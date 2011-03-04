@@ -151,6 +151,15 @@ class cGobiQDLCore
          return (eGobiError)ec;
       };
 
+      void set_vid(const char *vid)
+      {
+         mVid = vid;
+      }
+
+      void set_pid(const char *pid)
+      {
+         mPid = pid;
+      }
 
    protected:
       /* QDL protocol server */
@@ -164,5 +173,8 @@ class cGobiQDLCore
 
       /* Last error recorded */
       eGobiError mLastError;
+
+      const char *mVid;
+      const char *mPid;
 };
 

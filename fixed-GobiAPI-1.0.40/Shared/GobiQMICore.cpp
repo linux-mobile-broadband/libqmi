@@ -284,6 +284,8 @@ cGobiQMICore::GetAvailableDevices()
    std::vector <tDeviceID> devices;
 
    std::string path = "/sys/bus/usb/devices/";
+   char buf[PATH_MAX];
+   char *s;
 
    glob_t files;
    int ret = glob( (path + "*/*/*/qcqmi*").c_str(), 
@@ -344,54 +346,15 @@ cGobiQMICore::GetAvailableDevices()
          continue;
       }
 
-      // Move down one directory to the device level
-      curPath = curPath.substr( 0, curPath.find_last_of( "/" ) );
-
-      // Read idVendor
-      handle = open( (curPath + "/idVendor").c_str(), O_RDONLY );
-      if (handle == -1)
-      {
+      memset(buf, 0, sizeof(buf));
+      if (readlink((curPath + "/driver").c_str(), buf, sizeof(buf)) < 0)
          continue;
-      }
-      bFound = false;
-      ret = read( handle, buff, 4 );
-      if (ret == 4)
-      {
-         ret = strncmp( buff, "05c6", 4 );
-         if (ret == 0)
-         {
-            bFound = true;
-         }
-      }
-      close( handle );
+      buf[sizeof(buf) - 1] = '\0';
+      s = strrchr(buf, '/');
+      s = s ? s + 1 : buf;
 
-      if (bFound == false)
-      {
+      if (strcmp(s, "gobi"))
          continue;
-      }
-
-      // Read idProduct
-      handle = open( (curPath + "/idProduct").c_str(), O_RDONLY );
-      if (handle == -1)
-      {
-         continue;
-      }
-      bFound = false;
-      ret = read( handle, buff, 4 );
-      if (ret == 4)
-      {
-         ret = strncmp( buff, "920d", 4 );
-         if (ret == 0)
-         {
-            bFound = true;
-         }
-      }
-      close( handle );
-
-      if (bFound == false)
-      {
-         continue;
-      }
 
       // Device node success!
 

@@ -254,6 +254,7 @@ RETURN VALUE:
 ===========================================================================*/
 bool cQMIProtocolServer::CleanupComm()
 {
+   mComm.RunIOCTL(0x8BE4, NULL);
    // Nothing to actually do here
    return true;
 }
