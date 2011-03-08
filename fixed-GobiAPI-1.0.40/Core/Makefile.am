@@ -2,6 +2,11 @@ noinst_LTLIBRARIES = libCore.la
 
 libCore_la_CXXFLAGS = -Wunused-variable
 
+libCore_includedir = $(includedir)/gobi
+
+libCore_include_HEADERS = \
+	types.h
+
 libCore_la_SOURCES = \
 	BitPacker.cpp \
 	BitPacker.h \

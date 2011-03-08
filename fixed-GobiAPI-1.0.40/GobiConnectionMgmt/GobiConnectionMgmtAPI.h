@@ -33,20 +33,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ==========================================================================*/
 
-#ifndef GOBI_TYPEDEFS
-#define GOBI_TYPEDEFS
-
-// Type Definitions
-typedef unsigned long      ULONG;
-typedef unsigned long long ULONGLONG;
-typedef signed char        INT8;
-typedef unsigned char      BYTE;
-typedef char               CHAR;
-typedef unsigned short     WORD;
-typedef unsigned short     USHORT;
-typedef const char *       LPCSTR;
-
-#endif
+#include "types.h"
 
 /*=========================================================================*/
 // Definitions
