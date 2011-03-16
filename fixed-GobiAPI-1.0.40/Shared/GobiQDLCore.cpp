@@ -72,8 +72,7 @@ RETURN VALUE:
 cGobiQDLCore::cGobiQDLCore()
    :  mQDL( 512, 512 ),
       mQDLPortNode( "" ),
-      mQDLTimeout( DEFAULT_GOBI_QDL_TIMEOUT ),
-      mVid(NULL), mPid(NULL)
+      mQDLTimeout( DEFAULT_GOBI_QDL_TIMEOUT )
 {
    // Nothing to do
 }
@@ -142,12 +141,14 @@ std::vector <std::string> cGobiQDLCore::GetAvailableQDLPorts()
    std::vector <std::string> devices;
 
    std::string path = "/sys/bus/usb/devices/";
+   char buf[PATH_MAX];
 
    glob_t files;
    int ret = glob( (path + "*/*/ttyUSB*").c_str(), 
                    0, 
                    NULL, 
                    &files );
+   char *s;
    if (ret != 0)
    {
       // Glob failure
@@ -202,54 +203,16 @@ std::vector <std::string> cGobiQDLCore::GetAvailableQDLPorts()
          continue;
       }
 
-      // Move down one directory to the device level
-      curPath = curPath.substr( 0, curPath.find_last_of( "/" ) );
-
-      // Read idVendor
-      handle = open( (curPath + "/idVendor").c_str(), O_RDONLY );
-      if (handle == -1)
-      {
+      memset(buf, 0, sizeof(buf));
+      if (readlink((curPath + "/driver").c_str(), buf, sizeof(buf)) < 0)
          continue;
-      }
-      bFound = false;
-      ret = read( handle, buff, 4 );
-      if (ret == 4)
-      {
-         ret = strncmp( buff, mVid, 4 );
-         if (ret == 0)
-         {
-            bFound = true;
-         }
-      }
-      close( handle );
+      buf[sizeof(buf) - 1] = '\0';
+      s = strrchr(buf, '/');
+      s = s ? s + 1 : buf;
 
-      if (bFound == false)
-      {
+      if (strcmp(s, "qcserial") && strcmp(s, "QCSerial2k")
+          && strcmp(s, "GobiSerial"))
          continue;
-      }
-
-      // Read idProduct
-      handle = open( (curPath + "/idProduct").c_str(), O_RDONLY );
-      if (handle == -1)
-      {
-         continue;
-      }
-      bFound = false;
-      ret = read( handle, buff, 4 );
-      if (ret == 4)
-      {
-         ret = strncmp( buff, mPid, 4 );
-         if (ret == 0)
-         {
-            bFound = true;
-         }
-      }
-      close( handle );
-
-      if (bFound == false)
-      {
-         continue;
-      }
 
       // Success!
       devices.push_back( deviceNode );
