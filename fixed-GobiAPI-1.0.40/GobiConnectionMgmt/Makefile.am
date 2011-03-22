@@ -27,5 +27,6 @@ libGobiConnectionMgmt_la_SOURCES = \
 libGobiConnectionMgmt_la_LIBADD = \
 	$(top_builddir)/Database/QMI/libQMIDB.la \
 	$(top_builddir)/Shared/libShared.la \
-	$(top_builddir)/Core/libCore.la
+	$(top_builddir)/Core/libCore.la \
+	-lpthread
 
