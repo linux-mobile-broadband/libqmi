@@ -20,9 +20,12 @@ GobiQDLService_CPPFLAGS = \
 
 GobiQDLService_SOURCES = Main.cpp
 
+GobiQDLService_CXXFLAGS = -pthread
+
 GobiQDLService_LDADD = \
 	$(top_builddir)/Database/QMI/libQMIDB.la \
 	$(top_builddir)/Shared/libShared.la \
 	$(top_builddir)/Core/libCore.la \
-	-lrt
+	-lrt \
+	-lpthread
 
