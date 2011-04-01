@@ -490,6 +490,46 @@ bool ParseAMSSVersion(
    return bRC;
 }
 
+struct device_id {
+	unsigned int vid;
+	unsigned int pid;
+	const char *fwpath;
+};
+
+#define GOBI3(vid,pid)	{ 0x ## vid, 0x ## pid, "/opt/Qualcomm/firmware/" #vid ":" #pid }
+#define GOBI2(vid,pid,oem) { 0x ## vid, 0x ## pid, "/opt/Qualcomm/Images2k/" oem }
+
+struct device_id device_ids[] = {
+	GOBI3(1410, a021),
+	GOBI2(05c6, 9215, "Acer"),
+	GOBI2(05c6, 9225, "Sony"),
+	GOBI2(05c6, 9245, "Samsung"),
+	GOBI2(1410, 0000, "Novatel"),
+	GOBI2(413c, 8186, "Dell"),
+	{ 0, 0, NULL }
+};
+
+static const char *vidpid_to_imagestore(unsigned int vid, unsigned int pid)
+{
+	int i;
+
+	/* Part of the gobi 3k image API doesn't have access to the device
+	 * vid:pid when it goes looking for images, so we support this as a
+	 * special case - 0000:0000 means "the directory with *all* gobi3
+	 * firmwares in it". */
+	if (vid == 0 && pid == 0)
+		return "/opt/Qualcomm/firmware";
+
+	for (i = 0; device_ids[i].fwpath; i++) {
+		if (device_ids[i].vid && device_ids[i].vid != vid)
+			continue;
+		if (device_ids[i].pid && device_ids[i].pid != pid)
+			continue;
+		return device_ids[i].fwpath;
+	}
+	return "<none>";
+}
+
 /*===========================================================================
 METHOD:
    GetImageStore (Public Method)
@@ -501,12 +541,12 @@ DESCRIPTION:
 RETURN VALUE:
    std::string - Image Store
 ===========================================================================*/
-std::string GetImageStore()
+std::string GetImageStore(unsigned int vid, unsigned int pid)
 {
-   std::string imageStore = GetProgramPath();
-   imageStore += "Images/3000/Generic";
+   std::string oem = vidpid_to_imagestore(vid, pid);
+   printf("GetImageStore: dir %s\n", oem.c_str());
 
-   return imageStore;
+   return oem;
 }
 
 /*===========================================================================
@@ -876,7 +916,8 @@ std::string GetImageByUniqueID( BYTE * pImageID )
 
    // Enumerate all folders of the image store
    std::vector <std::string> folders;
-   std::string imageStore = ::GetImageStore();
+
+   std::string imageStore = ::GetImageStore(0, 0);
    EnumerateFolders( imageStore, folders );
 
    // Did we find any folders?

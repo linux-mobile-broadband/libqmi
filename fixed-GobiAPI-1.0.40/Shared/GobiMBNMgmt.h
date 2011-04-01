@@ -114,7 +114,7 @@ DESCRIPTION:
 RETURN VALUE:
    std::string - Image Store
 ===========================================================================*/
-std::string GetImageStore();
+std::string GetImageStore(unsigned int vid, unsigned int pid);
 
 /*===========================================================================
 METHOD:

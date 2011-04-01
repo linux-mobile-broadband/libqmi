@@ -68,7 +68,8 @@ PARAMETERS:
 RETURN VALUE:
    sImageInfo - Generic image information
 ===========================================================================*/
-sImageInfo GetGenericImage( const sImageInfo & uqcnInfo )
+sImageInfo GetGenericImage( const sImageInfo & uqcnInfo, unsigned int vid,
+                            unsigned int pid )
 {
    // Validate arguments
    sImageInfo amssInfo;
@@ -92,7 +93,7 @@ sImageInfo GetGenericImage( const sImageInfo & uqcnInfo )
 
    // Recursively enumerate all folders of the image store
    std::vector <std::string> folders;
-   std::string imageStore = ::GetImageStore();
+   std::string imageStore = ::GetImageStore(vid, pid);
    EnumerateFolders( imageStore, folders );
 
    // Did we find any folders?
@@ -336,6 +337,9 @@ RETURN VALUE:
 ===========================================================================*/
 eGobiError cGobiQMICore::UpgradeFirmware( CHAR * pDestinationPath )
 {
+   char *end;
+   ULONG carrier;
+
    // Validate arguments
    if (pDestinationPath == 0 || pDestinationPath[0] == 0)
    {
@@ -348,77 +352,25 @@ eGobiError cGobiQMICore::UpgradeFirmware( CHAR * pDestinationPath )
       return eGOBI_ERR_NO_CONNECTION;
    }
 
-   // Use that to validate the image store for this device
-   std::string tmpPath( pDestinationPath );
-   int tmpPathlen = tmpPath.size();
-   if (tmpPath[tmpPathlen - 1] != '/')
-   {
-      tmpPath += '/';
-   }
-
-   std::string imageStore = ::GetImageStore();
-   if (tmpPath.find( imageStore ) == std::string::npos)
-   {
-      return eGOBI_ERR_INVALID_FILE;
-   }
+   if (*pDestinationPath == '/')
+      pDestinationPath++;
+   carrier = strtoul(pDestinationPath, &end, 10);
+   if (*end)
+      return eGOBI_ERR_INVALID_ARG;
 
    sImageInfo amssInfo;
    sImageInfo uqcnInfo;
    std::vector <sImageInfo> images;
-   images = ::GetImagesInfo( tmpPath );
 
-   ULONG imageCount = (ULONG)images.size();
-   for (ULONG i = 0; i < imageCount; i++)
-   {
-      const sImageInfo & ii = images[i];
-      if (ii.mImageType == eGOBI_MBN_TYPE_MODEM)
-      {
-         amssInfo = ii;
-      }
-      else if (ii.mImageType == eGOBI_MBN_TYPE_PRI)
-      {
-         uqcnInfo = ii;
-      }
-   }
-
-   if (uqcnInfo.IsValid() == false)
-   {
-      return eGOBI_ERR_INVALID_FILE; 
-   }
-
-   if (amssInfo.IsValid() == false)
-   {
-      amssInfo = GetGenericImage( uqcnInfo );
-      
-      // Still bad?
-      if (amssInfo.IsValid() == false)
-      {
-         return eGOBI_ERR_INVALID_FILE; 
-      }
-   }
-
-   WORD msgID = (WORD)eQMI_DMS_SET_FIRMWARE_PREF;
+   WORD msgID = (WORD)eQMI_DMS_SET_FIRMWARE_ID;
    std::vector <sDB2PackingInput> piv;
 
-   std::ostringstream amssIDStr;
-   std::ostringstream uqcnIDStr;
-   for (ULONG v = 0; v < 16; v++)
-   {
-      amssIDStr << " " << (ULONG)amssInfo.mImageID[v];
-      uqcnIDStr << " " << (ULONG)uqcnInfo.mImageID[v];
-   }
-   
-   // "2 0%s %d \"%s\" 1%s %d \"%s\""
    std::ostringstream tmp;
-   tmp << "2 0" << amssIDStr.str() << " " << amssInfo.mVersion.size()
-       << " \"" << amssInfo.mVersion << "\" 1" << uqcnIDStr.str()
-       << " " << uqcnInfo.mVersion.size() << " \"" 
-       << uqcnInfo.mVersion << "\"";
-   
+   tmp << (UINT)carrier;
+
    sProtocolEntityKey pek( eDB2_ET_QMI_DMS_REQ, msgID, 1 );
    sDB2PackingInput pi( pek, tmp.str().c_str() );
    piv.push_back( pi );
-
 
    // Pack up the QMI request
    const cCoreDatabase & db = GetDatabase();
@@ -494,7 +446,7 @@ eGobiError cGobiQMICore::GetImageInfo(
       tmpPath += '/';
    }
 
-   std::string imageStore = ::GetImageStore();
+   std::string imageStore = ::GetImageStore(mVid, mPid);
    if (tmpPath.find( imageStore ) < 0)
    {
       return eGOBI_ERR_INVALID_FILE;
@@ -552,7 +504,7 @@ eGobiError cGobiQMICore::GetImageStore(
       return eGOBI_ERR_NO_CONNECTION;
    }
 
-   std::string imageStore = ::GetImageStore();
+   std::string imageStore = ::GetImageStore(mVid, mPid);
 
    // Copy over image store
    LONG strLen = imageStore.size();

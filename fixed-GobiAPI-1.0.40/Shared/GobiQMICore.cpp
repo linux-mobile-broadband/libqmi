@@ -373,6 +373,43 @@ cGobiQMICore::GetAvailableDevices()
    return devices;
 }
 
+static unsigned int getvidpid(const char *devname)
+{
+	char buf[PATH_MAX + 1];
+	char nbuf[PATH_MAX + 1];
+	char idproduct[16];
+	char idvendor[16];
+	int fd;
+
+	snprintf(buf, sizeof(buf), "/sys/class/QCQMI/%s/../../..", devname);
+	memset(nbuf, 0, sizeof(nbuf));
+	if (!realpath(buf, nbuf)) {
+		return 0;
+	}
+
+	snprintf(buf, sizeof(buf), "%s/idVendor", nbuf);
+	fd = open(buf, O_RDONLY);
+	if (fd < 0) {
+		return 0;
+	}
+	if (read(fd, idvendor, sizeof(idvendor)) <= 0) {
+		return 0;
+	}
+	close(fd);
+
+	snprintf(buf, sizeof(buf), "%s/idProduct", nbuf);
+	fd = open(buf, O_RDONLY);
+	if (fd < 0) {
+		return 0;
+	}
+	if (read(fd, idproduct, sizeof(idproduct)) <= 0) {
+		return 0;
+	}
+	close(fd);
+
+	return (strtoul(idvendor, NULL, 16) << 16) | strtoul(idproduct, NULL, 16);
+}
+
 /*===========================================================================
 METHOD:
    Connect (Public Method)
@@ -470,6 +507,10 @@ bool cGobiQMICore::Connect(
    // Store device ID/key strings
    mDeviceNode = devices[0].first;
    mDeviceKey = devices[0].second;
+
+   unsigned int vidpid = getvidpid(mDeviceNode.c_str());
+   mVid = (vidpid >> 16) & 0xFFFF;
+   mPid = vidpid & 0xFFFF;
 
    // Initalize/connect all configured QMI servers
    std::map <eQMIService, cQMIProtocolServer *>::const_iterator pIter;

@@ -1016,6 +1016,9 @@ class cGobiQMICore
       /* Device key string of connected device (may be empty) */
       std::string mDeviceKey;
 
+      unsigned int mVid;
+      unsigned int mPid;
+
       /* Last error recorded */
       eGobiError mLastError;
 
