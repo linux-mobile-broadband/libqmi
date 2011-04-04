@@ -55,7 +55,7 @@ POSSIBILITY OF SUCH DAMAGE.
 const ULONG INVALID_REQUEST_ID = 0;
 
 // Default activity timeout value
-const ULONG DEFAULT_WAIT = 100;
+const ULONG DEFAULT_WAIT = 10000;
 
 // MTU (Maximum Transmission Unit) for auxiliary data (QC USB imposed)
 const ULONG MAX_AUX_MTU_SIZE = 1024 * 256;
@@ -133,19 +133,8 @@ void * ScheduleThread( PVOID pArg )
          break;
       }
 
-      // Get Schedule Mutex (non-blocking)
-      nRet = pthread_mutex_trylock( &pServer->mScheduleMutex );
-      if (nRet == EBUSY)
-      {
-         // Not an error, we're just too slow
-         // Someone else got to the ScheduleMutex before us
-         // We'll wait for the signal again
-         toTime = TimeIn( DEFAULT_WAIT );
-         TRACE( "ScheduleThread [%lu] unable to lock ScheduleMutex\n", 
-                pthread_self() );
-         continue;
-      }
-      else if (nRet != 0)
+      nRet = pthread_mutex_lock( &pServer->mScheduleMutex );
+      if (nRet != 0)
       {
          // Error condition
          TRACE( "ScheduleThread [%lu] mScheduleMutex error %d, %s\n",
@@ -196,7 +185,7 @@ void * ScheduleThread( PVOID pArg )
             TRACE( "ScheduleThread() Sequencing error: "
                    "Active request %lu is not waiting for response ???\n",
                    pServer->mpActiveRequest->mID );
-
+            pthread_mutex_unlock( &pServer->mScheduleMutex );
             break;
          }
       }
@@ -230,16 +219,7 @@ void * ScheduleThread( PVOID pArg )
              GetTickCount(), 
              TimeFromNow( toTime ) );  */
       
-      // Unlock schedule mutex        
-      nRet = pthread_mutex_unlock( &pServer->mScheduleMutex );
-      if (nRet != 0)
-      {
-         TRACE( "ScheduleThread Unable to unlock schedule mutex."
-                " Error %d: %s\n",
-                nRet,
-                strerror( nRet ) );
-         return false;
-      }
+      pthread_mutex_unlock( &pServer->mScheduleMutex );
    }
 
    TRACE( "Schedule thread [%lu] exited\n", 
