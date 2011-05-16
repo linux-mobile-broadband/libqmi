@@ -5,7 +5,8 @@ libCore_la_CXXFLAGS = -Wunused-variable
 libCore_includedir = $(includedir)/gobi
 
 libCore_include_HEADERS = \
-	types.h
+	types.h \
+	apidefs.h
 
 libCore_la_SOURCES = \
 	BitPacker.cpp \

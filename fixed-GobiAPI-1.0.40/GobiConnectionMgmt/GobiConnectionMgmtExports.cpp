@@ -74,6 +74,15 @@ struct sAdapterInfo
 // Exported Methods
 /*=========================================================================*/
 
+/* Returns the type of the connected device */
+GobiType GetDeviceType()
+{
+   cGobiConnectionMgmt *pAPI = gConnectionDLL.GetAPI();
+   if (!pAPI)
+      return GOBITYPE_UNKNOWN;
+   return pAPI->GetDeviceType();
+}
+
 /*===========================================================================
 METHOD:
    QCWWANEnumerateDevices

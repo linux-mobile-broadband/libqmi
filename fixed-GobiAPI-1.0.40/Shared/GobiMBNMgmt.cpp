@@ -491,23 +491,36 @@ bool ParseAMSSVersion(
 }
 
 struct device_id {
+	GobiType type;
 	unsigned int vid;
 	unsigned int pid;
 	const char *fwpath;
 };
 
-#define GOBI3(vid,pid)	{ 0x ## vid, 0x ## pid, "/opt/Qualcomm/firmware/" #vid ":" #pid }
-#define GOBI2(vid,pid,oem) { 0x ## vid, 0x ## pid, "/opt/Qualcomm/Images2k/" oem }
+#define GOBI3(vid,pid)	{ GOBITYPE_3K, 0x ## vid, 0x ## pid, "/opt/Qualcomm/firmware/" #vid ":" #pid }
+#define GOBI2(vid,pid,oem) { GOBITYPE_2K, 0x ## vid, 0x ## pid, "/opt/Qualcomm/Images2k/" oem }
 
 struct device_id device_ids[] = {
-	GOBI3(1410, a021),
+	GOBI3(05c6, 920d),		/* Novatel */
+	GOBI3(12d1, 14f1),		/* Sony */
+	GOBI3(1410, a021),		/* Generic */
+	GOBI3(413c, 8194),		/* Dell */
 	GOBI2(05c6, 9215, "Acer"),
 	GOBI2(05c6, 9225, "Sony"),
 	GOBI2(05c6, 9245, "Samsung"),
 	GOBI2(1410, 0000, "Novatel"),
 	GOBI2(413c, 8186, "Dell"),
-	{ 0, 0, NULL }
+	{ GOBITYPE_UNKNOWN, 0, 0, NULL }
 };
+
+GobiType GetDeviceType(unsigned int vid, unsigned int pid)
+{
+	int i;
+	for (i = 0; device_ids[i].fwpath; i++)
+		if (vid == device_ids[i].vid && pid == device_ids[i].pid)
+			return device_ids[i].type;
+	return GOBITYPE_UNKNOWN;
+}
 
 static const char *vidpid_to_imagestore(unsigned int vid, unsigned int pid)
 {

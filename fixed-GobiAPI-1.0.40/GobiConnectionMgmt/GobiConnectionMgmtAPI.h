@@ -33,6 +33,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ==========================================================================*/
 
+#include "apidefs.h"
 #include "types.h"
 
 /*=========================================================================*/
@@ -145,6 +146,8 @@ typedef void (* tFNUSSDOrigination)(
 /*=========================================================================*/
 // Prototypes
 /*=========================================================================*/
+/* Returns the type of the connected device. */
+GobiType GetDeviceType();
 
 /*===========================================================================
 METHOD:

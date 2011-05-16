@@ -44,6 +44,8 @@ POSSIBILITY OF SUCH DAMAGE.
 //---------------------------------------------------------------------------
 // Include Files
 //---------------------------------------------------------------------------
+#include "apidefs.h"
+
 #include "CoreDatabase.h"
 #include "ProtocolBuffer.h"
 #include "QMIProtocolServer.h"
@@ -160,6 +162,9 @@ class cGobiQMICore
       // Return the set of available Gobi devices
       typedef std::pair <std::string, std::string> tDeviceID;
       virtual std::vector <tDeviceID> GetAvailableDevices();
+
+      // Return the type of the currently connected device
+      GobiType GetDeviceType();
 
       // Connect to the specified (or first detected) Gobi device
       virtual bool Connect(
