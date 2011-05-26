@@ -500,7 +500,7 @@ struct device_id {
 #define GOBI3(vid,pid)	{ GOBITYPE_3K, 0x ## vid, 0x ## pid, "/opt/Qualcomm/firmware/" #vid ":" #pid }
 #define GOBI2(vid,pid,oem) { GOBITYPE_2K, 0x ## vid, 0x ## pid, "/opt/Qualcomm/Images2k/" oem }
 
-struct device_id device_ids[] = {
+const struct device_id device_ids[] = {
 	GOBI3(05c6, 920d),		/* Novatel */
 	GOBI3(12d1, 14f1),		/* Sony */
 	GOBI3(1410, a021),		/* Generic */
@@ -513,18 +513,29 @@ struct device_id device_ids[] = {
 	{ GOBITYPE_UNKNOWN, 0, 0, NULL }
 };
 
-GobiType GetDeviceType(unsigned int vid, unsigned int pid)
+static const struct device_id *VidPidToDev(unsigned int vid, unsigned int pid)
 {
 	int i;
-	for (i = 0; device_ids[i].fwpath; i++)
-		if (vid == device_ids[i].vid && pid == device_ids[i].pid)
-			return device_ids[i].type;
-	return GOBITYPE_UNKNOWN;
+	for (i = 0; device_ids[i].fwpath; i++) {
+		if (device_ids[i].vid && device_ids[i].vid != vid)
+			continue;
+		if (device_ids[i].pid && device_ids[i].pid != pid)
+			continue;
+		return &device_ids[i];
+	}
+	return NULL;
 }
 
-static const char *vidpid_to_imagestore(unsigned int vid, unsigned int pid)
+GobiType GetDeviceType(unsigned int vid, unsigned int pid)
+{
+	const struct device_id *dev = VidPidToDev(vid, pid);
+	return dev ? dev->type : GOBITYPE_UNKNOWN;
+}
+
+static const char *VidPidToImageStore(unsigned int vid, unsigned int pid)
 {
 	int i;
+	const struct device_id *dev = VidPidToDev(vid, pid);
 
 	/* Part of the gobi 3k image API doesn't have access to the device
 	 * vid:pid when it goes looking for images, so we support this as a
@@ -533,14 +544,7 @@ static const char *vidpid_to_imagestore(unsigned int vid, unsigned int pid)
 	if (vid == 0 && pid == 0)
 		return "/opt/Qualcomm/firmware";
 
-	for (i = 0; device_ids[i].fwpath; i++) {
-		if (device_ids[i].vid && device_ids[i].vid != vid)
-			continue;
-		if (device_ids[i].pid && device_ids[i].pid != pid)
-			continue;
-		return device_ids[i].fwpath;
-	}
-	return "<none>";
+	return dev ? dev->fwpath : NULL;
 }
 
 /*===========================================================================
@@ -556,7 +560,7 @@ RETURN VALUE:
 ===========================================================================*/
 std::string GetImageStore(unsigned int vid, unsigned int pid)
 {
-   std::string oem = vidpid_to_imagestore(vid, pid);
+   std::string oem = VidPidToImageStore(vid, pid);
    printf("GetImageStore: dir %s\n", oem.c_str());
 
    return oem;
