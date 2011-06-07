@@ -770,7 +770,17 @@ sSharedBuffer * DB2PackQMIBuffer(
          }
       }
 
+      if (bufLen + (ULONG)sizeof(sQMIRawContentHeader) < bufLen)
+      {
+         bOK = false;
+         break;
+      }
       bufLen += (ULONG)sizeof(sQMIRawContentHeader);
+      if (bufLen + packedLen < bufLen)
+      {
+         bOK = false;
+         break;
+      }
       bufLen += packedLen;
 
       // What we are building cannot be too large

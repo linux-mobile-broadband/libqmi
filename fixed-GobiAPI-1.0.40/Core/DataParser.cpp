@@ -574,8 +574,8 @@ bool sParsedField::ParseString(
    ULONG                      numChars,
    cBitParser &               bp )
 {
-   // Validate size
-   if (MAX_SHARED_BUFFER_SIZE < numChars)
+   // Validate size (including '\0')
+   if (MAX_SHARED_BUFFER_SIZE < numChars + 1)
    {
       return false;
    }
