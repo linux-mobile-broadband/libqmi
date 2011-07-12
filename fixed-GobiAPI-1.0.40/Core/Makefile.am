@@ -41,8 +41,10 @@ libCore_la_SOURCES = \
 	MemoryMappedFile.h \
 	ProtocolBuffer.cpp \
 	ProtocolBuffer.h \
+	ProtocolEntityFieldEnumerator.h \
 	ProtocolEntityNav.cpp \
 	ProtocolEntityNav.h \
+	ProtocolEnum.h \
 	ProtocolLog.cpp \
 	ProtocolLog.h \
 	ProtocolNotification.cpp \
@@ -53,12 +55,17 @@ libCore_la_SOURCES = \
 	ProtocolServer.h \
 	QDLBuffers.cpp \
 	QDLBuffers.h \
+	QDLEnum.h \
 	QDLProtocolServer.cpp \
 	QDLProtocolServer.h \
 	QMIBuffers.cpp \
 	QMIBuffers.h \
+	QMIEnum.h \
 	QMIProtocolServer.cpp \
 	QMIProtocolServer.h \
 	SharedBuffer.cpp \
-	SharedBuffer.h
+	SharedBuffer.h \
+	StdAfx.h \
+	SyncQueue.h
+
 
