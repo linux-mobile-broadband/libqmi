@@ -21,7 +21,6 @@ stamp-*
 autom4te.cache
 intltool-*
 TAGS
-COPYING
 INSTALL
 ABOUT-NLS
 *.pc
