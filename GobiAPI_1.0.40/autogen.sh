@@ -16,6 +16,7 @@ PKG_NAME=GobiAPI
 }
 
 (cd $srcdir;
+    mkdir m4
     autoreconf --install --symlink &&
     autoreconf &&
     ./configure --enable-maintainer-mode $@
