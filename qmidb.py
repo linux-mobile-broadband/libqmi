@@ -245,7 +245,7 @@ class DataSet:
         return name.replace(' ', '_').replace('/', '_').lower().split('-')[0].strip('_')
 
     def constname(self, name):
-        return name.replace(' ', '_').replace('/', '_').upper().split('-')[0].strip('_')
+        return name.replace(' ', '_').replace('/', '_').upper().split('-')[0].strip('_').replace('(', '').replace(')', '')
 
     def emitfield(self, f):
         basetypes = {
