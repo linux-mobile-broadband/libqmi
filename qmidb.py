@@ -335,6 +335,9 @@ class DataSet:
             else:
                 struct['printname'] = 'gobi_%d' % struct['id']
             print 'struct %s; /* %s */' % (struct['printname'], struct['name'])
+
+        print "\n"
+
         for s in self.structs:
             struct = self.structs[s]
             print 'struct %s { /* %s */' % (struct['printname'], struct['name'])
