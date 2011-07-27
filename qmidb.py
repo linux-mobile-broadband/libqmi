@@ -70,7 +70,7 @@ class StructParser(Parser):
             'uniqueid': parts[0] + '.' + parts[1],
             'id': int(parts[0]),
             'order': int(parts[1]),
-            'type': int(parts[2]),
+            'type': int(parts[2]),   # eDB2FragmentType
             'value': int(parts[3]),
             'name': parts[4].replace('"', ''),
             'offset': int(parts[5]),
@@ -95,8 +95,8 @@ class FieldParser(Parser):
             'id': int(parts[0]),
             'name': parts[1].replace('"', ''),
             'size': int(parts[2]),
-            'type': int(parts[3]),
-            'typeval': int(parts[4]),
+            'type': int(parts[3]),    # eDB2FieldType
+            'typeval': int(parts[4]), # eDB2StdFieldType if 'type' == 0
             'hex': int(parts[5]) != 0,
             'descid': None,
             'internal': False,
@@ -186,8 +186,9 @@ class DataSet:
         enum['values'].sort(lambda x, y: cmp(x['value'], y['value']))
 
     def add_field(self, field):
-        if field['type'] > DataSet.FIELD_MAX:
-            print 'Strange field %s' % field
+        if field['type'] == 0:  # eDB2FieldType :: eDB2_FIELD_STD
+            if field['typeval'] > DataSet.FIELD_MAX:
+                print 'Strange field %s' % field
         self.fields[field['id']] = field
 
     def add_struct(self, struct):
@@ -308,31 +309,56 @@ class DataSet:
 
     def emitfield(self, f):
         basetypes = {
-            DataSet.FIELD_BOOL: 'bool',
-            DataSet.FIELD_INT8: 'int8',
-            DataSet.FIELD_UINT8: 'uint8',
-            DataSet.FIELD_INT16: 'int16',
-            DataSet.FIELD_UINT16: 'uint16',
-            DataSet.FIELD_INT32: 'int32',
-            DataSet.FIELD_UINT32: 'uint32',
+            # Maps field type to [ <textual type>, <is array> ]
+            DataSet.FIELD_BOOL: [ 'bool', False ],
+            DataSet.FIELD_INT8: [ 'int8', False ],
+            DataSet.FIELD_UINT8: [ 'uint8', False ],
+            DataSet.FIELD_INT16: [ 'int16', False ],
+            DataSet.FIELD_UINT16: [ 'uint16', False ],
+            DataSet.FIELD_INT32: [ 'int32', False ],
+            DataSet.FIELD_UINT32: [ 'uint32', False ],
+            DataSet.FIELD_INT64: [ 'int64', False ],
+            DataSet.FIELD_UINT64: [ 'uint64', False ],
+            DataSet.FIELD_STRING_A: [ 'char', True ],
+            DataSet.FIELD_STRING_ANT: [ 'char *', False ],
+            DataSet.FIELD_FLOAT32: [ 'float32', False ],
+            DataSet.FIELD_FLOAT64: [ 'float64', False ],
         }
-        if f['type'] == 0:
+        if f['type'] == 0:  # eDB2_FRAGMENT_FIELD
             _f = self.fields[f['value']]
-            print "\t%s %s; /* %s */" % (basetypes[_f['type']], self.nicename(_f['name']), _f['name'])
+            realtype = ''
+            realsize = 0
+            if _f['type'] == 0:  # eDB2_FIELD_STD
+                btinfo = basetypes[_f['typeval']]
+                realtype = btinfo[0]
+                if btinfo[1]:
+                    realsize = _f['size'] / 8
+            elif _f['type'] == 1 or _f['type'] == 2:
+                # It's a enum; find the enum
+                e = self.enums[_f['typeval']]
+                realtype = "gobi_%s" % self.nicename(e['name'])
+            else:
+                raise ValueError("Unknown Field type")
+            s = "\t%s %s" % (realtype, self.nicename(_f['name']))
+            if realsize > 0:
+                s += "[%d]" % realsize
+            s += "; /* %s */" % _f['name']
+            print s
         else:
-            print "\t???";
+            print "\t???"
 
     def emit(self):
         print '/* GENERATED CODE. DO NOT EDIT. */'
+        print '\ntypedef uint8 bool;\n'
         for e in self.enums:
             enum = self.enums[e]
-            print 'enum gobi_%s { /* %s */ ' % (self.nicename(enum['name']), enum['name'])
+            print 'typedef enum { /* %s */ ' % enum['name']
             for en in enum['values']:
                 print "\tGOBI_%s_%s\t\t= 0x%08x,     /* %s */" % (
                                                     self.constname(enum['name']),
                                                     self.constname(en['name']),
                                                     en['value'], en['name'])
-            print "};\n"
+            print "} gobi_%s;\n" % self.nicename(enum['name'])
         for s in self.structs:
             struct = self.structs[s];
             if struct['name'] != '<none>':
