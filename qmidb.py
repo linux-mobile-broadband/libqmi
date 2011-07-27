@@ -196,17 +196,22 @@ class DataSet:
         ent = {
             'id': struct['id'],
             'name': '<none>',
-            'fields': [],
+            'fields': {},
         }
         if struct['id'] in self.structs:
             ent = self.structs[struct['id']]
         self.structs[struct['id']] = ent
 
+        order = struct['order']
+        if ent['fields'].has_key(order):
+            raise ValueError("Struct entity already has this field")
+
         field = {
             'type': struct['type'],
-            'value': struct['value'],
+            'value': struct['value']
         }
-        ent['fields'].append(field)
+        # Add fields in order
+        ent['fields'][order] = field
 
     def add_entity(self, entity):
         ent = {
@@ -223,7 +228,7 @@ class DataSet:
     def validate(self):
         for s in self.structs:
             struct = self.structs[s]
-            for f in struct['fields']:
+            for f in struct['fields'].values():
                 if f['type'] == 0:
                     if f['value'] not in self.fields:
                         print 'No field: %d' % f['value']
@@ -341,7 +346,9 @@ class DataSet:
         for s in self.structs:
             struct = self.structs[s]
             print 'struct %s { /* %s */' % (struct['printname'], struct['name'])
-            for f in struct['fields']:
+            # this field iteration depends on python ordering dict values
+            # by their key
+            for f in struct['fields'].values():
                 self.emitfield(f)
             print "};\n"
 
