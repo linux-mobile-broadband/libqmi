@@ -245,7 +245,53 @@ class DataSet:
         return name.replace(' ', '_').replace('/', '_').lower().split('-')[0].strip('_')
 
     def constname(self, name):
-        return name.replace(' ', '_').replace('/', '_').upper().split('-')[0].strip('_').replace('(', '').replace(')', '')
+        rlist = { '(': '',
+                  ')': '',
+                  '+': '',
+                  ' ': '_',
+                  '/': '_',
+                  '.': '' }
+        # Capture stuff like "-9 dB" correctly
+        if name.find("dB") == -1:
+            rlist['-'] = '_'
+        else:
+            rlist['-'] = 'NEG_'
+
+        sanitized = ""
+        for c in name:
+            try:
+                sanitized += rlist[c]
+            except KeyError:
+                sanitized += c
+
+        # modify certain words
+        words = sanitized.upper().strip('_').split('_')
+        klist = [ 'UNSUPPORTED' ]
+        slist = [ 'STATES', 'REASONS', 'FORMATS', 'SELECTIONS', 'TYPES', 'TAGS',
+                  'PROTOCOLS', 'CLASSES', 'ACTIONS', 'VALUES', 'OPTIONS',
+                  'DOMAINS', 'DEVICES', 'MODES', 'MONTHS', 'PREFERENCES',
+                  'PREFS', 'DURATIONS', 'CAPABILITIES', 'INTERFACES',
+                  'TECHNOLOGIES', 'NETWORKS', 'DAYS', 'SYSTEMS', 'SCHEMES',
+                  'INDICATORS', 'ENCODINGS', 'INITIALS', 'BITS', 'MEDIUMS',
+                  'BASES', 'ERRORS', 'RESULTS', 'RATIOS', 'DELIVERIES',
+                  'FAMILIES', 'SETTINGS', 'SOURCES', 'ORDERS' ]
+        blist = { 'CLASSES': 'CLASS' }
+        final = ''
+        for word in words:
+            if word in klist or len(word) == 0:
+                continue
+            if len(final):
+                final += '_'
+            if word in blist:
+                final += blist[word]
+            elif word in slist:
+                if word.endswith("IES"):
+                    final += word[:len(word) - 3] + "Y"
+                elif word.endswith("S"):
+                    final += word[:len(word) - 1]
+            else:
+                final += word
+        return final
 
     def emitfield(self, f):
         basetypes = {
