@@ -247,10 +247,10 @@ class DataSet:
     def constname(self, name):
         rlist = { '(': '',
                   ')': '',
-                  '+': '',
                   ' ': '_',
                   '/': '_',
-                  '.': '' }
+                  '.': '',
+                  ',': '' }
         # Capture stuff like "-9 dB" correctly
         if name.find("dB") == -1:
             rlist['-'] = '_'
@@ -264,8 +264,16 @@ class DataSet:
             except KeyError:
                 sanitized += c
 
+        # Handle E_UTRA -> EUTRA and E_UTRAN -> EUTRAN
+        foo = sanitized.upper().strip('_')
+        foo = foo.replace('E_UTRA', 'EUTRA')
+
+        # And HSDPA+ -> HSDPA_PLUS then strip all plusses
+        foo = foo.replace('HSDPA+', 'HSDPA_PLUS')
+        foo = foo.replace('+', '')
+
         # modify certain words
-        words = sanitized.upper().strip('_').split('_')
+        words = foo.split('_')
         klist = [ 'UNSUPPORTED' ]
         slist = [ 'STATES', 'REASONS', 'FORMATS', 'SELECTIONS', 'TYPES', 'TAGS',
                   'PROTOCOLS', 'CLASSES', 'ACTIONS', 'VALUES', 'OPTIONS',
