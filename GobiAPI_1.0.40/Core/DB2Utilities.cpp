@@ -546,9 +546,9 @@ sSharedBuffer * DB2BuildQMIBuffer(
    const ULONG szMsgHdr   = (ULONG)sizeof(sQMIRawMessageHeader);
    const ULONG szTLVHdr   = (ULONG)sizeof(sQMIRawContentHeader);
 
-   // Need something to build
+   // Need something to build (but not too much)
    ULONG tlvs = (ULONG)input.size();
-   if (tlvs == 0)
+   if (tlvs == 0 || tlvs > (ULONG)UCHAR_MAX)
    {
       return pRef;
    }
@@ -566,10 +566,19 @@ sSharedBuffer * DB2BuildQMIBuffer(
       return pRef;
    }
 
+   ULONG t = 0;
+   for (t = 0; t < tlvs; t++)
+   {
+      const sDB2NavInput & tlvInput = input[t];
+      if (tlvInput.mPayloadLen > QMI_MAX_BUFFER_SIZE)
+      {
+         return pRef;
+      }
+   }
+
    ULONG szReq = szTransHdr + szMsgHdr + (tlvs * szTLVHdr);
    szReq += tlvInput.mPayloadLen;
 
-   ULONG t = 0;
    for (t = 1; t < tlvs; t++)
    {
       const sDB2NavInput & tlv2Input = input[t];
@@ -649,9 +658,9 @@ sSharedBuffer * DB2PackQMIBuffer(
    // Assume failure
    sSharedBuffer * pRef = 0;
 
-   // Need something to build
+   // Need something to build (but not too much)
    ULONG tlvs = (ULONG)input.size();
-   if (tlvs == 0)
+   if (tlvs == 0 || tlvs > (ULONG)UCHAR_MAX)
    {
       return pRef;
    }
@@ -670,6 +679,15 @@ sSharedBuffer * DB2PackQMIBuffer(
    }
 
    ULONG t = 0;
+   for (t = 0; t < tlvs; t++)
+   {
+      const sDB2PackingInput & tlvInput = input[t];
+      if (tlvInput.mDataLen > QMI_MAX_BUFFER_SIZE)
+      {
+         return pRef;
+      }
+   }
+
    for (t = 1; t < tlvs; t++)
    {
       const sDB2PackingInput & tlv2Input = input[t];

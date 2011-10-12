@@ -42,7 +42,6 @@ POSSIBILITY OF SUCH DAMAGE.
 //---------------------------------------------------------------------------
 // Includes
 //---------------------------------------------------------------------------
-#include <aio.h>
 #include <fstream>
 #include <assert.h>
 #include <termios.h>
@@ -57,6 +56,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 //---------------------------------------------------------------------------
 // Macro defination
@@ -170,3 +170,6 @@ typedef double             DATE;
 // Device I/O control code for obtaining device MEID
 #define QMI_GET_MEID_IOCTL 0x8BE0 + 3
 
+// Define the directions for pipes
+#define READING 0
+#define WRITING 1

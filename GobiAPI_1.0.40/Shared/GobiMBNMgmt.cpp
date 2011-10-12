@@ -51,8 +51,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "CoreUtilities.h"
 #include "MemoryMappedFile.h"
 
-#include <glob.h>
-
 //---------------------------------------------------------------------------
 // Definitions
 //---------------------------------------------------------------------------
@@ -680,22 +678,16 @@ std::vector <sImageInfo> GetImagesInfo( const std::string & path )
       folderSearch += '/';
    }
 
-   folderSearch += "*.mbn";
+   std::vector <std::string> files;
+   DepthSearch( folderSearch,
+                0,
+                ".mbn",
+                files );
 
-   glob_t files;
-   int ret = glob( folderSearch.c_str(), 
-                   0, 
-                   NULL, 
-                   &files );
-   if (ret != 0)
+   int fileNum = files.size();
+   for (int i = 0; i < fileNum; i++)
    {
-      // Glob error
-      return retVec;
-   }
-
-   for (int i = 0; i < files.gl_pathc; i++)
-   {
-      std::string mbnName = files.gl_pathv[i];
+      std::string mbnName = files[i];
 
       BYTE imageType = UCHAR_MAX;
       BYTE imageID[16] = { 0 };
@@ -720,7 +712,6 @@ std::vector <sImageInfo> GetImagesInfo( const std::string & path )
          retVec.push_back( ii );
       }
    }
-   globfree( &files );
 
    return retVec;
 }
@@ -898,22 +889,16 @@ std::string GetImageByUniqueID( BYTE * pImageID )
          folderSearch += '/';
       }
 
-      folderSearch += "*.mbn";
+      std::vector <std::string> files;
+      DepthSearch( folderSearch,
+                   0,
+                   ".mbn",
+                   files );
 
-      glob_t files;
-      int ret = glob( folderSearch.c_str(), 
-                      0, 
-                      NULL, 
-                      &files );
-      if (ret != 0)
+      int fileNum = files.size();
+      for (int i = 0; i < fileNum; i++)
       {
-         // Glob error, often GLOB_NOMATCH
-         continue;
-      }
-
-      for (int i = 0; i < files.gl_pathc; i++)
-      {
-         std::string mbnName = files.gl_pathv[i];
+         std::string mbnName = files[i];
 
          BYTE imageType = UCHAR_MAX;
          BYTE imageID[16] = { 0 };
@@ -946,7 +931,6 @@ std::string GetImageByUniqueID( BYTE * pImageID )
             }
          }
       }
-      globfree( &files );
 
       if (retStr.size() > 0)
       {

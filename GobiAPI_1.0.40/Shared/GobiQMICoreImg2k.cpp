@@ -45,8 +45,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "QMIBuffers.h"
 
-#include <glob.h>
-
 //---------------------------------------------------------------------------
 // Definitions
 //---------------------------------------------------------------------------
@@ -114,22 +112,16 @@ sImageInfo GetGenericImage( const sImageInfo & uqcnInfo )
          folderSearch += '/';
       }
 
-      folderSearch += "*.mbn";
+      std::vector <std::string> files;
+      DepthSearch( folderSearch,
+                   0,
+                   ".mbn",
+                   files );
 
-      glob_t files;
-      int ret = glob( folderSearch.c_str(), 
-                      0, 
-                      NULL, 
-                      &files );
-      if (ret != 0)
+      int fileNum = files.size();
+      for (int i = 0; i < fileNum; i++)
       {
-         // Glob error
-         continue;
-      }
-
-      for (int i = 0; i < files.gl_pathc; i++)
-      {
-         std::string mbnName = files.gl_pathv[i];
+         std::string mbnName = files[i];
 
          BYTE imageType = UCHAR_MAX;
          BYTE imageID[16] = { 0 };
@@ -174,7 +166,6 @@ sImageInfo GetGenericImage( const sImageInfo & uqcnInfo )
             }
          }
       }
-      globfree( &files );
    }
 
    // Success

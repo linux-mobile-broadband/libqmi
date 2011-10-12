@@ -49,12 +49,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "Event.h"
 
-//---------------------------------------------------------------------------
-// Definitions
-//---------------------------------------------------------------------------
-const DWORD READING = 0;
-const DWORD WRITING = 1;
-
 /*===========================================================================
 METHOD:
    WaitOnMultipleEvents (Free Method)

@@ -46,8 +46,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "ProtocolNotification.h"
 #include "CoreUtilities.h"
 
-#include <glob.h>
-
 //---------------------------------------------------------------------------
 // Definitions
 //---------------------------------------------------------------------------
@@ -285,21 +283,17 @@ cGobiQMICore::GetAvailableDevices()
 
    std::string path = "/sys/bus/usb/devices/";
 
-   glob_t files;
-   int ret = glob( (path + "*/*/*/qcqmi*").c_str(), 
-                   0, 
-                   NULL, 
-                   &files );
-   if (ret != 0)
-   {
-      // Glob failure
-      return devices;
-   }
+   std::vector <std::string> files;
+   DepthSearch( path,
+                3,
+                "qcqmi",
+                files );
 
-   for (int i = 0; i < files.gl_pathc; i++)
+   int fileNum = files.size();
+   for (int i = 0; i < fileNum; i++)
    {
       // Example "/sys/bus/usb/devices/8-1/8-1:1.0/GobiQMI/qcqmi0"
-      std::string nodePath = files.gl_pathv[i];
+      std::string nodePath = files[i];
       
       int lastSlash = nodePath.find_last_of( "/" );
 
@@ -322,7 +316,7 @@ cGobiQMICore::GetAvailableDevices()
       memset( buff, 0, 4 );
       
       bool bFound = false;
-      ret = read( handle, buff, 2 );
+      int ret = read( handle, buff, 2 );
       if (ret == 2)
       {
          ret = strncmp( buff, "00", 2 );
@@ -405,7 +399,6 @@ cGobiQMICore::GetAvailableDevices()
 
       devices.push_back( device );
    }
-   globfree( &files );
 
    return devices;
 }

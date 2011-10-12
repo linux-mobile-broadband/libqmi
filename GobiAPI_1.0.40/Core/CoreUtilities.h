@@ -39,6 +39,7 @@ PUBLIC CLASSES AND METHODS:
 
    GetProgramPath()
    EnumerateFolders()
+   DepthSearch()
 
    ContainerToCSVString()
    CSVStringToContainer()
@@ -250,6 +251,13 @@ std::string GetProgramPath();
 void EnumerateFolders( 
    const std::string &           baseFolder,
    std::vector <std::string> &   foundFolders );
+
+// Search for a file at a given depth
+void DepthSearch( 
+   const std::string &           baseFolder,
+   int                           depth,
+   std::string                   name,
+   std::vector <std::string> &   foundFiles );
 
 /*=========================================================================*/
 // Free Methods

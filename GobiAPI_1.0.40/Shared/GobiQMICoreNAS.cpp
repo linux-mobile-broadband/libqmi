@@ -267,7 +267,7 @@ eGobiError cGobiQMICore::GetSignalStrengths(
    {
       ULONG fi = 0;
       ULONG auxSigs = (ULONG)pf[fi++].mValue.mU16;
-      if (pf.size() <= 1 + 2 * auxSigs)
+      if (pf.size() >= 1 + 2 * auxSigs)
       {
          for (ULONG s = 0; s < auxSigs; s++, fi += 2)
          {

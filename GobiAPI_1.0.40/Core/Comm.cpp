@@ -47,6 +47,10 @@ POSSIBILITY OF SUCH DAMAGE.
 //---------------------------------------------------------------------------
 // Definitions
 //---------------------------------------------------------------------------
+// Thread commands
+#define START_READ_CMD  0
+#define STOP_READ_CMD   1
+#define EXIT_CMD        2
 
 /*=========================================================================*/
 // Free Methods
@@ -54,48 +58,102 @@ POSSIBILITY OF SUCH DAMAGE.
 
 /*===========================================================================
 METHOD:
-   RxCompletionRoutine (Free Method)
+   RxThread (Free Method)
 
 DESCRIPTION:
-   Completion routine for receive operation, exercises current receive 
-   callback object
+   Thread for simulating asynchronous reads
 
 PARAMETERS:
-   returnSignal [ I/O ]   Asynchronus signal event 
-                          (contains pointer to cCOMM object)
+   pData      [ I ]   Asynchronous read object
 
 RETURN VALUE:
-   None
+   void * - thread exit value (always 0)
 ===========================================================================*/
-VOID RxCompletionRoutine( sigval returnSignal )
+void * RxThread( void * pData )
 {
-   cComm * pComm = (cComm *)returnSignal.sival_ptr;
-      
+   cComm * pComm = (cComm*)pData;
    if (pComm == NULL || pComm->IsValid() == false)
    {
-      return;
+      return 0;
    }
 
-   cIOCallback * pCallback = pComm->mpRxCallback;
-   if (pCallback == 0)
+   fd_set inputSet, outputSet;
+   FD_ZERO( &inputSet );
+   FD_SET( pComm->mCommandPipe[READING], &inputSet );
+   int largestFD = pComm->mCommandPipe[READING];
+
+   int status = 0;
+   while (true)
    {
-      // aio_cancel is broken if file pointer is bad
-      // Notify cComm::CancelIO() manually
-      TRACE( "%s manual notification %d\n", __func__, pComm->mPort );
-      pComm->mReadCanceled.Set( 1 );
-      
-      return;
+      // No FD_COPY() available
+      memcpy( &outputSet, &inputSet, sizeof( fd_set ) );
+
+      status = select( largestFD + 1, &outputSet, NULL, NULL, NULL );
+      if (status <= 0)
+      {
+         TRACE( "error %d in select, errno %d\n", status, errno );
+         break;
+      }
+
+      if (FD_ISSET( pComm->mCommandPipe[READING], &outputSet ) == true)
+      {
+         // Read from the pipe
+         BYTE cmd;
+         status = read( pComm->mCommandPipe[READING], &cmd, 1 );
+         if (status != 1)
+         {
+            TRACE( "cmd error %d\n", status );
+            break;
+         }
+
+         if (cmd == START_READ_CMD)
+         {
+            FD_SET( pComm->mPort, &inputSet );
+            largestFD = std::max( pComm->mPort, 
+                                  pComm->mCommandPipe[READING] );
+         }
+         else if (cmd == STOP_READ_CMD)
+         {
+            FD_CLR( pComm->mPort, &inputSet );
+            largestFD = pComm->mCommandPipe[READING];
+         }
+         else
+         {
+            // EXIT_CMD or anything else
+            break;
+         }
+      }
+      else if (FD_ISSET( pComm->mPort, &outputSet ) == true)
+      {
+         // Stop watching for read data
+         FD_CLR( pComm->mPort, &inputSet );
+         largestFD = pComm->mCommandPipe[READING];
+
+         // Perform a read
+         status = read( pComm->mPort,
+                        pComm->mpBuffer,
+                        pComm->mBuffSz );
+
+         cIOCallback * pCallback = pComm->mpRxCallback;
+         pComm->mpRxCallback = 0;
+
+         if (pCallback == (cIOCallback *)1)
+         {
+            // We wanted to read, but not to be notified
+         }   
+         else if (status >= 0)
+         {
+            pCallback->IOComplete( 0, status );
+         }
+         else
+         {
+            pCallback->IOComplete( status, 0 );
+         }
+      }
    }
 
-   pComm->mpRxCallback = 0;
-   if (pCallback != (cIOCallback *)1)
-   {
-      int nEC = aio_error( &pComm->mReadIO );
-      int nBytesTransfered = aio_return( &pComm->mReadIO );
-
-      pCallback->IOComplete( nEC, nBytesTransfered );
-   }
-}
+   return 0;
+};
 
 /*=========================================================================*/
 // cComm Methods
@@ -116,11 +174,12 @@ cComm::cComm()
       mPort( INVALID_HANDLE_VALUE ),
       mpRxCallback( 0 ),
       mbCancelWrite( false ),
-      mReadCanceled()
+      mpBuffer( 0 ),
+      mBuffSz( 0 ),
+      mRxThreadID( 0 )
 {
-   memset( &mReadIO, 0, sizeof( aiocb) );
-
-   mReadIO.aio_sigevent.sigev_value.sival_ptr = this;
+   mCommandPipe[READING] = INVALID_HANDLE_VALUE;
+   mCommandPipe[WRITING] = INVALID_HANDLE_VALUE;
 }
 
 /*===========================================================================
@@ -138,7 +197,8 @@ cComm::~cComm()
    // Disconnect from current port
    Disconnect();
 
-   mReadIO.aio_sigevent.sigev_value.sival_ptr = NULL;
+   mCommandPipe[READING] = INVALID_HANDLE_VALUE;
+   mCommandPipe[WRITING] = INVALID_HANDLE_VALUE;
 }
 
 /*===========================================================================
@@ -153,7 +213,8 @@ RETURN VALUE:
 ===========================================================================*/
 bool cComm::IsValid()
 {
-   return (mReadIO.aio_sigevent.sigev_value.sival_ptr == this);
+   // Nothing to do, dependant on extended class functionality
+   return true;
 }
 
 /*===========================================================================
@@ -181,18 +242,35 @@ bool cComm::Connect( LPCSTR pPort )
       Disconnect();
    }
 
+   // Initialize command pipe for read thread
+   int nRet = pipe( mCommandPipe );
+   if (nRet != 0)
+   {
+      TRACE( "cComm:Connect() pipe creation failed %d\n", nRet );
+      return false;
+   }
+
+   // Start the read thread
+   nRet = pthread_create( &mRxThreadID,
+                          0,
+                          RxThread,
+                          this );
+   if (nRet != 0)
+   {
+      TRACE( "cComm::Connect() pthread_create = %d\n",  nRet );
+
+      Disconnect();
+      return false;
+   }
+
    // Opening the com port
    mPort = open( pPort, O_RDWR );
    if (mPort == INVALID_HANDLE_VALUE) 
    {
+      Disconnect();
       return false;
    }
 
-   // Clear any contents
-   tcdrain( mPort );
-
-   mReadCanceled.Clear();
- 
    // Save port name
    mPortName = pPort;
 
@@ -242,14 +320,35 @@ bool cComm::Disconnect()
    // Assume success
    bool bRC = true;
 
-   if (mPort != INVALID_HANDLE_VALUE)
+   if (mCommandPipe[WRITING] != INVALID_HANDLE_VALUE)
    {
-      int nClose = close( mPort );
-      if (nClose == -1)
+      if (mRxThreadID != 0)
       {
-         bRC = false;
+         // Notify the thread to exit
+         BYTE byte = EXIT_CMD;
+         write( mCommandPipe[WRITING], &byte, 1 );
+
+         // And wait for it
+         TRACE( "cComm::Disconnnect() joining thread\n" );
+         int nRC = pthread_join( mRxThreadID, 0 );
+         if (nRC != 0)
+         {
+            TRACE( "failed to join thread %d\n", nRC );
+            bRC = false;
+         }
+
+         mRxThreadID = 0;
       }
 
+      close( mCommandPipe[WRITING] );
+      close( mCommandPipe[READING] );
+      mCommandPipe[READING] = INVALID_HANDLE_VALUE;
+      mCommandPipe[WRITING] = INVALID_HANDLE_VALUE;
+   }
+
+   if (mPort != INVALID_HANDLE_VALUE)
+   {
+      close( mPort );
       mPort = INVALID_HANDLE_VALUE;
    }
 
@@ -356,31 +455,28 @@ RETURN VALUE:
 ===========================================================================*/
 bool cComm::CancelRx()
 {
-   if (mPort == INVALID_HANDLE_VALUE || mpRxCallback == 0)
+   if (mPort == INVALID_HANDLE_VALUE
+   ||  mCommandPipe[WRITING] == INVALID_HANDLE_VALUE
+   ||  mpRxCallback == 0
+   ||  mRxThreadID == 0)
    {
+      TRACE( "cannot cancel, thread not active\n" );
       return false;
    }
 
-   int nReadRC = aio_cancel( mPort, &mReadIO );
+   // Notify the thread to stop reading
+   BYTE byte = STOP_READ_CMD;
+   int nRC = write( mCommandPipe[WRITING], &byte, 1 );
+   if (nRC != 1)
+   {
+      TRACE( "error %d canceling read\n", nRC );
+      return false;
+   }
+   
+   // Remove the old callback
    mpRxCallback = 0;
 
-   if (nReadRC == -1 && errno == EBADF)
-   {
-      // aio_cancel is broken if file pointer is bad
-      // wait for completion
-      TRACE( "cComm::CancelRx manual wait %d\n", mPort );
-
-      DWORD nTemp; 
-      if (mReadCanceled.Wait( INFINITE, nTemp ) == 0)
-      {
-         return true;
-      }
-
-      // Timeout or some other failure
-      return false;
-   }
-
-   return (nReadRC == AIO_CANCELED);
+   return true;
 }
 
 /*===========================================================================
@@ -430,7 +526,7 @@ bool cComm::RxData(
    {
       return false;
    }
-      
+
    if (pCallback == 0)
    {
       // Not interested in being notified, but we still need a value
@@ -443,19 +539,15 @@ bool cComm::RxData(
       mpRxCallback = pCallback;
    }
 
-   mReadIO.aio_fildes = mPort;
-   mReadIO.aio_buf = pBuf;
-   mReadIO.aio_nbytes = bufSz;
-   mReadIO.aio_sigevent.sigev_notify = SIGEV_THREAD;
-   mReadIO.aio_sigevent.sigev_notify_function = RxCompletionRoutine;
-   mReadIO.aio_sigevent.sigev_value.sival_ptr = this;
-   mReadIO.aio_offset = 0;
+   mpBuffer = pBuf;
+   mBuffSz = bufSz;
 
-   int nRet = aio_read( &mReadIO );
-   if (nRet != 0)
+   // Notify the thread to stop reading
+   BYTE byte = START_READ_CMD;
+   int nRC = write( mCommandPipe[WRITING], &byte, 1 );
+   if (nRC != 1)
    {
-      TRACE( "cComm::RxData() = %d, %s\n", nRet, strerror( errno ) );
-      errno = 0;
+      TRACE( "error %d starting read\n", nRC );
       return false;
    }
 

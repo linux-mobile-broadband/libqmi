@@ -136,18 +136,24 @@ class cComm
       /* Handle to COM port */
       int mPort;
 
-      // Read IO settings
-      aiocb mReadIO;
-
       /* Read callbacks */
       cIOCallback * mpRxCallback;
       
       // Cancel the write request?
       bool mbCancelWrite;
 
-      // Read callback cancelation notification
-      cEvent mReadCanceled;
+      /* Buffer */
+      BYTE * mpBuffer;
 
-      // Rx completion routine is allowed complete access
-      friend VOID RxCompletionRoutine( sigval returnSignal );
+      /* Buffer size */
+      ULONG mBuffSz;
+
+      /* Pipe for comunication with thread */
+      int mCommandPipe[2];
+
+      /* Thread ID of Rx Thread. */
+      pthread_t mRxThreadID;
+
+      // Rx thread is allowed complete access
+      friend void * RxThread( void * pData );
 };

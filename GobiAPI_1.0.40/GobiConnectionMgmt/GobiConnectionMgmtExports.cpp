@@ -333,7 +333,7 @@ ULONG QCWWANGetConnectedDeviceID(
    memcpy( (LPVOID)pDeviceKey, (LPVOID)devKey.c_str(), lenKey );
    
    // Enforce null termination
-   devKey[lenKey] = 0;
+   pDeviceKey[lenKey] = 0;
 
    return eGOBI_ERR_NONE;
 }

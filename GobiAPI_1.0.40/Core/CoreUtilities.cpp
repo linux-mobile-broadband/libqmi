@@ -46,7 +46,10 @@ PUBLIC CLASSES AND METHODS:
    SetUnion()
 
    GetProgramPath()
+   IsFolder()
    EnumerateFolders()
+   IsHidden()
+   DepthSearch()
 
 Copyright (c) 2011, Code Aurora Forum. All rights reserved.
 
@@ -1733,7 +1736,7 @@ void EnumerateFolders(
    int nNumDevFiles = scandir( folderSearch.c_str(), 
                                &ppDevFiles, 
                                IsFolder, 
-                               alphasort );
+                               NULL );
    for (int nFile = 0; nFile < nNumDevFiles; nFile++)
    {
       std::string newFolder = folderSearch + ppDevFiles[nFile]->d_name;
@@ -1743,6 +1746,105 @@ void EnumerateFolders(
       EnumerateFolders( newFolder, foundFolders );
    }
    
+   if (nNumDevFiles != -1)
+   {
+      free( ppDevFiles );
+   }
+}
+
+/*===========================================================================
+METHOD:
+   IsHidden (Free Method)
+
+DESCRIPTION:
+   Helper function for DepthSearch, tells if a dirent is a hidden file.
+   This reduces the memory usage by scandir, as compared to checking after
+   scandir returns.
+
+PARAMETERS:
+   pFile         [ I ] - dirent structure describing file
+  
+RETURN VALUE:
+   int:  zero    - Ignore this file
+         nonzero - Process this file
+===========================================================================*/
+int IsHidden( const struct dirent * pFile )
+{
+   // Ignore anything beginning with a '.'
+   if (pFile->d_name[0] == '.')
+   {
+      return 0;
+   }
+
+   return 1;
+}
+
+/*===========================================================================
+METHOD:
+   DepthSearch (Public Method)
+
+DESCRIPTION:
+   Search for all matching files at a specified depth (recursive)
+
+PARAMETERS:
+   baseFolder     [ I ] - Folder to search in
+   depth          [ I ] - Depth 
+   name           [ I ] - Partial name of file to search for
+   foundFolders   [ O ] - Fully qualified paths of found files
+
+RETURN VALUE:
+   None
+===========================================================================*/
+void DepthSearch( 
+   const std::string &           baseFolder,
+   int                           depth,
+   std::string                   name,
+   std::vector <std::string> &   foundFiles )
+{
+   if (baseFolder.size() == 0 
+   ||  name.size() == 0
+   ||  depth < 0)
+   {
+      return;
+   }
+
+   std::string folderSearch = baseFolder;
+
+   // Add trailing / if not present
+   int folderLen = folderSearch.size();
+   if (folderSearch[folderLen - 1] != '/')
+   {
+      folderSearch += '/';
+   }
+
+   dirent ** ppDevFiles;
+
+   // Yes, scandir really takes a triple pointer for its second param
+   int nNumDevFiles = scandir( folderSearch.c_str(), 
+                               &ppDevFiles, 
+                               IsHidden, 
+                               NULL );
+   for (int nFile = 0; nFile < nNumDevFiles; nFile++)
+   {
+      std::string newFile = ppDevFiles[nFile]->d_name;
+
+      // Recurse or not?
+      if (depth == 0)
+      {
+         if (newFile.find( name ) != std::string::npos)
+         {
+            foundFiles.push_back( folderSearch + newFile );
+         }
+      }
+      else
+      {
+         DepthSearch( folderSearch + newFile,
+                      depth - 1,
+                      name,
+                      foundFiles );
+      }
+   }
+
    if (nNumDevFiles != -1)
    {
       free( ppDevFiles );
