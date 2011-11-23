@@ -17,366 +17,425 @@
 # Copyright (C) 2011 Red Hat, Inc.
 #
 
-class Parser:
-    def __init__(self):
-        pass
+def constname(name):
+    rlist = { '(': '',
+              ')': '',
+              ' ': '_',
+              '/': '_',
+              '.': '',
+              ',': '' }
+    # Capture stuff like "-9 dB" correctly
+    if name.find("dB") == -1:
+        rlist['-'] = '_'
+    else:
+        rlist['-'] = 'NEG_'
 
-    def parseline(self, line):
-        pass
+    sanitized = ""
+    for c in name:
+        try:
+            sanitized += rlist[c]
+        except KeyError:
+            sanitized += c
 
-    def parse(self, f):
-        for line in f:
-            self.parseline(line.strip())
+    # Handle E_UTRA -> EUTRA and E_UTRAN -> EUTRAN
+    foo = sanitized.upper().strip('_')
+    foo.replace('E_UTRA', 'EUTRA')
 
-class EntityParser(Parser):
-    def __init__(self):
-        self.byid = {}
-        self.byname = {}
+    # And HSDPA+ -> HSDPA_PLUS then strip all plusses
+    foo = foo.replace('HSDPA+', 'HSDPA_PLUS')
+    foo = foo.replace('+', '')
 
-    def parseline(self, line):
+    # 1xEV-DO -> 1x EVDO
+    foo = foo.replace("1XEV_DO", "1X_EVDO")
+    foo = foo.replace("EV_DO", "EVDO")
+
+    # modify certain words
+    words = foo.split('_')
+    klist = [ 'UNSUPPORTED' ]
+    slist = [ 'STATES', 'REASONS', 'FORMATS', 'SELECTIONS', 'TYPES', 'TAGS',
+              'PROTOCOLS', 'CLASSES', 'ACTIONS', 'VALUES', 'OPTIONS',
+              'DOMAINS', 'DEVICES', 'MODES', 'MONTHS', 'PREFERENCES',
+              'PREFS', 'DURATIONS', 'CAPABILITIES', 'INTERFACES',
+              'TECHNOLOGIES', 'NETWORKS', 'DAYS', 'SYSTEMS', 'SCHEMES',
+              'INDICATORS', 'ENCODINGS', 'INITIALS', 'BITS', 'MEDIUMS',
+              'BASES', 'ERRORS', 'RESULTS', 'RATIOS', 'DELIVERIES',
+              'FAMILIES', 'SETTINGS', 'SOURCES', 'ORDERS' ]
+    blist = { 'CLASSES': 'CLASS' }
+    final = ''
+    for word in words:
+        if word in klist or len(word) == 0:
+            continue
+        if len(final):
+            final += '_'
+        if word in blist:
+            final += blist[word]
+        elif word in slist:
+            if word.endswith("IES"):
+                final += word[:len(word) - 3] + "Y"
+            elif word.endswith("S"):
+                final += word[:len(word) - 1]
+        else:
+            final += word
+    return final
+
+def nicename(name):
+    name = name.lower()
+    name = name.replace("1xev-do", "1x evdo")
+    name = name.replace("ev-do", "evdo")
+    return name.replace(' ', '_').replace('/', '_').replace('-', '_').replace('.','').strip('_')
+
+
+class Entity:
+    def __init__(self, line):
+        # Each entity defines a TLV item in a QMI request or response.  The
+        # entity's 'struct' field maps to the ID of a struct in Struct.txt,
+        # which describes the fields of that struct.  For example:
+        #
+        # 33^"32,16"^"WDS/Start Network Interface Request/Primary DNS"^50021^-1
+        #
+        # The first field (33) indicates that this entity is valid for the QMI
+        # message eDB2_ET_QMI_WDS_REQ. The "32,16" is a tuple
+        # (eQMI_WDS_START_NET, 16), the first item of which (32) indicates the
+        # general QMI service the entity is associated with (WDS, CTL, NAS, etc)
+        # and the second item indicates the specific entity number (ie, the 'T'
+        # in TLV).
+        #
+        # The 'struct' field (50021) points to:
+        #
+        # Struct.txt:50021^0^0^50118^""^-1^1^"4"
+        #
+        # which indicates that the only member of this struct is field #50118:
+        #
+        # Field.txt:50118^"IP V4 Address"^8^0^2^0
+        #
+        # which should be pretty self-explanatory.  Note that different entities
+        # can point to the same struct.
+
+
         parts = line.split('^')
         if len(parts) < 4:
-            return None
-        entity = {
-            'uniqueid': parts[0] + '.' + parts[1].replace('"', '').replace(',', '.'),
-            'type': int(parts[0]),
-            'key': parts[1],
-            'name': parts[2].replace('"', ''),
-            'struct': int(parts[3]),
-            'format': None,
-            'internal': True,
-            'extformat': None,
-        }
+            raise Exception("Invalid entity line '%s'" % line)
+        self.uniqueid = parts[0] + '.' + parts[1].replace('"', '').replace(',', '.')
+        self.type = int(parts[0])  # eDB2EntityType
+        self.key = parts[1]  # tuple of (eQMIMessageXXX, entity number)
+        self.name = parts[2].replace('"', '')
+        self.struct = int(parts[3])
+        self.format = None
+        self.internal = True
+        self.extformat = None
         if len(parts) > 4:
-            entity['format'] = int(parts[4])
+            self.format = int(parts[4])
         if len(parts) > 5:
-            entity['internal'] = int(parts[5]) != 0
+            self.internal = int(parts[5]) != 0
         if len(parts) > 6:
-            entity['extformat'] = int(parts[6])
-        self.byid[entity['uniqueid']] = entity
-        self.byname[entity['name']] = entity
-        return entity
+            self.extformat = int(parts[6])
 
-class StructParser(Parser):
-    def __init__(self):
+    def validate(self, structs):
+        if not structs.has_child(self.struct):
+            raise Exception("Entity missing struct: %d" % self.struct)
+
+    def emit(self, fields, structs, enums):
+        # Tell the struct this value is for to emit itself
+        s = structs.get_child(self.struct)
+        s.emit(self.name, fields, structs, enums)
+        return self.struct
+
+class Entities:
+    def __init__(self, path):
         self.byid = {}
-        self.byname = {}
-
-    def parseline(self, line):
-        parts = line.split('^')
-        if len(parts) < 8:
-            return None
-        struct = {
-            'uniqueid': parts[0] + '.' + parts[1],
-            'id': int(parts[0]),
-            'order': int(parts[1]),
-            'type': int(parts[2]),   # eDB2FragmentType
-            'value': int(parts[3]),
-            'name': parts[4].replace('"', ''),
-            'offset': int(parts[5]),
-            'modtype': int(parts[6]),
-            'modval': parts[7].replace('"', '')
-        }
-        self.byid[struct['uniqueid']] = struct
-        self.byname[struct['name']] = struct
-        return struct
-
-class FieldParser(Parser):
-    def __init__(self):
-        self.byid = {}
-        self.byname = {}
-
-    def parseline(self, line):
-        parts = line.split('^')
-        if len(parts) < 6:
-            return None
-        field = {
-            'uniqueid': int(parts[0]),
-            'id': int(parts[0]),
-            'name': parts[1].replace('"', ''),
-            'size': int(parts[2]),
-            'type': int(parts[3]),    # eDB2FieldType
-            'typeval': int(parts[4]), # eDB2StdFieldType if 'type' == 0
-            'hex': int(parts[5]) != 0,
-            'descid': None,
-            'internal': False,
-        }
-        if len(parts) > 6:
-            field['descid'] = int(parts[6])
-        if len(parts) > 7:
-            field['internal'] = int(parts[7])
-        self.byid[field['uniqueid']] = field
-        self.byname[field['name']] = field
-        return field
-
-class EnumParser(Parser):
-    def __init__(self):
-        self.byid = {}
-        self.byname = {}
-
-    def parseline(self, line):
-        parts = line.split('^')
-        if len(parts) < 4:
-            return None
-        enum = {
-            'uniqueid': int(parts[0]),
-            'id': int(parts[0]),
-            'name': parts[1].replace('"', ''),
-            'descid': int(parts[2]),
-            'internal': int(parts[3]) != 0,
-        }
-        self.byid[enum['uniqueid']] = enum
-        self.byname[enum['name']] = enum
-        return enum
-
-class EnumEntryParser(Parser):
-    def __init__(self):
-        self.byid = {}
-        self.byname = {}
-
-    def parseline(self, line):
-        parts = line.split('^')
-        if len(parts) < 3:
-            return None
-        entry = {
-            'uniqueid': '%d.%d' % (int(parts[0]), int(parts[1], 0)),
-            'id': int(parts[0]),
-            'value': int(parts[1], 0),
-            'name': parts[2].replace('"', ''),
-        }
-        if len(parts) > 3:
-            entry['descid'] = int(parts[3])
-        self.byid[entry['uniqueid']] = entry
-        self.byname[entry['name']] = entry
-        return entry
-
-class DataSet:
-    FIELD_BOOL = 0
-    FIELD_INT8 = 1
-    FIELD_UINT8 = 2
-    FIELD_INT16 = 3
-    FIELD_UINT16 = 4
-    FIELD_INT32 = 5
-    FIELD_UINT32 = 6
-    FIELD_INT64 = 7
-    FIELD_UINT64 = 8
-    FIELD_STRING_A = 9
-    FIELD_STRING_U = 10
-    FIELD_STRING_ANT = 11
-    FIELD_STRING_UNT = 12
-    FIELD_FLOAT32 = 13
-    FIELD_FLOAT64 = 14
-    FIELD_STRING_U8 = 15
-    FIELD_STRING_U8NT = 16
-    FIELD_MAX = 16
-
-    def __init__(self):
-        self.enums = {}
-        self.fields = {}
-        self.structs = {}
-        self.entities = {}
-
-    def add_enum(self, enum):
-        ent = { 'id': enum['uniqueid'], 'name': enum['name'], 'values': [] }
-        self.enums[enum['uniqueid']] = ent
-
-    def add_entry(self, entry):
-        enum = self.enums[entry['id']]
-        enum['values'].append({ 'value': entry['value'], 'name': entry['name'] })
-        enum['values'].sort(lambda x, y: cmp(x['value'], y['value']))
-
-    def add_field(self, field):
-        if field['type'] == 0:  # eDB2FieldType :: eDB2_FIELD_STD
-            if field['typeval'] > DataSet.FIELD_MAX:
-                print 'Strange field %s' % field
-        self.fields[field['id']] = field
-
-    def add_struct(self, struct):
-        # Each struct entry is really a 'struct fragment'; we can connect them
-        # together by the pair of (id, order) (aka 'uniqueid').
-        ent = {
-            'id': struct['id'],
-            'name': '<none>',
-            'fields': {},
-        }
-        if struct['id'] in self.structs:
-            ent = self.structs[struct['id']]
-        self.structs[struct['id']] = ent
-
-        order = struct['order']
-        if ent['fields'].has_key(order):
-            raise ValueError("Struct entity already has this field")
-
-        field = {
-            'type': struct['type'],
-            'value': struct['value']
-        }
-        # Add fields in order
-        ent['fields'][order] = field
-
-    def add_entity(self, entity):
-        ent = {
-            'name': entity['name'],
-            'struct': entity['struct'],
-        }
-        self.entities[entity['uniqueid']] = ent
-        if self.structs[entity['struct']]:
-            s = self.structs[entity['struct']]
-            if s['name'] == '<none>':
-                s['name'] = entity['name']
+        f = file(path + "Entity.txt")
+        for line in f:
+            try:
+                ent = Entity(line)
+                self.byid[ent.uniqueid] = ent
+            except Exception(e):
                 pass
 
-    def validate(self):
-        for s in self.structs:
-            struct = self.structs[s]
-            for f in struct['fields'].values():
-                if f['type'] == 0:
-                    if f['value'] not in self.fields:
-                        print 'No field: %d' % f['value']
-                elif f['type'] == 1:
-                    if f['value'] not in self.structs:
-                        print 'No struct: %d' % f['value']
-                elif f['type'] == 2:
-                    pass
-                elif f['type'] == 6:
-                    pass
-                else:
-                    print 'Surprising struct field: %s' % f
-        for e in self.entities:
-            ent = self.entities[e]
-            if ent['struct'] not in self.structs:
-                print 'Entity missing struct: %s' % ent
+    def validate(self, structs):
+        for e in self.byid.values():
+            e.validate(structs)
 
-    def nicename(self, name):
-        return name.replace(' ', '_').replace('/', '_').lower().split('-')[0].strip('_')
+    def emit(self, fields, structs, enums):
+        structs_used = []
+        for e in self.byid.values():
+            sused = e.emit(fields, structs, enums)
+            structs_used.append(sused)
+        return structs_used
 
-    def constname(self, name):
-        rlist = { '(': '',
-                  ')': '',
-                  ' ': '_',
-                  '/': '_',
-                  '.': '',
-                  ',': '' }
-        # Capture stuff like "-9 dB" correctly
-        if name.find("dB") == -1:
-            rlist['-'] = '_'
+
+class Field:
+
+    # eDB2FieldType
+    FIELD_TYPE_STD           = 0 # Field is a standard type (see below)
+    FIELD_TYPE_ENUM_UNSIGNED = 1 # Field is an unsigned enumerated type
+    FIELD_TYPE_ENUM_SIGNED   = 2 # Field is a signed enumerated type
+
+    # eDB2StdFieldType
+    FIELD_STD_BOOL = 0         # boolean (0/1, false/true)
+    FIELD_STD_INT8 = 1         # 8-bit signed integer
+    FIELD_STD_UINT8 = 2        # 8-bit unsigned integer
+    FIELD_STD_INT16 = 3        # 16-bit signed integer
+    FIELD_STD_UINT16 = 4       # 16-bit unsigned integer
+    FIELD_STD_INT32 = 5        # 32-bit signed integer
+    FIELD_STD_UINT32 = 6       # 32-bit unsigned integer
+    FIELD_STD_INT64 = 7        # 64-bit signed integer
+    FIELD_STD_UINT64 = 8       # 64-bit unsigned integer
+    FIELD_STD_STRING_A = 9     # ANSI (ASCII?) fixed length string
+    FIELD_STD_STRING_U = 10    # UNICODE fixed length string
+    FIELD_STD_STRING_ANT = 11  # ANSI (ASCII?) NULL terminated string
+    FIELD_STD_STRING_UNT = 12  # UNICODE NULL terminated string
+    FIELD_STD_FLOAT32 = 13     # 32-bit floating point value
+    FIELD_STD_FLOAT64 = 14     # 64-bit floating point value
+    FIELD_STD_STRING_U8 = 15   # UTF-8 encoded fixed length string
+    FIELD_STD_STRING_U8NT = 16 # UTF-8 encoded NULL terminated string
+
+    stdtypes = {
+        # Maps field type to [ <C type>, <is array> ]
+        FIELD_STD_BOOL: [ 'bool', False ],
+        FIELD_STD_INT8: [ 'int8', False ],
+        FIELD_STD_UINT8: [ 'uint8', False ],
+        FIELD_STD_INT16: [ 'int16', False ],
+        FIELD_STD_UINT16: [ 'uint16', False ],
+        FIELD_STD_INT32: [ 'int32', False ],
+        FIELD_STD_UINT32: [ 'uint32', False ],
+        FIELD_STD_INT64: [ 'int64', False ],
+        FIELD_STD_UINT64: [ 'uint64', False ],
+        FIELD_STD_STRING_A: [ 'char', True ],
+        FIELD_STD_STRING_ANT: [ 'char *', False ],
+        FIELD_STD_FLOAT32: [ 'float32', False ],
+        FIELD_STD_FLOAT64: [ 'float64', False ],
+    }
+
+    def __init__(self, line):
+        parts = line.split('^')
+        if len(parts) < 6:
+            raise Exception("Invalid field line '%s'" % line)
+        self.id = int(parts[0])
+        self.name = parts[1].replace('"', '')
+        self.size = int(parts[2])
+        self.type = int(parts[3]) # eDB2FieldType
+        self.typeval = int(parts[4])  # eDB2StdFieldType if 'type' == 0
+        self.hex = int(parts[5]) != 0
+        self.descid = None
+        self.internal = False
+        if len(parts) > 6:
+            self.descid = int(parts[6])
+        if len(parts) > 7:
+            self.internal = int(parts[7])
+
+    def emit(self, enums):
+        realsize = 0
+        realtype = ''
+        if self.type == Field.FIELD_TYPE_STD:  # eDB2_FIELD_STD
+            tinfo = Field.stdtypes[self.typeval]
+            realtype = tinfo[0]
+            if tinfo[1]:
+                realsize = self.size / 8
+        elif self.type == Field.FIELD_TYPE_ENUM_UNSIGNED or self.type == Field.FIELD_TYPE_ENUM_SIGNED:
+            # It's a enum; find the enum
+            e = enums.get_child(self.typeval)
+            realtype = "gobi_%s" % nicename(e.name)
         else:
-            rlist['-'] = 'NEG_'
+            raise ValueError("Unknown Field type")
 
-        sanitized = ""
-        for c in name:
-            try:
-                sanitized += rlist[c]
-            except KeyError:
-                sanitized += c
+        s = "\t%s %s" % (realtype, nicename(self.name))
+        if realsize > 0:
+            s += "[%d]" % realsize
+        s += "; /* %s */" % self.name
+        print s
 
-        # Handle E_UTRA -> EUTRA and E_UTRAN -> EUTRAN
-        foo = sanitized.upper().strip('_')
-        foo = foo.replace('E_UTRA', 'EUTRA')
 
-        # And HSDPA+ -> HSDPA_PLUS then strip all plusses
-        foo = foo.replace('HSDPA+', 'HSDPA_PLUS')
-        foo = foo.replace('+', '')
+class Fields:
+    def __init__(self, path):
+        self.byid = {}
 
-        # modify certain words
-        words = foo.split('_')
-        klist = [ 'UNSUPPORTED' ]
-        slist = [ 'STATES', 'REASONS', 'FORMATS', 'SELECTIONS', 'TYPES', 'TAGS',
-                  'PROTOCOLS', 'CLASSES', 'ACTIONS', 'VALUES', 'OPTIONS',
-                  'DOMAINS', 'DEVICES', 'MODES', 'MONTHS', 'PREFERENCES',
-                  'PREFS', 'DURATIONS', 'CAPABILITIES', 'INTERFACES',
-                  'TECHNOLOGIES', 'NETWORKS', 'DAYS', 'SYSTEMS', 'SCHEMES',
-                  'INDICATORS', 'ENCODINGS', 'INITIALS', 'BITS', 'MEDIUMS',
-                  'BASES', 'ERRORS', 'RESULTS', 'RATIOS', 'DELIVERIES',
-                  'FAMILIES', 'SETTINGS', 'SOURCES', 'ORDERS' ]
-        blist = { 'CLASSES': 'CLASS' }
-        final = ''
-        for word in words:
-            if word in klist or len(word) == 0:
+        f = file(path + "Field.txt")
+        for line in f:
+            field = Field(line.strip())
+            self.byid[field.id] = field
+
+    def has_child(self, fid):
+        return self.byid.has_key(fid)
+
+    def get_child(self, fid):
+        return self.byid[fid]
+
+
+class StructFragment:
+    TYPE_FIELD              = 0 # Simple field fragment
+    TYPE_STRUCT             = 1 # Structure fragment
+    TYPE_CONSTANT_PAD       = 2 # Pad fragment, fixed length (bits)
+    TYPE_VARIABLE_PAD_BITS  = 3 # Pad fragment, variable (bits)
+    TYPE_VARIABLE_PAD_BYTES = 4 # Pad fragment, variable (bytes)
+    TYPE_FULL_BYTE_PAD      = 5 # Pad fragment, pad to a full byte
+    TYPE_MSB_2_LSB          = 6 # Switch to MSB -> LSB order
+    TYPE_LSB_2_MSB          = 7 # Switch to LSB -> MSB order
+
+    def __init__(self, line):
+        parts = line.split('^')
+        if len(parts) < 8:
+            raise Exception("Invalid struct fragment '%s'" % line)
+        self.id = int(parts[0])
+        self.order = int(parts[1])
+        self.type = int(parts[2])   # eDB2FragmentType
+        self.value = int(parts[3])  # id of field in Fields.txt
+        self.name = parts[4].replace('"', '')
+        self.offset = int(parts[5])
+        self.modtype = int(parts[6])
+        self.modval = parts[7].replace('"', '')
+
+    def validate(self, fields, structs):
+        if self.type == StructFragment.TYPE_FIELD:
+            if not fields.has_child(self.value):
+                raise Exception("No field %d" % self.value)
+        elif self.type == StructFragment.TYPE_STRUCT:
+            if not structs.has_child(self.value):
+                raise Exception("No struct %d" % self.value)
+        elif self.type == StructFragment.TYPE_CONSTANT_PAD:
+            if self.value < 0 or self.value > 1000:
+                raise Exception("Invalid constant pad size %d" % self.value)
+        elif self.type == StructFragment.TYPE_MSB_2_LSB:
+            pass
+        else:
+            raise Exception("Surprising struct field: %d" % self.type)
+
+    def emit(self, name, fields, structs, enums):
+        if self.type == StructFragment.TYPE_FIELD:
+            f = fields.get_child(self.value)
+            f.emit(enums)
+        elif self.type == StructFragment.TYPE_STRUCT:
+            s = structs.get_child(self.value)
+            print "\t%s;\t" % nicename(name)
+
+
+class Struct:
+    def __init__(self, sid):
+        self.id = sid
+        self.fragments = []
+        self.name = "struct_%d" % sid
+
+    def add_fragment(self, fragment):
+        for f in self.fragments:
+            if fragment.order == f.order:
+                raise Exception("Struct %d already has fragment order %d" % (self.id, fragment.order))
+        self.fragments.append(fragment)
+        self.fragments.sort(lambda x, y: cmp(x.order, y.order))
+
+    def validate(self, fields, structs):
+        for f in self.fragments:
+            f.validate(fields, structs)
+
+    def emit(self, name, fields, structs, enums):
+        if name == None:
+            name = self.name
+        print 'struct %s { /* %s */' % (nicename(name), name)
+        for f in self.fragments:
+            f.emit(name, fields, structs, enums)
+        print "};\n"
+
+class Structs:
+    def __init__(self, path):
+        self.structs = {}
+        f = file(path + "Struct.txt")
+        for line in f:
+            if len(line.strip()) == 0:
                 continue
-            if len(final):
-                final += '_'
-            if word in blist:
-                final += blist[word]
-            elif word in slist:
-                if word.endswith("IES"):
-                    final += word[:len(word) - 3] + "Y"
-                elif word.endswith("S"):
-                    final += word[:len(word) - 1]
-            else:
-                final += word
-        return final
+            frag = StructFragment(line.strip())
+            if not self.structs.has_key(frag.id):
+                struct = Struct(frag.id)
+                self.structs[struct.id] = struct
+            struct.add_fragment(frag)
+        f.close()
 
-    def emitfield(self, f):
-        basetypes = {
-            # Maps field type to [ <textual type>, <is array> ]
-            DataSet.FIELD_BOOL: [ 'bool', False ],
-            DataSet.FIELD_INT8: [ 'int8', False ],
-            DataSet.FIELD_UINT8: [ 'uint8', False ],
-            DataSet.FIELD_INT16: [ 'int16', False ],
-            DataSet.FIELD_UINT16: [ 'uint16', False ],
-            DataSet.FIELD_INT32: [ 'int32', False ],
-            DataSet.FIELD_UINT32: [ 'uint32', False ],
-            DataSet.FIELD_INT64: [ 'int64', False ],
-            DataSet.FIELD_UINT64: [ 'uint64', False ],
-            DataSet.FIELD_STRING_A: [ 'char', True ],
-            DataSet.FIELD_STRING_ANT: [ 'char *', False ],
-            DataSet.FIELD_FLOAT32: [ 'float32', False ],
-            DataSet.FIELD_FLOAT64: [ 'float64', False ],
-        }
-        if f['type'] == 0:  # eDB2_FRAGMENT_FIELD
-            _f = self.fields[f['value']]
-            realtype = ''
-            realsize = 0
-            if _f['type'] == 0:  # eDB2_FIELD_STD
-                btinfo = basetypes[_f['typeval']]
-                realtype = btinfo[0]
-                if btinfo[1]:
-                    realsize = _f['size'] / 8
-            elif _f['type'] == 1 or _f['type'] == 2:
-                # It's a enum; find the enum
-                e = self.enums[_f['typeval']]
-                realtype = "gobi_%s" % self.nicename(e['name'])
-            else:
-                raise ValueError("Unknown Field type")
-            s = "\t%s %s" % (realtype, self.nicename(_f['name']))
-            if realsize > 0:
-                s += "[%d]" % realsize
-            s += "; /* %s */" % _f['name']
-            print s
-        else:
-            print "\t???"
+    def validate(self, fields):
+        for s in self.structs.values():
+            s.validate(fields, self)
+
+    def has_child(self, sid):
+        return self.structs.has_key(sid)
+
+    def get_child(self, sid):
+        return self.structs[sid]
+
+    def emit_unused(self, used, fields, enums):
+        for s in self.structs.values():
+            if not s.id in used:
+                s.emit(None, fields, self, enums)
+
+class EnumEntry:
+    def __init__(self, line):
+        parts = line.split('^')
+        if len(parts) < 3:
+            raise Exception("Invalid enum entry line '%s'" % line)
+        self.id = int(parts[0])
+        self.value = int(parts[1], 0)
+        self.name = parts[2].replace('"', '')
+        self.descid = None
+        if len(parts) > 3:
+            self.descid = int(parts[3])
+
+    def emit(self, enum_name):
+        print "\tGOBI_%s_%s\t\t= 0x%08x,     /* %s */" % (
+                    constname(enum_name),
+                    constname(self.name),
+                    self.value, self.name)
+
+class Enum:
+    def __init__(self, line):
+        parts = line.split('^')
+        if len(parts) < 4:
+            raise Exception("Invalid enum line '%s'" % line)
+        self.id = int(parts[0])
+        self.name = parts[1].replace('"', '')
+        self.descid = int(parts[2])
+        self.internal = int(parts[3]) != 0
+        self.values = []   # list of EnumEntry objects
+
+    def add_entry(self, entry):
+        for v in self.values:
+            if entry.value == v.value:
+                raise Exception("Enum %d already has value %d" % (self.id, v.value))
+        self.values.append(entry)
+        self.values.sort(lambda x, y: cmp(x.value, y.value))
 
     def emit(self):
-        print '/* GENERATED CODE. DO NOT EDIT. */'
-        print '\ntypedef uint8 bool;\n'
+        print 'typedef enum { /* %s */ ' % self.name
+        for en in self.values:
+            en.emit(self.name)
+        print "} gobi_%s;\n" % nicename(self.name)
+            
+
+class Enums:
+    def __init__(self, path):
+        self.enums = {}
+
+        # parse the enums
+        f = file(path + "Enum.txt")
+        for line in f:
+            try:
+                enum = Enum(line.strip())
+                self.enums[enum.id] = enum
+            except Exception(e):
+                pass
+        f.close()
+
+        # and now the enum entries
+        f = file(path + "EnumEntry.txt")
+        for line in f:
+            try:
+                entry = EnumEntry(line.strip())
+                self.enums[entry.id].add_entry(entry)
+            except Exception(e):
+                pass
+        f.close()
+
+    def emit(self):
         for e in self.enums:
-            enum = self.enums[e]
-            print 'typedef enum { /* %s */ ' % enum['name']
-            for en in enum['values']:
-                print "\tGOBI_%s_%s\t\t= 0x%08x,     /* %s */" % (
-                                                    self.constname(enum['name']),
-                                                    self.constname(en['name']),
-                                                    en['value'], en['name'])
-            print "} gobi_%s;\n" % self.nicename(enum['name'])
-        for s in self.structs:
-            struct = self.structs[s];
-            if struct['name'] != '<none>':
-                struct['printname'] = 'gobi_' + self.nicename(struct['name'])
-            else:
-                struct['printname'] = 'gobi_%d' % struct['id']
-            print 'struct %s; /* %s */' % (struct['printname'], struct['name'])
+            self.enums[e].emit()
 
-        print "\n"
+    def get_child(self, eid):
+        return self.enums[eid]
 
-        for s in self.structs:
-            struct = self.structs[s]
-            print 'struct %s { /* %s */' % (struct['printname'], struct['name'])
-            # this field iteration depends on python ordering dict values
-            # by their key
-            for f in struct['fields'].values():
-                self.emitfield(f)
-            print "};\n"
 
 import sys
 
@@ -387,33 +446,21 @@ path = ""
 if len(sys.argv) == 2:
     path = sys.argv[1] + "/"
 
-entities = EntityParser()
-entries = EnumEntryParser()
-enums = EnumParser()
-fields = FieldParser()
-structs = StructParser()
-entities.parse(file(path + 'Entity.txt'))
-entries.parse(file(path + 'EnumEntry.txt'))
-enums.parse(file(path + 'Enum.txt'))
-fields.parse(file(path + 'Field.txt'))
-structs.parse(file(path + 'Struct.txt'))
-print 'Loaded: %d entities, %d enums (%d entries), %d fields, %d structs' % (
-    len(entities.byid),
-    len(enums.byid),
-    len(entries.byid),
-    len(fields.byid),
-    len(structs.byid))
+enums = Enums(path)
+entities = Entities(path)
+fields = Fields(path)
+structs = Structs(path)
 
-ds = DataSet()
-for e in enums.byid:
-    ds.add_enum(enums.byid[e])
-for e in entries.byid:
-    ds.add_entry(entries.byid[e])
-for f in fields.byid:
-    ds.add_field(fields.byid[f])
-for s in structs.byid:
-    ds.add_struct(structs.byid[s])
-for e in entities.byid:
-    ds.add_entity(entities.byid[e])
-ds.validate()
-ds.emit()
+structs.validate(fields)
+entities.validate(structs)
+
+print '/* GENERATED CODE. DO NOT EDIT. */'
+print '\ntypedef uint8 bool;\n'
+enums.emit()
+
+print '\n\n'
+
+structs_used = entities.emit(fields, structs, enums)
+
+# emit structs that weren't associated with an entity
+structs.emit_unused(structs_used, fields, enums)
