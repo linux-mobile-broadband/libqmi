@@ -49,6 +49,9 @@ def constname(name):
     foo = foo.replace("1XEV_DO", "1X_EVDO")
     foo = foo.replace("EV_DO", "EVDO")
 
+    # Wi-Fi -> WiFi
+    foo = foo.replace("WI_FI", "WIFI")
+
     # modify certain words
     words = foo.split('_')
     klist = [ 'UNSUPPORTED' ]
@@ -82,7 +85,10 @@ def nicename(name):
     name = name.lower()
     name = name.replace("1xev-do", "1x evdo")
     name = name.replace("ev-do", "evdo")
-    return name.replace(' ', '_').replace('/', '_').replace('-', '_').replace('.','').strip('_')
+    name = name.replace("wi-fi", "wifi")
+    name = name.replace(' ', '_').replace('/', '_').replace('-', '_').replace('.','').replace('(', '').replace(')', '')
+    name = name.replace("___", "_").replace("__", "_")
+    return name.strip('_')
 
 
 class Entity:
@@ -201,7 +207,9 @@ class Field:
         FIELD_STD_INT64: [ 'int64', False ],
         FIELD_STD_UINT64: [ 'uint64', False ],
         FIELD_STD_STRING_A: [ 'char', True ],
+        FIELD_STD_STRING_U: [ 'uint16', True ],
         FIELD_STD_STRING_ANT: [ 'char *', False ],
+        FIELD_STD_STRING_UNT: [ 'char *', False ],
         FIELD_STD_FLOAT32: [ 'float32', False ],
         FIELD_STD_FLOAT64: [ 'float64', False ],
     }
@@ -223,14 +231,30 @@ class Field:
         if len(parts) > 7:
             self.internal = int(parts[7])
 
-    def emit(self, enums):
-        realsize = 0
+        # Field.txt:50118^"IP V4 Address"^8^0^2^0
+
+
+    def emit(self, enums, newsize):
         realtype = ''
+        arraybits = ''
+
         if self.type == Field.FIELD_TYPE_STD:  # eDB2_FIELD_STD
             tinfo = Field.stdtypes[self.typeval]
             realtype = tinfo[0]
-            if tinfo[1]:
-                realsize = self.size / 8
+
+            arraysize = 0
+            if tinfo[1] or newsize > 0:
+                if newsize > 0:
+                    arraysize = newsize
+                else:
+                    arraysize = self.size
+
+                # Unicode strings are two-byte characters
+                if self.typeval == Field.FIELD_STD_STRING_U:
+                    arraysize = arraysize * 2
+
+                # Convert back to bytes
+                arraybits = "[%d]" % (arraysize / 8)
         elif self.type == Field.FIELD_TYPE_ENUM_UNSIGNED or self.type == Field.FIELD_TYPE_ENUM_SIGNED:
             # It's a enum; find the enum
             e = enums.get_child(self.typeval)
@@ -238,11 +262,7 @@ class Field:
         else:
             raise ValueError("Unknown Field type")
 
-        s = "\t%s %s" % (realtype, nicename(self.name))
-        if realsize > 0:
-            s += "[%d]" % realsize
-        s += "; /* %s */" % self.name
-        print s
+        print "\t%s %s%s; /* %s */" % (realtype, nicename(self.name), arraybits, self.name)
 
 
 class Fields:
@@ -262,6 +282,7 @@ class Fields:
 
 
 class StructFragment:
+    # eDB2FragmentType
     TYPE_FIELD              = 0 # Simple field fragment
     TYPE_STRUCT             = 1 # Structure fragment
     TYPE_CONSTANT_PAD       = 2 # Pad fragment, fixed length (bits)
@@ -270,6 +291,19 @@ class StructFragment:
     TYPE_FULL_BYTE_PAD      = 5 # Pad fragment, pad to a full byte
     TYPE_MSB_2_LSB          = 6 # Switch to MSB -> LSB order
     TYPE_LSB_2_MSB          = 7 # Switch to LSB -> MSB order
+
+    # eDB2ModifierType
+    MOD_NONE             = 0  # Modifier is not used
+    MOD_CONSTANT_ARRAY   = 1  # Constant (elements) array
+    MOD_VARIABLE_ARRAY   = 2  # Variable (elements) array
+    MOD_OBSOLETE_3       = 3  # Constant (bits) array [OBS]
+    MOD_OBSOLETE_4       = 4  # Variable (bits) array [OBS]
+    MOD_OPTIONAL         = 5  # Fragment is optional
+    MOD_VARIABLE_ARRAY2  = 6  # Variable (elements) array, start/stop given
+    MOD_VARIABLE_ARRAY3  = 7  # Variable (elements) array, simple expression
+    MOD_VARIABLE_STRING1 = 8  # Variable length string (bit length)
+    MOD_VARIABLE_STRING2 = 9  # Variable length string (byte length)
+    MOD_VARIABLE_STRING3 = 10 # Variable length string (character length)
 
     def __init__(self, line):
         parts = line.split('^')
@@ -281,8 +315,9 @@ class StructFragment:
         self.value = int(parts[3])  # id of field in Fields.txt
         self.name = parts[4].replace('"', '')
         self.offset = int(parts[5])
-        self.modtype = int(parts[6])
+        self.modtype = int(parts[6])  # eDB2ModifierType
         self.modval = parts[7].replace('"', '')
+
 
     def validate(self, fields, structs):
         if self.type == StructFragment.TYPE_FIELD:
@@ -302,10 +337,28 @@ class StructFragment:
     def emit(self, name, fields, structs, enums):
         if self.type == StructFragment.TYPE_FIELD:
             f = fields.get_child(self.value)
-            f.emit(enums)
+
+            # modify the field like cProtocolEntityNav::ProcessFragment(); if
+            # the struct fragment is a "string" type and has a modval that
+            # points to another Field.txt entry, that entry defines the string
+            # length
+            newsize = 0
+            if self.modtype == StructFragment.MOD_VARIABLE_STRING1 or \
+                    self.modtype == StructFragment.MOD_VARIABLE_STRING2 or \
+                    self.modtype == StructFragment.MOD_VARIABLE_STRING3:
+                flen = fields.get_child(int(self.modval))
+                newsize = flen.size
+                if self.modtype == StructFragment.MOD_VARIABLE_STRING2 or \
+                        self.modtype == StructFragment.MOD_VARIABLE_STRING3:
+                    newsize = newsize * 8  # Convert to size-in-bits
+            elif self.modtype == StructFragment.MOD_CONSTANT_ARRAY:
+                # size in bytes is modval
+                newsize = int(self.modval) * 8
+
+            f.emit(enums, newsize)
         elif self.type == StructFragment.TYPE_STRUCT:
             s = structs.get_child(self.value)
-            print "\t%s;\t" % nicename(name)
+            print "\t%s %s;\t" % (nicename(name), nicename(self.name))
 
 
 class Struct:
