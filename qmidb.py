@@ -124,7 +124,9 @@ class Entity:
             raise Exception("Invalid entity line '%s'" % line)
         self.uniqueid = parts[0] + '.' + parts[1].replace('"', '').replace(',', '.')
         self.type = int(parts[0])  # eDB2EntityType
-        self.key = parts[1]  # tuple of (eQMIMessageXXX, entity number)
+        self.key = parts[1].replace('"','')  # tuple of (eQMIMessageXXX, entity number)
+        self.cmdno = int(self.key.split(",")[0])
+        self.tlvno = int(self.key.split(",")[1])
         self.name = parts[2].replace('"', '')
         self.struct = int(parts[3])
         self.format = None
@@ -142,6 +144,10 @@ class Entity:
             raise Exception("Entity missing struct: %d" % self.struct)
 
     def emit(self, fields, structs, enums):
+        if self.tlvno == 2 and self.name.find("/Result Code") > 0 and self.struct == 50000:
+            # ignore this entity if it's a standard QMI result code struct
+            return self.struct
+
         # Tell the struct this value is for to emit itself
         s = structs.get_child(self.struct)
         s.emit(self.name, fields, structs, enums)
@@ -152,17 +158,21 @@ class Entities:
         self.byid = {}
         f = file(path + "Entity.txt")
         for line in f:
-            try:
-                ent = Entity(line)
-                self.byid[ent.uniqueid] = ent
-            except Exception(e):
-                pass
+            ent = Entity(line)
+            self.byid[ent.uniqueid] = ent
 
     def validate(self, structs):
         for e in self.byid.values():
             e.validate(structs)
 
     def emit(self, fields, structs, enums):
+        # emit the standard status TLV struct
+        print "struct qmi_result_code { /* QMI Result Code TLV (0x0002) */"
+        print "\tgobi_qmi_results qmi_result; /* QMI Result */"
+        print "\tgobi_qmi_errors qmi_error; /* QMI Error */"
+        print "};"
+        print ""
+
         structs_used = []
         for e in self.byid.values():
             sused = e.emit(fields, structs, enums)
