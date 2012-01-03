@@ -86,6 +86,7 @@ def nicename(name):
     name = name.replace("1xev-do", "1x evdo")
     name = name.replace("ev-do", "evdo")
     name = name.replace("wi-fi", "wifi")
+    name = name.replace("%", "pct")
     name = name.replace(' ', '_').replace('/', '_').replace('-', '_').replace('.','').replace('(', '').replace(')', '')
     name = name.replace("___", "_").replace("__", "_")
     return name.strip('_')
@@ -233,8 +234,7 @@ class Field:
 
         # Field.txt:50118^"IP V4 Address"^8^0^2^0
 
-
-    def emit(self, enums, newsize):
+    def emit(self, enums, newsize, comment, isarray):
         realtype = ''
         arraybits = ''
 
@@ -259,10 +259,16 @@ class Field:
             # It's a enum; find the enum
             e = enums.get_child(self.typeval)
             realtype = "gobi_%s" % nicename(e.name)
+            if isarray:
+                if newsize != 0:
+                    raise Exception("Unhandled ENUM field type with size %d" % newsize)
+                arraybits = "[0]";
         else:
             raise ValueError("Unknown Field type")
 
-        print "\t%s %s%s; /* %s */" % (realtype, nicename(self.name), arraybits, self.name)
+        if comment:
+            comment = " (%s)" % comment
+        print "\t%s %s%s; /* %s%s */" % (realtype, nicename(self.name), arraybits, self.name, comment)
 
 
 class Fields:
@@ -295,7 +301,7 @@ class StructFragment:
     # eDB2ModifierType
     MOD_NONE             = 0  # Modifier is not used
     MOD_CONSTANT_ARRAY   = 1  # Constant (elements) array
-    MOD_VARIABLE_ARRAY   = 2  # Variable (elements) array
+    MOD_VARIABLE_ARRAY   = 2  # Variable (elements) array (modval gives #elements field)
     MOD_OBSOLETE_3       = 3  # Constant (bits) array [OBS]
     MOD_OBSOLETE_4       = 4  # Variable (bits) array [OBS]
     MOD_OPTIONAL         = 5  # Fragment is optional
@@ -304,6 +310,23 @@ class StructFragment:
     MOD_VARIABLE_STRING1 = 8  # Variable length string (bit length)
     MOD_VARIABLE_STRING2 = 9  # Variable length string (byte length)
     MOD_VARIABLE_STRING3 = 10 # Variable length string (character length)
+
+    # Struct fragments (ie, each line in Struct.txt describe each member of
+    # a struct.  The format is as follows:
+    #
+    # id^order^type^fieldid^name^offset^modtype^modval
+    #
+    # 50409^1^0^54024^""^-1^2^"54023"
+    #
+    # This describes the second element (ie, element #1) of struct 50409,
+    # which is of type FIELD (0) and the value is described by Field #54024.
+    # Additionally, it's "modtype" is VARIABLE_ARRAY which is described by
+    # Field #54023.  Basically, this fragment is a variable array of
+    # "Medium Preference" values, each element of which is one of the
+    # "QMI PDS Mediums" (Enum.txt, #50407 given by Field.txt #54024).  The
+    # number of elements in the array is given by the "modtype" and "modval"
+    # pointers, which say that Field #54023 (which is also the first member
+    # of this struct) specifies the number of elements in this variable array.
 
     def __init__(self, line):
         parts = line.split('^')
@@ -318,6 +341,9 @@ class StructFragment:
         self.modtype = int(parts[6])  # eDB2ModifierType
         self.modval = parts[7].replace('"', '')
 
+        self.structsize = 0
+        if self.type == StructFragment.TYPE_CONSTANT_PAD:
+            self.structsize = self.value
 
     def validate(self, fields, structs):
         if self.type == StructFragment.TYPE_FIELD:
@@ -327,12 +353,15 @@ class StructFragment:
             if not structs.has_child(self.value):
                 raise Exception("No struct %d" % self.value)
         elif self.type == StructFragment.TYPE_CONSTANT_PAD:
+            # specifies the total size of the struct; if there's not
+            # enough data for the given size the struct should be padded
+            # out to that size
             if self.value < 0 or self.value > 1000:
                 raise Exception("Invalid constant pad size %d" % self.value)
         elif self.type == StructFragment.TYPE_MSB_2_LSB:
             pass
         else:
-            raise Exception("Surprising struct field: %d" % self.type)
+            raise Exception("Surprising struct %d:%d field: %d" % (self.id, self.order, self.type))
 
     def emit(self, name, fields, structs, enums):
         if self.type == StructFragment.TYPE_FIELD:
@@ -343,6 +372,8 @@ class StructFragment:
             # points to another Field.txt entry, that entry defines the string
             # length
             newsize = 0
+            comment = ""
+            isarray = False
             if self.modtype == StructFragment.MOD_VARIABLE_STRING1 or \
                     self.modtype == StructFragment.MOD_VARIABLE_STRING2 or \
                     self.modtype == StructFragment.MOD_VARIABLE_STRING3:
@@ -354,11 +385,21 @@ class StructFragment:
             elif self.modtype == StructFragment.MOD_CONSTANT_ARRAY:
                 # size in bytes is modval
                 newsize = int(self.modval) * 8
+            elif self.modtype == StructFragment.MOD_VARIABLE_ARRAY:
+                # The "modval" is the field id that gives the # of elements
+                # of this variable array.  That field is usually the immediately
+                # previous fragment of this struct.
+                fdesc = fields.get_child(int(self.modval))
+                comment = "size given by %s" % nicename(fdesc.name)
+                isarray = True
 
-            f.emit(enums, newsize)
+            f.emit(enums, newsize, comment, isarray)
         elif self.type == StructFragment.TYPE_STRUCT:
             s = structs.get_child(self.value)
             print "\t%s %s;\t" % (nicename(name), nicename(self.name))
+
+    def struct_size(self):
+        return self.structsize
 
 
 class Struct:
@@ -366,6 +407,7 @@ class Struct:
         self.id = sid
         self.fragments = []
         self.name = "struct_%d" % sid
+        self.structsize = 0
 
     def add_fragment(self, fragment):
         for f in self.fragments:
@@ -373,6 +415,13 @@ class Struct:
                 raise Exception("Struct %d already has fragment order %d" % (self.id, fragment.order))
         self.fragments.append(fragment)
         self.fragments.sort(lambda x, y: cmp(x.order, y.order))
+
+        s = fragment.struct_size()
+#        print "id %d, s %d, size %d" % (self.id, s, self.structsize)
+#        if s > 0:
+#            if self.structsize != 0:
+#                raise Exception("Already found a CONSTANT_PAD fragment")
+#            self.structsize = s
 
     def validate(self, fields, structs):
         for f in self.fragments:
