@@ -91,6 +91,9 @@ def nicename(name):
     name = name.replace("___", "_").replace("__", "_")
     return name.strip('_')
 
+def parse_entity_name(name):
+        parts = name.split("/")
+        return (parts[0].upper(), parts[1].upper().replace(" ", "_"), parts[2])
 
 class Entity:
     def __init__(self, line):
@@ -124,6 +127,7 @@ class Entity:
             raise Exception("Invalid entity line '%s'" % line)
         self.uniqueid = parts[0] + '.' + parts[1].replace('"', '').replace(',', '.')
         self.type = int(parts[0])  # eDB2EntityType
+
         self.key = parts[1].replace('"','')  # tuple of (eQMIMessageXXX, entity number)
         self.cmdno = int(self.key.split(",")[0])
         self.tlvno = int(self.key.split(",")[1])
@@ -150,7 +154,7 @@ class Entity:
 
         # Tell the struct this value is for to emit itself
         s = structs.get_child(self.struct)
-        s.emit(self.name, fields, structs, enums)
+        s.emit(self.name, self.cmdno, self.tlvno, fields, structs, enums)
         return self.struct
 
 class Entities:
@@ -437,10 +441,20 @@ class Struct:
         for f in self.fragments:
             f.validate(fields, structs)
 
-    def emit(self, name, fields, structs, enums):
-        if name == None:
+    def emit(self, name, cmdno, tlvno, fields, structs, enums):
+        if not name:
             name = self.name
-        print 'struct %s { /* %s */' % (nicename(name), name)
+            svcname = "Unknown"
+            cmdname = "Unknown"
+            tlvname = "Unknown"
+        else:
+            (svcname, cmdname, tlvname) = parse_entity_name(name)
+        print '/**'
+        print ' * SVC: %s' % svcname
+        print ' * CMD: 0x%04x (%s)' % (cmdno, cmdname)
+        print ' * TLV: 0x%02x   (%s)' % (tlvno, tlvname)
+        print ' */'
+        print 'struct %s {' % nicename(name)
         for f in self.fragments:
             f.emit(name, fields, structs, enums)
         print "};\n"
@@ -470,9 +484,10 @@ class Structs:
         return self.structs[sid]
 
     def emit_unused(self, used, fields, enums):
+        print '/**** UNKNOWN TLVs ****/\n'
         for s in self.structs.values():
             if not s.id in used:
-                s.emit(None, fields, self, enums)
+                s.emit(None, 0, 0, fields, self, enums)
 
 class EnumEntry:
     def __init__(self, line):
