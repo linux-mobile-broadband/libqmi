@@ -453,6 +453,7 @@ class Struct:
         print ' * SVC: %s' % svcname
         print ' * CMD: 0x%04x (%s)' % (cmdno, cmdname)
         print ' * TLV: 0x%02x   (%s)' % (tlvno, tlvname)
+        print ' * ID:  %d' % self.id
         print ' */'
         print 'struct %s {' % nicename(name)
         for f in self.fragments:
