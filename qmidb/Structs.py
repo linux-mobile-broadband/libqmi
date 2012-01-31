@@ -29,6 +29,12 @@ TYPE_FULL_BYTE_PAD      = 5 # Pad fragment, pad to a full byte
 TYPE_MSB_2_LSB          = 6 # Switch to MSB -> LSB order
 TYPE_LSB_2_MSB          = 7 # Switch to LSB -> MSB order
 
+def is_pad_type(t):
+    if t == TYPE_CONSTANT_PAD or t == TYPE_VARIABLE_PAD_BITS or \
+        t == TYPE_VARIABLE_PAD_BYTES or t == TYPE_FULL_BYTE_PAD:
+        return True
+    return False
+
 # eDB2ModifierType
 MOD_NONE             = 0  # Modifier is not used
 MOD_CONSTANT_ARRAY   = 1  # Constant (elements) array
@@ -74,12 +80,14 @@ class FragmentBase:
         self.modtype = int(parts[6])  # eDB2ModifierType
         self.modval = parts[7].replace('"', '')
 
+    #Struct.txt:50021^0^0^50118^""^-1^1^"4"
+
     def validate(self, fields, structs):
         raise Exception("Surprising struct %d:%d field: %d" % (self.id, self.order, self.type))
 
     # Should return size in *bits* of this struct fragment, including all
     # sub-fragments
-    def emit(self, do_print, entity_name, indent, fields, structs, enums, cur_structsize):
+    def emit(self, do_print, entity_name, indent, reserved_bits, fields, structs, enums, cur_structsize):
         return 0
 
 class Msb2LsbFragment(FragmentBase):
@@ -92,29 +100,19 @@ class FieldFragment(FragmentBase):
     def validate(self, fields, structs):
         self.field = fields.get_child(self.value)
 
-    def emit(self, do_print, entity_name, indent, fields, structs, enums, cur_structsize):
+    def emit(self, do_print, entity_name, indent, reserved_bits, fields, structs, enums, cur_structsize):
         # modify the field like cProtocolEntityNav::ProcessFragment()
         num_elements = 0
         comment = ""
         isarray = False
-#        if self.modtype == MOD_VARIABLE_STRING1 or \
-#                self.modtype == MOD_VARIABLE_STRING2 or \
-#                self.modtype == MOD_VARIABLE_STRING3:
-#            # self.modval points to a field, the value of which is the length of
-#            # the string defined by self.field.  That length is interpreted
-#            # in different ways depending on the field type of self.field and
-#            # self.modtype
-#            flen = fields.get_child(int(self.modval))
-#            newsize_bits = flen.size * flen.get_charsize()
-
-#        if self.modtype == MOD_VARIABLE_STRING2 or \
-#                self.modtype == MOD_VARIABLE_STRING3:
-#            newsize_bits = newsize_bits * 8  # Convert to size-in-bits
 
         if self.modtype == MOD_CONSTANT_ARRAY:
             # modval is number of elements
-            num_elements = int(self.modval) * 8
-        elif self.modtype == MOD_VARIABLE_ARRAY:
+            num_elements = int(self.modval)
+        elif self.modtype == MOD_VARIABLE_ARRAY or \
+             self.modtype == MOD_VARIABLE_STRING1 or \
+             self.modtype == MOD_VARIABLE_STRING2 or \
+             self.modtype == MOD_VARIABLE_STRING3:
             # The "modval" is the field id that gives the # of elements
             # of this variable array.  That field is usually the immediately
             # previous fragment of this struct.  ie it's something like:
@@ -136,9 +134,35 @@ class StructFragment(FragmentBase):
     def validate(self, fields, structs):
         self.struct = structs.get_child(self.value)
 
-    def emit(self, do_print, entity_name, indent, fields, structs, enums, cur_structsize):
+    def emit(self, do_print, entity_name, indent, reserved_bits, fields, structs, enums, cur_structsize):
         # embedded structs often won't have a name of their own
-        return self.struct.emit("a", indent, fields, structs, enums)
+        structname = "a_item"
+        if self.name:
+            structname = "%s_item" % utils.nicename(self.name)
+
+        bits = self.struct.emit(structname, indent, reserved_bits, fields, structs, enums)
+
+        # Ignore the condition on some structs' modvals
+        fdesc_id = 0
+        if len(self.modval) and self.modval.find("=") < 0:
+            fdesc_id = int(self.modval)
+
+        comment = ""
+        arraybits = ""
+        try:
+            fdesc = fields.get_child(fdesc_id)
+            comment = "\t /* size given by %s */" % utils.nicename(fdesc.name)
+            arraybits = "[0]"
+        except KeyError:
+            pass
+
+        if do_print:
+            varname = utils.nicename(self.name)
+            if not varname:
+                varname = "item"
+            print "%sstruct %s %s%s;%s" % ("\t" * indent, structname, utils.nicename(self.name), arraybits, comment)
+
+        return bits
 
 class ConstantPadFragment(FragmentBase):
     # Subclass for TYPE_CONSTANT_PAD
@@ -152,7 +176,7 @@ class ConstantPadFragment(FragmentBase):
         if self.value < 0 or self.value > 1000:
             raise Exception("Invalid constant pad size %d" % self.value)
 
-    def emit(self, do_print, entity_name, indent, fields, structs, enums, cur_structsize):
+    def emit(self, do_print, entity_name, indent, reserved_bits, fields, structs, enums, cur_structsize):
         # cur_structsize is in bits
         if cur_structsize > self.padsize:
             raise ValueError("Current structure size (%d) is larger than pad size (%d)!")
@@ -169,7 +193,10 @@ class ConstantPadFragment(FragmentBase):
             raise ValueError("FIXME: handle multi-long padding")
 
         if do_print:
-            print "%s%s padding:%d;" % ("\t" * indent, padtype, padbits)
+            if padbits in [8, 16, 32]:
+                print "%s%s padding;" % ("\t" * indent, padtype)
+            else:
+                print "%s%s padding:%d;" % ("\t" * indent, padtype, padbits)
         return padbits
 
 class Struct:
@@ -208,13 +235,62 @@ class Struct:
         print ' * ID:  %d' % self.id
         print ' */'
 
-    def emit(self, entity_name, indent, fields, structs, enums):
+    def need_union(self, frag_idx):
+        # scan to see if there is any pad fragment in this struct; if there is,
+        # and if there's a struct fragment before the pad fragment, we'll need
+        # to make a union
+        found_struct = False
+        for i in range(frag_idx, len(self.fragments)):
+            if self.fragments[i].type == TYPE_STRUCT:
+                found_struct = True
+            if is_pad_type(self.fragments[i].type):
+                if found_struct:
+                    return True
+                break
+        return False
+
+    def emit(self, entity_name, indent, pad_bits, fields, structs, enums):
         print '%sstruct %s {' % ("\t" * indent, utils.nicename(entity_name))
 
         # current structure size in *bits*
         size_in_bits = 0
-        for frag in self.fragments:
-            size_in_bits += frag.emit(True, entity_name, indent + 1, fields, structs, enums, size_in_bits)
+
+        # if there was a previous member we're supposed to add some padding
+        # for (ie, this struct is in a union and something is before it) do
+        # that now
+        if pad_bits:
+            print '%suint8 padding:%d;' % ("\t" * (indent + 1), pad_bits)
+            size_in_bits += pad_bits
+
+        union_frag = None
+        reserved_bits = 0
+
+        for i in range(0, len(self.fragments)):
+            frag = self.fragments[i]
+
+            if not union_frag:
+                if self.need_union(i):
+                    union_frag = frag
+                    indent += 1
+                    print '%sunion u_%s {' % ("\t" * indent, utils.nicename(frag.field.name))
+
+            bits = frag.emit(True, entity_name, indent + 1, reserved_bits, fields, structs, enums, size_in_bits)
+            if frag == union_frag:
+                # Track the first union fragment's reserved bits; we'll ignore
+                # them for total struct size since the following struct(s) will
+                # include it's size
+                reserved_bits = bits
+            elif is_pad_type(frag.type):
+                # When we reach the pad fragment, the union terminates so
+                # clear out union-specific state
+                reserved_bits = 0
+                if union_frag:
+                    print '%s};' % ("\t" * indent)
+                    indent -= 1
+                    union_frag = None
+                size_in_bits += bits
+            else:
+                size_in_bits += bits
 
         print "%s};\n" % ("\t" * indent)
         return size_in_bits

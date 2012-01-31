@@ -79,7 +79,7 @@ class Entity:
         # Tell the struct this value is for to emit itself
         s = structs.get_child(self.struct)
         s.emit_header(self.name, self.cmdno, self.tlvno)
-        s.emit(self.name, 0, fields, structs, enums)
+        s.emit(self.name, 0, 0, fields, structs, enums)
         return self.struct
 
 

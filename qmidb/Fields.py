@@ -35,7 +35,7 @@ FIELD_STD_INT32 = 5        # 32-bit signed integer
 FIELD_STD_UINT32 = 6       # 32-bit unsigned integer
 FIELD_STD_INT64 = 7        # 64-bit signed integer
 FIELD_STD_UINT64 = 8       # 64-bit unsigned integer
-FIELD_STD_STRING_A = 9     # ANSI (ASCII?) fixed length string
+FIELD_STD_STRING_A = 9     # ANSI (ASCII?) fixed length string; size in bits
 FIELD_STD_STRING_U = 10    # UCS-2 fixed length string
 FIELD_STD_STRING_ANT = 11  # ANSI (ASCII?) NULL terminated string
 FIELD_STD_STRING_UNT = 12  # UCS-2 NULL terminated string
@@ -45,7 +45,7 @@ FIELD_STD_STRING_U8 = 15   # UTF-8 encoded fixed length string
 FIELD_STD_STRING_U8NT = 16 # UTF-8 encoded NULL terminated string
 
 stdtypes = {
-    # Maps field type to [ <C type>, <is array>, <size in bits> ]
+    # Maps field type to [ <C type>, <is array>, <element size in bits> ]
     FIELD_STD_BOOL: [ 'bool', False, 8 ],
     FIELD_STD_INT8: [ 'int8', False, 8 ],
     FIELD_STD_UINT8: [ 'uint8', False, 8 ],
@@ -63,10 +63,11 @@ stdtypes = {
     FIELD_STD_FLOAT64: [ 'float64', False, 64 ],
 }
 
-class Field:
-    def is_array_type(self):
-        return stdtypes[self.type][1]
+def is_array_type(t):
+    return stdtypes[t][1]
 
+
+class Field:
     def __init__(self, line):
         parts = line.split('^')
         if len(parts) < 6:
@@ -86,12 +87,13 @@ class Field:
 
         # Field.txt:50118^"IP V4 Address"^8^0^2^0
 
+    #Field.txt:50118^"IP V4 Address"^8^0^2^0
+
     def get_charsize(self):
         if self.type == FIELD_TYPE_STD:
-            if self.typeval == FIELD_STD_STRING_A or self.typeval == FIELD_STD_STRING_ANT:
-                return 8
-            elif self.typeval == FIELD_STD_STRING_U or self.typeval == FIELD_STD_STRING_UNT:
-                return 16;
+            if self.typeval == FIELD_STD_STRING_A or self.typeval == FIELD_STD_STRING_ANT or \
+                self.typeval == FIELD_STD_STRING_U or self.typeval == FIELD_STD_STRING_UNT:
+                return stdtypes[self.typeval][2]
         raise Exception("Called for non-string type")
 
     def emit(self, do_print, indent, enums, num_elements, comment, isarray):
@@ -102,13 +104,17 @@ class Field:
         if self.type == FIELD_TYPE_STD:  # eDB2_FIELD_STD
             tinfo = stdtypes[self.typeval]
             ctype = tinfo[0]
-
-            if self.is_array_type() or num_elements > 0:
+            
+            if is_array_type(self.typeval) or num_elements > 0:
                 if num_elements > 0:
                     arraypart = "[%d]" % num_elements
                     sizebits = num_elements * tinfo[2]
+                elif isarray:
+                    # array with size given by previous fragment
+                    arraypart = "[0]"
+                    sizebits = 0
                 else:
-                    arraypart = "[%d]" % self.size
+                    arraypart = "[%d]" % (self.size / tinfo[2])
                     sizebits = self.size * tinfo[2]
         elif self.type == FIELD_TYPE_ENUM_UNSIGNED or self.type == FIELD_TYPE_ENUM_SIGNED:
             # It's a enum; find the enum
@@ -120,7 +126,12 @@ class Field:
                 arraypart = "[0]";
                 sizebits = 0
             else:
-                sizebits = 32
+                if self.size > 0:
+                    # enum size is # of bits
+                    arraypart = ":%d" % self.size
+                    sizebits = self.size
+                else:
+                    sizebits = 32
         else:
             raise ValueError("Unknown Field type")
 
