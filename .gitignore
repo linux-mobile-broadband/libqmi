@@ -27,6 +27,7 @@ ABOUT-NLS
 AUTHORS
 ChangeLog
 *.a
+*.pyc
 
 m4/libtool.m4
 m4/lt~obsolete.m4
