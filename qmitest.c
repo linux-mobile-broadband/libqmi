@@ -749,7 +749,7 @@ get_signal (int fd)
     if (err < 0)
         g_warning ("Failed to get signal: %d", err);
     else {
-        g_message ("dBm: -%d", dbm);
+        g_message ("dBm: -%d", 0x100 - (dbm & 0xFF));
         g_message ("AcT: %s", act_to_string (act));
     }
 
