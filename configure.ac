@@ -31,7 +31,11 @@ PKG_CHECK_MODULES(LIBQMI_GLIB,
 AC_SUBST(LIBQMI_GLIB_CFLAGS)
 AC_SUBST(LIBQMI_GLIB_LIBS)
 
+GLIB_MKENUMS=`pkg-config --variable=glib_mkenums glib-2.0`
+AC_SUBST(GLIB_MKENUMS)
+
 AC_CONFIG_FILES([Makefile
+                 build-aux/Makefile
                  src/Makefile])
 AC_OUTPUT
 

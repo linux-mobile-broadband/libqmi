@@ -20,10 +20,21 @@
  * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
  */
 
-#ifndef _LIBQMI_GLIB_H_
-#define _LIBQMI_GLIB_H_
+#ifndef _LIBQMI_GLIB_QMI_ERRORS_H_
+#define _LIBQMI_GLIB_QMI_ERRORS_H_
 
-#include "qmi-errors.h"
-#include "qmi-error-types.h"
+/**
+ * QmiCoreError:
+ * @QMI_CORE_ERROR_FAILED: Operation failed.
+ * @QMI_CORE_ERROR_WRONG_STATE: Operation cannot be executed in the current state.
+ * @QMI_CORE_ERROR_INVALID_ARGS: Invalid arguments given.
+ *
+ * Common errors that may be reported by libqmi-glib.
+ */
+typedef enum {
+    QMI_CORE_ERROR_FAILED,
+    QMI_CORE_ERROR_WRONG_STATE,
+    QMI_CORE_ERROR_INVALID_ARGS,
+} QmiCoreError;
 
-#endif /* _LIBQMI_GLIB_H_ */
+#endif /* _LIBQMI_GLIB_QMI_ERRORS_H_ */

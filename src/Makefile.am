@@ -8,12 +8,28 @@ libqmi_glib_la_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/src
 
+# Error types
+qmi-error-types.h: qmi-errors.h $(top_srcdir)/build-aux/qmi-error-types-template.h
+	$(AM_V_GEN) $(GLIB_MKENUMS) \
+		--fhead "#ifndef __LIBQMI_GLIB_ERROR_TYPES_H__\n#define __LIBQMI_GLIB_ERROR_TYPES_H__\n#include \"qmi-errors.h\"\n" \
+		--template $(top_srcdir)/build-aux/qmi-error-types-template.h \
+		--ftail "#endif /* __LIBQMI_GLIB_ERROR_TYPES_H__ */\n" \
+		qmi-errors.h > $@
+
+qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/qmi-error-types-template.c
+	$(AM_V_GEN) $(GLIB_MKENUMS) \
+		--fhead "#include \"qmi-errors.h\"\n#include \"qmi-error-types.h\"\n" \
+		--template $(top_srcdir)/build-aux/qmi-error-types-template.c \
+		qmi-errors.h > $@
+
 libqmi_glib_la_SOURCES = \
-	libqmi-glib.h
+	libqmi-glib.h \
+	qmi-errors.h qmi-error-types.h qmi-error-types.c
 
 libqmi_glib_la_LIBADD = \
 	$(LIBQMI_GLIB_LIBS)
 
 includedir = @includedir@/libqmi-glib
 include_HEADERS = \
-	libqmi-glib.h
+	libqmi-glib.h \
+	qmi-errors.h qmi-error-types.h
