@@ -22,9 +22,13 @@ qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/qmi-er
 		--template $(top_srcdir)/build-aux/qmi-error-types-template.c \
 		qmi-errors.h > $@
 
+# Additional dependencies
+qmi-device.c: qmi-error-types.h
+
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
-	qmi-errors.h qmi-error-types.h qmi-error-types.c
+	qmi-errors.h qmi-error-types.h qmi-error-types.c \
+	qmi-device.h qmi-device.c
 
 libqmi_glib_la_LIBADD = \
 	$(LIBQMI_GLIB_LIBS)
@@ -32,4 +36,5 @@ libqmi_glib_la_LIBADD = \
 includedir = @includedir@/libqmi-glib
 include_HEADERS = \
 	libqmi-glib.h \
-	qmi-errors.h qmi-error-types.h
+	qmi-errors.h qmi-error-types.h \
+	qmi-device.h

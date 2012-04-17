@@ -25,5 +25,6 @@
 
 #include "qmi-errors.h"
 #include "qmi-error-types.h"
+#include "qmi-device.h"
 
 #endif /* _LIBQMI_GLIB_H_ */
