@@ -62,6 +62,18 @@ GFile       *qmi_device_get_file         (QmiDevice *self);
 GFile       *qmi_device_peek_file        (QmiDevice *self);
 const gchar *qmi_device_get_path         (QmiDevice *self);
 const gchar *qmi_device_get_path_display (QmiDevice *self);
+gboolean     qmi_device_is_open          (QmiDevice *self);
+
+void         qmi_device_open        (QmiDevice *self,
+                                     GCancellable *cancellable,
+                                     GAsyncReadyCallback callback,
+                                     gpointer user_data);
+gboolean     qmi_device_open_finish (QmiDevice *self,
+                                     GAsyncResult *res,
+                                     GError **error);
+
+gboolean     qmi_device_close (QmiDevice *self,
+                               GError **error);
 
 G_END_DECLS
 

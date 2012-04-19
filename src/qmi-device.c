@@ -43,7 +43,14 @@ struct _QmiDevicePrivate {
     GFile *file;
     gchar *path;
     gchar *path_display;
+
+    /* I/O channel, set when the file is open */
+    GIOChannel *iochannel;
+    guint watch_id;
+    GByteArray *response;
 };
+
+#define BUFFER_SIZE 2048
 
 /*****************************************************************************/
 
@@ -115,6 +122,252 @@ qmi_device_get_path_display (QmiDevice *self)
     g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
 
     return self->priv->path_display;
+}
+
+/**
+ * qmi_device_is_open:
+ * @self: a #QmiDevice.
+ *
+ * Checks whether the #QmiDevice is open for I/O.
+ *
+ * Returns: #TRUE if @self is open, #FALSE otherwise.
+ */
+gboolean
+qmi_device_is_open (QmiDevice *self)
+{
+    g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
+
+    return !!self->priv->iochannel;
+}
+
+/*****************************************************************************/
+/* Open device */
+
+static gboolean
+data_available (GIOChannel *source,
+                GIOCondition condition,
+                QmiDevice *self)
+{
+    gsize bytes_read;
+    GIOStatus status;
+    guint8 buffer[BUFFER_SIZE + 1];
+
+    if (condition & G_IO_HUP) {
+        g_debug ("[%s] unexpected port hangup!",
+                 self->priv->path_display);
+
+        if (self->priv->response &&
+            self->priv->response->len)
+            g_byte_array_remove_range (self->priv->response, 0, self->priv->response->len);
+
+        qmi_device_close (self, NULL);
+        return FALSE;
+    }
+
+    if (condition & G_IO_ERR) {
+        if (self->priv->response &&
+            self->priv->response->len)
+            g_byte_array_remove_range (self->priv->response, 0, self->priv->response->len);
+        return TRUE;
+    }
+
+    /* If not ready yet, prepare the response with default initial size. */
+    if (G_UNLIKELY (!self->priv->response))
+        self->priv->response = g_byte_array_sized_new (500);
+
+    do {
+        GError *error = NULL;
+
+        status = g_io_channel_read_chars (source,
+                                          buffer,
+                                          BUFFER_SIZE,
+                                          &bytes_read,
+                                          &error);
+        if (status == G_IO_STATUS_ERROR) {
+            if (error) {
+                g_warning ("error reading from the IOChannel: '%s'", error->message);
+                g_error_free (error);
+            }
+
+            /* Port is closed; we're done */
+            if (self->priv->watch_id == 0)
+                break;
+        }
+
+        /* If no bytes read, just let g_io_channel wait for more data */
+        if (bytes_read == 0)
+            break;
+
+        if (bytes_read > 0)
+            g_byte_array_append (self->priv->response, buffer, bytes_read);
+
+        /* TODO: parse response */
+        g_byte_array_remove_range (self->priv->response, 0, self->priv->response->len);
+
+        /* And keep on if we were told to keep on */
+    } while (bytes_read == BUFFER_SIZE || status == G_IO_STATUS_AGAIN);
+
+    return TRUE;
+}
+
+static gboolean
+create_iochannel (QmiDevice *self,
+                  GError **error)
+{
+    if (self->priv->iochannel) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_WRONG_STATE,
+                     "already open",
+                     self->priv->path_display);
+        return FALSE;
+    }
+
+    g_assert (self->priv->file);
+    g_assert (self->priv->path);
+    self->priv->iochannel = g_io_channel_new_file (self->priv->path, "r+", error);
+
+    if (self->priv->iochannel) {
+        GError *inner_error = NULL;
+
+        /* We don't want UTF-8 encoding, we're playing with raw binary data */
+        g_io_channel_set_encoding (self->priv->iochannel, NULL, NULL);
+        /* We don't want to get blocked while writing stuff */
+        if (!g_io_channel_set_flags (self->priv->iochannel,
+                                     G_IO_FLAG_NONBLOCK,
+                                     &inner_error)) {
+            g_prefix_error (&inner_error, "Cannot set non-blocking channel: ");
+            g_propagate_error (error, inner_error);
+            g_io_channel_shutdown (self->priv->iochannel, FALSE, NULL);
+            g_io_channel_unref (self->priv->iochannel);
+            self->priv->iochannel = NULL;
+        }
+    }
+
+    if (self->priv->iochannel)
+        self->priv->watch_id = g_io_add_watch (self->priv->iochannel,
+                                               G_IO_IN | G_IO_ERR | G_IO_HUP,
+                                               (GIOFunc)data_available,
+                                               self);
+
+    return !!self->priv->iochannel;
+}
+
+/**
+ * qmi_device_open_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @error: a #GError.
+ *
+ * Finishes an asynchronous open operation started with qmi_device_open_async().
+ *
+ * Returns: #TRUE if successful, #FALSE if @error is set.
+ */
+gboolean
+qmi_device_open_finish (QmiDevice *self,
+                        GAsyncResult *res,
+                        GError **error)
+{
+    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+}
+
+/**
+ * qmi_device_open:
+ * @self: a #QmiDevice.
+ *
+ * Asynchronously opens a #QmiDevice for I/O.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qmi_device_open_finish() to get the result of the operation.
+ */
+void
+qmi_device_open (QmiDevice *self,
+                 GCancellable *cancellable,
+                 GAsyncReadyCallback callback,
+                 gpointer user_data)
+{
+    GSimpleAsyncResult *result;
+    GError *error = NULL;
+
+    g_return_if_fail (QMI_IS_DEVICE (self));
+
+    result = g_simple_async_result_new (G_OBJECT (self),
+                                        callback,
+                                        user_data,
+                                        qmi_device_open);
+
+    if (!create_iochannel (self, &error)) {
+        g_prefix_error (&error,
+                        "Cannot open (async) QMI device: ");
+        g_simple_async_result_take_error (result, error);
+        g_simple_async_result_complete_in_idle (result);
+        g_object_unref (result);
+        return;
+    }
+
+    /* TODO: run version check */
+
+    g_simple_async_result_set_op_res_gboolean (result, TRUE);
+    g_simple_async_result_complete_in_idle (result);
+    g_object_unref (result);
+}
+
+/*****************************************************************************/
+/* Close channel */
+
+static gboolean
+destroy_iochannel (QmiDevice *self,
+                   GError **error)
+{
+    GError *inner_error = NULL;
+
+    /* Already closed? */
+    if (!self->priv->iochannel)
+        return TRUE;
+
+    g_io_channel_shutdown (self->priv->iochannel, TRUE, &inner_error);
+
+    /* Failures when closing still make the device to get closed */
+    g_io_channel_unref (self->priv->iochannel);
+    self->priv->iochannel = NULL;
+    self->priv->watch_id = 0;
+    if (self->priv->response) {
+        g_byte_array_unref (self->priv->response);
+        self->priv->response = NULL;
+    }
+
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * qmi_device_close:
+ * @self: a #QmiDevice
+ * @error: a #GError
+ *
+ * Synchronously closes a #QmiDevice, preventing any further I/O.
+ *
+ * Closing a #QmiDevice multiple times will not return an error.
+ *
+ * Returns: #TRUE if successful, #FALSE if @error is set.
+ */
+gboolean
+qmi_device_close (QmiDevice *self,
+                  GError **error)
+{
+    g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
+
+    if (!destroy_iochannel (self, error)) {
+        g_prefix_error (error,
+                        "Cannot close QMI device: ");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*****************************************************************************/
@@ -337,6 +590,10 @@ finalize (GObject *object)
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);
+    if (self->priv->response)
+        g_byte_array_unref (self->priv->response);
+    if (self->priv->iochannel)
+        g_io_channel_unref (self->priv->iochannel);
 
     G_OBJECT_CLASS (qmi_device_parent_class)->finalize (object);
 }
