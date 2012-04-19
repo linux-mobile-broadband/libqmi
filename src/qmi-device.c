@@ -23,6 +23,8 @@
 #include <gio/gio.h>
 
 #include "qmi-device.h"
+#include "qmi-message.h"
+#include "qmi-utils.h"
 #include "qmi-error-types.h"
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
@@ -48,9 +50,127 @@ struct _QmiDevicePrivate {
     GIOChannel *iochannel;
     guint watch_id;
     GByteArray *response;
+
+    /* HT to keep track of ongoing transactions */
+    GHashTable *transactions;
 };
 
 #define BUFFER_SIZE 2048
+
+/*****************************************************************************/
+/* Message transactions (private) */
+
+typedef struct {
+    QmiMessage *message;
+    GSimpleAsyncResult *result;
+} Transaction;
+
+static Transaction *
+transaction_new (QmiDevice *self,
+                 QmiMessage *message,
+                 GAsyncReadyCallback callback,
+                 gpointer user_data)
+{
+    Transaction *tr;
+
+    tr = g_slice_new (Transaction);
+    tr->message = qmi_message_ref (message);
+    tr->result = g_simple_async_result_new (G_OBJECT (self),
+                                            callback,
+                                            user_data,
+                                            transaction_new);
+
+    return tr;
+}
+
+static void
+transaction_complete_and_free (Transaction *tr,
+                               QmiMessage *reply,
+                               const GError *error)
+{
+    g_assert (reply != NULL || error != NULL);
+
+    if (reply)
+        g_simple_async_result_set_op_res_gpointer (tr->result,
+                                                   qmi_message_ref (reply),
+                                                   (GDestroyNotify)qmi_message_unref);
+    else
+        g_simple_async_result_set_from_error (tr->result, error);
+
+    g_simple_async_result_complete_in_idle (tr->result);
+    g_object_unref (tr->result);
+    qmi_message_unref (tr->message);
+    g_slice_free (Transaction, tr);
+}
+
+static inline gpointer
+build_transaction_key (QmiMessage *message)
+{
+    gpointer key;
+    guint8 service;
+    guint8 client_id;
+    guint16 transaction_id;
+
+    service = (guint8)qmi_message_get_service (message);
+    client_id = qmi_message_get_client_id (message);
+    transaction_id = qmi_message_get_transaction_id (message);
+
+    key = (gpointer)((((service << 8) | client_id) << 16) | transaction_id);
+
+#ifdef MESSAGE_ENABLE_TRACE
+    {
+        gchar *hex;
+
+        hex = qmi_utils_str_hex (&key, sizeof (key), ':');
+        g_debug ("KEY: %s", hex);
+        g_free (hex);
+
+        hex = qmi_utils_str_hex (&service, sizeof (service), ':');
+        g_debug ("  Service: %s", hex);
+        g_free (hex);
+
+        hex = qmi_utils_str_hex (&client_id, sizeof (client_id), ':');
+        g_debug ("  Client ID: %s", hex);
+        g_free (hex);
+
+        hex = qmi_utils_str_hex (&transaction_id, sizeof (transaction_id), ':');
+        g_debug ("  Transaction ID: %s", hex);
+        g_free (hex);
+    }
+#endif /* MESSAGE_ENABLE_TRACE */
+
+    return key;
+}
+
+static gboolean
+device_store_transaction (QmiDevice *self,
+                          Transaction *tr)
+{
+    if (G_UNLIKELY (!self->priv->transactions))
+        self->priv->transactions = g_hash_table_new (g_direct_hash,
+                                                     g_direct_equal);
+
+    g_hash_table_insert (self->priv->transactions,
+                         build_transaction_key (tr->message),
+                         tr);
+}
+
+static Transaction *
+device_match_transaction (QmiDevice *self,
+                          QmiMessage *message)
+{
+    Transaction *tr;
+    gpointer key;
+
+    /* msg can be either the original message or the response */
+    key = build_transaction_key (message);
+    tr = g_hash_table_lookup (self->priv->transactions, key);
+    if (tr)
+        /* If found, remove it from the HT */
+        g_hash_table_remove (self->priv->transactions, key);
+
+    return tr;
+}
 
 /*****************************************************************************/
 
@@ -143,6 +263,69 @@ qmi_device_is_open (QmiDevice *self)
 /*****************************************************************************/
 /* Open device */
 
+static void
+parse_response (QmiDevice *self)
+{
+    do {
+        GError *error = NULL;
+        QmiMessage *message;
+
+        /* Every message received must start with the QMUX marker.
+         * If it doesn't, we broke framing :-/
+         * If we broke framing, an error should be reported and the device
+         * should get closed */
+        if (self->priv->response->len > 0 &&
+            self->priv->response->data[0] != QMI_MESSAGE_QMUX_MARKER) {
+            /* TODO: Report fatal error */
+            g_warning ("QMI framing error detected");
+            return;
+        }
+
+        message = qmi_message_new_from_raw (self->priv->response->data,
+                                            self->priv->response->len);
+        if (!message)
+            /* More data we need */
+            return;
+
+        /* Remove the read data from the response buffer */
+        g_byte_array_remove_range (self->priv->response,
+                                   0,
+                                   qmi_message_get_length (message));
+
+        /* Ensure the read message is valid */
+        if (!qmi_message_check (message, &error)) {
+            g_warning ("Invalid QMI message received: %s",
+                       error->message);
+            g_error_free (error);
+        } else {
+            Transaction *tr;
+
+            /* Got a valid QMI message, do whatever we need to do with it now */
+
+#ifdef MESSAGE_ENABLE_TRACE
+            {
+                gchar *printable;
+
+                printable = qmi_message_get_printable (message);
+                g_debug ("[%s] Received message...\n%s",
+                         self->priv->path_display,
+                         printable);
+                g_free (printable);
+            }
+#endif /* MESSAGE_ENABLE_TRACE */
+
+            tr = device_match_transaction (self, message);
+            if (!tr)
+                g_debug ("[%s] No transaction matched in received message",
+                         self->priv->path_display);
+            else
+                transaction_complete_and_free (tr, message, NULL);
+        }
+
+        qmi_message_unref (message);
+    } while (self->priv->response->len > 0);
+}
+
 static gboolean
 data_available (GIOChannel *source,
                 GIOCondition condition,
@@ -201,8 +384,8 @@ data_available (GIOChannel *source,
         if (bytes_read > 0)
             g_byte_array_append (self->priv->response, buffer, bytes_read);
 
-        /* TODO: parse response */
-        g_byte_array_remove_range (self->priv->response, 0, self->priv->response->len);
+        /* Try to parse what we already got */
+        parse_response (self);
 
         /* And keep on if we were told to keep on */
     } while (bytes_read == BUFFER_SIZE || status == G_IO_STATUS_AGAIN);
@@ -368,6 +551,91 @@ qmi_device_close (QmiDevice *self,
     }
 
     return TRUE;
+}
+
+/*****************************************************************************/
+/* Command */
+
+QmiMessage *
+qmi_device_command_finish (QmiDevice *self,
+                           GAsyncResult *res,
+                           GError **error)
+{
+    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+        return NULL;
+
+    return qmi_message_ref (g_simple_async_result_get_op_res_gpointer (
+                                G_SIMPLE_ASYNC_RESULT (res)));
+}
+
+void
+qmi_device_command (QmiDevice *self,
+                    QmiMessage *message,
+                    GCancellable *cancellable,
+                    GAsyncReadyCallback callback,
+                    gpointer user_data)
+{
+    GError *error = NULL;
+    Transaction *tr;
+    gconstpointer raw_message;
+    gsize raw_message_len;
+    gsize written;
+
+    g_return_if_fail (QMI_IS_DEVICE (self));
+    g_return_if_fail (message != NULL);
+
+    tr = transaction_new (self, message, callback, user_data);
+
+    /* Device must be open */
+    if (!self->priv->iochannel) {
+        error = g_error_new (QMI_CORE_ERROR,
+                             QMI_CORE_ERROR_WRONG_STATE,
+                             "Device must be open to send commands");
+        transaction_complete_and_free (tr, NULL, error);
+        g_error_free (error);
+        return;
+    }
+
+#ifdef MESSAGE_ENABLE_TRACE
+    {
+        gchar *printable;
+
+        printable = qmi_message_get_printable (message);
+        g_debug ("[%s] Sending message...\n%s",
+                 self->priv->path_display,
+                 printable);
+        g_free (printable);
+    }
+#endif /* MESSAGE_ENABLE_TRACE */
+
+    /* Get raw message */
+    raw_message = qmi_message_get_raw (message, &raw_message_len, &error);
+    if (!raw_message) {
+        g_prefix_error (&error, "Cannot get raw message: ");
+        transaction_complete_and_free (tr, NULL, error);
+        g_error_free (error);
+        return;
+    }
+
+    /* Setup context to match response */
+    device_store_transaction (self, tr);
+
+    written = 0;
+    if (g_io_channel_write_chars (self->priv->iochannel,
+                                  raw_message,
+                                  (gssize)raw_message_len,
+                                  &written,
+                                  &error) != G_IO_STATUS_NORMAL) {
+        g_prefix_error (&error, "Cannot write message: ");
+
+        /* Match transaction so that we remove it from our tracking table */
+        tr = device_match_transaction (self, message);
+        transaction_complete_and_free (tr, NULL, error);
+        g_error_free (error);
+        return;
+    }
+
+    /* Just return, we'll get response asynchronously */
 }
 
 /*****************************************************************************/
@@ -587,6 +855,11 @@ static void
 finalize (GObject *object)
 {
     QmiDevice *self = QMI_DEVICE (object);
+
+    /* Transactions keep refs to the device, so it's actually
+     * impossible to have any content in the HT */
+    g_assert (g_hash_table_size (self->priv->transactions) == 0);
+    g_hash_table_unref (self->priv->transactions);
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);

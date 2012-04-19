@@ -25,7 +25,12 @@
 
 #include <glib-object.h>
 
+
 G_BEGIN_DECLS
+
+/* Forward reference of the QMI message, we don't want to include qmi-message.h
+ * as it is not installable */
+typedef struct _QmiMessage QmiMessage;
 
 #define QMI_TYPE_DEVICE            (qmi_device_get_type ())
 #define QMI_DEVICE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), QMI_TYPE_DEVICE, QmiDevice))
@@ -74,6 +79,15 @@ gboolean     qmi_device_open_finish (QmiDevice *self,
 
 gboolean     qmi_device_close (QmiDevice *self,
                                GError **error);
+
+void         qmi_device_command        (QmiDevice *self,
+                                        QmiMessage *message,
+                                        GCancellable *cancellable,
+                                        GAsyncReadyCallback callback,
+                                        gpointer user_data);
+QmiMessage  *qmi_device_command_finish (QmiDevice *self,
+                                        GAsyncResult *res,
+                                        GError **error);
 
 G_END_DECLS
 
