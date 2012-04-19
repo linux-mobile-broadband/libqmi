@@ -38,12 +38,14 @@ qmi-enum-types.c: qmi-enums.h qmi-enum-types.h $(top_srcdir)/build-aux/qmi-enum-
 
 # Additional dependencies
 qmi-device.c: qmi-error-types.h
+qmi-message.c: qmi-error-types.h
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
 	qmi-errors.h qmi-error-types.h qmi-error-types.c \
 	qmi-enums.h qmi-enum-types.h qmi-enum-types.c \
 	qmi-utils.h qmi-utils.c \
+	qmi-message.h qmi-message.c \
 	qmi-device.h qmi-device.c
 
 libqmi_glib_la_LIBADD = \
