@@ -38,3 +38,7 @@ src/qmi-error-types.c
 src/qmi-error-types.h
 src/qmi-enum-types.h
 src/qmi-enum-types.c
+
+cli/.deps
+cli/.libs
+cli/qmicli

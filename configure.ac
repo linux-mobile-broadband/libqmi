@@ -31,12 +31,21 @@ PKG_CHECK_MODULES(LIBQMI_GLIB,
 AC_SUBST(LIBQMI_GLIB_CFLAGS)
 AC_SUBST(LIBQMI_GLIB_LIBS)
 
+dnl General cli dependencies
+PKG_CHECK_MODULES(QMICLI,
+                  glib-2.0 >= 2.22
+                  gobject-2.0
+                  gio-2.0)
+AC_SUBST(QMICLI_CFLAGS)
+AC_SUBST(QMICLI_LIBS)
+
 GLIB_MKENUMS=`pkg-config --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
 
 AC_CONFIG_FILES([Makefile
                  build-aux/Makefile
-                 src/Makefile])
+                 src/Makefile
+                 cli/Makefile])
 AC_OUTPUT
 
 echo "
