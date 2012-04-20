@@ -25,6 +25,7 @@
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
 #include "qmi-client.h"
+#include "qmi-client-ctl.h"
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
 
@@ -164,6 +165,35 @@ initable_init_finish (GAsyncInitable  *initable,
 }
 
 static void
+allocate_cid_ready (QmiClientCtl *client_ctl,
+                    GAsyncResult *res,
+                    GSimpleAsyncResult *simple)
+{
+    QmiClient *self;
+    GError *error = NULL;
+    guint8 cid;
+
+    cid = qmi_client_ctl_allocate_cid_finish (client_ctl, res, &error);
+    if (!cid) {
+        g_prefix_error (&error, "CID allocation failed in the CTL client: ");
+        g_simple_async_result_take_error (simple, error);
+        g_simple_async_result_complete (simple);
+        g_object_unref (simple);
+        return;
+    }
+
+    /* Recover the QmiClient */
+    self = QMI_CLIENT (g_async_result_get_source_object (G_ASYNC_RESULT (simple)));
+
+    /* Store the CID */
+    self->priv->cid = cid;
+
+    g_simple_async_result_complete (simple);
+    g_object_unref (simple);
+    g_object_unref (self);
+}
+
+static void
 initable_init_async (GAsyncInitable *initable,
                      int io_priority,
                      GCancellable *cancellable,
@@ -185,9 +215,19 @@ initable_init_async (GAsyncInitable *initable,
     g_assert (QMI_IS_DEVICE (self->priv->device));
 
     if (self->priv->service != QMI_SERVICE_CTL) {
-        /* TODO: allocate CID */
+        /* NOTE that we shouldn't allocate a CID for the QmiClientCtl,
+         * as it is the one actually used to allocate CIDs, and must
+         * exist already in the QmiDevice. */
+        qmi_client_ctl_allocate_cid (qmi_device_peek_client_ctl (self->priv->device),
+                                     self->priv->service,
+                                     5, /* wait up to 5s to get a CID */
+                                     cancellable,
+                                     (GAsyncReadyCallback)allocate_cid_ready,
+                                     result);
+        return;
     }
 
+    /* For the QmiClientCtl, just done we are */
     g_simple_async_result_set_op_res_gboolean (result, TRUE);
     g_simple_async_result_complete_in_idle (result);
     g_object_unref (result);

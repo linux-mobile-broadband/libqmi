@@ -120,6 +120,102 @@ qmi_client_ctl_get_version_info (QmiClientCtl *self,
 }
 
 /*****************************************************************************/
+/* Allocate CID */
+
+/**
+ * qmi_client_ctl_allocate_cid_finish:
+ * @self: a #QmiClientCtl.
+ * @res: a #GAsyncResult.
+ * @error: a #GError.
+ *
+ * Finishes an operation started with qmi_client_ctl_allocate_cid().
+ *
+ * Returns: the new CID, or 0 if @error is set.
+ */
+guint8
+qmi_client_ctl_allocate_cid_finish (QmiClientCtl *self,
+                                    GAsyncResult *res,
+                                    GError **error)
+{
+    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+        return 0;
+
+    return (guint8) GPOINTER_TO_UINT (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+}
+
+static void
+allocate_cid_ready (QmiDevice *device,
+                    GAsyncResult *res,
+                    GSimpleAsyncResult *simple)
+{
+    GError *error = NULL;
+    QmiMessage *reply;
+    guint8 cid;
+
+    reply = qmi_device_command_finish (device, res, &error);
+    if (!reply) {
+        g_prefix_error (&error, "CID allocation failed: ");
+        g_simple_async_result_take_error (simple, error);
+        g_simple_async_result_complete (simple);
+        g_object_unref (simple);
+        return;
+    }
+
+    /* Parse reply */
+    cid = qmi_message_ctl_allocate_cid_reply_parse (reply, &error);
+    if (!cid) {
+        g_prefix_error (&error, "CID allocation reply parsing failed: ");
+        g_simple_async_result_take_error (simple, error);
+    } else
+        g_simple_async_result_set_op_res_gpointer (simple,
+                                                   GUINT_TO_POINTER ((guint)cid),
+                                                   NULL);
+
+    g_simple_async_result_complete (simple);
+    g_object_unref (simple);
+}
+
+/**
+ * qmi_client_ctl_allocate_cid:
+ * @self: a #QmiClientCtl.
+ * @service: a #QmiService.
+ * @timeout: maximum time to wait to get the operation completed.
+ * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Allocate a new client ID for the given @service..
+ * When the query is finished, @callback will be called. You can then call
+ * qmi_client_ctl_allocate_cid_finish() to get the the result of the operation.
+ */
+void
+qmi_client_ctl_allocate_cid (QmiClientCtl *self,
+                             QmiService service,
+                             guint timeout,
+                             GCancellable *cancellable,
+                             GAsyncReadyCallback callback,
+                             gpointer user_data)
+{
+    GSimpleAsyncResult *result;
+    QmiMessage *request;
+
+    result = g_simple_async_result_new (G_OBJECT (self),
+                                        callback,
+                                        user_data,
+                                        qmi_client_ctl_allocate_cid);
+
+    request = qmi_message_ctl_allocate_cid_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
+                                                service);
+    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+                        request,
+                        timeout,
+                        cancellable,
+                        (GAsyncReadyCallback)allocate_cid_ready,
+                        result);
+    qmi_message_unref (request);
+}
+
+/*****************************************************************************/
 
 static void
 qmi_client_ctl_init (QmiClientCtl *self)

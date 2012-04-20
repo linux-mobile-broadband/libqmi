@@ -44,6 +44,13 @@ QmiMessage *qmi_message_ctl_version_info_new         (guint8 transaction_id);
 GArray     *qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
                                                       GError **error);
 
+/* Allocate CID */
+
+QmiMessage *qmi_message_ctl_allocate_cid_new         (guint8 transaction_id,
+                                                      QmiService service);
+guint8      qmi_message_ctl_allocate_cid_reply_parse (QmiMessage *self,
+                                                      GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_MESSAGE_CTL_H_ */

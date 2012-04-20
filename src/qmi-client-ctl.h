@@ -61,6 +61,17 @@ GArray *qmi_client_ctl_get_version_info_finish (QmiClientCtl *self,
                                                 GAsyncResult *res,
                                                 GError **error);
 
+/* Allocate CID */
+void   qmi_client_ctl_allocate_cid        (QmiClientCtl *self,
+                                           QmiService service,
+                                           guint timeout,
+                                           GCancellable *cancellable,
+                                           GAsyncReadyCallback callback,
+                                           gpointer user_data);
+guint8 qmi_client_ctl_allocate_cid_finish (QmiClientCtl *self,
+                                           GAsyncResult *res,
+                                           GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_CLIENT_CTL_H_ */
