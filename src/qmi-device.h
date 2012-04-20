@@ -25,12 +25,13 @@
 
 #include <glib-object.h>
 
-
 G_BEGIN_DECLS
 
 /* Forward reference of the QMI message, we don't want to include qmi-message.h
  * as it is not installable */
 typedef struct _QmiMessage QmiMessage;
+
+typedef struct _QmiClientCtl QmiClientCtl;
 
 #define QMI_TYPE_DEVICE            (qmi_device_get_type ())
 #define QMI_DEVICE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), QMI_TYPE_DEVICE, QmiDevice))
@@ -43,7 +44,8 @@ typedef struct _QmiDevice QmiDevice;
 typedef struct _QmiDeviceClass QmiDeviceClass;
 typedef struct _QmiDevicePrivate QmiDevicePrivate;
 
-#define QMI_DEVICE_FILE "device-file"
+#define QMI_DEVICE_FILE       "device-file"
+#define QMI_DEVICE_CLIENT_CTL "device-client-ctl"
 
 struct _QmiDevice {
     GObject parent;
@@ -63,11 +65,13 @@ void       qmi_device_new       (GFile *file,
 QmiDevice *qmi_device_new_finish (GAsyncResult *res,
                                   GError **error);
 
-GFile       *qmi_device_get_file         (QmiDevice *self);
-GFile       *qmi_device_peek_file        (QmiDevice *self);
-const gchar *qmi_device_get_path         (QmiDevice *self);
-const gchar *qmi_device_get_path_display (QmiDevice *self);
-gboolean     qmi_device_is_open          (QmiDevice *self);
+GFile        *qmi_device_get_file         (QmiDevice *self);
+GFile        *qmi_device_peek_file        (QmiDevice *self);
+QmiClientCtl *qmi_device_get_client_ctl   (QmiDevice *self);
+QmiClientCtl *qmi_device_peek_client_ctl  (QmiDevice *self);
+const gchar  *qmi_device_get_path         (QmiDevice *self);
+const gchar  *qmi_device_get_path_display (QmiDevice *self);
+gboolean      qmi_device_is_open          (QmiDevice *self);
 
 void         qmi_device_open        (QmiDevice *self,
                                      guint timeout,

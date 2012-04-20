@@ -84,13 +84,13 @@ qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
 
     result = g_array_sized_new (FALSE,
                                 FALSE,
-                                sizeof (QmiCtlVersionInfoService),
+                                sizeof (QmiCtlVersionInfo),
                                 service_list->count);
 
     for (i = 0, svc = &(service_list->services[0]);
          i < service_list->count;
          i++, svc++) {
-        QmiCtlVersionInfoService service;
+        QmiCtlVersionInfo service;
 
         service.service_type = (QmiService)svc->service_type;
         service.major_version = le16toh (svc->major_version);

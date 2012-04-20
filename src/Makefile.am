@@ -39,6 +39,7 @@ qmi-enum-types.c: qmi-enums.h qmi-enum-types.h $(top_srcdir)/build-aux/qmi-enum-
 # Additional dependencies
 qmi-device.c: qmi-error-types.h
 qmi-client.c: qmi-error-types.h qmi-enum-types.h
+qmi-client-ctl.c: qmi-error-types.h
 qmi-message.c: qmi-error-types.h
 qmi-message-ctl.c: qmi-error-types.h
 
@@ -50,7 +51,8 @@ libqmi_glib_la_SOURCES = \
 	qmi-message.h qmi-message.c \
 	qmi-message-ctl.h qmi-message-ctl.c \
 	qmi-device.h qmi-device.c \
-	qmi-client.h qmi-client.c
+	qmi-client.h qmi-client.c \
+	qmi-client-ctl.h qmi-client-ctl.c
 
 libqmi_glib_la_LIBADD = \
 	$(LIBQMI_GLIB_LIBS)
@@ -61,4 +63,5 @@ include_HEADERS = \
 	qmi-errors.h qmi-error-types.h \
 	qmi-enums.h qmi-enum-types.h \
 	qmi-device.h \
-	qmi-client.h
+	qmi-client.h \
+	qmi-client-ctl.h

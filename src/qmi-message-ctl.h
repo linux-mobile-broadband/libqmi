@@ -32,14 +32,15 @@
 G_BEGIN_DECLS
 
 /* Version info */
+
 typedef struct {
     QmiService service_type;
     guint16 major_version;
     guint16 minor_version;
-} QmiCtlVersionInfoService;
+} QmiCtlVersionInfo;
 
 QmiMessage *qmi_message_ctl_version_info_new         (guint8 transaction_id);
-/* array of QmiCtlVersionInfoService */
+/* array of QmiCtlVersionInfo */
 GArray     *qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
                                                       GError **error);
 

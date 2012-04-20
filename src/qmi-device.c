@@ -23,7 +23,8 @@
 #include <gio/gio.h>
 
 #include "qmi-device.h"
-#include "qmi-message-ctl.h"
+#include "qmi-message.h"
+#include "qmi-client-ctl.h"
 #include "qmi-utils.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
@@ -36,6 +37,7 @@ G_DEFINE_TYPE_EXTENDED (QmiDevice, qmi_device, G_TYPE_OBJECT, 0,
 enum {
     PROP_0,
     PROP_FILE,
+    PROP_CLIENT_CTL,
     PROP_LAST
 };
 
@@ -47,6 +49,9 @@ struct _QmiDevicePrivate {
     gchar *path;
     gchar *path_display;
 
+    /* Implicit CTL client */
+    QmiClientCtl *client_ctl;
+
     /* I/O channel, set when the file is open */
     GIOChannel *iochannel;
     guint watch_id;
@@ -54,9 +59,6 @@ struct _QmiDevicePrivate {
 
     /* HT to keep track of ongoing transactions */
     GHashTable *transactions;
-
-    /* Transaction ID for the CTL service */
-    guint8 ctl_transaction_id;
 };
 
 #define BUFFER_SIZE 2048
@@ -224,24 +226,6 @@ device_match_transaction (QmiDevice *self,
 
 /*****************************************************************************/
 
-static guint8
-device_get_ctl_transaction_id (QmiDevice *self)
-{
-    guint8 next;
-
-    next = self->priv->ctl_transaction_id;
-
-    /* Don't go further than 8bits in the CTL service */
-    if (self->priv->ctl_transaction_id == G_MAXUINT8)
-        self->priv->ctl_transaction_id = 0x01;
-    else
-        self->priv->ctl_transaction_id++;
-
-    return next;
-}
-
-/*****************************************************************************/
-
 /**
  * qmi_device_get_file:
  * @self: a #QmiDevice.
@@ -261,6 +245,44 @@ qmi_device_get_file (QmiDevice *self)
                   QMI_DEVICE_FILE, &file,
                   NULL);
     return file;
+}
+
+/**
+ * qmi_device_peek_client_ctl:
+ * @self: a #QmiDevice.
+ *
+ * Get the #QmiClientCtl handled by this #QmiDevice, without increasing the reference count
+ * on the returned object.
+ *
+ * Returns: a #GFile. Do not free the returned object, it is owned by @self.
+ */
+QmiClientCtl *
+qmi_device_peek_client_ctl (QmiDevice *self)
+{
+    g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
+
+    return self->priv->client_ctl;
+}
+
+/**
+ * qmi_device_get_client_ctl:
+ * @self: a #QmiDevice.
+ *
+ * Get the #QmiClientCtl handled by this #QmiDevice.
+ *
+ * Returns: a #QmiClientCtl that must be freed with g_object_unref().
+ */
+QmiClientCtl *
+qmi_device_get_client_ctl (QmiDevice *self)
+{
+    QmiClientCtl *client_ctl = NULL;
+
+    g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
+
+    g_object_get (G_OBJECT (self),
+                  QMI_DEVICE_CLIENT_CTL, &client_ctl,
+                  NULL);
+    return client_ctl;
 }
 
 /**
@@ -523,17 +545,17 @@ qmi_device_open_finish (QmiDevice *self,
 }
 
 static void
-version_info_ready (QmiDevice *self,
+version_info_ready (QmiClientCtl *client_ctl,
                     GAsyncResult *res,
                     GSimpleAsyncResult *simple)
 {
+    QmiDevice *self;
     GError *error = NULL;
-    QmiMessage *reply;
     GArray *services;
+    guint i;
 
-    reply = qmi_device_command_finish (self, res, &error);
-
-    if (!reply) {
+    services = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
+    if (!services) {
         g_prefix_error (&error, "Version info check failed: ");
         g_simple_async_result_take_error (simple, error);
         g_simple_async_result_complete (simple);
@@ -541,35 +563,28 @@ version_info_ready (QmiDevice *self,
         return;
     }
 
-    /* Parse version reply */
-    services = qmi_message_ctl_version_info_reply_parse (reply, &error);
-    if (!services) {
-        g_prefix_error (&error, "Version info reply parsing failed: ");
-        g_simple_async_result_take_error (simple, error);
-    } else {
-        guint i;
+    /* Recover the QmiDevice */
+    self = QMI_DEVICE (g_async_result_get_source_object (G_ASYNC_RESULT (simple)));
 
-        g_debug ("[%s] QMI Device supports %u services:",
+    g_debug ("[%s] QMI Device supports %u services:",
+             self->priv->path_display,
+             services->len);
+    for (i = 0; i < services->len; i++) {
+        QmiCtlVersionInfo *service;
+
+        service = &g_array_index (services, QmiCtlVersionInfo, i);
+        g_debug ("[%s]    %s (%u.%u)",
                  self->priv->path_display,
-                 services->len);
-        for (i = 0; i < services->len; i++) {
-            QmiCtlVersionInfoService *service;
-
-            service = &g_array_index (services, QmiCtlVersionInfoService, i);
-            g_debug ("[%s]    %s (%u.%u)",
-                     self->priv->path_display,
-                     qmi_service_get_string (service->service_type),
-                     service->major_version,
-                     service->minor_version);
-        }
-
-        g_array_unref (services);
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
+                 qmi_service_get_string (service->service_type),
+                 service->major_version,
+                 service->minor_version);
     }
 
+    g_array_unref (services);
+    g_simple_async_result_set_op_res_gboolean (simple, TRUE);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
-    qmi_message_unref (reply);
+    g_object_unref (self);
 }
 
 /**
@@ -591,7 +606,6 @@ qmi_device_open (QmiDevice *self,
 {
     GSimpleAsyncResult *result;
     GError *error = NULL;
-    QmiMessage *version_info_request;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
 
@@ -609,15 +623,13 @@ qmi_device_open (QmiDevice *self,
         return;
     }
 
-    /* Send version info check */
+    /* Query version info */
     g_debug ("Checking version info...");
-    version_info_request = qmi_message_ctl_version_info_new (device_get_ctl_transaction_id (self));
-    qmi_device_command (self,
-                        version_info_request,
-                        timeout,
-                        cancellable,
-                        (GAsyncReadyCallback)version_info_ready,
-                        result);
+    qmi_client_ctl_get_version_info (self->priv->client_ctl,
+                                     timeout,
+                                     cancellable,
+                                     (GAsyncReadyCallback)version_info_ready,
+                                     result);
 }
 
 /*****************************************************************************/
@@ -845,6 +857,31 @@ initable_init_finish (GAsyncInitable  *initable,
 }
 
 static void
+client_ctl_ready (GAsyncInitable *initable,
+                  GAsyncResult *res,
+                  InitContext *ctx)
+{
+    GError *error = NULL;
+    GObject *obj;
+
+    obj = g_async_initable_new_finish (initable, res, &error);
+    if (!obj) {
+        g_prefix_error (&error,
+                        "Couldn't create CTL client: ");
+        g_simple_async_result_take_error (ctx->result, error);
+        init_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* Keep the client */
+    ctx->self->priv->client_ctl = QMI_CLIENT_CTL (obj);
+
+    /* Done we are */
+    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+    init_context_complete_and_free (ctx);
+}
+
+static void
 query_info_async_ready (GFile *file,
                         GAsyncResult *res,
                         InitContext *ctx)
@@ -870,12 +907,18 @@ query_info_async_ready (GFile *file,
         init_context_complete_and_free (ctx);
         return;
     }
-
     g_object_unref (info);
 
-    /* Done we are */
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    init_context_complete_and_free (ctx);
+    /* Create the implicit CTL client
+     * We are giving already the CID of the CTL client, the default one */
+    g_async_initable_new_async (QMI_TYPE_CLIENT_CTL,
+                                G_PRIORITY_DEFAULT,
+                                ctx->cancellable,
+                                (GAsyncReadyCallback)client_ctl_ready,
+                                ctx,
+                                QMI_CLIENT_DEVICE, ctx->self,
+                                QMI_CLIENT_SERVICE, QMI_SERVICE_CTL,
+                                NULL);
 }
 
 static void
@@ -935,6 +978,10 @@ set_property (GObject *object,
         self->priv->path = g_file_get_path (self->priv->file);
         self->priv->path_display = g_filename_display_name (self->priv->path);
         break;
+    case PROP_CLIENT_CTL:
+        /* Not writable */
+        g_assert_not_reached ();
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -953,6 +1000,9 @@ get_property (GObject *object,
     case PROP_FILE:
         g_value_set_object (value, self->priv->file);
         break;
+    case PROP_CLIENT_CTL:
+        g_value_set_object (value, self->priv->client_ctl);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -965,7 +1015,6 @@ qmi_device_init (QmiDevice *self)
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE ((self),
                                               QMI_TYPE_DEVICE,
                                               QmiDevicePrivate);
-    self->priv->ctl_transaction_id = 0x01;
 }
 
 static void
@@ -974,6 +1023,7 @@ dispose (GObject *object)
     QmiDevice *self = QMI_DEVICE (object);
 
     g_clear_object (&self->priv->file);
+    g_clear_object (&self->priv->client_ctl);
 
     G_OBJECT_CLASS (qmi_device_parent_class)->dispose (object);
 }
@@ -1024,4 +1074,12 @@ qmi_device_class_init (QmiDeviceClass *klass)
                              G_TYPE_FILE,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_FILE, properties[PROP_FILE]);
+
+    properties[PROP_CLIENT_CTL] =
+        g_param_spec_object (QMI_DEVICE_CLIENT_CTL,
+                             "CTL client",
+                             "Implicit CTL client",
+                             QMI_TYPE_CLIENT_CTL,
+                             G_PARAM_READABLE);
+    g_object_class_install_property (object_class, PROP_CLIENT_CTL, properties[PROP_CLIENT_CTL]);
 }
