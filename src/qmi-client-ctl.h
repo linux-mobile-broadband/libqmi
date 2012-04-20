@@ -72,6 +72,18 @@ guint8 qmi_client_ctl_allocate_cid_finish (QmiClientCtl *self,
                                            GAsyncResult *res,
                                            GError **error);
 
+/* Release CID */
+void   qmi_client_ctl_release_cid          (QmiClientCtl *self,
+                                            QmiService service,
+                                            guint8 cid,
+                                            guint timeout,
+                                            GCancellable *cancellable,
+                                            GAsyncReadyCallback callback,
+                                            gpointer user_data);
+gboolean qmi_client_ctl_release_cid_finish (QmiClientCtl *self,
+                                            GAsyncResult *res,
+                                            GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_CLIENT_CTL_H_ */

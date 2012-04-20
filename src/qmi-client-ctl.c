@@ -250,6 +250,147 @@ qmi_client_ctl_allocate_cid (QmiClientCtl *self,
 }
 
 /*****************************************************************************/
+/* Release CID */
+
+typedef struct {
+    QmiClientCtl *self;
+    GSimpleAsyncResult *result;
+    QmiService service;
+    guint8 cid;
+} ReleaseCidContext;
+
+static void
+release_cid_context_complete_and_free (ReleaseCidContext *ctx)
+{
+    g_simple_async_result_complete (ctx->result);
+    g_object_unref (ctx->result);
+    g_object_unref (ctx->self);
+    g_slice_free (ReleaseCidContext, ctx);
+}
+
+/**
+ * qmi_client_ctl_release_cid_finish:
+ * @self: a #QmiClientCtl.
+ * @res: a #GAsyncResult.
+ * @error: a #GError.
+ *
+ * Finishes an operation started with qmi_client_ctl_release_cid().
+ *
+ * Returns: #TRUE if the operation succeeded, or #FALSE if @error is set.
+ */
+gboolean
+qmi_client_ctl_release_cid_finish (QmiClientCtl *self,
+                                   GAsyncResult *res,
+                                   GError **error)
+{
+    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+}
+
+static void
+release_cid_ready (QmiDevice *device,
+                   GAsyncResult *res,
+                   ReleaseCidContext *ctx)
+{
+    GError *error = NULL;
+    QmiMessage *reply;
+    guint8 cid;
+    QmiService service;
+
+    reply = qmi_device_command_finish (device, res, &error);
+    if (!reply) {
+        g_prefix_error (&error, "CID release failed: ");
+        g_simple_async_result_take_error (ctx->result, error);
+        release_cid_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* Parse reply */
+    cid = 0;
+    service = QMI_SERVICE_UNKNOWN;
+    if (!qmi_message_ctl_release_cid_reply_parse (reply, &cid, &service, &error)) {
+        g_prefix_error (&error, "CID release reply parsing failed: ");
+        g_simple_async_result_take_error (ctx->result, error);
+        release_cid_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* The service we got must match the one we requested */
+    if (service != ctx->service) {
+        g_simple_async_result_set_error (ctx->result,
+                                         QMI_CORE_ERROR,
+                                         QMI_CORE_ERROR_FAILED,
+                                         "Service mismatch (%s vs %s)",
+                                         qmi_service_get_string (service),
+                                         qmi_service_get_string (ctx->service));
+        release_cid_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* The cid we got must match the one we requested */
+    if (cid != ctx->cid) {
+        g_simple_async_result_set_error (ctx->result,
+                                         QMI_CORE_ERROR,
+                                         QMI_CORE_ERROR_FAILED,
+                                         "CID mismatch (%s vs %s)",
+                                         qmi_service_get_string (service),
+                                         qmi_service_get_string (ctx->service));
+        release_cid_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* Set the CID as result */
+    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+    release_cid_context_complete_and_free (ctx);
+}
+
+/**
+ * qmi_client_ctl_release_cid:
+ * @self: a #QmiClientCtl.
+ * @service: a #QmiService.
+ * @cid: the client ID to release.
+ * @timeout: maximum time to wait to get the operation completed.
+ * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Release a previously allocated client ID for the given @service.
+ * When the query is finished, @callback will be called. You can then call
+ * qmi_client_ctl_release_cid_finish() to get the the result of the operation.
+ */
+void
+qmi_client_ctl_release_cid (QmiClientCtl *self,
+                            QmiService service,
+                            guint8 cid,
+                            guint timeout,
+                            GCancellable *cancellable,
+                            GAsyncReadyCallback callback,
+                            gpointer user_data)
+{
+    ReleaseCidContext *ctx;
+    QmiMessage *request;
+
+    ctx = g_slice_new (ReleaseCidContext);
+    ctx->self = g_object_ref (self);
+    ctx->service = service;
+    ctx->cid = cid;
+    ctx->result = g_simple_async_result_new (G_OBJECT (self),
+                                             callback,
+                                             user_data,
+                                             qmi_client_ctl_release_cid);
+
+    request = qmi_message_ctl_release_cid_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
+                                               service,
+                                               cid);
+    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+                        request,
+                        timeout,
+                        cancellable,
+                        (GAsyncReadyCallback)release_cid_ready,
+                        ctx);
+    qmi_message_unref (request);
+}
+
+/*****************************************************************************/
 
 static void
 qmi_client_ctl_init (QmiClientCtl *self)

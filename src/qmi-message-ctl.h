@@ -53,6 +53,16 @@ gboolean    qmi_message_ctl_allocate_cid_reply_parse (QmiMessage *self,
                                                       QmiService *service,
                                                       GError **error);
 
+/* Release CID */
+
+QmiMessage *qmi_message_ctl_release_cid_new         (guint8 transaction_id,
+                                                     QmiService service,
+                                                     guint8 cid);
+gboolean    qmi_message_ctl_release_cid_reply_parse (QmiMessage *self,
+                                                     guint8 *cid,
+                                                     QmiService *service,
+                                                     GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_MESSAGE_CTL_H_ */

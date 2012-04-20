@@ -158,4 +158,57 @@ qmi_message_ctl_allocate_cid_reply_parse (QmiMessage *self,
 
     return TRUE;
 }
+
+/*****************************************************************************/
+/* Release CID */
+
+QmiMessage *
+qmi_message_ctl_release_cid_new (guint8 transaction_id,
+                                 QmiService service,
+                                 guint8 cid)
+{
+    QmiMessage *message;
+    GError *error = NULL;
+    struct qmi_ctl_cid id;
+
+    g_assert (service != QMI_SERVICE_UNKNOWN);
+    id.service_type = (guint8)service;
+    id.cid = cid;
+
+    message = qmi_message_new (QMI_SERVICE_CTL,
+                               0,
+                               transaction_id,
+                               QMI_CTL_MESSAGE_RELEASE_CLIENT_ID);
+
+    qmi_message_tlv_add (message,
+                         (guint8)0x01,
+                         sizeof (id),
+                         &id,
+                         &error);
+    g_assert_no_error (error);
+
+    return message;
+}
+
+gboolean
+qmi_message_ctl_release_cid_reply_parse (QmiMessage *self,
+                                         guint8 *cid,
+                                         QmiService *service,
+                                         GError **error)
+{
+    struct qmi_ctl_cid id;
+
+    g_assert (qmi_message_get_message_id (self) == QMI_CTL_MESSAGE_RELEASE_CLIENT_ID);
+
+    if (!qmi_message_tlv_get (self, 0x01, sizeof (id), &id, error)) {
+        g_prefix_error (error, "Couldn't get TLV: ");
+        return FALSE;
+    }
+
+    if (cid)
+        *cid = id.cid;
+    if (service)
+        *service = (QmiService)id.service_type;
+
+    return TRUE;
 }

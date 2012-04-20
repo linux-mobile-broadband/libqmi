@@ -234,6 +234,52 @@ initable_init_async (GAsyncInitable *initable,
 }
 
 /*****************************************************************************/
+/* Release! */
+
+typedef struct {
+    guint8 cid;
+    QmiService service;
+} ReleaseCidContext;
+
+static void
+cid_released (QmiClientCtl *client_ctl,
+              GAsyncResult *res,
+              ReleaseCidContext *ctx)
+{
+    GError *error = NULL;
+
+    if (!qmi_client_ctl_release_cid_finish (client_ctl, res, &error)) {
+        g_debug ("[%s] Release of CID %u from service '%s' failed",
+                 qmi_device_get_path_display (qmi_client_peek_device (QMI_CLIENT (client_ctl))),
+                 ctx->cid,
+                 qmi_service_get_string (ctx->service));
+    }
+
+    g_slice_free (ReleaseCidContext, ctx);
+}
+
+static void
+client_release_cid (QmiClient *self)
+{
+    ReleaseCidContext *ctx;
+
+    if (!self->priv->device ||
+        self->priv->cid == 0)
+        return;
+
+    ctx = g_slice_new (ReleaseCidContext);
+    ctx->service = self->priv->service;
+    ctx->cid = self->priv->cid;
+    qmi_client_ctl_release_cid (qmi_device_peek_client_ctl (self->priv->device),
+                                self->priv->service,
+                                self->priv->cid,
+                                3,
+                                NULL,
+                                (GAsyncReadyCallback)cid_released,
+                                ctx);
+}
+
+/*****************************************************************************/
 
 static void
 set_property (GObject *object,
@@ -301,6 +347,11 @@ static void
 dispose (GObject *object)
 {
     QmiClient *self = QMI_CLIENT (object);
+
+    /* This will launch an async operation to release the CID.
+     * We won't be able to use the client in the callback of the async
+     * operation, as it is being disposed just here. */
+    client_release_cid (self);
 
     g_clear_object (&self->priv->device);
 
