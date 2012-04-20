@@ -26,6 +26,8 @@
 #include "qmi-errors.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
+
 #include "qmi-device.h"
+#include "qmi-client.h"
 
 #endif /* _LIBQMI_GLIB_H_ */
