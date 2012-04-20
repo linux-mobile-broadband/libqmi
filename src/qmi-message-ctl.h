@@ -48,7 +48,9 @@ GArray     *qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
 
 QmiMessage *qmi_message_ctl_allocate_cid_new         (guint8 transaction_id,
                                                       QmiService service);
-guint8      qmi_message_ctl_allocate_cid_reply_parse (QmiMessage *self,
+gboolean    qmi_message_ctl_allocate_cid_reply_parse (QmiMessage *self,
+                                                      guint8 *cid,
+                                                      QmiService *service,
                                                       GError **error);
 
 G_END_DECLS

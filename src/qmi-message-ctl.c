@@ -131,23 +131,31 @@ qmi_message_ctl_allocate_cid_new (guint8 transaction_id,
     return message;
 }
 
-struct qmi_ctl_allocate_cid {
+struct qmi_ctl_cid {
 	guint8 service_type;
     guint8 cid;
 } __attribute__((__packed__));;
 
-guint8
+gboolean
 qmi_message_ctl_allocate_cid_reply_parse (QmiMessage *self,
+                                          guint8 *cid,
+                                          QmiService *service,
                                           GError **error)
 {
-    struct qmi_ctl_allocate_cid id;
+    struct qmi_ctl_cid id;
 
     g_assert (qmi_message_get_message_id (self) == QMI_CTL_MESSAGE_ALLOCATE_CLIENT_ID);
 
     if (!qmi_message_tlv_get (self, 0x01, sizeof (id), &id, error)) {
         g_prefix_error (error, "Couldn't get TLV: ");
-        return 0;
+        return FALSE;
     }
 
-    return id.cid;
+    if (cid)
+        *cid = id.cid;
+    if (service)
+        *service = (QmiService)id.service_type;
+
+    return TRUE;
+}
 }

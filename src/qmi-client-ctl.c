@@ -23,6 +23,7 @@
 #include <gio/gio.h>
 
 #include "qmi-error-types.h"
+#include "qmi-enum-types.h"
 #include "qmi-client-ctl.h"
 
 G_DEFINE_TYPE (QmiClientCtl, qmi_client_ctl, QMI_TYPE_CLIENT);
@@ -122,6 +123,21 @@ qmi_client_ctl_get_version_info (QmiClientCtl *self,
 /*****************************************************************************/
 /* Allocate CID */
 
+typedef struct {
+    QmiClientCtl *self;
+    GSimpleAsyncResult *result;
+    QmiService service;
+} AllocateCidContext;
+
+static void
+allocate_cid_context_complete_and_free (AllocateCidContext *ctx)
+{
+    g_simple_async_result_complete (ctx->result);
+    g_object_unref (ctx->result);
+    g_object_unref (ctx->self);
+    g_slice_free (AllocateCidContext, ctx);
+}
+
 /**
  * qmi_client_ctl_allocate_cid_finish:
  * @self: a #QmiClientCtl.
@@ -146,33 +162,48 @@ qmi_client_ctl_allocate_cid_finish (QmiClientCtl *self,
 static void
 allocate_cid_ready (QmiDevice *device,
                     GAsyncResult *res,
-                    GSimpleAsyncResult *simple)
+                    AllocateCidContext *ctx)
 {
     GError *error = NULL;
     QmiMessage *reply;
     guint8 cid;
+    QmiService service;
 
     reply = qmi_device_command_finish (device, res, &error);
     if (!reply) {
         g_prefix_error (&error, "CID allocation failed: ");
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_simple_async_result_take_error (ctx->result, error);
+        allocate_cid_context_complete_and_free (ctx);
         return;
     }
 
     /* Parse reply */
-    cid = qmi_message_ctl_allocate_cid_reply_parse (reply, &error);
-    if (!cid) {
+    cid = 0;
+    service = QMI_SERVICE_UNKNOWN;
+    if (!qmi_message_ctl_allocate_cid_reply_parse (reply, &cid, &service, &error)) {
         g_prefix_error (&error, "CID allocation reply parsing failed: ");
-        g_simple_async_result_take_error (simple, error);
-    } else
-        g_simple_async_result_set_op_res_gpointer (simple,
-                                                   GUINT_TO_POINTER ((guint)cid),
-                                                   NULL);
+        g_simple_async_result_take_error (ctx->result, error);
+        allocate_cid_context_complete_and_free (ctx);
+        return;
+    }
 
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    /* The service we got must match the one we requested */
+    if (service != ctx->service) {
+        g_simple_async_result_set_error (ctx->result,
+                                         QMI_CORE_ERROR,
+                                         QMI_CORE_ERROR_FAILED,
+                                         "Service mismatch (%s vs %s)",
+                                         qmi_service_get_string (service),
+                                         qmi_service_get_string (ctx->service));
+        allocate_cid_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* Set the CID as result */
+    g_simple_async_result_set_op_res_gpointer (ctx->result,
+                                               GUINT_TO_POINTER ((guint)cid),
+                                               NULL);
+    allocate_cid_context_complete_and_free (ctx);
 }
 
 /**
@@ -196,13 +227,16 @@ qmi_client_ctl_allocate_cid (QmiClientCtl *self,
                              GAsyncReadyCallback callback,
                              gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    AllocateCidContext *ctx;
     QmiMessage *request;
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        qmi_client_ctl_allocate_cid);
+    ctx = g_slice_new (AllocateCidContext);
+    ctx->self = g_object_ref (self);
+    ctx->service = service;
+    ctx->result = g_simple_async_result_new (G_OBJECT (self),
+                                             callback,
+                                             user_data,
+                                             qmi_client_ctl_allocate_cid);
 
     request = qmi_message_ctl_allocate_cid_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
                                                 service);
@@ -211,7 +245,7 @@ qmi_client_ctl_allocate_cid (QmiClientCtl *self,
                         timeout,
                         cancellable,
                         (GAsyncReadyCallback)allocate_cid_ready,
-                        result);
+                        ctx);
     qmi_message_unref (request);
 }
 
