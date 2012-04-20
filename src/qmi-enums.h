@@ -63,7 +63,9 @@ typedef enum {
 } QmiService;
 
 typedef enum {
-    QMI_CTL_MESSAGE_GET_VERSION_INFO = 0x0021,
+    QMI_CTL_MESSAGE_GET_VERSION_INFO   = 0x0021,
+    QMI_CTL_MESSAGE_ALLOCATE_CLIENT_ID = 0x0022,
+    QMI_CTL_MESSAGE_RELEASE_CLIENT_ID  = 0x0023,
 } QmiCtlMessage;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_H_ */
