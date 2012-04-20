@@ -23,9 +23,10 @@
 #include <gio/gio.h>
 
 #include "qmi-device.h"
-#include "qmi-message.h"
+#include "qmi-message-ctl.h"
 #include "qmi-utils.h"
 #include "qmi-error-types.h"
+#include "qmi-enum-types.h"
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
 
@@ -53,6 +54,9 @@ struct _QmiDevicePrivate {
 
     /* HT to keep track of ongoing transactions */
     GHashTable *transactions;
+
+    /* Transaction ID for the CTL service */
+    guint8 ctl_transaction_id;
 };
 
 #define BUFFER_SIZE 2048
@@ -170,6 +174,24 @@ device_match_transaction (QmiDevice *self,
         g_hash_table_remove (self->priv->transactions, key);
 
     return tr;
+}
+
+/*****************************************************************************/
+
+static guint8
+device_get_ctl_transaction_id (QmiDevice *self)
+{
+    guint8 next;
+
+    next = self->priv->ctl_transaction_id;
+
+    /* Don't go further than 8bits in the CTL service */
+    if (self->priv->ctl_transaction_id == G_MAXUINT8)
+        self->priv->ctl_transaction_id = 0x01;
+    else
+        self->priv->ctl_transaction_id++;
+
+    return next;
 }
 
 /*****************************************************************************/
@@ -454,6 +476,56 @@ qmi_device_open_finish (QmiDevice *self,
     return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
 }
 
+static void
+version_info_ready (QmiDevice *self,
+                    GAsyncResult *res,
+                    GSimpleAsyncResult *simple)
+{
+    GError *error = NULL;
+    QmiMessage *reply;
+    GArray *services;
+
+    reply = qmi_device_command_finish (self, res, &error);
+
+    if (!reply) {
+        g_prefix_error (&error, "Version info check failed: ");
+        g_simple_async_result_take_error (simple, error);
+        g_simple_async_result_complete (simple);
+        g_object_unref (simple);
+        return;
+    }
+
+    /* Parse version reply */
+    services = qmi_message_ctl_version_info_reply_parse (reply, &error);
+    if (!services) {
+        g_prefix_error (&error, "Version info reply parsing failed: ");
+        g_simple_async_result_take_error (simple, error);
+    } else {
+        guint i;
+
+        g_debug ("[%s] QMI Device supports %u services:",
+                 self->priv->path_display,
+                 services->len);
+        for (i = 0; i < services->len; i++) {
+            QmiCtlVersionInfoService *service;
+
+            service = &g_array_index (services, QmiCtlVersionInfoService, i);
+            g_debug ("[%s]    %s (%u.%u)",
+                     self->priv->path_display,
+                     qmi_service_get_string (service->service_type),
+                     service->major_version,
+                     service->minor_version);
+        }
+
+        g_array_unref (services);
+        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
+    }
+
+    g_simple_async_result_complete (simple);
+    g_object_unref (simple);
+    qmi_message_unref (reply);
+}
+
 /**
  * qmi_device_open:
  * @self: a #QmiDevice.
@@ -471,6 +543,7 @@ qmi_device_open (QmiDevice *self,
 {
     GSimpleAsyncResult *result;
     GError *error = NULL;
+    QmiMessage *version_info_request;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
 
@@ -488,11 +561,14 @@ qmi_device_open (QmiDevice *self,
         return;
     }
 
-    /* TODO: run version check */
-
-    g_simple_async_result_set_op_res_gboolean (result, TRUE);
-    g_simple_async_result_complete_in_idle (result);
-    g_object_unref (result);
+    /* Send version info check */
+    g_debug ("Checking version info...");
+    version_info_request = qmi_message_ctl_version_info_new (device_get_ctl_transaction_id (self));
+    qmi_device_command (self,
+                        version_info_request,
+                        cancellable,
+                        (GAsyncReadyCallback)version_info_ready,
+                        result);
 }
 
 /*****************************************************************************/
@@ -839,6 +915,7 @@ qmi_device_init (QmiDevice *self)
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE ((self),
                                               QMI_TYPE_DEVICE,
                                               QmiDevicePrivate);
+    self->priv->ctl_transaction_id = 0x01;
 }
 
 static void
