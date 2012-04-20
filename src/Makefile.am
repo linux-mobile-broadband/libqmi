@@ -52,7 +52,8 @@ libqmi_glib_la_SOURCES = \
 	qmi-message-ctl.h qmi-message-ctl.c \
 	qmi-device.h qmi-device.c \
 	qmi-client.h qmi-client.c \
-	qmi-client-ctl.h qmi-client-ctl.c
+	qmi-client-ctl.h qmi-client-ctl.c \
+	qmi-client-dms.h qmi-client-dms.c
 
 libqmi_glib_la_LIBADD = \
 	$(LIBQMI_GLIB_LIBS)
@@ -64,4 +65,5 @@ include_HEADERS = \
 	qmi-enums.h qmi-enum-types.h \
 	qmi-device.h \
 	qmi-client.h \
-	qmi-client-ctl.h
+	qmi-client-ctl.h \
+	qmi-client-dms.h
