@@ -67,6 +67,7 @@ struct _QmiDevicePrivate {
 typedef struct {
     QmiMessage *message;
     GSimpleAsyncResult *result;
+    guint timeout_id;
 } Transaction;
 
 static Transaction *
@@ -77,7 +78,7 @@ transaction_new (QmiDevice *self,
 {
     Transaction *tr;
 
-    tr = g_slice_new (Transaction);
+    tr = g_slice_new0 (Transaction);
     tr->message = qmi_message_ref (message);
     tr->result = g_simple_async_result_new (G_OBJECT (self),
                                             callback,
@@ -93,6 +94,9 @@ transaction_complete_and_free (Transaction *tr,
                                const GError *error)
 {
     g_assert (reply != NULL || error != NULL);
+
+    if (tr->timeout_id)
+        g_source_remove (tr->timeout_id);
 
     if (reply)
         g_simple_async_result_set_op_res_gpointer (tr->result,
@@ -146,34 +150,76 @@ build_transaction_key (QmiMessage *message)
     return key;
 }
 
+static Transaction *
+device_release_transaction (QmiDevice *self,
+                            gpointer key)
+{
+    Transaction *tr = NULL;
+
+    if (self->priv->transactions) {
+        tr = g_hash_table_lookup (self->priv->transactions, key);
+        if (tr)
+            /* If found, remove it from the HT */
+            g_hash_table_remove (self->priv->transactions, key);
+    }
+
+    return tr;
+}
+
+typedef struct {
+    QmiDevice *self;
+    gpointer key;
+} TransactionTimeoutContext;
+
+static gboolean
+transaction_timed_out (TransactionTimeoutContext *ctx)
+{
+    Transaction *tr;
+    GError *error = NULL;
+
+    tr = device_release_transaction (ctx->self, ctx->key);
+    tr->timeout_id = 0;
+
+    /* Complete transaction with a timeout error */
+    error = g_error_new (QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_TIMEOUT,
+                         "Transaction timed out");
+    transaction_complete_and_free (tr, NULL, error);
+    g_error_free (error);
+
+    return FALSE;
+}
+
 static gboolean
 device_store_transaction (QmiDevice *self,
-                          Transaction *tr)
+                          Transaction *tr,
+                          guint timeout)
 {
+    TransactionTimeoutContext *timeout_ctx;
+    gpointer key;
+
     if (G_UNLIKELY (!self->priv->transactions))
         self->priv->transactions = g_hash_table_new (g_direct_hash,
                                                      g_direct_equal);
 
-    g_hash_table_insert (self->priv->transactions,
-                         build_transaction_key (tr->message),
-                         tr);
+    key = build_transaction_key (tr->message);
+    g_hash_table_insert (self->priv->transactions, key, tr);
+
+    /* Once it gets into the HT, setup the timeout */
+    timeout_ctx = g_slice_new (TransactionTimeoutContext);
+    timeout_ctx->self = self;
+    timeout_ctx->key = key;
+    tr->timeout_id = g_timeout_add_seconds (timeout,
+                                            (GSourceFunc)transaction_timed_out,
+                                            timeout_ctx);
 }
 
 static Transaction *
 device_match_transaction (QmiDevice *self,
                           QmiMessage *message)
 {
-    Transaction *tr;
-    gpointer key;
-
     /* msg can be either the original message or the response */
-    key = build_transaction_key (message);
-    tr = g_hash_table_lookup (self->priv->transactions, key);
-    if (tr)
-        /* If found, remove it from the HT */
-        g_hash_table_remove (self->priv->transactions, key);
-
-    return tr;
+    return device_release_transaction (self, build_transaction_key (message));
 }
 
 /*****************************************************************************/
@@ -529,6 +575,7 @@ version_info_ready (QmiDevice *self,
 /**
  * qmi_device_open:
  * @self: a #QmiDevice.
+ * @timeout: maximum time, in seconds, to wait for the device to be opened.
  *
  * Asynchronously opens a #QmiDevice for I/O.
  *
@@ -537,6 +584,7 @@ version_info_ready (QmiDevice *self,
  */
 void
 qmi_device_open (QmiDevice *self,
+                 guint timeout,
                  GCancellable *cancellable,
                  GAsyncReadyCallback callback,
                  gpointer user_data)
@@ -566,6 +614,7 @@ qmi_device_open (QmiDevice *self,
     version_info_request = qmi_message_ctl_version_info_new (device_get_ctl_transaction_id (self));
     qmi_device_command (self,
                         version_info_request,
+                        timeout,
                         cancellable,
                         (GAsyncReadyCallback)version_info_ready,
                         result);
@@ -647,6 +696,7 @@ qmi_device_command_finish (QmiDevice *self,
 void
 qmi_device_command (QmiDevice *self,
                     QmiMessage *message,
+                    guint timeout,
                     GCancellable *cancellable,
                     GAsyncReadyCallback callback,
                     gpointer user_data)
@@ -694,7 +744,7 @@ qmi_device_command (QmiDevice *self,
     }
 
     /* Setup context to match response */
-    device_store_transaction (self, tr);
+    device_store_transaction (self, tr, timeout);
 
     written = 0;
     if (g_io_channel_write_chars (self->priv->iochannel,

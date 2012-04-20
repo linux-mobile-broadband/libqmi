@@ -200,6 +200,7 @@ device_new_ready (GObject *unused,
 
     /* Open the device */
     qmi_device_open (ctx->device,
+                     5,
                      ctx->cancellable,
                      (GAsyncReadyCallback)device_open_ready,
                      ctx);

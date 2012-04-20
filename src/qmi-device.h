@@ -70,6 +70,7 @@ const gchar *qmi_device_get_path_display (QmiDevice *self);
 gboolean     qmi_device_is_open          (QmiDevice *self);
 
 void         qmi_device_open        (QmiDevice *self,
+                                     guint timeout,
                                      GCancellable *cancellable,
                                      GAsyncReadyCallback callback,
                                      gpointer user_data);
@@ -82,6 +83,7 @@ gboolean     qmi_device_close (QmiDevice *self,
 
 void         qmi_device_command        (QmiDevice *self,
                                         QmiMessage *message,
+                                        guint timeout,
                                         GCancellable *cancellable,
                                         GAsyncReadyCallback callback,
                                         gpointer user_data);

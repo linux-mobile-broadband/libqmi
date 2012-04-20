@@ -27,6 +27,7 @@
  * QmiCoreError:
  * @QMI_CORE_ERROR_FAILED: Operation failed.
  * @QMI_CORE_ERROR_WRONG_STATE: Operation cannot be executed in the current state.
+ * @QMI_CORE_ERROR_TIMEOUT: Operation timed out.
  * @QMI_CORE_ERROR_INVALID_ARGS: Invalid arguments given.
  * @QMI_CORE_ERROR_INVALID_MESSAGE: QMI message is invalid.
  * @QMI_CORE_ERROR_TLV_NOT_FOUND: TLV not found.
@@ -37,6 +38,7 @@
 typedef enum {
     QMI_CORE_ERROR_FAILED,
     QMI_CORE_ERROR_WRONG_STATE,
+    QMI_CORE_ERROR_TIMEOUT,
     QMI_CORE_ERROR_INVALID_ARGS,
     QMI_CORE_ERROR_INVALID_MESSAGE,
     QMI_CORE_ERROR_TLV_NOT_FOUND,
