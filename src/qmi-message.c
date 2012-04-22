@@ -637,3 +637,59 @@ qmi_message_get_printable (QmiMessage *self)
 
     return g_string_free (printable, FALSE);
 }
+
+/*****************************************************************************/
+/* QMI protocol errors handling */
+
+struct qmi_result {
+  uint16_t status;
+  uint16_t error;
+} PACKED;
+
+/* 0x02 is the TLV for the result of any request.
+   (grep "Result Code" [Gobi3000API]/Database/QMI/Entity.txt) */
+#define QMI_TLV_RESULT_CODE ((uint8_t)0x02)
+
+enum {
+  QMI_STATUS_SUCCESS = 0x0000,
+  QMI_STATUS_FAILURE = 0x0001
+};
+
+gboolean
+qmi_message_get_result (QmiMessage *self,
+                        GError **error)
+{
+    struct qmi_result msg_result;
+
+    g_assert (self != NULL);
+
+    if (!qmi_message_tlv_get (self,
+                              QMI_TLV_RESULT_CODE,
+                              sizeof (msg_result),
+                              &msg_result,
+                              error)) {
+        g_prefix_error (error, "Couldn't get result code: ");
+        return FALSE;
+    }
+
+    switch (msg_result.status) {
+    case QMI_STATUS_SUCCESS:
+        /* Operation succeeded */
+        return TRUE;
+
+    case QMI_STATUS_FAILURE:
+        /* Report a QMI protocol error */
+        g_set_error (error,
+                     QMI_PROTOCOL_ERROR,
+                     (QmiProtocolError)msg_result.error,
+                     "");
+        return FALSE;
+
+    default:
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_INVALID_MESSAGE,
+                     "Unexpected result status (%u)", msg_result.status);
+        return FALSE;
+    }
+}

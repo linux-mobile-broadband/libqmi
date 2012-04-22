@@ -86,6 +86,9 @@ gchar *qmi_message_get_printable (QmiMessage *self);
 gboolean qmi_message_check (QmiMessage *self,
                             GError **error);
 
+gboolean qmi_message_get_result (QmiMessage *self,
+                                 GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_MESSAGE_H_ */
