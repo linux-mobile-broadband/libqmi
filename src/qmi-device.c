@@ -505,6 +505,10 @@ create_iochannel (QmiDevice *self,
 
         /* We don't want UTF-8 encoding, we're playing with raw binary data */
         g_io_channel_set_encoding (self->priv->iochannel, NULL, NULL);
+
+        /* We don't want to get the channel buffered */
+        g_io_channel_set_buffered (self->priv->iochannel, FALSE);
+
         /* We don't want to get blocked while writing stuff */
         if (!g_io_channel_set_flags (self->priv->iochannel,
                                      G_IO_FLAG_NONBLOCK,
