@@ -7,7 +7,9 @@ qmicli_CPPFLAGS = \
 	-I$(top_builddir)/src
 
 qmicli_SOURCES = \
-	qmicli.c
+	qmicli.c \
+	qmicli.h \
+	qmicli-ctl.c
 
 qmicli_LDADD = \
 	$(QMICLI_LIBS) \

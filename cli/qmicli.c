@@ -30,12 +30,15 @@
 
 #include <libqmi-glib.h>
 
+#include "qmicli.h"
+
 #define PROGRAM_NAME    "qmicli"
 #define PROGRAM_VERSION PACKAGE_VERSION
 
 /* Globals */
 static GMainLoop *loop;
 static GCancellable *cancellable;
+static QmiDevice *device;
 
 /* Main options */
 static gchar *device_str;
@@ -133,8 +136,8 @@ print_version_and_exit (void)
 /*****************************************************************************/
 /* Running asynchronously */
 
-static void
-async_operation_done (void)
+void
+qmicli_async_operation_done (void)
 {
     if (cancellable) {
         g_object_unref (cancellable);
@@ -144,27 +147,9 @@ async_operation_done (void)
     g_main_loop_quit (loop);
 }
 
-typedef struct {
-    GCancellable *cancellable;
-    QmiDevice *device;
-} AsyncRunContext;
-
-static void
-async_run_context_complete_and_free (AsyncRunContext *ctx)
-{
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
-    if (ctx->device)
-        g_object_unref (ctx->device);
-    g_slice_free (AsyncRunContext, ctx);
-
-    async_operation_done ();
-}
-
 static void
 device_open_ready (QmiDevice *device,
-                   GAsyncResult *res,
-                   AsyncRunContext *ctx)
+                   GAsyncResult *res)
 {
     GError *error = NULL;
 
@@ -174,51 +159,37 @@ device_open_ready (QmiDevice *device,
         exit (EXIT_FAILURE);
     }
 
-    if (!qmi_device_close (ctx->device, &error)) {
-        g_printerr ("error: couldn't close the QmiDevice: %s\n",
-                    error->message);
+    /* As soon as we get the QmiDevice, launch the specific action requested */
+
+    /* CTL options? */
+    if (qmicli_ctl_options_enabled ())
+        qmicli_ctl_run (device, cancellable);
+    /* No options? */
+    else {
+        g_printerr ("error: no actions specified\n");
         exit (EXIT_FAILURE);
     }
-
-    /* All done */
-    async_run_context_complete_and_free (ctx);
 }
 
 static void
 device_new_ready (GObject *unused,
-                  GAsyncResult *res,
-                  AsyncRunContext *ctx)
+                  GAsyncResult *res)
 {
     GError *error = NULL;
 
-    ctx->device = qmi_device_new_finish (res, &error);
-    if (!ctx->device) {
+    device = qmi_device_new_finish (res, &error);
+    if (!device) {
         g_printerr ("error: couldn't create QmiDevice: %s\n",
                     error->message);
         exit (EXIT_FAILURE);
     }
 
     /* Open the device */
-    qmi_device_open (ctx->device,
+    qmi_device_open (device,
                      5,
-                     ctx->cancellable,
+                     cancellable,
                      (GAsyncReadyCallback)device_open_ready,
-                     ctx);
-}
-
-static void
-run (GFile *file,
-     GCancellable *cancellable)
-{
-    AsyncRunContext *ctx;
-
-    ctx = g_slice_new0 (AsyncRunContext);
-    ctx->cancellable = cancellable ? g_object_ref (cancellable) : NULL;
-
-    qmi_device_new (file,
-                    cancellable,
-                    (GAsyncReadyCallback)device_new_ready,
-                    ctx);
+                     NULL);
 }
 
 /*****************************************************************************/
@@ -235,6 +206,8 @@ int main (int argc, char **argv)
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Control QMI devices");
+	g_option_context_add_group (context,
+	                            qmicli_ctl_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     g_option_context_parse (context, &argc, &argv, NULL);
 	g_option_context_free (context);
@@ -263,11 +236,17 @@ int main (int argc, char **argv)
     cancellable = g_cancellable_new ();
     loop = g_main_loop_new (NULL, FALSE);
 
-    run (file, cancellable);
+    /* Launch QmiDevice creation */
+    qmi_device_new (file,
+                    cancellable,
+                    (GAsyncReadyCallback)device_new_ready,
+                    NULL);
     g_main_loop_run (loop);
 
     if (cancellable)
         g_object_unref (cancellable);
+    if (device)
+        g_object_unref (device);
     g_main_loop_unref (loop);
     g_object_unref (file);
 
