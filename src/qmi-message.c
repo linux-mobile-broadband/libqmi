@@ -486,6 +486,29 @@ qmi_message_tlv_get_varlen (QmiMessage *self,
     return qmimsg_tlv_get_internal (self, type, length, value, FALSE, error);
 }
 
+gchar *
+qmi_message_tlv_get_string (QmiMessage *self,
+                            guint8 type,
+                            GError **error)
+{
+    uint16_t length;
+    gchar *value;
+
+    /* Read length only first */
+    if (!qmi_message_tlv_get_varlen (self, type, &length, NULL, error))
+        return NULL;
+
+    /* Read exact length and value */
+    value = g_malloc (length + 1);
+    if (!qmi_message_tlv_get (self, type, length, value, error)) {
+        g_free (value);
+        return NULL;
+    }
+    value[length] = '\0';
+
+    return value;
+}
+
 void
 qmi_message_tlv_foreach (QmiMessage *self,
                          QmiMessageForeachTlvFn callback,

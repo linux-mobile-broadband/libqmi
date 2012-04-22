@@ -68,6 +68,10 @@ gboolean qmi_message_tlv_get_varlen (QmiMessage *self,
                                      guint16 *length,
                                      gpointer value,
                                      GError **error);
+gchar   *qmi_message_tlv_get_string (QmiMessage *self,
+                                     guint8 type,
+                                     GError **error);
+
 
 gboolean qmi_message_tlv_add (QmiMessage *self,
                               guint8 type,
