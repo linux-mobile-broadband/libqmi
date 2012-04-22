@@ -68,4 +68,5 @@ typedef enum {
     QMI_CTL_MESSAGE_RELEASE_CLIENT_ID  = 0x0023,
 } QmiCtlMessage;
 
+#define QMI_CID_NONE      0x00
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_H_ */

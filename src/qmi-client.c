@@ -118,7 +118,7 @@ qmi_client_get_service (QmiClient *self)
 guint8
 qmi_client_get_cid (QmiClient *self)
 {
-    g_return_val_if_fail (QMI_IS_CLIENT (self), 0);
+    g_return_val_if_fail (QMI_IS_CLIENT (self), QMI_CID_NONE);
 
     return self->priv->cid;
 }
@@ -188,7 +188,7 @@ client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
 
         /* Recover self and reset the CID */
         self = QMI_CLIENT (g_async_result_get_source_object (G_ASYNC_RESULT (simple)));
-        self->priv->cid = 0;
+        self->priv->cid = QMI_CID_NONE;
         g_object_unref (self);
 
         g_simple_async_result_set_op_res_gboolean (simple, TRUE);
@@ -236,7 +236,7 @@ qmi_client_release (QmiClient *self,
     }
 
     /* The CID may already be released */
-    if (self->priv->cid == 0) {
+    if (self->priv->cid == QMI_CID_NONE) {
         g_simple_async_result_set_op_res_gboolean (result, TRUE);
         g_simple_async_result_complete_in_idle (result);
         g_object_unref (result);
@@ -368,7 +368,7 @@ client_release_cid_on_dispose (QmiClient *self)
         return;
 
     /* The CID may already be released */
-    if (self->priv->cid == 0)
+    if (self->priv->cid == QMI_CID_NONE)
         return;
 
     /* NOTE! we cannot use qmi_client_release(), as that ensures that a
@@ -450,6 +450,7 @@ qmi_client_init (QmiClient *self)
     /* Defaults */
     self->priv->service = QMI_SERVICE_UNKNOWN;
     self->priv->transaction_id = 0x01;
+    self->priv->cid = QMI_CID_NONE;
 }
 
 static void
@@ -508,7 +509,7 @@ qmi_client_class_init (QmiClientClass *klass)
                            "ID of the client registered into the QMI device",
                            0,
                            G_MAXUINT8,
-                           0,
+                           QMI_CID_NONE,
                            G_PARAM_READABLE);
     g_object_class_install_property (object_class, PROP_CID, properties[PROP_CID]);
 }
