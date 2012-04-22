@@ -23,8 +23,112 @@
 #include <gio/gio.h>
 
 #include "qmi-client-dms.h"
+#include "qmi-message-dms.h"
 
 G_DEFINE_TYPE (QmiClientDms, qmi_client_dms, QMI_TYPE_CLIENT);
+
+/*****************************************************************************/
+/* Get IDs */
+
+typedef struct {
+    gchar *esn;
+    gchar *imei;
+    gchar *meid;
+} GetIdsResult;
+
+gboolean
+qmi_client_dms_get_ids_finish (QmiClientDms *self,
+                               GAsyncResult *res,
+                               gchar **esn,
+                               gchar **imei,
+                               gchar **meid,
+                               GError **error)
+{
+    GetIdsResult *result;
+
+    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+        return FALSE;
+
+    result = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
+
+    if (esn)
+        *esn = result->esn;
+    else
+        g_free (result->esn);
+
+    if (imei)
+        *imei = result->imei;
+    else
+        g_free (result->imei);
+
+    if (meid)
+        *meid = result->meid;
+    else
+        g_free (result->meid);
+
+    return TRUE;
+}
+
+static void
+get_ids_ready (QmiDevice *device,
+               GAsyncResult *res,
+               GSimpleAsyncResult *simple)
+{
+    GetIdsResult result;
+    GError *error = NULL;
+    QmiMessage *reply;
+
+    reply = qmi_device_command_finish (device, res, &error);
+    if (!reply) {
+        g_prefix_error (&error, "Getting IDs failed: ");
+        g_simple_async_result_take_error (simple, error);
+        g_simple_async_result_complete (simple);
+        g_object_unref (simple);
+        return;
+    }
+
+    /* Parse version reply */
+    if (!qmi_message_dms_get_ids_reply_parse (reply,
+                                              &result.esn,
+                                              &result.imei,
+                                              &result.meid,
+                                              &error)) {
+        g_prefix_error (&error, "Getting IDs reply parsing failed: ");
+        g_simple_async_result_take_error (simple, error);
+    } else
+        /* We set as result the struct in the stack. Therefore,
+         * never complete_in_idle() here! */
+        g_simple_async_result_set_op_res_gpointer (simple, &result, NULL);
+
+    g_simple_async_result_complete (simple);
+    g_object_unref (simple);
+}
+
+void
+qmi_client_dms_get_ids (QmiClientDms *self,
+                        guint timeout,
+                        GCancellable *cancellable,
+                        GAsyncReadyCallback callback,
+                        gpointer user_data)
+{
+    GSimpleAsyncResult *result;
+    QmiMessage *request;
+
+    result = g_simple_async_result_new (G_OBJECT (self),
+                                        callback,
+                                        user_data,
+                                        qmi_client_dms_get_ids);
+
+    request = qmi_message_dms_get_ids_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
+                                           qmi_client_get_cid (QMI_CLIENT (self)));
+    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+                        request,
+                        timeout,
+                        cancellable,
+                        (GAsyncReadyCallback)get_ids_ready,
+                        result);
+    qmi_message_unref (request);
+}
 
 /*****************************************************************************/
 /* New DMS client */
