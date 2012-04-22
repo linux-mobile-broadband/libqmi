@@ -154,6 +154,105 @@ qmi_client_get_next_transaction_id (QmiClient *self)
 }
 
 /*****************************************************************************/
+/* Explicitly release the CID */
+
+/**
+ * qmi_client_release_finish:
+ * @self: a #QmiClient.
+ * @res: a #GAsyncResult.
+ * @error: a #GError.
+ *
+ * Finishes an asynchronous CID release operation started with qmi_client_release().
+ *
+ * Returns: #TRUE if successful, #FALSE if @error is set.
+ */
+gboolean
+qmi_client_release_finish (QmiClient *self,
+                           GAsyncResult *res,
+                           GError **error)
+{
+    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+}
+
+static void
+client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
+                              GAsyncResult *res,
+                              GSimpleAsyncResult *simple)
+{
+    GError *error = NULL;
+
+    if (!qmi_client_ctl_release_cid_finish (client_ctl, res, &error))
+        g_simple_async_result_take_error (simple, error);
+    else {
+        QmiClient *self;
+
+        /* Recover self and reset the CID */
+        self = QMI_CLIENT (g_async_result_get_source_object (G_ASYNC_RESULT (simple)));
+        self->priv->cid = 0;
+        g_object_unref (self);
+
+        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
+    }
+    g_simple_async_result_complete (simple);
+    g_object_unref (simple);
+}
+
+/**
+ * qmi_client_release:
+ * @self: a #QmiClient.
+ * @timeout: maximum time, in seconds, to wait for the CID to be released.
+ *
+ * Asynchronously releases the client ID of a #QmiClient.
+ *
+ * Once the #QmiClient has released its CID, it cannot be used any more to
+ * perform operations. Therefore, it is only meaningful to explicitly release
+ * the CID, when the user needs to know whether it gets properly released. If
+ * this information is not important, the user can rely on the implicit
+ * release performed when the last reference of #QmiClient is destroyed.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qmi_client_release_finish() to get the result of the operation.
+ */
+void
+qmi_client_release (QmiClient *self,
+                    guint timeout,
+                    GAsyncReadyCallback callback,
+                    gpointer user_data)
+{
+    GSimpleAsyncResult *result;
+
+    result = g_simple_async_result_new (G_OBJECT (self),
+                                        callback,
+                                        user_data,
+                                        qmi_client_release);
+
+    /* The CTL service client uses the implicit client (CID == 0),
+     * no need to explicitly release it */
+    if (self->priv->service == QMI_SERVICE_CTL) {
+        g_simple_async_result_set_op_res_gboolean (result, TRUE);
+        g_simple_async_result_complete_in_idle (result);
+        g_object_unref (result);
+        return;
+    }
+
+    /* The CID may already be released */
+    if (self->priv->cid == 0) {
+        g_simple_async_result_set_op_res_gboolean (result, TRUE);
+        g_simple_async_result_complete_in_idle (result);
+        g_object_unref (result);
+        return;
+    }
+
+    qmi_client_ctl_release_cid (qmi_device_peek_client_ctl (self->priv->device),
+                                self->priv->service,
+                                self->priv->cid,
+                                timeout,
+                                NULL,
+                                (GAsyncReadyCallback)client_ctl_release_cid_ready,
+                                result);
+}
+
+/*****************************************************************************/
 /* Init */
 
 static gboolean
@@ -234,7 +333,7 @@ initable_init_async (GAsyncInitable *initable,
 }
 
 /*****************************************************************************/
-/* Release! */
+/* Implicit release on dispose */
 
 typedef struct {
     guint8 cid;
@@ -242,9 +341,9 @@ typedef struct {
 } ReleaseCidContext;
 
 static void
-cid_released (QmiClientCtl *client_ctl,
-              GAsyncResult *res,
-              ReleaseCidContext *ctx)
+client_ctl_release_cid_on_dispose_ready (QmiClientCtl *client_ctl,
+                                         GAsyncResult *res,
+                                         ReleaseCidContext *ctx)
 {
     GError *error = NULL;
 
@@ -259,14 +358,23 @@ cid_released (QmiClientCtl *client_ctl,
 }
 
 static void
-client_release_cid (QmiClient *self)
+client_release_cid_on_dispose (QmiClient *self)
 {
     ReleaseCidContext *ctx;
 
-    if (!self->priv->device ||
-        self->priv->cid == 0)
+    /* The CTL service client uses the implicit client (CID == 0),
+     * no need to explicitly release it */
+    if (self->priv->service == QMI_SERVICE_CTL)
         return;
 
+    /* The CID may already be released */
+    if (self->priv->cid == 0)
+        return;
+
+    /* NOTE! we cannot use qmi_client_release(), as that ensures that a
+     * reference to self is available while the operation is ongoing (which
+     * means it adds a new reference to self). We don't want this, as we're
+     * already disposing the object. */
     ctx = g_slice_new (ReleaseCidContext);
     ctx->service = self->priv->service;
     ctx->cid = self->priv->cid;
@@ -275,9 +383,10 @@ client_release_cid (QmiClient *self)
                                 self->priv->cid,
                                 3,
                                 NULL,
-                                (GAsyncReadyCallback)cid_released,
+                                (GAsyncReadyCallback)client_ctl_release_cid_on_dispose_ready,
                                 ctx);
 }
+
 
 /*****************************************************************************/
 
@@ -351,7 +460,7 @@ dispose (GObject *object)
     /* This will launch an async operation to release the CID.
      * We won't be able to use the client in the callback of the async
      * operation, as it is being disposed just here. */
-    client_release_cid (self);
+    client_release_cid_on_dispose (self);
 
     g_clear_object (&self->priv->device);
 

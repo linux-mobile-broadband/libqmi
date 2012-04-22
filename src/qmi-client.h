@@ -63,6 +63,14 @@ guint8      qmi_client_get_cid     (QmiClient *self);
 
 guint16     qmi_client_get_next_transaction_id (QmiClient *self);
 
+void     qmi_client_release        (QmiClient *self,
+                                    guint timeout,
+                                    GAsyncReadyCallback callback,
+                                    gpointer user_data);
+gboolean qmi_client_release_finish (QmiClient *self,
+                                    GAsyncResult *res,
+                                    GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_CLIENT_H_ */
