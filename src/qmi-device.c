@@ -738,6 +738,18 @@ qmi_device_command (QmiDevice *self,
         return;
     }
 
+    /* Non-CTL services should use a proper CID */
+    if (qmi_message_get_service (message) != QMI_SERVICE_CTL &&
+        qmi_message_get_client_id (message) == 0) {
+        error = g_error_new (QMI_CORE_ERROR,
+                             QMI_CORE_ERROR_FAILED,
+                             "Cannot send message in service '%s' without a CID",
+                             qmi_service_get_string (qmi_message_get_service (message)));
+        transaction_complete_and_free (tr, NULL, error);
+        g_error_free (error);
+        return;
+    }
+
 #ifdef MESSAGE_ENABLE_TRACE
     {
         gchar *printable;
