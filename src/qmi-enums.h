@@ -69,4 +69,6 @@ typedef enum {
 } QmiCtlMessage;
 
 #define QMI_CID_NONE      0x00
+#define QMI_CID_BROADCAST 0xFF
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_H_ */

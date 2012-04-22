@@ -387,6 +387,9 @@ parse_response (QmiDevice *self)
             g_warning ("Invalid QMI message received: %s",
                        error->message);
             g_error_free (error);
+        } else if (qmi_message_get_client_id (message) == QMI_CID_BROADCAST) {
+            g_debug ("Broadcast QMI message received");
+            /* TODO: notify to clients */
         } else {
             Transaction *tr;
 
