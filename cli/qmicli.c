@@ -164,6 +164,9 @@ device_open_ready (QmiDevice *device,
     /* CTL options? */
     if (qmicli_ctl_options_enabled ())
         qmicli_ctl_run (device, cancellable);
+    /* DMS options? */
+    else if (qmicli_dms_options_enabled ())
+        qmicli_dms_run (device, cancellable);
     /* No options? */
     else {
         g_printerr ("error: no actions specified\n");
@@ -208,6 +211,8 @@ int main (int argc, char **argv)
     context = g_option_context_new ("- Control QMI devices");
 	g_option_context_add_group (context,
 	                            qmicli_ctl_get_option_group ());
+	g_option_context_add_group (context,
+	                            qmicli_dms_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     g_option_context_parse (context, &argc, &argv, NULL);
 	g_option_context_free (context);

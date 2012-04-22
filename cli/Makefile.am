@@ -9,7 +9,8 @@ qmicli_CPPFLAGS = \
 qmicli_SOURCES = \
 	qmicli.c \
 	qmicli.h \
-	qmicli-ctl.c
+	qmicli-ctl.c \
+	qmicli-dms.c
 
 qmicli_LDADD = \
 	$(QMICLI_LIBS) \

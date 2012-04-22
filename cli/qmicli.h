@@ -32,4 +32,10 @@ gboolean      qmicli_ctl_options_enabled  (void);
 void          qmicli_ctl_run              (QmiDevice *device,
                                            GCancellable *cancellable);
 
+/* DMS group */
+GOptionGroup *qmicli_dms_get_option_group (void);
+gboolean      qmicli_dms_options_enabled  (void);
+void          qmicli_dms_run              (QmiDevice *device,
+                                           GCancellable *cancellable);
+
 #endif /* __QMICLI_H__ */
