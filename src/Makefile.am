@@ -50,6 +50,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-utils.h qmi-utils.c \
 	qmi-message.h qmi-message.c \
 	qmi-message-ctl.h qmi-message-ctl.c \
+	qmi-message-dms.h qmi-message-dms.c \
 	qmi-device.h qmi-device.c \
 	qmi-client.h qmi-client.c \
 	qmi-client-ctl.h qmi-client-ctl.c \
