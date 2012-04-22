@@ -663,6 +663,26 @@ qmi_message_get_result (QmiMessage *self,
 
     g_assert (self != NULL);
 
+    if (qmi_message_get_service (self) == QMI_SERVICE_CTL) {
+        if (!(qmi_message_get_qmi_flags (self) & QMI_CTL_FLAG_RESPONSE)) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_INVALID_MESSAGE,
+                         "Cannot get result code from non-response CTL message");
+            return FALSE;
+        }
+        /* CTL response, keep on */
+    } else {
+        if (!(qmi_message_get_qmi_flags (self) & QMI_SERVICE_FLAG_RESPONSE)) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_INVALID_MESSAGE,
+                         "Cannot get result code from non-response SVC message");
+            return FALSE;
+        }
+        /* SVC response, keep on */
+    }
+
     if (!qmi_message_tlv_get (self,
                               QMI_TLV_RESULT_CODE,
                               sizeof (msg_result),

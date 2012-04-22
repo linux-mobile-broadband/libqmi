@@ -62,11 +62,30 @@ typedef enum {
     QMI_SERVICE_OMA = 0xE2
 } QmiService;
 
+/*****************************************************************************/
+/* QMI Control */
+
 typedef enum {
     QMI_CTL_MESSAGE_GET_VERSION_INFO   = 0x0021,
     QMI_CTL_MESSAGE_ALLOCATE_CLIENT_ID = 0x0022,
     QMI_CTL_MESSAGE_RELEASE_CLIENT_ID  = 0x0023,
 } QmiCtlMessage;
+
+typedef enum {
+    QMI_CTL_FLAG_NONE       = 0,
+    QMI_CTL_FLAG_RESPONSE   = 1 << 0,
+    QMI_CTL_FLAG_INDICATION = 1 << 1,
+} QmiCtlFlag;
+
+/*****************************************************************************/
+/* QMI Services */
+
+typedef enum {
+    QMI_SERVICE_FLAG_NONE       = 0,
+    QMI_SERVICE_FLAG_COMPOUND   = 1 << 0,
+    QMI_SERVICE_FLAG_RESPONSE   = 1 << 1,
+    QMI_SERVICE_FLAG_INDICATION = 1 << 2,
+} QmiServiceFlag;
 
 #define QMI_CID_NONE      0x00
 #define QMI_CID_BROADCAST 0xFF
