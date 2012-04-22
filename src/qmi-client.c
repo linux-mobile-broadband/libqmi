@@ -150,7 +150,7 @@ qmi_client_get_next_transaction_id (QmiClient *self)
     else
         self->priv->transaction_id++;
 
-    return self->priv->transaction_id;
+    return next;
 }
 
 /*****************************************************************************/
