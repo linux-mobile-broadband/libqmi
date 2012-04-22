@@ -66,9 +66,18 @@ typedef enum {
 /* QMI Control */
 
 typedef enum {
-    QMI_CTL_MESSAGE_GET_VERSION_INFO   = 0x0021,
-    QMI_CTL_MESSAGE_ALLOCATE_CLIENT_ID = 0x0022,
-    QMI_CTL_MESSAGE_RELEASE_CLIENT_ID  = 0x0023,
+    QMI_CTL_MESSAGE_SET_INSTANCE_ID        = 0x0020, /* unused currently */
+    QMI_CTL_MESSAGE_GET_VERSION_INFO       = 0x0021,
+    QMI_CTL_MESSAGE_ALLOCATE_CLIENT_ID     = 0x0022,
+    QMI_CTL_MESSAGE_RELEASE_CLIENT_ID      = 0x0023,
+    QMI_CTL_MESSAGE_REVOKE_CLIENT_ID       = 0x0024, /* unused currently */
+    QMI_CTL_MESSAGE_INVALID_CLIENT_ID      = 0x0025, /* unused currently */
+    QMI_CTL_MESSAGE_SET_DATA_FORMAT        = 0x0026, /* unused currently */
+    QMI_CTL_MESSAGE_SYNC                   = 0x0027, /* unused currently */
+    QMI_CTL_MESSAGE_EVENT                  = 0x0028, /* unused currently */
+    QMI_CTL_MESSAGE_SET_POWER_SAVE_CONFIG  = 0x0029, /* unused currently */
+    QMI_CTL_MESSAGE_SET_POWER_SAVE_MODE    = 0x002A, /* unused currently */
+    QMI_CTL_MESSAGE_GET_POWER_SAVE_MODE    = 0x002B, /* unused currently */
 } QmiCtlMessage;
 
 typedef enum {
