@@ -23,6 +23,7 @@
 
 #include "qmi-message-dms.h"
 #include "qmi-enums.h"
+#include "qmi-error-types.h"
 
 /*****************************************************************************/
 /* Get IDs */
@@ -50,30 +51,48 @@ qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
                                      gchar **meid,
                                      GError **error)
 {
-    gchar *str;
+    gchar *got_esn;
+    gchar *got_imei;
+    gchar *got_meid;
 
     g_assert (qmi_message_get_message_id (self) == QMI_DMS_MESSAGE_GET_IDS);
-    g_assert (esn != NULL);
-    g_assert (imei != NULL);
-    g_assert (meid != NULL);
 
-    *esn = qmi_message_tlv_get_string (self,
-                                       QMI_DMS_TLV_GET_IDS_ESN,
-                                       error);
-    if (!*esn)
-        return FALSE;
+    got_esn = qmi_message_tlv_get_string (self,
+                                          QMI_DMS_TLV_GET_IDS_ESN,
+                                          NULL);
+    got_imei = qmi_message_tlv_get_string (self,
+                                           QMI_DMS_TLV_GET_IDS_IMEI,
+                                           NULL);
+    got_meid = qmi_message_tlv_get_string (self,
+                                           QMI_DMS_TLV_GET_IDS_MEID,
+                                           NULL);
 
-    *imei = qmi_message_tlv_get_string (self,
-                                        QMI_DMS_TLV_GET_IDS_IMEI,
-                                        error);
-    if (!*imei)
+    /* Only return error if none of the outputs was read */
+    if (!got_esn && !got_imei && !got_meid) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_TLV_NOT_FOUND,
+                     "None of the expected outputs (ESN, IMEI, MEID) "
+                     "was found in the message");
         return FALSE;
+    }
 
-    *meid = qmi_message_tlv_get_string (self,
-                                        QMI_DMS_TLV_GET_IDS_MEID,
-                                        error);
-    if (!*meid)
-        return FALSE;
+    /* Set requested outputs */
+
+    if (esn)
+        *esn = got_esn;
+    else
+        g_free (got_esn);
+
+    if (imei)
+        *imei = got_imei;
+    else
+        g_free (got_imei);
+
+    if (meid)
+        *meid = got_meid;
+    else
+        g_free (got_meid);
 
     return TRUE;
 }

@@ -42,6 +42,7 @@ qmi-client.c: qmi-error-types.h qmi-enum-types.h
 qmi-client-ctl.c: qmi-error-types.h qmi-enum-types.h
 qmi-message.c: qmi-error-types.h
 qmi-message-ctl.c: qmi-error-types.h
+qmi-message-dms.c: qmi-error-types.h
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
