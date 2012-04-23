@@ -90,8 +90,10 @@ gchar *qmi_message_get_printable (QmiMessage *self);
 gboolean qmi_message_check (QmiMessage *self,
                             GError **error);
 
-gboolean qmi_message_get_result (QmiMessage *self,
-                                 GError **error);
+gboolean qmi_message_is_response   (QmiMessage *self);
+gboolean qmi_message_is_indication (QmiMessage *self);
+gboolean qmi_message_get_response_result (QmiMessage *self,
+                                          GError **error);
 
 G_END_DECLS
 

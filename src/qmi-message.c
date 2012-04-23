@@ -148,6 +148,34 @@ qmi_message_get_qmi_flags (QmiMessage *self)
     return self->buf->qmi.service.header.flags;
 }
 
+gboolean
+qmi_message_is_response (QmiMessage *self)
+{
+    if (qmi_message_is_control (self)) {
+        if (self->buf->qmi.control.header.flags & QMI_CTL_FLAG_RESPONSE)
+            return TRUE;
+    } else {
+        if (self->buf->qmi.service.header.flags & QMI_SERVICE_FLAG_RESPONSE)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+gboolean
+qmi_message_is_indication (QmiMessage *self)
+{
+    if (qmi_message_is_control (self)) {
+        if (self->buf->qmi.control.header.flags & QMI_CTL_FLAG_INDICATION)
+            return TRUE;
+    } else {
+        if (self->buf->qmi.service.header.flags & QMI_SERVICE_FLAG_INDICATION)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
 guint16
 qmi_message_get_transaction_id (QmiMessage *self)
 {
@@ -679,31 +707,19 @@ enum {
 };
 
 gboolean
-qmi_message_get_result (QmiMessage *self,
-                        GError **error)
+qmi_message_get_response_result (QmiMessage *self,
+                                 GError **error)
 {
     struct qmi_result msg_result;
 
     g_assert (self != NULL);
 
-    if (qmi_message_get_service (self) == QMI_SERVICE_CTL) {
-        if (!(qmi_message_get_qmi_flags (self) & QMI_CTL_FLAG_RESPONSE)) {
-            g_set_error (error,
-                         QMI_CORE_ERROR,
-                         QMI_CORE_ERROR_INVALID_MESSAGE,
-                         "Cannot get result code from non-response CTL message");
-            return FALSE;
-        }
-        /* CTL response, keep on */
-    } else {
-        if (!(qmi_message_get_qmi_flags (self) & QMI_SERVICE_FLAG_RESPONSE)) {
-            g_set_error (error,
-                         QMI_CORE_ERROR,
-                         QMI_CORE_ERROR_INVALID_MESSAGE,
-                         "Cannot get result code from non-response SVC message");
-            return FALSE;
-        }
-        /* SVC response, keep on */
+    if (!qmi_message_is_response (self)) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_INVALID_MESSAGE,
+                     "Cannot get result code from non-response message");
+        return FALSE;
     }
 
     if (!qmi_message_tlv_get (self,

@@ -415,7 +415,7 @@ parse_response (QmiDevice *self)
             else {
                 /* Received message is a response in a transaction; handle QMI protocol
                  * errors */
-                if (!qmi_message_get_result (message, &error)) {
+                if (!qmi_message_get_response_result (message, &error)) {
                     transaction_complete_and_free (tr, NULL, error);
                     g_error_free (error);
                 } else {
