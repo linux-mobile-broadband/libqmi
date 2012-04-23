@@ -49,7 +49,7 @@ AC_CONFIG_FILES([Makefile
 AC_OUTPUT
 
 echo "
-    libgqmi $VERSION
+    libqmi-glib $VERSION
     ==============================================
 
     compiler:                ${CC}
