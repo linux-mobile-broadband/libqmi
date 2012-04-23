@@ -153,9 +153,9 @@ get_ids_ready (QmiClientDms *client,
              "\tIMEI: '%s'\n"
              "\tMEID: '%s'\n",
              qmi_device_get_path_display (ctx->device),
-             esn,
-             imei,
-             meid);
+             esn ? esn : "not available",
+             imei ? imei : "not available",
+             meid ? meid : "not available");
 
     g_free (esn);
     g_free (imei);
