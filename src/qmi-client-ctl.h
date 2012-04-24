@@ -84,6 +84,16 @@ gboolean qmi_client_ctl_release_cid_finish (QmiClientCtl *self,
                                             GAsyncResult *res,
                                             GError **error);
 
+/* Sync */
+void     qmi_client_ctl_sync        (QmiClientCtl *self,
+                                     guint timeout,
+                                     GCancellable *cancellable,
+                                     GAsyncReadyCallback callback,
+                                     gpointer user_data);
+gboolean qmi_client_ctl_sync_finish (QmiClientCtl *self,
+                                     GAsyncResult *res,
+                                     GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_CLIENT_CTL_H_ */

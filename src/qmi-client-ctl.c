@@ -25,6 +25,7 @@
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
 #include "qmi-client-ctl.h"
+#include "qmi-message-ctl.h"
 
 G_DEFINE_TYPE (QmiClientCtl, qmi_client_ctl, QMI_TYPE_CLIENT);
 
@@ -391,6 +392,81 @@ qmi_client_ctl_release_cid (QmiClientCtl *self,
 }
 
 /*****************************************************************************/
+/* Sync */
+
+/**
+ * qmi_client_ctl_sync_finish:
+ * @self: a #QmiClientCtl.
+ * @res: a #GAsyncResult.
+ * @error: a #GError.
+ *
+ * Finishes an operation started with qmi_client_ctl_sync().
+ *
+ * Returns: #TRUE if the operation succeeded, or #FALSE if @error is set.
+ */
+gboolean
+qmi_client_ctl_sync_finish (QmiClientCtl *self,
+                            GAsyncResult *res,
+                            GError **error)
+{
+    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+}
+
+static void
+sync_command_ready (QmiDevice *device,
+                    GAsyncResult *res,
+                    GSimpleAsyncResult *simple)
+{
+    GError *error = NULL;
+    QmiMessage *reply;
+
+    reply = qmi_device_command_finish (device, res, &error);
+    if (!reply)
+        g_simple_async_result_take_error (simple, error);
+    else
+        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
+
+    g_simple_async_result_complete (simple);
+    g_object_unref (simple);
+    qmi_message_unref (reply);
+}
+
+/**
+ * qmi_client_ctl_sync:
+ * @self: a #QmiClientCtl.
+ * @timeout: maximum time to wait to get the operation completed.
+ * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Request to sync with the device.
+ * When the operation is finished, @callback will be called. You can then call
+ * qmi_client_ctl_sync_finish() to get the the result of the operation.
+ */
+void
+qmi_client_ctl_sync (QmiClientCtl *self,
+                     guint timeout,
+                     GCancellable *cancellable,
+                     GAsyncReadyCallback callback,
+                     gpointer user_data)
+{
+    GSimpleAsyncResult *result;
+    QmiMessage *request;
+
+    result = g_simple_async_result_new (G_OBJECT (self),
+                                        callback,
+                                        user_data,
+                                        qmi_client_ctl_sync);
+
+    request = qmi_message_ctl_sync_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)));
+    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+                        request,
+                        timeout,
+                        cancellable,
+                        (GAsyncReadyCallback)sync_command_ready,
+                        result);
+    qmi_message_unref (request);
+}
 
 static void
 qmi_client_ctl_init (QmiClientCtl *self)

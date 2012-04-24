@@ -63,6 +63,9 @@ gboolean    qmi_message_ctl_release_cid_reply_parse (QmiMessage *self,
                                                      QmiService *service,
                                                      GError **error);
 
+/* Sync */
+QmiMessage *qmi_message_ctl_sync_new (guint8 transaction_id);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_MESSAGE_CTL_H_ */

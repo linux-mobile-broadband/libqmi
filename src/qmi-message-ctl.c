@@ -214,3 +214,15 @@ qmi_message_ctl_release_cid_reply_parse (QmiMessage *self,
 
     return TRUE;
 }
+
+/*****************************************************************************/
+/* Sync */
+
+QmiMessage *
+qmi_message_ctl_sync_new (guint8 transaction_id)
+{
+    return qmi_message_new (QMI_SERVICE_CTL,
+                            0,
+                            transaction_id,
+                            QMI_CTL_MESSAGE_SYNC);
+}

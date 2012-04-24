@@ -73,7 +73,7 @@ typedef enum {
     QMI_CTL_MESSAGE_REVOKE_CLIENT_ID       = 0x0024, /* unused currently */
     QMI_CTL_MESSAGE_INVALID_CLIENT_ID      = 0x0025, /* unused currently */
     QMI_CTL_MESSAGE_SET_DATA_FORMAT        = 0x0026, /* unused currently */
-    QMI_CTL_MESSAGE_SYNC                   = 0x0027, /* unused currently */
+    QMI_CTL_MESSAGE_SYNC                   = 0x0027,
     QMI_CTL_MESSAGE_EVENT                  = 0x0028, /* unused currently */
     QMI_CTL_MESSAGE_SET_POWER_SAVE_CONFIG  = 0x0029, /* unused currently */
     QMI_CTL_MESSAGE_SET_POWER_SAVE_MODE    = 0x002A, /* unused currently */
