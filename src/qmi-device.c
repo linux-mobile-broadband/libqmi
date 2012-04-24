@@ -20,6 +20,11 @@
  * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
  */
 
+#include <errno.h>
+#include <string.h>
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
 #include <gio/gio.h>
 
 #include "qmi-device.h"
@@ -637,6 +642,9 @@ static gboolean
 create_iochannel (QmiDevice *self,
                   GError **error)
 {
+    GError *inner_error = NULL;
+    guint fd;
+
     if (self->priv->iochannel) {
         g_set_error (error,
                      QMI_CORE_ERROR,
@@ -648,34 +656,47 @@ create_iochannel (QmiDevice *self,
 
     g_assert (self->priv->file);
     g_assert (self->priv->path);
-    self->priv->iochannel = g_io_channel_new_file (self->priv->path, "r+", error);
 
-    if (self->priv->iochannel) {
-        GError *inner_error = NULL;
-
-        /* We don't want UTF-8 encoding, we're playing with raw binary data */
-        g_io_channel_set_encoding (self->priv->iochannel, NULL, NULL);
-
-        /* We don't want to get the channel buffered */
-        g_io_channel_set_buffered (self->priv->iochannel, FALSE);
-
-        /* We don't want to get blocked while writing stuff */
-        if (!g_io_channel_set_flags (self->priv->iochannel,
-                                     G_IO_FLAG_NONBLOCK,
-                                     &inner_error)) {
-            g_prefix_error (&inner_error, "Cannot set non-blocking channel: ");
-            g_propagate_error (error, inner_error);
-            g_io_channel_shutdown (self->priv->iochannel, FALSE, NULL);
-            g_io_channel_unref (self->priv->iochannel);
-            self->priv->iochannel = NULL;
-        }
+    errno = 0;
+    fd = open (self->priv->path, O_RDWR | O_EXCL | O_NONBLOCK | O_NOCTTY);
+    if (fd < 0) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "Cannot open device file '%s': %s",
+                     self->priv->path_display,
+                     strerror (errno));
+        return FALSE;
     }
 
-    if (self->priv->iochannel)
-        self->priv->watch_id = g_io_add_watch (self->priv->iochannel,
-                                               G_IO_IN | G_IO_ERR | G_IO_HUP,
-                                               (GIOFunc)data_available,
-                                               self);
+    /* Create new GIOChannel */
+    self->priv->iochannel = g_io_channel_unix_new (fd);
+
+    /* We don't want UTF-8 encoding, we're playing with raw binary data */
+    g_io_channel_set_encoding (self->priv->iochannel, NULL, NULL);
+
+    /* We don't want to get the channel buffered */
+    g_io_channel_set_buffered (self->priv->iochannel, FALSE);
+
+    /* Let the GIOChannel own the FD */
+    g_io_channel_set_close_on_unref (self->priv->iochannel, TRUE);
+
+    /* We don't want to get blocked while writing stuff */
+    if (!g_io_channel_set_flags (self->priv->iochannel,
+                                 G_IO_FLAG_NONBLOCK,
+                                 &inner_error)) {
+        g_prefix_error (&inner_error, "Cannot set non-blocking channel: ");
+        g_propagate_error (error, inner_error);
+        g_io_channel_shutdown (self->priv->iochannel, FALSE, NULL);
+        g_io_channel_unref (self->priv->iochannel);
+        self->priv->iochannel = NULL;
+        return FALSE;
+    }
+
+    self->priv->watch_id = g_io_add_watch (self->priv->iochannel,
+                                           G_IO_IN | G_IO_ERR | G_IO_HUP,
+                                           (GIOFunc)data_available,
+                                           self);
 
     return !!self->priv->iochannel;
 }
