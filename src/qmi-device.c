@@ -125,7 +125,8 @@ build_transaction_key (QmiMessage *message)
     client_id = qmi_message_get_client_id (message);
     transaction_id = qmi_message_get_transaction_id (message);
 
-    key = (gpointer)((((service << 8) | client_id) << 16) | transaction_id);
+    /* We're putting a 32 bit value into a gpointer */
+    key = GUINT_TO_POINTER ((((service << 8) | client_id) << 16) | transaction_id);
 
 #ifdef MESSAGE_ENABLE_TRACE
     {
