@@ -22,6 +22,8 @@
  * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
  */
 
+#include <endian.h>
+
 #include "qmi-message-ctl.h"
 #include "qmi-enums.h"
 #include "qmi-error-types.h"
