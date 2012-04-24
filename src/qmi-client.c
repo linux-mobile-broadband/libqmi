@@ -219,12 +219,21 @@ qmi_client_release (QmiClient *self,
                     GAsyncReadyCallback callback,
                     gpointer user_data)
 {
+    GError *error = NULL;
     GSimpleAsyncResult *result;
 
     result = g_simple_async_result_new (G_OBJECT (self),
                                         callback,
                                         user_data,
                                         qmi_client_release);
+
+    /* Unregister client from the device */
+    if (!qmi_device_unregister_client (self->priv->device, self, &error)) {
+        g_simple_async_result_take_error (result, error);
+        g_simple_async_result_complete_in_idle (result);
+        g_object_unref (result);
+        return;
+    }
 
     /* The CTL service client uses the implicit client (CID == 0),
      * no need to explicitly release it */
@@ -250,6 +259,15 @@ qmi_client_release (QmiClient *self,
                                 NULL,
                                 (GAsyncReadyCallback)client_ctl_release_cid_ready,
                                 result);
+}
+/*****************************************************************************/
+
+void
+qmi_client_process_indication (QmiClient *self,
+                               QmiMessage *message)
+{
+    if (QMI_CLIENT_GET_CLASS (self)->process_indication)
+        QMI_CLIENT_GET_CLASS (self)->process_indication (self, message);
 }
 
 /*****************************************************************************/
@@ -286,6 +304,13 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
 
     /* Store the CID */
     self->priv->cid = cid;
+
+    /* Register the client in the device in order to get notifications */
+    if (!qmi_device_register_client (self->priv->device, self, &error)) {
+        g_prefix_error (&error, "Couldn't register client in device: ");
+        g_simple_async_result_take_error (simple, error);
+    } else
+        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
 
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
@@ -327,7 +352,14 @@ initable_init_async (GAsyncInitable *initable,
     }
 
     /* For the QmiClientCtl, just done we are */
-    g_simple_async_result_set_op_res_gboolean (result, TRUE);
+
+    /* Register the client in the device in order to get notifications */
+    if (!qmi_device_register_client (self->priv->device, self, &error)) {
+        g_prefix_error (&error, "Couldn't register client in device: ");
+        g_simple_async_result_take_error (result, error);
+    } else
+        g_simple_async_result_set_op_res_gboolean (result, TRUE);
+
     g_simple_async_result_complete_in_idle (result);
     g_object_unref (result);
 }
@@ -386,7 +418,6 @@ client_release_cid_on_dispose (QmiClient *self)
                                 (GAsyncReadyCallback)client_ctl_release_cid_on_dispose_ready,
                                 ctx);
 }
-
 
 /*****************************************************************************/
 

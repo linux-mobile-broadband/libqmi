@@ -59,6 +59,9 @@ struct _QmiDevicePrivate {
 
     /* HT to keep track of ongoing transactions */
     GHashTable *transactions;
+
+    /* HT of clients that want to get indications */
+    GHashTable *registered_clients;
 };
 
 #define BUFFER_SIZE 2048
@@ -352,7 +355,180 @@ qmi_device_is_open (QmiDevice *self)
 }
 
 /*****************************************************************************/
+/* Register clients that want to receive indications */
+
+static gpointer
+build_registered_client_key (guint8 cid,
+                             QmiService service)
+{
+    return GUINT_TO_POINTER (((guint8)service << 8) | cid);
+}
+
+gboolean
+qmi_device_register_client (QmiDevice *self,
+                            QmiClient *client,
+                            GError **error)
+{
+    gpointer key;
+
+    if (G_UNLIKELY (!self->priv->registered_clients))
+        self->priv->registered_clients = g_hash_table_new_full (g_direct_hash,
+                                                                g_direct_equal,
+                                                                NULL,
+                                                                g_object_unref);
+
+    key = build_registered_client_key (qmi_client_get_cid (client),
+                                       qmi_client_get_service (client));
+    /* Only add the new client if not already registered one with the same CID
+     * for the same service */
+    if (g_hash_table_lookup (self->priv->registered_clients, key)) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "A client with CID '%u' and service '%s' is already registered",
+                     qmi_client_get_cid (client),
+                     qmi_service_get_string (qmi_client_get_service (client)));
+        return FALSE;
+    }
+
+    g_hash_table_insert (self->priv->registered_clients,
+                         key,
+                         g_object_ref (client));
+    return TRUE;
+}
+
+gboolean
+qmi_device_unregister_client (QmiDevice *self,
+                              QmiClient *client,
+                              GError **error)
+{
+    gpointer key;
+
+    key = build_registered_client_key (qmi_client_get_cid (client),
+                                       qmi_client_get_service (client));
+    if (!g_hash_table_remove (self->priv->registered_clients, key)) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "Cannot unregister client with CID '%u' and service '%s': Not found",
+                     qmi_client_get_cid (client),
+                     qmi_service_get_string (qmi_client_get_service (client)));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*****************************************************************************/
 /* Open device */
+
+typedef struct {
+    QmiClient *client;
+    QmiMessage *message;
+} IdleIndicationContext;
+
+static gboolean
+process_indication_idle (IdleIndicationContext *ctx)
+{
+    g_assert (ctx->client != NULL);
+    g_assert (ctx->message != NULL);
+
+    qmi_client_process_indication (ctx->client, ctx->message);
+
+    g_object_unref (ctx->client);
+    qmi_message_unref (ctx->message);
+    g_slice_free (IdleIndicationContext, ctx);
+    return FALSE;
+}
+
+static void
+report_indication (QmiClient *client,
+                   QmiMessage *message)
+{
+    IdleIndicationContext *ctx;
+
+    /* Setup an idle to Pass the indication down to the client */
+    ctx = g_slice_new (IdleIndicationContext);
+    ctx->client = g_object_ref (client);
+    ctx->message = qmi_message_ref (message);
+    g_idle_add ((GSourceFunc)process_indication_idle, ctx);
+}
+
+static void
+process_message (QmiDevice *self,
+                 QmiMessage *message)
+{
+    GError *error = NULL;
+
+    /* Ensure the read message is valid */
+    if (!qmi_message_check (message, &error)) {
+        g_warning ("Invalid QMI message received: %s",
+                   error->message);
+        g_error_free (error);
+        return;
+    }
+
+#ifdef MESSAGE_ENABLE_TRACE
+    {
+        gchar *printable;
+
+        printable = qmi_message_get_printable (message, ">>>>>> ");
+        g_debug ("[%s] Received message...\n%s",
+                 self->priv->path_display,
+                 printable);
+        g_free (printable);
+    }
+#endif /* MESSAGE_ENABLE_TRACE */
+
+    if (qmi_message_is_indication (message)) {
+        if (qmi_message_get_client_id (message) == QMI_CID_BROADCAST) {
+            GHashTableIter iter;
+            gpointer key;
+            QmiClient *client;
+
+            g_hash_table_iter_init (&iter, self->priv->registered_clients);
+            while (g_hash_table_iter_next (&iter, &key, (gpointer *)&client)) {
+                /* For broadcast messages, report them just if the service matches */
+                if (qmi_message_get_service (message) == qmi_client_get_service (client))
+                    report_indication (client, message);
+            }
+        } else {
+            QmiClient *client;
+
+            client = g_hash_table_lookup (self->priv->registered_clients,
+                                          build_registered_client_key (qmi_message_get_client_id (message),
+                                                                       qmi_message_get_service (message)));
+            if (client)
+                report_indication (client, message);
+        }
+
+        return;
+    }
+
+    if (qmi_message_is_response (message)) {
+        Transaction *tr;
+
+        tr = device_match_transaction (self, message);
+        if (!tr)
+            g_debug ("[%s] No transaction matched in received message",
+                     self->priv->path_display);
+        else {
+            /* Received message is a response in a transaction; handle QMI protocol
+             * errors */
+            if (!qmi_message_get_response_result (message, &error)) {
+                transaction_complete_and_free (tr, NULL, error);
+                g_error_free (error);
+            } else {
+                /* Report the reply message */
+                transaction_complete_and_free (tr, message, NULL);
+            }
+        }
+        return;
+    }
+
+    g_debug ("[%s] Message received but it is neither an indication nor a response. Skipping it.",
+             self->priv->path_display);
+}
 
 static void
 parse_response (QmiDevice *self)
@@ -383,47 +559,8 @@ parse_response (QmiDevice *self)
                                    0,
                                    qmi_message_get_length (message));
 
-        /* Ensure the read message is valid */
-        if (!qmi_message_check (message, &error)) {
-            g_warning ("Invalid QMI message received: %s",
-                       error->message);
-            g_error_free (error);
-        } else if (qmi_message_get_client_id (message) == QMI_CID_BROADCAST) {
-            g_debug ("Broadcast QMI message received");
-            /* TODO: notify to clients */
-        } else {
-            Transaction *tr;
-
-            /* Got a valid QMI message, do whatever we need to do with it now */
-
-#ifdef MESSAGE_ENABLE_TRACE
-            {
-                gchar *printable;
-
-                printable = qmi_message_get_printable (message, ">>>>>> ");
-                g_debug ("[%s] Received message...\n%s",
-                         self->priv->path_display,
-                         printable);
-                g_free (printable);
-            }
-#endif /* MESSAGE_ENABLE_TRACE */
-
-            tr = device_match_transaction (self, message);
-            if (!tr)
-                g_debug ("[%s] No transaction matched in received message",
-                         self->priv->path_display);
-            else {
-                /* Received message is a response in a transaction; handle QMI protocol
-                 * errors */
-                if (!qmi_message_get_response_result (message, &error)) {
-                    transaction_complete_and_free (tr, NULL, error);
-                    g_error_free (error);
-                } else {
-                    /* Report the reply message */
-                    transaction_complete_and_free (tr, message, NULL);
-                }
-            }
-        }
+        /* Play with the received message */
+        process_message (self, message);
 
         qmi_message_unref (message);
     } while (self->priv->response->len > 0);
@@ -1064,8 +1201,17 @@ finalize (GObject *object)
 
     /* Transactions keep refs to the device, so it's actually
      * impossible to have any content in the HT */
-    g_assert (g_hash_table_size (self->priv->transactions) == 0);
-    g_hash_table_unref (self->priv->transactions);
+    if (self->priv->transactions) {
+        g_assert (g_hash_table_size (self->priv->transactions) == 0);
+        g_hash_table_unref (self->priv->transactions);
+    }
+
+    /* Registered clients keep refs to the device, so it's actually
+     * impossible to have any content in the HT */
+    if (self->priv->registered_clients) {
+        g_assert (g_hash_table_size (self->priv->registered_clients) == 0);
+        g_hash_table_unref (self->priv->registered_clients);
+    }
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);

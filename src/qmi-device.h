@@ -31,6 +31,7 @@ G_BEGIN_DECLS
  * as it is not installable */
 typedef struct _QmiMessage QmiMessage;
 
+typedef struct _QmiClient QmiClient;
 typedef struct _QmiClientCtl QmiClientCtl;
 
 #define QMI_TYPE_DEVICE            (qmi_device_get_type ())
@@ -94,6 +95,14 @@ void         qmi_device_command        (QmiDevice *self,
 QmiMessage  *qmi_device_command_finish (QmiDevice *self,
                                         GAsyncResult *res,
                                         GError **error);
+
+/* not part of the public API */
+gboolean qmi_device_register_client   (QmiDevice *self,
+                                       QmiClient *client,
+                                       GError **error);
+gboolean qmi_device_unregister_client (QmiDevice *self,
+                                       QmiClient *client,
+                                       GError **error);
 
 G_END_DECLS
 

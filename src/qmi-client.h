@@ -52,6 +52,10 @@ struct _QmiClient {
 
 struct _QmiClientClass {
     GObjectClass parent;
+
+    /* Virtual method to get indications processed */
+    void (* process_indication) (QmiClient *self,
+                                 QmiMessage *message);
 };
 
 GType qmi_client_get_type (void);
@@ -70,6 +74,10 @@ void     qmi_client_release        (QmiClient *self,
 gboolean qmi_client_release_finish (QmiClient *self,
                                     GAsyncResult *res,
                                     GError **error);
+
+/* not part of the public API */
+void qmi_client_process_indication (QmiClient *self,
+                                    QmiMessage *message);
 
 G_END_DECLS
 
