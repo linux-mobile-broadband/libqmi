@@ -35,6 +35,7 @@
 
 #include "qmi-message.h"
 #include "qmi-utils.h"
+#include "qmi-enum-types.h"
 #include "qmi-error-types.h"
 
 #define PACKED __attribute__((packed))
@@ -641,48 +642,76 @@ qmi_message_new_from_raw (const guint8 *raw,
 }
 
 gchar *
-qmi_message_get_printable (QmiMessage *self)
+qmi_message_get_printable (QmiMessage *self,
+                           const gchar *line_prefix)
 {
     GString *printable;
+    gchar *qmi_flags_str;
+    const gchar *qmi_message_str;
     struct tlv *tlv;
 
     if (!qmi_message_check (self, NULL))
         return NULL;
 
+    if (!line_prefix)
+        line_prefix = "";
+
     printable = g_string_new ("");
     g_string_append_printf (printable,
-                            "QMUX:\n"
-                            "\tlength=0x%04x\n"
-                            "\tflags=0x%02x\n"
-                            "\tservice=0x%02x\n"
-                            "\tclient=0x%02x\n",
-                            qmux_length (self),
-                            qmi_message_get_qmux_flags (self),
-                            qmi_message_get_service (self),
-                            qmi_message_get_client_id (self));
+                            "%sQMUX:\n"
+                            "%s  length  = %u (0x%04x)\n"
+                            "%s  flags   = 0x%02x\n"
+                            "%s  service = \"%s\" (0x%02x)\n"
+                            "%s  client  = 0x%02x\n",
+                            line_prefix,
+                            line_prefix, qmux_length (self), qmux_length (self),
+                            line_prefix, qmi_message_get_qmux_flags (self),
+                            line_prefix, qmi_service_get_string (qmi_message_get_service (self)), qmi_message_get_service (self),
+                            line_prefix, qmi_message_get_client_id (self));
+
+    if (qmi_message_get_service (self) == QMI_SERVICE_CTL)
+        qmi_flags_str = qmi_ctl_flag_build_string_from_mask (qmi_message_get_qmi_flags (self));
+    else
+        qmi_flags_str = qmi_service_flag_build_string_from_mask (qmi_message_get_qmi_flags (self));
+
+    switch (qmi_message_get_service (self)) {
+    case QMI_SERVICE_CTL:
+        qmi_message_str = qmi_ctl_message_get_string (qmi_message_get_message_id (self));
+        break;
+    case QMI_SERVICE_DMS:
+        qmi_message_str = qmi_dms_message_get_string (qmi_message_get_message_id (self));
+        break;
+    default:
+        qmi_message_str = "unknown";
+        break;
+    }
+
     g_string_append_printf (printable,
-                            "QMI:\n"
-                            "\tflags=0x%02x\n"
-                            "\ttransaction=0x%04x\n"
-                            "\tmessage=0x%04x\n"
-                            "\ttlv_length=0x%04x\n",
-                            qmi_message_get_qmi_flags (self),
-                            qmi_message_get_transaction_id (self),
-                            qmi_message_get_message_id (self),
-                            qmi_tlv_length (self));
+                            "%sQMI:\n"
+                            "%s  flags       = \"%s\" (0x%02x)\n"
+                            "%s  transaction = %u (0x%04x)\n"
+                            "%s  message     = \"%s\" (0x%04x)\n"
+                            "%s  tlv_length  = %u (0x%04x)\n",
+                            line_prefix,
+                            line_prefix, qmi_flags_str, qmi_message_get_qmi_flags (self),
+                            line_prefix, qmi_message_get_transaction_id (self), qmi_message_get_transaction_id (self),
+                            line_prefix, qmi_message_str, qmi_message_get_message_id (self),
+                            line_prefix, qmi_tlv_length (self), qmi_tlv_length (self));
+    g_free (qmi_flags_str);
 
     for (tlv = qmi_tlv_first (self); tlv; tlv = qmi_tlv_next (self, tlv)) {
         gchar *value_hex;
 
         value_hex = qmi_utils_str_hex (tlv->value, tlv->length, ':');
         g_string_append_printf (printable,
-                                "TLV:\n"
-                                "\ttype=0x%02x\n"
-                                "\tlength=0x%04x\n"
-                                "\tvalue=%s\n",
-                                tlv->type,
-                                tlv->length,
-                                value_hex);
+                                "%sTLV:\n"
+                                "%s  type   = 0x%02x\n"
+                                "%s  length = %u (0x%04x)\n"
+                                "%s  value  = %s\n",
+                                line_prefix,
+                                line_prefix, tlv->type,
+                                line_prefix, tlv->length, tlv->length,
+                                line_prefix, value_hex);
         g_free (value_hex);
     }
 

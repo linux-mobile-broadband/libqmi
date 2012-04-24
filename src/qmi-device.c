@@ -400,7 +400,7 @@ parse_response (QmiDevice *self)
             {
                 gchar *printable;
 
-                printable = qmi_message_get_printable (message);
+                printable = qmi_message_get_printable (message, ">>>>>> ");
                 g_debug ("[%s] Received message...\n%s",
                          self->priv->path_display,
                          printable);
@@ -767,7 +767,7 @@ qmi_device_command (QmiDevice *self,
     {
         gchar *printable;
 
-        printable = qmi_message_get_printable (message);
+        printable = qmi_message_get_printable (message, "<<<<<< ");
         g_debug ("[%s] Sending message...\n%s",
                  self->priv->path_display,
                  printable);

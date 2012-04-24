@@ -85,7 +85,8 @@ gconstpointer qmi_message_get_raw (QmiMessage *self,
 
 gsize qmi_message_get_length (QmiMessage *self);
 
-gchar *qmi_message_get_printable (QmiMessage *self);
+gchar *qmi_message_get_printable (QmiMessage *self,
+                                  const gchar *line_prefix);
 
 gboolean qmi_message_check (QmiMessage *self,
                             GError **error);
