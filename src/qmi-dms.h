@@ -18,31 +18,26 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
+ * Copyright (C) 2012 Aleksander Morgado <aleksander@gnu.org>
  */
 
-/* NOTE: this is a private non-installable header */
-
-#ifndef _LIBQMI_GLIB_QMI_MESSAGE_DMS_H_
-#define _LIBQMI_GLIB_QMI_MESSAGE_DMS_H_
+#ifndef _LIBQMI_GLIB_QMI_DMS_H_
+#define _LIBQMI_GLIB_QMI_DMS_H_
 
 #include <glib.h>
 
-#include "qmi-dms.h"
-#include "qmi-message.h"
-
 G_BEGIN_DECLS
 
-/* Get IDs */
-
-QmiMessage *qmi_message_dms_get_ids_new         (guint8 transaction_id,
-                                                 guint8 client_id);
-gboolean    qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
-                                                 gchar **esn,
-                                                 gchar **imei,
-                                                 gchar **meid,
-                                                 GError **error);
+/*****************************************************************************/
+/* Supported/known messages */
+typedef enum {
+    QMI_DMS_MESSAGE_EVENT              = 0x0001, /* unused currently */
+    QMI_DMS_MESSAGE_GET_MANUFACTURER   = 0x0021, /* unused currently */
+    QMI_DMS_MESSAGE_GET_IDS            = 0x0025,
+    QMI_DMS_MESSAGE_GET_OPERATING_MODE = 0x002D, /* unused currently */
+    QMI_DMS_MESSAGE_SET_OPERATING_MODE = 0x002E, /* unused currently */
+} QmiDmsMessage;
 
 G_END_DECLS
 
-#endif /* _LIBQMI_GLIB_QMI_MESSAGE_DMS_H_ */
+#endif /* _LIBQMI_GLIB_QMI_DMS_H_ */

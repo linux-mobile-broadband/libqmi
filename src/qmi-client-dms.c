@@ -22,6 +22,7 @@
 
 #include <gio/gio.h>
 
+#include "qmi-enum-types.h"
 #include "qmi-client-dms.h"
 #include "qmi-message-dms.h"
 

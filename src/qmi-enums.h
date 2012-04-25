@@ -99,12 +99,4 @@ typedef enum {
 #define QMI_CID_NONE      0x00
 #define QMI_CID_BROADCAST 0xFF
 
-typedef enum {
-    QMI_DMS_MESSAGE_EVENT              = 0x0001, /* unused currently */
-    QMI_DMS_MESSAGE_GET_MANUFACTURER   = 0x0021, /* unused currently */
-    QMI_DMS_MESSAGE_GET_IDS            = 0x0025,
-    QMI_DMS_MESSAGE_GET_OPERATING_MODE = 0x002D, /* unused currently */
-    QMI_DMS_MESSAGE_SET_OPERATING_MODE = 0x002E, /* unused currently */
-} QmiDmsMessage;
-
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_H_ */

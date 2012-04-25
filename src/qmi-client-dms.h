@@ -26,6 +26,7 @@
 #include <glib-object.h>
 
 #include "qmi-client.h"
+#include "qmi-dms.h"
 
 G_BEGIN_DECLS
 

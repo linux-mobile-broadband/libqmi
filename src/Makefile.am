@@ -23,18 +23,19 @@ qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/qmi-er
 		qmi-errors.h > $@
 
 # Enum types
-qmi-enum-types.h: qmi-enums.h $(top_srcdir)/build-aux/qmi-enum-types-template.h
+ENUMS = qmi-enums.h qmi-dms.h
+qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-dms.h\"\n" \
 		--template $(top_srcdir)/build-aux/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
-		qmi-enums.h > $@
+		$(ENUMS) > $@
 
-qmi-enum-types.c: qmi-enums.h qmi-enum-types.h $(top_srcdir)/build-aux/qmi-enum-types-template.c
+qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/qmi-enum-types-template.c
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#include \"qmi-enums.h\"\n#include \"qmi-enum-types.h\"\n" \
+		--fhead "#include \"qmi-enum-types.h\"\n" \
 		--template $(top_srcdir)/build-aux/qmi-enum-types-template.c \
-		qmi-enums.h > $@
+		$(ENUMS) > $@
 
 # Additional dependencies
 qmi-device.c: qmi-error-types.h
@@ -68,4 +69,4 @@ include_HEADERS = \
 	qmi-device.h \
 	qmi-client.h \
 	qmi-client-ctl.h \
-	qmi-client-dms.h
+	qmi-dms.h qmi-client-dms.h
