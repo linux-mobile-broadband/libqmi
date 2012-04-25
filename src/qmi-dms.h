@@ -38,6 +38,15 @@ typedef enum {
     QMI_DMS_MESSAGE_SET_OPERATING_MODE = 0x002E, /* unused currently */
 } QmiDmsMessage;
 
+/*****************************************************************************/
+/* Get IDs */
+typedef struct _QmiDmsGetIdsResult QmiDmsGetIdsResult;
+QmiDmsGetIdsResult *qmi_dms_get_ids_result_ref      (QmiDmsGetIdsResult *result);
+void                qmi_dms_get_ids_result_unref    (QmiDmsGetIdsResult *result);
+const gchar        *qmi_dms_get_ids_result_get_esn  (QmiDmsGetIdsResult *result);
+const gchar        *qmi_dms_get_ids_result_get_imei (QmiDmsGetIdsResult *result);
+const gchar        *qmi_dms_get_ids_result_get_meid (QmiDmsGetIdsResult *result);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_DMS_H_ */

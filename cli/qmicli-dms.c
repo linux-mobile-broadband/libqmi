@@ -130,36 +130,31 @@ shutdown (void)
 
 static void
 get_ids_ready (QmiClientDms *client,
-               GAsyncResult *result)
+               GAsyncResult *res)
 {
     GError *error = NULL;
-    gchar *esn = NULL;
-    gchar *imei = NULL;
-    gchar *meid = NULL;
+    QmiDmsGetIdsResult *result;
 
-    if (!qmi_client_dms_get_ids_finish (client,
-                                        result,
-                                        &esn,
-                                        &imei,
-                                        &meid,
-                                        &error)) {
+    result = qmi_client_dms_get_ids_finish (client, res, &error);
+    if (!result) {
         g_printerr ("error: couldn't get IDs: %s\n",
                     error->message);
         exit (EXIT_FAILURE);
     }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     g_print ("[%s] Device IDs retrieved:\n"
              "\t ESN: '%s'\n"
              "\tIMEI: '%s'\n"
              "\tMEID: '%s'\n",
              qmi_device_get_path_display (ctx->device),
-             esn ? esn : "not available",
-             imei ? imei : "not available",
-             meid ? meid : "not available");
+             VALIDATE_UNKNOWN (qmi_dms_get_ids_result_get_esn (result)),
+             VALIDATE_UNKNOWN (qmi_dms_get_ids_result_get_imei (result)),
+             VALIDATE_UNKNOWN (qmi_dms_get_ids_result_get_meid (result)));
 
-    g_free (esn);
-    g_free (imei);
-    g_free (meid);
+    qmi_dms_get_ids_result_unref (result);
 
     shutdown ();
 }

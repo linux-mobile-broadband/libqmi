@@ -34,6 +34,103 @@ enum {
   QMI_DMS_TLV_GET_IDS_MEID
 };
 
+/**
+ * QmiDmsGetIdsResult:
+ *
+ * An opaque type handling the IDS of the device.
+ */
+struct _QmiDmsGetIdsResult {
+    volatile gint ref_count;
+    gchar *esn;
+    gchar *imei;
+    gchar *meid;
+};
+
+/**
+ * qmi_dms_get_ids_result_get_esn:
+ * @info: a #QmiDmsGetIdsResult.
+ *
+ * Get the ESN.
+ *
+ * Returns: the ESN.
+ */
+const gchar *
+qmi_dms_get_ids_result_get_esn (QmiDmsGetIdsResult *result)
+{
+    g_return_val_if_fail (result != NULL, NULL);
+
+    return result->esn;
+}
+
+/**
+ * qmi_dms_get_ids_result_get_imei:
+ * @info: a #QmiDmsGetIdsResult.
+ *
+ * Get the IMEI.
+ *
+ * Returns: the IMEI.
+ */
+const gchar *
+qmi_dms_get_ids_result_get_imei (QmiDmsGetIdsResult *result)
+{
+    g_return_val_if_fail (result != NULL, NULL);
+
+    return result->imei;
+}
+
+/**
+ * qmi_dms_get_ids_result_get_meid:
+ * @info: a #QmiDmsGetIdsResult.
+ *
+ * Get the MEID.
+ *
+ * Returns: the MEID.
+ */
+const gchar *
+qmi_dms_get_ids_result_get_meid (QmiDmsGetIdsResult *result)
+{
+    g_return_val_if_fail (result != NULL, NULL);
+
+    return result->meid;
+}
+
+/**
+ * qmi_dms_get_ids_result_ref:
+ * @result: a #QmiDmsGetIdsResult.
+ *
+ * Atomically increments the reference count of @result by one.
+ *
+ * Returns: the new reference to @result.
+ */
+QmiDmsGetIdsResult *
+qmi_dms_get_ids_result_ref (QmiDmsGetIdsResult *result)
+{
+    g_return_val_if_fail (result != NULL, NULL);
+
+    g_atomic_int_inc (&result->ref_count);
+    return result;
+}
+
+/**
+ * qmi_dms_get_ids_result_unref:
+ * @result: a #QmiDmsGetIdsResult.
+ *
+ * Atomically decrements the reference count of array by one.
+ * If the reference count drops to 0, @result is completely disposed.
+ */
+void
+qmi_dms_get_ids_result_unref (QmiDmsGetIdsResult *result)
+{
+    g_return_if_fail (result != NULL);
+
+    if (g_atomic_int_dec_and_test (&result->ref_count)) {
+        g_free (result->esn);
+        g_free (result->imei);
+        g_free (result->meid);
+        g_slice_free (QmiDmsGetIdsResult, result);
+    }
+}
+
 QmiMessage *
 qmi_message_dms_get_ids_new (guint8 transaction_id,
                              guint8 client_id)
@@ -44,13 +141,11 @@ qmi_message_dms_get_ids_new (guint8 transaction_id,
                             QMI_DMS_MESSAGE_GET_IDS);
 }
 
-gboolean
+QmiDmsGetIdsResult *
 qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
-                                     gchar **esn,
-                                     gchar **imei,
-                                     gchar **meid,
                                      GError **error)
 {
+    QmiDmsGetIdsResult *result;
     gchar *got_esn;
     gchar *got_imei;
     gchar *got_meid;
@@ -74,25 +169,13 @@ qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
                      QMI_CORE_ERROR_TLV_NOT_FOUND,
                      "None of the expected outputs (ESN, IMEI, MEID) "
                      "was found in the message");
-        return FALSE;
+        return NULL;
     }
 
-    /* Set requested outputs */
+    result = g_slice_new (QmiDmsGetIdsResult);
+    result->esn = got_esn;
+    result->imei = got_imei;
+    result->meid = got_meid;
 
-    if (esn)
-        *esn = got_esn;
-    else
-        g_free (got_esn);
-
-    if (imei)
-        *imei = got_imei;
-    else
-        g_free (got_imei);
-
-    if (meid)
-        *meid = got_meid;
-    else
-        g_free (got_meid);
-
-    return TRUE;
+    return result;
 }

@@ -60,17 +60,14 @@ QmiClientDms *qmi_client_dms_new_finish (GAsyncResult *res,
                                          GError **error);
 
 /* Get IDs */
-void     qmi_client_dms_get_ids        (QmiClientDms *self,
-                                        guint timeout,
-                                        GCancellable *cancellable,
-                                        GAsyncReadyCallback callback,
-                                        gpointer user_data);
-gboolean qmi_client_dms_get_ids_finish (QmiClientDms *self,
-                                        GAsyncResult *res,
-                                        gchar **esn,
-                                        gchar **imei,
-                                        gchar **meid,
-                                        GError **error);
+void                qmi_client_dms_get_ids        (QmiClientDms *self,
+                                                   guint timeout,
+                                                   GCancellable *cancellable,
+                                                   GAsyncReadyCallback callback,
+                                                   gpointer user_data);
+QmiDmsGetIdsResult *qmi_client_dms_get_ids_finish (QmiClientDms *self,
+                                                   GAsyncResult *res,
+                                                   GError **error);
 
 G_END_DECLS
 

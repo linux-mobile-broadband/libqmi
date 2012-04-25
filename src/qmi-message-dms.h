@@ -33,15 +33,12 @@
 
 G_BEGIN_DECLS
 
+/*****************************************************************************/
 /* Get IDs */
-
-QmiMessage *qmi_message_dms_get_ids_new         (guint8 transaction_id,
-                                                 guint8 client_id);
-gboolean    qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
-                                                 gchar **esn,
-                                                 gchar **imei,
-                                                 gchar **meid,
-                                                 GError **error);
+QmiMessage         *qmi_message_dms_get_ids_new         (guint8 transaction_id,
+                                                         guint8 client_id);
+QmiDmsGetIdsResult *qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
+                                                         GError **error);
 
 G_END_DECLS
 

@@ -31,43 +31,15 @@ G_DEFINE_TYPE (QmiClientDms, qmi_client_dms, QMI_TYPE_CLIENT);
 /*****************************************************************************/
 /* Get IDs */
 
-typedef struct {
-    gchar *esn;
-    gchar *imei;
-    gchar *meid;
-} GetIdsResult;
-
-gboolean
+QmiDmsGetIdsResult *
 qmi_client_dms_get_ids_finish (QmiClientDms *self,
                                GAsyncResult *res,
-                               gchar **esn,
-                               gchar **imei,
-                               gchar **meid,
                                GError **error)
 {
-    GetIdsResult *result;
-
     if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return FALSE;
+        return NULL;
 
-    result = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-
-    if (esn)
-        *esn = result->esn;
-    else
-        g_free (result->esn);
-
-    if (imei)
-        *imei = result->imei;
-    else
-        g_free (result->imei);
-
-    if (meid)
-        *meid = result->meid;
-    else
-        g_free (result->meid);
-
-    return TRUE;
+    return qmi_dms_get_ids_result_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
 }
 
 static void
@@ -75,7 +47,7 @@ get_ids_ready (QmiDevice *device,
                GAsyncResult *res,
                GSimpleAsyncResult *simple)
 {
-    GetIdsResult result;
+    QmiDmsGetIdsResult *result;
     GError *error = NULL;
     QmiMessage *reply;
 
@@ -88,19 +60,15 @@ get_ids_ready (QmiDevice *device,
         return;
     }
 
-    /* Parse version reply */
-    if (!qmi_message_dms_get_ids_reply_parse (reply,
-                                              &result.esn,
-                                              &result.imei,
-                                              &result.meid,
-                                              &error)) {
+    /* Parse reply */
+    result = qmi_message_dms_get_ids_reply_parse (reply, &error);
+    if (!result) {
         g_prefix_error (&error, "Getting IDs reply parsing failed: ");
         g_simple_async_result_take_error (simple, error);
     } else
-        /* We set as result the struct in the stack. Therefore,
-         * never complete_in_idle() here! */
-        g_simple_async_result_set_op_res_gpointer (simple, &result, NULL);
-
+        g_simple_async_result_set_op_res_gpointer (simple,
+                                                   result,
+                                                   (GDestroyNotify)qmi_dms_get_ids_result_unref);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
 }
