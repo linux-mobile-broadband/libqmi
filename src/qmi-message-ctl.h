@@ -33,21 +33,14 @@
 
 G_BEGIN_DECLS
 
+/*****************************************************************************/
 /* Version info */
-
-typedef struct {
-    QmiService service_type;
-    guint16 major_version;
-    guint16 minor_version;
-} QmiCtlVersionInfo;
-
 QmiMessage *qmi_message_ctl_version_info_new         (guint8 transaction_id);
-/* array of QmiCtlVersionInfo */
-GArray     *qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
+GPtrArray  *qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
                                                       GError **error);
 
+/*****************************************************************************/
 /* Allocate CID */
-
 QmiMessage *qmi_message_ctl_allocate_cid_new         (guint8 transaction_id,
                                                       QmiService service);
 gboolean    qmi_message_ctl_allocate_cid_reply_parse (QmiMessage *self,
@@ -55,8 +48,8 @@ gboolean    qmi_message_ctl_allocate_cid_reply_parse (QmiMessage *self,
                                                       QmiService *service,
                                                       GError **error);
 
+/*****************************************************************************/
 /* Release CID */
-
 QmiMessage *qmi_message_ctl_release_cid_new         (guint8 transaction_id,
                                                      QmiService service,
                                                      guint8 cid);
@@ -65,6 +58,7 @@ gboolean    qmi_message_ctl_release_cid_reply_parse (QmiMessage *self,
                                                      QmiService *service,
                                                      GError **error);
 
+/*****************************************************************************/
 /* Sync */
 QmiMessage *qmi_message_ctl_sync_new (guint8 transaction_id);
 

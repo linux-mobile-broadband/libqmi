@@ -131,14 +131,14 @@ shutdown (void)
 
 static void
 get_version_info_ready (QmiClientCtl *client,
-                        GAsyncResult *result)
+                        GAsyncResult *res)
 {
     GError *error = NULL;
-    GArray *services;
+    GPtrArray *result;
     guint i;
 
-    services = qmi_client_ctl_get_version_info_finish (client, result, &error);
-    if (!services) {
+    result = qmi_client_ctl_get_version_info_finish (client, res, &error);
+    if (!result) {
         g_printerr ("error: couldn't get version info: %s\n",
                     error->message);
         exit (EXIT_FAILURE);
@@ -146,17 +146,17 @@ get_version_info_ready (QmiClientCtl *client,
 
     g_print ("[%s] Supported services:\n",
              qmi_device_get_path_display (ctx->device));
-    for (i = 0; i < services->len; i++) {
-        QmiCtlVersionInfo *service;
+    for (i = 0; i < result->len; i++) {
+        QmiCtlVersionInfo *info;
 
-        service = &g_array_index (services, QmiCtlVersionInfo, i);
+        info = g_ptr_array_index (result, i);
         g_print ("\t%s (%u.%u)\n",
-                 qmi_service_get_string (service->service_type),
-                 service->major_version,
-                 service->minor_version);
+                 qmi_service_get_string (qmi_ctl_version_info_get_service (info)),
+                 qmi_ctl_version_info_get_major_version (info),
+                 qmi_ctl_version_info_get_minor_version (info));
     }
 
-    g_array_unref (services);
+    g_ptr_array_unref (result);
 
     shutdown ();
 }

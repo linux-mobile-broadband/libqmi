@@ -31,6 +31,100 @@
 /*****************************************************************************/
 /* Version info */
 
+/**
+ * QmiCtlVersionInfo:
+ *
+ * An opaque type specifying a supported service.
+ */
+struct _QmiCtlVersionInfo {
+    volatile gint ref_count;
+    QmiService service;
+    guint16 major_version;
+    guint16 minor_version;
+};
+
+/**
+ * qmi_ctl_version_info_get_service:
+ * @info: a #QmiCtlVersionInfo.
+ *
+ * Get the QMI service being reported.
+ *
+ * Returns: A #QmiService.
+ */
+QmiService
+qmi_ctl_version_info_get_service (QmiCtlVersionInfo *info)
+{
+    g_return_val_if_fail (info != NULL, QMI_SERVICE_UNKNOWN);
+
+    return info->service;
+}
+
+/**
+ * qmi_ctl_version_info_get_major_version:
+ * @info: a #QmiCtlVersionInfo.
+ *
+ * Get the major version of the QMI service being reported.
+ *
+ * Returns: the major version.
+ */
+guint16
+qmi_ctl_version_info_get_major_version (QmiCtlVersionInfo *info)
+{
+    g_return_val_if_fail (info != NULL, 0);
+
+    return info->major_version;
+}
+
+/**
+ * qmi_ctl_version_info_get_minor_version:
+ * @info: a #QmiCtlVersionInfo.
+ *
+ * Get the minor version of the QMI service being reported.
+ *
+ * Returns: the minor version.
+ */
+guint16
+qmi_ctl_version_info_get_minor_version (QmiCtlVersionInfo *info)
+{
+    g_return_val_if_fail (info != NULL, 0);
+
+    return info->minor_version;
+}
+
+/**
+ * qmi_ctl_version_info_ref:
+ * @info: a #QmiCtlVersionInfo.
+ *
+ * Atomically increments the reference count of @info by one.
+ *
+ * Returns: the new reference to @info.
+ */
+QmiCtlVersionInfo *
+qmi_ctl_version_info_ref (QmiCtlVersionInfo *info)
+{
+    g_return_val_if_fail (info != NULL, NULL);
+
+    g_atomic_int_inc (&info->ref_count);
+    return info;
+}
+
+/**
+ * qmi_ctl_version_info_unref:
+ * @info: a #QmiCtlVersionInfo.
+ *
+ * Atomically decrements the reference count of array by one.
+ * If the reference count drops to 0, @info is completely disposed.
+ */
+void
+qmi_ctl_version_info_unref (QmiCtlVersionInfo *info)
+{
+    g_return_if_fail (info != NULL);
+
+    if (g_atomic_int_dec_and_test (&info->ref_count)) {
+        g_slice_free (QmiCtlVersionInfo, info);
+    }
+}
+
 QmiMessage *
 qmi_message_ctl_version_info_new (guint8 transaction_id)
 {
@@ -51,7 +145,7 @@ struct qmi_tlv_ctl_version_info_list {
 	struct qmi_ctl_version_info_list_service services[0];
 }__attribute__((__packed__));
 
-GArray *
+GPtrArray *
 qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
                                           GError **error)
 {
@@ -59,7 +153,7 @@ qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
     struct qmi_ctl_version_info_list_service *svc;
     guint8 svcbuf[100];
     guint16 svcbuflen = 100;
-    GArray *result;
+    GPtrArray *result;
     guint i;
 
     g_assert (qmi_message_get_message_id (self) == QMI_CTL_MESSAGE_GET_VERSION_INFO);
@@ -84,21 +178,20 @@ qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
         return NULL;
     }
 
-    result = g_array_sized_new (FALSE,
-                                FALSE,
-                                sizeof (QmiCtlVersionInfo),
-                                service_list->count);
+    result = g_ptr_array_new_full (service_list->count,
+                                   (GDestroyNotify)qmi_ctl_version_info_unref);;
 
     for (i = 0, svc = &(service_list->services[0]);
          i < service_list->count;
          i++, svc++) {
-        QmiCtlVersionInfo service;
+        QmiCtlVersionInfo *info;
 
-        service.service_type = (QmiService)svc->service_type;
-        service.major_version = le16toh (svc->major_version);
-        service.minor_version = le16toh (svc->minor_version);
+        info = g_slice_new (QmiCtlVersionInfo);
+        info->service = (QmiService)svc->service_type;
+        info->major_version = le16toh (svc->major_version);
+        info->minor_version = le16toh (svc->minor_version);
 
-        g_array_insert_val (result, i, service);
+        g_ptr_array_add (result, info);
     }
 
     return result;

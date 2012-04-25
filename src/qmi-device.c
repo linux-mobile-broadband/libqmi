@@ -726,7 +726,7 @@ version_info_ready (QmiClientCtl *client_ctl,
 {
     QmiDevice *self;
     GError *error = NULL;
-    GArray *services;
+    GPtrArray *services;
     guint i;
 
     services = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
@@ -747,15 +747,15 @@ version_info_ready (QmiClientCtl *client_ctl,
     for (i = 0; i < services->len; i++) {
         QmiCtlVersionInfo *service;
 
-        service = &g_array_index (services, QmiCtlVersionInfo, i);
+        service = g_ptr_array_index (services, i);
         g_debug ("[%s]    %s (%u.%u)",
                  self->priv->path_display,
-                 qmi_service_get_string (service->service_type),
-                 service->major_version,
-                 service->minor_version);
+                 qmi_service_get_string (qmi_ctl_version_info_get_service (service)),
+                 qmi_ctl_version_info_get_major_version (service),
+                 qmi_ctl_version_info_get_minor_version (service));
     }
 
-    g_array_unref (services);
+    g_ptr_array_unref (services);
     g_simple_async_result_set_op_res_gboolean (simple, TRUE);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);

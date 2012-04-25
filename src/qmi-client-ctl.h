@@ -52,14 +52,14 @@ struct _QmiClientCtlClass {
 GType qmi_client_ctl_get_type (void);
 
 /* Version info */
-void    qmi_client_ctl_get_version_info        (QmiClientCtl *self,
-                                                guint timeout,
-                                                GCancellable *cancellable,
-                                                GAsyncReadyCallback callback,
-                                                gpointer user_data);
-GArray *qmi_client_ctl_get_version_info_finish (QmiClientCtl *self,
-                                                GAsyncResult *res,
-                                                GError **error);
+void    qmi_client_ctl_get_version_info           (QmiClientCtl *self,
+                                                   guint timeout,
+                                                   GCancellable *cancellable,
+                                                   GAsyncReadyCallback callback,
+                                                   gpointer user_data);
+GPtrArray *qmi_client_ctl_get_version_info_finish (QmiClientCtl *self,
+                                                   GAsyncResult *res,
+                                                   GError **error);
 
 /* Allocate CID */
 void   qmi_client_ctl_allocate_cid        (QmiClientCtl *self,

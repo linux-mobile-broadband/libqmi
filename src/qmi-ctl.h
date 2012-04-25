@@ -26,6 +26,8 @@
 
 #include <glib.h>
 
+#include "qmi-enums.h"
+
 G_BEGIN_DECLS
 
 /*****************************************************************************/
@@ -44,6 +46,13 @@ typedef enum {
     QMI_CTL_MESSAGE_SET_POWER_SAVE_MODE    = 0x002A, /* unused currently */
     QMI_CTL_MESSAGE_GET_POWER_SAVE_MODE    = 0x002B, /* unused currently */
 } QmiCtlMessage;
+
+/*****************************************************************************/
+/* Version info */
+typedef struct _QmiCtlVersionInfo QmiCtlVersionInfo;
+QmiService qmi_ctl_version_info_get_service       (QmiCtlVersionInfo *info);
+guint16    qmi_ctl_version_info_get_major_version (QmiCtlVersionInfo *info);
+guint16    qmi_ctl_version_info_get_minor_version (QmiCtlVersionInfo *info);
 
 G_END_DECLS
 
