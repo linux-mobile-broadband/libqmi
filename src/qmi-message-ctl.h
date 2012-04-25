@@ -27,6 +27,8 @@
 #define _LIBQMI_GLIB_QMI_MESSAGE_CTL_H_
 
 #include <glib.h>
+
+#include "qmi-ctl.h"
 #include "qmi-message.h"
 
 G_BEGIN_DECLS
