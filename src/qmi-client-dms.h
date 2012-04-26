@@ -51,14 +51,6 @@ struct _QmiClientDmsClass {
 
 GType qmi_client_dms_get_type (void);
 
-/* New DMS client */
-void          qmi_client_dms_new        (QmiDevice *device,
-                                         GCancellable *cancellable,
-                                         GAsyncReadyCallback callback,
-                                         gpointer user_data);
-QmiClientDms *qmi_client_dms_new_finish (GAsyncResult *res,
-                                         GError **error);
-
 /* Get IDs */
 void                qmi_client_dms_get_ids        (QmiClientDms *self,
                                                    guint timeout,

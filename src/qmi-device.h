@@ -25,6 +25,8 @@
 
 #include <glib-object.h>
 
+#include "qmi-enums.h"
+
 G_BEGIN_DECLS
 
 /* Forward reference of the QMI message, we don't want to include qmi-message.h
@@ -32,7 +34,6 @@ G_BEGIN_DECLS
 typedef struct _QmiMessage QmiMessage;
 
 typedef struct _QmiClient QmiClient;
-typedef struct _QmiClientCtl QmiClientCtl;
 
 #define QMI_TYPE_DEVICE            (qmi_device_get_type ())
 #define QMI_DEVICE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), QMI_TYPE_DEVICE, QmiDevice))
@@ -68,8 +69,6 @@ QmiDevice *qmi_device_new_finish (GAsyncResult *res,
 
 GFile        *qmi_device_get_file         (QmiDevice *self);
 GFile        *qmi_device_peek_file        (QmiDevice *self);
-QmiClientCtl *qmi_device_get_client_ctl   (QmiDevice *self);
-QmiClientCtl *qmi_device_peek_client_ctl  (QmiDevice *self);
 const gchar  *qmi_device_get_path         (QmiDevice *self);
 const gchar  *qmi_device_get_path_display (QmiDevice *self);
 gboolean      qmi_device_is_open          (QmiDevice *self);
@@ -86,6 +85,26 @@ gboolean     qmi_device_open_finish (QmiDevice *self,
 gboolean     qmi_device_close (QmiDevice *self,
                                GError **error);
 
+void          qmi_device_allocate_client        (QmiDevice *self,
+                                                 QmiService service,
+                                                 guint timeout,
+                                                 GCancellable *cancellable,
+                                                 GAsyncReadyCallback callback,
+                                                 gpointer user_data);
+QmiClient    *qmi_device_allocate_client_finish (QmiDevice *self,
+                                                 GAsyncResult *res,
+                                                 GError **error);
+
+void          qmi_device_release_client        (QmiDevice *self,
+                                                QmiClient *client,
+                                                guint timeout,
+                                                GCancellable *cancellable,
+                                                GAsyncReadyCallback callback,
+                                                gpointer user_data);
+gboolean      qmi_device_release_client_finish (QmiDevice *self,
+                                                GAsyncResult *res,
+                                                GError **error);
+
 void         qmi_device_command        (QmiDevice *self,
                                         QmiMessage *message,
                                         guint timeout,
@@ -95,14 +114,6 @@ void         qmi_device_command        (QmiDevice *self,
 QmiMessage  *qmi_device_command_finish (QmiDevice *self,
                                         GAsyncResult *res,
                                         GError **error);
-
-/* not part of the public API */
-gboolean qmi_device_register_client   (QmiDevice *self,
-                                       QmiClient *client,
-                                       GError **error);
-gboolean qmi_device_unregister_client (QmiDevice *self,
-                                       QmiClient *client,
-                                       GError **error);
 
 G_END_DECLS
 

@@ -100,48 +100,6 @@ qmi_client_dms_get_ids (QmiClientDms *self,
 }
 
 /*****************************************************************************/
-/* New DMS client */
-
-/**
- * qmi_device_new_finish:
- * @res: a #GAsyncResult.
- * @error: a #GError.
- *
- * Finishes an operation started with qmi_device_new().
- *
- * Returns: A newly created #QmiDevice, or #NULL if @error is set.
- */
-QmiClientDms *
-qmi_client_dms_new_finish (GAsyncResult *res,
-                           GError **error)
-{
-  GObject *ret;
-  GObject *source_object;
-
-  source_object = g_async_result_get_source_object (res);
-  ret = g_async_initable_new_finish (G_ASYNC_INITABLE (source_object), res, error);
-  g_object_unref (source_object);
-
-  return (ret ? QMI_CLIENT_DMS (ret) : NULL);
-}
-
-void
-qmi_client_dms_new (QmiDevice *device,
-                    GCancellable *cancellable,
-                    GAsyncReadyCallback callback,
-                    gpointer user_data)
-{
-    g_async_initable_new_async (QMI_TYPE_CLIENT_DMS,
-                                G_PRIORITY_DEFAULT,
-                                cancellable,
-                                callback,
-                                user_data,
-                                QMI_CLIENT_DEVICE, device,
-                                QMI_CLIENT_SERVICE, QMI_SERVICE_DMS,
-                                NULL);
-}
-
-/*****************************************************************************/
 
 static void
 qmi_client_dms_init (QmiClientDms *self)

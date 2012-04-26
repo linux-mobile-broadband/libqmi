@@ -30,6 +30,9 @@
 
 G_BEGIN_DECLS
 
+#define QMI_CID_NONE      0x00
+#define QMI_CID_BROADCAST 0xFF
+
 #define QMI_TYPE_CLIENT            (qmi_client_get_type ())
 #define QMI_CLIENT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), QMI_TYPE_CLIENT, QmiClient))
 #define QMI_CLIENT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  QMI_TYPE_CLIENT, QmiClientClass))
@@ -66,14 +69,6 @@ QmiService  qmi_client_get_service (QmiClient *self);
 guint8      qmi_client_get_cid     (QmiClient *self);
 
 guint16     qmi_client_get_next_transaction_id (QmiClient *self);
-
-void     qmi_client_release        (QmiClient *self,
-                                    guint timeout,
-                                    GAsyncReadyCallback callback,
-                                    gpointer user_data);
-gboolean qmi_client_release_finish (QmiClient *self,
-                                    GAsyncResult *res,
-                                    GError **error);
 
 /* not part of the public API */
 void qmi_client_process_indication (QmiClient *self,

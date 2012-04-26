@@ -38,7 +38,7 @@ qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/qmi-enum-typ
 		$(ENUMS) > $@
 
 # Additional dependencies
-qmi-device.c: qmi-error-types.h
+qmi-device.c: qmi-error-types.h qmi-enum-types.h
 qmi-client.c: qmi-error-types.h qmi-enum-types.h
 qmi-client-ctl.c: qmi-error-types.h qmi-enum-types.h
 qmi-message.c: qmi-error-types.h qmi-enum-types.h
@@ -68,5 +68,4 @@ include_HEADERS = \
 	qmi-enums.h qmi-enum-types.h \
 	qmi-device.h \
 	qmi-client.h \
-	qmi-ctl.h qmi-client-ctl.h \
 	qmi-dms.h qmi-client-dms.h

@@ -30,6 +30,7 @@
 #include "qmi-device.h"
 #include "qmi-message.h"
 #include "qmi-client-ctl.h"
+#include "qmi-client-dms.h"
 #include "qmi-utils.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
@@ -257,44 +258,6 @@ qmi_device_get_file (QmiDevice *self)
 }
 
 /**
- * qmi_device_peek_client_ctl:
- * @self: a #QmiDevice.
- *
- * Get the #QmiClientCtl handled by this #QmiDevice, without increasing the reference count
- * on the returned object.
- *
- * Returns: a #GFile. Do not free the returned object, it is owned by @self.
- */
-QmiClientCtl *
-qmi_device_peek_client_ctl (QmiDevice *self)
-{
-    g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
-
-    return self->priv->client_ctl;
-}
-
-/**
- * qmi_device_get_client_ctl:
- * @self: a #QmiDevice.
- *
- * Get the #QmiClientCtl handled by this #QmiDevice.
- *
- * Returns: a #QmiClientCtl that must be freed with g_object_unref().
- */
-QmiClientCtl *
-qmi_device_get_client_ctl (QmiDevice *self)
-{
-    QmiClientCtl *client_ctl = NULL;
-
-    g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
-
-    g_object_get (G_OBJECT (self),
-                  QMI_DEVICE_CLIENT_CTL, &client_ctl,
-                  NULL);
-    return client_ctl;
-}
-
-/**
  * qmi_device_peek_file:
  * @self: a #QmiDevice.
  *
@@ -360,7 +323,7 @@ qmi_device_is_open (QmiDevice *self)
 }
 
 /*****************************************************************************/
-/* Register clients that want to receive indications */
+/* Register/Unregister clients that want to receive indications */
 
 static gpointer
 build_registered_client_key (guint8 cid,
@@ -369,18 +332,12 @@ build_registered_client_key (guint8 cid,
     return GUINT_TO_POINTER (((guint8)service << 8) | cid);
 }
 
-gboolean
-qmi_device_register_client (QmiDevice *self,
-                            QmiClient *client,
-                            GError **error)
+static gboolean
+register_client (QmiDevice *self,
+                 QmiClient *client,
+                 GError **error)
 {
     gpointer key;
-
-    if (G_UNLIKELY (!self->priv->registered_clients))
-        self->priv->registered_clients = g_hash_table_new_full (g_direct_hash,
-                                                                g_direct_equal,
-                                                                NULL,
-                                                                g_object_unref);
 
     key = build_registered_client_key (qmi_client_get_cid (client),
                                        qmi_client_get_service (client));
@@ -402,27 +359,301 @@ qmi_device_register_client (QmiDevice *self,
     return TRUE;
 }
 
-gboolean
-qmi_device_unregister_client (QmiDevice *self,
-                              QmiClient *client,
-                              GError **error)
+static void
+unregister_client (QmiDevice *self,
+                   QmiClient *client)
 {
+    g_hash_table_remove (self->priv->registered_clients,
+                         build_registered_client_key (qmi_client_get_cid (client),
+                                                      qmi_client_get_service (client)));
+}
+
+/*****************************************************************************/
+/* Allocate new client */
+
+typedef struct {
+    QmiDevice *self;
+    GSimpleAsyncResult *result;
+    QmiService service;
+    GType client_type;
+} AllocateClientContext;
+
+static void
+allocate_client_context_complete_and_free (AllocateClientContext *ctx)
+{
+    g_simple_async_result_complete_in_idle (ctx->result);
+    g_object_unref (ctx->result);
+    g_object_unref (ctx->self);
+    g_slice_free (AllocateClientContext, ctx);
+}
+
+/**
+ * qmi_device_allocate_client_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @error: a #GError.
+ *
+ * Finishes an operation started with qmi_device_allocate_client().
+ *
+ * Returns: a newly allocated #QmiClient, or #NULL if @error is set.
+ */
+QmiClient *
+qmi_device_allocate_client_finish (QmiDevice *self,
+                                   GAsyncResult *res,
+                                   GError **error)
+{
+    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+        return NULL;
+
+    return QMI_CLIENT (g_object_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res))));
+}
+
+static void
+allocate_cid_ready (QmiClientCtl *client_ctl,
+                    GAsyncResult *res,
+                    AllocateClientContext *ctx)
+{
+    QmiClient *client;
+    GError *error = NULL;
+    guint8 cid;
     gpointer key;
 
-    key = build_registered_client_key (qmi_client_get_cid (client),
-                                       qmi_client_get_service (client));
-    if (!g_hash_table_remove (self->priv->registered_clients, key)) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_FAILED,
-                     "Cannot unregister client with CID '%u' and service '%s': Not found",
-                     qmi_client_get_cid (client),
-                     qmi_service_get_string (qmi_client_get_service (client)));
-        return FALSE;
+    cid = qmi_client_ctl_allocate_cid_finish (client_ctl, res, &error);
+    if (!cid) {
+        g_prefix_error (&error, "CID allocation failed in the CTL client: ");
+        g_simple_async_result_take_error (ctx->result, error);
+        allocate_client_context_complete_and_free (ctx);
+        return;
     }
 
-    return TRUE;
+    /* We now have a proper CID for the client, we should be able to create it
+     * right away */
+    client = g_object_new (ctx->client_type,
+                           QMI_CLIENT_DEVICE,  ctx->self,
+                           QMI_CLIENT_SERVICE, ctx->service,
+                           QMI_CLIENT_CID,     cid,
+                           NULL);
+
+    /* Register the client to get indications */
+    if (!register_client (ctx->self, client, &error)) {
+        g_prefix_error (&error,
+                        "Cannot register new client with CID '%u' and service '%s'",
+                        cid,
+                        qmi_service_get_string (ctx->service));
+        g_simple_async_result_take_error (ctx->result, error);
+        allocate_client_context_complete_and_free (ctx);
+        g_object_unref (client);
+        return;
+    }
+
+    /* Client created and registered, complete successfully */
+    g_simple_async_result_set_op_res_gpointer (ctx->result,
+                                               client,
+                                               (GDestroyNotify)g_object_unref);
+    allocate_client_context_complete_and_free (ctx);
 }
+
+/**
+ * qmi_device_allocate_client:
+ * @self: a #QmiDevice.
+ * @service: a valid #QmiService.
+ * @timeout: maximum time to wait.
+ * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously allocates a new #QmiClient in @self.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qmi_device_allocate_client_finish() to get the result of the operation.
+ */
+void
+qmi_device_allocate_client (QmiDevice *self,
+                            QmiService service,
+                            guint timeout,
+                            GCancellable *cancellable,
+                            GAsyncReadyCallback callback,
+                            gpointer user_data)
+{
+    AllocateClientContext *ctx;
+
+    g_return_if_fail (QMI_IS_DEVICE (self));
+    g_return_if_fail (service != QMI_SERVICE_UNKNOWN);
+
+    ctx = g_slice_new0 (AllocateClientContext);
+    ctx->self = g_object_ref (self);
+    ctx->result = g_simple_async_result_new (G_OBJECT (self),
+                                             callback,
+                                             user_data,
+                                             qmi_device_allocate_client);
+    ctx->service = service;
+
+    switch (service) {
+    case QMI_SERVICE_CTL:
+        g_simple_async_result_set_error (ctx->result,
+                                         QMI_CORE_ERROR,
+                                         QMI_CORE_ERROR_INVALID_ARGS,
+                                         "Cannot create additional clients for the CTL service");
+        allocate_client_context_complete_and_free (ctx);
+        return;
+
+    case QMI_SERVICE_DMS:
+        ctx->client_type = QMI_TYPE_CLIENT_DMS;
+        break;
+
+    default:
+        g_simple_async_result_set_error (ctx->result,
+                                         QMI_CORE_ERROR,
+                                         QMI_CORE_ERROR_INVALID_ARGS,
+                                         "Clients for service '%s' not yet supported",
+                                         qmi_service_get_string (service));
+        allocate_client_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* Allocate a new CID for the client to be created */
+    qmi_client_ctl_allocate_cid (self->priv->client_ctl,
+                                 ctx->service,
+                                 timeout,
+                                 cancellable,
+                                 (GAsyncReadyCallback)allocate_cid_ready,
+                                 ctx);
+}
+
+/*****************************************************************************/
+/* Release client */
+
+typedef struct {
+    QmiClient *client;
+    GSimpleAsyncResult *result;
+} ReleaseClientContext;
+
+static void
+release_client_context_complete_and_free (ReleaseClientContext *ctx)
+{
+    g_simple_async_result_complete_in_idle (ctx->result);
+    g_object_unref (ctx->result);
+    g_object_unref (ctx->client);
+    g_slice_free (ReleaseClientContext, ctx);
+}
+
+/**
+ * qmi_device_release_client_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @error: a #GError.
+ *
+ * Finishes an operation started with qmi_device_release_client().
+ *
+ * Note that even if the release operation returns an error, the client should
+ * anyway be considered released, and shouldn't be used afterwards.
+ *
+ * Returns: #TRUE if successful, or #NULL if @error is set.
+ */
+gboolean
+qmi_device_release_client_finish (QmiDevice *self,
+                                  GAsyncResult *res,
+                                  GError **error)
+{
+    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+}
+
+static void
+client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
+                              GAsyncResult *res,
+                              ReleaseClientContext *ctx)
+{
+    GError *error = NULL;
+
+    /* Note: even if we return an error, the client is to be considered
+     * released! (so shouldn't be used) */
+
+    if (!qmi_client_ctl_release_cid_finish (client_ctl, res, &error))
+        g_simple_async_result_take_error (ctx->result, error);
+    else
+        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+
+    release_client_context_complete_and_free (ctx);
+}
+
+/**
+ * qmi_device_release_client:
+ * @self: a #QmiDevice.
+ * @client: the #QmiClient to release.
+ * @timeout: maximum time to wait.
+ * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously releases the #QmiClient from the #QmiDevice.
+ *
+ * Once the #QmiClient has been released, it cannot be used any more to
+ * perform operations.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qmi_device_release_client_finish() to get the result of the operation.
+ */
+void
+qmi_device_release_client (QmiDevice *self,
+                           QmiClient *client,
+                           guint timeout,
+                           GCancellable *cancellable,
+                           GAsyncReadyCallback callback,
+                           gpointer user_data)
+{
+    ReleaseClientContext *ctx;
+    guint8 cid;
+    QmiService service;
+
+    g_return_if_fail (QMI_IS_DEVICE (self));
+    g_return_if_fail (QMI_IS_CLIENT (client));
+
+    /* The CTL client should not have been created out of the QmiDevice */
+    g_assert (qmi_client_get_service (client) != QMI_SERVICE_CTL);
+
+    /* NOTE! The operation must not take a reference to self, or we won't be
+     * able to use it implicitly from our dispose() */
+
+    ctx = g_slice_new0 (ReleaseClientContext);
+    ctx->client = g_object_ref (client);
+    ctx->result = g_simple_async_result_new (G_OBJECT (self),
+                                             callback,
+                                             user_data,
+                                             qmi_device_release_client);
+
+    cid = qmi_client_get_cid (client);
+    service = qmi_client_get_service (client);
+
+    /* Do not try to release an already released client */
+    if (cid == QMI_CID_NONE) {
+        g_simple_async_result_set_error (ctx->result,
+                                         QMI_CORE_ERROR,
+                                         QMI_CORE_ERROR_INVALID_ARGS,
+                                         "Client is already released");
+        release_client_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* Unregister from device */
+    unregister_client (self, client);
+
+    /* Reset the contents of the client object, making it unusable */
+    g_object_set (client,
+                  QMI_CLIENT_CID,     QMI_CID_NONE,
+                  QMI_CLIENT_SERVICE, QMI_SERVICE_UNKNOWN,
+                  QMI_CLIENT_DEVICE,  NULL,
+                  NULL);
+
+    /* And now, really try to release the CID */
+    qmi_client_ctl_release_cid (self->priv->client_ctl,
+                                service,
+                                cid,
+                                timeout,
+                                cancellable,
+                                (GAsyncReadyCallback)client_ctl_release_cid_ready,
+                                ctx);
+}
+
 
 /*****************************************************************************/
 /* Open device */
@@ -1044,31 +1275,6 @@ initable_init_finish (GAsyncInitable  *initable,
 }
 
 static void
-client_ctl_ready (GAsyncInitable *initable,
-                  GAsyncResult *res,
-                  InitContext *ctx)
-{
-    GError *error = NULL;
-    GObject *obj;
-
-    obj = g_async_initable_new_finish (initable, res, &error);
-    if (!obj) {
-        g_prefix_error (&error,
-                        "Couldn't create CTL client: ");
-        g_simple_async_result_take_error (ctx->result, error);
-        init_context_complete_and_free (ctx);
-        return;
-    }
-
-    /* Keep the client */
-    ctx->self->priv->client_ctl = QMI_CLIENT_CTL (obj);
-
-    /* Done we are */
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    init_context_complete_and_free (ctx);
-}
-
-static void
 query_info_async_ready (GFile *file,
                         GAsyncResult *res,
                         InitContext *ctx)
@@ -1096,16 +1302,22 @@ query_info_async_ready (GFile *file,
     }
     g_object_unref (info);
 
-    /* Create the implicit CTL client
-     * We are giving already the CID of the CTL client, the default one */
-    g_async_initable_new_async (QMI_TYPE_CLIENT_CTL,
-                                G_PRIORITY_DEFAULT,
-                                ctx->cancellable,
-                                (GAsyncReadyCallback)client_ctl_ready,
-                                ctx,
-                                QMI_CLIENT_DEVICE, ctx->self,
-                                QMI_CLIENT_SERVICE, QMI_SERVICE_CTL,
-                                NULL);
+    /* Create the implicit CTL client */
+    ctx->self->priv->client_ctl = g_object_new (QMI_TYPE_CLIENT_CTL,
+                                                QMI_CLIENT_DEVICE,  ctx->self,
+                                                QMI_CLIENT_SERVICE, QMI_SERVICE_CTL,
+                                                QMI_CLIENT_CID,     QMI_CID_NONE,
+                                                NULL);
+
+    /* Register the CTL client to get indications */
+    register_client (ctx->self,
+                     QMI_CLIENT (ctx->self->priv->client_ctl),
+                     &error);
+    g_assert_no_error (error);
+
+    /* Done we are */
+    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+    init_context_complete_and_free (ctx);
 }
 
 static void
@@ -1202,6 +1414,23 @@ qmi_device_init (QmiDevice *self)
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE ((self),
                                               QMI_TYPE_DEVICE,
                                               QmiDevicePrivate);
+
+    self->priv->registered_clients = g_hash_table_new_full (g_direct_hash,
+                                                            g_direct_equal,
+                                                            NULL,
+                                                            g_object_unref);
+}
+
+static gboolean
+foreach_warning (gpointer key,
+                 QmiClient *client,
+                 QmiDevice *self)
+{
+    g_warning ("QMI client for service '%s' with CID '%u' wasn't released",
+               qmi_service_get_string (qmi_client_get_service (client)),
+               qmi_client_get_cid (client));
+
+    return TRUE;
 }
 
 static void
@@ -1210,6 +1439,17 @@ dispose (GObject *object)
     QmiDevice *self = QMI_DEVICE (object);
 
     g_clear_object (&self->priv->file);
+
+    /* unregister our CTL client */
+    unregister_client (self, QMI_CLIENT (self->priv->client_ctl));
+
+    /* If clients were left unreleased, we'll just warn about it.
+     * There is no point in trying to request CID releases, as the device
+     * itself is being disposed. */
+    g_hash_table_foreach_remove (self->priv->registered_clients,
+                                 (GHRFunc)foreach_warning,
+                                 self);
+
     g_clear_object (&self->priv->client_ctl);
 
     G_OBJECT_CLASS (qmi_device_parent_class)->dispose (object);
@@ -1227,12 +1467,7 @@ finalize (GObject *object)
         g_hash_table_unref (self->priv->transactions);
     }
 
-    /* Registered clients keep refs to the device, so it's actually
-     * impossible to have any content in the HT */
-    if (self->priv->registered_clients) {
-        g_assert (g_hash_table_size (self->priv->registered_clients) == 0);
-        g_hash_table_unref (self->priv->registered_clients);
-    }
+    g_hash_table_unref (self->priv->registered_clients);
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);

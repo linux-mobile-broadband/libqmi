@@ -102,17 +102,17 @@ context_free (Context *ctx)
 }
 
 static void
-client_release_ready (QmiClient *client,
+release_client_ready (QmiDevice *device,
                       GAsyncResult *res)
 {
     GError *error = NULL;
 
-    if (!qmi_client_release_finish (client, res, &error)) {
-        g_printerr ("error: couldn't release client CID: %s", error->message);
+    if (!qmi_device_release_client_finish (device, res, &error)) {
+        g_printerr ("error: couldn't release client: %s", error->message);
         exit (EXIT_FAILURE);
     }
 
-    g_debug ("Client CID released");
+    g_debug ("Client released");
 
     /* Cleanup context and finish async operation */
     context_free (ctx);
@@ -122,10 +122,12 @@ client_release_ready (QmiClient *client,
 static void
 shutdown (void)
 {
-    qmi_client_release (QMI_CLIENT (ctx->client),
-                        10,
-                        (GAsyncReadyCallback)client_release_ready,
-                        NULL);
+    qmi_device_release_client (ctx->device,
+                               QMI_CLIENT (ctx->client),
+                               10,
+                               NULL,
+                               (GAsyncReadyCallback)release_client_ready,
+                               NULL);
 }
 
 static void
@@ -160,12 +162,12 @@ get_ids_ready (QmiClientDms *client,
 }
 
 static void
-client_dms_new_ready (GObject *unused,
-                      GAsyncResult *res)
+allocate_client_ready (QmiDevice *device,
+                       GAsyncResult *res)
 {
     GError *error = NULL;
 
-    ctx->client = qmi_client_dms_new_finish (res, &error);
+    ctx->client = (QmiClientDms *)qmi_device_allocate_client_finish (device, res, &error);
     if (!ctx->client) {
         g_printerr ("error: couldn't create DMS client: %s\n",
                     error->message);
@@ -197,8 +199,10 @@ qmicli_dms_run (QmiDevice *device,
         ctx->cancellable = g_object_ref (cancellable);
 
     /* Create a new DMS client */
-    qmi_client_dms_new (device,
-                        cancellable,
-                        (GAsyncReadyCallback)client_dms_new_ready,
-                        NULL);
+    qmi_device_allocate_client (device,
+                                QMI_SERVICE_DMS,
+                                10,
+                                cancellable,
+                                (GAsyncReadyCallback)allocate_client_ready,
+                                NULL);
 }

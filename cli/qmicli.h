@@ -26,12 +26,6 @@
 /* Common */
 void          qmicli_async_operation_done  (void);
 
-/* CTL group */
-GOptionGroup *qmicli_ctl_get_option_group (void);
-gboolean      qmicli_ctl_options_enabled  (void);
-void          qmicli_ctl_run              (QmiDevice *device,
-                                           GCancellable *cancellable);
-
 /* DMS group */
 GOptionGroup *qmicli_dms_get_option_group (void);
 gboolean      qmicli_dms_options_enabled  (void);

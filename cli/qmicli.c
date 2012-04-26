@@ -161,11 +161,8 @@ device_open_ready (QmiDevice *device,
 
     /* As soon as we get the QmiDevice, launch the specific action requested */
 
-    /* CTL options? */
-    if (qmicli_ctl_options_enabled ())
-        qmicli_ctl_run (device, cancellable);
     /* DMS options? */
-    else if (qmicli_dms_options_enabled ())
+    if (qmicli_dms_options_enabled ())
         qmicli_dms_run (device, cancellable);
     /* No options? */
     else {
@@ -209,8 +206,6 @@ int main (int argc, char **argv)
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Control QMI devices");
-	g_option_context_add_group (context,
-	                            qmicli_ctl_get_option_group ());
 	g_option_context_add_group (context,
 	                            qmicli_dms_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
