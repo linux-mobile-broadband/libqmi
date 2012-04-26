@@ -229,7 +229,7 @@ qmi_message_ctl_allocate_cid_new (guint8 transaction_id,
 struct qmi_ctl_cid {
 	guint8 service_type;
     guint8 cid;
-} __attribute__((__packed__));;
+} __attribute__((__packed__));
 
 gboolean
 qmi_message_ctl_allocate_cid_reply_parse (QmiMessage *self,
