@@ -31,6 +31,7 @@
 #include "qmi-message.h"
 #include "qmi-client-ctl.h"
 #include "qmi-client-dms.h"
+#include "qmi-client-wds.h"
 #include "qmi-utils.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
@@ -532,6 +533,10 @@ qmi_device_allocate_client (QmiDevice *self,
 
     case QMI_SERVICE_DMS:
         ctx->client_type = QMI_TYPE_CLIENT_DMS;
+        break;
+
+    case QMI_SERVICE_WDS:
+        ctx->client_type = QMI_TYPE_CLIENT_WDS;
         break;
 
     default:
