@@ -32,4 +32,10 @@ gboolean      qmicli_dms_options_enabled  (void);
 void          qmicli_dms_run              (QmiDevice *device,
                                            GCancellable *cancellable);
 
+/* WDS group */
+GOptionGroup *qmicli_wds_get_option_group (void);
+gboolean      qmicli_wds_options_enabled  (void);
+void          qmicli_wds_run              (QmiDevice *device,
+                                           GCancellable *cancellable);
+
 #endif /* __QMICLI_H__ */
