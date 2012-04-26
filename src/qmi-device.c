@@ -786,17 +786,10 @@ process_message (QmiDevice *self,
         if (!tr)
             g_debug ("[%s] No transaction matched in received message",
                      self->priv->path_display);
-        else {
-            /* Received message is a response in a transaction; handle QMI protocol
-             * errors */
-            if (!qmi_message_get_response_result (message, &error)) {
-                transaction_complete_and_free (tr, NULL, error);
-                g_error_free (error);
-            } else {
-                /* Report the reply message */
-                transaction_complete_and_free (tr, message, NULL);
-            }
-        }
+        else
+            /* Report the reply message */
+            transaction_complete_and_free (tr, message, NULL);
+
         return;
     }
 

@@ -158,6 +158,10 @@ qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
 
     g_assert (qmi_message_get_message_id (self) == QMI_CTL_MESSAGE_GET_VERSION_INFO);
 
+    /* Abort if we got a QMI error reported */
+    if (!qmi_message_get_response_result (self, error))
+        return NULL;
+
     if (!qmi_message_tlv_get_varlen (self,
                                      0x01,
                                      &svcbuflen,
@@ -241,6 +245,10 @@ qmi_message_ctl_allocate_cid_reply_parse (QmiMessage *self,
 
     g_assert (qmi_message_get_message_id (self) == QMI_CTL_MESSAGE_ALLOCATE_CLIENT_ID);
 
+    /* Abort if we got a QMI error reported */
+    if (!qmi_message_get_response_result (self, error))
+        return FALSE;
+
     if (!qmi_message_tlv_get (self, 0x01, sizeof (id), &id, error)) {
         g_prefix_error (error, "Couldn't get TLV: ");
         return FALSE;
@@ -294,6 +302,10 @@ qmi_message_ctl_release_cid_reply_parse (QmiMessage *self,
     struct qmi_ctl_cid id;
 
     g_assert (qmi_message_get_message_id (self) == QMI_CTL_MESSAGE_RELEASE_CLIENT_ID);
+
+    /* Abort if we got a QMI error reported */
+    if (!qmi_message_get_response_result (self, error))
+        return FALSE;
 
     if (!qmi_message_tlv_get (self, 0x01, sizeof (id), &id, error)) {
         g_prefix_error (error, "Couldn't get TLV: ");

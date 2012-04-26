@@ -152,6 +152,10 @@ qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
 
     g_assert (qmi_message_get_message_id (self) == QMI_DMS_MESSAGE_GET_IDS);
 
+    /* Abort if we got a QMI error reported */
+    if (!qmi_message_get_response_result (self, error))
+        return NULL;
+
     got_esn = qmi_message_tlv_get_string (self,
                                           QMI_DMS_TLV_GET_IDS_ESN,
                                           NULL);
