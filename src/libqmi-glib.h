@@ -29,7 +29,7 @@
 
 #include "qmi-device.h"
 #include "qmi-client.h"
-#include "qmi-client-ctl.h"
 #include "qmi-client-dms.h"
+#include "qmi-client-wds.h"
 
 #endif /* _LIBQMI_GLIB_H_ */
