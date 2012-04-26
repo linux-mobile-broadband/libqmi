@@ -58,6 +58,9 @@ struct _QmiDevicePrivate {
     /* Implicit CTL client */
     QmiClientCtl *client_ctl;
 
+    /* Supported services */
+    GPtrArray *supported_services;
+
     /* I/O channel, set when the file is open */
     GIOChannel *iochannel;
     guint watch_id;
@@ -453,6 +456,25 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
     allocate_client_context_complete_and_free (ctx);
 }
 
+static gboolean
+check_service_supported (QmiDevice *self,
+                         QmiService service)
+{
+    guint i;
+
+    g_assert (self->priv->supported_services != NULL);
+    for (i = 0; i < self->priv->supported_services->len; i++) {
+        QmiCtlVersionInfo *info;
+
+        info = g_ptr_array_index (self->priv->supported_services, i);
+
+        if (service == qmi_ctl_version_info_get_service (info))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
 /**
  * qmi_device_allocate_client:
  * @self: a #QmiDevice.
@@ -487,6 +509,17 @@ qmi_device_allocate_client (QmiDevice *self,
                                              user_data,
                                              qmi_device_allocate_client);
     ctx->service = service;
+
+    /* Check if the requested service is supported by the device */
+    if (!check_service_supported (self, service)) {
+        g_simple_async_result_set_error (ctx->result,
+                                         QMI_CORE_ERROR,
+                                         QMI_CORE_ERROR_UNSUPPORTED,
+                                         "Service '%s' not supported by the device",
+                                         qmi_service_get_string (service));
+        allocate_client_context_complete_and_free (ctx);
+        return;
+    }
 
     switch (service) {
     case QMI_SERVICE_CTL:
@@ -957,28 +990,28 @@ version_info_ready (QmiClientCtl *client_ctl,
 {
     QmiDevice *self;
     GError *error = NULL;
-    GPtrArray *services;
     guint i;
-
-    services = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
-    if (!services) {
-        g_prefix_error (&error, "Version info check failed: ");
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
-        return;
-    }
 
     /* Recover the QmiDevice */
     self = QMI_DEVICE (g_async_result_get_source_object (G_ASYNC_RESULT (simple)));
 
+    self->priv->supported_services = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
+    if (!self->priv->supported_services) {
+        g_prefix_error (&error, "Version info check failed: ");
+        g_simple_async_result_take_error (simple, error);
+        g_simple_async_result_complete (simple);
+        g_object_unref (simple);
+        g_object_unref (self);
+        return;
+    }
+
     g_debug ("[%s] QMI Device supports %u services:",
              self->priv->path_display,
-             services->len);
-    for (i = 0; i < services->len; i++) {
+             self->priv->supported_services->len);
+    for (i = 0; i < self->priv->supported_services->len; i++) {
         QmiCtlVersionInfo *service;
 
-        service = g_ptr_array_index (services, i);
+        service = g_ptr_array_index (self->priv->supported_services, i);
         g_debug ("[%s]    %s (%u.%u)",
                  self->priv->path_display,
                  qmi_service_get_string (qmi_ctl_version_info_get_service (service)),
@@ -986,7 +1019,6 @@ version_info_ready (QmiClientCtl *client_ctl,
                  qmi_ctl_version_info_get_minor_version (service));
     }
 
-    g_ptr_array_unref (services);
     g_simple_async_result_set_op_res_gboolean (simple, TRUE);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
@@ -1468,6 +1500,8 @@ finalize (GObject *object)
     }
 
     g_hash_table_unref (self->priv->registered_clients);
+
+    g_ptr_array_unref (self->priv->supported_services);
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);
