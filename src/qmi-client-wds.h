@@ -51,6 +51,29 @@ struct _QmiClientWdsClass {
 
 GType qmi_client_wds_get_type (void);
 
+/*****************************************************************************/
+/* Start network */
+void    qmi_client_wds_start_network        (QmiClientWds *self,
+                                             guint timeout,
+                                             GCancellable *cancellable,
+                                             GAsyncReadyCallback callback,
+                                             gpointer user_data);
+guint32 qmi_client_wds_start_network_finish (QmiClientWds *self,
+                                             GAsyncResult *res,
+                                             GError **error);
+
+/*****************************************************************************/
+/* Stop network */
+void     qmi_client_wds_stop_network        (QmiClientWds *self,
+                                             guint32 packet_data_handle,
+                                             guint timeout,
+                                             GCancellable *cancellable,
+                                             GAsyncReadyCallback callback,
+                                             gpointer user_data);
+gboolean qmi_client_wds_stop_network_finish (QmiClientWds *self,
+                                             GAsyncResult *res,
+                                             GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_CLIENT_WDS_H_ */

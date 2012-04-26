@@ -32,10 +32,12 @@ G_BEGIN_DECLS
 /* Supported/known messages */
 typedef enum {
   QMI_WDS_MESSAGE_EVENT         = 0x0001, /* unused currently */
-  QMI_WDS_MESSAGE_START_NETWORK = 0x0020, /* unused currently */
-  QMI_WDS_MESSAGE_STOP_NETWORK  = 0x0021, /* unused currently */
+  QMI_WDS_MESSAGE_START_NETWORK = 0x0020,
+  QMI_WDS_MESSAGE_STOP_NETWORK  = 0x0021,
   QMI_WDS_MESSAGE_PACKET_STATUS = 0x0022, /* unused currently */
 } QmiWdsMessage;
+
+
 
 G_END_DECLS
 
