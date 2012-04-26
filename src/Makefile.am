@@ -55,8 +55,8 @@ libqmi_glib_la_SOURCES = \
 	qmi-message-dms.h qmi-message-dms.c \
 	qmi-device.h qmi-device.c \
 	qmi-client.h qmi-client.c \
-	qmi-client-ctl.h qmi-client-ctl.c \
-	qmi-client-dms.h qmi-client-dms.c
+	qmi-ctl.h qmi-client-ctl.h qmi-client-ctl.c \
+	qmi-dms.h qmi-client-dms.h qmi-client-dms.c
 
 libqmi_glib_la_LIBADD = \
 	$(LIBQMI_GLIB_LIBS)
