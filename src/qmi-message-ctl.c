@@ -178,8 +178,8 @@ qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
         return NULL;
     }
 
-    result = g_ptr_array_new_full (service_list->count,
-                                   (GDestroyNotify)qmi_ctl_version_info_unref);;
+    result = g_ptr_array_sized_new (service_list->count);
+    g_ptr_array_set_free_func (result, (GDestroyNotify)qmi_ctl_version_info_unref);
 
     for (i = 0, svc = &(service_list->services[0]);
          i < service_list->count;
