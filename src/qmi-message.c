@@ -303,7 +303,8 @@ qmi_message_check (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length too short for QMUX header");
+                     "QMUX length too short for QMUX header (%u < %u)",
+                     qmux_length (self), sizeof (struct qmux));
         return FALSE;
     }
 
@@ -315,7 +316,8 @@ qmi_message_check (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length and buffer length don't match");
+                     "QMUX length and buffer length don't match (%u != %u)",
+                     qmux_length (self), self->len - 1);
         return FALSE;
     }
 
@@ -327,7 +329,8 @@ qmi_message_check (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length too short for QMI header");
+                     "QMUX length too short for QMI header (%u < %u)",
+                     qmux_length (self), header_length);
         return FALSE;
     }
 
@@ -335,7 +338,8 @@ qmi_message_check (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length and QMI TLV lengths don't match");
+                     "QMUX length and QMI TLV lengths don't match (%u - %u != %u)",
+                     qmux_length (self), header_length, qmi_tlv_length (self));
         return FALSE;
     }
 
@@ -345,14 +349,16 @@ qmi_message_check (QmiMessage *self,
             g_set_error (error,
                          QMI_CORE_ERROR,
                          QMI_CORE_ERROR_INVALID_MESSAGE,
-                         "TLV header runs over buffer");
+                         "TLV header runs over buffer (%p > %p)",
+                         tlv->value, end);
             return FALSE;
         }
         if (tlv->value + tlv->length > end) {
             g_set_error (error,
                          QMI_CORE_ERROR,
                          QMI_CORE_ERROR_INVALID_MESSAGE,
-                         "TLV value runs over buffer");
+                         "TLV value runs over buffer (%p + %u  > %p)",
+                         tlv->value, tlv->length, end);
             return FALSE;
         }
     }
