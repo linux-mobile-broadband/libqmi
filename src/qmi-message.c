@@ -244,7 +244,7 @@ qmi_end (QmiMessage *self)
 static struct tlv *
 tlv_next (struct tlv *tlv)
 {
-    return (struct tlv *)((char *)tlv + sizeof(struct tlv) + tlv->length);
+    return (struct tlv *)((char *)tlv + sizeof(struct tlv) + le16toh (tlv->length));
 }
 
 static struct tlv *
@@ -353,12 +353,12 @@ qmi_message_check (QmiMessage *self,
                          tlv->value, end);
             return FALSE;
         }
-        if (tlv->value + tlv->length > end) {
+        if (tlv->value + le16toh (tlv->length) > end) {
             g_set_error (error,
                          QMI_CORE_ERROR,
                          QMI_CORE_ERROR_INVALID_MESSAGE,
                          "TLV value runs over buffer (%p + %u  > %p)",
-                         tlv->value, tlv->length, end);
+                         tlv->value, le16toh (tlv->length), end);
             return FALSE;
         }
     }
@@ -469,7 +469,7 @@ qmimsg_tlv_get_internal (QmiMessage *self,
 
     for (tlv = qmi_tlv_first (self); tlv; tlv = qmi_tlv_next (self, tlv)) {
         if (tlv->type == type) {
-            if (length_exact && (tlv->length != *length)) {
+            if (length_exact && (le16toh (tlv->length) != *length)) {
                 g_set_error (error,
                              QMI_CORE_ERROR,
                              QMI_CORE_ERROR_TLV_NOT_FOUND,
@@ -477,19 +477,19 @@ qmimsg_tlv_get_internal (QmiMessage *self,
                              tlv->length,
                              *length);
                 return FALSE;
-            } else if (value && tlv->length > *length) {
+            } else if (value && le16toh (tlv->length) > *length) {
                 g_set_error (error,
                              QMI_CORE_ERROR,
                              QMI_CORE_ERROR_TLV_TOO_LONG,
                              "TLV found but too long (%u > %u)",
-                             tlv->length,
+                             le16toh (tlv->length),
                              *length);
                 return FALSE;
             }
 
-            *length = tlv->length;
+            *length = le16toh (tlv->length);
             if (value)
-                memcpy (value, tlv->value, tlv->length);
+                memcpy (value, tlv->value, le16toh (tlv->length));
             return TRUE;
         }
     }
@@ -556,7 +556,7 @@ qmi_message_tlv_foreach (QmiMessage *self,
 
     for (tlv = qmi_tlv_first (self); tlv; tlv = qmi_tlv_next (self, tlv)) {
         callback (tlv->type,
-                  (gsize)(tlv->length),
+                  (gsize)(le16toh (tlv->length)),
                   (gconstpointer)tlv->value,
                   user_data);
     }
@@ -600,7 +600,7 @@ qmi_message_tlv_add (QmiMessage *self,
     /* Fill in new TLV. */
     tlv = (struct tlv *)(qmi_end (self) - tlv_len);
     tlv->type = type;
-    tlv->length = length;
+    tlv->length = htole16 (length);
     if (value)
         memcpy (tlv->value, value, length);
 
@@ -708,7 +708,7 @@ qmi_message_get_printable (QmiMessage *self,
     for (tlv = qmi_tlv_first (self); tlv; tlv = qmi_tlv_next (self, tlv)) {
         gchar *value_hex;
 
-        value_hex = qmi_utils_str_hex (tlv->value, tlv->length, ':');
+        value_hex = qmi_utils_str_hex (tlv->value, le16toh (tlv->length), ':');
         g_string_append_printf (printable,
                                 "%sTLV:\n"
                                 "%s  type   = 0x%02x\n"
@@ -716,7 +716,7 @@ qmi_message_get_printable (QmiMessage *self,
                                 "%s  value  = %s\n",
                                 line_prefix,
                                 line_prefix, tlv->type,
-                                line_prefix, tlv->length, tlv->length,
+                                line_prefix, le16toh (tlv->length), le16toh (tlv->length),
                                 line_prefix, value_hex);
         g_free (value_hex);
     }
