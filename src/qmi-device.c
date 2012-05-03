@@ -1156,6 +1156,7 @@ qmi_device_command (QmiDevice *self,
     gconstpointer raw_message;
     gsize raw_message_len;
     gsize written;
+    GIOStatus write_status;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (message != NULL);
@@ -1209,18 +1210,37 @@ qmi_device_command (QmiDevice *self,
     device_store_transaction (self, tr, timeout);
 
     written = 0;
-    if (g_io_channel_write_chars (self->priv->iochannel,
-                                  raw_message,
-                                  (gssize)raw_message_len,
-                                  &written,
-                                  &error) != G_IO_STATUS_NORMAL) {
-        g_prefix_error (&error, "Cannot write message: ");
+    write_status = G_IO_STATUS_AGAIN;
+    while (write_status == G_IO_STATUS_AGAIN) {
+        write_status = g_io_channel_write_chars (self->priv->iochannel,
+                                                 raw_message,
+                                                 (gssize)raw_message_len,
+                                                 &written,
+                                                 &error);
+        switch (write_status) {
+        case G_IO_STATUS_ERROR:
+            g_prefix_error (&error, "Cannot write message: ");
 
-        /* Match transaction so that we remove it from our tracking table */
-        tr = device_match_transaction (self, message);
-        transaction_complete_and_free (tr, NULL, error);
-        g_error_free (error);
-        return;
+            /* Match transaction so that we remove it from our tracking table */
+            tr = device_match_transaction (self, message);
+            transaction_complete_and_free (tr, NULL, error);
+            g_error_free (error);
+            return;
+
+        case G_IO_STATUS_EOF:
+            /* We shouldn't get EOF when writing */
+            g_assert_not_reached ();
+            break;
+
+        case G_IO_STATUS_NORMAL:
+            /* All good, we'll exit the loop now */
+            break;
+
+        case G_IO_STATUS_AGAIN:
+            /* We're in a non-blocking channel and therefore we're up to receive
+             * EAGAIN; just retry in this case. TODO: in an idle? */
+            break;
+        }
     }
 
     /* Just return, we'll get response asynchronously */
