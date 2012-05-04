@@ -48,7 +48,7 @@ struct _QmiDmsGetIdsOutput {
 
 /**
  * qmi_dms_get_ids_output_get_esn:
- * @info: a #QmiDmsGetIdsOutput.
+ * @output: a #QmiDmsGetIdsOutput.
  *
  * Get the ESN.
  *
@@ -64,7 +64,7 @@ qmi_dms_get_ids_output_get_esn (QmiDmsGetIdsOutput *output)
 
 /**
  * qmi_dms_get_ids_output_get_imei:
- * @info: a #QmiDmsGetIdsOutput.
+ * @output: a #QmiDmsGetIdsOutput.
  *
  * Get the IMEI.
  *
@@ -80,7 +80,7 @@ qmi_dms_get_ids_output_get_imei (QmiDmsGetIdsOutput *output)
 
 /**
  * qmi_dms_get_ids_output_get_meid:
- * @info: a #QmiDmsGetIdsOutput.
+ * @output: a #QmiDmsGetIdsOutput.
  *
  * Get the MEID.
  *
@@ -115,7 +115,7 @@ qmi_dms_get_ids_output_ref (QmiDmsGetIdsOutput *output)
  * qmi_dms_get_ids_output_unref:
  * @output: a #QmiDmsGetIdsOutput.
  *
- * Atomically decrements the reference count of array by one.
+ * Atomically decrements the reference count of @output by one.
  * If the reference count drops to 0, @output is completely disposed.
  */
 void
