@@ -135,10 +135,10 @@ get_ids_ready (QmiClientDms *client,
                GAsyncResult *res)
 {
     GError *error = NULL;
-    QmiDmsGetIdsResult *result;
+    QmiDmsGetIdsOutput *output;
 
-    result = qmi_client_dms_get_ids_finish (client, res, &error);
-    if (!result) {
+    output = qmi_client_dms_get_ids_finish (client, res, &error);
+    if (!output) {
         g_printerr ("error: couldn't get IDs: %s\n",
                     error->message);
         exit (EXIT_FAILURE);
@@ -152,11 +152,11 @@ get_ids_ready (QmiClientDms *client,
              "\tIMEI: '%s'\n"
              "\tMEID: '%s'\n",
              qmi_device_get_path_display (ctx->device),
-             VALIDATE_UNKNOWN (qmi_dms_get_ids_result_get_esn (result)),
-             VALIDATE_UNKNOWN (qmi_dms_get_ids_result_get_imei (result)),
-             VALIDATE_UNKNOWN (qmi_dms_get_ids_result_get_meid (result)));
+             VALIDATE_UNKNOWN (qmi_dms_get_ids_output_get_esn (output)),
+             VALIDATE_UNKNOWN (qmi_dms_get_ids_output_get_imei (output)),
+             VALIDATE_UNKNOWN (qmi_dms_get_ids_output_get_meid (output)));
 
-    qmi_dms_get_ids_result_unref (result);
+    qmi_dms_get_ids_output_unref (output);
 
     shutdown ();
 }

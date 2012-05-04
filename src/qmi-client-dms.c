@@ -31,7 +31,7 @@ G_DEFINE_TYPE (QmiClientDms, qmi_client_dms, QMI_TYPE_CLIENT);
 /*****************************************************************************/
 /* Get IDs */
 
-QmiDmsGetIdsResult *
+QmiDmsGetIdsOutput *
 qmi_client_dms_get_ids_finish (QmiClientDms *self,
                                GAsyncResult *res,
                                GError **error)
@@ -39,7 +39,7 @@ qmi_client_dms_get_ids_finish (QmiClientDms *self,
     if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
         return NULL;
 
-    return qmi_dms_get_ids_result_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+    return qmi_dms_get_ids_output_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
 }
 
 static void
@@ -47,7 +47,7 @@ get_ids_ready (QmiDevice *device,
                GAsyncResult *res,
                GSimpleAsyncResult *simple)
 {
-    QmiDmsGetIdsResult *result;
+    QmiDmsGetIdsOutput *output;
     GError *error = NULL;
     QmiMessage *reply;
 
@@ -61,14 +61,14 @@ get_ids_ready (QmiDevice *device,
     }
 
     /* Parse reply */
-    result = qmi_message_dms_get_ids_reply_parse (reply, &error);
-    if (!result) {
+    output = qmi_message_dms_get_ids_reply_parse (reply, &error);
+    if (!output) {
         g_prefix_error (&error, "Getting IDs reply parsing failed: ");
         g_simple_async_result_take_error (simple, error);
     } else
         g_simple_async_result_set_op_res_gpointer (simple,
-                                                   result,
-                                                   (GDestroyNotify)qmi_dms_get_ids_result_unref);
+                                                   output,
+                                                   (GDestroyNotify)qmi_dms_get_ids_output_unref);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
 }

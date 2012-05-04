@@ -35,11 +35,11 @@ enum {
 };
 
 /**
- * QmiDmsGetIdsResult:
+ * QmiDmsGetIdsOutput:
  *
  * An opaque type handling the IDS of the device.
  */
-struct _QmiDmsGetIdsResult {
+struct _QmiDmsGetIdsOutput {
     volatile gint ref_count;
     gchar *esn;
     gchar *imei;
@@ -47,87 +47,87 @@ struct _QmiDmsGetIdsResult {
 };
 
 /**
- * qmi_dms_get_ids_result_get_esn:
- * @info: a #QmiDmsGetIdsResult.
+ * qmi_dms_get_ids_output_get_esn:
+ * @info: a #QmiDmsGetIdsOutput.
  *
  * Get the ESN.
  *
  * Returns: the ESN.
  */
 const gchar *
-qmi_dms_get_ids_result_get_esn (QmiDmsGetIdsResult *result)
+qmi_dms_get_ids_output_get_esn (QmiDmsGetIdsOutput *output)
 {
-    g_return_val_if_fail (result != NULL, NULL);
+    g_return_val_if_fail (output != NULL, NULL);
 
-    return result->esn;
+    return output->esn;
 }
 
 /**
- * qmi_dms_get_ids_result_get_imei:
- * @info: a #QmiDmsGetIdsResult.
+ * qmi_dms_get_ids_output_get_imei:
+ * @info: a #QmiDmsGetIdsOutput.
  *
  * Get the IMEI.
  *
  * Returns: the IMEI.
  */
 const gchar *
-qmi_dms_get_ids_result_get_imei (QmiDmsGetIdsResult *result)
+qmi_dms_get_ids_output_get_imei (QmiDmsGetIdsOutput *output)
 {
-    g_return_val_if_fail (result != NULL, NULL);
+    g_return_val_if_fail (output != NULL, NULL);
 
-    return result->imei;
+    return output->imei;
 }
 
 /**
- * qmi_dms_get_ids_result_get_meid:
- * @info: a #QmiDmsGetIdsResult.
+ * qmi_dms_get_ids_output_get_meid:
+ * @info: a #QmiDmsGetIdsOutput.
  *
  * Get the MEID.
  *
  * Returns: the MEID.
  */
 const gchar *
-qmi_dms_get_ids_result_get_meid (QmiDmsGetIdsResult *result)
+qmi_dms_get_ids_output_get_meid (QmiDmsGetIdsOutput *output)
 {
-    g_return_val_if_fail (result != NULL, NULL);
+    g_return_val_if_fail (output != NULL, NULL);
 
-    return result->meid;
+    return output->meid;
 }
 
 /**
- * qmi_dms_get_ids_result_ref:
- * @result: a #QmiDmsGetIdsResult.
+ * qmi_dms_get_ids_output_ref:
+ * @output: a #QmiDmsGetIdsOutput.
  *
- * Atomically increments the reference count of @result by one.
+ * Atomically increments the reference count of @output by one.
  *
- * Returns: the new reference to @result.
+ * Returns: the new reference to @output.
  */
-QmiDmsGetIdsResult *
-qmi_dms_get_ids_result_ref (QmiDmsGetIdsResult *result)
+QmiDmsGetIdsOutput *
+qmi_dms_get_ids_output_ref (QmiDmsGetIdsOutput *output)
 {
-    g_return_val_if_fail (result != NULL, NULL);
+    g_return_val_if_fail (output != NULL, NULL);
 
-    g_atomic_int_inc (&result->ref_count);
-    return result;
+    g_atomic_int_inc (&output->ref_count);
+    return output;
 }
 
 /**
- * qmi_dms_get_ids_result_unref:
- * @result: a #QmiDmsGetIdsResult.
+ * qmi_dms_get_ids_output_unref:
+ * @output: a #QmiDmsGetIdsOutput.
  *
  * Atomically decrements the reference count of array by one.
- * If the reference count drops to 0, @result is completely disposed.
+ * If the reference count drops to 0, @output is completely disposed.
  */
 void
-qmi_dms_get_ids_result_unref (QmiDmsGetIdsResult *result)
+qmi_dms_get_ids_output_unref (QmiDmsGetIdsOutput *output)
 {
-    g_return_if_fail (result != NULL);
+    g_return_if_fail (output != NULL);
 
-    if (g_atomic_int_dec_and_test (&result->ref_count)) {
-        g_free (result->esn);
-        g_free (result->imei);
-        g_free (result->meid);
-        g_slice_free (QmiDmsGetIdsResult, result);
+    if (g_atomic_int_dec_and_test (&output->ref_count)) {
+        g_free (output->esn);
+        g_free (output->imei);
+        g_free (output->meid);
+        g_slice_free (QmiDmsGetIdsOutput, output);
     }
 }
 
@@ -141,11 +141,11 @@ qmi_message_dms_get_ids_new (guint8 transaction_id,
                             QMI_DMS_MESSAGE_GET_IDS);
 }
 
-QmiDmsGetIdsResult *
+QmiDmsGetIdsOutput *
 qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
                                      GError **error)
 {
-    QmiDmsGetIdsResult *result;
+    QmiDmsGetIdsOutput *output;
     gchar *got_esn;
     gchar *got_imei;
     gchar *got_meid;
@@ -176,10 +176,10 @@ qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
         return NULL;
     }
 
-    result = g_slice_new (QmiDmsGetIdsResult);
-    result->esn = got_esn;
-    result->imei = got_imei;
-    result->meid = got_meid;
+    output = g_slice_new (QmiDmsGetIdsOutput);
+    output->esn = got_esn;
+    output->imei = got_imei;
+    output->meid = got_meid;
 
-    return result;
+    return output;
 }

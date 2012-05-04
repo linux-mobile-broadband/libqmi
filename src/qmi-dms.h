@@ -40,12 +40,12 @@ typedef enum {
 
 /*****************************************************************************/
 /* Get IDs */
-typedef struct _QmiDmsGetIdsResult QmiDmsGetIdsResult;
-QmiDmsGetIdsResult *qmi_dms_get_ids_result_ref      (QmiDmsGetIdsResult *result);
-void                qmi_dms_get_ids_result_unref    (QmiDmsGetIdsResult *result);
-const gchar        *qmi_dms_get_ids_result_get_esn  (QmiDmsGetIdsResult *result);
-const gchar        *qmi_dms_get_ids_result_get_imei (QmiDmsGetIdsResult *result);
-const gchar        *qmi_dms_get_ids_result_get_meid (QmiDmsGetIdsResult *result);
+typedef struct _QmiDmsGetIdsOutput QmiDmsGetIdsOutput;
+QmiDmsGetIdsOutput *qmi_dms_get_ids_output_ref      (QmiDmsGetIdsOutput *output);
+void                qmi_dms_get_ids_output_unref    (QmiDmsGetIdsOutput *output);
+const gchar        *qmi_dms_get_ids_output_get_esn  (QmiDmsGetIdsOutput *output);
+const gchar        *qmi_dms_get_ids_output_get_imei (QmiDmsGetIdsOutput *output);
+const gchar        *qmi_dms_get_ids_output_get_meid (QmiDmsGetIdsOutput *output);
 
 G_END_DECLS
 

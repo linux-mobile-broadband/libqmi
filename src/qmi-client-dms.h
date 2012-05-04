@@ -57,7 +57,7 @@ void                qmi_client_dms_get_ids        (QmiClientDms *self,
                                                    GCancellable *cancellable,
                                                    GAsyncReadyCallback callback,
                                                    gpointer user_data);
-QmiDmsGetIdsResult *qmi_client_dms_get_ids_finish (QmiClientDms *self,
+QmiDmsGetIdsOutput *qmi_client_dms_get_ids_finish (QmiClientDms *self,
                                                    GAsyncResult *res,
                                                    GError **error);
 
