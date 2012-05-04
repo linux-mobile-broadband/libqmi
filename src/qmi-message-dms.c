@@ -37,14 +37,40 @@ enum {
 /**
  * QmiDmsGetIdsOutput:
  *
- * An opaque type handling the IDS of the device.
+ * An opaque type handling the output of the Get IDs operation.
  */
 struct _QmiDmsGetIdsOutput {
     volatile gint ref_count;
+    GError *error;
     gchar *esn;
     gchar *imei;
     gchar *meid;
 };
+
+/**
+ * qmi_dms_get_ids_output_get_result:
+ * @output: a #QmiDmsGetIdsOutput.
+ * @error: a #GError.
+ *
+ * Get the result of the Get IDs operation.
+ *
+ * Returns: #TRUE if the operation succeeded, and #FALSE if @error is set.
+ */
+gboolean
+qmi_dms_get_ids_output_get_result (QmiDmsGetIdsOutput *output,
+                                   GError **error)
+{
+    g_return_val_if_fail (output != NULL, FALSE);
+
+    if (output->error) {
+        if (error)
+            *error = g_error_copy (output->error);
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 /**
  * qmi_dms_get_ids_output_get_esn:
@@ -127,6 +153,8 @@ qmi_dms_get_ids_output_unref (QmiDmsGetIdsOutput *output)
         g_free (output->esn);
         g_free (output->imei);
         g_free (output->meid);
+        if (output->error)
+            g_error_free (output->error);
         g_slice_free (QmiDmsGetIdsOutput, output);
     }
 }
@@ -146,40 +174,34 @@ qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
                                      GError **error)
 {
     QmiDmsGetIdsOutput *output;
-    gchar *got_esn;
-    gchar *got_imei;
-    gchar *got_meid;
+    GError *inner_error = NULL;
 
     g_assert (qmi_message_get_message_id (self) == QMI_DMS_MESSAGE_GET_IDS);
 
-    /* Abort if we got a QMI error reported */
-    if (!qmi_message_get_response_result (self, error))
-        return NULL;
+    if (!qmi_message_get_response_result (self, &inner_error)) {
+        /* Only QMI protocol errors are set in the Output result, all the
+         * others (e.g. failures parsing) are directly propagated to error. */
+        if (inner_error->domain != QMI_PROTOCOL_ERROR) {
+            g_propagate_error (error, inner_error);
+            return NULL;
+        }
 
-    got_esn = qmi_message_tlv_get_string (self,
-                                          QMI_DMS_TLV_GET_IDS_ESN,
-                                          NULL);
-    got_imei = qmi_message_tlv_get_string (self,
-                                           QMI_DMS_TLV_GET_IDS_IMEI,
-                                           NULL);
-    got_meid = qmi_message_tlv_get_string (self,
-                                           QMI_DMS_TLV_GET_IDS_MEID,
-                                           NULL);
-
-    /* Only return error if none of the outputs was read */
-    if (!got_esn && !got_imei && !got_meid) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_TLV_NOT_FOUND,
-                     "None of the expected outputs (ESN, IMEI, MEID) "
-                     "was found in the message");
-        return NULL;
+        /* Otherwise, build output */
     }
 
     output = g_slice_new (QmiDmsGetIdsOutput);
-    output->esn = got_esn;
-    output->imei = got_imei;
-    output->meid = got_meid;
+    output->error = inner_error;
+
+    /* Note: all ESN/IMEI/MEID are OPTIONAL; so it's ok if none of them appear */
+    output->esn = qmi_message_tlv_get_string (self,
+                                              QMI_DMS_TLV_GET_IDS_ESN,
+                                              NULL);
+    output->imei = qmi_message_tlv_get_string (self,
+                                               QMI_DMS_TLV_GET_IDS_IMEI,
+                                               NULL);
+    output->meid = qmi_message_tlv_get_string (self,
+                                               QMI_DMS_TLV_GET_IDS_MEID,
+                                               NULL);
 
     return output;
 }

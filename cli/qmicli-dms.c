@@ -139,8 +139,12 @@ get_ids_ready (QmiClientDms *client,
 
     output = qmi_client_dms_get_ids_finish (client, res, &error);
     if (!output) {
-        g_printerr ("error: couldn't get IDs: %s\n",
-                    error->message);
+        g_printerr ("error: operation failed: %s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    if (!qmi_dms_get_ids_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get IDs: %s\n", error->message);
         exit (EXIT_FAILURE);
     }
 

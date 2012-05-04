@@ -26,6 +26,8 @@
 
 #include <glib.h>
 
+#include "qmi-enums.h"
+
 G_BEGIN_DECLS
 
 /*****************************************************************************/
@@ -41,11 +43,13 @@ typedef enum {
 /*****************************************************************************/
 /* Get IDs */
 typedef struct _QmiDmsGetIdsOutput QmiDmsGetIdsOutput;
-QmiDmsGetIdsOutput *qmi_dms_get_ids_output_ref      (QmiDmsGetIdsOutput *output);
-void                qmi_dms_get_ids_output_unref    (QmiDmsGetIdsOutput *output);
-const gchar        *qmi_dms_get_ids_output_get_esn  (QmiDmsGetIdsOutput *output);
-const gchar        *qmi_dms_get_ids_output_get_imei (QmiDmsGetIdsOutput *output);
-const gchar        *qmi_dms_get_ids_output_get_meid (QmiDmsGetIdsOutput *output);
+QmiDmsGetIdsOutput *qmi_dms_get_ids_output_ref        (QmiDmsGetIdsOutput *output);
+void                qmi_dms_get_ids_output_unref      (QmiDmsGetIdsOutput *output);
+gboolean            qmi_dms_get_ids_output_get_result (QmiDmsGetIdsOutput *output,
+                                                       GError **error);
+const gchar        *qmi_dms_get_ids_output_get_esn    (QmiDmsGetIdsOutput *output);
+const gchar        *qmi_dms_get_ids_output_get_imei   (QmiDmsGetIdsOutput *output);
+const gchar        *qmi_dms_get_ids_output_get_meid   (QmiDmsGetIdsOutput *output);
 
 G_END_DECLS
 
