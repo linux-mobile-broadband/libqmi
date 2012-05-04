@@ -34,7 +34,7 @@ typedef enum {
   QMI_WDS_MESSAGE_EVENT         = 0x0001, /* unused currently */
   QMI_WDS_MESSAGE_START_NETWORK = 0x0020,
   QMI_WDS_MESSAGE_STOP_NETWORK  = 0x0021,
-  QMI_WDS_MESSAGE_PACKET_STATUS = 0x0022, /* unused currently */
+  QMI_WDS_MESSAGE_GET_PACKET_SERVICE_STATUS = 0x0022,
 } QmiWdsMessage;
 
 /*****************************************************************************/
@@ -85,6 +85,26 @@ QmiWdsStopNetworkOutput *qmi_wds_stop_network_output_ref   (QmiWdsStopNetworkOut
 void                     qmi_wds_stop_network_output_unref (QmiWdsStopNetworkOutput *output);
 gboolean                 qmi_wds_stop_network_output_get_result (QmiWdsStopNetworkOutput *output,
                                                                  GError **error);
+
+/*****************************************************************************/
+/* Get packet service status */
+
+/* Note: no defined input yet */
+
+typedef enum {
+    QMI_WDS_CONNECTION_STATUS_UNKNOWN        = 0,
+    QMI_WDS_CONNECTION_STATUS_DISCONNECTED   = 1,
+    QMI_WDS_CONNECTION_STATUS_CONNECTED      = 2,
+    QMI_WDS_CONNECTION_STATUS_SUSPENDED      = 3,
+    QMI_WDS_CONNECTION_STATUS_AUTHENTICATING = 4,
+} QmiWdsConnectionStatus;
+
+typedef struct _QmiWdsGetPacketServiceStatusOutput QmiWdsGetPacketServiceStatusOutput;
+QmiWdsGetPacketServiceStatusOutput *qmi_wds_get_packet_service_status_output_ref   (QmiWdsGetPacketServiceStatusOutput *output);
+void                                qmi_wds_get_packet_service_status_output_unref (QmiWdsGetPacketServiceStatusOutput *output);
+gboolean                            qmi_wds_get_packet_service_status_output_get_result (QmiWdsGetPacketServiceStatusOutput *output,
+                                                                                         GError **error);
+QmiWdsConnectionStatus              qmi_wds_get_packet_service_status_output_get_connection_status (QmiWdsGetPacketServiceStatusOutput *output);
 
 G_END_DECLS
 

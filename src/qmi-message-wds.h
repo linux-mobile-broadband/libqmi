@@ -51,6 +51,13 @@ QmiMessage              *qmi_message_wds_stop_network_new         (guint8 transa
 QmiWdsStopNetworkOutput *qmi_message_wds_stop_network_reply_parse (QmiMessage *self,
                                                                    GError **error);
 
+/*****************************************************************************/
+/* Get packet service status */
+QmiMessage                         *qmi_message_wds_get_packet_service_status_new         (guint8 transaction_id,
+                                                                                           guint8 client_id);
+QmiWdsGetPacketServiceStatusOutput *qmi_message_wds_get_packet_service_status_reply_parse (QmiMessage *self,
+                                                                                           GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_MESSAGE_WDS_H_ */

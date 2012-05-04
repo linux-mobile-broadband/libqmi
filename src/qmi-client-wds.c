@@ -190,6 +190,77 @@ qmi_client_wds_stop_network (QmiClientWds *self,
 }
 
 /*****************************************************************************/
+/* Get packet service status */
+
+QmiWdsGetPacketServiceStatusOutput *
+qmi_client_wds_get_packet_service_status_finish (QmiClientWds *self,
+                                                 GAsyncResult *res,
+                                                 GError **error)
+{
+    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+        return NULL;
+
+    return qmi_wds_get_packet_service_status_output_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+}
+
+static void
+get_packet_service_status_ready (QmiDevice *device,
+                                 GAsyncResult *res,
+                                 GSimpleAsyncResult *simple)
+{
+    GError *error = NULL;
+    QmiMessage *reply;
+    QmiWdsGetPacketServiceStatusOutput *output;
+
+    reply = qmi_device_command_finish (device, res, &error);
+    if (!reply) {
+        g_simple_async_result_take_error (simple, error);
+        g_simple_async_result_complete (simple);
+        g_object_unref (simple);
+        return;
+    }
+
+    /* Parse reply */
+    output = qmi_message_wds_get_packet_service_status_reply_parse (reply, &error);
+    if (!output)
+        g_simple_async_result_take_error (simple, error);
+    else
+        g_simple_async_result_set_op_res_gpointer (simple,
+                                                   output,
+                                                   (GDestroyNotify)qmi_wds_get_packet_service_status_output_unref);
+    g_simple_async_result_complete (simple);
+    g_object_unref (simple);
+}
+
+void
+qmi_client_wds_get_packet_service_status (QmiClientWds *self,
+                                          gpointer input_unused,
+                                          guint timeout,
+                                          GCancellable *cancellable,
+                                          GAsyncReadyCallback callback,
+                                          gpointer user_data)
+{
+    GSimpleAsyncResult *result;
+    QmiMessage *request;
+    GError *error = NULL;
+
+    result = g_simple_async_result_new (G_OBJECT (self),
+                                        callback,
+                                        user_data,
+                                        qmi_client_wds_get_packet_service_status);
+
+    request = qmi_message_wds_get_packet_service_status_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
+                                                             qmi_client_get_cid (QMI_CLIENT (self)));
+    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+                        request,
+                        timeout,
+                        cancellable,
+                        (GAsyncReadyCallback)get_packet_service_status_ready,
+                        result);
+    qmi_message_unref (request);
+}
+
+/*****************************************************************************/
 
 static void
 qmi_client_wds_init (QmiClientWds *self)

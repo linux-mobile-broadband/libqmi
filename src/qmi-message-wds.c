@@ -718,3 +718,146 @@ qmi_message_wds_stop_network_reply_parse (QmiMessage *self,
 
     return output;
 }
+
+/*****************************************************************************/
+/* Get packet service status */
+
+QmiMessage *
+qmi_message_wds_get_packet_service_status_new (guint8 transaction_id,
+                                               guint8 client_id)
+{
+    return qmi_message_new (QMI_SERVICE_WDS,
+                            client_id,
+                            transaction_id,
+                            QMI_WDS_MESSAGE_GET_PACKET_SERVICE_STATUS);
+}
+
+enum {
+    GET_PACKET_SERVICE_STATUS_OUTPUT_TLV_CONNECTION_STATUS = 0x01,
+};
+
+/**
+ * QmiWdsGetPacketServiceStatusOutput:
+ *
+ * An opaque type handling the output of the Stop Network operation.
+ */
+struct _QmiWdsGetPacketServiceStatusOutput {
+    volatile gint ref_count;
+    GError *error;
+    guint8 connection_status;
+};
+
+/**
+ * qmi_wds_get_packet_service_status_output_get_result:
+ * @output: a #QmiWdsGetPacketServiceStatusOutput.
+ * @error: a #GError.
+ *
+ * Get the result of the Get Packet Status operation.
+ *
+ * Returns: #TRUE if the operation succeeded, and #FALSE if @error is set.
+ */
+gboolean
+qmi_wds_get_packet_service_status_output_get_result (QmiWdsGetPacketServiceStatusOutput *output,
+                                                     GError **error)
+{
+    g_return_val_if_fail (output != NULL, FALSE);
+
+    if (output->error) {
+        if (error)
+            *error = g_error_copy (output->error);
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * qmi_wds_start_network_output_get_connection_status:
+ * @output: a #QmiWdsGetPacketServiceStatusOutput.
+ *
+ * Get the connection status.
+ *
+ * Returns: a #QmiWdsConnectionStatus.
+ */
+QmiWdsConnectionStatus
+qmi_wds_get_packet_service_status_output_get_connection_status (QmiWdsGetPacketServiceStatusOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_CONNECTION_STATUS_UNKNOWN);
+
+    return (QmiWdsConnectionStatus)output->connection_status;
+}
+
+/**
+ * qmi_wds_get_packet_service_status_output_ref:
+ * @output: a #QmiWdsGetPacketServiceStatusOutput.
+ *
+ * Atomically increments the reference count of @output by one.
+ *
+ * Returns: the new reference to @output.
+ */
+QmiWdsGetPacketServiceStatusOutput *
+qmi_wds_get_packet_service_status_output_ref (QmiWdsGetPacketServiceStatusOutput *output)
+{
+    g_return_val_if_fail (output != NULL, NULL);
+
+    g_atomic_int_inc (&output->ref_count);
+    return output;
+}
+
+/**
+ * qmi_wds_get_packet_service_status_output_unref:
+ * @output: a #QmiWdsGetPacketServiceStatusOutput.
+ *
+ * Atomically decrements the reference count of @output by one.
+ * If the reference count drops to 0, @output is completely disposed.
+ */
+void
+qmi_wds_get_packet_service_status_output_unref (QmiWdsGetPacketServiceStatusOutput *output)
+{
+    g_return_if_fail (output != NULL);
+
+    if (g_atomic_int_dec_and_test (&output->ref_count)) {
+        if (output->error)
+            g_error_free (output->error);
+        g_slice_free (QmiWdsGetPacketServiceStatusOutput, output);
+    }
+}
+
+QmiWdsGetPacketServiceStatusOutput *
+qmi_message_wds_get_packet_service_status_reply_parse (QmiMessage *self,
+                                                       GError **error)
+{
+    QmiWdsGetPacketServiceStatusOutput *output;
+    GError *inner_error = NULL;
+
+    g_assert (qmi_message_get_message_id (self) == QMI_WDS_MESSAGE_GET_PACKET_SERVICE_STATUS);
+
+    if (!qmi_message_get_response_result (self, &inner_error)) {
+        /* Only QMI protocol errors are set in the Output result, all the
+         * others (e.g. failures parsing) are directly propagated to error. */
+        if (inner_error->domain != QMI_PROTOCOL_ERROR) {
+            g_propagate_error (error, inner_error);
+            return NULL;
+        }
+
+        /* Otherwise, build output */
+    }
+
+    /* success */
+
+    output = g_slice_new0 (QmiWdsGetPacketServiceStatusOutput);
+    output->error = inner_error;
+
+    if (!qmi_message_tlv_get (self,
+                              GET_PACKET_SERVICE_STATUS_OUTPUT_TLV_CONNECTION_STATUS,
+                              sizeof (output->connection_status),
+                              &output->connection_status,
+                              error)) {
+        g_prefix_error (error, "Couldn't get the connection status TLV: ");
+        qmi_wds_get_packet_service_status_output_unref (output);
+        return NULL;
+    }
+
+    return output;
+}

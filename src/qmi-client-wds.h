@@ -75,6 +75,18 @@ QmiWdsStopNetworkOutput *qmi_client_wds_stop_network_finish (QmiClientWds *self,
                                                              GAsyncResult *res,
                                                              GError **error);
 
+/*****************************************************************************/
+/* Get packet service status */
+void                                qmi_client_wds_get_packet_service_status        (QmiClientWds *self,
+                                                                                     gpointer input_unused,
+                                                                                     guint timeout,
+                                                                                     GCancellable *cancellable,
+                                                                                     GAsyncReadyCallback callback,
+                                                                                     gpointer user_data);
+QmiWdsGetPacketServiceStatusOutput *qmi_client_wds_get_packet_service_status_finish (QmiClientWds *self,
+                                                                                     GAsyncResult *res,
+                                                                                     GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_CLIENT_WDS_H_ */
