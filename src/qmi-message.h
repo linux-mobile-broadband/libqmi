@@ -95,6 +95,7 @@ gboolean qmi_message_is_response   (QmiMessage *self);
 gboolean qmi_message_is_indication (QmiMessage *self);
 gboolean qmi_message_get_response_result (QmiMessage *self,
                                           GError **error);
+guint16  qmi_message_get_message_id (QmiMessage *self);
 
 G_END_DECLS
 
