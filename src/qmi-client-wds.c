@@ -111,12 +111,15 @@ qmi_client_wds_start_network (QmiClientWds *self,
 /*****************************************************************************/
 /* Stop network */
 
-gboolean
+QmiWdsStopNetworkOutput *
 qmi_client_wds_stop_network_finish (QmiClientWds *self,
                                     GAsyncResult *res,
                                     GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+        return NULL;
+
+    return qmi_wds_stop_network_output_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
 }
 
 static void
@@ -126,6 +129,7 @@ stop_network_ready (QmiDevice *device,
 {
     GError *error = NULL;
     QmiMessage *reply;
+    QmiWdsStopNetworkOutput *output;
 
     reply = qmi_device_command_finish (device, res, &error);
     if (!reply) {
@@ -136,17 +140,20 @@ stop_network_ready (QmiDevice *device,
     }
 
     /* Parse reply */
-    if (!qmi_message_wds_stop_network_reply_parse (reply, &error))
+    output = qmi_message_wds_stop_network_reply_parse (reply, &error);
+    if (!output)
         g_simple_async_result_take_error (simple, error);
     else
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
+        g_simple_async_result_set_op_res_gpointer (simple,
+                                                   output,
+                                                   (GDestroyNotify)qmi_wds_stop_network_output_unref);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
 }
 
 void
 qmi_client_wds_stop_network (QmiClientWds *self,
-                             guint32 packet_data_handle,
+                             QmiWdsStopNetworkInput *input,
                              guint timeout,
                              GCancellable *cancellable,
                              GAsyncReadyCallback callback,
@@ -154,6 +161,7 @@ qmi_client_wds_stop_network (QmiClientWds *self,
 {
     GSimpleAsyncResult *result;
     QmiMessage *request;
+    GError *error = NULL;
 
     result = g_simple_async_result_new (G_OBJECT (self),
                                         callback,
@@ -162,7 +170,16 @@ qmi_client_wds_stop_network (QmiClientWds *self,
 
     request = qmi_message_wds_stop_network_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
                                                 qmi_client_get_cid (QMI_CLIENT (self)),
-                                                packet_data_handle);
+                                                input,
+                                                &error);
+    if (!request) {
+        g_prefix_error (&error, "Couldn't create request message: ");
+        g_simple_async_result_take_error (result, error);
+        g_simple_async_result_complete_in_idle (result);
+        g_object_unref (result);
+        return;
+    }
+
     qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
                         request,
                         timeout,

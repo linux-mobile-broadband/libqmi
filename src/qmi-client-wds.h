@@ -65,15 +65,15 @@ QmiWdsStartNetworkOutput *qmi_client_wds_start_network_finish (QmiClientWds *sel
 
 /*****************************************************************************/
 /* Stop network */
-void     qmi_client_wds_stop_network        (QmiClientWds *self,
-                                             guint32 packet_data_handle,
-                                             guint timeout,
-                                             GCancellable *cancellable,
-                                             GAsyncReadyCallback callback,
-                                             gpointer user_data);
-gboolean qmi_client_wds_stop_network_finish (QmiClientWds *self,
-                                             GAsyncResult *res,
-                                             GError **error);
+void                      qmi_client_wds_stop_network        (QmiClientWds *self,
+                                                              QmiWdsStopNetworkInput *input,
+                                                              guint timeout,
+                                                              GCancellable *cancellable,
+                                                              GAsyncReadyCallback callback,
+                                                              gpointer user_data);
+QmiWdsStopNetworkOutput *qmi_client_wds_stop_network_finish (QmiClientWds *self,
+                                                             GAsyncResult *res,
+                                                             GError **error);
 
 G_END_DECLS
 

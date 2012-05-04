@@ -489,34 +489,232 @@ enum {
     STOP_NETWORK_INPUT_TLV_PACKET_DATA_HANDLE = 0x01,
 };
 
+/**
+ * QmiWdsStopNetworkInput:
+ *
+ * An opaque type handling the input arguments that may be passed to the Stop
+ * Network operation in the WDS service.
+ */
+struct _QmiWdsStopNetworkInput {
+    volatile gint ref_count;
+
+    gboolean packet_data_handle_set;
+    guint32 packet_data_handle;
+};
+
+/**
+ * qmi_wds_stop_network_input_set_packet_data_handle:
+ * @input: a #QmiWdsStopNetworkInput.
+ * @packet_data_handle: the packet data handle.
+ *
+ * Set the packet data handle of the connection.
+ */
+void
+qmi_wds_stop_network_input_set_packet_data_handle (QmiWdsStopNetworkInput *input,
+                                                   guint32 packet_data_handle)
+{
+    g_return_if_fail (input != NULL);
+
+    input->packet_data_handle_set = TRUE;
+    input->packet_data_handle = packet_data_handle;
+}
+
+/**
+ * qmi_wds_stop_network_input_get_packet_data_handle:
+ * @input: a #QmiWdsStopNetworkInput.
+ * @packet_data_handle: output location for the packet data handle.
+ *
+ * Get the packet data handle of the connection.
+ *
+ * Returns: #TRUE if @packet_data_handle is set, #FALSE otherwise.
+ */
+gboolean
+qmi_wds_stop_network_input_get_packet_data_handle (QmiWdsStopNetworkInput *input,
+                                                   guint32 *packet_data_handle)
+{
+    g_return_val_if_fail (input != NULL, FALSE);
+
+    if (input->packet_data_handle_set)
+        *packet_data_handle = input->packet_data_handle;
+    return input->packet_data_handle_set;
+}
+
+/**
+ * qmi_wds_stop_network_input_new:
+ *
+ * Allocates a new #QmiWdsStopNetworkInput.
+ *
+ * Returns: the newly created #QmiWdsStopNetworkInput.
+ */
+QmiWdsStopNetworkInput *
+qmi_wds_stop_network_input_new (void)
+{
+    return g_slice_new0 (QmiWdsStopNetworkInput);
+}
+
+/**
+ * qmi_wds_stop_network_input_ref:
+ * @input: a #QmiWdsStopNetworkInput.
+ *
+ * Atomically increments the reference count of @input by one.
+ *
+ * Returns: the new reference to @input.
+ */
+QmiWdsStopNetworkInput *
+qmi_wds_stop_network_input_ref (QmiWdsStopNetworkInput *input)
+{
+    g_return_val_if_fail (input != NULL, NULL);
+
+    g_atomic_int_inc (&input->ref_count);
+    return input;
+}
+
+/**
+ * qmi_wds_stop_network_input_unref:
+ * @input: a #QmiWdsStopNetworkInput.
+ *
+ * Atomically decrements the reference count of @input by one.
+ * If the reference count drops to 0, @input is completely disposed.
+ */
+void
+qmi_wds_stop_network_input_unref (QmiWdsStopNetworkInput *input)
+{
+    g_return_if_fail (input != NULL);
+
+    if (g_atomic_int_dec_and_test (&input->ref_count)) {
+        g_slice_free (QmiWdsStopNetworkInput, input);
+    }
+}
+
 QmiMessage *
 qmi_message_wds_stop_network_new (guint8 transaction_id,
                                   guint8 client_id,
-                                  guint32 packet_data_handle)
+                                  QmiWdsStopNetworkInput *input,
+                                  GError **error)
 {
     QmiMessage *message;
-    GError *error = NULL;
 
-    /* TODO: handle optional TLVs */
-    message =  qmi_message_new (QMI_SERVICE_WDS,
-                                client_id,
-                                transaction_id,
-                                QMI_WDS_MESSAGE_STOP_NETWORK);
-    qmi_message_tlv_add (message,
-                         STOP_NETWORK_INPUT_TLV_PACKET_DATA_HANDLE,
-                         sizeof (packet_data_handle),
-                         &packet_data_handle,
-                         &error);
-    g_assert_no_error (error);
+    /* Check mandatory input arguments */
+    if (!input ||
+        !input->packet_data_handle_set) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_INVALID_ARGS,
+                     "Missing mandatory argument 'packet data handle'");
+        return NULL;
+    }
+
+    message = qmi_message_new (QMI_SERVICE_WDS,
+                               client_id,
+                               transaction_id,
+                               QMI_WDS_MESSAGE_STOP_NETWORK);
+
+    if (!qmi_message_tlv_add (message,
+                              STOP_NETWORK_INPUT_TLV_PACKET_DATA_HANDLE,
+                              sizeof (input->packet_data_handle),
+                              &input->packet_data_handle,
+                              error)) {
+        g_prefix_error (error, "Failed to add packet data handle to message: ");
+        qmi_message_unref (message);
+        return NULL;
+    }
 
     return message;
 }
 
+/**
+ * QmiWdsStopNetworkOutput:
+ *
+ * An opaque type handling the output of the Stop Network operation.
+ */
+struct _QmiWdsStopNetworkOutput {
+    volatile gint ref_count;
+    GError *error;
+};
+
+/**
+ * qmi_wds_stop_network_output_get_result:
+ * @output: a #QmiWdsStopNetworkOutput.
+ * @error: a #GError.
+ *
+ * Get the result of the Stop Network operation.
+ *
+ * Returns: #TRUE if the operation succeeded, and #FALSE if @error is set.
+ */
 gboolean
-qmi_message_wds_stop_network_reply_parse (QmiMessage *self,
-                                          GError **error)
+qmi_wds_stop_network_output_get_result (QmiWdsStopNetworkOutput *output,
+                                         GError **error)
 {
+    g_return_val_if_fail (output != NULL, FALSE);
+
+    if (output->error) {
+        if (error)
+            *error = g_error_copy (output->error);
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * qmi_wds_stop_network_output_ref:
+ * @output: a #QmiWdsStopNetworkOutput.
+ *
+ * Atomically increments the reference count of @output by one.
+ *
+ * Returns: the new reference to @output.
+ */
+QmiWdsStopNetworkOutput *
+qmi_wds_stop_network_output_ref (QmiWdsStopNetworkOutput *output)
+{
+    g_return_val_if_fail (output != NULL, NULL);
+
+    g_atomic_int_inc (&output->ref_count);
+    return output;
+}
+
+/**
+ * qmi_wds_stop_network_output_unref:
+ * @output: a #QmiWdsStopNetworkOutput.
+ *
+ * Atomically decrements the reference count of @output by one.
+ * If the reference count drops to 0, @output is completely disposed.
+ */
+void
+qmi_wds_stop_network_output_unref (QmiWdsStopNetworkOutput *output)
+{
+    g_return_if_fail (output != NULL);
+
+    if (g_atomic_int_dec_and_test (&output->ref_count)) {
+        if (output->error)
+            g_error_free (output->error);
+        g_slice_free (QmiWdsStopNetworkOutput, output);
+    }
+}
+
+QmiWdsStopNetworkOutput *
+qmi_message_wds_stop_network_reply_parse (QmiMessage *self,
+                                           GError **error)
+{
+    QmiWdsStopNetworkOutput *output;
+    GError *inner_error = NULL;
+
     g_assert (qmi_message_get_message_id (self) == QMI_WDS_MESSAGE_STOP_NETWORK);
 
-    return qmi_message_get_response_result (self, error);
+    if (!qmi_message_get_response_result (self, &inner_error)) {
+        /* Only QMI protocol errors are set in the Output result, all the
+         * others (e.g. failures parsing) are directly propagated to error. */
+        if (inner_error->domain != QMI_PROTOCOL_ERROR) {
+            g_propagate_error (error, inner_error);
+            return NULL;
+        }
+
+        /* Otherwise, build output */
+    }
+
+    output = g_slice_new0 (QmiWdsStopNetworkOutput);
+    output->error = inner_error;
+
+    return output;
 }

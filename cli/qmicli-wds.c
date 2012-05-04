@@ -139,10 +139,17 @@ stop_network_ready (QmiClientWds *client,
                     GAsyncResult *res)
 {
     GError *error = NULL;
+    QmiWdsStopNetworkOutput *output;
 
-    if (!qmi_client_wds_stop_network_finish (client, res, &error)) {
-        g_printerr ("error: couldn't stop network: %s\n",
+    output = qmi_client_wds_stop_network_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
                     error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    if (!qmi_wds_stop_network_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't stop network: %s\n", error->message);
         exit (EXIT_FAILURE);
     }
 
@@ -152,21 +159,27 @@ stop_network_ready (QmiClientWds *client,
     g_print ("[%s] Network stopped\n",
              qmi_device_get_path_display (ctx->device));
 
+    qmi_wds_stop_network_output_unref (output);
     shutdown ();
 }
 
 static void
 network_cancelled (GCancellable *cancellable)
 {
+    QmiWdsStopNetworkInput *input;
     ctx->network_started_id = 0;
+
+    input = qmi_wds_stop_network_input_new ();
+    qmi_wds_stop_network_input_set_packet_data_handle (input, ctx->packet_data_handle);
 
     g_print ("Network cancelled... releasing resources\n");
     qmi_client_wds_stop_network (ctx->client,
-                                 ctx->packet_data_handle,
+                                 input,
                                  10,
                                  ctx->cancellable,
                                  (GAsyncReadyCallback)stop_network_ready,
                                  NULL);
+    qmi_wds_stop_network_input_unref (input);
 }
 
 static void

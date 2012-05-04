@@ -44,11 +44,12 @@ QmiWdsStartNetworkOutput *qmi_message_wds_start_network_reply_parse (QmiMessage 
 
 /*****************************************************************************/
 /* Stop network */
-QmiMessage *qmi_message_wds_stop_network_new         (guint8 transaction_id,
-                                                      guint8 client_id,
-                                                      guint32 packet_data_handle);
-gboolean    qmi_message_wds_stop_network_reply_parse (QmiMessage *self,
-                                                      GError **error);
+QmiMessage              *qmi_message_wds_stop_network_new         (guint8 transaction_id,
+                                                                   guint8 client_id,
+                                                                   QmiWdsStopNetworkInput *input,
+                                                                   GError **error);
+QmiWdsStopNetworkOutput *qmi_message_wds_stop_network_reply_parse (QmiMessage *self,
+                                                                   GError **error);
 
 G_END_DECLS
 

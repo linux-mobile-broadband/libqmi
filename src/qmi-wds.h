@@ -68,6 +68,23 @@ gboolean                  qmi_wds_start_network_output_get_verbose_call_end_reas
                                                                                     guint16 *verbose_call_end_reason_domain,
                                                                                     guint16 *verbose_call_end_reason_value);
 
+/*****************************************************************************/
+/* Stop network */
+
+typedef struct _QmiWdsStopNetworkInput QmiWdsStopNetworkInput;
+QmiWdsStopNetworkInput *qmi_wds_stop_network_input_new   (void);
+QmiWdsStopNetworkInput *qmi_wds_stop_network_input_ref   (QmiWdsStopNetworkInput *input);
+void                    qmi_wds_stop_network_input_unref (QmiWdsStopNetworkInput *input);
+void                    qmi_wds_stop_network_input_set_packet_data_handle (QmiWdsStopNetworkInput *input,
+                                                                           guint32 packet_data_handle);
+gboolean                qmi_wds_stop_network_input_get_packet_data_handle (QmiWdsStopNetworkInput *input,
+                                                                           guint32 *packet_data_handle);
+
+typedef struct _QmiWdsStopNetworkOutput QmiWdsStopNetworkOutput;
+QmiWdsStopNetworkOutput *qmi_wds_stop_network_output_ref   (QmiWdsStopNetworkOutput *output);
+void                     qmi_wds_stop_network_output_unref (QmiWdsStopNetworkOutput *output);
+gboolean                 qmi_wds_stop_network_output_get_result (QmiWdsStopNetworkOutput *output,
+                                                                 GError **error);
 
 G_END_DECLS
 
