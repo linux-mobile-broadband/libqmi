@@ -176,6 +176,7 @@ static void
 network_cancelled (GCancellable *cancellable)
 {
     QmiWdsStopNetworkInput *input;
+
     ctx->network_started_id = 0;
 
     input = qmi_wds_stop_network_input_new ();
@@ -362,6 +363,7 @@ qmicli_wds_run (QmiDevice *device,
     ctx->device = g_object_ref (device);
     ctx->cancellable = g_object_ref (cancellable);
     ctx->network_started_id = 0;
+    ctx->packet_status_timeout_id = 0;
 
     /* Create a new WDS client */
     qmi_device_allocate_client (device,
