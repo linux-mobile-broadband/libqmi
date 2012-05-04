@@ -53,14 +53,15 @@ GType qmi_client_wds_get_type (void);
 
 /*****************************************************************************/
 /* Start network */
-void    qmi_client_wds_start_network        (QmiClientWds *self,
-                                             guint timeout,
-                                             GCancellable *cancellable,
-                                             GAsyncReadyCallback callback,
-                                             gpointer user_data);
-guint32 qmi_client_wds_start_network_finish (QmiClientWds *self,
-                                             GAsyncResult *res,
-                                             GError **error);
+void                      qmi_client_wds_start_network        (QmiClientWds *self,
+                                                               QmiWdsStartNetworkInput *input,
+                                                               guint timeout,
+                                                               GCancellable *cancellable,
+                                                               GAsyncReadyCallback callback,
+                                                               gpointer user_data);
+QmiWdsStartNetworkOutput *qmi_client_wds_start_network_finish (QmiClientWds *self,
+                                                               GAsyncResult *res,
+                                                               GError **error);
 
 /*****************************************************************************/
 /* Stop network */

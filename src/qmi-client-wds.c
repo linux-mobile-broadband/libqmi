@@ -30,15 +30,15 @@ G_DEFINE_TYPE (QmiClientWds, qmi_client_wds, QMI_TYPE_CLIENT);
 /*****************************************************************************/
 /* Start network */
 
-guint32
+QmiWdsStartNetworkOutput *
 qmi_client_wds_start_network_finish (QmiClientWds *self,
                                      GAsyncResult *res,
                                      GError **error)
 {
     if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return 0; /* TODO: what would be a good invalid packet data handle? */
+        return NULL;
 
-    return (guint32) GPOINTER_TO_UINT (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+    return qmi_wds_start_network_output_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
 }
 
 static void
@@ -48,7 +48,7 @@ start_network_ready (QmiDevice *device,
 {
     GError *error = NULL;
     QmiMessage *reply;
-    guint32 result;
+    QmiWdsStartNetworkOutput *output;
 
     reply = qmi_device_command_finish (device, res, &error);
     if (!reply) {
@@ -59,19 +59,20 @@ start_network_ready (QmiDevice *device,
     }
 
     /* Parse reply */
-    result = qmi_message_wds_start_network_reply_parse (reply, &error);
-    if (!result)
+    output = qmi_message_wds_start_network_reply_parse (reply, &error);
+    if (!output)
         g_simple_async_result_take_error (simple, error);
     else
         g_simple_async_result_set_op_res_gpointer (simple,
-                                                   GUINT_TO_POINTER (result),
-                                                   NULL);
+                                                   output,
+                                                   (GDestroyNotify)qmi_wds_start_network_output_unref);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
 }
 
 void
 qmi_client_wds_start_network (QmiClientWds *self,
+                              QmiWdsStartNetworkInput *input,
                               guint timeout,
                               GCancellable *cancellable,
                               GAsyncReadyCallback callback,
@@ -79,6 +80,7 @@ qmi_client_wds_start_network (QmiClientWds *self,
 {
     GSimpleAsyncResult *result;
     QmiMessage *request;
+    GError *error = NULL;
 
     result = g_simple_async_result_new (G_OBJECT (self),
                                         callback,
@@ -86,7 +88,17 @@ qmi_client_wds_start_network (QmiClientWds *self,
                                         qmi_client_wds_start_network);
 
     request = qmi_message_wds_start_network_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
-                                                 qmi_client_get_cid (QMI_CLIENT (self)));
+                                                 qmi_client_get_cid (QMI_CLIENT (self)),
+                                                 input,
+                                                 &error);
+    if (!request) {
+        g_prefix_error (&error, "Couldn't create request message: ");
+        g_simple_async_result_take_error (result, error);
+        g_simple_async_result_complete_in_idle (result);
+        g_object_unref (result);
+        return;
+    }
+
     qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
                         request,
                         timeout,

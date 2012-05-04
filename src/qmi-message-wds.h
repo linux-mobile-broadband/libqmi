@@ -35,10 +35,12 @@ G_BEGIN_DECLS
 
 /*****************************************************************************/
 /* Start network */
-QmiMessage *qmi_message_wds_start_network_new         (guint8 transaction_id,
-                                                       guint8 client_id);
-guint32     qmi_message_wds_start_network_reply_parse (QmiMessage *self,
-                                                       GError **error);
+QmiMessage               *qmi_message_wds_start_network_new         (guint8 transaction_id,
+                                                                     guint8 client_id,
+                                                                     QmiWdsStartNetworkInput *input,
+                                                                     GError **error);
+QmiWdsStartNetworkOutput *qmi_message_wds_start_network_reply_parse (QmiMessage *self,
+                                                                     GError **error);
 
 /*****************************************************************************/
 /* Stop network */

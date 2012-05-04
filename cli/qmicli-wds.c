@@ -174,13 +174,33 @@ start_network_ready (QmiClientWds *client,
                      GAsyncResult *res)
 {
     GError *error = NULL;
+    QmiWdsStartNetworkOutput *output;
 
-    ctx->packet_data_handle = qmi_client_wds_start_network_finish (client, res, &error);
-    if (!ctx->packet_data_handle) {
-        g_printerr ("error: couldn't start network: %s\n",
+    output = qmi_client_wds_start_network_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
                     error->message);
         exit (EXIT_FAILURE);
     }
+
+    if (!qmi_wds_start_network_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't start network: %s\n", error->message);
+        if (g_error_matches (error,
+                             QMI_PROTOCOL_ERROR,
+                             QMI_PROTOCOL_ERROR_CALL_FAILED)) {
+            guint16 cer;
+            guint16 domain;
+
+            if (qmi_wds_start_network_output_get_call_end_reason (output, &cer))
+                g_printerr ("call end reason: %u\n", cer);
+            if (qmi_wds_start_network_output_get_verbose_call_end_reason (output, &cer, &domain))
+                g_printerr ("verbose call end reason: %u, %u\n", domain, cer);
+        }
+
+        exit (EXIT_FAILURE);
+    }
+
+    qmi_wds_start_network_output_get_packet_data_handle (output, &ctx->packet_data_handle);
 
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
@@ -195,6 +215,8 @@ start_network_ready (QmiClientWds *client,
                                                      G_CALLBACK (network_cancelled),
                                                      NULL,
                                                      NULL);
+
+    qmi_wds_start_network_output_unref (output);
 }
 
 static void
@@ -214,6 +236,7 @@ allocate_client_ready (QmiDevice *device,
     if (start_network_flag) {
         g_debug ("Asynchronously starting network...");
         qmi_client_wds_start_network (ctx->client,
+                                      NULL, /* allow NULL input for now */
                                       10,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback)start_network_ready,

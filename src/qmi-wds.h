@@ -37,6 +37,36 @@ typedef enum {
   QMI_WDS_MESSAGE_PACKET_STATUS = 0x0022, /* unused currently */
 } QmiWdsMessage;
 
+/*****************************************************************************/
+/* Start network */
+
+typedef struct _QmiWdsStartNetworkInput QmiWdsStartNetworkInput;
+QmiWdsStartNetworkInput *qmi_wds_start_network_input_new   (void);
+QmiWdsStartNetworkInput *qmi_wds_start_network_input_ref   (QmiWdsStartNetworkInput *input);
+void                     qmi_wds_start_network_input_unref (QmiWdsStartNetworkInput *input);
+void                     qmi_wds_start_network_input_set_apn      (QmiWdsStartNetworkInput *input,
+                                                                   const gchar *str);
+const gchar             *qmi_wds_start_network_input_get_apn      (QmiWdsStartNetworkInput *input);
+void                     qmi_wds_start_network_input_set_username (QmiWdsStartNetworkInput *input,
+                                                                   const gchar *str);
+const gchar             *qmi_wds_start_network_input_get_username (QmiWdsStartNetworkInput *input);
+void                     qmi_wds_start_network_input_set_password (QmiWdsStartNetworkInput *input,
+                                                                   const gchar *str);
+const gchar             *qmi_wds_start_network_input_get_password (QmiWdsStartNetworkInput *input);
+
+typedef struct _QmiWdsStartNetworkOutput QmiWdsStartNetworkOutput;
+QmiWdsStartNetworkOutput *qmi_wds_start_network_output_ref   (QmiWdsStartNetworkOutput *output);
+void                      qmi_wds_start_network_output_unref (QmiWdsStartNetworkOutput *output);
+gboolean                  qmi_wds_start_network_output_get_result             (QmiWdsStartNetworkOutput *output,
+                                                                               GError **error);
+gboolean                  qmi_wds_start_network_output_get_packet_data_handle (QmiWdsStartNetworkOutput *output,
+                                                                               guint32 *packet_data_handle);
+/* TODO: provide proper enums for the call end reasons */
+gboolean                  qmi_wds_start_network_output_get_call_end_reason    (QmiWdsStartNetworkOutput *output,
+                                                                               guint16 *call_end_reason);
+gboolean                  qmi_wds_start_network_output_get_verbose_call_end_reason (QmiWdsStartNetworkOutput *output,
+                                                                                    guint16 *verbose_call_end_reason_domain,
+                                                                                    guint16 *verbose_call_end_reason_value);
 
 
 G_END_DECLS
