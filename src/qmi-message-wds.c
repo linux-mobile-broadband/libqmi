@@ -367,7 +367,7 @@ qmi_wds_start_network_output_get_verbose_call_end_reason (QmiWdsStartNetworkOutp
         *verbose_call_end_reason_domain = output->verbose_call_end_reason_domain;
         *verbose_call_end_reason_value = output->verbose_call_end_reason_value;
     }
-    return output->call_end_reason_set;
+    return output->verbose_call_end_reason_set;
 }
 
 /**
