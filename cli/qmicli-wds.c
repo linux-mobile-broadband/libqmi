@@ -40,6 +40,7 @@ typedef struct {
 
     /* Helpers for the wds-start-network command */
     gulong network_started_id;
+    guint packet_status_timeout_id;
     guint32 packet_data_handle;
 } Context;
 static Context *ctx;
@@ -100,6 +101,8 @@ context_free (Context *ctx)
         g_object_unref (ctx->client);
     if (ctx->network_started_id)
         g_cancellable_disconnect (ctx->cancellable, ctx->network_started_id);
+    if (ctx->packet_status_timeout_id)
+        g_source_remove (ctx->packet_status_timeout_id);
     g_object_unref (ctx->cancellable);
     g_object_unref (ctx->device);
     g_slice_free (Context, ctx);
@@ -183,6 +186,45 @@ network_cancelled (GCancellable *cancellable)
 }
 
 static void
+timeout_get_packet_service_status_ready (QmiClientWds *client,
+                                         GAsyncResult *res)
+{
+    GError *error = NULL;
+    QmiWdsGetPacketServiceStatusOutput *output;
+
+    output = qmi_client_wds_get_packet_service_status_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
+                    error->message);
+        return;
+    }
+
+    if (!qmi_wds_get_packet_service_status_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get packet service status: %s\n", error->message);
+    } else {
+        g_print ("[%s] Connection status: '%s'\n",
+                 qmi_device_get_path_display (ctx->device),
+                 qmi_wds_connection_status_get_string (
+                     qmi_wds_get_packet_service_status_output_get_connection_status (
+                         output)));
+    }
+
+    qmi_wds_get_packet_service_status_output_unref (output);
+}
+
+static gboolean
+packet_status_timeout (void)
+{
+    qmi_client_wds_get_packet_service_status (ctx->client,
+                                              NULL,
+                                              10,
+                                              ctx->cancellable,
+                                              (GAsyncReadyCallback)timeout_get_packet_service_status_ready,
+                                              NULL);
+    return TRUE;
+}
+
+static void
 start_network_ready (QmiClientWds *client,
                      GAsyncResult *res)
 {
@@ -228,6 +270,10 @@ start_network_ready (QmiClientWds *client,
                                                      G_CALLBACK (network_cancelled),
                                                      NULL,
                                                      NULL);
+
+    ctx->packet_status_timeout_id = g_timeout_add_seconds (20,
+                                                           (GSourceFunc)packet_status_timeout,
+                                                           NULL);
 
     qmi_wds_start_network_output_unref (output);
 }
