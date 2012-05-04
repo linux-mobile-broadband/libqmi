@@ -47,10 +47,15 @@ static Context *ctx;
 
 /* Options */
 static gboolean start_network_flag;
+static gboolean get_packet_service_status_flag;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_NONE, &start_network_flag,
       "Start network",
+      NULL
+    },
+    { "wds-get-packet-service-status", 0, 0, G_OPTION_ARG_NONE, &get_packet_service_status_flag,
+      "Get packet service status",
       NULL
     },
     { NULL }
@@ -80,7 +85,8 @@ qmicli_wds_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (start_network_flag);
+    n_actions = (start_network_flag +
+                 get_packet_service_status_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many WDS actions requested\n");
@@ -279,6 +285,35 @@ start_network_ready (QmiClientWds *client,
 }
 
 static void
+get_packet_service_status_ready (QmiClientWds *client,
+                                 GAsyncResult *res)
+{
+    GError *error = NULL;
+    QmiWdsGetPacketServiceStatusOutput *output;
+
+    output = qmi_client_wds_get_packet_service_status_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
+                    error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    if (!qmi_wds_get_packet_service_status_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get packet service status: %s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("[%s] Connection status: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             qmi_wds_connection_status_get_string (
+                 qmi_wds_get_packet_service_status_output_get_connection_status (
+                     output)));
+
+    qmi_wds_get_packet_service_status_output_unref (output);
+    shutdown ();
+}
+
+static void
 allocate_client_ready (QmiDevice *device,
                        GAsyncResult *res)
 {
@@ -300,6 +335,18 @@ allocate_client_ready (QmiDevice *device,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback)start_network_ready,
                                       NULL);
+        return;
+    }
+
+    /* Request to get packet service status? */
+    if (get_packet_service_status_flag) {
+        g_debug ("Asynchronously getting packet service status...");
+        qmi_client_wds_get_packet_service_status (ctx->client,
+                                                  NULL,
+                                                  10,
+                                                  ctx->cancellable,
+                                                  (GAsyncReadyCallback)get_packet_service_status_ready,
+                                                  NULL);
         return;
     }
 
