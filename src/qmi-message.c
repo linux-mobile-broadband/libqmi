@@ -779,7 +779,9 @@ qmi_message_get_response_result (QmiMessage *self,
         g_set_error (error,
                      QMI_PROTOCOL_ERROR,
                      (QmiProtocolError)msg_result.error,
-                     "QMI protocol error (%u)", (guint)msg_result.error);
+                     "QMI protocol error (%u): '%s'",
+                     (guint)msg_result.error,
+                     qmi_protocol_error_get_string ((QmiProtocolError)msg_result.error));
         return FALSE;
 
     default:
