@@ -49,6 +49,7 @@ static Context *ctx;
 static gboolean start_network_flag;
 static gboolean get_packet_service_status_flag;
 static gboolean get_data_bearer_technology_flag;
+static gboolean get_current_data_bearer_technology_flag;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_NONE, &start_network_flag,
@@ -61,6 +62,10 @@ static GOptionEntry entries[] = {
     },
     { "wds-get-data-bearer-technology", 0, 0, G_OPTION_ARG_NONE, &get_data_bearer_technology_flag,
       "Get data bearer technology",
+      NULL
+    },
+    { "wds-get-current-data-bearer-technology", 0, 0, G_OPTION_ARG_NONE, &get_current_data_bearer_technology_flag,
+      "Get current data bearer technology",
       NULL
     },
     { NULL }
@@ -92,7 +97,8 @@ qmicli_wds_options_enabled (void)
 
     n_actions = (start_network_flag +
                  get_packet_service_status_flag +
-                 get_data_bearer_technology_flag);
+                 get_data_bearer_technology_flag +
+                 get_current_data_bearer_technology_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many WDS actions requested\n");
@@ -362,6 +368,123 @@ get_data_bearer_technology_ready (QmiClientWds *client,
 }
 
 static void
+get_current_data_bearer_technology_ready (QmiClientWds *client,
+                                          GAsyncResult *res)
+{
+    GError *error = NULL;
+    QmiWdsGetCurrentDataBearerTechnologyOutput *output;
+    gchar *rat_string = NULL;
+    gchar *so_string = NULL;
+
+    output = qmi_client_wds_get_current_data_bearer_technology_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
+                    error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    if (!qmi_wds_get_current_data_bearer_technology_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get current data bearer technology: %s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    switch (qmi_wds_get_current_data_bearer_technology_output_get_current_network_type (output)) {
+    case QMI_WDS_NETWORK_TYPE_UNKNOWN:
+        break;
+    case QMI_WDS_NETWORK_TYPE_3GPP:
+        rat_string = (qmi_wds_rat_3gpp_build_string_from_mask (
+                          qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp (
+                              output)));
+        break;
+    case QMI_WDS_NETWORK_TYPE_3GPP2:
+        rat_string = (qmi_wds_rat_3gpp2_build_string_from_mask (
+                          qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp2 (
+                              output)));
+        if (qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp2 (output) &
+            QMI_WDS_RAT_3GPP2_CDMA1X) {
+            so_string = (qmi_wds_so_cdma1x_build_string_from_mask (
+                          qmi_wds_get_current_data_bearer_technology_output_get_current_so_cdma1x (
+                              output)));
+        } else if (qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp2 (output) &
+                   QMI_WDS_RAT_3GPP2_EVDO_REVA) {
+            so_string = (qmi_wds_so_evdo_reva_build_string_from_mask (
+                          qmi_wds_get_current_data_bearer_technology_output_get_current_so_evdo_reva (
+                              output)));
+        }
+        break;
+    default:
+        g_warn_if_reached ();
+    }
+
+    g_print ("[%s] Data bearer technology (current):\n"
+             "   Network type: '%s'",
+             qmi_device_get_path_display (ctx->device),
+             qmi_wds_network_type_get_string (
+                 qmi_wds_get_current_data_bearer_technology_output_get_current_network_type (
+                     output)));
+    if (rat_string) {
+        g_print ("   Radio Access Technology: '%s'",
+                 rat_string);
+        g_free (rat_string);
+    }
+    if (so_string) {
+        g_print ("   Service Option: '%s'",
+                 so_string);
+        g_free (so_string);
+    }
+
+    rat_string = NULL;
+    so_string = NULL;
+    switch (qmi_wds_get_current_data_bearer_technology_output_get_last_network_type (output)) {
+    case QMI_WDS_NETWORK_TYPE_UNKNOWN:
+        break;
+    case QMI_WDS_NETWORK_TYPE_3GPP:
+        rat_string = (qmi_wds_rat_3gpp_build_string_from_mask (
+                          qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp (
+                              output)));
+        break;
+    case QMI_WDS_NETWORK_TYPE_3GPP2:
+        rat_string = (qmi_wds_rat_3gpp2_build_string_from_mask (
+                          qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp2 (
+                              output)));
+        if (qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp2 (output) &
+            QMI_WDS_RAT_3GPP2_CDMA1X) {
+            so_string = (qmi_wds_so_cdma1x_build_string_from_mask (
+                          qmi_wds_get_current_data_bearer_technology_output_get_last_so_cdma1x (
+                              output)));
+        } else if (qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp2 (output) &
+                   QMI_WDS_RAT_3GPP2_EVDO_REVA) {
+            so_string = (qmi_wds_so_evdo_reva_build_string_from_mask (
+                          qmi_wds_get_current_data_bearer_technology_output_get_last_so_evdo_reva (
+                              output)));
+        }
+        break;
+    default:
+        g_warn_if_reached ();
+    }
+
+    g_print ("[%s] Data bearer technology (last):\n"
+             "   Network type: '%s'",
+             qmi_device_get_path_display (ctx->device),
+             qmi_wds_network_type_get_string (
+                 qmi_wds_get_current_data_bearer_technology_output_get_last_network_type (
+                     output)));
+    if (rat_string) {
+        g_print ("   Radio Access Technology: '%s'",
+                 rat_string);
+        g_free (rat_string);
+    }
+    if (so_string) {
+        g_print ("   Service Option: '%s'",
+                 so_string);
+        g_free (so_string);
+    }
+
+    qmi_wds_get_current_data_bearer_technology_output_unref (output);
+    shutdown ();
+}
+
+static void
 allocate_client_ready (QmiDevice *device,
                        GAsyncResult *res)
 {
@@ -407,6 +530,18 @@ allocate_client_ready (QmiDevice *device,
                                                    ctx->cancellable,
                                                    (GAsyncReadyCallback)get_data_bearer_technology_ready,
                                                    NULL);
+        return;
+    }
+
+    /* Request to get current data bearer technology? */
+    if (get_current_data_bearer_technology_flag) {
+        g_debug ("Asynchronously getting current data bearer technology...");
+        qmi_client_wds_get_current_data_bearer_technology (ctx->client,
+                                                           NULL,
+                                                           10,
+                                                           ctx->cancellable,
+                                                           (GAsyncReadyCallback)get_current_data_bearer_technology_ready,
+                                                           NULL);
         return;
     }
 
