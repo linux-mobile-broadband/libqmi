@@ -65,6 +65,13 @@ QmiMessage                          *qmi_message_wds_get_data_bearer_technology_
 QmiWdsGetDataBearerTechnologyOutput *qmi_message_wds_get_data_bearer_technology_reply_parse (QmiMessage *self,
                                                                                              GError **error);
 
+/*****************************************************************************/
+/* Get current data bearer technology */
+QmiMessage                                 *qmi_message_wds_get_current_data_bearer_technology_new         (guint8 transaction_id,
+                                                                                                            guint8 client_id);
+QmiWdsGetCurrentDataBearerTechnologyOutput *qmi_message_wds_get_current_data_bearer_technology_reply_parse (QmiMessage *self,
+                                                                                                            GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_MESSAGE_WDS_H_ */

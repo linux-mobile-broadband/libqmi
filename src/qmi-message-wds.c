@@ -1057,3 +1057,342 @@ qmi_message_wds_get_data_bearer_technology_reply_parse (QmiMessage *self,
 
     return output;
 }
+
+/*****************************************************************************/
+/* Get current data bearer technology */
+
+QmiMessage *
+qmi_message_wds_get_current_data_bearer_technology_new (guint8 transaction_id,
+                                                        guint8 client_id)
+{
+    return qmi_message_new (QMI_SERVICE_WDS,
+                            client_id,
+                            transaction_id,
+                            QMI_WDS_MESSAGE_GET_CURRENT_DATA_BEARER_TECHNOLOGY);
+}
+
+enum {
+    GET_CURRENT_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_CURRENT = 0x01,
+    GET_CURRENT_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_LAST    = 0x10,
+};
+
+struct current_data_bearer_technology {
+    guint8 nw;
+    guint32 rat_mask;
+    guint32 so_mask;
+} __attribute__((__packed__));
+
+/**
+ * QmiWdsGetCurrentDataBearerTechnologyOutput:
+ *
+ * An opaque type handling the output of the Get Current Data Bearer Technology operation.
+ */
+struct _QmiWdsGetCurrentDataBearerTechnologyOutput {
+    volatile gint ref_count;
+    GError *error;
+    struct current_data_bearer_technology current;
+    struct current_data_bearer_technology last;
+};
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_result:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ * @error: a #GError.
+ *
+ * Get the result of the Get Current Data Bearer Technology operation.
+ *
+ * Returns: #TRUE if the operation succeeded, and #FALSE if @error is set.
+ */
+gboolean
+qmi_wds_get_current_data_bearer_technology_output_get_result (QmiWdsGetCurrentDataBearerTechnologyOutput *output,
+                                                              GError **error)
+{
+    g_return_val_if_fail (output != NULL, FALSE);
+
+    if (output->error) {
+        if (error)
+            *error = g_error_copy (output->error);
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_current_network_type:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Get the current network type.
+ *
+ * Returns: a #QmiWdsNetworkType.
+ */
+QmiWdsNetworkType
+qmi_wds_get_current_data_bearer_technology_output_get_current_network_type (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_NETWORK_TYPE_UNKNOWN);
+
+    return (QmiWdsNetworkType)output->current.nw;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp2:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Get the current 3GPP2 specific Radio Access Technology, if the current network type is #QMI_NETWORK_TYPE_3GPP2.
+ *
+ * Returns: a #QmiWdsRat3gpp2.
+ */
+QmiWdsRat3gpp2
+qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp2 (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_RAT_3GPP2_NONE);
+    g_return_val_if_fail (output->current.nw == QMI_WDS_NETWORK_TYPE_3GPP2, QMI_WDS_RAT_3GPP2_NONE);
+
+    return (QmiWdsRat3gpp2)output->current.rat_mask;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Get the current 3GPP specific Radio Access Technology, if the current network type is #QMI_NETWORK_TYPE_3GPP.
+ *
+ * Returns: a #QmiWdsRat3gpp.
+ */
+QmiWdsRat3gpp
+qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_RAT_3GPP_NONE);
+    g_return_val_if_fail (output->current.nw == QMI_WDS_NETWORK_TYPE_3GPP, QMI_WDS_RAT_3GPP_NONE);
+
+    return (QmiWdsRat3gpp)output->current.rat_mask;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_current_so_cdma1x:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Get the current Service Option, if the current network type is #QMI_NETWORK_TYPE_3GPP2
+ * and the Radio Access Technology mask contains #QMI_WDS_RAT_3GPP2_CDMA1X.
+ *
+ * Returns: a #QmiWdsSoCdma1x.
+ */
+QmiWdsSoCdma1x
+qmi_wds_get_current_data_bearer_technology_output_get_current_so_cdma1x (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_SO_CDMA1X_NONE);
+    g_return_val_if_fail (output->current.nw == QMI_WDS_NETWORK_TYPE_3GPP2, QMI_WDS_SO_CDMA1X_NONE);
+    g_return_val_if_fail (output->current.rat_mask & QMI_WDS_RAT_3GPP2_CDMA1X, QMI_WDS_SO_CDMA1X_NONE);
+
+    return (QmiWdsSoCdma1x)output->current.so_mask;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_current_so_evdo_reva:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Get the current Service Option, if the current network type is #QMI_NETWORK_TYPE_3GPP2
+ * and the Radio Access Technology mask contains #QMI_WDS_RAT_3GPP2_EVDO_REVA.
+ *
+ * Returns: a #QmiWdsSoEvdoRevA.
+ */
+QmiWdsSoEvdoRevA
+qmi_wds_get_current_data_bearer_technology_output_get_current_so_evdo_reva (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_SO_EVDO_REVA_NONE);
+    g_return_val_if_fail (output->current.nw == QMI_WDS_NETWORK_TYPE_3GPP2, QMI_WDS_SO_EVDO_REVA_NONE);
+    g_return_val_if_fail (output->current.rat_mask & QMI_WDS_RAT_3GPP2_EVDO_REVA, QMI_WDS_SO_EVDO_REVA_NONE);
+
+    return (QmiWdsSoEvdoRevA)output->current.so_mask;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_last_network_type:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Get the network type of the last connection.
+ * This field is optional.
+ *
+ * Returns: a #QmiWdsNetworkType.
+ */
+QmiWdsNetworkType
+qmi_wds_get_current_data_bearer_technology_output_get_last_network_type (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_NETWORK_TYPE_UNKNOWN);
+
+    return (QmiWdsConnectionStatus)output->last.nw;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp2:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Get the 3GPP2 specific Radio Access Technology of the last connection, if the last network type is #QMI_NETWORK_TYPE_3GPP2.
+ * This field is optional.
+ *
+ * Returns: a #QmiWdsRat3gpp2.
+ */
+QmiWdsRat3gpp2
+qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp2 (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_RAT_3GPP2_NONE);
+    g_return_val_if_fail (output->last.nw == QMI_WDS_NETWORK_TYPE_3GPP2, QMI_WDS_RAT_3GPP2_NONE);
+
+    return (QmiWdsRat3gpp2)output->last.rat_mask;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Get the 3GPP specific Radio Access Technology of the last connection, if the last network type is #QMI_NETWORK_TYPE_3GPP.
+ * This field is optional.
+ *
+ * Returns: a #QmiWdsRat3gpp.
+ */
+QmiWdsRat3gpp
+qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_RAT_3GPP2_NONE);
+    g_return_val_if_fail (output->last.nw == QMI_WDS_NETWORK_TYPE_3GPP, QMI_WDS_RAT_3GPP_NONE);
+
+    return (QmiWdsRat3gpp)output->last.rat_mask;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_last_so_cdma1x:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Get the Service Option of the last connection, if the last network type is #QMI_NETWORK_TYPE_3GPP2
+ * and the Radio Access Technology mask contains #QMI_WDS_RAT_3GPP2_CDMA1X.
+ * This field is optional.
+ *
+ * Returns: a #QmiWdsSoCdma1x.
+ */
+QmiWdsSoCdma1x
+qmi_wds_get_current_data_bearer_technology_output_get_last_so_cdma1x (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_SO_CDMA1X_NONE);
+    g_return_val_if_fail (output->last.nw == QMI_WDS_NETWORK_TYPE_3GPP2, QMI_WDS_SO_CDMA1X_NONE);
+    g_return_val_if_fail (output->last.rat_mask & QMI_WDS_RAT_3GPP2_CDMA1X, QMI_WDS_SO_CDMA1X_NONE);
+
+    return (QmiWdsSoCdma1x)output->last.so_mask;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_get_last_so_evdo_reva:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Get the Service Option of the last connection, if the last network type is #QMI_NETWORK_TYPE_3GPP2
+ * and the Radio Access Technology mask contains #QMI_WDS_RAT_3GPP2_EVDO_REVA.
+ * This field is optional.
+ *
+ * Returns: a #QmiWdsSoEvdoRevA.
+ */
+QmiWdsSoEvdoRevA
+qmi_wds_get_current_data_bearer_technology_output_get_last_so_evdo_reva (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_SO_EVDO_REVA_NONE);
+    g_return_val_if_fail (output->last.nw == QMI_WDS_NETWORK_TYPE_3GPP2, QMI_WDS_SO_EVDO_REVA_NONE);
+    g_return_val_if_fail (output->last.rat_mask & QMI_WDS_RAT_3GPP2_EVDO_REVA, QMI_WDS_SO_EVDO_REVA_NONE);
+
+    return (QmiWdsSoEvdoRevA)output->last.so_mask;
+}
+
+/**
+ * qmi_wds_get_data_bearer_technology_output_ref:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Atomically increments the reference count of @output by one.
+ *
+ * Returns: the new reference to @output.
+ */
+QmiWdsGetCurrentDataBearerTechnologyOutput *
+qmi_wds_get_current_data_bearer_technology_output_ref (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, NULL);
+
+    g_atomic_int_inc (&output->ref_count);
+    return output;
+}
+
+/**
+ * qmi_wds_get_current_data_bearer_technology_output_unref:
+ * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
+ *
+ * Atomically decrements the reference count of @output by one.
+ * If the reference count drops to 0, @output is completely disposed.
+ */
+void
+qmi_wds_get_current_data_bearer_technology_output_unref (QmiWdsGetCurrentDataBearerTechnologyOutput *output)
+{
+    g_return_if_fail (output != NULL);
+
+    if (g_atomic_int_dec_and_test (&output->ref_count)) {
+        if (output->error)
+            g_error_free (output->error);
+        g_slice_free (QmiWdsGetCurrentDataBearerTechnologyOutput, output);
+    }
+}
+
+QmiWdsGetCurrentDataBearerTechnologyOutput *
+qmi_message_wds_get_current_data_bearer_technology_reply_parse (QmiMessage *self,
+                                                                GError **error)
+{
+    QmiWdsGetCurrentDataBearerTechnologyOutput *output;
+    GError *inner_error = NULL;
+
+    g_assert (qmi_message_get_message_id (self) == QMI_WDS_MESSAGE_GET_CURRENT_DATA_BEARER_TECHNOLOGY);
+
+    if (!qmi_message_get_response_result (self, &inner_error)) {
+        /* Only QMI protocol errors are set in the Output result, all the
+         * others (e.g. failures parsing) are directly propagated to error. */
+        if (inner_error->domain != QMI_PROTOCOL_ERROR) {
+            g_propagate_error (error, inner_error);
+            return NULL;
+        }
+
+        /* Otherwise, build output */
+    }
+
+    /* success */
+
+    output = g_slice_new0 (QmiWdsGetCurrentDataBearerTechnologyOutput);
+    output->ref_count = 1;
+    output->error = inner_error;
+    output->current.nw = QMI_WDS_NETWORK_TYPE_UNKNOWN;
+    output->current.rat_mask = 0;
+    output->current.so_mask = 0;
+    output->last.nw = QMI_WDS_NETWORK_TYPE_UNKNOWN;
+    output->last.rat_mask = 0;
+    output->last.so_mask = 0;
+
+    /* Handle QMI protocol errors */
+    if (output->error) {
+        if (g_error_matches (output->error,
+                             QMI_PROTOCOL_ERROR,
+                             QMI_PROTOCOL_ERROR_OUT_OF_CALL)) {
+            /* last will only appear if we get out-of-call errors */
+            qmi_message_tlv_get (self,
+                                 GET_CURRENT_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_LAST,
+                                 sizeof (output->last),
+                                 &output->last,
+                                 NULL);
+        }
+
+        return output;
+    }
+
+    if (!qmi_message_tlv_get (self,
+                              GET_CURRENT_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_CURRENT,
+                              sizeof (output->current),
+                              &output->current,
+                              error)) {
+        g_prefix_error (error, "Couldn't get the current technology TLV: ");
+        qmi_wds_get_current_data_bearer_technology_output_unref (output);
+        return NULL;
+    }
+
+    return output;
+}

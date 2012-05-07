@@ -36,6 +36,7 @@ typedef enum {
   QMI_WDS_MESSAGE_STOP_NETWORK  = 0x0021,
   QMI_WDS_MESSAGE_GET_PACKET_SERVICE_STATUS  = 0x0022,
   QMI_WDS_MESSAGE_GET_DATA_BEARER_TECHNOLOGY = 0x0037,
+  QMI_WDS_MESSAGE_GET_CURRENT_DATA_BEARER_TECHNOLOGY = 0x0044,
 } QmiWdsMessage;
 
 /*****************************************************************************/
@@ -138,6 +139,70 @@ gboolean                             qmi_wds_get_data_bearer_technology_output_g
                                                                                            GError **error);
 QmiWdsDataBearerTechnology           qmi_wds_get_data_bearer_technology_output_get_current (QmiWdsGetDataBearerTechnologyOutput *output);
 QmiWdsDataBearerTechnology           qmi_wds_get_data_bearer_technology_output_get_last    (QmiWdsGetDataBearerTechnologyOutput *output);
+
+/*****************************************************************************/
+/* Get current data bearer technology */
+
+/* Note: no defined input yet */
+
+typedef enum {
+    QMI_WDS_NETWORK_TYPE_UNKNOWN = 0,
+    QMI_WDS_NETWORK_TYPE_3GPP2   = 1,
+    QMI_WDS_NETWORK_TYPE_3GPP    = 2,
+} QmiWdsNetworkType;
+
+typedef enum { /*< underscore_name=qmi_wds_rat_3gpp2 >*/
+    QMI_WDS_RAT_3GPP2_NONE        = 0,
+    QMI_WDS_RAT_3GPP2_CDMA1X      = 1 << 0,
+    QMI_WDS_RAT_3GPP2_EVDO_REV0   = 1 << 1,
+    QMI_WDS_RAT_3GPP2_EVDO_REVA   = 1 << 2,
+    QMI_WDS_RAT_3GPP2_EVDO_REVB   = 1 << 3,
+    QMI_WDS_RAT_3GPP2_NULL_BEARER = 1 << 15,
+} QmiWdsRat3gpp2;
+
+typedef enum { /*< underscore_name=qmi_wds_rat_3gpp >*/
+    QMI_WDS_RAT_3GPP_NONE        = 0,
+    QMI_WDS_RAT_3GPP_WCDMA       = 1 << 0,
+    QMI_WDS_RAT_3GPP_GPRS        = 1 << 1,
+    QMI_WDS_RAT_3GPP_HSDPA       = 1 << 2,
+    QMI_WDS_RAT_3GPP_HSUPA       = 1 << 3,
+    QMI_WDS_RAT_3GPP_EDGE        = 1 << 4,
+    QMI_WDS_RAT_3GPP_LTE         = 1 << 5,
+    QMI_WDS_RAT_3GPP_HSDPAPLUS   = 1 << 6,
+    QMI_WDS_RAT_3GPP_DCHSDPAPLUS = 1 << 7,
+    QMI_WDS_RAT_3GPP_NULL_BEARER = 1 << 15,
+} QmiWdsRat3gpp;
+
+typedef enum {
+    QMI_WDS_SO_CDMA1X_NONE         = 0,
+    QMI_WDS_SO_CDMA1X_IS95         = 1 << 0,
+    QMI_WDS_SO_CDMA1X_IS2000       = 1 << 1,
+    QMI_WDS_SO_CDMA1X_IS2000_REL_A = 1 << 2,
+} QmiWdsSoCdma1x;
+
+typedef enum { /*< underscore_name=qmi_wds_so_evdo_reva >*/
+    QMI_WDS_SO_EVDO_REVA_NONE       = 0,
+    QMI_WDS_SO_EVDO_REVA_DPA        = 1 << 0,
+    QMI_WDS_SO_EVDO_REVA_MFPA       = 1 << 1,
+    QMI_WDS_SO_EVDO_REVA_EMPA       = 1 << 2,
+    QMI_WDS_SO_EVDO_REVA_EMPA_EHRPD = 1 << 3,
+} QmiWdsSoEvdoRevA;
+
+typedef struct _QmiWdsGetCurrentDataBearerTechnologyOutput QmiWdsGetCurrentDataBearerTechnologyOutput;
+QmiWdsGetCurrentDataBearerTechnologyOutput *qmi_wds_get_current_data_bearer_technology_output_ref   (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+void                                        qmi_wds_get_current_data_bearer_technology_output_unref (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+gboolean                                    qmi_wds_get_current_data_bearer_technology_output_get_result (QmiWdsGetCurrentDataBearerTechnologyOutput *output,
+                                                                                                          GError **error);
+QmiWdsNetworkType qmi_wds_get_current_data_bearer_technology_output_get_current_network_type (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+QmiWdsRat3gpp2    qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp2 (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+QmiWdsRat3gpp     qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+QmiWdsSoCdma1x    qmi_wds_get_current_data_bearer_technology_output_get_current_so_cdma1x (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+QmiWdsSoEvdoRevA  qmi_wds_get_current_data_bearer_technology_output_get_current_so_evdo_reva (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+QmiWdsNetworkType qmi_wds_get_current_data_bearer_technology_output_get_last_network_type (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+QmiWdsRat3gpp2    qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp2 (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+QmiWdsRat3gpp     qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+QmiWdsSoCdma1x    qmi_wds_get_current_data_bearer_technology_output_get_last_so_cdma1x (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
+QmiWdsSoEvdoRevA  qmi_wds_get_current_data_bearer_technology_output_get_last_so_evdo_reva (QmiWdsGetCurrentDataBearerTechnologyOutput *output);
 
 G_END_DECLS
 
