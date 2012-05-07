@@ -668,12 +668,12 @@ qmi_message_get_printable (QmiMessage *self,
                             "%s  length  = %u (0x%04x)\n"
                             "%s  flags   = 0x%02x\n"
                             "%s  service = \"%s\" (0x%02x)\n"
-                            "%s  client  = 0x%02x\n",
+                            "%s  client  = %u (0x%02x)\n",
                             line_prefix,
                             line_prefix, qmux_length (self), qmux_length (self),
                             line_prefix, qmi_message_get_qmux_flags (self),
                             line_prefix, qmi_service_get_string (qmi_message_get_service (self)), qmi_message_get_service (self),
-                            line_prefix, qmi_message_get_client_id (self));
+                            line_prefix, qmi_message_get_client_id (self), qmi_message_get_client_id (self));
 
     if (qmi_message_get_service (self) == QMI_SERVICE_CTL)
         qmi_flags_str = qmi_ctl_flag_build_string_from_mask (qmi_message_get_qmi_flags (self));
