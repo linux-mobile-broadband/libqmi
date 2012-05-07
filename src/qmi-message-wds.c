@@ -1029,9 +1029,21 @@ qmi_message_wds_get_data_bearer_technology_reply_parse (QmiMessage *self,
     output->current = QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN;
     output->last = QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN;
 
-    /* If we got a QMI protocol error, no need to look for any TLV */
-    if (output->error)
+    /* Handle QMI protocol errors */
+    if (output->error) {
+        if (g_error_matches (output->error,
+                             QMI_PROTOCOL_ERROR,
+                             QMI_PROTOCOL_ERROR_OUT_OF_CALL)) {
+            /* last will only appear if we get out-of-call errors */
+            qmi_message_tlv_get (self,
+                                 GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_LAST,
+                                 sizeof (output->last),
+                                 &output->last,
+                                 NULL);
+        }
+
         return output;
+    }
 
     if (!qmi_message_tlv_get (self,
                               GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_CURRENT,
@@ -1042,13 +1054,6 @@ qmi_message_wds_get_data_bearer_technology_reply_parse (QmiMessage *self,
         qmi_wds_get_data_bearer_technology_output_unref (output);
         return NULL;
     }
-
-    /* last is optional */
-    qmi_message_tlv_get (self,
-                         GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_LAST,
-                         sizeof (output->last),
-                         &output->last,
-                         NULL);
 
     return output;
 }
