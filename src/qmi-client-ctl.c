@@ -200,6 +200,10 @@ allocate_cid_ready (QmiDevice *device,
         return;
     }
 
+    g_debug ("Allocated client ID '%u' for service '%s'",
+             cid,
+             qmi_service_get_string (ctx->service));
+
     /* Set the CID as result */
     g_simple_async_result_set_op_res_gpointer (ctx->result,
                                                GUINT_TO_POINTER ((guint)cid),
@@ -338,6 +342,10 @@ release_cid_ready (QmiDevice *device,
         release_cid_context_complete_and_free (ctx);
         return;
     }
+
+    g_debug ("Released client ID '%u' for service '%s'",
+             cid,
+             qmi_service_get_string (service));
 
     /* Set the CID as result */
     g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
