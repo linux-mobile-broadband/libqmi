@@ -208,6 +208,7 @@ timeout_get_packet_service_status_ready (QmiClientWds *client,
 
     if (!qmi_wds_get_packet_service_status_output_get_result (output, &error)) {
         g_printerr ("error: couldn't get packet service status: %s\n", error->message);
+        g_error_free (error);
     } else {
         g_print ("[%s] Connection status: '%s'\n",
                  qmi_device_get_path_display (ctx->device),
