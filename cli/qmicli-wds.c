@@ -426,18 +426,18 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
             }
 
             g_print ("[%s] Data bearer technology (last):\n"
-                     "   Network type: '%s'",
+                     "   Network type: '%s'\n",
                      qmi_device_get_path_display (ctx->device),
                      qmi_wds_network_type_get_string (
                          qmi_wds_get_current_data_bearer_technology_output_get_last_network_type (
                              output)));
             if (rat_string) {
-                g_print ("   Radio Access Technology: '%s'",
+                g_print ("   Radio Access Technology: '%s'\n",
                          rat_string);
                 g_free (rat_string);
             }
             if (so_string) {
-                g_print ("   Service Option: '%s'",
+                g_print ("   Service Option: '%s'\n",
                          so_string);
                 g_free (so_string);
             }
@@ -477,18 +477,18 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
     }
 
     g_print ("[%s] Data bearer technology (current):\n"
-             "   Network type: '%s'",
+             "   Network type: '%s'\n",
              qmi_device_get_path_display (ctx->device),
              qmi_wds_network_type_get_string (
                  qmi_wds_get_current_data_bearer_technology_output_get_current_network_type (
                      output)));
     if (rat_string) {
-        g_print ("   Radio Access Technology: '%s'",
+        g_print ("   Radio Access Technology: '%s'\n",
                  rat_string);
         g_free (rat_string);
     }
     if (so_string) {
-        g_print ("   Service Option: '%s'",
+        g_print ("   Service Option: '%s'\n",
                  so_string);
         g_free (so_string);
     }
