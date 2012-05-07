@@ -953,7 +953,7 @@ qmi_wds_get_data_bearer_technology_output_get_current (QmiWdsGetDataBearerTechno
  * @output: a #QmiWdsGetDataBearerTechnologyOutput.
  *
  * Get the data bearer technology of the last connection.
- * This field is optional.
+ * This field is optional, and it may appear only when the operation failed with #QMI_PROTOCOL_ERROR_OUT_OF_CALL.
  *
  * Returns: a #QmiWdsDataBearerTechnology.
  */
@@ -1212,7 +1212,7 @@ qmi_wds_get_current_data_bearer_technology_output_get_current_so_evdo_reva (QmiW
  * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
  *
  * Get the network type of the last connection.
- * This field is optional.
+ * This field is optional, and it may appear only when the operation failed with #QMI_PROTOCOL_ERROR_OUT_OF_CALL.
  *
  * Returns: a #QmiWdsNetworkType.
  */
@@ -1229,7 +1229,7 @@ qmi_wds_get_current_data_bearer_technology_output_get_last_network_type (QmiWdsG
  * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
  *
  * Get the 3GPP2 specific Radio Access Technology of the last connection, if the last network type is #QMI_NETWORK_TYPE_3GPP2.
- * This field is optional.
+ * This field is optional, and it may appear only when the operation failed with #QMI_PROTOCOL_ERROR_OUT_OF_CALL.
  *
  * Returns: a #QmiWdsRat3gpp2.
  */
@@ -1247,7 +1247,7 @@ qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp2 (QmiWdsGetC
  * @output: a #QmiWdsGetCurrentDataBearerTechnologyOutput.
  *
  * Get the 3GPP specific Radio Access Technology of the last connection, if the last network type is #QMI_NETWORK_TYPE_3GPP.
- * This field is optional.
+ * This field is optional, and it may appear only when the operation failed with #QMI_PROTOCOL_ERROR_OUT_OF_CALL.
  *
  * Returns: a #QmiWdsRat3gpp.
  */
@@ -1266,7 +1266,7 @@ qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp (QmiWdsGetCu
  *
  * Get the Service Option of the last connection, if the last network type is #QMI_NETWORK_TYPE_3GPP2
  * and the Radio Access Technology mask contains #QMI_WDS_RAT_3GPP2_CDMA1X.
- * This field is optional.
+ * This field is optional, and it may appear only when the operation failed with #QMI_PROTOCOL_ERROR_OUT_OF_CALL.
  *
  * Returns: a #QmiWdsSoCdma1x.
  */
@@ -1286,7 +1286,7 @@ qmi_wds_get_current_data_bearer_technology_output_get_last_so_cdma1x (QmiWdsGetC
  *
  * Get the Service Option of the last connection, if the last network type is #QMI_NETWORK_TYPE_3GPP2
  * and the Radio Access Technology mask contains #QMI_WDS_RAT_3GPP2_EVDO_REVA.
- * This field is optional.
+ * This field is optional, and it may appear only when the operation failed with #QMI_PROTOCOL_ERROR_OUT_OF_CALL.
  *
  * Returns: a #QmiWdsSoEvdoRevA.
  */
