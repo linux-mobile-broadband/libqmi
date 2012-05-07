@@ -144,6 +144,7 @@ qmicli_async_operation_done (void)
         cancellable = NULL;
     }
 
+    g_debug ("Asynchronous operation done... quitting the loop");
     g_main_loop_quit (loop);
 }
 
@@ -160,13 +161,19 @@ device_open_ready (QmiDevice *device,
     }
 
     /* As soon as we get the QmiDevice, launch the specific action requested */
+    g_debug ("QMI Device at '%s' ready",
+             qmi_device_get_path_display (device));
 
     /* DMS options? */
-    if (qmicli_dms_options_enabled ())
+    if (qmicli_dms_options_enabled ()) {
+        g_debug ("Running DMS operation...");
         qmicli_dms_run (device, cancellable);
+    }
     /* WDS options? */
-    else if (qmicli_wds_options_enabled ())
+    else if (qmicli_wds_options_enabled ()) {
+        g_debug ("Running WDS operation...");
         qmicli_wds_run (device, cancellable);
+    }
     /* No options? */
     else {
         g_printerr ("error: no actions specified\n");
