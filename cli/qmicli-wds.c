@@ -48,6 +48,7 @@ static Context *ctx;
 /* Options */
 static gboolean start_network_flag;
 static gboolean get_packet_service_status_flag;
+static gboolean get_data_bearer_technology_flag;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_NONE, &start_network_flag,
@@ -56,6 +57,10 @@ static GOptionEntry entries[] = {
     },
     { "wds-get-packet-service-status", 0, 0, G_OPTION_ARG_NONE, &get_packet_service_status_flag,
       "Get packet service status",
+      NULL
+    },
+    { "wds-get-data-bearer-technology", 0, 0, G_OPTION_ARG_NONE, &get_data_bearer_technology_flag,
+      "Get data bearer technology",
       NULL
     },
     { NULL }
@@ -86,7 +91,8 @@ qmicli_wds_options_enabled (void)
         return !!n_actions;
 
     n_actions = (start_network_flag +
-                 get_packet_service_status_flag);
+                 get_packet_service_status_flag +
+                 get_data_bearer_technology_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many WDS actions requested\n");
@@ -322,6 +328,40 @@ get_packet_service_status_ready (QmiClientWds *client,
 }
 
 static void
+get_data_bearer_technology_ready (QmiClientWds *client,
+                                  GAsyncResult *res)
+{
+    GError *error = NULL;
+    QmiWdsGetDataBearerTechnologyOutput *output;
+
+    output = qmi_client_wds_get_data_bearer_technology_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
+                    error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    if (!qmi_wds_get_data_bearer_technology_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get data bearer technology: %s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("[%s] Data bearer technology (current): '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             qmi_wds_data_bearer_technology_get_string (
+                 qmi_wds_get_data_bearer_technology_output_get_current (
+                     output)));
+    g_print ("[%s] Data bearer technology (last): '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             qmi_wds_data_bearer_technology_get_string (
+                 qmi_wds_get_data_bearer_technology_output_get_last (
+                     output)));
+
+    qmi_wds_get_data_bearer_technology_output_unref (output);
+    shutdown ();
+}
+
+static void
 allocate_client_ready (QmiDevice *device,
                        GAsyncResult *res)
 {
@@ -355,6 +395,18 @@ allocate_client_ready (QmiDevice *device,
                                                   ctx->cancellable,
                                                   (GAsyncReadyCallback)get_packet_service_status_ready,
                                                   NULL);
+        return;
+    }
+
+    /* Request to get data bearer technology? */
+    if (get_data_bearer_technology_flag) {
+        g_debug ("Asynchronously getting data bearer technology...");
+        qmi_client_wds_get_data_bearer_technology (ctx->client,
+                                                   NULL,
+                                                   10,
+                                                   ctx->cancellable,
+                                                   (GAsyncReadyCallback)get_data_bearer_technology_ready,
+                                                   NULL);
         return;
     }
 
