@@ -179,6 +179,12 @@ network_cancelled (GCancellable *cancellable)
 
     ctx->network_started_id = 0;
 
+    /* Remove the timeout right away */
+    if (ctx->packet_status_timeout_id) {
+        g_source_remove (ctx->packet_status_timeout_id);
+        ctx->packet_status_timeout_id = 0;
+    }
+
     input = qmi_wds_stop_network_input_new ();
     qmi_wds_stop_network_input_set_packet_data_handle (input, ctx->packet_data_handle);
 
