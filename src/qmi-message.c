@@ -687,6 +687,9 @@ qmi_message_get_printable (QmiMessage *self,
     case QMI_SERVICE_DMS:
         qmi_message_str = qmi_dms_message_get_string (qmi_message_get_message_id (self));
         break;
+    case QMI_SERVICE_WDS:
+        qmi_message_str = qmi_wds_message_get_string (qmi_message_get_message_id (self));
+        break;
     default:
         qmi_message_str = "unknown";
         break;
