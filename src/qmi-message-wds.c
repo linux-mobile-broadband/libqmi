@@ -158,7 +158,11 @@ qmi_wds_start_network_input_get_password (QmiWdsStartNetworkInput *input)
 QmiWdsStartNetworkInput *
 qmi_wds_start_network_input_new (void)
 {
-    return g_slice_new0 (QmiWdsStartNetworkInput);
+    QmiWdsStartNetworkInput *input;
+
+    input = g_slice_new0 (QmiWdsStartNetworkInput);
+    input->ref_count = 1;
+    return input;
 }
 
 /**
@@ -427,6 +431,7 @@ qmi_message_wds_start_network_reply_parse (QmiMessage *self,
     }
 
     output = g_slice_new0 (QmiWdsStartNetworkOutput);
+    output->ref_count = 1;
     output->error = inner_error;
 
     /* On CALL_FAILED errors, we can try to get more info on the reason */
@@ -549,7 +554,11 @@ qmi_wds_stop_network_input_get_packet_data_handle (QmiWdsStopNetworkInput *input
 QmiWdsStopNetworkInput *
 qmi_wds_stop_network_input_new (void)
 {
-    return g_slice_new0 (QmiWdsStopNetworkInput);
+    QmiWdsStopNetworkInput *input;
+
+    input = g_slice_new0 (QmiWdsStopNetworkInput);
+    input->ref_count = 1;
+    return input;
 }
 
 /**
@@ -714,6 +723,7 @@ qmi_message_wds_stop_network_reply_parse (QmiMessage *self,
     }
 
     output = g_slice_new0 (QmiWdsStopNetworkOutput);
+    output->ref_count = 1;
     output->error = inner_error;
 
     return output;
@@ -847,6 +857,7 @@ qmi_message_wds_get_packet_service_status_reply_parse (QmiMessage *self,
     /* success */
 
     output = g_slice_new0 (QmiWdsGetPacketServiceStatusOutput);
+    output->ref_count = 1;
     output->error = inner_error;
 
     if (!qmi_message_tlv_get (self,

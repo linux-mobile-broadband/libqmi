@@ -191,6 +191,7 @@ qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
         QmiCtlVersionInfo *info;
 
         info = g_slice_new (QmiCtlVersionInfo);
+        info->ref_count = 1;
         info->service = (QmiService)svc->service_type;
         info->major_version = le16toh (svc->major_version);
         info->minor_version = le16toh (svc->minor_version);

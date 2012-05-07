@@ -189,7 +189,8 @@ qmi_message_dms_get_ids_reply_parse (QmiMessage *self,
         /* Otherwise, build output */
     }
 
-    output = g_slice_new (QmiDmsGetIdsOutput);
+    output = g_slice_new0 (QmiDmsGetIdsOutput);
+    output->ref_count = 1;
     output->error = inner_error;
 
     /* Note: all ESN/IMEI/MEID are OPTIONAL; so it's ok if none of them appear */
