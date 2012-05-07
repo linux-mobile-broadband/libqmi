@@ -860,6 +860,10 @@ qmi_message_wds_get_packet_service_status_reply_parse (QmiMessage *self,
     output->ref_count = 1;
     output->error = inner_error;
 
+    /* If we got a QMI protocol error, no need to look for any TLV */
+    if (output->error)
+        return output;
+
     if (!qmi_message_tlv_get (self,
                               GET_PACKET_SERVICE_STATUS_OUTPUT_TLV_CONNECTION_STATUS,
                               sizeof (output->connection_status),
@@ -1024,6 +1028,10 @@ qmi_message_wds_get_data_bearer_technology_reply_parse (QmiMessage *self,
     output->error = inner_error;
     output->current = QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN;
     output->last = QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN;
+
+    /* If we got a QMI protocol error, no need to look for any TLV */
+    if (output->error)
+        return output;
 
     if (!qmi_message_tlv_get (self,
                               GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_CURRENT,
