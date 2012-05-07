@@ -450,6 +450,10 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
         return;
     }
 
+    g_debug ("Registered '%s' client with ID '%u'",
+             qmi_service_get_string (ctx->service),
+             cid);
+
     /* Client created and registered, complete successfully */
     g_simple_async_result_set_op_res_gpointer (ctx->result,
                                                client,
@@ -674,6 +678,10 @@ qmi_device_release_client (QmiDevice *self,
 
     /* Unregister from device */
     unregister_client (self, client);
+
+    g_debug ("Unregistered '%s' client with ID '%u'",
+             qmi_service_get_string (service),
+             cid);
 
     /* Reset the contents of the client object, making it unusable */
     g_object_set (client,
