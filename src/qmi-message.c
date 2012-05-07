@@ -183,6 +183,7 @@ qmi_message_get_transaction_id (QmiMessage *self)
     g_return_val_if_fail (self != NULL, 0);
 
     if (qmi_message_is_control (self))
+        /* note: only 1 byte for transaction in CTL message */
         return (guint16)self->buf->qmi.control.header.transaction;
 
     return le16toh (self->buf->qmi.service.header.transaction);
@@ -769,7 +770,7 @@ qmi_message_get_response_result (QmiMessage *self,
         return FALSE;
     }
 
-    switch (msg_result.status) {
+    switch (le16toh (msg_result.status)) {
     case QMI_STATUS_SUCCESS:
         /* Operation succeeded */
         return TRUE;
@@ -778,17 +779,18 @@ qmi_message_get_response_result (QmiMessage *self,
         /* Report a QMI protocol error */
         g_set_error (error,
                      QMI_PROTOCOL_ERROR,
-                     (QmiProtocolError)msg_result.error,
+                     (QmiProtocolError)le16toh (msg_result.error),
                      "QMI protocol error (%u): '%s'",
-                     (guint)msg_result.error,
-                     qmi_protocol_error_get_string ((QmiProtocolError)msg_result.error));
+                     (guint) le16toh (msg_result.error),
+                     qmi_protocol_error_get_string ((QmiProtocolError) le16toh (msg_result.error)));
         return FALSE;
 
     default:
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "Unexpected result status (%u)", msg_result.status);
+                     "Unexpected result status (%u)",
+                     (guint) le16toh (msg_result.status));
         return FALSE;
     }
 }
