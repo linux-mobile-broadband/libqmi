@@ -187,6 +187,12 @@ typedef struct {
     gpointer key;
 } TransactionTimeoutContext;
 
+static void
+transaction_timeout_context_free (TransactionTimeoutContext *ctx)
+{
+    g_slice_free (TransactionTimeoutContext, ctx);
+}
+
 static gboolean
 transaction_timed_out (TransactionTimeoutContext *ctx)
 {
@@ -224,10 +230,12 @@ device_store_transaction (QmiDevice *self,
     /* Once it gets into the HT, setup the timeout */
     timeout_ctx = g_slice_new (TransactionTimeoutContext);
     timeout_ctx->self = self;
-    timeout_ctx->key = key;
-    tr->timeout_id = g_timeout_add_seconds (timeout,
-                                            (GSourceFunc)transaction_timed_out,
-                                            timeout_ctx);
+    timeout_ctx->key = key; /* valid as long as the transaction is in the HT */
+    tr->timeout_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT,
+                                                 timeout,
+                                                 (GSourceFunc)transaction_timed_out,
+                                                 timeout_ctx,
+                                                 (GDestroyNotify)transaction_timeout_context_free);
 }
 
 static Transaction *
