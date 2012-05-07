@@ -71,6 +71,7 @@ get_ids_ready (QmiDevice *device,
                                                    (GDestroyNotify)qmi_dms_get_ids_output_unref);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
+    qmi_message_unref (reply);
 }
 
 void

@@ -68,6 +68,7 @@ start_network_ready (QmiDevice *device,
                                                    (GDestroyNotify)qmi_wds_start_network_output_unref);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
+    qmi_message_unref (reply);
 }
 
 void
@@ -149,6 +150,7 @@ stop_network_ready (QmiDevice *device,
                                                    (GDestroyNotify)qmi_wds_stop_network_output_unref);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
+    qmi_message_unref (reply);
 }
 
 void
@@ -230,6 +232,7 @@ get_packet_service_status_ready (QmiDevice *device,
                                                    (GDestroyNotify)qmi_wds_get_packet_service_status_output_unref);
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
+    qmi_message_unref (reply);
 }
 
 void

@@ -82,6 +82,7 @@ version_info_ready (QmiDevice *device,
 
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
+    qmi_message_unref (reply);
 }
 
 /**
@@ -185,6 +186,7 @@ allocate_cid_ready (QmiDevice *device,
         g_prefix_error (&error, "CID allocation reply parsing failed: ");
         g_simple_async_result_take_error (ctx->result, error);
         allocate_cid_context_complete_and_free (ctx);
+        qmi_message_unref (reply);
         return;
     }
 
@@ -197,6 +199,7 @@ allocate_cid_ready (QmiDevice *device,
                                          qmi_service_get_string (service),
                                          qmi_service_get_string (ctx->service));
         allocate_cid_context_complete_and_free (ctx);
+        qmi_message_unref (reply);
         return;
     }
 
@@ -209,6 +212,7 @@ allocate_cid_ready (QmiDevice *device,
                                                GUINT_TO_POINTER ((guint)cid),
                                                NULL);
     allocate_cid_context_complete_and_free (ctx);
+    qmi_message_unref (reply);
 }
 
 /**
@@ -316,6 +320,7 @@ release_cid_ready (QmiDevice *device,
         g_prefix_error (&error, "CID release reply parsing failed: ");
         g_simple_async_result_take_error (ctx->result, error);
         release_cid_context_complete_and_free (ctx);
+        qmi_message_unref (reply);
         return;
     }
 
@@ -328,6 +333,7 @@ release_cid_ready (QmiDevice *device,
                                          qmi_service_get_string (service),
                                          qmi_service_get_string (ctx->service));
         release_cid_context_complete_and_free (ctx);
+        qmi_message_unref (reply);
         return;
     }
 
@@ -340,6 +346,7 @@ release_cid_ready (QmiDevice *device,
                                          qmi_service_get_string (service),
                                          qmi_service_get_string (ctx->service));
         release_cid_context_complete_and_free (ctx);
+        qmi_message_unref (reply);
         return;
     }
 
@@ -350,6 +357,7 @@ release_cid_ready (QmiDevice *device,
     /* Set the CID as result */
     g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
     release_cid_context_complete_and_free (ctx);
+    qmi_message_unref (reply);
 }
 
 /**
@@ -431,12 +439,13 @@ sync_command_ready (QmiDevice *device,
     reply = qmi_device_command_finish (device, res, &error);
     if (!reply)
         g_simple_async_result_take_error (simple, error);
-    else
+    else {
         g_simple_async_result_set_op_res_gboolean (simple, TRUE);
+        qmi_message_unref (reply);
+    }
 
     g_simple_async_result_complete (simple);
     g_object_unref (simple);
-    qmi_message_unref (reply);
 }
 
 /**
