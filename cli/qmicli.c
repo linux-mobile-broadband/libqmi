@@ -42,6 +42,8 @@ static QmiDevice *device;
 
 /* Main options */
 static gchar *device_str;
+static gboolean device_open_version_info_flag;
+static gboolean device_open_sync_flag;
 static gboolean verbose_flag;
 static gboolean version_flag;
 
@@ -49,6 +51,14 @@ static GOptionEntry main_entries[] = {
     { "device", 'd', 0, G_OPTION_ARG_STRING, &device_str,
       "Specify device path",
       "[PATH]"
+    },
+    { "device-open-version-info", 0, 0, G_OPTION_ARG_NONE, &device_open_version_info_flag,
+      "Run version info check when opening device",
+      NULL
+    },
+    { "device-open-sync", 0, 0, G_OPTION_ARG_NONE, &device_open_sync_flag,
+      "Run sync operation when opening device",
+      NULL
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
       "Run action with verbose logs",
@@ -185,6 +195,7 @@ static void
 device_new_ready (GObject *unused,
                   GAsyncResult *res)
 {
+    QmiDeviceOpenFlags open_flags = QMI_DEVICE_OPEN_FLAGS_NONE;
     GError *error = NULL;
 
     device = qmi_device_new_finish (res, &error);
@@ -194,8 +205,15 @@ device_new_ready (GObject *unused,
         exit (EXIT_FAILURE);
     }
 
+    /* Setup device open flags */
+    if (device_open_version_info_flag)
+        open_flags |= QMI_DEVICE_OPEN_FLAGS_VERSION_INFO;
+    if (device_open_sync_flag)
+        open_flags |= QMI_DEVICE_OPEN_FLAGS_SYNC;
+
     /* Open the device */
     qmi_device_open (device,
+                     open_flags,
                      5,
                      cancellable,
                      (GAsyncReadyCallback)device_open_ready,

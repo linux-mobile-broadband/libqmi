@@ -467,7 +467,13 @@ check_service_supported (QmiDevice *self,
 {
     guint i;
 
-    g_assert (self->priv->supported_services != NULL);
+    /* If we didn't check supported services, just assume it is supported */
+    if (!self->priv->supported_services) {
+        g_debug ("Assuming service '%s' is supported...",
+                 qmi_service_get_string (service));
+        return TRUE;
+    }
+
     for (i = 0; i < self->priv->supported_services->len; i++) {
         QmiCtlVersionInfo *info;
 
@@ -971,6 +977,25 @@ create_iochannel (QmiDevice *self,
     return !!self->priv->iochannel;
 }
 
+typedef struct {
+    QmiDevice *self;
+    GSimpleAsyncResult *result;
+    GCancellable *cancellable;
+    QmiDeviceOpenFlags flags;
+    guint timeout;
+} DeviceOpenContext;
+
+static void
+device_open_context_complete_and_free (DeviceOpenContext *ctx)
+{
+    g_simple_async_result_complete_in_idle (ctx->result);
+    g_object_unref (ctx->result);
+    if (ctx->cancellable)
+        g_object_unref (ctx->cancellable);
+    g_object_unref (ctx->self);
+    g_slice_free (DeviceOpenContext, ctx);
+}
+
 /**
  * qmi_device_open_finish:
  * @self: a #QmiDevice.
@@ -989,52 +1014,104 @@ qmi_device_open_finish (QmiDevice *self,
     return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
 }
 
+static void process_open_flags (DeviceOpenContext *ctx);
+
 static void
-version_info_ready (QmiClientCtl *client_ctl,
-                    GAsyncResult *res,
-                    GSimpleAsyncResult *simple)
+sync_ready (QmiClientCtl *client_ctl,
+            GAsyncResult *res,
+            DeviceOpenContext *ctx)
 {
-    QmiDevice *self;
     GError *error = NULL;
     guint i;
 
-    /* Recover the QmiDevice */
-    self = QMI_DEVICE (g_async_result_get_source_object (G_ASYNC_RESULT (simple)));
+    if (!qmi_client_ctl_sync_finish (client_ctl, res, &error)) {
+        g_prefix_error (&error, "Sync failed: ");
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
+        return;
+    }
 
-    self->priv->supported_services = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
-    if (!self->priv->supported_services) {
+    g_debug ("[%s] Sync operation finished",
+             ctx->self->priv->path_display);
+
+    /* Keep on with next flags */
+    process_open_flags (ctx);
+}
+
+static void
+version_info_ready (QmiClientCtl *client_ctl,
+                    GAsyncResult *res,
+                    DeviceOpenContext *ctx)
+{
+    GError *error = NULL;
+    guint i;
+
+    ctx->self->priv->supported_services = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
+    if (!ctx->self->priv->supported_services) {
         g_prefix_error (&error, "Version info check failed: ");
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
-        g_object_unref (self);
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
         return;
     }
 
     g_debug ("[%s] QMI Device supports %u services:",
-             self->priv->path_display,
-             self->priv->supported_services->len);
-    for (i = 0; i < self->priv->supported_services->len; i++) {
+             ctx->self->priv->path_display,
+             ctx->self->priv->supported_services->len);
+    for (i = 0; i < ctx->self->priv->supported_services->len; i++) {
         QmiCtlVersionInfo *service;
 
-        service = g_ptr_array_index (self->priv->supported_services, i);
+        service = g_ptr_array_index (ctx->self->priv->supported_services, i);
         g_debug ("[%s]    %s (%u.%u)",
-                 self->priv->path_display,
+                 ctx->self->priv->path_display,
                  qmi_service_get_string (qmi_ctl_version_info_get_service (service)),
                  qmi_ctl_version_info_get_major_version (service),
                  qmi_ctl_version_info_get_minor_version (service));
     }
 
-    g_simple_async_result_set_op_res_gboolean (simple, TRUE);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
-    g_object_unref (self);
+    /* Keep on with next flags */
+    process_open_flags (ctx);
+}
+
+static void
+process_open_flags (DeviceOpenContext *ctx)
+{
+    /* Query version info? */
+    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_VERSION_INFO) {
+        g_debug ("Checking version info...");
+        ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_VERSION_INFO;
+        qmi_client_ctl_get_version_info (ctx->self->priv->client_ctl,
+                                         ctx->timeout,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)version_info_ready,
+                                         ctx);
+        return;
+    }
+
+    /* Sync? */
+    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_SYNC) {
+        g_debug ("Running sync...");
+        ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_SYNC;
+        qmi_client_ctl_sync (ctx->self->priv->client_ctl,
+                             ctx->timeout,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)sync_ready,
+                             ctx);
+        return;
+    }
+
+    /* No more flags to process, done we are */
+    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+    device_open_context_complete_and_free (ctx);
 }
 
 /**
  * qmi_device_open:
  * @self: a #QmiDevice.
+ * @flags: mask of #QmiDeviceOpenFlags specifying how the device should be opened.
  * @timeout: maximum time, in seconds, to wait for the device to be opened.
+ * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
  *
  * Asynchronously opens a #QmiDevice for I/O.
  *
@@ -1043,37 +1120,37 @@ version_info_ready (QmiClientCtl *client_ctl,
  */
 void
 qmi_device_open (QmiDevice *self,
+                 QmiDeviceOpenFlags flags,
                  guint timeout,
                  GCancellable *cancellable,
                  GAsyncReadyCallback callback,
                  gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    DeviceOpenContext *ctx;
     GError *error = NULL;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
 
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        qmi_device_open);
+    ctx = g_slice_new (DeviceOpenContext);
+    ctx->self = g_object_ref (self);
+    ctx->result = g_simple_async_result_new (G_OBJECT (self),
+                                             callback,
+                                             user_data,
+                                             qmi_device_open);
+    ctx->flags = flags;
+    ctx->timeout = timeout;
+    ctx->cancellable = (cancellable ? g_object_ref (cancellable) : NULL);
 
     if (!create_iochannel (self, &error)) {
         g_prefix_error (&error,
-                        "Cannot open (async) QMI device: ");
-        g_simple_async_result_take_error (result, error);
-        g_simple_async_result_complete_in_idle (result);
-        g_object_unref (result);
+                        "Cannot open QMI device: ");
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
         return;
     }
 
-    /* Query version info */
-    g_debug ("Checking version info...");
-    qmi_client_ctl_get_version_info (self->priv->client_ctl,
-                                     timeout,
-                                     cancellable,
-                                     (GAsyncReadyCallback)version_info_ready,
-                                     result);
+    /* Process all open flags */
+    process_open_flags (ctx);
 }
 
 /*****************************************************************************/
@@ -1527,7 +1604,8 @@ finalize (GObject *object)
 
     g_hash_table_unref (self->priv->registered_clients);
 
-    g_ptr_array_unref (self->priv->supported_services);
+    if (self->priv->supported_services)
+        g_ptr_array_unref (self->priv->supported_services);
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);

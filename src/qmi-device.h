@@ -73,7 +73,22 @@ const gchar  *qmi_device_get_path         (QmiDevice *self);
 const gchar  *qmi_device_get_path_display (QmiDevice *self);
 gboolean      qmi_device_is_open          (QmiDevice *self);
 
+/**
+ * QmiDeviceOpenFlags:
+ * @QMI_DEVICE_OPEN_FLAGS_NONE: No flags.
+ * @QMI_DEVICE_OPEN_FLAGS_VERSION_INFO: Run version info check when opening.
+ * @QMI_DEVICE_OPEN_FLAGS_SYNC: Synchronize with endpoint once the device is open. Will release any previously allocated client ID.
+ *
+ * Flags to specify which actions to be performed when the device is open.
+ */
+typedef enum {
+    QMI_DEVICE_OPEN_FLAGS_NONE         = 0,
+    QMI_DEVICE_OPEN_FLAGS_VERSION_INFO = 1 << 0,
+    QMI_DEVICE_OPEN_FLAGS_SYNC         = 1 << 1,
+} QmiDeviceOpenFlags;
+
 void         qmi_device_open        (QmiDevice *self,
+                                     QmiDeviceOpenFlags flags,
                                      guint timeout,
                                      GCancellable *cancellable,
                                      GAsyncReadyCallback callback,
