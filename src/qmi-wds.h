@@ -34,7 +34,8 @@ typedef enum {
   QMI_WDS_MESSAGE_EVENT         = 0x0001, /* unused currently */
   QMI_WDS_MESSAGE_START_NETWORK = 0x0020,
   QMI_WDS_MESSAGE_STOP_NETWORK  = 0x0021,
-  QMI_WDS_MESSAGE_GET_PACKET_SERVICE_STATUS = 0x0022,
+  QMI_WDS_MESSAGE_GET_PACKET_SERVICE_STATUS  = 0x0022,
+  QMI_WDS_MESSAGE_GET_DATA_BEARER_TECHNOLOGY = 0x0037,
 } QmiWdsMessage;
 
 /*****************************************************************************/
@@ -105,6 +106,38 @@ void                                qmi_wds_get_packet_service_status_output_unr
 gboolean                            qmi_wds_get_packet_service_status_output_get_result (QmiWdsGetPacketServiceStatusOutput *output,
                                                                                          GError **error);
 QmiWdsConnectionStatus              qmi_wds_get_packet_service_status_output_get_connection_status (QmiWdsGetPacketServiceStatusOutput *output);
+
+/*****************************************************************************/
+/* Get data bearer technology */
+
+/* Note: no defined input yet */
+
+typedef enum {
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN = -1,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_CDMA20001X = 0x01,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_1xEVDO = 0x02,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_GSM = 0x03,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_UMTS = 0x04,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_1xEVDO_REVA = 0x05,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_EDGE = 0x06,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_HSDPA = 0x07,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_HSUPA = 0x08,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_HSDPA_HSUPDA = 0x09,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_LTE = 0x0A,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_EHRPD = 0x0B,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_HSDPAPLUS = 0x0C,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_HSDPAPLUS_HSUPA = 0x0D,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_DCHSDPAPLUS = 0x0E,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_DCHSDPAPLUS_HSUPA = 0x0F,
+} QmiWdsDataBearerTechnology;
+
+typedef struct _QmiWdsGetDataBearerTechnologyOutput QmiWdsGetDataBearerTechnologyOutput;
+QmiWdsGetDataBearerTechnologyOutput *qmi_wds_get_data_bearer_technology_output_ref   (QmiWdsGetDataBearerTechnologyOutput *output);
+void                                 qmi_wds_get_data_bearer_technology_output_unref (QmiWdsGetDataBearerTechnologyOutput *output);
+gboolean                             qmi_wds_get_data_bearer_technology_output_get_result (QmiWdsGetDataBearerTechnologyOutput *output,
+                                                                                           GError **error);
+QmiWdsDataBearerTechnology           qmi_wds_get_data_bearer_technology_output_get_current (QmiWdsGetDataBearerTechnologyOutput *output);
+QmiWdsDataBearerTechnology           qmi_wds_get_data_bearer_technology_output_get_last    (QmiWdsGetDataBearerTechnologyOutput *output);
 
 G_END_DECLS
 

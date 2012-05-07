@@ -872,3 +872,175 @@ qmi_message_wds_get_packet_service_status_reply_parse (QmiMessage *self,
 
     return output;
 }
+
+/*****************************************************************************/
+/* Get data bearer technology */
+
+QmiMessage *
+qmi_message_wds_get_data_bearer_technology_new (guint8 transaction_id,
+                                                guint8 client_id)
+{
+    return qmi_message_new (QMI_SERVICE_WDS,
+                            client_id,
+                            transaction_id,
+                            QMI_WDS_MESSAGE_GET_DATA_BEARER_TECHNOLOGY);
+}
+
+enum {
+    GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_CURRENT = 0x01,
+    GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_LAST    = 0x10,
+};
+
+/**
+ * QmiWdsGetDataBearerTechnologyOutput:
+ *
+ * An opaque type handling the output of the Stop Network operation.
+ */
+struct _QmiWdsGetDataBearerTechnologyOutput {
+    volatile gint ref_count;
+    GError *error;
+    gint8 current;
+    gint8 last;
+};
+
+/**
+ * qmi_wds_get_data_bearer_technology_output_get_result:
+ * @output: a #QmiWdsGetDataBearerTechnologyOutput.
+ * @error: a #GError.
+ *
+ * Get the result of the Get Data Bearer Technology operation.
+ *
+ * Returns: #TRUE if the operation succeeded, and #FALSE if @error is set.
+ */
+gboolean
+qmi_wds_get_data_bearer_technology_output_get_result (QmiWdsGetDataBearerTechnologyOutput *output,
+                                                      GError **error)
+{
+    g_return_val_if_fail (output != NULL, FALSE);
+
+    if (output->error) {
+        if (error)
+            *error = g_error_copy (output->error);
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ * qmi_wds_get_data_bearer_technology_output_get_current:
+ * @output: a #QmiWdsGetDataBearerTechnologyOutput.
+ *
+ * Get the current data bearer technology.
+ *
+ * Returns: a #QmiWdsDataBearerTechnology.
+ */
+QmiWdsDataBearerTechnology
+qmi_wds_get_data_bearer_technology_output_get_current (QmiWdsGetDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN);
+
+    return (QmiWdsDataBearerTechnology)output->current;
+}
+
+/**
+ * qmi_wds_get_data_bearer_technology_output_output_get_last:
+ * @output: a #QmiWdsGetDataBearerTechnologyOutput.
+ *
+ * Get the data bearer technology of the last connection.
+ * This field is optional.
+ *
+ * Returns: a #QmiWdsDataBearerTechnology.
+ */
+QmiWdsDataBearerTechnology
+qmi_wds_get_data_bearer_technology_output_get_last (QmiWdsGetDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN);
+
+    return (QmiWdsDataBearerTechnology)output->last;
+}
+
+/**
+ * qmi_wds_get_data_bearer_technology_output_ref:
+ * @output: a #QmiWdsGetDataBearerTechnologyOutput.
+ *
+ * Atomically increments the reference count of @output by one.
+ *
+ * Returns: the new reference to @output.
+ */
+QmiWdsGetDataBearerTechnologyOutput *
+qmi_wds_get_data_bearer_technology_output_ref (QmiWdsGetDataBearerTechnologyOutput *output)
+{
+    g_return_val_if_fail (output != NULL, NULL);
+
+    g_atomic_int_inc (&output->ref_count);
+    return output;
+}
+
+/**
+ * qmi_wds_get_data_bearer_technology_output_unref:
+ * @output: a #QmiWdsGetDataBearerTechnologyOutput.
+ *
+ * Atomically decrements the reference count of @output by one.
+ * If the reference count drops to 0, @output is completely disposed.
+ */
+void
+qmi_wds_get_data_bearer_technology_output_unref (QmiWdsGetDataBearerTechnologyOutput *output)
+{
+    g_return_if_fail (output != NULL);
+
+    if (g_atomic_int_dec_and_test (&output->ref_count)) {
+        if (output->error)
+            g_error_free (output->error);
+        g_slice_free (QmiWdsGetDataBearerTechnologyOutput, output);
+    }
+}
+
+QmiWdsGetDataBearerTechnologyOutput *
+qmi_message_wds_get_data_bearer_technology_reply_parse (QmiMessage *self,
+                                                        GError **error)
+{
+    QmiWdsGetDataBearerTechnologyOutput *output;
+    GError *inner_error = NULL;
+
+    g_assert (qmi_message_get_message_id (self) == QMI_WDS_MESSAGE_GET_DATA_BEARER_TECHNOLOGY);
+
+    if (!qmi_message_get_response_result (self, &inner_error)) {
+        /* Only QMI protocol errors are set in the Output result, all the
+         * others (e.g. failures parsing) are directly propagated to error. */
+        if (inner_error->domain != QMI_PROTOCOL_ERROR) {
+            g_propagate_error (error, inner_error);
+            return NULL;
+        }
+
+        /* Otherwise, build output */
+    }
+
+    /* success */
+
+    output = g_slice_new0 (QmiWdsGetDataBearerTechnologyOutput);
+    output->ref_count = 1;
+    output->error = inner_error;
+    output->current = QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN;
+    output->last = QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN;
+
+    if (!qmi_message_tlv_get (self,
+                              GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_CURRENT,
+                              sizeof (output->current),
+                              &output->current,
+                              error)) {
+        g_prefix_error (error, "Couldn't get the current technology TLV: ");
+        qmi_wds_get_data_bearer_technology_output_unref (output);
+        return NULL;
+    }
+
+    /* last is optional */
+    qmi_message_tlv_get (self,
+                         GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_LAST,
+                         sizeof (output->last),
+                         &output->last,
+                         NULL);
+
+    return output;
+}

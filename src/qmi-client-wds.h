@@ -87,6 +87,18 @@ QmiWdsGetPacketServiceStatusOutput *qmi_client_wds_get_packet_service_status_fin
                                                                                      GAsyncResult *res,
                                                                                      GError **error);
 
+/*****************************************************************************/
+/* Get data bearer technology */
+void                                qmi_client_wds_get_data_bearer_technology        (QmiClientWds *self,
+                                                                                      gpointer input_unused,
+                                                                                      guint timeout,
+                                                                                      GCancellable *cancellable,
+                                                                                      GAsyncReadyCallback callback,
+                                                                                      gpointer user_data);
+QmiWdsGetDataBearerTechnologyOutput *qmi_client_wds_get_data_bearer_technology_finish (QmiClientWds *self,
+                                                                                       GAsyncResult *res,
+                                                                                       GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_CLIENT_WDS_H_ */
