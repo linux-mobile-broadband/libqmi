@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+# -*- Mode: python; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation; either version 2 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright (C) 2012 Lanedo GmbH
+#
+
+import os
+import sys
+import json
+
+from Client      import Client
+from MessageList import MessageList
+import utils
+
+# Setup inputs
+if len(sys.argv) != 3:
+    print "Usage: qmi-codegen <path to database.json> <path to output>"
+    sys.exit(1)
+
+database_file_path = sys.argv[1]
+base_output_path = sys.argv[2]
+
+output_file_c = open(base_output_path + ".c", 'w')
+output_file_h = open(base_output_path + ".h", 'w')
+
+# Load database file contents
+database_file = open(sys.argv[1])
+database_file_contents = database_file.read()
+database_file.close()
+
+# Add common stuff to the output files
+utils.add_copyright(output_file_c);
+utils.add_copyright(output_file_h);
+utils.add_header_start(output_file_h, os.path.basename(base_output_path))
+utils.add_source_start(output_file_c, os.path.basename(base_output_path))
+
+# Get our message collection
+object_list_json = json.loads(database_file_contents)
+message_list = MessageList(object_list_json)
+
+# Emit the message creation/parsing code
+message_list.emit(output_file_h, output_file_c)
+
+# Build our own client
+client = Client(object_list_json)
+client.emit(output_file_h, output_file_c, message_list)
+
+utils.add_header_stop(output_file_h, os.path.basename(base_output_path))
+
+output_file_c.close()
+output_file_h.close()

@@ -1,0 +1,225 @@
+#!/usr/bin/env python
+# -*- Mode: python; tab-width: 4; indent-tabs-mode: nil -*-
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation; either version 2 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright (C) 2012 Lanedo GmbH
+#
+
+import string
+
+from Struct import Struct
+import utils
+
+class Field:
+    """
+    The Field class takes care of handling Input and Output TLVs
+    """
+
+    def __init__(self, prefix, dictionary):
+        # The field prefix, usually the name of the Container,
+        #  e.g. "Qmi Message Ctl Something Output"
+        self.prefix = prefix
+        # The name of the specific field, e.g. "Result"
+        self.name = dictionary['name']
+        # The specific TLV ID
+        self.id = dictionary['id']
+        # Whether the field is to be considered mandatory in the message
+        self.mandatory = dictionary['mandatory']
+        # Specific format of the field
+        self.format = dictionary['format']
+        # The type, which must always be "TLV"
+        self.type = dictionary['type']
+        # Output Fields may have prerequisites
+        self.prerequisite = dictionary['prerequisite'] if 'prerequisite' in dictionary else None
+
+        # Strings containing how the given type is to be copied and disposed
+        self.copy = None
+        self.dispose = None
+        # The field type to be used in the generated code
+        self.field_type = None
+
+        # Create the composed full name (prefix + name),
+        #  e.g. "Qmi Message Ctl Something Output Result"
+        self.fullname = self.prefix + ' ' + self.name
+
+        # Create the variable name within the Container
+        self.variable_name = 'arg_' + string.lower(utils.build_underscore_name(self.name))
+
+        # Create the ID enumeration name
+        self.id_enum_name = string.upper(utils.build_underscore_name(self.prefix + ' TLV ' + self.name))
+
+
+    def emit_types(self, hfile):
+        '''
+        Subclasses can implement the method to emit the required type
+        information
+        '''
+        pass
+
+
+    def emit_getter(self, hfile, cfile):
+        translations = { 'name'              : self.name,
+                         'variable_name'     : self.variable_name,
+                         'field_type'        : self.field_type,
+                         'field_dispose_msg' : ' Dispose @value with ' + self.dispose + '() when no longer needed.' if self.dispose is not None else '',
+                         'field_copy'        : self.copy if self.copy is not None else '',
+                         'underscore'        : utils.build_underscore_name(self.name),
+                         'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
+                         'prefix_underscore' : utils.build_underscore_name(self.prefix) }
+
+        # Emit the getter header
+        template = (
+            '\n'
+            'gboolean ${prefix_underscore}_get_${underscore} (\n'
+            '    ${prefix_camelcase} *self,\n'
+            '    ${field_type} *value,\n'
+            '    GError **error);\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        # Emit the getter source
+        template = (
+            '\n'
+            '/**\n'
+            ' * ${prefix_underscore}_get_${underscore}:\n'
+            ' * @self: a ${prefix_camelcase}.\n'
+            ' * @value: a placeholder for the output value, or #NULL.\n'
+            ' * @error: a #GError.\n'
+            ' *\n'
+            ' * Get the \'${name}\' field from @self.\n'
+            ' *\n'
+            ' * Returns: #TRUE if the field is found and @value is set, #FALSE otherwise.${field_dispose_msg}\n'
+            ' */\n'
+            'gboolean\n'
+            '${prefix_underscore}_get_${underscore} (\n'
+            '    ${prefix_camelcase} *self,\n'
+            '    ${field_type} *value,\n'
+            '    GError **error)\n'
+            '{\n'
+            '    g_return_val_if_fail (self != NULL, FALSE);\n'
+            '\n'
+            '    if (!self->${variable_name}_set) {\n'
+            '        g_set_error (error,\n'
+            '                     QMI_CORE_ERROR,\n'
+            '                     QMI_CORE_ERROR_TLV_NOT_FOUND,\n'
+            '                     "Field \'${name}\' was not found in the message");\n'
+            '        return FALSE;\n'
+            '    }\n'
+            '\n'
+            '    if (value)\n'
+            '        *value = ${field_copy}(self->${variable_name});\n'
+            '    return TRUE;\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+
+    def emit_setter(self, hfile, cfile):
+        translations = { 'name'              : self.name,
+                         'variable_name'     : self.variable_name,
+                         'field_type'        : self.field_type,
+                         'field_dispose'     : self.dispose + '(self->' + self_variable_name + ');\n' if self.dispose is not None else '',
+                         'field_copy'        : self.copy if self.copy is not None else '',
+                         'underscore'        : utils.build_underscore_name(self.name),
+                         'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
+                         'prefix_underscore' : utils.build_underscore_name(self.prefix) }
+
+        # Emit the setter header
+        template = (
+            '\n'
+            'gboolean ${prefix_underscore}_set_${underscore} (\n'
+            '    ${prefix_camelcase} *self,\n'
+            '    ${field_type} value,\n'
+            '    GError **error);\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        # Emit the setter source
+        template = (
+            '\n'
+            '/**\n'
+            ' * ${prefix_underscore}_set_${underscore}:\n'
+            ' * @self: a ${prefix_camelcase}.\n'
+            ' * @value: the value to set.\n'
+            ' * @error: a #GError.\n'
+            ' *\n'
+            ' * Set the \'${name}\' field in the message.\n'
+            ' *\n'
+            ' * Returns: #TRUE if @value was successfully set, #FALSE otherwise.\n'
+            ' */\n'
+            'gboolean\n'
+            '${prefix_underscore}_set_${underscore} (\n'
+            '    ${prefix_camelcase} *self,\n'
+            '    ${field_type} value,\n'
+            '    GError **error)\n'
+            '{\n'
+            '    g_return_val_if_fail (self != NULL, FALSE);\n'
+            '\n'
+            '    ${field_dispose}'
+            '    self->${variable_name}_set = TRUE;\n'
+            '    self->${variable_name} = value;\n'
+            '\n'
+            '    return TRUE;\n'
+            '}\n'
+            '\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+
+    def emit_input_mandatory_check(self, f, line_prefix):
+        if self.mandatory == 'yes':
+            translations = { 'name'          : self.name,
+                             'variable_name' : self.variable_name,
+                             'lp'            : line_prefix }
+
+            template = (
+                '\n'
+                '${lp}if (!input || !input->${variable_name}_set) {\n'
+                '${lp}    g_set_error (error,\n'
+                '${lp}                 QMI_CORE_ERROR,\n'
+                '${lp}                 QMI_CORE_ERROR_INVALID_ARGS,\n'
+                '${lp}                 "Missing mandatory TLV \'${name}\'");\n'
+                '${lp}    qmi_message_unref (self);\n'
+                '${lp}    return NULL;\n'
+                '${lp}}\n')
+
+            f.write(string.Template(template).substitute(translations))
+
+    def emit_input_tlv_add(self, f, line_prefix):
+        '''
+        Subclasses can implement the method to emit the required TLV adding
+        '''
+        pass
+
+
+    def emit_output_prerequisite_check(self, f, line_prefix):
+        translations = { 'lp' : line_prefix }
+        template = None
+        if self.prerequisite is not None:
+            translations['prerequisite_field'] = utils.build_underscore_name(self.prerequisite['field'])
+            translations['prerequisite_operation'] = self.prerequisite['operation']
+            translations['prerequisite_value'] = self.prerequisite['value']
+            template = (
+                '${lp}/* Prerequisite.... */\n'
+                '${lp}if (!(self->arg_${prerequisite_field} ${prerequisite_operation} ${prerequisite_value}))\n'
+                '${lp}    break;\n')
+        else:
+            template = (
+                '${lp}/* No Prerequisites for field */\n')
+        f.write(string.Template(template).substitute(translations))
+
+
+    def emit_output_tlv_get(self, f, line_prefix):
+        '''
+        Subclasses can implement the method to emit the required TLV retrieval
+        '''
+        pass

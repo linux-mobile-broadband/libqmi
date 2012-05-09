@@ -42,3 +42,5 @@ src/qmi-enum-types.c
 cli/.deps
 cli/.libs
 cli/qmicli
+
+build-aux/qmi-codegen/*.pyc

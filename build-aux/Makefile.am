@@ -1,3 +1,2 @@
 
-SUBDIRS = templates
-
+SUBDIRS = templates qmi-codegen
