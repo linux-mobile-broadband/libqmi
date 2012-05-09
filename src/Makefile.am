@@ -37,6 +37,12 @@ qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/templates/qm
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.c \
 		$(ENUMS) > $@
 
+# QMI message handling generation
+qmi-tmp-ctl.c qmi-tmp-ctl.h: $(top_srcdir)/data/qmi-service-ctl.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+	$(AM_V_GEN) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(top_srcdir)/data/qmi-service-ctl.json \
+		qmi-tmp-ctl
+
 # Additional dependencies
 qmi-device.c: qmi-error-types.h qmi-enum-types.h
 qmi-client.c: qmi-error-types.h qmi-enum-types.h
@@ -44,6 +50,8 @@ qmi-client-ctl.c: qmi-error-types.h qmi-enum-types.h
 qmi-message.c: qmi-error-types.h qmi-enum-types.h
 qmi-message-ctl.c: qmi-error-types.h
 qmi-message-dms.c: qmi-error-types.h
+qmi-tmp-*.c: qmi-error-types.h
+qmi-tmp-*.h: qmi-enum-types.h
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
@@ -51,6 +59,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-enums.h qmi-enum-types.h qmi-enum-types.c \
 	qmi-utils.h qmi-utils.c \
 	qmi-message.h qmi-message.c \
+	qmi-tmp-ctl.c qmi-tmp-ctl.h \
 	qmi-message-ctl.h qmi-message-ctl.c \
 	qmi-message-dms.h qmi-message-dms.c \
 	qmi-message-wds.h qmi-message-wds.c \
