@@ -46,6 +46,7 @@ GLIB_MKENUMS=`pkg-config --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
 
 AC_CONFIG_FILES([Makefile
+                 data/Makefile
                  build-aux/Makefile
                  build-aux/templates/Makefile
                  build-aux/qmi-codegen/Makefile
