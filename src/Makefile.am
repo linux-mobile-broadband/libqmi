@@ -9,32 +9,32 @@ libqmi_glib_la_CPPFLAGS = \
 	-I$(top_builddir)/src
 
 # Error types
-qmi-error-types.h: qmi-errors.h $(top_srcdir)/build-aux/qmi-error-types-template.h
+qmi-error-types.h: qmi-errors.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#ifndef __LIBQMI_GLIB_ERROR_TYPES_H__\n#define __LIBQMI_GLIB_ERROR_TYPES_H__\n#include \"qmi-errors.h\"\n" \
-		--template $(top_srcdir)/build-aux/qmi-error-types-template.h \
+		--template $(top_srcdir)/build-aux/templates/qmi-error-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ERROR_TYPES_H__ */\n" \
 		qmi-errors.h > $@
 
-qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/qmi-error-types-template.c
+qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.c
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#include \"qmi-errors.h\"\n#include \"qmi-error-types.h\"\n" \
-		--template $(top_srcdir)/build-aux/qmi-error-types-template.c \
+		--template $(top_srcdir)/build-aux/templates/qmi-error-types-template.c \
 		qmi-errors.h > $@
 
 # Enum types
 ENUMS = qmi-enums.h qmi-dms.h qmi-wds.h qmi-ctl.h
-qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/qmi-enum-types-template.h
+qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-dms.h\"\n#include \"qmi-ctl.h\"\n#include \"qmi-wds.h\"\n" \
-		--template $(top_srcdir)/build-aux/qmi-enum-types-template.h \
+		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
 
-qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/qmi-enum-types-template.c
+qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/templates/qmi-enum-types-template.c
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#include \"qmi-enum-types.h\"\n" \
-		--template $(top_srcdir)/build-aux/qmi-enum-types-template.c \
+		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.c \
 		$(ENUMS) > $@
 
 # Additional dependencies
