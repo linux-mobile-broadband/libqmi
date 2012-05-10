@@ -102,33 +102,11 @@ context_free (Context *ctx)
 }
 
 static void
-release_client_ready (QmiDevice *device,
-                      GAsyncResult *res)
+shutdown (void)
 {
-    GError *error = NULL;
-
-    if (!qmi_device_release_client_finish (device, res, &error)) {
-        g_printerr ("error: couldn't release client: %s", error->message);
-        exit (EXIT_FAILURE);
-    }
-
-    g_debug ("Client released");
-
     /* Cleanup context and finish async operation */
     context_free (ctx);
     qmicli_async_operation_done ();
-}
-
-static void
-shutdown (void)
-{
-    qmi_device_release_client (ctx->device,
-                               QMI_CLIENT (ctx->client),
-                               QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
-                               10,
-                               NULL,
-                               (GAsyncReadyCallback)release_client_ready,
-                               NULL);
 }
 
 static void
@@ -166,18 +144,17 @@ get_ids_ready (QmiClientDms *client,
     shutdown ();
 }
 
-static void
-allocate_client_ready (QmiDevice *device,
-                       GAsyncResult *res)
+void
+qmicli_dms_run (QmiDevice *device,
+                QmiClientDms *client,
+                GCancellable *cancellable)
 {
-    GError *error = NULL;
-
-    ctx->client = (QmiClientDms *)qmi_device_allocate_client_finish (device, res, &error);
-    if (!ctx->client) {
-        g_printerr ("error: couldn't create DMS client: %s\n",
-                    error->message);
-        exit (EXIT_FAILURE);
-    }
+    /* Initialize context */
+    ctx = g_slice_new (Context);
+    ctx->device = g_object_ref (device);
+    ctx->client = g_object_ref (client);
+    if (cancellable)
+        ctx->cancellable = g_object_ref (cancellable);
 
     /* Request to get IDs? */
     if (get_ids_flag) {
@@ -191,24 +168,4 @@ allocate_client_ready (QmiDevice *device,
     }
 
     g_warn_if_reached ();
-}
-
-void
-qmicli_dms_run (QmiDevice *device,
-                GCancellable *cancellable)
-{
-    /* Initialize context */
-    ctx = g_slice_new (Context);
-    ctx->device = g_object_ref (device);
-    if (cancellable)
-        ctx->cancellable = g_object_ref (cancellable);
-
-    /* Create a new DMS client */
-    qmi_device_allocate_client (device,
-                                QMI_SERVICE_DMS,
-                                QMI_CID_NONE,
-                                10,
-                                cancellable,
-                                (GAsyncReadyCallback)allocate_client_ready,
-                                NULL);
 }

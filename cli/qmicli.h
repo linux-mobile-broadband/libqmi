@@ -30,12 +30,14 @@ void          qmicli_async_operation_done  (void);
 GOptionGroup *qmicli_dms_get_option_group (void);
 gboolean      qmicli_dms_options_enabled  (void);
 void          qmicli_dms_run              (QmiDevice *device,
+                                           QmiClientDms *client,
                                            GCancellable *cancellable);
 
 /* WDS group */
 GOptionGroup *qmicli_wds_get_option_group (void);
 gboolean      qmicli_wds_options_enabled  (void);
 void          qmicli_wds_run              (QmiDevice *device,
+                                           QmiClientWds *client,
                                            GCancellable *cancellable);
 
 #endif /* __QMICLI_H__ */

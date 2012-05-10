@@ -39,6 +39,8 @@
 static GMainLoop *loop;
 static GCancellable *cancellable;
 static QmiDevice *device;
+static QmiClient *client;
+static QmiService service;
 
 /* Main options */
 static gchar *device_str;
@@ -146,16 +148,66 @@ print_version_and_exit (void)
 /*****************************************************************************/
 /* Running asynchronously */
 
+static void
+release_client_ready (QmiDevice *device,
+                      GAsyncResult *res)
+{
+    GError *error = NULL;
+
+    if (!qmi_device_release_client_finish (device, res, &error)) {
+        g_printerr ("error: couldn't release client: %s", error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    g_debug ("Client released");
+    g_main_loop_quit (loop);
+}
+
 void
 qmicli_async_operation_done (void)
 {
+    g_debug ("Asynchronous operation done...");
+
     if (cancellable) {
         g_object_unref (cancellable);
         cancellable = NULL;
     }
 
-    g_debug ("Asynchronous operation done... quitting the loop");
-    g_main_loop_quit (loop);
+    qmi_device_release_client (device,
+                               client,
+                               QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
+                               10,
+                               NULL,
+                               (GAsyncReadyCallback)release_client_ready,
+                               NULL);
+}
+
+static void
+allocate_client_ready (QmiDevice *device,
+                       GAsyncResult *res)
+{
+
+    GError *error = NULL;
+
+    client = qmi_device_allocate_client_finish (device, res, &error);
+    if (!client) {
+        g_printerr ("error: couldn't create client for the '%s' service: %s\n",
+                    qmi_service_get_string (service),
+                    error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    /* Run the service-specific action */
+    switch (service) {
+    case QMI_SERVICE_DMS:
+        qmicli_dms_run (device, QMI_CLIENT_DMS (client), cancellable);
+        return;
+    case QMI_SERVICE_WDS:
+        qmicli_wds_run (device, QMI_CLIENT_WDS (client), cancellable);
+        return;
+    default:
+        g_assert_not_reached ();
+    }
 }
 
 static void
@@ -170,25 +222,18 @@ device_open_ready (QmiDevice *device,
         exit (EXIT_FAILURE);
     }
 
-    /* As soon as we get the QmiDevice, launch the specific action requested */
     g_debug ("QMI Device at '%s' ready",
              qmi_device_get_path_display (device));
 
-    /* DMS options? */
-    if (qmicli_dms_options_enabled ()) {
-        g_debug ("Running DMS operation...");
-        qmicli_dms_run (device, cancellable);
-    }
-    /* WDS options? */
-    else if (qmicli_wds_options_enabled ()) {
-        g_debug ("Running WDS operation...");
-        qmicli_wds_run (device, cancellable);
-    }
-    /* No options? */
-    else {
-        g_printerr ("error: no actions specified\n");
-        exit (EXIT_FAILURE);
-    }
+    /* As soon as we get the QmiDevice, create a client for the requested
+     * service */
+    qmi_device_allocate_client (device,
+                                service,
+                                QMI_CID_NONE,
+                                10,
+                                cancellable,
+                                (GAsyncReadyCallback)allocate_client_ready,
+                                NULL);
 }
 
 static void
@@ -262,6 +307,20 @@ int main (int argc, char **argv)
     signal (SIGHUP, signals_handler);
     signal (SIGTERM, signals_handler);
 
+    /* DMS options? */
+    if (qmicli_dms_options_enabled ()) {
+        service = QMI_SERVICE_DMS;
+    }
+    /* WDS options? */
+    else if (qmicli_wds_options_enabled ()) {
+        service = QMI_SERVICE_WDS;
+    }
+    /* No options? */
+    else {
+        g_printerr ("error: no actions specified\n");
+        exit (EXIT_FAILURE);
+    }
+
     /* Create requirements for async options */
     cancellable = g_cancellable_new ();
     loop = g_main_loop_new (NULL, FALSE);
@@ -270,11 +329,13 @@ int main (int argc, char **argv)
     qmi_device_new (file,
                     cancellable,
                     (GAsyncReadyCallback)device_new_ready,
-                    NULL);
+                    GUINT_TO_POINTER (service));
     g_main_loop_run (loop);
 
     if (cancellable)
         g_object_unref (cancellable);
+    if (client)
+        g_object_unref (client);
     if (device)
         g_object_unref (device);
     g_main_loop_unref (loop);

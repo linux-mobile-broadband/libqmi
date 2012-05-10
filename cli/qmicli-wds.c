@@ -127,33 +127,11 @@ context_free (Context *ctx)
 }
 
 static void
-release_client_ready (QmiDevice *device,
-                      GAsyncResult *res)
+shutdown (void)
 {
-    GError *error = NULL;
-
-    if (!qmi_device_release_client_finish (device, res, &error)) {
-        g_printerr ("error: couldn't release client: %s", error->message);
-        exit (EXIT_FAILURE);
-    }
-
-    g_debug ("Client released");
-
     /* Cleanup context and finish async operation */
     context_free (ctx);
     qmicli_async_operation_done ();
-}
-
-static void
-shutdown (void)
-{
-    qmi_device_release_client (ctx->device,
-                               QMI_CLIENT (ctx->client),
-                               QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
-                               10,
-                               NULL,
-                               (GAsyncReadyCallback)release_client_ready,
-                               NULL);
 }
 
 static void
@@ -498,18 +476,19 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
     shutdown ();
 }
 
-static void
-allocate_client_ready (QmiDevice *device,
-                       GAsyncResult *res)
+void
+qmicli_wds_run (QmiDevice *device,
+                QmiClientWds *client,
+                GCancellable *cancellable)
 {
-    GError *error = NULL;
+    /* Initialize context */
+    ctx = g_slice_new (Context);
+    ctx->device = g_object_ref (device);
+    ctx->client = g_object_ref (client);
+    ctx->cancellable = g_object_ref (cancellable);
+    ctx->network_started_id = 0;
+    ctx->packet_status_timeout_id = 0;
 
-    ctx->client = (QmiClientWds *)qmi_device_allocate_client_finish (device, res, &error);
-    if (!ctx->client) {
-        g_printerr ("error: couldn't create WDS client: %s\n",
-                    error->message);
-        exit (EXIT_FAILURE);
-    }
 
     /* Request to start network? */
     if (start_network_flag) {
@@ -560,25 +539,4 @@ allocate_client_ready (QmiDevice *device,
     }
 
     g_warn_if_reached ();
-}
-
-void
-qmicli_wds_run (QmiDevice *device,
-                GCancellable *cancellable)
-{
-    /* Initialize context */
-    ctx = g_slice_new (Context);
-    ctx->device = g_object_ref (device);
-    ctx->cancellable = g_object_ref (cancellable);
-    ctx->network_started_id = 0;
-    ctx->packet_status_timeout_id = 0;
-
-    /* Create a new WDS client */
-    qmi_device_allocate_client (device,
-                                QMI_SERVICE_WDS,
-                                QMI_CID_NONE,
-                                10,
-                                cancellable,
-                                (GAsyncReadyCallback)allocate_client_ready,
-                                NULL);
 }
