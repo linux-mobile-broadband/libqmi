@@ -388,6 +388,7 @@ typedef struct {
     GSimpleAsyncResult *result;
     QmiService service;
     GType client_type;
+    guint8 cid;
 } AllocateClientContext;
 
 static void
@@ -421,36 +422,25 @@ qmi_device_allocate_client_finish (QmiDevice *self,
 }
 
 static void
-allocate_cid_ready (QmiClientCtl *client_ctl,
-                    GAsyncResult *res,
-                    AllocateClientContext *ctx)
+build_client_object (AllocateClientContext *ctx)
 {
-    QmiClient *client;
     GError *error = NULL;
-    guint8 cid;
+    QmiClient *client;
     gpointer key;
-
-    cid = qmi_client_ctl_allocate_cid_finish (client_ctl, res, &error);
-    if (!cid) {
-        g_prefix_error (&error, "CID allocation failed in the CTL client: ");
-        g_simple_async_result_take_error (ctx->result, error);
-        allocate_client_context_complete_and_free (ctx);
-        return;
-    }
 
     /* We now have a proper CID for the client, we should be able to create it
      * right away */
     client = g_object_new (ctx->client_type,
                            QMI_CLIENT_DEVICE,  ctx->self,
                            QMI_CLIENT_SERVICE, ctx->service,
-                           QMI_CLIENT_CID,     cid,
+                           QMI_CLIENT_CID,     ctx->cid,
                            NULL);
 
     /* Register the client to get indications */
     if (!register_client (ctx->self, client, &error)) {
         g_prefix_error (&error,
                         "Cannot register new client with CID '%u' and service '%s'",
-                        cid,
+                        ctx->cid,
                         qmi_service_get_string (ctx->service));
         g_simple_async_result_take_error (ctx->result, error);
         allocate_client_context_complete_and_free (ctx);
@@ -460,13 +450,31 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
 
     g_debug ("Registered '%s' client with ID '%u'",
              qmi_service_get_string (ctx->service),
-             cid);
+             ctx->cid);
 
     /* Client created and registered, complete successfully */
     g_simple_async_result_set_op_res_gpointer (ctx->result,
                                                client,
                                                (GDestroyNotify)g_object_unref);
     allocate_client_context_complete_and_free (ctx);
+}
+
+static void
+allocate_cid_ready (QmiClientCtl *client_ctl,
+                    GAsyncResult *res,
+                    AllocateClientContext *ctx)
+{
+    GError *error = NULL;
+
+    ctx->cid = qmi_client_ctl_allocate_cid_finish (client_ctl, res, &error);
+    if (ctx->cid == QMI_CID_NONE) {
+        g_prefix_error (&error, "CID allocation failed in the CTL client: ");
+        g_simple_async_result_take_error (ctx->result, error);
+        allocate_client_context_complete_and_free (ctx);
+        return;
+    }
+
+    build_client_object (ctx);
 }
 
 static gboolean
@@ -498,6 +506,7 @@ check_service_supported (QmiDevice *self,
  * qmi_device_allocate_client:
  * @self: a #QmiDevice.
  * @service: a valid #QmiService.
+ * @cid: a valid client ID, or #QMI_CID_NONE.
  * @timeout: maximum time to wait.
  * @cancellable: optional #GCancellable object, #NULL to ignore.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
@@ -505,12 +514,19 @@ check_service_supported (QmiDevice *self,
  *
  * Asynchronously allocates a new #QmiClient in @self.
  *
+ * If #QMI_CID_NONE is given in @cid, a new client ID will be allocated;
+ * otherwise a client with the given @cid will be generated.
+ *
  * When the operation is finished @callback will be called. You can then call
  * qmi_device_allocate_client_finish() to get the result of the operation.
+ *
+ * Note: Clients for the #QMI_SERVICE_CTL cannot be created with this method;
+ * instead get/peek the implicit one from @self.
  */
 void
 qmi_device_allocate_client (QmiDevice *self,
                             QmiService service,
+                            guint8 cid,
                             guint timeout,
                             GCancellable *cancellable,
                             GAsyncReadyCallback callback,
@@ -568,12 +584,21 @@ qmi_device_allocate_client (QmiDevice *self,
     }
 
     /* Allocate a new CID for the client to be created */
-    qmi_client_ctl_allocate_cid (self->priv->client_ctl,
-                                 ctx->service,
-                                 timeout,
-                                 cancellable,
-                                 (GAsyncReadyCallback)allocate_cid_ready,
-                                 ctx);
+    if (cid == QMI_CID_NONE) {
+        g_debug ("Allocating new client ID...");
+        qmi_client_ctl_allocate_cid (self->priv->client_ctl,
+                                     ctx->service,
+                                     timeout,
+                                     cancellable,
+                                     (GAsyncReadyCallback)allocate_cid_ready,
+                                     ctx);
+        return;
+    }
+
+    /* Reuse the given CID */
+    g_debug ("Reusing client CID '%u'...", cid);
+    ctx->cid = cid;
+    build_client_object (ctx);
 }
 
 /*****************************************************************************/
@@ -636,6 +661,7 @@ client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
  * qmi_device_release_client:
  * @self: a #QmiDevice.
  * @client: the #QmiClient to release.
+ * @flags: mask of #QmiDeviceReleaseClientFlags specifying how the client should be released.
  * @timeout: maximum time to wait.
  * @cancellable: optional #GCancellable object, #NULL to ignore.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
@@ -646,12 +672,14 @@ client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
  * Once the #QmiClient has been released, it cannot be used any more to
  * perform operations.
  *
+ *
  * When the operation is finished @callback will be called. You can then call
  * qmi_device_release_client_finish() to get the result of the operation.
  */
 void
 qmi_device_release_client (QmiDevice *self,
                            QmiClient *client,
+                           QmiDeviceReleaseClientFlags flags,
                            guint timeout,
                            GCancellable *cancellable,
                            GAsyncReadyCallback callback,
@@ -704,14 +732,22 @@ qmi_device_release_client (QmiDevice *self,
                   QMI_CLIENT_DEVICE,  NULL,
                   NULL);
 
-    /* And now, really try to release the CID */
-    qmi_client_ctl_release_cid (self->priv->client_ctl,
-                                service,
-                                cid,
-                                timeout,
-                                cancellable,
-                                (GAsyncReadyCallback)client_ctl_release_cid_ready,
-                                ctx);
+    if (flags & QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID) {
+        /* And now, really try to release the CID */
+        qmi_client_ctl_release_cid (self->priv->client_ctl,
+                                    service,
+                                    cid,
+                                    timeout,
+                                    cancellable,
+                                    (GAsyncReadyCallback)client_ctl_release_cid_ready,
+                                    ctx);
+        return;
+    }
+
+    /* No need to release the CID, so just done */
+    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+    release_client_context_complete_and_free (ctx);
+    return;
 }
 
 

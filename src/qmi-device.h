@@ -102,6 +102,7 @@ gboolean     qmi_device_close (QmiDevice *self,
 
 void          qmi_device_allocate_client        (QmiDevice *self,
                                                  QmiService service,
+                                                 guint8 cid,
                                                  guint timeout,
                                                  GCancellable *cancellable,
                                                  GAsyncReadyCallback callback,
@@ -110,8 +111,21 @@ QmiClient    *qmi_device_allocate_client_finish (QmiDevice *self,
                                                  GAsyncResult *res,
                                                  GError **error);
 
+/**
+ * QmiDeviceReleaseClientFlags:
+ * @QMI_DEVICE_RELEASE_CLIENT_FLAGS_NONE: No flags.
+ * @QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID: Release the CID when releasing the client.
+ *
+ * Flags to specify which actions to be performed when releasing the client.
+ */
+typedef enum {
+    QMI_DEVICE_RELEASE_CLIENT_FLAGS_NONE        = 0,
+    QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID = 1 << 0,
+} QmiDeviceReleaseClientFlags;
+
 void          qmi_device_release_client        (QmiDevice *self,
                                                 QmiClient *client,
+                                                QmiDeviceReleaseClientFlags flags,
                                                 guint timeout,
                                                 GCancellable *cancellable,
                                                 GAsyncReadyCallback callback,

@@ -124,6 +124,7 @@ shutdown (void)
 {
     qmi_device_release_client (ctx->device,
                                QMI_CLIENT (ctx->client),
+                               QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
                                10,
                                NULL,
                                (GAsyncReadyCallback)release_client_ready,
@@ -205,6 +206,7 @@ qmicli_dms_run (QmiDevice *device,
     /* Create a new DMS client */
     qmi_device_allocate_client (device,
                                 QMI_SERVICE_DMS,
+                                QMI_CID_NONE,
                                 10,
                                 cancellable,
                                 (GAsyncReadyCallback)allocate_client_ready,
