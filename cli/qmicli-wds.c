@@ -47,6 +47,8 @@ static Context *ctx;
 
 /* Options */
 static gboolean start_network_flag;
+static gboolean follow_network_flag;
+static gchar *stop_network_str;
 static gboolean get_packet_service_status_flag;
 static gboolean get_data_bearer_technology_flag;
 static gboolean get_current_data_bearer_technology_flag;
@@ -55,6 +57,14 @@ static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_NONE, &start_network_flag,
       "Start network",
       NULL
+    },
+    { "wds-follow-network", 0, 0, G_OPTION_ARG_NONE, &follow_network_flag,
+      "Follow the network status until disconnected. Use with `--wds-start-network'",
+      NULL
+    },
+    { "wds-stop-network", 0, 0, G_OPTION_ARG_STRING, &stop_network_str,
+      "Stop network",
+      "[Packet data handle]"
     },
     { "wds-get-packet-service-status", 0, 0, G_OPTION_ARG_NONE, &get_packet_service_status_flag,
       "Get packet service status",
@@ -96,12 +106,17 @@ qmicli_wds_options_enabled (void)
         return !!n_actions;
 
     n_actions = (start_network_flag +
+                 !!stop_network_str +
                  get_packet_service_status_flag +
                  get_data_bearer_technology_flag +
                  get_current_data_bearer_technology_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many WDS actions requested\n");
+        exit (EXIT_FAILURE);
+    } else if (n_actions == 0 &&
+               follow_network_flag) {
+        g_printerr ("error: `--wds-follow-network' must be used with `--wds-start-network'\n");
         exit (EXIT_FAILURE);
     }
 
@@ -164,17 +179,10 @@ stop_network_ready (QmiClientWds *client,
 }
 
 static void
-network_cancelled (GCancellable *cancellable)
+internal_stop_network (GCancellable *cancellable,
+                       guint32 packet_data_handle)
 {
     QmiWdsStopNetworkInput *input;
-
-    ctx->network_started_id = 0;
-
-    /* Remove the timeout right away */
-    if (ctx->packet_status_timeout_id) {
-        g_source_remove (ctx->packet_status_timeout_id);
-        ctx->packet_status_timeout_id = 0;
-    }
 
     input = qmi_wds_stop_network_input_new ();
     qmi_wds_stop_network_input_set_packet_data_handle (input, ctx->packet_data_handle);
@@ -187,6 +195,23 @@ network_cancelled (GCancellable *cancellable)
                                  (GAsyncReadyCallback)stop_network_ready,
                                  NULL);
     qmi_wds_stop_network_input_unref (input);
+}
+
+static void
+network_cancelled (GCancellable *cancellable)
+{
+    QmiWdsStopNetworkInput *input;
+
+    ctx->network_started_id = 0;
+
+    /* Remove the timeout right away */
+    if (ctx->packet_status_timeout_id) {
+        g_source_remove (ctx->packet_status_timeout_id);
+        ctx->packet_status_timeout_id = 0;
+    }
+
+    g_print ("Network cancelled... releasing resources\n");
+    internal_stop_network (cancellable, ctx->packet_data_handle);
 }
 
 static void
@@ -270,15 +295,20 @@ start_network_ready (QmiClientWds *client,
              qmi_device_get_path_display (ctx->device),
              (guint)ctx->packet_data_handle);
 
-    g_print ("\nCtrl+C will stop the network\n");
-    ctx->network_started_id = g_cancellable_connect (ctx->cancellable,
-                                                     G_CALLBACK (network_cancelled),
-                                                     NULL,
-                                                     NULL);
+    if (follow_network_flag) {
+        g_print ("\nCtrl+C will stop the network\n");
+        ctx->network_started_id = g_cancellable_connect (ctx->cancellable,
+                                                         G_CALLBACK (network_cancelled),
+                                                         NULL,
+                                                         NULL);
 
-    ctx->packet_status_timeout_id = g_timeout_add_seconds (20,
-                                                           (GSourceFunc)packet_status_timeout,
-                                                           NULL);
+        ctx->packet_status_timeout_id = g_timeout_add_seconds (20,
+                                                               (GSourceFunc)packet_status_timeout,
+                                                               NULL);
+    } else {
+        /* Nothing else to do */
+        shutdown ();
+    }
 
     qmi_wds_start_network_output_unref (output);
 }
@@ -499,6 +529,22 @@ qmicli_wds_run (QmiDevice *device,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback)start_network_ready,
                                       NULL);
+        return;
+    }
+
+    /* Request to stop network? */
+    if (stop_network_str) {
+        guint32 packet_data_handle;
+
+        packet_data_handle = atoi (stop_network_str);
+        if (!packet_data_handle) {
+            g_printerr ("error: invalid packet data handle given '%s'\n",
+                        stop_network_str);
+            exit (EXIT_FAILURE);
+        }
+
+        g_debug ("Asynchronously stopping network...");
+        internal_stop_network (ctx->cancellable, packet_data_handle);
         return;
     }
 
