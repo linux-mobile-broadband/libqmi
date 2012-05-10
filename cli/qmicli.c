@@ -111,35 +111,45 @@ log_handler (const gchar *log_domain,
              gpointer user_data)
 {
     const gchar *log_level_str;
-	time_t now;
-	gchar time_str[64];
-	struct tm    *local_time;
+    time_t now;
+    gchar time_str[64];
+    struct tm *local_time;
+    gboolean err = FALSE;
 
-	now = time ((time_t *) NULL);
-	local_time = localtime (&now);
-	strftime (time_str, 64, "%d %b %Y, %H:%M:%S", local_time);
+    now = time ((time_t *) NULL);
+    local_time = localtime (&now);
+    strftime (time_str, 64, "%d %b %Y, %H:%M:%S", local_time);
 
-	switch (log_level) {
-	case G_LOG_LEVEL_WARNING:
-		log_level_str = "-Warning **";
-		break;
+    switch (log_level) {
+    case G_LOG_LEVEL_WARNING:
+        log_level_str = "-Warning **";
+        err = TRUE;
+        break;
 
-	case G_LOG_LEVEL_CRITICAL:
+    case G_LOG_LEVEL_CRITICAL:
     case G_LOG_FLAG_FATAL:
-	case G_LOG_LEVEL_ERROR:
-		log_level_str = "-Error **";
-		break;
+    case G_LOG_LEVEL_ERROR:
+        log_level_str = "-Error **";
+        err = TRUE;
+        break;
 
-	case G_LOG_LEVEL_DEBUG:
-		log_level_str = "[Debug]";
-		break;
+    case G_LOG_LEVEL_DEBUG:
+        log_level_str = "[Debug]";
+        break;
 
     default:
-		log_level_str = "";
-		break;
+        log_level_str = "";
+        break;
     }
 
-    g_print ("[%s] %s %s\n", time_str, log_level_str, message);
+    if (!verbose_flag && !err)
+        return;
+
+    g_fprintf (err ? stderr : stdout,
+               "[%s] %s %s\n",
+               time_str,
+               log_level_str,
+               message);
 }
 
 static void
@@ -326,8 +336,7 @@ int main (int argc, char **argv)
     if (version_flag)
         print_version_and_exit ();
 
-    if (verbose_flag)
-        g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, log_handler, NULL);
+    g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, log_handler, NULL);
 
     /* No device path given? */
     if (!device_str) {
