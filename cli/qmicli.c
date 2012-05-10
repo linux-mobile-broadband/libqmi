@@ -46,6 +46,8 @@ static QmiService service;
 static gchar *device_str;
 static gboolean device_open_version_info_flag;
 static gboolean device_open_sync_flag;
+static gchar *client_cid_str;
+static gboolean client_no_release_cid_flag;
 static gboolean verbose_flag;
 static gboolean version_flag;
 
@@ -60,6 +62,14 @@ static GOptionEntry main_entries[] = {
     },
     { "device-open-sync", 0, 0, G_OPTION_ARG_NONE, &device_open_sync_flag,
       "Run sync operation when opening device",
+      NULL
+    },
+    { "client-cid", 0, 0, G_OPTION_ARG_STRING, &client_cid_str,
+      "Use the given CID, don't allocate a new one",
+      "[CID]"
+    },
+    { "client-no-release-cid", 0, 0, G_OPTION_ARG_NONE, &client_no_release_cid_flag,
+      "Do not release the CID when exiting",
       NULL
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
@@ -166,6 +176,8 @@ release_client_ready (QmiDevice *device,
 void
 qmicli_async_operation_done (void)
 {
+    QmiDeviceReleaseClientFlags flags = QMI_DEVICE_RELEASE_CLIENT_FLAGS_NONE;
+
     g_debug ("Asynchronous operation done...");
 
     if (cancellable) {
@@ -173,9 +185,19 @@ qmicli_async_operation_done (void)
         cancellable = NULL;
     }
 
+    if (!client_no_release_cid_flag)
+        flags |= QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID;
+    else
+        g_print ("[%s] Client ID not released:\n"
+                 "\tService: '%s'\n"
+                 "\t    CID: '%u'\n",
+                 qmi_device_get_path_display (device),
+                 qmi_service_get_string (service),
+                 qmi_client_get_cid (client));
+
     qmi_device_release_client (device,
                                client,
-                               QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
+                               flags,
                                10,
                                NULL,
                                (GAsyncReadyCallback)release_client_ready,
@@ -186,7 +208,6 @@ static void
 allocate_client_ready (QmiDevice *device,
                        GAsyncResult *res)
 {
-
     GError *error = NULL;
 
     client = qmi_device_allocate_client_finish (device, res, &error);
@@ -215,6 +236,7 @@ device_open_ready (QmiDevice *device,
                    GAsyncResult *res)
 {
     GError *error = NULL;
+    guint8 cid = QMI_CID_NONE;
 
     if (!qmi_device_open_finish (device, res, &error)) {
         g_printerr ("error: couldn't open the QmiDevice: %s\n",
@@ -225,11 +247,25 @@ device_open_ready (QmiDevice *device,
     g_debug ("QMI Device at '%s' ready",
              qmi_device_get_path_display (device));
 
+    if (client_cid_str) {
+        guint32 cid32;
+
+        cid32 = atoi (client_cid_str);
+        if (!cid32 || cid32 > G_MAXUINT8) {
+            g_printerr ("error: invalid CID given '%s'\n",
+                        client_cid_str);
+            exit (EXIT_FAILURE);
+        }
+
+        cid = (guint8)cid32;
+        g_debug ("Reusing CID '%u'", cid);
+    }
+
     /* As soon as we get the QmiDevice, create a client for the requested
      * service */
     qmi_device_allocate_client (device,
                                 service,
-                                QMI_CID_NONE,
+                                cid,
                                 10,
                                 cancellable,
                                 (GAsyncReadyCallback)allocate_client_ready,
