@@ -1,0 +1,196 @@
+#!/bin/bash
+
+print_usage ()
+{
+    echo "usage: $0 [DEVICE] [COMMAND]"
+}
+
+if [ $# -ne 2 ]; then
+    echo "error: missing arguments" 1>&2
+    print_usage
+    exit 255
+fi
+
+DEVICE=$1
+COMMAND=$2
+STATE_FILE=/tmp/qmi-network-state
+
+save_state ()
+{
+    KEY=$1
+    VAL=$2
+
+    echo "Saving state... ($KEY: $VAL)"
+
+    if [ -f $STATE_FILE ]; then
+        PREVIOUS=`cat $STATE_FILE`
+        PREVIOUS=`echo "$PREVIOUS" | grep -v $KEY`
+        if [ "x$PREVIOUS" != "x" ]; then
+            echo $PREVIOUS > $STATE_FILE
+        else
+            rm $STATE_FILE
+        fi
+    fi
+
+    if [ "x$VAL" != "x" ]; then
+        echo "$KEY=\"$VAL\"" >> $STATE_FILE
+    fi
+}
+
+load_state ()
+{
+    if [ -f $STATE_FILE ]; then
+        echo "Loading previous state..."
+        source $STATE_FILE
+
+        if [ "x$CID" != "x" ]; then
+            echo "    Previous CID: $CID"
+        fi
+        if [ "x$PDH" != "x" ]; then
+            echo "    Previous PDH: $PDH"
+        fi
+    fi
+}
+
+clear_state ()
+{
+    echo "Clearing state..."
+    rm $STATE_FILE
+}
+
+# qmicli -d /dev/cdc-wdm0 --wds-start-network --client-no-release-cid
+# [/dev/cdc-wdm0] Network started
+# 	Packet data handle: 3634026241
+# [/dev/cdc-wdm0] Client ID not released:
+# 	Service: 'wds'
+# 	    CID: '80'
+start_network ()
+{
+    if [ "x$CID" != "x" ]; then
+        USE_PREVIOUS_CID="--client-cid=$CID"
+    fi
+
+    if [ "x$PDH" != "x" ]; then
+        echo "error: cannot re-start network, PDH already exists" 1>&2
+        exit 3
+    fi
+
+    START_NETWORK_CMD="qmicli -d $DEVICE --wds-start-network $USE_PREVIOUS_CID --client-no-release-cid"
+    echo "Starting network with '$START_NETWORK_CMD'..."
+
+    if [[ $QMIDEBUG -eq 1 ]]; then
+        START_NETWORK_OUT="\
+[/dev/cdc-wdm0] Network started
+	Packet data handle: '3634026241'
+[/dev/cdc-wdm0] Client ID not released:
+	Service: 'wds'
+	CID: '80'"
+    else
+        START_NETWORK_OUT=`$START_NETWORK_CMD`
+    fi
+
+    # Save the new CID if we didn't use any before
+    if [ "x$CID" = "x" ]; then
+        CID=`echo "$START_NETWORK_OUT" | grep CID | sed "s/'//g" | awk 'BEGIN { FS = ":" } ; { print $2 }'`
+        if [[ "x$CID" = "x" ]]; then
+            echo "error: network start failed, client not allocated" 1>&2
+            exit 1
+        else
+            save_state "CID" $CID
+        fi
+    fi
+
+    PDH=`echo "$START_NETWORK_OUT" | grep handle | sed "s/'//g" | awk 'BEGIN { FS = ":" } ; { print $2 }'`
+    if [[ "x$PDH" = "x" ]]; then
+        echo "error: network start failed, no packet data handle" 1>&2
+        exit 2
+    else
+        save_state "PDH" $PDH
+    fi
+
+    echo "Network started successfully"
+}
+
+# qmicli -d /dev/cdc-wdm0 --wds-stop-network
+stop_network ()
+{
+    if [ "x$CID" = "x" ]; then
+        echo "error: cannot stop network, no CID" 1>&2
+        exit 3
+    fi
+
+    if [ "x$PDH" = "x" ]; then
+        echo "error: cannot stop network, no PDH" 1>&2
+        exit 3
+    fi
+
+    STOP_NETWORK_CMD="qmicli -d $DEVICE --wds-stop-network=$PDH --client-cid=$CID"
+    echo "Stopping network with '$STOP_NETWORK_CMD'..."
+
+    if [[ $QMIDEBUG -eq 1 ]]; then
+        STOP_NETWORK_OUT="\
+[/dev/cdc-wdm0] Network stopped
+"
+    else
+        STOP_NETWORK_OUT=`$STOP_NETWORK_CMD`
+    fi
+
+    echo "Network stopped successfully"
+
+    clear_state
+}
+
+# qmicli -d /dev/cdc-wdm0 --wds-get-packet-service-status
+packet_service_status ()
+{
+    if [ "x$CID" != "x" ]; then
+        USE_PREVIOUS_CID="--client-cid=$CID --client-no-release-cid"
+    fi
+
+    STATUS_CMD="qmicli -d $DEVICE --wds-get-packet-service-status $USE_PREVIOUS_CID"
+    echo "Getting status with '$STATUS_CMD'..."
+
+    if [[ $QMIDEBUG -eq 1 ]]; then
+        STATUS_OUT="\
+[/dev/cdc-wdm0] Connection status: 'disconnected'
+"
+    else
+        STATUS_OUT=`$STATUS_CMD`
+    fi
+
+    CONN=`echo "$STATUS_OUT" | grep "Connection status" | sed "s/'//g" | awk 'BEGIN { FS = ":" } ; { print $2 }'`
+    if [[ "x$CONN" = "x" ]]; then
+        echo "error: couldn't get packet service status" 1>&2
+        exit 2
+    else
+        echo "Status: $CONN"
+        if [[ "x$CONN" != "xconnected" ]]; then
+            exit 64
+        fi
+    fi
+}
+
+# Main
+
+# Load previous state, if any
+load_state
+
+# Process commands
+case $COMMAND in
+    "start")
+        start_network
+        ;;
+    "stop")
+        stop_network
+        ;;
+    "status")
+        packet_service_status
+        ;;
+    *)
+        echo "error: unexpected command '$COMMAND'" 1>&2
+        print_usage
+        exit 255
+        ;;
+esac
+
+exit 0

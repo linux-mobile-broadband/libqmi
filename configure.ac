@@ -45,7 +45,8 @@ AC_SUBST(GLIB_MKENUMS)
 AC_CONFIG_FILES([Makefile
                  build-aux/Makefile
                  src/Makefile
-                 cli/Makefile])
+                 cli/Makefile
+                 utils/Makefile])
 AC_OUTPUT
 
 echo "
