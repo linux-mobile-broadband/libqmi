@@ -618,6 +618,15 @@ qmi_message_wds_stop_network_new (guint8 transaction_id,
         return NULL;
     }
 
+    if (!input->packet_data_handle) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_INVALID_ARGS,
+                     "Invalid 'packet data handle': %u",
+                     (guint)input->packet_data_handle);
+        return NULL;
+    }
+
     /* We want `handle' in LE; FROM_LE() can also be used as TO_LE() */
     handle = GUINT32_FROM_LE (input->packet_data_handle);
 
