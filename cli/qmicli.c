@@ -49,6 +49,7 @@ static gboolean device_open_sync_flag;
 static gchar *client_cid_str;
 static gboolean client_no_release_cid_flag;
 static gboolean verbose_flag;
+static gboolean silent_flag;
 static gboolean version_flag;
 
 static GOptionEntry main_entries[] = {
@@ -73,7 +74,11 @@ static GOptionEntry main_entries[] = {
       NULL
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
-      "Run action with verbose logs",
+      "Run action with verbose logs, including the debug ones",
+      NULL
+    },
+    { "silent", 0, 0, G_OPTION_ARG_NONE, &silent_flag,
+      "Run action with no logs; not even the error/warning ones",
       NULL
     },
     { "version", 'V', 0, G_OPTION_ARG_NONE, &version_flag,
@@ -114,11 +119,16 @@ log_handler (const gchar *log_domain,
     time_t now;
     gchar time_str[64];
     struct tm *local_time;
-    gboolean err = FALSE;
+    gboolean err;
+
+    /* Nothing to do if we're silent */
+    if (silent_flag)
+        return;
 
     now = time ((time_t *) NULL);
     local_time = localtime (&now);
     strftime (time_str, 64, "%d %b %Y, %H:%M:%S", local_time);
+    err = FALSE;
 
     switch (log_level) {
     case G_LOG_LEVEL_WARNING:
