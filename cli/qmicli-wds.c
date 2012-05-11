@@ -189,7 +189,7 @@ internal_stop_network (GCancellable *cancellable,
     QmiWdsStopNetworkInput *input;
 
     input = qmi_wds_stop_network_input_new ();
-    qmi_wds_stop_network_input_set_packet_data_handle (input, ctx->packet_data_handle);
+    qmi_wds_stop_network_input_set_packet_data_handle (input, packet_data_handle);
 
     g_print ("Network cancelled... releasing resources\n");
     qmi_client_wds_stop_network (ctx->client,
