@@ -416,6 +416,7 @@ qmi_message_wds_start_network_reply_parse (QmiMessage *self,
 {
     QmiWdsStartNetworkOutput *output;
     GError *inner_error = NULL;
+    guint32 packet_data_handle_le;
 
     g_assert (qmi_message_get_message_id (self) == QMI_WDS_MESSAGE_START_NETWORK);
 
@@ -473,16 +474,19 @@ qmi_message_wds_start_network_reply_parse (QmiMessage *self,
 
     /* success */
 
+    packet_data_handle_le = 0;
     if (!qmi_message_tlv_get (self,
                               START_NETWORK_OUTPUT_TLV_PACKET_DATA_HANDLE,
-                              sizeof (output->packet_data_handle),
-                              &output->packet_data_handle,
+                              sizeof (packet_data_handle_le),
+                              &packet_data_handle_le,
                               error)) {
         g_prefix_error (error, "Couldn't get the packet data handle TLV: ");
         qmi_wds_start_network_output_unref (output);
         return NULL;
-    } else
+    } else {
+        output->packet_data_handle = GUINT32_FROM_LE (packet_data_handle_le);
         output->packet_data_handle_set = TRUE;
+    }
 
     return output;
 }
@@ -602,6 +606,7 @@ qmi_message_wds_stop_network_new (guint8 transaction_id,
                                   GError **error)
 {
     QmiMessage *message;
+    guint32 handle;
 
     /* Check mandatory input arguments */
     if (!input ||
@@ -613,6 +618,9 @@ qmi_message_wds_stop_network_new (guint8 transaction_id,
         return NULL;
     }
 
+    /* We want `handle' in LE; FROM_LE() can also be used as TO_LE() */
+    handle = GUINT32_FROM_LE (input->packet_data_handle);
+
     message = qmi_message_new (QMI_SERVICE_WDS,
                                client_id,
                                transaction_id,
@@ -620,8 +628,8 @@ qmi_message_wds_stop_network_new (guint8 transaction_id,
 
     if (!qmi_message_tlv_add (message,
                               STOP_NETWORK_INPUT_TLV_PACKET_DATA_HANDLE,
-                              sizeof (input->packet_data_handle),
-                              &input->packet_data_handle,
+                              sizeof (handle),
+                              &handle,
                               error)) {
         g_prefix_error (error, "Failed to add packet data handle to message: ");
         qmi_message_unref (message);
