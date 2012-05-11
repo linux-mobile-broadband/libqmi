@@ -41,6 +41,7 @@ static GCancellable *cancellable;
 static QmiDevice *device;
 static QmiClient *client;
 static QmiService service;
+static gboolean operation_status;
 
 /* Main options */
 static gchar *device_str;
@@ -186,19 +187,20 @@ release_client_ready (QmiDevice *device,
 
     if (!qmi_device_release_client_finish (device, res, &error)) {
         g_printerr ("error: couldn't release client: %s", error->message);
-        exit (EXIT_FAILURE);
-    }
+        g_error_free (error);
+    } else
+        g_debug ("Client released");
 
-    g_debug ("Client released");
     g_main_loop_quit (loop);
 }
 
 void
-qmicli_async_operation_done (void)
+qmicli_async_operation_done (gboolean reported_operation_status)
 {
     QmiDeviceReleaseClientFlags flags = QMI_DEVICE_RELEASE_CLIENT_FLAGS_NONE;
 
-    g_debug ("Asynchronous operation done...");
+    /* Keep the result of the operation */
+    operation_status = reported_operation_status;
 
     if (cancellable) {
         g_object_unref (cancellable);
@@ -396,5 +398,5 @@ int main (int argc, char **argv)
     g_main_loop_unref (loop);
     g_object_unref (file);
 
-    return EXIT_SUCCESS;
+    return (operation_status ? EXIT_SUCCESS : EXIT_FAILURE);
 }

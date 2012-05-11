@@ -142,11 +142,11 @@ context_free (Context *ctx)
 }
 
 static void
-shutdown (void)
+shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
     context_free (ctx);
-    qmicli_async_operation_done ();
+    qmicli_async_operation_done (operation_status);
 }
 
 static void
@@ -160,12 +160,17 @@ stop_network_ready (QmiClientWds *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n",
                     error->message);
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
     }
 
     if (!qmi_wds_stop_network_output_get_result (output, &error)) {
         g_printerr ("error: couldn't stop network: %s\n", error->message);
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        qmi_wds_stop_network_output_unref (output);
+        shutdown (FALSE);
+        return;
     }
 
 #undef VALIDATE_UNKNOWN
@@ -173,9 +178,8 @@ stop_network_ready (QmiClientWds *client,
 
     g_print ("[%s] Network stopped\n",
              qmi_device_get_path_display (ctx->device));
-
     qmi_wds_stop_network_output_unref (output);
-    shutdown ();
+    shutdown (TRUE);
 }
 
 static void
@@ -225,21 +229,26 @@ timeout_get_packet_service_status_ready (QmiClientWds *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n",
                     error->message);
+        g_error_free (error);
+        shutdown (FALSE);
         return;
     }
 
     if (!qmi_wds_get_packet_service_status_output_get_result (output, &error)) {
         g_printerr ("error: couldn't get packet service status: %s\n", error->message);
         g_error_free (error);
-    } else {
-        g_print ("[%s] Connection status: '%s'\n",
-                 qmi_device_get_path_display (ctx->device),
-                 qmi_wds_connection_status_get_string (
-                     qmi_wds_get_packet_service_status_output_get_connection_status (
-                         output)));
+        qmi_wds_get_packet_service_status_output_unref (output);
+        shutdown (FALSE);
+        return;
     }
 
+    g_print ("[%s] Connection status: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             qmi_wds_connection_status_get_string (
+                 qmi_wds_get_packet_service_status_output_get_connection_status (
+                     output)));
     qmi_wds_get_packet_service_status_output_unref (output);
+    shutdown (TRUE);
 }
 
 static gboolean
@@ -265,7 +274,9 @@ start_network_ready (QmiClientWds *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n",
                     error->message);
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
     }
 
     if (!qmi_wds_start_network_output_get_result (output, &error)) {
@@ -282,10 +293,14 @@ start_network_ready (QmiClientWds *client,
                 g_printerr ("verbose call end reason: %u, %u\n", domain, cer);
         }
 
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        qmi_wds_start_network_output_unref (output);
+        shutdown (FALSE);
+        return;
     }
 
     qmi_wds_start_network_output_get_packet_data_handle (output, &ctx->packet_data_handle);
+    qmi_wds_start_network_output_unref (output);
 
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
@@ -305,12 +320,11 @@ start_network_ready (QmiClientWds *client,
         ctx->packet_status_timeout_id = g_timeout_add_seconds (20,
                                                                (GSourceFunc)packet_status_timeout,
                                                                NULL);
-    } else {
-        /* Nothing else to do */
-        shutdown ();
+        return;
     }
 
-    qmi_wds_start_network_output_unref (output);
+    /* Nothing else to do */
+    shutdown (TRUE);
 }
 
 static void
@@ -324,12 +338,17 @@ get_packet_service_status_ready (QmiClientWds *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n",
                     error->message);
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
     }
 
     if (!qmi_wds_get_packet_service_status_output_get_result (output, &error)) {
         g_printerr ("error: couldn't get packet service status: %s\n", error->message);
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        qmi_wds_get_packet_service_status_output_unref (output);
+        shutdown (FALSE);
+        return;
     }
 
     g_print ("[%s] Connection status: '%s'\n",
@@ -339,7 +358,7 @@ get_packet_service_status_ready (QmiClientWds *client,
                      output)));
 
     qmi_wds_get_packet_service_status_output_unref (output);
-    shutdown ();
+    shutdown (TRUE);
 }
 
 static void
@@ -353,7 +372,9 @@ get_data_bearer_technology_ready (QmiClientWds *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n",
                     error->message);
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
     }
 
     if (!qmi_wds_get_data_bearer_technology_output_get_result (output, &error)) {
@@ -369,7 +390,10 @@ get_data_bearer_technology_ready (QmiClientWds *client,
                              output)));
         }
 
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        qmi_wds_get_data_bearer_technology_output_unref (output);
+        shutdown (FALSE);
+        return;
     }
 
     g_print ("[%s] Data bearer technology (current): '%s'\n",
@@ -377,9 +401,8 @@ get_data_bearer_technology_ready (QmiClientWds *client,
              qmi_wds_data_bearer_technology_get_string (
                  qmi_wds_get_data_bearer_technology_output_get_current (
                      output)));
-
     qmi_wds_get_data_bearer_technology_output_unref (output);
-    shutdown ();
+    shutdown (TRUE);
 }
 
 static void
@@ -395,7 +418,9 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n",
                     error->message);
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
     }
 
     if (!qmi_wds_get_current_data_bearer_technology_output_get_result (output, &error)) {
@@ -452,7 +477,10 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
             }
         }
 
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        qmi_wds_get_current_data_bearer_technology_output_unref (output);
+        shutdown (FALSE);
+        return;
     }
 
     /* Retrieve CURRENT */
@@ -503,7 +531,7 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
     }
 
     qmi_wds_get_current_data_bearer_technology_output_unref (output);
-    shutdown ();
+    shutdown (TRUE);
 }
 
 void
@@ -518,7 +546,6 @@ qmicli_wds_run (QmiDevice *device,
     ctx->cancellable = g_object_ref (cancellable);
     ctx->network_started_id = 0;
     ctx->packet_status_timeout_id = 0;
-
 
     /* Request to start network? */
     if (start_network_flag) {
@@ -541,7 +568,8 @@ qmicli_wds_run (QmiDevice *device,
             packet_data_handle > G_MAXUINT32) {
             g_printerr ("error: invalid packet data handle given '%s'\n",
                         stop_network_str);
-            exit (EXIT_FAILURE);
+            shutdown (FALSE);
+            return;
         }
 
         g_debug ("Asynchronously stopping network...");

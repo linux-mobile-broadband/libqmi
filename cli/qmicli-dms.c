@@ -102,11 +102,11 @@ context_free (Context *ctx)
 }
 
 static void
-shutdown (void)
+shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
     context_free (ctx);
-    qmicli_async_operation_done ();
+    qmicli_async_operation_done (operation_status);
 }
 
 static void
@@ -119,12 +119,17 @@ get_ids_ready (QmiClientDms *client,
     output = qmi_client_dms_get_ids_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
     }
 
     if (!qmi_dms_get_ids_output_get_result (output, &error)) {
         g_printerr ("error: couldn't get IDs: %s\n", error->message);
-        exit (EXIT_FAILURE);
+        g_error_free (error);
+        qmi_dms_get_ids_output_unref (output);
+        shutdown (FALSE);
+        return;
     }
 
 #undef VALIDATE_UNKNOWN
@@ -140,8 +145,7 @@ get_ids_ready (QmiClientDms *client,
              VALIDATE_UNKNOWN (qmi_dms_get_ids_output_get_meid (output)));
 
     qmi_dms_get_ids_output_unref (output);
-
-    shutdown ();
+    shutdown (TRUE);
 }
 
 void
