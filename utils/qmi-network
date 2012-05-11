@@ -78,7 +78,7 @@ start_network ()
     START_NETWORK_CMD="qmicli -d $DEVICE --wds-start-network $USE_PREVIOUS_CID --client-no-release-cid"
     echo "Starting network with '$START_NETWORK_CMD'..."
 
-    if [[ $QMIDEBUG -eq 1 ]]; then
+    if [[ "x$QMIDEBUG" != "x" ]]; then
         START_NETWORK_OUT="\
 [/dev/cdc-wdm0] Network started
 	Packet data handle: '3634026241'
@@ -127,7 +127,7 @@ stop_network ()
     STOP_NETWORK_CMD="qmicli -d $DEVICE --wds-stop-network=$PDH --client-cid=$CID"
     echo "Stopping network with '$STOP_NETWORK_CMD'..."
 
-    if [[ $QMIDEBUG -eq 1 ]]; then
+    if [[ "x$QMIDEBUG" != "x" ]]; then
         STOP_NETWORK_OUT="\
 [/dev/cdc-wdm0] Network stopped
 "
@@ -150,7 +150,7 @@ packet_service_status ()
     STATUS_CMD="qmicli -d $DEVICE --wds-get-packet-service-status $USE_PREVIOUS_CID"
     echo "Getting status with '$STATUS_CMD'..."
 
-    if [[ $QMIDEBUG -eq 1 ]]; then
+    if [[ "x$QMIDEBUG" != "x" ]]; then
         STATUS_OUT="\
 [/dev/cdc-wdm0] Connection status: 'disconnected'
 "
