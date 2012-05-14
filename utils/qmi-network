@@ -55,7 +55,7 @@ load_state ()
 clear_state ()
 {
     echo "Clearing state..."
-    rm $STATE_FILE
+    rm -f $STATE_FILE
 }
 
 # qmicli -d /dev/cdc-wdm0 --wds-start-network --client-no-release-cid
