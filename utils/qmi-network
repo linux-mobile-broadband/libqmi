@@ -115,27 +115,25 @@ start_network ()
 stop_network ()
 {
     if [ "x$CID" = "x" ]; then
-        echo "error: cannot stop network, no CID" 1>&2
-        exit 3
-    fi
+        echo "Network already stopped"
+    elif [ "x$PDH" = "x" ]; then
+        echo "Network already stopped; need to cleanup CID $CID"
+        # Cleanup the client
+        qmicli -d "$DEVICE" --wds-noop --client-cid="$CID"
+    else
+        STOP_NETWORK_CMD="qmicli -d $DEVICE --wds-stop-network=$PDH --client-cid=$CID"
+        echo "Stopping network with '$STOP_NETWORK_CMD'..."
 
-    if [ "x$PDH" = "x" ]; then
-        echo "error: cannot stop network, no PDH" 1>&2
-        exit 3
-    fi
-
-    STOP_NETWORK_CMD="qmicli -d $DEVICE --wds-stop-network=$PDH --client-cid=$CID"
-    echo "Stopping network with '$STOP_NETWORK_CMD'..."
-
-    if [[ "x$QMIDEBUG" != "x" ]]; then
-        STOP_NETWORK_OUT="\
+        if [[ "x$QMIDEBUG" != "x" ]]; then
+            STOP_NETWORK_OUT="\
 [/dev/cdc-wdm0] Network stopped
 "
-    else
-        STOP_NETWORK_OUT=`$STOP_NETWORK_CMD`
-    fi
+        else
+            STOP_NETWORK_OUT=`$STOP_NETWORK_CMD`
+        fi
 
-    echo "Network stopped successfully"
+        echo "Network stopped successfully"
+    fi
 
     clear_state
 }
