@@ -103,6 +103,9 @@ start_network ()
     PDH=`echo "$START_NETWORK_OUT" | grep handle | sed "s/'//g" | awk 'BEGIN { FS = ":" } ; { print $2 }'`
     if [[ "x$PDH" = "x" ]]; then
         echo "error: network start failed, no packet data handle" 1>&2
+        # Cleanup the client
+        qmicli -d "$DEVICE" --wds-noop --client-cid="$CID"
+        clear_state
         exit 2
     else
         save_state "PDH" $PDH
