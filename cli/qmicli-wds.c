@@ -52,6 +52,7 @@ static gchar *stop_network_str;
 static gboolean get_packet_service_status_flag;
 static gboolean get_data_bearer_technology_flag;
 static gboolean get_current_data_bearer_technology_flag;
+static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_NONE, &start_network_flag,
@@ -76,6 +77,10 @@ static GOptionEntry entries[] = {
     },
     { "wds-get-current-data-bearer-technology", 0, 0, G_OPTION_ARG_NONE, &get_current_data_bearer_technology_flag,
       "Get current data bearer technology",
+      NULL
+    },
+    { "wds-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
+      "Just allocate or release a WDS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
     },
     { NULL }
@@ -109,7 +114,8 @@ qmicli_wds_options_enabled (void)
                  !!stop_network_str +
                  get_packet_service_status_flag +
                  get_data_bearer_technology_flag +
-                 get_current_data_bearer_technology_flag);
+                 get_current_data_bearer_technology_flag +
+                 noop_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many WDS actions requested\n");
@@ -534,6 +540,12 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
     shutdown (TRUE);
 }
 
+static gboolean
+noop_cb (gpointer unused)
+{
+    shutdown (TRUE);
+}
+
 void
 qmicli_wds_run (QmiDevice *device,
                 QmiClientWds *client,
@@ -610,6 +622,12 @@ qmicli_wds_run (QmiDevice *device,
                                                            ctx->cancellable,
                                                            (GAsyncReadyCallback)get_current_data_bearer_technology_ready,
                                                            NULL);
+        return;
+    }
+
+    /* Just client allocate/release? */
+    if (noop_flag) {
+        g_idle_add (noop_cb, NULL);
         return;
     }
 

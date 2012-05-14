@@ -42,10 +42,15 @@ static Context *ctx;
 
 /* Options */
 static gboolean get_ids_flag;
+static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "dms-get-ids", 0, 0, G_OPTION_ARG_NONE, &get_ids_flag,
       "Get IDs",
+      NULL
+    },
+    { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
+      "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
     },
     { NULL }
@@ -75,7 +80,8 @@ qmicli_dms_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (get_ids_flag);
+    n_actions = (get_ids_flag +
+                 noop_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many DMS actions requested\n");
@@ -148,6 +154,12 @@ get_ids_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static gboolean
+noop_cb (gpointer unused)
+{
+    shutdown (TRUE);
+}
+
 void
 qmicli_dms_run (QmiDevice *device,
                 QmiClientDms *client,
@@ -168,6 +180,12 @@ qmicli_dms_run (QmiDevice *device,
                                 ctx->cancellable,
                                 (GAsyncReadyCallback)get_ids_ready,
                                 NULL);
+        return;
+    }
+
+    /* Just client allocate/release? */
+    if (noop_flag) {
+        g_idle_add (noop_cb, NULL);
         return;
     }
 
