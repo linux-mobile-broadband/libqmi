@@ -84,7 +84,7 @@ gboolean      qmi_device_is_open          (QmiDevice *self);
 typedef enum {
     QMI_DEVICE_OPEN_FLAGS_NONE         = 0,
     QMI_DEVICE_OPEN_FLAGS_VERSION_INFO = 1 << 0,
-    QMI_DEVICE_OPEN_FLAGS_SYNC         = 1 << 1,
+    QMI_DEVICE_OPEN_FLAGS_SYNC         = 1 << 1
 } QmiDeviceOpenFlags;
 
 void         qmi_device_open        (QmiDevice *self,
@@ -120,7 +120,7 @@ QmiClient    *qmi_device_allocate_client_finish (QmiDevice *self,
  */
 typedef enum {
     QMI_DEVICE_RELEASE_CLIENT_FLAGS_NONE        = 0,
-    QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID = 1 << 0,
+    QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID = 1 << 0
 } QmiDeviceReleaseClientFlags;
 
 void          qmi_device_release_client        (QmiDevice *self,

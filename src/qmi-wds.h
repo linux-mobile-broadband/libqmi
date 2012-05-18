@@ -36,7 +36,7 @@ typedef enum {
   QMI_WDS_MESSAGE_STOP_NETWORK  = 0x0021,
   QMI_WDS_MESSAGE_GET_PACKET_SERVICE_STATUS  = 0x0022,
   QMI_WDS_MESSAGE_GET_DATA_BEARER_TECHNOLOGY = 0x0037,
-  QMI_WDS_MESSAGE_GET_CURRENT_DATA_BEARER_TECHNOLOGY = 0x0044,
+  QMI_WDS_MESSAGE_GET_CURRENT_DATA_BEARER_TECHNOLOGY = 0x0044
 } QmiWdsMessage;
 
 /*****************************************************************************/
@@ -98,7 +98,7 @@ typedef enum {
     QMI_WDS_CONNECTION_STATUS_DISCONNECTED   = 1,
     QMI_WDS_CONNECTION_STATUS_CONNECTED      = 2,
     QMI_WDS_CONNECTION_STATUS_SUSPENDED      = 3,
-    QMI_WDS_CONNECTION_STATUS_AUTHENTICATING = 4,
+    QMI_WDS_CONNECTION_STATUS_AUTHENTICATING = 4
 } QmiWdsConnectionStatus;
 
 typedef struct _QmiWdsGetPacketServiceStatusOutput QmiWdsGetPacketServiceStatusOutput;
@@ -129,7 +129,7 @@ typedef enum {
     QMI_WDS_DATA_BEARER_TECHNOLOGY_HSDPAPLUS = 0x0C,
     QMI_WDS_DATA_BEARER_TECHNOLOGY_HSDPAPLUS_HSUPA = 0x0D,
     QMI_WDS_DATA_BEARER_TECHNOLOGY_DCHSDPAPLUS = 0x0E,
-    QMI_WDS_DATA_BEARER_TECHNOLOGY_DCHSDPAPLUS_HSUPA = 0x0F,
+    QMI_WDS_DATA_BEARER_TECHNOLOGY_DCHSDPAPLUS_HSUPA = 0x0F
 } QmiWdsDataBearerTechnology;
 
 typedef struct _QmiWdsGetDataBearerTechnologyOutput QmiWdsGetDataBearerTechnologyOutput;
@@ -148,7 +148,7 @@ QmiWdsDataBearerTechnology           qmi_wds_get_data_bearer_technology_output_g
 typedef enum {
     QMI_WDS_NETWORK_TYPE_UNKNOWN = 0,
     QMI_WDS_NETWORK_TYPE_3GPP2   = 1,
-    QMI_WDS_NETWORK_TYPE_3GPP    = 2,
+    QMI_WDS_NETWORK_TYPE_3GPP    = 2
 } QmiWdsNetworkType;
 
 typedef enum { /*< underscore_name=qmi_wds_rat_3gpp2 >*/
@@ -157,7 +157,7 @@ typedef enum { /*< underscore_name=qmi_wds_rat_3gpp2 >*/
     QMI_WDS_RAT_3GPP2_EVDO_REV0   = 1 << 1,
     QMI_WDS_RAT_3GPP2_EVDO_REVA   = 1 << 2,
     QMI_WDS_RAT_3GPP2_EVDO_REVB   = 1 << 3,
-    QMI_WDS_RAT_3GPP2_NULL_BEARER = 1 << 15,
+    QMI_WDS_RAT_3GPP2_NULL_BEARER = 1 << 15
 } QmiWdsRat3gpp2;
 
 typedef enum { /*< underscore_name=qmi_wds_rat_3gpp >*/
@@ -170,14 +170,14 @@ typedef enum { /*< underscore_name=qmi_wds_rat_3gpp >*/
     QMI_WDS_RAT_3GPP_LTE         = 1 << 5,
     QMI_WDS_RAT_3GPP_HSDPAPLUS   = 1 << 6,
     QMI_WDS_RAT_3GPP_DCHSDPAPLUS = 1 << 7,
-    QMI_WDS_RAT_3GPP_NULL_BEARER = 1 << 15,
+    QMI_WDS_RAT_3GPP_NULL_BEARER = 1 << 15
 } QmiWdsRat3gpp;
 
 typedef enum {
     QMI_WDS_SO_CDMA1X_NONE         = 0,
     QMI_WDS_SO_CDMA1X_IS95         = 1 << 0,
     QMI_WDS_SO_CDMA1X_IS2000       = 1 << 1,
-    QMI_WDS_SO_CDMA1X_IS2000_REL_A = 1 << 2,
+    QMI_WDS_SO_CDMA1X_IS2000_REL_A = 1 << 2
 } QmiWdsSoCdma1x;
 
 typedef enum { /*< underscore_name=qmi_wds_so_evdo_reva >*/
@@ -185,7 +185,7 @@ typedef enum { /*< underscore_name=qmi_wds_so_evdo_reva >*/
     QMI_WDS_SO_EVDO_REVA_DPA        = 1 << 0,
     QMI_WDS_SO_EVDO_REVA_MFPA       = 1 << 1,
     QMI_WDS_SO_EVDO_REVA_EMPA       = 1 << 2,
-    QMI_WDS_SO_EVDO_REVA_EMPA_EHRPD = 1 << 3,
+    QMI_WDS_SO_EVDO_REVA_EMPA_EHRPD = 1 << 3
 } QmiWdsSoEvdoRevA;
 
 typedef struct _QmiWdsGetCurrentDataBearerTechnologyOutput QmiWdsGetCurrentDataBearerTechnologyOutput;

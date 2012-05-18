@@ -68,7 +68,7 @@ typedef enum {
 typedef enum {
     QMI_CTL_FLAG_NONE       = 0,
     QMI_CTL_FLAG_RESPONSE   = 1 << 0,
-    QMI_CTL_FLAG_INDICATION = 1 << 1,
+    QMI_CTL_FLAG_INDICATION = 1 << 1
 } QmiCtlFlag;
 
 /*****************************************************************************/
@@ -78,7 +78,7 @@ typedef enum {
     QMI_SERVICE_FLAG_NONE       = 0,
     QMI_SERVICE_FLAG_COMPOUND   = 1 << 0,
     QMI_SERVICE_FLAG_RESPONSE   = 1 << 1,
-    QMI_SERVICE_FLAG_INDICATION = 1 << 2,
+    QMI_SERVICE_FLAG_INDICATION = 1 << 2
 } QmiServiceFlag;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_H_ */

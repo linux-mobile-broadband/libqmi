@@ -37,7 +37,7 @@ typedef enum {
     QMI_DMS_MESSAGE_GET_MANUFACTURER   = 0x0021, /* unused currently */
     QMI_DMS_MESSAGE_GET_IDS            = 0x0025,
     QMI_DMS_MESSAGE_GET_OPERATING_MODE = 0x002D, /* unused currently */
-    QMI_DMS_MESSAGE_SET_OPERATING_MODE = 0x002E, /* unused currently */
+    QMI_DMS_MESSAGE_SET_OPERATING_MODE = 0x002E  /* unused currently */
 } QmiDmsMessage;
 
 /*****************************************************************************/

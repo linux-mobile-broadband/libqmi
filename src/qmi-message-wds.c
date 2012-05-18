@@ -33,7 +33,7 @@
 enum {
   QMI_WDS_TLV_START_NETWORK_APN      = 0x14,
   QMI_WDS_TLV_START_NETWORK_USERNAME = 0x17,
-  QMI_WDS_TLV_START_NETWORK_PASSWORD = 0x18,
+  QMI_WDS_TLV_START_NETWORK_PASSWORD = 0x18
 };
 
 /**
@@ -495,7 +495,7 @@ qmi_message_wds_start_network_reply_parse (QmiMessage *self,
 /* Stop network */
 
 enum {
-    STOP_NETWORK_INPUT_TLV_PACKET_DATA_HANDLE = 0x01,
+    STOP_NETWORK_INPUT_TLV_PACKET_DATA_HANDLE = 0x01
 };
 
 /**
@@ -760,7 +760,7 @@ qmi_message_wds_get_packet_service_status_new (guint8 transaction_id,
 }
 
 enum {
-    GET_PACKET_SERVICE_STATUS_OUTPUT_TLV_CONNECTION_STATUS = 0x01,
+    GET_PACKET_SERVICE_STATUS_OUTPUT_TLV_CONNECTION_STATUS = 0x01
 };
 
 /**
@@ -909,7 +909,7 @@ qmi_message_wds_get_data_bearer_technology_new (guint8 transaction_id,
 
 enum {
     GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_CURRENT = 0x01,
-    GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_LAST    = 0x10,
+    GET_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_LAST    = 0x10
 };
 
 /**
@@ -1090,7 +1090,7 @@ qmi_message_wds_get_current_data_bearer_technology_new (guint8 transaction_id,
 
 enum {
     GET_CURRENT_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_CURRENT = 0x01,
-    GET_CURRENT_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_LAST    = 0x10,
+    GET_CURRENT_DATA_BEARER_TECHNOLOGY_OUTPUT_TLV_LAST    = 0x10
 };
 
 struct current_data_bearer_technology {

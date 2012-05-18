@@ -44,7 +44,7 @@ typedef enum {
     QMI_CTL_MESSAGE_EVENT                  = 0x0028, /* unused currently */
     QMI_CTL_MESSAGE_SET_POWER_SAVE_CONFIG  = 0x0029, /* unused currently */
     QMI_CTL_MESSAGE_SET_POWER_SAVE_MODE    = 0x002A, /* unused currently */
-    QMI_CTL_MESSAGE_GET_POWER_SAVE_MODE    = 0x002B, /* unused currently */
+    QMI_CTL_MESSAGE_GET_POWER_SAVE_MODE    = 0x002B  /* unused currently */
 } QmiCtlMessage;
 
 /*****************************************************************************/
