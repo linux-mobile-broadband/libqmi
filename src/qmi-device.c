@@ -896,7 +896,7 @@ data_available (GIOChannel *source,
 {
     gsize bytes_read;
     GIOStatus status;
-    guint8 buffer[BUFFER_SIZE + 1];
+    gchar buffer[BUFFER_SIZE + 1];
 
     if (condition & G_IO_HUP) {
         g_debug ("[%s] unexpected port hangup!",
@@ -945,7 +945,7 @@ data_available (GIOChannel *source,
             break;
 
         if (bytes_read > 0)
-            g_byte_array_append (self->priv->response, buffer, bytes_read);
+            g_byte_array_append (self->priv->response, (const guint8 *)buffer, bytes_read);
 
         /* Try to parse what we already got */
         parse_response (self);
