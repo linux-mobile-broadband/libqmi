@@ -330,7 +330,6 @@ int main (int argc, char **argv)
 {
     GFile *file;
     GOptionContext *context;
-	GOptionGroup *group;
 
     setlocale (LC_ALL, "");
 
