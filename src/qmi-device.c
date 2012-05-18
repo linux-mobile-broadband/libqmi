@@ -967,8 +967,7 @@ create_iochannel (QmiDevice *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_WRONG_STATE,
-                     "already open",
-                     self->priv->path_display);
+                     "Already open");
         return FALSE;
     }
 
