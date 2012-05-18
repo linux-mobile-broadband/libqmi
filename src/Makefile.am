@@ -37,21 +37,20 @@ qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/templates/qm
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.c \
 		$(ENUMS) > $@
 
-# QMI message handling generation
-qmi-tmp-ctl.c qmi-tmp-ctl.h: $(top_srcdir)/data/qmi-service-ctl.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+# CTL service
+qmi-ctl.stamp: $(top_srcdir)/data/qmi-service-ctl.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
 	$(AM_V_GEN) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 		$(top_srcdir)/data/qmi-service-ctl.json \
-		qmi-tmp-ctl
+		qmi-ctl && \
+	touch $@
 
 # Additional dependencies
 qmi-device.c: qmi-error-types.h qmi-enum-types.h
 qmi-client.c: qmi-error-types.h qmi-enum-types.h
-qmi-client-ctl.c: qmi-error-types.h qmi-enum-types.h
 qmi-message.c: qmi-error-types.h qmi-enum-types.h
-qmi-message-ctl.c: qmi-error-types.h
 qmi-message-dms.c: qmi-error-types.h
-qmi-tmp-*.c: qmi-error-types.h
-qmi-tmp-*.h: qmi-enum-types.h
+qmi-ctl.h: qmi-ctl.stamp
+qmi-ctl.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.stamp
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
@@ -59,15 +58,15 @@ libqmi_glib_la_SOURCES = \
 	qmi-enums.h qmi-enum-types.h qmi-enum-types.c \
 	qmi-utils.h qmi-utils.c \
 	qmi-message.h qmi-message.c \
-	qmi-tmp-ctl.c qmi-tmp-ctl.h \
-	qmi-message-ctl.h qmi-message-ctl.c \
-	qmi-message-dms.h qmi-message-dms.c \
-	qmi-message-wds.h qmi-message-wds.c \
 	qmi-device.h qmi-device.c \
 	qmi-client.h qmi-client.c \
-	qmi-ctl.h qmi-client-ctl.h qmi-client-ctl.c \
+	qmi-message-dms.h qmi-message-dms.c \
+	qmi-message-wds.h qmi-message-wds.c \
 	qmi-dms.h qmi-client-dms.h qmi-client-dms.c \
 	qmi-wds.h qmi-client-wds.h qmi-client-wds.c
+
+nodist_libqmi_glib_la_SOURCES = \
+	qmi-ctl.c qmi-ctl.h
 
 libqmi_glib_la_LIBADD = \
 	$(LIBQMI_GLIB_LIBS)
@@ -81,3 +80,6 @@ include_HEADERS = \
 	qmi-client.h \
 	qmi-dms.h qmi-client-dms.h \
 	qmi-wds.h qmi-client-wds.h
+
+CLEANFILES = \
+	qmi-ctl.h qmi-ctl.c qmi-ctl.stamp

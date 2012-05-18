@@ -29,7 +29,7 @@
 
 #include "qmi-device.h"
 #include "qmi-message.h"
-#include "qmi-client-ctl.h"
+#include "qmi-ctl.h"
 #include "qmi-client-dms.h"
 #include "qmi-client-wds.h"
 #include "qmi-utils.h"
@@ -60,7 +60,7 @@ struct _QmiDevicePrivate {
     QmiClientCtl *client_ctl;
 
     /* Supported services */
-    GPtrArray *supported_services;
+    GArray *supported_services;
 
     /* I/O channel, set when the file is open */
     GIOChannel *iochannel;
@@ -424,8 +424,8 @@ qmi_device_allocate_client_finish (QmiDevice *self,
 static void
 build_client_object (AllocateClientContext *ctx)
 {
-    GError *error = NULL;
     QmiClient *client;
+    GError *error = NULL;
 
     /* We now have a proper CID for the client, we should be able to create it
      * right away */
@@ -463,17 +463,37 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
                     GAsyncResult *res,
                     AllocateClientContext *ctx)
 {
+    QmiMessageCtlAllocateCidOutput *output;
+    QmiMessageCtlAllocateCidOutputAllocationInfo info;
     GError *error = NULL;
 
-    ctx->cid = qmi_client_ctl_allocate_cid_finish (client_ctl, res, &error);
-    if (ctx->cid == QMI_CID_NONE) {
+    output = qmi_client_ctl_allocate_cid_finish (client_ctl, res, &error);
+    if (!output) {
         g_prefix_error (&error, "CID allocation failed in the CTL client: ");
         g_simple_async_result_take_error (ctx->result, error);
         allocate_client_context_complete_and_free (ctx);
         return;
     }
 
+    g_assert (qmi_message_ctl_allocate_cid_output_get_allocation_info (output, &info, NULL));
+
+    if (info.service != ctx->service) {
+        g_simple_async_result_set_error (
+            ctx->result,
+            QMI_CORE_ERROR,
+            QMI_CORE_ERROR_FAILED,
+            "CID allocation failed in the CTL client: "
+            "Service mismatch (requested '%s', got '%s')",
+            qmi_service_get_string (ctx->service),
+            qmi_service_get_string (info.service));
+        allocate_client_context_complete_and_free (ctx);
+        qmi_message_ctl_allocate_cid_output_unref (output);
+        return;
+    }
+
+    ctx->cid = info.cid;
     build_client_object (ctx);
+    qmi_message_ctl_allocate_cid_output_unref (output);
 }
 
 static gboolean
@@ -490,11 +510,13 @@ check_service_supported (QmiDevice *self,
     }
 
     for (i = 0; i < self->priv->supported_services->len; i++) {
-        QmiCtlVersionInfo *info;
+        QmiMessageCtlGetVersionInfoOutputServiceListService *info;
 
-        info = g_ptr_array_index (self->priv->supported_services, i);
+        info = &g_array_index (self->priv->supported_services,
+                               QmiMessageCtlGetVersionInfoOutputServiceListService,
+                               i);
 
-        if (service == qmi_ctl_version_info_get_service (info))
+        if (service == info->service)
             return TRUE;
     }
 
@@ -584,13 +606,20 @@ qmi_device_allocate_client (QmiDevice *self,
 
     /* Allocate a new CID for the client to be created */
     if (cid == QMI_CID_NONE) {
+        QmiMessageCtlAllocateCidInput *input;
+
+        input = qmi_message_ctl_allocate_cid_input_new ();
+        qmi_message_ctl_allocate_cid_input_set_service (input, ctx->service, NULL);
+
         g_debug ("Allocating new client ID...");
         qmi_client_ctl_allocate_cid (self->priv->client_ctl,
-                                     ctx->service,
+                                     input,
                                      timeout,
                                      cancellable,
                                      (GAsyncReadyCallback)allocate_cid_ready,
                                      ctx);
+
+        qmi_message_ctl_allocate_cid_input_unref (input);
         return;
     }
 
@@ -685,8 +714,7 @@ qmi_device_release_client (QmiDevice *self,
                            gpointer user_data)
 {
     ReleaseClientContext *ctx;
-    guint8 cid;
-    QmiService service;
+    QmiMessageCtlReleaseCidInputReleaseInfo info;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (QMI_IS_CLIENT (client));
@@ -704,11 +732,11 @@ qmi_device_release_client (QmiDevice *self,
                                              user_data,
                                              qmi_device_release_client);
 
-    cid = qmi_client_get_cid (client);
-    service = qmi_client_get_service (client);
+    info.cid = qmi_client_get_cid (client);
+    info.service = (guint8)qmi_client_get_service (client);
 
     /* Do not try to release an already released client */
-    if (cid == QMI_CID_NONE) {
+    if (info.cid == QMI_CID_NONE) {
         g_simple_async_result_set_error (ctx->result,
                                          QMI_CORE_ERROR,
                                          QMI_CORE_ERROR_INVALID_ARGS,
@@ -721,8 +749,8 @@ qmi_device_release_client (QmiDevice *self,
     unregister_client (self, client);
 
     g_debug ("Unregistered '%s' client with ID '%u'",
-             qmi_service_get_string (service),
-             cid);
+             qmi_service_get_string (info.service),
+             info.cid);
 
     /* Reset the contents of the client object, making it unusable */
     g_object_set (client,
@@ -732,14 +760,21 @@ qmi_device_release_client (QmiDevice *self,
                   NULL);
 
     if (flags & QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID) {
+        QmiMessageCtlReleaseCidInput *input;
+
+        /* And now, really try to release the CID */
+        input = qmi_message_ctl_release_cid_input_new ();
+        qmi_message_ctl_release_cid_input_set_release_info (input, info, NULL);
+
         /* And now, really try to release the CID */
         qmi_client_ctl_release_cid (self->priv->client_ctl,
-                                    service,
-                                    cid,
+                                    input,
                                     timeout,
                                     cancellable,
                                     (GAsyncReadyCallback)client_ctl_release_cid_ready,
                                     ctx);
+
+        qmi_message_ctl_release_cid_input_unref (input);
         return;
     }
 
@@ -748,7 +783,6 @@ qmi_device_release_client (QmiDevice *self,
     release_client_context_complete_and_free (ctx);
     return;
 }
-
 
 /*****************************************************************************/
 /* Open device */
@@ -1063,8 +1097,10 @@ sync_ready (QmiClientCtl *client_ctl,
             DeviceOpenContext *ctx)
 {
     GError *error = NULL;
+    QmiMessageCtlSyncOutput *output;
 
-    if (!qmi_client_ctl_sync_finish (client_ctl, res, &error)) {
+    output = qmi_client_ctl_sync_finish (client_ctl, res, &error);
+    if(!output) {
         g_prefix_error (&error, "Sync failed: ");
         g_simple_async_result_take_error (ctx->result, error);
         device_open_context_complete_and_free (ctx);
@@ -1076,6 +1112,8 @@ sync_ready (QmiClientCtl *client_ctl,
 
     /* Keep on with next flags */
     process_open_flags (ctx);
+
+    qmi_message_ctl_sync_output_unref (output);
 }
 
 static void
@@ -1083,33 +1121,48 @@ version_info_ready (QmiClientCtl *client_ctl,
                     GAsyncResult *res,
                     DeviceOpenContext *ctx)
 {
+    QmiMessageCtlGetVersionInfoOutputResult result;
+    QmiMessageCtlGetVersionInfoOutput *output;
     GError *error = NULL;
     guint i;
 
-    ctx->self->priv->supported_services = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
-    if (!ctx->self->priv->supported_services) {
+    output = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
+    if (!output) {
         g_prefix_error (&error, "Version info check failed: ");
         g_simple_async_result_take_error (ctx->result, error);
         device_open_context_complete_and_free (ctx);
         return;
     }
 
+    g_assert (qmi_message_ctl_get_version_info_output_get_result (
+                  output,
+                  &result,
+                  NULL));
+
+    qmi_message_ctl_get_version_info_output_get_service_list (output,
+                                                              &ctx->self->priv->supported_services,
+                                                              NULL);
+
+
     g_debug ("[%s] QMI Device supports %u services:",
              ctx->self->priv->path_display,
              ctx->self->priv->supported_services->len);
     for (i = 0; i < ctx->self->priv->supported_services->len; i++) {
-        QmiCtlVersionInfo *service;
+        QmiMessageCtlGetVersionInfoOutputServiceListService *info;
 
-        service = g_ptr_array_index (ctx->self->priv->supported_services, i);
+        info = &g_array_index (ctx->self->priv->supported_services,
+                               QmiMessageCtlGetVersionInfoOutputServiceListService,
+                               i);
         g_debug ("[%s]    %s (%u.%u)",
                  ctx->self->priv->path_display,
-                 qmi_service_get_string (qmi_ctl_version_info_get_service (service)),
-                 qmi_ctl_version_info_get_major_version (service),
-                 qmi_ctl_version_info_get_minor_version (service));
+                 qmi_service_get_string (info->service),
+                 info->major_version,
+                 info->minor_version);
     }
 
     /* Keep on with next flags */
     process_open_flags (ctx);
+    qmi_message_ctl_get_version_info_output_unref (output);
 }
 
 static void
@@ -1120,6 +1173,7 @@ process_open_flags (DeviceOpenContext *ctx)
         g_debug ("Checking version info...");
         ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_VERSION_INFO;
         qmi_client_ctl_get_version_info (ctx->self->priv->client_ctl,
+                                         NULL,
                                          ctx->timeout,
                                          ctx->cancellable,
                                          (GAsyncReadyCallback)version_info_ready,
@@ -1132,6 +1186,7 @@ process_open_flags (DeviceOpenContext *ctx)
         g_debug ("Running sync...");
         ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_SYNC;
         qmi_client_ctl_sync (ctx->self->priv->client_ctl,
+                             NULL,
                              ctx->timeout,
                              ctx->cancellable,
                              (GAsyncReadyCallback)sync_ready,
@@ -1645,7 +1700,7 @@ finalize (GObject *object)
     g_hash_table_unref (self->priv->registered_clients);
 
     if (self->priv->supported_services)
-        g_ptr_array_unref (self->priv->supported_services);
+        g_array_unref (self->priv->supported_services);
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);

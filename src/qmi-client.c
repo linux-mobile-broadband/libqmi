@@ -26,7 +26,7 @@
 #include "qmi-enum-types.h"
 #include "qmi-device.h"
 #include "qmi-client.h"
-#include "qmi-client-ctl.h"
+#include "qmi-ctl.h"
 
 G_DEFINE_ABSTRACT_TYPE (QmiClient, qmi_client, G_TYPE_OBJECT);
 

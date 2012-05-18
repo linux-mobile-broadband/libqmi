@@ -647,6 +647,7 @@ qmi_message_new_from_raw (const guint8 *raw,
     return self;
 }
 
+#if 0
 gchar *
 qmi_message_get_printable (QmiMessage *self,
                            const gchar *line_prefix)
@@ -726,6 +727,7 @@ qmi_message_get_printable (QmiMessage *self,
 
     return g_string_free (printable, FALSE);
 }
+#endif
 
 /*****************************************************************************/
 /* QMI protocol errors handling */
