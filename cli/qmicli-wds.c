@@ -210,8 +210,6 @@ internal_stop_network (GCancellable *cancellable,
 static void
 network_cancelled (GCancellable *cancellable)
 {
-    QmiWdsStopNetworkInput *input;
-
     ctx->network_started_id = 0;
 
     /* Remove the timeout right away */

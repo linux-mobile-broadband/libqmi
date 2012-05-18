@@ -245,7 +245,6 @@ qmi_client_wds_get_packet_service_status (QmiClientWds *self,
 {
     GSimpleAsyncResult *result;
     QmiMessage *request;
-    GError *error = NULL;
 
     result = g_simple_async_result_new (G_OBJECT (self),
                                         callback,
@@ -317,7 +316,6 @@ qmi_client_wds_get_data_bearer_technology (QmiClientWds *self,
 {
     GSimpleAsyncResult *result;
     QmiMessage *request;
-    GError *error = NULL;
 
     result = g_simple_async_result_new (G_OBJECT (self),
                                         callback,
@@ -389,7 +387,6 @@ qmi_client_wds_get_current_data_bearer_technology (QmiClientWds *self,
 {
     GSimpleAsyncResult *result;
     QmiMessage *request;
-    GError *error = NULL;
 
     result = g_simple_async_result_new (G_OBJECT (self),
                                         callback,

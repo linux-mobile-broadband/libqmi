@@ -426,7 +426,6 @@ build_client_object (AllocateClientContext *ctx)
 {
     GError *error = NULL;
     QmiClient *client;
-    gpointer key;
 
     /* We now have a proper CID for the client, we should be able to create it
      * right away */
@@ -859,7 +858,6 @@ static void
 parse_response (QmiDevice *self)
 {
     do {
-        GError *error = NULL;
         QmiMessage *message;
 
         /* Every message received must start with the QMUX marker.
@@ -1066,7 +1064,6 @@ sync_ready (QmiClientCtl *client_ctl,
             DeviceOpenContext *ctx)
 {
     GError *error = NULL;
-    guint i;
 
     if (!qmi_client_ctl_sync_finish (client_ctl, res, &error)) {
         g_prefix_error (&error, "Sync failed: ");

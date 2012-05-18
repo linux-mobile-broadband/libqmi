@@ -624,7 +624,6 @@ qmi_message_new_from_raw (const guint8 *raw,
 {
     QmiMessage *self;
     gsize message_len;
-    struct qmux *qmux;
 
     /* If we didn't even read the header, leave */
     if (raw_len < (sizeof (struct qmux) + 1))
