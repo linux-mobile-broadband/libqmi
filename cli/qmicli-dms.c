@@ -158,6 +158,7 @@ static gboolean
 noop_cb (gpointer unused)
 {
     shutdown (TRUE);
+    return FALSE;
 }
 
 void
