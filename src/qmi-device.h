@@ -27,11 +27,9 @@
 
 #include "qmi-enums.h"
 #include "qmi-message.h"
+#include "qmi-client.h"
 
 G_BEGIN_DECLS
-
-struct _QmiClient;
-typedef struct _QmiClient QmiClient;
 
 #define QMI_TYPE_DEVICE            (qmi_device_get_type ())
 #define QMI_DEVICE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), QMI_TYPE_DEVICE, QmiDevice))

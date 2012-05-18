@@ -24,6 +24,7 @@
 
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
+#include "qmi-device.h"
 #include "qmi-client.h"
 #include "qmi-client-ctl.h"
 
@@ -55,12 +56,12 @@ struct _QmiClientPrivate {
  *
  * Get the #QmiDevice associated with this #QmiClient.
  *
- * Returns: a #QmiClient that must be freed with g_object_unref().
+ * Returns: a #GObject that must be freed with g_object_unref().
  */
-QmiDevice *
+GObject *
 qmi_client_get_device (QmiClient *self)
 {
-    QmiDevice *device;
+    GObject *device;
 
     g_return_val_if_fail (QMI_IS_CLIENT (self), NULL);
 
@@ -78,14 +79,14 @@ qmi_client_get_device (QmiClient *self)
  * Get the #QmiDevice associated with this #QmiClient, without increasing the reference count
  * on the returned object.
  *
- * Returns: a #QmiDevice. Do not free the returned object, it is owned by @self.
+ * Returns: a #GObject. Do not free the returned object, it is owned by @self.
  */
-QmiDevice *
+GObject *
 qmi_client_peek_device (QmiClient *self)
 {
     g_return_val_if_fail (QMI_IS_CLIENT (self), NULL);
 
-    return self->priv->device;
+    return G_OBJECT (self->priv->device);
 }
 
 /**

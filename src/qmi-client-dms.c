@@ -23,6 +23,7 @@
 #include <gio/gio.h>
 
 #include "qmi-enum-types.h"
+#include "qmi-device.h"
 #include "qmi-client-dms.h"
 #include "qmi-message-dms.h"
 
@@ -91,7 +92,7 @@ qmi_client_dms_get_ids (QmiClientDms *self,
 
     request = qmi_message_dms_get_ids_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
                                            qmi_client_get_cid (QMI_CLIENT (self)));
-    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),
                         request,
                         timeout,
                         cancellable,

@@ -22,6 +22,7 @@
 
 #include <gio/gio.h>
 
+#include "qmi-device.h"
 #include "qmi-client-wds.h"
 #include "qmi-message-wds.h"
 
@@ -100,7 +101,7 @@ qmi_client_wds_start_network (QmiClientWds *self,
         return;
     }
 
-    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),
                         request,
                         timeout,
                         cancellable,
@@ -182,7 +183,7 @@ qmi_client_wds_stop_network (QmiClientWds *self,
         return;
     }
 
-    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),
                         request,
                         timeout,
                         cancellable,
@@ -253,7 +254,7 @@ qmi_client_wds_get_packet_service_status (QmiClientWds *self,
 
     request = qmi_message_wds_get_packet_service_status_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
                                                              qmi_client_get_cid (QMI_CLIENT (self)));
-    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),
                         request,
                         timeout,
                         cancellable,
@@ -324,7 +325,7 @@ qmi_client_wds_get_data_bearer_technology (QmiClientWds *self,
 
     request = qmi_message_wds_get_data_bearer_technology_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
                                                               qmi_client_get_cid (QMI_CLIENT (self)));
-    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),
                         request,
                         timeout,
                         cancellable,
@@ -395,7 +396,7 @@ qmi_client_wds_get_current_data_bearer_technology (QmiClientWds *self,
 
     request = qmi_message_wds_get_current_data_bearer_technology_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
                                                                       qmi_client_get_cid (QMI_CLIENT (self)));
-    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),
                         request,
                         timeout,
                         cancellable,

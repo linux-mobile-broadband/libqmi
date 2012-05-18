@@ -26,7 +26,7 @@
 #include <glib-object.h>
 
 #include "qmi-enums.h"
-#include "qmi-device.h"
+#include "qmi-message.h"
 
 G_BEGIN_DECLS
 
@@ -63,8 +63,8 @@ struct _QmiClientClass {
 
 GType qmi_client_get_type (void);
 
-QmiDevice  *qmi_client_get_device  (QmiClient *self);
-QmiDevice  *qmi_client_peek_device (QmiClient *self);
+GObject    *qmi_client_get_device  (QmiClient *self);
+GObject    *qmi_client_peek_device (QmiClient *self);
 QmiService  qmi_client_get_service (QmiClient *self);
 guint8      qmi_client_get_cid     (QmiClient *self);
 

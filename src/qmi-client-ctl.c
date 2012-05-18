@@ -24,6 +24,7 @@
 
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
+#include "qmi-device.h"
 #include "qmi-client-ctl.h"
 #include "qmi-message-ctl.h"
 
@@ -113,7 +114,7 @@ qmi_client_ctl_get_version_info (QmiClientCtl *self,
                                         qmi_client_ctl_get_version_info);
 
     request = qmi_message_ctl_version_info_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)));
-    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),
                         request,
                         timeout,
                         cancellable,
@@ -249,7 +250,7 @@ qmi_client_ctl_allocate_cid (QmiClientCtl *self,
 
     request = qmi_message_ctl_allocate_cid_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
                                                 service);
-    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),
                         request,
                         timeout,
                         cancellable,
@@ -398,7 +399,7 @@ qmi_client_ctl_release_cid (QmiClientCtl *self,
     request = qmi_message_ctl_release_cid_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)),
                                                service,
                                                cid);
-    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),
                         request,
                         timeout,
                         cancellable,
@@ -476,7 +477,7 @@ qmi_client_ctl_sync (QmiClientCtl *self,
                                         qmi_client_ctl_sync);
 
     request = qmi_message_ctl_sync_new (qmi_client_get_next_transaction_id (QMI_CLIENT (self)));
-    qmi_device_command (qmi_client_peek_device (QMI_CLIENT (self)),
+    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),
                         request,
                         timeout,
                         cancellable,
