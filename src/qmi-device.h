@@ -26,13 +26,11 @@
 #include <glib-object.h>
 
 #include "qmi-enums.h"
+#include "qmi-message.h"
 
 G_BEGIN_DECLS
 
-/* Forward reference of the QMI message, we don't want to include qmi-message.h
- * as it is not installable */
-typedef struct _QmiMessage QmiMessage;
-
+struct _QmiClient;
 typedef struct _QmiClient QmiClient;
 
 #define QMI_TYPE_DEVICE            (qmi_device_get_type ())

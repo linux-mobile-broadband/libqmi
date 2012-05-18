@@ -27,8 +27,6 @@
  * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
  */
 
-/* NOTE: this is a private non-installable header */
-
 #ifndef _LIBQMI_GLIB_QMI_MESSAGE_H_
 #define _LIBQMI_GLIB_QMI_MESSAGE_H_
 
