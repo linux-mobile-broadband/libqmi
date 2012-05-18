@@ -54,6 +54,9 @@ QmiService qmi_ctl_version_info_get_service       (QmiCtlVersionInfo *info);
 guint16    qmi_ctl_version_info_get_major_version (QmiCtlVersionInfo *info);
 guint16    qmi_ctl_version_info_get_minor_version (QmiCtlVersionInfo *info);
 
+QmiCtlVersionInfo *qmi_ctl_version_info_ref   (QmiCtlVersionInfo *info);
+void               qmi_ctl_version_info_unref (QmiCtlVersionInfo *info);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_CTL_H_ */
