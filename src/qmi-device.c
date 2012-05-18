@@ -212,7 +212,7 @@ transaction_timed_out (TransactionTimeoutContext *ctx)
     return FALSE;
 }
 
-static gboolean
+static void
 device_store_transaction (QmiDevice *self,
                           Transaction *tr,
                           guint timeout)
