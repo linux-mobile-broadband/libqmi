@@ -285,8 +285,8 @@ gboolean
 qmi_message_check (QmiMessage *self,
                    GError **error)
 {
-    size_t header_length;
-    char *end;
+    gsize header_length;
+    gchar *end;
     struct tlv *tlv;
 
     g_assert (self != NULL);
@@ -304,7 +304,7 @@ qmi_message_check (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length too short for QMUX header (%u < %u)",
+                     "QMUX length too short for QMUX header (%u < %" G_GSIZE_FORMAT ")",
                      qmux_length (self), sizeof (struct qmux));
         return FALSE;
     }
@@ -317,7 +317,7 @@ qmi_message_check (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length and buffer length don't match (%u != %u)",
+                     "QMUX length and buffer length don't match (%u != %" G_GSIZE_FORMAT ")",
                      qmux_length (self), self->len - 1);
         return FALSE;
     }
@@ -330,7 +330,7 @@ qmi_message_check (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length too short for QMI header (%u < %u)",
+                     "QMUX length too short for QMI header (%u < %" G_GSIZE_FORMAT ")",
                      qmux_length (self), header_length);
         return FALSE;
     }
@@ -339,7 +339,7 @@ qmi_message_check (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length and QMI TLV lengths don't match (%u - %u != %u)",
+                     "QMUX length and QMI TLV lengths don't match (%u - %" G_GSIZE_FORMAT " != %u)",
                      qmux_length (self), header_length, qmi_tlv_length (self));
         return FALSE;
     }
