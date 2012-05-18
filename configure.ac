@@ -23,6 +23,9 @@ dnl Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT
 
+dnl Specific warnings to always use
+LIBQMI_GLIB_COMPILER_WARNINGS
+
 dnl General dependencies
 PKG_CHECK_MODULES(LIBQMI_GLIB,
                   glib-2.0 >= 2.28
