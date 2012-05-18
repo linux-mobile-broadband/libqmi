@@ -27,7 +27,7 @@
 #include "qmi-client-ctl.h"
 #include "qmi-message-ctl.h"
 
-G_DEFINE_TYPE (QmiClientCtl, qmi_client_ctl, QMI_TYPE_CLIENT);
+G_DEFINE_TYPE (QmiClientCtl, qmi_client_ctl, QMI_TYPE_CLIENT)
 
 /*****************************************************************************/
 /* Get version info */

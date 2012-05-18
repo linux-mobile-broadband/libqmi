@@ -26,7 +26,7 @@
 #include "qmi-client-dms.h"
 #include "qmi-message-dms.h"
 
-G_DEFINE_TYPE (QmiClientDms, qmi_client_dms, QMI_TYPE_CLIENT);
+G_DEFINE_TYPE (QmiClientDms, qmi_client_dms, QMI_TYPE_CLIENT)
 
 /*****************************************************************************/
 /* Get IDs */

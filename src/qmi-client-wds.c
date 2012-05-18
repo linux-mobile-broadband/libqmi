@@ -25,7 +25,7 @@
 #include "qmi-client-wds.h"
 #include "qmi-message-wds.h"
 
-G_DEFINE_TYPE (QmiClientWds, qmi_client_wds, QMI_TYPE_CLIENT);
+G_DEFINE_TYPE (QmiClientWds, qmi_client_wds, QMI_TYPE_CLIENT)
 
 /*****************************************************************************/
 /* Start network */
