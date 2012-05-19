@@ -24,7 +24,7 @@ from Message import Message
 import utils
 
 class MessageList:
-    def __init__(self, objects_dictionary):
+    def __init__(self, objects_dictionary, common_objects_dictionary):
         self.list = []
         self.message_id_enum_name = None
 
@@ -32,7 +32,7 @@ class MessageList:
         # and looking for the special 'Message-ID-Enum' type
         for object_dictionary in objects_dictionary:
             if object_dictionary['type'] == 'Message':
-                message = Message(object_dictionary)
+                message = Message(object_dictionary, common_objects_dictionary)
                 self.list.append(message)
             elif object_dictionary['type'] == 'Message-ID-Enum':
                 self.message_id_enum_name = object_dictionary['name']

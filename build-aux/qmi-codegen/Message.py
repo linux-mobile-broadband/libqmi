@@ -25,7 +25,7 @@ from ContainerOutput import ContainerOutput
 from ContainerInput  import ContainerInput
 
 class Message:
-    def __init__(self, dictionary):
+    def __init__(self, dictionary, common_objects_dictionary):
         # The message prefix
         self.prefix = 'Qmi Message'
         # The message service, e.g. "Ctl"
@@ -49,14 +49,16 @@ class Message:
         # will generate a new Output type and public getters for each output
         # field
         self.output = ContainerOutput(self.fullname,
-                                      dictionary['output'])
+                                      dictionary['output'],
+                                      common_objects_dictionary)
 
         # Build input container.
         # Every defined message will have its own input container, which
         # will generate a new Input type and public getters for each input
         # field
         self.input = ContainerInput(self.fullname,
-                                    dictionary['input'] if 'input' in dictionary else None)
+                                    dictionary['input'] if 'input' in dictionary else None,
+                                    common_objects_dictionary)
 
 
     def __emit_request_creator(self, hfile, cfile):

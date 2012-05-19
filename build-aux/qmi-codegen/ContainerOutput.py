@@ -29,10 +29,10 @@ class ContainerOutput(Container):
     fields
     """
 
-    def __init__(self, prefix, dictionary):
+    def __init__(self, prefix, dictionary, common_objects_dictionary):
 
         self.name = 'Output'
         self.readonly = True
 
         # Call the parent constructor
-        Container.__init__(self, prefix, dictionary)
+        Container.__init__(self, prefix, dictionary, common_objects_dictionary)

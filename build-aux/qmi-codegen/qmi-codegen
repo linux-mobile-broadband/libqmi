@@ -34,6 +34,8 @@ def codegen_main():
                           help='Input JSON-formatted database')
     arg_parser.add_option('', '--output', metavar='OUTFILES',
                           help='Generate C code in OUTFILES.[ch]')
+    arg_parser.add_option('', '--include', metavar='JSONFILE', action='append',
+                          help='Additional common types in a JSON-formatted database')
     (opts, args) = arg_parser.parse_args();
 
     if opts.input == None:
@@ -45,20 +47,29 @@ def codegen_main():
     output_file_c = open(opts.output + ".c", 'w')
     output_file_h = open(opts.output + ".h", 'w')
 
-    # Load database file contents
-    database_file = open(opts.input)
-    database_file_contents = database_file.read()
-    database_file.close()
-
     # Add common stuff to the output files
     utils.add_copyright(output_file_c);
     utils.add_copyright(output_file_h);
     utils.add_header_start(output_file_h, os.path.basename(opts.output))
     utils.add_source_start(output_file_c, os.path.basename(opts.output))
 
+    # Load database file contents
+    database_file = open(opts.input)
+    database_file_contents = database_file.read()
+    database_file.close()
+
+    # Load all common types
+    common_object_list_json = []
+    if opts.include != None:
+        for include in opts.include:
+            include_file = open(include)
+            include_contents = include_file.read()
+            common_object_list_json.extend(json.loads(include_contents))
+            include_file.close()
+
     # Get our message collection
     object_list_json = json.loads(database_file_contents)
-    message_list = MessageList(object_list_json)
+    message_list = MessageList(object_list_json, common_object_list_json)
 
     # Emit the message creation/parsing code
     message_list.emit(output_file_h, output_file_c)
