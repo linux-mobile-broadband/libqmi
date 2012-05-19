@@ -176,7 +176,7 @@ qmi_message_ctl_version_info_reply_parse (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_FAILED,
-                     "Couldn't read the whole services list (%u < %u)",
+                     "Couldn't read the whole services list (%u < %" G_GSIZE_FORMAT ")",
                      svcbuflen,
                      (service_list->count * sizeof (struct qmi_ctl_version_info_list_service)));
         return NULL;
