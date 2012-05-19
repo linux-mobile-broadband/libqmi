@@ -40,8 +40,8 @@ qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/templates/qm
 # CTL service
 qmi-ctl.stamp: $(top_srcdir)/data/qmi-service-ctl.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
 	$(AM_V_GEN) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
-		$(top_srcdir)/data/qmi-service-ctl.json \
-		qmi-ctl && \
+		--input $(top_srcdir)/data/qmi-service-ctl.json \
+		--output qmi-ctl && \
 	touch $@
 
 # Additional dependencies
