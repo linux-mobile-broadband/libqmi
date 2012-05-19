@@ -21,9 +21,10 @@
 import string
 
 import utils
-from FieldStruct import FieldStruct
-from FieldArray  import FieldArray
-from FieldBasic  import FieldBasic
+from FieldStruct       import FieldStruct
+from FieldStructResult import FieldStructResult
+from FieldArray        import FieldArray
+from FieldBasic        import FieldBasic
 
 class Container:
     """
@@ -51,7 +52,10 @@ class Container:
                 if field_dictionary['format'] == 'array':
                     self.fields.append(FieldArray(self.fullname, field_dictionary))
                 elif field_dictionary['format'] == 'struct':
-                    self.fields.append(FieldStruct(self.fullname, field_dictionary))
+                    if field_dictionary['name'] == 'Result':
+                        self.fields.append(FieldStructResult(self.fullname, field_dictionary))
+                    else:
+                        self.fields.append(FieldStruct(self.fullname, field_dictionary))
                 elif field_dictionary['format'] == 'guint8' or \
                      field_dictionary['format'] == 'guint16' or \
                      field_dictionary['format'] == 'guint32' or \
@@ -212,18 +216,6 @@ class Container:
         cfile.write(string.Template(template).substitute(translations))
 
 
-    def __emit_fields (self, hfile, cfile):
-        # Emit field getter/setter
-        if self.fields is None:
-            return
-
-        for field in self.fields:
-            field.emit_types(hfile)
-            field.emit_getter(hfile, cfile)
-            if self.readonly == False:
-                field.emit_setter(hfile, cfile)
-
-
     def emit(self, hfile, cfile):
         translations = { 'name'       : self.name,
                          'camelcase'  : utils.build_camelcase_name (self.fullname),
@@ -236,14 +228,22 @@ class Container:
             cfile.write(string.Template(template).substitute(translations))
             return
 
-        # Emit the container types
+        # Emit the container and field  types
+        # Emit field getter/setter
+        if self.fields is not None:
+            for field in self.fields:
+                field.emit_types(hfile, cfile)
         self.__emit_types(hfile, cfile, translations)
 
         # Emit TLV enums
         self.__emit_tlv_ids_enum(cfile)
 
         # Emit fields
-        self.__emit_fields(hfile, cfile)
+        if self.fields is not None:
+            for field in self.fields:
+                field.emit_getter(hfile, cfile)
+                if self.readonly == False:
+                    field.emit_setter(hfile, cfile)
 
         # Emit the container core
         self.__emit_core(hfile, cfile, translations)

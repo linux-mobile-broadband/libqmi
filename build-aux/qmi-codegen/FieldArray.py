@@ -49,11 +49,11 @@ class FieldArray(Field):
         self.dispose = 'g_array_unref'
 
 
-    def emit_types(self, f):
+    def emit_types(self, hfile, cfile):
         '''
         Emit the type for the struct used as array element
         '''
-        self.array_element.emit(f)
+        self.array_element.emit(hfile)
 
 
     def emit_input_tlv_add(self, cfile, line_prefix):

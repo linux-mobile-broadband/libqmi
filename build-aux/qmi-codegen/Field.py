@@ -62,7 +62,7 @@ class Field:
         self.id_enum_name = string.upper(utils.build_underscore_name(self.prefix + ' TLV ' + self.name))
 
 
-    def emit_types(self, hfile):
+    def emit_types(self, hfile, cfile):
         '''
         Subclasses can implement the method to emit the required type
         information

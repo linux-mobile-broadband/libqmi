@@ -42,11 +42,11 @@ class FieldStruct(Field):
                                dictionary['contents'])
 
 
-    def emit_types(self, f):
+    def emit_types(self, hfile, cfile):
         '''
         Emit the Struct type info
         '''
-        self.contents.emit(f)
+        self.contents.emit(hfile)
 
 
     def emit_input_tlv_add(self, cfile, line_prefix):

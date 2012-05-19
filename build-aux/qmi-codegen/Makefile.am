@@ -9,6 +9,7 @@ EXTRA_DIST = \
 	Field.py \
 	FieldArray.py \
 	FieldStruct.py \
+	FieldStructResult.py \
 	FieldBasic.py \
 	utils.py \
 	qmi-codegen

@@ -467,6 +467,7 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
     QmiMessageCtlAllocateCidOutputAllocationInfo info;
     GError *error = NULL;
 
+    /* Check result of the async operation */
     output = qmi_client_ctl_allocate_cid_finish (client_ctl, res, &error);
     if (!output) {
         g_prefix_error (&error, "CID allocation failed in the CTL client: ");
@@ -475,6 +476,15 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
         return;
     }
 
+    /* Check result of the QMI operation */
+    if (!qmi_message_ctl_allocate_cid_output_get_result (output, &error)) {
+        g_simple_async_result_take_error (ctx->result, error);
+        allocate_client_context_complete_and_free (ctx);
+        qmi_message_ctl_allocate_cid_output_unref (output);
+        return;
+    }
+
+    /* Allocation info is mandatory when result is success */
     g_assert (qmi_message_ctl_allocate_cid_output_get_allocation_info (output, &info, NULL));
 
     if (info.service != ctx->service) {
@@ -673,16 +683,30 @@ client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
                               ReleaseClientContext *ctx)
 {
     GError *error = NULL;
+    QmiMessageCtlReleaseCidOutput *output;
 
     /* Note: even if we return an error, the client is to be considered
      * released! (so shouldn't be used) */
 
-    if (!qmi_client_ctl_release_cid_finish (client_ctl, res, &error))
+    /* Check result of the async operation */
+    output = qmi_client_ctl_release_cid_finish (client_ctl, res, &error);
+    if (!output) {
         g_simple_async_result_take_error (ctx->result, error);
-    else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+        release_client_context_complete_and_free (ctx);
+        return;
+    }
 
+    /* Check result of the QMI operation */
+    if (!qmi_message_ctl_release_cid_output_get_result (output, &error)) {
+        g_simple_async_result_take_error (ctx->result, error);
+        release_client_context_complete_and_free (ctx);
+        qmi_message_ctl_release_cid_output_unref (output);
+        return;
+    }
+
+    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
     release_client_context_complete_and_free (ctx);
+    qmi_message_ctl_release_cid_output_unref (output);
 }
 
 /**
@@ -1099,11 +1123,19 @@ sync_ready (QmiClientCtl *client_ctl,
     GError *error = NULL;
     QmiMessageCtlSyncOutput *output;
 
+    /* Check result of the async operation */
     output = qmi_client_ctl_sync_finish (client_ctl, res, &error);
     if(!output) {
-        g_prefix_error (&error, "Sync failed: ");
         g_simple_async_result_take_error (ctx->result, error);
         device_open_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* Check result of the QMI operation */
+    if (!qmi_message_ctl_sync_output_get_result (output, &error)) {
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
+        qmi_message_ctl_sync_output_unref (output);
         return;
     }
 
@@ -1112,7 +1144,6 @@ sync_ready (QmiClientCtl *client_ctl,
 
     /* Keep on with next flags */
     process_open_flags (ctx);
-
     qmi_message_ctl_sync_output_unref (output);
 }
 
@@ -1121,29 +1152,30 @@ version_info_ready (QmiClientCtl *client_ctl,
                     GAsyncResult *res,
                     DeviceOpenContext *ctx)
 {
-    QmiMessageCtlGetVersionInfoOutputResult result;
     QmiMessageCtlGetVersionInfoOutput *output;
     GError *error = NULL;
     guint i;
 
+    /* Check result of the async operation */
     output = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
     if (!output) {
-        g_prefix_error (&error, "Version info check failed: ");
         g_simple_async_result_take_error (ctx->result, error);
         device_open_context_complete_and_free (ctx);
         return;
     }
 
-    g_assert (qmi_message_ctl_get_version_info_output_get_result (
-                  output,
-                  &result,
-                  NULL));
+    /* Check result of the QMI operation */
+    if (!qmi_message_ctl_get_version_info_output_get_result (output, &error)) {
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
+        qmi_message_ctl_get_version_info_output_unref (output);
+        return;
+    }
 
+    /* QMI operation succeeded, we can now get the outputs */
     qmi_message_ctl_get_version_info_output_get_service_list (output,
                                                               &ctx->self->priv->supported_services,
                                                               NULL);
-
-
     g_debug ("[%s] QMI Device supports %u services:",
              ctx->self->priv->path_display,
              ctx->self->priv->supported_services->len);
