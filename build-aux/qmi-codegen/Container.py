@@ -62,9 +62,18 @@ class Container:
                     else:
                         raise RuntimeError('Common type \'%s\' not found' % field_dictionary['name'])
 
+            # We need to sort the fields, so that the ones with prerequisites are
+            # include after the prerequisites themselves. Note: we don't currently
+            # support complex setups yet.
+            sorted_dictionary = []
+            for field_dictionary in dictionary:
+                if 'prerequisite' in field_dictionary:
+                    sorted_dictionary.append(field_dictionary)
+                else:
+                    sorted_dictionary.insert(0, field_dictionary)
 
             # Then, really parse each field
-            for field_dictionary in dictionary:
+            for field_dictionary in sorted_dictionary:
                 if field_dictionary['type'] == 'TLV':
                     if field_dictionary['format'] == 'array':
                         self.fields.append(FieldArray(self.fullname, field_dictionary))
