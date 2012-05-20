@@ -237,7 +237,11 @@ class Container:
             '${camelcase} *\n'
             '${underscore}_new (void)\n'
             '{\n'
-            '    return g_slice_new0 (${camelcase});\n'
+            '    ${camelcase} *self;\n'
+            '\n'
+            '    self = g_slice_new0 (${camelcase});\n'
+            '    self->ref_count = 1;\n'
+            '    return self;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
 
