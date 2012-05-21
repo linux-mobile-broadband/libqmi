@@ -1152,6 +1152,7 @@ version_info_ready (QmiClientCtl *client_ctl,
                     GAsyncResult *res,
                     DeviceOpenContext *ctx)
 {
+    GArray *service_list;
     QmiMessageCtlGetVersionInfoOutput *output;
     GError *error = NULL;
     guint i;
@@ -1173,9 +1174,12 @@ version_info_ready (QmiClientCtl *client_ctl,
     }
 
     /* QMI operation succeeded, we can now get the outputs */
+    service_list = NULL;
     qmi_message_ctl_get_version_info_output_get_service_list (output,
-                                                              &ctx->self->priv->supported_services,
+                                                              &service_list,
                                                               NULL);
+    ctx->self->priv->supported_services = g_array_ref (service_list);
+
     g_debug ("[%s] QMI Device supports %u services:",
              ctx->self->priv->path_display,
              ctx->self->priv->supported_services->len);
