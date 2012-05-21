@@ -1,0 +1,40 @@
+
+[
+  {  "name"    : "QMI Client DMS",
+     "type"    : "Client" },
+
+  {  "name"    : "QMI Message DMS",
+     "type"    : "Message-ID-Enum" },
+
+  {  "name"    : "Get IDs",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0025",
+     "output"  : [  { "name"      : "Result",
+                      "type"      : "common-TLV" },
+                    { "name"      : "Esn",
+                      "id"        : "0x10",
+                      "mandatory" : "no",
+                      "type"      : "TLV",
+                      "format"    : "string",
+                      "prerequisite": { "field"     : "Result.Error Status",
+                                        "operation" : "==",
+                                        "value"     : "QMI_STATUS_SUCCESS" } },
+                    { "name"      : "Imei",
+                      "id"        : "0x11",
+                      "mandatory" : "no",
+                      "type"      : "TLV",
+                      "format"    : "string",
+                      "prerequisite": { "field"     : "Result.Error Status",
+                                        "operation" : "==",
+                                        "value"     : "QMI_STATUS_SUCCESS" } },
+                    { "name"      : "Meid",
+                      "id"        : "0x12",
+                      "mandatory" : "no",
+                      "type"      : "TLV",
+                      "format"    : "string",
+                      "prerequisite": { "field"     : "Result.Error Status",
+                                        "operation" : "==",
+                                        "value"     : "QMI_STATUS_SUCCESS" } } ] }
+
+]

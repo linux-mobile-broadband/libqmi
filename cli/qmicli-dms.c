@@ -119,8 +119,11 @@ static void
 get_ids_ready (QmiClientDms *client,
                GAsyncResult *res)
 {
+    gchar *esn = NULL;
+    gchar *imei = NULL;
+    gchar *meid = NULL;
+    QmiMessageDmsGetIdsOutput *output;
     GError *error = NULL;
-    QmiDmsGetIdsOutput *output;
 
     output = qmi_client_dms_get_ids_finish (client, res, &error);
     if (!output) {
@@ -130,10 +133,10 @@ get_ids_ready (QmiClientDms *client,
         return;
     }
 
-    if (!qmi_dms_get_ids_output_get_result (output, &error)) {
+    if (!qmi_message_dms_get_ids_output_get_result (output, &error)) {
         g_printerr ("error: couldn't get IDs: %s\n", error->message);
         g_error_free (error);
-        qmi_dms_get_ids_output_unref (output);
+        qmi_message_dms_get_ids_output_unref (output);
         shutdown (FALSE);
         return;
     }
@@ -141,16 +144,20 @@ get_ids_ready (QmiClientDms *client,
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
+    qmi_message_dms_get_ids_output_get_esn  (output, &esn, NULL);
+    qmi_message_dms_get_ids_output_get_imei (output, &imei, NULL);
+    qmi_message_dms_get_ids_output_get_meid (output, &meid, NULL);
+
     g_print ("[%s] Device IDs retrieved:\n"
              "\t ESN: '%s'\n"
              "\tIMEI: '%s'\n"
              "\tMEID: '%s'\n",
              qmi_device_get_path_display (ctx->device),
-             VALIDATE_UNKNOWN (qmi_dms_get_ids_output_get_esn (output)),
-             VALIDATE_UNKNOWN (qmi_dms_get_ids_output_get_imei (output)),
-             VALIDATE_UNKNOWN (qmi_dms_get_ids_output_get_meid (output)));
+             VALIDATE_UNKNOWN (esn),
+             VALIDATE_UNKNOWN (imei),
+             VALIDATE_UNKNOWN (meid));
 
-    qmi_dms_get_ids_output_unref (output);
+    qmi_message_dms_get_ids_output_unref (output);
     shutdown (TRUE);
 }
 
@@ -177,6 +184,7 @@ qmicli_dms_run (QmiDevice *device,
     if (get_ids_flag) {
         g_debug ("Asynchronously getting IDs...");
         qmi_client_dms_get_ids (ctx->client,
+                                NULL,
                                 10,
                                 ctx->cancellable,
                                 (GAsyncReadyCallback)get_ids_ready,

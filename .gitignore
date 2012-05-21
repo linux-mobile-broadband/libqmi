@@ -40,6 +40,8 @@ src/qmi-enum-types.h
 src/qmi-enum-types.c
 src/qmi-ctl.h
 src/qmi-ctl.c
+src/qmi-dms.h
+src/qmi-dms.c
 src/*.stamp
 
 cli/.deps

@@ -26,7 +26,7 @@ qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templa
 ENUMS = qmi-enums.h qmi-dms.h qmi-wds.h qmi-ctl.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-dms.h\"\n#include \"qmi-ctl.h\"\n#include \"qmi-wds.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-ctl.h\"\n#include \"qmi-dms.h\"\n#include \"qmi-wds.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
@@ -45,6 +45,14 @@ qmi-ctl.stamp: $(top_srcdir)/data/qmi-service-ctl.json $(top_srcdir)/build-aux/q
 		--output qmi-ctl && \
 	touch $@
 
+# DMS service
+qmi-dms.stamp: $(top_srcdir)/data/qmi-service-dms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+	$(AM_V_GEN) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		--input $(top_srcdir)/data/qmi-service-dms.json \
+		--include $(top_srcdir)/data/qmi-common.json \
+		--output qmi-dms && \
+	touch $@
+
 # Additional dependencies
 qmi-device.c: qmi-error-types.h qmi-enum-types.h
 qmi-client.c: qmi-error-types.h qmi-enum-types.h
@@ -52,6 +60,8 @@ qmi-message.c: qmi-error-types.h qmi-enum-types.h
 qmi-message-dms.c: qmi-error-types.h
 qmi-ctl.h: qmi-ctl.stamp
 qmi-ctl.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.stamp
+qmi-dms.h: qmi-dms.stamp
+qmi-dms.c: qmi-error-types.h qmi-enum-types.h qmi-dms.stamp
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
@@ -61,13 +71,12 @@ libqmi_glib_la_SOURCES = \
 	qmi-message.h qmi-message.c \
 	qmi-device.h qmi-device.c \
 	qmi-client.h qmi-client.c \
-	qmi-message-dms.h qmi-message-dms.c \
 	qmi-message-wds.h qmi-message-wds.c \
-	qmi-dms.h qmi-client-dms.h qmi-client-dms.c \
 	qmi-wds.h qmi-client-wds.h qmi-client-wds.c
 
 nodist_libqmi_glib_la_SOURCES = \
-	qmi-ctl.c qmi-ctl.h
+	qmi-ctl.c qmi-ctl.h \
+	qmi-dms.c qmi-dms.h
 
 libqmi_glib_la_LIBADD = \
 	$(LIBQMI_GLIB_LIBS)
@@ -79,8 +88,9 @@ include_HEADERS = \
 	qmi-enums.h qmi-enum-types.h \
 	qmi-device.h \
 	qmi-client.h \
-	qmi-dms.h qmi-client-dms.h \
+	qmi-dms.h \
 	qmi-wds.h qmi-client-wds.h
 
 CLEANFILES = \
-	qmi-ctl.h qmi-ctl.c qmi-ctl.stamp
+	qmi-ctl.h qmi-ctl.c qmi-ctl.stamp \
+	qmi-dms.h qmi-dms.c qmi-dms.stamp
