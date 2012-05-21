@@ -21,6 +21,7 @@
 import string
 
 import utils
+from FieldString       import FieldString
 from FieldStruct       import FieldStruct
 from FieldStructResult import FieldStructResult
 from FieldArray        import FieldArray
@@ -77,6 +78,8 @@ class Container:
                 if field_dictionary['type'] == 'TLV':
                     if field_dictionary['format'] == 'array':
                         self.fields.append(FieldArray(self.fullname, field_dictionary))
+                    elif field_dictionary['format'] == 'string':
+                        self.fields.append(FieldString(self.fullname, field_dictionary))
                     elif field_dictionary['format'] == 'struct':
                         if field_dictionary['name'] == 'Result':
                             self.fields.append(FieldStructResult(self.fullname, field_dictionary))
