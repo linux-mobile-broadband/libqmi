@@ -129,8 +129,8 @@ class Field:
         translations = { 'name'              : self.name,
                          'variable_name'     : self.variable_name,
                          'field_type'        : self.field_type,
-                         'field_dispose'     : self.dispose + '(self->' + self_variable_name + ');\n' if self.dispose is not None else '',
-                         'field_copy'        : self.copy if self.copy is not None else '',
+                         'field_dispose'     : self.dispose + '(self->' + self.variable_name + ');\n' if self.dispose is not None else '',
+                         'field_copy'        : self.copy + ' ' if self.copy is not None else '',
                          'underscore'        : utils.build_underscore_name(self.name),
                          'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
                          'prefix_underscore' : utils.build_underscore_name(self.prefix) }
@@ -165,9 +165,9 @@ class Field:
             '{\n'
             '    g_return_val_if_fail (self != NULL, FALSE);\n'
             '\n'
-            '    ${field_dispose}'
+            '    ${field_dispose}\n'
             '    self->${variable_name}_set = TRUE;\n'
-            '    self->${variable_name} = value;\n'
+            '    self->${variable_name} = ${field_copy}(value);\n'
             '\n'
             '    return TRUE;\n'
             '}\n'
