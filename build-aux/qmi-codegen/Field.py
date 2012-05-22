@@ -43,7 +43,9 @@ class Field:
         # The type, which must always be "TLV"
         self.type = dictionary['type']
         # Output Fields may have prerequisites
-        self.prerequisite = dictionary['prerequisite'] if 'prerequisite' in dictionary else None
+        self.prerequisites = []
+        if 'prerequisites' in dictionary:
+            self.prerequisites = dictionary['prerequisites']
 
         # Strings containing how the given type is to be copied and disposed
         self.copy = None
@@ -181,29 +183,21 @@ class Field:
         pass
 
 
-    def __emit_single_prerequisite_check(self, f, line_prefix, prerequisite):
-        translations = { 'lp'                     : line_prefix,
-                         'prerequisite_field'     : utils.build_underscore_name(prerequisite['field']),
-                         'prerequisite_operation' : prerequisite['operation'],
-                         'prerequisite_value'     : prerequisite['value'] }
-        template = (
-            '${lp}/* Prerequisite.... */\n'
-            '${lp}if (!(self->arg_${prerequisite_field} ${prerequisite_operation} ${prerequisite_value}))\n'
-            '${lp}    break;\n')
-        f.write(string.Template(template).substitute(translations))
-
-
     def emit_output_prerequisite_check(self, f, line_prefix):
-        if self.prerequisite is not None:
-            # We may have a single prerequisite or a list of prerequisites
-            if isinstance(self.prerequisite, dict):
-                self.__emit_single_prerequisite_check(f, line_prefix, self.prerequisite)
-            else:
-                for prerequisite in self.prerequisite:
-                    self.__emit_single_prerequisite_check(f, line_prefix, prerequisite)
-        else:
+        if self.prerequisites == []:
             f.write('%s/* No Prerequisites for field */\n' % line_prefix)
+            return
 
+        for prerequisite in self.prerequisites:
+            translations = { 'lp'                     : line_prefix,
+                             'prerequisite_field'     : utils.build_underscore_name(prerequisite['field']),
+                             'prerequisite_operation' : prerequisite['operation'],
+                             'prerequisite_value'     : prerequisite['value'] }
+            template = (
+                '${lp}/* Prerequisite.... */\n'
+                '${lp}if (!(self->arg_${prerequisite_field} ${prerequisite_operation} ${prerequisite_value}))\n'
+                '${lp}    break;\n')
+            f.write(string.Template(template).substitute(translations))
 
     def emit_output_tlv_get(self, f, line_prefix):
         '''

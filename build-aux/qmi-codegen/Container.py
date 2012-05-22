@@ -68,7 +68,7 @@ class Container:
             # support complex setups yet.
             sorted_dictionary = []
             for field_dictionary in dictionary:
-                if 'prerequisite' in field_dictionary:
+                if 'prerequisites' in field_dictionary:
                     sorted_dictionary.append(field_dictionary)
                 else:
                     sorted_dictionary.insert(0, field_dictionary)
