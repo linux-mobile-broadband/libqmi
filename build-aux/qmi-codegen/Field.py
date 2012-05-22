@@ -88,9 +88,11 @@ class Field:
 
 
     def emit_getter(self, hfile, cfile):
+        public_field_type = self.public_field_type if self.public_field_type is not None else self.field_type
         translations = { 'name'              : self.name,
                          'variable_name'     : self.variable_name,
-                         'public_field_type' : self.public_field_type if self.public_field_type is not None else self.field_type,
+                         'public_field_type' : public_field_type,
+                         'public_field_out'  : public_field_type if public_field_type.endswith('*') else public_field_type + ' ',
                          'dispose_warn'      : ' Do not free the returned @value, it is owned by @self.' if self.dispose is not None else '',
                          'underscore'        : utils.build_underscore_name(self.name),
                          'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
@@ -101,7 +103,7 @@ class Field:
             '\n'
             'gboolean ${prefix_underscore}_get_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
-            '    ${public_field_type} *value,\n'
+            '    ${public_field_out}*value,\n'
             '    GError **error);\n')
         hfile.write(string.Template(template).substitute(translations))
 
@@ -121,7 +123,7 @@ class Field:
             'gboolean\n'
             '${prefix_underscore}_get_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
-            '    ${public_field_type} *value,\n'
+            '    ${public_field_out}*value,\n'
             '    GError **error)\n'
             '{\n'
             '    g_return_val_if_fail (self != NULL, FALSE);\n'
