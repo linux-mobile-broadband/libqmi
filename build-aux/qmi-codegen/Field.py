@@ -174,26 +174,6 @@ class Field:
             '\n')
         cfile.write(string.Template(template).substitute(translations))
 
-
-    def emit_input_mandatory_check(self, f, line_prefix):
-        if self.mandatory == 'yes':
-            translations = { 'name'          : self.name,
-                             'variable_name' : self.variable_name,
-                             'lp'            : line_prefix }
-
-            template = (
-                '\n'
-                '${lp}if (!input || !input->${variable_name}_set) {\n'
-                '${lp}    g_set_error (error,\n'
-                '${lp}                 QMI_CORE_ERROR,\n'
-                '${lp}                 QMI_CORE_ERROR_INVALID_ARGS,\n'
-                '${lp}                 "Missing mandatory TLV \'${name}\'");\n'
-                '${lp}    qmi_message_unref (self);\n'
-                '${lp}    return NULL;\n'
-                '${lp}}\n')
-
-            f.write(string.Template(template).substitute(translations))
-
     def emit_input_tlv_add(self, f, line_prefix):
         '''
         Subclasses can implement the method to emit the required TLV adding

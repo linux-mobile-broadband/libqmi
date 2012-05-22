@@ -42,8 +42,21 @@ class FieldString(Field):
 
 
     def emit_input_tlv_add(self, cfile, line_prefix):
-        # TODO
-        pass
+        translations = { 'name'          : self.name,
+                         'tlv_id'        : self.id_enum_name,
+                         'variable_name' : self.variable_name,
+                         'lp'            : line_prefix }
+        template = (
+            '${lp}if (!qmi_message_tlv_add (self,\n'
+            '${lp}                          (guint8)${tlv_id},\n'
+            '${lp}                          strlen (input->${variable_name}) + 1,\n'
+            '${lp}                          input->${variable_name},\n'
+            '${lp}                          error)) {\n'
+            '${lp}    g_prefix_error (error, \"Couldn\'t set the \'${name}\' TLV: \");\n'
+            '${lp}    qmi_message_unref (self);\n'
+            '${lp}    return NULL;\n'
+            '${lp}}\n')
+        cfile.write(string.Template(template).substitute(translations))
 
 
     def emit_output_tlv_get(self, f, line_prefix):

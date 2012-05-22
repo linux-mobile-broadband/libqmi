@@ -39,33 +39,31 @@ class FieldBasic(Field):
         self.field_type = self.format;
 
     def emit_input_tlv_add(self, cfile, line_prefix):
-        translations = { 'name'         : self.name,
-                         'tlv_id'       : self.id_enum_name,
-                         'field_type'   : self.field_type,
-                         'set_variable' : utils.le_from_he ('input->' + self.variable_name, 'tmp', self.field_type),
-                         'lp'           : line_prefix }
+        translations = { 'name'          : self.name,
+                         'tlv_id'        : self.id_enum_name,
+                         'field_type'    : self.field_type,
+                         'variable_name' : self.variable_name,
+                         'set_variable'  : utils.le_from_he ('input->' + self.variable_name, 'tmp', self.field_type),
+                         'lp'            : line_prefix }
 
         template = (
-            '${lp}/* Try to add the \'${name}\' TLV */\n'
-            '${lp}{\n'
-            '${lp}    ${field_type} tmp;\n'
+            '${lp}${field_type} tmp;\n'
             '\n'
-            '${lp}    ${set_variable};\n'
+            '${lp}${set_variable};\n'
             '\n'
-            '${lp}    if (!qmi_message_tlv_add (self,\n'
-            '${lp}                              (guint8)${tlv_id},\n'
-            '${lp}                              sizeof (tmp),\n'
-            '${lp}                              &tmp,\n'
-            '${lp}                              error)) {\n'
-            '${lp}        g_prefix_error (error, \"Couldn\'t set the ${name} TLV: \");\n'
-            '${lp}        qmi_message_unref (self);\n'
-            '${lp}        return NULL;\n'
-            '${lp}    }\n'
+            '${lp}if (!qmi_message_tlv_add (self,\n'
+            '${lp}                          (guint8)${tlv_id},\n'
+            '${lp}                          sizeof (tmp),\n'
+            '${lp}                          &tmp,\n'
+            '${lp}                          error)) {\n'
+            '${lp}    g_prefix_error (error, \"Couldn\'t set the ${name} TLV: \");\n'
+            '${lp}    qmi_message_unref (self);\n'
+            '${lp}    return NULL;\n'
             '${lp}}\n')
         cfile.write(string.Template(template).substitute(translations))
 
 
-    def emit_output_tlv_get(self, f, line_prefix):
+    def emit_output_tlv_get(self, cfile, line_prefix):
         translations = { 'name'                 : self.name,
                          'container_underscore' : utils.build_underscore_name (self.prefix),
                          'tlv_id'               : self.id_enum_name,

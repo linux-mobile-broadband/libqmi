@@ -89,6 +89,8 @@ def add_header_stop(f, output_name):
 def add_source_start(f, output_name):
     template = string.Template (
         "\n"
+        "#include <string.h>\n"
+        "\n"
         "#include \"${name}.h\"\n"
         "#include \"qmi-error-types.h\"\n"
         "#include \"qmi-device.h\"\n"

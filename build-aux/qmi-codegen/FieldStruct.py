@@ -57,30 +57,27 @@ class FieldStruct(Field):
                          'lp'            : line_prefix }
 
         template = (
-            '${lp}/* Try to add the \'${name}\' TLV */\n'
-            '${lp}{\n'
-            '${lp}    ${field_type} tmp;\n'
+            '${lp}${field_type} tmp;\n'
             '\n')
         cfile.write(string.Template(template).substitute(translations))
 
         # uint32 and uint16 fields need to be converted to host-endianness
         for struct_field in self.contents.members:
-            cfile.write('%s    %s;\n' % (line_prefix,
-                                         utils.le_from_he ('input->' + self.variable_name + '.' + utils.build_underscore_name(struct_field['name']),
-                                                           'tmp.' + utils.build_underscore_name(struct_field['name']),
-                                                           struct_field['type'])))
+            cfile.write('%s%s;\n' % (line_prefix,
+                                     utils.le_from_he ('input->' + self.variable_name + '.' + utils.build_underscore_name(struct_field['name']),
+                                                       'tmp.' + utils.build_underscore_name(struct_field['name']),
+                                                       struct_field['type'])))
 
         template = (
             '\n'
-            '${lp}    if (!qmi_message_tlv_add (self,\n'
-            '${lp}                              (guint8)${tlv_id},\n'
-            '${lp}                              sizeof (tmp),\n'
-            '${lp}                              &tmp,\n'
-            '${lp}                              error)) {\n'
-            '${lp}        g_prefix_error (error, \"Couldn\'t set the ${name} TLV: \");\n'
-            '${lp}        qmi_message_unref (self);\n'
-            '${lp}        return NULL;\n'
-            '${lp}    }\n'
+            '${lp}if (!qmi_message_tlv_add (self,\n'
+            '${lp}                          (guint8)${tlv_id},\n'
+            '${lp}                          sizeof (tmp),\n'
+            '${lp}                          &tmp,\n'
+            '${lp}                          error)) {\n'
+            '${lp}    g_prefix_error (error, \"Couldn\'t set the ${name} TLV: \");\n'
+            '${lp}    qmi_message_unref (self);\n'
+            '${lp}    return NULL;\n'
             '${lp}}\n')
         cfile.write(string.Template(template).substitute(translations))
 

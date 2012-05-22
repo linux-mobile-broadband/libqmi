@@ -62,7 +62,8 @@ class Message:
 
 
     def __emit_request_creator(self, hfile, cfile):
-        translations = { 'service'    : self.service,
+        translations = { 'name'       : self.name,
+                         'service'    : self.service,
                          'container'  : utils.build_camelcase_name (self.input.fullname),
                          'underscore' : utils.build_underscore_name (self.fullname),
                          'message_id' : self.id_enum_name }
@@ -95,16 +96,67 @@ class Message:
             '    self = qmi_message_new (QMI_SERVICE_${service},\n'
             '                            cid,\n'
             '                            transaction_id,\n'
-            '                            ${message_id});\n'
-            '\n' % input_arg_template)
+            '                            ${message_id});\n' % input_arg_template)
         cfile.write(string.Template(template).substitute(translations))
 
         if self.input.fields is not None:
+            # Count how many mandatory fields we have
+            n_mandatory = 0
             for field in self.input.fields:
-                field.emit_input_mandatory_check(cfile, '    ')
-                field.emit_input_tlv_add(cfile, '    ')
+                if field.mandatory == 'yes':
+                    n_mandatory += 1
 
+            if n_mandatory == 0:
+                # If we don't have mandatory fields, we do allow to have
+                # a NULL input
+                cfile.write(
+                    '\n'
+                    '    /* All TLVs are optional, we allow NULL input */\n'
+                    '    if (!input)\n'
+                    '        return self;\n')
+            else:
+                # If we do have mandatory fields, issue error if no input
+                # given.
+                cfile.write(
+                    '\n'
+                    '    /* There is at least one mandatory TLV, don\'t allow NULL input */\n'
+                    '    if (!input) {\n'
+                    '        g_set_error (error,\n'
+                    '                     QMI_CORE_ERROR,\n'
+                    '                     QMI_CORE_ERROR_INVALID_ARGS,\n'
+                    '                     "Message \'${name}\' has mandatory TLVs");\n'
+                    '        qmi_message_unref (self);\n'
+                    '        return NULL;\n'
+                    '    }\n')
+
+            # Now iterate fields
+            for field in self.input.fields:
+                translations['tlv_name'] = field.name
+                translations['variable_name'] = field.variable_name
+                template = (
+                    '\n'
+                    '    /* Try to add the \'${tlv_name}\' TLV */\n'
+                    '    if (input->${variable_name}_set) {\n')
+                cfile.write(string.Template(template).substitute(translations))
+
+                # Emit the TLV getter
+                field.emit_input_tlv_add(cfile, '        ')
+
+                if field.mandatory == 'yes':
+                    template = (
+                        '    } else {\n'
+                        '        g_set_error (error,\n'
+                        '                     QMI_CORE_ERROR,\n'
+                        '                     QMI_CORE_ERROR_INVALID_ARGS,\n'
+                        '                     "Missing mandatory TLV \'${tlv_name}\' in message \'${name}\'");\n'
+                        '        qmi_message_unref (self);\n'
+                        '        return NULL;\n')
+                    cfile.write(string.Template(template).substitute(translations))
+
+                cfile.write(
+                    '    }\n')
         cfile.write(
+            '\n'
             '    return self;\n'
             '}\n')
 
