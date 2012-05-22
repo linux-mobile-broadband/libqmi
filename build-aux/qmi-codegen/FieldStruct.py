@@ -67,7 +67,7 @@ class FieldStruct(Field):
             cfile.write('%s%s;\n' % (line_prefix,
                                      utils.le_from_he ('input->' + self.variable_name + '.' + utils.build_underscore_name(struct_field['name']),
                                                        'tmp.' + utils.build_underscore_name(struct_field['name']),
-                                                       struct_field['type'])))
+                                                       struct_field['format'])))
 
         template = (
             '\n'
@@ -107,7 +107,7 @@ class FieldStruct(Field):
             f.write('%s    %s;\n' % (line_prefix,
                                      utils.he_from_le ('tmp.' + utils.build_underscore_name(struct_field['name']),
                                                        'self->' + self.variable_name + '.' + utils.build_underscore_name(struct_field['name']),
-                                                       struct_field['type'])))
+                                                       struct_field['format'])))
         if self.mandatory is 'yes':
             template = (
                     '${lp}} else {\n'

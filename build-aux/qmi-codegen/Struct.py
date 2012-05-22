@@ -27,7 +27,7 @@ class Struct:
     def __init__(self, name, members):
         # The struct type name, e.g. QmiTheStruct
         self.name = name
-        # The struct members, a dictionary of 'type'+'name' pairs
+        # The struct members, a dictionary of 'format'+'name' pairs
         self.members = members
 
 
@@ -40,7 +40,7 @@ class Struct:
         f.write(string.Template(template).substitute(translations))
 
         for var in self.members:
-            translations['variable_type'] = var['type']
+            translations['variable_type'] = var['format']
             translations['variable_name'] = utils.build_underscore_name(var['name'])
             template = (
                 '    ${variable_type} ${variable_name};\n')
@@ -58,7 +58,7 @@ class Struct:
         f.write(string.Template(template).substitute(translations))
 
         for var in self.members:
-            translations['variable_type'] = var['type']
+            translations['variable_type'] = var['format']
             translations['variable_name'] = utils.build_underscore_name(var['name'])
             template = (
                 '    ${variable_type} ${variable_name};\n')

@@ -95,7 +95,7 @@ class FieldArray(Field):
             f.write('%s        %s;\n' % (line_prefix,
                                          utils.he_from_le ('item->' + utils.build_underscore_name(struct_field['name']),
                                                            'tmp.' + utils.build_underscore_name(struct_field['name']),
-                                                           struct_field['type'])))
+                                                           struct_field['format'])))
 
         template = (
             '${lp}        g_array_insert_val (self->${variable_name}, i, tmp);\n'
