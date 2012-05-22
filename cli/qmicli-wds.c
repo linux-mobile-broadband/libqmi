@@ -160,7 +160,7 @@ stop_network_ready (QmiClientWds *client,
                     GAsyncResult *res)
 {
     GError *error = NULL;
-    QmiWdsStopNetworkOutput *output;
+    QmiMessageWdsStopNetworkOutput *output;
 
     output = qmi_client_wds_stop_network_finish (client, res, &error);
     if (!output) {
@@ -171,10 +171,10 @@ stop_network_ready (QmiClientWds *client,
         return;
     }
 
-    if (!qmi_wds_stop_network_output_get_result (output, &error)) {
+    if (!qmi_message_wds_stop_network_output_get_result (output, &error)) {
         g_printerr ("error: couldn't stop network: %s\n", error->message);
         g_error_free (error);
-        qmi_wds_stop_network_output_unref (output);
+        qmi_message_wds_stop_network_output_unref (output);
         shutdown (FALSE);
         return;
     }
@@ -184,7 +184,7 @@ stop_network_ready (QmiClientWds *client,
 
     g_print ("[%s] Network stopped\n",
              qmi_device_get_path_display (ctx->device));
-    qmi_wds_stop_network_output_unref (output);
+    qmi_message_wds_stop_network_output_unref (output);
     shutdown (TRUE);
 }
 
@@ -192,10 +192,10 @@ static void
 internal_stop_network (GCancellable *cancellable,
                        guint32 packet_data_handle)
 {
-    QmiWdsStopNetworkInput *input;
+    QmiMessageWdsStopNetworkInput *input;
 
-    input = qmi_wds_stop_network_input_new ();
-    qmi_wds_stop_network_input_set_packet_data_handle (input, packet_data_handle);
+    input = qmi_message_wds_stop_network_input_new ();
+    qmi_message_wds_stop_network_input_set_packet_data_handle (input, packet_data_handle, NULL);
 
     g_print ("Network cancelled... releasing resources\n");
     qmi_client_wds_stop_network (ctx->client,
@@ -204,7 +204,7 @@ internal_stop_network (GCancellable *cancellable,
                                  ctx->cancellable,
                                  (GAsyncReadyCallback)stop_network_ready,
                                  NULL);
-    qmi_wds_stop_network_input_unref (input);
+    qmi_message_wds_stop_network_input_unref (input);
 }
 
 static void
@@ -227,7 +227,8 @@ timeout_get_packet_service_status_ready (QmiClientWds *client,
                                          GAsyncResult *res)
 {
     GError *error = NULL;
-    QmiWdsGetPacketServiceStatusOutput *output;
+    QmiMessageWdsGetPacketServiceStatusOutput *output;
+    guint8 status;
 
     output = qmi_client_wds_get_packet_service_status_finish (client, res, &error);
     if (!output) {
@@ -238,20 +239,24 @@ timeout_get_packet_service_status_ready (QmiClientWds *client,
         return;
     }
 
-    if (!qmi_wds_get_packet_service_status_output_get_result (output, &error)) {
+    if (!qmi_message_wds_get_packet_service_status_output_get_result (output, &error)) {
         g_printerr ("error: couldn't get packet service status: %s\n", error->message);
         g_error_free (error);
-        qmi_wds_get_packet_service_status_output_unref (output);
+        qmi_message_wds_get_packet_service_status_output_unref (output);
         shutdown (FALSE);
         return;
     }
 
-    g_print ("[%s] Connection status: '%s'\n",
+    qmi_message_wds_get_packet_service_status_output_get_connection_status (
+        output,
+        &status,
+        NULL);
+
+    /* TODO: print string */
+    g_print ("[%s] Connection status: '%u'\n",
              qmi_device_get_path_display (ctx->device),
-             qmi_wds_connection_status_get_string (
-                 qmi_wds_get_packet_service_status_output_get_connection_status (
-                     output)));
-    qmi_wds_get_packet_service_status_output_unref (output);
+             (guint) status);
+    qmi_message_wds_get_packet_service_status_output_unref (output);
     shutdown (TRUE);
 }
 
@@ -264,6 +269,7 @@ packet_status_timeout (void)
                                               ctx->cancellable,
                                               (GAsyncReadyCallback)timeout_get_packet_service_status_ready,
                                               NULL);
+
     return TRUE;
 }
 
@@ -272,7 +278,7 @@ start_network_ready (QmiClientWds *client,
                      GAsyncResult *res)
 {
     GError *error = NULL;
-    QmiWdsStartNetworkOutput *output;
+    QmiMessageWdsStartNetworkOutput *output;
 
     output = qmi_client_wds_start_network_finish (client, res, &error);
     if (!output) {
@@ -283,28 +289,30 @@ start_network_ready (QmiClientWds *client,
         return;
     }
 
-    if (!qmi_wds_start_network_output_get_result (output, &error)) {
+    if (!qmi_message_wds_start_network_output_get_result (output, &error)) {
         g_printerr ("error: couldn't start network: %s\n", error->message);
         if (g_error_matches (error,
                              QMI_PROTOCOL_ERROR,
                              QMI_PROTOCOL_ERROR_CALL_FAILED)) {
             guint16 cer;
-            guint16 domain;
+            QmiMessageWdsStartNetworkOutputVerboseCallEndReason verbose_cer;
 
-            if (qmi_wds_start_network_output_get_call_end_reason (output, &cer))
+            if (qmi_message_wds_start_network_output_get_call_end_reason (output, &cer, NULL))
                 g_printerr ("call end reason: %u\n", cer);
-            if (qmi_wds_start_network_output_get_verbose_call_end_reason (output, &cer, &domain))
-                g_printerr ("verbose call end reason: %u, %u\n", domain, cer);
+            if (qmi_message_wds_start_network_output_get_verbose_call_end_reason (output, &verbose_cer, NULL))
+                g_printerr ("verbose call end reason: %u, %u\n",
+                            verbose_cer.type,
+                            verbose_cer.reason);
         }
 
         g_error_free (error);
-        qmi_wds_start_network_output_unref (output);
+        qmi_message_wds_start_network_output_unref (output);
         shutdown (FALSE);
         return;
     }
 
-    qmi_wds_start_network_output_get_packet_data_handle (output, &ctx->packet_data_handle);
-    qmi_wds_start_network_output_unref (output);
+    qmi_message_wds_start_network_output_get_packet_data_handle (output, &ctx->packet_data_handle, NULL);
+    qmi_message_wds_start_network_output_unref (output);
 
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
@@ -336,7 +344,8 @@ get_packet_service_status_ready (QmiClientWds *client,
                                  GAsyncResult *res)
 {
     GError *error = NULL;
-    QmiWdsGetPacketServiceStatusOutput *output;
+    QmiMessageWdsGetPacketServiceStatusOutput *output;
+    guint8 status;
 
     output = qmi_client_wds_get_packet_service_status_finish (client, res, &error);
     if (!output) {
@@ -347,21 +356,25 @@ get_packet_service_status_ready (QmiClientWds *client,
         return;
     }
 
-    if (!qmi_wds_get_packet_service_status_output_get_result (output, &error)) {
+    if (!qmi_message_wds_get_packet_service_status_output_get_result (output, &error)) {
         g_printerr ("error: couldn't get packet service status: %s\n", error->message);
         g_error_free (error);
-        qmi_wds_get_packet_service_status_output_unref (output);
+        qmi_message_wds_get_packet_service_status_output_unref (output);
         shutdown (FALSE);
         return;
     }
 
-    g_print ("[%s] Connection status: '%s'\n",
-             qmi_device_get_path_display (ctx->device),
-             qmi_wds_connection_status_get_string (
-                 qmi_wds_get_packet_service_status_output_get_connection_status (
-                     output)));
+    qmi_message_wds_get_packet_service_status_output_get_connection_status (
+        output,
+        &status,
+        NULL);
 
-    qmi_wds_get_packet_service_status_output_unref (output);
+    /* TODO: print string */
+    g_print ("[%s] Connection status: '%u'\n",
+             qmi_device_get_path_display (ctx->device),
+             status);
+
+    qmi_message_wds_get_packet_service_status_output_unref (output);
     shutdown (TRUE);
 }
 
@@ -370,7 +383,8 @@ get_data_bearer_technology_ready (QmiClientWds *client,
                                   GAsyncResult *res)
 {
     GError *error = NULL;
-    QmiWdsGetDataBearerTechnologyOutput *output;
+    QmiMessageWdsGetDataBearerTechnologyOutput *output;
+    guint8 current;
 
     output = qmi_client_wds_get_data_bearer_technology_finish (client, res, &error);
     if (!output) {
@@ -381,31 +395,39 @@ get_data_bearer_technology_ready (QmiClientWds *client,
         return;
     }
 
-    if (!qmi_wds_get_data_bearer_technology_output_get_result (output, &error)) {
+    if (!qmi_message_wds_get_data_bearer_technology_output_get_result (output, &error)) {
         g_printerr ("error: couldn't get data bearer technology: %s\n", error->message);
 
         if (g_error_matches (error,
                              QMI_PROTOCOL_ERROR,
                              QMI_PROTOCOL_ERROR_OUT_OF_CALL)) {
-            g_print ("[%s] Data bearer technology (last): '%s'\n",
+            guint8 last;
+
+            qmi_message_wds_get_data_bearer_technology_output_get_last (
+                output,
+                &last,
+                NULL);
+            /* TODO: print string */
+            g_print ("[%s] Data bearer technology (last): '%u'\n",
                      qmi_device_get_path_display (ctx->device),
-                     qmi_wds_data_bearer_technology_get_string (
-                         qmi_wds_get_data_bearer_technology_output_get_last (
-                             output)));
+                     last);
         }
 
         g_error_free (error);
-        qmi_wds_get_data_bearer_technology_output_unref (output);
+        qmi_message_wds_get_data_bearer_technology_output_unref (output);
         shutdown (FALSE);
         return;
     }
 
-    g_print ("[%s] Data bearer technology (current): '%s'\n",
+    qmi_message_wds_get_data_bearer_technology_output_get_last (
+        output,
+        &current,
+        NULL);
+    /* TODO: print string */
+    g_print ("[%s] Data bearer technology (current): '%u'\n",
              qmi_device_get_path_display (ctx->device),
-             qmi_wds_data_bearer_technology_get_string (
-                 qmi_wds_get_data_bearer_technology_output_get_current (
-                     output)));
-    qmi_wds_get_data_bearer_technology_output_unref (output);
+             current);
+    qmi_message_wds_get_data_bearer_technology_output_unref (output);
     shutdown (TRUE);
 }
 
@@ -414,9 +436,8 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
                                           GAsyncResult *res)
 {
     GError *error = NULL;
-    QmiWdsGetCurrentDataBearerTechnologyOutput *output;
-    gchar *rat_string = NULL;
-    gchar *so_string = NULL;
+    QmiMessageWdsGetCurrentDataBearerTechnologyOutput *output;
+    QmiMessageWdsGetCurrentDataBearerTechnologyOutputCurrent current;;
 
     output = qmi_client_wds_get_current_data_bearer_technology_finish (client, res, &error);
     if (!output) {
@@ -427,114 +448,48 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
         return;
     }
 
-    if (!qmi_wds_get_current_data_bearer_technology_output_get_result (output, &error)) {
+    if (!qmi_message_wds_get_current_data_bearer_technology_output_get_result (output, &error)) {
+        QmiMessageWdsGetCurrentDataBearerTechnologyOutputLast last;
+
         g_printerr ("error: couldn't get current data bearer technology: %s\n", error->message);
 
-        if (g_error_matches (error,
-                             QMI_PROTOCOL_ERROR,
-                             QMI_PROTOCOL_ERROR_OUT_OF_CALL)) {
-            /* Retrieve LAST */
 
-            switch (qmi_wds_get_current_data_bearer_technology_output_get_last_network_type (output)) {
-            case QMI_WDS_NETWORK_TYPE_UNKNOWN:
-                break;
-            case QMI_WDS_NETWORK_TYPE_3GPP:
-                rat_string = (qmi_wds_rat_3gpp_build_string_from_mask (
-                                  qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp (
-                                      output)));
-                break;
-            case QMI_WDS_NETWORK_TYPE_3GPP2:
-                rat_string = (qmi_wds_rat_3gpp2_build_string_from_mask (
-                                  qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp2 (
-                                      output)));
-                if (qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp2 (output) &
-                    QMI_WDS_RAT_3GPP2_CDMA1X) {
-                    so_string = (qmi_wds_so_cdma1x_build_string_from_mask (
-                                     qmi_wds_get_current_data_bearer_technology_output_get_last_so_cdma1x (
-                                         output)));
-                } else if (qmi_wds_get_current_data_bearer_technology_output_get_last_rat_3gpp2 (output) &
-                           QMI_WDS_RAT_3GPP2_EVDO_REVA) {
-                    so_string = (qmi_wds_so_evdo_reva_build_string_from_mask (
-                                     qmi_wds_get_current_data_bearer_technology_output_get_last_so_evdo_reva (
-                                         output)));
-                }
-                break;
-            default:
-                g_warn_if_reached ();
-            }
-
+        if (qmi_message_wds_get_current_data_bearer_technology_output_get_last (
+                output,
+                &last,
+                NULL)) {
             g_print ("[%s] Data bearer technology (last):\n"
-                     "   Network type: '%s'\n",
+                     "   Network type: '%u'\n"
+                     "   Radio Access Technology: '%u'\n"
+                     "   Service Option: '%u'\n",
                      qmi_device_get_path_display (ctx->device),
-                     qmi_wds_network_type_get_string (
-                         qmi_wds_get_current_data_bearer_technology_output_get_last_network_type (
-                             output)));
-            if (rat_string) {
-                g_print ("   Radio Access Technology: '%s'\n",
-                         rat_string);
-                g_free (rat_string);
-            }
-            if (so_string) {
-                g_print ("   Service Option: '%s'\n",
-                         so_string);
-                g_free (so_string);
-            }
+                     last.network_type,
+                     last.rat_mask,
+                     last.so_mask);
         }
 
         g_error_free (error);
-        qmi_wds_get_current_data_bearer_technology_output_unref (output);
+        qmi_message_wds_get_current_data_bearer_technology_output_unref (output);
         shutdown (FALSE);
         return;
     }
 
     /* Retrieve CURRENT */
-
-    switch (qmi_wds_get_current_data_bearer_technology_output_get_current_network_type (output)) {
-    case QMI_WDS_NETWORK_TYPE_UNKNOWN:
-        break;
-    case QMI_WDS_NETWORK_TYPE_3GPP:
-        rat_string = (qmi_wds_rat_3gpp_build_string_from_mask (
-                          qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp (
-                              output)));
-        break;
-    case QMI_WDS_NETWORK_TYPE_3GPP2:
-        rat_string = (qmi_wds_rat_3gpp2_build_string_from_mask (
-                          qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp2 (
-                              output)));
-        if (qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp2 (output) &
-            QMI_WDS_RAT_3GPP2_CDMA1X) {
-            so_string = (qmi_wds_so_cdma1x_build_string_from_mask (
-                          qmi_wds_get_current_data_bearer_technology_output_get_current_so_cdma1x (
-                              output)));
-        } else if (qmi_wds_get_current_data_bearer_technology_output_get_current_rat_3gpp2 (output) &
-                   QMI_WDS_RAT_3GPP2_EVDO_REVA) {
-            so_string = (qmi_wds_so_evdo_reva_build_string_from_mask (
-                          qmi_wds_get_current_data_bearer_technology_output_get_current_so_evdo_reva (
-                              output)));
-        }
-        break;
-    default:
-        g_warn_if_reached ();
+    if (qmi_message_wds_get_current_data_bearer_technology_output_get_current (
+            output,
+            &current,
+            NULL)) {
+        g_print ("[%s] Data bearer technology (current):\n"
+                 "   Network type: '%u'\n"
+                 "   Radio Access Technology: '%u'\n"
+                 "   Service Option: '%u'\n",
+                 qmi_device_get_path_display (ctx->device),
+                 current.network_type,
+                 current.rat_mask,
+                 current.so_mask);
     }
 
-    g_print ("[%s] Data bearer technology (current):\n"
-             "   Network type: '%s'\n",
-             qmi_device_get_path_display (ctx->device),
-             qmi_wds_network_type_get_string (
-                 qmi_wds_get_current_data_bearer_technology_output_get_current_network_type (
-                     output)));
-    if (rat_string) {
-        g_print ("   Radio Access Technology: '%s'\n",
-                 rat_string);
-        g_free (rat_string);
-    }
-    if (so_string) {
-        g_print ("   Service Option: '%s'\n",
-                 so_string);
-        g_free (so_string);
-    }
-
-    qmi_wds_get_current_data_bearer_technology_output_unref (output);
+    qmi_message_wds_get_current_data_bearer_technology_output_unref (output);
     shutdown (TRUE);
 }
 

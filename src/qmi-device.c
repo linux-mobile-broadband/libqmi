@@ -31,7 +31,7 @@
 #include "qmi-message.h"
 #include "qmi-ctl.h"
 #include "qmi-dms.h"
-#include "qmi-client-wds.h"
+#include "qmi-wds.h"
 #include "qmi-utils.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

@@ -42,6 +42,8 @@ src/qmi-ctl.h
 src/qmi-ctl.c
 src/qmi-dms.h
 src/qmi-dms.c
+src/qmi-wds.h
+src/qmi-wds.c
 src/*.stamp
 
 cli/.deps
