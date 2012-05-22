@@ -35,6 +35,7 @@ class FieldString(Field):
 
         # The field type will be the given string name
         self.field_type = 'gchar *'
+        self.public_field_type = 'const gchar *'
         # The string needs to get disposed
         self.dispose = 'g_free'
         # The string needs to be copied when set

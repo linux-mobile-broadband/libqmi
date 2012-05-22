@@ -119,9 +119,9 @@ static void
 get_ids_ready (QmiClientDms *client,
                GAsyncResult *res)
 {
-    gchar *esn = NULL;
-    gchar *imei = NULL;
-    gchar *meid = NULL;
+    const gchar *esn = NULL;
+    const gchar *imei = NULL;
+    const gchar *meid = NULL;
     QmiMessageDmsGetIdsOutput *output;
     GError *error = NULL;
 
