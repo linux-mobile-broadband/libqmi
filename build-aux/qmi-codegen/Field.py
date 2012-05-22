@@ -201,21 +201,28 @@ class Field:
         pass
 
 
-    def emit_output_prerequisite_check(self, f, line_prefix):
-        translations = { 'lp' : line_prefix }
-        template = None
-        if self.prerequisite is not None:
-            translations['prerequisite_field'] = utils.build_underscore_name(self.prerequisite['field'])
-            translations['prerequisite_operation'] = self.prerequisite['operation']
-            translations['prerequisite_value'] = self.prerequisite['value']
-            template = (
-                '${lp}/* Prerequisite.... */\n'
-                '${lp}if (!(self->arg_${prerequisite_field} ${prerequisite_operation} ${prerequisite_value}))\n'
-                '${lp}    break;\n')
-        else:
-            template = (
-                '${lp}/* No Prerequisites for field */\n')
+    def __emit_single_prerequisite_check(self, f, line_prefix, prerequisite):
+        translations = { 'lp'                     : line_prefix,
+                         'prerequisite_field'     : utils.build_underscore_name(prerequisite['field']),
+                         'prerequisite_operation' : prerequisite['operation'],
+                         'prerequisite_value'     : prerequisite['value'] }
+        template = (
+            '${lp}/* Prerequisite.... */\n'
+            '${lp}if (!(self->arg_${prerequisite_field} ${prerequisite_operation} ${prerequisite_value}))\n'
+            '${lp}    break;\n')
         f.write(string.Template(template).substitute(translations))
+
+
+    def emit_output_prerequisite_check(self, f, line_prefix):
+        if self.prerequisite is not None:
+            # We may have a single prerequisite or a list of prerequisites
+            if isinstance(self.prerequisite, dict):
+                self.__emit_single_prerequisite_check(f, line_prefix, self.prerequisite)
+            else:
+                for prerequisite in self.prerequisite:
+                    self.__emit_single_prerequisite_check(f, line_prefix, prerequisite)
+        else:
+            f.write('%s/* No Prerequisites for field */\n' % line_prefix)
 
 
     def emit_output_tlv_get(self, f, line_prefix):
