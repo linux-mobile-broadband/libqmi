@@ -37,6 +37,8 @@ class FieldString(Field):
         self.field_type = 'gchar *'
         # The string needs to get disposed
         self.dispose = 'g_free'
+        # The string needs to be copied when set
+        self.copy = 'g_strdup'
 
 
     def emit_input_tlv_add(self, cfile, line_prefix):
