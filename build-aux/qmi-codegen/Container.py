@@ -52,10 +52,10 @@ class Container:
 
             # First, look for references to common types
             for field_dictionary in dictionary:
-                if field_dictionary['type'] == 'common-TLV':
+                if 'common-ref' in field_dictionary:
                     for common in common_objects_dictionary:
-                        if common['name'] == field_dictionary['name'] and \
-                           common['type'] == 'TLV':
+                        if common['type'] == 'TLV' and \
+                           common['common-ref'] == field_dictionary['common-ref']:
                            # Replace the reference with the actual common dictionary
                            dictionary.remove(field_dictionary)
                            dictionary.append(common)

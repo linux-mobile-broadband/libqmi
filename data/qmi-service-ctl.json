@@ -10,8 +10,7 @@
      "type"    : "Message",
      "service" : "CTL",
      "id"      : "0x0021",
-     "output"  : [  { "name"      : "Result",
-                      "type"      : "common-TLV" },
+     "output"  : [  { "common-ref" : "Operation Result" },
                     { "name"      : "Service list",
                       "id"        : "0x01",
                       "mandatory" : "yes",
@@ -38,8 +37,7 @@
                       "mandatory" : "yes",
                       "type"      : "TLV",
                       "format"    : "guint8" } ],
-     "output"  : [  { "name"      : "Result",
-                      "type"      : "common-TLV" },
+     "output"  : [  { "common-ref" : "Operation Result" },
                     { "name"      : "Allocation Info",
                       "id"        : "0x01",
                       "mandatory" : "yes",
@@ -66,8 +64,7 @@
                                         "type" : "guint8" },
                                       { "name" : "Cid",
                                         "type" : "guint8" } ] } ],
-     "output"  : [  { "name"      : "Result",
-                      "type"      : "common-TLV" },
+     "output"  : [  { "common-ref" : "Operation Result" },
                     { "name"      : "Release Info",
                       "id"        : "0x01",
                       "mandatory" : "yes",
@@ -85,6 +82,5 @@
      "type"    : "Message",
      "service" : "CTL",
      "id"      : "0x0027",
-     "output"  : [  { "name"      : "Result",
-                      "type"      : "common-TLV" } ] }
+     "output"  : [  { "common-ref" : "Operation Result" } ] }
 ]
