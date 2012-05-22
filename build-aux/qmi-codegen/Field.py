@@ -52,9 +52,10 @@ class Field:
                     for common in common_objects_dictionary:
                         if common['type'] == 'prerequisite' and \
                            common['common-ref'] == prerequisite_dictionary['common-ref']:
-                           # Replace the reference with the actual common dictionary
+                           # Replace the reference with a copy of the common dictionary
+                           copy = dict(common)
                            self.prerequisites.remove(prerequisite_dictionary)
-                           self.prerequisites.append(common)
+                           self.prerequisites.append(copy)
                            break
                     else:
                         raise RuntimeError('Common type \'%s\' not found' % prerequisite_dictionary['name'])

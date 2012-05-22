@@ -56,9 +56,13 @@ class Container:
                     for common in common_objects_dictionary:
                         if common['type'] == 'TLV' and \
                            common['common-ref'] == field_dictionary['common-ref']:
-                           # Replace the reference with the actual common dictionary
+                           # Replace the reference with a copy of the common dictionary
+                           # If the source reference has prerequisites, add them to the copy
+                           copy = dict(common)
+                           if 'prerequisites' in field_dictionary:
+                               copy['prerequisites'] = field_dictionary['prerequisites']
                            dictionary.remove(field_dictionary)
-                           dictionary.append(common)
+                           dictionary.append(copy)
                            break
                     else:
                         raise RuntimeError('Common type \'%s\' not found' % field_dictionary['name'])
