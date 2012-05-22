@@ -31,7 +31,25 @@ class Struct:
         self.members = members
 
 
-    # Emits the definition of the struct
+    # Emits the packed definition of the struct, meant to be private
+    def emit_packed(self, f):
+        translations = { 'name' : self.name }
+        template = (
+            '\n'
+            'typedef struct _${name}Packed {\n')
+        f.write(string.Template(template).substitute(translations))
+
+        for var in self.members:
+            translations['variable_type'] = var['type']
+            translations['variable_name'] = utils.build_underscore_name(var['name'])
+            template = (
+                '    ${variable_type} ${variable_name};\n')
+            f.write(string.Template(template).substitute(translations))
+
+        template = ('} __attribute__((__packed__)) ${name}Packed;\n\n')
+        f.write(string.Template(template).substitute(translations))
+
+    # Emits the public non-packed definition of the struct
     def emit(self, f):
         translations = { 'name' : self.name }
         template = (
@@ -46,5 +64,5 @@ class Struct:
                 '    ${variable_type} ${variable_name};\n')
             f.write(string.Template(template).substitute(translations))
 
-        template = ('} __attribute__((__packed__)) ${name};\n\n')
+        template = ('} ${name};\n\n')
         f.write(string.Template(template).substitute(translations))

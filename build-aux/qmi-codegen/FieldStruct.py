@@ -46,6 +46,7 @@ class FieldStruct(Field):
         '''
         Emit the Struct type info
         '''
+        self.contents.emit_packed(cfile)
         self.contents.emit(hfile)
 
 
@@ -57,7 +58,7 @@ class FieldStruct(Field):
                          'lp'            : line_prefix }
 
         template = (
-            '${lp}${field_type} tmp;\n'
+            '${lp}${field_type}Packed tmp;\n'
             '\n')
         cfile.write(string.Template(template).substitute(translations))
 
@@ -92,17 +93,19 @@ class FieldStruct(Field):
                          'error'                : 'error' if self.mandatory == 'yes' else 'NULL'}
 
         template = (
-                '${lp}if (qmi_message_tlv_get (message,\n'
-                '${lp}                         ${tlv_id},\n'
-                '${lp}                         sizeof (self->${variable_name}),\n'
-                '${lp}                         &self->${variable_name},\n'
-                '${lp}                         ${error})) {\n'
-                '${lp}    self->${variable_name}_set = TRUE;\n')
+            '${lp}${field_type}Packed tmp;\n'
+            '\n'
+            '${lp}if (qmi_message_tlv_get (message,\n'
+            '${lp}                         ${tlv_id},\n'
+            '${lp}                         sizeof (tmp),\n'
+            '${lp}                         &tmp,\n'
+            '${lp}                         ${error})) {\n'
+            '${lp}    self->${variable_name}_set = TRUE;\n')
         f.write(string.Template(template).substitute(translations))
 
         for struct_field in self.contents.members:
             f.write('%s    %s;\n' % (line_prefix,
-                                     utils.he_from_le ('self->' + self.variable_name + '.' + utils.build_underscore_name(struct_field['name']),
+                                     utils.he_from_le ('tmp.' + utils.build_underscore_name(struct_field['name']),
                                                        'self->' + self.variable_name + '.' + utils.build_underscore_name(struct_field['name']),
                                                        struct_field['type'])))
         if self.mandatory is 'yes':

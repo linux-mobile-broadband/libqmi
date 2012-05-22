@@ -54,6 +54,7 @@ class FieldArray(Field):
         Emit the type for the struct used as array element
         '''
         self.array_element.emit(hfile)
+        self.array_element.emit_packed(cfile)
 
 
     def emit_input_tlv_add(self, cfile, line_prefix):
@@ -74,7 +75,7 @@ class FieldArray(Field):
             '${lp}guint i;\n'
             '${lp}guint8 buffer[1024];\n'
             '${lp}guint16 buffer_len = 1024;\n'
-            '${lp}${array_element_type} *item;\n'
+            '${lp}${array_element_type}Packed *item;\n'
             '\n'
             '${lp}if (qmi_message_tlv_get_varlen (message,\n'
             '${lp}                                ${tlv_id},\n'
@@ -85,17 +86,19 @@ class FieldArray(Field):
             '\n'
             '${lp}    self->${variable_name}_set = TRUE;\n'
             '${lp}    self->${variable_name} = g_array_sized_new (FALSE, FALSE, sizeof (${array_element_type}), nitems);\n'
-            '${lp}    for (i = 0, item = (${array_element_type} *)&buffer[1]; i < nitems; i++, item++) {\n')
+            '${lp}    for (i = 0, item = (${array_element_type}Packed *)&buffer[1]; i < nitems; i++, item++) {\n'
+            '${lp}        ${array_element_type} tmp;\n'
+            '\n')
         f.write(string.Template(template).substitute(translations))
 
         for struct_field in self.array_element.members:
             f.write('%s        %s;\n' % (line_prefix,
                                          utils.he_from_le ('item->' + utils.build_underscore_name(struct_field['name']),
-                                                           'item->' + utils.build_underscore_name(struct_field['name']),
+                                                           'tmp.' + utils.build_underscore_name(struct_field['name']),
                                                            struct_field['type'])))
 
         template = (
-            '${lp}        g_array_insert_val (self->${variable_name}, i, *item);\n'
+            '${lp}        g_array_insert_val (self->${variable_name}, i, tmp);\n'
             '${lp}    }\n')
 
         if self.mandatory == 'yes':

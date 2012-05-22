@@ -30,7 +30,8 @@ class FieldStructResult(FieldStruct):
     """
 
     def emit_types(self, hfile, cfile):
-        # Emit the struct type info to the SOURCE file (not public)
+        # Emit both packed/unpacked types to the SOURCE file (not public)
+        self.contents.emit_packed(cfile)
         self.contents.emit(cfile)
 
     def emit_getter(self, hfile, cfile):
