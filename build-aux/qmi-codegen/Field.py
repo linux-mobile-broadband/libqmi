@@ -74,8 +74,7 @@ class Field:
         translations = { 'name'              : self.name,
                          'variable_name'     : self.variable_name,
                          'field_type'        : self.field_type,
-                         'field_dispose_msg' : ' Dispose @value with ' + self.dispose + '() when no longer needed.' if self.dispose is not None else '',
-                         'field_copy'        : self.copy if self.copy is not None else '',
+                         'dispose_warn'      : ' Do not free the returned @value, it is owned by @self.' if self.dispose is not None else '',
                          'underscore'        : utils.build_underscore_name(self.name),
                          'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
                          'prefix_underscore' : utils.build_underscore_name(self.prefix) }
@@ -100,7 +99,7 @@ class Field:
             ' *\n'
             ' * Get the \'${name}\' field from @self.\n'
             ' *\n'
-            ' * Returns: #TRUE if the field is found and @value is set, #FALSE otherwise.${field_dispose_msg}\n'
+            ' * Returns: #TRUE if the field is found and @value is set, #FALSE otherwise.${dispose_warn}\n'
             ' */\n'
             'gboolean\n'
             '${prefix_underscore}_get_${underscore} (\n'
@@ -118,8 +117,9 @@ class Field:
             '        return FALSE;\n'
             '    }\n'
             '\n'
+            '    /* Just for now, transfer-none always */\n'
             '    if (value)\n'
-            '        *value = ${field_copy}(self->${variable_name});\n'
+            '        *value = self->${variable_name};\n'
             '    return TRUE;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
