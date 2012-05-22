@@ -49,6 +49,7 @@ class Struct:
         template = ('} __attribute__((__packed__)) ${name}Packed;\n\n')
         f.write(string.Template(template).substitute(translations))
 
+
     # Emits the public non-packed definition of the struct
     def emit(self, f):
         translations = { 'name' : self.name }
@@ -58,7 +59,7 @@ class Struct:
         f.write(string.Template(template).substitute(translations))
 
         for var in self.members:
-            translations['variable_type'] = var['format']
+            translations['variable_type'] = var['public-format'] if 'public-format' in var else var['format']
             translations['variable_name'] = utils.build_underscore_name(var['name'])
             template = (
                 '    ${variable_type} ${variable_name};\n')

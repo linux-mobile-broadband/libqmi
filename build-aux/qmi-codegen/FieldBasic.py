@@ -37,6 +37,7 @@ class FieldBasic(Field):
         # The field type to be used in the generated code is the same as the one
         # given in the database
         self.field_type = self.format;
+        self.public_field_type = self.public_format;
 
     def emit_input_tlv_add(self, cfile, line_prefix):
         translations = { 'name'          : self.name,

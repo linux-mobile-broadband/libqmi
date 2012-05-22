@@ -40,6 +40,7 @@ class Field:
         self.mandatory = dictionary['mandatory']
         # Specific format of the field
         self.format = dictionary['format']
+        self.public_format = dictionary['public-format'] if 'public-format' in dictionary else None
         # The type, which must always be "TLV"
         self.type = dictionary['type']
         # Output Fields may have prerequisites
@@ -65,6 +66,7 @@ class Field:
         self.dispose = None
         # The field type to be used in the generated code
         self.field_type = None
+        self.public_field_type = None
 
         # Create the composed full name (prefix + name),
         #  e.g. "Qmi Message Ctl Something Output Result"
@@ -88,7 +90,7 @@ class Field:
     def emit_getter(self, hfile, cfile):
         translations = { 'name'              : self.name,
                          'variable_name'     : self.variable_name,
-                         'field_type'        : self.field_type,
+                         'public_field_type' : self.public_field_type if self.public_field_type is not None else self.field_type,
                          'dispose_warn'      : ' Do not free the returned @value, it is owned by @self.' if self.dispose is not None else '',
                          'underscore'        : utils.build_underscore_name(self.name),
                          'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
@@ -99,7 +101,7 @@ class Field:
             '\n'
             'gboolean ${prefix_underscore}_get_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
-            '    ${field_type} *value,\n'
+            '    ${public_field_type} *value,\n'
             '    GError **error);\n')
         hfile.write(string.Template(template).substitute(translations))
 
@@ -119,7 +121,7 @@ class Field:
             'gboolean\n'
             '${prefix_underscore}_get_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
-            '    ${field_type} *value,\n'
+            '    ${public_field_type} *value,\n'
             '    GError **error)\n'
             '{\n'
             '    g_return_val_if_fail (self != NULL, FALSE);\n'
@@ -134,7 +136,7 @@ class Field:
             '\n'
             '    /* Just for now, transfer-none always */\n'
             '    if (value)\n'
-            '        *value = self->${variable_name};\n'
+            '        *value = (${public_field_type})self->${variable_name};\n'
             '    return TRUE;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
@@ -144,6 +146,7 @@ class Field:
         translations = { 'name'              : self.name,
                          'variable_name'     : self.variable_name,
                          'field_type'        : self.field_type,
+                         'public_field_type' : self.public_field_type if self.public_field_type is not None else self.field_type,
                          'field_dispose'     : self.dispose + '(self->' + self.variable_name + ');\n' if self.dispose is not None else '',
                          'field_copy'        : self.copy + ' ' if self.copy is not None else '',
                          'underscore'        : utils.build_underscore_name(self.name),
@@ -155,7 +158,7 @@ class Field:
             '\n'
             'gboolean ${prefix_underscore}_set_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
-            '    ${field_type} value,\n'
+            '    ${public_field_type} value,\n'
             '    GError **error);\n')
         hfile.write(string.Template(template).substitute(translations))
 
@@ -175,14 +178,14 @@ class Field:
             'gboolean\n'
             '${prefix_underscore}_set_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
-            '    ${field_type} value,\n'
+            '    ${public_field_type} value,\n'
             '    GError **error)\n'
             '{\n'
             '    g_return_val_if_fail (self != NULL, FALSE);\n'
             '\n'
             '    ${field_dispose}\n'
             '    self->${variable_name}_set = TRUE;\n'
-            '    self->${variable_name} = ${field_copy}(value);\n'
+            '    self->${variable_name} = (${field_type})${field_copy}(value);\n'
             '\n'
             '    return TRUE;\n'
             '}\n'
