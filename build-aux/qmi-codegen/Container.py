@@ -77,21 +77,21 @@ class Container:
             for field_dictionary in sorted_dictionary:
                 if field_dictionary['type'] == 'TLV':
                     if field_dictionary['format'] == 'array':
-                        self.fields.append(FieldArray(self.fullname, field_dictionary))
+                        self.fields.append(FieldArray(self.fullname, field_dictionary, common_objects_dictionary))
                     elif field_dictionary['format'] == 'string':
-                        self.fields.append(FieldString(self.fullname, field_dictionary))
+                        self.fields.append(FieldString(self.fullname, field_dictionary, common_objects_dictionary))
                     elif field_dictionary['format'] == 'struct':
                         if field_dictionary['name'] == 'Result':
-                            self.fields.append(FieldStructResult(self.fullname, field_dictionary))
+                            self.fields.append(FieldStructResult(self.fullname, field_dictionary, common_objects_dictionary))
                         else:
-                            self.fields.append(FieldStruct(self.fullname, field_dictionary))
+                            self.fields.append(FieldStruct(self.fullname, field_dictionary, common_objects_dictionary))
                     elif field_dictionary['format'] == 'guint8' or \
                          field_dictionary['format'] == 'guint16' or \
                          field_dictionary['format'] == 'guint32' or \
                          field_dictionary['format'] == 'gint8' or \
                          field_dictionary['format'] == 'gint16' or \
                          field_dictionary['format'] == 'gint32':
-                        self.fields.append(FieldBasic(self.fullname, field_dictionary))
+                        self.fields.append(FieldBasic(self.fullname, field_dictionary, common_objects_dictionary))
                     else:
                         raise ValueError('Cannot handle TLV format \'%s\'' % field_dictionary['format'])
 

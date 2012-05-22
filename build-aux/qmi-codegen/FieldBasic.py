@@ -29,10 +29,10 @@ class FieldBasic(Field):
     on basic types (e.g. integers)
     """
 
-    def __init__(self, prefix, dictionary):
+    def __init__(self, prefix, dictionary, common_objects_dictionary):
 
         # Call the parent constructor
-        Field.__init__(self, prefix, dictionary)
+        Field.__init__(self, prefix, dictionary, common_objects_dictionary)
 
         # The field type to be used in the generated code is the same as the one
         # given in the database

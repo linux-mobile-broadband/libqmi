@@ -29,9 +29,9 @@ class FieldString(Field):
     Input and Output TLVs
     """
 
-    def __init__(self, prefix, dictionary):
+    def __init__(self, prefix, dictionary, common_objects_dictionary):
         # Call the parent constructor
-        Field.__init__(self, prefix, dictionary)
+        Field.__init__(self, prefix, dictionary, common_objects_dictionary)
 
         # The field type will be the given string name
         self.field_type = 'gchar *'

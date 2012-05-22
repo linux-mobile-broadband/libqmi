@@ -28,7 +28,7 @@ class Field:
     The Field class takes care of handling Input and Output TLVs
     """
 
-    def __init__(self, prefix, dictionary):
+    def __init__(self, prefix, dictionary, common_objects_dictionary):
         # The field prefix, usually the name of the Container,
         #  e.g. "Qmi Message Ctl Something Output"
         self.prefix = prefix
@@ -46,6 +46,18 @@ class Field:
         self.prerequisites = []
         if 'prerequisites' in dictionary:
             self.prerequisites = dictionary['prerequisites']
+            # First, look for references to common types
+            for prerequisite_dictionary in self.prerequisites:
+                if 'common-ref' in prerequisite_dictionary:
+                    for common in common_objects_dictionary:
+                        if common['type'] == 'prerequisite' and \
+                           common['common-ref'] == prerequisite_dictionary['common-ref']:
+                           # Replace the reference with the actual common dictionary
+                           self.prerequisites.remove(prerequisite_dictionary)
+                           self.prerequisites.append(common)
+                           break
+                    else:
+                        raise RuntimeError('Common type \'%s\' not found' % prerequisite_dictionary['name'])
 
         # Strings containing how the given type is to be copied and disposed
         self.copy = None

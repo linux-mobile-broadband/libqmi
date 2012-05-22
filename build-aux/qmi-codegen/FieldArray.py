@@ -30,9 +30,9 @@ class FieldArray(Field):
     Input and Output TLVs
     """
 
-    def __init__(self, prefix, dictionary):
+    def __init__(self, prefix, dictionary, common_objects_dictionary):
         # Call the parent constructor
-        Field.__init__(self, prefix, dictionary)
+        Field.__init__(self, prefix, dictionary, common_objects_dictionary)
 
         if dictionary['array-element']['format'] != 'struct':
             raise ValueError('Cannot handle arrays of format \'%s\'' % dictionary['array-element']['format'])
