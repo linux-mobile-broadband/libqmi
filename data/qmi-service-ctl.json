@@ -24,9 +24,7 @@
                                                            "type"   : "guint16" },
                                                          { "name"   : "minor version",
                                                            "type"   : "guint16" } ] },
-                      "prerequisites": [ { "field"     : "Result.Error Status",
-                                           "operation" : "==",
-                                           "value"     : "QMI_STATUS_SUCCESS" } ] } ] },
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   {  "name"    : "Allocate CID",
      "type"    : "Message",
@@ -47,9 +45,7 @@
                                         "type" : "guint8" },
                                       { "name" : "Cid",
                                         "type" : "guint8" } ],
-                      "prerequisites": [ { "field"     : "Result.Error Status",
-                                           "operation" : "==",
-                                           "value"     : "QMI_STATUS_SUCCESS" } ] } ] },
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   {  "name"    : "Release CID",
      "type"    : "Message",
@@ -74,9 +70,7 @@
                                         "type" : "guint8" },
                                       { "name" : "Cid",
                                         "type" : "guint8" } ],
-                      "prerequisites": [ { "field"     : "Result.Error Status",
-                                           "operation" : "==",
-                                           "value"     : "QMI_STATUS_SUCCESS" } ] } ] },
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   {  "name"    : "Sync",
      "type"    : "Message",

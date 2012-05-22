@@ -16,24 +16,18 @@
                       "mandatory" : "no",
                       "type"      : "TLV",
                       "format"    : "string",
-                      "prerequisites": [ { "field"     : "Result.Error Status",
-                                           "operation" : "==",
-                                           "value"     : "QMI_STATUS_SUCCESS" } ] },
+                      "prerequisites": [ { "common-ref" : "Success" } ] },
                     { "name"      : "Imei",
                       "id"        : "0x11",
                       "mandatory" : "no",
                       "type"      : "TLV",
                       "format"    : "string",
-                      "prerequisites": [ { "field"     : "Result.Error Status",
-                                           "operation" : "==",
-                                           "value"     : "QMI_STATUS_SUCCESS" } ] },
+                      "prerequisites": [ { "common-ref" : "Success" } ] },
                     { "name"      : "Meid",
                       "id"        : "0x12",
                       "mandatory" : "no",
                       "type"      : "TLV",
                       "format"    : "string",
-                      "prerequisites": [ { "field"     : "Result.Error Status",
-                                           "operation" : "==",
-                                           "value"     : "QMI_STATUS_SUCCESS" } ] } ] }
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] }
 
 ]

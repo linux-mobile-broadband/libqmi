@@ -8,5 +8,11 @@
       "contents"   : [ { "name" : "Error Status",
                          "type" : "guint16" },
                        { "name" : "Error Code",
-                         "type" : "guint16" } ] }
+                         "type" : "guint16" } ] },
+
+    { "common-ref" : "Success",
+      "type"       : "prerequisite",
+      "field"      : "Result.Error Status",
+      "operation"  : "==",
+      "value"      : "QMI_STATUS_SUCCESS" }
 ]
