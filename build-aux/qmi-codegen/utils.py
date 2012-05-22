@@ -148,3 +148,16 @@ def he_from_le(input_variable, output_variable, variable_type):
 
 def le_from_he(input_variable, output_variable, variable_type):
     return he_from_le(input_variable, output_variable, variable_type)
+
+
+def read_json_file(path):
+    f = open(path)
+    out = ''
+    for line in f.readlines():
+        stripped = line.strip()
+        if stripped.startswith('//'):
+            # Skip this line
+            pass
+        else:
+            out += line
+    return out

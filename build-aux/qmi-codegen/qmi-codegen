@@ -59,18 +59,14 @@ def codegen_main():
     common_object_list_json = []
     opts.include.append(opts.input)
     for include in opts.include:
-        include_file = open(include)
-        include_contents = include_file.read()
+        include_contents = utils.read_json_file(include)
         include_list = json.loads(include_contents)
         for obj in include_list:
             if 'common-ref' in obj:
                 common_object_list_json.append(obj)
-        include_file.close()
 
     # Load database file contents
-    database_file = open(opts.input)
-    database_file_contents = database_file.read()
-    database_file.close()
+    database_file_contents = utils.read_json_file(opts.input)
 
     # Get our message collection
     object_list_json = json.loads(database_file_contents)
