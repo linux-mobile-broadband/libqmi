@@ -42,6 +42,8 @@ def codegen_main():
         raise RuntimeError('Input JSON file is mandatory')
     if opts.output == None:
         raise RuntimeError('Output file pattern is mandatory')
+    if opts.include == None:
+        opts.include = []
 
     # Prepare output file names
     output_file_c = open(opts.output + ".c", 'w')
@@ -53,19 +55,22 @@ def codegen_main():
     utils.add_header_start(output_file_h, os.path.basename(opts.output))
     utils.add_source_start(output_file_c, os.path.basename(opts.output))
 
+    # Load all common types
+    common_object_list_json = []
+    opts.include.append(opts.input)
+    for include in opts.include:
+        include_file = open(include)
+        include_contents = include_file.read()
+        include_list = json.loads(include_contents)
+        for obj in include_list:
+            if 'common-ref' in obj:
+                common_object_list_json.append(obj)
+        include_file.close()
+
     # Load database file contents
     database_file = open(opts.input)
     database_file_contents = database_file.read()
     database_file.close()
-
-    # Load all common types
-    common_object_list_json = []
-    if opts.include != None:
-        for include in opts.include:
-            include_file = open(include)
-            include_contents = include_file.read()
-            common_object_list_json.extend(json.loads(include_contents))
-            include_file.close()
 
     # Get our message collection
     object_list_json = json.loads(database_file_contents)
