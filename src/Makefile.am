@@ -24,7 +24,7 @@ qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templa
 
 # Enum types
 ENUMS = qmi-enums.h qmi-enums-wds.h qmi-dms.h qmi-wds.h qmi-ctl.h
-qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
+qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h qmi-ctl.stamp qmi-dms.stamp qmi-wds.stamp
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-ctl.h\"\n#include \"qmi-dms.h\"\n#include \"qmi-wds.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
@@ -39,27 +39,36 @@ qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/templates/qm
 
 # CTL service
 qmi-ctl.stamp: $(top_srcdir)/data/qmi-service-ctl.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
-	$(AM_V_GEN) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
-		--input $(top_srcdir)/data/qmi-service-ctl.json \
-		--include $(top_srcdir)/data/qmi-common.json \
-		--output qmi-ctl && \
-	touch $@
+	$(AM_V_GEN)  \
+		rm -f qmi-ctl.h && \
+		rm -f qmi-ctl.c && \
+		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-ctl.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			--output qmi-ctl && \
+		touch $@
 
 # DMS service
 qmi-dms.stamp: $(top_srcdir)/data/qmi-service-dms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
-	$(AM_V_GEN) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
-		--input $(top_srcdir)/data/qmi-service-dms.json \
-		--include $(top_srcdir)/data/qmi-common.json \
-		--output qmi-dms && \
-	touch $@
+	$(AM_V_GEN) \
+		rm -f qmi-dms.h && \
+		rm -f qmi-dms.c && \
+		 $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-dms.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			--output qmi-dms && \
+		touch $@
 
 # WDS service
 qmi-wds.stamp: $(top_srcdir)/data/qmi-service-wds.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
-	$(AM_V_GEN) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
-		--input $(top_srcdir)/data/qmi-service-wds.json \
-		--include $(top_srcdir)/data/qmi-common.json \
-		--output qmi-wds && \
-	touch $@
+	$(AM_V_GEN) \
+		rm -f qmi-wds.h && \
+		rm -f qmi-wds.c && \
+		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-wds.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			--output qmi-wds && \
+		touch $@
 
 # Additional dependencies
 qmi-device.c: qmi-error-types.h qmi-enum-types.h
