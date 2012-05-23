@@ -20,6 +20,8 @@
  * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
  */
 
+#include "qmi-enums-wds.h"
+
 #ifndef _LIBQMI_GLIB_QMI_ENUMS_H_
 #define _LIBQMI_GLIB_QMI_ENUMS_H_
 

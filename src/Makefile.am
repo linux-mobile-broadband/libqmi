@@ -23,10 +23,10 @@ qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templa
 		qmi-errors.h > $@
 
 # Enum types
-ENUMS = qmi-enums.h qmi-dms.h qmi-wds.h qmi-ctl.h
+ENUMS = qmi-enums.h qmi-enums-wds.h qmi-dms.h qmi-wds.h qmi-ctl.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-ctl.h\"\n#include \"qmi-dms.h\"\n#include \"qmi-wds.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-ctl.h\"\n#include \"qmi-dms.h\"\n#include \"qmi-wds.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@

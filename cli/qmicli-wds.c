@@ -228,7 +228,7 @@ timeout_get_packet_service_status_ready (QmiClientWds *client,
 {
     GError *error = NULL;
     QmiMessageWdsGetPacketServiceStatusOutput *output;
-    guint8 status;
+    QmiWdsConnectionStatus status;
 
     output = qmi_client_wds_get_packet_service_status_finish (client, res, &error);
     if (!output) {
@@ -345,7 +345,7 @@ get_packet_service_status_ready (QmiClientWds *client,
 {
     GError *error = NULL;
     QmiMessageWdsGetPacketServiceStatusOutput *output;
-    guint8 status;
+    QmiWdsConnectionStatus status;
 
     output = qmi_client_wds_get_packet_service_status_finish (client, res, &error);
     if (!output) {
