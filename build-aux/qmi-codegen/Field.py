@@ -230,7 +230,8 @@ class Field:
         template = (
             'static gchar *\n'
             '${underscore}_get_printable (\n'
-            '    QmiMessage *self)\n'
+            '    QmiMessage *self,\n'
+            '    const gchar *line_prefix)\n'
             '{\n'
             '    return NULL;\n'
             '}\n')

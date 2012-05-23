@@ -122,7 +122,8 @@ class FieldArray(Field):
             '\n'
             'static gchar *\n'
             '${underscore}_get_printable (\n'
-            '    QmiMessage *self)\n'
+            '    QmiMessage *self,\n'
+            '    const gchar *line_prefix)\n'
             '{\n'
             '    GString *printable;\n'
             '    guint i;\n'
@@ -140,6 +141,11 @@ class FieldArray(Field):
             '\n'
             '        for (i = 0, item = (${array_element_type}Packed *)&buffer[1]; i < nitems; i++, item++) {\n'
             '            ${array_element_type} tmp;\n'
+            '\n'
+            '            g_string_append_printf (printable,\n'
+            '                                    "\\n"\n'
+            '                                    "%s    [#%u]",\n'
+            '                                    line_prefix, i);\n'
             '\n')
         f.write(string.Template(template).substitute(translations))
 
@@ -151,19 +157,24 @@ class FieldArray(Field):
                                                           struct_field['format'])
 
             template = (
-                '            ${endianfix};\n'
-                '            g_string_append_printf (printable,\n')
+                '            ${endianfix};\n')
 
             if struct_field['format'] == 'guint8' or \
                struct_field['format'] == 'guint16' or \
                struct_field['format'] == 'guin32':
                 template += (
-                    '                            "[${name_struct_field} = %u] ",\n'
-                    '                            (guint)tmp.${underscore_struct_field});\n')
+                    '            g_string_append_printf (printable,\n'
+                    '                                    "\\n"\n'
+                    '                                    "%s       [${name_struct_field} = %u] ",\n'
+                    '                                    line_prefix,\n'
+                    '                                    (guint)tmp.${underscore_struct_field});\n')
             else:
                 template += (
-                    '                            "[${name_struct_field} = %d] ",\n'
-                    '                            (gint)tmp.${underscore_struct_field});\n')
+                    '            g_string_append_printf (printable,\n'
+                    '                                    "\\n"'
+                    '                                    "%s       [${name_struct_field} = %d] ",\n'
+                    '                                    line_prefix,\n'
+                    '                                    (gint)tmp.${underscore_struct_field});\n')
             f.write(string.Template(template).substitute(translations))
 
         f.write(

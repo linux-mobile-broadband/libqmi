@@ -132,7 +132,8 @@ class FieldStruct(Field):
             '\n'
             'static gchar *\n'
             '${underscore}_get_printable (\n'
-            '    QmiMessage *self)\n'
+            '    QmiMessage *self,\n'
+            '    const gchar *line_prefix)\n'
             '{\n'
             '    GString *printable;\n'
             '    ${field_type}Packed tmp;\n'
@@ -145,6 +146,7 @@ class FieldStruct(Field):
             '                                   NULL));\n')
         f.write(string.Template(template).substitute(translations))
 
+        first = False
         for struct_field in self.contents.members:
             translations['name_struct_field'] = struct_field['name']
             translations['underscore_struct_field'] = utils.build_underscore_name(struct_field['name'])
@@ -159,11 +161,15 @@ class FieldStruct(Field):
                struct_field['format'] == 'guint16' or \
                struct_field['format'] == 'guin32':
                 template += (
-                    '                            "[${name_struct_field} = %u] ",\n'
+                    '                            "\\n"\n'
+                    '                            "%s     [${name_struct_field} = %u] ",\n'
+                    '                            line_prefix,\n'
                     '                            (guint)tmp.${underscore_struct_field});\n')
             else:
                 template += (
-                    '                            "[${name_struct_field} = %d] ",\n'
+                    '                            "\\n"\n'
+                    '                            "%s     [${name_struct_field} = %d] ",\n'
+                    '                            line_prefix,\n'
                     '                            (gint)tmp.${underscore_struct_field});\n')
             f.write(string.Template(template).substitute(translations))
 

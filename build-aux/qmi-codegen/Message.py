@@ -261,7 +261,9 @@ class Message:
                 field_template = (
                     '        case ${field_enum}:\n'
                     '            tlv_type_str = "${field_name}";\n'
-                    '            translated_value = ${underscore_field}_get_printable (ctx->self);\n'
+                    '            translated_value = ${underscore_field}_get_printable (\n'
+                    '                                   ctx->self,\n'
+                    '                                   ctx->line_prefix);\n'
                     '            break;\n')
                 template += string.Template(field_template).substitute(translations)
 
@@ -279,7 +281,9 @@ class Message:
             field_template = (
                 '        case ${field_enum}:\n'
                 '            tlv_type_str = "${field_name}";\n'
-                '            translated_value = ${underscore_field}_get_printable (ctx->self);\n'
+                '            translated_value = ${underscore_field}_get_printable (\n'
+                '                                   ctx->self,\n'
+                '                                   ctx->line_prefix);\n'
                 '            break;\n')
             template += string.Template(field_template).substitute(translations)
 
