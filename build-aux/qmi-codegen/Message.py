@@ -312,7 +312,7 @@ class Message:
             '        g_string_append_printf (ctx->printable,\n'
             '                                "%sTLV:\\n"\n'
             '                                "%s  type       = \\"%s\\" (0x%02x)\\n"\n'
-            '                                "%s  length     = %u\\n"\n'
+            '                                "%s  length     = %" G_GSIZE_FORMAT "\\n"\n'
             '                                "%s  value      = %s\\n"\n'
             '                                "%s  translated = %s\\n",\n'
             '                                ctx->line_prefix,\n'
