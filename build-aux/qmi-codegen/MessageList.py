@@ -27,6 +27,7 @@ class MessageList:
     def __init__(self, objects_dictionary, common_objects_dictionary):
         self.list = []
         self.message_id_enum_name = None
+        self.service = None
 
         # Loop items in the list, creating Message objects for the messages
         # and looking for the special 'Message-ID-Enum' type
@@ -36,10 +37,16 @@ class MessageList:
                 self.list.append(message)
             elif object_dictionary['type'] == 'Message-ID-Enum':
                 self.message_id_enum_name = object_dictionary['name']
+            elif object_dictionary['type'] == 'Service':
+                self.service = object_dictionary['name']
 
         # We NEED the Message-ID-Enum field
         if self.message_id_enum_name is None:
             raise ValueError('Missing Message-ID-Enum field')
+
+        # We NEED the Service field
+        if self.service is None:
+            raise ValueError('Missing Service field')
 
 
     def emit_message_ids_enum(self, f):
