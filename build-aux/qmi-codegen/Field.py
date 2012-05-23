@@ -217,8 +217,21 @@ class Field:
                 '${lp}    break;\n')
             f.write(string.Template(template).substitute(translations))
 
+
     def emit_output_tlv_get(self, f, line_prefix):
         '''
         Subclasses can implement the method to emit the required TLV retrieval
         '''
         pass
+
+
+    def emit_output_tlv_get_printable(self, f):
+        translations = { 'underscore'           : utils.build_underscore_name (self.fullname) }
+        template = (
+            'static gchar *\n'
+            '${underscore}_get_printable (\n'
+            '    QmiMessage *self)\n'
+            '{\n'
+            '    return NULL;\n'
+            '}\n')
+        f.write(string.Template(template).substitute(translations))

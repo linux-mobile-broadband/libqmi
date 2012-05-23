@@ -90,3 +90,49 @@ class FieldStructResult(FieldStruct):
             '    return FALSE;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
+
+    def emit_output_tlv_get_printable(self, f):
+        translations = { 'name'                 : self.name,
+                         'underscore'           : utils.build_underscore_name (self.fullname),
+                         'container_underscore' : utils.build_underscore_name (self.prefix),
+                         'field_type'           : self.field_type,
+                         'tlv_id'               : self.id_enum_name,
+                         'variable_name'        : self.variable_name }
+
+        template = (
+            '\n'
+            'static gchar *\n'
+            '${underscore}_get_printable (\n'
+            '    QmiMessage *self)\n'
+            '{\n'
+            '    GString *printable;\n'
+            '    ${field_type}Packed tmp;\n'
+            '\n'
+            '    printable = g_string_new ("");\n'
+            '    g_assert (qmi_message_tlv_get (self,\n'
+            '                                   ${tlv_id},\n'
+            '                                   sizeof (tmp),\n'
+            '                                   &tmp,\n'
+            '                                   NULL));\n')
+        f.write(string.Template(template).substitute(translations))
+
+        for struct_field in self.contents.members:
+            translations['name_struct_field'] = struct_field['name']
+            translations['underscore_struct_field'] = utils.build_underscore_name(struct_field['name'])
+            translations['endianfix'] = utils.he_from_le ('tmp.' + utils.build_underscore_name(struct_field['name']),
+                                                          'tmp.' + utils.build_underscore_name(struct_field['name']),
+                                                          struct_field['format'])
+            template = (
+                '    ${endianfix};')
+
+        f.write(
+            '    if (tmp.error_status == QMI_STATUS_SUCCESS)\n'
+            '        g_string_append (printable,\n'
+            '                         "SUCCESS");\n'
+            '    else\n'
+            '        g_string_append_printf (printable,\n'
+            '                                "FAILURE: %s",\n'
+            '                                qmi_protocol_error_get_string ((QmiProtocolError) tmp.error_code));\n'
+            '\n'
+            '    return g_string_free (printable, FALSE);\n'
+            '}\n')

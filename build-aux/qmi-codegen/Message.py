@@ -220,6 +220,13 @@ class Message:
 
 
     def __emit_get_printable(self, hfile, cfile):
+
+        if self.input.fields is not None:
+            for field in self.input.fields:
+                field.emit_output_tlv_get_printable(cfile)
+        for field in self.output.fields:
+            field.emit_output_tlv_get_printable(cfile)
+
         translations = { 'name'       : self.name,
                          'service'    : self.service,
                          'id'         : self.id,
@@ -241,17 +248,20 @@ class Message:
             '    struct ${underscore}_context *ctx)\n'
             '{\n'
             '    const gchar *tlv_type_str = NULL;\n'
+            '    gchar *translated_value;\n'
             '\n'
             '    if (!qmi_message_is_response (ctx->self)) {\n'
             '        switch (type) {\n')
 
         if self.input.fields is not None:
             for field in self.input.fields:
+                translations['underscore_field'] = utils.build_underscore_name(field.fullname)
                 translations['field_enum'] = field.id_enum_name
                 translations['field_name'] = field.name
                 field_template = (
                     '        case ${field_enum}:\n'
                     '            tlv_type_str = "${field_name}";\n'
+                    '            translated_value = ${underscore_field}_get_printable (ctx->self);\n'
                     '            break;\n')
                 template += string.Template(field_template).substitute(translations)
 
@@ -263,11 +273,13 @@ class Message:
             '        switch (type) {\n')
 
         for field in self.output.fields:
+            translations['underscore_field'] = utils.build_underscore_name(field.fullname)
             translations['field_enum'] = field.id_enum_name
             translations['field_name'] = field.name
             field_template = (
                 '        case ${field_enum}:\n'
                 '            tlv_type_str = "${field_name}";\n'
+                '            translated_value = ${underscore_field}_get_printable (ctx->self);\n'
                 '            break;\n')
             template += string.Template(field_template).substitute(translations)
 
@@ -295,14 +307,17 @@ class Message:
             '        value_hex = qmi_utils_str_hex (value, length, \':\');\n'
             '        g_string_append_printf (ctx->printable,\n'
             '                                "%sTLV:\\n"\n'
-            '                                "%s  type   = \\"%s\\" (0x%02x)\\n"\n'
-            '                                "%s  length = %u\\n"\n'
-            '                                "%s  value  = %s\\n",\n'
+            '                                "%s  type       = \\"%s\\" (0x%02x)\\n"\n'
+            '                                "%s  length     = %u\\n"\n'
+            '                                "%s  value      = %s\\n"\n'
+            '                                "%s  translated = %s\\n",\n'
             '                                ctx->line_prefix,\n'
             '                                ctx->line_prefix, tlv_type_str, type,\n'
             '                                ctx->line_prefix, length,\n'
-            '                                ctx->line_prefix, value_hex);\n'
+            '                                ctx->line_prefix, value_hex,\n'
+            '                                ctx->line_prefix, translated_value ? translated_value : "");\n'
             '        g_free (value_hex);\n'
+            '        g_free (translated_value);\n'
             '    }\n'
             '}\n'
             '\n'
