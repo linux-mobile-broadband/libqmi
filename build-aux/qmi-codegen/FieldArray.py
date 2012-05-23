@@ -112,3 +112,63 @@ class FieldArray(Field):
             template += (
                 '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
+
+
+    def emit_output_tlv_get_printable(self, f):
+        translations = { 'underscore'           : utils.build_underscore_name (self.fullname),
+                         'array_element_type'   : self.array_element.name,
+                         'tlv_id'               : self.id_enum_name }
+        template = (
+            '\n'
+            'static gchar *\n'
+            '${underscore}_get_printable (\n'
+            '    QmiMessage *self)\n'
+            '{\n'
+            '    GString *printable;\n'
+            '    guint i;\n'
+            '    guint8 buffer[1024];\n'
+            '    guint16 buffer_len = 1024;\n'
+            '    ${array_element_type}Packed *item;\n'
+            '\n'
+            '    printable = g_string_new ("");\n'
+            '    if (qmi_message_tlv_get_varlen (self,\n'
+            '                                    ${tlv_id},\n'
+            '                                    &buffer_len,\n'
+            '                                    buffer,\n'
+            '                                    NULL)) {\n'
+            '        guint8 nitems = buffer[0];\n'
+            '\n'
+            '        for (i = 0, item = (${array_element_type}Packed *)&buffer[1]; i < nitems; i++, item++) {\n'
+            '            ${array_element_type} tmp;\n'
+            '\n')
+        f.write(string.Template(template).substitute(translations))
+
+        for struct_field in self.array_element.members:
+            translations['name_struct_field'] = struct_field['name']
+            translations['underscore_struct_field'] = utils.build_underscore_name(struct_field['name'])
+            translations['endianfix'] = utils.he_from_le ('item->' + utils.build_underscore_name(struct_field['name']),
+                                                          'tmp.' + utils.build_underscore_name(struct_field['name']),
+                                                          struct_field['format'])
+
+            template = (
+                '            ${endianfix};\n'
+                '            g_string_append_printf (printable,\n')
+
+            if struct_field['format'] == 'guint8' or \
+               struct_field['format'] == 'guint16' or \
+               struct_field['format'] == 'guin32':
+                template += (
+                    '                            "[${name_struct_field} = %u] ",\n'
+                    '                            (guint)tmp.${underscore_struct_field});\n')
+            else:
+                template += (
+                    '                            "[${name_struct_field} = %d] ",\n'
+                    '                            (gint)tmp.${underscore_struct_field});\n')
+            f.write(string.Template(template).substitute(translations))
+
+        f.write(
+            '        }\n'
+            '    }\n'
+            '\n'
+            '    return g_string_free (printable, FALSE);\n'
+            '}\n')
