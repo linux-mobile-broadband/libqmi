@@ -87,3 +87,25 @@ class FieldString(Field):
             template += (
                     '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
+
+
+    def emit_output_tlv_get_printable(self, f):
+        translations = { 'underscore'           : utils.build_underscore_name (self.fullname),
+                         'tlv_id'               : self.id_enum_name }
+
+        template = (
+            '\n'
+            'static gchar *\n'
+            '${underscore}_get_printable (\n'
+            '    QmiMessage *self)\n'
+            '{\n'
+            '    gchar *printable;\n'
+            '\n'
+            '    printable = qmi_message_tlv_get_string (self,\n'
+            '                                            ${tlv_id},\n'
+            '                                            NULL);\n'
+            '    g_assert (printable != NULL);'
+            '\n'
+            '    return printable;\n'
+            '}\n')
+        f.write(string.Template(template).substitute(translations))
