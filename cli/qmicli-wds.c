@@ -384,7 +384,7 @@ get_data_bearer_technology_ready (QmiClientWds *client,
 {
     GError *error = NULL;
     QmiMessageWdsGetDataBearerTechnologyOutput *output;
-    guint8 current;
+    QmiWdsDataBearerTechnology current;
 
     output = qmi_client_wds_get_data_bearer_technology_finish (client, res, &error);
     if (!output) {
@@ -401,16 +401,15 @@ get_data_bearer_technology_ready (QmiClientWds *client,
         if (g_error_matches (error,
                              QMI_PROTOCOL_ERROR,
                              QMI_PROTOCOL_ERROR_OUT_OF_CALL)) {
-            guint8 last;
+            QmiWdsDataBearerTechnology last = QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN;
 
-            qmi_message_wds_get_data_bearer_technology_output_get_last (
-                output,
-                &last,
-                NULL);
-            /* TODO: print string */
-            g_print ("[%s] Data bearer technology (last): '%u'\n",
-                     qmi_device_get_path_display (ctx->device),
-                     last);
+            if (qmi_message_wds_get_data_bearer_technology_output_get_last (
+                    output,
+                    &last,
+                    NULL))
+                g_print ("[%s] Data bearer technology (last): '%s'(%d)\n",
+                         qmi_device_get_path_display (ctx->device),
+                         qmi_wds_data_bearer_technology_get_string (last), last);
         }
 
         g_error_free (error);
@@ -423,10 +422,9 @@ get_data_bearer_technology_ready (QmiClientWds *client,
         output,
         &current,
         NULL);
-    /* TODO: print string */
-    g_print ("[%s] Data bearer technology (current): '%u'\n",
+    g_print ("[%s] Data bearer technology (current): '%s'\n",
              qmi_device_get_path_display (ctx->device),
-             current);
+             qmi_wds_data_bearer_technology_get_string (current));
     qmi_message_wds_get_data_bearer_technology_output_unref (output);
     shutdown (TRUE);
 }
