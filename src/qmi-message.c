@@ -664,7 +664,7 @@ qmi_message_get_tlv_printable (QmiMessage *self,
     value_hex = qmi_utils_str_hex (value, length, ':');
     printable = g_strdup_printf ("%sTLV:\n"
                                  "%s  type   = 0x%02x\n"
-                                 "%s  length = %u\n"
+                                 "%s  length = %" G_GSIZE_FORMAT "\n"
                                  "%s  value  = %s\n",
                                  line_prefix,
                                  line_prefix, type,
