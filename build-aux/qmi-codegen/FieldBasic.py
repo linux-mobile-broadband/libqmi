@@ -85,7 +85,7 @@ class FieldBasic(Field):
                                      utils.le_from_he ('self->' + self.variable_name,
                                                        'self->' + self.variable_name,
                                                         self.field_type)))
-        if self.mandatory is 'yes':
+        if self.mandatory == 'yes':
             template = (
                     '${lp}} else {\n'
                     '${lp}    g_prefix_error (error, \"Couldn\'t get the ${name} TLV: \");\n'

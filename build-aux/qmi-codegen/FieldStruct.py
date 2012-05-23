@@ -108,7 +108,7 @@ class FieldStruct(Field):
                                      utils.he_from_le ('tmp.' + utils.build_underscore_name(struct_field['name']),
                                                        'self->' + self.variable_name + '.' + utils.build_underscore_name(struct_field['name']),
                                                        struct_field['format'])))
-        if self.mandatory is 'yes':
+        if self.mandatory == 'yes':
             template = (
                     '${lp}} else {\n'
                     '${lp}    g_prefix_error (error, \"Couldn\'t get the ${name} TLV: \");\n'

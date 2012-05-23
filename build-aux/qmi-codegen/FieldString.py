@@ -76,7 +76,7 @@ class FieldString(Field):
                 '${lp}if (self->${variable_name}) {\n'
                 '${lp}    self->${variable_name}_set = TRUE;\n')
 
-        if self.mandatory is 'yes':
+        if self.mandatory == 'yes':
             template += (
                     '${lp}} else {\n'
                     '${lp}    g_prefix_error (error, \"Couldn\'t get the ${name} TLV: \");\n'
