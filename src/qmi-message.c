@@ -38,6 +38,10 @@
 #include "qmi-enum-types.h"
 #include "qmi-error-types.h"
 
+#include "qmi-ctl.h"
+#include "qmi-dms.h"
+#include "qmi-wds.h"
+
 #define PACKED __attribute__((packed))
 
 struct qmux {
@@ -93,17 +97,17 @@ struct _QmiMessage {
     volatile gint ref_count; /* the ref count */
 };
 
-static inline uint16_t
-qmux_length (QmiMessage *self)
+guint16
+qmi_message_get_qmux_length (QmiMessage *self)
 {
-    return le16toh (self->buf->qmux.length);
+    return GUINT16_FROM_LE (self->buf->qmux.length);
 }
 
 static inline void
 set_qmux_length (QmiMessage *self,
                  uint16_t length)
 {
-    self->buf->qmux.length = htole16 (length);
+    self->buf->qmux.length = GUINT16_TO_LE (length);
 }
 
 gboolean
@@ -208,23 +212,23 @@ qmi_message_get_length (QmiMessage *self)
     return self->len;
 }
 
-static uint16_t
-qmi_tlv_length (QmiMessage *self)
+guint16
+qmi_message_get_tlv_length (QmiMessage *self)
 {
     if (qmi_message_is_control (self))
-        return le16toh (self->buf->qmi.control.header.tlv_length);
+        return GUINT16_FROM_LE (self->buf->qmi.control.header.tlv_length);
 
-    return le16toh (self->buf->qmi.service.header.tlv_length);
+    return GUINT16_FROM_LE (self->buf->qmi.service.header.tlv_length);
 }
 
 static void
-set_qmi_tlv_length (QmiMessage *self,
-                    uint16_t length)
+set_qmi_message_get_tlv_length (QmiMessage *self,
+                    guint16 length)
 {
     if (qmi_message_is_control (self))
-        self->buf->qmi.control.header.tlv_length = htole16 (length);
+        self->buf->qmi.control.header.tlv_length = GUINT16_TO_LE (length);
     else
-        self->buf->qmi.service.header.tlv_length = htole16 (length);
+        self->buf->qmi.service.header.tlv_length = GUINT16_TO_LE (length);
 }
 
 static struct tlv *
@@ -251,7 +255,7 @@ tlv_next (struct tlv *tlv)
 static struct tlv *
 qmi_tlv_first (QmiMessage *self)
 {
-    if (qmi_tlv_length (self))
+    if (qmi_message_get_tlv_length (self))
         return qmi_tlv (self);
 
     return NULL;
@@ -300,12 +304,12 @@ qmi_message_check (QmiMessage *self,
         return FALSE;
     }
 
-    if (qmux_length (self) < sizeof (struct qmux)) {
+    if (qmi_message_get_qmux_length (self) < sizeof (struct qmux)) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
                      "QMUX length too short for QMUX header (%u < %" G_GSIZE_FORMAT ")",
-                     qmux_length (self), sizeof (struct qmux));
+                     qmi_message_get_qmux_length (self), sizeof (struct qmux));
         return FALSE;
     }
 
@@ -313,12 +317,12 @@ qmi_message_check (QmiMessage *self,
      * qmux length is one byte shorter than buffer length because qmux
      * length does not include the qmux frame marker.
      */
-    if (qmux_length (self) != self->len - 1) {
+    if (qmi_message_get_qmux_length (self) != self->len - 1) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
                      "QMUX length and buffer length don't match (%u != %" G_GSIZE_FORMAT ")",
-                     qmux_length (self), self->len - 1);
+                     qmi_message_get_qmux_length (self), self->len - 1);
         return FALSE;
     }
 
@@ -326,21 +330,21 @@ qmi_message_check (QmiMessage *self,
                                             sizeof (struct control_header) :
                                             sizeof (struct service_header));
 
-    if (qmux_length (self) < header_length) {
+    if (qmi_message_get_qmux_length (self) < header_length) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
                      "QMUX length too short for QMI header (%u < %" G_GSIZE_FORMAT ")",
-                     qmux_length (self), header_length);
+                     qmi_message_get_qmux_length (self), header_length);
         return FALSE;
     }
 
-    if (qmux_length (self) - header_length != qmi_tlv_length (self)) {
+    if (qmi_message_get_qmux_length (self) - header_length != qmi_message_get_tlv_length (self)) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
                      "QMUX length and QMI TLV lengths don't match (%u - %" G_GSIZE_FORMAT " != %u)",
-                     qmux_length (self), header_length, qmi_tlv_length (self));
+                     qmi_message_get_qmux_length (self), header_length, qmi_message_get_tlv_length (self));
         return FALSE;
     }
 
@@ -411,7 +415,7 @@ qmi_message_new (QmiService service,
         self->buf->qmi.service.header.message = htole16 (message_id);
     }
 
-    set_qmi_tlv_length (self, 0);
+    set_qmi_message_get_tlv_length (self, 0);
 
     g_assert (qmi_message_check (self, NULL));
 
@@ -586,7 +590,7 @@ qmi_message_tlv_add (QmiMessage *self,
     tlv_len = sizeof (struct tlv) + length;
 
     /* Check for overflow of message size. */
-    if (qmux_length (self) + tlv_len > UINT16_MAX) {
+    if (qmi_message_get_qmux_length (self) + tlv_len > UINT16_MAX) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_TLV_TOO_LONG,
@@ -606,8 +610,8 @@ qmi_message_tlv_add (QmiMessage *self,
         memcpy (tlv->value, value, length);
 
     /* Update length fields. */
-    set_qmux_length (self, (uint16_t)(qmux_length (self) + tlv_len));
-    set_qmi_tlv_length (self, (uint16_t)(qmi_tlv_length(self) + tlv_len));
+    set_qmux_length (self, (uint16_t)(qmi_message_get_qmux_length (self) + tlv_len));
+    set_qmi_message_get_tlv_length (self, (uint16_t)(qmi_message_get_tlv_length(self) + tlv_len));
 
     /* Make sure we didn't break anything. */
     if (!qmi_message_check (self, error)) {
@@ -647,13 +651,64 @@ qmi_message_new_from_raw (const guint8 *raw,
     return self;
 }
 
+gchar *
+qmi_message_get_tlv_printable (QmiMessage *self,
+                               const gchar *line_prefix,
+                               guint8 type,
+                               gsize length,
+                               gconstpointer value)
+{
+    gchar *printable;
+    gchar *value_hex;
+
+    value_hex = qmi_utils_str_hex (value, length, ':');
+    printable = g_strdup_printf ("%sTLV:\n"
+                                 "%s  type   = 0x%02x\n"
+                                 "%s  length = %u\n"
+                                 "%s  value  = %s\n",
+                                 line_prefix,
+                                 line_prefix, type,
+                                 line_prefix, length,
+                                 line_prefix, value_hex);
+    g_free (value_hex);
+    return printable;
+}
+
 static gchar *
 get_generic_printable (QmiMessage *self,
                        const gchar *line_prefix)
 {
     GString *printable;
-    gchar *qmi_flags_str;
     struct tlv *tlv;
+
+    printable = g_string_new ("");
+
+    g_string_append_printf (printable,
+                            "%s  message     = (0x%04x)\n",
+                            line_prefix, qmi_message_get_message_id (self));
+
+    for (tlv = qmi_tlv_first (self); tlv; tlv = qmi_tlv_next (self, tlv)) {
+        gchar *printable_tlv;
+
+        printable_tlv = qmi_message_get_tlv_printable (self,
+                                                       line_prefix,
+                                                       tlv->type,
+                                                       tlv->length,
+                                                       tlv->value);
+        g_string_append (printable, printable_tlv);
+        g_free (printable_tlv);
+    }
+
+    return g_string_free (printable, FALSE);
+}
+
+gchar *
+qmi_message_get_printable (QmiMessage *self,
+                           const gchar *line_prefix)
+{
+    GString *printable;
+    gchar *qmi_flags_str;
+    gchar *contents;
 
     if (!qmi_message_check (self, NULL))
         return NULL;
@@ -664,15 +719,15 @@ get_generic_printable (QmiMessage *self,
     printable = g_string_new ("");
     g_string_append_printf (printable,
                             "%sQMUX:\n"
-                            "%s  length  = %u (0x%04x)\n"
+                            "%s  length  = %u\n"
                             "%s  flags   = 0x%02x\n"
-                            "%s  service = \"%s\" (0x%02x)\n"
-                            "%s  client  = %u (0x%02x)\n",
+                            "%s  service = \"%s\"\n"
+                            "%s  client  = %u\n",
                             line_prefix,
-                            line_prefix, qmux_length (self), qmux_length (self),
+                            line_prefix, qmi_message_get_qmux_length (self),
                             line_prefix, qmi_message_get_qmux_flags (self),
-                            line_prefix, qmi_service_get_string (qmi_message_get_service (self)), qmi_message_get_service (self),
-                            line_prefix, qmi_message_get_client_id (self), qmi_message_get_client_id (self));
+                            line_prefix, qmi_service_get_string (qmi_message_get_service (self)),
+                            line_prefix, qmi_message_get_client_id (self));
 
     if (qmi_message_get_service (self) == QMI_SERVICE_CTL)
         qmi_flags_str = qmi_ctl_flag_build_string_from_mask (qmi_message_get_qmi_flags (self));
@@ -683,37 +738,32 @@ get_generic_printable (QmiMessage *self,
                             "%sQMI:\n"
                             "%s  flags       = \"%s\"\n"
                             "%s  transaction = %u\n"
-                            "%s  message     = 0x%04x\n"
                             "%s  tlv_length  = %u\n",
                             line_prefix,
                             line_prefix, qmi_flags_str,
                             line_prefix, qmi_message_get_transaction_id (self),
-                            line_prefix, qmi_message_get_message_id (self),
-                            line_prefix, qmi_tlv_length (self));
+                            line_prefix, qmi_message_get_tlv_length (self));
     g_free (qmi_flags_str);
 
-    for (tlv = qmi_tlv_first (self); tlv; tlv = qmi_tlv_next (self, tlv)) {
-        gchar *value_hex;
-
-        value_hex = qmi_utils_str_hex (tlv->value, GUINT16_FROM_LE (tlv->length), ':');
-        g_string_append_printf (printable,
-                                "%sTLV:\n"
-                                "%s  type   = 0x%02x\n"
-                                "%s  length = %u\n"
-                                "%s  value  = %s\n",
-                                line_prefix,
-                                line_prefix, tlv->type,
-                                line_prefix, GUINT16_FROM_LE (tlv->length),
-                                line_prefix, value_hex);
-        g_free (value_hex);
+    contents = NULL;
+    switch (qmi_message_get_service (self)) {
+    case QMI_SERVICE_CTL:
+        contents = qmi_message_ctl_get_printable (self, line_prefix);
+        break;
+    case QMI_SERVICE_DMS:
+        contents = qmi_message_dms_get_printable (self, line_prefix);
+        break;
+    case QMI_SERVICE_WDS:
+        contents = qmi_message_wds_get_printable (self, line_prefix);
+        break;
+    default:
+        break;
     }
 
-    return g_string_free (printable, FALSE);
-}
+    if (!contents)
+        contents = get_generic_printable (self, line_prefix);
+    g_string_append (printable, contents);
+    g_free (contents);
 
-gchar *
-qmi_message_get_printable (QmiMessage *self,
-                           const gchar *line_prefix)
-{
-    return get_generic_printable (self, line_prefix);
+    return g_string_free (printable, FALSE);
 }

@@ -64,8 +64,7 @@ qmi-wds.stamp: $(top_srcdir)/data/qmi-service-wds.json $(top_srcdir)/build-aux/q
 # Additional dependencies
 qmi-device.c: qmi-error-types.h qmi-enum-types.h
 qmi-client.c: qmi-error-types.h qmi-enum-types.h
-qmi-message.c: qmi-error-types.h qmi-enum-types.h
-qmi-message-dms.c: qmi-error-types.h
+qmi-message.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.h qmi-dms.h qmi-wds.h
 qmi-ctl.h: qmi-ctl.stamp
 qmi-ctl.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.stamp
 qmi-dms.h: qmi-dms.stamp

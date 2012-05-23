@@ -30,9 +30,9 @@
 
 G_BEGIN_DECLS
 
-gchar *qmi_utils_str_hex (gpointer mem,
-                          gsize    size,
-                          gchar    delimiter);
+gchar *qmi_utils_str_hex (gconstpointer mem,
+                          gsize size,
+                          gchar delimiter);
 
 G_END_DECLS
 

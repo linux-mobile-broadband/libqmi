@@ -81,10 +81,18 @@ gconstpointer qmi_message_get_raw (QmiMessage *self,
                                    gsize *length,
                                    GError **error);
 
-gsize qmi_message_get_length (QmiMessage *self);
+guint16 qmi_message_get_qmux_length (QmiMessage *self);
+guint16 qmi_message_get_tlv_length  (QmiMessage *self);
+gsize   qmi_message_get_length      (QmiMessage *self);
 
 gchar *qmi_message_get_printable (QmiMessage *self,
                                   const gchar *line_prefix);
+
+gchar *qmi_message_get_tlv_printable (QmiMessage *self,
+                                      const gchar *line_prefix,
+                                      guint8 type,
+                                      gsize length,
+                                      gconstpointer value);
 
 gboolean qmi_message_check (QmiMessage *self,
                             GError **error);

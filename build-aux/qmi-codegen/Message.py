@@ -219,6 +219,118 @@ class Message:
             '}\n')
 
 
+    def __emit_get_printable(self, hfile, cfile):
+        translations = { 'name'       : self.name,
+                         'service'    : self.service,
+                         'id'         : self.id,
+                         'underscore' : utils.build_underscore_name (self.name) }
+
+        template = (
+            '\n'
+            'struct ${underscore}_context {\n'
+            '    QmiMessage *self;\n'
+            '    const gchar *line_prefix;\n'
+            '    GString *printable;\n'
+            '};\n'
+            '\n'
+            'static void\n'
+            '${underscore}_get_tlv_printable (\n'
+            '    guint8 type,\n'
+            '    gsize length,\n'
+            '    gconstpointer value,\n'
+            '    struct ${underscore}_context *ctx)\n'
+            '{\n'
+            '    const gchar *tlv_type_str = NULL;\n'
+            '\n'
+            '    if (!qmi_message_is_response (ctx->self)) {\n'
+            '        switch (type) {\n')
+
+        if self.input.fields is not None:
+            for field in self.input.fields:
+                translations['field_enum'] = field.id_enum_name
+                translations['field_name'] = field.name
+                field_template = (
+                    '        case ${field_enum}:\n'
+                    '            tlv_type_str = "${field_name}";\n'
+                    '            break;\n')
+                template += string.Template(field_template).substitute(translations)
+
+        template += (
+            '        default:\n'
+            '            break;\n'
+            '        }\n'
+            '    } else {\n'
+            '        switch (type) {\n')
+
+        for field in self.output.fields:
+            translations['field_enum'] = field.id_enum_name
+            translations['field_name'] = field.name
+            field_template = (
+                '        case ${field_enum}:\n'
+                '            tlv_type_str = "${field_name}";\n'
+                '            break;\n')
+            template += string.Template(field_template).substitute(translations)
+
+        template += (
+            '        default:\n'
+            '            break;\n'
+            '        }\n'
+            '    }\n'
+            '\n'
+            '\n'
+            '\n'
+            '    if (!tlv_type_str) {\n'
+            '        gchar *value_str = NULL;\n'
+            '\n'
+            '        value_str = qmi_message_get_tlv_printable (ctx->self,\n'
+            '                                                   ctx->line_prefix,\n'
+            '                                                   type,\n'
+            '                                                   length,\n'
+            '                                                   value);\n'
+            '        g_string_append (ctx->printable, value_str);\n'
+            '        g_free (value_str);\n'
+            '    } else {\n'
+            '        gchar *value_hex;\n'
+            '\n'
+            '        value_hex = qmi_utils_str_hex (value, length, \':\');\n'
+            '        g_string_append_printf (ctx->printable,\n'
+            '                                "%sTLV:\\n"\n'
+            '                                "%s  type   = \\"%s\\" (0x%02x)\\n"\n'
+            '                                "%s  length = %u\\n"\n'
+            '                                "%s  value  = %s\\n",\n'
+            '                                ctx->line_prefix,\n'
+            '                                ctx->line_prefix, tlv_type_str, type,\n'
+            '                                ctx->line_prefix, length,\n'
+            '                                ctx->line_prefix, value_hex);\n'
+            '        g_free (value_hex);\n'
+            '    }\n'
+            '}\n'
+            '\n'
+            'static gchar *\n'
+            '${underscore}_get_printable (\n'
+            '    QmiMessage *self,\n'
+            '    const gchar *line_prefix)\n'
+            '{\n'
+            '    struct ${underscore}_context ctx;\n'
+            '    GString *printable;\n'
+            '\n'
+            '    printable = g_string_new ("");\n'
+            '    g_string_append_printf (printable,\n'
+            '                            "%s  message     = \\\"${name}\\\" (${id})\\n",\n'
+            '                            line_prefix);\n'
+            '\n'
+            '    ctx.self = self;\n'
+            '    ctx.line_prefix = line_prefix;\n'
+            '    ctx.printable = printable;\n'
+            '    qmi_message_tlv_foreach (self,\n'
+            '                             (QmiMessageForeachTlvFn)${underscore}_get_tlv_printable,\n'
+            '                             &ctx);\n'
+            '\n'
+            '    return g_string_free (printable, FALSE);\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+
     def emit(self, hfile, cfile):
         utils.add_separator(hfile, 'REQUEST/RESPONSE', self.fullname);
         utils.add_separator(cfile, 'REQUEST/RESPONSE', self.fullname);
@@ -226,9 +338,11 @@ class Message:
         hfile.write('\n/* --- Input -- */\n');
         cfile.write('\n/* --- Input -- */\n');
         self.input.emit(hfile, cfile)
-        self.__emit_request_creator (hfile, cfile)
+        self.__emit_request_creator(hfile, cfile)
 
         hfile.write('\n/* --- Output -- */\n');
         cfile.write('\n/* --- Output -- */\n');
         self.output.emit(hfile, cfile)
-        self.__emit_response_parser (hfile, cfile)
+        self.__emit_response_parser(hfile, cfile)
+
+        self.__emit_get_printable(hfile, cfile)

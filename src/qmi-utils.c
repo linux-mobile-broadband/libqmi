@@ -28,9 +28,9 @@
 #include "qmi-utils.h"
 
 gchar *
-qmi_utils_str_hex (gpointer mem,
-                   gsize    size,
-                   gchar    delimiter)
+qmi_utils_str_hex (gconstpointer mem,
+                   gsize size,
+                   gchar delimiter)
 {
     const guint8 *data = mem;
 	gsize i;

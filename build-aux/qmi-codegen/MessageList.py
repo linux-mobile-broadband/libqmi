@@ -67,6 +67,42 @@ class MessageList:
         f.write(string.Template(template).substitute(translations))
 
 
+    def __emit_get_printable(self, hfile, cfile):
+        translations = { 'service'    : string.lower(self.service) }
+
+        template = (
+            '\n'
+            'gchar *qmi_message_${service}_get_printable (\n'
+            '    QmiMessage *self,\n'
+            '    const gchar *line_prefix);\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        template = (
+            '\n'
+            'gchar *\n'
+            'qmi_message_${service}_get_printable (\n'
+            '    QmiMessage *self,\n'
+            '    const gchar *line_prefix)\n'
+            '{\n'
+            '    switch (qmi_message_get_message_id (self)) {\n')
+
+        for message in self.list:
+            translations['enum_name'] = message.id_enum_name
+            translations['message_underscore'] = utils.build_underscore_name (message.name)
+            translations['enum_value'] = message.id
+            inner_template = (
+                'case ${enum_name}:\n'
+                '    return ${message_underscore}_get_printable (self, line_prefix);\n')
+            template += string.Template(inner_template).substitute(translations)
+
+        template += (
+            '    default:\n'
+            '        return NULL;\n'
+            '    }\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+
     def emit(self, hfile, cfile):
         # First, emit the message IDs enum
         self.emit_message_ids_enum(cfile)
@@ -74,3 +110,8 @@ class MessageList:
         # Then, emit all message handlers
         for message in self.list:
             message.emit(hfile, cfile)
+
+        # First, emit common class code
+        utils.add_separator(hfile, 'PRINTABLE', self.service);
+        utils.add_separator(cfile, 'PRINTABLE', self.service);
+        self.__emit_get_printable(hfile, cfile)
