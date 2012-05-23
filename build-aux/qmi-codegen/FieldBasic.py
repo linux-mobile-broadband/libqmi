@@ -96,3 +96,41 @@ class FieldBasic(Field):
             template = (
                     '${lp}}\n')
         cfile.write(string.Template(template).substitute(translations))
+
+
+    def emit_output_tlv_get_printable(self, f):
+        translations = { 'underscore' : utils.build_underscore_name (self.fullname),
+                         'field_type' : self.field_type,
+                         'tlv_id'     : self.id_enum_name }
+
+        template = (
+            '\n'
+            'static gchar *\n'
+            '${underscore}_get_printable (\n'
+            '    QmiMessage *self)\n'
+            '{\n'
+            '    ${field_type} tmp;\n'
+            '    gchar *printable;\n'
+            '\n'
+            '    g_assert (qmi_message_tlv_get (self,\n'
+            '                                   ${tlv_id},\n'
+            '                                   sizeof (tmp),\n'
+            '                                   &tmp,\n'
+            '                                   NULL));\n')
+
+        template += ('    %s;\n' % (utils.le_from_he('tmp', 'tmp', self.field_type)))
+
+        if self.format == 'guint8' or \
+           self.format == 'guint16' or \
+           self.format == 'guin32':
+            template += (
+                '    printable = g_strdup_printf ("%u", (guint)tmp);\n')
+        else:
+            template += (
+                '    printable = g_strdup_printf ("%d", (gint)tmp);\n')
+
+        template += (
+            '\n'
+            '    return printable;\n'
+            '}\n')
+        f.write(string.Template(template).substitute(translations))
