@@ -647,14 +647,12 @@ qmi_message_new_from_raw (const guint8 *raw,
     return self;
 }
 
-#if 0
-gchar *
-qmi_message_get_printable (QmiMessage *self,
-                           const gchar *line_prefix)
+static gchar *
+get_generic_printable (QmiMessage *self,
+                       const gchar *line_prefix)
 {
     GString *printable;
     gchar *qmi_flags_str;
-    const gchar *qmi_message_str;
     struct tlv *tlv;
 
     if (!qmi_message_check (self, NULL))
@@ -681,50 +679,41 @@ qmi_message_get_printable (QmiMessage *self,
     else
         qmi_flags_str = qmi_service_flag_build_string_from_mask (qmi_message_get_qmi_flags (self));
 
-    switch (qmi_message_get_service (self)) {
-    case QMI_SERVICE_CTL:
-        qmi_message_str = qmi_ctl_message_get_string (qmi_message_get_message_id (self));
-        break;
-    case QMI_SERVICE_DMS:
-        qmi_message_str = qmi_dms_message_get_string (qmi_message_get_message_id (self));
-        break;
-    case QMI_SERVICE_WDS:
-        qmi_message_str = qmi_wds_message_get_string (qmi_message_get_message_id (self));
-        break;
-    default:
-        qmi_message_str = "unknown";
-        break;
-    }
-
     g_string_append_printf (printable,
                             "%sQMI:\n"
-                            "%s  flags       = \"%s\" (0x%02x)\n"
-                            "%s  transaction = %u (0x%04x)\n"
-                            "%s  message     = \"%s\" (0x%04x)\n"
-                            "%s  tlv_length  = %u (0x%04x)\n",
+                            "%s  flags       = \"%s\"\n"
+                            "%s  transaction = %u\n"
+                            "%s  message     = 0x%04x\n"
+                            "%s  tlv_length  = %u\n",
                             line_prefix,
-                            line_prefix, qmi_flags_str, qmi_message_get_qmi_flags (self),
-                            line_prefix, qmi_message_get_transaction_id (self), qmi_message_get_transaction_id (self),
-                            line_prefix, qmi_message_str, qmi_message_get_message_id (self),
-                            line_prefix, qmi_tlv_length (self), qmi_tlv_length (self));
+                            line_prefix, qmi_flags_str,
+                            line_prefix, qmi_message_get_transaction_id (self),
+                            line_prefix, qmi_message_get_message_id (self),
+                            line_prefix, qmi_tlv_length (self));
     g_free (qmi_flags_str);
 
     for (tlv = qmi_tlv_first (self); tlv; tlv = qmi_tlv_next (self, tlv)) {
         gchar *value_hex;
 
-        value_hex = qmi_utils_str_hex (tlv->value, le16toh (tlv->length), ':');
+        value_hex = qmi_utils_str_hex (tlv->value, GUINT16_FROM_LE (tlv->length), ':');
         g_string_append_printf (printable,
                                 "%sTLV:\n"
                                 "%s  type   = 0x%02x\n"
-                                "%s  length = %u (0x%04x)\n"
+                                "%s  length = %u\n"
                                 "%s  value  = %s\n",
                                 line_prefix,
                                 line_prefix, tlv->type,
-                                line_prefix, le16toh (tlv->length), le16toh (tlv->length),
+                                line_prefix, GUINT16_FROM_LE (tlv->length),
                                 line_prefix, value_hex);
         g_free (value_hex);
     }
 
     return g_string_free (printable, FALSE);
 }
-#endif
+
+gchar *
+qmi_message_get_printable (QmiMessage *self,
+                           const gchar *line_prefix)
+{
+    return get_generic_printable (self, line_prefix);
+}
