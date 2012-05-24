@@ -1,3 +1,6 @@
 
 EXTRA_DIST = \
-	qmi-service-ctl.json
+	qmi-common.json \
+	qmi-service-ctl.json \
+	qmi-service-dms.json \
+	qmi-service-wds.json
