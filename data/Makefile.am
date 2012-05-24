@@ -1,3 +1,4 @@
+SUBDIRS = . pkg-config
 
 EXTRA_DIST = \
 	qmi-common.json \

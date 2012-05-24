@@ -47,6 +47,8 @@ AC_SUBST(GLIB_MKENUMS)
 
 AC_CONFIG_FILES([Makefile
                  data/Makefile
+                 data/pkg-config/Makefile
+                 data/pkg-config/qmi-glib.pc
                  build-aux/Makefile
                  build-aux/templates/Makefile
                  build-aux/qmi-codegen/Makefile

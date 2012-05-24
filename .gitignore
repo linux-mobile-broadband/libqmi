@@ -29,6 +29,8 @@ missing
 stamp-h1
 depcomp
 
+data/pkg-config/qmi-glib.pc
+
 src/.libs
 src/.deps
 src/Makefile
