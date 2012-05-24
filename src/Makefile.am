@@ -84,6 +84,7 @@ qmi-wds.c: qmi-error-types.h qmi-enum-types.h qmi-wds.stamp
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
 	qmi-errors.h qmi-error-types.h qmi-error-types.c \
+	qmi-enums-wds.h \
 	qmi-enums.h qmi-enum-types.h qmi-enum-types.c \
 	qmi-utils.h qmi-utils.c \
 	qmi-message.h qmi-message.c \
@@ -103,10 +104,11 @@ include_HEADERS = \
 	libqmi-glib.h \
 	qmi-errors.h qmi-error-types.h \
 	qmi-enums.h qmi-enum-types.h \
+	qmi-message.h \
 	qmi-device.h \
 	qmi-client.h \
 	qmi-dms.h \
-	qmi-wds.h
+	qmi-enums-wds.h qmi-wds.h
 
 CLEANFILES = \
 	qmi-ctl.h qmi-ctl.c qmi-ctl.stamp \
