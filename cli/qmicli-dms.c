@@ -43,6 +43,7 @@ static Context *ctx;
 /* Options */
 static gboolean get_ids_flag;
 static gboolean get_capabilities_flag;
+static gboolean get_manufacturer_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -52,6 +53,10 @@ static GOptionEntry entries[] = {
     },
     { "dms-get-capabilities", 0, 0, G_OPTION_ARG_NONE, &get_capabilities_flag,
       "Get capabilities",
+      NULL
+    },
+    { "dms-get-manufacturer", 0, 0, G_OPTION_ARG_NONE, &get_manufacturer_flag,
+      "Get manufacturer",
       NULL
     },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -87,6 +92,7 @@ qmicli_dms_options_enabled (void)
 
     n_actions = (get_ids_flag +
                  get_capabilities_flag +
+                 get_manufacturer_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -223,6 +229,44 @@ get_capabilities_ready (QmiClientDms *client,
     qmi_message_dms_get_capabilities_output_unref (output);
     shutdown (TRUE);
 }
+
+static void
+get_manufacturer_ready (QmiClientDms *client,
+                        GAsyncResult *res)
+{
+    const gchar *str = NULL;
+    QmiMessageDmsGetManufacturerOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_manufacturer_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_manufacturer_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get manufacturer: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_manufacturer_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    qmi_message_dms_get_manufacturer_output_get_manufacturer (output, &str, NULL);
+
+    g_print ("[%s] Device manufacturer retrieved:\n"
+             "\tManufacturer: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             VALIDATE_UNKNOWN (str));
+
+    qmi_message_dms_get_manufacturer_output_unref (output);
+    shutdown (TRUE);
+}
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -262,6 +306,18 @@ qmicli_dms_run (QmiDevice *device,
                                          10,
                                          ctx->cancellable,
                                          (GAsyncReadyCallback)get_capabilities_ready,
+                                         NULL);
+        return;
+    }
+
+    /* Request to get manufacturer? */
+    if (get_manufacturer_flag) {
+        g_debug ("Asynchronously getting manufacturer...");
+        qmi_client_dms_get_manufacturer (ctx->client,
+                                         NULL,
+                                         10,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)get_manufacturer_ready,
                                          NULL);
         return;
     }
