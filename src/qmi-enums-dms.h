@@ -74,4 +74,35 @@ typedef enum {
     QMI_DMS_RADIO_INTERFACE_LTE        = 8
 } QmiDmsRadioInterface;
 
+
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Get Power State' message */
+
+/**
+ * QmiDmsPowerState:
+ * @QMI_DMS_POWER_STATE_EXTERNAL_SOURCE: Powered by an external source.
+ * @QMI_DMS_POWER_STATE_BATTERY_CONNECTED: Battery is connected.
+ * @QMI_DMS_POWER_STATE_BATTERY_CHARGING: Battery is currently being charged.
+ * @QMI_DMS_POWER_STATE_FAULT: Recognized power fault.
+ *
+ * Flags specifying the current power state.
+ *
+ * If @QMI_DMS_POWER_STATE_EXTERNAL_SOURCE is set, the device is powerered by an
+ * external source; otherwise it is powered by a battery.
+ *
+ * If @QMI_DMS_POWER_STATE_BATTERY_CONNECTED is set, the battery is connected;
+ * otherwise the battery is not connected.
+ *
+ * If @QMI_DMS_POWER_STATE_BATTERY_CHARGING is set, the battery is being charged;
+ * otherwise the battery is not being charged.
+ *
+ * If @QMI_DMS_POWER_STATE_FAULT is set, a power fault has been detected.
+ */
+typedef enum {
+    QMI_DMS_POWER_STATE_EXTERNAL_SOURCE   = 1 << 0,
+    QMI_DMS_POWER_STATE_BATTERY_CONNECTED = 1 << 1,
+    QMI_DMS_POWER_STATE_BATTERY_CHARGING  = 1 << 2,
+    QMI_DMS_POWER_STATE_FAULT             = 1 << 3,
+} QmiDmsPowerState;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */

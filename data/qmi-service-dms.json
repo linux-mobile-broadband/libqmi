@@ -114,6 +114,22 @@
                       "mandatory" : "no",
                       "type"      : "TLV",
                       "format"    : "string",
-                      "prerequisites": [ { "common-ref" : "Success" } ] } ] }
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
+  // *********************************************************************************
+  {  "name"    : "Get Power State",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0026",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"      : "Info",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "struct",
+                      "contents"  : [ { "name"   : "Power State Flags",
+                                        "format" : "guint8" },
+                                      { "name"   : "Battery Level",
+                                        "format" : "guint8" } ],
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] }
 ]
