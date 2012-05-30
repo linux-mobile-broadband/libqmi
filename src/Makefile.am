@@ -23,10 +23,10 @@ qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templa
 		qmi-errors.h > $@
 
 # Enum types
-ENUMS = qmi-enums.h qmi-enums-wds.h qmi-dms.h qmi-wds.h qmi-ctl.h
+ENUMS = qmi-enums.h qmi-enums-wds.h qmi-enums-dms.h qmi-dms.h qmi-wds.h qmi-ctl.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h qmi-ctl.stamp qmi-dms.stamp qmi-wds.stamp
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-ctl.h\"\n#include \"qmi-dms.h\"\n#include \"qmi-wds.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-ctl.h\"\n#include \"qmi-dms.h\"\n#include \"qmi-wds.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
@@ -85,6 +85,7 @@ libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
 	qmi-errors.h qmi-error-types.h qmi-error-types.c \
 	qmi-enums-wds.h \
+	qmi-enums-dms.h \
 	qmi-enums.h qmi-enum-types.h qmi-enum-types.c \
 	qmi-utils.h qmi-utils.c \
 	qmi-message.h qmi-message.c \
@@ -107,7 +108,7 @@ include_HEADERS = \
 	qmi-message.h \
 	qmi-device.h \
 	qmi-client.h \
-	qmi-dms.h \
+	qmi-enums-dms.h qmi-dms.h \
 	qmi-enums-wds.h qmi-wds.h
 
 CLEANFILES = \
