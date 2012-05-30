@@ -42,11 +42,16 @@ static Context *ctx;
 
 /* Options */
 static gboolean get_ids_flag;
+static gboolean get_capabilities_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "dms-get-ids", 0, 0, G_OPTION_ARG_NONE, &get_ids_flag,
       "Get IDs",
+      NULL
+    },
+    { "dms-get-capabilities", 0, 0, G_OPTION_ARG_NONE, &get_capabilities_flag,
+      "Get capabilities",
       NULL
     },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -81,6 +86,7 @@ qmicli_dms_options_enabled (void)
         return !!n_actions;
 
     n_actions = (get_ids_flag +
+                 get_capabilities_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -161,6 +167,62 @@ get_ids_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+get_capabilities_ready (QmiClientDms *client,
+                        GAsyncResult *res)
+{
+    QmiMessageDmsGetCapabilitiesOutputInfo info;
+    QmiMessageDmsGetCapabilitiesOutput *output;
+    GError *error = NULL;
+    GString *networks;
+    guint i;
+
+    output = qmi_client_dms_get_capabilities_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_capabilities_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get capabilities: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_capabilities_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_capabilities_output_get_info (output, &info, NULL);
+
+    networks = g_string_new ("");
+    for (i = 0; i < info.radio_interface_list->len; i++) {
+        g_string_append (networks,
+                         qmi_dms_radio_interface_get_string (
+                             g_array_index (info.radio_interface_list,
+                                            QmiDmsRadioInterface,
+                                            i)));
+        if (i != info.radio_interface_list->len - 1)
+            g_string_append (networks, ", ");
+    }
+
+    g_print ("[%s] Device capabilities retrieved:\n"
+             "\tMax TX channel rate: '%u'\n"
+             "\tMax RX channel rate: '%u'\n"
+             "\t       Data Service: '%s'\n"
+             "\t                SIM: '%s'\n"
+             "\t           Networks: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             info.max_tx_channel_rate,
+             info.max_rx_channel_rate,
+             qmi_dms_data_service_capability_get_string (info.data_service_capability),
+             qmi_dms_sim_capability_get_string (info.sim_capability),
+             networks->str);
+
+    g_string_free (networks, TRUE);
+    qmi_message_dms_get_capabilities_output_unref (output);
+    shutdown (TRUE);
+}
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -189,6 +251,18 @@ qmicli_dms_run (QmiDevice *device,
                                 ctx->cancellable,
                                 (GAsyncReadyCallback)get_ids_ready,
                                 NULL);
+        return;
+    }
+
+    /* Request to get capabilities? */
+    if (get_capabilities_flag) {
+        g_debug ("Asynchronously getting capabilities...");
+        qmi_client_dms_get_capabilities (ctx->client,
+                                         NULL,
+                                         10,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)get_capabilities_ready,
+                                         NULL);
         return;
     }
 
