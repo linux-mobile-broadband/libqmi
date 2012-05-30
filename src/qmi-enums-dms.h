@@ -105,4 +105,20 @@ typedef enum {
     QMI_DMS_POWER_STATE_FAULT             = 1 << 3,
 } QmiDmsPowerState;
 
+
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Set PIN Protection' message */
+
+/**
+ * QmiDmsPinId:
+ * @QMI_DMS_PIN_ID_PIN: PIN.
+ * @QMI_DMS_PIN_ID_PIN2: PIN2.
+ *
+ * The PIN identifier.
+ */
+typedef enum {
+    QMI_DMS_PIN_ID_PIN  = 1,
+    QMI_DMS_PIN_ID_PIN2 = 2
+} QmiDmsPinId;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */
