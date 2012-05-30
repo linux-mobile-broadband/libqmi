@@ -1,15 +1,17 @@
 
 EXTRA_DIST = \
+	TypeFactory.py \
 	Client.py \
 	MessageList.py \
 	Message.py \
 	Container.py \
-	ContainerInput.py \
-	ContainerOutput.py \
 	Field.py \
-	FieldArray.py \
-	FieldStruct.py \
-	FieldStructResult.py \
-	FieldBasic.py \
+	FieldResult.py \
+	Variable.py \
+	VariableFactory.py \
+	VariableArray.py \
+	VariableStruct.py \
+	VariableInteger.py \
+	VariableString.py \
 	utils.py \
 	qmi-codegen

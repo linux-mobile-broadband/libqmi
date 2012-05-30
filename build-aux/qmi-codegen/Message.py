@@ -21,10 +21,16 @@
 import string
 
 import utils
-from ContainerOutput import ContainerOutput
-from ContainerInput  import ContainerInput
+from Container import Container
 
+"""
+The Message class takes care of request/response message handling
+"""
 class Message:
+
+    """
+    Constructor
+    """
     def __init__(self, dictionary, common_objects_dictionary):
         # The message prefix
         self.prefix = 'Qmi Message'
@@ -48,19 +54,24 @@ class Message:
         # Every defined message will have its own output container, which
         # will generate a new Output type and public getters for each output
         # field
-        self.output = ContainerOutput(self.fullname,
-                                      dictionary['output'],
-                                      common_objects_dictionary)
+        self.output = Container(self.fullname,
+                                'Output',
+                                dictionary['output'],
+                                common_objects_dictionary)
 
         # Build input container.
         # Every defined message will have its own input container, which
         # will generate a new Input type and public getters for each input
         # field
-        self.input = ContainerInput(self.fullname,
-                                    dictionary['input'] if 'input' in dictionary else None,
-                                    common_objects_dictionary)
+        self.input = Container(self.fullname,
+                               'Input',
+                               dictionary['input'] if 'input' in dictionary else None,
+                               common_objects_dictionary)
 
 
+    """
+    Emit method responsible for creating a new request of the given type
+    """
     def __emit_request_creator(self, hfile, cfile):
         translations = { 'name'       : self.name,
                          'service'    : self.service,
@@ -161,6 +172,9 @@ class Message:
             '}\n')
 
 
+    """
+    Emit method responsible for parsing a response of the given type
+    """
     def __emit_response_parser(self, hfile, cfile):
         translations = { 'name'                 : self.name,
                          'container'            : utils.build_camelcase_name (self.output.fullname),
@@ -219,6 +233,10 @@ class Message:
             '}\n')
 
 
+    """
+    Emit method responsible for getting a printable representation of the whole
+    request/response
+    """
     def __emit_get_printable(self, hfile, cfile):
 
         if self.input.fields is not None:
@@ -293,8 +311,6 @@ class Message:
             '        }\n'
             '    }\n'
             '\n'
-            '\n'
-            '\n'
             '    if (!tlv_type_str) {\n'
             '        gchar *value_str = NULL;\n'
             '\n'
@@ -350,6 +366,9 @@ class Message:
         cfile.write(string.Template(template).substitute(translations))
 
 
+    """
+    Emit request/response handling implementation
+    """
     def emit(self, hfile, cfile):
         utils.add_separator(hfile, 'REQUEST/RESPONSE', self.fullname);
         utils.add_separator(cfile, 'REQUEST/RESPONSE', self.fullname);
@@ -364,4 +383,6 @@ class Message:
         self.output.emit(hfile, cfile)
         self.__emit_response_parser(hfile, cfile)
 
+        hfile.write('\n/* --- Printable -- */\n');
+        cfile.write('\n/* --- Printable -- */\n');
         self.__emit_get_printable(hfile, cfile)

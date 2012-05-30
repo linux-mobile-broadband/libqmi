@@ -23,7 +23,15 @@ import string
 from Message import Message
 import utils
 
+"""
+The MessageList class handles the generation of all messages for a given
+specific service
+"""
 class MessageList:
+
+    """
+    Constructor
+    """
     def __init__(self, objects_dictionary, common_objects_dictionary):
         self.list = []
         self.message_id_enum_name = None
@@ -49,6 +57,9 @@ class MessageList:
             raise ValueError('Missing Service field')
 
 
+    """
+    Emit the enumeration of the messages found in the specific service
+    """
     def emit_message_ids_enum(self, f):
         translations = { 'enum_type' : utils.build_camelcase_name (self.message_id_enum_name) }
         template = (
@@ -67,6 +78,10 @@ class MessageList:
         f.write(string.Template(template).substitute(translations))
 
 
+    """
+    Emit the method responsible for getting a printable representation of all
+    messages of a given service.
+    """
     def __emit_get_printable(self, hfile, cfile):
         translations = { 'service'    : string.lower(self.service) }
 
@@ -103,6 +118,9 @@ class MessageList:
         cfile.write(string.Template(template).substitute(translations))
 
 
+    """
+    Emit the message list handling implementation
+    """
     def emit(self, hfile, cfile):
         # First, emit the message IDs enum
         self.emit_message_ids_enum(cfile)
@@ -112,6 +130,6 @@ class MessageList:
             message.emit(hfile, cfile)
 
         # First, emit common class code
-        utils.add_separator(hfile, 'PRINTABLE', self.service);
-        utils.add_separator(cfile, 'PRINTABLE', self.service);
+        utils.add_separator(hfile, 'Service-specific printable', self.service);
+        utils.add_separator(cfile, 'Service-specific printable', self.service);
         self.__emit_get_printable(hfile, cfile)

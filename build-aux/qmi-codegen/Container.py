@@ -21,29 +21,35 @@
 import string
 
 import utils
-from FieldString       import FieldString
-from FieldStruct       import FieldStruct
-from FieldStructResult import FieldStructResult
-from FieldArray        import FieldArray
-from FieldBasic        import FieldBasic
+from FieldResult import FieldResult
+from Field import Field
 
+"""
+The Container class takes care of handling collections of Input or
+Output fields
+"""
 class Container:
-    """
-    The Container class takes care of handling collections of Input or
-    Output fields
-    """
 
-    def __init__(self, prefix, dictionary, common_objects_dictionary):
+    """
+    Constructor
+    """
+    def __init__(self, prefix, container_type, dictionary, common_objects_dictionary):
         # The field container prefix usually contains the name of the Message,
         # e.g. "Qmi Message Ctl Something"
         self.prefix = prefix
 
-        # self.name needs to be set by the subclass
-        if self.name != 'Input' and self.name != 'Output':
-            raise ValueError('Cannot handle container \'%s\'' % self.name)
+        # We may have 'Input' or 'Output' containers
+        if container_type == 'Input':
+            self.readonly = False
+        elif container_type == 'Output':
+            self.readonly = True
+        else:
+            raise ValueError('Cannot handle container type \'%s\'' % container_type)
+
+        self.name = container_type
 
         # Create the composed full name (prefix + name),
-        #  e.g. "Qmi Message Ctl Something Output Result"
+        #  e.g. "Qmi Message Ctl Something Output"
         self.fullname = self.prefix + ' ' + self.name
 
         self.fields = None
@@ -80,26 +86,16 @@ class Container:
             # Then, really parse each field
             for field_dictionary in sorted_dictionary:
                 if field_dictionary['type'] == 'TLV':
-                    if field_dictionary['format'] == 'array':
-                        self.fields.append(FieldArray(self.fullname, field_dictionary, common_objects_dictionary))
-                    elif field_dictionary['format'] == 'string':
-                        self.fields.append(FieldString(self.fullname, field_dictionary, common_objects_dictionary))
-                    elif field_dictionary['format'] == 'struct':
-                        if field_dictionary['name'] == 'Result':
-                            self.fields.append(FieldStructResult(self.fullname, field_dictionary, common_objects_dictionary))
-                        else:
-                            self.fields.append(FieldStruct(self.fullname, field_dictionary, common_objects_dictionary))
-                    elif field_dictionary['format'] == 'guint8' or \
-                         field_dictionary['format'] == 'guint16' or \
-                         field_dictionary['format'] == 'guint32' or \
-                         field_dictionary['format'] == 'gint8' or \
-                         field_dictionary['format'] == 'gint16' or \
-                         field_dictionary['format'] == 'gint32':
-                        self.fields.append(FieldBasic(self.fullname, field_dictionary, common_objects_dictionary))
+                    if field_dictionary['format'] == 'struct' and \
+                       field_dictionary['name'] == 'Result':
+                        self.fields.append(FieldResult(self.fullname, field_dictionary, common_objects_dictionary))
                     else:
-                        raise ValueError('Cannot handle TLV format \'%s\'' % field_dictionary['format'])
+                        self.fields.append(Field(self.fullname, field_dictionary, common_objects_dictionary))
 
 
+    """
+    Emit enumeration of TLVs in the container
+    """
     def __emit_tlv_ids_enum(self, f):
         if self.fields is None:
             return
@@ -136,6 +132,9 @@ class Container:
         f.write(string.Template(template).substitute(translations))
 
 
+    """
+    Emit new container types
+    """
     def __emit_types(self, hfile, cfile, translations):
         # Emit types header
         template = (
@@ -147,26 +146,29 @@ class Container:
         template = (
             '\n'
             'struct _${camelcase} {\n'
-            '    volatile gint ref_count;\n'
-            '\n')
+            '    volatile gint ref_count;\n')
         cfile.write(string.Template(template).substitute(translations))
 
         if self.fields is not None:
             for field in self.fields:
-                translations['field_type'] = field.field_type
-                translations['field_variable_name'] = field.variable_name
-                translations['field_name'] = field.name
-                template = (
-                    '\n'
-                    '    /* ${field_name} */\n'
-                    '    gboolean ${field_variable_name}_set;\n'
-                    '    ${field_type} ${field_variable_name};\n')
-                cfile.write(string.Template(template).substitute(translations))
+                if field.variable is not None:
+                    translations['field_type'] = field.variable.private_format if field.variable.private_format.endswith('*') else field.variable.private_format + ' '
+                    translations['field_variable_name'] = field.variable_name
+                    translations['field_name'] = field.name
+                    template = (
+                        '\n'
+                        '    /* ${field_name} */\n'
+                        '    gboolean ${field_variable_name}_set;\n'
+                        '    ${field_type}${field_variable_name};\n')
+                    cfile.write(string.Template(template).substitute(translations))
 
         cfile.write(
             '};\n')
 
 
+    """
+    Emit container handling core implementation
+    """
     def __emit_core(self, hfile, cfile, translations):
         # Emit container core header
         template = (
@@ -215,12 +217,8 @@ class Container:
 
         if self.fields is not None:
             for field in self.fields:
-                if field.dispose is not None:
-                    translations['field_dispose'] = field.dispose
-                    translations['field_variable_name'] = field.variable_name
-                    template = (
-                        '        ${field_dispose} (self->${field_variable_name});\n')
-                    cfile.write(string.Template(template).substitute(translations))
+                if field.variable is not None and field.variable.needs_dispose is True:
+                    field.variable.emit_dispose(cfile, '        ', 'self->' + field.variable_name)
 
         template = (
             '        g_slice_free (${camelcase}, self);\n'
@@ -253,6 +251,9 @@ class Container:
         cfile.write(string.Template(template).substitute(translations))
 
 
+    """
+    Emit container implementation
+    """
     def emit(self, hfile, cfile):
         translations = { 'name'       : self.name,
                          'camelcase'  : utils.build_camelcase_name (self.fullname),

@@ -21,19 +21,30 @@
 import string
 
 import utils
-from Struct import Struct
-from FieldStruct  import FieldStruct
+import TypeFactory
+from Field import Field
 
-class FieldStructResult(FieldStruct):
-    """
-    The FieldResult class takes care of handling the common 'Result' TLV
-    """
 
+"""
+The FieldResult class takes care of handling the common 'Result' TLV
+"""
+class FieldResult(Field):
+
+    """
+    Emit the types required to the source file (they will not be exposed in the
+    interface)
+    """
     def emit_types(self, hfile, cfile):
-        # Emit both packed/unpacked types to the SOURCE file (not public)
-        self.contents.emit_packed(cfile)
-        self.contents.emit(cfile)
+        if TypeFactory.is_type_emitted(self.fullname) is False:
+            TypeFactory.set_type_emitted(self.fullname)
+            self.variable.emit_types(cfile)
 
+
+    """
+    Emit the method responsible for getting the Result TLV contents. This
+    special TLV will have its own getter implementation, as we want to have
+    proper GErrors built from the QMI result status/code.
+    """
     def emit_getter(self, hfile, cfile):
         translations = { 'variable_name'     : self.variable_name,
                          'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
@@ -91,14 +102,20 @@ class FieldStructResult(FieldStruct):
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
 
-    def emit_output_tlv_get_printable(self, f):
-        translations = { 'name'                 : self.name,
-                         'underscore'           : utils.build_underscore_name (self.fullname),
-                         'container_underscore' : utils.build_underscore_name (self.prefix),
-                         'field_type'           : self.field_type,
-                         'tlv_id'               : self.id_enum_name,
-                         'variable_name'        : self.variable_name }
 
+    """
+    Emit the method responsible for getting a printable representation of this
+    TLV field.
+    """
+    def emit_output_tlv_get_printable(self, f):
+        if TypeFactory.is_get_printable_emitted(self.fullname):
+            return
+
+        TypeFactory.set_get_printable_emitted(self.fullname)
+
+        translations = { 'name'       : self.name,
+                         'tlv_id'     : self.id_enum_name,
+                         'underscore' : utils.build_underscore_name (self.fullname) }
         template = (
             '\n'
             'static gchar *\n'
@@ -106,34 +123,40 @@ class FieldStructResult(FieldStruct):
             '    QmiMessage *self,\n'
             '    const gchar *line_prefix)\n'
             '{\n'
-            '    GString *printable;\n'
-            '    ${field_type}Packed tmp;\n'
+            '    guint8 *buffer;\n'
+            '    guint16 buffer_len;\n'
             '\n'
-            '    printable = g_string_new ("");\n'
-            '    g_assert (qmi_message_tlv_get (self,\n'
-            '                                   ${tlv_id},\n'
-            '                                   sizeof (tmp),\n'
-            '                                   &tmp,\n'
-            '                                   NULL));\n')
-        f.write(string.Template(template).substitute(translations))
-
-        for struct_field in self.contents.members:
-            translations['name_struct_field'] = struct_field['name']
-            translations['underscore_struct_field'] = utils.build_underscore_name(struct_field['name'])
-            translations['endianfix'] = utils.he_from_le ('tmp.' + utils.build_underscore_name(struct_field['name']),
-                                                          'tmp.' + utils.build_underscore_name(struct_field['name']),
-                                                          struct_field['format'])
-            template = (
-                '    ${endianfix};')
-
-        f.write(
-            '    if (tmp.error_status == QMI_STATUS_SUCCESS)\n'
-            '        g_string_append (printable,\n'
-            '                         "SUCCESS");\n'
-            '    else\n'
-            '        g_string_append_printf (printable,\n'
-            '                                "FAILURE: %s",\n'
-            '                                qmi_protocol_error_get_string ((QmiProtocolError) tmp.error_code));\n'
+            '    if (qmi_message_tlv_get (self,\n'
+            '                             ${tlv_id},\n'
+            '                             &buffer_len,\n'
+            '                             &buffer,\n'
+            '                             NULL)) {\n'
+            '        GString *printable;\n'
+            '        guint16 error_status;\n'
+            '        guint16 error_code;\n'
             '\n'
-            '    return g_string_free (printable, FALSE);\n'
+            '        printable = g_string_new ("");\n'
+            '        qmi_utils_read_guint16_from_buffer (\n'
+            '            &buffer,\n'
+            '            &buffer_len,\n'
+            '            &error_status);\n'
+            '        qmi_utils_read_guint16_from_buffer (\n'
+            '            &buffer,\n'
+            '            &buffer_len,\n'
+            '            &error_code);\n'
+            '\n'
+            '        g_warn_if_fail (buffer_len == 0);\n'
+            '\n'
+            '        if (error_status == QMI_STATUS_SUCCESS)\n'
+            '            g_string_append (printable, "SUCCESS");\n'
+            '        else\n'
+            '            g_string_append_printf (printable,\n'
+            '                                    "FAILURE: %s",\n'
+            '                                    qmi_protocol_error_get_string ((QmiProtocolError) error_code));\n'
+            '\n'
+            '        return g_string_free (printable, FALSE);\n'
+            '    }\n'
+            '\n'
+            '    return NULL;\n'
             '}\n')
+        f.write(string.Template(template).substitute(translations))

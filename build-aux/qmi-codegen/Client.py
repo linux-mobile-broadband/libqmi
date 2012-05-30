@@ -23,7 +23,15 @@ import string
 from MessageList import MessageList
 import utils
 
+"""
+The Client class is responsible for providing the QmiClient-based service
+specific client GObject.
+"""
 class Client:
+
+    """
+    Constructor
+    """
     def __init__(self, objects_dictionary):
         self.name = None
 
@@ -37,6 +45,9 @@ class Client:
             raise ValueError('Missing Client field')
 
 
+    """
+    Emits the generic GObject class implementation
+    """
     def __emit_class(self, hfile, cfile):
         translations = { 'underscore'                 : utils.build_underscore_name(self.name),
                          'no_prefix_underscore_upper' : string.upper(utils.build_underscore_name(self.name[4:])),
@@ -85,6 +96,9 @@ class Client:
         cfile.write(string.Template(template).substitute(translations))
 
 
+    """
+    Emits the async methods for each known request/response
+    """
     def __emit_methods(self, hfile, cfile, message_list):
         translations = { 'underscore' : utils.build_underscore_name(self.name),
                          'camelcase'  : utils.build_camelcase_name (self.name) }
@@ -205,6 +219,10 @@ class Client:
                 '\n'  % input_arg_template)
             cfile.write(string.Template(template).substitute(translations))
 
+
+    """
+    Emit the service-specific client implementation
+    """
     def emit(self, hfile, cfile, message_list):
         # First, emit common class code
         utils.add_separator(hfile, 'CLIENT', self.name);

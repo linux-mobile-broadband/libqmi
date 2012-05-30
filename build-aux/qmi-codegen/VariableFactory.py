@@ -18,21 +18,25 @@
 # Copyright (C) 2012 Lanedo GmbH
 #
 
-import string
+import utils
+from VariableInteger import VariableInteger
+from VariableString import VariableString
+from VariableStruct import VariableStruct
+from VariableArray import VariableArray
 
-from Field     import Field
-from Container import Container
 
-class ContainerInput(Container):
-    """
-    The ContainerInput class takes care of handling collections of Input
-    fields
-    """
-
-    def __init__(self, prefix, dictionary, common_objects_dictionary):
-
-        self.name = 'Input'
-        self.readonly = False
-
-        # Call the parent constructor
-        Container.__init__(self, prefix, dictionary, common_objects_dictionary)
+"""
+Helps in the creation of Variable objects based on the specific 'format' found
+in the given dictionary
+"""
+def create_variable(dictionary, new_type_name):
+    if utils.format_is_integer(dictionary['format']):
+        return VariableInteger(dictionary)
+    elif dictionary['format'] == 'string':
+        return VariableString(dictionary)
+    elif dictionary['format'] == 'struct':
+        return VariableStruct(dictionary, new_type_name)
+    elif dictionary['format'] == 'array':
+        return VariableArray(dictionary, new_type_name)
+    else:
+        raise RuntimeError('Unexpected field format \'%s\'' % dictionary['format'])
