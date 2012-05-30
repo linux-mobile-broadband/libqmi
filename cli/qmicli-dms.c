@@ -44,6 +44,7 @@ static Context *ctx;
 static gboolean get_ids_flag;
 static gboolean get_capabilities_flag;
 static gboolean get_manufacturer_flag;
+static gboolean get_model_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -57,6 +58,10 @@ static GOptionEntry entries[] = {
     },
     { "dms-get-manufacturer", 0, 0, G_OPTION_ARG_NONE, &get_manufacturer_flag,
       "Get manufacturer",
+      NULL
+    },
+    { "dms-get-model", 0, 0, G_OPTION_ARG_NONE, &get_model_flag,
+      "Get model",
       NULL
     },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -93,6 +98,7 @@ qmicli_dms_options_enabled (void)
     n_actions = (get_ids_flag +
                  get_capabilities_flag +
                  get_manufacturer_flag +
+                 get_model_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -267,6 +273,44 @@ get_manufacturer_ready (QmiClientDms *client,
     qmi_message_dms_get_manufacturer_output_unref (output);
     shutdown (TRUE);
 }
+
+static void
+get_model_ready (QmiClientDms *client,
+                 GAsyncResult *res)
+{
+    const gchar *str = NULL;
+    QmiMessageDmsGetModelOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_model_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_model_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get model: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_model_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    qmi_message_dms_get_model_output_get_model (output, &str, NULL);
+
+    g_print ("[%s] Device model retrieved:\n"
+             "\tModel: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             VALIDATE_UNKNOWN (str));
+
+    qmi_message_dms_get_model_output_unref (output);
+    shutdown (TRUE);
+}
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -319,6 +363,18 @@ qmicli_dms_run (QmiDevice *device,
                                          ctx->cancellable,
                                          (GAsyncReadyCallback)get_manufacturer_ready,
                                          NULL);
+        return;
+    }
+
+    /* Request to get model? */
+    if (get_model_flag) {
+        g_debug ("Asynchronously getting model...");
+        qmi_client_dms_get_model (ctx->client,
+                                  NULL,
+                                  10,
+                                  ctx->cancellable,
+                                  (GAsyncReadyCallback)get_model_ready,
+                                  NULL);
         return;
     }
 
