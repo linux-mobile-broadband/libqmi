@@ -53,6 +53,19 @@
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Get Model",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0022",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"      : "Model",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "string",
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get IDs",
      "type"    : "Message",
      "service" : "DMS",
