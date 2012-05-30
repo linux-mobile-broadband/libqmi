@@ -47,6 +47,7 @@ static gboolean get_manufacturer_flag;
 static gboolean get_model_flag;
 static gboolean get_revision_flag;
 static gboolean get_msisdn_flag;
+static gboolean get_power_state_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -72,6 +73,10 @@ static GOptionEntry entries[] = {
     },
     { "dms-get-msisdn", 0, 0, G_OPTION_ARG_NONE, &get_msisdn_flag,
       "Get MSISDN",
+      NULL
+    },
+    { "dms-get-power-state", 0, 0, G_OPTION_ARG_NONE, &get_power_state_flag,
+      "Get power state",
       NULL
     },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -111,6 +116,7 @@ qmicli_dms_options_enabled (void)
                  get_model_flag +
                  get_revision_flag +
                  get_msisdn_flag +
+                 get_power_state_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -399,6 +405,47 @@ get_msisdn_ready (QmiClientDms *client,
     qmi_message_dms_get_msisdn_output_unref (output);
     shutdown (TRUE);
 }
+
+static void
+get_power_state_ready (QmiClientDms *client,
+                       GAsyncResult *res)
+{
+    gchar *power_state_str;
+    QmiMessageDmsGetPowerStateOutputInfo info;
+    QmiMessageDmsGetPowerStateOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_power_state_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_power_state_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get power state: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_power_state_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_power_state_output_get_info (output, &info, NULL);
+    power_state_str = qmi_dms_power_state_build_string_from_mask ((QmiDmsPowerState)info.power_state_flags);
+
+    g_print ("[%s] Device power state retrieved:\n"
+             "\tPower state: '%s'\n"
+             "\tBattery level: '%u %%'\n",
+             qmi_device_get_path_display (ctx->device),
+             power_state_str,
+             (guint)info.battery_level);
+
+    g_free (power_state_str);
+    qmi_message_dms_get_power_state_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -487,6 +534,18 @@ qmicli_dms_run (QmiDevice *device,
                                    ctx->cancellable,
                                    (GAsyncReadyCallback)get_msisdn_ready,
                                    NULL);
+        return;
+    }
+
+    /* Request to get power status? */
+    if (get_power_state_flag) {
+        g_debug ("Asynchronously getting power status...");
+        qmi_client_dms_get_power_state (ctx->client,
+                                        NULL,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)get_power_state_ready,
+                                        NULL);
         return;
     }
 
