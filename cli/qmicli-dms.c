@@ -46,6 +46,7 @@ static gboolean get_capabilities_flag;
 static gboolean get_manufacturer_flag;
 static gboolean get_model_flag;
 static gboolean get_revision_flag;
+static gboolean get_msisdn_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -67,6 +68,10 @@ static GOptionEntry entries[] = {
     },
     { "dms-get-revision", 0, 0, G_OPTION_ARG_NONE, &get_revision_flag,
       "Get revision",
+      NULL
+    },
+    { "dms-get-msisdn", 0, 0, G_OPTION_ARG_NONE, &get_msisdn_flag,
+      "Get MSISDN",
       NULL
     },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -105,6 +110,7 @@ qmicli_dms_options_enabled (void)
                  get_manufacturer_flag +
                  get_model_flag +
                  get_revision_flag +
+                 get_msisdn_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -355,6 +361,44 @@ get_revision_ready (QmiClientDms *client,
     qmi_message_dms_get_revision_output_unref (output);
     shutdown (TRUE);
 }
+
+static void
+get_msisdn_ready (QmiClientDms *client,
+                  GAsyncResult *res)
+{
+    const gchar *str = NULL;
+    QmiMessageDmsGetMsisdnOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_msisdn_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_msisdn_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get MSISDN: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_msisdn_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    qmi_message_dms_get_msisdn_output_get_msisdn (output, &str, NULL);
+
+    g_print ("[%s] Device MSISDN retrieved:\n"
+             "\tMSISDN: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             VALIDATE_UNKNOWN (str));
+
+    qmi_message_dms_get_msisdn_output_unref (output);
+    shutdown (TRUE);
+}
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -431,6 +475,18 @@ qmicli_dms_run (QmiDevice *device,
                                      ctx->cancellable,
                                      (GAsyncReadyCallback)get_revision_ready,
                                      NULL);
+        return;
+    }
+
+    /* Request to get msisdn? */
+    if (get_msisdn_flag) {
+        g_debug ("Asynchronously getting msisdn...");
+        qmi_client_dms_get_msisdn (ctx->client,
+                                   NULL,
+                                   10,
+                                   ctx->cancellable,
+                                   (GAsyncReadyCallback)get_msisdn_ready,
+                                   NULL);
         return;
     }
 
