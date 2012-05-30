@@ -1,6 +1,7 @@
 [
     { "common-ref" : "Operation Result",
       "name"       : "Result",
+      "fullname"   : "Qmi Message Result",
       "id"         : "0x02",
       "mandatory"  : "yes",
       "type"       : "TLV",
