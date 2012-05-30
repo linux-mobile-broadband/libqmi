@@ -328,6 +328,7 @@ device_new_ready (GObject *unused,
 
 int main (int argc, char **argv)
 {
+    GError *error = NULL;
     GFile *file;
     GOptionContext *context;
 
@@ -342,7 +343,11 @@ int main (int argc, char **argv)
 	g_option_context_add_group (context,
 	                            qmicli_wds_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
-    g_option_context_parse (context, &argc, &argv, NULL);
+    if (!g_option_context_parse (context, &argc, &argv, &error)) {
+        g_printerr ("error: %s\n",
+                    error->message);
+        exit (EXIT_FAILURE);
+    }
 	g_option_context_free (context);
 
     if (version_flag)
