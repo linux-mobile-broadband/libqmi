@@ -277,5 +277,18 @@
                                       { "name"   : "Verify Retries Left",
                                         "format" : "guint8" },
                                       { "name"   : "Unblock Retries Left",
-                                        "format" : "guint8" } ] } ] }
+                                        "format" : "guint8" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Get Hardware Revision",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x002C",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"      : "Revision",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "string",
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] }
 ]
