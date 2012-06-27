@@ -48,6 +48,7 @@ static gboolean get_model_flag;
 static gboolean get_revision_flag;
 static gboolean get_msisdn_flag;
 static gboolean get_power_state_flag;
+static gchar *set_pin_protection_str;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -78,6 +79,10 @@ static GOptionEntry entries[] = {
     { "dms-get-power-state", 0, 0, G_OPTION_ARG_NONE, &get_power_state_flag,
       "Get power state",
       NULL
+    },
+    { "dms-set-pin-protection", 0, 0, G_OPTION_ARG_STRING, &set_pin_protection_str,
+      "Set PIN protection",
+      "[(PIN|PIN2),(disable|enable),(current PIN)]",
     },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
@@ -117,6 +122,7 @@ qmicli_dms_options_enabled (void)
                  get_revision_flag +
                  get_msisdn_flag +
                  get_power_state_flag +
+                 !!set_pin_protection_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -446,6 +452,98 @@ get_power_state_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+
+static QmiMessageDmsSetPinProtectionInput *
+set_pin_protection_input_create (const gchar *str)
+{
+    QmiMessageDmsSetPinProtectionInput *input;
+    QmiMessageDmsSetPinProtectionInputInfo info;
+    gchar **split;
+
+    /* Prepare inputs.
+     * Format of the string is:
+     *    "[(PIN|PIN2),(disable|enable),(current PIN)]"
+     */
+    input = qmi_message_dms_set_pin_protection_input_new ();
+
+    split = g_strsplit (str, ",", -1);
+
+    if (g_str_equal (split[0], "PIN"))
+        info.pin_id = QMI_DMS_PIN_ID_PIN;
+    else if (g_str_equal (split[0], "PIN2"))
+        info.pin_id = QMI_DMS_PIN_ID_PIN2;
+    else {
+        g_printerr ("error: expected 'PIN' or 'PIN2', got: '%s'\n",
+                    split[0]);
+        exit (EXIT_FAILURE);
+    }
+
+    if (g_str_equal (split[1], "disable"))
+        info.protection_enabled = FALSE;
+    else if (g_str_equal (split[1], "enable"))
+        info.protection_enabled = TRUE;
+    else {
+        g_printerr ("error: expected 'disable' or 'enable', got: '%s'\n",
+                    split[1]);
+        exit (EXIT_FAILURE);
+    }
+
+    info.pin = split[2];
+    if (info.pin[0] == '\0') {
+        g_printerr ("error: empty current PIN given\n");
+        exit (EXIT_FAILURE);
+    }
+
+    qmi_message_dms_set_pin_protection_input_set_info (input, info, NULL);
+    g_strfreev (split);
+
+    return input;
+}
+
+static void
+set_pin_protection_ready (QmiClientDms *client,
+                          GAsyncResult *res)
+{
+    QmiMessageDmsSetPinProtectionOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_set_pin_protection_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_set_pin_protection_output_get_result (output, &error)) {
+        QmiMessageDmsSetPinProtectionOutputPinRetriesStatus retry_status;
+
+        g_printerr ("error: couldn't set PIN protection: %s\n", error->message);
+        g_error_free (error);
+
+        if (qmi_message_dms_set_pin_protection_output_get_pin_retries_status (output,
+                                                                              &retry_status,
+                                                                              NULL)) {
+            g_printerr ("[%s] Retries left:\n"
+                        "\tVerify: %u\n"
+                        "\tUnblock: %u\n",
+                        qmi_device_get_path_display (ctx->device),
+                        retry_status.verify_retries_left,
+                        retry_status.unblock_retries_left);
+        }
+
+        qmi_message_dms_set_pin_protection_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] PIN protection updated\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_set_pin_protection_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -546,6 +644,22 @@ qmicli_dms_run (QmiDevice *device,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_power_state_ready,
                                         NULL);
+        return;
+    }
+
+    /* Request to set PIN protection? */
+    if (set_pin_protection_str) {
+        QmiMessageDmsSetPinProtectionInput *input;
+
+        g_debug ("Asynchronously setting PIN protection...");
+        input = set_pin_protection_input_create (set_pin_protection_str);
+        qmi_client_dms_set_pin_protection (ctx->client,
+                                           input,
+                                           10,
+                                           ctx->cancellable,
+                                           (GAsyncReadyCallback)set_pin_protection_ready,
+                                           NULL);
+        qmi_message_dms_set_pin_protection_input_unref (input);
         return;
     }
 
