@@ -121,4 +121,32 @@ typedef enum {
     QMI_DMS_PIN_ID_PIN2 = 2
 } QmiDmsPinId;
 
+
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Get PIN Status' message */
+
+/**
+ * QmiDmsPinStatus:
+ * @QMI_DMS_PIN_STATUS_NOT_INITIALIZED: Not initialized.
+ * @QMI_DMS_PIN_STATUS_ENABLED_NOT_VERIFIED: Enabled, not verified.
+ * @QMI_DMS_PIN_STATUS_ENABLED_VERIFIED: Enabled, verified.
+ * @QMI_DMS_PIN_STATUS_DISABLED: Disabled.
+ * @QMI_DMS_PIN_STATUS_BLOCKED: Blocked.
+ * @QMI_DMS_PIN_STATUS_PERMANENTLY_BLOCKED: Permanently Blocked.
+ * @QMI_DMS_PIN_STATUS_UNBLOCKED: Unblocked.
+ * @QMI_DMS_PIN_STATUS_CHANGED: Changed.
+ *
+ * The PIN status.
+ */
+typedef enum {
+    QMI_DMS_PIN_STATUS_NOT_INITIALIZED      = 0,
+    QMI_DMS_PIN_STATUS_ENABLED_NOT_VERIFIED = 1,
+    QMI_DMS_PIN_STATUS_ENABLED_VERIFIED     = 2,
+    QMI_DMS_PIN_STATUS_DISABLED             = 3,
+    QMI_DMS_PIN_STATUS_BLOCKED              = 4,
+    QMI_DMS_PIN_STATUS_PERMANENTLY_BLOCKED  = 5,
+    QMI_DMS_PIN_STATUS_UNBLOCKED            = 6,
+    QMI_DMS_PIN_STATUS_CHANGED              = 7,
+} QmiDmsPinStatus;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */
