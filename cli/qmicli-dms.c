@@ -50,6 +50,7 @@ static gboolean get_msisdn_flag;
 static gboolean get_power_state_flag;
 static gchar *set_pin_protection_str;
 static gchar *verify_pin_str;
+static gchar *unblock_pin_str;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -88,6 +89,10 @@ static GOptionEntry entries[] = {
     { "dms-verify-pin", 0, 0, G_OPTION_ARG_STRING, &verify_pin_str,
       "Verify PIN",
       "[(PIN|PIN2),(current PIN)]",
+    },
+    { "dms-unblock-pin", 0, 0, G_OPTION_ARG_STRING, &unblock_pin_str,
+      "Unblock PIN",
+      "[(PIN|PIN2),(PUK),(new PIN)]",
     },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
@@ -129,6 +134,7 @@ qmicli_dms_options_enabled (void)
                  get_power_state_flag +
                  !!set_pin_protection_str +
                  !!verify_pin_str +
+                 !!unblock_pin_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -631,6 +637,93 @@ verify_pin_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static QmiMessageDmsUnblockPinInput *
+unblock_pin_input_create (const gchar *str)
+{
+    QmiMessageDmsUnblockPinInput *input;
+    QmiMessageDmsUnblockPinInputInfo info;
+    gchar **split;
+
+    /* Prepare inputs.
+     * Format of the string is:
+     *    "[(PIN|PIN2),(PUK),(new PIN)]"
+     */
+    input = qmi_message_dms_unblock_pin_input_new ();
+
+    split = g_strsplit (str, ",", -1);
+
+    if (g_str_equal (split[0], "PIN"))
+        info.pin_id = QMI_DMS_PIN_ID_PIN;
+    else if (g_str_equal (split[0], "PIN2"))
+        info.pin_id = QMI_DMS_PIN_ID_PIN2;
+    else {
+        g_printerr ("error: expected 'PIN' or 'PIN2', got: '%s'\n",
+                    split[0]);
+        exit (EXIT_FAILURE);
+    }
+
+    info.puk = split[1];
+    if (info.puk[0] == '\0') {
+        g_printerr ("error: empty PUK given\n");
+        exit (EXIT_FAILURE);
+    }
+
+    info.new_pin = split[2];
+    if (info.new_pin[0] == '\0') {
+        g_printerr ("error: empty new PIN given\n");
+        exit (EXIT_FAILURE);
+    }
+
+    qmi_message_dms_unblock_pin_input_set_info (input, info, NULL);
+    g_strfreev (split);
+
+    return input;
+}
+
+static void
+unblock_pin_ready (QmiClientDms *client,
+                  GAsyncResult *res)
+{
+    QmiMessageDmsUnblockPinOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_unblock_pin_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_unblock_pin_output_get_result (output, &error)) {
+        QmiMessageDmsUnblockPinOutputPinRetriesStatus retry_status;
+
+        g_printerr ("error: couldn't unblock PIN: %s\n", error->message);
+        g_error_free (error);
+
+        if (qmi_message_dms_unblock_pin_output_get_pin_retries_status (output,
+                                                                       &retry_status,
+                                                                       NULL)) {
+            g_printerr ("[%s] Retries left:\n"
+                        "\tVerify: %u\n"
+                        "\tUnblock: %u\n",
+                        qmi_device_get_path_display (ctx->device),
+                        retry_status.verify_retries_left,
+                        retry_status.unblock_retries_left);
+        }
+
+        qmi_message_dms_unblock_pin_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] PIN unblocked successfully\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_unblock_pin_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -763,6 +856,22 @@ qmicli_dms_run (QmiDevice *device,
                                    (GAsyncReadyCallback)verify_pin_ready,
                                    NULL);
         qmi_message_dms_verify_pin_input_unref (input);
+        return;
+    }
+
+    /* Request to unblock PIN? */
+    if (unblock_pin_str) {
+        QmiMessageDmsUnblockPinInput *input;
+
+        g_debug ("Asynchronously unblocking PIN...");
+        input = unblock_pin_input_create (unblock_pin_str);
+        qmi_client_dms_unblock_pin (ctx->client,
+                                    input,
+                                    10,
+                                    ctx->cancellable,
+                                    (GAsyncReadyCallback)unblock_pin_ready,
+                                    NULL);
+        qmi_message_dms_unblock_pin_input_unref (input);
         return;
     }
 
