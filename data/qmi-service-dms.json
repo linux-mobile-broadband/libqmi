@@ -160,5 +160,6 @@
                       "contents"  : [ { "name"   : "Verify Retries Left",
                                         "format" : "guint8" },
                                       { "name"   : "Unblock Retries Left",
-                                        "format" : "guint8" } ] } ] }
+                                        "format" : "guint8" } ],
+                      "prerequisites": [ { "common-ref" : "No Success" } ] } ] }
 ]

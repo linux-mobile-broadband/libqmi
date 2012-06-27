@@ -15,5 +15,11 @@
       "type"       : "prerequisite",
       "field"      : "Result.Error Status",
       "operation"  : "==",
+      "value"      : "QMI_STATUS_SUCCESS" },
+
+    { "common-ref" : "No Success",
+      "type"       : "prerequisite",
+      "field"      : "Result.Error Status",
+      "operation"  : "!=",
       "value"      : "QMI_STATUS_SUCCESS" }
 ]
