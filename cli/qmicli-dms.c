@@ -470,6 +470,55 @@ get_power_state_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static QmiDmsPinId
+read_pin_id_from_string (const gchar *str)
+{
+    if (!str || str[0] == '\0') {
+        g_printerr ("error: expected 'PIN' or 'PIN2', got: none\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (g_str_equal (str, "PIN"))
+        return QMI_DMS_PIN_ID_PIN;
+
+    if (g_str_equal (str, "PIN2"))
+        return QMI_DMS_PIN_ID_PIN2;
+
+    g_printerr ("error: expected 'PIN' or 'PIN2', got: '%s'\n",
+                str);
+    exit (EXIT_FAILURE);
+}
+
+static gboolean
+read_enable_disable_from_string (const gchar *str)
+{
+    if (!str || str[0] == '\0') {
+        g_printerr ("error: expected 'disable' or 'enable', got: none\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (g_str_equal (str, "disable"))
+        return FALSE;
+
+    if (g_str_equal (str, "enable"))
+        return TRUE;
+
+    g_printerr ("error: expected 'disable' or 'enable', got: '%s'\n",
+                str);
+    exit (EXIT_FAILURE);
+}
+
+static gchar *
+read_non_empty_string (const gchar *str,
+                       const gchar *description)
+{
+    if (!str || str[0] == '\0') {
+        g_printerr ("error: empty %s given\n", description);
+        exit (EXIT_FAILURE);
+    }
+
+    return (gchar *)str;
+}
 
 static QmiMessageDmsSetPinProtectionInput *
 set_pin_protection_input_create (const gchar *str)
@@ -486,31 +535,9 @@ set_pin_protection_input_create (const gchar *str)
 
     split = g_strsplit (str, ",", -1);
 
-    if (g_str_equal (split[0], "PIN"))
-        info.pin_id = QMI_DMS_PIN_ID_PIN;
-    else if (g_str_equal (split[0], "PIN2"))
-        info.pin_id = QMI_DMS_PIN_ID_PIN2;
-    else {
-        g_printerr ("error: expected 'PIN' or 'PIN2', got: '%s'\n",
-                    split[0]);
-        exit (EXIT_FAILURE);
-    }
-
-    if (g_str_equal (split[1], "disable"))
-        info.protection_enabled = FALSE;
-    else if (g_str_equal (split[1], "enable"))
-        info.protection_enabled = TRUE;
-    else {
-        g_printerr ("error: expected 'disable' or 'enable', got: '%s'\n",
-                    split[1]);
-        exit (EXIT_FAILURE);
-    }
-
-    info.pin = split[2];
-    if (info.pin[0] == '\0') {
-        g_printerr ("error: empty current PIN given\n");
-        exit (EXIT_FAILURE);
-    }
+    info.pin_id = read_pin_id_from_string (split[0]);
+    info.protection_enabled = read_enable_disable_from_string (split[1]);
+    info.pin = read_non_empty_string (split[2], "current PIN");
 
     qmi_message_dms_set_pin_protection_input_set_info (input, info, NULL);
     g_strfreev (split);
@@ -577,21 +604,8 @@ verify_pin_input_create (const gchar *str)
 
     split = g_strsplit (str, ",", -1);
 
-    if (g_str_equal (split[0], "PIN"))
-        info.pin_id = QMI_DMS_PIN_ID_PIN;
-    else if (g_str_equal (split[0], "PIN2"))
-        info.pin_id = QMI_DMS_PIN_ID_PIN2;
-    else {
-        g_printerr ("error: expected 'PIN' or 'PIN2', got: '%s'\n",
-                    split[0]);
-        exit (EXIT_FAILURE);
-    }
-
-    info.pin = split[1];
-    if (info.pin[0] == '\0') {
-        g_printerr ("error: empty current PIN given\n");
-        exit (EXIT_FAILURE);
-    }
+    info.pin_id = read_pin_id_from_string (split[0]);
+    info.pin = read_non_empty_string (split[1], "current PIN");
 
     qmi_message_dms_verify_pin_input_set_info (input, info, NULL);
     g_strfreev (split);
@@ -658,27 +672,9 @@ unblock_pin_input_create (const gchar *str)
 
     split = g_strsplit (str, ",", -1);
 
-    if (g_str_equal (split[0], "PIN"))
-        info.pin_id = QMI_DMS_PIN_ID_PIN;
-    else if (g_str_equal (split[0], "PIN2"))
-        info.pin_id = QMI_DMS_PIN_ID_PIN2;
-    else {
-        g_printerr ("error: expected 'PIN' or 'PIN2', got: '%s'\n",
-                    split[0]);
-        exit (EXIT_FAILURE);
-    }
-
-    info.puk = split[1];
-    if (info.puk[0] == '\0') {
-        g_printerr ("error: empty PUK given\n");
-        exit (EXIT_FAILURE);
-    }
-
-    info.new_pin = split[2];
-    if (info.new_pin[0] == '\0') {
-        g_printerr ("error: empty new PIN given\n");
-        exit (EXIT_FAILURE);
-    }
+    info.pin_id = read_pin_id_from_string (split[0]);
+    info.puk = read_non_empty_string (split[1], "PUK");
+    info.new_pin = read_non_empty_string (split[2], "new PIN");
 
     qmi_message_dms_unblock_pin_input_set_info (input, info, NULL);
     g_strfreev (split);
@@ -745,30 +741,9 @@ change_pin_input_create (const gchar *str)
 
     split = g_strsplit (str, ",", -1);
 
-    if (!split[0] || split[0][0] == '\0') {
-        g_printerr ("error: expected 'PIN' or 'PIN2', got: none\n");
-        exit (EXIT_FAILURE);
-    } else if (g_str_equal (split[0], "PIN"))
-        info.pin_id = QMI_DMS_PIN_ID_PIN;
-    else if (g_str_equal (split[0], "PIN2"))
-        info.pin_id = QMI_DMS_PIN_ID_PIN2;
-    else {
-        g_printerr ("error: expected 'PIN' or 'PIN2', got: '%s'\n",
-                    split[0]);
-        exit (EXIT_FAILURE);
-    }
-
-    info.old_pin = split[1];
-    if (!info.old_pin || info.old_pin[0] == '\0') {
-        g_printerr ("error: empty old PIN given\n");
-        exit (EXIT_FAILURE);
-    }
-
-    info.new_pin = split[2];
-    if (!info.new_pin || info.new_pin[0] == '\0') {
-        g_printerr ("error: empty new PIN given\n");
-        exit (EXIT_FAILURE);
-    }
+    info.pin_id = read_pin_id_from_string (split[0]);
+    info.old_pin = read_non_empty_string (split[1], "old PIN");
+    info.new_pin = read_non_empty_string (split[2], "new PIN");
 
     qmi_message_dms_change_pin_input_set_info (input, info, NULL);
     g_strfreev (split);
