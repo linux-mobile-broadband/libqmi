@@ -52,6 +52,7 @@ static gchar *set_pin_protection_str;
 static gchar *verify_pin_str;
 static gchar *unblock_pin_str;
 static gchar *change_pin_str;
+static gboolean get_pin_status_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -99,6 +100,10 @@ static GOptionEntry entries[] = {
       "Change PIN",
       "[(PIN|PIN2),(old PIN),(new PIN)]",
     },
+    { "dms-get-pin-status", 0, 0, G_OPTION_ARG_NONE, &get_pin_status_flag,
+      "Get PIN status",
+      NULL
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -141,6 +146,7 @@ qmicli_dms_options_enabled (void)
                  !!verify_pin_str +
                  !!unblock_pin_str +
                  !!change_pin_str +
+                 get_pin_status_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -795,6 +801,64 @@ change_pin_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+get_pin_status_ready (QmiClientDms *client,
+                      GAsyncResult *res)
+{
+    QmiMessageDmsGetPinStatusOutputPin1Status pin1_status;
+    QmiMessageDmsGetPinStatusOutputPin2Status pin2_status;
+    QmiMessageDmsGetPinStatusOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_pin_status_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_pin_status_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get PIN status: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_pin_status_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] PIN status retrieved successfully\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_dms_get_pin_status_output_get_pin1_status (output,
+                                                               &pin1_status,
+                                                               NULL)) {
+        g_print ("[%s] PIN1:\n"
+                 "\tStatus: %s\n"
+                 "\tVerify: %u\n"
+                 "\tUnblock: %u\n",
+                 qmi_device_get_path_display (ctx->device),
+                 qmi_dms_pin_status_get_string (pin1_status.current_status),
+                 pin1_status.verify_retries_left,
+                 pin1_status.unblock_retries_left);
+    }
+
+    if (qmi_message_dms_get_pin_status_output_get_pin2_status (output,
+                                                               &pin2_status,
+                                                               NULL)) {
+        g_print ("[%s] PIN2:\n"
+                 "\tStatus: %s\n"
+                 "\tVerify: %u\n"
+                 "\tUnblock: %u\n",
+                 qmi_device_get_path_display (ctx->device),
+                 qmi_dms_pin_status_get_string (pin2_status.current_status),
+                 pin2_status.verify_retries_left,
+                 pin2_status.unblock_retries_left);
+    }
+
+    qmi_message_dms_get_pin_status_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -959,6 +1023,18 @@ qmicli_dms_run (QmiDevice *device,
                                    (GAsyncReadyCallback)change_pin_ready,
                                    NULL);
         qmi_message_dms_change_pin_input_unref (input);
+        return;
+    }
+
+    /* Request to get PIN status? */
+    if (get_pin_status_flag) {
+        g_debug ("Asynchronously getting PIN status...");
+        qmi_client_dms_get_pin_status (ctx->client,
+                                       NULL,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback)get_pin_status_ready,
+                                       NULL);
         return;
     }
 
