@@ -53,6 +53,7 @@ static gchar *verify_pin_str;
 static gchar *unblock_pin_str;
 static gchar *change_pin_str;
 static gboolean get_pin_status_flag;
+static gboolean get_hardware_revision_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -104,6 +105,10 @@ static GOptionEntry entries[] = {
       "Get PIN status",
       NULL
     },
+    { "dms-get-hardware-revision", 0, 0, G_OPTION_ARG_NONE, &get_hardware_revision_flag,
+      "Get the HW revision",
+      NULL
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -147,6 +152,7 @@ qmicli_dms_options_enabled (void)
                  !!unblock_pin_str +
                  !!change_pin_str +
                  get_pin_status_flag +
+                 get_hardware_revision_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -859,6 +865,44 @@ get_pin_status_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+get_hardware_revision_ready (QmiClientDms *client,
+                             GAsyncResult *res)
+{
+    const gchar *str = NULL;
+    QmiMessageDmsGetHardwareRevisionOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_hardware_revision_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_hardware_revision_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get the HW revision: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_hardware_revision_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    qmi_message_dms_get_hardware_revision_output_get_revision (output, &str, NULL);
+
+    g_print ("[%s] Hardware revision retrieved:\n"
+             "\tRevision: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             VALIDATE_UNKNOWN (str));
+
+    qmi_message_dms_get_hardware_revision_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1035,6 +1079,18 @@ qmicli_dms_run (QmiDevice *device,
                                        ctx->cancellable,
                                        (GAsyncReadyCallback)get_pin_status_ready,
                                        NULL);
+        return;
+    }
+
+    /* Request to get hardware revision? */
+    if (get_hardware_revision_flag) {
+        g_debug ("Asynchronously getting hardware revision...");
+        qmi_client_dms_get_hardware_revision (ctx->client,
+                                              NULL,
+                                              10,
+                                              ctx->cancellable,
+                                              (GAsyncReadyCallback)get_hardware_revision_ready,
+                                              NULL);
         return;
     }
 
