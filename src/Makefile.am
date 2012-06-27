@@ -108,6 +108,7 @@ include_HEADERS = \
 	qmi-message.h \
 	qmi-device.h \
 	qmi-client.h \
+	qmi-ctl.h \
 	qmi-enums-dms.h qmi-dms.h \
 	qmi-enums-wds.h qmi-wds.h
 
