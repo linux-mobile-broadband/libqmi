@@ -149,4 +149,45 @@ typedef enum {
     QMI_DMS_PIN_STATUS_CHANGED              = 7,
 } QmiDmsPinStatus;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Get Operating Mode' message */
+
+/**
+ * QmiDmsOperatingMode:
+ * @QMI_DMS_OPERATING_MODE_ONLINE: Device can acquire a system and make calls.
+ * @QMI_DMS_OPERATING_MODE_LOW_POWER: Device has temporarily disabled RF.
+ * @QMI_DMS_OPERATING_MODE_PERSISTENT_LOW_POWER: Device has disabled RF and state persists even after a reset.
+ * @QMI_DMS_OPERATING_MODE_FACTORY_TEST: Special mode for manufacturer tests.
+ * @QMI_DMS_OPERATING_MODE_OFFLINE: Device has deactivated RF and is partially shutdown.
+ * @QMI_DMS_OPERATING_MODE_RESETTING: Device is in the process of power cycling.
+ * @QMI_DMS_OPERATING_MODE_SHUTTING_DOWN: Device is in the process of shutting down.
+ *
+ * Operating mode of the device.
+ */
+typedef enum {
+    QMI_DMS_OPERATING_MODE_ONLINE                = 0,
+    QMI_DMS_OPERATING_MODE_LOW_POWER             = 1,
+    QMI_DMS_OPERATING_MODE_FACTORY_TEST          = 2,
+    QMI_DMS_OPERATING_MODE_OFFLINE               = 3,
+    QMI_DMS_OPERATING_MODE_RESETTING             = 4,
+    QMI_DMS_OPERATING_MODE_SHUTTING_DOWN         = 5,
+    QMI_DMS_OPERATING_MODE_PERSISTENT_LOW_POWER  = 6
+} QmiDmsOperatingMode;
+
+/**
+ * QmiDmsOfflineReason:
+ * @QMI_DMS_OFFLINE_REASON_HOST_IMAGE_MISCONFIGURATION: Host image misconfiguration.
+ * @QMI_DMS_OFFLINE_REASON_PRI_IMAGE_MISCONFIGURATION: PRI image misconfiguration.
+ * @QMI_DMS_OFFLINE_REASON_PRI_VERSION_INCOMPATIBLE: PRI version incompatible.
+ * @QMI_DMS_OFFLINE_REASON_DEVICE_MEMORY_FULL: Memory full, cannot copy PRI information.
+ *
+ * Reasons for being in Offline (@QMI_DMS_OPERATING_MODE_OFFLINE) state.
+ */
+typedef enum {
+    QMI_DMS_OFFLINE_REASON_HOST_IMAGE_MISCONFIGURATION = 1 << 0,
+    QMI_DMS_OFFLINE_REASON_PRI_IMAGE_MISCONFIGURATION  = 1 << 1,
+    QMI_DMS_OFFLINE_REASON_PRI_VERSION_INCOMPATIBLE    = 1 << 2,
+    QMI_DMS_OFFLINE_REASON_DEVICE_MEMORY_FULL          = 1 << 3
+} QmiDmsOfflineReason;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */
