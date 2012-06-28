@@ -55,6 +55,7 @@ static gchar *change_pin_str;
 static gboolean get_pin_status_flag;
 static gboolean get_hardware_revision_flag;
 static gboolean get_operating_mode_flag;
+static gchar *set_operating_mode_str;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -114,6 +115,10 @@ static GOptionEntry entries[] = {
       "Get the device operating mode",
       NULL
     },
+    { "dms-set-operating-mode", 0, 0, G_OPTION_ARG_STRING, &set_operating_mode_str,
+      "Set the device operating mode",
+      "[(Operating mode)]"
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -159,6 +164,7 @@ qmicli_dms_options_enabled (void)
                  get_pin_status_flag +
                  get_hardware_revision_flag +
                  get_operating_mode_flag +
+                 !!set_operating_mode_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -963,6 +969,60 @@ get_operating_mode_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static QmiMessageDmsSetOperatingModeInput *
+set_operating_mode_input_create (const gchar *str)
+{
+    QmiMessageDmsSetOperatingModeInput *input;
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_dms_operating_mode_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (!enum_value) {
+        g_printerr ("error: invalid operating mode value given: '%s'\n", str);
+        exit (EXIT_FAILURE);
+    }
+
+    input = qmi_message_dms_set_operating_mode_input_new ();
+    qmi_message_dms_set_operating_mode_input_set_mode (input, (QmiDmsOperatingMode)enum_value->value, NULL);
+    g_type_class_unref (enum_class);
+
+    return input;
+}
+
+static void
+set_operating_mode_ready (QmiClientDms *client,
+                          GAsyncResult *res)
+{
+    QmiMessageDmsSetOperatingModeOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_set_operating_mode_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_set_operating_mode_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set operating mode: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_set_operating_mode_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Operating mode set successfully\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_set_operating_mode_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1163,6 +1223,22 @@ qmicli_dms_run (QmiDevice *device,
                                            ctx->cancellable,
                                            (GAsyncReadyCallback)get_operating_mode_ready,
                                            NULL);
+        return;
+    }
+
+    /* Request to set operating mode? */
+    if (set_operating_mode_str) {
+        QmiMessageDmsSetOperatingModeInput *input;
+
+        g_debug ("Asynchronously setting operating mode...");
+        input = set_operating_mode_input_create (set_operating_mode_str);
+        qmi_client_dms_set_operating_mode (ctx->client,
+                                           input,
+                                           10,
+                                           ctx->cancellable,
+                                           (GAsyncReadyCallback)set_operating_mode_ready,
+                                           NULL);
+        qmi_message_dms_set_operating_mode_input_unref (input);
         return;
     }
 
