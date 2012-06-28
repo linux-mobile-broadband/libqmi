@@ -320,5 +320,18 @@
                       "type"      : "TLV",
                       "format"    : "guint8",
                       "public-format" : "gboolean",
-                      "prerequisites": [ { "common-ref" : "Success" } ] } ] }
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Set Operating Mode",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x002E",
+     "input"   : [  { "name"      : "Mode",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "guint8",
+                      "public-format" : "QmiDmsOperatingMode" } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] }
 ]
