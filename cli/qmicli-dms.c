@@ -54,6 +54,7 @@ static gchar *unblock_pin_str;
 static gchar *change_pin_str;
 static gboolean get_pin_status_flag;
 static gboolean get_hardware_revision_flag;
+static gboolean get_operating_mode_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -109,6 +110,10 @@ static GOptionEntry entries[] = {
       "Get the HW revision",
       NULL
     },
+    { "dms-get-operating-mode", 0, 0, G_OPTION_ARG_NONE, &get_operating_mode_flag,
+      "Get the device operating mode",
+      NULL
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -153,6 +158,7 @@ qmicli_dms_options_enabled (void)
                  !!change_pin_str +
                  get_pin_status_flag +
                  get_hardware_revision_flag +
+                 get_operating_mode_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -903,6 +909,60 @@ get_hardware_revision_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+get_operating_mode_ready (QmiClientDms *client,
+                          GAsyncResult *res)
+{
+    QmiMessageDmsGetOperatingModeOutput *output;
+    QmiDmsOperatingMode mode;
+    gboolean hw_restricted = FALSE;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_operating_mode_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_operating_mode_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get the HW revision: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_operating_mode_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    qmi_message_dms_get_operating_mode_output_get_mode (output, &mode, NULL);
+
+    g_print ("[%s] Operating mode retrieved:\n"
+             "\tMode: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             qmi_dms_operating_mode_get_string (mode));
+
+    if (mode == QMI_DMS_OPERATING_MODE_OFFLINE) {
+        QmiDmsOfflineReason reason;
+        gchar *reason_str = NULL;
+
+        if (qmi_message_dms_get_operating_mode_output_get_offline_reason (output, &reason, NULL)) {
+            reason_str = qmi_dms_offline_reason_build_string_from_mask (reason);
+        }
+
+        g_print ("\tReason: '%s'\n", VALIDATE_UNKNOWN (reason_str));
+        g_free (reason_str);
+    }
+
+    qmi_message_dms_get_operating_mode_output_get_hardware_restricted_mode (output, &hw_restricted, NULL);
+    g_print ("\tHW restricted: '%s'\n", hw_restricted ? "yes" : "no");
+
+    qmi_message_dms_get_operating_mode_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1091,6 +1151,18 @@ qmicli_dms_run (QmiDevice *device,
                                               ctx->cancellable,
                                               (GAsyncReadyCallback)get_hardware_revision_ready,
                                               NULL);
+        return;
+    }
+
+    /* Request to get operating mode? */
+    if (get_operating_mode_flag) {
+        g_debug ("Asynchronously getting operating mode...");
+        qmi_client_dms_get_operating_mode (ctx->client,
+                                           NULL,
+                                           10,
+                                           ctx->cancellable,
+                                           (GAsyncReadyCallback)get_operating_mode_ready,
+                                           NULL);
         return;
     }
 
