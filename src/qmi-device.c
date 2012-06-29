@@ -1302,7 +1302,12 @@ destroy_iochannel (QmiDevice *self,
     /* Failures when closing still make the device to get closed */
     g_io_channel_unref (self->priv->iochannel);
     self->priv->iochannel = NULL;
-    self->priv->watch_id = 0;
+
+    if (self->priv->watch_id) {
+        g_source_remove (self->priv->watch_id);
+        self->priv->watch_id = 0;
+    }
+
     if (self->priv->response) {
         g_byte_array_unref (self->priv->response);
         self->priv->response = NULL;
