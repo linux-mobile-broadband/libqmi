@@ -1082,6 +1082,7 @@ typedef struct {
     GCancellable *cancellable;
     QmiDeviceOpenFlags flags;
     guint timeout;
+    guint version_check_retries;
 } DeviceOpenContext;
 
 static void
@@ -1160,6 +1161,23 @@ version_info_ready (QmiClientCtl *client_ctl,
     /* Check result of the async operation */
     output = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
     if (!output) {
+        if (g_error_matches (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TIMEOUT)) {
+            /* Update retries... */
+            ctx->version_check_retries--;
+            /* If retries left, retry */
+            if (ctx->version_check_retries > 0) {
+                qmi_client_ctl_get_version_info (ctx->self->priv->client_ctl,
+                                                 NULL,
+                                                 1,
+                                                 ctx->cancellable,
+                                                 (GAsyncReadyCallback)version_info_ready,
+                                                 ctx);
+                return;
+            }
+
+            /* Otherwise, propagate the error */
+        }
+
         g_simple_async_result_take_error (ctx->result, error);
         device_open_context_complete_and_free (ctx);
         return;
@@ -1206,11 +1224,13 @@ process_open_flags (DeviceOpenContext *ctx)
 {
     /* Query version info? */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_VERSION_INFO) {
-        g_debug ("Checking version info...");
         ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_VERSION_INFO;
+        /* Setup how many times to retry... We'll retry once per second */
+        ctx->version_check_retries = ctx->timeout > 0 ? ctx->timeout : 1;
+        g_debug ("Checking version info (%u retries)...", ctx->version_check_retries);
         qmi_client_ctl_get_version_info (ctx->self->priv->client_ctl,
                                          NULL,
-                                         ctx->timeout,
+                                         1,
                                          ctx->cancellable,
                                          (GAsyncReadyCallback)version_info_ready,
                                          ctx);
