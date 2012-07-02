@@ -53,6 +53,7 @@ static gchar *uim_verify_pin_str;
 static gchar *uim_unblock_pin_str;
 static gchar *uim_change_pin_str;
 static gboolean uim_get_pin_status_flag;
+static gboolean uim_get_iccid_flag;
 static gboolean get_hardware_revision_flag;
 static gboolean get_operating_mode_flag;
 static gchar *set_operating_mode_str;
@@ -105,6 +106,10 @@ static GOptionEntry entries[] = {
     },
     { "dms-uim-get-pin-status", 0, 0, G_OPTION_ARG_NONE, &uim_get_pin_status_flag,
       "Get PIN status",
+      NULL
+    },
+    { "dms-uim-get-iccid", 0, 0, G_OPTION_ARG_NONE, &uim_get_iccid_flag,
+      "Get ICCID",
       NULL
     },
     { "dms-get-hardware-revision", 0, 0, G_OPTION_ARG_NONE, &get_hardware_revision_flag,
@@ -162,6 +167,7 @@ qmicli_dms_options_enabled (void)
                  !!uim_unblock_pin_str +
                  !!uim_change_pin_str +
                  uim_get_pin_status_flag +
+                 uim_get_iccid_flag +
                  get_hardware_revision_flag +
                  get_operating_mode_flag +
                  !!set_operating_mode_str +
@@ -878,6 +884,44 @@ uim_get_pin_status_ready (QmiClientDms *client,
 }
 
 static void
+uim_get_iccid_ready (QmiClientDms *client,
+                     GAsyncResult *res)
+{
+    const gchar *str = NULL;
+    QmiMessageDmsUimGetIccidOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_uim_get_iccid_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_uim_get_iccid_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get ICCID: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_uim_get_iccid_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    qmi_message_dms_uim_get_iccid_output_get_iccid (output, &str, NULL);
+
+    g_print ("[%s] UIM ICCID retrieved:\n"
+             "\tICCID: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             VALIDATE_UNKNOWN (str));
+
+    qmi_message_dms_uim_get_iccid_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
 get_hardware_revision_ready (QmiClientDms *client,
                              GAsyncResult *res)
 {
@@ -1199,6 +1243,18 @@ qmicli_dms_run (QmiDevice *device,
                                            ctx->cancellable,
                                            (GAsyncReadyCallback)uim_get_pin_status_ready,
                                            NULL);
+        return;
+    }
+
+    /* Request to get UIM ICCID? */
+    if (uim_get_iccid_flag) {
+        g_debug ("Asynchronously getting UIM ICCID...");
+        qmi_client_dms_uim_get_iccid (ctx->client,
+                                      NULL,
+                                      10,
+                                      ctx->cancellable,
+                                      (GAsyncReadyCallback)uim_get_iccid_ready,
+                                      NULL);
         return;
     }
 
