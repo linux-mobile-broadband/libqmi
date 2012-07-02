@@ -54,6 +54,7 @@ static gchar *uim_unblock_pin_str;
 static gchar *uim_change_pin_str;
 static gboolean uim_get_pin_status_flag;
 static gboolean uim_get_iccid_flag;
+static gboolean uim_get_imsi_flag;
 static gboolean get_hardware_revision_flag;
 static gboolean get_operating_mode_flag;
 static gchar *set_operating_mode_str;
@@ -112,6 +113,10 @@ static GOptionEntry entries[] = {
       "Get ICCID",
       NULL
     },
+    { "dms-uim-get-imsi", 0, 0, G_OPTION_ARG_NONE, &uim_get_imsi_flag,
+      "Get IMSI",
+      NULL
+    },
     { "dms-get-hardware-revision", 0, 0, G_OPTION_ARG_NONE, &get_hardware_revision_flag,
       "Get the HW revision",
       NULL
@@ -168,6 +173,7 @@ qmicli_dms_options_enabled (void)
                  !!uim_change_pin_str +
                  uim_get_pin_status_flag +
                  uim_get_iccid_flag +
+                 uim_get_imsi_flag +
                  get_hardware_revision_flag +
                  get_operating_mode_flag +
                  !!set_operating_mode_str +
@@ -922,6 +928,44 @@ uim_get_iccid_ready (QmiClientDms *client,
 }
 
 static void
+uim_get_imsi_ready (QmiClientDms *client,
+                    GAsyncResult *res)
+{
+    const gchar *str = NULL;
+    QmiMessageDmsUimGetImsiOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_uim_get_imsi_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_uim_get_imsi_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get IMSI: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_uim_get_imsi_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    qmi_message_dms_uim_get_imsi_output_get_imsi (output, &str, NULL);
+
+    g_print ("[%s] UIM IMSI retrieved:\n"
+             "\tIMSI: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             VALIDATE_UNKNOWN (str));
+
+    qmi_message_dms_uim_get_imsi_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
 get_hardware_revision_ready (QmiClientDms *client,
                              GAsyncResult *res)
 {
@@ -1255,6 +1299,18 @@ qmicli_dms_run (QmiDevice *device,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback)uim_get_iccid_ready,
                                       NULL);
+        return;
+    }
+
+    /* Request to get UIM IMSI? */
+    if (uim_get_imsi_flag) {
+        g_debug ("Asynchronously getting UIM IMSI...");
+        qmi_client_dms_uim_get_imsi (ctx->client,
+                                     NULL,
+                                     10,
+                                     ctx->cancellable,
+                                     (GAsyncReadyCallback)uim_get_imsi_ready,
+                                     NULL);
         return;
     }
 
