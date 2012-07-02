@@ -134,7 +134,7 @@
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
-  {  "name"    : "Set PIN Protection",
+  {  "name"    : "UIM Set PIN Protection",
      "type"    : "Message",
      "service" : "DMS",
      "id"      : "0x0027",
@@ -145,7 +145,7 @@
                       "format"    : "struct",
                       "contents"  : [ { "name"          : "Pin ID",
                                         "format"        : "guint8",
-                                        "public-format" : "QmiDmsPinId" },
+                                        "public-format" : "QmiDmsUimPinId" },
                                       { "name"          : "Protection Enabled",
                                         "format"        : "guint8",
                                         "public-format" : "gboolean" },
@@ -164,7 +164,7 @@
                       "prerequisites": [ { "common-ref" : "No Success" } ] } ] },
 
   // *********************************************************************************
-  {  "name"    : "Verify PIN",
+  {  "name"    : "UIM Verify PIN",
      "type"    : "Message",
      "service" : "DMS",
      "id"      : "0x0028",
@@ -175,7 +175,7 @@
                       "format"    : "struct",
                       "contents"  : [ { "name"          : "Pin ID",
                                         "format"        : "guint8",
-                                        "public-format" : "QmiDmsPinId" },
+                                        "public-format" : "QmiDmsUimPinId" },
                                       { "name"   : "PIN",
                                         "format" : "string" } ] } ],
      "output"  : [  { "common-ref" : "Operation Result" },
@@ -191,7 +191,7 @@
                       "prerequisites": [ { "common-ref" : "No Success" } ] } ] },
 
   // *********************************************************************************
-  {  "name"    : "Unblock PIN",
+  {  "name"    : "UIM Unblock PIN",
      "type"    : "Message",
      "service" : "DMS",
      "id"      : "0x0029",
@@ -202,7 +202,7 @@
                       "format"    : "struct",
                       "contents"  : [ { "name"          : "Pin ID",
                                         "format"        : "guint8",
-                                        "public-format" : "QmiDmsPinId" },
+                                        "public-format" : "QmiDmsUimPinId" },
                                       { "name"   : "PUK",
                                         "format" : "string" },
                                       { "name"   : "New PIN",
@@ -220,7 +220,7 @@
                       "prerequisites": [ { "common-ref" : "No Success" } ] } ] },
 
   // *********************************************************************************
-  {  "name"    : "Change PIN",
+  {  "name"    : "UIM Change PIN",
      "type"    : "Message",
      "service" : "DMS",
      "id"      : "0x002A",
@@ -231,7 +231,7 @@
                       "format"    : "struct",
                       "contents"  : [ { "name"          : "Pin ID",
                                         "format"        : "guint8",
-                                        "public-format" : "QmiDmsPinId" },
+                                        "public-format" : "QmiDmsUimPinId" },
                                       { "name"   : "Old PIN",
                                         "format" : "string" },
                                       { "name"   : "New PIN",
@@ -249,7 +249,7 @@
                       "prerequisites": [ { "common-ref" : "No Success" } ] } ] },
 
   // *********************************************************************************
-  {  "name"    : "Get PIN Status",
+  {  "name"    : "UIM Get PIN Status",
      "type"    : "Message",
      "service" : "DMS",
      "id"      : "0x002B",
@@ -261,7 +261,7 @@
                       "format"    : "struct",
                       "contents"  : [ { "name"          : "Current Status",
                                         "format"        : "guint8",
-                                        "public-format" : "QmiDmsPinStatus" },
+                                        "public-format" : "QmiDmsUimPinStatus" },
                                       { "name"   : "Verify Retries Left",
                                         "format" : "guint8" },
                                       { "name"   : "Unblock Retries Left",
@@ -273,7 +273,7 @@
                       "format"    : "struct",
                       "contents"  : [ { "name"          : "Current Status",
                                         "format"        : "guint8",
-                                        "public-format" : "QmiDmsPinStatus" },
+                                        "public-format" : "QmiDmsUimPinStatus" },
                                       { "name"   : "Verify Retries Left",
                                         "format" : "guint8" },
                                       { "name"   : "Unblock Retries Left",

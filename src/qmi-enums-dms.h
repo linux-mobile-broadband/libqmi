@@ -107,47 +107,47 @@ typedef enum {
 
 
 /*****************************************************************************/
-/* Helper enums for the 'QMI DMS Set PIN Protection' message */
+/* Helper enums for the 'QMI DMS UIM Set PIN Protection' message */
 
 /**
- * QmiDmsPinId:
- * @QMI_DMS_PIN_ID_PIN: PIN.
- * @QMI_DMS_PIN_ID_PIN2: PIN2.
+ * QmiDmsUimPinId:
+ * @QMI_DMS_UIM_PIN_ID_PIN: PIN.
+ * @QMI_DMS_UIM_PIN_ID_PIN2: PIN2.
  *
  * The PIN identifier.
  */
 typedef enum {
-    QMI_DMS_PIN_ID_PIN  = 1,
-    QMI_DMS_PIN_ID_PIN2 = 2
-} QmiDmsPinId;
+    QMI_DMS_UIM_PIN_ID_PIN  = 1,
+    QMI_DMS_UIM_PIN_ID_PIN2 = 2
+} QmiDmsUimPinId;
 
 
 /*****************************************************************************/
-/* Helper enums for the 'QMI DMS Get PIN Status' message */
+/* Helper enums for the 'QMI DMS UIM Get PIN Status' message */
 
 /**
  * QmiDmsPinStatus:
- * @QMI_DMS_PIN_STATUS_NOT_INITIALIZED: Not initialized.
- * @QMI_DMS_PIN_STATUS_ENABLED_NOT_VERIFIED: Enabled, not verified.
- * @QMI_DMS_PIN_STATUS_ENABLED_VERIFIED: Enabled, verified.
- * @QMI_DMS_PIN_STATUS_DISABLED: Disabled.
- * @QMI_DMS_PIN_STATUS_BLOCKED: Blocked.
- * @QMI_DMS_PIN_STATUS_PERMANENTLY_BLOCKED: Permanently Blocked.
- * @QMI_DMS_PIN_STATUS_UNBLOCKED: Unblocked.
- * @QMI_DMS_PIN_STATUS_CHANGED: Changed.
+ * @QMI_DMS_UIM_PIN_STATUS_NOT_INITIALIZED: Not initialized.
+ * @QMI_DMS_UIM_PIN_STATUS_ENABLED_NOT_VERIFIED: Enabled, not verified.
+ * @QMI_DMS_UIM_PIN_STATUS_ENABLED_VERIFIED: Enabled, verified.
+ * @QMI_DMS_UIM_PIN_STATUS_DISABLED: Disabled.
+ * @QMI_DMS_UIM_PIN_STATUS_BLOCKED: Blocked.
+ * @QMI_DMS_UIM_PIN_STATUS_PERMANENTLY_BLOCKED: Permanently Blocked.
+ * @QMI_DMS_UIM_PIN_STATUS_UNBLOCKED: Unblocked.
+ * @QMI_DMS_UIM_PIN_STATUS_CHANGED: Changed.
  *
  * The PIN status.
  */
 typedef enum {
-    QMI_DMS_PIN_STATUS_NOT_INITIALIZED      = 0,
-    QMI_DMS_PIN_STATUS_ENABLED_NOT_VERIFIED = 1,
-    QMI_DMS_PIN_STATUS_ENABLED_VERIFIED     = 2,
-    QMI_DMS_PIN_STATUS_DISABLED             = 3,
-    QMI_DMS_PIN_STATUS_BLOCKED              = 4,
-    QMI_DMS_PIN_STATUS_PERMANENTLY_BLOCKED  = 5,
-    QMI_DMS_PIN_STATUS_UNBLOCKED            = 6,
-    QMI_DMS_PIN_STATUS_CHANGED              = 7,
-} QmiDmsPinStatus;
+    QMI_DMS_UIM_PIN_STATUS_NOT_INITIALIZED      = 0,
+    QMI_DMS_UIM_PIN_STATUS_ENABLED_NOT_VERIFIED = 1,
+    QMI_DMS_UIM_PIN_STATUS_ENABLED_VERIFIED     = 2,
+    QMI_DMS_UIM_PIN_STATUS_DISABLED             = 3,
+    QMI_DMS_UIM_PIN_STATUS_BLOCKED              = 4,
+    QMI_DMS_UIM_PIN_STATUS_PERMANENTLY_BLOCKED  = 5,
+    QMI_DMS_UIM_PIN_STATUS_UNBLOCKED            = 6,
+    QMI_DMS_UIM_PIN_STATUS_CHANGED              = 7,
+} QmiDmsUimPinStatus;
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS Get Operating Mode' message */
