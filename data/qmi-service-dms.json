@@ -333,5 +333,18 @@
                       "type"      : "TLV",
                       "format"    : "guint8",
                       "public-format" : "QmiDmsOperatingMode" } ],
-     "output"  : [  { "common-ref" : "Operation Result" } ] }
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "UIM Get ICCID",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x003C",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"      : "ICCID",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "string",
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] }
 ]
