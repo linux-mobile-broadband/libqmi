@@ -22,6 +22,7 @@ import utils
 from VariableInteger import VariableInteger
 from VariableString import VariableString
 from VariableStruct import VariableStruct
+from VariableSequence import VariableSequence
 from VariableArray import VariableArray
 
 
@@ -36,6 +37,8 @@ def create_variable(dictionary, new_type_name):
         return VariableString(dictionary)
     elif dictionary['format'] == 'struct':
         return VariableStruct(dictionary, new_type_name)
+    elif dictionary['format'] == 'sequence':
+        return VariableSequence(dictionary, new_type_name)
     elif dictionary['format'] == 'array':
         return VariableArray(dictionary, new_type_name)
     else:

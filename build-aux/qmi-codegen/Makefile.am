@@ -11,6 +11,7 @@ EXTRA_DIST = \
 	VariableFactory.py \
 	VariableArray.py \
 	VariableStruct.py \
+	VariableSequence.py \
 	VariableInteger.py \
 	VariableString.py \
 	utils.py \
