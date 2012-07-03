@@ -100,36 +100,13 @@ class Container:
         if self.fields is None:
             return
 
-        translations = { 'enum_type' : utils.build_camelcase_name (self.fullname + ' TLV') }
-        template = (
-            '\n'
-            '/**\n'
-            ' * ${enum_type}:\n')
-        f.write(string.Template(template).substitute(translations))
-
+        f.write('\n')
         for tlv in self.fields:
-            translations['enum_name'] = tlv.id_enum_name
-            translations['enum_value'] = tlv.id
+            translations = { 'enum_name'  : tlv.id_enum_name,
+                             'enum_value' : tlv.id }
             template = (
-                ' * @${enum_name}: TODO,\n')
+                '#define ${enum_name} ${enum_value}\n')
             f.write(string.Template(template).substitute(translations))
-
-        template = (
-            ' * TODO: comment enum\n'
-            ' */\n'
-            'typedef enum {\n')
-        f.write(string.Template(template).substitute(translations))
-
-        for tlv in self.fields:
-            translations['enum_name'] = tlv.id_enum_name
-            translations['enum_value'] = tlv.id
-            template = (
-                '    ${enum_name} = ${enum_value},\n')
-            f.write(string.Template(template).substitute(translations))
-
-        template = (
-            '} ${enum_type};\n')
-        f.write(string.Template(template).substitute(translations))
 
 
     """
