@@ -575,7 +575,7 @@ uim_set_pin_protection_input_create (const gchar *str)
     info.protection_enabled = read_enable_disable_from_string (split[1]);
     info.pin = read_non_empty_string (split[2], "current PIN");
 
-    qmi_message_dms_uim_set_pin_protection_input_set_info (input, info, NULL);
+    qmi_message_dms_uim_set_pin_protection_input_set_info (input, &info, NULL);
     g_strfreev (split);
 
     return input;
@@ -643,7 +643,7 @@ uim_verify_pin_input_create (const gchar *str)
     info.pin_id = read_pin_id_from_string (split[0]);
     info.pin = read_non_empty_string (split[1], "current PIN");
 
-    qmi_message_dms_uim_verify_pin_input_set_info (input, info, NULL);
+    qmi_message_dms_uim_verify_pin_input_set_info (input, &info, NULL);
     g_strfreev (split);
 
     return input;
@@ -712,7 +712,7 @@ uim_unblock_pin_input_create (const gchar *str)
     info.puk = read_non_empty_string (split[1], "PUK");
     info.new_pin = read_non_empty_string (split[2], "new PIN");
 
-    qmi_message_dms_uim_unblock_pin_input_set_info (input, info, NULL);
+    qmi_message_dms_uim_unblock_pin_input_set_info (input, &info, NULL);
     g_strfreev (split);
 
     return input;
@@ -781,7 +781,7 @@ uim_change_pin_input_create (const gchar *str)
     info.old_pin = read_non_empty_string (split[1], "old PIN");
     info.new_pin = read_non_empty_string (split[2], "new PIN");
 
-    qmi_message_dms_uim_change_pin_input_set_info (input, info, NULL);
+    qmi_message_dms_uim_change_pin_input_set_info (input, &info, NULL);
     g_strfreev (split);
 
     return input;

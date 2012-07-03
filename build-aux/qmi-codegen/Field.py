@@ -91,22 +91,25 @@ class Field:
     container
     """
     def emit_getter(self, hfile, cfile):
-        translations = { 'name'              : self.name,
-                         'variable_name'     : self.variable_name,
-                         'public_field_type' : self.variable.public_format,
-                         'public_field_out'  : self.variable.public_format if self.variable.public_format.endswith('*') else self.variable.public_format + ' ',
-                         'dispose_warn'      : ' Do not free the returned @value, it is owned by @self.' if self.variable.needs_dispose is True else '',
-                         'underscore'        : utils.build_underscore_name(self.name),
-                         'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
-                         'prefix_underscore' : utils.build_underscore_name(self.prefix),
-                         'const'             : 'const ' if self.variable.pass_constant else '' }
+        input_variable_name = utils.build_underscore_name(self.name)
+        variable_getter_dec = self.variable.build_getter_declaration('    ', input_variable_name)
+        variable_getter_doc = self.variable.build_getter_documentation(' * ', input_variable_name)
+        variable_getter_imp = self.variable.build_getter_implementation('    ', 'self->' + self.variable_name, input_variable_name, True)
+        translations = { 'name'                : self.name,
+                         'variable_name'       : self.variable_name,
+                         'variable_getter_dec' : variable_getter_dec,
+                         'variable_getter_doc' : variable_getter_doc,
+                         'variable_getter_imp' : variable_getter_imp,
+                         'underscore'          : utils.build_underscore_name(self.name),
+                         'prefix_camelcase'    : utils.build_camelcase_name(self.prefix),
+                         'prefix_underscore'   : utils.build_underscore_name(self.prefix) }
 
         # Emit the getter header
         template = (
             '\n'
             'gboolean ${prefix_underscore}_get_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
-            '    ${const}${public_field_out}*value,\n'
+            '${variable_getter_dec}'
             '    GError **error);\n')
         hfile.write(string.Template(template).substitute(translations))
 
@@ -116,17 +119,17 @@ class Field:
             '/**\n'
             ' * ${prefix_underscore}_get_${underscore}:\n'
             ' * @self: a ${prefix_camelcase}.\n'
-            ' * @value: a placeholder for the output value, or #NULL.\n'
+            '${variable_getter_doc}'
             ' * @error: a #GError.\n'
             ' *\n'
             ' * Get the \'${name}\' field from @self.\n'
             ' *\n'
-            ' * Returns: #TRUE if the field is found and @value is set, #FALSE otherwise.${dispose_warn}\n'
+            ' * Returns: #TRUE if the field is found, #FALSE otherwise.\n'
             ' */\n'
             'gboolean\n'
             '${prefix_underscore}_get_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
-            '    ${const}${public_field_out}*value,\n'
+            '${variable_getter_dec}'
             '    GError **error)\n'
             '{\n'
             '    g_return_val_if_fail (self != NULL, FALSE);\n'
@@ -139,9 +142,7 @@ class Field:
             '        return FALSE;\n'
             '    }\n'
             '\n'
-            '    /* Just for now, transfer-none always */\n'
-            '    if (value)\n'
-            '        *value = (${public_field_out})(self->${variable_name});\n'
+            '${variable_getter_imp}'
             '\n'
             '    return TRUE;\n'
             '}\n')
@@ -153,20 +154,25 @@ class Field:
     container
     """
     def emit_setter(self, hfile, cfile):
-        translations = { 'name'              : self.name,
-                         'variable_name'     : self.variable_name,
-                         'field_type'        : self.variable.public_format,
-                         'underscore'        : utils.build_underscore_name(self.name),
-                         'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
-                         'prefix_underscore' : utils.build_underscore_name(self.prefix),
-                         'const'             : 'const ' if self.variable.pass_constant else ''  }
+        input_variable_name = utils.build_underscore_name(self.name)
+        variable_setter_dec = self.variable.build_setter_declaration('    ', input_variable_name)
+        variable_setter_doc = self.variable.build_setter_documentation(' * ', input_variable_name)
+        variable_setter_imp = self.variable.build_setter_implementation('    ', input_variable_name, 'self->' + self.variable_name)
+        translations = { 'name'                : self.name,
+                         'variable_name'       : self.variable_name,
+                         'variable_setter_dec' : variable_setter_dec,
+                         'variable_setter_doc' : variable_setter_doc,
+                         'variable_setter_imp' : variable_setter_imp,
+                         'underscore'          : utils.build_underscore_name(self.name),
+                         'prefix_camelcase'    : utils.build_camelcase_name(self.prefix),
+                         'prefix_underscore'   : utils.build_underscore_name(self.prefix) }
 
         # Emit the setter header
         template = (
             '\n'
             'gboolean ${prefix_underscore}_set_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
-            '    ${const}${field_type} value,\n'
+            '${variable_setter_dec}'
             '    GError **error);\n')
         hfile.write(string.Template(template).substitute(translations))
 
@@ -176,7 +182,7 @@ class Field:
             '/**\n'
             ' * ${prefix_underscore}_set_${underscore}:\n'
             ' * @self: a ${prefix_camelcase}.\n'
-            ' * @value: the value to set.\n'
+            '${variable_setter_doc}'
             ' * @error: a #GError.\n'
             ' *\n'
             ' * Set the \'${name}\' field in the message.\n'
@@ -186,21 +192,17 @@ class Field:
             'gboolean\n'
             '${prefix_underscore}_set_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
-            '    ${const}${field_type} value,\n'
+            '${variable_setter_dec}'
             '    GError **error)\n'
             '{\n'
             '    g_return_val_if_fail (self != NULL, FALSE);\n'
             '\n'
-            '    self->${variable_name}_set = TRUE;\n')
-        cfile.write(string.Template(template).substitute(translations))
-
-        self.variable.emit_dispose(cfile, '    ', 'self->' + self.variable_name)
-        self.variable.emit_copy(cfile, '    ', 'value', 'self->' + self.variable_name)
-
-        cfile.write(
+            '    self->${variable_name}_set = TRUE;\n'
+            '${variable_setter_imp}'
             '\n'
             '    return TRUE;\n'
             '}\n')
+        cfile.write(string.Template(template).substitute(translations))
 
 
     """

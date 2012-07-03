@@ -128,19 +128,108 @@ class VariableStruct(Variable):
 
 
     """
-    Copying a struct is just about copying each of the struct fields one by one.
-    Note that we shouldn't just "a = b" with the structs, as the members may be
-    heap-allocated strings.
+    Variable declaration
     """
-    def emit_copy(self, f, line_prefix, variable_name_from, variable_name_to):
+    def build_variable_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'     : line_prefix,
+                         'format' : self.public_format,
+                         'name'   : variable_name }
+
+        template = (
+            '${lp}${format} ${name};\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    The getter for a struct variable will include independent getters for each
+    of the variables in the struct.
+    """
+    def build_getter_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'     : line_prefix,
+                         'format' : self.public_format,
+                         'name'   : variable_name }
+
+        template = (
+            '${lp}${format} *${name},\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Documentation for the getter
+    """
+    def build_getter_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'     : line_prefix,
+                         'format' : self.public_format,
+                         'name'   : variable_name }
+
+        template = (
+            '${lp}@${name}: a placeholder for the output constant #${format}, or #NULL if not required.\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Builds the Struct getter implementation
+    """
+    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+        translations = { 'lp'   : line_prefix,
+                         'from' : variable_name_from,
+                         'to'   : variable_name_to }
+
+        if to_is_reference:
+            template = (
+                '${lp}if (${to})\n'
+                '${lp}    *${to} = ${from};\n')
+            return string.Template(template).substitute(translations)
+        else:
+            template = (
+                '${lp}${to} = ${from};\n')
+            return string.Template(template).substitute(translations)
+
+
+    """
+    The setter for a struct variable will include independent setters for each
+    of the variables in the struct.
+    """
+    def build_setter_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'     : line_prefix,
+                         'format' : self.public_format,
+                         'name'   : variable_name }
+
+        template = (
+            '${lp}const ${format} *${name},\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Documentation for the setter
+    """
+    def build_setter_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'     : line_prefix,
+                         'format' : self.public_format,
+                         'name'   : variable_name }
+
+        template = (
+            '${lp}@${name}: the address of the #${format} to set.\n')
+        return string.Template(template).substitute(translations)
+
+    """
+    Builds the Struct setter implementation
+    """
+    def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
+        built = ''
         for member in self.members:
-            member['object'].emit_copy(f, line_prefix, variable_name_from + '.' + member['name'], variable_name_to + '.' + member['name'])
+            built += member['object'].build_setter_implementation(line_prefix,
+                                                                  variable_name_from + '->' + member['name'],
+                                                                  variable_name_to + '.' + member['name'])
+        return built
 
 
     """
     Disposing a struct is just about disposing each of the struct fields one by
     one.
     """
-    def emit_dispose(self, f, line_prefix, variable_name):
+    def build_dispose(self, line_prefix, variable_name):
+        built = ''
         for member in self.members:
-            member['object'].emit_dispose(f, line_prefix, variable_name + '.' + member['name'])
+            built += member['object'].build_dispose(line_prefix, variable_name + '.' + member['name'])
+        return built

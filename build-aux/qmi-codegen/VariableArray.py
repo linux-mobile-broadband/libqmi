@@ -144,25 +144,110 @@ class VariableArray(Variable):
 
 
     """
-    GArrays are ref-counted, so we can just provide a new ref to the array.
+    Variable declaration
     """
-    def emit_copy(self, f, line_prefix, variable_name_from, variable_name_to):
+    def build_variable_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = (
+            '${lp}GArray *${name};\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Getter for the array type
+    """
+    def build_getter_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = (
+            '${lp}GArray **${name},\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Documentation for the getter
+    """
+    def build_getter_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'                          : line_prefix,
+                         'public_array_element_format' : self.array_element.public_format,
+                         'name'                        : variable_name }
+
+        template = (
+            '${lp}@${name}: a placeholder for the output #GArray of #${public_array_element_format} elements, or #NULL if not required. Do not free it, it is owned by @self.\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Builds the array getter implementation
+    """
+    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+        translations = { 'lp'   : line_prefix,
+                         'from' : variable_name_from,
+                         'to'   : variable_name_to }
+
+        if to_is_reference:
+            template = (
+                '${lp}if (${to})\n'
+                '${lp}    *${to} = ${from};\n')
+            return string.Template(template).substitute(translations)
+        else:
+            template = (
+                '${lp}${to} = ${from};\n')
+            return string.Template(template).substitute(translations)
+
+
+    """
+    Setter for the array type
+    """
+    def build_setter_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = (
+            '${lp}GArray *${name},\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Documentation for the setter
+    """
+    def build_setter_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'                          : line_prefix,
+                         'public_array_element_format' : self.array_element.public_format,
+                         'name'                        : variable_name }
+
+        template = (
+            '${lp}@${name}: a #GArray of #${public_array_element_format} elements. A new reference to @{name} will be taken.\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Builds the array setter implementation
+    """
+    def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         translations = { 'lp'   : line_prefix,
                          'from' : variable_name_from,
                          'to'   : variable_name_to }
 
         template = (
+            '${lp}if (${to})\n'
+            '${lp}    g_array_unref (${to});\n'
             '${lp}${to} = g_array_ref (${from});\n')
-        f.write(string.Template(template).substitute(translations))
+        return string.Template(template).substitute(translations)
 
 
     """
     FIXME: we should only dispose the members of the array if the refcount of
     the array reached zero. Use g_array_set_clear_func() for that.
     """
-    def emit_dispose(self, f, line_prefix, variable_name):
+    def build_dispose(self, line_prefix, variable_name):
         translations = { 'lp'            : line_prefix,
                          'variable_name' : variable_name }
+
+        built = ''
 
         if self.array_element.needs_dispose == True:
             template = (
@@ -170,16 +255,17 @@ class VariableArray(Variable):
                 '${lp}    guint i;\n'
                 '\n'
                 '${lp}    for (i = 0; i < ${variable_name}->len; i++) {\n')
-            f.write(string.Template(template).substitute(translations))
+            built += string.Template(template).substitute(translations)
 
-            self.array_element.emit_dispose(f, line_prefix, 'g_array_index (' + variable_name + ',' + self.array_element.public_format + ', i)')
+            built += self.array_element.build_dispose(line_prefix, 'g_array_index (' + variable_name + ',' + self.array_element.public_format + ', i)')
 
             template = (
                 '${lp}    }\n'
                 '${lp}}')
-            f.write(string.Template(template).substitute(translations))
+            built += string.Template(template).substitute(translations)
 
 
         template = (
             '${lp}g_array_unref (${variable_name});\n')
-        f.write(string.Template(template).substitute(translations))
+        built += string.Template(template).substitute(translations)
+        return built

@@ -152,15 +152,15 @@ class Container:
         if self.fields is not None:
             for field in self.fields:
                 if field.variable is not None:
-                    translations['field_type'] = field.variable.private_format if field.variable.private_format.endswith('*') else field.variable.private_format + ' '
+                    variable_declaration = field.variable.build_variable_declaration('    ', field.variable_name)
                     translations['field_variable_name'] = field.variable_name
                     translations['field_name'] = field.name
                     template = (
                         '\n'
                         '    /* ${field_name} */\n'
-                        '    gboolean ${field_variable_name}_set;\n'
-                        '    ${field_type}${field_variable_name};\n')
+                        '    gboolean ${field_variable_name}_set;\n')
                     cfile.write(string.Template(template).substitute(translations))
+                    cfile.write(variable_declaration)
 
         cfile.write(
             '};\n')
@@ -218,7 +218,7 @@ class Container:
         if self.fields is not None:
             for field in self.fields:
                 if field.variable is not None and field.variable.needs_dispose is True:
-                    field.variable.emit_dispose(cfile, '        ', 'self->' + field.variable_name)
+                    template += field.variable.build_dispose('        ', 'self->' + field.variable_name)
 
         template = (
             '        g_slice_free (${camelcase}, self);\n'

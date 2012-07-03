@@ -41,9 +41,6 @@ class VariableString(Variable):
         # Strings will be heap-allocated
         self.needs_dispose = True
 
-        # We want to get the strings be passed as 'const'
-        self.pass_constant = True
-
         # Strings which are given as the full value of a TLV will NOT have a
         # length prefix
         self.length_prefix = False if 'type' in dictionary and dictionary['type'] == 'TLV' else True
@@ -118,25 +115,105 @@ class VariableString(Variable):
 
 
     """
-    Copy the string
+    Variable declaration
     """
-    def emit_copy(self, f, line_prefix, variable_name_from, variable_name_to):
+    def build_variable_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = (
+            '${lp}gchar *${name};\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Getter for the string type
+    """
+    def build_getter_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = (
+            '${lp}const gchar **${name},\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Documentation for the getter
+    """
+    def build_getter_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = (
+            '${lp}@${name}: a placeholder for the output constant string, or #NULL if not required.\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Builds the String getter implementation
+    """
+    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+        translations = { 'lp'   : line_prefix,
+                         'from' : variable_name_from,
+                         'to'   : variable_name_to }
+
+        if to_is_reference:
+            template = (
+                '${lp}if (${to})\n'
+                '${lp}    *${to} = ${from};\n')
+            return string.Template(template).substitute(translations)
+        else:
+            template = (
+                '${lp}${to} = ${from};\n')
+            return string.Template(template).substitute(translations)
+
+
+    """
+    Setter for the string type
+    """
+    def build_setter_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = (
+            '${lp}const gchar *${name},\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Documentation for the setter
+    """
+    def build_setter_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = (
+            '${lp}@${name}: a placeholder for the output constant string, or #NULL if not required.\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Builds the String setter implementation
+    """
+    def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         translations = { 'lp'   : line_prefix,
                          'from' : variable_name_from,
                          'to'   : variable_name_to }
 
         template = (
+            '${lp}g_free (${to});\n'
             '${lp}${to} = g_strdup (${from});\n')
-        f.write(string.Template(template).substitute(translations))
+        return string.Template(template).substitute(translations)
 
 
     """
     Dispose the string
     """
-    def emit_dispose(self, f, line_prefix, variable_name):
+    def build_dispose(self, line_prefix, variable_name):
         translations = { 'lp'            : line_prefix,
                          'variable_name' : variable_name }
 
         template = (
             '${lp}g_free (${variable_name});\n')
-        f.write(string.Template(template).substitute(translations))
+        return string.Template(template).substitute(translations)

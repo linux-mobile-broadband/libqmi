@@ -141,13 +141,102 @@ class VariableInteger(Variable):
 
 
     """
-    Copy an integer to another one
+    Variable declaration
     """
-    def emit_copy(self, f, line_prefix, variable_name_from, variable_name_to):
-        translations = { 'lp'   : line_prefix,
-                         'from' : variable_name_from,
-                         'to'   : variable_name_to }
+    def build_variable_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'             : line_prefix,
+                         'private_format' : self.private_format,
+                         'name'           : variable_name }
 
         template = (
-            '${lp}${to} = ${from};\n')
-        f.write(string.Template(template).substitute(translations))
+            '${lp}${private_format} ${name};\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Getter for the integer type
+    """
+    def build_getter_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'            : line_prefix,
+                         'public_format' : self.public_format,
+                         'name'          : variable_name }
+
+        template = (
+            '${lp}${public_format} *${name},\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Documentation for the getter
+    """
+    def build_getter_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'            : line_prefix,
+                         'public_format' : self.public_format,
+                         'name'          : variable_name }
+
+        template = (
+            '${lp}@${name}: a placeholder for the output #${public_format}, or #NULL if not required.\n')
+        return string.Template(template).substitute(translations)
+
+    """
+    Builds the Integer getter implementation
+    """
+    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+        needs_cast = True if self.public_format != self.private_format else False
+        translations = { 'lp'       : line_prefix,
+                         'from'     : variable_name_from,
+                         'to'       : variable_name_to,
+                         'cast_ini' : '(' + self.public_format + ')(' if needs_cast else '',
+                         'cast_end' : ')' if needs_cast else '' }
+
+        if to_is_reference:
+            template = (
+                '${lp}if (${to})\n'
+                '${lp}    *${to} = ${cast_ini}${from}${cast_end};\n')
+            return string.Template(template).substitute(translations)
+        else:
+            template = (
+                '${lp}${to} = ${cast_ini}${from}${cast_end};\n')
+            return string.Template(template).substitute(translations)
+
+
+    """
+    Setter for the integer type
+    """
+    def build_setter_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'            : line_prefix,
+                         'public_format' : self.public_format,
+                         'name'          : variable_name }
+
+        template = (
+            '${lp}${public_format} ${name},\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Documentation for the setter
+    """
+    def build_setter_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'            : line_prefix,
+                         'public_format' : self.public_format,
+                         'name'          : variable_name }
+
+        template = (
+            '${lp}@${name}: a #${public_format}.\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Implementation of the setter
+    """
+    def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
+        needs_cast = True if self.public_format != self.private_format else False
+        translations = { 'lp'       : line_prefix,
+                         'from'     : variable_name_from,
+                         'to'       : variable_name_to,
+                         'cast_ini' : '(' + self.private_format + ')(' if needs_cast else '',
+                         'cast_end' : ')' if needs_cast else '' }
+
+        template = (
+            '${lp}${to} = ${cast_ini}${from}${cast_end};\n')
+        return string.Template(template).substitute(translations)

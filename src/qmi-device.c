@@ -788,7 +788,7 @@ qmi_device_release_client (QmiDevice *self,
 
         /* And now, really try to release the CID */
         input = qmi_message_ctl_release_cid_input_new ();
-        qmi_message_ctl_release_cid_input_set_release_info (input, info, NULL);
+        qmi_message_ctl_release_cid_input_set_release_info (input, &info, NULL);
 
         /* And now, really try to release the CID */
         qmi_client_ctl_release_cid (self->priv->client_ctl,

@@ -44,12 +44,6 @@ class Variable:
         """
         self.needs_dispose = False
 
-        """
-        Variables may suggest to be passed flagged as 'const' in the get/set
-        methods generated.
-        """
-        self.pass_constant = False
-
 
     """
     Emits the code to declare specific new types required by the variable.
@@ -81,13 +75,49 @@ class Variable:
         pass
 
     """
-    Emits the code to copy a variable into another one of the same type.
+    Builds the code to include the declaration of a variable of this kind.
     """
-    def emit_copy(self, f, line_prefix, variable_name_from, variable_name_to):
-        pass
+    def build_variable_declaration(self, line_prefix, variable_name):
+        return ''
+
+    """
+    Builds the code to include in the getter method declaration for this kind of variable.
+    """
+    def build_getter_declaration(self, line_prefix, variable_name):
+        return ''
+
+    """
+    Builds the documentation of the getter code
+    """
+    def build_getter_documentation(self, line_prefix, variable_name):
+        return ''
+
+    """
+    Builds the code to implement getting this kind of variable.
+    """
+    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+        return ''
+
+    """
+    Builds the code to include in the setter method for this kind of variable.
+    """
+    def build_setter_declaration(self, line_prefix, variable_name):
+        return ''
+
+    """
+    Builds the documentation of the setter code
+    """
+    def build_setter_documentation(self, line_prefix, variable_name):
+        return ''
+
+    """
+    Builds the code to implement setting this kind of variable.
+    """
+    def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
+        return ''
 
     """
     Emits the code to dispose the variable.
     """
-    def emit_dispose(self, f, line_prefix, variable_name):
-        pass
+    def build_dispose(self, line_prefix, variable_name):
+        return ''
