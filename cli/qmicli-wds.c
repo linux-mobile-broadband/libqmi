@@ -295,14 +295,23 @@ start_network_ready (QmiClientWds *client,
                              QMI_PROTOCOL_ERROR,
                              QMI_PROTOCOL_ERROR_CALL_FAILED)) {
             guint16 cer;
-            QmiMessageWdsStartNetworkOutputVerboseCallEndReason verbose_cer;
+            guint16 verbose_cer_type;
+            guint16 verbose_cer_reason;
 
-            if (qmi_message_wds_start_network_output_get_call_end_reason (output, &cer, NULL))
+            if (qmi_message_wds_start_network_output_get_call_end_reason (
+                    output,
+                    &cer,
+                    NULL))
                 g_printerr ("call end reason: %u\n", cer);
-            if (qmi_message_wds_start_network_output_get_verbose_call_end_reason (output, &verbose_cer, NULL))
+
+            if (qmi_message_wds_start_network_output_get_verbose_call_end_reason (
+                    output,
+                    &verbose_cer_type,
+                    &verbose_cer_reason,
+                    NULL))
                 g_printerr ("verbose call end reason: %u, %u\n",
-                            verbose_cer.type,
-                            verbose_cer.reason);
+                            verbose_cer_type,
+                            verbose_cer_reason);
         }
 
         g_error_free (error);
@@ -430,12 +439,46 @@ get_data_bearer_technology_ready (QmiClientWds *client,
 }
 
 static void
+print_current_data_bearer_technology_results (const gchar *which,
+                                              QmiWdsNetworkType network_type,
+                                              guint32 rat_mask,
+                                              guint32 so_mask)
+{
+    gchar *rat_string = NULL;
+    gchar *so_string = NULL;
+
+    if (network_type == QMI_WDS_NETWORK_TYPE_3GPP2) {
+        rat_string = qmi_wds_rat_3gpp2_build_string_from_mask (rat_mask);
+        if (rat_mask & QMI_WDS_RAT_3GPP2_CDMA1X)
+            so_string = qmi_wds_so_cdma1x_build_string_from_mask (so_mask);
+        else if (rat_mask & QMI_WDS_RAT_3GPP2_EVDO_REVA)
+            so_string = qmi_wds_so_evdo_reva_build_string_from_mask (so_mask);
+    } else if (network_type == QMI_WDS_NETWORK_TYPE_3GPP) {
+        rat_string = qmi_wds_rat_3gpp_build_string_from_mask (rat_mask);
+    }
+
+    g_print ("[%s] Data bearer technology (%s):\n"
+             "              Network type: '%s'\n"
+             "   Radio Access Technology: '%s'\n"
+             "            Service Option: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             which,
+             qmi_wds_network_type_get_string (network_type),
+             VALIDATE_UNKNOWN (rat_string),
+             VALIDATE_UNKNOWN (so_string));
+    g_free (rat_string);
+    g_free (so_string);
+}
+
+static void
 get_current_data_bearer_technology_ready (QmiClientWds *client,
                                           GAsyncResult *res)
 {
     GError *error = NULL;
     QmiMessageWdsGetCurrentDataBearerTechnologyOutput *output;
-    QmiMessageWdsGetCurrentDataBearerTechnologyOutputCurrent current;;
+    QmiWdsNetworkType network_type;
+    guint32 rat_mask;
+    guint32 so_mask;
 
     output = qmi_client_wds_get_current_data_bearer_technology_finish (client, res, &error);
     if (!output) {
@@ -450,37 +493,19 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     if (!qmi_message_wds_get_current_data_bearer_technology_output_get_result (output, &error)) {
-        QmiMessageWdsGetCurrentDataBearerTechnologyOutputLast last;
-
         g_printerr ("error: couldn't get current data bearer technology: %s\n", error->message);
 
         if (qmi_message_wds_get_current_data_bearer_technology_output_get_last (
                 output,
-                &last,
+                &network_type,
+                &rat_mask,
+                &so_mask,
                 NULL)) {
-            gchar *rat_string = NULL;
-            gchar *so_string = NULL;
-
-            if (last.network_type == QMI_WDS_NETWORK_TYPE_3GPP2) {
-                rat_string = qmi_wds_rat_3gpp2_build_string_from_mask (last.rat_mask);
-                if (last.rat_mask & QMI_WDS_RAT_3GPP2_CDMA1X)
-                    so_string = qmi_wds_so_cdma1x_build_string_from_mask (last.so_mask);
-                else if (last.rat_mask & QMI_WDS_RAT_3GPP2_EVDO_REVA)
-                    so_string = qmi_wds_so_evdo_reva_build_string_from_mask (last.so_mask);
-            } else if (last.network_type == QMI_WDS_NETWORK_TYPE_3GPP) {
-                rat_string = qmi_wds_rat_3gpp_build_string_from_mask (last.rat_mask);
-            }
-
-            g_print ("[%s] Data bearer technology (last):\n"
-                     "              Network type: '%s'\n"
-                     "   Radio Access Technology: '%s'\n"
-                     "            Service Option: '%s'\n",
-                     qmi_device_get_path_display (ctx->device),
-                     qmi_wds_network_type_get_string (last.network_type),
-                     VALIDATE_UNKNOWN (rat_string),
-                     VALIDATE_UNKNOWN (so_string));
-            g_free (rat_string);
-            g_free (so_string);
+            print_current_data_bearer_technology_results (
+                "last",
+                network_type,
+                rat_mask,
+                so_mask);
         }
 
         g_error_free (error);
@@ -492,31 +517,15 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
     /* Retrieve CURRENT */
     if (qmi_message_wds_get_current_data_bearer_technology_output_get_current (
             output,
-            &current,
+            &network_type,
+            &rat_mask,
+            &so_mask,
             NULL)) {
-        gchar *rat_string = NULL;
-        gchar *so_string = NULL;
-
-        if (current.network_type == QMI_WDS_NETWORK_TYPE_3GPP2) {
-            rat_string = qmi_wds_rat_3gpp2_build_string_from_mask (current.rat_mask);
-            if (current.rat_mask & QMI_WDS_RAT_3GPP2_CDMA1X)
-                so_string = qmi_wds_so_cdma1x_build_string_from_mask (current.so_mask);
-            else if (current.rat_mask & QMI_WDS_RAT_3GPP2_EVDO_REVA)
-                so_string = qmi_wds_so_evdo_reva_build_string_from_mask (current.so_mask);
-        } else if (current.network_type == QMI_WDS_NETWORK_TYPE_3GPP) {
-            rat_string = qmi_wds_rat_3gpp_build_string_from_mask (current.rat_mask);
-        }
-
-        g_print ("[%s] Data bearer technology (current):\n"
-                 "              Network type: '%s'\n"
-                 "   Radio Access Technology: '%s'\n"
-                 "            Service Option: '%s'\n",
-                 qmi_device_get_path_display (ctx->device),
-                 qmi_wds_network_type_get_string (current.network_type),
-                 VALIDATE_UNKNOWN (rat_string),
-                 VALIDATE_UNKNOWN (so_string));
-        g_free (rat_string);
-        g_free (so_string);
+        print_current_data_bearer_technology_results (
+            "current",
+            network_type,
+            rat_mask,
+            so_mask);
     }
 
     qmi_message_wds_get_current_data_bearer_technology_output_unref (output);
