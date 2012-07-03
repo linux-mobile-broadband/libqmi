@@ -28,7 +28,7 @@ LIBQMI_GLIB_COMPILER_WARNINGS
 
 dnl General dependencies
 PKG_CHECK_MODULES(LIBQMI_GLIB,
-                  glib-2.0 >= 2.28
+                  glib-2.0 >= 2.32
                   gobject-2.0
                   gio-2.0)
 AC_SUBST(LIBQMI_GLIB_CFLAGS)

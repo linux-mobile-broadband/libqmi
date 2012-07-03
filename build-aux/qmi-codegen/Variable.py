@@ -53,6 +53,14 @@ class Variable:
 
 
     """
+    Emits the code to custom helper methods needed by this variable.
+    They are emitted as early as possible.
+    """
+    def emit_helper_methods(self, hfile, cfile):
+        pass
+
+
+    """
     Emits the code involved in reading the variable from the raw byte stream
     into the specific private format.
     """

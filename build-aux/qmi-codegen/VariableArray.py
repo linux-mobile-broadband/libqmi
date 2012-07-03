@@ -55,6 +55,27 @@ class VariableArray(Variable):
     def emit_types(self, f):
         self.array_element.emit_types(f)
 
+    """
+    Emits the code to clear the element of the array
+    """
+    def emit_helper_methods(self, hfile, cfile):
+        # No need for the clear func if no need to dispose the contents
+        if self.array_element.needs_dispose == False:
+            return
+
+        translations = { 'element_format'   : self.array_element.public_format,
+                         'underscore'       : utils.build_underscore_name_from_camelcase(self.array_element.public_format),
+                         'dispose_contents' : self.array_element.build_dispose('    ', '(*p)') }
+
+        template = (
+            '\n'
+            'static void\n'
+            '${underscore}_clear (${element_format} *p)\n'
+            '{\n'
+            '$dispose_contents'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
 
     """
     Reading an array from the raw byte buffer is just about providing a loop to
@@ -64,6 +85,7 @@ class VariableArray(Variable):
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
                          'public_array_element_format' : self.array_element.public_format,
+                         'underscore'     : utils.build_underscore_name_from_camelcase(self.array_element.public_format),
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
                          'buffer_len'     : buffer_len }
@@ -83,7 +105,15 @@ class VariableArray(Variable):
             '${lp}        FALSE,\n'
             '${lp}        sizeof (${public_array_element_format}),\n'
             '${lp}        n_items);\n'
-            '\n'
+            '\n')
+
+        if self.array_element.needs_dispose == True:
+            template += (
+                '${lp}    g_array_set_clear_func (${variable_name},\n'
+                '${lp}                            (GDestroyNotify)${underscore}_clear);\n'
+                '\n')
+
+        template += (
             '${lp}    for (i = 0; i < n_items; i++) {\n'
             '${lp}        ${public_array_element_format} aux;\n'
             '\n')
@@ -240,32 +270,12 @@ class VariableArray(Variable):
 
 
     """
-    FIXME: we should only dispose the members of the array if the refcount of
-    the array reached zero. Use g_array_set_clear_func() for that.
+    Dispose the array just with an unref
     """
     def build_dispose(self, line_prefix, variable_name):
         translations = { 'lp'            : line_prefix,
                          'variable_name' : variable_name }
 
-        built = ''
-
-        if self.array_element.needs_dispose == True:
-            template = (
-                '${lp}{\n'
-                '${lp}    guint i;\n'
-                '\n'
-                '${lp}    for (i = 0; i < ${variable_name}->len; i++) {\n')
-            built += string.Template(template).substitute(translations)
-
-            built += self.array_element.build_dispose(line_prefix, 'g_array_index (' + variable_name + ',' + self.array_element.public_format + ', i)')
-
-            template = (
-                '${lp}    }\n'
-                '${lp}}')
-            built += string.Template(template).substitute(translations)
-
-
         template = (
             '${lp}g_array_unref (${variable_name});\n')
-        built += string.Template(template).substitute(translations)
-        return built
+        return string.Template(template).substitute(translations)

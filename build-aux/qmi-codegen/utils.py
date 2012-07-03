@@ -19,6 +19,7 @@
 #
 
 import string
+import re
 
 """
 Add the common copyright header to the given file
@@ -128,6 +129,15 @@ e.g.: "This is a message" --> "this_is_a_message"
 """
 def build_underscore_name(name):
     return string.lower(string.replace (name, ' ', '_'))
+
+
+"""
+Build an underscore name from the given camelcase name
+e.g.: "ThisIsAMessage" --> "this_is_a_message"
+"""
+def build_underscore_name_from_camelcase(camelcase):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camelcase)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
 """
