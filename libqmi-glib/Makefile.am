@@ -5,8 +5,8 @@ libqmi_glib_la_CPPFLAGS = \
 	$(LIBQMI_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
-	-I$(top_srcdir)/src \
-	-I$(top_builddir)/src
+	-I$(top_srcdir)/libqmi-glib \
+	-I$(top_builddir)/libqmi-glib
 
 # Error types
 qmi-error-types.h: qmi-errors.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.h

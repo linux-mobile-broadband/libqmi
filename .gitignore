@@ -31,22 +31,22 @@ depcomp
 
 data/pkg-config/qmi-glib.pc
 
-src/.libs
-src/.deps
-src/Makefile
-src/Makefile.in
-src/libqmi-glib.la
-src/qmi-error-types.c
-src/qmi-error-types.h
-src/qmi-enum-types.h
-src/qmi-enum-types.c
-src/qmi-ctl.h
-src/qmi-ctl.c
-src/qmi-dms.h
-src/qmi-dms.c
-src/qmi-wds.h
-src/qmi-wds.c
-src/*.stamp
+libqmi-glib/.libs
+libqmi-glib/.deps
+libqmi-glib/Makefile
+libqmi-glib/Makefile.in
+libqmi-glib/libqmi-glib.la
+libqmi-glib/qmi-error-types.c
+libqmi-glib/qmi-error-types.h
+libqmi-glib/qmi-enum-types.h
+libqmi-glib/qmi-enum-types.c
+libqmi-glib/qmi-ctl.h
+libqmi-glib/qmi-ctl.c
+libqmi-glib/qmi-dms.h
+libqmi-glib/qmi-dms.c
+libqmi-glib/qmi-wds.h
+libqmi-glib/qmi-wds.c
+libqmi-glib/*.stamp
 
 cli/.deps
 cli/.libs

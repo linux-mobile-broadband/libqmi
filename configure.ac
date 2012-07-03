@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.68])
 
-AC_INIT([libqmi-glib], [0.0.1], [aleksander@gnu.org])
+AC_INIT([libqmi], [0.0.1], [libqmi-devel@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -24,9 +24,9 @@ LT_PREREQ([2.2])
 LT_INIT
 
 dnl Specific warnings to always use
-LIBQMI_GLIB_COMPILER_WARNINGS
+LIBQMI_COMPILER_WARNINGS
 
-dnl General dependencies
+dnl General dependencies for libqmi-glib
 PKG_CHECK_MODULES(LIBQMI_GLIB,
                   glib-2.0 >= 2.32
                   gobject-2.0
@@ -34,7 +34,7 @@ PKG_CHECK_MODULES(LIBQMI_GLIB,
 AC_SUBST(LIBQMI_GLIB_CFLAGS)
 AC_SUBST(LIBQMI_GLIB_LIBS)
 
-dnl General cli dependencies
+dnl General dependencies for qmicli
 PKG_CHECK_MODULES(QMICLI,
                   glib-2.0 >= 2.28
                   gobject-2.0
@@ -52,13 +52,13 @@ AC_CONFIG_FILES([Makefile
                  build-aux/Makefile
                  build-aux/templates/Makefile
                  build-aux/qmi-codegen/Makefile
-                 src/Makefile
+                 libqmi-glib/Makefile
                  cli/Makefile
                  utils/Makefile])
 AC_OUTPUT
 
 echo "
-    libqmi-glib $VERSION
+    libqmi (libqmi-glib, qmicli) $VERSION
     ==============================================
 
     compiler:                ${CC}

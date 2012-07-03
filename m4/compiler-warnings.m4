@@ -1,4 +1,4 @@
-AC_DEFUN([LIBQMI_GLIB_COMPILER_WARNINGS],
+AC_DEFUN([LIBQMI_COMPILER_WARNINGS],
 [AC_ARG_ENABLE(more-warnings,
 	AS_HELP_STRING([--enable-more-warnings], [Maximum compiler warnings]),
 	set_more_warnings="$enableval",set_more_warnings=yes)
