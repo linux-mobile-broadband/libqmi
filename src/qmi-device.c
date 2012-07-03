@@ -464,7 +464,8 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
                     AllocateClientContext *ctx)
 {
     QmiMessageCtlAllocateCidOutput *output;
-    QmiMessageCtlAllocateCidOutputAllocationInfo info;
+    QmiService service;
+    guint8 cid;
     GError *error = NULL;
 
     /* Check result of the async operation */
@@ -485,9 +486,9 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
     }
 
     /* Allocation info is mandatory when result is success */
-    g_assert (qmi_message_ctl_allocate_cid_output_get_allocation_info (output, &info, NULL));
+    g_assert (qmi_message_ctl_allocate_cid_output_get_allocation_info (output, &service, &cid, NULL));
 
-    if (info.service != ctx->service) {
+    if (service != ctx->service) {
         g_simple_async_result_set_error (
             ctx->result,
             QMI_CORE_ERROR,
@@ -495,13 +496,13 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
             "CID allocation failed in the CTL client: "
             "Service mismatch (requested '%s', got '%s')",
             qmi_service_get_string (ctx->service),
-            qmi_service_get_string (info.service));
+            qmi_service_get_string (service));
         allocate_client_context_complete_and_free (ctx);
         qmi_message_ctl_allocate_cid_output_unref (output);
         return;
     }
 
-    ctx->cid = info.cid;
+    ctx->cid = cid;
     build_client_object (ctx);
     qmi_message_ctl_allocate_cid_output_unref (output);
 }
@@ -738,7 +739,8 @@ qmi_device_release_client (QmiDevice *self,
                            gpointer user_data)
 {
     ReleaseClientContext *ctx;
-    QmiMessageCtlReleaseCidInputReleaseInfo info;
+    QmiService service;
+    guint8 cid;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (QMI_IS_CLIENT (client));
@@ -756,11 +758,11 @@ qmi_device_release_client (QmiDevice *self,
                                              user_data,
                                              qmi_device_release_client);
 
-    info.cid = qmi_client_get_cid (client);
-    info.service = (guint8)qmi_client_get_service (client);
+    cid = qmi_client_get_cid (client);
+    service = (guint8)qmi_client_get_service (client);
 
     /* Do not try to release an already released client */
-    if (info.cid == QMI_CID_NONE) {
+    if (cid == QMI_CID_NONE) {
         g_simple_async_result_set_error (ctx->result,
                                          QMI_CORE_ERROR,
                                          QMI_CORE_ERROR_INVALID_ARGS,
@@ -773,8 +775,8 @@ qmi_device_release_client (QmiDevice *self,
     unregister_client (self, client);
 
     g_debug ("Unregistered '%s' client with ID '%u'",
-             qmi_service_get_string (info.service),
-             info.cid);
+             qmi_service_get_string (service),
+             cid);
 
     /* Reset the contents of the client object, making it unusable */
     g_object_set (client,
@@ -788,7 +790,7 @@ qmi_device_release_client (QmiDevice *self,
 
         /* And now, really try to release the CID */
         input = qmi_message_ctl_release_cid_input_new ();
-        qmi_message_ctl_release_cid_input_set_release_info (input, &info, NULL);
+        qmi_message_ctl_release_cid_input_set_release_info (input, service,cid, NULL);
 
         /* And now, really try to release the CID */
         qmi_client_ctl_release_cid (self->priv->client_ctl,
