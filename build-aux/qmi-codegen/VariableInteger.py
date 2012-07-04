@@ -24,7 +24,7 @@ from Variable import Variable
 
 """
 Variable type for signed/unsigned Integers
-('guint8', 'gint8', 'guint16', 'gint16', 'guint32', 'gint32', 'guint64', 'gint64' formats)
+('guint8', 'gint8', 'guint16', 'gint16', 'guint32', 'gint32', 'guint64', 'gint64' 'guint-sized' formats)
 """
 class VariableInteger(Variable):
 
@@ -36,8 +36,17 @@ class VariableInteger(Variable):
         # Call the parent constructor
         Variable.__init__(self, dictionary)
 
-        self.private_format = self.format
-        self.public_format = dictionary['public-format'] if 'public-format' in dictionary else self.private_format
+        self.guint_sized_size = ''
+        if self.format == "guint-sized":
+            if 'guint-size' not in dictionary:
+                raise RuntimeError('Format \'guint-sized\' requires \'guint-size\' parameter')
+            else:
+                self.guint_sized_size = dictionary['guint-size']
+            self.private_format = 'guint64'
+            self.public_format  = 'guint64'
+        else:
+            self.private_format = self.format
+            self.public_format = dictionary['public-format'] if 'public-format' in dictionary else self.private_format
 
 
     """
@@ -47,11 +56,20 @@ class VariableInteger(Variable):
         translations = { 'lp'             : line_prefix,
                          'public_format'  : self.public_format,
                          'private_format' : self.private_format,
+                         'len'            : self.guint_sized_size,
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
                          'buffer_len'     : buffer_len }
 
-        if self.private_format == self.public_format:
+        if self.format == 'guint-sized':
+            template = (
+                '${lp}/* Read the ${len}-byte long variable from the buffer */\n'
+                '${lp}qmi_utils_read_sized_guint_from_buffer (\n'
+                '${lp}    &${buffer_name},\n'
+                '${lp}    &${buffer_len},\n'
+                '${lp}    ${len},\n'
+                '${lp}    &(${variable_name}));\n')
+        elif self.private_format == self.public_format:
             template = (
                 '${lp}/* Read the ${private_format} variable from the buffer */\n'
                 '${lp}qmi_utils_read_${private_format}_from_buffer (\n'
@@ -79,10 +97,20 @@ class VariableInteger(Variable):
     def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len):
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
+                         'len'            : self.guint_sized_size,
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
                          'buffer_len'     : buffer_len }
-        if self.private_format == self.public_format:
+
+        if self.format == 'guint-sized':
+            template = (
+                '${lp}/* Write the ${len}-byte long variable to the buffer */\n'
+                '${lp}qmi_utils_write_sized_guint_to_buffer (\n'
+                '${lp}    &${buffer_name},\n'
+                '${lp}    &${buffer_len},\n'
+                '${lp}    ${len},\n'
+                '${lp}    &(${variable_name}));\n')
+        elif self.private_format == self.public_format:
             template = (
                 '${lp}/* Write the ${private_format} variable to the buffer */\n'
                 '${lp}qmi_utils_write_${private_format}_to_buffer (\n'
@@ -131,25 +159,42 @@ class VariableInteger(Variable):
 
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
+                         'len'            : self.guint_sized_size,
                          'printable'      : printable,
                          'buffer_name'    : buffer_name,
                          'buffer_len'     : buffer_len,
                          'common_format'  : common_format,
                          'common_cast'    : common_cast }
 
-        template = (
-            '\n'
-            '${lp}{\n'
-            '${lp}    ${private_format} tmp;\n'
-            '\n'
-            '${lp}    /* Read the ${private_format} variable from the buffer */\n'
-            '${lp}    qmi_utils_read_${private_format}_from_buffer (\n'
-            '${lp}        &${buffer_name},\n'
-            '${lp}        &${buffer_len},\n'
-            '${lp}        &tmp);\n'
-            '\n'
-            '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n'
-            '${lp}}\n')
+        if self.format == 'guint-sized':
+            template = (
+                '\n'
+                '${lp}{\n'
+                '${lp}    ${private_format} tmp;\n'
+                '\n'
+                '${lp}    /* Read the ${len}-byte long variable from the buffer */\n'
+                '${lp}    qmi_utils_read_sized_guint_from_buffer (\n'
+                '${lp}        &${buffer_name},\n'
+                '${lp}        &${buffer_len},\n'
+                '${lp}        ${len},\n'
+                '${lp}        &tmp);\n'
+                '\n'
+                '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n'
+                '${lp}}\n')
+        else:
+            template = (
+                '\n'
+                '${lp}{\n'
+                '${lp}    ${private_format} tmp;\n'
+                '\n'
+                '${lp}    /* Read the ${private_format} variable from the buffer */\n'
+                '${lp}    qmi_utils_read_${private_format}_from_buffer (\n'
+                '${lp}        &${buffer_name},\n'
+                '${lp}        &${buffer_len},\n'
+                '${lp}        &tmp);\n'
+                '\n'
+                '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n'
+                '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
 
 

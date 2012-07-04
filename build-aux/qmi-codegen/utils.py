@@ -172,7 +172,8 @@ def format_is_unsigned_integer(fmt):
     if fmt == 'guint8'  or \
        fmt == 'guint16' or \
        fmt == 'guint32' or \
-       fmt == 'guint64':
+       fmt == 'guint64' or \
+       fmt == 'guint-sized' :
         return True
     else:
         return False
