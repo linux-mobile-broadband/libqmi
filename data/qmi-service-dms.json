@@ -367,6 +367,26 @@
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Get PRL Version",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0030",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"      : "Version",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "guint16",
+                      "prerequisites": [ { "common-ref" : "Success" } ] },
+                    { "name"          : "PRL Only Preference",
+                      "id"            : "0x10",
+                      "mandatory"     : "no",
+                      "type"          : "TLV",
+                      "format"        : "guint8",
+                      "public-format" : "gboolean",
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "UIM Get ICCID",
      "type"    : "Message",
      "service" : "DMS",
