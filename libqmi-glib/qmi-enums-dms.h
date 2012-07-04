@@ -192,4 +192,21 @@ typedef enum {
     QMI_DMS_OFFLINE_REASON_DEVICE_MEMORY_FULL          = 1 << 3
 } QmiDmsOfflineReason;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Get Time' message */
+
+/**
+ * QmiDmsTimeSource:
+ * @QMI_DMS_TIME_SOURCE_DEVICE: 32 kHz device clock.
+ * @QMI_DMS_TIME_SOURCE_CDMA_NETWORK: CDMA network.
+ * @QMI_DMS_TIME_SOURCE_HDR_NETWORK: HDR network.
+ *
+ * Source of the timestamp.
+ */
+typedef enum {
+    QMI_DMS_TIME_SOURCE_DEVICE        = 0,
+    QMI_DMS_TIME_SOURCE_CDMA_NETWORK  = 1,
+    QMI_DMS_TIME_SOURCE_HDR_NETWORK   = 2,
+} QmiDmsTimeSource;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */

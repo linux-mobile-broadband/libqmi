@@ -336,6 +336,25 @@
      "output"  : [  { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
+  {  "name"    : "Get Time",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x002F",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"      : "Device Time",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "sequence",
+                      "contents"  : [ { "name"          : "Time Count",
+                                        "format"        : "guint-sized",
+                                        "guint-size"    : "6" },
+                                      { "name"          : "Time Source",
+                                        "format"        : "guint16",
+                                        "public-format" : "QmiDmsTimeSource" } ],
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "UIM Get ICCID",
      "type"    : "Message",
      "service" : "DMS",
