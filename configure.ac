@@ -45,6 +45,18 @@ AC_SUBST(QMICLI_LIBS)
 GLIB_MKENUMS=`pkg-config --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
 
+dnl Tests
+AC_ARG_WITH(tests, AS_HELP_STRING([--with-tests], [Build libqmi tests]))
+AM_CONDITIONAL(WITH_TESTS, test "x$with_tests" = "xyes")
+case $with_tests in
+    yes)
+        with_tests=yes
+        ;;
+    *)
+        with_tests=no
+        ;;
+esac
+
 AC_CONFIG_FILES([Makefile
                  data/Makefile
                  data/pkg-config/Makefile
@@ -53,6 +65,7 @@ AC_CONFIG_FILES([Makefile
                  build-aux/templates/Makefile
                  build-aux/qmi-codegen/Makefile
                  libqmi-glib/Makefile
+                 libqmi-glib/test/Makefile
                  cli/Makefile
                  utils/Makefile])
 AC_OUTPUT
@@ -64,4 +77,5 @@ echo "
     compiler:                ${CC}
     cflags:                  ${CFLAGS}
     Maintainer mode:         ${USE_MAINTAINER_MODE}
+    Tests:                   ${with_tests}
 "

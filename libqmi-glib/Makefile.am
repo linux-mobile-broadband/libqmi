@@ -1,4 +1,6 @@
 
+SUBDIRS = . test
+
 lib_LTLIBRARIES = libqmi-glib.la
 
 libqmi_glib_la_CPPFLAGS = \

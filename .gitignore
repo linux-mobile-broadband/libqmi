@@ -48,6 +48,12 @@ libqmi-glib/qmi-wds.h
 libqmi-glib/qmi-wds.c
 libqmi-glib/*.stamp
 
+libqmi-glib/test/.libs
+libqmi-glib/test/.deps
+libqmi-glib/test/Makefile
+libqmi-glib/test/Makefile.in
+libqmi-glib/test/test-utils
+
 cli/.deps
 cli/.libs
 cli/qmicli
