@@ -1180,6 +1180,22 @@ get_time_ready (QmiClientDms *client,
              time_count,
              qmi_dms_time_source_get_string (time_source));
 
+    if (qmi_message_dms_get_time_output_get_system_time (
+        output,
+        &time_count,
+        NULL)){
+        g_print ("\tSystem time: '%" G_GUINT64_FORMAT " (ms)'\n",
+                 time_count);
+    }
+
+    if (qmi_message_dms_get_time_output_get_user_time (
+        output,
+        &time_count,
+        NULL)){
+        g_print ("\tUser time: '%" G_GUINT64_FORMAT " (ms)'\n",
+                 time_count);
+    }
+
     qmi_message_dms_get_time_output_unref (output);
     shutdown (TRUE);
 }

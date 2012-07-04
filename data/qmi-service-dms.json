@@ -352,6 +352,18 @@
                                       { "name"          : "Time Source",
                                         "format"        : "guint16",
                                         "public-format" : "QmiDmsTimeSource" } ],
+                      "prerequisites": [ { "common-ref" : "Success" } ] },
+                    { "name"      : "System Time",
+                      "id"        : "0x10",
+                      "mandatory" : "no",
+                      "type"      : "TLV",
+                      "format"    : "guint64",
+                      "prerequisites": [ { "common-ref" : "Success" } ] },
+                    { "name"      : "User Time",
+                      "id"        : "0x11",
+                      "mandatory" : "no",
+                      "type"      : "TLV",
+                      "format"    : "guint64",
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
