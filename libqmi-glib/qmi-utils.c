@@ -190,6 +190,26 @@ qmi_utils_read_gint64_from_buffer (guint8  **buffer,
 }
 
 void
+qmi_utils_read_sized_guint_from_buffer (guint8  **buffer,
+                                        guint16  *buffer_size,
+                                        guint     n_bytes,
+                                        guint64  *out)
+{
+    guint64 tmp = 0;
+
+    g_assert (out != NULL);
+    g_assert (buffer != NULL);
+    g_assert (buffer_size != NULL);
+    g_assert (*buffer_size >= n_bytes);
+
+    memcpy (&tmp, *buffer, n_bytes);
+    *out = GUINT64_FROM_LE (tmp);
+
+    *buffer = &((*buffer)[n_bytes]);
+    *buffer_size = (*buffer_size) - n_bytes;
+}
+
+void
 qmi_utils_write_guint8_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
                                   guint8   *in)
@@ -315,6 +335,26 @@ qmi_utils_write_gint64_to_buffer (guint8  **buffer,
 
     *buffer = &((*buffer)[8]);
     *buffer_size = (*buffer_size) - 8;
+}
+
+void
+qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
+                                       guint16  *buffer_size,
+                                       guint     n_bytes,
+                                       guint64  *in)
+{
+    guint64 tmp;
+
+    g_assert (in != NULL);
+    g_assert (buffer != NULL);
+    g_assert (buffer_size != NULL);
+    g_assert (*buffer_size >= n_bytes);
+
+    tmp = GUINT64_TO_LE (*in);
+    memcpy (*buffer, &tmp, n_bytes);
+
+    *buffer = &((*buffer)[n_bytes]);
+    *buffer_size = (*buffer_size) - n_bytes;
 }
 
 void
