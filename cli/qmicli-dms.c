@@ -59,6 +59,7 @@ static gboolean get_hardware_revision_flag;
 static gboolean get_operating_mode_flag;
 static gchar *set_operating_mode_str;
 static gboolean get_time_flag;
+static gboolean get_prl_version_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -134,6 +135,10 @@ static GOptionEntry entries[] = {
       "Get the device time",
       NULL,
     },
+    { "dms-get-prl-version", 0, 0, G_OPTION_ARG_NONE, &get_prl_version_flag,
+      "Get the PRL version",
+      NULL,
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -183,6 +188,7 @@ qmicli_dms_options_enabled (void)
                  get_operating_mode_flag +
                  !!set_operating_mode_str +
                  get_time_flag +
+                 get_prl_version_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1200,6 +1206,53 @@ get_time_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+get_prl_version_ready (QmiClientDms *client,
+                       GAsyncResult *res)
+{
+    QmiMessageDmsGetPrlVersionOutput *output;
+    guint16 prl_version;
+    gboolean prl_only;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_prl_version_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_prl_version_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get the PRL version: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_prl_version_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_prl_version_output_get_version (
+        output,
+        &prl_version,
+        NULL);
+
+    g_print ("[%s] PRL version retrieved:\n"
+             "\tPRL version: '%" G_GUINT16_FORMAT "'\n",
+             qmi_device_get_path_display (ctx->device),
+             prl_version);
+
+    if (qmi_message_dms_get_prl_version_output_get_prl_only_preference (
+        output,
+        &prl_only,
+        NULL)){
+        g_print ("\tPRL only preference: '%s'\n",
+                 prl_only ? "yes" : "no");
+    }
+
+    qmi_message_dms_get_prl_version_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1452,6 +1505,18 @@ qmicli_dms_run (QmiDevice *device,
                                  ctx->cancellable,
                                  (GAsyncReadyCallback)get_time_ready,
                                  NULL);
+        return;
+    }
+
+    /* Request to get the PRL version? */
+    if (get_prl_version_flag) {
+        g_debug ("Asynchronously getting PRL version...");
+        qmi_client_dms_get_prl_version (ctx->client,
+                                        NULL,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)get_prl_version_ready,
+                                        NULL);
         return;
     }
 
