@@ -58,6 +58,7 @@ static gboolean uim_get_imsi_flag;
 static gboolean get_hardware_revision_flag;
 static gboolean get_operating_mode_flag;
 static gchar *set_operating_mode_str;
+static gboolean get_time_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -129,6 +130,10 @@ static GOptionEntry entries[] = {
       "Set the device operating mode",
       "[(Operating mode)]"
     },
+    { "dms-get-time", 0, 0, G_OPTION_ARG_NONE, &get_time_flag,
+      "Get the device time",
+      NULL,
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -177,6 +182,7 @@ qmicli_dms_options_enabled (void)
                  get_hardware_revision_flag +
                  get_operating_mode_flag +
                  !!set_operating_mode_str +
+                 get_time_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1136,6 +1142,48 @@ set_operating_mode_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+get_time_ready (QmiClientDms *client,
+                GAsyncResult *res)
+{
+    QmiMessageDmsGetTimeOutput *output;
+    guint64 time_count;
+    QmiDmsTimeSource time_source;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_time_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_time_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get the device time: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_time_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_time_output_get_device_time (
+        output,
+        &time_count,
+        &time_source,
+        NULL);
+
+    g_print ("[%s] Time retrieved:\n"
+             "\tTime count: '%" G_GUINT64_FORMAT " (x 1.25ms)'\n"
+             "\tTime source: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             time_count,
+             qmi_dms_time_source_get_string (time_source));
+
+    qmi_message_dms_get_time_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1376,6 +1424,18 @@ qmicli_dms_run (QmiDevice *device,
                                            (GAsyncReadyCallback)set_operating_mode_ready,
                                            NULL);
         qmi_message_dms_set_operating_mode_input_unref (input);
+        return;
+    }
+
+    /* Request to get time? */
+    if (get_time_flag) {
+        g_debug ("Asynchronously getting time...");
+        qmi_client_dms_get_time (ctx->client,
+                                 NULL,
+                                 10,
+                                 ctx->cancellable,
+                                 (GAsyncReadyCallback)get_time_ready,
+                                 NULL);
         return;
     }
 
