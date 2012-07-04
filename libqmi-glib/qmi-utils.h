@@ -57,6 +57,13 @@ void qmi_utils_read_gint32_from_buffer  (guint8  **buffer,
                                          guint16  *buffer_size,
                                          gint32   *out);
 
+void qmi_utils_read_guint64_from_buffer (guint8  **buffer,
+                                         guint16  *buffer_size,
+                                         guint64  *out);
+void qmi_utils_read_gint64_from_buffer  (guint8  **buffer,
+                                         guint16  *buffer_size,
+                                         gint64   *out);
+
 void qmi_utils_write_guint8_to_buffer (guint8  **buffer,
                                        guint16  *buffer_size,
                                        guint8   *in);
@@ -77,6 +84,13 @@ void qmi_utils_write_guint32_to_buffer (guint8  **buffer,
 void qmi_utils_write_gint32_to_buffer  (guint8  **buffer,
                                         guint16  *buffer_size,
                                         gint32   *in);
+
+void qmi_utils_write_guint64_to_buffer (guint8  **buffer,
+                                        guint16  *buffer_size,
+                                        guint64  *in);
+void qmi_utils_write_gint64_to_buffer  (guint8  **buffer,
+                                        guint16  *buffer_size,
+                                        gint64   *in);
 
 /* Reading/Writing string variables */
 

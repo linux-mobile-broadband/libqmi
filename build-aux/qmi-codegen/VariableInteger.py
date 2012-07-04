@@ -24,7 +24,7 @@ from Variable import Variable
 
 """
 Variable type for signed/unsigned Integers
-('guint8', 'gint8', 'guint16', 'gint16', 'guint32', 'gint32' formats)
+('guint8', 'gint8', 'guint16', 'gint16', 'guint32', 'gint32', 'guint64', 'gint64' formats)
 """
 class VariableInteger(Variable):
 
@@ -105,16 +105,29 @@ class VariableInteger(Variable):
 
 
     """
-    Get the integer as a printable string. Given that we support max 32-bit
-    integers, it is safe to cast all them to standard integers when printing.
+    Get the integer as a printable string.
     """
     def emit_get_printable(self, f, line_prefix, printable, buffer_name, buffer_len):
-        if utils.format_is_unsigned_integer(self.private_format):
+        common_format = ''
+        common_cast = ''
+        if self.private_format == 'guint8':
             common_format = '%u'
-            common_cast = 'guint'
-        else:
+            common_cast = '(guint)'
+        elif self.private_format == 'guint16':
+            common_format = '%" G_GUINT16_FORMAT "'
+        elif self.private_format == 'guint32':
+            common_format = '%" G_GUINT32_FORMAT "'
+        elif self.private_format == 'guint64':
+            common_format = '%" G_GUINT64_FORMAT "'
+        elif self.private_format == 'gint8':
             common_format = '%d'
-            common_cast = 'gint'
+            common_cast = '(gint)'
+        elif self.private_format == 'gint16':
+            common_format = '%" G_GINT16_FORMAT "'
+        elif self.private_format == 'gint32':
+            common_format = '%" G_GINT32_FORMAT "'
+        elif self.private_format == 'gint64':
+            common_format = '%" G_GINT64_FORMAT "'
 
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
@@ -135,7 +148,7 @@ class VariableInteger(Variable):
             '${lp}        &${buffer_len},\n'
             '${lp}        &tmp);\n'
             '\n'
-            '${lp}    g_string_append_printf (${printable}, "${common_format}", (${common_cast})tmp);\n'
+            '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n'
             '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
 

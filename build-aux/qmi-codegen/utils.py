@@ -171,7 +171,8 @@ Returns True if the given format corresponds to a basic unsigned integer type
 def format_is_unsigned_integer(fmt):
     if fmt == 'guint8'  or \
        fmt == 'guint16' or \
-       fmt == 'guint32':
+       fmt == 'guint32' or \
+       fmt == 'guint64':
         return True
     else:
         return False
@@ -183,7 +184,8 @@ Returns True if the given format corresponds to a basic signed integer type
 def format_is_signed_integer(fmt):
     if fmt == 'gint8'   or \
        fmt == 'gint16'  or \
-       fmt == 'gint32':
+       fmt == 'gint32'  or \
+       fmt == 'gint64':
         return True
     else:
         return False

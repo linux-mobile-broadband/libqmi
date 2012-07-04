@@ -158,6 +158,38 @@ qmi_utils_read_gint32_from_buffer (guint8  **buffer,
 }
 
 void
+qmi_utils_read_guint64_from_buffer (guint8  **buffer,
+                                    guint16  *buffer_size,
+                                    guint64  *out)
+{
+    g_assert (out != NULL);
+    g_assert (buffer != NULL);
+    g_assert (buffer_size != NULL);
+    g_assert (*buffer_size >= 8);
+
+    *out = GUINT64_FROM_LE (*((guint64 *)&((*buffer)[0])));
+
+    *buffer = &((*buffer)[8]);
+    *buffer_size = (*buffer_size) - 8;
+}
+
+void
+qmi_utils_read_gint64_from_buffer (guint8  **buffer,
+                                   guint16  *buffer_size,
+                                   gint64   *out)
+{
+    g_assert (out != NULL);
+    g_assert (buffer != NULL);
+    g_assert (buffer_size != NULL);
+    g_assert (*buffer_size >= 8);
+
+    *out = GUINT64_FROM_LE (*((guint64 *)&((*buffer)[0])));
+
+    *buffer = &((*buffer)[8]);
+    *buffer_size = (*buffer_size) - 8;
+}
+
+void
 qmi_utils_write_guint8_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
                                   guint8   *in)
@@ -251,6 +283,38 @@ qmi_utils_write_gint32_to_buffer (guint8  **buffer,
 
     *buffer = &((*buffer)[4]);
     *buffer_size = (*buffer_size) - 4;
+}
+
+void
+qmi_utils_write_guint64_to_buffer (guint8  **buffer,
+                                   guint16  *buffer_size,
+                                   guint64  *in)
+{
+    g_assert (in != NULL);
+    g_assert (buffer != NULL);
+    g_assert (buffer_size != NULL);
+    g_assert (*buffer_size >= 8);
+
+    *((guint64 *)(&((*buffer)[0]))) = GUINT64_TO_LE (*in);
+
+    *buffer = &((*buffer)[8]);
+    *buffer_size = (*buffer_size) - 8;
+}
+
+void
+qmi_utils_write_gint64_to_buffer (guint8  **buffer,
+                                  guint16  *buffer_size,
+                                  gint64   *in)
+{
+    g_assert (in != NULL);
+    g_assert (buffer != NULL);
+    g_assert (buffer_size != NULL);
+    g_assert (*buffer_size >= 8);
+
+    *((gint64 *)(&((*buffer)[0]))) = GINT64_TO_LE (*in);
+
+    *buffer = &((*buffer)[8]);
+    *buffer_size = (*buffer_size) - 8;
 }
 
 void
