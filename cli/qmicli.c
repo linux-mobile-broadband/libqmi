@@ -418,6 +418,44 @@ device_new_ready (GObject *unused,
 
 /*****************************************************************************/
 
+static void
+parse_actions (void)
+{
+    guint actions_enabled = 0;
+
+    /* Generic options? */
+    if (generic_options_enabled ()) {
+        service = QMI_SERVICE_CTL;
+        actions_enabled++;
+    }
+
+    /* DMS options? */
+    if (qmicli_dms_options_enabled ()) {
+        service = QMI_SERVICE_DMS;
+        actions_enabled++;
+    }
+
+    /* WDS options? */
+    if (qmicli_wds_options_enabled ()) {
+        service = QMI_SERVICE_WDS;
+        actions_enabled++;
+    }
+
+    /* Cannot mix actions from different services */
+    if (actions_enabled > 1) {
+        g_printerr ("error: cannot execute multiple actions of different services\n");
+        exit (EXIT_FAILURE);
+    }
+
+    /* No options? */
+    if (actions_enabled == 0) {
+        g_printerr ("error: no actions specified\n");
+        exit (EXIT_FAILURE);
+    }
+
+    /* Go on! */
+}
+
 int main (int argc, char **argv)
 {
     GError *error = NULL;
@@ -461,23 +499,7 @@ int main (int argc, char **argv)
     signal (SIGHUP, signals_handler);
     signal (SIGTERM, signals_handler);
 
-    /* Generic options? */
-    if (generic_options_enabled ()) {
-        service = QMI_SERVICE_CTL;
-    }
-    /* DMS options? */
-    else if (qmicli_dms_options_enabled ()) {
-        service = QMI_SERVICE_DMS;
-    }
-    /* WDS options? */
-    else if (qmicli_wds_options_enabled ()) {
-        service = QMI_SERVICE_WDS;
-    }
-    /* No options? */
-    else {
-        g_printerr ("error: no actions specified\n");
-        exit (EXIT_FAILURE);
-    }
+    parse_actions ();
 
     /* Create requirements for async options */
     cancellable = g_cancellable_new ();
