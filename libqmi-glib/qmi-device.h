@@ -130,6 +130,17 @@ gboolean      qmi_device_release_client_finish (QmiDevice *self,
                                                 GAsyncResult *res,
                                                 GError **error);
 
+void          qmi_device_set_instance_id        (QmiDevice *self,
+                                                 guint8 instance_id,
+                                                 guint timeout,
+                                                 GCancellable *cancellable,
+                                                 GAsyncReadyCallback callback,
+                                                 gpointer user_data);
+gboolean      qmi_device_set_instance_id_finish (QmiDevice *self,
+                                                 GAsyncResult *res,
+                                                 guint16 *link_id,
+                                                 GError **error);
+
 void         qmi_device_command        (QmiDevice *self,
                                         QmiMessage *message,
                                         guint timeout,
