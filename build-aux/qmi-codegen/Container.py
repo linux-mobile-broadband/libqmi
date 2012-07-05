@@ -113,9 +113,12 @@ class Container:
     Emit new container types
     """
     def __emit_types(self, hfile, cfile, translations):
+        translations['type_macro'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(self.fullname), 'QMI_')
         # Emit types header
         template = (
             '\n'
+            'GType ${underscore}_get_type (void) G_GNUC_CONST;\n'
+            '#define ${type_macro} (${underscore}_get_type ())\n'
             'typedef struct _${camelcase} ${camelcase};\n')
         hfile.write(string.Template(template).substitute(translations))
 
@@ -159,6 +162,23 @@ class Container:
 
         # Emit container core source
         template = (
+            '\n'
+            'GType\n'
+            '${underscore}_get_type (void)\n'
+            '{\n'
+            '    static volatile gsize g_define_type_id__volatile = 0;\n'
+            '\n'
+            '    if (g_once_init_enter (&g_define_type_id__volatile)) {\n'
+            '        GType g_define_type_id =\n'
+            '            g_boxed_type_register_static (g_intern_static_string ("${camelcase}"),\n'
+            '                                          (GBoxedCopyFunc) ${underscore}_ref,\n'
+            '                                          (GBoxedFreeFunc) ${underscore}_unref);\n'
+            '\n'
+            '        g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);\n'
+            '    }\n'
+            '\n'
+            '    return g_define_type_id__volatile;\n'
+            '}\n'
             '\n'
             '/**\n'
             ' * ${underscore}_ref:\n'

@@ -132,6 +132,14 @@ def build_underscore_name(name):
 
 
 """
+Build an underscore uppercase name from the given full name
+e.g.: "This is a message" --> "THIS_IS_A_MESSAGE"
+"""
+def build_underscore_uppercase_name(name):
+    return string.upper(string.replace (name, ' ', '_'))
+
+
+"""
 Build an underscore name from the given camelcase name
 e.g.: "ThisIsAMessage" --> "this_is_a_message"
 """
@@ -146,6 +154,13 @@ e.g.: "This is a message" --> "ThisIsAMessage"
 """
 def build_camelcase_name(name):
     return string.replace(string.capwords(name), ' ', '')
+
+
+"""
+Remove the given prefix from the string
+"""
+def remove_prefix(line, prefix):
+    return line[len(prefix):] if line.startswith(prefix) else line
 
 
 """
