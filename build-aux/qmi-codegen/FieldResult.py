@@ -107,7 +107,7 @@ class FieldResult(Field):
     Emit the method responsible for getting a printable representation of this
     TLV field.
     """
-    def emit_output_tlv_get_printable(self, f):
+    def emit_tlv_get_printable(self, f):
         if TypeFactory.is_get_printable_emitted(self.fullname):
             return
 

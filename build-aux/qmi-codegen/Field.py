@@ -309,7 +309,7 @@ class Field:
     """
     Emit the method responsible for creating a printable representation of the TLV
     """
-    def emit_output_tlv_get_printable(self, f):
+    def emit_tlv_get_printable(self, f):
         if TypeFactory.is_get_printable_emitted(self.fullname):
             return
 

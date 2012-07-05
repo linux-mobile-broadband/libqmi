@@ -244,9 +244,9 @@ class Message:
 
         if self.input.fields is not None:
             for field in self.input.fields:
-                field.emit_output_tlv_get_printable(cfile)
+                field.emit_tlv_get_printable(cfile)
         for field in self.output.fields:
-            field.emit_output_tlv_get_printable(cfile)
+            field.emit_tlv_get_printable(cfile)
 
         translations = { 'name'       : self.name,
                          'service'    : self.service,
