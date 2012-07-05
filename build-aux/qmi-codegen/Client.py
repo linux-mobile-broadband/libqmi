@@ -48,7 +48,15 @@ class Client:
     """
     Emits the generic GObject class implementation
     """
-    def __emit_class(self, hfile, cfile):
+    def __emit_class(self, hfile, cfile, message_list):
+
+        # Check if we'll have indications
+        has_indications = False
+        for message in message_list.list:
+            if message.type == 'Indication':
+                has_indications = True
+                break
+
         translations = { 'underscore'                 : utils.build_underscore_name(self.name),
                          'no_prefix_underscore_upper' : string.upper(utils.build_underscore_name(self.name[4:])),
                          'camelcase'                  : utils.build_camelcase_name (self.name) }
@@ -81,7 +89,66 @@ class Client:
         # Emit class source
         template = (
             '\n'
-            'G_DEFINE_TYPE (${camelcase}, ${underscore}, QMI_TYPE_CLIENT);\n'
+            'G_DEFINE_TYPE (${camelcase}, ${underscore}, QMI_TYPE_CLIENT);\n')
+
+        if has_indications:
+            template += (
+                '\n'
+                'enum {\n')
+            for message in message_list.list:
+                if message.type == 'Indication':
+                    translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
+                    inner_template = (
+                        '    SIGNAL_${signal_id},\n')
+                    template += string.Template(inner_template).substitute(translations)
+            template += (
+                '    SIGNAL_LAST\n'
+                '};\n'
+                '\n'
+                'static guint signals[SIGNAL_LAST] = { 0 };\n')
+
+        template += (
+            '\n'
+            'static void\n'
+            'process_indication (QmiClient *self,\n'
+            '                    QmiMessage *message)\n'
+            '{\n'
+            '    switch (qmi_message_get_message_id (message)) {\n')
+
+        for message in message_list.list:
+            if message.type == 'Indication':
+                translations['enum_name'] = message.id_enum_name
+                translations['message_fullname_underscore'] = utils.build_underscore_name(message.fullname)
+                translations['message_name'] = message.name
+                translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
+                translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
+                translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
+                translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
+                inner_template = (
+                    '        case ${enum_name}: {\n'
+                    '            ${output_camelcase} *output;\n'
+                    '            GError *error = NULL;\n'
+                    '\n'
+                    '            /* Parse indication */\n'
+                    '            output = ${message_fullname_underscore}_indication_parse (message, &error);\n'
+                    '            if (!output) {\n'
+                    '                g_warning ("Couldn\'t parse \'${message_name}\' indication: %s",\n'
+                    '                           error ? error->message : "Unknown error");\n'
+                    '                if (error)\n'
+                    '                    g_error_free (error);\n'
+                    '            } else {\n'
+                    '                g_signal_emit (self, signals[SIGNAL_${signal_id}], 0, output);\n'
+                    '                ${output_underscore}_unref (output);\n'
+                    '            }\n'
+                    '            break;\n'
+                    '        }\n')
+                template += string.Template(inner_template).substitute(translations)
+
+        template += (
+            '        default:\n'
+            '            break;\n'
+            '    }\n'
+            '}\n'
             '\n'
             'static void\n'
             '${underscore}_init (${camelcase} *self)\n'
@@ -91,6 +158,39 @@ class Client:
             'static void\n'
             '${underscore}_class_init (${camelcase}Class *klass)\n'
             '{\n'
+            '    QmiClientClass *client_class = QMI_CLIENT_CLASS (klass);\n'
+            '\n'
+            '    client_class->process_indication = process_indication;\n')
+
+        for message in message_list.list:
+            if message.type == 'Indication':
+                translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
+                translations['signal_name'] = utils.build_dashed_name(message.name)
+                translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
+                translations['bundle_type'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(message.output.fullname), 'QMI_')
+                inner_template = (
+                    '\n'
+                    '    /**\n'
+                    '     * ${camelcase}::${signal_name}:\n'
+                    '     * @object: A #${camelcase}.\n'
+                    '     * @output: A #${output_camelcase}.\n'
+                    '     *\n'
+                    '     * The ::${signal_name} signal gets emitted when a \'${message_name}\' indication is received.\n'
+                    '     */\n'
+                    '    signals[SIGNAL_${signal_id}] =\n'
+                    '        g_signal_new ("${signal_name}",\n'
+                    '                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),\n'
+                    '                      G_SIGNAL_RUN_LAST,\n'
+                    '                      0,\n'
+                    '                      NULL,\n'
+                    '                      NULL,\n'
+                    '                      NULL,\n'
+                    '                      G_TYPE_NONE,\n'
+                    '                      1,\n'
+                    '                      ${bundle_type});\n')
+                template += string.Template(inner_template).substitute(translations)
+
+        template += (
             '}\n'
             '\n')
         cfile.write(string.Template(template).substitute(translations))
@@ -104,6 +204,10 @@ class Client:
                          'camelcase'  : utils.build_camelcase_name (self.name) }
 
         for message in message_list.list:
+
+            if message.type == 'Indication':
+                continue
+
             translations['message_underscore'] = utils.build_underscore_name(message.name)
             translations['message_fullname_underscore'] = utils.build_underscore_name(message.fullname)
             translations['input_camelcase'] = utils.build_camelcase_name(message.input.fullname)
@@ -227,5 +331,5 @@ class Client:
         # First, emit common class code
         utils.add_separator(hfile, 'CLIENT', self.name);
         utils.add_separator(cfile, 'CLIENT', self.name);
-        self.__emit_class(hfile, cfile)
+        self.__emit_class(hfile, cfile, message_list)
         self.__emit_methods(hfile, cfile, message_list)

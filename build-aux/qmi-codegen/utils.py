@@ -157,6 +157,14 @@ def build_camelcase_name(name):
 
 
 """
+Build a dashed lowercase name from the given full name
+e.g.: "This is a message" --> "this-is-a-message"
+"""
+def build_dashed_name(name):
+    return string.replace(string.lower(name), ' ', '-')
+
+
+"""
 Remove the given prefix from the string
 """
 def remove_prefix(line, prefix):

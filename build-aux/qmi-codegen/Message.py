@@ -32,18 +32,19 @@ class Message:
     Constructor
     """
     def __init__(self, dictionary, common_objects_dictionary):
-        # The message prefix
-        self.prefix = 'Qmi Message'
         # The message service, e.g. "Ctl"
         self.service = dictionary['service']
         # The name of the specific message, e.g. "Something"
         self.name = dictionary['name']
         # The specific message ID
         self.id = dictionary['id']
-        # The type, which must always be 'Message'
+        # The type, which must always be 'Message' or 'Indication'
         self.type = dictionary['type']
         # The version info, optional
         self.version_info = dictionary['version'].split('.') if 'version' in dictionary else []
+
+        # The message prefix
+        self.prefix = 'Qmi ' + self.type
 
         # Create the composed full name (prefix + service + name),
         #  e.g. "Qmi Message Ctl Something Output Result"
@@ -55,20 +56,22 @@ class Message:
         # Build output container.
         # Every defined message will have its own output container, which
         # will generate a new Output type and public getters for each output
-        # field
+        # field. This applies to both Request/Response and Indications.
         self.output = Container(self.fullname,
                                 'Output',
                                 dictionary['output'],
                                 common_objects_dictionary)
 
-        # Build input container.
-        # Every defined message will have its own input container, which
-        # will generate a new Input type and public getters for each input
-        # field
-        self.input = Container(self.fullname,
-                               'Input',
-                               dictionary['input'] if 'input' in dictionary else None,
-                               common_objects_dictionary)
+        self.input = None
+        if self.type == 'Message':
+            # Build input container (Request/Response only).
+            # Every defined message will have its own input container, which
+            # will generate a new Input type and public getters for each input
+            # field
+            self.input = Container(self.fullname,
+                                   'Input',
+                                   dictionary['input'] if 'input' in dictionary else None,
+                                   common_objects_dictionary)
 
 
     """
@@ -176,10 +179,11 @@ class Message:
 
 
     """
-    Emit method responsible for parsing a response of the given type
+    Emit method responsible for parsing a response/indication of the given type
     """
-    def __emit_response_parser(self, hfile, cfile):
+    def __emit_response_or_indication_parser(self, hfile, cfile):
         translations = { 'name'                 : self.name,
+                         'type'                 : 'response' if self.type == 'Message' else 'indication',
                          'container'            : utils.build_camelcase_name (self.output.fullname),
                          'container_underscore' : utils.build_underscore_name (self.output.fullname),
                          'underscore'           : utils.build_underscore_name (self.fullname),
@@ -187,7 +191,7 @@ class Message:
 
         template = (
             '\n'
-            '${container} *${underscore}_response_parse (\n'
+            '${container} *${underscore}_${type}_parse (\n'
             '    QmiMessage *message,\n'
             '    GError **error);\n')
         hfile.write(string.Template(template).substitute(translations))
@@ -195,16 +199,16 @@ class Message:
         template = (
             '\n'
             '/**\n'
-            ' * ${underscore}_response_parse:\n'
-            ' * @message: a #QmiMessage response.\n'
+            ' * ${underscore}_${type}_parse:\n'
+            ' * @message: a #QmiMessage ${type}.\n'
             ' * @error: a #GError.\n'
             ' *\n'
-            ' * Parse the \'${name}\' response.\n'
+            ' * Parse the \'${name}\' ${type}.\n'
             ' *\n'
             ' * Returns: a #${container} which should be disposed with ${container_underscore}_unref(), or #NULL if @error is set.\n'
             ' */\n'
             '${container} *\n'
-            '${underscore}_response_parse (\n'
+            '${underscore}_${type}_parse (\n'
             '    QmiMessage *message,\n'
             '    GError **error)\n'
             '{\n'
@@ -242,7 +246,7 @@ class Message:
     """
     def __emit_get_printable(self, hfile, cfile):
 
-        if self.input.fields is not None:
+        if self.input is not None and self.input.fields is not None:
             for field in self.input.fields:
                 field.emit_tlv_get_printable(cfile)
         for field in self.output.fields:
@@ -251,22 +255,23 @@ class Message:
         translations = { 'name'       : self.name,
                          'service'    : self.service,
                          'id'         : self.id,
-                         'underscore' : utils.build_underscore_name (self.name) }
+                         'type'       : utils.build_underscore_name(self.type),
+                         'underscore' : utils.build_underscore_name(self.name) }
 
         template = (
             '\n'
-            'struct ${underscore}_context {\n'
+            'struct ${type}_${underscore}_context {\n'
             '    QmiMessage *self;\n'
             '    const gchar *line_prefix;\n'
             '    GString *printable;\n'
             '};\n'
             '\n'
             'static void\n'
-            '${underscore}_get_tlv_printable (\n'
+            '${type}_${underscore}_get_tlv_printable (\n'
             '    guint8 type,\n'
             '    gsize length,\n'
             '    gconstpointer value,\n'
-            '    struct ${underscore}_context *ctx)\n'
+            '    struct ${type}_${underscore}_context *ctx)\n'
             '{\n'
             '    const gchar *tlv_type_str = NULL;\n'
             '    gchar *translated_value;\n'
@@ -274,7 +279,7 @@ class Message:
             '    if (!qmi_message_is_response (ctx->self)) {\n'
             '        switch (type) {\n')
 
-        if self.input.fields is not None:
+        if self.input is not None and self.input.fields is not None:
             for field in self.input.fields:
                 translations['underscore_field'] = utils.build_underscore_name(field.fullname)
                 translations['field_enum'] = field.id_enum_name
@@ -345,11 +350,11 @@ class Message:
             '}\n'
             '\n'
             'static gchar *\n'
-            '${underscore}_get_printable (\n'
+            '${type}_${underscore}_get_printable (\n'
             '    QmiMessage *self,\n'
             '    const gchar *line_prefix)\n'
             '{\n'
-            '    struct ${underscore}_context ctx;\n'
+            '    struct ${type}_${underscore}_context ctx;\n'
             '    GString *printable;\n'
             '\n'
             '    printable = g_string_new ("");\n'
@@ -361,7 +366,7 @@ class Message:
             '    ctx.line_prefix = line_prefix;\n'
             '    ctx.printable = printable;\n'
             '    qmi_message_tlv_foreach (self,\n'
-            '                             (QmiMessageForeachTlvFn)${underscore}_get_tlv_printable,\n'
+            '                             (QmiMessageForeachTlvFn)${type}_${underscore}_get_tlv_printable,\n'
             '                             &ctx);\n'
             '\n'
             '    return g_string_free (printable, FALSE);\n'
@@ -370,21 +375,26 @@ class Message:
 
 
     """
-    Emit request/response handling implementation
+    Emit request/response/indication handling implementation
     """
     def emit(self, hfile, cfile):
-        utils.add_separator(hfile, 'REQUEST/RESPONSE', self.fullname);
-        utils.add_separator(cfile, 'REQUEST/RESPONSE', self.fullname);
+        if self.type == 'Message':
+            utils.add_separator(hfile, 'REQUEST/RESPONSE', self.fullname);
+            utils.add_separator(cfile, 'REQUEST/RESPONSE', self.fullname);
+        else:
+            utils.add_separator(hfile, 'INDICATION', self.fullname);
+            utils.add_separator(cfile, 'INDICATION', self.fullname);
 
-        hfile.write('\n/* --- Input -- */\n');
-        cfile.write('\n/* --- Input -- */\n');
-        self.input.emit(hfile, cfile)
-        self.__emit_request_creator(hfile, cfile)
+        if self.type == 'Message':
+            hfile.write('\n/* --- Input -- */\n');
+            cfile.write('\n/* --- Input -- */\n');
+            self.input.emit(hfile, cfile)
+            self.__emit_request_creator(hfile, cfile)
 
         hfile.write('\n/* --- Output -- */\n');
         cfile.write('\n/* --- Output -- */\n');
         self.output.emit(hfile, cfile)
-        self.__emit_response_parser(hfile, cfile)
+        self.__emit_response_or_indication_parser(hfile, cfile)
 
         hfile.write('\n/* --- Printable -- */\n');
         cfile.write('\n/* --- Printable -- */\n');
