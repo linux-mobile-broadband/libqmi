@@ -46,6 +46,7 @@ static gboolean operation_status;
 
 /* Main options */
 static gchar *device_str;
+static gchar *device_set_instance_id_str;
 static gboolean device_open_version_info_flag;
 static gboolean device_open_sync_flag;
 static gchar *client_cid_str;
@@ -58,6 +59,10 @@ static GOptionEntry main_entries[] = {
     { "device", 'd', 0, G_OPTION_ARG_STRING, &device_str,
       "Specify device path",
       "[PATH]"
+    },
+    { "device-set-instance-id", 0, 0, G_OPTION_ARG_STRING, &device_set_instance_id_str,
+      "Set instance ID",
+      "[Instance ID]"
     },
     { "device-open-version-info", 0, 0, G_OPTION_ARG_NONE, &device_open_version_info_flag,
       "Run version info check when opening device",
@@ -177,6 +182,26 @@ print_version_and_exit (void)
     exit (EXIT_SUCCESS);
 }
 
+static gboolean
+generic_options_enabled (void)
+{
+    static guint n_actions = 0;
+    static gboolean checked = FALSE;
+
+    if (checked)
+        return !!n_actions;
+
+    n_actions = !!device_set_instance_id_str;
+
+    if (n_actions > 1) {
+        g_printerr ("error: too many generic actions requested\n");
+        exit (EXIT_FAILURE);
+    }
+
+    checked = TRUE;
+    return !!n_actions;
+}
+
 /*****************************************************************************/
 /* Running asynchronously */
 
@@ -206,6 +231,12 @@ qmicli_async_operation_done (gboolean reported_operation_status)
     if (cancellable) {
         g_object_unref (cancellable);
         cancellable = NULL;
+    }
+
+    /* If no client was allocated (e.g. generic action), just quit */
+    if (!client) {
+        g_main_loop_quit (loop);
+        return;
     }
 
     if (!client_no_release_cid_flag)
@@ -255,20 +286,9 @@ allocate_client_ready (QmiDevice *device,
 }
 
 static void
-device_open_ready (QmiDevice *device,
-                   GAsyncResult *res)
+device_allocate_client (QmiDevice *device)
 {
-    GError *error = NULL;
     guint8 cid = QMI_CID_NONE;
-
-    if (!qmi_device_open_finish (device, res, &error)) {
-        g_printerr ("error: couldn't open the QmiDevice: %s\n",
-                    error->message);
-        exit (EXIT_FAILURE);
-    }
-
-    g_debug ("QMI Device at '%s' ready",
-             qmi_device_get_path_display (device));
 
     if (client_cid_str) {
         guint32 cid32;
@@ -293,6 +313,78 @@ device_open_ready (QmiDevice *device,
                                 cancellable,
                                 (GAsyncReadyCallback)allocate_client_ready,
                                 NULL);
+}
+
+static void
+set_instance_id_ready (QmiDevice *device,
+                       GAsyncResult *res)
+{
+    GError *error = NULL;
+    guint16 link_id;
+
+    if (!qmi_device_set_instance_id_finish (device, res, &link_id, &error)) {
+        g_printerr ("error: couldn't set instance ID: %s\n",
+                    error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    g_print ("[%s] Instance ID set:\n"
+             "\tLink ID: '%" G_GUINT16_FORMAT "'\n",
+             qmi_device_get_path_display (device),
+             link_id);
+
+    /* We're done now */
+    qmicli_async_operation_done (TRUE);
+}
+
+static void
+device_set_instance_id (QmiDevice *device)
+{
+    gint instance_id;
+
+    if (g_str_equal (device_set_instance_id_str, "0"))
+        instance_id = 0;
+    else {
+        instance_id = atoi (device_set_instance_id_str);
+        if (instance_id == 0) {
+            g_printerr ("error: invalid instance ID given: '%s'\n", device_set_instance_id_str);
+            exit (EXIT_FAILURE);
+        } else if (instance_id < 0 || instance_id > G_MAXUINT8) {
+            g_printerr ("error: given instance ID is out of range [0,%u]: '%s'\n",
+                        G_MAXUINT8,
+                        device_set_instance_id_str);
+            exit (EXIT_FAILURE);
+        }
+    }
+
+    g_debug ("Setting instance ID '%d'...", instance_id);
+    qmi_device_set_instance_id (device,
+                                (guint8)instance_id,
+                                10,
+                                cancellable,
+                                (GAsyncReadyCallback)set_instance_id_ready,
+                                NULL);
+}
+
+static void
+device_open_ready (QmiDevice *device,
+                   GAsyncResult *res)
+{
+    GError *error = NULL;
+
+    if (!qmi_device_open_finish (device, res, &error)) {
+        g_printerr ("error: couldn't open the QmiDevice: %s\n",
+                    error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    g_debug ("QMI Device at '%s' ready",
+             qmi_device_get_path_display (device));
+
+    if (device_set_instance_id_str)
+        device_set_instance_id (device);
+    else
+        device_allocate_client (device);
 }
 
 static void
@@ -369,8 +461,12 @@ int main (int argc, char **argv)
     signal (SIGHUP, signals_handler);
     signal (SIGTERM, signals_handler);
 
+    /* Generic options? */
+    if (generic_options_enabled ()) {
+        service = QMI_SERVICE_CTL;
+    }
     /* DMS options? */
-    if (qmicli_dms_options_enabled ()) {
+    else if (qmicli_dms_options_enabled ()) {
         service = QMI_SERVICE_DMS;
     }
     /* WDS options? */
