@@ -13,6 +13,24 @@
      "type"    : "Message-ID-Enum" },
 
   // *********************************************************************************
+  {  "name"    : "Set Instance ID",
+     "type"    : "Message",
+     "service" : "CTL",
+     "id"      : "0x0020",
+     "input"   : [  { "name"      : "ID",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "guint8" } ],
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"      : "Link ID",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "guint16",
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get Version Info",
      "type"    : "Message",
      "service" : "CTL",
