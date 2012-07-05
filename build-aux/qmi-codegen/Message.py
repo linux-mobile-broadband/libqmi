@@ -128,7 +128,7 @@ class Message:
             else:
                 # If we do have mandatory fields, issue error if no input
                 # given.
-                cfile.write(
+                template = (
                     '\n'
                     '    /* There is at least one mandatory TLV, don\'t allow NULL input */\n'
                     '    if (!input) {\n'
@@ -139,6 +139,7 @@ class Message:
                     '        qmi_message_unref (self);\n'
                     '        return NULL;\n'
                     '    }\n')
+                cfile.write(string.Template(template).substitute(translations))
 
             # Now iterate fields
             for field in self.input.fields:
