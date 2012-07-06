@@ -61,6 +61,7 @@ static gchar *set_operating_mode_str;
 static gboolean get_time_flag;
 static gboolean get_prl_version_flag;
 static gboolean get_activation_state_flag;
+static gchar *activate_automatic_str;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -144,6 +145,10 @@ static GOptionEntry entries[] = {
       "Get the state of the service activation",
       NULL,
     },
+    { "dms-activate-automatic", 0, 0, G_OPTION_ARG_STRING, &activate_automatic_str,
+      "Request automatic service activation",
+      "[Activation Code]"
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -195,6 +200,7 @@ qmicli_dms_options_enabled (void)
                  get_time_flag +
                  get_prl_version_flag +
                  get_activation_state_flag +
+                 !!activate_automatic_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1297,6 +1303,33 @@ get_activation_state_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+activate_automatic_ready (QmiClientDms *client,
+                          GAsyncResult *res)
+{
+    QmiMessageDmsActivateAutomaticOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_activate_automatic_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_activate_automatic_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't request automatic service activation: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_activate_automatic_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_activate_automatic_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1573,6 +1606,23 @@ qmicli_dms_run (QmiDevice *device,
                                              ctx->cancellable,
                                              (GAsyncReadyCallback)get_activation_state_ready,
                                              NULL);
+        return;
+    }
+
+    /* Request to activate automatically? */
+    if (activate_automatic_str) {
+        QmiMessageDmsActivateAutomaticInput *input;
+
+        g_debug ("Asynchronously requesting automatic activation...");
+        input = qmi_message_dms_activate_automatic_input_new ();
+        qmi_message_dms_activate_automatic_input_set_activation_code (input, activate_automatic_str, NULL);
+        qmi_client_dms_get_activation_state (ctx->client,
+                                             NULL,
+                                             10,
+                                             ctx->cancellable,
+                                             (GAsyncReadyCallback)activate_automatic_ready,
+                                             NULL);
+        qmi_message_dms_activate_automatic_input_unref (input);
         return;
     }
 
