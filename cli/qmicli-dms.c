@@ -60,6 +60,7 @@ static gboolean get_operating_mode_flag;
 static gchar *set_operating_mode_str;
 static gboolean get_time_flag;
 static gboolean get_prl_version_flag;
+static gboolean get_activation_state_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -139,6 +140,10 @@ static GOptionEntry entries[] = {
       "Get the PRL version",
       NULL,
     },
+    { "dms-get-activation-state", 0, 0, G_OPTION_ARG_NONE, &get_activation_state_flag,
+      "Get the state of the service activation",
+      NULL,
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -189,6 +194,7 @@ qmicli_dms_options_enabled (void)
                  !!set_operating_mode_str +
                  get_time_flag +
                  get_prl_version_flag +
+                 get_activation_state_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1253,6 +1259,44 @@ get_prl_version_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+get_activation_state_ready (QmiClientDms *client,
+                            GAsyncResult *res)
+{
+    QmiMessageDmsGetActivationStateOutput *output;
+    QmiDmsActivationState activation_state;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_activation_state_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_activation_state_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get the state of the service activation: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_activation_state_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_activation_state_output_get_info (
+        output,
+        &activation_state,
+        NULL);
+
+    g_print ("[%s] Activation state retrieved:\n"
+             "\tState: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             qmi_dms_activation_state_get_string (activation_state));
+
+    qmi_message_dms_get_activation_state_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1517,6 +1561,18 @@ qmicli_dms_run (QmiDevice *device,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_prl_version_ready,
                                         NULL);
+        return;
+    }
+
+    /* Request to get the activation state? */
+    if (get_activation_state_flag) {
+        g_debug ("Asynchronously getting activation state...");
+        qmi_client_dms_get_activation_state (ctx->client,
+                                             NULL,
+                                             10,
+                                             ctx->cancellable,
+                                             (GAsyncReadyCallback)get_activation_state_ready,
+                                             NULL);
         return;
     }
 
