@@ -449,6 +449,20 @@
      "output"  : [  { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
+  {  "name"    : "Get User Lock State",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0034",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"          : "Enabled",
+                      "id"            : "0x01",
+                      "mandatory"     : "yes",
+                      "type"          : "TLV",
+                      "format"        : "guint8",
+                      "public-format" : "gboolean",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "UIM Get ICCID",
      "type"    : "Message",
      "service" : "DMS",
