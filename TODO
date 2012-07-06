@@ -1,0 +1,8 @@
+
+
+List of things left for later:
+----------------------------------------
+
+ * qmi-codegen: Skip additional heap allocation for Strings marked with
+   'max-size'. If the 'max-size' is short enough, we can just use arrays of
+   gchars with a specific size directly in the input/output bundle.

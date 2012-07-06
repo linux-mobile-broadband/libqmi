@@ -44,6 +44,7 @@ class VariableString(Variable):
             self.needs_dispose = False
             self.length_prefix = False
             self.fixed_size = dictionary['fixed-size']
+            self.max_size = ''
         else:
             self.is_fixed_size = False
             # Variable-length strings in heap
@@ -52,6 +53,7 @@ class VariableString(Variable):
             # length prefix
             self.length_prefix = False if 'type' in dictionary and dictionary['type'] == 'TLV' else True
             self.fixed_size = ''
+            self.max_size = dictionary['max-size'] if 'max-size' in dictionary else ''
 
 
     """
@@ -248,6 +250,10 @@ class VariableString(Variable):
             translations['fixed_size'] = self.fixed_size
             template = (
                 '${lp}@${name}: a constant string of exactly ${fixed_size} characters.\n')
+        elif self.max_size != '':
+            translations['max_size'] = self.max_size
+            template = (
+                '${lp}@${name}: a constant string with a maximum length of ${max_size} characters.\n')
         else:
             template = (
                 '${lp}@${name}: a constant string.\n')
@@ -275,7 +281,18 @@ class VariableString(Variable):
                 '${lp}memcpy (${to}, ${from}, ${fixed_size});\n'
                 '${lp}${to}[${fixed_size}] = \'\\0\';\n')
         else:
-            template = (
+            template = ''
+            if self.max_size != '':
+                translations['max_size'] = self.max_size
+                template += (
+                    '${lp}if (${from} && strlen (${from}) > ${max_size}) {\n'
+                    '${lp}    g_set_error (error,\n'
+                    '${lp}                 QMI_CORE_ERROR,\n'
+                    '${lp}                 QMI_CORE_ERROR_INVALID_ARGS,\n'
+                    '${lp}                 "Input variable \'${from}\' must be less than ${max_size} characters long");\n'
+                    '${lp}    return FALSE;\n'
+                    '${lp}}\n')
+            template += (
                 '${lp}g_free (${to});\n'
                 '${lp}${to} = g_strdup (${from} ? ${from} : "");\n')
 
