@@ -209,4 +209,37 @@ typedef enum {
     QMI_DMS_TIME_SOURCE_HDR_NETWORK   = 2,
 } QmiDmsTimeSource;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Get Activation State' message */
+
+/**
+ * QmiDmsActivationState:
+ * @QMI_DMS_ACTIVATION_STATE_NOT_ACTIVATED: Service not activated.
+ * @QMI_DMS_ACTIVATION_STATE_ACTIVATED: Service is activated.
+ * @QMI_DMS_ACTIVATION_STATE_CONNECTING: Connection in progress for automatic activation.
+ * @QMI_DMS_ACTIVATION_STATE_CONNECTED: Connection connected for automatic activation.
+ * @QMI_DMS_ACTIVATION_STATE_OTASP_AUTHENTICATED: OTASP security authenticated.
+ * @QMI_DMS_ACTIVATION_STATE_OTASP_NAM: OTASP NAM downloaded.
+ * @QMI_DMS_ACTIVATION_STATE_OTASP_MDN: OTASP MDN downloaded.
+ * @QMI_DMS_ACTIVATION_STATE_OTASP_IMSI: OTASP IMSI downloaded.
+ * @QMI_DMS_ACTIVATION_STATE_OTASP_PRL: OTASP PRL downloaded.
+ * @QMI_DMS_ACTIVATION_STATE_OTASP_SPC: OTASP SPC downloaded.
+ * @QMI_DMS_ACTIVATION_STATE_OTASP_COMMITED: OTASP settings committed.
+ *
+ * State of the service activation.
+ */
+typedef enum {
+    QMI_DMS_ACTIVATION_STATE_NOT_ACTIVATED       = 0x00,
+    QMI_DMS_ACTIVATION_STATE_ACTIVATED           = 0x01,
+    QMI_DMS_ACTIVATION_STATE_CONNECTING          = 0x02,
+    QMI_DMS_ACTIVATION_STATE_CONNECTED           = 0x03,
+    QMI_DMS_ACTIVATION_STATE_OTASP_AUTHENTICATED = 0x04,
+    QMI_DMS_ACTIVATION_STATE_OTASP_NAM           = 0x05,
+    QMI_DMS_ACTIVATION_STATE_OTASP_MDN           = 0x06,
+    QMI_DMS_ACTIVATION_STATE_OTASP_IMSI          = 0x07,
+    QMI_DMS_ACTIVATION_STATE_OTASP_PRL           = 0x08,
+    QMI_DMS_ACTIVATION_STATE_OTASP_SPC           = 0x09,
+    QMI_DMS_ACTIVATION_STATE_OTASP_COMMITED      = 0x0A
+} QmiDmsActivationState;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */

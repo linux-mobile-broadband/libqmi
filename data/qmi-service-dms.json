@@ -387,6 +387,20 @@
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Get Activation State",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0031",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"          : "Info",
+                      "id"            : "0x01",
+                      "mandatory"     : "yes",
+                      "type"          : "TLV",
+                      "format"        : "guint16",
+                      "public-format" : "QmiDmsActivationState",
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "UIM Get ICCID",
      "type"    : "Message",
      "service" : "DMS",
