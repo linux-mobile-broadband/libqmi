@@ -389,10 +389,27 @@ qmi_utils_read_string_from_buffer (guint8   **buffer,
 }
 
 void
-qmi_utils_write_string_to_buffer (guint8   **buffer,
-                                  guint16   *buffer_size,
-                                  gboolean   length_prefix,
-                                  gchar    **in)
+qmi_utils_read_fixed_size_string_from_buffer (guint8   **buffer,
+                                              guint16   *buffer_size,
+                                              guint16    fixed_size,
+                                              gchar     *out)
+{
+    g_assert (out != NULL);
+    g_assert (buffer != NULL);
+    g_assert (buffer_size != NULL);
+    g_assert (fixed_size > 0);
+
+    memcpy (out, *buffer, fixed_size);
+
+    *buffer = &((*buffer)[fixed_size]);
+    *buffer_size = (*buffer_size) - fixed_size;
+}
+
+void
+qmi_utils_write_string_to_buffer (guint8      **buffer,
+                                  guint16      *buffer_size,
+                                  gboolean      length_prefix,
+                                  const gchar  *in)
 {
     guint16 len;
 
@@ -400,7 +417,7 @@ qmi_utils_write_string_to_buffer (guint8   **buffer,
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
 
-    len = (guint16) strlen (*in);
+    len = (guint16) strlen (in);
 
     if (length_prefix) {
         guint8 len_8;
@@ -410,7 +427,23 @@ qmi_utils_write_string_to_buffer (guint8   **buffer,
         qmi_utils_write_guint8_to_buffer (buffer, buffer_size, &len_8);
     }
 
-    memcpy (*buffer, *in, len);
+    memcpy (*buffer, in, len);
     *buffer = &((*buffer)[len]);
     *buffer_size = (*buffer_size) - len;
+}
+
+void
+qmi_utils_write_fixed_size_string_to_buffer (guint8      **buffer,
+                                             guint16      *buffer_size,
+                                             guint16       fixed_size,
+                                             const gchar  *in)
+{
+    g_assert (in != NULL);
+    g_assert (buffer != NULL);
+    g_assert (buffer_size != NULL);
+    g_assert (fixed_size > 0);
+
+    memcpy (*buffer, in, fixed_size);
+    *buffer = &((*buffer)[fixed_size]);
+    *buffer_size = (*buffer_size) - fixed_size;
 }

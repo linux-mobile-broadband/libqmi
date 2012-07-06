@@ -108,11 +108,19 @@ void qmi_utils_read_string_from_buffer (guint8   **buffer,
                                         guint16   *buffer_size,
                                         gboolean   length_prefix,
                                         gchar    **out);
+void qmi_utils_write_string_to_buffer  (guint8      **buffer,
+                                        guint16      *buffer_size,
+                                        gboolean      length_prefix,
+                                        const gchar  *in);
 
-void qmi_utils_write_string_to_buffer (guint8   **buffer,
-                                       guint16   *buffer_size,
-                                       gboolean   length_prefix,
-                                       gchar    **in);
+void qmi_utils_read_fixed_size_string_from_buffer (guint8   **buffer,
+                                                   guint16   *buffer_size,
+                                                   guint16    fixed_size,
+                                                   gchar     *out);
+void qmi_utils_write_fixed_size_string_to_buffer  (guint8      **buffer,
+                                                   guint16      *buffer_size,
+                                                   guint16       fixed_size,
+                                                   const gchar  *in);
 
 G_END_DECLS
 

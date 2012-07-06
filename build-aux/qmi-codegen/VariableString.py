@@ -38,12 +38,20 @@ class VariableString(Variable):
         self.private_format = 'gchar *'
         self.public_format = self.private_format
 
-        # Strings will be heap-allocated
-        self.needs_dispose = True
-
-        # Strings which are given as the full value of a TLV will NOT have a
-        # length prefix
-        self.length_prefix = False if 'type' in dictionary and dictionary['type'] == 'TLV' else True
+        if 'fixed-size' in dictionary:
+            self.is_fixed_size = True
+            # Fixed-size strings
+            self.needs_dispose = False
+            self.length_prefix = False
+            self.fixed_size = dictionary['fixed-size']
+        else:
+            self.is_fixed_size = False
+            # Variable-length strings in heap
+            self.needs_dispose = True
+            # Strings which are given as the full value of a TLV will NOT have a
+            # length prefix
+            self.length_prefix = False if 'type' in dictionary and dictionary['type'] == 'TLV' else True
+            self.fixed_size = ''
 
 
     """
@@ -53,16 +61,28 @@ class VariableString(Variable):
         translations = { 'lp'             : line_prefix,
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len,
-                         'length_prefix'  : 'TRUE' if self.length_prefix else 'FALSE' }
+                         'buffer_len'     : buffer_len }
 
-        template = (
-            '${lp}/* Read the string variable from the buffer */\n'
-            '${lp}qmi_utils_read_string_from_buffer (\n'
-            '${lp}    &${buffer_name},\n'
-            '${lp}    &${buffer_len},\n'
-            '${lp}    ${length_prefix},\n'
-            '${lp}    &(${variable_name}));\n')
+        if self.is_fixed_size:
+            translations['fixed_size'] = self.fixed_size
+            template = (
+                '${lp}/* Read the fixed-size string variable from the buffer */\n'
+                '${lp}qmi_utils_read_fixed_size_string_from_buffer (\n'
+                '${lp}    &${buffer_name},\n'
+                '${lp}    &${buffer_len},\n'
+                '${lp}    ${fixed_size},\n'
+                '${lp}    &${variable_name}[0]);\n'
+                '${lp}${variable_name}[${fixed_size}] = \'\\0\';\n')
+        else:
+            translations['length_prefix'] = 'TRUE' if self.length_prefix else 'FALSE'
+            template = (
+                '${lp}/* Read the string variable from the buffer */\n'
+                '${lp}qmi_utils_read_string_from_buffer (\n'
+                '${lp}    &${buffer_name},\n'
+                '${lp}    &${buffer_len},\n'
+                '${lp}    ${length_prefix},\n'
+                '${lp}    &(${variable_name}));\n')
+
         f.write(string.Template(template).substitute(translations))
 
 
@@ -73,16 +93,27 @@ class VariableString(Variable):
         translations = { 'lp'             : line_prefix,
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len,
-                         'length_prefix'  : 'TRUE' if self.length_prefix else 'FALSE' }
+                         'buffer_len'     : buffer_len }
 
-        template = (
-            '${lp}/* Write the string variable to the buffer */\n'
-            '${lp}qmi_utils_write_string_to_buffer (\n'
-            '${lp}    &${buffer_name},\n'
-            '${lp}    &${buffer_len},\n'
-            '${lp}    ${length_prefix},\n'
-            '${lp}    &(${variable_name}));\n')
+        if self.is_fixed_size:
+            translations['fixed_size'] = self.fixed_size
+            template = (
+                '${lp}/* Write the fixed-size string variable to the buffer */\n'
+                '${lp}qmi_utils_write_fixed_size_string_to_buffer (\n'
+                '${lp}    &${buffer_name},\n'
+                '${lp}    &${buffer_len},\n'
+                '${lp}    ${fixed_size},\n'
+                '${lp}    ${variable_name});\n')
+        else:
+            translations['length_prefix'] = 'TRUE' if self.length_prefix else 'FALSE'
+            template = (
+                '${lp}/* Write the string variable to the buffer */\n'
+                '${lp}qmi_utils_write_string_to_buffer (\n'
+                '${lp}    &${buffer_name},\n'
+                '${lp}    &${buffer_len},\n'
+                '${lp}    ${length_prefix},\n'
+                '${lp}    ${variable_name});\n')
+
         f.write(string.Template(template).substitute(translations))
 
 
@@ -93,24 +124,44 @@ class VariableString(Variable):
         translations = { 'lp'             : line_prefix,
                          'printable'      : printable,
                          'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len,
-                         'length_prefix'  : 'TRUE' if self.length_prefix else 'FALSE' }
+                         'buffer_len'     : buffer_len }
 
-        template = (
-            '\n'
-            '${lp}{\n'
-            '${lp}    gchar *tmp;\n'
-            '\n'
-            '${lp}    /* Read the string variable from the buffer */\n'
-            '${lp}    qmi_utils_read_string_from_buffer (\n'
-            '${lp}        &${buffer_name},\n'
-            '${lp}        &${buffer_len},\n'
-            '${lp}        ${length_prefix},\n'
-            '${lp}        &tmp);\n'
-            '\n'
-            '${lp}    g_string_append_printf (${printable}, "%s", tmp);\n'
-            '${lp}    g_free (tmp);\n'
-            '${lp}}\n')
+        if self.is_fixed_size:
+            translations['fixed_size'] = self.fixed_size
+            translations['fixed_size_plus_one'] = int(self.fixed_size) + 1
+            template = (
+                '\n'
+                '${lp}{\n'
+                '${lp}    gchar tmp[${fixed_size_plus_one}];\n'
+                '\n'
+                '${lp}    /* Read the fixed-size string variable from the buffer */\n'
+                '${lp}    qmi_utils_read_fixed_size_string_from_buffer (\n'
+                '${lp}        &${buffer_name},\n'
+                '${lp}        &${buffer_len},\n'
+                '${lp}        ${fixed_size},\n'
+                '${lp}        &tmp[0]);\n'
+                '${lp}    tmp[${fixed_size}] = \'\\0\';\n'
+                '\n'
+                '${lp}    g_string_append_printf (${printable}, "%s", tmp);\n'
+                '${lp}}\n')
+        else:
+            translations['length_prefix'] = 'TRUE' if self.length_prefix else 'FALSE'
+            template = (
+                '\n'
+                '${lp}{\n'
+                '${lp}    gchar *tmp;\n'
+                '\n'
+                '${lp}    /* Read the string variable from the buffer */\n'
+                '${lp}    qmi_utils_read_string_from_buffer (\n'
+                '${lp}        &${buffer_name},\n'
+                '${lp}        &${buffer_len},\n'
+                '${lp}        ${length_prefix},\n'
+                '${lp}        &tmp);\n'
+                '\n'
+                '${lp}    g_string_append_printf (${printable}, "%s", tmp);\n'
+                '${lp}    g_free (tmp);\n'
+                '${lp}}\n')
+
         f.write(string.Template(template).substitute(translations))
 
 
@@ -121,8 +172,13 @@ class VariableString(Variable):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
-        template = (
-            '${lp}gchar *${name};\n')
+        if self.is_fixed_size:
+            translations['fixed_size_plus_one'] = int(self.fixed_size) + 1
+            template = (
+                '${lp}gchar ${name}[${fixed_size_plus_one}];\n')
+        else:
+            template = (
+                '${lp}gchar *${name};\n')
         return string.Template(template).substitute(translations)
 
 
@@ -188,8 +244,13 @@ class VariableString(Variable):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
-        template = (
-            '${lp}@${name}: a placeholder for the output constant string, or #NULL if not required.\n')
+        if self.is_fixed_size:
+            translations['fixed_size'] = self.fixed_size
+            template = (
+                '${lp}@${name}: a constant string of exactly ${fixed_size} characters.\n')
+        else:
+            template = (
+                '${lp}@${name}: a constant string.\n')
         return string.Template(template).substitute(translations)
 
 
@@ -201,9 +262,23 @@ class VariableString(Variable):
                          'from' : variable_name_from,
                          'to'   : variable_name_to }
 
-        template = (
-            '${lp}g_free (${to});\n'
-            '${lp}${to} = g_strdup (${from});\n')
+        if self.is_fixed_size:
+            translations['fixed_size'] = self.fixed_size
+            template = (
+                '${lp}if (!${from} || strlen (${from}) != ${fixed_size}) {\n'
+                '${lp}    g_set_error (error,\n'
+                '${lp}                 QMI_CORE_ERROR,\n'
+                '${lp}                 QMI_CORE_ERROR_INVALID_ARGS,\n'
+                '${lp}                 "Input variable \'${from}\' must be ${fixed_size} characters long");\n'
+                '${lp}    return FALSE;\n'
+                '${lp}}\n'
+                '${lp}memcpy (${to}, ${from}, ${fixed_size});\n'
+                '${lp}${to}[${fixed_size}] = \'\\0\';\n')
+        else:
+            template = (
+                '${lp}g_free (${to});\n'
+                '${lp}${to} = g_strdup (${from} ? ${from} : "");\n')
+
         return string.Template(template).substitute(translations)
 
 
@@ -211,6 +286,10 @@ class VariableString(Variable):
     Dispose the string
     """
     def build_dispose(self, line_prefix, variable_name):
+        # Fixed-size strings don't need dispose
+        if self.is_fixed_size:
+            return ''
+
         translations = { 'lp'            : line_prefix,
                          'variable_name' : variable_name }
 
