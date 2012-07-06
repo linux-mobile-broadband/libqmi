@@ -62,6 +62,7 @@ static gboolean get_time_flag;
 static gboolean get_prl_version_flag;
 static gboolean get_activation_state_flag;
 static gchar *activate_automatic_str;
+static gboolean get_user_lock_state_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -149,6 +150,10 @@ static GOptionEntry entries[] = {
       "Request automatic service activation",
       "[Activation Code]"
     },
+    { "dms-get-user-lock-state", 0, 0, G_OPTION_ARG_NONE, &get_user_lock_state_flag,
+      "Get the state of the user lock",
+      NULL,
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -201,6 +206,7 @@ qmicli_dms_options_enabled (void)
                  get_prl_version_flag +
                  get_activation_state_flag +
                  !!activate_automatic_str +
+                 get_user_lock_state_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1330,6 +1336,44 @@ activate_automatic_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+get_user_lock_state_ready (QmiClientDms *client,
+                           GAsyncResult *res)
+{
+    QmiMessageDmsGetUserLockStateOutput *output;
+    gboolean enabled;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_user_lock_state_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_user_lock_state_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get the state of the user lock: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_user_lock_state_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_user_lock_state_output_get_enabled (
+        output,
+        &enabled,
+        NULL);
+
+    g_print ("[%s] User lock state retrieved:\n"
+             "\tEnabled: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             enabled ? "yes" : "no");
+
+    qmi_message_dms_get_user_lock_state_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1623,6 +1667,18 @@ qmicli_dms_run (QmiDevice *device,
                                              (GAsyncReadyCallback)activate_automatic_ready,
                                              NULL);
         qmi_message_dms_activate_automatic_input_unref (input);
+        return;
+    }
+
+    /* Request to get the activation state? */
+    if (get_user_lock_state_flag) {
+        g_debug ("Asynchronously getting user lock state...");
+        qmi_client_dms_get_user_lock_state (ctx->client,
+                                            NULL,
+                                            10,
+                                            ctx->cancellable,
+                                            (GAsyncReadyCallback)get_user_lock_state_ready,
+                                            NULL);
         return;
     }
 
