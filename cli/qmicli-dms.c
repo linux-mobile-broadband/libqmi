@@ -68,6 +68,7 @@ static gboolean get_user_lock_state_flag;
 static gchar *set_user_lock_state_str;
 static gchar *set_user_lock_code_str;
 static gboolean read_user_data_flag;
+static gchar *write_user_data_str;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -175,6 +176,10 @@ static GOptionEntry entries[] = {
       "Read user data",
       NULL,
     },
+    { "dms-write-user-data", 0, 0, G_OPTION_ARG_STRING, &write_user_data_str,
+      "Write user data",
+      "[(User data)]",
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -232,6 +237,7 @@ qmicli_dms_options_enabled (void)
                  !!set_user_lock_state_str +
                  !!set_user_lock_code_str +
                  read_user_data_flag +
+                 !!write_user_data_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1582,6 +1588,57 @@ read_user_data_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static QmiMessageDmsWriteUserDataInput *
+write_user_data_input_create (const gchar *str)
+{
+    QmiMessageDmsWriteUserDataInput *input;
+    GArray *array;
+
+    /* Prepare inputs. Just assume we'll get some text string here, although
+     * nobody said this had to be text. Read User Data actually treats the
+     * contents of the user data as raw binary data. */
+    array = g_array_sized_new (FALSE, FALSE, 1, strlen (str));
+    g_array_insert_vals (array, 0, str, strlen (str));
+    input = qmi_message_dms_write_user_data_input_new ();
+    qmi_message_dms_write_user_data_input_set_user_data (
+        input,
+        array,
+        NULL);
+    g_array_unref (array);
+
+    return input;
+}
+
+static void
+write_user_data_ready (QmiClientDms *client,
+                       GAsyncResult *res)
+{
+    QmiMessageDmsWriteUserDataOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_write_user_data_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_write_user_data_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't write user data: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_write_user_data_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] User data written",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_write_user_data_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1943,6 +2000,22 @@ qmicli_dms_run (QmiDevice *device,
                                        ctx->cancellable,
                                        (GAsyncReadyCallback)read_user_data_ready,
                                        NULL);
+        return;
+    }
+
+    /* Request to write user data? */
+    if (write_user_data_str) {
+        QmiMessageDmsWriteUserDataInput *input;
+
+        g_debug ("Asynchronously writing user data...");
+        input = write_user_data_input_create (write_user_data_str);
+        qmi_client_dms_write_user_data (ctx->client,
+                                        input,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)write_user_data_ready,
+                                        NULL);
+        qmi_message_dms_write_user_data_input_unref (input);
         return;
     }
 
