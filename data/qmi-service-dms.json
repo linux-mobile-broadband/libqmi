@@ -486,5 +486,19 @@
                       "mandatory" : "yes",
                       "type"      : "TLV",
                       "format"    : "string",
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "UIM Get State",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0044",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"          : "State",
+                      "id"            : "0x01",
+                      "mandatory"     : "yes",
+                      "type"          : "TLV",
+                      "format"        : "guint8",
+                      "public-format" : "QmiDmsUimState",
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] }
 ]

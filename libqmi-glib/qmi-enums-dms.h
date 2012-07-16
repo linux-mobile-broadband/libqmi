@@ -242,4 +242,25 @@ typedef enum {
     QMI_DMS_ACTIVATION_STATE_OTASP_COMMITED      = 0x0A
 } QmiDmsActivationState;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS UIM Get State' message */
+
+/**
+ * QmiDmsUimState:
+ * @QMI_DMS_UIM_STATE_INITIALIZATION_COMPLETED: UIM initialization completed.
+ * @QMI_DMS_UIM_STATE_LOCKED_OR_FAILED: UIM is locked or failed.
+ * @QMI_DMS_UIM_STATE_NOT_PRESENT: No UIM in the device.
+ * @QMI_DMS_UIM_STATE_RESERVED: Reserved, unknown.
+ * @QMI_DMS_UIM_STATE_UNKNOWN: UIM state currently unavailable.
+ *
+ * State of the UIM.
+ */
+typedef enum {
+    QMI_DMS_UIM_STATE_INITIALIZATION_COMPLETED = 0x00,
+    QMI_DMS_UIM_STATE_LOCKED_OR_FAILED         = 0x01,
+    QMI_DMS_UIM_STATE_NOT_PRESENT              = 0x02,
+    QMI_DMS_UIM_STATE_RESERVED                 = 0x03,
+    QMI_DMS_UIM_STATE_UNKNOWN                  = 0xFF
+} QmiDmsUimState;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */
