@@ -65,6 +65,7 @@ static gboolean get_activation_state_flag;
 static gchar *activate_automatic_str;
 static gboolean get_user_lock_state_flag;
 static gchar *set_user_lock_state_str;
+static gchar *set_user_lock_code_str;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -164,6 +165,10 @@ static GOptionEntry entries[] = {
       "Set the state of the user lock",
       "[(disable|enable),(current lock code)]",
     },
+    { "dms-set-user-lock-code", 0, 0, G_OPTION_ARG_STRING, &set_user_lock_code_str,
+      "Change the user lock code",
+      "[(old lock code),(new lock code)]",
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -219,6 +224,7 @@ qmicli_dms_options_enabled (void)
                  !!activate_automatic_str +
                  get_user_lock_state_flag +
                  !!set_user_lock_state_str +
+                 !!set_user_lock_code_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1473,6 +1479,58 @@ set_user_lock_state_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static QmiMessageDmsSetUserLockCodeInput *
+set_user_lock_code_input_create (const gchar *str)
+{
+    QmiMessageDmsSetUserLockCodeInput *input;
+    gchar **split;
+
+    /* Prepare inputs.
+     * Format of the string is:
+     *    "[(old lock code),(new lock code)]"
+     */
+    split = g_strsplit (str, ",", -1);
+    input = qmi_message_dms_set_user_lock_code_input_new ();
+    qmi_message_dms_set_user_lock_code_input_set_info (
+        input,
+        read_non_empty_string (split[0], "old lock code"),
+        read_non_empty_string (split[1], "new lock code"),
+        NULL);
+    g_strfreev (split);
+
+    return input;
+}
+
+static void
+set_user_lock_code_ready (QmiClientDms *client,
+                          GAsyncResult *res)
+{
+    QmiMessageDmsSetUserLockCodeOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_set_user_lock_code_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_set_user_lock_code_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't change user lock code: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_set_user_lock_code_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] User lock code changed\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_set_user_lock_code_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1806,6 +1864,22 @@ qmicli_dms_run (QmiDevice *device,
                                             (GAsyncReadyCallback)set_user_lock_state_ready,
                                             NULL);
         qmi_message_dms_set_user_lock_state_input_unref (input);
+        return;
+    }
+
+    /* Request to set user lock code? */
+    if (set_user_lock_code_str) {
+        QmiMessageDmsSetUserLockCodeInput *input;
+
+        g_debug ("Asynchronously changing user lock code...");
+        input = set_user_lock_code_input_create (set_user_lock_code_str);
+        qmi_client_dms_set_user_lock_code (ctx->client,
+                                           input,
+                                           10,
+                                           ctx->cancellable,
+                                           (GAsyncReadyCallback)set_user_lock_code_ready,
+                                            NULL);
+        qmi_message_dms_set_user_lock_code_input_unref (input);
         return;
     }
 
