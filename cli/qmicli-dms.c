@@ -31,6 +31,7 @@
 #include <libqmi-glib.h>
 
 #include "qmicli.h"
+#include "qmicli-helpers.h"
 
 /* Context */
 typedef struct {
@@ -66,6 +67,7 @@ static gchar *activate_automatic_str;
 static gboolean get_user_lock_state_flag;
 static gchar *set_user_lock_state_str;
 static gchar *set_user_lock_code_str;
+static gboolean read_user_data_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -169,6 +171,10 @@ static GOptionEntry entries[] = {
       "Change the user lock code",
       "[(old lock code),(new lock code)]",
     },
+    { "dms-read-user-data", 0, 0, G_OPTION_ARG_NONE, &read_user_data_flag,
+      "Read user data",
+      NULL,
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -225,6 +231,7 @@ qmicli_dms_options_enabled (void)
                  get_user_lock_state_flag +
                  !!set_user_lock_state_str +
                  !!set_user_lock_code_str +
+                 read_user_data_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1531,6 +1538,50 @@ set_user_lock_code_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+read_user_data_ready (QmiClientDms *client,
+                      GAsyncResult *res)
+{
+    QmiMessageDmsReadUserDataOutput *output;
+    GArray *user_data = NULL;
+    gchar *user_data_printable;
+    GError *error = NULL;
+
+    output = qmi_client_dms_read_user_data_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_read_user_data_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't read user data: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_read_user_data_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_read_user_data_output_get_user_data (
+        output,
+        &user_data,
+        NULL);
+    user_data_printable = qmicli_get_raw_data_printable (user_data, 80, "\t\t");
+
+    g_print ("[%s] User data read:\n"
+             "\tSize: '%u' bytes\n"
+             "\tContents:\n"
+             "%s",
+             qmi_device_get_path_display (ctx->device),
+             user_data->len,
+             user_data_printable);
+    g_free (user_data_printable);
+
+    qmi_message_dms_read_user_data_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1880,6 +1931,18 @@ qmicli_dms_run (QmiDevice *device,
                                            (GAsyncReadyCallback)set_user_lock_code_ready,
                                             NULL);
         qmi_message_dms_set_user_lock_code_input_unref (input);
+        return;
+    }
+
+    /* Request to read user data? */
+    if (read_user_data_flag) {
+        g_debug ("Asynchronously reading user data...");
+        qmi_client_dms_read_user_data (ctx->client,
+                                       NULL,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback)read_user_data_ready,
+                                       NULL);
         return;
     }
 
