@@ -48,12 +48,24 @@ class VariableArray(Variable):
         else:
             self.array_element = VariableFactory.create_variable(dictionary['array-element'], '')
 
+        # Load variable type for the array size prefix
+        if 'array-size' in dictionary:
+            # We do NOT allow 64-bit types as array sizes
+            if dictionary['array-size'] == 'guint64' or dictionary['array-size'] == 'gint64':
+                raise RuntimeError('Array size should not be given with a 64-bit value (unsupported)')
+            self.array_size_element = VariableFactory.create_variable(dictionary['array-size'], '')
+        else:
+            # Default to 'guint8' if no explicit array size given
+            default_array_size = { 'format' : 'guint8' }
+            self.array_size_element = VariableFactory.create_variable(default_array_size, '')
+
 
     """
     Emit the type for the array element
     """
     def emit_types(self, f):
         self.array_element.emit_types(f)
+
 
     """
     Emits the code to clear the element of the array
@@ -85,6 +97,7 @@ class VariableArray(Variable):
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
                          'public_array_element_format' : self.array_element.public_format,
+                         'array_size_element_format' : self.array_size_element.public_format,
                          'underscore'     : utils.build_underscore_name_from_camelcase(self.array_element.public_format),
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
@@ -93,18 +106,20 @@ class VariableArray(Variable):
         template = (
             '${lp}{\n'
             '${lp}    guint i;\n'
-            '${lp}    guint8 n_items;\n'
+            '${lp}    ${array_size_element_format} n_items;\n'
             '\n'
-            '${lp}    /* Read number of items in the array */\n'
-            '${lp}    n_items = ${buffer_name}[0];\n'
-            '${lp}    ${buffer_name}++;\n'
-            '${lp}    ${buffer_len}--;\n'
+            '${lp}    /* Read number of items in the array */\n')
+        f.write(string.Template(template).substitute(translations))
+
+        self.array_size_element.emit_buffer_read(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
+
+        template = (
             '\n'
             '${lp}    ${variable_name} = g_array_sized_new (\n'
             '${lp}        FALSE,\n'
             '${lp}        FALSE,\n'
             '${lp}        sizeof (${public_array_element_format}),\n'
-            '${lp}        n_items);\n'
+            '${lp}        (guint)n_items);\n'
             '\n')
 
         if self.array_element.needs_dispose == True:
@@ -142,6 +157,7 @@ class VariableArray(Variable):
     """
     def emit_get_printable(self, f, line_prefix, printable, buffer_name, buffer_len):
         translations = { 'lp'          : line_prefix,
+                         'array_size_element_format' : self.array_size_element.public_format,
                          'printable'   : printable,
                          'buffer_name' : buffer_name,
                          'buffer_len'  : buffer_len }
@@ -149,12 +165,14 @@ class VariableArray(Variable):
         template = (
             '${lp}{\n'
             '${lp}    guint i;\n'
-            '${lp}    guint8 n_items;\n'
+            '${lp}    ${array_size_element_format} n_items;\n'
             '\n'
-            '${lp}    /* Read number of items in the array */\n'
-            '${lp}    n_items = ${buffer_name}[0];\n'
-            '${lp}    ${buffer_name}++;\n'
-            '${lp}    ${buffer_len}--;\n'
+            '${lp}    /* Read number of items in the array */\n')
+        f.write(string.Template(template).substitute(translations))
+
+        self.array_size_element.emit_buffer_read(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
+
+        template = (
             '\n'
             '${lp}    g_string_append (${printable}, "{");\n'
             '\n'
