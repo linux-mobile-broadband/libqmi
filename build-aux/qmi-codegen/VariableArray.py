@@ -148,7 +148,34 @@ class VariableArray(Variable):
     write every array element one by one.
     """
     def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len):
-        raise RuntimeError('Not implemented yet')
+        translations = { 'lp'             : line_prefix,
+                         'variable_name'  : variable_name,
+                         'array_size_element_format' : self.array_size_element.private_format,
+                         'buffer_name'    : buffer_name,
+                         'buffer_len'     : buffer_len }
+
+        template = (
+            '${lp}{\n'
+            '${lp}    guint i;\n'
+            '${lp}    ${array_size_element_format} n_items;\n'
+            '\n'
+            '${lp}    /* Write the number of items in the array first */\n'
+            '${lp}    n_items = (${array_size_element_format}) ${variable_name}->len;\n')
+        f.write(string.Template(template).substitute(translations))
+
+        self.array_size_element.emit_buffer_write(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
+
+        template = (
+            '\n'
+            '${lp}    for (i = 0; i < ${variable_name}->len; i++) {\n')
+        f.write(string.Template(template).substitute(translations))
+
+        self.array_element.emit_buffer_write(f, line_prefix + '        ', 'g_array_index (' + variable_name + ', ' + self.array_element.public_format + ', i)', buffer_name, buffer_len)
+
+        template = (
+            '${lp}    }\n'
+            '${lp}}\n')
+        f.write(string.Template(template).substitute(translations))
 
 
     """
