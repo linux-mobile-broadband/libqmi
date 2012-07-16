@@ -9,6 +9,8 @@ List of things left for later:
 
  * qmi-codegen: support new `digit-string' format type
 
+ * qmi-codegen: allow specifying max number of items expected in an array.
+
  * dms: Support 'Preferred Roaming List' TLV (0x13) in DMS/"Activate Manual".
    This TLV is based on an array of raw binary data which can be passed to the
    device over multiple messages, using a sequence number to identify each
