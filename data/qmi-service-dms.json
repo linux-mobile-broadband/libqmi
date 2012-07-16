@@ -481,6 +481,24 @@
      "output"  : [  { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
+  {  "name"    : "Set User Lock Code",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0036",
+     "input"   : [  { "name"      : "Info",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "sequence",
+                      "contents"  : [ { "name"       : "Old Code",
+                                        "format"     : "string",
+                                        "fixed-size" : "4" },
+                                      { "name"       : "New Code",
+                                        "format"     : "string",
+                                        "fixed-size" : "4" } ] } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "UIM Get ICCID",
      "type"    : "Message",
      "service" : "DMS",
