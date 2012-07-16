@@ -64,6 +64,7 @@ static gboolean get_prl_version_flag;
 static gboolean get_activation_state_flag;
 static gchar *activate_automatic_str;
 static gboolean get_user_lock_state_flag;
+static gchar *set_user_lock_state_str;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -159,6 +160,10 @@ static GOptionEntry entries[] = {
       "Get the state of the user lock",
       NULL,
     },
+    { "dms-set-user-lock-state", 0, 0, G_OPTION_ARG_STRING, &set_user_lock_state_str,
+      "Set the state of the user lock",
+      "[(disable|enable),(current lock code)]",
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -213,6 +218,7 @@ qmicli_dms_options_enabled (void)
                  get_activation_state_flag +
                  !!activate_automatic_str +
                  get_user_lock_state_flag +
+                 !!set_user_lock_state_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1415,6 +1421,58 @@ get_user_lock_state_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static QmiMessageDmsSetUserLockStateInput *
+set_user_lock_state_input_create (const gchar *str)
+{
+    QmiMessageDmsSetUserLockStateInput *input;
+    gchar **split;
+
+    /* Prepare inputs.
+     * Format of the string is:
+     *    "[(disable|enable),(current lock code)]"
+     */
+    split = g_strsplit (str, ",", -1);
+    input = qmi_message_dms_set_user_lock_state_input_new ();
+    qmi_message_dms_set_user_lock_state_input_set_info (
+        input,
+        read_enable_disable_from_string (split[0]),
+        read_non_empty_string (split[1], "current lock code"),
+        NULL);
+    g_strfreev (split);
+
+    return input;
+}
+
+static void
+set_user_lock_state_ready (QmiClientDms *client,
+                           GAsyncResult *res)
+{
+    QmiMessageDmsSetUserLockStateOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_set_user_lock_state_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_set_user_lock_state_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set state of the user lock: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_set_user_lock_state_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] User lock state updated\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_set_user_lock_state_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -1732,6 +1790,22 @@ qmicli_dms_run (QmiDevice *device,
                                             ctx->cancellable,
                                             (GAsyncReadyCallback)get_user_lock_state_ready,
                                             NULL);
+        return;
+    }
+
+    /* Request to set user lock state? */
+    if (set_user_lock_state_str) {
+        QmiMessageDmsSetUserLockStateInput *input;
+
+        g_debug ("Asynchronously setting user lock state...");
+        input = set_user_lock_state_input_create (set_user_lock_state_str);
+        qmi_client_dms_set_user_lock_state (ctx->client,
+                                            input,
+                                            10,
+                                            ctx->cancellable,
+                                            (GAsyncReadyCallback)set_user_lock_state_ready,
+                                            NULL);
+        qmi_message_dms_set_user_lock_state_input_unref (input);
         return;
     }
 
