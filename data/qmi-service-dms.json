@@ -514,6 +514,21 @@
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Write User Data",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0038",
+     "input"   : [  { "name"          : "User Data",
+                      "id"            : "0x01",
+                      "mandatory"     : "yes",
+                      "type"          : "TLV",
+                      "format"        : "array",
+                      "array-size"    : { "format" : "guint16" },
+                      "array-element" : { "format" : "guint8" },
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "UIM Get ICCID",
      "type"    : "Message",
      "service" : "DMS",
