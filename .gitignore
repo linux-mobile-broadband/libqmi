@@ -57,5 +57,10 @@ libqmi-glib/test/test-utils
 cli/.deps
 cli/.libs
 cli/qmicli
+cli/test/.libs
+cli/test/.deps
+cli/test/Makefile
+cli/test/Makefile.in
+cli/test/test-helpers
 
 build-aux/qmi-codegen/*.pyc

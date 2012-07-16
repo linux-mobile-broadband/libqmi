@@ -67,6 +67,7 @@ AC_CONFIG_FILES([Makefile
                  libqmi-glib/Makefile
                  libqmi-glib/test/Makefile
                  cli/Makefile
+                 cli/test/Makefile
                  utils/Makefile])
 AC_OUTPUT
 

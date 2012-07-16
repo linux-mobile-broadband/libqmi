@@ -1,3 +1,6 @@
+
+SUBDIRS = . test
+
 bin_PROGRAMS = qmicli
 
 qmicli_CPPFLAGS = \
@@ -9,6 +12,8 @@ qmicli_CPPFLAGS = \
 qmicli_SOURCES = \
 	qmicli.c \
 	qmicli.h \
+	qmicli-helpers.c \
+	qmicli-helpers.h \
 	qmicli-dms.c \
 	qmicli-wds.c
 
