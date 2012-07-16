@@ -463,6 +463,24 @@
                       "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Set User Lock State",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0035",
+     "input"   : [  { "name"      : "Info",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "sequence",
+                      "contents"  : [ { "name"          : "Enabled",
+                                        "format"        : "guint8",
+                                        "public-format" : "gboolean" },
+                                      { "name"       : "Lock Code",
+                                        "format"     : "string",
+                                        "fixed-size" : "4" } ] } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "UIM Get ICCID",
      "type"    : "Message",
      "service" : "DMS",
