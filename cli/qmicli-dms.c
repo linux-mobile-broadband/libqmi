@@ -69,6 +69,7 @@ static gchar *set_user_lock_state_str;
 static gchar *set_user_lock_code_str;
 static gboolean read_user_data_flag;
 static gchar *write_user_data_str;
+static gboolean read_eri_file_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -180,6 +181,10 @@ static GOptionEntry entries[] = {
       "Write user data",
       "[(User data)]",
     },
+    { "dms-read-eri-file", 0, 0, G_OPTION_ARG_NONE, &read_eri_file_flag,
+      "Read ERI file",
+      NULL,
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -238,6 +243,7 @@ qmicli_dms_options_enabled (void)
                  !!set_user_lock_code_str +
                  read_user_data_flag +
                  !!write_user_data_str +
+                 read_eri_file_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1639,6 +1645,50 @@ write_user_data_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+read_eri_file_ready (QmiClientDms *client,
+                     GAsyncResult *res)
+{
+    QmiMessageDmsReadEriFileOutput *output;
+    GArray *eri_file = NULL;
+    gchar *eri_file_printable;
+    GError *error = NULL;
+
+    output = qmi_client_dms_read_eri_file_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_read_eri_file_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't read eri file: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_read_eri_file_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_read_eri_file_output_get_eri_file (
+        output,
+        &eri_file,
+        NULL);
+    eri_file_printable = qmicli_get_raw_data_printable (eri_file, 80, "\t\t");
+
+    g_print ("[%s] ERI file read:\n"
+             "\tSize: '%u' bytes\n"
+             "\tContents:\n"
+             "%s",
+             qmi_device_get_path_display (ctx->device),
+             eri_file->len,
+             eri_file_printable);
+    g_free (eri_file_printable);
+
+    qmi_message_dms_read_eri_file_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -2016,6 +2066,18 @@ qmicli_dms_run (QmiDevice *device,
                                         (GAsyncReadyCallback)write_user_data_ready,
                                         NULL);
         qmi_message_dms_write_user_data_input_unref (input);
+        return;
+    }
+
+    /* Request to read ERI file? */
+    if (read_eri_file_flag) {
+        g_debug ("Asynchronously reading ERI file...");
+        qmi_client_dms_read_eri_file (ctx->client,
+                                      NULL,
+                                      10,
+                                      ctx->cancellable,
+                                      (GAsyncReadyCallback)read_eri_file_ready,
+                                      NULL);
         return;
     }
 
