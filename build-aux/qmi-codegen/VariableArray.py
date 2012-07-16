@@ -268,7 +268,7 @@ class VariableArray(Variable):
                          'name'                        : variable_name }
 
         template = (
-            '${lp}@${name}: a #GArray of #${public_array_element_format} elements. A new reference to @{name} will be taken.\n')
+            '${lp}@${name}: a #GArray of #${public_array_element_format} elements. A new reference to @${name} will be taken.\n')
         return string.Template(template).substitute(translations)
 
 
