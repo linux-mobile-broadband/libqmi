@@ -641,6 +641,28 @@
                       "format"    : "guint8" } ] },
 
   // *********************************************************************************
+  {  "name"    : "UIM Unblock CK",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0042",
+     "input"   : [  { "name"      : "Facility",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "sequence",
+                      "contents"  : [ { "name"          : "Facility",
+                                        "format"        : "guint8",
+                                        "public-format" : "QmiDmsUimFacility" },
+                                      { "name"   : "Facility Control Key",
+                                        "format" : "string" } ] } ],
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"      : "Unblock Retries Left",
+                      "id"        : "0x10",
+                      "mandatory" : "no",
+                      "type"      : "TLV",
+                      "format"    : "guint8" } ] },
+
+  // *********************************************************************************
   {  "name"    : "UIM Get IMSI",
      "type"    : "Message",
      "service" : "DMS",
