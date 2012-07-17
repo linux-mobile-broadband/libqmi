@@ -71,6 +71,7 @@ static gboolean read_user_data_flag;
 static gchar *write_user_data_str;
 static gboolean read_eri_file_flag;
 static gchar *restore_factory_defaults_str;
+static gchar *validate_service_programming_code_str;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -190,6 +191,10 @@ static GOptionEntry entries[] = {
       "Restore factory defaults",
       "[(Service Programming Code)]",
     },
+    { "dms-validate-service-programming-code", 0, 0, G_OPTION_ARG_STRING, &validate_service_programming_code_str,
+      "Validate the Service Programming Code",
+      "[(Service Programming Code)]",
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -250,6 +255,7 @@ qmicli_dms_options_enabled (void)
                  !!write_user_data_str +
                  read_eri_file_flag +
                  !!restore_factory_defaults_str +
+                 !!validate_service_programming_code_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1811,6 +1817,57 @@ restore_factory_defaults_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static QmiMessageDmsValidateServiceProgrammingCodeInput *
+validate_service_programming_code_input_create (const gchar *str)
+{
+    QmiMessageDmsValidateServiceProgrammingCodeInput *input;
+    GError *error = NULL;
+
+    input = qmi_message_dms_validate_service_programming_code_input_new ();
+    if (!qmi_message_dms_validate_service_programming_code_input_set_service_programming_code (
+            input,
+            str,
+            &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_dms_validate_service_programming_code_input_unref (input);
+        input = NULL;
+    }
+
+    return input;
+}
+
+static void
+validate_service_programming_code_ready (QmiClientDms *client,
+                                         GAsyncResult *res)
+{
+    QmiMessageDmsValidateServiceProgrammingCodeOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_validate_service_programming_code_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_validate_service_programming_code_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't validate Service Programming Code: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_validate_service_programming_code_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Service Programming Code validated\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_validate_service_programming_code_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -2255,6 +2312,26 @@ qmicli_dms_run (QmiDevice *device,
                                                  (GAsyncReadyCallback)restore_factory_defaults_ready,
                                                  NULL);
         qmi_message_dms_restore_factory_defaults_input_unref (input);
+        return;
+    }
+
+    /* Request to validate SPC? */
+    if (validate_service_programming_code_str) {
+        QmiMessageDmsValidateServiceProgrammingCodeInput *input;
+
+        g_debug ("Asynchronously validating SPC...");
+        input = validate_service_programming_code_input_create (validate_service_programming_code_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
+        qmi_client_dms_validate_service_programming_code (ctx->client,
+                                                          input,
+                                                          10,
+                                                          ctx->cancellable,
+                                                          (GAsyncReadyCallback)validate_service_programming_code_ready,
+                                                          NULL);
+        qmi_message_dms_validate_service_programming_code_input_unref (input);
         return;
     }
 
