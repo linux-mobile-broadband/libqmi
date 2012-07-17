@@ -57,6 +57,7 @@ static gboolean uim_get_pin_status_flag;
 static gboolean uim_get_iccid_flag;
 static gboolean uim_get_imsi_flag;
 static gboolean uim_get_state_flag;
+static gchar *uim_get_ck_status_str;
 static gboolean get_hardware_revision_flag;
 static gboolean get_operating_mode_flag;
 static gchar *set_operating_mode_str;
@@ -134,6 +135,10 @@ static GOptionEntry entries[] = {
     { "dms-uim-get-state", 0, 0, G_OPTION_ARG_NONE, &uim_get_state_flag,
       "Get UIM State",
       NULL
+    },
+    { "dms-uim-get-ck-status", 0, 0, G_OPTION_ARG_STRING, &uim_get_ck_status_str,
+      "Get CK Status",
+      "[(pn|pu|pp|pc|pf)]"
     },
     { "dms-get-hardware-revision", 0, 0, G_OPTION_ARG_NONE, &get_hardware_revision_flag,
       "Get the HW revision",
@@ -241,6 +246,7 @@ qmicli_dms_options_enabled (void)
                  uim_get_iccid_flag +
                  uim_get_imsi_flag +
                  uim_get_state_flag +
+                 !!uim_get_ck_status_str +
                  get_hardware_revision_flag +
                  get_operating_mode_flag +
                  !!set_operating_mode_str +
@@ -1109,6 +1115,89 @@ uim_get_state_ready (QmiClientDms *client,
              qmi_dms_uim_state_get_string (state));
 
     qmi_message_dms_uim_get_state_output_unref (output);
+    shutdown (TRUE);
+}
+
+static QmiMessageDmsUimGetCkStatusInput *
+uim_get_ck_status_input_create (const gchar *str)
+{
+    QmiMessageDmsUimGetCkStatusInput *input = NULL;
+    QmiDmsUimFacility facility;
+
+    if (qmicli_read_facility_from_string (str, &facility)) {
+        GError *error = NULL;
+
+        input = qmi_message_dms_uim_get_ck_status_input_new ();
+        if (!qmi_message_dms_uim_get_ck_status_input_set_facility (
+                input,
+                facility,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_dms_uim_get_ck_status_input_unref (input);
+            input = NULL;
+        }
+    }
+
+    return input;
+}
+
+static void
+uim_get_ck_status_ready (QmiClientDms *client,
+                         GAsyncResult *res)
+{
+    QmiMessageDmsUimGetCkStatusOutput *output;
+    GError *error = NULL;
+    QmiDmsUimFacilityState state;
+    guint8 verify_retries_left;
+    guint8 unblock_retries_left;
+    gboolean blocking;
+
+    output = qmi_client_dms_uim_get_ck_status_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_uim_get_ck_status_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get UIM CK status: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_uim_get_ck_status_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_uim_get_ck_status_output_get_ck_status (
+        output,
+        &state,
+        &verify_retries_left,
+        &unblock_retries_left,
+        NULL);
+
+    g_print ("[%s] UIM facility state retrieved:\n"
+             "\tState: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             qmi_dms_uim_facility_state_get_string (state));
+    g_print ("[%s] Retries left:\n"
+             "\tVerify: %u\n"
+             "\tUnblock: %u\n",
+             qmi_device_get_path_display (ctx->device),
+             verify_retries_left,
+             unblock_retries_left);
+
+    if (qmi_message_dms_uim_get_ck_status_output_get_operation_blocking_facility (
+            output,
+            &blocking,
+            NULL) &&
+        blocking) {
+        g_print ("[%s] Facility is blocking operation\n",
+                 qmi_device_get_path_display (ctx->device));
+    }
+
+    qmi_message_dms_uim_get_ck_status_output_unref (output);
     shutdown (TRUE);
 }
 
@@ -2332,6 +2421,26 @@ qmicli_dms_run (QmiDevice *device,
                                                           (GAsyncReadyCallback)validate_service_programming_code_ready,
                                                           NULL);
         qmi_message_dms_validate_service_programming_code_input_unref (input);
+        return;
+    }
+
+    /* Request to get CK status? */
+    if (uim_get_ck_status_str) {
+        QmiMessageDmsUimGetCkStatusInput *input;
+
+        g_debug ("Asynchronously getting CK status...");
+        input = uim_get_ck_status_input_create (uim_get_ck_status_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
+        qmi_client_dms_uim_get_ck_status (ctx->client,
+                                          input,
+                                          10,
+                                          ctx->cancellable,
+                                          (GAsyncReadyCallback)uim_get_ck_status_ready,
+                                          NULL);
+        qmi_message_dms_uim_get_ck_status_input_unref (input);
         return;
     }
 
