@@ -58,6 +58,7 @@ static gboolean uim_get_iccid_flag;
 static gboolean uim_get_imsi_flag;
 static gboolean uim_get_state_flag;
 static gchar *uim_get_ck_status_str;
+static gchar *uim_set_ck_protection_str;
 static gboolean get_hardware_revision_flag;
 static gboolean get_operating_mode_flag;
 static gchar *set_operating_mode_str;
@@ -139,6 +140,10 @@ static GOptionEntry entries[] = {
     { "dms-uim-get-ck-status", 0, 0, G_OPTION_ARG_STRING, &uim_get_ck_status_str,
       "Get CK Status",
       "[(pn|pu|pp|pc|pf)]"
+    },
+    { "dms-uim-set-ck-protection", 0, 0, G_OPTION_ARG_STRING, &uim_set_ck_protection_str,
+      "Disable CK protection",
+      "[(pn|pu|pp|pc|pf),(disable),(key)]"
     },
     { "dms-get-hardware-revision", 0, 0, G_OPTION_ARG_NONE, &get_hardware_revision_flag,
       "Get the HW revision",
@@ -247,6 +252,7 @@ qmicli_dms_options_enabled (void)
                  uim_get_imsi_flag +
                  uim_get_state_flag +
                  !!uim_get_ck_status_str +
+                 !!uim_set_ck_protection_str +
                  get_hardware_revision_flag +
                  get_operating_mode_flag +
                  !!set_operating_mode_str +
@@ -1198,6 +1204,93 @@ uim_get_ck_status_ready (QmiClientDms *client,
     }
 
     qmi_message_dms_uim_get_ck_status_output_unref (output);
+    shutdown (TRUE);
+}
+
+static QmiMessageDmsUimSetCkProtectionInput *
+uim_set_ck_protection_input_create (const gchar *str)
+{
+    QmiMessageDmsUimSetCkProtectionInput *input = NULL;
+    gchar **split;
+    QmiDmsUimFacility facility;
+    gboolean enable_disable;
+    gchar *key;
+
+    /* Prepare inputs.
+     * Format of the string is:
+     *    "[(facility),disable,(key)]"
+     */
+    split = g_strsplit (str, ",", -1);
+    if (qmicli_read_facility_from_string (split[0], &facility) &&
+        qmicli_read_enable_disable_from_string (split[1], &enable_disable) &&
+        qmicli_read_non_empty_string (split[2], "control key", &key)) {
+
+        /* We should only allow 'disable' here */
+        if (enable_disable) {
+            g_printerr ("error: only 'disable' action is allowed\n");
+        } else {
+            GError *error = NULL;
+
+            input = qmi_message_dms_uim_set_ck_protection_input_new ();
+            if (!qmi_message_dms_uim_set_ck_protection_input_set_facility (
+                    input,
+                    facility,
+                    (QmiDmsUimFacilityState)enable_disable, /* 0 == DISABLE */
+                    key,
+                    &error)) {
+                g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                            error->message);
+                g_error_free (error);
+                qmi_message_dms_uim_set_ck_protection_input_unref (input);
+                input = NULL;
+            }
+        }
+    }
+    g_strfreev (split);
+
+    return input;
+}
+
+static void
+uim_set_ck_protection_ready (QmiClientDms *client,
+                             GAsyncResult *res)
+{
+    QmiMessageDmsUimSetCkProtectionOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_uim_set_ck_protection_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_uim_set_ck_protection_output_get_result (output, &error)) {
+        guint8 verify_retries_left;
+
+        g_printerr ("error: couldn't set UIM CK protection: %s\n", error->message);
+        g_error_free (error);
+
+        if (qmi_message_dms_uim_set_ck_protection_output_get_verify_retries_left (
+                output,
+                &verify_retries_left,
+                NULL)) {
+            g_printerr ("[%s] Retries left:\n"
+                        "\tVerify: %u\n",
+                        qmi_device_get_path_display (ctx->device),
+                        verify_retries_left);
+        }
+
+        qmi_message_dms_uim_set_ck_protection_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] UIM CK protection set\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_uim_set_ck_protection_output_unref (output);
     shutdown (TRUE);
 }
 
@@ -2441,6 +2534,26 @@ qmicli_dms_run (QmiDevice *device,
                                           (GAsyncReadyCallback)uim_get_ck_status_ready,
                                           NULL);
         qmi_message_dms_uim_get_ck_status_input_unref (input);
+        return;
+    }
+
+    /* Request to set CK protection? */
+    if (uim_set_ck_protection_str) {
+        QmiMessageDmsUimSetCkProtectionInput *input;
+
+        g_debug ("Asynchronously setting CK protection...");
+        input = uim_set_ck_protection_input_create (uim_set_ck_protection_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
+        qmi_client_dms_uim_set_ck_protection (ctx->client,
+                                              input,
+                                              10,
+                                              ctx->cancellable,
+                                              (GAsyncReadyCallback)uim_set_ck_protection_ready,
+                                              NULL);
+        qmi_message_dms_uim_set_ck_protection_input_unref (input);
         return;
     }
 
