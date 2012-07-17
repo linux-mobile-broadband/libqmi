@@ -198,8 +198,8 @@ class Field:
             '{\n'
             '    g_return_val_if_fail (self != NULL, FALSE);\n'
             '\n'
-            '    self->${variable_name}_set = TRUE;\n'
             '${variable_setter_imp}'
+            '    self->${variable_name}_set = TRUE;\n'
             '\n'
             '    return TRUE;\n'
             '}\n')
