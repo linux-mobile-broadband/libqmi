@@ -557,6 +557,19 @@
      "output"  : [  { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
+  {  "name"    : "Validate Service Programming Code",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x003B",
+     "input"   : [  { "name"          : "Service Programming Code",
+                      "id"            : "0x01",
+                      "mandatory"     : "yes",
+                      "type"          : "TLV",
+                      "format"        : "string",
+                      "fixed-size"    : "6" } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "UIM Get ICCID",
      "type"    : "Message",
      "service" : "DMS",
