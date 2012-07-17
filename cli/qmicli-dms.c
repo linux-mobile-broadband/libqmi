@@ -70,6 +70,7 @@ static gchar *set_user_lock_code_str;
 static gboolean read_user_data_flag;
 static gchar *write_user_data_str;
 static gboolean read_eri_file_flag;
+static gchar *restore_factory_defaults_str;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -185,6 +186,10 @@ static GOptionEntry entries[] = {
       "Read ERI file",
       NULL,
     },
+    { "dms-restore-factory-defaults", 0, 0, G_OPTION_ARG_STRING, &restore_factory_defaults_str,
+      "Restore factory defaults",
+      "[(Service Programming Code)]",
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -244,6 +249,7 @@ qmicli_dms_options_enabled (void)
                  read_user_data_flag +
                  !!write_user_data_str +
                  read_eri_file_flag +
+                 !!restore_factory_defaults_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1689,6 +1695,37 @@ read_eri_file_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+restore_factory_defaults_ready (QmiClientDms *client,
+                                GAsyncResult *res)
+{
+    QmiMessageDmsRestoreFactoryDefaultsOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_restore_factory_defaults_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_restore_factory_defaults_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't restores factory defaults: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_restore_factory_defaults_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Factory defaults restored\n"
+             "Device needs to get power-cycled for reset to take effect.\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_restore_factory_defaults_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -2078,6 +2115,26 @@ qmicli_dms_run (QmiDevice *device,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback)read_eri_file_ready,
                                       NULL);
+        return;
+    }
+
+    /* Request to restore factory defaults? */
+    if (restore_factory_defaults_str) {
+        QmiMessageDmsRestoreFactoryDefaultsInput *input;
+
+        g_debug ("Asynchronously restoring factory defaults...");
+        input = qmi_message_dms_restore_factory_defaults_input_new ();
+        qmi_message_dms_restore_factory_defaults_input_set_service_programming_code (
+            input,
+            restore_factory_defaults_str,
+            NULL);
+        qmi_client_dms_restore_factory_defaults (ctx->client,
+                                                 input,
+                                                 10,
+                                                 ctx->cancellable,
+                                                 (GAsyncReadyCallback)restore_factory_defaults_ready,
+                                                 NULL);
+        qmi_message_dms_restore_factory_defaults_input_unref (input);
         return;
     }
 
