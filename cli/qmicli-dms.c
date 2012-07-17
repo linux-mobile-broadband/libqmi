@@ -593,74 +593,39 @@ get_power_state_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
-static QmiDmsUimPinId
-read_pin_id_from_string (const gchar *str)
-{
-    if (!str || str[0] == '\0') {
-        g_printerr ("error: expected 'PIN' or 'PIN2', got: none\n");
-        exit (EXIT_FAILURE);
-    }
-
-    if (g_str_equal (str, "PIN"))
-        return QMI_DMS_UIM_PIN_ID_PIN;
-
-    if (g_str_equal (str, "PIN2"))
-        return QMI_DMS_UIM_PIN_ID_PIN2;
-
-    g_printerr ("error: expected 'PIN' or 'PIN2', got: '%s'\n",
-                str);
-    exit (EXIT_FAILURE);
-}
-
-static gboolean
-read_enable_disable_from_string (const gchar *str)
-{
-    if (!str || str[0] == '\0') {
-        g_printerr ("error: expected 'disable' or 'enable', got: none\n");
-        exit (EXIT_FAILURE);
-    }
-
-    if (g_str_equal (str, "disable"))
-        return FALSE;
-
-    if (g_str_equal (str, "enable"))
-        return TRUE;
-
-    g_printerr ("error: expected 'disable' or 'enable', got: '%s'\n",
-                str);
-    exit (EXIT_FAILURE);
-}
-
-static gchar *
-read_non_empty_string (const gchar *str,
-                       const gchar *description)
-{
-    if (!str || str[0] == '\0') {
-        g_printerr ("error: empty %s given\n", description);
-        exit (EXIT_FAILURE);
-    }
-
-    return (gchar *)str;
-}
-
 static QmiMessageDmsUimSetPinProtectionInput *
 uim_set_pin_protection_input_create (const gchar *str)
 {
-    QmiMessageDmsUimSetPinProtectionInput *input;
+    QmiMessageDmsUimSetPinProtectionInput *input = NULL;
     gchar **split;
+    QmiDmsUimPinId pin_id;
+    gboolean enable_disable;
+    gchar *current_pin;
 
     /* Prepare inputs.
      * Format of the string is:
      *    "[(PIN|PIN2),(disable|enable),(current PIN)]"
      */
     split = g_strsplit (str, ",", -1);
-    input = qmi_message_dms_uim_set_pin_protection_input_new ();
-    qmi_message_dms_uim_set_pin_protection_input_set_info (
-        input,
-        read_pin_id_from_string (split[0]),
-        read_enable_disable_from_string (split[1]),
-        read_non_empty_string (split[2], "current PIN"),
-        NULL);
+    if (qmicli_read_pin_id_from_string (split[0], &pin_id) &&
+        qmicli_read_enable_disable_from_string (split[1], &enable_disable) &&
+        qmicli_read_non_empty_string (split[2], "current PIN", &current_pin)) {
+        GError *error = NULL;
+
+        input = qmi_message_dms_uim_set_pin_protection_input_new ();
+        if (!qmi_message_dms_uim_set_pin_protection_input_set_info (
+                input,
+                pin_id,
+                enable_disable,
+                current_pin,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_dms_uim_set_pin_protection_input_unref (input);
+            input = NULL;
+        }
+    }
     g_strfreev (split);
 
     return input;
@@ -716,20 +681,33 @@ uim_set_pin_protection_ready (QmiClientDms *client,
 static QmiMessageDmsUimVerifyPinInput *
 uim_verify_pin_input_create (const gchar *str)
 {
-    QmiMessageDmsUimVerifyPinInput *input;
+    QmiMessageDmsUimVerifyPinInput *input = NULL;
     gchar **split;
+    QmiDmsUimPinId pin_id;
+    gchar *current_pin;
 
     /* Prepare inputs.
      * Format of the string is:
      *    "[(PIN|PIN2),(current PIN)]"
      */
     split = g_strsplit (str, ",", -1);
-    input = qmi_message_dms_uim_verify_pin_input_new ();
-    qmi_message_dms_uim_verify_pin_input_set_info (
-        input,
-        read_pin_id_from_string (split[0]),
-        read_non_empty_string (split[1], "current PIN"),
-        NULL);
+    if (qmicli_read_pin_id_from_string (split[0], &pin_id) &&
+        qmicli_read_non_empty_string (split[1], "current PIN", &current_pin)) {
+        GError *error = NULL;
+
+        input = qmi_message_dms_uim_verify_pin_input_new ();
+        if (!qmi_message_dms_uim_verify_pin_input_set_info (
+                input,
+                pin_id,
+                current_pin,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_dms_uim_verify_pin_input_unref (input);
+            input = NULL;
+        }
+    }
     g_strfreev (split);
 
     return input;
@@ -785,21 +763,36 @@ uim_verify_pin_ready (QmiClientDms *client,
 static QmiMessageDmsUimUnblockPinInput *
 uim_unblock_pin_input_create (const gchar *str)
 {
-    QmiMessageDmsUimUnblockPinInput *input;
+    QmiMessageDmsUimUnblockPinInput *input = NULL;
     gchar **split;
+    QmiDmsUimPinId pin_id;
+    gchar *puk;
+    gchar *new_pin;
 
     /* Prepare inputs.
      * Format of the string is:
      *    "[(PIN|PIN2),(PUK),(new PIN)]"
      */
     split = g_strsplit (str, ",", -1);
-    input = qmi_message_dms_uim_unblock_pin_input_new ();
-    qmi_message_dms_uim_unblock_pin_input_set_info (
-        input,
-        read_pin_id_from_string (split[0]),
-        read_non_empty_string (split[1], "PUK"),
-        read_non_empty_string (split[2], "new PIN"),
-        NULL);
+    if (qmicli_read_pin_id_from_string (split[0], &pin_id) &&
+        qmicli_read_non_empty_string (split[1], "PUK", &puk) &&
+        qmicli_read_non_empty_string (split[2], "new PIN", &new_pin)) {
+        GError *error = NULL;
+
+        input = qmi_message_dms_uim_unblock_pin_input_new ();
+        if (!qmi_message_dms_uim_unblock_pin_input_set_info (
+                input,
+                pin_id,
+                puk,
+                new_pin,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_dms_uim_unblock_pin_input_unref (input);
+            input = NULL;
+        }
+    }
     g_strfreev (split);
 
     return input;
@@ -855,21 +848,36 @@ uim_unblock_pin_ready (QmiClientDms *client,
 static QmiMessageDmsUimChangePinInput *
 uim_change_pin_input_create (const gchar *str)
 {
-    QmiMessageDmsUimChangePinInput *input;
+    QmiMessageDmsUimChangePinInput *input = NULL;
     gchar **split;
+    QmiDmsUimPinId pin_id;
+    gchar *old_pin;
+    gchar *new_pin;
 
     /* Prepare inputs.
      * Format of the string is:
      *    "[(PIN|PIN2),(old PIN),(new PIN)]"
      */
     split = g_strsplit (str, ",", -1);
-    input = qmi_message_dms_uim_change_pin_input_new ();
-    qmi_message_dms_uim_change_pin_input_set_info (
-        input,
-        read_pin_id_from_string (split[0]),
-        read_non_empty_string (split[1], "old PIN"),
-        read_non_empty_string (split[2], "new PIN"),
-        NULL);
+    if (qmicli_read_pin_id_from_string (split[0], &pin_id) &&
+        qmicli_read_non_empty_string (split[1], "old PIN", &old_pin) &&
+        qmicli_read_non_empty_string (split[1], "new PIN", &new_pin)) {
+        GError *error = NULL;
+
+        input = qmi_message_dms_uim_change_pin_input_new ();
+        if (!qmi_message_dms_uim_change_pin_input_set_info (
+                input,
+                pin_id,
+                old_pin,
+                new_pin,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_dms_uim_change_pin_input_unref (input);
+            input = NULL;
+        }
+    }
     g_strfreev (split);
 
     return input;
@@ -1193,23 +1201,24 @@ get_operating_mode_ready (QmiClientDms *client,
 static QmiMessageDmsSetOperatingModeInput *
 set_operating_mode_input_create (const gchar *str)
 {
-    QmiMessageDmsSetOperatingModeInput *input;
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
+    QmiMessageDmsSetOperatingModeInput *input = NULL;
+    QmiDmsOperatingMode mode;
 
-    type = qmi_dms_operating_mode_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
+    if (qmicli_read_operating_mode_from_string (str, &mode)) {
+        GError *error = NULL;
 
-    if (!enum_value) {
-        g_printerr ("error: invalid operating mode value given: '%s'\n", str);
-        exit (EXIT_FAILURE);
+        input = qmi_message_dms_set_operating_mode_input_new ();
+        if (!qmi_message_dms_set_operating_mode_input_set_mode (
+                input,
+                mode,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_dms_set_operating_mode_input_unref (input);
+            input = NULL;
+        }
     }
-
-    input = qmi_message_dms_set_operating_mode_input_new ();
-    qmi_message_dms_set_operating_mode_input_set_mode (input, (QmiDmsOperatingMode)enum_value->value, NULL);
-    g_type_class_unref (enum_class);
 
     return input;
 }
@@ -1387,6 +1396,27 @@ get_activation_state_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static QmiMessageDmsActivateAutomaticInput *
+activate_automatic_input_create (const gchar *str)
+{
+    QmiMessageDmsActivateAutomaticInput *input;
+    GError *error = NULL;
+
+    input = qmi_message_dms_activate_automatic_input_new ();
+    if (!qmi_message_dms_activate_automatic_input_set_activation_code (
+            input,
+            str,
+            &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_dms_activate_automatic_input_unref (input);
+        input = NULL;
+    }
+
+    return input;
+}
+
 static void
 activate_automatic_ready (QmiClientDms *client,
                           GAsyncResult *res)
@@ -1455,20 +1485,34 @@ get_user_lock_state_ready (QmiClientDms *client,
 static QmiMessageDmsSetUserLockStateInput *
 set_user_lock_state_input_create (const gchar *str)
 {
-    QmiMessageDmsSetUserLockStateInput *input;
+    QmiMessageDmsSetUserLockStateInput *input = NULL;
     gchar **split;
+    gboolean enable_disable;
+    gchar *code;
 
     /* Prepare inputs.
      * Format of the string is:
      *    "[(disable|enable),(current lock code)]"
      */
     split = g_strsplit (str, ",", -1);
-    input = qmi_message_dms_set_user_lock_state_input_new ();
-    qmi_message_dms_set_user_lock_state_input_set_info (
-        input,
-        read_enable_disable_from_string (split[0]),
-        read_non_empty_string (split[1], "current lock code"),
-        NULL);
+
+    if (qmicli_read_enable_disable_from_string (split[0], &enable_disable) &&
+        qmicli_read_non_empty_string (split[1], "current lock code", &code)) {
+        GError *error = NULL;
+
+        input = qmi_message_dms_set_user_lock_state_input_new ();
+        if (!qmi_message_dms_set_user_lock_state_input_set_info (
+                input,
+                enable_disable,
+                code,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_dms_set_user_lock_state_input_unref (input);
+            input = NULL;
+        }
+    }
     g_strfreev (split);
 
     return input;
@@ -1507,20 +1551,33 @@ set_user_lock_state_ready (QmiClientDms *client,
 static QmiMessageDmsSetUserLockCodeInput *
 set_user_lock_code_input_create (const gchar *str)
 {
-    QmiMessageDmsSetUserLockCodeInput *input;
+    QmiMessageDmsSetUserLockCodeInput *input = NULL;
     gchar **split;
+    gchar *old_code;
+    gchar *new_code;
 
     /* Prepare inputs.
      * Format of the string is:
      *    "[(old lock code),(new lock code)]"
      */
     split = g_strsplit (str, ",", -1);
-    input = qmi_message_dms_set_user_lock_code_input_new ();
-    qmi_message_dms_set_user_lock_code_input_set_info (
-        input,
-        read_non_empty_string (split[0], "old lock code"),
-        read_non_empty_string (split[1], "new lock code"),
-        NULL);
+    if (qmicli_read_non_empty_string (split[0], "old lock code", &old_code) &&
+        qmicli_read_non_empty_string (split[1], "new lock code", &new_code)) {
+        GError *error = NULL;
+
+        input = qmi_message_dms_set_user_lock_code_input_new ();
+        if (!qmi_message_dms_set_user_lock_code_input_set_info (
+                input,
+                old_code,
+                new_code,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_dms_set_user_lock_code_input_unref (input);
+            input = NULL;
+        }
+    }
     g_strfreev (split);
 
     return input;
@@ -1605,6 +1662,7 @@ write_user_data_input_create (const gchar *str)
 {
     QmiMessageDmsWriteUserDataInput *input;
     GArray *array;
+    GError *error = NULL;
 
     /* Prepare inputs. Just assume we'll get some text string here, although
      * nobody said this had to be text. Read User Data actually treats the
@@ -1612,10 +1670,16 @@ write_user_data_input_create (const gchar *str)
     array = g_array_sized_new (FALSE, FALSE, 1, strlen (str));
     g_array_insert_vals (array, 0, str, strlen (str));
     input = qmi_message_dms_write_user_data_input_new ();
-    qmi_message_dms_write_user_data_input_set_user_data (
-        input,
-        array,
-        NULL);
+    if (!qmi_message_dms_write_user_data_input_set_user_data (
+            input,
+            array,
+            &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_dms_write_user_data_input_unref (input);
+        input = NULL;
+    }
     g_array_unref (array);
 
     return input;
@@ -1693,6 +1757,27 @@ read_eri_file_ready (QmiClientDms *client,
 
     qmi_message_dms_read_eri_file_output_unref (output);
     shutdown (TRUE);
+}
+
+static QmiMessageDmsRestoreFactoryDefaultsInput *
+restore_factory_defaults_input_create (const gchar *str)
+{
+    QmiMessageDmsRestoreFactoryDefaultsInput *input;
+    GError *error = NULL;
+
+    input = qmi_message_dms_restore_factory_defaults_input_new ();
+    if (!qmi_message_dms_restore_factory_defaults_input_set_service_programming_code (
+            input,
+            str,
+            &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_dms_restore_factory_defaults_input_unref (input);
+        input = NULL;
+    }
+
+    return input;
 }
 
 static void
@@ -1835,6 +1920,10 @@ qmicli_dms_run (QmiDevice *device,
 
         g_debug ("Asynchronously setting PIN protection...");
         input = uim_set_pin_protection_input_create (uim_set_pin_protection_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
         qmi_client_dms_uim_set_pin_protection (ctx->client,
                                                input,
                                                10,
@@ -1851,6 +1940,10 @@ qmicli_dms_run (QmiDevice *device,
 
         g_debug ("Asynchronously verifying PIN...");
         input = uim_verify_pin_input_create (uim_verify_pin_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
         qmi_client_dms_uim_verify_pin (ctx->client,
                                        input,
                                        10,
@@ -1867,6 +1960,10 @@ qmicli_dms_run (QmiDevice *device,
 
         g_debug ("Asynchronously unblocking PIN...");
         input = uim_unblock_pin_input_create (uim_unblock_pin_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
         qmi_client_dms_uim_unblock_pin (ctx->client,
                                         input,
                                         10,
@@ -1883,6 +1980,10 @@ qmicli_dms_run (QmiDevice *device,
 
         g_debug ("Asynchronously changing PIN...");
         input = uim_change_pin_input_create (uim_change_pin_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
         qmi_client_dms_uim_change_pin (ctx->client,
                                        input,
                                        10,
@@ -1971,6 +2072,10 @@ qmicli_dms_run (QmiDevice *device,
 
         g_debug ("Asynchronously setting operating mode...");
         input = set_operating_mode_input_create (set_operating_mode_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
         qmi_client_dms_set_operating_mode (ctx->client,
                                            input,
                                            10,
@@ -2022,8 +2127,11 @@ qmicli_dms_run (QmiDevice *device,
         QmiMessageDmsActivateAutomaticInput *input;
 
         g_debug ("Asynchronously requesting automatic activation...");
-        input = qmi_message_dms_activate_automatic_input_new ();
-        qmi_message_dms_activate_automatic_input_set_activation_code (input, activate_automatic_str, NULL);
+        input = activate_automatic_input_create (activate_automatic_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
         qmi_client_dms_get_activation_state (ctx->client,
                                              NULL,
                                              10,
@@ -2052,6 +2160,10 @@ qmicli_dms_run (QmiDevice *device,
 
         g_debug ("Asynchronously setting user lock state...");
         input = set_user_lock_state_input_create (set_user_lock_state_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
         qmi_client_dms_set_user_lock_state (ctx->client,
                                             input,
                                             10,
@@ -2068,6 +2180,10 @@ qmicli_dms_run (QmiDevice *device,
 
         g_debug ("Asynchronously changing user lock code...");
         input = set_user_lock_code_input_create (set_user_lock_code_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
         qmi_client_dms_set_user_lock_code (ctx->client,
                                            input,
                                            10,
@@ -2096,6 +2212,10 @@ qmicli_dms_run (QmiDevice *device,
 
         g_debug ("Asynchronously writing user data...");
         input = write_user_data_input_create (write_user_data_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
         qmi_client_dms_write_user_data (ctx->client,
                                         input,
                                         10,
@@ -2123,11 +2243,11 @@ qmicli_dms_run (QmiDevice *device,
         QmiMessageDmsRestoreFactoryDefaultsInput *input;
 
         g_debug ("Asynchronously restoring factory defaults...");
-        input = qmi_message_dms_restore_factory_defaults_input_new ();
-        qmi_message_dms_restore_factory_defaults_input_set_service_programming_code (
-            input,
-            restore_factory_defaults_str,
-            NULL);
+        input = restore_factory_defaults_input_create (restore_factory_defaults_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
         qmi_client_dms_restore_factory_defaults (ctx->client,
                                                  input,
                                                  10,

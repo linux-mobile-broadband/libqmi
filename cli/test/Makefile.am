@@ -10,10 +10,13 @@ test_helpers_SOURCES = \
 test_helpers_CPPFLAGS = \
 	$(QMICLI_CFLAGS) \
 	-I$(top_srcdir) \
-	-I$(top_srcdir)/cli
+	-I$(top_srcdir)/cli \
+	-I$(top_srcdir)/libqmi-glib \
+	-I$(top_builddir)/libqmi-glib
 
 test_helpers_LDADD = \
-	$(QMICLI_LIBS)
+	$(QMICLI_LIBS) \
+	$(top_builddir)/libqmi-glib/libqmi-glib.la
 
 if WITH_TESTS
 

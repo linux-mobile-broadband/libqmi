@@ -100,3 +100,84 @@ qmicli_get_raw_data_printable (const GArray *data,
 	/* Set output string */
 	return new_str;
 }
+
+gboolean
+qmicli_read_pin_id_from_string (const gchar *str,
+                                QmiDmsUimPinId *out)
+{
+    if (!str || str[0] == '\0') {
+        g_printerr ("error: expected 'PIN' or 'PIN2', got: none\n");
+        return FALSE;
+    }
+
+    if (g_str_equal (str, "PIN")) {
+        *out = QMI_DMS_UIM_PIN_ID_PIN;
+        return TRUE;
+    }
+
+    if (g_str_equal (str, "PIN2")) {
+        *out = QMI_DMS_UIM_PIN_ID_PIN2;
+        return TRUE;
+    }
+
+    g_printerr ("error: expected 'PIN' or 'PIN2', got: '%s'\n", str);
+    return FALSE;
+}
+
+gboolean
+qmicli_read_operating_mode_from_string (const gchar *str,
+                                        QmiDmsOperatingMode *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_dms_operating_mode_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiDmsOperatingMode)enum_value->value;
+    else
+        g_printerr ("error: invalid operating mode value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
+qmicli_read_enable_disable_from_string (const gchar *str,
+                                        gboolean *out)
+{
+    if (!str || str[0] == '\0') {
+        g_printerr ("error: expected 'disable' or 'enable', got: none\n");
+        return FALSE;
+    }
+
+    if (g_str_equal (str, "disable")) {
+        *out = FALSE;
+        return TRUE;
+    }
+
+    if (g_str_equal (str, "enable")) {
+        *out = TRUE;
+        return TRUE;
+    }
+
+    g_printerr ("error: expected 'disable' or 'enable', got: '%s'\n", str);
+    return FALSE;
+}
+
+gboolean
+qmicli_read_non_empty_string (const gchar *str,
+                              const gchar *description,
+                              gchar **out)
+{
+    if (!str || str[0] == '\0') {
+        g_printerr ("error: empty %s given\n", description);
+        return FALSE;
+    }
+
+    *out = (gchar *)str;
+    return TRUE;
+}

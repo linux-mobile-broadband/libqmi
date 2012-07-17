@@ -20,11 +20,23 @@
 
 #include <glib.h>
 
+#include <libqmi-glib.h>
+
 #ifndef __QMICLI_HELPERS_H__
 #define __QMICLI_HELPERS_H__
 
 gchar *qmicli_get_raw_data_printable (const GArray *data,
                                       gsize max_line_length,
                                       const gchar *new_line_prefix);
+
+gboolean qmicli_read_pin_id_from_string         (const gchar *str,
+                                                 QmiDmsUimPinId *out);
+gboolean qmicli_read_operating_mode_from_string (const gchar *str,
+                                                 QmiDmsOperatingMode *out);
+gboolean qmicli_read_enable_disable_from_string (const gchar *str,
+                                                 gboolean *out);
+gboolean qmicli_read_non_empty_string           (const gchar *str,
+                                                 const gchar *description,
+                                                 gchar **out);
 
 #endif /* __QMICLI_H__ */
