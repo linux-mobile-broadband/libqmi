@@ -243,6 +243,39 @@ typedef enum {
 } QmiDmsActivationState;
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI DMS UIM Get CK Status' message */
+
+/**
+ * QmiDmsUimFacility:
+ * @QMI_DMS_UIM_FACILITY_PN: Network personalization facility.
+ * @QMI_DMS_UIM_FACILITY_PU: Network subset personalization facility.
+ * @QMI_DMS_UIM_FACILITY_PP: Service provider facility.
+ * @QMI_DMS_UIM_FACILITY_PC: Corporate personalization facility.
+ * @QMI_DMS_UIM_FACILITY_PF: UIM personalization facility.
+ *
+ * UIM personalization facilities.
+ */
+typedef enum {
+    QMI_DMS_UIM_FACILITY_PN = 0,
+    QMI_DMS_UIM_FACILITY_PU = 1,
+    QMI_DMS_UIM_FACILITY_PP = 2,
+    QMI_DMS_UIM_FACILITY_PC = 3,
+    QMI_DMS_UIM_FACILITY_PF = 4
+} QmiDmsUimFacility;
+
+/**
+ * QmiDmsUimFacilityState:
+ * @QMI_DMS_UIM_FACILITY_STATE_DEACTIVATED: Facility is deactivated.
+ * @QMI_DMS_UIM_FACILITY_STATE_ACTIVATED: Facility is activated.
+ * @QMI_DMS_UIM_FACILITY_STATE_BLOCKED: Facility is blocked.
+ */
+typedef enum {
+    QMI_DMS_UIM_FACILITY_STATE_DEACTIVATED = 0,
+    QMI_DMS_UIM_FACILITY_STATE_ACTIVATED   = 1,
+    QMI_DMS_UIM_FACILITY_STATE_BLOCKED     = 2
+} QmiDmsUimFacilityState;
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI DMS UIM Get State' message */
 
 /**
