@@ -708,5 +708,19 @@
                       "type"          : "TLV",
                       "format"        : "guint64",
                       "public-format" : "QmiDmsLteBandCapability",
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Get Factory SKU",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0046",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"         : "SKU",
+                      "id"           : "0x01",
+                      "mandatory"    : "yes",
+                      "type"         : "TLV",
+                      "format"       : "string",
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] }
+
 ]
