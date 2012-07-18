@@ -89,6 +89,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-enums-wds.h \
 	qmi-enums-dms.h \
 	qmi-enums.h qmi-enum-types.h qmi-enum-types.c \
+	qmi-enum-types-static.h qmi-enum-types-static.c \
 	qmi-utils.h qmi-utils.c \
 	qmi-message.h qmi-message.c \
 	qmi-device.h qmi-device.c \
@@ -106,7 +107,7 @@ includedir = @includedir@/libqmi-glib
 include_HEADERS = \
 	libqmi-glib.h \
 	qmi-errors.h qmi-error-types.h \
-	qmi-enums.h qmi-enum-types.h \
+	qmi-enums.h qmi-enum-types.h qmi-enum-types-static.h \
 	qmi-message.h \
 	qmi-device.h \
 	qmi-client.h \

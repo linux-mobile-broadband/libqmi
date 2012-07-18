@@ -17,20 +17,24 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
+ * Copyright (C) 2012 Google, Inc.
  */
 
-#ifndef _LIBQMI_GLIB_H_
-#define _LIBQMI_GLIB_H_
+#ifndef __LIBQMI_GLIB_ENUM_TYPES_STATIC_H__
+#define __LIBQMI_GLIB_ENUM_TYPES_STATIC_H__
 
-#include "qmi-errors.h"
-#include "qmi-error-types.h"
-#include "qmi-enum-types.h"
-#include "qmi-enum-types-static.h"
+#include <glib-object.h>
 
-#include "qmi-device.h"
-#include "qmi-client.h"
-#include "qmi-dms.h"
-#include "qmi-wds.h"
+#include "qmi-enums-dms.h"
 
-#endif /* _LIBQMI_GLIB_H_ */
+G_BEGIN_DECLS
+
+/* Band capability (64-bit flags) */
+gchar *qmi_dms_band_capability_build_string_from_mask (QmiDmsBandCapability mask);
+
+/* LTE Band capability (64-bit flags) */
+gchar *qmi_dms_lte_band_capability_build_string_from_mask (QmiDmsLteBandCapability mask);
+
+G_END_DECLS
+
+#endif /* __LIBQMI_GLIB_ENUM_TYPES_STATIC_H__ */

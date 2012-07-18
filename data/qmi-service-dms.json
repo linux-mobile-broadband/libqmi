@@ -687,5 +687,26 @@
                       "type"          : "TLV",
                       "format"        : "guint8",
                       "public-format" : "QmiDmsUimState",
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Get Band Capabilities",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0045",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"          : "Band Capability",
+                      "id"            : "0x01",
+                      "mandatory"     : "yes",
+                      "type"          : "TLV",
+                      "format"        : "guint64",
+                      "public-format" : "QmiDmsBandCapability",
+                      "prerequisites": [ { "common-ref" : "Success" } ] },
+		            { "name"          : "LTE Band Capability",
+                      "id"            : "0x10",
+                      "mandatory"     : "no",
+                      "type"          : "TLV",
+                      "format"        : "guint64",
+                      "public-format" : "QmiDmsLteBandCapability",
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] }
 ]
