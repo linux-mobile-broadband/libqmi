@@ -76,6 +76,7 @@ static gboolean read_eri_file_flag;
 static gchar *restore_factory_defaults_str;
 static gchar *validate_service_programming_code_str;
 static gboolean get_band_capabilities_flag;
+static gboolean get_factory_sku_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -215,6 +216,10 @@ static GOptionEntry entries[] = {
       "Get band capabilities",
       NULL
     },
+    { "dms-get-factory-sku", 0, 0, G_OPTION_ARG_NONE, &get_factory_sku_flag,
+      "Get factory stock keeping unit",
+      NULL
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -280,6 +285,7 @@ qmicli_dms_options_enabled (void)
                  !!restore_factory_defaults_str +
                  !!validate_service_programming_code_str +
                  get_band_capabilities_flag +
+                 get_factory_sku_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -2191,6 +2197,44 @@ get_band_capabilities_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+get_factory_sku_ready (QmiClientDms *client,
+                       GAsyncResult *res)
+{
+    const gchar *str = NULL;
+    QmiMessageDmsGetFactorySkuOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_get_factory_sku_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_factory_sku_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get factory SKU: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_factory_sku_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    qmi_message_dms_get_factory_sku_output_get_sku (output, &str, NULL);
+
+    g_print ("[%s] Device factory SKU retrieved:\n"
+             "\tSKU: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             VALIDATE_UNKNOWN (str));
+
+    qmi_message_dms_get_factory_sku_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -2727,6 +2771,18 @@ qmicli_dms_run (QmiDevice *device,
                                               ctx->cancellable,
                                               (GAsyncReadyCallback)get_band_capabilities_ready,
                                               NULL);
+        return;
+    }
+
+    /* Request to get factory SKU? */
+    if (get_factory_sku_flag) {
+        g_debug ("Asynchronously getting factory SKU...");
+        qmi_client_dms_get_factory_sku (ctx->client,
+                                        NULL,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)get_factory_sku_ready,
+                                        NULL);
         return;
     }
 
