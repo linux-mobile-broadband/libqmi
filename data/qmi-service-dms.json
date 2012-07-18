@@ -721,6 +721,24 @@
                       "mandatory"    : "yes",
                       "type"         : "TLV",
                       "format"       : "string",
-                      "prerequisites": [ { "common-ref" : "Success" } ] } ] }
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Set Time",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x004B",
+     "input"   : [  { "name"      : "Time",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "guint64" },
+                    { "name"          : "Time Reference Type",
+                      "id"            : "0x10",
+                      "mandatory"     : "yes",
+                      "type"          :  "TLV",
+                      "format"        : "guint32",
+                      "public-format" : "QmiDmsTimeReferenceType" } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] }
 
 ]

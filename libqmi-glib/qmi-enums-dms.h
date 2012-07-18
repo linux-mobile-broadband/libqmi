@@ -469,4 +469,17 @@ typedef enum { /*< skip >*/
     /* Bit 43-64 reserved */
 } QmiDmsLteBandCapability;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Set Time' message */
+
+/**
+ * QmiDmsTimeReferenceType:
+ * @QMI_DMS_TIME_REFERENCE_TYPE_USER: User time.
+ *
+ * Time reference type.
+ */
+typedef enum {
+    QMI_DMS_TIME_REFERENCE_TYPE_USER = 0
+} QmiDmsTimeReferenceType;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */
