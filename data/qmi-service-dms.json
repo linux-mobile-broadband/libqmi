@@ -779,6 +779,25 @@
                       "mandatory"     : "yes",
                       "type"          : "TLV",
                       "format"        : "string",
-                      "prerequisites": [ { "common-ref" : "Success" } ] } ] }
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Set Service Programming Code",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0052",
+     "input"   : [  { "name"       : "Current",
+                      "id"         : "0x01",
+                      "mandatory"  : "yes",
+                      "type"       : "TLV",
+                      "format"     : "string",
+                      "fixed-size" : "6" },
+                    { "name"       : "New",
+                      "id"         : "0x02",
+                      "mandatory"  : "yes",
+                      "type"       : "TLV",
+                      "format"     : "string",
+                      "fixed-size" : "6" } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] }
 
 ]
