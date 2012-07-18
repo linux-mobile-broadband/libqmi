@@ -739,6 +739,33 @@
                       "type"          :  "TLV",
                       "format"        : "guint32",
                       "public-format" : "QmiDmsTimeReferenceType" } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Get Alt Net Config",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x004D",
+     "output"  : [  { "common-ref" : "Operation Result" },
+                    { "name"          : "Config",
+                      "id"            : "0x01",
+                      "mandatory"     : "yes",
+                      "type"          : "TLV",
+                      "format"        : "guint8",
+                      "public-format" : "gboolean",
+                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Set Alt Net Config",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x004E",
+     "input"   : [  { "name"          : "Config",
+                      "id"            : "0x01",
+                      "mandatory"     : "yes",
+                      "type"          : "TLV",
+                      "format"        : "guint8",
+                      "public-format" : "gboolean" } ],
      "output"  : [  { "common-ref" : "Operation Result" } ] }
 
 ]
