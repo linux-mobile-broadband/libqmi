@@ -21,3 +21,8 @@ List of things left for later:
    being sent automatically, not just one.
 
  * qmicli: Implement `--dms-activate-manual'.
+ * qmicli: Implement `--dms-set-time'.
+ * qmicli: Implement `--dms-get-alt-net-config'.
+ * qmicli: Implement `--dms-set-alt-net-config'.
+ * qmicli: Implement `--dms-get-software-version'.
+ * qmicli: Implement `--dms-set-service-programming-code'.
