@@ -75,6 +75,7 @@ static gchar *write_user_data_str;
 static gboolean read_eri_file_flag;
 static gchar *restore_factory_defaults_str;
 static gchar *validate_service_programming_code_str;
+static gboolean get_band_capabilities_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -210,6 +211,10 @@ static GOptionEntry entries[] = {
       "Validate the Service Programming Code",
       "[(Service Programming Code)]",
     },
+    { "dms-get-band-capabilities", 0, 0, G_OPTION_ARG_NONE, &get_band_capabilities_flag,
+      "Get band capabilities",
+      NULL
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -274,6 +279,7 @@ qmicli_dms_options_enabled (void)
                  read_eri_file_flag +
                  !!restore_factory_defaults_str +
                  !!validate_service_programming_code_str +
+                 get_band_capabilities_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -2134,6 +2140,57 @@ validate_service_programming_code_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+get_band_capabilities_ready (QmiClientDms *client,
+                             GAsyncResult *res)
+{
+    QmiMessageDmsGetBandCapabilitiesOutput *output;
+    QmiDmsBandCapability band_capability;
+    QmiDmsLteBandCapability lte_band_capability;
+    GError *error = NULL;
+    gchar *str;
+
+    output = qmi_client_dms_get_band_capabilities_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_band_capabilities_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get band capabilities: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_band_capabilities_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_band_capabilities_output_get_band_capability (
+        output,
+        &band_capability,
+        NULL);
+
+    str = qmi_dms_band_capability_build_string_from_mask (band_capability);
+    g_print ("[%s] Device band capabilities retrieved:\n"
+             "\tBands: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             str);
+    g_free (str);
+
+    if (qmi_message_dms_get_band_capabilities_output_get_lte_band_capability (
+            output,
+            &lte_band_capability,
+            NULL)) {
+        str = qmi_dms_lte_band_capability_build_string_from_mask (lte_band_capability);
+        g_print ("\tLTE bands: '%s'\n", str);
+        g_free (str);
+    }
+
+    qmi_message_dms_get_band_capabilities_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -2658,6 +2715,18 @@ qmicli_dms_run (QmiDevice *device,
                                        (GAsyncReadyCallback)uim_unblock_ck_ready,
                                        NULL);
         qmi_message_dms_uim_unblock_ck_input_unref (input);
+        return;
+    }
+
+    /* Request to get band capabilities? */
+    if (get_band_capabilities_flag) {
+        g_debug ("Asynchronously getting band capabilities...");
+        qmi_client_dms_get_band_capabilities (ctx->client,
+                                              NULL,
+                                              10,
+                                              ctx->cancellable,
+                                              (GAsyncReadyCallback)get_band_capabilities_ready,
+                                              NULL);
         return;
     }
 
