@@ -13,6 +13,10 @@
      "type"    : "Message-ID-Enum" },
 
   // *********************************************************************************
+  {  "name"    : "QMI Indication CTL",
+     "type"    : "Indication-ID-Enum" },
+
+  // *********************************************************************************
   {  "name"    : "Set Instance ID",
      "type"    : "Message",
      "service" : "CTL",
@@ -109,5 +113,10 @@
      "type"    : "Message",
      "service" : "CTL",
      "id"      : "0x0027",
-     "output"  : [  { "common-ref" : "Operation Result" } ] }
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  {  "name"    : "Sync",
+     "type"    : "Indication",
+     "service" : "CTL",
+     "id"      : "0x0027" }
 ]
