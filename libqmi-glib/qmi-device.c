@@ -1737,6 +1737,15 @@ initable_init_finish (GAsyncInitable  *initable,
 }
 
 static void
+sync_indication_cb (QmiClientCtl *client_ctl,
+                    QmiDevice *self)
+{
+    /* Just log about it */
+    g_debug ("[%s] Sync indication received",
+             self->priv->path_display);
+}
+
+static void
 query_info_async_ready (GFile *file,
                         GAsyncResult *res,
                         InitContext *ctx)
@@ -1776,6 +1785,12 @@ query_info_async_ready (GFile *file,
                      QMI_CLIENT (ctx->self->priv->client_ctl),
                      &error);
     g_assert_no_error (error);
+
+    /* Connect to 'Sync' indications */
+    g_signal_connect (ctx->self->priv->client_ctl,
+                      "sync",
+                      G_CALLBACK (sync_indication_cb),
+                      ctx->self);
 
     /* Done we are */
     g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
