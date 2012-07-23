@@ -40,4 +40,11 @@ void          qmicli_wds_run              (QmiDevice *device,
                                            QmiClientWds *client,
                                            GCancellable *cancellable);
 
+/* NAS group */
+GOptionGroup *qmicli_nas_get_option_group (void);
+gboolean      qmicli_nas_options_enabled  (void);
+void          qmicli_nas_run              (QmiDevice *device,
+                                           QmiClientNas *client,
+                                           GCancellable *cancellable);
+
 #endif /* __QMICLI_H__ */
