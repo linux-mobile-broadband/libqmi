@@ -25,10 +25,10 @@ qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templa
 		qmi-errors.h > $@
 
 # Enum types
-ENUMS = qmi-enums.h qmi-enums-wds.h qmi-enums-dms.h qmi-dms.h qmi-wds.h qmi-ctl.h
-qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h qmi-ctl.stamp qmi-dms.stamp qmi-wds.stamp
+ENUMS = qmi-enums.h qmi-enums-wds.h qmi-enums-dms.h qmi-enums-nas.h qmi-dms.h qmi-wds.h qmi-nas.h qmi-ctl.h
+qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h qmi-ctl.stamp qmi-dms.stamp qmi-wds.stamp qmi-nas.stamp
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-ctl.h\"\n#include \"qmi-dms.h\"\n#include \"qmi-wds.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-ctl.h\"\n#include \"qmi-dms.h\"\n#include \"qmi-wds.h\"\n#include \"qmi-nas.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
@@ -72,22 +72,36 @@ qmi-wds.stamp: $(top_srcdir)/data/qmi-service-wds.json $(top_srcdir)/build-aux/q
 			--output qmi-wds && \
 		touch $@
 
+# NAS service
+qmi-nas.stamp: $(top_srcdir)/data/qmi-service-nas.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+	$(AM_V_GEN) \
+		rm -f qmi-nas.h && \
+		rm -f qmi-nas.c && \
+		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-nas.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			--output qmi-nas && \
+		touch $@
+
 # Additional dependencies
 qmi-device.c: qmi-error-types.h qmi-enum-types.h
 qmi-client.c: qmi-error-types.h qmi-enum-types.h
-qmi-message.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.h qmi-dms.h qmi-wds.h
+qmi-message.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.h qmi-dms.h qmi-wds.h qmi-nas.h
 qmi-ctl.h: qmi-ctl.stamp
 qmi-ctl.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.stamp
 qmi-dms.h: qmi-dms.stamp
 qmi-dms.c: qmi-error-types.h qmi-enum-types.h qmi-dms.stamp
 qmi-wds.h: qmi-wds.stamp
 qmi-wds.c: qmi-error-types.h qmi-enum-types.h qmi-wds.stamp
+qmi-nas.h: qmi-nas.stamp
+qmi-nas.c: qmi-error-types.h qmi-enum-types.h qmi-nas.stamp
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
 	qmi-errors.h qmi-error-types.h qmi-error-types.c \
 	qmi-enums-wds.h \
 	qmi-enums-dms.h \
+	qmi-enums-nas.h \
 	qmi-enums.h qmi-enum-types.h qmi-enum-types.c \
 	qmi-enum-types-static.h qmi-enum-types-static.c \
 	qmi-utils.h qmi-utils.c \
@@ -98,7 +112,8 @@ libqmi_glib_la_SOURCES = \
 nodist_libqmi_glib_la_SOURCES = \
 	qmi-ctl.c qmi-ctl.h \
 	qmi-dms.c qmi-dms.h \
-	qmi-wds.c qmi-wds.h
+	qmi-wds.c qmi-wds.h \
+	qmi-nas.c qmi-nas.h
 
 libqmi_glib_la_LIBADD = \
 	$(LIBQMI_GLIB_LIBS)
@@ -113,9 +128,11 @@ include_HEADERS = \
 	qmi-client.h \
 	qmi-ctl.h \
 	qmi-enums-dms.h qmi-dms.h \
-	qmi-enums-wds.h qmi-wds.h
+	qmi-enums-wds.h qmi-wds.h \
+	qmi-enums-nas.h qmi-nas.h
 
 CLEANFILES = \
 	qmi-ctl.h qmi-ctl.c qmi-ctl.stamp \
 	qmi-dms.h qmi-dms.c qmi-dms.stamp \
-	qmi-wds.h qmi-wds.c qmi-wds.stamp
+	qmi-wds.h qmi-wds.c qmi-wds.stamp \
+	qmi-nas.h qmi-nas.c qmi-nas.stamp

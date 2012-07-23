@@ -17,21 +17,10 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
+ * Copyright (C) 2012 Google Inc.
  */
 
-#ifndef _LIBQMI_GLIB_H_
-#define _LIBQMI_GLIB_H_
+#ifndef _LIBQMI_GLIB_QMI_ENUMS_NAS_H_
+#define _LIBQMI_GLIB_QMI_ENUMS_NAS_H_
 
-#include "qmi-errors.h"
-#include "qmi-error-types.h"
-#include "qmi-enum-types.h"
-#include "qmi-enum-types-static.h"
-
-#include "qmi-device.h"
-#include "qmi-client.h"
-#include "qmi-dms.h"
-#include "qmi-wds.h"
-#include "qmi-nas.h"
-
-#endif /* _LIBQMI_GLIB_H_ */
+#endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
