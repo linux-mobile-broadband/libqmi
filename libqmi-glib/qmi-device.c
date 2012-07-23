@@ -275,7 +275,8 @@ check_service_supported (QmiDevice *self,
 {
     /* If we didn't check supported services, just assume it is supported */
     if (!self->priv->supported_services) {
-        g_debug ("Assuming service '%s' is supported...",
+        g_debug ("[%s] Assuming service '%s' is supported...",
+                 self->priv->path_display,
                  qmi_service_get_string (service));
         return TRUE;
     }
@@ -532,7 +533,8 @@ build_client_object (AllocateClientContext *ctx)
         return;
     }
 
-    g_debug ("Registered '%s' client with ID '%u'",
+    g_debug ("[%s] Registered '%s' client with ID '%u'",
+             ctx->self->priv->path_display,
              qmi_service_get_string (ctx->service),
              ctx->cid);
 
@@ -680,7 +682,8 @@ qmi_device_allocate_client (QmiDevice *self,
         input = qmi_message_ctl_allocate_cid_input_new ();
         qmi_message_ctl_allocate_cid_input_set_service (input, ctx->service, NULL);
 
-        g_debug ("Allocating new client ID...");
+        g_debug ("[%s] Allocating new client ID...",
+                 ctx->self->priv->path_display);
         qmi_client_ctl_allocate_cid (self->priv->client_ctl,
                                      input,
                                      timeout,
@@ -693,7 +696,9 @@ qmi_device_allocate_client (QmiDevice *self,
     }
 
     /* Reuse the given CID */
-    g_debug ("Reusing client CID '%u'...", cid);
+    g_debug ("[%s] Reusing client CID '%u'...",
+             ctx->self->priv->path_display,
+             cid);
     ctx->cid = cid;
     build_client_object (ctx);
 }
@@ -832,7 +837,8 @@ qmi_device_release_client (QmiDevice *self,
     /* Unregister from device */
     unregister_client (self, client);
 
-    g_debug ("Unregistered '%s' client with ID '%u'",
+    g_debug ("[%s] Unregistered '%s' client with ID '%u'",
+             self->priv->path_display,
              qmi_service_get_string (service),
              cid);
 
@@ -1013,7 +1019,8 @@ process_message (QmiDevice *self,
 
     /* Ensure the read message is valid */
     if (!qmi_message_check (message, &error)) {
-        g_warning ("Invalid QMI message received: %s",
+        g_warning ("[%s] Invalid QMI message received: %s",
+                   self->priv->path_display,
                    error->message);
         g_error_free (error);
         return;
@@ -1087,7 +1094,8 @@ parse_response (QmiDevice *self)
         if (self->priv->response->len > 0 &&
             self->priv->response->data[0] != QMI_MESSAGE_QMUX_MARKER) {
             /* TODO: Report fatal error */
-            g_warning ("QMI framing error detected");
+            g_warning ("[%s] QMI framing error detected",
+                       self->priv->path_display);
             return;
         }
 
@@ -1151,7 +1159,9 @@ data_available (GIOChannel *source,
                                           &error);
         if (status == G_IO_STATUS_ERROR) {
             if (error) {
-                g_warning ("error reading from the IOChannel: '%s'", error->message);
+                g_warning ("[%s] error reading from the IOChannel: '%s'",
+                           self->priv->path_display,
+                           error->message);
                 g_error_free (error);
             }
 
@@ -1389,7 +1399,9 @@ process_open_flags (DeviceOpenContext *ctx)
         ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_VERSION_INFO;
         /* Setup how many times to retry... We'll retry once per second */
         ctx->version_check_retries = ctx->timeout > 0 ? ctx->timeout : 1;
-        g_debug ("Checking version info (%u retries)...", ctx->version_check_retries);
+        g_debug ("[%s] Checking version info (%u retries)...",
+                 ctx->self->priv->path_display,
+                 ctx->version_check_retries);
         qmi_client_ctl_get_version_info (ctx->self->priv->client_ctl,
                                          NULL,
                                          1,
@@ -1401,7 +1413,8 @@ process_open_flags (DeviceOpenContext *ctx)
 
     /* Sync? */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_SYNC) {
-        g_debug ("Running sync...");
+        g_debug ("[%s] Running sync...",
+                 ctx->self->priv->path_display);
         ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_SYNC;
         qmi_client_ctl_sync (ctx->self->priv->client_ctl,
                              NULL,
@@ -1903,7 +1916,8 @@ foreach_warning (gpointer key,
                  QmiClient *client,
                  QmiDevice *self)
 {
-    g_warning ("QMI client for service '%s' with CID '%u' wasn't released",
+    g_warning ("[%s] QMI client for service '%s' with CID '%u' wasn't released",
+               self->priv->path_display,
                qmi_service_get_string (qmi_client_get_service (client)),
                qmi_client_get_cid (client));
 
