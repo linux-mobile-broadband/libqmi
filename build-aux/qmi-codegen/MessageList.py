@@ -106,8 +106,8 @@ class MessageList:
             translations['message_underscore'] = utils.build_underscore_name (message.name)
             translations['enum_value'] = message.id
             inner_template = (
-                'case ${enum_name}:\n'
-                '    return ${message_underscore}_get_printable (self, line_prefix);\n')
+                '    case ${enum_name}:\n'
+                '        return ${message_underscore}_get_printable (self, line_prefix);\n')
             template += string.Template(inner_template).substitute(translations)
 
         template += (
