@@ -99,6 +99,10 @@ guint16    qmi_message_get_transaction_id (QmiMessage *self);
 guint8     qmi_message_get_qmux_flags     (QmiMessage *self);
 guint8     qmi_message_get_qmi_flags      (QmiMessage *self);
 
+gboolean   qmi_message_get_version_introduced (QmiMessage *message,
+                                               guint *major,
+                                               guint *minor);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_MESSAGE_H_ */

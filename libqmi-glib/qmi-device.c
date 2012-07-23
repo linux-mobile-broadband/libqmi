@@ -247,6 +247,91 @@ device_match_transaction (QmiDevice *self,
 }
 
 /*****************************************************************************/
+/* Version info checks (private) */
+
+static const QmiMessageCtlGetVersionInfoOutputServiceListService *
+find_service_version_info (QmiDevice *self,
+                           QmiService service)
+{
+    guint i;
+
+    for (i = 0; i < self->priv->supported_services->len; i++) {
+        const QmiMessageCtlGetVersionInfoOutputServiceListService *info;
+
+        info = &g_array_index (self->priv->supported_services,
+                               QmiMessageCtlGetVersionInfoOutputServiceListService,
+                               i);
+
+        if (service == info->service)
+            return info;
+    }
+
+    return NULL;
+}
+
+static gboolean
+check_service_supported (QmiDevice *self,
+                         QmiService service)
+{
+    /* If we didn't check supported services, just assume it is supported */
+    if (!self->priv->supported_services) {
+        g_debug ("Assuming service '%s' is supported...",
+                 qmi_service_get_string (service));
+        return TRUE;
+    }
+
+    return !!find_service_version_info (self, service);
+}
+
+static gboolean
+check_message_supported (QmiDevice *self,
+                         QmiMessage *message,
+                         GError **error)
+{
+    const QmiMessageCtlGetVersionInfoOutputServiceListService *info;
+    guint major = 0;
+    guint minor = 0;
+
+    /* If we didn't check supported services, just assume it is supported */
+    if (!self->priv->supported_services)
+        return TRUE;
+
+    /* For CTL, we assume all are supported */
+    if (qmi_message_get_service (message) == QMI_SERVICE_CTL)
+        return TRUE;
+
+    /* If we cannot get in which version this message was introduced, we'll just
+     * assume it's supported */
+    if (!qmi_message_get_version_introduced (message, &major, &minor))
+        return TRUE;
+
+    /* Get version info. It MUST exist because we allowed creating a client
+     * of this service type */
+    info = find_service_version_info (self, qmi_message_get_service (message));
+    g_assert (info != NULL);
+    g_assert (info->service == qmi_message_get_service (message));
+
+    /* If the version of the message is greater than the version of the service,
+     * report unsupported */
+    if (major > info->major_version ||
+        (major == info->major_version &&
+         minor > info->minor_version)) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_UNSUPPORTED,
+                     "QMI service '%s' version '%u.%u' required, got version '%u.%u'",
+                     qmi_service_get_string (qmi_message_get_service (message)),
+                     major, minor,
+                     info->major_version,
+                     info->minor_version);
+        return FALSE;
+    }
+
+    /* Supported! */
+    return TRUE;
+}
+
+/*****************************************************************************/
 
 /**
  * qmi_device_get_file:
@@ -505,33 +590,6 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
     ctx->cid = cid;
     build_client_object (ctx);
     qmi_message_ctl_allocate_cid_output_unref (output);
-}
-
-static gboolean
-check_service_supported (QmiDevice *self,
-                         QmiService service)
-{
-    guint i;
-
-    /* If we didn't check supported services, just assume it is supported */
-    if (!self->priv->supported_services) {
-        g_debug ("Assuming service '%s' is supported...",
-                 qmi_service_get_string (service));
-        return TRUE;
-    }
-
-    for (i = 0; i < self->priv->supported_services->len; i++) {
-        QmiMessageCtlGetVersionInfoOutputServiceListService *info;
-
-        info = &g_array_index (self->priv->supported_services,
-                               QmiMessageCtlGetVersionInfoOutputServiceListService,
-                               i);
-
-        if (service == info->service)
-            return TRUE;
-    }
-
-    return FALSE;
 }
 
 /**
@@ -1523,6 +1581,15 @@ qmi_device_command (QmiDevice *self,
                              QMI_CORE_ERROR_FAILED,
                              "Cannot send message in service '%s' without a CID",
                              qmi_service_get_string (qmi_message_get_service (message)));
+        transaction_complete_and_free (tr, NULL, error);
+        g_error_free (error);
+        return;
+    }
+
+    /* Check if the message to be sent is supported by the device
+     * (only applicable if we did version info check when opening) */
+    if (!check_message_supported (self, message, &error)) {
+        g_prefix_error (&error, "Cannot send message: ");
         transaction_complete_and_free (tr, NULL, error);
         g_error_free (error);
         return;

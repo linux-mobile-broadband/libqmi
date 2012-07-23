@@ -705,3 +705,12 @@ qmi_message_get_printable (QmiMessage *self,
 
     return g_string_free (printable, FALSE);
 }
+
+gboolean
+qmi_message_get_version_introduced (QmiMessage *message,
+                                    guint *major,
+                                    guint *minor)
+{
+    /* TODO */
+    return FALSE;
+}
