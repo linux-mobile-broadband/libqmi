@@ -77,6 +77,7 @@ static gchar *restore_factory_defaults_str;
 static gchar *validate_service_programming_code_str;
 static gboolean get_band_capabilities_flag;
 static gboolean get_factory_sku_flag;
+static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -220,6 +221,10 @@ static GOptionEntry entries[] = {
       "Get factory stock keeping unit",
       NULL
     },
+    { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
+      "Reset the service state",
+      NULL
+    },
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -286,6 +291,7 @@ qmicli_dms_options_enabled (void)
                  !!validate_service_programming_code_str +
                  get_band_capabilities_flag +
                  get_factory_sku_flag +
+                 reset_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -2235,6 +2241,36 @@ get_factory_sku_ready (QmiClientDms *client,
     shutdown (TRUE);
 }
 
+static void
+reset_ready (QmiClientDms *client,
+             GAsyncResult *res)
+{
+    QmiMessageDmsResetOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_reset_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_reset_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't reset the DMS service: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_reset_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully performed DMS service reset\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_reset_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -2783,6 +2819,18 @@ qmicli_dms_run (QmiDevice *device,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_factory_sku_ready,
                                         NULL);
+        return;
+    }
+
+    /* Request to reset DMS service? */
+    if (reset_flag) {
+        g_debug ("Asynchronously resetting DMS service...");
+        qmi_client_dms_reset (ctx->client,
+                              NULL,
+                              10,
+                              ctx->cancellable,
+                              (GAsyncReadyCallback)reset_ready,
+                              NULL);
         return;
     }
 
