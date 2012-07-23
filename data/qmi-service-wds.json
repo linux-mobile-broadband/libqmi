@@ -13,6 +13,14 @@
      "type"    : "Message-ID-Enum" },
 
   // *********************************************************************************
+  {  "name"    : "Reset",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0000",
+     "version" : "1.0",
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Start Network",
      "type"    : "Message",
      "service" : "WDS",
