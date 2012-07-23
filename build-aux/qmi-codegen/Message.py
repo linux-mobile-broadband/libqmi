@@ -57,9 +57,10 @@ class Message:
         # Every defined message will have its own output container, which
         # will generate a new Output type and public getters for each output
         # field. This applies to both Request/Response and Indications.
+        # Output containers are actually optional in Indications
         self.output = Container(self.fullname,
                                 'Output',
-                                dictionary['output'],
+                                dictionary['output'] if 'output' in dictionary else None,
                                 common_objects_dictionary)
 
         self.input = None
@@ -182,6 +183,10 @@ class Message:
     Emit method responsible for parsing a response/indication of the given type
     """
     def __emit_response_or_indication_parser(self, hfile, cfile):
+        # If no output fields to parse, don't emit anything
+        if self.output is None or self.output.fields is None:
+            return
+
         translations = { 'name'                 : self.name,
                          'type'                 : 'response' if self.type == 'Message' else 'indication',
                          'container'            : utils.build_camelcase_name (self.output.fullname),
@@ -245,12 +250,16 @@ class Message:
     request/response
     """
     def __emit_get_printable(self, hfile, cfile):
-
+        need_tlv_printable = False
         if self.input is not None and self.input.fields is not None:
+            need_tlv_printable = True
             for field in self.input.fields:
                 field.emit_tlv_get_printable(cfile)
-        for field in self.output.fields:
-            field.emit_tlv_get_printable(cfile)
+
+        if self.output is not None and self.output.fields is not None:
+            need_tlv_printable = True
+            for field in self.output.fields:
+                field.emit_tlv_get_printable(cfile)
 
         translations = { 'name'       : self.name,
                          'service'    : self.service,
@@ -258,116 +267,127 @@ class Message:
                          'type'       : utils.build_underscore_name(self.type),
                          'underscore' : utils.build_underscore_name(self.name) }
 
-        template = (
-            '\n'
-            'struct ${type}_${underscore}_context {\n'
-            '    QmiMessage *self;\n'
-            '    const gchar *line_prefix;\n'
-            '    GString *printable;\n'
-            '};\n'
-            '\n'
-            'static void\n'
-            '${type}_${underscore}_get_tlv_printable (\n'
-            '    guint8 type,\n'
-            '    gsize length,\n'
-            '    gconstpointer value,\n'
-            '    struct ${type}_${underscore}_context *ctx)\n'
-            '{\n'
-            '    const gchar *tlv_type_str = NULL;\n'
-            '    gchar *translated_value;\n'
-            '\n'
-            '    if (!qmi_message_is_response (ctx->self)) {\n'
-            '        switch (type) {\n')
+        template = ''
+        if need_tlv_printable:
+            template += (
+                '\n'
+                'struct ${type}_${underscore}_context {\n'
+                '    QmiMessage *self;\n'
+                '    const gchar *line_prefix;\n'
+                '    GString *printable;\n'
+                '};\n'
+                '\n'
+                'static void\n'
+                '${type}_${underscore}_get_tlv_printable (\n'
+                '    guint8 type,\n'
+                '    gsize length,\n'
+                '    gconstpointer value,\n'
+                '    struct ${type}_${underscore}_context *ctx)\n'
+                '{\n'
+                '    const gchar *tlv_type_str = NULL;\n'
+                '    gchar *translated_value;\n'
+                '\n'
+                '    if (!qmi_message_is_response (ctx->self)) {\n'
+                '        switch (type) {\n')
 
-        if self.input is not None and self.input.fields is not None:
-            for field in self.input.fields:
-                translations['underscore_field'] = utils.build_underscore_name(field.fullname)
-                translations['field_enum'] = field.id_enum_name
-                translations['field_name'] = field.name
-                field_template = (
-                    '        case ${field_enum}:\n'
-                    '            tlv_type_str = "${field_name}";\n'
-                    '            translated_value = ${underscore_field}_get_printable (\n'
-                    '                                   ctx->self,\n'
-                    '                                   ctx->line_prefix);\n'
-                    '            break;\n')
-                template += string.Template(field_template).substitute(translations)
+            if self.input is not None and self.input.fields is not None:
+                for field in self.input.fields:
+                    translations['underscore_field'] = utils.build_underscore_name(field.fullname)
+                    translations['field_enum'] = field.id_enum_name
+                    translations['field_name'] = field.name
+                    field_template = (
+                        '        case ${field_enum}:\n'
+                        '            tlv_type_str = "${field_name}";\n'
+                        '            translated_value = ${underscore_field}_get_printable (\n'
+                        '                                   ctx->self,\n'
+                        '                                   ctx->line_prefix);\n'
+                        '            break;\n')
+                    template += string.Template(field_template).substitute(translations)
+
+            template += (
+                '        default:\n'
+                '            break;\n'
+                '        }\n'
+                '    } else {\n'
+                '        switch (type) {\n')
+
+            if self.output is not None and self.output.fields is not None:
+                for field in self.output.fields:
+                    translations['underscore_field'] = utils.build_underscore_name(field.fullname)
+                    translations['field_enum'] = field.id_enum_name
+                    translations['field_name'] = field.name
+                    field_template = (
+                        '        case ${field_enum}:\n'
+                        '            tlv_type_str = "${field_name}";\n'
+                        '            translated_value = ${underscore_field}_get_printable (\n'
+                        '                                   ctx->self,\n'
+                        '                                   ctx->line_prefix);\n'
+                        '            break;\n')
+                    template += string.Template(field_template).substitute(translations)
+
+            template += (
+                '        default:\n'
+                '            break;\n'
+                '        }\n'
+                '    }\n'
+                '\n'
+                '    if (!tlv_type_str) {\n'
+                '        gchar *value_str = NULL;\n'
+                '\n'
+                '        value_str = qmi_message_get_tlv_printable (ctx->self,\n'
+                '                                                   ctx->line_prefix,\n'
+                '                                                   type,\n'
+                '                                                   length,\n'
+                '                                                   value);\n'
+                '        g_string_append (ctx->printable, value_str);\n'
+                '        g_free (value_str);\n'
+                '    } else {\n'
+                '        gchar *value_hex;\n'
+                '\n'
+                '        value_hex = qmi_utils_str_hex (value, length, \':\');\n'
+                '        g_string_append_printf (ctx->printable,\n'
+                '                                "%sTLV:\\n"\n'
+                '                                "%s  type       = \\"%s\\" (0x%02x)\\n"\n'
+                '                                "%s  length     = %" G_GSIZE_FORMAT "\\n"\n'
+                '                                "%s  value      = %s\\n"\n'
+                '                                "%s  translated = %s\\n",\n'
+                '                                ctx->line_prefix,\n'
+                '                                ctx->line_prefix, tlv_type_str, type,\n'
+                '                                ctx->line_prefix, length,\n'
+                '                                ctx->line_prefix, value_hex,\n'
+                '                                ctx->line_prefix, translated_value ? translated_value : "");\n'
+                '        g_free (value_hex);\n'
+                '        g_free (translated_value);\n'
+                '    }\n'
+                '}\n')
 
         template += (
-            '        default:\n'
-            '            break;\n'
-            '        }\n'
-            '    } else {\n'
-            '        switch (type) {\n')
-
-        for field in self.output.fields:
-            translations['underscore_field'] = utils.build_underscore_name(field.fullname)
-            translations['field_enum'] = field.id_enum_name
-            translations['field_name'] = field.name
-            field_template = (
-                '        case ${field_enum}:\n'
-                '            tlv_type_str = "${field_name}";\n'
-                '            translated_value = ${underscore_field}_get_printable (\n'
-                '                                   ctx->self,\n'
-                '                                   ctx->line_prefix);\n'
-                '            break;\n')
-            template += string.Template(field_template).substitute(translations)
-
-        template += (
-            '        default:\n'
-            '            break;\n'
-            '        }\n'
-            '    }\n'
-            '\n'
-            '    if (!tlv_type_str) {\n'
-            '        gchar *value_str = NULL;\n'
-            '\n'
-            '        value_str = qmi_message_get_tlv_printable (ctx->self,\n'
-            '                                                   ctx->line_prefix,\n'
-            '                                                   type,\n'
-            '                                                   length,\n'
-            '                                                   value);\n'
-            '        g_string_append (ctx->printable, value_str);\n'
-            '        g_free (value_str);\n'
-            '    } else {\n'
-            '        gchar *value_hex;\n'
-            '\n'
-            '        value_hex = qmi_utils_str_hex (value, length, \':\');\n'
-            '        g_string_append_printf (ctx->printable,\n'
-            '                                "%sTLV:\\n"\n'
-            '                                "%s  type       = \\"%s\\" (0x%02x)\\n"\n'
-            '                                "%s  length     = %" G_GSIZE_FORMAT "\\n"\n'
-            '                                "%s  value      = %s\\n"\n'
-            '                                "%s  translated = %s\\n",\n'
-            '                                ctx->line_prefix,\n'
-            '                                ctx->line_prefix, tlv_type_str, type,\n'
-            '                                ctx->line_prefix, length,\n'
-            '                                ctx->line_prefix, value_hex,\n'
-            '                                ctx->line_prefix, translated_value ? translated_value : "");\n'
-            '        g_free (value_hex);\n'
-            '        g_free (translated_value);\n'
-            '    }\n'
-            '}\n'
             '\n'
             'static gchar *\n'
             '${type}_${underscore}_get_printable (\n'
             '    QmiMessage *self,\n'
             '    const gchar *line_prefix)\n'
             '{\n'
-            '    struct ${type}_${underscore}_context ctx;\n'
             '    GString *printable;\n'
             '\n'
             '    printable = g_string_new ("");\n'
             '    g_string_append_printf (printable,\n'
             '                            "%s  message     = \\\"${name}\\\" (${id})\\n",\n'
-            '                            line_prefix);\n'
-            '\n'
-            '    ctx.self = self;\n'
-            '    ctx.line_prefix = line_prefix;\n'
-            '    ctx.printable = printable;\n'
-            '    qmi_message_tlv_foreach (self,\n'
-            '                             (QmiMessageForeachTlvFn)${type}_${underscore}_get_tlv_printable,\n'
-            '                             &ctx);\n'
+            '                            line_prefix);\n')
+
+        if need_tlv_printable:
+            template += (
+                '\n'
+                '    {\n'
+                '        struct ${type}_${underscore}_context ctx;\n'
+                '        ctx.self = self;\n'
+                '        ctx.line_prefix = line_prefix;\n'
+                '        ctx.printable = printable;\n'
+                '        qmi_message_tlv_foreach (self,\n'
+                '                                 (QmiMessageForeachTlvFn)${type}_${underscore}_get_tlv_printable,\n'
+                '                                 &ctx);\n'
+                '    }\n')
+        template += (
             '\n'
             '    return g_string_free (printable, FALSE);\n'
             '}\n')

@@ -120,28 +120,39 @@ class Client:
                 translations['enum_name'] = message.id_enum_name
                 translations['message_fullname_underscore'] = utils.build_underscore_name(message.fullname)
                 translations['message_name'] = message.name
-                translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
-                translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
-                translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
                 translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
-                inner_template = (
-                    '        case ${enum_name}: {\n'
-                    '            ${output_camelcase} *output;\n'
-                    '            GError *error = NULL;\n'
-                    '\n'
-                    '            /* Parse indication */\n'
-                    '            output = ${message_fullname_underscore}_indication_parse (message, &error);\n'
-                    '            if (!output) {\n'
-                    '                g_warning ("Couldn\'t parse \'${message_name}\' indication: %s",\n'
-                    '                           error ? error->message : "Unknown error");\n'
-                    '                if (error)\n'
-                    '                    g_error_free (error);\n'
-                    '            } else {\n'
-                    '                g_signal_emit (self, signals[SIGNAL_${signal_id}], 0, output);\n'
-                    '                ${output_underscore}_unref (output);\n'
-                    '            }\n'
-                    '            break;\n'
-                    '        }\n')
+                inner_template = ''
+                if message.output is not None and message.output.fields is not None:
+                    # At least one field in the indication
+                    translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
+                    translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
+                    translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
+                    inner_template += (
+                        '        case ${enum_name}: {\n'
+                        '            ${output_camelcase} *output;\n'
+                        '            GError *error = NULL;\n'
+                        '\n'
+                        '            /* Parse indication */\n'
+                        '            output = ${message_fullname_underscore}_indication_parse (message, &error);\n'
+                        '            if (!output) {\n'
+                        '                g_warning ("Couldn\'t parse \'${message_name}\' indication: %s",\n'
+                        '                           error ? error->message : "Unknown error");\n'
+                        '                if (error)\n'
+                        '                    g_error_free (error);\n'
+                        '            } else {\n'
+                        '                g_signal_emit (self, signals[SIGNAL_${signal_id}], 0, output);\n'
+                        '                ${output_underscore}_unref (output);\n'
+                        '            }\n'
+                        '            break;\n'
+                        '        }\n')
+                else:
+                    # No output field in the indication
+                    inner_template += (
+                        '        case ${enum_name}: {\n'
+                        '            g_signal_emit (self, signals[SIGNAL_${signal_id}], 0, NULL);\n'
+                        '            break;\n'
+                        '        }\n')
+
                 template += string.Template(inner_template).substitute(translations)
 
         template += (
@@ -164,30 +175,53 @@ class Client:
 
         for message in message_list.list:
             if message.type == 'Indication':
-                translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
                 translations['signal_name'] = utils.build_dashed_name(message.name)
                 translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
-                translations['bundle_type'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(message.output.fullname), 'QMI_')
-                inner_template = (
-                    '\n'
-                    '    /**\n'
-                    '     * ${camelcase}::${signal_name}:\n'
-                    '     * @object: A #${camelcase}.\n'
-                    '     * @output: A #${output_camelcase}.\n'
-                    '     *\n'
-                    '     * The ::${signal_name} signal gets emitted when a \'${message_name}\' indication is received.\n'
-                    '     */\n'
-                    '    signals[SIGNAL_${signal_id}] =\n'
-                    '        g_signal_new ("${signal_name}",\n'
-                    '                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),\n'
-                    '                      G_SIGNAL_RUN_LAST,\n'
-                    '                      0,\n'
-                    '                      NULL,\n'
-                    '                      NULL,\n'
-                    '                      NULL,\n'
-                    '                      G_TYPE_NONE,\n'
-                    '                      1,\n'
-                    '                      ${bundle_type});\n')
+                inner_template = ''
+                if message.output is not None and message.output.fields is not None:
+                    # At least one field in the indication
+                    translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
+                    translations['bundle_type'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(message.output.fullname), 'QMI_')
+                    inner_template += (
+                        '\n'
+                        '    /**\n'
+                        '     * ${camelcase}::${signal_name}:\n'
+                        '     * @object: A #${camelcase}.\n'
+                        '     * @output: A #${output_camelcase}.\n'
+                        '     *\n'
+                        '     * The ::${signal_name} signal gets emitted when a \'${message_name}\' indication is received.\n'
+                        '     */\n'
+                        '    signals[SIGNAL_${signal_id}] =\n'
+                        '        g_signal_new ("${signal_name}",\n'
+                        '                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),\n'
+                        '                      G_SIGNAL_RUN_LAST,\n'
+                        '                      0,\n'
+                        '                      NULL,\n'
+                        '                      NULL,\n'
+                        '                      NULL,\n'
+                        '                      G_TYPE_NONE,\n'
+                        '                      1,\n'
+                        '                      ${bundle_type});\n')
+                else:
+                    # No output field in the indication
+                    inner_template += (
+                        '\n'
+                        '    /**\n'
+                        '     * ${camelcase}::${signal_name}:\n'
+                        '     * @object: A #${camelcase}.\n'
+                        '     *\n'
+                        '     * The ::${signal_name} signal gets emitted when a \'${message_name}\' indication is received.\n'
+                        '     */\n'
+                        '    signals[SIGNAL_${signal_id}] =\n'
+                        '        g_signal_new ("${signal_name}",\n'
+                        '                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),\n'
+                        '                      G_SIGNAL_RUN_LAST,\n'
+                        '                      0,\n'
+                        '                      NULL,\n'
+                        '                      NULL,\n'
+                        '                      NULL,\n'
+                        '                      G_TYPE_NONE,\n'
+                        '                      0);\n')
                 template += string.Template(inner_template).substitute(translations)
 
         template += (
