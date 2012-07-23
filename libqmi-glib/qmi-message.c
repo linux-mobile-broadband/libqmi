@@ -707,10 +707,25 @@ qmi_message_get_printable (QmiMessage *self,
 }
 
 gboolean
-qmi_message_get_version_introduced (QmiMessage *message,
+qmi_message_get_version_introduced (QmiMessage *self,
                                     guint *major,
                                     guint *minor)
 {
-    /* TODO */
-    return FALSE;
+    switch (qmi_message_get_service (self)) {
+    case QMI_SERVICE_CTL:
+        /* For CTL service, we'll assume the minimum one */
+        *major = 0;
+        *minor = 0;
+        return TRUE;
+
+    case QMI_SERVICE_DMS:
+        return qmi_message_dms_get_version_introduced (self, major, minor);
+
+    case QMI_SERVICE_WDS:
+        return qmi_message_wds_get_version_introduced (self, major, minor);
+
+    default:
+        /* For the still unsupported services, cannot do anything */
+        return FALSE;
+    }
 }

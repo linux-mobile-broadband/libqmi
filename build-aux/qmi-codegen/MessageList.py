@@ -119,6 +119,52 @@ class MessageList:
 
 
     """
+    Emit the method responsible for getting in which version the messages were
+    introduced.
+    """
+    def __emit_get_version_introduced(self, hfile, cfile):
+        translations = { 'service'    : string.lower(self.service) }
+
+        template = (
+            '\n'
+            'gboolean qmi_message_${service}_get_version_introduced (\n'
+            '    QmiMessage *self,\n'
+            '    guint *major,\n'
+            '    guint *minor);\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        template = (
+            '\n'
+            'gboolean\n'
+            'qmi_message_${service}_get_version_introduced (\n'
+            '    QmiMessage *self,\n'
+            '    guint *major,\n'
+            '    guint *minor)\n'
+            '{\n'
+            '    switch (qmi_message_get_message_id (self)) {\n')
+
+        for message in self.list:
+            # Only add if we know the version info
+            if message.version_info != []:
+                translations['enum_name'] = message.id_enum_name
+                translations['message_major'] = message.version_info[0]
+                translations['message_minor'] = message.version_info[1]
+                inner_template = (
+                    '    case ${enum_name}:\n'
+                    '        *major = ${message_major};\n'
+                    '        *minor = ${message_minor};\n'
+                    '        return TRUE;\n')
+                template += string.Template(inner_template).substitute(translations)
+
+        template += (
+            '    default:\n'
+            '        return FALSE;\n'
+            '    }\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+
+    """
     Emit the message list handling implementation
     """
     def emit(self, hfile, cfile):
@@ -133,3 +179,4 @@ class MessageList:
         utils.add_separator(hfile, 'Service-specific printable', self.service);
         utils.add_separator(cfile, 'Service-specific printable', self.service);
         self.__emit_get_printable(hfile, cfile)
+        self.__emit_get_version_introduced(hfile, cfile)

@@ -42,6 +42,8 @@ class Message:
         self.id = dictionary['id']
         # The type, which must always be 'Message'
         self.type = dictionary['type']
+        # The version info, optional
+        self.version_info = dictionary['version'].split('.') if 'version' in dictionary else []
 
         # Create the composed full name (prefix + service + name),
         #  e.g. "Qmi Message Ctl Something Output Result"
