@@ -52,6 +52,7 @@ static gchar *stop_network_str;
 static gboolean get_packet_service_status_flag;
 static gboolean get_data_bearer_technology_flag;
 static gboolean get_current_data_bearer_technology_flag;
+static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -77,6 +78,10 @@ static GOptionEntry entries[] = {
     },
     { "wds-get-current-data-bearer-technology", 0, 0, G_OPTION_ARG_NONE, &get_current_data_bearer_technology_flag,
       "Get current data bearer technology",
+      NULL
+    },
+    { "wds-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
+      "Reset the service state",
       NULL
     },
     { "wds-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -115,6 +120,7 @@ qmicli_wds_options_enabled (void)
                  get_packet_service_status_flag +
                  get_data_bearer_technology_flag +
                  get_current_data_bearer_technology_flag +
+                 reset_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -532,6 +538,36 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
     shutdown (TRUE);
 }
 
+static void
+reset_ready (QmiClientWds *client,
+             GAsyncResult *res)
+{
+    QmiMessageWdsResetOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_wds_reset_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_reset_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't reset the WDS service: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wds_reset_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully performed WDS service reset\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_wds_reset_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -615,6 +651,18 @@ qmicli_wds_run (QmiDevice *device,
                                                            ctx->cancellable,
                                                            (GAsyncReadyCallback)get_current_data_bearer_technology_ready,
                                                            NULL);
+        return;
+    }
+
+    /* Request to reset WDS service? */
+    if (reset_flag) {
+        g_debug ("Asynchronously resetting WDS service...");
+        qmi_client_wds_reset (ctx->client,
+                              NULL,
+                              10,
+                              ctx->cancellable,
+                              (GAsyncReadyCallback)reset_ready,
+                              NULL);
         return;
     }
 
