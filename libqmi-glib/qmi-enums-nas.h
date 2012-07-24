@@ -283,4 +283,47 @@ typedef enum {
     QMI_NAS_SIGNAL_STRENGTH_REQUEST_LTE_RSRP   = 1 << 7
 } QmiNasSignalStrengthRequest;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI NAS Network Scan' request/response */
+
+/**
+ * QmiNasNetworkScanType:
+ * @QMI_NAS_NETWORK_SCAN_TYPE_GSM: GSM network.
+ * @QMI_NAS_NETWORK_SCAN_TYPE_UMTS: UMTS network.
+ * @QMI_NAS_NETWORK_SCAN_TYPE_LTE: LTE network.
+ * @QMI_NAS_NETWORK_SCAN_TYPE_TD_SCDMA: TD-SCDMA network.
+ *
+ * Flags to use when specifying which networks to scan.
+ */
+typedef enum {
+    QMI_NAS_NETWORK_SCAN_TYPE_GSM      = 1 << 0,
+    QMI_NAS_NETWORK_SCAN_TYPE_UMTS     = 1 << 1,
+    QMI_NAS_NETWORK_SCAN_TYPE_LTE      = 1 << 2,
+    QMI_NAS_NETWORK_SCAN_TYPE_TD_SCDMA = 1 << 3
+} QmiNasNetworkScanType;
+
+/**
+ * QmiNasNetworkStatus:
+ * @QMI_NAS_NETWORK_STATUS_CURRENT_SERVING: Network is in use, current serving.
+ * @QMI_NAS_NETWORK_STATUS_AVAILABLE: Network is vailable.
+ * @QMI_NAS_NETWORK_STATUS_HOME: Network is home network.
+ * @QMI_NAS_NETWORK_STATUS_ROAMING: Network is a roaming network.
+ * @QMI_NAS_NETWORK_STATUS_FORBIDDEN: Network is forbidden.
+ * @QMI_NAS_NETWORK_STATUS_NOT_FORBIDDEN: Network is not forbidden.
+ * @QMI_NAS_NETWORK_STATUS_PREFERRED: Network is preferred.
+ * @QMI_NAS_NETWORK_STATUS_NOT_PREFERRED: Network is not preferred.
+ *
+ * Flags to specify the status of a given network.
+ */
+typedef enum {
+    QMI_NAS_NETWORK_STATUS_CURRENT_SERVING = 1 << 0,
+    QMI_NAS_NETWORK_STATUS_AVAILABLE       = 1 << 1,
+    QMI_NAS_NETWORK_STATUS_HOME            = 1 << 2,
+    QMI_NAS_NETWORK_STATUS_ROAMING         = 1 << 3,
+    QMI_NAS_NETWORK_STATUS_FORBIDDEN       = 1 << 4,
+    QMI_NAS_NETWORK_STATUS_NOT_FORBIDDEN   = 1 << 5,
+    QMI_NAS_NETWORK_STATUS_PREFERRED       = 1 << 6,
+    QMI_NAS_NETWORK_STATUS_NOT_PREFERRED   = 1 << 7
+} QmiNasNetworkStatus;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
