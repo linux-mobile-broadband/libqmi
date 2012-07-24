@@ -254,4 +254,33 @@ typedef enum {
     QMI_NAS_EVDO_SINR_LEVEL_8 = 8
 } QmiNasEvdoSinrLevel;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI NAS Get Signal Strength' request/response */
+
+/**
+ * QmiNasSignalStrengthRequest:
+ * @QMI_NAS_SIGNAL_STRENGTH_REQUEST_NONE: None.
+ * @QMI_NAS_SIGNAL_STRENGTH_REQUEST_RSSI: Request RSSI information.
+ * @QMI_NAS_SIGNAL_STRENGTH_REQUEST_ECIO: Request ECIO information.
+ * @QMI_NAS_SIGNAL_STRENGTH_REQUEST_IO: Request IO information.
+ * @QMI_NAS_SIGNAL_STRENGTH_REQUEST_SINR: Request SINR information.
+ * @QMI_NAS_SIGNAL_STRENGTH_REQUEST_ERROR_RATE: Request error rate information.
+ * @QMI_NAS_SIGNAL_STRENGTH_REQUEST_RSRQ: Request RSRQ information.
+ * @QMI_NAS_SIGNAL_STRENGTH_REQUEST_LTE_SNR: Request LTE SNR information.
+ * @QMI_NAS_SIGNAL_STRENGTH_REQUEST_LTE_RSRP: Request LTE RSRP information.
+ *
+ * Extra information to request when gathering Signal Strength.
+ */
+typedef enum {
+    QMI_NAS_SIGNAL_STRENGTH_REQUEST_NONE       = 0,
+    QMI_NAS_SIGNAL_STRENGTH_REQUEST_RSSI       = 1 << 0,
+    QMI_NAS_SIGNAL_STRENGTH_REQUEST_ECIO       = 1 << 1,
+    QMI_NAS_SIGNAL_STRENGTH_REQUEST_IO         = 1 << 2,
+    QMI_NAS_SIGNAL_STRENGTH_REQUEST_SINR       = 1 << 3,
+    QMI_NAS_SIGNAL_STRENGTH_REQUEST_ERROR_RATE = 1 << 4,
+    QMI_NAS_SIGNAL_STRENGTH_REQUEST_RSRQ       = 1 << 5,
+    QMI_NAS_SIGNAL_STRENGTH_REQUEST_LTE_SNR    = 1 << 6,
+    QMI_NAS_SIGNAL_STRENGTH_REQUEST_LTE_RSRP   = 1 << 7
+} QmiNasSignalStrengthRequest;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
