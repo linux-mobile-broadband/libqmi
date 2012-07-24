@@ -41,10 +41,15 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
+static gboolean network_scan_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+    { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
+      "Scan networks",
+      NULL
+    },
     { "nas-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -80,7 +85,8 @@ qmicli_nas_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (reset_flag +
+    n_actions = (network_scan_flag +
+                 reset_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -113,6 +119,99 @@ shutdown (gboolean operation_status)
     /* Cleanup context and finish async operation */
     context_free (ctx);
     qmicli_async_operation_done (operation_status);
+}
+
+static void
+network_scan_ready (QmiClientNas *client,
+                    GAsyncResult *res)
+{
+    QmiMessageNasNetworkScanOutput *output;
+    GError *error = NULL;
+    GArray *array;
+
+    output = qmi_client_nas_network_scan_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_network_scan_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't scan networks: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_network_scan_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully scanned networks\n",
+             qmi_device_get_path_display (ctx->device));
+
+    array = NULL;
+    if (qmi_message_nas_network_scan_output_get_network_information (output, &array, NULL)) {
+        guint i;
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasNetworkScanOutputNetworkInformationElement *element;
+            gchar *status_str;
+
+            element = &g_array_index (array, QmiMessageNasNetworkScanOutputNetworkInformationElement, i);
+            status_str = qmi_nas_network_status_build_string_from_mask (element->network_status);
+            g_print ("Network [%u]:\n"
+                     "\tMCC: '%" G_GUINT16_FORMAT"'\n"
+                     "\tMNC: '%" G_GUINT16_FORMAT"'\n"
+                     "\tStatus: '%s'\n"
+                     "\tDescription: '%s'\n",
+                     i,
+                     element->mcc,
+                     element->mnc,
+                     status_str,
+                     element->description);
+            g_free (status_str);
+        }
+    }
+
+    array = NULL;
+    if (qmi_message_nas_network_scan_output_get_radio_access_technology (output, &array, NULL)) {
+        guint i;
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasNetworkScanOutputRadioAccessTechnologyElement *element;
+
+            element = &g_array_index (array, QmiMessageNasNetworkScanOutputRadioAccessTechnologyElement, i);
+            g_print ("Network [%u]:\n"
+                     "\tMCC: '%" G_GUINT16_FORMAT"'\n"
+                     "\tMNC: '%" G_GUINT16_FORMAT"'\n"
+                     "\tRAT: '%s'\n",
+                     i,
+                     element->mcc,
+                     element->mnc,
+                     qmi_nas_radio_interface_get_string (element->rat));
+        }
+    }
+
+    array = NULL;
+    if (qmi_message_nas_network_scan_output_get_mnc_pds_digit_include_status (output, &array, NULL)) {
+        guint i;
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasNetworkScanOutputMncPdsDigitIncludeStatusElement *element;
+
+            element = &g_array_index (array, QmiMessageNasNetworkScanOutputMncPdsDigitIncludeStatusElement, i);
+            g_print ("Network [%u]:\n"
+                     "\tMCC: '%" G_GUINT16_FORMAT"'\n"
+                     "\tMNC: '%" G_GUINT16_FORMAT"'\n"
+                     "\tMCC with PCS digit: '%s'\n",
+                     i,
+                     element->mcc,
+                     element->mnc,
+                     element->includes_pcs_digit ? "yes" : "no");
+        }
+    }
+
+    qmi_message_nas_network_scan_output_unref (output);
+    shutdown (TRUE);
 }
 
 static void
@@ -163,6 +262,18 @@ qmicli_nas_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     if (cancellable)
         ctx->cancellable = g_object_ref (cancellable);
+
+    /* Request to scan networks? */
+    if (network_scan_flag) {
+        g_debug ("Asynchronously scanning networks...");
+        qmi_client_nas_network_scan (ctx->client,
+                                     NULL,
+                                     300, /* this operation takes a lot of time! */
+                                     ctx->cancellable,
+                                     (GAsyncReadyCallback)network_scan_ready,
+                                     NULL);
+        return;
+    }
 
     /* Request to reset NAS service? */
     if (reset_flag) {
