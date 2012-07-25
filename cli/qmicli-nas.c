@@ -41,11 +41,16 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
+static gboolean get_signal_strength_flag;
 static gboolean network_scan_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+    { "nas-get-signal-strength", 0, 0, G_OPTION_ARG_NONE, &get_signal_strength_flag,
+      "Get signal strength (deprecated)",
+      NULL
+    },
     { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
       "Scan networks",
       NULL
@@ -85,7 +90,8 @@ qmicli_nas_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (network_scan_flag +
+    n_actions = (get_signal_strength_flag +
+                 network_scan_flag +
                  reset_flag +
                  noop_flag);
 
@@ -119,6 +125,189 @@ shutdown (gboolean operation_status)
     /* Cleanup context and finish async operation */
     context_free (ctx);
     qmicli_async_operation_done (operation_status);
+}
+
+static QmiMessageNasGetSignalStrengthInput *
+get_signal_strength_input_create (void)
+{
+    GError *error = NULL;
+    QmiMessageNasGetSignalStrengthInput *input;
+    QmiNasSignalStrengthRequest mask;
+
+    mask = (QMI_NAS_SIGNAL_STRENGTH_REQUEST_RSSI |
+            QMI_NAS_SIGNAL_STRENGTH_REQUEST_ECIO |
+            QMI_NAS_SIGNAL_STRENGTH_REQUEST_IO |
+            QMI_NAS_SIGNAL_STRENGTH_REQUEST_SINR |
+            QMI_NAS_SIGNAL_STRENGTH_REQUEST_RSRQ |
+            QMI_NAS_SIGNAL_STRENGTH_REQUEST_LTE_SNR |
+            QMI_NAS_SIGNAL_STRENGTH_REQUEST_LTE_RSRP);
+
+    input = qmi_message_nas_get_signal_strength_input_new ();
+    if (!qmi_message_nas_get_signal_strength_input_set_request_mask (
+            input,
+            mask,
+            &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_nas_get_signal_strength_input_unref (input);
+        input = NULL;
+    }
+
+    return input;
+}
+
+static gdouble
+get_db_from_sinr_level (QmiNasEvdoSinrLevel level)
+{
+    switch (level) {
+    case QMI_NAS_EVDO_SINR_LEVEL_0: return -9.0;
+    case QMI_NAS_EVDO_SINR_LEVEL_1: return -6;
+    case QMI_NAS_EVDO_SINR_LEVEL_2: return -4.5;
+    case QMI_NAS_EVDO_SINR_LEVEL_3: return -3;
+    case QMI_NAS_EVDO_SINR_LEVEL_4: return -2;
+    case QMI_NAS_EVDO_SINR_LEVEL_5: return 1;
+    case QMI_NAS_EVDO_SINR_LEVEL_6: return 3;
+    case QMI_NAS_EVDO_SINR_LEVEL_7: return 6;
+    case QMI_NAS_EVDO_SINR_LEVEL_8: return +9;
+    default:
+        g_warning ("Invalid SINR level '%u'", level);
+        return -G_MAXDOUBLE;
+    }
+}
+
+static void
+get_signal_strength_ready (QmiClientNas *client,
+                           GAsyncResult *res)
+{
+    QmiMessageNasGetSignalStrengthOutput *output;
+    GError *error = NULL;
+    GArray *array;
+    QmiNasRadioInterface radio_interface;
+    gint8 strength;
+    gint32 io;
+    QmiNasEvdoSinrLevel sinr_level;
+    gint8 rsrq;
+    gint16 rsrp;
+    gint16 snr;
+
+    output = qmi_client_nas_get_signal_strength_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_signal_strength_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get signal strength: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_signal_strength_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_nas_get_signal_strength_output_get_signal_strength (output,
+                                                                    &strength,
+                                                                    &radio_interface,
+                                                                    NULL);
+
+    g_print ("[%s] Successfully got signal strength\n"
+             "Current:\n"
+             "\tNetwork '%s': '%d dBm'\n",
+             qmi_device_get_path_display (ctx->device),
+             qmi_nas_radio_interface_get_string (radio_interface),
+             strength);
+
+    /* Other signal strengths in other networks... */
+    if (qmi_message_nas_get_signal_strength_output_get_strength_list (output, &array, NULL)) {
+        guint i;
+
+        g_print ("Other:\n");
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetSignalStrengthOutputStrengthListElement *element;
+
+            element = &g_array_index (array, QmiMessageNasGetSignalStrengthOutputStrengthListElement, i);
+            g_print ("\tNetwork '%s': '%d dBm'\n",
+                     qmi_nas_radio_interface_get_string (element->radio_interface),
+                     element->strength);
+        }
+    }
+
+    /* RSSI... */
+    if (qmi_message_nas_get_signal_strength_output_get_rssi_list (output, &array, NULL)) {
+        guint i;
+
+        g_print ("RSSI:\n");
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetSignalStrengthOutputRssiListElement *element;
+
+            element = &g_array_index (array, QmiMessageNasGetSignalStrengthOutputRssiListElement, i);
+            g_print ("\tNetwork '%s': '%d dBm'\n",
+                     qmi_nas_radio_interface_get_string (element->radio_interface),
+                     (-1) * element->rssi);
+        }
+    }
+
+    /* ECIO... */
+    if (qmi_message_nas_get_signal_strength_output_get_ecio_list (output, &array, NULL)) {
+        guint i;
+
+        g_print ("ECIO:\n");
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetSignalStrengthOutputEcioListElement *element;
+
+            element = &g_array_index (array, QmiMessageNasGetSignalStrengthOutputEcioListElement, i);
+            g_print ("\tNetwork '%s': '%.1lf dBm'\n",
+                     qmi_nas_radio_interface_get_string (element->radio_interface),
+                     (-0.5) * ((gdouble)element->ecio));
+        }
+    }
+
+    /* IO... */
+    if (qmi_message_nas_get_signal_strength_output_get_io (output, &io, NULL)) {
+        g_print ("IO:\n"
+                 "\tNetwork '%s': '%d dBm'\n",
+                 qmi_nas_radio_interface_get_string (QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO),
+                 io);
+    }
+
+    /* SINR level */
+    if (qmi_message_nas_get_signal_strength_output_get_sinr (output, &sinr_level, NULL)) {
+        g_print ("SINR:\n"
+                 "\tNetwork '%s': (%u) '%.1lf dB'\n",
+                 qmi_nas_radio_interface_get_string (QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO),
+                 sinr_level, get_db_from_sinr_level (sinr_level));
+    }
+
+    /* RSRQ */
+    if (qmi_message_nas_get_signal_strength_output_get_rsrq (output, &rsrq, &radio_interface, NULL)) {
+        g_print ("RSRQ:\n"
+                 "\tNetwork '%s': '%d dB'\n",
+                 qmi_nas_radio_interface_get_string (radio_interface),
+                 rsrq);
+    }
+
+    /* LTE SNR */
+    if (qmi_message_nas_get_signal_strength_output_get_lte_snr (output, &snr, NULL)) {
+        g_print ("SNR:\n"
+                 "\tNetwork '%s': '%.1lf dB'\n",
+                 qmi_nas_radio_interface_get_string (QMI_NAS_RADIO_INTERFACE_LTE),
+                 (0.1) * ((gdouble)snr));
+    }
+
+    /* LTE RSRP */
+    if (qmi_message_nas_get_signal_strength_output_get_lte_rsrp (output, &rsrp, NULL)) {
+        g_print ("RSRP:\n"
+                 "\tNetwork '%s': '%d dBm'\n",
+                 qmi_nas_radio_interface_get_string (QMI_NAS_RADIO_INTERFACE_LTE),
+                 rsrp);
+    }
+
+    /* Just skip others for now */
+
+    qmi_message_nas_get_signal_strength_output_unref (output);
+    shutdown (TRUE);
 }
 
 static void
@@ -262,6 +451,23 @@ qmicli_nas_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     if (cancellable)
         ctx->cancellable = g_object_ref (cancellable);
+
+    /* Request to get signal strength? */
+    if (get_signal_strength_flag) {
+        QmiMessageNasGetSignalStrengthInput *input;
+
+        input = get_signal_strength_input_create ();
+
+        g_debug ("Asynchronously getting signal strength...");
+        qmi_client_nas_get_signal_strength (ctx->client,
+                                            input,
+                                            10,
+                                            ctx->cancellable,
+                                            (GAsyncReadyCallback)get_signal_strength_ready,
+                                            NULL);
+        qmi_message_nas_get_signal_strength_input_unref (input);
+        return;
+    }
 
     /* Request to scan networks? */
     if (network_scan_flag) {
