@@ -42,6 +42,7 @@ static Context *ctx;
 
 /* Options */
 static gboolean get_signal_strength_flag;
+static gboolean get_signal_info_flag;
 static gboolean network_scan_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -49,6 +50,10 @@ static gboolean noop_flag;
 static GOptionEntry entries[] = {
     { "nas-get-signal-strength", 0, 0, G_OPTION_ARG_NONE, &get_signal_strength_flag,
       "Get signal strength (deprecated)",
+      NULL
+    },
+    { "nas-get-signal-info", 0, 0, G_OPTION_ARG_NONE, &get_signal_info_flag,
+      "Get signal info (deprecated)",
       NULL
     },
     { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
@@ -91,6 +96,7 @@ qmicli_nas_options_enabled (void)
         return !!n_actions;
 
     n_actions = (get_signal_strength_flag +
+                 get_signal_info_flag +
                  network_scan_flag +
                  reset_flag +
                  noop_flag);
@@ -127,6 +133,141 @@ shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status);
 }
 
+static gdouble
+get_db_from_sinr_level (QmiNasEvdoSinrLevel level)
+{
+    switch (level) {
+    case QMI_NAS_EVDO_SINR_LEVEL_0: return -9.0;
+    case QMI_NAS_EVDO_SINR_LEVEL_1: return -6;
+    case QMI_NAS_EVDO_SINR_LEVEL_2: return -4.5;
+    case QMI_NAS_EVDO_SINR_LEVEL_3: return -3;
+    case QMI_NAS_EVDO_SINR_LEVEL_4: return -2;
+    case QMI_NAS_EVDO_SINR_LEVEL_5: return 1;
+    case QMI_NAS_EVDO_SINR_LEVEL_6: return 3;
+    case QMI_NAS_EVDO_SINR_LEVEL_7: return 6;
+    case QMI_NAS_EVDO_SINR_LEVEL_8: return +9;
+    default:
+        g_warning ("Invalid SINR level '%u'", level);
+        return -G_MAXDOUBLE;
+    }
+}
+
+static void
+get_signal_info_ready (QmiClientNas *client,
+                       GAsyncResult *res)
+{
+    QmiMessageNasGetSignalInfoOutput *output;
+    GError *error = NULL;
+    gint8 rssi;
+    guint16 ecio;
+    QmiNasEvdoSinrLevel sinr_level;
+    gint32 io;
+    gint8 rsrq;
+    gint16 rsrp;
+    gint16 snr;
+    gint8 rscp;
+
+    output = qmi_client_nas_get_signal_info_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_signal_info_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get signal info: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_signal_info_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got signal info\n",
+             qmi_device_get_path_display (ctx->device));
+
+    /* CDMA... */
+    if (qmi_message_nas_get_signal_info_output_get_cdma_signal_strength (output,
+                                                                         &rssi,
+                                                                         &ecio,
+                                                                         NULL)) {
+        g_print ("CDMA:\n"
+                 "\tRSSI: '%d dBm'\n"
+                 "\tECIO: '%.1lf dBm'\n",
+                 rssi,
+                 (-0.5)*((gdouble)ecio));
+    }
+
+    /* HDR... */
+    if (qmi_message_nas_get_signal_info_output_get_hdr_signal_strength (output,
+                                                                        &rssi,
+                                                                        &ecio,
+                                                                        &sinr_level,
+                                                                        &io,
+                                                                        NULL)) {
+        g_print ("HDR:\n"
+                 "\tRSSI: '%d dBm'\n"
+                 "\tECIO: '%.1lf dBm'\n"
+                 "\tSINR (%u): '%.1lf dB'\n"
+                 "\tIO: '%d dBm'\n",
+                 rssi,
+                 (-0.5)*((gdouble)ecio),
+                 sinr_level, get_db_from_sinr_level (sinr_level),
+                 io);
+    }
+
+    /* GSM */
+    if (qmi_message_nas_get_signal_info_output_get_gsm_signal_strength (output,
+                                                                        &rssi,
+                                                                        NULL)) {
+        g_print ("GSM:\n"
+                 "\tRSSI: '%d dBm'\n",
+                 rssi);
+    }
+
+    /* WCDMA... */
+    if (qmi_message_nas_get_signal_info_output_get_wcdma_signal_strength (output,
+                                                                          &rssi,
+                                                                          &ecio,
+                                                                          NULL)) {
+        g_print ("WCDMA:\n"
+                 "\tRSSI: '%d dBm'\n"
+                 "\tECIO: '%.1lf dBm'\n",
+                 rssi,
+                 (-0.5)*((gdouble)ecio));
+    }
+
+    /* LTE... */
+    if (qmi_message_nas_get_signal_info_output_get_lte_signal_strength (output,
+                                                                        &rssi,
+                                                                        &rsrq,
+                                                                        &rsrp,
+                                                                        &snr,
+                                                                        NULL)) {
+        g_print ("LTE:\n"
+                 "\tRSSI: '%d dBm'\n"
+                 "\tRSRQ: '%d dB'\n"
+                 "\tRSRP: '%d dBm'\n"
+                 "\tSNR: '%.1lf dBm'\n",
+                 rssi,
+                 rsrq,
+                 rsrp,
+                 (0.1) * ((gdouble)snr));
+    }
+
+    /* TDMA */
+    if (qmi_message_nas_get_signal_info_output_get_tdma_signal_strength (output,
+                                                                         &rscp,
+                                                                         NULL)) {
+        g_print ("TDMA:\n"
+                 "\tRSCP: '%d dBm'\n",
+                 rscp);
+    }
+
+    qmi_message_nas_get_signal_info_output_unref (output);
+    shutdown (TRUE);
+}
+
 static QmiMessageNasGetSignalStrengthInput *
 get_signal_strength_input_create (void)
 {
@@ -155,25 +296,6 @@ get_signal_strength_input_create (void)
     }
 
     return input;
-}
-
-static gdouble
-get_db_from_sinr_level (QmiNasEvdoSinrLevel level)
-{
-    switch (level) {
-    case QMI_NAS_EVDO_SINR_LEVEL_0: return -9.0;
-    case QMI_NAS_EVDO_SINR_LEVEL_1: return -6;
-    case QMI_NAS_EVDO_SINR_LEVEL_2: return -4.5;
-    case QMI_NAS_EVDO_SINR_LEVEL_3: return -3;
-    case QMI_NAS_EVDO_SINR_LEVEL_4: return -2;
-    case QMI_NAS_EVDO_SINR_LEVEL_5: return 1;
-    case QMI_NAS_EVDO_SINR_LEVEL_6: return 3;
-    case QMI_NAS_EVDO_SINR_LEVEL_7: return 6;
-    case QMI_NAS_EVDO_SINR_LEVEL_8: return +9;
-    default:
-        g_warning ("Invalid SINR level '%u'", level);
-        return -G_MAXDOUBLE;
-    }
 }
 
 static void
@@ -466,6 +588,18 @@ qmicli_nas_run (QmiDevice *device,
                                             (GAsyncReadyCallback)get_signal_strength_ready,
                                             NULL);
         qmi_message_nas_get_signal_strength_input_unref (input);
+        return;
+    }
+
+    /* Request to get signal info? */
+    if (get_signal_info_flag) {
+        g_debug ("Asynchronously getting signal info...");
+        qmi_client_nas_get_signal_info (ctx->client,
+                                        NULL,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)get_signal_info_ready,
+                                        NULL);
         return;
     }
 
