@@ -511,6 +511,7 @@ qmi_device_allocate_client_finish (QmiDevice *self,
 static void
 build_client_object (AllocateClientContext *ctx)
 {
+    gchar *version_string = NULL;
     QmiClient *client;
     GError *error = NULL;
 
@@ -534,10 +535,22 @@ build_client_object (AllocateClientContext *ctx)
         return;
     }
 
-    g_debug ("[%s] Registered '%s' client with ID '%u'",
+    /* Build version string for the logging */
+    if (ctx->self->priv->supported_services) {
+        const QmiMessageCtlGetVersionInfoOutputServiceListService *info;
+
+        info = find_service_version_info (ctx->self, ctx->service);
+        if (info)
+            version_string = g_strdup_printf ("%u.%u", info->major_version, info->minor_version);
+    }
+
+    g_debug ("[%s] Registered '%s' (version %s) client with ID '%u'",
              ctx->self->priv->path_display,
              qmi_service_get_string (ctx->service),
+             version_string ? version_string : "unknown",
              ctx->cid);
+
+    g_free (version_string);
 
     /* Client created and registered, complete successfully */
     g_simple_async_result_set_op_res_gpointer (ctx->result,
