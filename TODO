@@ -17,6 +17,8 @@ List of things left for later:
    version of the service they were introduced, so that we return an error when
    trying to use those unsupported by our device.
 
+ * qmi-codegen: allow specifying 'description' to both messages and TLVs.
+
  * dms: Support 'Preferred Roaming List' TLV (0x13) in DMS/"Activate Manual".
    This TLV is based on an array of raw binary data which can be passed to the
    device over multiple messages, using a sequence number to identify each
