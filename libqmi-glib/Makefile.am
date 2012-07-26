@@ -40,10 +40,10 @@ qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/templates/qm
 		$(ENUMS) > $@
 
 # 64bit flag types
-FLAGS64 = qmi-flags64-dms.h
-qmi-flags64-types.h:  $(FLAGS64) $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h qmi-dms.stamp
+FLAGS64 = qmi-flags64-dms.h qmi-flags64-nas.h
+qmi-flags64-types.h:  $(FLAGS64) $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h qmi-dms.stamp qmi-nas.stamp
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include \"qmi-flags64-dms.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include \"qmi-flags64-dms.h\"\n#include \"qmi-flags64-nas.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_FLAGS64_TYPES_H__ */\n" \
 		$(FLAGS64) > $@
@@ -109,7 +109,7 @@ qmi-dms.c: qmi-error-types.h qmi-enum-types.h qmi-flags64-types.h qmi-dms.stamp
 qmi-wds.h: qmi-wds.stamp
 qmi-wds.c: qmi-error-types.h qmi-enum-types.h qmi-wds.stamp
 qmi-nas.h: qmi-nas.stamp
-qmi-nas.c: qmi-error-types.h qmi-enum-types.h qmi-nas.stamp
+qmi-nas.c: qmi-error-types.h qmi-enum-types.h qmi-flags64-types.h qmi-nas.stamp
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
@@ -143,7 +143,7 @@ include_HEADERS = \
 	qmi-ctl.h \
 	qmi-enums-dms.h qmi-flags64-dms.h qmi-dms.h \
 	qmi-enums-wds.h qmi-wds.h \
-	qmi-enums-nas.h qmi-nas.h
+	qmi-enums-nas.h qmi-flags64-nas.h qmi-nas.h
 
 CLEANFILES = \
 	qmi-ctl.h qmi-ctl.c qmi-ctl.stamp \

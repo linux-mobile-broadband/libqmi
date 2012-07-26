@@ -326,4 +326,122 @@ typedef enum {
     QMI_NAS_NETWORK_STATUS_NOT_PREFERRED   = 1 << 7
 } QmiNasNetworkStatus;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI NAS Get System Selection Preference'
+ * request/response */
+
+/**
+ * QmiNasRatModePreference:
+ * @QMI_NAS_RAT_MODE_PREFERENCE_CDMA_1X: CDMA2000 1X.
+ * @QMI_NAS_RAT_MODE_PREFERENCE_CDMA_1XEVDO: CDMA2000 HRPD (1xEV-DO).
+ * @QMI_NAS_RAT_MODE_PREFERENCE_GSM: GSM.
+ * @QMI_NAS_RAT_MODE_PREFERENCE_UMTS: UMTS.
+ * @QMI_NAS_RAT_MODE_PREFERENCE_LTE: LTE.
+ * @QMI_NAS_RAT_MODE_PREFERENCE_TD_SCDMA: TD-SCDMA.
+ *
+ * Flags specifying radio access technology mode preference.
+ */
+typedef enum {
+    QMI_NAS_RAT_MODE_PREFERENCE_CDMA_1X     = 1 << 0,
+    QMI_NAS_RAT_MODE_PREFERENCE_CDMA_1XEVDO = 1 << 1,
+    QMI_NAS_RAT_MODE_PREFERENCE_GSM         = 1 << 2,
+    QMI_NAS_RAT_MODE_PREFERENCE_UMTS        = 1 << 3,
+    QMI_NAS_RAT_MODE_PREFERENCE_LTE         = 1 << 4,
+    QMI_NAS_RAT_MODE_PREFERENCE_TD_SCDMA    = 1 << 5
+} QmiNasRatModePreference;
+
+/**
+ * QmiNasCdmaPrlPreference:
+ * @QMI_NAS_CDMA_PRL_PREFERENCE_A_SIDE_ONLY: System A only.
+ * @QMI_NAS_CDMA_PRL_PREFERENCE_B_SIDE_ONLY: System B only.
+ * @QMI_NAS_CDMA_PRL_PREFERENCE_ANY: Any system.
+ *
+ * Flags specifying the preference when using CDMA Band Class 0.
+ */
+typedef enum {
+    QMI_NAS_CDMA_PRL_PREFERENCE_A_SIDE_ONLY = 0x0001,
+    QMI_NAS_CDMA_PRL_PREFERENCE_B_SIDE_ONLY = 0x0002,
+    QMI_NAS_CDMA_PRL_PREFERENCE_ANY         = 0x3FFF
+} QmiNasCdmaPrlPreference;
+
+/**
+ * QmiNasRoamingPreference:
+ * @QMI_NAS_ROAMING_PREFERENCE_OFF: Only non-roaming networks.
+ * @QMI_NAS_ROAMING_PREFERENCE_NOT_OFF: Only roaming networks.
+ * @QMI_NAS_ROAMING_PREFERENCE_NOT_FLASHING: Only non-roaming networks or not flashing.
+ * @QMI_NAS_ROAMING_PREFERENCE_ANY: Don't filter by roaming when acquiring networks.
+ *
+ * Roaming preference.
+ */
+typedef enum {
+    QMI_NAS_ROAMING_PREFERENCE_OFF          = 0x01,
+    QMI_NAS_ROAMING_PREFERENCE_NOT_OFF      = 0x02,
+    QMI_NAS_ROAMING_PREFERENCE_NOT_FLASHING = 0x03,
+    QMI_NAS_ROAMING_PREFERENCE_ANY          = 0xFF
+} QmiNasRoamingPreference;
+
+/**
+ * QmiNasNetworkSelectionPreference:
+ * @QMI_NAS_NETWORK_SELECTION_PREFERENCE_AUTOMATIC:
+ * @QMI_NAS_NETWORK_SELECTION_PREFERENCE_MANUAL:
+ *
+ * Network selection preference.
+ */
+typedef enum {
+    QMI_NAS_NETWORK_SELECTION_PREFERENCE_AUTOMATIC = 0x00,
+    QMI_NAS_NETWORK_SELECTION_PREFERENCE_MANUAL    = 0x01
+} QmiNasNetworkSelectionPreference;
+
+/**
+ * QmiNasServiceDomainPreference:
+ * @QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_ONLY: Circuit-switched only.
+ * @QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ONLY: Packet-switched only.
+ * @QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_PS: Circuit-switched and packet-switched.
+ * @QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ATTACH: Packet-switched attach.
+ * @QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_DETACH:Packet-switched dettach.
+ *
+ * Service domain preference.
+ */
+typedef enum {
+    QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_ONLY   = 0x00,
+    QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ONLY   = 0x01,
+    QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_PS     = 0x02,
+    QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ATTACH = 0x03,
+    QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_DETACH = 0x04,
+} QmiNasServiceDomainPreference;
+
+/**
+ * QmiNasGsmWcdmaAcquisitionOrderPreference:
+ * @QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_AUTOMATIC: Automatic.
+ * @QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_GSM: GSM first, then WCDMA.
+ * @QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_WCDMA: WCDMA first, then GSM.
+ *
+ * GSM/WCDMA acquisition order preference.
+ */
+typedef enum {
+    QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_AUTOMATIC = 0x00,
+    QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_GSM       = 0x01,
+    QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_WCDMA     = 0x02
+} QmiNasGsmWcdmaAcquisitionOrderPreference;
+
+/**
+ * QmiNasTdScdmaBandPreference:
+ * @QMI_NAS_TD_SCDMA_BAND_PREFERENCE_A: Band A.
+ * @QMI_NAS_TD_SCDMA_BAND_PREFERENCE_B: Band B.
+ * @QMI_NAS_TD_SCDMA_BAND_PREFERENCE_C: Band C.
+ * @QMI_NAS_TD_SCDMA_BAND_PREFERENCE_D: Band D.
+ * @QMI_NAS_TD_SCDMA_BAND_PREFERENCE_E: Band E.
+ * @QMI_NAS_TD_SCDMA_BAND_PREFERENCE_F: Band F.
+ *
+ * Flags to specify TD-SCDMA-specific frequency band preferences.
+ */
+typedef enum {
+    QMI_NAS_TD_SCDMA_BAND_PREFERENCE_A = 1 << 0,
+    QMI_NAS_TD_SCDMA_BAND_PREFERENCE_B = 1 << 1,
+    QMI_NAS_TD_SCDMA_BAND_PREFERENCE_C = 1 << 2,
+    QMI_NAS_TD_SCDMA_BAND_PREFERENCE_D = 1 << 3,
+    QMI_NAS_TD_SCDMA_BAND_PREFERENCE_E = 1 << 4,
+    QMI_NAS_TD_SCDMA_BAND_PREFERENCE_F = 1 << 5
+} QmiNasTdScdmaBandPreference;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
