@@ -26,7 +26,7 @@
 #include "qmi-errors.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
-#include "qmi-enum-types-static.h"
+#include "qmi-flags64-types.h"
 
 #include "qmi-device.h"
 #include "qmi-client.h"

@@ -71,6 +71,7 @@ def add_header_start(f, output_name):
         "#include <gio/gio.h>\n"
         "\n"
         "#include \"qmi-enum-types.h\"\n"
+        "#include \"qmi-flags64-types.h\"\n"
         "#include \"qmi-message.h\"\n"
         "#include \"qmi-client.h\"\n"
         "\n"
