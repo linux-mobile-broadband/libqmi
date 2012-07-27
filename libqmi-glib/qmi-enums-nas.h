@@ -327,6 +327,51 @@ typedef enum {
 } QmiNasNetworkStatus;
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI NAS Get Technology Preference' request/response */
+
+/**
+ * QmiNasRadioTechnologyPreference:
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_3GPP2: 3GPP2 technology.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_3GPP: 3GPP technology.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_ANALOG: AMPS if 3GPP2, GSM if 3GPP.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_DIGITAL: CDMA if 3GPP2, WCDMA if 3GPP.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_HDR: CDMA EV-DO.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_LTE: LTE.
+ *
+ * Flags to specify the radio technology preference.
+ */
+typedef enum {
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_3GPP2   = 1 << 0,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_3GPP    = 1 << 1,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_ANALOG  = 1 << 2,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_DIGITAL = 1 << 3,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_HDR     = 1 << 4,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_LTE     = 1 << 5
+} QmiNasRadioTechnologyPreference;
+
+/**
+ * QmiNasRadioTechnologyPreferenceDuration:
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_PERMANENT: Permanent.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_POWER_CYCLE: Until the next power cycle.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_ONE_CALL: Until end of call.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_ONE_CALL_OR_TIME: Until end of call or a specified time.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_1: Internal reason 1, one call.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_2: Internal reason 2, one call.
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_3: Internal reason 3, one call.
+ *
+ * Duration of the Radio Technology Preference.
+ */
+typedef enum {
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_PERMANENT = 0x00,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_POWER_CYCLE = 0x01,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_ONE_CALL = 0x02,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_ONE_CALL_OR_TIME = 0x03,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_1 = 0x04,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_2 = 0x05,
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_3 = 0x06
+} QmiNasRadioTechnologyPreferenceDuration;
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get System Selection Preference'
  * request/response */
 
