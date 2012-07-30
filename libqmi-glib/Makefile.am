@@ -103,11 +103,11 @@ qmi-device.c: qmi-error-types.h qmi-enum-types.h
 qmi-client.c: qmi-error-types.h qmi-enum-types.h
 qmi-message.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.h qmi-dms.h qmi-wds.h qmi-nas.h
 qmi-ctl.h: qmi-ctl.stamp
-qmi-ctl.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.stamp
+qmi-ctl.c: qmi-error-types.h qmi-enum-types.h qmi-flags64-types.h qmi-ctl.stamp
 qmi-dms.h: qmi-dms.stamp
 qmi-dms.c: qmi-error-types.h qmi-enum-types.h qmi-flags64-types.h qmi-dms.stamp
 qmi-wds.h: qmi-wds.stamp
-qmi-wds.c: qmi-error-types.h qmi-enum-types.h qmi-wds.stamp
+qmi-wds.c: qmi-error-types.h qmi-enum-types.h qmi-flags64-types.h qmi-wds.stamp
 qmi-nas.h: qmi-nas.stamp
 qmi-nas.c: qmi-error-types.h qmi-enum-types.h qmi-flags64-types.h qmi-nas.stamp
 
