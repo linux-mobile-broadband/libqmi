@@ -1393,15 +1393,24 @@ version_info_ready (QmiClientCtl *client_ctl,
              ctx->self->priv->supported_services->len);
     for (i = 0; i < ctx->self->priv->supported_services->len; i++) {
         QmiMessageCtlGetVersionInfoOutputServiceListService *info;
+        const gchar *service_str;
 
         info = &g_array_index (ctx->self->priv->supported_services,
                                QmiMessageCtlGetVersionInfoOutputServiceListService,
                                i);
-        g_debug ("[%s]    %s (%u.%u)",
-                 ctx->self->priv->path_display,
-                 qmi_service_get_string (info->service),
-                 info->major_version,
-                 info->minor_version);
+        service_str = qmi_service_get_string (info->service);
+        if (service_str)
+            g_debug ("[%s]    %s (%u.%u)",
+                     ctx->self->priv->path_display,
+                     service_str,
+                     info->major_version,
+                     info->minor_version);
+        else
+            g_debug ("[%s]    unknown [0x%02x] (%u.%u)",
+                     ctx->self->priv->path_display,
+                     info->service,
+                     info->major_version,
+                     info->minor_version);
     }
 
     /* Keep on with next flags */
