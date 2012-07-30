@@ -531,7 +531,7 @@
                                         "public-format" : "QmiNasRadioTechnologyPreferenceDuration" } ] },
                     { "name"      : "Persistent",
                       "id"        : "0x10",
-                      "mandatory" : "yes",
+                      "mandatory" : "no",
                       "type"      : "TLV",
                       "format"    : "guint16",
                       "public-format" : "QmiNasRadioTechnologyPreference" } ] },
