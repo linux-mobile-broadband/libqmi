@@ -43,6 +43,7 @@ static Context *ctx;
 /* Options */
 static gboolean get_signal_strength_flag;
 static gboolean get_signal_info_flag;
+static gboolean get_technology_preference_flag;
 static gboolean network_scan_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -54,6 +55,10 @@ static GOptionEntry entries[] = {
     },
     { "nas-get-signal-info", 0, 0, G_OPTION_ARG_NONE, &get_signal_info_flag,
       "Get signal info",
+      NULL
+    },
+    { "nas-get-technology-preference", 0, 0, G_OPTION_ARG_NONE, &get_technology_preference_flag,
+      "Get technology preference",
       NULL
     },
     { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
@@ -97,6 +102,7 @@ qmicli_nas_options_enabled (void)
 
     n_actions = (get_signal_strength_flag +
                  get_signal_info_flag +
+                 get_technology_preference_flag +
                  network_scan_flag +
                  reset_flag +
                  noop_flag);
@@ -433,6 +439,61 @@ get_signal_strength_ready (QmiClientNas *client,
 }
 
 static void
+get_technology_preference_ready (QmiClientNas *client,
+                                 GAsyncResult *res)
+{
+    QmiMessageNasGetTechnologyPreferenceOutput *output;
+    GError *error = NULL;
+    QmiNasRadioTechnologyPreference preference;
+    QmiNasRadioTechnologyPreferenceDuration duration;
+    gchar *preference_string;
+
+    output = qmi_client_nas_get_technology_preference_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_technology_preference_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get technology preference: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_technology_preference_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_nas_get_technology_preference_output_get_active (
+        output,
+        &preference,
+        &duration,
+        NULL);
+
+    preference_string = qmi_nas_radio_technology_preference_build_string_from_mask (preference);
+    g_print ("[%s] Successfully got technology preference\n"
+             "\tActive: '%s', duration: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             preference_string,
+             qmi_nas_radio_technology_preference_duration_get_string (duration));
+    g_free (preference_string);
+
+    if (qmi_message_nas_get_technology_preference_output_get_persistent (
+            output,
+            &preference,
+            NULL)) {
+        preference_string = qmi_nas_radio_technology_preference_build_string_from_mask (preference);
+        g_print ("\tPersistent: '%s', duration: '%s'\n",
+                 qmi_device_get_path_display (ctx->device),
+                 preference_string);
+        g_free (preference_string);
+    }
+
+    qmi_message_nas_get_technology_preference_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
 network_scan_ready (QmiClientNas *client,
                     GAsyncResult *res)
 {
@@ -600,6 +661,18 @@ qmicli_nas_run (QmiDevice *device,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_signal_info_ready,
                                         NULL);
+        return;
+    }
+
+    /* Request to get technology preference? */
+    if (get_technology_preference_flag) {
+        g_debug ("Asynchronously getting technology preference...");
+        qmi_client_nas_get_technology_preference (ctx->client,
+                                                  NULL,
+                                                  10,
+                                                  ctx->cancellable,
+                                                  (GAsyncReadyCallback)get_technology_preference_ready,
+                                                  NULL);
         return;
     }
 
