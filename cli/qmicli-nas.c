@@ -44,6 +44,7 @@ static Context *ctx;
 static gboolean get_signal_strength_flag;
 static gboolean get_signal_info_flag;
 static gboolean get_technology_preference_flag;
+static gboolean get_system_selection_preference_flag;
 static gboolean network_scan_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -59,6 +60,10 @@ static GOptionEntry entries[] = {
     },
     { "nas-get-technology-preference", 0, 0, G_OPTION_ARG_NONE, &get_technology_preference_flag,
       "Get technology preference",
+      NULL
+    },
+    { "nas-get-system-selection-preference", 0, 0, G_OPTION_ARG_NONE, &get_system_selection_preference_flag,
+      "Get system selection preference",
       NULL
     },
     { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
@@ -103,6 +108,7 @@ qmicli_nas_options_enabled (void)
     n_actions = (get_signal_strength_flag +
                  get_signal_info_flag +
                  get_technology_preference_flag +
+                 get_system_selection_preference_flag +
                  network_scan_flag +
                  reset_flag +
                  noop_flag);
@@ -494,6 +500,157 @@ get_technology_preference_ready (QmiClientNas *client,
 }
 
 static void
+get_system_selection_preference_ready (QmiClientNas *client,
+                                 GAsyncResult *res)
+{
+    QmiMessageNasGetSystemSelectionPreferenceOutput *output;
+    GError *error = NULL;
+    gboolean emergency_mode;
+    QmiNasRatModePreference mode_preference;
+    QmiNasBandPreference band_preference;
+    QmiNasLteBandPreference lte_band_preference;
+    QmiNasTdScdmaBandPreference td_scdma_band_preference;
+    QmiNasCdmaPrlPreference cdma_prl_preference;
+    QmiNasRoamingPreference roaming_preference;
+    QmiNasNetworkSelectionPreference network_selection_preference;
+    QmiNasServiceDomainPreference service_domain_preference;
+    QmiNasGsmWcdmaAcquisitionOrderPreference gsm_wcdma_acquisition_order_preference;
+    guint16 mcc;
+    guint16 mnc;
+    gboolean has_pcs_digit;
+
+    output = qmi_client_nas_get_system_selection_preference_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_system_selection_preference_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get system_selection preference: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_system_selection_preference_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got system selection preference\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_emergency_mode (
+            output,
+            &emergency_mode,
+            NULL)) {
+        g_print ("\tEmergency mode: '%s'\n",
+                 emergency_mode ? "yes" : "no");
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_mode_preference (
+            output,
+            &mode_preference,
+            NULL)) {
+        gchar *str;
+
+        str = qmi_nas_rat_mode_preference_build_string_from_mask (mode_preference);
+        g_print ("\tMode preference: '%s'\n", str);
+        g_free (str);
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_band_preference (
+            output,
+            &band_preference,
+            NULL)) {
+        gchar *str;
+
+        str = qmi_nas_band_preference_build_string_from_mask (band_preference);
+        g_print ("\tBand preference: '%s'\n", str);
+        g_free (str);
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_lte_band_preference (
+            output,
+            &lte_band_preference,
+            NULL)) {
+        gchar *str;
+
+        str = qmi_nas_lte_band_preference_build_string_from_mask (lte_band_preference);
+        g_print ("\tLTE band preference: '%s'\n", str);
+        g_free (str);
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_td_scdma_band_preference (
+            output,
+            &td_scdma_band_preference,
+            NULL)) {
+        gchar *str;
+
+        str = qmi_nas_td_scdma_band_preference_build_string_from_mask (td_scdma_band_preference);
+        g_print ("\tTD-SCDMA band preference: '%s'\n", str);
+        g_free (str);
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_cdma_prl_preference (
+            output,
+            &cdma_prl_preference,
+            NULL)) {
+        g_print ("\tCDMA PRL preference: '%s'\n",
+                 qmi_nas_cdma_prl_preference_get_string (cdma_prl_preference));
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_roaming_preference (
+            output,
+            &roaming_preference,
+            NULL)) {
+        g_print ("\tRoaming preference: '%s'\n",
+                 qmi_nas_roaming_preference_get_string (roaming_preference));
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_network_selection_preference (
+            output,
+            &network_selection_preference,
+            NULL)) {
+        g_print ("\tNetwork selection preference: '%s'\n",
+                 qmi_nas_network_selection_preference_get_string (network_selection_preference));
+    }
+
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_service_domain_preference (
+            output,
+            &service_domain_preference,
+            NULL)) {
+        g_print ("\tService domain preference: '%s'\n",
+                 qmi_nas_service_domain_preference_get_string (service_domain_preference));
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_gsm_wcdma_acquisition_order_preference (
+            output,
+            &gsm_wcdma_acquisition_order_preference,
+            NULL)) {
+        g_print ("\tService selection preference: '%s'\n",
+                 qmi_nas_gsm_wcdma_acquisition_order_preference_get_string (gsm_wcdma_acquisition_order_preference));
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_manual_network_selection (
+            output,
+            &mcc,
+            &mnc,
+            &has_pcs_digit,
+            NULL)) {
+        g_print ("\tManual network selection:\n"
+                 "\t\tMCC: '%" G_GUINT16_FORMAT"'\n"
+                 "\t\tMNC: '%" G_GUINT16_FORMAT"'\n"
+                 "\t\tMCC with PCS digit: '%s'\n",
+                 mcc,
+                 mnc,
+                 has_pcs_digit ? "yes" : "no");
+    }
+
+    qmi_message_nas_get_system_selection_preference_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
 network_scan_ready (QmiClientNas *client,
                     GAsyncResult *res)
 {
@@ -673,6 +830,18 @@ qmicli_nas_run (QmiDevice *device,
                                                   ctx->cancellable,
                                                   (GAsyncReadyCallback)get_technology_preference_ready,
                                                   NULL);
+        return;
+    }
+
+    /* Request to get system_selection preference? */
+    if (get_system_selection_preference_flag) {
+        g_debug ("Asynchronously getting system selection preference...");
+        qmi_client_nas_get_system_selection_preference (ctx->client,
+                                                        NULL,
+                                                        10,
+                                                        ctx->cancellable,
+                                                        (GAsyncReadyCallback)get_system_selection_preference_ready,
+                                                        NULL);
         return;
     }
 
