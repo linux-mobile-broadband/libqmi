@@ -49,11 +49,11 @@ static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "nas-get-signal-strength", 0, 0, G_OPTION_ARG_NONE, &get_signal_strength_flag,
-      "Get signal strength (deprecated)",
+      "Get signal strength",
       NULL
     },
     { "nas-get-signal-info", 0, 0, G_OPTION_ARG_NONE, &get_signal_info_flag,
-      "Get signal info (deprecated)",
+      "Get signal info",
       NULL
     },
     { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
