@@ -372,8 +372,8 @@ typedef enum {
 } QmiNasRadioTechnologyPreferenceDuration;
 
 /*****************************************************************************/
-/* Helper enums for the 'QMI NAS Get System Selection Preference'
- * request/response */
+/* Helper enums for the 'QMI NAS Get/Set System Selection Preference'
+ * requests/responses */
 
 /**
  * QmiNasRatModePreference:
@@ -436,6 +436,18 @@ typedef enum {
     QMI_NAS_NETWORK_SELECTION_PREFERENCE_AUTOMATIC = 0x00,
     QMI_NAS_NETWORK_SELECTION_PREFERENCE_MANUAL    = 0x01
 } QmiNasNetworkSelectionPreference;
+
+/**
+ * QmiNasChangeDuration:
+ * @QMI_NAS_CHANGE_DURATION_POWER_CYCLE: Change active until device is power-cycled.
+ * @QMI_NAS_CHANGE_DURATION_PERMANENT: Change is permanent.
+ *
+ * Duration of the change requested.
+ */
+typedef enum {
+    QMI_NAS_CHANGE_DURATION_POWER_CYCLE = 0x00,
+    QMI_NAS_CHANGE_DURATION_PERMANENT   = 0x01
+} QmiNasChangeDuration;
 
 /**
  * QmiNasServiceDomainPreference:
