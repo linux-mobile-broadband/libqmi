@@ -512,6 +512,25 @@
                                                            "public-format" : "gboolean" } ] } } ] },
 
   // *********************************************************************************
+  {  "name"    : "Set Technology Preference",
+     "type"    : "Message",
+     "service" : "NAS",
+     "id"      : "0x002A",
+     "version" : "1.7",
+     "input"   : [  { "name"      : "Current",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "sequence",
+                      "contents"  : [ { "name"          : "Technology Preference",
+                                        "format"        : "guint16",
+                                        "public-format" : "QmiNasRadioTechnologyPreference" },
+                                      { "name"          : "Technology Preference Duration",
+                                        "format"        : "guint8",
+                                        "public-format" : "QmiNasPreferenceDuration" } ] } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get Technology Preference",
      "type"    : "Message",
      "service" : "NAS",
