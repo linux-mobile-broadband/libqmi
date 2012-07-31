@@ -350,26 +350,26 @@ typedef enum {
 } QmiNasRadioTechnologyPreference;
 
 /**
- * QmiNasRadioTechnologyPreferenceDuration:
- * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_PERMANENT: Permanent.
- * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_POWER_CYCLE: Until the next power cycle.
- * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_ONE_CALL: Until end of call.
- * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_ONE_CALL_OR_TIME: Until end of call or a specified time.
- * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_1: Internal reason 1, one call.
- * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_2: Internal reason 2, one call.
- * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_3: Internal reason 3, one call.
+ * QmiNasPreferenceDuration:
+ * @QMI_NAS_PREFERENCE_DURATION_PERMANENT: Permanent.
+ * @QMI_NAS_PREFERENCE_DURATION_POWER_CYCLE: Until the next power cycle.
+ * @QMI_NAS_PREFERENCE_DURATION_ONE_CALL: Until end of call.
+ * @QMI_NAS_PREFERENCE_DURATION_ONE_CALL_OR_TIME: Until end of call or a specified time.
+ * @QMI_NAS_PREFERENCE_DURATION_INTERNAL_ONE_CALL_1: Internal reason 1, one call.
+ * @QMI_NAS_PREFERENCE_DURATION_INTERNAL_ONE_CALL_2: Internal reason 2, one call.
+ * @QMI_NAS_PREFERENCE_DURATION_INTERNAL_ONE_CALL_3: Internal reason 3, one call.
  *
- * Duration of the Radio Technology Preference.
+ * Duration of the preference setting.
  */
 typedef enum {
-    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_PERMANENT = 0x00,
-    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_POWER_CYCLE = 0x01,
-    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_ONE_CALL = 0x02,
-    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_ONE_CALL_OR_TIME = 0x03,
-    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_1 = 0x04,
-    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_2 = 0x05,
-    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_INTERNAL_ONE_CALL_3 = 0x06
-} QmiNasRadioTechnologyPreferenceDuration;
+    QMI_NAS_PREFERENCE_DURATION_PERMANENT           = 0x00,
+    QMI_NAS_PREFERENCE_DURATION_POWER_CYCLE         = 0x01,
+    QMI_NAS_PREFERENCE_DURATION_ONE_CALL            = 0x02,
+    QMI_NAS_PREFERENCE_DURATION_ONE_CALL_OR_TIME    = 0x03,
+    QMI_NAS_PREFERENCE_DURATION_INTERNAL_ONE_CALL_1 = 0x04,
+    QMI_NAS_PREFERENCE_DURATION_INTERNAL_ONE_CALL_2 = 0x05,
+    QMI_NAS_PREFERENCE_DURATION_INTERNAL_ONE_CALL_3 = 0x06
+} QmiNasPreferenceDuration;
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get/Set System Selection Preference'
@@ -436,18 +436,6 @@ typedef enum {
     QMI_NAS_NETWORK_SELECTION_PREFERENCE_AUTOMATIC = 0x00,
     QMI_NAS_NETWORK_SELECTION_PREFERENCE_MANUAL    = 0x01
 } QmiNasNetworkSelectionPreference;
-
-/**
- * QmiNasChangeDuration:
- * @QMI_NAS_CHANGE_DURATION_POWER_CYCLE: Change active until device is power-cycled.
- * @QMI_NAS_CHANGE_DURATION_PERMANENT: Change is permanent.
- *
- * Duration of the change requested.
- */
-typedef enum {
-    QMI_NAS_CHANGE_DURATION_POWER_CYCLE = 0x00,
-    QMI_NAS_CHANGE_DURATION_PERMANENT   = 0x01
-} QmiNasChangeDuration;
 
 /**
  * QmiNasServiceDomainPreference:

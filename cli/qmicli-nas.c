@@ -451,7 +451,7 @@ get_technology_preference_ready (QmiClientNas *client,
     QmiMessageNasGetTechnologyPreferenceOutput *output;
     GError *error = NULL;
     QmiNasRadioTechnologyPreference preference;
-    QmiNasRadioTechnologyPreferenceDuration duration;
+    QmiNasPreferenceDuration duration;
     gchar *preference_string;
 
     output = qmi_client_nas_get_technology_preference_finish (client, res, &error);
@@ -481,7 +481,7 @@ get_technology_preference_ready (QmiClientNas *client,
              "\tActive: '%s', duration: '%s'\n",
              qmi_device_get_path_display (ctx->device),
              preference_string,
-             qmi_nas_radio_technology_preference_duration_get_string (duration));
+             qmi_nas_preference_duration_get_string (duration));
     g_free (preference_string);
 
     if (qmi_message_nas_get_technology_preference_output_get_persistent (
