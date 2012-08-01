@@ -495,7 +495,7 @@
                                                          { "name"          : "RAT",
                                                            "format"        : "guint8",
                                                            "public-format" : "QmiNasRadioInterface" } ] } },
-                    { "name"      : "MNC PDS Digit Include Status",
+                    { "name"      : "MNC PCS Digit Include Status",
                       "id"        : "0x12",
                       "mandatory" : "no",
                       "type"      : "TLV",

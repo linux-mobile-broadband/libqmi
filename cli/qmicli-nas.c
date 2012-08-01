@@ -721,13 +721,13 @@ network_scan_ready (QmiClientNas *client,
     }
 
     array = NULL;
-    if (qmi_message_nas_network_scan_output_get_mnc_pds_digit_include_status (output, &array, NULL)) {
+    if (qmi_message_nas_network_scan_output_get_mnc_pcs_digit_include_status (output, &array, NULL)) {
         guint i;
 
         for (i = 0; i < array->len; i++) {
-            QmiMessageNasNetworkScanOutputMncPdsDigitIncludeStatusElement *element;
+            QmiMessageNasNetworkScanOutputMncPcsDigitIncludeStatusElement *element;
 
-            element = &g_array_index (array, QmiMessageNasNetworkScanOutputMncPdsDigitIncludeStatusElement, i);
+            element = &g_array_index (array, QmiMessageNasNetworkScanOutputMncPcsDigitIncludeStatusElement, i);
             g_print ("Network [%u]:\n"
                      "\tMCC: '%" G_GUINT16_FORMAT"'\n"
                      "\tMNC: '%" G_GUINT16_FORMAT"'\n"
