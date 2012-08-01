@@ -43,6 +43,7 @@ static Context *ctx;
 /* Options */
 static gboolean get_signal_strength_flag;
 static gboolean get_signal_info_flag;
+static gboolean get_serving_system_flag;
 static gboolean get_technology_preference_flag;
 static gboolean get_system_selection_preference_flag;
 static gboolean network_scan_flag;
@@ -56,6 +57,10 @@ static GOptionEntry entries[] = {
     },
     { "nas-get-signal-info", 0, 0, G_OPTION_ARG_NONE, &get_signal_info_flag,
       "Get signal info",
+      NULL
+    },
+    { "nas-get-serving-system", 0, 0, G_OPTION_ARG_NONE, &get_serving_system_flag,
+      "Get serving system",
       NULL
     },
     { "nas-get-technology-preference", 0, 0, G_OPTION_ARG_NONE, &get_technology_preference_flag,
@@ -107,6 +112,7 @@ qmicli_nas_options_enabled (void)
 
     n_actions = (get_signal_strength_flag +
                  get_signal_info_flag +
+                 get_serving_system_flag +
                  get_technology_preference_flag +
                  get_system_selection_preference_flag +
                  network_scan_flag +
@@ -441,6 +447,436 @@ get_signal_strength_ready (QmiClientNas *client,
     /* Just skip others for now */
 
     qmi_message_nas_get_signal_strength_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
+get_serving_system_ready (QmiClientNas *client,
+                          GAsyncResult *res)
+{
+    QmiMessageNasGetServingSystemOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_nas_get_serving_system_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_serving_system_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get serving system: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_serving_system_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got serving system:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    {
+        QmiNasRegistrationState registration_state;
+        QmiNasAttachState cs_attach_state;
+        QmiNasAttachState ps_attach_state;
+        QmiNasNetworkType selected_network;
+        GArray *radio_interfaces;
+        guint i;
+
+        qmi_message_nas_get_serving_system_output_get_serving_system (
+            output,
+            &registration_state,
+            &cs_attach_state,
+            &ps_attach_state,
+            &selected_network,
+            &radio_interfaces,
+            NULL);
+
+        g_print ("\tRegistration state: '%s'\n"
+                 "\tCS: '%s'\n"
+                 "\tPS: '%s'\n"
+                 "\tSelected network: '%s'\n"
+                 "\tRadio interfaces: '%u'",
+                 qmi_nas_registration_state_get_string (registration_state),
+                 qmi_nas_attach_state_get_string (cs_attach_state),
+                 qmi_nas_attach_state_get_string (ps_attach_state),
+                 qmi_nas_network_type_get_string (selected_network),
+                 radio_interfaces->len);
+
+        for (i = 0; i < radio_interfaces->len; i++) {
+            QmiNasRadioInterface iface;
+
+            iface = g_array_index (radio_interfaces, QmiNasRadioInterface, i);
+            g_print ("\t\t[%u]: '%s'\n", i, qmi_nas_radio_interface_get_string (iface));
+        }
+    }
+
+    {
+        QmiNasRoamingIndicatorStatus roaming;
+
+        if (qmi_message_nas_get_serving_system_output_get_roaming_indicator (
+                output,
+                &roaming,
+                NULL)) {
+            g_print ("\tRoaming status: '%s'\n",
+                     qmi_nas_roaming_indicator_status_get_string (roaming));
+        }
+    }
+
+    {
+        GArray *data_service_capability;
+
+        if (qmi_message_nas_get_serving_system_output_get_data_service_capability (
+                output,
+                &data_service_capability,
+                NULL)) {
+            guint i;
+
+            g_print ("\tData service capabilities: '%u'\n",
+                     data_service_capability->len);
+
+            for (i = 0; i < data_service_capability->len; i++) {
+                QmiNasDataCapability cap;
+
+                cap = g_array_index (data_service_capability, QmiNasDataCapability, i);
+                g_print ("\t\t[%u]: '%s'\n", i, qmi_nas_data_capability_get_string (cap));
+            }
+        }
+    }
+
+    {
+        guint16 current_plmn_mcc;
+        guint16 current_plmn_mnc;
+        const gchar *current_plmn_description;
+
+        if (qmi_message_nas_get_serving_system_output_get_current_plmn (
+                output,
+                &current_plmn_mcc,
+                &current_plmn_mnc,
+                &current_plmn_description,
+                NULL)) {
+            g_print ("\tCurrent PLMN:\n"
+                     "\t\tMCC: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tMNC: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tDescription: '%s'",
+                     current_plmn_mcc,
+                     current_plmn_mnc,
+                     current_plmn_description);
+        }
+    }
+
+    {
+        guint16 sid;
+        guint16 nid;
+
+        if (qmi_message_nas_get_serving_system_output_get_cdma_system_id (
+                output,
+                &sid,
+                &nid,
+                NULL)) {
+            g_print ("\tCDMA System ID:\n"
+                     "\t\tSID: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tESN: '%" G_GUINT16_FORMAT"'\n",
+                     sid, nid);
+        }
+    }
+
+    {
+        guint16 id;
+        gint32 latitude;
+        gint32 longitude;
+
+        if (qmi_message_nas_get_serving_system_output_get_cdma_base_station_info (
+                output,
+                &id,
+                &latitude,
+                &longitude,
+                NULL)) {
+            gdouble latitude_degrees;
+            gdouble longitude_degrees;
+
+            /* TODO: give degrees, minutes, seconds */
+            latitude_degrees = ((gdouble)latitude * 0.25)/3600.0;
+            longitude_degrees = ((gdouble)longitude * 0.25)/3600.0;
+
+            g_print ("\tCDMA Base station info:\n"
+                     "\t\tBase station ID: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tLatitude: '%lf'º\n"
+                     "\t\tLongitude: '%lf'º\n",
+                     id, latitude_degrees, longitude_degrees);
+        }
+    }
+
+    {
+        GArray *roaming_indicators;
+
+        if (qmi_message_nas_get_serving_system_output_get_roaming_indicator_list (
+                output,
+                &roaming_indicators,
+                NULL)) {
+            guint i;
+
+            g_print ("\tRoaming indicators: '%u'\n",
+                     roaming_indicators->len);
+
+            for (i = 0; i < roaming_indicators->len; i++) {
+                QmiMessageNasGetServingSystemOutputRoamingIndicatorListElement *element;
+
+                element = &g_array_index (roaming_indicators, QmiMessageNasGetServingSystemOutputRoamingIndicatorListElement, i);
+                g_print ("\t\t[%u]: '%s' (%s)\n",
+                         i,
+                         qmi_nas_roaming_indicator_status_get_string (element->roaming_indicator),
+                         qmi_nas_radio_interface_get_string (element->radio_interface));
+            }
+        }
+    }
+
+    {
+        QmiNasRoamingIndicatorStatus roaming;
+
+        if (qmi_message_nas_get_serving_system_output_get_default_roaming_indicator (
+                output,
+                &roaming,
+                NULL)) {
+            g_print ("\tDefault roaming status: '%s'\n",
+                     qmi_nas_roaming_indicator_status_get_string (roaming));
+        }
+    }
+
+    {
+        guint8 leap_seconds;
+        gint8 local_time_offset;
+        gboolean daylight_saving_time;
+
+        if (qmi_message_nas_get_serving_system_output_get_time_zone_3gpp2 (
+                output,
+                &leap_seconds,
+                &local_time_offset,
+                &daylight_saving_time,
+                NULL)) {
+            g_print ("\t3GPP2 time zone:\n"
+                     "\t\tLeap seconds: '%u' seconds\n"
+                     "\t\tLocal time offset: '%d' minutes\n"
+                     "\t\tDaylight saving time: '%s'\n",
+                     leap_seconds,
+                     (gint)local_time_offset * 30,
+                     daylight_saving_time ? "yes" : "no");
+        }
+    }
+
+    {
+        guint8 cdma_p_rev;
+
+        if (qmi_message_nas_get_serving_system_output_get_cdma_p_rev (
+                output,
+                &cdma_p_rev,
+                NULL)) {
+            g_print ("\tCDMA P_Rev: '%u'\n", cdma_p_rev);
+        }
+    }
+
+    {
+        gint8 time_zone;
+
+        if (qmi_message_nas_get_serving_system_output_get_time_zone_3gpp (
+                output,
+                &time_zone,
+                NULL)) {
+            g_print ("\t3GPP time zone offset: '%d' minutes\n",
+                     (gint)time_zone * 15);
+        }
+    }
+
+    {
+        guint8 adjustment;
+
+        if (qmi_message_nas_get_serving_system_output_get_daylight_saving_time_adjustment_3gpp (
+                output,
+                &adjustment,
+                NULL)) {
+            g_print ("\t3GPP daylight saving time adjustment: '%u' hours\n",
+                     adjustment);
+        }
+    }
+
+    {
+        guint16 lac;
+
+        if (qmi_message_nas_get_serving_system_output_get_lac_3gpp (
+                output,
+                &lac,
+                NULL)) {
+            g_print ("\t3GPP location area code: '%" G_GUINT16_FORMAT"'\n", lac);
+        }
+    }
+
+    {
+        guint32 cid;
+
+        if (qmi_message_nas_get_serving_system_output_get_cid_3gpp (
+                output,
+                &cid,
+                NULL)) {
+            g_print ("\t3GPP cell ID: '%u'\n", cid);
+        }
+    }
+
+    {
+        gboolean concurrent;
+
+        if (qmi_message_nas_get_serving_system_output_get_concurrent_service_info_3gpp2 (
+                output,
+                &concurrent,
+                NULL)) {
+            g_print ("\t3GPP2 concurrent service info: '%s'\n",
+                     concurrent ? "available" : "not available");
+        }
+    }
+
+    {
+        gboolean prl;
+
+        if (qmi_message_nas_get_serving_system_output_get_prl_indicator_3gpp2 (
+                output,
+                &prl,
+                NULL)) {
+            g_print ("\t3GPP2 PRL indicator: '%s'\n",
+                     prl ? "system in PRL" : "system not in PRL");
+        }
+    }
+
+    {
+        gboolean supported;
+
+        if (qmi_message_nas_get_serving_system_output_get_dual_transfer_mode_supported (
+                output,
+                &supported,
+                NULL)) {
+            g_print ("\tDual transfer mode: '%s'\n",
+                     supported ? "supported" : "not supported");
+        }
+    }
+
+    {
+        QmiNasServiceStatus status;
+        QmiNasNetworkServiceDomain capability;
+        QmiNasServiceStatus hdr_status;
+        gboolean hdr_hybrid;
+        gboolean forbidden;
+
+        if (qmi_message_nas_get_serving_system_output_get_detailed_service_status (
+                output,
+                &status,
+                &capability,
+                &hdr_status,
+                &hdr_hybrid,
+                &forbidden,
+                NULL)) {
+            g_print ("\tDetailed status:\n"
+                     "\t\tStatus: '%s'\n"
+                     "\t\tCapability: '%s'\n"
+                     "\t\tHDR Status: '%s'\n"
+                     "\t\tHDR Hybrid: '%s'\n"
+                     "\t\tForbidden: '%s'\n",
+                     qmi_nas_service_status_get_string (status),
+                     qmi_nas_network_service_domain_get_string (capability),
+                     qmi_nas_service_status_get_string (hdr_status),
+                     hdr_hybrid ? "yes" : "no",
+                     forbidden ? "yes" : "no");
+        }
+    }
+
+    {
+        guint16 mcc;
+        guint8 imsi_11_12;
+
+        if (qmi_message_nas_get_serving_system_output_get_cdma_system_info (
+                output,
+                &mcc,
+                &imsi_11_12,
+                NULL)) {
+            g_print ("\tCDMA system info:\n"
+                     "\t\tMCC: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tIMSI_11_12: '%u'\n",
+                     mcc,
+                     imsi_11_12);
+        }
+    }
+
+    {
+        QmiNasHdrPersonality personality;
+
+        if (qmi_message_nas_get_serving_system_output_get_hdr_personality (
+                output,
+                &personality,
+                NULL)) {
+            g_print ("\tHDR personality: '%s'\n",
+                     qmi_nas_hdr_personality_get_string (personality));
+        }
+    }
+
+    {
+        guint16 tac;
+
+        if (qmi_message_nas_get_serving_system_output_get_lte_tac (
+                output,
+                &tac,
+                NULL)) {
+            g_print ("\tLTE tracking area code: '%" G_GUINT16_FORMAT"'\n", tac);
+        }
+    }
+
+    {
+        QmiNasCallBarringStatus cs_status;
+        QmiNasCallBarringStatus ps_status;
+
+        if (qmi_message_nas_get_serving_system_output_get_call_barring_status (
+                output,
+                &cs_status,
+                &ps_status,
+                NULL)) {
+            g_print ("\tCall barring status:\n"
+                     "\t\tCircuit switched: '%s'\n"
+                     "\t\tPacket switched: '%s'\n",
+                     qmi_nas_call_barring_status_get_string (cs_status),
+                     qmi_nas_call_barring_status_get_string (ps_status));
+        }
+    }
+
+    {
+        guint16 code;
+
+        if (qmi_message_nas_get_serving_system_output_get_umts_primary_scrambling_code (
+                output,
+                &code,
+                NULL)) {
+            g_print ("\tUMTS primary scrambling code: '%" G_GUINT16_FORMAT"'\n", code);
+        }
+    }
+
+    {
+        guint16 mcc;
+        guint16 mnc;
+        gboolean has_pcs_digit;
+
+        if (qmi_message_nas_get_serving_system_output_get_mnc_pcs_digit_include_status (
+                output,
+                &mcc,
+                &mnc,
+                &has_pcs_digit,
+                NULL)) {
+            g_print ("\tFull operator code info:\n"
+                     "\t\tMCC: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tMNC: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tMNC with PCS digit: '%s'\n",
+                     mcc,
+                     mnc,
+                     has_pcs_digit ? "yes" : "no");
+        }
+    }
+
+    qmi_message_nas_get_serving_system_output_unref (output);
     shutdown (TRUE);
 }
 
@@ -818,6 +1254,18 @@ qmicli_nas_run (QmiDevice *device,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_signal_info_ready,
                                         NULL);
+        return;
+    }
+
+    /* Request to get serving system? */
+    if (get_serving_system_flag) {
+        g_debug ("Asynchronously getting serving system...");
+        qmi_client_nas_get_serving_system (ctx->client,
+                                           NULL,
+                                           10,
+                                           ctx->cancellable,
+                                           (GAsyncReadyCallback)get_serving_system_ready,
+                                           NULL);
         return;
     }
 
