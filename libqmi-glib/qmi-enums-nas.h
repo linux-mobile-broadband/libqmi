@@ -216,16 +216,20 @@ typedef enum {
 
 /**
  * QmiNasNetworkServiceDomain:
+ * @QMI_NAS_NETWORK_SERVICE_DOMAIN_NONE: No service.
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_CS: Circuit switched.
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_PS: Packet switched.
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_CS_PS: Circuit and packet switched.
+ * @QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN: Unknown service..
  *
  * Network Service Domain.
  */
 typedef enum {
-    QMI_NAS_NETWORK_SERVICE_DOMAIN_CS    = 1,
-    QMI_NAS_NETWORK_SERVICE_DOMAIN_PS    = 2,
-    QMI_NAS_NETWORK_SERVICE_DOMAIN_CS_PS = 3,
+    QMI_NAS_NETWORK_SERVICE_DOMAIN_NONE    = 0x00,
+    QMI_NAS_NETWORK_SERVICE_DOMAIN_CS      = 0x01,
+    QMI_NAS_NETWORK_SERVICE_DOMAIN_PS      = 0x02,
+    QMI_NAS_NETWORK_SERVICE_DOMAIN_CS_PS   = 0x03,
+    QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN = 0x04,
 } QmiNasNetworkServiceDomain;
 
 /**
@@ -325,6 +329,152 @@ typedef enum {
     QMI_NAS_NETWORK_STATUS_PREFERRED       = 1 << 6,
     QMI_NAS_NETWORK_STATUS_NOT_PREFERRED   = 1 << 7
 } QmiNasNetworkStatus;
+
+/*****************************************************************************/
+/* Helper enums for the 'QMI NAS Get Serving System' request/response */
+
+/**
+ * QmiNasRegistrationState:
+ * @QMI_NAS_REGISTRATION_STATE_NOT_REGISTERED: Not registered.
+ * @QMI_NAS_REGISTRATION_STATE_REGISTERED: Registered.
+ * @QMI_NAS_REGISTRATION_STATE_NOT_REGISTERED_SEARCHING: Searching.
+ * @QMI_NAS_REGISTRATION_STATE_REGISTRATION_DENIED: Registration denied.
+ * @QMI_NAS_REGISTRATION_STATE_UNKNOWN: Unknown.
+ *
+ * Status of the network registration.
+ */
+typedef enum {
+    QMI_NAS_REGISTRATION_STATE_NOT_REGISTERED           = 0x00,
+    QMI_NAS_REGISTRATION_STATE_REGISTERED               = 0x01,
+    QMI_NAS_REGISTRATION_STATE_NOT_REGISTERED_SEARCHING = 0x02,
+    QMI_NAS_REGISTRATION_STATE_REGISTRATION_DENIED      = 0x03,
+    QMI_NAS_REGISTRATION_STATE_UNKNOWN                  = 0x04
+} QmiNasRegistrationState;
+
+/**
+ * QmiNasAttachState:
+ * @QMI_NAS_ATTACH_STATE_UNKNOWN: Unknown attach state.
+ * @QMI_NAS_ATTACH_STATE_ATTACHED: Attached.
+ * @QMI_NAS_ATTACH_STATE_DETACHED: Detached.
+ *
+ * Domain attach state.
+ */
+typedef enum {
+    QMI_NAS_ATTACH_STATE_UNKNOWN  = 0x00,
+    QMI_NAS_ATTACH_STATE_ATTACHED = 0x01,
+    QMI_NAS_ATTACH_STATE_DETACHED = 0x02,
+} QmiNasAttachState;
+
+/**
+ * QmiNasNetworkType:
+ * @QMI_NAS_NETWORK_TYPE_UNKNOWN: Unknown.
+ * @QMI_NAS_NETWORK_TYPE_3GPP: 3GPP network.
+ * @QMI_NAS_NETWORK_TYPE_3GPP2: 3GPP2 network.
+ *
+ * Type of network.
+ */
+typedef enum {
+    QMI_NAS_NETWORK_TYPE_UNKNOWN = 0x00,
+    QMI_NAS_NETWORK_TYPE_3GPP    = 0x01,
+    QMI_NAS_NETWORK_TYPE_3GPP2   = 0x02
+} QmiNasNetworkType;
+
+/**
+ * QmiNasRoamingIndicatorStatus:
+ * @QMI_NAS_ROAMING_INDICATOR_STATUS_ON: Roaming.
+ * @QMI_NAS_ROAMING_INDICATOR_STATUS_OFF: Home.
+ *
+ * Status of the roaming indication.
+ */
+typedef enum {
+    QMI_NAS_ROAMING_INDICATOR_STATUS_ON  = 0x00,
+    QMI_NAS_ROAMING_INDICATOR_STATUS_OFF = 0x01,
+    /* next values only for 3GPP2 */
+} QmiNasRoamingIndicatorStatus;
+
+/**
+ * QmiNasDataCapability:
+ * @QMI_NAS_DATA_CAPABILITY_GPRS: GPRS.
+ * @QMI_NAS_DATA_CAPABILITY_EDGE: EDGE.
+ * @QMI_NAS_DATA_CAPABILITY_HSDPA: HSDPA.
+ * @QMI_NAS_DATA_CAPABILITY_HSUPA: HSUPA.
+ * @QMI_NAS_DATA_CAPABILITY_WCDMA: WCDMA.
+ * @QMI_NAS_DATA_CAPABILITY_CDMA: CDMA.
+ * @QMI_NAS_DATA_CAPABILITY_EVDO_REV_0: EV-DO revision 0.
+ * @QMI_NAS_DATA_CAPABILITY_EVDO_REV_A: EV-DO revision A.
+ * @QMI_NAS_DATA_CAPABILITY_GSM: GSM.
+ * @QMI_NAS_DATA_CAPABILITY_EVDO_REV_B: EV-DO revision B.
+ * @QMI_NAS_DATA_CAPABILITY_LTE: LTE.
+ * @QMI_NAS_DATA_CAPABILITY_HSDPA_PLUS: HSDPA+.
+ * @QMI_NAS_DATA_CAPABILITY_DC_HSDPA_PLUS: DC-HSDPA+.
+ *
+ * Data capability of the network.
+ */
+typedef enum {
+    QMI_NAS_DATA_CAPABILITY_GPRS          = 0x01,
+    QMI_NAS_DATA_CAPABILITY_EDGE          = 0x02,
+    QMI_NAS_DATA_CAPABILITY_HSDPA         = 0x03,
+    QMI_NAS_DATA_CAPABILITY_HSUPA         = 0x04,
+    QMI_NAS_DATA_CAPABILITY_WCDMA         = 0x05,
+    QMI_NAS_DATA_CAPABILITY_CDMA          = 0x06,
+    QMI_NAS_DATA_CAPABILITY_EVDO_REV_0    = 0x07,
+    QMI_NAS_DATA_CAPABILITY_EVDO_REV_A    = 0x08,
+    QMI_NAS_DATA_CAPABILITY_GSM           = 0x09,
+    QMI_NAS_DATA_CAPABILITY_EVDO_REV_B    = 0x0A,
+    QMI_NAS_DATA_CAPABILITY_LTE           = 0x0B,
+    QMI_NAS_DATA_CAPABILITY_HSDPA_PLUS    = 0x0C,
+    QMI_NAS_DATA_CAPABILITY_DC_HSDPA_PLUS = 0x0D
+} QmiNasDataCapability;
+
+/**
+ * QmiNasServiceStatus:
+ * @QMI_NAS_SERVICE_STATUS_NONE: No service.
+ * @QMI_NAS_SERVICE_STATUS_LIMITED: Limited service.
+ * @QMI_NAS_SERVICE_STATUS_AVAILABLE: Service available.
+ * @QMI_NAS_SERVICE_STATUS_LIMITED_REGIONAL: Limited regional service.
+ * @QMI_NAS_SERVICE_STATUS_POWER_SAVE: Device in power save mode.
+ *
+ * Status of the service.
+ */
+typedef enum {
+    QMI_NAS_SERVICE_STATUS_NONE             = 0x00,
+    QMI_NAS_SERVICE_STATUS_LIMITED          = 0x01,
+    QMI_NAS_SERVICE_STATUS_AVAILABLE        = 0x02,
+    QMI_NAS_SERVICE_STATUS_LIMITED_REGIONAL = 0x03,
+    QMI_NAS_SERVICE_STATUS_POWER_SAVE       = 0x04
+} QmiNasServiceStatus;
+
+/**
+ * QmiNasHdrPersonality:
+ * @QMI_NAS_HDR_PERSONALITY_UNKNOWN: Unknown.
+ * @QMI_NAS_HDR_PERSONALITY_HRPD: HRPD.
+ * @QMI_NAS_HDR_PERSONALITY_EHRPD: eHRPD.
+ *
+ * HDR personality type.
+ */
+typedef enum {
+    QMI_NAS_HDR_PERSONALITY_UNKNOWN = 0x00,
+    QMI_NAS_HDR_PERSONALITY_HRPD    = 0x01,
+    QMI_NAS_HDR_PERSONALITY_EHRPD   = 0x02,
+} QmiNasHdrPersonality;
+
+/**
+ * QmiNasCallBarringStatus:
+ * @QMI_NAS_CALL_BARRING_STATUS_NORMAL_ONLY: Normal calls only.
+ * @QMI_NAS_CALL_BARRING_STATUS_EMERGENCY_ONLY: Emergency calls only.
+ * @QMI_NAS_CALL_BARRING_STATUS_NO_CALLS: No calls allowed.
+ * @QMI_NAS_CALL_BARRING_STATUS_ALL_CALLS: All calls allowed.
+ * @QMI_NAS_CALL_BARRING_STATUS_UNKNOWN: Unknown.
+ *
+ * Status of the call barring functionality.
+ */
+typedef enum {
+    QMI_NAS_CALL_BARRING_STATUS_NORMAL_ONLY    = 0x00,
+    QMI_NAS_CALL_BARRING_STATUS_EMERGENCY_ONLY = 0x01,
+    QMI_NAS_CALL_BARRING_STATUS_NO_CALLS       = 0x02,
+    QMI_NAS_CALL_BARRING_STATUS_ALL_CALLS      = 0x03,
+    QMI_NAS_CALL_BARRING_STATUS_UNKNOWN        = -1
+} QmiNasCallBarringStatus;
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get Technology Preference' request/response */
