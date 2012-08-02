@@ -333,6 +333,21 @@ typedef enum {
 } QmiNasNetworkStatus;
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI NAS Initiate Network Register' request/response */
+
+/**
+ * QmiNasNetworkRegisterType:
+ * @QMI_NAS_NETWORK_REGISTER_TYPE_AUTOMATIC: Automatic network registration.
+ * @QMI_NAS_NETWORK_REGISTER_TYPE_MANUAL: Manual network registration.
+ *
+ * Type of network registration.
+ */
+typedef enum {
+    QMI_NAS_NETWORK_REGISTER_TYPE_AUTOMATIC = 0x01,
+    QMI_NAS_NETWORK_REGISTER_TYPE_MANUAL    = 0x02
+} QmiNasNetworkRegisterType;
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get Serving System' request/response */
 
 /**
