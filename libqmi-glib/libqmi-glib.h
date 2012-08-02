@@ -23,7 +23,6 @@
 #ifndef _LIBQMI_GLIB_H_
 #define _LIBQMI_GLIB_H_
 
-#include "qmi-errors.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
 #include "qmi-flags64-types.h"

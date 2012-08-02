@@ -60,24 +60,34 @@ def build_header_guard(output_name):
 """
 Write the common header start chunk
 """
-def add_header_start(f, output_name):
-    template = string.Template(
-        "\n"
-        "#ifndef ${guard}\n"
-        "#define ${guard}\n"
+def add_header_start(f, output_name, service):
+    translations = { 'guard'   : build_header_guard(output_name),
+                     'service' : build_underscore_name(service) }
+    template = (
         "\n"
         "#include <glib.h>\n"
         "#include <glib-object.h>\n"
         "#include <gio/gio.h>\n"
         "\n"
-        "#include \"qmi-enum-types.h\"\n"
-        "#include \"qmi-flags64-types.h\"\n"
+        "#include \"qmi-enums.h\"\n")
+    # CTL doesn't have enums
+    if service != 'CTL':
+        template += (
+            "#include \"qmi-enums-${service}.h\"\n")
+    # CTL and WDS don't have flags64
+    if service != 'CTL' and service != 'WDS':
+        template += (
+            "#include \"qmi-flags64-${service}.h\"\n")
+    template += (
         "#include \"qmi-message.h\"\n"
         "#include \"qmi-client.h\"\n"
         "\n"
+        "#ifndef ${guard}\n"
+        "#define ${guard}\n"
+        "\n"
         "G_BEGIN_DECLS\n"
         "\n")
-    f.write(template.substitute(guard = build_header_guard(output_name)))
+    f.write(string.Template(template).substitute(translations))
 
 
 """
@@ -101,6 +111,8 @@ def add_source_start(f, output_name):
         "#include <string.h>\n"
         "\n"
         "#include \"${name}.h\"\n"
+        "#include \"qmi-enum-types.h\"\n"
+        "#include \"qmi-flags64-types.h\"\n"
         "#include \"qmi-error-types.h\"\n"
         "#include \"qmi-device.h\"\n"
         "#include \"qmi-utils.h\"\n"

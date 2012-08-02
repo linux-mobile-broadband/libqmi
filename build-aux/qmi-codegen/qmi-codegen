@@ -49,12 +49,6 @@ def codegen_main():
     output_file_c = open(opts.output + ".c", 'w')
     output_file_h = open(opts.output + ".h", 'w')
 
-    # Add common stuff to the output files
-    utils.add_copyright(output_file_c);
-    utils.add_copyright(output_file_h);
-    utils.add_header_start(output_file_h, os.path.basename(opts.output))
-    utils.add_source_start(output_file_c, os.path.basename(opts.output))
-
     # Load all common types
     common_object_list_json = []
     opts.include.append(opts.input)
@@ -68,9 +62,15 @@ def codegen_main():
     # Load database file contents
     database_file_contents = utils.read_json_file(opts.input)
 
-    # Get our message collection
+    # Build message list
     object_list_json = json.loads(database_file_contents)
     message_list = MessageList(object_list_json, common_object_list_json)
+
+    # Add common stuff to the output files
+    utils.add_copyright(output_file_c);
+    utils.add_copyright(output_file_h);
+    utils.add_header_start(output_file_h, os.path.basename(opts.output), message_list.service)
+    utils.add_source_start(output_file_c, os.path.basename(opts.output))
 
     # Emit the message creation/parsing code
     message_list.emit(output_file_h, output_file_c)

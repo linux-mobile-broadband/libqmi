@@ -24,6 +24,7 @@
 #define _LIBQMI_GLIB_QMI_DEVICE_H_
 
 #include <glib-object.h>
+#include <gio/gio.h>
 
 #include "qmi-enums.h"
 #include "qmi-message.h"
