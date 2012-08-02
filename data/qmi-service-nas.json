@@ -493,7 +493,7 @@
                                                            "format" : "guint16" },
                                                          { "name"   : "MNC",
                                                            "format" : "guint16" },
-                                                         { "name"          : "RAT",
+                                                         { "name"          : "Radio Interface",
                                                            "format"        : "gint8",
                                                            "public-format" : "QmiNasRadioInterface" } ] } },
                     { "name"      : "MNC PCS Digit Include Status",

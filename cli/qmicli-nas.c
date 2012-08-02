@@ -1152,7 +1152,7 @@ network_scan_ready (QmiClientNas *client,
                      i,
                      element->mcc,
                      element->mnc,
-                     qmi_nas_radio_interface_get_string (element->rat));
+                     qmi_nas_radio_interface_get_string (element->radio_interface));
         }
     }
 
