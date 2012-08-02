@@ -590,6 +590,18 @@ typedef enum {
 } QmiNasNetworkSelectionPreference;
 
 /**
+ * QmiNasChangeDuration:
+ * @QMI_NAS_CHANGE_DURATION_PERMANENT: Permanent.
+ * @QMI_NAS_CHANGE_DURATION_POWER_CYCLE: Until the next power cycle.
+ *
+ * Duration of the change setting.
+ */
+typedef enum {
+    QMI_NAS_CHANGE_DURATION_POWER_CYCLE = 0x00,
+    QMI_NAS_CHANGE_DURATION_PERMANENT   = 0x01
+} QmiNasChangeDuration;
+
+/**
  * QmiNasServiceDomainPreference:
  * @QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_ONLY: Circuit-switched only.
  * @QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ONLY: Packet-switched only.
