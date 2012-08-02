@@ -28,6 +28,7 @@ m4
 missing
 stamp-h1
 depcomp
+gtk-doc.make
 
 data/pkg-config/qmi-glib.pc
 
@@ -68,3 +69,17 @@ cli/test/Makefile.in
 cli/test/test-helpers
 
 build-aux/qmi-codegen/*.pyc
+
+docs/reference/libqmi-glib/version.xml
+docs/reference/libqmi-glib/libqmi-glib.args
+docs/reference/libqmi-glib/libqmi-glib.hierarchy
+docs/reference/libqmi-glib/libqmi-glib.interfaces
+docs/reference/libqmi-glib/libqmi-glib.prerequisites
+docs/reference/libqmi-glib/libqmi-glib.signals
+docs/reference/libqmi-glib/libqmi-glib.types
+docs/reference/libqmi-glib/*.stamp
+docs/reference/libqmi-glib/*.txt
+docs/reference/libqmi-glib/html
+docs/reference/libqmi-glib/tmpl
+docs/reference/libqmi-glib/xml
+docs/reference/libqmi-glib/.libs
