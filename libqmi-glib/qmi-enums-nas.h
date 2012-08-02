@@ -222,7 +222,7 @@ typedef enum {
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_CS: Circuit switched.
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_PS: Packet switched.
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_CS_PS: Circuit and packet switched.
- * @QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN: Unknown service..
+ * @QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN: Unknown service.
  *
  * Network Service Domain.
  */
@@ -667,5 +667,112 @@ typedef enum {
     QMI_NAS_TD_SCDMA_BAND_PREFERENCE_E = 1 << 4,
     QMI_NAS_TD_SCDMA_BAND_PREFERENCE_F = 1 << 5
 } QmiNasTdScdmaBandPreference;
+
+/*****************************************************************************/
+/* Helper enums for the 'QMI NAS Get System Info' request/response */
+
+/**
+ * QmiNasRoamingStatus:
+ * @QMI_NAS_ROAMING_STATUS_OFF: Off.
+ * @QMI_NAS_ROAMING_STATUS_ON: On.
+ * @QMI_NAS_ROAMING_STATUS_BLINK: Blinking.
+ * @QMI_NAS_ROAMING_STATUS_OUT_OF_NEIGHBORHOOD: Out of neighborhood.
+ * @QMI_NAS_ROAMING_STATUS_OUT_OF_BUILDING: Out of building.
+ * @QMI_NAS_ROAMING_STATUS_PREFERRED_SYSTEM: Preferred system.
+ * @QMI_NAS_ROAMING_STATUS_AVAILABLE_SYSTEM: Available system.
+ * @QMI_NAS_ROAMING_STATUS_ALLIANCE_PARTNER: Alliance partner.
+ * @QMI_NAS_ROAMING_STATUS_PREMIUM_PARTNER: Premium partner.
+ * @QMI_NAS_ROAMING_STATUS_FULL_SERVICE: Full service.
+ * @QMI_NAS_ROAMING_STATUS_PARTIAL_SERVICE: Partial service.
+ * @QMI_NAS_ROAMING_STATUS_BANNER_ON: Banner on.
+ * @QMI_NAS_ROAMING_STATUS_BANNER_OFF: Banner off.
+*/
+typedef enum {
+    QMI_NAS_ROAMING_STATUS_OFF                 = 0x00,
+    QMI_NAS_ROAMING_STATUS_ON                  = 0x01,
+    /* Next ones only for 3GPP2 */
+    QMI_NAS_ROAMING_STATUS_BLINK               = 0x02,
+    QMI_NAS_ROAMING_STATUS_OUT_OF_NEIGHBORHOOD = 0x03,
+    QMI_NAS_ROAMING_STATUS_OUT_OF_BUILDING     = 0x04,
+    QMI_NAS_ROAMING_STATUS_PREFERRED_SYSTEM    = 0x05,
+    QMI_NAS_ROAMING_STATUS_AVAILABLE_SYSTEM    = 0x06,
+    QMI_NAS_ROAMING_STATUS_ALLIANCE_PARTNER    = 0x07,
+    QMI_NAS_ROAMING_STATUS_PREMIUM_PARTNER     = 0x08,
+    QMI_NAS_ROAMING_STATUS_FULL_SERVICE        = 0x09,
+    QMI_NAS_ROAMING_STATUS_PARTIAL_SERVICE     = 0x0A,
+    QMI_NAS_ROAMING_STATUS_BANNER_ON           = 0x0B,
+    QMI_NAS_ROAMING_STATUS_BANNER_OFF          = 0x0C
+} QmiNasRoamingStatus;
+
+/**
+ * QmiNasHdrProtocolRevision:
+ * @QMI_NAS_HDR_PROTOCOL_REVISION_NONE: None.
+ * @QMI_NAS_HDR_PROTOCOL_REVISION_REL_0: HDR Rel 0.
+ * @QMI_NAS_HDR_PROTOCOL_REVISION_REL_A: HDR Rel A.
+ * @QMI_NAS_HDR_PROTOCOL_REVISION_REL_B: HDR Rel B.
+ *
+ * HDR protocol revision.
+ */
+typedef enum {
+    QMI_NAS_HDR_PROTOCOL_REVISION_NONE  = 0x00,
+    QMI_NAS_HDR_PROTOCOL_REVISION_REL_0 = 0x01,
+    QMI_NAS_HDR_PROTOCOL_REVISION_REL_A = 0x02,
+    QMI_NAS_HDR_PROTOCOL_REVISION_REL_B = 0x03
+} QmiNasHdrProtocolRevision;
+
+/**
+ * QmiNasWcdmaHsService:
+ * @QMI_NAS_WCDMA_HS_SERVICE_HSDPA_HSUPA_UNSUPPORTED: HSDPA and HSUPA not supported.
+ * @QMI_NAS_WCDMA_HS_SERVICE_HSDPA_SUPPORTED: HSDPA supported.
+ * @QMI_NAS_WCDMA_HS_SERVICE_HSUPA_SUPPORTED: HSUPA supported.
+ * @QMI_NAS_WCDMA_HS_SERVICE_HSDPA_HSUPA_SUPPORTED: HSDPA and HSUPA supported.
+ * @QMI_NAS_WCDMA_HS_SERVICE_HSDPA_PLUS_SUPPORTED: HSDPA+ supported.
+ * @QMI_NAS_WCDMA_HS_SERVICE_HSDPA_PLUS_HSUPA_SUPPORTED: HSDPA+ and HSUPA supported.
+ * @QMI_NAS_WCDMA_HS_SERVICE_DC_HSDPA_PLUS_SUPPORTED: DC-HSDPA+ supported.
+ * @QMI_NAS_WCDMA_HS_SERVICE_DC_HSDPA_PLUS_HSUPA_SUPPORTED: DC-HSDPA+ and HSUPA supported.
+ * Call status on high speed.
+ */
+typedef enum {
+    QMI_NAS_WCDMA_HS_SERVICE_HSDPA_HSUPA_UNSUPPORTED       = 0x00,
+    QMI_NAS_WCDMA_HS_SERVICE_HSDPA_SUPPORTED               = 0x01,
+    QMI_NAS_WCDMA_HS_SERVICE_HSUPA_SUPPORTED               = 0x02,
+    QMI_NAS_WCDMA_HS_SERVICE_HSDPA_HSUPA_SUPPORTED         = 0x03,
+    QMI_NAS_WCDMA_HS_SERVICE_HSDPA_PLUS_SUPPORTED          = 0x04,
+    QMI_NAS_WCDMA_HS_SERVICE_HSDPA_PLUS_HSUPA_SUPPORTED    = 0x05,
+    QMI_NAS_WCDMA_HS_SERVICE_DC_HSDPA_PLUS_SUPPORTED       = 0x06,
+    QMI_NAS_WCDMA_HS_SERVICE_DC_HSDPA_PLUS_HSUPA_SUPPORTED = 0x07
+} QmiNasWcdmaHsService;
+
+/**
+ * QmiNasCellBroadcastCapability:
+ * @QMI_NAS_CELL_BROADCAST_CAPABILITY_UNKNOWN: Unknown.
+ * @QMI_NAS_CELL_BROADCAST_CAPABILITY_OFF: Cell broadcast not supported.
+ * @QMI_NAS_CELL_BROADCAST_CAPABILITY_ON: Cell broadcast supported.
+ *
+ * Cell broadcast support.
+ */
+typedef enum {
+    QMI_NAS_CELL_BROADCAST_CAPABILITY_UNKNOWN = 0x00,
+    QMI_NAS_CELL_BROADCAST_CAPABILITY_OFF     = 0x01,
+    QMI_NAS_CELL_BROADCAST_CAPABILITY_ON      = 0x02
+} QmiNasCellBroadcastCapability;
+
+/**
+ * QmiNasSimRejectState:
+ * @QMI_NAS_SIM_REJECT_STATE_SIM_UNAVAILABLE: SIM not available.
+ * @QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE: SIM available.
+ * @QMI_NAS_SIM_REJECT_STATE_SIM_CS_INVALID: SIM invalid for circuit-switched connections.
+ * @QMI_NAS_SIM_REJECT_STATE_SIM_PS_INVALID: SIM invalid for packet-switched connections.
+ * @QMI_NAS_SIM_REJECT_STATE_SIM_CS_PS_INVALID: SIM invalid for circuit-switched and packet-switched connections.
+ *
+ * Reject information of the SIM.
+ */
+typedef enum {
+    QMI_NAS_SIM_REJECT_STATE_SIM_UNAVAILABLE   = 0,
+    QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE      = 1,
+    QMI_NAS_SIM_REJECT_STATE_SIM_CS_INVALID    = 2,
+    QMI_NAS_SIM_REJECT_STATE_SIM_PS_INVALID    = 3,
+    QMI_NAS_SIM_REJECT_STATE_SIM_CS_PS_INVALID = 4
+} QmiNasSimRejectState;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */

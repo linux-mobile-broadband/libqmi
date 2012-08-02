@@ -33,5 +33,5 @@ List of things left for later:
  * qmicli: Implement `--dms-get-software-version'.
  * qmicli: Implement `--dms-set-service-programming-code'.
 
- * nas: Define the 'QmiNasRegistrationRejectCause' enum for TLV 0x12 in the
-   "Event Report" indication.
+ * nas: Define the 'QmiNasRegistrationRejectCause' enum for the "Event Report"
+   indication and "Get System Info" response.
