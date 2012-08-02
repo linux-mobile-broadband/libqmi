@@ -28,6 +28,7 @@
 
 /**
  * QmiNasRadioInterface:
+ * @QMI_NAS_RADIO_INTERFACE_UNKNOWN: Not known or not needed.
  * @QMI_NAS_RADIO_INTERFACE_NONE: None, no service.
  * @QMI_NAS_RADIO_INTERFACE_CDMA_1X: CDMA2000 1X.
  * @QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO: CDMA2000 HRPD (1xEV-DO).
@@ -40,6 +41,7 @@
  * Radio interface technology.
  */
 typedef enum {
+    QMI_NAS_RADIO_INTERFACE_UNKNOWN     = -1,
     QMI_NAS_RADIO_INTERFACE_NONE        = 0x00,
     QMI_NAS_RADIO_INTERFACE_CDMA_1X     = 0x01,
     QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO = 0x02,
