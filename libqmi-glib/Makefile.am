@@ -99,7 +99,7 @@ qmi-nas.stamp: $(top_srcdir)/data/qmi-service-nas.json $(top_srcdir)/build-aux/q
 		touch $@
 
 # Additional dependencies
-qmi-device.c: qmi-error-types.h qmi-enum-types.h
+qmi-device.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.h qmi-dms.h qmi-wds.h qmi-nas.h
 qmi-client.c: qmi-error-types.h qmi-enum-types.h
 qmi-message.c: qmi-error-types.h qmi-enum-types.h qmi-ctl.h qmi-dms.h qmi-wds.h qmi-nas.h
 qmi-ctl.h: qmi-ctl.stamp
