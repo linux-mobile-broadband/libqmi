@@ -749,7 +749,7 @@ get_serving_system_ready (QmiClientNas *client,
     {
         gboolean supported;
 
-        if (qmi_message_nas_get_serving_system_output_get_dual_transfer_mode_supported (
+        if (qmi_message_nas_get_serving_system_output_get_dtm_support (
                 output,
                 &supported,
                 NULL)) {
