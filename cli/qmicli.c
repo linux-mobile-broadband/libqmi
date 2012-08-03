@@ -277,11 +277,11 @@ allocate_client_ready (QmiDevice *device,
     case QMI_SERVICE_DMS:
         qmicli_dms_run (device, QMI_CLIENT_DMS (client), cancellable);
         return;
-    case QMI_SERVICE_WDS:
-        qmicli_wds_run (device, QMI_CLIENT_WDS (client), cancellable);
-        return;
     case QMI_SERVICE_NAS:
         qmicli_nas_run (device, QMI_CLIENT_NAS (client), cancellable);
+        return;
+    case QMI_SERVICE_WDS:
+        qmicli_wds_run (device, QMI_CLIENT_WDS (client), cancellable);
         return;
     default:
         g_assert_not_reached ();
@@ -438,15 +438,15 @@ parse_actions (void)
         actions_enabled++;
     }
 
-    /* WDS options? */
-    if (qmicli_wds_options_enabled ()) {
-        service = QMI_SERVICE_WDS;
-        actions_enabled++;
-    }
-
     /* NAS options? */
     if (qmicli_nas_options_enabled ()) {
         service = QMI_SERVICE_NAS;
+        actions_enabled++;
+    }
+
+    /* WDS options? */
+    if (qmicli_wds_options_enabled ()) {
+        service = QMI_SERVICE_WDS;
         actions_enabled++;
     }
 
@@ -480,9 +480,9 @@ int main (int argc, char **argv)
 	g_option_context_add_group (context,
 	                            qmicli_dms_get_option_group ());
 	g_option_context_add_group (context,
-	                            qmicli_wds_get_option_group ());
-	g_option_context_add_group (context,
 	                            qmicli_nas_get_option_group ());
+	g_option_context_add_group (context,
+	                            qmicli_wds_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",
