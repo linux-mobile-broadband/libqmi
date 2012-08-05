@@ -514,6 +514,7 @@ build_client_object (AllocateClientContext *ctx)
     gchar *version_string = NULL;
     QmiClient *client;
     GError *error = NULL;
+    const QmiMessageCtlGetVersionInfoOutputServiceListService *version_info;
 
     /* We now have a proper CID for the client, we should be able to create it
      * right away */
@@ -522,6 +523,14 @@ build_client_object (AllocateClientContext *ctx)
                            QMI_CLIENT_SERVICE, ctx->service,
                            QMI_CLIENT_CID,     ctx->cid,
                            NULL);
+
+    /* Add version info to the client if it was retrieved */
+    version_info = find_service_version_info (ctx->self, ctx->service);
+    if (version_info)
+        g_object_set (client,
+                      QMI_CLIENT_VERSION_MAJOR, version_info->major_version,
+                      QMI_CLIENT_VERSION_MINOR, version_info->minor_version,
+                      NULL);
 
     /* Register the client to get indications */
     if (!register_client (ctx->self, client, &error)) {
