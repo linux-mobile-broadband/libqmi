@@ -35,6 +35,8 @@ enum {
     PROP_DEVICE,
     PROP_SERVICE,
     PROP_CID,
+    PROP_VERSION_MAJOR,
+    PROP_VERSION_MINOR,
     PROP_LAST
 };
 
@@ -44,6 +46,8 @@ struct _QmiClientPrivate {
     QmiDevice *device;
     QmiService service;
     guint8 cid;
+    guint version_major;
+    guint version_minor;
 
     guint16 transaction_id;
 };
@@ -122,6 +126,64 @@ qmi_client_get_cid (QmiClient *self)
 }
 
 /**
+ * qmi_client_get_version:
+ * @self: A #QmiClient
+ * @major: placeholder for the output major version.
+ * @minor: placeholder for the output minor version.
+ *
+ * Get the version of the service handled by this #QmiClient.
+ *
+ * Returns: #TRUE if the version was properly reported, #FALSE otherwise.
+ */
+gboolean
+qmi_client_get_version (QmiClient *self,
+                        guint *major,
+                        guint *minor)
+{
+    g_return_val_if_fail (QMI_IS_CLIENT (self), FALSE);
+
+    /* If the major version is greater than zero, assume it was
+     * set properly */
+    if (!self->priv->version_major)
+        return FALSE;
+
+    *major = self->priv->version_major;
+    *minor = self->priv->version_minor;
+    return TRUE;
+}
+
+/**
+ * qmi_client_check_version:
+ * @self: A #QmiClient
+ * @major: a major version.
+ * @minor: a minor version.
+ *
+ * Checks if the version of the service handled by this #QmiClient is greater
+ * or equal than the given version.
+ *
+ * Returns: #TRUE if the version of the service is greater or equal than the one given, #FALSE otherwise.
+ */
+gboolean
+qmi_client_check_version (QmiClient *self,
+                          guint major,
+                          guint minor)
+{
+    g_return_val_if_fail (QMI_IS_CLIENT (self), FALSE);
+
+    /* If the major version is greater than zero, assume it was
+     * set properly */
+    if (!self->priv->version_major)
+        return FALSE;
+
+    if (self->priv->version_major > major ||
+        (self->priv->version_major == major &&
+         self->priv->version_minor >= minor))
+        return TRUE;
+
+    return FALSE;
+}
+
+/**
  * qmi_client_get_next_transaction_id:
  * @self: A #QmiClient
  *
@@ -183,6 +245,12 @@ set_property (GObject *object,
     case PROP_CID:
         self->priv->cid = (guint8)g_value_get_uint (value);
         break;
+    case PROP_VERSION_MAJOR:
+        self->priv->version_major = g_value_get_uint (value);
+        break;
+    case PROP_VERSION_MINOR:
+        self->priv->version_minor = g_value_get_uint (value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -207,6 +275,12 @@ get_property (GObject *object,
     case PROP_CID:
         g_value_set_uint (value, (guint)self->priv->cid);
         break;
+    case PROP_VERSION_MAJOR:
+        g_value_set_uint (value, self->priv->version_major);
+        break;
+    case PROP_VERSION_MINOR:
+        g_value_set_uint (value, self->priv->version_minor);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -224,6 +298,8 @@ qmi_client_init (QmiClient *self)
     self->priv->service = QMI_SERVICE_UNKNOWN;
     self->priv->transaction_id = 0x01;
     self->priv->cid = QMI_CID_NONE;
+    self->priv->version_major = 0;
+    self->priv->version_minor = 0;
 }
 
 static void
@@ -262,4 +338,24 @@ qmi_client_class_init (QmiClientClass *klass)
                            QMI_CID_NONE,
                            G_PARAM_READWRITE);
     g_object_class_install_property (object_class, PROP_CID, properties[PROP_CID]);
+
+    properties[PROP_VERSION_MAJOR] =
+        g_param_spec_uint (QMI_CLIENT_VERSION_MAJOR,
+                           "Version major",
+                           "Major version of the service handled by this client",
+                           0,
+                           G_MAXUINT,
+                           0,
+                           G_PARAM_READWRITE);
+    g_object_class_install_property (object_class, PROP_VERSION_MAJOR, properties[PROP_VERSION_MAJOR]);
+
+    properties[PROP_VERSION_MINOR] =
+        g_param_spec_uint (QMI_CLIENT_VERSION_MINOR,
+                           "Version minor",
+                           "Minor version of the service handled by this client",
+                           0,
+                           G_MAXUINT,
+                           0,
+                           G_PARAM_READWRITE);
+    g_object_class_install_property (object_class, PROP_VERSION_MINOR, properties[PROP_VERSION_MINOR]);
 }

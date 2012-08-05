@@ -44,9 +44,11 @@ typedef struct _QmiClient QmiClient;
 typedef struct _QmiClientClass QmiClientClass;
 typedef struct _QmiClientPrivate QmiClientPrivate;
 
-#define QMI_CLIENT_DEVICE   "client-device"
-#define QMI_CLIENT_SERVICE  "client-service"
-#define QMI_CLIENT_CID      "client-cid"
+#define QMI_CLIENT_DEVICE        "client-device"
+#define QMI_CLIENT_SERVICE       "client-service"
+#define QMI_CLIENT_CID           "client-cid"
+#define QMI_CLIENT_VERSION_MAJOR "client-version-major"
+#define QMI_CLIENT_VERSION_MINOR "client-version-minor"
 
 struct _QmiClient {
     GObject parent;
@@ -67,6 +69,12 @@ GObject    *qmi_client_get_device  (QmiClient *self);
 GObject    *qmi_client_peek_device (QmiClient *self);
 QmiService  qmi_client_get_service (QmiClient *self);
 guint8      qmi_client_get_cid     (QmiClient *self);
+gboolean    qmi_client_get_version (QmiClient *self,
+                                    guint *major,
+                                    guint *minor);
+gboolean    qmi_client_check_version (QmiClient *self,
+                                      guint major,
+                                      guint minor);
 
 guint16     qmi_client_get_next_transaction_id (QmiClient *self);
 
