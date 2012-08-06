@@ -907,7 +907,7 @@
                                         "format" : "guint8" },
                                       { "name"   : "Time Zone",
                                         "format" : "guint8" } ] },
-                    { "name"      : "LAC",
+                    { "name"      : "LAC 3GPP",
                       "id"        : "0x1D",
                       "mandatory" : "no",
                       "type"      : "TLV",
