@@ -19,6 +19,12 @@ List of things left for later:
 
  * qmi-codegen: allow specifying 'description' to both messages and TLVs.
 
+ * qmi-codegen: some bitmask fields could have some more love. A new
+   'bit-sequence' format type would allow us to have getters for specific bit
+   values, and would also allow us to split a given set of flags into more
+   detailed sub-types, e.g.: the 'QmiNasRadioTechnologyPreference' flags type,
+   where the first two bits define the type of the next ones.
+
  * dms: Support 'Preferred Roaming List' TLV (0x13) in DMS/"Activate Manual".
    This TLV is based on an array of raw binary data which can be passed to the
    device over multiple messages, using a sequence number to identify each
