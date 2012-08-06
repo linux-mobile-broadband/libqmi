@@ -385,15 +385,15 @@ typedef enum {
 /**
  * QmiNasNetworkType:
  * @QMI_NAS_NETWORK_TYPE_UNKNOWN: Unknown.
- * @QMI_NAS_NETWORK_TYPE_3GPP: 3GPP network.
  * @QMI_NAS_NETWORK_TYPE_3GPP2: 3GPP2 network.
+ * @QMI_NAS_NETWORK_TYPE_3GPP: 3GPP network.
  *
  * Type of network.
  */
 typedef enum {
     QMI_NAS_NETWORK_TYPE_UNKNOWN = 0x00,
-    QMI_NAS_NETWORK_TYPE_3GPP    = 0x01,
-    QMI_NAS_NETWORK_TYPE_3GPP2   = 0x02
+    QMI_NAS_NETWORK_TYPE_3GPP2   = 0x01,
+    QMI_NAS_NETWORK_TYPE_3GPP    = 0x02,
 } QmiNasNetworkType;
 
 /**
