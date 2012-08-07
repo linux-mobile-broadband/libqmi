@@ -494,6 +494,39 @@ typedef enum {
 } QmiNasCallBarringStatus;
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI NAS Get Home Network' request/response */
+
+/**
+ * QmiNasNetworkDescriptionDisplay:
+ * @QMI_NAS_NETWORK_DESCRIPTION_DISPLAY_NO: Don't display.
+ * @QMI_NAS_NETWORK_DESCRIPTION_DISPLAY_YES: Display.
+ * @QMI_NAS_NETWORK_DESCRIPTION_DISPLAY_UNKNOWN: Unknown.
+ *
+ * Setup to define whether the network description should be displayed.
+ */
+typedef enum {
+    QMI_NAS_NETWORK_DESCRIPTION_DISPLAY_NO      = 0x00,
+    QMI_NAS_NETWORK_DESCRIPTION_DISPLAY_YES     = 0x01,
+    QMI_NAS_NETWORK_DESCRIPTION_DISPLAY_UNKNOWN = 0xFF
+} QmiNasNetworkDescriptionDisplay;
+
+/**
+ * QmiNasNetworkDescriptionEncoding:
+ * @QMI_NAS_NETWORK_DESCRIPTION_ENCODING_UNSPECIFIED: Unspecified.
+ * @QMI_NAS_NETWORK_DESCRIPTION_ENCODING_ASCII7: ASCII-7.
+ * @QMI_NAS_NETWORK_DESCRIPTION_ENCODING_UNICODE: Unicode.
+ * @QMI_NAS_NETWORK_DESCRIPTION_ENCODING_GSM: GSM 7-bit.
+ *
+ * Type of encoding used in the network description.
+ */
+typedef enum {
+    QMI_NAS_NETWORK_DESCRIPTION_ENCODING_UNSPECIFIED = 0x00,
+    QMI_NAS_NETWORK_DESCRIPTION_ENCODING_ASCII7      = 0x01,
+    QMI_NAS_NETWORK_DESCRIPTION_ENCODING_UNICODE     = 0x04,
+    QMI_NAS_NETWORK_DESCRIPTION_ENCODING_GSM         = 0x09
+} QmiNasNetworkDescriptionEncoding;
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get Technology Preference' request/response */
 
 /**
