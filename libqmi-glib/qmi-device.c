@@ -256,6 +256,9 @@ find_service_version_info (QmiDevice *self,
 {
     guint i;
 
+    if (!self->priv->supported_services)
+        return NULL;
+
     for (i = 0; i < self->priv->supported_services->len; i++) {
         const QmiMessageCtlGetVersionInfoOutputServiceListService *info;
 
