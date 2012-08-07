@@ -1008,7 +1008,10 @@ get_system_info_ready (QmiClientNas *client,
                     g_print ("\t\tPacket zone: '%" G_GUINT16_FORMAT "'\n", packet_zone);
                 if (network_id_valid) {
                     g_print ("\t\tMCC: '%s'\n", mcc);
-                    g_print ("\t\tMNC: '%s'\n", mnc);
+                    if (mnc[2] == 0xFF)
+                        g_print ("\t\tMNC: '%.2s'\n", mnc);
+                    else
+                        g_print ("\t\tMNC: '%.3s'\n", mnc);
                 }
             }
 
@@ -1175,7 +1178,10 @@ get_system_info_ready (QmiClientNas *client,
                              registration_reject_cause);
                 if (network_id_valid) {
                     g_print ("\t\tMCC: '%s'\n", mcc);
-                    g_print ("\t\tMNC: '%s'\n", mnc);
+                    if (mnc[2] == 0xFF)
+                        g_print ("\t\tMNC: '%.2s'\n", mnc);
+                    else
+                        g_print ("\t\tMNC: '%.3s'\n", mnc);
                 }
                 if (egprs_support_valid)
                     g_print ("\t\tE-GPRS supported: '%s'\n", egprs_support ? "yes" : "no");
@@ -1292,7 +1298,10 @@ get_system_info_ready (QmiClientNas *client,
                              registration_reject_cause);
                 if (network_id_valid) {
                     g_print ("\t\tMCC: '%s'\n", mcc);
-                    g_print ("\t\tMNC: '%s'\n", mnc);
+                    if (mnc[2] == 0xFF)
+                        g_print ("\t\tMNC: '%.2s'\n", mnc);
+                    else
+                        g_print ("\t\tMNC: '%.3s'\n", mnc);
                 }
                 if (hs_call_status_valid)
                     g_print ("\t\tHS call status: '%s'\n", qmi_nas_wcdma_hs_service_get_string (hs_call_status));
@@ -1403,7 +1412,10 @@ get_system_info_ready (QmiClientNas *client,
                              registration_reject_cause);
                 if (network_id_valid) {
                     g_print ("\t\tMCC: '%s'\n", mcc);
-                    g_print ("\t\tMNC: '%s'\n", mnc);
+                    if (mnc[2] == 0xFF)
+                        g_print ("\t\tMNC: '%.2s'\n", mnc);
+                    else
+                        g_print ("\t\tMNC: '%.3s'\n", mnc);
                 }
                 if (tac_valid)
                     g_print ("\t\tTracking Area Code: '%" G_GUINT16_FORMAT"'\n", tac);
@@ -1521,7 +1533,10 @@ get_system_info_ready (QmiClientNas *client,
                              registration_reject_cause);
                 if (network_id_valid) {
                     g_print ("\t\tMCC: '%s'\n", mcc);
-                    g_print ("\t\tMNC: '%s'\n", mnc);
+                    if (mnc[2] == 0xFF)
+                        g_print ("\t\tMNC: '%.2s'\n", mnc);
+                    else
+                        g_print ("\t\tMNC: '%.3s'\n", mnc);
                 }
                 if (hs_call_status_valid)
                     g_print ("\t\tHS call status: '%s'\n", qmi_nas_wcdma_hs_service_get_string (hs_call_status));
