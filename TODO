@@ -39,5 +39,7 @@ List of things left for later:
  * qmicli: Implement `--dms-get-software-version'.
  * qmicli: Implement `--dms-set-service-programming-code'.
 
+ * qmicli: Print 3GPP2 network description in "Get Home Network"
+
  * nas: Define the 'QmiNasRegistrationRejectCause' enum for the "Event Report"
    indication and "Get System Info" response.

@@ -43,6 +43,7 @@ static Context *ctx;
 /* Options */
 static gboolean get_signal_strength_flag;
 static gboolean get_signal_info_flag;
+static gboolean get_home_network_flag;
 static gboolean get_serving_system_flag;
 static gboolean get_system_info_flag;
 static gboolean get_technology_preference_flag;
@@ -58,6 +59,10 @@ static GOptionEntry entries[] = {
     },
     { "nas-get-signal-info", 0, 0, G_OPTION_ARG_NONE, &get_signal_info_flag,
       "Get signal info",
+      NULL
+    },
+    { "nas-get-home-network", 0, 0, G_OPTION_ARG_NONE, &get_home_network_flag,
+      "Get home network",
       NULL
     },
     { "nas-get-serving-system", 0, 0, G_OPTION_ARG_NONE, &get_serving_system_flag,
@@ -117,6 +122,7 @@ qmicli_nas_options_enabled (void)
 
     n_actions = (get_signal_strength_flag +
                  get_signal_info_flag +
+                 get_home_network_flag +
                  get_serving_system_flag +
                  get_system_info_flag +
                  get_technology_preference_flag +
@@ -453,6 +459,95 @@ get_signal_strength_ready (QmiClientNas *client,
     /* Just skip others for now */
 
     qmi_message_nas_get_signal_strength_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
+get_home_network_ready (QmiClientNas *client,
+                        GAsyncResult *res)
+{
+    QmiMessageNasGetHomeNetworkOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_nas_get_home_network_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_home_network_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get home network: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_home_network_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got home network:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    {
+        guint16 mcc;
+        guint16 mnc;
+        const gchar *description;
+
+        qmi_message_nas_get_home_network_output_get_home_network (
+            output,
+            &mcc,
+            &mnc,
+            &description,
+            NULL);
+
+        g_print ("\tHome network:\n"
+                 "\t\tMCC: '%" G_GUINT16_FORMAT"'\n"
+                 "\t\tMNC: '%" G_GUINT16_FORMAT"'\n"
+                 "\t\tDescription: '%s'",
+                 mcc,
+                 mnc,
+                 description);
+    }
+
+    {
+        guint16 sid;
+        guint16 nid;
+
+        if (qmi_message_nas_get_home_network_output_get_home_system_id (
+                output,
+                &sid,
+                &nid,
+                NULL)) {
+            g_print ("\t\tSID: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tNID: '%" G_GUINT16_FORMAT"'\n",
+                     sid,
+                     nid);
+        }
+    }
+
+    {
+        guint16 mcc;
+        guint16 mnc;
+
+        if (qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
+                output,
+                &mcc,
+                &mnc,
+                NULL, /* display_description */
+                NULL, /* description_encoding */
+                NULL, /* description */
+                NULL)) {
+            g_print ("\t3GPP2 Home network (extended):\n"
+                     "\t\tMCC: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tMNC: '%" G_GUINT16_FORMAT"'\n",
+                     mcc,
+                     mnc);
+
+            /* TODO: convert description to UTF-8 and display */
+        }
+    }
+
+    qmi_message_nas_get_home_network_output_unref (output);
     shutdown (TRUE);
 }
 
@@ -1946,6 +2041,18 @@ qmicli_nas_run (QmiDevice *device,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_signal_info_ready,
                                         NULL);
+        return;
+    }
+
+    /* Request to get home network? */
+    if (get_home_network_flag) {
+        g_debug ("Asynchronously getting home network...");
+        qmi_client_nas_get_home_network (ctx->client,
+                                         NULL,
+                                         10,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)get_home_network_ready,
+                                         NULL);
         return;
     }
 
