@@ -947,98 +947,81 @@ get_system_info_ready (QmiClientNas *client,
         guint16 geo_system_index;
         guint16 registration_period;
 
-        g_print ("\tCDMA 1x service:\n");
-
         if (qmi_message_nas_get_system_info_output_get_cdma_service_status (
                 output,
                 &service_status,
                 &preferred_data_path,
                 NULL)) {
-            g_print ("\t\tStatus: '%s'\n"
+            g_print ("\tCDMA 1x service:\n"
+                     "\t\tStatus: '%s'\n"
                      "\t\tPreferred data path: '%s'\n",
                      qmi_nas_service_status_get_string (service_status),
                      preferred_data_path ? "yes" : "no");
-        }
 
-        if (qmi_message_nas_get_system_info_output_get_cdma_system_info (
-                output,
-                &domain_valid,
-                &domain,
-                &service_capability_valid,
-                &service_capability,
-                &roaming_status_valid,
-                &roaming_status,
-                &forbidden_valid,
-                &forbidden,
-                &prl_match_valid,
-                &prl_match,
-                &p_rev_valid,
-                &p_rev,
-                &base_station_p_rev_valid,
-                &base_station_p_rev,
-                &concurrent_service_support_valid,
-                &concurrent_service_support,
-                &cdma_system_id_valid,
-                &sid,
-                &nid,
-                &base_station_info_valid,
-                &base_station_id,
-                &base_station_longitude,
-                &base_station_latitude,
-                &packet_zone_valid,
-                &packet_zone,
-                &network_id_valid,
-                &mcc,
-                &mnc,
-                NULL)) {
-            if (domain_valid)
-                g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
-            if (service_capability_valid)
-                g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
-            if (roaming_status_valid)
-                g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
-            if (forbidden_valid)
-                g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
-            if (prl_match_valid)
-                g_print ("\t\tPRL match: '%s'\n", prl_match ? "yes" : "no");
-            if (p_rev_valid)
-                g_print ("\t\tP-Rev: '%u'\n", p_rev);
-            if (base_station_p_rev_valid)
-                g_print ("\t\tBase station P-Rev: '%u'\n", base_station_p_rev);
-            if (concurrent_service_support_valid)
-                g_print ("\t\tConcurrent service support: '%s'\n", concurrent_service_support ? "yes" : "no");
-            if (cdma_system_id_valid) {
-                g_print ("\t\tSID: '%" G_GUINT16_FORMAT"'\n", sid);
-                g_print ("\t\tNID: '%" G_GUINT16_FORMAT"'\n", nid);
-            }
-            if (base_station_info_valid) {
-                gdouble latitude_degrees;
-                gdouble longitude_degrees;
+            if (qmi_message_nas_get_system_info_output_get_cdma_system_info (
+                    output,
+                    &domain_valid, &domain,
+                    &service_capability_valid, &service_capability,
+                    &roaming_status_valid, &roaming_status,
+                    &forbidden_valid, &forbidden,
+                    &prl_match_valid, &prl_match,
+                    &p_rev_valid, &p_rev,
+                    &base_station_p_rev_valid, &base_station_p_rev,
+                    &concurrent_service_support_valid, &concurrent_service_support,
+                    &cdma_system_id_valid, &sid, &nid,
+                    &base_station_info_valid, &base_station_id, &base_station_longitude, &base_station_latitude,
+                    &packet_zone_valid, &packet_zone,
+                    &network_id_valid, &mcc, &mnc,
+                    NULL)) {
+                if (domain_valid)
+                    g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
+                if (service_capability_valid)
+                    g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
+                if (roaming_status_valid)
+                    g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
+                if (forbidden_valid)
+                    g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
+                if (prl_match_valid)
+                    g_print ("\t\tPRL match: '%s'\n", prl_match ? "yes" : "no");
+                if (p_rev_valid)
+                    g_print ("\t\tP-Rev: '%u'\n", p_rev);
+                if (base_station_p_rev_valid)
+                    g_print ("\t\tBase station P-Rev: '%u'\n", base_station_p_rev);
+                if (concurrent_service_support_valid)
+                    g_print ("\t\tConcurrent service support: '%s'\n", concurrent_service_support ? "yes" : "no");
+                if (cdma_system_id_valid) {
+                    g_print ("\t\tSID: '%" G_GUINT16_FORMAT"'\n", sid);
+                    g_print ("\t\tNID: '%" G_GUINT16_FORMAT"'\n", nid);
+                }
+                if (base_station_info_valid) {
+                    gdouble latitude_degrees;
+                    gdouble longitude_degrees;
 
-                /* TODO: give degrees, minutes, seconds */
-                latitude_degrees = ((gdouble)base_station_latitude * 0.25)/3600.0;
-                longitude_degrees = ((gdouble)base_station_longitude * 0.25)/3600.0;
-                g_print ("\t\tBase station ID: '%" G_GUINT16_FORMAT"'\n", base_station_id);
-                g_print ("\t\tBase station latitude: '%lf'º\n", latitude_degrees);
-                g_print ("\t\tBase station longitude: '%lf'º\n", longitude_degrees);
+                    /* TODO: give degrees, minutes, seconds */
+                    latitude_degrees = ((gdouble)base_station_latitude * 0.25)/3600.0;
+                    longitude_degrees = ((gdouble)base_station_longitude * 0.25)/3600.0;
+                    g_print ("\t\tBase station ID: '%" G_GUINT16_FORMAT"'\n", base_station_id);
+                    g_print ("\t\tBase station latitude: '%lf'º\n", latitude_degrees);
+                    g_print ("\t\tBase station longitude: '%lf'º\n", longitude_degrees);
+                }
+                if (packet_zone_valid)
+                    g_print ("\t\tPacket zone: '%" G_GUINT16_FORMAT "'\n", packet_zone);
+                if (network_id_valid) {
+                    g_print ("\t\tMCC: '%s'\n", mcc);
+                    g_print ("\t\tMNC: '%s'\n", mnc);
+                }
             }
-            if (packet_zone_valid)
-                g_print ("\t\tPacket zone: '%" G_GUINT16_FORMAT "'\n", packet_zone);
-            if (network_id_valid) {
-                g_print ("\t\tMCC: '%s'\n", mcc);
-                g_print ("\t\tMNC: '%s'\n", mnc);
-            }
-        }
 
-        if (qmi_message_nas_get_system_info_output_get_additional_cdma_system_info (
-                output,
-                &geo_system_index,
-                &registration_period,
-                NULL)) {
-            if (geo_system_index != 0xFFFF)
-                g_print ("\t\tGeo system index: '%" G_GUINT16_FORMAT "'\n", geo_system_index);
-            if (registration_period != 0xFFFF)
-                g_print ("\t\tRegistration period: '%" G_GUINT16_FORMAT "'\n", registration_period);
+            if (qmi_message_nas_get_system_info_output_get_additional_cdma_system_info (
+                    output,
+                    &geo_system_index,
+                    &registration_period,
+                    NULL)) {
+                if (geo_system_index != 0xFFFF)
+                    g_print ("\t\tGeo system index: '%" G_GUINT16_FORMAT "'\n", geo_system_index);
+                if (registration_period != 0xFFFF)
+                    g_print ("\t\tRegistration period: '%" G_GUINT16_FORMAT "'\n", registration_period);
+            }
         }
     }
 
@@ -1064,62 +1047,53 @@ get_system_info_ready (QmiClientNas *client,
         const gchar *is_856_system_id;
         guint16 geo_system_index;
 
-        g_print ("\tCDMA 1xEV-DO (HDR) service:\n");
-
         if (qmi_message_nas_get_system_info_output_get_hdr_service_status (
                 output,
                 &service_status,
                 &preferred_data_path,
                 NULL)) {
-            g_print ("\t\tStatus: '%s'\n"
+            g_print ("\tCDMA 1xEV-DO (HDR) service:\n"
+                     "\t\tStatus: '%s'\n"
                      "\t\tPreferred data path: '%s'\n",
                      qmi_nas_service_status_get_string (service_status),
                      preferred_data_path ? "yes" : "no");
-        }
 
-        if (qmi_message_nas_get_system_info_output_get_hdr_system_info (
-                output,
-                &domain_valid,
-                &domain,
-                &service_capability_valid,
-                &service_capability,
-                &roaming_status_valid,
-                &roaming_status,
-                &forbidden_valid,
-                &forbidden,
-                &prl_match_valid,
-                &prl_match,
-                &personality_valid,
-                &personality,
-                &protocol_revision_valid,
-                &protocol_revision,
-                &is_856_system_id_valid,
-                &is_856_system_id,
-                NULL)) {
-            if (domain_valid)
-                g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
-            if (service_capability_valid)
-                g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
-            if (roaming_status_valid)
-                g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
-            if (forbidden_valid)
-                g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
-            if (prl_match_valid)
-                g_print ("\t\tPRL match: '%s'\n", prl_match ? "yes" : "no");
-            if (personality_valid)
-                g_print ("\t\tPersonality: '%s'\n", qmi_nas_hdr_personality_get_string (personality));
-            if (protocol_revision_valid)
-                g_print ("\t\tProtocol revision: '%s'\n", qmi_nas_hdr_protocol_revision_get_string (protocol_revision));
-            if (is_856_system_id_valid)
-                g_print ("\t\tIS-856 system ID: '%s'\n", is_856_system_id);
-        }
+            if (qmi_message_nas_get_system_info_output_get_hdr_system_info (
+                    output,
+                    &domain_valid, &domain,
+                    &service_capability_valid, &service_capability,
+                    &roaming_status_valid, &roaming_status,
+                    &forbidden_valid, &forbidden,
+                    &prl_match_valid, &prl_match,
+                    &personality_valid, &personality,
+                    &protocol_revision_valid, &protocol_revision,
+                    &is_856_system_id_valid, &is_856_system_id,
+                    NULL)) {
+                if (domain_valid)
+                    g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
+                if (service_capability_valid)
+                    g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
+                if (roaming_status_valid)
+                    g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
+                if (forbidden_valid)
+                    g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
+                if (prl_match_valid)
+                    g_print ("\t\tPRL match: '%s'\n", prl_match ? "yes" : "no");
+                if (personality_valid)
+                    g_print ("\t\tPersonality: '%s'\n", qmi_nas_hdr_personality_get_string (personality));
+                if (protocol_revision_valid)
+                    g_print ("\t\tProtocol revision: '%s'\n", qmi_nas_hdr_protocol_revision_get_string (protocol_revision));
+                if (is_856_system_id_valid)
+                    g_print ("\t\tIS-856 system ID: '%s'\n", is_856_system_id);
+            }
 
-        if (qmi_message_nas_get_system_info_output_get_additional_hdr_system_info (
-                output,
-                &geo_system_index,
-                NULL)) {
-            if (geo_system_index != 0xFFFF)
-                g_print ("\t\tGeo system index: '%" G_GUINT16_FORMAT "'\n", geo_system_index);
+            if (qmi_message_nas_get_system_info_output_get_additional_hdr_system_info (
+                    output,
+                    &geo_system_index,
+                    NULL)) {
+                if (geo_system_index != 0xFFFF)
+                    g_print ("\t\tGeo system index: '%" G_GUINT16_FORMAT "'\n", geo_system_index);
+            }
         }
     }
 
@@ -1156,97 +1130,84 @@ get_system_info_ready (QmiClientNas *client,
         QmiNasCallBarringStatus call_barring_status_ps;
         QmiNasNetworkServiceDomain cipher_domain;
 
-        g_print ("\tGSM service:\n");
-
         if (qmi_message_nas_get_system_info_output_get_gsm_service_status (
                 output,
                 &service_status,
                 &true_service_status,
                 &preferred_data_path,
                 NULL)) {
-            g_print ("\t\tStatus: '%s'\n"
+            g_print ("\tGSM service:\n"
+                     "\t\tStatus: '%s'\n"
                      "\t\tTrue Status: '%s'\n"
                      "\t\tPreferred data path: '%s'\n",
                      qmi_nas_service_status_get_string (service_status),
                      qmi_nas_service_status_get_string (true_service_status),
                      preferred_data_path ? "yes" : "no");
-        }
 
-        if (qmi_message_nas_get_system_info_output_get_gsm_system_info (
-                output,
-                &domain_valid,
-                &domain,
-                &service_capability_valid,
-                &service_capability,
-                &roaming_status_valid,
-                &roaming_status,
-                &forbidden_valid,
-                &forbidden,
-                &lac_valid,
-                &lac,
-                &cid_valid,
-                &cid,
-                &registration_reject_info_valid,
-                &registration_reject_domain,
-                &registration_reject_cause,
-                &network_id_valid,
-                &mcc,
-                &mnc,
-                &egprs_support_valid,
-                &egprs_support,
-                &dtm_support_valid,
-                &dtm_support,
-                NULL)) {
-            if (domain_valid)
-                g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
-            if (service_capability_valid)
-                g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
-            if (roaming_status_valid)
-                g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
-            if (forbidden_valid)
-                g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
-            if (lac_valid)
-                g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
-            if (cid_valid)
-                g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
-            if (registration_reject_info_valid)
-                g_print ("\t\tRegistration reject: '%s' (%u)\n",
-                         qmi_nas_network_service_domain_get_string (registration_reject_domain),
-                         registration_reject_cause);
-            if (network_id_valid) {
-                g_print ("\t\tMCC: '%s'\n", mcc);
-                g_print ("\t\tMNC: '%s'\n", mnc);
+            if (qmi_message_nas_get_system_info_output_get_gsm_system_info (
+                    output,
+                    &domain_valid, &domain,
+                    &service_capability_valid, &service_capability,
+                    &roaming_status_valid, &roaming_status,
+                    &forbidden_valid, &forbidden,
+                    &lac_valid, &lac,
+                    &cid_valid, &cid,
+                    &registration_reject_info_valid, &registration_reject_domain, &registration_reject_cause,
+                    &network_id_valid, &mcc, &mnc,
+                    &egprs_support_valid, &egprs_support,
+                    &dtm_support_valid, &dtm_support,
+                    NULL)) {
+                if (domain_valid)
+                    g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
+                if (service_capability_valid)
+                    g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
+                if (roaming_status_valid)
+                    g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
+                if (forbidden_valid)
+                    g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
+                if (lac_valid)
+                    g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
+                if (cid_valid)
+                    g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
+                if (registration_reject_info_valid)
+                    g_print ("\t\tRegistration reject: '%s' (%u)\n",
+                             qmi_nas_network_service_domain_get_string (registration_reject_domain),
+                             registration_reject_cause);
+                if (network_id_valid) {
+                    g_print ("\t\tMCC: '%s'\n", mcc);
+                    g_print ("\t\tMNC: '%s'\n", mnc);
+                }
+                if (egprs_support_valid)
+                    g_print ("\t\tE-GPRS supported: '%s'\n", egprs_support ? "yes" : "no");
+                if (dtm_support_valid)
+                    g_print ("\t\tDual Transfer Mode supported: '%s'\n", dtm_support ? "yes" : "no");
             }
-            if (egprs_support_valid)
-                g_print ("\t\tE-GPRS supported: '%s'\n", egprs_support ? "yes" : "no");
-            if (dtm_support_valid)
-                g_print ("\t\tDual Transfer Mode supported: '%s'\n", dtm_support ? "yes" : "no");
-        }
 
-        if (qmi_message_nas_get_system_info_output_get_additional_gsm_system_info (
-                output,
-                &geo_system_index,
-                &cell_broadcast_support,
-                NULL)) {
-            if (geo_system_index != 0xFFFF)
-                g_print ("\t\tGeo system index: '%" G_GUINT16_FORMAT "'\n", geo_system_index);
-            g_print ("\t\tCell broadcast support: '%s'\n", qmi_nas_cell_broadcast_capability_get_string (cell_broadcast_support));
-        }
+            if (qmi_message_nas_get_system_info_output_get_additional_gsm_system_info (
+                    output,
+                    &geo_system_index,
+                    &cell_broadcast_support,
+                    NULL)) {
+                if (geo_system_index != 0xFFFF)
+                    g_print ("\t\tGeo system index: '%" G_GUINT16_FORMAT "'\n", geo_system_index);
+                g_print ("\t\tCell broadcast support: '%s'\n", qmi_nas_cell_broadcast_capability_get_string (cell_broadcast_support));
+            }
 
-        if (qmi_message_nas_get_system_info_output_get_gsm_call_barring_status (
-                output,
-                &call_barring_status_cs,
-                &call_barring_status_ps,
-                NULL)) {
-            g_print ("\t\tCall barring status (CS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_cs));
-            g_print ("\t\tCall barring status (PS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_ps));
-        }
+            if (qmi_message_nas_get_system_info_output_get_gsm_call_barring_status (
+                    output,
+                    &call_barring_status_cs,
+                    &call_barring_status_ps,
+                    NULL)) {
+                g_print ("\t\tCall barring status (CS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_cs));
+                g_print ("\t\tCall barring status (PS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_ps));
+            }
 
-        if (qmi_message_nas_get_system_info_output_get_gsm_cipher_domain (
-                output,
-                &cipher_domain,
-                NULL)) {
-            g_print ("\t\tCipher Domain: '%s'\n", qmi_nas_network_service_domain_get_string (cipher_domain));
+            if (qmi_message_nas_get_system_info_output_get_gsm_cipher_domain (
+                    output,
+                    &cipher_domain,
+                    NULL)) {
+                g_print ("\t\tCipher Domain: '%s'\n", qmi_nas_network_service_domain_get_string (cipher_domain));
+            }
         }
     }
 
@@ -1285,101 +1246,87 @@ get_system_info_ready (QmiClientNas *client,
         QmiNasCallBarringStatus call_barring_status_ps;
         QmiNasNetworkServiceDomain cipher_domain;
 
-        g_print ("\tWCDMA service:\n");
-
         if (qmi_message_nas_get_system_info_output_get_wcdma_service_status (
                 output,
                 &service_status,
                 &true_service_status,
                 &preferred_data_path,
                 NULL)) {
-            g_print ("\t\tStatus: '%s'\n"
+            g_print ("\tWCDMA service:\n"
+                     "\t\tStatus: '%s'\n"
                      "\t\tTrue Status: '%s'\n"
                      "\t\tPreferred data path: '%s'\n",
                      qmi_nas_service_status_get_string (service_status),
                      qmi_nas_service_status_get_string (true_service_status),
                      preferred_data_path ? "yes" : "no");
-        }
 
-        if (qmi_message_nas_get_system_info_output_get_wcdma_system_info (
-                output,
-                &domain_valid,
-                &domain,
-                &service_capability_valid,
-                &service_capability,
-                &roaming_status_valid,
-                &roaming_status,
-                &forbidden_valid,
-                &forbidden,
-                &lac_valid,
-                &lac,
-                &cid_valid,
-                &cid,
-                &registration_reject_info_valid,
-                &registration_reject_domain,
-                &registration_reject_cause,
-                &network_id_valid,
-                &mcc,
-                &mnc,
-                &hs_call_status_valid,
-                &hs_call_status,
-                &hs_service_valid,
-                &hs_service,
-                &primary_scrambling_code_valid,
-                &primary_scrambling_code,
+            if (qmi_message_nas_get_system_info_output_get_wcdma_system_info (
+                    output,
+                    &domain_valid, &domain,
+                    &service_capability_valid, &service_capability,
+                    &roaming_status_valid, &roaming_status,
+                    &forbidden_valid, &forbidden,
+                    &lac_valid, &lac,
+                    &cid_valid, &cid,
+                    &registration_reject_info_valid, &registration_reject_domain, &registration_reject_cause,
+                    &network_id_valid, &mcc, &mnc,
+                    &hs_call_status_valid, &hs_call_status,
+                    &hs_service_valid, &hs_service,
+                    &primary_scrambling_code_valid, &primary_scrambling_code,
                 NULL)) {
-            if (domain_valid)
-                g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
-            if (service_capability_valid)
-                g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
-            if (roaming_status_valid)
-                g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
-            if (forbidden_valid)
-                g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
-            if (lac_valid)
-                g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
-            if (cid_valid)
-                g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
-            if (registration_reject_info_valid)
-                g_print ("\t\tRegistration reject: '%s' (%u)\n",
-                         qmi_nas_network_service_domain_get_string (registration_reject_domain),
-                         registration_reject_cause);
-            if (network_id_valid) {
-                g_print ("\t\tMCC: '%s'\n", mcc);
-                g_print ("\t\tMNC: '%s'\n", mnc);
+                if (domain_valid)
+                    g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
+                if (service_capability_valid)
+                    g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
+                if (roaming_status_valid)
+                    g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
+                if (forbidden_valid)
+                    g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
+                if (lac_valid)
+                    g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
+                if (cid_valid)
+                    g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
+                if (registration_reject_info_valid)
+                    g_print ("\t\tRegistration reject: '%s' (%u)\n",
+                             qmi_nas_network_service_domain_get_string (registration_reject_domain),
+                             registration_reject_cause);
+                if (network_id_valid) {
+                    g_print ("\t\tMCC: '%s'\n", mcc);
+                    g_print ("\t\tMNC: '%s'\n", mnc);
+                }
+                if (hs_call_status_valid)
+                    g_print ("\t\tHS call status: '%s'\n", qmi_nas_wcdma_hs_service_get_string (hs_call_status));
+                if (hs_service_valid)
+                    g_print ("\t\tHS service: '%s'\n", qmi_nas_wcdma_hs_service_get_string (hs_service));
+                if (primary_scrambling_code_valid)
+                    g_print ("\t\tPrimary scrambling code: '%" G_GUINT16_FORMAT"'\n", primary_scrambling_code);
             }
-            if (hs_call_status_valid)
-                g_print ("\t\tHS call status: '%s'\n", qmi_nas_wcdma_hs_service_get_string (hs_call_status));
-            if (hs_service_valid)
-                g_print ("\t\tHS service: '%s'\n", qmi_nas_wcdma_hs_service_get_string (hs_service));
-            if (primary_scrambling_code_valid)
-                g_print ("\t\tPrimary scrambling code: '%" G_GUINT16_FORMAT"'\n", primary_scrambling_code);
-        }
 
-        if (qmi_message_nas_get_system_info_output_get_additional_wcdma_system_info (
-                output,
-                &geo_system_index,
-                &cell_broadcast_support,
-                NULL)) {
-            if (geo_system_index != 0xFFFF)
-                g_print ("\t\tGeo system index: '%" G_GUINT16_FORMAT "'\n", geo_system_index);
-            g_print ("\t\tCell broadcast support: '%s'\n", qmi_nas_cell_broadcast_capability_get_string (cell_broadcast_support));
-        }
+            if (qmi_message_nas_get_system_info_output_get_additional_wcdma_system_info (
+                    output,
+                    &geo_system_index,
+                    &cell_broadcast_support,
+                    NULL)) {
+                if (geo_system_index != 0xFFFF)
+                    g_print ("\t\tGeo system index: '%" G_GUINT16_FORMAT "'\n", geo_system_index);
+                g_print ("\t\tCell broadcast support: '%s'\n", qmi_nas_cell_broadcast_capability_get_string (cell_broadcast_support));
+            }
 
-        if (qmi_message_nas_get_system_info_output_get_wcdma_call_barring_status (
-                output,
-                &call_barring_status_cs,
-                &call_barring_status_ps,
-                NULL)) {
-            g_print ("\t\tCall barring status (CS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_cs));
-            g_print ("\t\tCall barring status (PS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_ps));
-        }
+            if (qmi_message_nas_get_system_info_output_get_wcdma_call_barring_status (
+                    output,
+                    &call_barring_status_cs,
+                    &call_barring_status_ps,
+                    NULL)) {
+                g_print ("\t\tCall barring status (CS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_cs));
+                g_print ("\t\tCall barring status (PS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_ps));
+            }
 
-        if (qmi_message_nas_get_system_info_output_get_wcdma_cipher_domain (
-                output,
-                &cipher_domain,
-                NULL)) {
-            g_print ("\t\tCipher Domain: '%s'\n", qmi_nas_network_service_domain_get_string (cipher_domain));
+            if (qmi_message_nas_get_system_info_output_get_wcdma_cipher_domain (
+                    output,
+                    &cipher_domain,
+                    NULL)) {
+                g_print ("\t\tCipher Domain: '%s'\n", qmi_nas_network_service_domain_get_string (cipher_domain));
+            }
         }
     }
 
@@ -1412,89 +1359,77 @@ get_system_info_ready (QmiClientNas *client,
         gboolean voice_support;
         gboolean embms_coverage_info_support;
 
-        g_print ("\tLTE service:\n");
-
         if (qmi_message_nas_get_system_info_output_get_lte_service_status (
                 output,
                 &service_status,
                 &true_service_status,
                 &preferred_data_path,
                 NULL)) {
-            g_print ("\t\tStatus: '%s'\n"
+            g_print ("\tLTE service:\n"
+                     "\t\tStatus: '%s'\n"
                      "\t\tTrue Status: '%s'\n"
                      "\t\tPreferred data path: '%s'\n",
                      qmi_nas_service_status_get_string (service_status),
                      qmi_nas_service_status_get_string (true_service_status),
                      preferred_data_path ? "yes" : "no");
-        }
 
-        if (qmi_message_nas_get_system_info_output_get_lte_system_info (
-                output,
-                &domain_valid,
-                &domain,
-                &service_capability_valid,
-                &service_capability,
-                &roaming_status_valid,
-                &roaming_status,
-                &forbidden_valid,
-                &forbidden,
-                &lac_valid,
-                &lac,
-                &cid_valid,
-                &cid,
-                &registration_reject_info_valid,
-                &registration_reject_domain,
-                &registration_reject_cause,
-                &network_id_valid,
-                &mcc,
-                &mnc,
-                &tac_valid,
-                &tac,
-                NULL)) {
-            if (domain_valid)
-                g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
-            if (service_capability_valid)
-                g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
-            if (roaming_status_valid)
-                g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
-            if (forbidden_valid)
-                g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
-            if (lac_valid)
-                g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
-            if (cid_valid)
-                g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
-            if (registration_reject_info_valid)
-                g_print ("\t\tRegistration reject: '%s' (%u)\n",
-                         qmi_nas_network_service_domain_get_string (registration_reject_domain),
-                         registration_reject_cause);
-            if (network_id_valid) {
-                g_print ("\t\tMCC: '%s'\n", mcc);
-                g_print ("\t\tMNC: '%s'\n", mnc);
+            if (qmi_message_nas_get_system_info_output_get_lte_system_info (
+                    output,
+                    &domain_valid, &domain,
+                    &service_capability_valid, &service_capability,
+                    &roaming_status_valid, &roaming_status,
+                    &forbidden_valid, &forbidden,
+                    &lac_valid, &lac,
+                    &cid_valid, &cid,
+                    &registration_reject_info_valid,&registration_reject_domain,&registration_reject_cause,
+                    &network_id_valid, &mcc, &mnc,
+                    &tac_valid, &tac,
+                    NULL)) {
+                if (domain_valid)
+                    g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
+                if (service_capability_valid)
+                    g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
+                if (roaming_status_valid)
+                    g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
+                if (forbidden_valid)
+                    g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
+                if (lac_valid)
+                    g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
+                if (cid_valid)
+                    g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
+                if (registration_reject_info_valid)
+                    g_print ("\t\tRegistration reject: '%s' (%u)\n",
+                             qmi_nas_network_service_domain_get_string (registration_reject_domain),
+                             registration_reject_cause);
+                if (network_id_valid) {
+                    g_print ("\t\tMCC: '%s'\n", mcc);
+                    g_print ("\t\tMNC: '%s'\n", mnc);
+                }
+                if (tac_valid)
+                    g_print ("\t\tTracking Area Code: '%" G_GUINT16_FORMAT"'\n", tac);
             }
-            if (tac_valid)
-                g_print ("\t\tTracking Area Code: '%" G_GUINT16_FORMAT"'\n", tac);
-        }
 
-        if (qmi_message_nas_get_system_info_output_get_additional_lte_system_info (
-                output,
-                &geo_system_index,
-                NULL)) {
-            if (geo_system_index != 0xFFFF)
-                g_print ("\t\tGeo system index: '%" G_GUINT16_FORMAT "'\n", geo_system_index);
-        }
+            if (qmi_message_nas_get_system_info_output_get_additional_lte_system_info (
+                    output,
+                    &geo_system_index,
+                    NULL)) {
+                if (geo_system_index != 0xFFFF)
+                    g_print ("\t\tGeo system index: '%" G_GUINT16_FORMAT "'\n", geo_system_index);
+            }
 
-        if (qmi_message_nas_get_system_info_output_get_lte_voice_support (
-                output,
-                &voice_support,
-                NULL)) {
-            g_print ("\t\tVoice support: '%s'\n", voice_support ? "yes" : "no");
-        }
+            if (qmi_message_nas_get_system_info_output_get_lte_voice_support (
+                    output,
+                    &voice_support,
+                    NULL)) {
+                g_print ("\t\tVoice support: '%s'\n", voice_support ? "yes" : "no");
+            }
 
-        if (qmi_message_nas_get_system_info_output_get_lte_embms_coverage_info_support (
-                output,
-                &embms_coverage_info_support,
-                NULL)) {
-            g_print ("\t\teMBMS coverage info support: '%s'\n", embms_coverage_info_support ? "yes" : "no");
+            if (qmi_message_nas_get_system_info_output_get_lte_embms_coverage_info_support (
+                    output,
+                    &embms_coverage_info_support,
+                    NULL)) {
+                g_print ("\t\teMBMS coverage info support: '%s'\n", embms_coverage_info_support ? "yes" : "no");
+            }
         }
     }
 
@@ -1536,91 +1471,73 @@ get_system_info_ready (QmiClientNas *client,
         gboolean cipher_domain_valid;
         QmiNasNetworkServiceDomain cipher_domain;
 
-        g_print ("\tWCDMA service:\n");
-
         if (qmi_message_nas_get_system_info_output_get_td_scdma_service_status (
                 output,
                 &service_status,
                 &true_service_status,
                 &preferred_data_path,
                 NULL)) {
-            g_print ("\t\tStatus: '%s'\n"
+            g_print ("\tTD-SCDMA service:\n"
+                     "\t\tStatus: '%s'\n"
                      "\t\tTrue Status: '%s'\n"
                      "\t\tPreferred data path: '%s'\n",
                      qmi_nas_service_status_get_string (service_status),
                      qmi_nas_service_status_get_string (true_service_status),
                      preferred_data_path ? "yes" : "no");
-        }
 
-        if (qmi_message_nas_get_system_info_output_get_td_scdma_system_info (
-                output,
-                &domain_valid,
-                &domain,
-                &service_capability_valid,
-                &service_capability,
-                &roaming_status_valid,
-                &roaming_status,
-                &forbidden_valid,
-                &forbidden,
-                &lac_valid,
-                &lac,
-                &cid_valid,
-                &cid,
-                &registration_reject_info_valid,
-                &registration_reject_domain,
-                &registration_reject_cause,
-                &network_id_valid,
-                &mcc,
-                &mnc,
-                &hs_call_status_valid,
-                &hs_call_status,
-                &hs_service_valid,
-                &hs_service,
-                &cell_parameter_id_valid,
-                &cell_parameter_id,
-                &cell_broadcast_support_valid,
-                &cell_broadcast_support,
-                &call_barring_status_cs_valid,
-                &call_barring_status_cs,
-                &call_barring_status_ps_valid,
-                &call_barring_status_ps,
-                &cipher_domain_valid,
-                &cipher_domain,
-                NULL)) {
-            if (domain_valid)
-                g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
-            if (service_capability_valid)
-                g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
-            if (roaming_status_valid)
-                g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
-            if (forbidden_valid)
-                g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
-            if (lac_valid)
-                g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
-            if (cid_valid)
-                g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
-            if (registration_reject_info_valid)
-                g_print ("\t\tRegistration reject: '%s' (%u)\n",
-                         qmi_nas_network_service_domain_get_string (registration_reject_domain),
-                         registration_reject_cause);
-            if (network_id_valid) {
-                g_print ("\t\tMCC: '%s'\n", mcc);
-                g_print ("\t\tMNC: '%s'\n", mnc);
+            if (qmi_message_nas_get_system_info_output_get_td_scdma_system_info (
+                    output,
+                    &domain_valid, &domain,
+                    &service_capability_valid, &service_capability,
+                    &roaming_status_valid, &roaming_status,
+                    &forbidden_valid, &forbidden,
+                    &lac_valid, &lac,
+                    &cid_valid, &cid,
+                    &registration_reject_info_valid, &registration_reject_domain, &registration_reject_cause,
+                    &network_id_valid, &mcc, &mnc,
+                    &hs_call_status_valid, &hs_call_status,
+                    &hs_service_valid, &hs_service,
+                    &cell_parameter_id_valid, &cell_parameter_id,
+                    &cell_broadcast_support_valid, &cell_broadcast_support,
+                    &call_barring_status_cs_valid, &call_barring_status_cs,
+                    &call_barring_status_ps_valid, &call_barring_status_ps,
+                    &cipher_domain_valid, &cipher_domain,
+                    NULL)) {
+                if (domain_valid)
+                    g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
+                if (service_capability_valid)
+                    g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
+                if (roaming_status_valid)
+                    g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
+                if (forbidden_valid)
+                    g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
+                if (lac_valid)
+                    g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
+                if (cid_valid)
+                    g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
+                if (registration_reject_info_valid)
+                    g_print ("\t\tRegistration reject: '%s' (%u)\n",
+                             qmi_nas_network_service_domain_get_string (registration_reject_domain),
+                             registration_reject_cause);
+                if (network_id_valid) {
+                    g_print ("\t\tMCC: '%s'\n", mcc);
+                    g_print ("\t\tMNC: '%s'\n", mnc);
+                }
+                if (hs_call_status_valid)
+                    g_print ("\t\tHS call status: '%s'\n", qmi_nas_wcdma_hs_service_get_string (hs_call_status));
+                if (hs_service_valid)
+                    g_print ("\t\tHS service: '%s'\n", qmi_nas_wcdma_hs_service_get_string (hs_service));
+                if (cell_parameter_id_valid)
+                    g_print ("\t\tCell parameter ID: '%" G_GUINT16_FORMAT"'\n", cell_parameter_id);
+                if (cell_broadcast_support_valid)
+                    g_print ("\t\tCell broadcast support: '%s'\n", qmi_nas_cell_broadcast_capability_get_string (cell_broadcast_support));
+                if (call_barring_status_cs_valid)
+                    g_print ("\t\tCall barring status (CS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_cs));
+                if (call_barring_status_ps_valid)
+                    g_print ("\t\tCall barring status (PS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_ps));
+                if (cipher_domain_valid)
+                    g_print ("\t\tCipher Domain: '%s'\n", qmi_nas_network_service_domain_get_string (cipher_domain));
             }
-            if (hs_call_status_valid)
-                g_print ("\t\tHS call status: '%s'\n", qmi_nas_wcdma_hs_service_get_string (hs_call_status));
-            if (hs_service_valid)
-                g_print ("\t\tHS service: '%s'\n", qmi_nas_wcdma_hs_service_get_string (hs_service));
-            if (cell_parameter_id_valid)
-                g_print ("\t\tCell parameter ID: '%" G_GUINT16_FORMAT"'\n", cell_parameter_id);
-            if (cell_broadcast_support_valid)
-                g_print ("\t\tCell broadcast support: '%s'\n", qmi_nas_cell_broadcast_capability_get_string (cell_broadcast_support));
-            if (call_barring_status_cs_valid)
-                g_print ("\t\tCall barring status (CS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_cs));
-            if (call_barring_status_ps_valid)
-                g_print ("\t\tCall barring status (PS): '%s'\n", qmi_nas_call_barring_status_get_string (call_barring_status_ps));
-            if (cipher_domain_valid)
-                g_print ("\t\tCipher Domain: '%s'\n", qmi_nas_network_service_domain_get_string (cipher_domain));
         }
 
         /* Common */
