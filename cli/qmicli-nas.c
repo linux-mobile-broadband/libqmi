@@ -598,7 +598,7 @@ get_serving_system_ready (QmiClientNas *client,
                  "\tCS: '%s'\n"
                  "\tPS: '%s'\n"
                  "\tSelected network: '%s'\n"
-                 "\tRadio interfaces: '%u'",
+                 "\tRadio interfaces: '%u'\n",
                  qmi_nas_registration_state_get_string (registration_state),
                  qmi_nas_attach_state_get_string (cs_attach_state),
                  qmi_nas_attach_state_get_string (ps_attach_state),
@@ -660,7 +660,7 @@ get_serving_system_ready (QmiClientNas *client,
             g_print ("\tCurrent PLMN:\n"
                      "\t\tMCC: '%" G_GUINT16_FORMAT"'\n"
                      "\t\tMNC: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tDescription: '%s'",
+                     "\t\tDescription: '%s'\n",
                      current_plmn_mcc,
                      current_plmn_mnc,
                      current_plmn_description);
