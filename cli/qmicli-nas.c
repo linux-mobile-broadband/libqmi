@@ -678,7 +678,7 @@ get_serving_system_ready (QmiClientNas *client,
                 NULL)) {
             g_print ("\tCDMA System ID:\n"
                      "\t\tSID: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tESN: '%" G_GUINT16_FORMAT"'\n",
+                     "\t\tNID: '%" G_GUINT16_FORMAT"'\n",
                      sid, nid);
         }
     }
