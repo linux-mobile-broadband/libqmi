@@ -24,6 +24,73 @@
 #define _LIBQMI_GLIB_QMI_ENUMS_WDS_H_
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI WDS Start Network' message */
+
+/**
+ * QmiWdsAuthenticationPreference:
+ * @QMI_WDS_AUTHENTICATION_PREFERENCE_ALLOW_PAP: PAP authentication may be performed.
+ * @QMI_WDS_AUTHENTICATION_PREFERENCE_ALLOW_CHAP: CHAP authentication may be performed.
+ *
+ * Type of authentication that may be performed by the device
+ */
+typedef enum {
+    QMI_WDS_AUTHENTICATION_PREFERENCE_ALLOW_PAP  = 1 << 0,
+    QMI_WDS_AUTHENTICATION_PREFERENCE_ALLOW_CHAP = 1 << 1
+} QmiWdsAuthenticationPreference;
+
+/**
+ * QmiWdsIpFamily:
+ * @QMI_WDS_IP_FAMILY_IPV4: IPv4.
+ * @QMI_WDS_IP_FAMILY_IPV6: IPv6.
+ * @QMI_WDS_IP_FAMILY_UNSPECIFIED: None specified.
+ *
+ * Type of IP family preference.
+ */
+typedef enum {
+    QMI_WDS_IP_FAMILY_IPV4        = 4,
+    QMI_WDS_IP_FAMILY_IPV6        = 6,
+    QMI_WDS_IP_FAMILY_UNSPECIFIED = 8
+} QmiWdsIpFamily;
+
+/**
+ * QmiWdsTechnologyPreference:
+ * @QMI_WDS_TECHNOLOGY_PREFERENCE_ALLOW_3GPP: 3GPP allowed.
+ * @QMI_WDS_TECHNOLOGY_PREFERENCE_ALLOW_3GPP2: 3GPP2 allowed.
+ *
+ * Type of network allowed when trying to connect.
+ */
+typedef enum {
+    QMI_WDS_TECHNOLOGY_PREFERENCE_ALLOW_3GPP  = 1 << 0,
+    QMI_WDS_TECHNOLOGY_PREFERENCE_ALLOW_3GPP2 = 1 << 1
+} QmiWdsTechnologyPreference;
+
+/**
+ * QmiWdsExtendedTechnologyPreference:
+ * @QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_CDMA: Use CDMA.
+ * @QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_UMTS: Use UMTS.
+ * @QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_EMBMS: Use eMBMS.
+ *
+ * Type of network allowed when trying to connect.
+ */
+typedef enum {
+    QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_CDMA  = -32767,
+    QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_UMTS  = -32764,
+    QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_EMBMS = -30590
+} QmiWdsExtendedTechnologyPreference;
+
+/**
+ * QmiWdsCallType:
+ * @QMI_WDS_CALL_TYPE_LAPTOP: Laptop call.
+ * @QMI_WDS_CALL_TYPE_EMBEDDED: Embedded call.
+ *
+ * Type of call to originate.
+ */
+typedef enum {
+    QMI_WDS_CALL_TYPE_LAPTOP   = 0,
+    QMI_WDS_CALL_TYPE_EMBEDDED = 1
+} QmiWdsCallType;
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI WDS Get Packet Service Status' message */
 
 /**
