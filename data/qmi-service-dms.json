@@ -904,7 +904,7 @@
      "service" : "DMS",
      "id"      : "0x004B",
      "version" : "1.4",
-     "input"   : [  { "name"      : "Time",
+     "input"   : [  { "name"      : "Time Value",
                       "id"        : "0x01",
                       "mandatory" : "yes",
                       "type"      : "TLV",
