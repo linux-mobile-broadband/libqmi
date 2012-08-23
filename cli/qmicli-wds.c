@@ -46,7 +46,7 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
-static gboolean start_network_flag;
+static gchar *start_network_str;
 static gboolean follow_network_flag;
 static gchar *stop_network_str;
 static gboolean get_packet_service_status_flag;
@@ -56,9 +56,9 @@ static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
-    { "wds-start-network", 0, 0, G_OPTION_ARG_NONE, &start_network_flag,
+    { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
       "Start network",
-      NULL
+      "[APN]"
     },
     { "wds-follow-network", 0, 0, G_OPTION_ARG_NONE, &follow_network_flag,
       "Follow the network status until disconnected. Use with `--wds-start-network'",
@@ -115,7 +115,7 @@ qmicli_wds_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (start_network_flag +
+    n_actions = (!!start_network_str +
                  !!stop_network_str +
                  get_packet_service_status_flag +
                  get_data_bearer_technology_flag +
@@ -589,14 +589,24 @@ qmicli_wds_run (QmiDevice *device,
     ctx->packet_status_timeout_id = 0;
 
     /* Request to start network? */
-    if (start_network_flag) {
+    if (start_network_str) {
+        QmiMessageWdsStartNetworkInput *input = NULL;
+
+        /* Use the input string as APN */
+        if (start_network_str[0]) {
+            input = qmi_message_wds_start_network_input_new ();
+            qmi_message_wds_start_network_input_set_apn (input, start_network_str, NULL);
+        }
+
         g_debug ("Asynchronously starting network...");
         qmi_client_wds_start_network (ctx->client,
-                                      NULL, /* allow NULL input for now */
+                                      input,
                                       10,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback)start_network_ready,
                                       NULL);
+        if (input)
+            qmi_message_wds_start_network_input_unref (input);
         return;
     }
 

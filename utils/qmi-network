@@ -29,6 +29,19 @@ fi
 DEVICE=$1
 COMMAND=$2
 STATE_FILE=/tmp/qmi-network-state
+PROFILE_FILE=/etc/qmi-network.conf
+
+load_profile ()
+{
+    if [ -f $PROFILE_FILE ]; then
+        echo "Loading profile..."
+        source $PROFILE_FILE
+
+        if [ "x$APN" != "x" ]; then
+            echo "    APN: $APN"
+        fi
+    fi
+}
 
 save_state ()
 {
@@ -90,7 +103,7 @@ start_network ()
         exit 3
     fi
 
-    START_NETWORK_CMD="qmicli -d $DEVICE --wds-start-network $USE_PREVIOUS_CID --client-no-release-cid"
+    START_NETWORK_CMD="qmicli -d $DEVICE --wds-start-network=$APN $USE_PREVIOUS_CID --client-no-release-cid"
     echo "Starting network with '$START_NETWORK_CMD'..."
 
     if [ "x$QMIDEBUG" != "x" ]; then
@@ -187,6 +200,9 @@ packet_service_status ()
 }
 
 # Main
+
+# Load profile, if any
+load_profile
 
 # Load previous state, if any
 load_state
