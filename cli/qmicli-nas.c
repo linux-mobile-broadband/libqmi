@@ -141,18 +141,18 @@ qmicli_nas_options_enabled (void)
 }
 
 static void
-context_free (Context *ctx)
+context_free (Context *context)
 {
-    if (!ctx)
+    if (!context)
         return;
 
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
-    if (ctx->device)
-        g_object_unref (ctx->device);
-    if (ctx->client)
-        g_object_unref (ctx->client);
-    g_slice_free (Context, ctx);
+    if (context->cancellable)
+        g_object_unref (context->cancellable);
+    if (context->device)
+        g_object_unref (context->device);
+    if (context->client)
+        g_object_unref (context->client);
+    g_slice_free (Context, context);
 }
 
 static void

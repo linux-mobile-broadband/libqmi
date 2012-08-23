@@ -137,20 +137,20 @@ qmicli_wds_options_enabled (void)
 }
 
 static void
-context_free (Context *ctx)
+context_free (Context *context)
 {
-    if (!ctx)
+    if (!context)
         return;
 
-    if (ctx->client)
-        g_object_unref (ctx->client);
-    if (ctx->network_started_id)
-        g_cancellable_disconnect (ctx->cancellable, ctx->network_started_id);
-    if (ctx->packet_status_timeout_id)
-        g_source_remove (ctx->packet_status_timeout_id);
-    g_object_unref (ctx->cancellable);
-    g_object_unref (ctx->device);
-    g_slice_free (Context, ctx);
+    if (context->client)
+        g_object_unref (context->client);
+    if (context->network_started_id)
+        g_cancellable_disconnect (context->cancellable, context->network_started_id);
+    if (context->packet_status_timeout_id)
+        g_source_remove (context->packet_status_timeout_id);
+    g_object_unref (context->cancellable);
+    g_object_unref (context->device);
+    g_slice_free (Context, context);
 }
 
 static void

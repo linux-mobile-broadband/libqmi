@@ -206,12 +206,12 @@ generic_options_enabled (void)
 /* Running asynchronously */
 
 static void
-release_client_ready (QmiDevice *device,
+release_client_ready (QmiDevice *dev,
                       GAsyncResult *res)
 {
     GError *error = NULL;
 
-    if (!qmi_device_release_client_finish (device, res, &error)) {
+    if (!qmi_device_release_client_finish (dev, res, &error)) {
         g_printerr ("error: couldn't release client: %s", error->message);
         g_error_free (error);
     } else
@@ -259,12 +259,12 @@ qmicli_async_operation_done (gboolean reported_operation_status)
 }
 
 static void
-allocate_client_ready (QmiDevice *device,
+allocate_client_ready (QmiDevice *dev,
                        GAsyncResult *res)
 {
     GError *error = NULL;
 
-    client = qmi_device_allocate_client_finish (device, res, &error);
+    client = qmi_device_allocate_client_finish (dev, res, &error);
     if (!client) {
         g_printerr ("error: couldn't create client for the '%s' service: %s\n",
                     qmi_service_get_string (service),
@@ -275,13 +275,13 @@ allocate_client_ready (QmiDevice *device,
     /* Run the service-specific action */
     switch (service) {
     case QMI_SERVICE_DMS:
-        qmicli_dms_run (device, QMI_CLIENT_DMS (client), cancellable);
+        qmicli_dms_run (dev, QMI_CLIENT_DMS (client), cancellable);
         return;
     case QMI_SERVICE_NAS:
-        qmicli_nas_run (device, QMI_CLIENT_NAS (client), cancellable);
+        qmicli_nas_run (dev, QMI_CLIENT_NAS (client), cancellable);
         return;
     case QMI_SERVICE_WDS:
-        qmicli_wds_run (device, QMI_CLIENT_WDS (client), cancellable);
+        qmicli_wds_run (dev, QMI_CLIENT_WDS (client), cancellable);
         return;
     default:
         g_assert_not_reached ();
@@ -289,7 +289,7 @@ allocate_client_ready (QmiDevice *device,
 }
 
 static void
-device_allocate_client (QmiDevice *device)
+device_allocate_client (QmiDevice *dev)
 {
     guint8 cid = QMI_CID_NONE;
 
@@ -309,7 +309,7 @@ device_allocate_client (QmiDevice *device)
 
     /* As soon as we get the QmiDevice, create a client for the requested
      * service */
-    qmi_device_allocate_client (device,
+    qmi_device_allocate_client (dev,
                                 service,
                                 cid,
                                 10,
@@ -319,13 +319,13 @@ device_allocate_client (QmiDevice *device)
 }
 
 static void
-set_instance_id_ready (QmiDevice *device,
+set_instance_id_ready (QmiDevice *dev,
                        GAsyncResult *res)
 {
     GError *error = NULL;
     guint16 link_id;
 
-    if (!qmi_device_set_instance_id_finish (device, res, &link_id, &error)) {
+    if (!qmi_device_set_instance_id_finish (dev, res, &link_id, &error)) {
         g_printerr ("error: couldn't set instance ID: %s\n",
                     error->message);
         exit (EXIT_FAILURE);
@@ -333,7 +333,7 @@ set_instance_id_ready (QmiDevice *device,
 
     g_print ("[%s] Instance ID set:\n"
              "\tLink ID: '%" G_GUINT16_FORMAT "'\n",
-             qmi_device_get_path_display (device),
+             qmi_device_get_path_display (dev),
              link_id);
 
     /* We're done now */
@@ -341,7 +341,7 @@ set_instance_id_ready (QmiDevice *device,
 }
 
 static void
-device_set_instance_id (QmiDevice *device)
+device_set_instance_id (QmiDevice *dev)
 {
     gint instance_id;
 
@@ -361,7 +361,7 @@ device_set_instance_id (QmiDevice *device)
     }
 
     g_debug ("Setting instance ID '%d'...", instance_id);
-    qmi_device_set_instance_id (device,
+    qmi_device_set_instance_id (dev,
                                 (guint8)instance_id,
                                 10,
                                 cancellable,
@@ -370,24 +370,24 @@ device_set_instance_id (QmiDevice *device)
 }
 
 static void
-device_open_ready (QmiDevice *device,
+device_open_ready (QmiDevice *dev,
                    GAsyncResult *res)
 {
     GError *error = NULL;
 
-    if (!qmi_device_open_finish (device, res, &error)) {
+    if (!qmi_device_open_finish (dev, res, &error)) {
         g_printerr ("error: couldn't open the QmiDevice: %s\n",
                     error->message);
         exit (EXIT_FAILURE);
     }
 
     g_debug ("QMI Device at '%s' ready",
-             qmi_device_get_path_display (device));
+             qmi_device_get_path_display (dev));
 
     if (device_set_instance_id_str)
-        device_set_instance_id (device);
+        device_set_instance_id (dev);
     else
-        device_allocate_client (device);
+        device_allocate_client (dev);
 }
 
 static void
