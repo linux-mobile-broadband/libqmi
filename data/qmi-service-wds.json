@@ -238,6 +238,20 @@
                                       { "name"   : "RAT Mask",
                                         "format" : "guint32" },
                                       { "name"   : "SO Mask",
-                                        "format" : "guint32" } ] } ] }
+                                        "format" : "guint32" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Set IP Family",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x004D",
+     "version" : "1.9",
+     "input"   : [  { "name"          : "Preference",
+                      "id"            : "0x01",
+                      "mandatory"     : "yes",
+                      "type"          : "TLV",
+                      "format"        : "guint8",
+                      "public-format" : "QmiWdsIpFamily" } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] }
 
 ]
