@@ -300,7 +300,7 @@ start_network_ready (QmiClientWds *client,
         if (g_error_matches (error,
                              QMI_PROTOCOL_ERROR,
                              QMI_PROTOCOL_ERROR_CALL_FAILED)) {
-            guint16 cer;
+            QmiWdsCallEndReason cer;
             guint16 verbose_cer_type;
             guint16 verbose_cer_reason;
 
@@ -308,7 +308,9 @@ start_network_ready (QmiClientWds *client,
                     output,
                     &cer,
                     NULL))
-                g_printerr ("call end reason: %u\n", cer);
+                g_printerr ("call end reason (%u): %s\n",
+                            cer,
+                            qmi_wds_call_end_reason_get_string (cer));
 
             if (qmi_message_wds_start_network_output_get_verbose_call_end_reason (
                     output,
