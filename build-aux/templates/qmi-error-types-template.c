@@ -15,11 +15,7 @@ static const G@Type@Value @enum_name@_values[] = {
     { 0, NULL, NULL }
 };
 
-GQuark
-@enum_name@_quark (void)
-{
-    return g_quark_from_static_string ("@enum_name@_quark");
-}
+/* @enum_name@_quark() implemented in qmi-errors-quarks.c */
 
 GType
 @enum_name@_get_type (void)

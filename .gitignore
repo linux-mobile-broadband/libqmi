@@ -37,6 +37,7 @@ libqmi-glib/.deps
 libqmi-glib/Makefile
 libqmi-glib/Makefile.in
 libqmi-glib/libqmi-glib.la
+libqmi-glib/qmi-error-quarks.c
 libqmi-glib/qmi-error-types.c
 libqmi-glib/qmi-error-types.h
 libqmi-glib/qmi-enum-types.h

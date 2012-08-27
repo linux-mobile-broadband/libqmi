@@ -23,6 +23,11 @@
 #ifndef _LIBQMI_GLIB_QMI_ERRORS_H_
 #define _LIBQMI_GLIB_QMI_ERRORS_H_
 
+/* Prefixes for errors registered in DBus */
+#define QMI_DBUS_ERROR_PREFIX          "org.freedesktop.libqmi.Error"
+#define QMI_CORE_ERROR_DBUS_PREFIX     QMI_DBUS_ERROR_PREFIX ".Core"
+#define QMI_PROTOCOL_ERROR_DBUS_PREFIX QMI_DBUS_ERROR_PREFIX ".Protocol"
+
 /**
  * QmiCoreError:
  * @QMI_CORE_ERROR_FAILED: Operation failed.
@@ -36,15 +41,15 @@
  *
  * Common errors that may be reported by libqmi-glib.
  */
-typedef enum {
-    QMI_CORE_ERROR_FAILED,
-    QMI_CORE_ERROR_WRONG_STATE,
-    QMI_CORE_ERROR_TIMEOUT,
-    QMI_CORE_ERROR_INVALID_ARGS,
-    QMI_CORE_ERROR_INVALID_MESSAGE,
-    QMI_CORE_ERROR_TLV_NOT_FOUND,
-    QMI_CORE_ERROR_TLV_TOO_LONG,
-    QMI_CORE_ERROR_UNSUPPORTED
+typedef enum { /*< underscore_name=qmi_core_error >*/
+    QMI_CORE_ERROR_FAILED           = 0, /*< nick=Failed >*/
+    QMI_CORE_ERROR_WRONG_STATE      = 1, /*< nick=WrongState >*/
+    QMI_CORE_ERROR_TIMEOUT          = 2, /*< nick=Timeout >*/
+    QMI_CORE_ERROR_INVALID_ARGS     = 3, /*< nick=InvalidArgs >*/
+    QMI_CORE_ERROR_INVALID_MESSAGE  = 4, /*< nick=InvalidMessage >*/
+    QMI_CORE_ERROR_TLV_NOT_FOUND    = 5, /*< nick=TlvNotFound >*/
+    QMI_CORE_ERROR_TLV_TOO_LONG     = 6, /*< nick=TlvTooLong >*/
+    QMI_CORE_ERROR_UNSUPPORTED      = 7  /*< nick=Unsupported >*/
 } QmiCoreError;
 
 /**
@@ -129,84 +134,84 @@ typedef enum {
   *
   * QMI protocol errors.
   */
-typedef enum {
-  QMI_PROTOCOL_ERROR_NONE                             = 0,
-  QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE                = 1,
-  QMI_PROTOCOL_ERROR_NO_MEMORY                        = 2,
-  QMI_PROTOCOL_ERROR_INTERNAL                         = 3,
-  QMI_PROTOCOL_ERROR_ABORTED                          = 4,
-  QMI_PROTOCOL_ERROR_CLIENT_IDS_EXHAUSTED             = 5,
-  QMI_PROTOCOL_ERROR_UNABORTABLE_TRANSACTION          = 6,
-  QMI_PROTOCOL_ERROR_INVALID_CLIENT_ID                = 7,
-  QMI_PROTOCOL_ERROR_NO_THRESHOLDS_PROVIDED           = 8,
-  QMI_PROTOCOL_ERROR_INVALID_HANDLE                   = 9,
-  QMI_PROTOCOL_ERROR_INVALID_PROFILE                  = 10,
-  QMI_PROTOCOL_ERROR_INVALID_PIN_ID                   = 11,
-  QMI_PROTOCOL_ERROR_INCORRECT_PIN                    = 12,
-  QMI_PROTOCOL_ERROR_NO_NETWORK_FOUND                 = 13,
-  QMI_PROTOCOL_ERROR_CALL_FAILED                      = 14,
-  QMI_PROTOCOL_ERROR_OUT_OF_CALL                      = 15,
-  QMI_PROTOCOL_ERROR_NOT_PROVISIONED                  = 16,
-  QMI_PROTOCOL_ERROR_MISSING_ARGUMENT                 = 17,
-  QMI_PROTOCOL_ERROR_ARGUMENT_TOO_LONG                = 19,
-  QMI_PROTOCOL_ERROR_INVALID_TRANSACTION_ID           = 22,
-  QMI_PROTOCOL_ERROR_DEVICE_IN_USE                    = 23,
-  QMI_PROTOCOL_ERROR_NETWORK_UNSUPPORTED              = 24,
-  QMI_PROTOCOL_ERROR_DEVICE_UNSUPPORTED               = 25,
-  QMI_PROTOCOL_ERROR_NO_EFFECT                        = 26,
-  QMI_PROTOCOL_ERROR_NO_FREE_PROFILE                  = 27,
-  QMI_PROTOCOL_ERROR_INVALID_PDP_TYPE                 = 28,
-  QMI_PROTOCOL_ERROR_INVALID_TECHNOLOGY_PREFERENCE    = 29,
-  QMI_PROTOCOL_ERROR_INVALID_PROFILE_TYPE             = 30,
-  QMI_PROTOCOL_ERROR_INVALID_SERVICE_TYPE             = 31,
-  QMI_PROTOCOL_ERROR_INVALID_REGISTER_ACTION          = 32,
-  QMI_PROTOCOL_ERROR_INVALID_PS_ATTACH_ACTION         = 33,
-  QMI_PROTOCOL_ERROR_AUTHENTICATION_FAILED            = 34,
-  QMI_PROTOCOL_ERROR_PIN_BLOCKED                      = 35,
-  QMI_PROTOCOL_ERROR_PIN_ALWAYS_BLOCKED               = 36,
-  QMI_PROTOCOL_ERROR_UIM_UNINITIALIZED                = 37,
-  QMI_PROTOCOL_ERROR_MAXIMUM_QOS_REQUESTS_IN_USE      = 38,
-  QMI_PROTOCOL_ERROR_INCORRECT_FLOW_FILTER            = 39,
-  QMI_PROTOCOL_ERROR_NETWORK_QOS_UNAWARE              = 40,
-  QMI_PROTOCOL_ERROR_INVALID_QOS_ID                   = 41,
-  QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE                  = 42,
-  QMI_PROTOCOL_ERROR_FLOW_SUSPENDED                   = 43,
-  QMI_PROTOCOL_ERROR_GENERAL_ERROR                    = 46,
-  QMI_PROTOCOL_ERROR_UNKNOWN_ERROR                    = 47,
-  QMI_PROTOCOL_ERROR_INVALID_ARGUMENT                 = 48,
-  QMI_PROTOCOL_ERROR_INVALID_INDEX                    = 49,
-  QMI_PROTOCOL_ERROR_NO_ENTRY                         = 50,
-  QMI_PROTOCOL_ERROR_DEVICE_STORAGE_FULL              = 51,
-  QMI_PROTOCOL_ERROR_DEVICE_NOT_READY                 = 52,
-  QMI_PROTOCOL_ERROR_NETWORK_NOT_READY                = 53,
-  QMI_PROTOCOL_ERROR_WMS_CAUSE_CODE                   = 54,
-  QMI_PROTOCOL_ERROR_WMS_MESSAGE_NOT_SENT             = 55,
-  QMI_PROTOCOL_ERROR_WMS_MESSAGE_DELIVERY_FAILURE     = 56,
-  QMI_PROTOCOL_ERROR_WMS_INVALID_MESSAGE_ID           = 57,
-  QMI_PROTOCOL_ERROR_WMS_ENCODING                     = 58,
-  QMI_PROTOCOL_ERROR_AUTHENTICATION_LOCK              = 59,
-  QMI_PROTOCOL_ERROR_INVALID_TRANSITION               = 60,
-  QMI_PROTOCOL_ERROR_SESSION_INACTIVE                 = 65,
-  QMI_PROTOCOL_ERROR_SESSION_INVALID                  = 66,
-  QMI_PROTOCOL_ERROR_SESSION_OWNERSHIP                = 67,
-  QMI_PROTOCOL_ERROR_INSUFFICIENT_RESOURCES           = 68,
-  QMI_PROTOCOL_ERROR_DISABLED                         = 69,
-  QMI_PROTOCOL_ERROR_INVALID_OPERATION                = 70,
-  QMI_PROTOCOL_ERROR_INVALID_QMI_COMMAND              = 71,
-  QMI_PROTOCOL_ERROR_WMS_T_PDU_TYPE                   = 72,
-  QMI_PROTOCOL_ERROR_WMS_SMSC_ADDRESS                 = 73,
-  QMI_PROTOCOL_ERROR_INFORMATION_UNAVAILABLE          = 74,
-  QMI_PROTOCOL_ERROR_SEGMENT_TOO_LONG                 = 75,
-  QMI_PROTOCOL_ERROR_SEGMENT_ORDER                    = 76,
-  QMI_PROTOCOL_ERROR_BUNDLING_NOT_SUPPORTED           = 77,
-  QMI_PROTOCOL_ERROR_SIM_FILE_NOT_FOUND               = 80,
-  QMI_PROTOCOL_ERROR_ACCESS_DENIED                    = 82,
-  QMI_PROTOCOL_ERROR_HARDWARE_RESTRICTED              = 83,
-  QMI_PROTOCOL_ERROR_CAT_EVENT_REGISTRATION_FAILED    = 61441,
-  QMI_PROTOCOL_ERROR_CAT_INVALID_TERMINAL_RESPONSE    = 61442,
-  QMI_PROTOCOL_ERROR_CAT_INVALID_ENVELOPE_COMMAND     = 61443,
-  QMI_PROTOCOL_ERROR_CAT_ENVELOPE_COMMAND_BUSY        = 61444,
-  QMI_PROTOCOL_ERROR_CAT_ENVELOPE_COMMAND_FAILED      = 61445
+typedef enum { /*< underscore_name=qmi_protocol_error >*/
+  QMI_PROTOCOL_ERROR_NONE                             = 0,  /*< nick=None >*/
+  QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE                = 1,  /*< nick=MalformedMessage >*/
+  QMI_PROTOCOL_ERROR_NO_MEMORY                        = 2,  /*< nick=NoMemory >*/
+  QMI_PROTOCOL_ERROR_INTERNAL                         = 3,  /*< nick=Internal >*/
+  QMI_PROTOCOL_ERROR_ABORTED                          = 4,  /*< nick=Aborted >*/
+  QMI_PROTOCOL_ERROR_CLIENT_IDS_EXHAUSTED             = 5,  /*< nick=ClientIdsExhausted >*/
+  QMI_PROTOCOL_ERROR_UNABORTABLE_TRANSACTION          = 6,  /*< nick=UnabortableTransaction >*/
+  QMI_PROTOCOL_ERROR_INVALID_CLIENT_ID                = 7,  /*< nick=InvalidClientId >*/
+  QMI_PROTOCOL_ERROR_NO_THRESHOLDS_PROVIDED           = 8,  /*< nick=NoThresholdsProvided >*/
+  QMI_PROTOCOL_ERROR_INVALID_HANDLE                   = 9,  /*< nick=InvalidHandle >*/
+  QMI_PROTOCOL_ERROR_INVALID_PROFILE                  = 10, /*< nick=InvalidProfile >*/
+  QMI_PROTOCOL_ERROR_INVALID_PIN_ID                   = 11, /*< nick=InvalidPinId >*/
+  QMI_PROTOCOL_ERROR_INCORRECT_PIN                    = 12, /*< nick=IncorrectPin >*/
+  QMI_PROTOCOL_ERROR_NO_NETWORK_FOUND                 = 13, /*< nick=NoNetworkFound >*/
+  QMI_PROTOCOL_ERROR_CALL_FAILED                      = 14, /*< nick=CallFailed >*/
+  QMI_PROTOCOL_ERROR_OUT_OF_CALL                      = 15, /*< nick=OutOfCall >*/
+  QMI_PROTOCOL_ERROR_NOT_PROVISIONED                  = 16, /*< nick=NotProvisioned >*/
+  QMI_PROTOCOL_ERROR_MISSING_ARGUMENT                 = 17, /*< nick=MissingArgument >*/
+  QMI_PROTOCOL_ERROR_ARGUMENT_TOO_LONG                = 19, /*< nick=ArgumentTooLong >*/
+  QMI_PROTOCOL_ERROR_INVALID_TRANSACTION_ID           = 22, /*< nick=InvalidTransactionId >*/
+  QMI_PROTOCOL_ERROR_DEVICE_IN_USE                    = 23, /*< nick=DeviceInUse >*/
+  QMI_PROTOCOL_ERROR_NETWORK_UNSUPPORTED              = 24, /*< nick=NetworkUnsupported >*/
+  QMI_PROTOCOL_ERROR_DEVICE_UNSUPPORTED               = 25, /*< nick=DeviceUnsupported >*/
+  QMI_PROTOCOL_ERROR_NO_EFFECT                        = 26, /*< nick=NoEffect >*/
+  QMI_PROTOCOL_ERROR_NO_FREE_PROFILE                  = 27, /*< nick=NoFreeProfile >*/
+  QMI_PROTOCOL_ERROR_INVALID_PDP_TYPE                 = 28, /*< nick=InvalidPdpType >*/
+  QMI_PROTOCOL_ERROR_INVALID_TECHNOLOGY_PREFERENCE    = 29, /*< nick=InvalidTechnologyPreference >*/
+  QMI_PROTOCOL_ERROR_INVALID_PROFILE_TYPE             = 30, /*< nick=InvalidProfileType >*/
+  QMI_PROTOCOL_ERROR_INVALID_SERVICE_TYPE             = 31, /*< nick=InvalidServiceType >*/
+  QMI_PROTOCOL_ERROR_INVALID_REGISTER_ACTION          = 32, /*< nick=InvalidRegisterAction >*/
+  QMI_PROTOCOL_ERROR_INVALID_PS_ATTACH_ACTION         = 33, /*< nick=InvalidPsAttachAction >*/
+  QMI_PROTOCOL_ERROR_AUTHENTICATION_FAILED            = 34, /*< nick=AuthenticationFailed >*/
+  QMI_PROTOCOL_ERROR_PIN_BLOCKED                      = 35, /*< nick=PinBlocked >*/
+  QMI_PROTOCOL_ERROR_PIN_ALWAYS_BLOCKED               = 36, /*< nick=PinAlwaysBlocked >*/
+  QMI_PROTOCOL_ERROR_UIM_UNINITIALIZED                = 37, /*< nick=UimUninitialized >*/
+  QMI_PROTOCOL_ERROR_MAXIMUM_QOS_REQUESTS_IN_USE      = 38, /*< nick=MaximumQosRequestsInUse >*/
+  QMI_PROTOCOL_ERROR_INCORRECT_FLOW_FILTER            = 39, /*< nick=IncorrectFlowFilter >*/
+  QMI_PROTOCOL_ERROR_NETWORK_QOS_UNAWARE              = 40, /*< nick= NetworkQosUnaware >*/
+  QMI_PROTOCOL_ERROR_INVALID_QOS_ID                   = 41, /*< nick=InvalidQosId >*/
+  QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE                  = 42, /*< nick=QosUnavailable >*/
+  QMI_PROTOCOL_ERROR_FLOW_SUSPENDED                   = 43, /*< nick=FlowSuspended >*/
+  QMI_PROTOCOL_ERROR_GENERAL_ERROR                    = 46, /*< nick=GeneralError >*/
+  QMI_PROTOCOL_ERROR_UNKNOWN_ERROR                    = 47, /*< nick=UnknownError >*/
+  QMI_PROTOCOL_ERROR_INVALID_ARGUMENT                 = 48, /*< nick=InvalidArgument >*/
+  QMI_PROTOCOL_ERROR_INVALID_INDEX                    = 49, /*< nick=InvalidIndex >*/
+  QMI_PROTOCOL_ERROR_NO_ENTRY                         = 50, /*< nick=NoEntry >*/
+  QMI_PROTOCOL_ERROR_DEVICE_STORAGE_FULL              = 51, /*< nick=DeviceStorageFull >*/
+  QMI_PROTOCOL_ERROR_DEVICE_NOT_READY                 = 52, /*< nick=DeviceNotReady >*/
+  QMI_PROTOCOL_ERROR_NETWORK_NOT_READY                = 53, /*< nick=NetworkNotReady >*/
+  QMI_PROTOCOL_ERROR_WMS_CAUSE_CODE                   = 54, /*< nick=Wms.CauseCode >*/
+  QMI_PROTOCOL_ERROR_WMS_MESSAGE_NOT_SENT             = 55, /*< nick=Wms.MessageNotSent >*/
+  QMI_PROTOCOL_ERROR_WMS_MESSAGE_DELIVERY_FAILURE     = 56, /*< nick=Wms.MessageDeliveryFailure >*/
+  QMI_PROTOCOL_ERROR_WMS_INVALID_MESSAGE_ID           = 57, /*< nick=Wms.InvalidMessageId >*/
+  QMI_PROTOCOL_ERROR_WMS_ENCODING                     = 58, /*< nick=Wms.Encoding >*/
+  QMI_PROTOCOL_ERROR_AUTHENTICATION_LOCK              = 59, /*< nick=AuthenticationLock >*/
+  QMI_PROTOCOL_ERROR_INVALID_TRANSITION               = 60, /*< nick=InvalidTransaction >*/
+  QMI_PROTOCOL_ERROR_SESSION_INACTIVE                 = 65, /*< nick=SessionInactive >*/
+  QMI_PROTOCOL_ERROR_SESSION_INVALID                  = 66, /*< nick=SessionInvalid >*/
+  QMI_PROTOCOL_ERROR_SESSION_OWNERSHIP                = 67, /*< nick=SessionOwnership >*/
+  QMI_PROTOCOL_ERROR_INSUFFICIENT_RESOURCES           = 68, /*< nick=InsufficientResources >*/
+  QMI_PROTOCOL_ERROR_DISABLED                         = 69, /*< nick=Disabled >*/
+  QMI_PROTOCOL_ERROR_INVALID_OPERATION                = 70, /*< nick=InvalidOperation >*/
+  QMI_PROTOCOL_ERROR_INVALID_QMI_COMMAND              = 71, /*< nick=InvalidQmiCommand >*/
+  QMI_PROTOCOL_ERROR_WMS_T_PDU_TYPE                   = 72, /*< nick=Wms.TPduType >*/
+  QMI_PROTOCOL_ERROR_WMS_SMSC_ADDRESS                 = 73, /*< nick=Wms.SmscAddress >*/
+  QMI_PROTOCOL_ERROR_INFORMATION_UNAVAILABLE          = 74, /*< nick=InformationUnavailable >*/
+  QMI_PROTOCOL_ERROR_SEGMENT_TOO_LONG                 = 75, /*< nick=SegmentTooLong >*/
+  QMI_PROTOCOL_ERROR_SEGMENT_ORDER                    = 76, /*< nick=SegmentOrder >*/
+  QMI_PROTOCOL_ERROR_BUNDLING_NOT_SUPPORTED           = 77, /*< nick=BundlingNotSupported >*/
+  QMI_PROTOCOL_ERROR_SIM_FILE_NOT_FOUND               = 80, /*< nick=SimFileNotFound >*/
+  QMI_PROTOCOL_ERROR_ACCESS_DENIED                    = 82, /*< nick=AccessDenied >*/
+  QMI_PROTOCOL_ERROR_HARDWARE_RESTRICTED              = 83, /*< nick=HardwareRestricted >*/
+  QMI_PROTOCOL_ERROR_CAT_EVENT_REGISTRATION_FAILED    = 61441, /*< nick=Cat.EventRegistrationFailed >*/
+  QMI_PROTOCOL_ERROR_CAT_INVALID_TERMINAL_RESPONSE    = 61442, /*< nick=Cat.InvalidTerminalResponse >*/
+  QMI_PROTOCOL_ERROR_CAT_INVALID_ENVELOPE_COMMAND     = 61443, /*< nick=Cat.InvalidEnvelopeCommand >*/
+  QMI_PROTOCOL_ERROR_CAT_ENVELOPE_COMMAND_BUSY        = 61444, /*< nick=Cat.EnvelopCommandBusy >*/
+  QMI_PROTOCOL_ERROR_CAT_ENVELOPE_COMMAND_FAILED      = 61445  /*< nick=Cat.EnvelopeCommandFailed >*/
 } QmiProtocolError;
 
 #endif /* _LIBQMI_GLIB_QMI_ERRORS_H_ */

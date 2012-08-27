@@ -24,6 +24,12 @@ qmi-error-types.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templa
 		--template $(top_srcdir)/build-aux/templates/qmi-error-types-template.c \
 		qmi-errors.h > $@
 
+qmi-error-quarks.c: qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templates/qmi-error-quarks-template.c
+	$(AM_V_GEN) $(GLIB_MKENUMS) \
+		--fhead "#include \"qmi-errors.h\"\n#include \"qmi-error-types.h\"\n" \
+		--template $(top_srcdir)/build-aux/templates/qmi-error-quarks-template.c \
+		qmi-errors.h > $@
+
 # Enum/Flag types
 ENUMS = qmi-enums.h qmi-enums-wds.h qmi-enums-dms.h qmi-enums-nas.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
@@ -113,7 +119,7 @@ qmi-nas.c: qmi-error-types.h qmi-enum-types.h qmi-flags64-types.h qmi-nas.h
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
-	qmi-errors.h qmi-error-types.h qmi-error-types.c \
+	qmi-errors.h qmi-error-types.h qmi-error-types.c qmi-error-quarks.c \
 	qmi-enums-wds.h \
 	qmi-enums-dms.h \
 	qmi-enums-nas.h \
