@@ -93,10 +93,10 @@ AC_CONFIG_FILES([Makefile
                  cli/Makefile
                  cli/test/Makefile
                  utils/Makefile
-		 docs/Makefile
-		 docs/reference/Makefile
-		 docs/reference/libqmi-glib/Makefile
-		 docs/reference/libqmi-glib/version.xml])
+                 docs/Makefile
+                 docs/reference/Makefile
+                 docs/reference/libqmi-glib/Makefile
+                 docs/reference/libqmi-glib/version.xml])
 AC_OUTPUT
 
 echo "
