@@ -301,8 +301,8 @@ start_network_ready (QmiClientWds *client,
                              QMI_PROTOCOL_ERROR,
                              QMI_PROTOCOL_ERROR_CALL_FAILED)) {
             QmiWdsCallEndReason cer;
-            guint16 verbose_cer_type;
-            guint16 verbose_cer_reason;
+            QmiWdsVerboseCallEndReasonType verbose_cer_type;
+            gint16 verbose_cer_reason;
 
             if (qmi_message_wds_start_network_output_get_call_end_reason (
                     output,
@@ -317,9 +317,11 @@ start_network_ready (QmiClientWds *client,
                     &verbose_cer_type,
                     &verbose_cer_reason,
                     NULL))
-                g_printerr ("verbose call end reason: %u, %u\n",
+                g_printerr ("verbose call end reason (%u,%d): [%s] %s\n",
                             verbose_cer_type,
-                            verbose_cer_reason);
+                            verbose_cer_reason,
+                            qmi_wds_verbose_call_end_reason_type_get_string (verbose_cer_type),
+                            qmi_wds_verbose_call_end_reason_get_string (verbose_cer_type, verbose_cer_reason));
         }
 
         g_error_free (error);

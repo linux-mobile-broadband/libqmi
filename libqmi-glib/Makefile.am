@@ -114,13 +114,14 @@ qmi-dms.h: qmi-dms.stamp qmi-enums-dms.h
 qmi-dms.c: qmi-error-types.h qmi-enum-types.h qmi-flags64-types.h qmi-dms.h
 qmi-wds.h: qmi-wds.stamp qmi-enums-wds.h
 qmi-wds.c: qmi-error-types.h qmi-enum-types.h qmi-wds.h
+qmi-enums-wds.c: qmi-enum-types.h qmi-enums-wds.h
 qmi-nas.h: qmi-nas.stamp qmi-enums-nas.h
 qmi-nas.c: qmi-error-types.h qmi-enum-types.h qmi-flags64-types.h qmi-nas.h
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
 	qmi-errors.h qmi-error-types.h qmi-error-types.c qmi-error-quarks.c \
-	qmi-enums-wds.h \
+	qmi-enums-wds.h qmi-enums-wds.c \
 	qmi-enums-dms.h \
 	qmi-enums-nas.h \
 	qmi-enums.h qmi-enum-types.h qmi-enum-types.c qmi-flags64-types.h qmi-flags64-types.c \
