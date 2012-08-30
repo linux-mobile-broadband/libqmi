@@ -531,6 +531,7 @@ typedef enum {
 
 /**
  * QmiNasRadioTechnologyPreference:
+ * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_AUTO: Automatic selection.
  * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_3GPP2: 3GPP2 technology.
  * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_3GPP: 3GPP technology.
  * @QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_AMPS_OR_GSM: AMPS if 3GPP2, GSM if 3GPP.
@@ -541,6 +542,7 @@ typedef enum {
  * Flags to specify the radio technology preference.
  */
 typedef enum {
+    QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_AUTO          = 0,
     QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_3GPP2         = 1 << 0,
     QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_3GPP          = 1 << 1,
     QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_AMPS_OR_GSM   = 1 << 2,
