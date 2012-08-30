@@ -162,7 +162,7 @@
                       "mandatory"     : "no",
                       "type"          : "TLV",
                       "format"        : "array",
-                      "array-size"    : { "format" : "guint16" },
+                      "array-size"    : { "format" : "guint8" },
                       "array-element" : { "name"     : "Element",
                                           "format"   : "struct",
                                           "contents" : [ { "name"          : "Radio Interface",
