@@ -1221,7 +1221,7 @@ create_iochannel (QmiDevice *self,
                   GError **error)
 {
     GError *inner_error = NULL;
-    guint fd;
+    gint fd;
 
     if (self->priv->iochannel) {
         g_set_error (error,
