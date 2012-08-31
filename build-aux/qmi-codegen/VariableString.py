@@ -42,7 +42,7 @@ class VariableString(Variable):
             self.is_fixed_size = True
             # Fixed-size strings
             self.needs_dispose = False
-            self.length_prefix = False
+            self.length_prefix_size = 0
             self.fixed_size = dictionary['fixed-size']
             self.max_size = ''
         else:
@@ -51,7 +51,15 @@ class VariableString(Variable):
             self.needs_dispose = True
             # Strings which are given as the full value of a TLV will NOT have a
             # length prefix
-            self.length_prefix = False if 'type' in dictionary and dictionary['type'] == 'TLV' else True
+            if 'type' in dictionary and dictionary['type'] == 'TLV':
+                self.length_prefix_size = 0
+            elif 'length-prefix-size' in dictionary:
+                self.length_prefix_size = dictionary['length-prefix-size']
+                if self.length_prefix_size not in ['8', '16']:
+                    raise ValueError('Invalid length prefix size %s: not 8 or 16' % self.length_prefix_size)
+            else:
+                # Default to UINT8
+                self.length_prefix_size = 8
             self.fixed_size = ''
             self.max_size = dictionary['max-size'] if 'max-size' in dictionary else ''
 
@@ -76,14 +84,14 @@ class VariableString(Variable):
                 '${lp}    &${variable_name}[0]);\n'
                 '${lp}${variable_name}[${fixed_size}] = \'\\0\';\n')
         else:
-            translations['length_prefix'] = 'TRUE' if self.length_prefix else 'FALSE'
+            translations['length_prefix_size'] = self.length_prefix_size
             translations['max_size'] = self.max_size if self.max_size != '' else '0'
             template = (
                 '${lp}/* Read the string variable from the buffer */\n'
                 '${lp}qmi_utils_read_string_from_buffer (\n'
                 '${lp}    &${buffer_name},\n'
                 '${lp}    &${buffer_len},\n'
-                '${lp}    ${length_prefix},\n'
+                '${lp}    ${length_prefix_size},\n'
                 '${lp}    ${max_size},\n'
                 '${lp}    &(${variable_name}));\n')
 
@@ -109,13 +117,13 @@ class VariableString(Variable):
                 '${lp}    ${fixed_size},\n'
                 '${lp}    ${variable_name});\n')
         else:
-            translations['length_prefix'] = 'TRUE' if self.length_prefix else 'FALSE'
+            translations['length_prefix_size'] = self.length_prefix_size
             template = (
                 '${lp}/* Write the string variable to the buffer */\n'
                 '${lp}qmi_utils_write_string_to_buffer (\n'
                 '${lp}    &${buffer_name},\n'
                 '${lp}    &${buffer_len},\n'
-                '${lp}    ${length_prefix},\n'
+                '${lp}    ${length_prefix_size},\n'
                 '${lp}    ${variable_name});\n')
 
         f.write(string.Template(template).substitute(translations))
@@ -149,7 +157,7 @@ class VariableString(Variable):
                 '${lp}    g_string_append_printf (${printable}, "%s", tmp);\n'
                 '${lp}}\n')
         else:
-            translations['length_prefix'] = 'TRUE' if self.length_prefix else 'FALSE'
+            translations['length_prefix_size'] = self.length_prefix_size
             translations['max_size'] = self.max_size if self.max_size != '' else '0'
             template = (
                 '\n'
@@ -160,7 +168,7 @@ class VariableString(Variable):
                 '${lp}    qmi_utils_read_string_from_buffer (\n'
                 '${lp}        &${buffer_name},\n'
                 '${lp}        &${buffer_len},\n'
-                '${lp}        ${length_prefix},\n'
+                '${lp}        ${length_prefix_size},\n'
                 '${lp}        ${max_size},\n'
                 '${lp}        &tmp);\n'
                 '\n'

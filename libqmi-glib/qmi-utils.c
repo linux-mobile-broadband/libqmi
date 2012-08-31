@@ -360,26 +360,37 @@ qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
 void
 qmi_utils_read_string_from_buffer (guint8   **buffer,
                                    guint16   *buffer_size,
-                                   gboolean   length_prefix,
+                                   guint8     length_prefix_size,
                                    guint16    max_size,
                                    gchar    **out)
 {
     guint16 string_length;
     guint16 valid_string_length;
+    guint8 string_length_8;
+    guint16 string_length_16;
 
     g_assert (out != NULL);
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
+    g_assert (length_prefix_size == 0 ||
+              length_prefix_size == 8 ||
+              length_prefix_size == 16);
 
-    /* If no length prefix given, read the whole buffer into a string */
-    if (!length_prefix)
+    switch (length_prefix_size) {
+    case 0:
+        /* If no length prefix given, read the whole buffer into a string */
         string_length = *buffer_size;
-    else {
-        /* We assume the length prefix is always a guint8 */
-        guint8 string_length_8;
-
+        break;
+    case 8:
         qmi_utils_read_guint8_from_buffer (buffer, buffer_size, &string_length_8);
         string_length = string_length_8;
+        break;
+    case 16:
+        qmi_utils_read_guint16_from_buffer (buffer, buffer_size, &string_length_16);
+        string_length = string_length_16;
+        break;
+    default:
+        g_assert_not_reached ();
     }
 
     if (max_size > 0 && string_length > max_size)
@@ -417,23 +428,37 @@ qmi_utils_read_fixed_size_string_from_buffer (guint8   **buffer,
 void
 qmi_utils_write_string_to_buffer (guint8      **buffer,
                                   guint16      *buffer_size,
-                                  gboolean      length_prefix,
+                                  guint8        length_prefix_size,
                                   const gchar  *in)
 {
     guint16 len;
+    guint8 len_8;
+    guint16 len_16;
 
     g_assert (in != NULL);
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
+    g_assert (length_prefix_size == 0 ||
+              length_prefix_size == 8 ||
+              length_prefix_size == 16);
 
     len = (guint16) strlen (in);
 
-    if (length_prefix) {
-        guint8 len_8;
-
+    switch (length_prefix_size) {
+    case 0:
+        break;
+    case 8:
         g_warn_if_fail (len <= G_MAXUINT8);
         len_8 = (guint8)len;
         qmi_utils_write_guint8_to_buffer (buffer, buffer_size, &len_8);
+        break;
+    case 16:
+        g_warn_if_fail (len <= G_MAXUINT16);
+        len_16 = (guint16)len;
+        qmi_utils_write_guint16_to_buffer (buffer, buffer_size, &len_16);
+        break;
+    default:
+        g_assert_not_reached ();
     }
 
     memcpy (*buffer, in, len);
