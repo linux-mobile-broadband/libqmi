@@ -2004,6 +2004,8 @@ finalize (GObject *object)
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);
+    if (self->priv->watch_id)
+        g_source_remove (self->priv->watch_id);
     if (self->priv->response)
         g_byte_array_unref (self->priv->response);
     if (self->priv->iochannel)
