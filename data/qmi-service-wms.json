@@ -292,6 +292,33 @@
                                         "format"        : "array",
                                         "array-size"    : { "format" : "guint16" },
                                         "array-element" : { "format" : "guint8" } } ],
-                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] }
+                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Modify Tag",
+     "type"    : "Message",
+     "service" : "WMS",
+     "id"      : "0x0023",
+     "version" : "1.1",
+     "input"   : [ { "name"      : "Message Tag",
+                     "id"        : "0x01",
+                     "mandatory" : "yes",
+                     "type"      : "TLV",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"          : "Storage Type",
+                                       "format"        : "guint8",
+                                       "public-format" : "QmiWmsStorageType" },
+                                     { "name"          : "Memory Index",
+                                       "format"        : "guint32" },
+                                     { "name"          : "Message Tag",
+                                       "format"        : "guint8",
+                                       "public-format" : "QmiWmsMessageTagType" } ] },
+                   { "name"          : "Message Mode",
+                     "id"            : "0x10",
+                     "mandatory"     : "no",
+                     "type"          : "TLV",
+                     "format"        : "guint8",
+                     "public-format" : "QmiWmsMessageMode" } ],
+     "output"   : [ { "common-ref" : "Operation Result" } ] }
 
 ]
