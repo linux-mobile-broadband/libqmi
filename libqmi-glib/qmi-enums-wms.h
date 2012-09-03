@@ -55,13 +55,15 @@ typedef enum {
  * @QMI_WMS_MESSAGE_FORMAT_CDMA: CDMA message.
  * @QMI_WMS_MESSAGE_FORMAT_GSM_WCDMA_POINT_TO_POINT: Point-to-point 3GPP message.
  * @QMI_WMS_MESSAGE_FORMAT_GSM_WCDMA_BROADCAST: Broadcast 3GPP message.
+ * @QMI_WMS_MESSAGE_FORMAT_MWI: Message Waiting Indicator.
  *
  * Type of message.
  */
 typedef enum {
     QMI_WMS_MESSAGE_FORMAT_CDMA                     = 0x00,
     QMI_WMS_MESSAGE_FORMAT_GSM_WCDMA_POINT_TO_POINT = 0x06,
-    QMI_WMS_MESSAGE_FORMAT_GSM_WCDMA_BROADCAST      = 0x07
+    QMI_WMS_MESSAGE_FORMAT_GSM_WCDMA_BROADCAST      = 0x07,
+    QMI_WMS_MESSAGE_FORMAT_MWI                      = 0x08
 } QmiWmsMessageFormat;
 
 /**
@@ -317,5 +319,24 @@ typedef enum {
     QMI_WMS_MESSAGE_DELIVERY_FAILURE_TYPE_TEMPORARY = 0x00,
     QMI_WMS_MESSAGE_DELIVERY_FAILURE_TYPE_PERMANENT = 0x01
 } QmiWmsMessageDeliveryFailureType;
+
+/*****************************************************************************/
+/* Helper enums for the 'QMI WMS Read Raw' request/response */
+
+/**
+ * QmiWmsMessageTagType:
+ * @QMI_WMS_MESSAGE_TAG_TYPE_MT_READ: Received SMS, already read.
+ * @QMI_WMS_MESSAGE_TAG_TYPE_MT_NOT_READ: Received SMS, not read.
+ * @QMI_WMS_MESSAGE_TAG_TYPE_MO_SENT: Sent SMS.
+ * @QMI_WMS_MESSAGE_TAG_TYPE_MO_NOT_SENT: Not yet sent SMS.
+ *
+ * Type of message tag.
+ */
+typedef enum {
+    QMI_WMS_MESSAGE_TAG_TYPE_MT_READ     = 0x00,
+    QMI_WMS_MESSAGE_TAG_TYPE_MT_NOT_READ = 0x01,
+    QMI_WMS_MESSAGE_TAG_TYPE_MO_SENT     = 0x02,
+    QMI_WMS_MESSAGE_TAG_TYPE_MO_NOT_SENT = 0x03
+} QmiWmsMessageTagType;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WMS_H_ */
