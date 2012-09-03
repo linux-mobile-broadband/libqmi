@@ -339,4 +339,16 @@ typedef enum {
     QMI_WMS_MESSAGE_TAG_TYPE_MO_NOT_SENT = 0x03
 } QmiWmsMessageTagType;
 
+/**
+ * QmiWmsMessageProtocol:
+ * @QMI_WMS_MESSAGE_PROTOCOL_CDMA: CDMA.
+ * @QMI_WMS_MESSAGE_PROTOCOL_WCDMA: WCDMA.
+ *
+ * Type of message protocol.
+ */
+typedef enum {
+    QMI_WMS_MESSAGE_PROTOCOL_CDMA  = 0x00,
+    QMI_WMS_MESSAGE_PROTOCOL_WCDMA = 0x01
+} QmiWmsMessageProtocol;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WMS_H_ */

@@ -350,6 +350,21 @@
                      "type"          : "TLV",
                      "format"        : "guint8",
                      "public-format" : "QmiWmsMessageMode" } ],
-     "output"   : [ { "common-ref" : "Operation Result" } ] }
+     "output"   : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Get Message Protocol",
+     "type"    : "Message",
+     "service" : "WMS",
+     "id"      : "0x0030",
+     "version" : "1.1",
+     "output"   : [ { "common-ref" : "Operation Result" },
+                    { "name"          : "Message Protocol",
+                      "id"            : "0x01",
+                      "mandatory"     : "yes",
+                      "type"          : "TLV",
+                      "format"        : "guint8",
+                      "public-format" : "QmiWmsMessageProtocol",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] }
 
 ]
