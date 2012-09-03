@@ -217,6 +217,35 @@
                                            "value"     : "QMI_STATUS_SUCCESS" },
                                          { "field"     : "Result.Error Code",
                                            "operation" : "==",
-                                           "value"     : "QMI_PROTOCOL_ERROR_WMS_CAUSE_CODE" } ] } ] }
+                                           "value"     : "QMI_PROTOCOL_ERROR_WMS_CAUSE_CODE" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Raw Write",
+     "type"    : "Message",
+     "service" : "WMS",
+     "id"      : "0x0021",
+     "version" : "1.1",
+     "input"   : [ { "name"      : "Raw Message Data",
+                     "id"        : "0x01",
+                     "mandatory" : "yes",
+                     "type"      : "TLV",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"          : "Storage Type",
+                                       "format"        : "guint8",
+                                       "public-format" : "QmiWmsStorageType" },
+                                     { "name"          : "Format",
+                                       "format"        : "guint8",
+                                       "public-format" : "QmiWmsMessageFormat" },
+                                     { "name"          : "Raw Data",
+                                       "format"        : "array",
+                                       "array-size"    : { "format" : "guint16" },
+                                       "array-element" : { "format" : "guint8" } } ] } ],
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"          : "Memory Index",
+                     "id"            : "0x01",
+                     "mandatory"     : "yes",
+                     "type"          : "TLV",
+                     "format"        : "guint32",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] }
 
 ]
