@@ -18,6 +18,22 @@
      "service" : "WMS",
      "id"      : "0x0000",
      "version" : "1.1",
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Set Event Report",
+     "type"    : "Message",
+     "service" : "WMS",
+     "id"      : "0x0001",
+     "version" : "1.1",
+     "input"   : [ { "name"      : "New MT Message Indicator",
+                     "id"        : "0x10",
+                     "mandatory" : "no",
+                     "type"      : "TLV",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"          : "Report",
+                                       "format"        : "guint8",
+                                       "public-format" : "gboolean" } ] } ],
      "output"  : [ { "common-ref" : "Operation Result" } ] }
 
 ]
