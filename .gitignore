@@ -52,6 +52,8 @@ libqmi-glib/qmi-wds.h
 libqmi-glib/qmi-wds.c
 libqmi-glib/qmi-nas.h
 libqmi-glib/qmi-nas.c
+libqmi-glib/qmi-wms.h
+libqmi-glib/qmi-wms.c
 libqmi-glib/*.stamp
 
 libqmi-glib/test/.libs
