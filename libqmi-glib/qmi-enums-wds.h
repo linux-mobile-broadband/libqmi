@@ -826,4 +826,116 @@ typedef enum { /*< underscore_name=qmi_wds_so_evdo_reva >*/
     QMI_WDS_SO_EVDO_REVA_EMPA_EHRPD = 1 << 3
 } QmiWdsSoEvdoRevA;
 
+
+/*****************************************************************************/
+/* Helper enums for the 'QMI WDS Get Current Settings' message */
+
+/**
+ * QmiWdsGetCurrentSettingsRequestedSettings:
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_NONE: no settings requested
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PROFILE_ID: request profile ID
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PROFILE_NAME: request profile name
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PDP_TYPE: request PDP context type
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_APN_NAME: request APN name
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DNS_ADDRESS: request DNS server addresses
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GRANTED_QOS: request granted QoS
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_USERNAME: request username
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_AUTH_PROTOCOL: request authentication protocol (ie PAP/CHAP/none)
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_ADDRESS: request IP address
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GATEWAY_INFO: request gateway address
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_ADDRESS: request PCSCF address
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_SERVER_ADDRESS_LIST: request PCSCF server address list
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_DOMAIN_NAME_LIST: request PCSCF domain name list
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_MTU: request MTU
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST: request domain name list
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_FAMILY: request IP family (ie IPv4 or IPv6)
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IMCN_FLAG: request IMCN flag
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_EXTENDED_TECHNOLOGY: request extended technology info
+ *
+ * Flags specifying which specific settings to return when requesting the
+ * current WDS bearer settings.
+ */
+typedef enum { /*< underscore_name=qmi_wds_get_current_settings_requested_settings >*/
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_NONE                      = 0,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PROFILE_ID                = 1 << 0,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PROFILE_NAME              = 1 << 1,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PDP_TYPE                  = 1 << 2,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_APN_NAME                  = 1 << 3,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DNS_ADDRESS               = 1 << 4,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GRANTED_QOS               = 1 << 5,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_USERNAME                  = 1 << 6,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_AUTH_PROTOCOL             = 1 << 7,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_ADDRESS                = 1 << 8,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GATEWAY_INFO              = 1 << 9,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_ADDRESS             = 1 << 10,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_SERVER_ADDRESS_LIST = 1 << 11,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_DOMAIN_NAME_LIST    = 1 << 12,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_MTU                       = 1 << 13,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST          = 1 << 14,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_FAMILY                 = 1 << 15,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IMCN_FLAG                 = 1 << 16,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_EXTENDED_TECHNOLOGY       = 1 << 17,
+} QmiWdsGetCurrentSettingsRequestedSettings;
+
+/**
+ * QmiWdsPdpType:
+ * @QMI_WDS_PDP_TYPE_IPV4: IPv4
+ * @QMI_WDS_PDP_TYPE_PPP: PPP
+ * @QMI_WDS_PDP_TYPE_IPV6: IPv6
+ * @QMI_WDS_PDP_TYPE_IPV4_OR_IPV6: IPv4 and IPv6 combined context
+ *
+ * PDP context type.
+ */
+typedef enum { /*< underscore_name=qmi_wds_pdp_type >*/
+    QMI_WDS_PDP_TYPE_IPV4         = 0,
+    QMI_WDS_PDP_TYPE_PPP          = 1,
+    QMI_WDS_PDP_TYPE_IPV6         = 2,
+    QMI_WDS_PDP_TYPE_IPV4_OR_IPV6 = 3
+} QmiWdsPdpType;
+
+/**
+ * QmiWdsTrafficClass:
+ * @QMI_WDS_TRAFFIC_CLASS_SUBSCRIBED: default (?) class, best-effort
+ * @QMI_WDS_TRAFFIC_CLASS_CONVERSATIONAL: two-way video/voice, most delay sensitive
+ * @QMI_WDS_TRAFFIC_CLASS_STREAMING: one-way video/audio, delay sensitive
+ * @QMI_WDS_TRAFFIC_CLASS_INTERACTIVE: delay-insensitive (browsing, SSH)
+ * @QMI_WDS_TRAFFIC_CLASS_BACKGROUND: delay-insensitive (downloads, email)
+ *
+ * QoS Traffic Classes.
+ */
+typedef enum { /*< underscore_name=qmi_wds_traffic_class >*/
+    QMI_WDS_TRAFFIC_CLASS_SUBSCRIBED     = 0,
+    QMI_WDS_TRAFFIC_CLASS_CONVERSATIONAL = 1,
+    QMI_WDS_TRAFFIC_CLASS_STREAMING      = 2,
+    QMI_WDS_TRAFFIC_CLASS_INTERACTIVE    = 3,
+    QMI_WDS_TRAFFIC_CLASS_BACKGROUND     = 4
+} QmiWdsTrafficClass;
+
+/**
+ * QmiWdsAuthentication:
+ * @QMI_WDS_AUTHENTICATION_NONE: no authentication
+ * @QMI_WDS_AUTHENTICATION_PAP: PAP authentication
+ * @QMI_WDS_AUTHENTICATION_CHAP: CHAP authentication
+ *
+ * PDP context authentication protocols.
+ */
+typedef enum { /*< underscore_name=qmi_wds_authentication >*/
+    QMI_WDS_AUTHENTICATION_NONE = 0,
+    QMI_WDS_AUTHENTICATION_PAP  = 1 << 0,
+    QMI_WDS_AUTHENTICATION_CHAP = 1 << 1
+} QmiWdsAuthentication;
+
+
+/**
+ * QmiWdsProfileType:
+ * @QMI_WDS_PROFILE_TYPE_3GPP: 3GPP profile type.
+ * @QMI_WDS_PROFILE_TYPE_3GPP2: 3GPP2 profile type.
+ *
+ * Profile network type family.
+ */
+typedef enum {
+    QMI_WDS_PROFILE_TYPE_3GPP    = 0,
+    QMI_WDS_PROFILE_TYPE_3GPP2   = 1
+} QmiWdsProfileType;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDS_H_ */
