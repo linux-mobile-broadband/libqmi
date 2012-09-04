@@ -39,6 +39,7 @@ class VariableArray(Variable):
         self.private_format  = 'GArray *'
         self.public_format = self.private_format
         self.fixed_size = 0
+        self.name = dictionary['name']
 
         # The array and its contents need to get disposed
         self.needs_dispose = True
@@ -74,6 +75,18 @@ class VariableArray(Variable):
 
 
     """
+    Constructs the name of the array clear function
+    """
+    def clear_func_name(self):
+        # element public format might be a base type like 'gchar *' rather
+        # than a structure name like QmiFooBar
+        elt_name = string.replace(self.array_element.public_format, '*', 'pointer')
+        return utils.build_underscore_name(self.name) + \
+             '_' + \
+             utils.build_underscore_name_from_camelcase(utils.build_camelcase_name(elt_name))
+
+
+    """
     Emits the code to clear the element of the array
     """
     def emit_helper_methods(self, hfile, cfile):
@@ -82,7 +95,7 @@ class VariableArray(Variable):
             return
 
         translations = { 'element_format'   : self.array_element.public_format,
-                         'underscore'       : utils.build_underscore_name_from_camelcase(self.array_element.public_format),
+                         'underscore'       : self.clear_func_name(),
                          'dispose_contents' : self.array_element.build_dispose('    ', '(*p)') }
 
         template = (
@@ -103,7 +116,7 @@ class VariableArray(Variable):
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
                          'public_array_element_format' : self.array_element.public_format,
-                         'underscore'     : utils.build_underscore_name_from_camelcase(self.array_element.public_format),
+                         'underscore'     : self.clear_func_name(),
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
                          'buffer_len'     : buffer_len }
