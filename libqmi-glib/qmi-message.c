@@ -42,6 +42,7 @@
 #include "qmi-dms.h"
 #include "qmi-wds.h"
 #include "qmi-nas.h"
+#include "qmi-wms.h"
 
 #define PACKED __attribute__((packed))
 
@@ -698,6 +699,9 @@ qmi_message_get_printable (QmiMessage *self,
     case QMI_SERVICE_NAS:
         contents = qmi_message_nas_get_printable (self, line_prefix);
         break;
+    case QMI_SERVICE_WMS:
+        contents = qmi_message_wms_get_printable (self, line_prefix);
+        break;
     default:
         break;
     }
@@ -730,6 +734,9 @@ qmi_message_get_version_introduced (QmiMessage *self,
 
     case QMI_SERVICE_NAS:
         return qmi_message_nas_get_version_introduced (self, major, minor);
+
+    case QMI_SERVICE_WMS:
+        return qmi_message_wms_get_version_introduced (self, major, minor);
 
     default:
         /* For the still unsupported services, cannot do anything */
