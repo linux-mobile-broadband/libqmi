@@ -30,12 +30,14 @@
  * QmiWmsStorageType:
  * @QMI_WMS_STORAGE_TYPE_UIM: Message stored in UIM.
  * @QMI_WMS_STORAGE_TYPE_NV: Message stored in non-volatile memory.
+ * @QMI_WMS_STORAGE_TYPE_NONE: None.
  *
  * Type of messaging storage
  */
 typedef enum {
-    QMI_WMS_STORAGE_TYPE_UIM = 0x00,
-    QMI_WMS_STORAGE_TYPE_NV  = 0x01
+    QMI_WMS_STORAGE_TYPE_UIM  = 0x00,
+    QMI_WMS_STORAGE_TYPE_NV   = 0x01,
+    QMI_WMS_STORAGE_TYPE_NONE = 0xFF
 } QmiWmsStorageType;
 
 /**
@@ -350,5 +352,64 @@ typedef enum {
     QMI_WMS_MESSAGE_PROTOCOL_CDMA  = 0x00,
     QMI_WMS_MESSAGE_PROTOCOL_WCDMA = 0x01
 } QmiWmsMessageProtocol;
+
+/*****************************************************************************/
+/* Helper enums for the 'QMI WMS Set Routes' request/response */
+
+/**
+ * QmiWmsMessageType:
+ * @QMI_WMS_MESSAGE_TYPE_POINT_TO_POINT: Point to point message.
+ *
+ * Type of message.
+ */
+typedef enum {
+    QMI_WMS_MESSAGE_TYPE_POINT_TO_POINT = 0x00
+} QmiWmsMessageType;
+
+/**
+ * QmiWmsMessageClass:
+ * @QMI_WMS_MESSAGE_CLASS_0: Class 0.
+ * @QMI_WMS_MESSAGE_CLASS_1: Class 1.
+ * @QMI_WMS_MESSAGE_CLASS_2: Class 2.
+ * @QMI_WMS_MESSAGE_CLASS_3: Class 3.
+ * @QMI_WMS_MESSAGE_CLASS_NONE: Class none.
+ * @QMI_WMS_MESSAGE_CLASS_CDMA: Class CDMA.
+ *
+ * Message class.
+ */
+typedef enum {
+    QMI_WMS_MESSAGE_CLASS_0    = 0x00,
+    QMI_WMS_MESSAGE_CLASS_1    = 0x01,
+    QMI_WMS_MESSAGE_CLASS_2    = 0x02,
+    QMI_WMS_MESSAGE_CLASS_3    = 0x03,
+    QMI_WMS_MESSAGE_CLASS_NONE = 0x04,
+    QMI_WMS_MESSAGE_CLASS_CDMA = 0x05
+} QmiWmsMessageClass;
+
+/**
+ * QmiWmsReceiptAction:
+ * @QMI_WMS_RECEIPT_ACTION_DISCARD: Discard message.
+ * @QMI_WMS_RECEIPT_ACTION_STORE_AND_NOTIFY: Store and notify to client.
+ * @QMI_WMS_RECEIPT_ACTION_TRANSFER_ONLY: Notify to client, which should send back ACK.
+ * @QMI_WMS_RECEIPT_ACTION_TRANSFER_AND_ACK: Notify to client and send back ACK.
+ *
+ * Action to perform when a message is received.
+ */
+typedef enum {
+    QMI_WMS_RECEIPT_ACTION_DISCARD          = 0x00,
+    QMI_WMS_RECEIPT_ACTION_STORE_AND_NOTIFY = 0x01,
+    QMI_WMS_RECEIPT_ACTION_TRANSFER_ONLY    = 0x02,
+    QMI_WMS_RECEIPT_ACTION_TRANSFER_AND_ACK = 0x03
+} QmiWmsReceiptAction;
+
+/**
+ * QmiWmsTransferIndication:
+ * @QMI_WMS_TRANSFER_INDICATION_CLIENT: Status reports transferred to the client.
+ *
+ * Transfer indication actions.
+ */
+typedef enum {
+    QMI_WMS_TRANSFER_INDICATION_CLIENT = 0x01
+} QmiWmsTransferIndication;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WMS_H_ */
