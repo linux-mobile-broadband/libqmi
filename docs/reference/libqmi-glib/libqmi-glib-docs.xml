@@ -75,6 +75,12 @@
     <xi:include href="xml/qmi-enums-wds.xml"/>
   </chapter>
 
+  <chapter>
+    <title>Wireless Messaging Service (WMS)</title>
+    <xi:include href="xml/qmi-wms.xml"/>
+    <xi:include href="xml/qmi-enums-wms.xml"/>
+  </chapter>
+
   <chapter id="object-tree">
     <title>Object Hierarchy</title>
      <xi:include href="xml/tree_index.sgml"/>
