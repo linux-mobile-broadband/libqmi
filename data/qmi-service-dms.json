@@ -253,6 +253,7 @@
                       "mandatory" : "no",
                       "type"      : "TLV",
                       "format"    : "string",
+                      "max-size"  : "15",
                       "prerequisites": [ { "common-ref" : "Success" } ] },
                     { "name"      : "Meid",
                       "id"        : "0x12",
