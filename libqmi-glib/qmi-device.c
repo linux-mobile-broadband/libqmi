@@ -33,6 +33,7 @@
 #include "qmi-dms.h"
 #include "qmi-wds.h"
 #include "qmi-nas.h"
+#include "qmi-wms.h"
 #include "qmi-utils.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
@@ -693,6 +694,10 @@ qmi_device_allocate_client (QmiDevice *self,
 
     case QMI_SERVICE_NAS:
         ctx->client_type = QMI_TYPE_CLIENT_NAS;
+        break;
+
+    case QMI_SERVICE_WMS:
+        ctx->client_type = QMI_TYPE_CLIENT_WMS;
         break;
 
     default:
