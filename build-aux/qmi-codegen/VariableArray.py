@@ -38,6 +38,7 @@ class VariableArray(Variable):
 
         self.private_format  = 'GArray *'
         self.public_format = self.private_format
+        self.fixed_size = 0
 
         # The array and its contents need to get disposed
         self.needs_dispose = True
@@ -54,6 +55,11 @@ class VariableArray(Variable):
             if dictionary['array-size'] == 'guint64' or dictionary['array-size'] == 'gint64':
                 raise RuntimeError('Array size should not be given with a 64-bit value (unsupported)')
             self.array_size_element = VariableFactory.create_variable(dictionary['array-size'], '')
+        elif 'fixed-size' in dictionary:
+            # fixed-size arrays have no size element, obviously
+            self.fixed_size = dictionary['fixed-size']
+            if int(self.fixed_size) == 0 or int(self.fixed_size) > 512:
+                raise ValueError('Fixed array size %s out of bounds (not between 0 and 512)' % self.fixed_size)
         else:
             # Default to 'guint8' if no explicit array size given
             default_array_size = { 'format' : 'guint8' }
@@ -97,7 +103,6 @@ class VariableArray(Variable):
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
                          'public_array_element_format' : self.array_element.public_format,
-                         'array_size_element_format' : self.array_size_element.public_format,
                          'underscore'     : utils.build_underscore_name_from_camelcase(self.array_element.public_format),
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
@@ -105,13 +110,26 @@ class VariableArray(Variable):
 
         template = (
             '${lp}{\n'
-            '${lp}    guint i;\n'
-            '${lp}    ${array_size_element_format} n_items;\n'
-            '\n'
-            '${lp}    /* Read number of items in the array */\n')
+            '${lp}    guint i;\n')
         f.write(string.Template(template).substitute(translations))
 
-        self.array_size_element.emit_buffer_read(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
+        if self.fixed_size:
+            translations['fixed_size'] = self.fixed_size
+
+            template = (
+                '${lp}    guint16 n_items = ${fixed_size};\n'
+                '\n')
+            f.write(string.Template(template).substitute(translations))
+        else:
+            translations['array_size_element_format'] = self.array_size_element.public_format
+
+            template = (
+                '${lp}    ${array_size_element_format} n_items;\n'
+                '\n'
+                '${lp}    /* Read number of items in the array */\n')
+            f.write(string.Template(template).substitute(translations))
+
+            self.array_size_element.emit_buffer_read(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
 
         template = (
             '\n'
@@ -150,20 +168,25 @@ class VariableArray(Variable):
     def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len):
         translations = { 'lp'             : line_prefix,
                          'variable_name'  : variable_name,
-                         'array_size_element_format' : self.array_size_element.private_format,
                          'buffer_name'    : buffer_name,
                          'buffer_len'     : buffer_len }
 
         template = (
             '${lp}{\n'
-            '${lp}    guint i;\n'
-            '${lp}    ${array_size_element_format} n_items;\n'
-            '\n'
-            '${lp}    /* Write the number of items in the array first */\n'
-            '${lp}    n_items = (${array_size_element_format}) ${variable_name}->len;\n')
+            '${lp}    guint i;\n')
         f.write(string.Template(template).substitute(translations))
 
-        self.array_size_element.emit_buffer_write(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
+        if self.fixed_size == 0:
+            translations['array_size_element_format'] = self.array_size_element.private_format
+
+            template = (
+                '${lp}    ${array_size_element_format} n_items;\n'
+                '\n'
+                '${lp}    /* Write the number of items in the array first */\n'
+                '${lp}    n_items = (${array_size_element_format}) ${variable_name}->len;\n')
+            f.write(string.Template(template).substitute(translations))
+
+            self.array_size_element.emit_buffer_write(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
 
         template = (
             '\n'
@@ -184,20 +207,32 @@ class VariableArray(Variable):
     """
     def emit_get_printable(self, f, line_prefix, printable, buffer_name, buffer_len):
         translations = { 'lp'          : line_prefix,
-                         'array_size_element_format' : self.array_size_element.public_format,
                          'printable'   : printable,
                          'buffer_name' : buffer_name,
                          'buffer_len'  : buffer_len }
 
         template = (
             '${lp}{\n'
-            '${lp}    guint i;\n'
-            '${lp}    ${array_size_element_format} n_items;\n'
-            '\n'
-            '${lp}    /* Read number of items in the array */\n')
+            '${lp}    guint i;\n')
         f.write(string.Template(template).substitute(translations))
 
-        self.array_size_element.emit_buffer_read(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
+        if self.fixed_size:
+            translations['fixed_size'] = self.fixed_size
+
+            template = (
+                '${lp}    guint16 n_items = ${fixed_size};\n'
+                '\n')
+            f.write(string.Template(template).substitute(translations))
+        else:
+            translations['array_size_element_format'] = self.array_size_element.public_format
+
+            template = (
+                '${lp}    ${array_size_element_format} n_items;\n'
+                '\n'
+                '${lp}    /* Read number of items in the array */\n')
+            f.write(string.Template(template).substitute(translations))
+
+            self.array_size_element.emit_buffer_read(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
 
         template = (
             '\n'
