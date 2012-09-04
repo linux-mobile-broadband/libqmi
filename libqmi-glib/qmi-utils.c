@@ -361,9 +361,11 @@ void
 qmi_utils_read_string_from_buffer (guint8   **buffer,
                                    guint16   *buffer_size,
                                    gboolean   length_prefix,
+                                   guint16    max_size,
                                    gchar    **out)
 {
     guint16 string_length;
+    guint16 valid_string_length;
 
     g_assert (out != NULL);
     g_assert (buffer != NULL);
@@ -380,10 +382,17 @@ qmi_utils_read_string_from_buffer (guint8   **buffer,
         string_length = string_length_8;
     }
 
-    *out = g_malloc (string_length + 1);
-    (*out)[string_length] = '\0';
-    memcpy (*out, *buffer, string_length);
+    if (max_size > 0 && string_length > max_size)
+        valid_string_length = max_size;
+    else
+        valid_string_length = string_length;
 
+    /* Read 'valid_string_length' bytes */
+    *out = g_malloc (valid_string_length + 1);
+    memcpy (*out, *buffer, valid_string_length);
+    (*out)[valid_string_length] = '\0';
+
+    /* And walk 'string_length' bytes */
     *buffer = &((*buffer)[string_length]);
     *buffer_size = (*buffer_size) - string_length;
 }

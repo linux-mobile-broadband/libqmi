@@ -77,12 +77,14 @@ class VariableString(Variable):
                 '${lp}${variable_name}[${fixed_size}] = \'\\0\';\n')
         else:
             translations['length_prefix'] = 'TRUE' if self.length_prefix else 'FALSE'
+            translations['max_size'] = self.max_size if self.max_size != '' else '0'
             template = (
                 '${lp}/* Read the string variable from the buffer */\n'
                 '${lp}qmi_utils_read_string_from_buffer (\n'
                 '${lp}    &${buffer_name},\n'
                 '${lp}    &${buffer_len},\n'
                 '${lp}    ${length_prefix},\n'
+                '${lp}    ${max_size},\n'
                 '${lp}    &(${variable_name}));\n')
 
         f.write(string.Template(template).substitute(translations))
@@ -148,6 +150,7 @@ class VariableString(Variable):
                 '${lp}}\n')
         else:
             translations['length_prefix'] = 'TRUE' if self.length_prefix else 'FALSE'
+            translations['max_size'] = self.max_size if self.max_size != '' else '0'
             template = (
                 '\n'
                 '${lp}{\n'
@@ -158,6 +161,7 @@ class VariableString(Variable):
                 '${lp}        &${buffer_name},\n'
                 '${lp}        &${buffer_len},\n'
                 '${lp}        ${length_prefix},\n'
+                '${lp}        ${max_size},\n'
                 '${lp}        &tmp);\n'
                 '\n'
                 '${lp}    g_string_append_printf (${printable}, "%s", tmp);\n'

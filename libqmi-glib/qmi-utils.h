@@ -107,6 +107,7 @@ void qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
 void qmi_utils_read_string_from_buffer (guint8   **buffer,
                                         guint16   *buffer_size,
                                         gboolean   length_prefix,
+                                        guint16    max_size,
                                         gchar    **out);
 void qmi_utils_write_string_to_buffer  (guint8      **buffer,
                                         guint16      *buffer_size,
