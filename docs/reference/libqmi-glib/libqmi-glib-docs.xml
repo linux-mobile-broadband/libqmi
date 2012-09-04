@@ -38,25 +38,41 @@
   </bookinfo>
 
   <chapter>
-    <title>TODO: Organize</title>
-        <xi:include href="xml/qmi-client.xml"/>
-        <xi:include href="xml/qmi-ctl.xml"/>
-        <xi:include href="xml/qmi-device.xml"/>
-        <xi:include href="xml/qmi-dms.xml"/>
-        <xi:include href="xml/qmi-enum-types.xml"/>
-        <xi:include href="xml/qmi-enums.xml"/>
-        <xi:include href="xml/qmi-enums-dms.xml"/>
-        <xi:include href="xml/qmi-enums-nas.xml"/>
-        <xi:include href="xml/qmi-enums-wds.xml"/>
-        <xi:include href="xml/qmi-error-types.xml"/>
-        <xi:include href="xml/qmi-errors.xml"/>
-        <xi:include href="xml/qmi-flags64-dms.xml"/>
-        <xi:include href="xml/qmi-flags64-nas.xml"/>
-        <xi:include href="xml/qmi-flags64-types.xml"/>
-        <xi:include href="xml/qmi-message.xml"/>
-        <xi:include href="xml/qmi-nas.xml"/>
-        <xi:include href="xml/qmi-utils.xml"/>
-        <xi:include href="xml/qmi-wds.xml"/>
+    <title>Core</title>
+    <xi:include href="xml/qmi-message.xml"/>
+    <xi:include href="xml/qmi-device.xml"/>
+    <xi:include href="xml/qmi-client.xml"/>
+    <xi:include href="xml/qmi-enums.xml"/>
+    <xi:include href="xml/qmi-enum-types.xml"/>
+    <xi:include href="xml/qmi-flags64-types.xml"/>
+    <xi:include href="xml/qmi-errors.xml"/>
+    <xi:include href="xml/qmi-error-types.xml"/>
+    <xi:include href="xml/qmi-utils.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Control Service (CTL)</title>
+    <xi:include href="xml/qmi-ctl.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Device Management Service (DMS)</title>
+    <xi:include href="xml/qmi-dms.xml"/>
+    <xi:include href="xml/qmi-enums-dms.xml"/>
+    <xi:include href="xml/qmi-flags64-dms.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Network Access Service (NAS)</title>
+    <xi:include href="xml/qmi-nas.xml"/>
+    <xi:include href="xml/qmi-enums-nas.xml"/>
+    <xi:include href="xml/qmi-flags64-nas.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Wireless Data Service (WDS)</title>
+    <xi:include href="xml/qmi-wds.xml"/>
+    <xi:include href="xml/qmi-enums-wds.xml"/>
   </chapter>
 
   <chapter id="object-tree">
