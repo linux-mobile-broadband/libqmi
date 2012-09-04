@@ -392,6 +392,7 @@ typedef enum {
  * @QMI_WMS_RECEIPT_ACTION_STORE_AND_NOTIFY: Store and notify to client.
  * @QMI_WMS_RECEIPT_ACTION_TRANSFER_ONLY: Notify to client, which should send back ACK.
  * @QMI_WMS_RECEIPT_ACTION_TRANSFER_AND_ACK: Notify to client and send back ACK.
+ * @QMI_WMS_RECEIPT_ACTION_UNKNOWN: Unknown action.
  *
  * Action to perform when a message is received.
  */
@@ -399,7 +400,8 @@ typedef enum {
     QMI_WMS_RECEIPT_ACTION_DISCARD          = 0x00,
     QMI_WMS_RECEIPT_ACTION_STORE_AND_NOTIFY = 0x01,
     QMI_WMS_RECEIPT_ACTION_TRANSFER_ONLY    = 0x02,
-    QMI_WMS_RECEIPT_ACTION_TRANSFER_AND_ACK = 0x03
+    QMI_WMS_RECEIPT_ACTION_TRANSFER_AND_ACK = 0x03,
+    QMI_WMS_RECEIPT_ACTION_UNKNOWN          = 0xFF
 } QmiWmsReceiptAction;
 
 /**
