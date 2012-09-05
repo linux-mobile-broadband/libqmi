@@ -1324,6 +1324,38 @@ qmi_device_open_finish (QmiDevice *self,
 static void process_open_flags (DeviceOpenContext *ctx);
 
 static void
+ctl_set_data_format_ready (QmiClientCtl *client,
+                           GAsyncResult *res,
+                           DeviceOpenContext *ctx)
+{
+    QmiMessageCtlSetDataFormatOutput *output = NULL;
+    GError *error = NULL;
+
+    output = qmi_client_ctl_set_data_format_finish (client, res, &error);
+    /* Check result of the async operation */
+    if (!output) {
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* Check result of the QMI operation */
+    if (!qmi_message_ctl_set_data_format_output_get_result (output, &error)) {
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
+        qmi_message_ctl_set_data_format_output_unref (output);
+        return;
+    }
+
+    g_debug ("[%s] Network port data format operation finished",
+             ctx->self->priv->path_display);
+
+    /* Keep on with next flags */
+    process_open_flags (ctx);
+    qmi_message_ctl_set_data_format_output_unref (output);
+}
+
+static void
 sync_ready (QmiClientCtl *client_ctl,
             GAsyncResult *res,
             DeviceOpenContext *ctx)
@@ -1435,6 +1467,11 @@ version_info_ready (QmiClientCtl *client_ctl,
     qmi_message_ctl_get_version_info_output_unref (output);
 }
 
+#define NETPORT_FLAGS (QMI_DEVICE_OPEN_FLAGS_NET_802_3 | \
+                       QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP | \
+                       QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER | \
+                       QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER)
+
 static void
 process_open_flags (DeviceOpenContext *ctx)
 {
@@ -1469,6 +1506,35 @@ process_open_flags (DeviceOpenContext *ctx)
         return;
     }
 
+    /* Network port setup */
+    if (ctx->flags & NETPORT_FLAGS) {
+        QmiMessageCtlSetDataFormatInput *input;
+        QmiCtlDataFormat qos = QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_ABSENT;
+        QmiCtlDataLinkProtocol link = QMI_CTL_DATA_LINK_PROTOCOL_802_3;
+
+        g_debug ("[%s] Setting network port data format...",
+                 ctx->self->priv->path_display);
+
+        input = qmi_message_ctl_set_data_format_input_new ();
+
+        if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER)
+            qos = QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_PRESENT;
+        qmi_message_ctl_set_data_format_input_set_format (input, qos, NULL);
+
+        if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP)
+            link = QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP;
+        qmi_message_ctl_set_data_format_input_set_protocol (input, link, NULL);
+
+        ctx->flags &= ~NETPORT_FLAGS;
+        qmi_client_ctl_set_data_format (ctx->self->priv->client_ctl,
+                                        input,
+                                        5,
+                                        NULL,
+                                        (GAsyncReadyCallback)ctl_set_data_format_ready,
+                                        ctx);
+        return;
+    }
+
     /* No more flags to process, done we are */
     g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
     device_open_context_complete_and_free (ctx);
@@ -1498,6 +1564,18 @@ qmi_device_open (QmiDevice *self,
 {
     DeviceOpenContext *ctx;
     GError *error = NULL;
+
+    /* Raw IP and 802.3 are mutually exclusive */
+    g_return_if_fail (!((flags & QMI_DEVICE_OPEN_FLAGS_NET_802_3) &&
+                        (flags & QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP)));
+    /* QoS and no QoS are mutually exclusive */
+    g_return_if_fail (!((flags & QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER) &&
+                        (flags & QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER)));
+    /* At least one of both link protocol and QoS must be specified */
+    if (flags & (QMI_DEVICE_OPEN_FLAGS_NET_802_3 | QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP))
+        g_return_if_fail (flags & (QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER | QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER));
+    if (flags & (QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER | QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER))
+        g_return_if_fail (flags & (QMI_DEVICE_OPEN_FLAGS_NET_802_3 | QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP));
 
     g_return_if_fail (QMI_IS_DEVICE (self));
 
