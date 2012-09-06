@@ -161,7 +161,8 @@
      "output"  : [ { "common-ref" : "Operation Result" },
                    { "name"          : "Message ID",
                      "id"            : "0x01",
-                     "mandatory"     : "yes",
+                     // Even if we have this TLV as mandatory, it seems it really isn't
+                     "mandatory"     : "no",
                      "type"          : "TLV",
                      "format"        : "guint16",
                      "prerequisites" : [ { "common-ref" : "Success" } ] },
