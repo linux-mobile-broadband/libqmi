@@ -61,7 +61,7 @@
                       "mandatory"     : "no",
                       "type"          : "TLV",
                       "format"        : "guint8",
-                      "public-format" : "QmiWdsAuthenticationPreference" },
+                      "public-format" : "QmiWdsAuthentication" },
                     { "name"      : "Username",
                       "id"        : "0x17",
                       "mandatory" : "no",

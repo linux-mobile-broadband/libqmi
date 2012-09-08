@@ -29,18 +29,6 @@
 /* Helper enums for the 'QMI WDS Start Network' message */
 
 /**
- * QmiWdsAuthenticationPreference:
- * @QMI_WDS_AUTHENTICATION_PREFERENCE_ALLOW_PAP: PAP authentication may be performed.
- * @QMI_WDS_AUTHENTICATION_PREFERENCE_ALLOW_CHAP: CHAP authentication may be performed.
- *
- * Type of authentication that may be performed by the device
- */
-typedef enum {
-    QMI_WDS_AUTHENTICATION_PREFERENCE_ALLOW_PAP  = 1 << 0,
-    QMI_WDS_AUTHENTICATION_PREFERENCE_ALLOW_CHAP = 1 << 1
-} QmiWdsAuthenticationPreference;
-
-/**
  * QmiWdsIpFamily:
  * @QMI_WDS_IP_FAMILY_IPV4: IPv4.
  * @QMI_WDS_IP_FAMILY_IPV6: IPv6.
