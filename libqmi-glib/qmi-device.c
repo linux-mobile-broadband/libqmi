@@ -1510,7 +1510,7 @@ process_open_flags (DeviceOpenContext *ctx)
     if (ctx->flags & NETPORT_FLAGS) {
         QmiMessageCtlSetDataFormatInput *input;
         QmiCtlDataFormat qos = QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_ABSENT;
-        QmiCtlDataLinkProtocol link = QMI_CTL_DATA_LINK_PROTOCOL_802_3;
+        QmiCtlDataLinkProtocol link_protocol = QMI_CTL_DATA_LINK_PROTOCOL_802_3;
 
         g_debug ("[%s] Setting network port data format...",
                  ctx->self->priv->path_display);
@@ -1522,8 +1522,8 @@ process_open_flags (DeviceOpenContext *ctx)
         qmi_message_ctl_set_data_format_input_set_format (input, qos, NULL);
 
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP)
-            link = QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP;
-        qmi_message_ctl_set_data_format_input_set_protocol (input, link, NULL);
+            link_protocol = QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP;
+        qmi_message_ctl_set_data_format_input_set_protocol (input, link_protocol, NULL);
 
         ctx->flags &= ~NETPORT_FLAGS;
         qmi_client_ctl_set_data_format (ctx->self->priv->client_ctl,
