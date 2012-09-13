@@ -70,11 +70,13 @@ CLEANFILES += \
 	$(DOC_MODULE)-undocumented.txt \
 	$(DOC_MODULE)-overrides.txt \
 	$(DOC_MODULE)-unused.txt \
+	$(DOC_MODULE)-sections.txt \
 	$(DOC_MODULE).args \
 	$(DOC_MODULE).hierarchy \
 	$(DOC_MODULE).interfaces \
 	$(DOC_MODULE).prerequisites \
 	$(DOC_MODULE).signals \
+	$(DOC_MODULE).types \
 	*.stamp \
 	-rf xml html tmpl \
 	$(NULL)
