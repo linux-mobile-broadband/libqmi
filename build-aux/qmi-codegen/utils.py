@@ -74,8 +74,8 @@ def add_header_start(f, output_name, service):
     if service != 'CTL':
         template += (
             "#include \"qmi-enums-${service}.h\"\n")
-    # CTL, WDS and WMS don't have flags64
-    if service != 'CTL' and service != 'WDS' and service != 'WMS':
+    # CTL, WDS, WMS and PDS don't have flags64
+    if service != 'CTL' and service != 'WDS' and service != 'WMS' and service != 'PDS':
         template += (
             "#include \"qmi-flags64-${service}.h\"\n")
     template += (

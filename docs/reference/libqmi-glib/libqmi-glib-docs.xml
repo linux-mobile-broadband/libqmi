@@ -81,6 +81,12 @@
     <xi:include href="xml/qmi-enums-wms.xml"/>
   </chapter>
 
+  <chapter>
+    <title>Position Determination Service (PDS)</title>
+    <xi:include href="xml/qmi-pds.xml"/>
+    <xi:include href="xml/qmi-enums-pds.xml"/>
+  </chapter>
+
   <chapter id="object-tree">
     <title>Object Hierarchy</title>
      <xi:include href="xml/tree_index.sgml"/>

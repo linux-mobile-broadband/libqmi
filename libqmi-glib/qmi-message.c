@@ -43,6 +43,7 @@
 #include "qmi-wds.h"
 #include "qmi-nas.h"
 #include "qmi-wms.h"
+#include "qmi-pds.h"
 
 #define PACKED __attribute__((packed))
 
@@ -702,6 +703,9 @@ qmi_message_get_printable (QmiMessage *self,
     case QMI_SERVICE_WMS:
         contents = qmi_message_wms_get_printable (self, line_prefix);
         break;
+    case QMI_SERVICE_PDS:
+        contents = qmi_message_pds_get_printable (self, line_prefix);
+        break;
     default:
         break;
     }
@@ -737,6 +741,9 @@ qmi_message_get_version_introduced (QmiMessage *self,
 
     case QMI_SERVICE_WMS:
         return qmi_message_wms_get_version_introduced (self, major, minor);
+
+    case QMI_SERVICE_PDS:
+        return qmi_message_pds_get_version_introduced (self, major, minor);
 
     default:
         /* For the still unsupported services, cannot do anything */
