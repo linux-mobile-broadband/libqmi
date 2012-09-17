@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
+ * Copyright (C) 2012 Google, Inc.
  */
 
 #include "qmi-enums-wds.h"
@@ -48,14 +48,18 @@ typedef enum {
 	QMI_SERVICE_AT = 0x08,
     /* Voice service */
     QMI_SERVICE_VOICE = 0x09,
-
+    /* Card Application Toolkit service (major version 2) */
 	QMI_SERVICE_CAT2 = 0x0A,
+    /* User Identity Module service */
 	QMI_SERVICE_UIM = 0x0B,
+    /* Phonebook Management service */
 	QMI_SERVICE_PBM = 0x0C,
+    /* Location service (~ PDS major version 2) */
 	QMI_SERVICE_LOC = 0x10,
+    /* No idea what this one means.. Search And Rescue? */
 	QMI_SERVICE_SAR = 0x11,
+    /* Remote Filesystem service */
 	QMI_SERVICE_RMTFS = 0x14,
-
     /* Card Application Toolkit service */
     QMI_SERVICE_CAT = 0xE0,
     /* Remote Management Service */
