@@ -113,36 +113,38 @@ class VariableArray(Variable):
     read every array element one by one.
     """
     def emit_buffer_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+        common_var_prefix = utils.build_underscore_name(self.name)
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
                          'public_array_element_format' : self.array_element.public_format,
                          'underscore'     : self.clear_func_name(),
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len }
+                         'buffer_len'     : buffer_len,
+                         'common_var_prefix' : common_var_prefix }
 
         template = (
             '${lp}{\n'
-            '${lp}    guint i;\n')
+            '${lp}    guint ${common_var_prefix}_i;\n')
         f.write(string.Template(template).substitute(translations))
 
         if self.fixed_size:
             translations['fixed_size'] = self.fixed_size
 
             template = (
-                '${lp}    guint16 n_items = ${fixed_size};\n'
+                '${lp}    guint16 ${common_var_prefix}_n_items = ${fixed_size};\n'
                 '\n')
             f.write(string.Template(template).substitute(translations))
         else:
             translations['array_size_element_format'] = self.array_size_element.public_format
 
             template = (
-                '${lp}    ${array_size_element_format} n_items;\n'
+                '${lp}    ${array_size_element_format} ${common_var_prefix}_n_items;\n'
                 '\n'
                 '${lp}    /* Read number of items in the array */\n')
             f.write(string.Template(template).substitute(translations))
 
-            self.array_size_element.emit_buffer_read(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
+            self.array_size_element.emit_buffer_read(f, line_prefix + '    ', common_var_prefix + '_n_items', buffer_name, buffer_len)
 
         template = (
             '\n'
@@ -150,7 +152,7 @@ class VariableArray(Variable):
             '${lp}        FALSE,\n'
             '${lp}        FALSE,\n'
             '${lp}        sizeof (${public_array_element_format}),\n'
-            '${lp}        (guint)n_items);\n'
+            '${lp}        (guint)${common_var_prefix}_n_items);\n'
             '\n')
 
         if self.array_element.needs_dispose == True:
@@ -160,15 +162,15 @@ class VariableArray(Variable):
                 '\n')
 
         template += (
-            '${lp}    for (i = 0; i < n_items; i++) {\n'
-            '${lp}        ${public_array_element_format} aux;\n'
+            '${lp}    for (${common_var_prefix}_i = 0; ${common_var_prefix}_i < ${common_var_prefix}_n_items; ${common_var_prefix}_i++) {\n'
+            '${lp}        ${public_array_element_format} ${common_var_prefix}_aux;\n'
             '\n')
         f.write(string.Template(template).substitute(translations))
 
-        self.array_element.emit_buffer_read(f, line_prefix + '        ', 'aux', buffer_name, buffer_len)
+        self.array_element.emit_buffer_read(f, line_prefix + '        ', common_var_prefix + '_aux', buffer_name, buffer_len)
 
         template = (
-            '${lp}        g_array_insert_val (${variable_name}, i, aux);\n'
+            '${lp}        g_array_insert_val (${variable_name}, ${common_var_prefix}_i, ${common_var_prefix}_aux);\n'
             '${lp}    }\n'
             '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
@@ -179,34 +181,36 @@ class VariableArray(Variable):
     write every array element one by one.
     """
     def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+        common_var_prefix = utils.build_underscore_name(self.name)
         translations = { 'lp'             : line_prefix,
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len }
+                         'buffer_len'     : buffer_len,
+                         'common_var_prefix' : common_var_prefix }
 
         template = (
             '${lp}{\n'
-            '${lp}    guint i;\n')
+            '${lp}    guint ${common_var_prefix}_i;\n')
         f.write(string.Template(template).substitute(translations))
 
         if self.fixed_size == 0:
             translations['array_size_element_format'] = self.array_size_element.private_format
 
             template = (
-                '${lp}    ${array_size_element_format} n_items;\n'
+                '${lp}    ${array_size_element_format} ${common_var_prefix}_n_items;\n'
                 '\n'
                 '${lp}    /* Write the number of items in the array first */\n'
-                '${lp}    n_items = (${array_size_element_format}) ${variable_name}->len;\n')
+                '${lp}    ${common_var_prefix}_n_items = (${array_size_element_format}) ${variable_name}->len;\n')
             f.write(string.Template(template).substitute(translations))
 
-            self.array_size_element.emit_buffer_write(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
+            self.array_size_element.emit_buffer_write(f, line_prefix + '    ', common_var_prefix + '_n_items', buffer_name, buffer_len)
 
         template = (
             '\n'
-            '${lp}    for (i = 0; i < ${variable_name}->len; i++) {\n')
+            '${lp}    for (${common_var_prefix}_i = 0; ${common_var_prefix}_i < ${variable_name}->len; ${common_var_prefix}_i++) {\n')
         f.write(string.Template(template).substitute(translations))
 
-        self.array_element.emit_buffer_write(f, line_prefix + '        ', 'g_array_index (' + variable_name + ', ' + self.array_element.public_format + ', i)', buffer_name, buffer_len)
+        self.array_element.emit_buffer_write(f, line_prefix + '        ', 'g_array_index (' + variable_name + ', ' + self.array_element.public_format + ',' + common_var_prefix + '_i)', buffer_name, buffer_len)
 
         template = (
             '${lp}    }\n'
@@ -219,40 +223,42 @@ class VariableArray(Variable):
     brackets
     """
     def emit_get_printable(self, f, line_prefix, printable, buffer_name, buffer_len):
+        common_var_prefix = utils.build_underscore_name(self.name)
         translations = { 'lp'          : line_prefix,
                          'printable'   : printable,
                          'buffer_name' : buffer_name,
-                         'buffer_len'  : buffer_len }
+                         'buffer_len'  : buffer_len,
+                         'common_var_prefix' : common_var_prefix }
 
         template = (
             '${lp}{\n'
-            '${lp}    guint i;\n')
+            '${lp}    guint ${common_var_prefix}_i;\n')
         f.write(string.Template(template).substitute(translations))
 
         if self.fixed_size:
             translations['fixed_size'] = self.fixed_size
 
             template = (
-                '${lp}    guint16 n_items = ${fixed_size};\n'
+                '${lp}    guint16 ${common_var_prefix}_n_items = ${fixed_size};\n'
                 '\n')
             f.write(string.Template(template).substitute(translations))
         else:
             translations['array_size_element_format'] = self.array_size_element.public_format
 
             template = (
-                '${lp}    ${array_size_element_format} n_items;\n'
+                '${lp}    ${array_size_element_format} ${common_var_prefix}_n_items;\n'
                 '\n'
                 '${lp}    /* Read number of items in the array */\n')
             f.write(string.Template(template).substitute(translations))
 
-            self.array_size_element.emit_buffer_read(f, line_prefix + '    ', 'n_items', buffer_name, buffer_len)
+            self.array_size_element.emit_buffer_read(f, line_prefix + '    ', common_var_prefix + '_n_items', buffer_name, buffer_len)
 
         template = (
             '\n'
             '${lp}    g_string_append (${printable}, "{");\n'
             '\n'
-            '${lp}    for (i = 0; i < n_items; i++) {\n'
-            '${lp}        g_string_append_printf (${printable}, " [%u] = \'", i);\n')
+            '${lp}    for (${common_var_prefix}_i = 0; ${common_var_prefix}_i < ${common_var_prefix}_n_items; ${common_var_prefix}_i++) {\n'
+            '${lp}        g_string_append_printf (${printable}, " [%u] = \'", ${common_var_prefix}_i);\n')
         f.write(string.Template(template).substitute(translations))
 
         self.array_element.emit_get_printable(f, line_prefix + '        ', printable, buffer_name, buffer_len);
