@@ -210,14 +210,13 @@ class Container:
             '    g_return_if_fail (self != NULL);\n'
             '\n'
             '    if (g_atomic_int_dec_and_test (&self->ref_count)) {\n')
-        cfile.write(string.Template(template).substitute(translations))
 
         if self.fields is not None:
             for field in self.fields:
                 if field.variable is not None and field.variable.needs_dispose is True:
                     template += field.variable.build_dispose('        ', 'self->' + field.variable_name)
 
-        template = (
+        template += (
             '        g_slice_free (${camelcase}, self);\n'
             '    }\n'
             '}\n')
