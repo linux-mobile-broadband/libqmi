@@ -290,6 +290,39 @@
                      "contents"  : [ { "name"          : "GPS Service State",
                                        "format"        : "guint8",
                                        "public-format" : "gboolean" } ] } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Get Auto Tracking State",
+     "type"    : "Message",
+     "service" : "PDS",
+     "id"      : "0x0030",
+     "version" : "1.0",
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"      : "State",
+                     "id"        : "0x01",
+                     "mandatory" : "yes",
+                     "type"      : "TLV",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"          : "Auto Tracking State",
+                                       "format"        : "guint8",
+                                       "public-format" : "gboolean" } ],
+                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Set Auto Tracking State",
+     "type"    : "Message",
+     "service" : "PDS",
+     "id"      : "0x0031",
+     "version" : "1.0",
+     "input"   : [ { "name"      : "State",
+                     "id"        : "0x01",
+                     "mandatory" : "yes",
+                     "type"      : "TLV",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"          : "Auto Tracking State",
+                                       "format"        : "guint8",
+                                       "public-format" : "gboolean" } ] } ],
      "output"  : [ { "common-ref" : "Operation Result" } ] }
 
 ]
