@@ -286,31 +286,36 @@ class Message:
                 '{\n'
                 '    const gchar *tlv_type_str = NULL;\n'
                 '    gchar *translated_value;\n'
-                '\n'
-                '    if (!qmi_message_is_response (ctx->self)) {\n'
-                '        switch (type) {\n')
+                '\n')
 
-            if self.input is not None and self.input.fields is not None:
-                for field in self.input.fields:
-                    translations['underscore_field'] = utils.build_underscore_name(field.fullname)
-                    translations['field_enum'] = field.id_enum_name
-                    translations['field_name'] = field.name
-                    field_template = (
-                        '        case ${field_enum}:\n'
-                        '            tlv_type_str = "${field_name}";\n'
-                        '            translated_value = ${underscore_field}_get_printable (\n'
-                        '                                   ctx->self,\n'
-                        '                                   ctx->line_prefix);\n'
-                        '            break;\n')
-                    template += string.Template(field_template).substitute(translations)
+            if self.type == 'Message':
+                template += (
+                    '    if (!qmi_message_is_response (ctx->self)) {\n'
+                    '        switch (type) {\n')
 
-            template += (
-                '        default:\n'
-                '            break;\n'
-                '        }\n'
-                '    } else {\n'
-                '        switch (type) {\n')
+                if self.input is not None and self.input.fields is not None:
+                    for field in self.input.fields:
+                        translations['underscore_field'] = utils.build_underscore_name(field.fullname)
+                        translations['field_enum'] = field.id_enum_name
+                        translations['field_name'] = field.name
+                        field_template = (
+                            '        case ${field_enum}:\n'
+                            '            tlv_type_str = "${field_name}";\n'
+                            '            translated_value = ${underscore_field}_get_printable (\n'
+                            '                                   ctx->self,\n'
+                            '                                   ctx->line_prefix);\n'
+                            '            break;\n')
+                        template += string.Template(field_template).substitute(translations)
 
+                template += (
+                    '        default:\n'
+                    '            break;\n'
+                    '        }\n'
+                    '    } else {\n')
+            else:
+                template += ('    {\n')
+
+            template += ('        switch (type) {\n')
             if self.output is not None and self.output.fields is not None:
                 for field in self.output.fields:
                     translations['underscore_field'] = utils.build_underscore_name(field.fullname)
