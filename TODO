@@ -43,3 +43,5 @@ List of things left for later:
 
  * nas: Define the 'QmiNasRegistrationRejectCause' enum for the "Event Report"
    indication and "Get System Info" response.
+
+ * pds: Parse all possible TLVs in the Event Report indications
