@@ -313,4 +313,19 @@ typedef enum {
     QMI_DMS_TIME_REFERENCE_TYPE_USER = 0
 } QmiDmsTimeReferenceType;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Get Firmware Preference' message */
+
+/**
+ * QmiDmsFirmwareImageType:
+ * @QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM: Modem image.
+ * @QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI: PRI image.
+ *
+ * Type of firmware image.
+ */
+typedef enum {
+    QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM = 0,
+    QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI   = 1
+} QmiDmsFirmwareImageType;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */
