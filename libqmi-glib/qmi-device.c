@@ -1537,6 +1537,7 @@ process_open_flags (DeviceOpenContext *ctx)
                                         NULL,
                                         (GAsyncReadyCallback)ctl_set_data_format_ready,
                                         ctx);
+        qmi_message_ctl_set_data_format_input_unref (input);
         return;
     }
 
