@@ -172,6 +172,8 @@
                                        "public-format" : "QmiPdsOperationMode" },
                                      { "name"     : "NMEA",
                                        "format"   : "string",
+                                       // This was supposed to be only 1 byte for length, but it seems it's not
+                                       "length-prefix-size" : "16",
                                        "max-size" : "200" } ] },
                    { "name"          : "Position Session Status",
                      "id"            : "0x12",
