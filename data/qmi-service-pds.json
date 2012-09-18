@@ -178,7 +178,7 @@
                      "mandatory"     : "no",
                      "type"          : "TLV",
                      "format"        : "guint8",
-                     "public-format" : "QmiPdsPositionSessionStatus" } ] }
+                     "public-format" : "QmiPdsPositionSessionStatus" } ] },
 
                    // TODO: parse all TLVs of this indication
                    // Reading gfloat/gdouble is still missing
@@ -255,5 +255,41 @@
                    //  "prerequisites": [ { "field"     : "Position Session Status",
                    //                       "operation" : "<=",
                    //                       "value"     : "QMI_PDS_POSITION_SESSION_STATUS_IN_PROGRESS" } ] } ] }
+
+  // *********************************************************************************
+  {  "name"    : "Get GPS Service State",
+     "type"    : "Message",
+     "service" : "PDS",
+     "id"      : "0x0020",
+     "version" : "1.0",
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"      : "State",
+                     "id"        : "0x01",
+                     "mandatory" : "yes",
+                     "type"      : "TLV",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"          : "GPS Service State",
+                                       "format"        : "guint8",
+                                       "public-format" : "gboolean" },
+                                     { "name"          : "Tracking Session State",
+                                       "format"        : "guint8",
+                                       "public-format" : "QmiPdsTrackingSessionState" } ],
+                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Set GPS Service State",
+     "type"    : "Message",
+     "service" : "PDS",
+     "id"      : "0x0021",
+     "version" : "1.0",
+     "input"   : [ { "name"      : "State",
+                     "id"        : "0x01",
+                     "mandatory" : "yes",
+                     "type"      : "TLV",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"          : "GPS Service State",
+                                       "format"        : "guint8",
+                                       "public-format" : "gboolean" } ] } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] }
 
 ]

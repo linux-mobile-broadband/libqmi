@@ -122,4 +122,21 @@ typedef enum {
     QMI_PDS_DATA_VALID_OPERATING_MODE          = 1 << 22
 } QmiPdsDataValid;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI PDS Get GPS Service State' request/response */
+
+/**
+ * QmiPdsTrackingSessionState:
+ * @QMI_PDS_TRACKING_SESSION_STATE_UNKNOWN: Unknown state.
+ * @QMI_PDS_TRACKING_SESSION_STATE_INACTIVE: Session inactive.
+ * @QMI_PDS_TRACKING_SESSION_STATE_ACTIVE: Session active.
+ *
+ * State of the tracking session.
+ */
+typedef enum {
+    QMI_PDS_TRACKING_SESSION_STATE_UNKNOWN  = 0,
+    QMI_PDS_TRACKING_SESSION_STATE_INACTIVE = 1,
+    QMI_PDS_TRACKING_SESSION_STATE_ACTIVE   = 2
+} QmiPdsTrackingSessionState;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_PDS_H_ */
