@@ -13,6 +13,10 @@
      "type"    : "Message-ID-Enum" },
 
   // *********************************************************************************
+  {  "name"    : "QMI Indication PDS",
+     "type"    : "Indication-ID-Enum" },
+
+  // *********************************************************************************
   {  "name"    : "Reset",
      "type"    : "Message",
      "service" : "PDS",
@@ -146,6 +150,34 @@
                      "type"          : "TLV",
                      "format"        : "guint8",
                      "public-format" : "gboolean" } ],
-     "output"  : [ { "common-ref" : "Operation Result" } ] }
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  {  "name"    : "Event Report",
+     "type"    : "Indication",
+     "service" : "PDS",
+     "id"      : "0x0001",
+     "output"  : [ { "name"      : "NMEA Position",
+                     "id"        : "0x10",
+                     "mandatory" : "no",
+                     "type"      : "TLV",
+                     "format"    : "string",
+                     "max-size"  : "200" },
+                   { "name"      : "Extended NMEA Position",
+                     "id"        : "0x11",
+                     "mandatory" : "no",
+                     "type"      : "TLV",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"          : "Operation Mode",
+                                       "format"        : "gint8",
+                                       "public-format" : "QmiPdsOperationMode" },
+                                     { "name"     : "NMEA",
+                                       "format"   : "string",
+                                       "max-size" : "200" } ] },
+                   { "name"          : "Position Session Status",
+                     "id"            : "0x12",
+                     "mandatory"     : "no",
+                     "type"          : "TLV",
+                     "format"        : "guint8",
+                     "public-format" : "QmiPdsPositionSessionStatus" } ] }
 
 ]
