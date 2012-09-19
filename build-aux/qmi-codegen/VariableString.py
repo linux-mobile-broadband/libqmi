@@ -53,10 +53,13 @@ class VariableString(Variable):
             # length prefix
             if 'type' in dictionary and dictionary['type'] == 'TLV':
                 self.length_prefix_size = 0
-            elif 'length-prefix-size' in dictionary:
-                self.length_prefix_size = dictionary['length-prefix-size']
-                if self.length_prefix_size not in ['8', '16']:
-                    raise ValueError('Invalid length prefix size %s: not 8 or 16' % self.length_prefix_size)
+            elif 'size-prefix-format' in dictionary:
+                if dictionary['size-prefix-format'] == 'guint8':
+                    self.length_prefix_size = 8
+                elif dictionary['size-prefix-format'] == 'guint16':
+                    self.length_prefix_size = 16
+                else:
+                    raise ValueError('Invalid size prefix format (%s): not guint8 or guint16' % dictionary['size-prefix-format'])
             else:
                 # Default to UINT8
                 self.length_prefix_size = 8
