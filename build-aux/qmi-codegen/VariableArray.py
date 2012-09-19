@@ -376,5 +376,6 @@ class VariableArray(Variable):
                          'variable_name' : variable_name }
 
         template = (
-            '${lp}g_array_unref (${variable_name});\n')
+            '${lp}if (${variable_name})\n'
+            '${lp}    g_array_unref (${variable_name});\n')
         return string.Template(template).substitute(translations)
