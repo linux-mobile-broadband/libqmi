@@ -51,11 +51,12 @@ class VariableArray(Variable):
             self.array_element = VariableFactory.create_variable(dictionary['array-element'], '')
 
         # Load variable type for the array size prefix
-        if 'array-size' in dictionary:
-            # We do NOT allow 64-bit types as array sizes
-            if dictionary['array-size'] == 'guint64' or dictionary['array-size'] == 'gint64':
-                raise RuntimeError('Array size should not be given with a 64-bit value (unsupported)')
-            self.array_size_element = VariableFactory.create_variable(dictionary['array-size'], '')
+        if 'size-prefix-format' in dictionary:
+            # We do NOT allow 64-bit types as array sizes (GArray won't support them)
+            if dictionary['size-prefix-format'] not in [ 'guint8', 'guint16', 'guint32' ]:
+                raise ValueError('Invalid size prefix format (%s): not guint8 or guint16 or guint32' % dictionary['size-prefix-format'])
+            default_array_size = { 'format' : dictionary['size-prefix-format'] }
+            self.array_size_element = VariableFactory.create_variable(default_array_size, '')
         elif 'fixed-size' in dictionary:
             # fixed-size arrays have no size element, obviously
             self.fixed_size = dictionary['fixed-size']
