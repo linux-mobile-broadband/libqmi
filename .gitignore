@@ -63,6 +63,7 @@ libqmi-glib/test/.deps
 libqmi-glib/test/Makefile
 libqmi-glib/test/Makefile.in
 libqmi-glib/test/test-utils
+libqmi-glib/test/test-message
 
 cli/.deps
 cli/.libs
