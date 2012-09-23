@@ -42,7 +42,7 @@ PKG_CHECK_MODULES(QMICLI,
 AC_SUBST(QMICLI_CFLAGS)
 AC_SUBST(QMICLI_LIBS)
 
-GLIB_MKENUMS=`pkg-config --variable=glib_mkenums glib-2.0`
+GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
 
 dnl Documentation
