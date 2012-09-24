@@ -570,14 +570,15 @@ qmi_message_new_from_raw (const guint8 *raw,
     QmiMessage *self;
     gsize message_len;
 
-    /* If we didn't even read the header, leave */
+    /* If we didn't even read the QMUX header (comes after the 1-byte marker),
+     * leave */
     if (raw_len < (sizeof (struct qmux) + 1))
         return NULL;
 
-    /* We need to have read the length reported by the header.
-     * Otherwise, return. */
-    message_len = le16toh (((struct full_message *)raw)->qmux.length);
-    if (raw_len < (message_len - 1))
+    /* We need to have read the length reported by the QMUX header (plus the
+     * initial 1-byte marker) */
+    message_len = GUINT16_FROM_LE (((struct full_message *)raw)->qmux.length);
+    if (raw_len < (message_len + 1))
         return NULL;
 
     /* Ok, so we should have all the data available already */
