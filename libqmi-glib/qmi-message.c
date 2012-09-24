@@ -136,22 +136,14 @@ get_qmi_flags (QmiMessage *self)
     return self->buf->qmi.service.header.flags;
 }
 
-QmiService
-qmi_message_get_service (QmiMessage *self)
-{
-    g_return_val_if_fail (self != NULL, QMI_SERVICE_UNKNOWN);
-
-    return (QmiService)self->buf->qmux.service;
-}
-
-guint8
-qmi_message_get_client_id (QmiMessage *self)
-{
-    g_return_val_if_fail (self != NULL, 0);
-
-    return self->buf->qmux.client;
-}
-
+/**
+ * qmi_message_is_response:
+ * @self: a #QmiMessage.
+ *
+ * Checks whether the given #QmiMessage is a response.
+ *
+ * Returns: #TRUE if @self is a response message, #FALSE otherwise.
+ */
 gboolean
 qmi_message_is_response (QmiMessage *self)
 {
@@ -166,6 +158,14 @@ qmi_message_is_response (QmiMessage *self)
     return FALSE;
 }
 
+/**
+ * qmi_message_is_indication:
+ * @self: a #QmiMessage.
+ *
+ * Checks whether the given #QmiMessage is an indication.
+ *
+ * Returns: #TRUE if @self is an indication message, #FALSE otherwise.
+ */
 gboolean
 qmi_message_is_indication (QmiMessage *self)
 {
@@ -180,6 +180,46 @@ qmi_message_is_indication (QmiMessage *self)
     return FALSE;
 }
 
+/**
+ * qmi_message_get_service:
+ * @self: a #QmiMessage.
+ *
+ * Gets the service corresponding to the given #QmiMessage.
+ *
+ * Returns: a #QmiService.
+ */
+QmiService
+qmi_message_get_service (QmiMessage *self)
+{
+    g_return_val_if_fail (self != NULL, QMI_SERVICE_UNKNOWN);
+
+    return (QmiService)self->buf->qmux.service;
+}
+
+/**
+ * qmi_message_get_client_id:
+ * @self: a #QmiMessage.
+ *
+ * Gets the client ID of the message.
+ *
+ * Returns: the client ID.
+ */
+guint8
+qmi_message_get_client_id (QmiMessage *self)
+{
+    g_return_val_if_fail (self != NULL, 0);
+
+    return self->buf->qmux.client;
+}
+
+/**
+ * qmi_message_get_transaction_id:
+ * @self: a #QmiMessage.
+ *
+ * Gets the transaction ID of the message.
+ *
+ * Returns: the transaction ID.
+ */
 guint16
 qmi_message_get_transaction_id (QmiMessage *self)
 {
@@ -192,6 +232,14 @@ qmi_message_get_transaction_id (QmiMessage *self)
     return GUINT16_FROM_LE (self->buf->qmi.service.header.transaction);
 }
 
+/**
+ * qmi_message_get_message_id:
+ * @self: a #QmiMessage.
+ *
+ * Gets the ID of the message.
+ *
+ * Returns: the ID.
+ */
 guint16
 qmi_message_get_message_id (QmiMessage *self)
 {
@@ -203,6 +251,14 @@ qmi_message_get_message_id (QmiMessage *self)
     return GUINT16_FROM_LE (self->buf->qmi.service.header.message);
 }
 
+/**
+ * qmi_message_get_length:
+ * @self: a #QmiMessage.
+ *
+ * Gets the length of the raw data corresponding to the given #QmiMessage.
+ *
+ * Returns: the length of the raw data.
+ */
 gsize
 qmi_message_get_length (QmiMessage *self)
 {
@@ -274,6 +330,10 @@ qmi_tlv_next (QmiMessage *self,
 }
 
 /**
+ * qmi_message_check:
+ * @self: a #QmiMessage.
+ * @error: return location for error or %NULL.
+ *
  * Checks the validity of a QMI message.
  *
  * In particular, checks:
@@ -282,7 +342,7 @@ qmi_tlv_next (QmiMessage *self,
  *    field are all consistent.
  * 3. The TLVs in the message fit exactly in the payload size.
  *
- * Returns non-zero if the message is valid, zero if invalid.
+ * Returns: #TRUE if the message is valid, #FALSE otherwise.
  */
 gboolean
 qmi_message_check (QmiMessage *self,
@@ -292,8 +352,8 @@ qmi_message_check (QmiMessage *self,
     guint8 *end;
     struct tlv *tlv;
 
-    g_assert (self != NULL);
-    g_assert (self->buf != NULL);
+    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_val_if_fail (self->buf != NULL, FALSE);
 
     if (self->buf->marker != QMI_MESSAGE_QMUX_MARKER) {
         g_set_error (error,
@@ -474,19 +534,33 @@ qmi_message_unref (QmiMessage *self)
     }
 }
 
-gconstpointer
+/**
+ * qmi_message_get_raw:
+ * @self: a #QmiMessage.
+ * @len: (out): return location for the size of the output buffer.
+ * @error: return location for error or %NULL.
+ *
+ * Gets the raw data buffer of the #QmiMessage.
+ *
+ * Returns: (transfer none): The raw data buffer, or #NULL if @error is set.
+ */
+const guint8 *
 qmi_message_get_raw (QmiMessage *self,
-                     gsize *len,
+                     gsize *length,
                      GError **error)
 {
-    g_assert (self != NULL);
-    g_assert (len != NULL);
+    g_return_val_if_fail (self != NULL, NULL);
+    g_return_val_if_fail (length != NULL, NULL);
 
+    /* QmiMessages are built either from a valid raw data buffer or from scratch
+     * with qmi_message_new() and adding the TLVs afterwards with
+     * qmi_message_add_raw_tlv(). In both cases, we must always have valid
+     * messages. TODO: remove this */
     if (!qmi_message_check (self, error))
         return NULL;
 
-    *len = self->len;
-    return self->buf;
+    *length = self->len;
+    return (guint8 *)(self->buf);
 }
 
 /**
@@ -724,6 +798,18 @@ get_generic_printable (QmiMessage *self,
     return g_string_free (printable, FALSE);
 }
 
+/**
+ * qmi_message_get_printable:
+ * @self: a #QmiMessage.
+ * @line_prefix: prefix string to use in each new generated line.
+ *
+ * Gets a printable string with the contents of the whole QMI message.
+ *
+ * If known, the printable string will contain translated TLV values as well as the raw
+ * data buffer contents.
+ *
+ * Returns: (transfer full): a newly allocated string, which should be freed with g_free().
+ */
 gchar *
 qmi_message_get_printable (QmiMessage *self,
                            const gchar *line_prefix)
@@ -731,6 +817,9 @@ qmi_message_get_printable (QmiMessage *self,
     GString *printable;
     gchar *qmi_flags_str;
     gchar *contents;
+
+    g_return_val_if_fail (self != NULL, NULL);
+    g_return_val_if_fail (line_prefix != NULL, NULL);
 
     if (!qmi_message_check (self, NULL))
         return NULL;
@@ -799,6 +888,16 @@ qmi_message_get_printable (QmiMessage *self,
     return g_string_free (printable, FALSE);
 }
 
+/**
+ * qmi_message_get_version_introduced:
+ * @self: a #QmiMessage.
+ * @major: (out) return location for the major version.
+ * @minor: (out) return location for the minor version.
+ *
+ * Gets, if known, the service version in which the given message was first introduced.
+ *
+ * Returns: #TRUE if @major and @minor are set, #FALSE otherwise.
+ */
 gboolean
 qmi_message_get_version_introduced (QmiMessage *self,
                                     guint *major,

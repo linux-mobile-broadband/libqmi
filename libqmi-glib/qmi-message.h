@@ -72,12 +72,6 @@ gboolean qmi_message_add_raw_tlv (QmiMessage *self,
                                   gsize length,
                                   GError **error);
 
-gconstpointer qmi_message_get_raw (QmiMessage *self,
-                                   gsize *length,
-                                   GError **error);
-
-gsize   qmi_message_get_length      (QmiMessage *self);
-
 gchar *qmi_message_get_printable (QmiMessage *self,
                                   const gchar *line_prefix);
 
@@ -90,13 +84,16 @@ gchar *qmi_message_get_tlv_printable (QmiMessage *self,
 gboolean qmi_message_check (QmiMessage *self,
                             GError **error);
 
-gboolean qmi_message_is_response   (QmiMessage *self);
-gboolean qmi_message_is_indication (QmiMessage *self);
-
-guint16    qmi_message_get_message_id     (QmiMessage *self);
-QmiService qmi_message_get_service        (QmiMessage *self);
-guint8     qmi_message_get_client_id      (QmiMessage *self);
-guint16    qmi_message_get_transaction_id (QmiMessage *self);
+gboolean      qmi_message_is_response        (QmiMessage *self);
+gboolean      qmi_message_is_indication      (QmiMessage *self);
+QmiService    qmi_message_get_service        (QmiMessage *self);
+guint8        qmi_message_get_client_id      (QmiMessage *self);
+guint16       qmi_message_get_transaction_id (QmiMessage *self);
+guint16       qmi_message_get_message_id     (QmiMessage *self);
+gsize         qmi_message_get_length         (QmiMessage *self);
+const guint8 *qmi_message_get_raw            (QmiMessage *self,
+                                              gsize *length,
+                                              GError **error);
 
 gboolean   qmi_message_get_version_introduced (QmiMessage *self,
                                                guint *major,
