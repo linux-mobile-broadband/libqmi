@@ -93,47 +93,38 @@ struct full_message {
     } qmi;
 } PACKED;
 
-struct _QmiMessage {
-    /* the ref count */
-    volatile gint ref_count;
-
-    /* The buffer and its allocated size */
-    gsize len;
-    struct full_message *buf;
-};
-
 static inline gboolean
 message_is_control (QmiMessage *self)
 {
-    return self->buf->qmux.service == QMI_SERVICE_CTL;
+    return ((struct full_message *)(self->data))->qmux.service == QMI_SERVICE_CTL;
 }
 
 static inline guint16
 get_qmux_length (QmiMessage *self)
 {
-    return GUINT16_FROM_LE (self->buf->qmux.length);
+    return GUINT16_FROM_LE (((struct full_message *)(self->data))->qmux.length);
 }
 
 static inline void
 set_qmux_length (QmiMessage *self,
                  guint16 length)
 {
-    self->buf->qmux.length = GUINT16_TO_LE (length);
+    ((struct full_message *)(self->data))->qmux.length = GUINT16_TO_LE (length);
 }
 
 static inline guint8
 get_qmux_flags (QmiMessage *self)
 {
-    return self->buf->qmux.flags;
+    return ((struct full_message *)(self->data))->qmux.flags;
 }
 
 static inline guint8
 get_qmi_flags (QmiMessage *self)
 {
     if (message_is_control (self))
-        return self->buf->qmi.control.header.flags;
+        return ((struct full_message *)(self->data))->qmi.control.header.flags;
 
-    return self->buf->qmi.service.header.flags;
+    return ((struct full_message *)(self->data))->qmi.service.header.flags;
 }
 
 /**
@@ -148,10 +139,10 @@ gboolean
 qmi_message_is_response (QmiMessage *self)
 {
     if (message_is_control (self)) {
-        if (self->buf->qmi.control.header.flags & QMI_CTL_FLAG_RESPONSE)
+        if (((struct full_message *)(self->data))->qmi.control.header.flags & QMI_CTL_FLAG_RESPONSE)
             return TRUE;
     } else {
-        if (self->buf->qmi.service.header.flags & QMI_SERVICE_FLAG_RESPONSE)
+        if (((struct full_message *)(self->data))->qmi.service.header.flags & QMI_SERVICE_FLAG_RESPONSE)
             return TRUE;
     }
 
@@ -170,10 +161,10 @@ gboolean
 qmi_message_is_indication (QmiMessage *self)
 {
     if (message_is_control (self)) {
-        if (self->buf->qmi.control.header.flags & QMI_CTL_FLAG_INDICATION)
+        if (((struct full_message *)(self->data))->qmi.control.header.flags & QMI_CTL_FLAG_INDICATION)
             return TRUE;
     } else {
-        if (self->buf->qmi.service.header.flags & QMI_SERVICE_FLAG_INDICATION)
+        if (((struct full_message *)(self->data))->qmi.service.header.flags & QMI_SERVICE_FLAG_INDICATION)
             return TRUE;
     }
 
@@ -193,7 +184,7 @@ qmi_message_get_service (QmiMessage *self)
 {
     g_return_val_if_fail (self != NULL, QMI_SERVICE_UNKNOWN);
 
-    return (QmiService)self->buf->qmux.service;
+    return (QmiService)((struct full_message *)(self->data))->qmux.service;
 }
 
 /**
@@ -209,7 +200,7 @@ qmi_message_get_client_id (QmiMessage *self)
 {
     g_return_val_if_fail (self != NULL, 0);
 
-    return self->buf->qmux.client;
+    return ((struct full_message *)(self->data))->qmux.client;
 }
 
 /**
@@ -227,9 +218,9 @@ qmi_message_get_transaction_id (QmiMessage *self)
 
     if (message_is_control (self))
         /* note: only 1 byte for transaction in CTL message */
-        return (guint16)self->buf->qmi.control.header.transaction;
+        return (guint16)((struct full_message *)(self->data))->qmi.control.header.transaction;
 
-    return GUINT16_FROM_LE (self->buf->qmi.service.header.transaction);
+    return GUINT16_FROM_LE (((struct full_message *)(self->data))->qmi.service.header.transaction);
 }
 
 /**
@@ -246,9 +237,9 @@ qmi_message_get_message_id (QmiMessage *self)
     g_return_val_if_fail (self != NULL, 0);
 
     if (message_is_control (self))
-        return GUINT16_FROM_LE (self->buf->qmi.control.header.message);
+        return GUINT16_FROM_LE (((struct full_message *)(self->data))->qmi.control.header.message);
 
-    return GUINT16_FROM_LE (self->buf->qmi.service.header.message);
+    return GUINT16_FROM_LE (((struct full_message *)(self->data))->qmi.service.header.message);
 }
 
 /**
@@ -271,9 +262,9 @@ static inline guint16
 get_all_tlvs_length (QmiMessage *self)
 {
     if (message_is_control (self))
-        return GUINT16_FROM_LE (self->buf->qmi.control.header.tlv_length);
+        return GUINT16_FROM_LE (((struct full_message *)(self->data))->qmi.control.header.tlv_length);
 
-    return GUINT16_FROM_LE (self->buf->qmi.service.header.tlv_length);
+    return GUINT16_FROM_LE (((struct full_message *)(self->data))->qmi.service.header.tlv_length);
 }
 
 static inline void
@@ -281,24 +272,24 @@ set_all_tlvs_length (QmiMessage *self,
                      guint16 length)
 {
     if (message_is_control (self))
-        self->buf->qmi.control.header.tlv_length = GUINT16_TO_LE (length);
+        ((struct full_message *)(self->data))->qmi.control.header.tlv_length = GUINT16_TO_LE (length);
     else
-        self->buf->qmi.service.header.tlv_length = GUINT16_TO_LE (length);
+        ((struct full_message *)(self->data))->qmi.service.header.tlv_length = GUINT16_TO_LE (length);
 }
 
 static inline struct tlv *
 qmi_tlv (QmiMessage *self)
 {
     if (message_is_control (self))
-        return self->buf->qmi.control.tlv;
+        return ((struct full_message *)(self->data))->qmi.control.tlv;
 
-    return self->buf->qmi.service.tlv;
+    return ((struct full_message *)(self->data))->qmi.service.tlv;
 }
 
 static inline guint8 *
 qmi_end (QmiMessage *self)
 {
-    return (guint8 *) self->buf + self->len;
+    return (guint8 *) self->data + self->len;
 }
 
 static inline struct tlv *
@@ -353,9 +344,8 @@ qmi_message_check (QmiMessage *self,
     struct tlv *tlv;
 
     g_return_val_if_fail (self != NULL, FALSE);
-    g_return_val_if_fail (self->buf != NULL, FALSE);
 
-    if (self->buf->marker != QMI_MESSAGE_QMUX_MARKER) {
+    if (((struct full_message *)(self->data))->marker != QMI_MESSAGE_QMUX_MARKER) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
@@ -380,7 +370,7 @@ qmi_message_check (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "QMUX length and buffer length don't match (%u != %" G_GSIZE_FORMAT ")",
+                     "QMUX length and buffer length don't match (%u != %u)",
                      get_qmux_length (self), self->len - 1);
         return FALSE;
     }
@@ -456,47 +446,47 @@ qmi_message_new (QmiService service,
                  guint16 transaction_id,
                  guint16 message_id)
 {
-    QmiMessage *self;
+    GByteArray *self;
+    struct full_message *buffer;
+    gsize buffer_len;
 
     /* Transaction ID in the control service is 8bit only */
     g_return_val_if_fail ((service != QMI_SERVICE_CTL || transaction_id <= G_MAXUINT8),
                           NULL);
 
-    self = g_slice_new (QmiMessage);
-    self->ref_count = 1;
+    /* Create array with enough size for the QMUX marker, the QMUX header and
+     * the QMI header */
+    buffer_len = (1 +
+                  sizeof (struct qmux) +
+                  (service == QMI_SERVICE_CTL ? sizeof (struct control_header) : sizeof (struct service_header)));
+    buffer = g_malloc (buffer_len);
 
-    self->len = 1 + sizeof (struct qmux) + (service == QMI_SERVICE_CTL ?
-                                            sizeof (struct control_header) :
-                                            sizeof (struct service_header));
-
-    /* Cannot allocate buffer and message together, as that would require
-     * re-allocating the memory chunk when TLVs get added. We cannot lose the
-     * original address of the message object or already existing references
-     * won't work. */
-    self->buf = g_malloc (self->len);
-
-    self->buf->marker = QMI_MESSAGE_QMUX_MARKER;
-    self->buf->qmux.flags = 0;
-    self->buf->qmux.service = service;
-    self->buf->qmux.client = client_id;
-    set_qmux_length (self, self->len - 1);
+    buffer->marker = QMI_MESSAGE_QMUX_MARKER;
+    buffer->qmux.flags = 0;
+    buffer->qmux.service = service;
+    buffer->qmux.client = client_id;
 
     if (service == QMI_SERVICE_CTL) {
-        self->buf->qmi.control.header.flags = 0;
-        self->buf->qmi.control.header.transaction = (guint8)transaction_id;
-        self->buf->qmi.control.header.message = GUINT16_TO_LE (message_id);
+        buffer->qmi.control.header.flags = 0;
+        buffer->qmi.control.header.transaction = (guint8)transaction_id;
+        buffer->qmi.control.header.message = GUINT16_TO_LE (message_id);
     } else {
-        self->buf->qmi.service.header.flags = 0;
-        self->buf->qmi.service.header.transaction = GUINT16_TO_LE (transaction_id);
-        self->buf->qmi.service.header.message = GUINT16_TO_LE (message_id);
+        buffer->qmi.service.header.flags = 0;
+        buffer->qmi.service.header.transaction = GUINT16_TO_LE (transaction_id);
+        buffer->qmi.service.header.message = GUINT16_TO_LE (message_id);
     }
 
+    /* Create the GByteArray */
+    self = g_byte_array_new_take ((guint8 *)buffer, buffer_len);
+
+    /* Update length fields. */
+    set_qmux_length (self, buffer_len - 1); /* QMUX marker not included in length */
     set_all_tlvs_length (self, 0);
 
     /* We shouldn't create invalid empty messages */
     g_assert (qmi_message_check (self, NULL));
 
-    return self;
+    return (QmiMessage *)self;
 }
 
 /**
@@ -512,8 +502,7 @@ qmi_message_ref (QmiMessage *self)
 {
     g_return_val_if_fail (self != NULL, NULL);
 
-    g_atomic_int_inc (&self->ref_count);
-    return self;
+    return (QmiMessage *)g_byte_array_ref (self);
 }
 
 /**
@@ -528,10 +517,7 @@ qmi_message_unref (QmiMessage *self)
 {
     g_return_if_fail (self != NULL);
 
-    if (g_atomic_int_dec_and_test (&self->ref_count)) {
-        g_free (self->buf);
-        g_slice_free (QmiMessage, self);
-    }
+    g_byte_array_unref (self);
 }
 
 /**
@@ -560,7 +546,7 @@ qmi_message_get_raw (QmiMessage *self,
         return NULL;
 
     *length = self->len;
-    return (guint8 *)(self->buf);
+    return self->data;
 }
 
 /**
@@ -665,8 +651,7 @@ qmi_message_add_raw_tlv (QmiMessage *self,
     }
 
     /* Resize buffer. */
-    self->len += tlv_len;
-    self->buf = g_realloc (self->buf, self->len);
+    g_byte_array_set_size (self, self->len + tlv_len);
 
     /* Fill in new TLV. */
     tlv = (struct tlv *)(qmi_end (self) - tlv_len);
@@ -702,7 +687,7 @@ QmiMessage *
 qmi_message_new_from_raw (GByteArray *raw,
                           GError **error)
 {
-    QmiMessage *self;
+    GByteArray *self;
     gsize message_len;
 
     g_return_val_if_fail (raw != NULL, NULL);
@@ -719,11 +704,8 @@ qmi_message_new_from_raw (GByteArray *raw,
         return NULL;
 
     /* Ok, so we should have all the data available already */
-    self = g_slice_new (QmiMessage);
-    self->ref_count = 1;
-    self->len = message_len + 1;
-    self->buf = g_malloc (self->len);
-    memcpy (self->buf, raw->data, self->len);
+    self = g_byte_array_sized_new (message_len + 1);
+    g_byte_array_prepend (self, raw->data, message_len + 1);
 
     /* We got a complete QMI message, remove from input buffer */
     g_byte_array_remove_range (raw, 0, self->len);
@@ -735,7 +717,7 @@ qmi_message_new_from_raw (GByteArray *raw,
         return NULL;
     }
 
-    return self;
+    return (QmiMessage *)self;
 }
 
 /**

@@ -43,7 +43,7 @@ G_BEGIN_DECLS
  *
  * An opaque type representing a QMI message.
  */
-typedef struct _QmiMessage QmiMessage;
+typedef GByteArray QmiMessage;
 
 /*****************************************************************************/
 /* QMI Message life cycle */
