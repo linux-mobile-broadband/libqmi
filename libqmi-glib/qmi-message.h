@@ -37,16 +37,22 @@
 G_BEGIN_DECLS
 
 #define QMI_MESSAGE_QMUX_MARKER (guint8)0x01
+
+/**
+ * QmiMessage:
+ *
+ * An opaque type representing a QMI message.
+ */
 typedef struct _QmiMessage QmiMessage;
 
-QmiMessage *qmi_message_new          (QmiService service,
-                                      guint8 client_id,
-                                      guint16 transaction_id,
-                                      guint16 message_id);
-QmiMessage *qmi_message_new_from_raw (const guint8 *raw,
-                                      gsize raw_len);
-QmiMessage *qmi_message_ref          (QmiMessage *self);
-void qmi_message_unref               (QmiMessage *self);
+QmiMessage   *qmi_message_new          (QmiService service,
+                                        guint8 client_id,
+                                        guint16 transaction_id,
+                                        guint16 message_id);
+QmiMessage   *qmi_message_new_from_raw (const guint8 *raw,
+                                        gsize length);
+QmiMessage   *qmi_message_ref          (QmiMessage *self);
+void          qmi_message_unref        (QmiMessage *self);
 
 typedef void (* QmiMessageForeachRawTlvFn) (guint8 type,
                                             const guint8 *value,

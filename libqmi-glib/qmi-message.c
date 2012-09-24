@@ -94,10 +94,12 @@ struct full_message {
 } PACKED;
 
 struct _QmiMessage {
-    /* TODO: avoid memory split here */
-    struct full_message *buf; /* buf allocated using g_malloc, not g_slice_alloc */
-    gsize len; /* cached size of *buf; not part of message. */
-    volatile gint ref_count; /* the ref count */
+    /* the ref count */
+    volatile gint ref_count;
+
+    /* The buffer and its allocated size */
+    gsize len;
+    struct full_message *buf;
 };
 
 static inline gboolean
@@ -374,6 +376,20 @@ qmi_message_check (QmiMessage *self,
     return TRUE;
 }
 
+/**
+ * qmi_message_new:
+ * @service: a #QmiService
+ * @client_id: client ID of the originating control point.
+ * @transaction_id: transaction ID.
+ * @message_id: message ID.
+ *
+ * Create a new #QmiMessage with the specified parameters.
+ *
+ * Note that @transaction_id must be less than #G_MAXUINT8 if @service is
+ * #QMI_SERVICE_CTL.
+ *
+ * Returns: (transfer full): a newly created #QmiMessage. The returned value should be freed with qmi_message_unref().
+ */
 QmiMessage *
 qmi_message_new (QmiService service,
                  guint8 client_id,
@@ -383,8 +399,8 @@ qmi_message_new (QmiService service,
     QmiMessage *self;
 
     /* Transaction ID in the control service is 8bit only */
-    g_assert (service != QMI_SERVICE_CTL ||
-              transaction_id <= G_MAXUINT8);
+    g_return_val_if_fail ((service != QMI_SERVICE_CTL || transaction_id <= G_MAXUINT8),
+                          NULL);
 
     self = g_slice_new (QmiMessage);
     self->ref_count = 1;
@@ -393,7 +409,10 @@ qmi_message_new (QmiService service,
                                             sizeof (struct control_header) :
                                             sizeof (struct service_header));
 
-    /* TODO: Allocate both the message and the buffer together */
+    /* Cannot allocate buffer and message together, as that would require
+     * re-allocating the memory chunk when TLVs get added. We cannot lose the
+     * original address of the message object or already existing references
+     * won't work. */
     self->buf = g_malloc (self->len);
 
     self->buf->marker = QMI_MESSAGE_QMUX_MARKER;
@@ -405,33 +424,49 @@ qmi_message_new (QmiService service,
     if (service == QMI_SERVICE_CTL) {
         self->buf->qmi.control.header.flags = 0;
         self->buf->qmi.control.header.transaction = (guint8)transaction_id;
-        self->buf->qmi.control.header.message = htole16 (message_id);
+        self->buf->qmi.control.header.message = GUINT16_TO_LE (message_id);
     } else {
         self->buf->qmi.service.header.flags = 0;
-        self->buf->qmi.service.header.transaction = htole16 (transaction_id);
-        self->buf->qmi.service.header.message = htole16 (message_id);
+        self->buf->qmi.service.header.transaction = GUINT16_TO_LE (transaction_id);
+        self->buf->qmi.service.header.message = GUINT16_TO_LE (message_id);
     }
 
     set_all_tlvs_length (self, 0);
 
+    /* We shouldn't create invalid empty messages */
     g_assert (qmi_message_check (self, NULL));
 
     return self;
 }
 
+/**
+ * qmi_message_ref:
+ * @self: a #QmiMessage.
+ *
+ * Atomically increments the reference count of @self by one.
+ *
+ * Returns: (transfer full) the new reference to @self.
+ */
 QmiMessage *
 qmi_message_ref (QmiMessage *self)
 {
-    g_assert (self != NULL);
+    g_return_val_if_fail (self != NULL, NULL);
 
     g_atomic_int_inc (&self->ref_count);
     return self;
 }
 
+/**
+ * qmi_message_unref:
+ * @self: a #QmiMessage.
+ *
+ * Atomically decrements the reference count of @self by one.
+ * If the reference count drops to 0, @self is completely disposed.
+ */
 void
 qmi_message_unref (QmiMessage *self)
 {
-    g_assert (self != NULL);
+    g_return_if_fail (self != NULL);
 
     if (g_atomic_int_dec_and_test (&self->ref_count)) {
         g_free (self->buf);
@@ -578,22 +613,33 @@ qmi_message_add_raw_tlv (QmiMessage *self,
     return TRUE;
 }
 
+/**
+ * qmi_message_new_from_raw:
+ * @raw: raw data buffer.
+ * @length: length of the raw data buffer.
+ *
+ * Create a new #QmiMessage from the given raw data buffer.
+ *
+ * Returns: (transfer full): a newly created #QmiMessage or #NULL if @raw doesn't contain a valid complete QMI message. The returned value should be freed with qmi_message_unref().
+ */
 QmiMessage *
 qmi_message_new_from_raw (const guint8 *raw,
-                          gsize raw_len)
+                          gsize length)
 {
     QmiMessage *self;
     gsize message_len;
 
+    g_return_val_if_fail (raw != NULL, NULL);
+
     /* If we didn't even read the QMUX header (comes after the 1-byte marker),
      * leave */
-    if (raw_len < (sizeof (struct qmux) + 1))
+    if (length < (sizeof (struct qmux) + 1))
         return NULL;
 
     /* We need to have read the length reported by the QMUX header (plus the
      * initial 1-byte marker) */
     message_len = GUINT16_FROM_LE (((struct full_message *)raw)->qmux.length);
-    if (raw_len < (message_len + 1))
+    if (length < (message_len + 1))
         return NULL;
 
     /* Ok, so we should have all the data available already */
