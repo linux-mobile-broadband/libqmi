@@ -1055,17 +1055,6 @@ static void
 process_message (QmiDevice *self,
                  QmiMessage *message)
 {
-    GError *error = NULL;
-
-    /* Ensure the read message is valid */
-    if (!qmi_message_check (message, &error)) {
-        g_warning ("[%s] Invalid QMI message received: %s",
-                   self->priv->path_display,
-                   error->message);
-        g_error_free (error);
-        return;
-    }
-
 #ifdef MESSAGE_ENABLE_TRACE
     {
         gchar *printable;
@@ -1125,6 +1114,7 @@ static void
 parse_response (QmiDevice *self)
 {
     do {
+        GError *error = NULL;
         QmiMessage *message;
 
         /* Every message received must start with the QMUX marker.
@@ -1139,21 +1129,22 @@ parse_response (QmiDevice *self)
             return;
         }
 
-        message = qmi_message_new_from_raw (self->priv->response->data,
-                                            self->priv->response->len);
-        if (!message)
-            /* More data we need */
-            return;
+        message = qmi_message_new_from_raw (self->priv->response, &error);
+        if (!message) {
+            if (!error)
+                /* More data we need */
+                return;
 
-        /* Remove the read data from the response buffer */
-        g_byte_array_remove_range (self->priv->response,
-                                   0,
-                                   qmi_message_get_length (message));
-
-        /* Play with the received message */
-        process_message (self, message);
-
-        qmi_message_unref (message);
+            /* Warn about the issue */
+            g_warning ("[%s] Invalid QMI message received: '%s'",
+                       self->priv->path_display,
+                       error->message);
+            g_error_free (error);
+        } else {
+            /* Play with the received message */
+            process_message (self, message);
+            qmi_message_unref (message);
+        }
     } while (self->priv->response->len > 0);
 }
 

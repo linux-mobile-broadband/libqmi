@@ -689,16 +689,18 @@ qmi_message_add_raw_tlv (QmiMessage *self,
 
 /**
  * qmi_message_new_from_raw:
- * @raw: raw data buffer.
- * @length: length of the raw data buffer.
+ * @raw: (inout): raw data buffer.
+ * @error: return location for error or %NULL.
  *
  * Create a new #QmiMessage from the given raw data buffer.
  *
- * Returns: (transfer full): a newly created #QmiMessage or #NULL if @raw doesn't contain a valid complete QMI message. The returned value should be freed with qmi_message_unref().
+ * Whenever a complete QMI message is read, its raw data gets removed from the @raw buffer.
+ *
+ * Returns: (transfer full): a newly created #QmiMessage, which should be freed with qmi_message_unref(). If @raw doesn't contain a complete QMI message #NULL is returned. If there is a complete QMI message but it appears not to be valid, #NULL is returned and @error is set.
  */
 QmiMessage *
-qmi_message_new_from_raw (const guint8 *raw,
-                          gsize length)
+qmi_message_new_from_raw (GByteArray *raw,
+                          GError **error)
 {
     QmiMessage *self;
     gsize message_len;
@@ -707,13 +709,13 @@ qmi_message_new_from_raw (const guint8 *raw,
 
     /* If we didn't even read the QMUX header (comes after the 1-byte marker),
      * leave */
-    if (length < (sizeof (struct qmux) + 1))
+    if (raw->len < (sizeof (struct qmux) + 1))
         return NULL;
 
     /* We need to have read the length reported by the QMUX header (plus the
      * initial 1-byte marker) */
-    message_len = GUINT16_FROM_LE (((struct full_message *)raw)->qmux.length);
-    if (length < (message_len + 1))
+    message_len = GUINT16_FROM_LE (((struct full_message *)raw->data)->qmux.length);
+    if (raw->len < (message_len + 1))
         return NULL;
 
     /* Ok, so we should have all the data available already */
@@ -721,9 +723,17 @@ qmi_message_new_from_raw (const guint8 *raw,
     self->ref_count = 1;
     self->len = message_len + 1;
     self->buf = g_malloc (self->len);
-    memcpy (self->buf, raw, self->len);
+    memcpy (self->buf, raw->data, self->len);
 
-    /* NOTE: we don't check if the message is valid here, let the caller do it */
+    /* We got a complete QMI message, remove from input buffer */
+    g_byte_array_remove_range (raw, 0, self->len);
+
+    /* Check input message validity as soon as we create the QmiMessage */
+    if (!qmi_message_check (self, error)) {
+        /* Yes, we lose the whole message here */
+        qmi_message_unref (self);
+        return NULL;
+    }
 
     return self;
 }

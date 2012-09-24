@@ -52,8 +52,8 @@ QmiMessage   *qmi_message_new          (QmiService service,
                                         guint8 client_id,
                                         guint16 transaction_id,
                                         guint16 message_id);
-QmiMessage   *qmi_message_new_from_raw (const guint8 *raw,
-                                        gsize length);
+QmiMessage   *qmi_message_new_from_raw (GByteArray *raw,
+                                        GError **error);
 QmiMessage   *qmi_message_ref          (QmiMessage *self);
 void          qmi_message_unref        (QmiMessage *self);
 
