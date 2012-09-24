@@ -195,7 +195,9 @@ def read_json_file(path):
         stripped = line.strip()
         if stripped.startswith('//'):
             # Skip this line
-            pass
+            # We add an empty line instead so that errors when parsing the JSON
+            # report the proper line number
+            out += "\n"
         else:
             out += line
     return out
