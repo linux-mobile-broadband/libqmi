@@ -70,8 +70,6 @@ gconstpointer qmi_message_get_raw (QmiMessage *self,
                                    gsize *length,
                                    GError **error);
 
-guint16 qmi_message_get_qmux_length (QmiMessage *self);
-guint16 qmi_message_get_tlv_length  (QmiMessage *self);
 gsize   qmi_message_get_length      (QmiMessage *self);
 
 gchar *qmi_message_get_printable (QmiMessage *self,
@@ -86,7 +84,6 @@ gchar *qmi_message_get_tlv_printable (QmiMessage *self,
 gboolean qmi_message_check (QmiMessage *self,
                             GError **error);
 
-gboolean qmi_message_is_control    (QmiMessage *self);
 gboolean qmi_message_is_response   (QmiMessage *self);
 gboolean qmi_message_is_indication (QmiMessage *self);
 
@@ -94,8 +91,6 @@ guint16    qmi_message_get_message_id     (QmiMessage *self);
 QmiService qmi_message_get_service        (QmiMessage *self);
 guint8     qmi_message_get_client_id      (QmiMessage *self);
 guint16    qmi_message_get_transaction_id (QmiMessage *self);
-guint8     qmi_message_get_qmux_flags     (QmiMessage *self);
-guint8     qmi_message_get_qmi_flags      (QmiMessage *self);
 
 gboolean   qmi_message_get_version_introduced (QmiMessage *self,
                                                guint *major,
