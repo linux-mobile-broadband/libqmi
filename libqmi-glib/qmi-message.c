@@ -45,6 +45,18 @@
 #include "qmi-wms.h"
 #include "qmi-pds.h"
 
+/**
+ * SECTION:qmi-message
+ * @title: QmiMessage
+ * @short_description: Generic QMI message handling routines
+ *
+ * #QmiMessage is a generic type representing a QMI message of any kind
+ * (request, response, indication) or service (including #QMI_SERVICE_CTL).
+ *
+ * This set of generic routines help in handling these message types, and
+ * allow creating any kind of message with any kind of TLV.
+ **/
+
 #define PACKED __attribute__((packed))
 
 struct qmux {
