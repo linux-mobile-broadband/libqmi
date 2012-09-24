@@ -81,6 +81,15 @@ class VariableStruct(Variable):
 
 
     """
+    Emit helper methods for all types in the struct
+    """
+    def emit_helper_methods(self, hfile, cfile):
+        # Emit for each member
+        for member in self.members:
+            member['object'].emit_helper_methods(hfile, cfile)
+
+
+    """
     Reading the contents of a struct is just about reading each of the struct
     fields one by one.
     """

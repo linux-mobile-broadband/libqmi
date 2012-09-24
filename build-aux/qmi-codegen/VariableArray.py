@@ -91,6 +91,8 @@ class VariableArray(Variable):
     Emits the code to clear the element of the array
     """
     def emit_helper_methods(self, hfile, cfile):
+        self.array_element.emit_helper_methods(hfile, cfile)
+
         # No need for the clear func if no need to dispose the contents
         if self.array_element.needs_dispose == False:
             return
