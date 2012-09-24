@@ -48,13 +48,13 @@ QmiMessage *qmi_message_new_from_raw (const guint8 *raw,
 QmiMessage *qmi_message_ref          (QmiMessage *self);
 void qmi_message_unref               (QmiMessage *self);
 
-typedef void (* QmiMessageForeachTlvFn) (guint8 type,
-                                         gsize length,
-                                         gconstpointer value,
-                                         gpointer user_data);
-void qmi_message_tlv_foreach (QmiMessage *self,
-                              QmiMessageForeachTlvFn callback,
-                              gpointer user_data);
+typedef void (* QmiMessageForeachRawTlvFn) (guint8 type,
+                                            const guint8 *value,
+                                            gsize length,
+                                            gpointer user_data);
+void qmi_message_foreach_raw_tlv (QmiMessage *self,
+                                  QmiMessageForeachRawTlvFn func,
+                                  gpointer user_data);
 
 const guint8 *qmi_message_get_raw_tlv (QmiMessage *self,
                                        guint8 type,

@@ -280,8 +280,8 @@ class Message:
                 'static void\n'
                 '${type}_${underscore}_get_tlv_printable (\n'
                 '    guint8 type,\n'
+                '    const guint8 *value,\n'
                 '    gsize length,\n'
-                '    gconstpointer value,\n'
                 '    struct ${type}_${underscore}_context *ctx)\n'
                 '{\n'
                 '    const gchar *tlv_type_str = NULL;\n'
@@ -388,9 +388,9 @@ class Message:
                 '        ctx.self = self;\n'
                 '        ctx.line_prefix = line_prefix;\n'
                 '        ctx.printable = printable;\n'
-                '        qmi_message_tlv_foreach (self,\n'
-                '                                 (QmiMessageForeachTlvFn)${type}_${underscore}_get_tlv_printable,\n'
-                '                                 &ctx);\n'
+                '        qmi_message_foreach_raw_tlv (self,\n'
+                '                                     (QmiMessageForeachRawTlvFn)${type}_${underscore}_get_tlv_printable,\n'
+                '                                     &ctx);\n'
                 '    }\n')
         template += (
             '\n'

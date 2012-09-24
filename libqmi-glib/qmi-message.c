@@ -491,21 +491,29 @@ qmi_message_get_raw_tlv (QmiMessage *self,
     return NULL;
 }
 
+/**
+ * qmi_message_foreach_raw_tlv:
+ * @self: a #QmiMessage.
+ * @func: the function to call for each TLV.
+ * @user_data: user data to pass to the function.
+ *
+ * Calls the given function for each TLV found within the #QmiMessage.
+ */
 void
-qmi_message_tlv_foreach (QmiMessage *self,
-                         QmiMessageForeachTlvFn callback,
-                         gpointer user_data)
+qmi_message_foreach_raw_tlv (QmiMessage *self,
+                             QmiMessageForeachRawTlvFn func,
+                             gpointer user_data)
 {
     struct tlv *tlv;
 
-    g_assert (self != NULL);
-    g_assert (callback != NULL);
+    g_return_if_fail (self != NULL);
+    g_return_if_fail (func != NULL);
 
     for (tlv = qmi_tlv_first (self); tlv; tlv = qmi_tlv_next (self, tlv)) {
-        callback (tlv->type,
-                  (gsize)(le16toh (tlv->length)),
-                  (gconstpointer)tlv->value,
-                  user_data);
+        func (tlv->type,
+              (const guint8 *)tlv->value,
+              (gsize)(GUINT16_FROM_LE (tlv->length)),
+              user_data);
     }
 }
 
