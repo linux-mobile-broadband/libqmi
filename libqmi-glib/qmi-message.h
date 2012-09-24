@@ -80,8 +80,8 @@ gchar *qmi_message_get_printable (QmiMessage *self,
 gchar *qmi_message_get_tlv_printable (QmiMessage *self,
                                       const gchar *line_prefix,
                                       guint8 type,
-                                      gsize length,
-                                      gconstpointer value);
+                                      const guint8 *raw,
+                                      gsize raw_length);
 
 gboolean qmi_message_check (QmiMessage *self,
                             GError **error);

@@ -614,24 +614,43 @@ qmi_message_new_from_raw (const guint8 *raw,
     return self;
 }
 
+/**
+ * qmi_message_get_tlv_printable:
+ * @self: a #QmiMessage.
+ * @line_prefix: prefix string to use in each new generated line.
+ * @type: type of the TLV.
+ * @raw: raw data buffer with the value of the TLV.
+ * @raw_length: length of the raw data buffer.
+ *
+ * Gets a printable string with the contents of the TLV.
+ *
+ * This method is the most generic one and doesn't try to translate the TLV contents.
+ *
+ * Returns: (transfer full): a newly allocated string, which should be freed with g_free().
+ */
 gchar *
 qmi_message_get_tlv_printable (QmiMessage *self,
                                const gchar *line_prefix,
                                guint8 type,
-                               gsize length,
-                               gconstpointer value)
+                               const guint8 *raw,
+                               gsize raw_length)
 {
     gchar *printable;
     gchar *value_hex;
 
-    value_hex = qmi_utils_str_hex (value, length, ':');
+    g_return_val_if_fail (self != NULL, NULL);
+    g_return_val_if_fail (line_prefix != NULL, NULL);
+    g_return_val_if_fail (raw != NULL, NULL);
+    g_return_val_if_fail (raw_length > 0, NULL);
+
+    value_hex = qmi_utils_str_hex (raw, raw_length, ':');
     printable = g_strdup_printf ("%sTLV:\n"
                                  "%s  type   = 0x%02x\n"
                                  "%s  length = %" G_GSIZE_FORMAT "\n"
                                  "%s  value  = %s\n",
                                  line_prefix,
                                  line_prefix, type,
-                                 line_prefix, length,
+                                 line_prefix, raw_length,
                                  line_prefix, value_hex);
     g_free (value_hex);
     return printable;
@@ -656,8 +675,8 @@ get_generic_printable (QmiMessage *self,
         printable_tlv = qmi_message_get_tlv_printable (self,
                                                        line_prefix,
                                                        tlv->type,
-                                                       tlv->length,
-                                                       tlv->value);
+                                                       tlv->value,
+                                                       tlv->length);
         g_string_append (printable, printable_tlv);
         g_free (printable_tlv);
     }
