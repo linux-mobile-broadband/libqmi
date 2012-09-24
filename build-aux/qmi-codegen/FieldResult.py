@@ -123,7 +123,7 @@ class FieldResult(Field):
             '    QmiMessage *self,\n'
             '    const gchar *line_prefix)\n'
             '{\n'
-            '    guint8 *buffer;\n'
+            '    const guint8 *buffer;\n'
             '    guint16 buffer_len;\n'
             '\n'
             '    if (qmi_message_tlv_get (self,\n'

@@ -20,13 +20,13 @@
 static void
 test_utils_uint8 (void)
 {
-    static guint8 in_buffer[8] = {
+    static const guint8 in_buffer[8] = {
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
     guint8 out_buffer[8] = { 0 };
 
     guint16 in_buffer_size;
-    guint8 *in_buffer_walker;
+    const guint8 *in_buffer_walker;
     guint16 out_buffer_size;
     guint8 *out_buffer_walker;
 
@@ -49,13 +49,13 @@ test_utils_uint8 (void)
 static void
 test_utils_int8 (void)
 {
-    static guint8 in_buffer[8] = {
+    static const guint8 in_buffer[8] = {
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
     guint8 out_buffer[8] = { 0 };
 
     guint16 in_buffer_size;
-    guint8 *in_buffer_walker;
+    const guint8 *in_buffer_walker;
     guint16 out_buffer_size;
     guint8 *out_buffer_walker;
 
@@ -78,17 +78,17 @@ test_utils_int8 (void)
 static void
 test_utils_uint16 (void)
 {
-    static guint8 in_buffer[8] = {
+    static const guint8 in_buffer[8] = {
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
-    static guint16 values[4] = {
+    static const guint16 values[4] = {
         0x500F, 0xE2EB, 0x00B6, 0x0000
     };
     guint8 out_buffer[8] = { 0 };
 
     guint i;
     guint16 in_buffer_size;
-    guint8 *in_buffer_walker;
+    const guint8 *in_buffer_walker;
     guint16 out_buffer_size;
     guint8 *out_buffer_walker;
 
@@ -115,17 +115,17 @@ test_utils_uint16 (void)
 static void
 test_utils_int16 (void)
 {
-    static guint8 in_buffer[8] = {
+    static const guint8 in_buffer[8] = {
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
-    static gint16 values[4] = {
+    static const gint16 values[4] = {
         0x500F, 0xE2EB, 0x00B6, 0x0000
     };
     guint8 out_buffer[8] = { 0 };
 
     guint i;
     guint16 in_buffer_size;
-    guint8 *in_buffer_walker;
+    const guint8 *in_buffer_walker;
     guint16 out_buffer_size;
     guint8 *out_buffer_walker;
 
@@ -152,17 +152,17 @@ test_utils_int16 (void)
 static void
 test_utils_uint32 (void)
 {
-    static guint8 in_buffer[8] = {
+    static const guint8 in_buffer[8] = {
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
-    static guint32 values[2] = {
+    static const guint32 values[2] = {
         0xE2EB500F, 0x000000B6
     };
     guint8 out_buffer[8] = { 0 };
 
     guint i;
     guint16 in_buffer_size;
-    guint8 *in_buffer_walker;
+    const guint8 *in_buffer_walker;
     guint16 out_buffer_size;
     guint8 *out_buffer_walker;
 
@@ -189,17 +189,17 @@ test_utils_uint32 (void)
 static void
 test_utils_int32 (void)
 {
-    static guint8 in_buffer[8] = {
+    static const guint8 in_buffer[8] = {
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
-    static gint32 values[2] = {
+    static const gint32 values[2] = {
         0xE2EB500F, 0x000000B6
     };
     guint8 out_buffer[8] = { 0 };
 
     guint i;
     guint16 in_buffer_size;
-    guint8 *in_buffer_walker;
+    const guint8 *in_buffer_walker;
     guint16 out_buffer_size;
     guint8 *out_buffer_walker;
 
@@ -226,17 +226,17 @@ test_utils_int32 (void)
 static void
 test_utils_uint64 (void)
 {
-    static guint8 in_buffer[8] = {
+    static const guint8 in_buffer[8] = {
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
-    static guint64 values[1] = {
+    static const guint64 values[1] = {
         0x000000B6E2EB500FULL
     };
     guint8 out_buffer[8] = { 0 };
 
     guint i;
     guint16 in_buffer_size;
-    guint8 *in_buffer_walker;
+    const guint8 *in_buffer_walker;
     guint16 out_buffer_size;
     guint8 *out_buffer_walker;
 
@@ -263,17 +263,17 @@ test_utils_uint64 (void)
 static void
 test_utils_int64 (void)
 {
-    static guint8 in_buffer[8] = {
+    static const guint8 in_buffer[8] = {
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
-    static gint64 values[1] = {
+    static const gint64 values[1] = {
         0x000000B6E2EB500FLL
     };
     guint8 out_buffer[8] = { 0 };
 
     guint i;
     guint16 in_buffer_size;
-    guint8 *in_buffer_walker;
+    const guint8 *in_buffer_walker;
     guint16 out_buffer_size;
     guint8 *out_buffer_walker;
 
@@ -300,7 +300,7 @@ test_utils_int64 (void)
 static void
 common_test_utils_uint_sized (guint n_bytes)
 {
-    static guint8 in_buffer[8] = {
+    static const guint8 in_buffer[8] = {
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
     guint64 value = 0x000000B6E2EB500FULL;
@@ -310,7 +310,7 @@ common_test_utils_uint_sized (guint n_bytes)
     guint64 tmp;
     guint i;
     guint16 in_buffer_size;
-    guint8 *in_buffer_walker;
+    const guint8 *in_buffer_walker;
     guint16 out_buffer_size;
     guint8 *out_buffer_walker;
 

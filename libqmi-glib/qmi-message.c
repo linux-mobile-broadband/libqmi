@@ -464,7 +464,7 @@ gboolean
 qmi_message_tlv_get (QmiMessage *self,
                      guint8 type,
                      guint16 *length,
-                     guint8 **value,
+                     const guint8 **value,
                      GError **error)
 {
     struct tlv *tlv;

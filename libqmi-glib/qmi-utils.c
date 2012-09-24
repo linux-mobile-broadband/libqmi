@@ -62,9 +62,9 @@ qmi_utils_str_hex (gconstpointer mem,
 }
 
 void
-qmi_utils_read_guint8_from_buffer (guint8  **buffer,
-                                   guint16  *buffer_size,
-                                   guint8   *out)
+qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
+                                   guint16       *buffer_size,
+                                   guint8        *out)
 {
     g_assert (out != NULL);
     g_assert (buffer != NULL);
@@ -78,9 +78,9 @@ qmi_utils_read_guint8_from_buffer (guint8  **buffer,
 }
 
 void
-qmi_utils_read_gint8_from_buffer (guint8  **buffer,
-                                  guint16  *buffer_size,
-                                  gint8    *out)
+qmi_utils_read_gint8_from_buffer (const guint8 **buffer,
+                                  guint16       *buffer_size,
+                                  gint8         *out)
 {
     g_assert (out != NULL);
     g_assert (buffer != NULL);
@@ -94,9 +94,9 @@ qmi_utils_read_gint8_from_buffer (guint8  **buffer,
 }
 
 void
-qmi_utils_read_guint16_from_buffer (guint8  **buffer,
-                                    guint16  *buffer_size,
-                                    guint16  *out)
+qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
+                                    guint16       *buffer_size,
+                                    guint16       *out)
 {
     g_assert (out != NULL);
     g_assert (buffer != NULL);
@@ -110,9 +110,9 @@ qmi_utils_read_guint16_from_buffer (guint8  **buffer,
 }
 
 void
-qmi_utils_read_gint16_from_buffer (guint8  **buffer,
-                                   guint16  *buffer_size,
-                                   gint16   *out)
+qmi_utils_read_gint16_from_buffer (const guint8 **buffer,
+                                   guint16       *buffer_size,
+                                   gint16        *out)
 {
     g_assert (out != NULL);
     g_assert (buffer != NULL);
@@ -126,9 +126,9 @@ qmi_utils_read_gint16_from_buffer (guint8  **buffer,
 }
 
 void
-qmi_utils_read_guint32_from_buffer (guint8  **buffer,
-                                    guint16  *buffer_size,
-                                    guint32  *out)
+qmi_utils_read_guint32_from_buffer (const guint8 **buffer,
+                                    guint16       *buffer_size,
+                                    guint32       *out)
 {
     g_assert (out != NULL);
     g_assert (buffer != NULL);
@@ -142,9 +142,9 @@ qmi_utils_read_guint32_from_buffer (guint8  **buffer,
 }
 
 void
-qmi_utils_read_gint32_from_buffer (guint8  **buffer,
-                                   guint16  *buffer_size,
-                                   gint32   *out)
+qmi_utils_read_gint32_from_buffer (const guint8 **buffer,
+                                   guint16       *buffer_size,
+                                   gint32        *out)
 {
     g_assert (out != NULL);
     g_assert (buffer != NULL);
@@ -158,9 +158,9 @@ qmi_utils_read_gint32_from_buffer (guint8  **buffer,
 }
 
 void
-qmi_utils_read_guint64_from_buffer (guint8  **buffer,
-                                    guint16  *buffer_size,
-                                    guint64  *out)
+qmi_utils_read_guint64_from_buffer (const guint8 **buffer,
+                                    guint16       *buffer_size,
+                                    guint64       *out)
 {
     g_assert (out != NULL);
     g_assert (buffer != NULL);
@@ -174,9 +174,9 @@ qmi_utils_read_guint64_from_buffer (guint8  **buffer,
 }
 
 void
-qmi_utils_read_gint64_from_buffer (guint8  **buffer,
-                                   guint16  *buffer_size,
-                                   gint64   *out)
+qmi_utils_read_gint64_from_buffer (const guint8 **buffer,
+                                   guint16       *buffer_size,
+                                   gint64        *out)
 {
     g_assert (out != NULL);
     g_assert (buffer != NULL);
@@ -190,10 +190,10 @@ qmi_utils_read_gint64_from_buffer (guint8  **buffer,
 }
 
 void
-qmi_utils_read_sized_guint_from_buffer (guint8  **buffer,
-                                        guint16  *buffer_size,
-                                        guint     n_bytes,
-                                        guint64  *out)
+qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
+                                        guint16       *buffer_size,
+                                        guint          n_bytes,
+                                        guint64       *out)
 {
     guint64 tmp = 0;
 
@@ -358,11 +358,11 @@ qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
 }
 
 void
-qmi_utils_read_string_from_buffer (guint8   **buffer,
-                                   guint16   *buffer_size,
-                                   guint8     length_prefix_size,
-                                   guint16    max_size,
-                                   gchar    **out)
+qmi_utils_read_string_from_buffer (const guint8 **buffer,
+                                   guint16       *buffer_size,
+                                   guint8         length_prefix_size,
+                                   guint16        max_size,
+                                   gchar        **out)
 {
     guint16 string_length;
     guint16 valid_string_length;
@@ -409,10 +409,10 @@ qmi_utils_read_string_from_buffer (guint8   **buffer,
 }
 
 void
-qmi_utils_read_fixed_size_string_from_buffer (guint8   **buffer,
-                                              guint16   *buffer_size,
-                                              guint16    fixed_size,
-                                              gchar     *out)
+qmi_utils_read_fixed_size_string_from_buffer (const guint8 **buffer,
+                                              guint16       *buffer_size,
+                                              guint16        fixed_size,
+                                              gchar         *out)
 {
     g_assert (out != NULL);
     g_assert (buffer != NULL);

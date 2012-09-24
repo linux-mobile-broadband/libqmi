@@ -271,7 +271,7 @@ class Field:
                          'error'                : 'error' if self.mandatory == 'yes' else 'NULL'}
 
         template = (
-            '${lp}guint8 *buffer;\n'
+            '${lp}const guint8 *buffer;\n'
             '${lp}guint16 buffer_len;\n'
             '\n'
             '${lp}if (qmi_message_tlv_get (message,\n'
@@ -325,7 +325,7 @@ class Field:
             '    QmiMessage *message,\n'
             '    const gchar *line_prefix)\n'
             '{\n'
-            '    guint8 *buffer;\n'
+            '    const guint8 *buffer;\n'
             '    guint16 buffer_len;\n'
             '\n'
             '    if (qmi_message_tlv_get (message,\n'

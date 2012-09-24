@@ -59,7 +59,7 @@ void qmi_message_tlv_foreach (QmiMessage *self,
 gboolean qmi_message_tlv_get (QmiMessage *self,
                               guint8 type,
                               guint16 *length,
-                              guint8 **value,
+                              const guint8 **value,
                               GError **error);
 
 gboolean qmi_message_tlv_add (QmiMessage *self,
