@@ -56,11 +56,9 @@ void qmi_message_tlv_foreach (QmiMessage *self,
                               QmiMessageForeachTlvFn callback,
                               gpointer user_data);
 
-gboolean qmi_message_tlv_get (QmiMessage *self,
-                              guint8 type,
-                              guint16 *length,
-                              const guint8 **value,
-                              GError **error);
+const guint8 *qmi_message_get_raw_tlv (QmiMessage *self,
+                                       guint8 type,
+                                       guint16 *length);
 
 gboolean qmi_message_tlv_add (QmiMessage *self,
                               guint8 type,

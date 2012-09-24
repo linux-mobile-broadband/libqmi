@@ -460,34 +460,35 @@ qmi_message_get_raw (QmiMessage *self,
     return self->buf;
 }
 
-gboolean
-qmi_message_tlv_get (QmiMessage *self,
-                     guint8 type,
-                     guint16 *length,
-                     const guint8 **value,
-                     GError **error)
+/**
+ * qmi_message_get_raw_tlv:
+ * @self: a #QmiMessage.
+ * @type: specific ID of the TLV to get.
+ * @length: (out): return location for the length of the TLV.
+ * @error: return location for error or %NULL.
+ *
+ * Get the raw data buffer of a specific TLV within the #QmiMessage.
+ *
+ * Returns: (transfer none): The raw data buffer of the TLV, or #NULL if not found.
+ */
+const guint8 *
+qmi_message_get_raw_tlv (QmiMessage *self,
+                         guint8 type,
+                         guint16 *length)
 {
     struct tlv *tlv;
 
-    g_assert (self != NULL);
-    g_assert (self->buf != NULL);
-    g_assert (length != NULL);
-    /* note: we allow querying only for the exact length */
+    g_return_val_if_fail (self != NULL, NULL);
+    g_return_val_if_fail (length != NULL, NULL);
 
     for (tlv = qmi_tlv_first (self); tlv; tlv = qmi_tlv_next (self, tlv)) {
         if (tlv->type == type) {
             *length = GUINT16_FROM_LE (tlv->length);
-            if (value)
-                *value = &(tlv->value[0]);
-            return TRUE;
+            return (guint8 *)&(tlv->value[0]);
         }
     }
 
-    g_set_error (error,
-                 QMI_CORE_ERROR,
-                 QMI_CORE_ERROR_TLV_TOO_LONG,
-                 "TLV not found");
-    return FALSE;
+    return NULL;
 }
 
 void

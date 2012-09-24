@@ -274,11 +274,10 @@ class Field:
             '${lp}const guint8 *buffer;\n'
             '${lp}guint16 buffer_len;\n'
             '\n'
-            '${lp}if (qmi_message_tlv_get (message,\n'
-            '${lp}                         ${tlv_id},\n'
-            '${lp}                         &buffer_len,\n'
-            '${lp}                         &buffer,\n'
-            '${lp}                         ${error})) {\n'
+            '${lp}buffer = qmi_message_get_raw_tlv (message,\n'
+            '${lp}                                  ${tlv_id},\n'
+            '${lp}                                  &buffer_len);\n'
+            '${lp} if (buffer) {\n'
             '${lp}    self->${variable_name}_set = TRUE;\n'
             '\n')
         f.write(string.Template(template).substitute(translations))
@@ -296,7 +295,10 @@ class Field:
         if self.mandatory == 'yes':
             template += (
                 '${lp}} else {\n'
-                '${lp}    g_prefix_error (error, \"Couldn\'t get the ${name} TLV: \");\n'
+                '${lp}    g_set_error (error,\n'
+                '${lp}                 QMI_CORE_ERROR,\n'
+                '${lp}                 QMI_CORE_ERROR_TLV_NOT_FOUND,\n'
+                '${lp}                 \"Couldn\'t get the ${name} TLV: Not found\");\n'
                 '${lp}    ${container_underscore}_unref (self);\n'
                 '${lp}    return NULL;\n'
                 '${lp}}\n')
@@ -328,11 +330,10 @@ class Field:
             '    const guint8 *buffer;\n'
             '    guint16 buffer_len;\n'
             '\n'
-            '    if (qmi_message_tlv_get (message,\n'
-            '                             ${tlv_id},\n'
-            '                             &buffer_len,\n'
-            '                             &buffer,\n'
-            '                             NULL)) {\n'
+            '    buffer = qmi_message_get_raw_tlv (message,\n'
+            '                                      ${tlv_id},\n'
+            '                                      &buffer_len);\n'
+            '    if (buffer) {\n'
             '        GString *printable;\n'
             '\n'
             '        printable = g_string_new ("");\n')
