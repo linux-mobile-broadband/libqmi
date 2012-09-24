@@ -60,11 +60,11 @@ const guint8 *qmi_message_get_raw_tlv (QmiMessage *self,
                                        guint8 type,
                                        guint16 *length);
 
-gboolean qmi_message_tlv_add (QmiMessage *self,
-                              guint8 type,
-                              gsize length,
-                              gconstpointer value,
-                              GError **error);
+gboolean qmi_message_add_raw_tlv (QmiMessage *self,
+                                  guint8 type,
+                                  const guint8 *raw,
+                                  gsize length,
+                                  GError **error);
 
 gconstpointer qmi_message_get_raw (QmiMessage *self,
                                    gsize *length,

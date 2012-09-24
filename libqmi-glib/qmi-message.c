@@ -509,18 +509,31 @@ qmi_message_tlv_foreach (QmiMessage *self,
     }
 }
 
+/**
+ * qmi_message_add_raw_tlv:
+ * @self: a #QmiMessage.
+ * @type: specific ID of the TLV to add.
+ * @raw: raw data buffer with the value of the TLV.
+ * @length: length of the raw data buffer.
+ * @error: return location for error or %NULL.
+ *
+ * Creates a new @type TLV with the value given in @raw, and adds it to the #QmiMessage.
+ *
+ * Returns: #TRUE if the TLV as successfully added, otherwise #FALSE is returned and @error is set.
+ */
 gboolean
-qmi_message_tlv_add (QmiMessage *self,
-                     guint8 type,
-                     gsize length,
-                     gconstpointer value,
-                     GError **error)
+qmi_message_add_raw_tlv (QmiMessage *self,
+                         guint8 type,
+                         const guint8 *raw,
+                         gsize length,
+                         GError **error)
 {
     size_t tlv_len;
     struct tlv *tlv;
 
-    g_assert (self != NULL);
-    g_assert ((length == 0) || value != NULL);
+    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_val_if_fail (raw != NULL, FALSE);
+    g_return_val_if_fail (length > 0, FALSE);
 
     /* Make sure nothing's broken to start. */
     if (!qmi_message_check (self, error)) {
@@ -528,11 +541,11 @@ qmi_message_tlv_add (QmiMessage *self,
         return FALSE;
     }
 
-    /* Find length of new TLV. */
+    /* Find length of new TLV */
     tlv_len = sizeof (struct tlv) + length;
 
     /* Check for overflow of message size. */
-    if (qmi_message_get_qmux_length (self) + tlv_len > UINT16_MAX) {
+    if (qmi_message_get_qmux_length (self) + tlv_len > G_MAXUINT16) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_TLV_TOO_LONG,
@@ -547,9 +560,8 @@ qmi_message_tlv_add (QmiMessage *self,
     /* Fill in new TLV. */
     tlv = (struct tlv *)(qmi_end (self) - tlv_len);
     tlv->type = type;
-    tlv->length = htole16 (length);
-    if (value)
-        memcpy (tlv->value, value, length);
+    tlv->length = GUINT16_TO_LE (length);
+    memcpy (tlv->value, raw, length);
 
     /* Update length fields. */
     set_qmux_length (self, (guint16)(qmi_message_get_qmux_length (self) + tlv_len));

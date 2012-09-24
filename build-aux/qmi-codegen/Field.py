@@ -227,11 +227,11 @@ class Field:
 
         template = (
             '\n'
-            '${lp}if (!qmi_message_tlv_add (self,\n'
-            '${lp}                          (guint8)${tlv_id},\n'
-            '${lp}                          (1024 - buffer_len),\n'
-            '${lp}                          buffer,\n'
-            '${lp}                          error)) {\n'
+            '${lp}if (!qmi_message_add_raw_tlv (self,\n'
+            '${lp}                              (guint8)${tlv_id},\n'
+            '${lp}                              buffer,\n'
+            '${lp}                              (1024 - buffer_len),\n'
+            '${lp}                              error)) {\n'
             '${lp}    g_prefix_error (error, \"Couldn\'t set the ${name} TLV: \");\n'
             '${lp}    qmi_message_unref (self);\n'
             '${lp}    return NULL;\n'
