@@ -320,11 +320,7 @@ qmi_tlv_next (QmiMessage *self,
     return (next < end ? next : NULL);
 }
 
-/**
- * qmi_message_check:
- * @self: a #QmiMessage.
- * @error: return location for error or %NULL.
- *
+/*
  * Checks the validity of a QMI message.
  *
  * In particular, checks:
@@ -335,15 +331,13 @@ qmi_tlv_next (QmiMessage *self,
  *
  * Returns: #TRUE if the message is valid, #FALSE otherwise.
  */
-gboolean
-qmi_message_check (QmiMessage *self,
-                   GError **error)
+static gboolean
+message_check (QmiMessage *self,
+               GError **error)
 {
     gsize header_length;
     guint8 *end;
     struct tlv *tlv;
-
-    g_return_val_if_fail (self != NULL, FALSE);
 
     if (((struct full_message *)(self->data))->marker != QMI_MESSAGE_QMUX_MARKER) {
         g_set_error (error,
@@ -407,12 +401,12 @@ qmi_message_check (QmiMessage *self,
                          tlv->value, end);
             return FALSE;
         }
-        if (tlv->value + le16toh (tlv->length) > end) {
+        if (tlv->value + GUINT16_FROM_LE (tlv->length) > end) {
             g_set_error (error,
                          QMI_CORE_ERROR,
                          QMI_CORE_ERROR_INVALID_MESSAGE,
                          "TLV value runs over buffer (%p + %u  > %p)",
-                         tlv->value, le16toh (tlv->length), end);
+                         tlv->value, GUINT16_FROM_LE (tlv->length), end);
             return FALSE;
         }
     }
@@ -484,7 +478,7 @@ qmi_message_new (QmiService service,
     set_all_tlvs_length (self, 0);
 
     /* We shouldn't create invalid empty messages */
-    g_assert (qmi_message_check (self, NULL));
+    g_assert (message_check (self, NULL));
 
     return (QmiMessage *)self;
 }
@@ -537,13 +531,6 @@ qmi_message_get_raw (QmiMessage *self,
 {
     g_return_val_if_fail (self != NULL, NULL);
     g_return_val_if_fail (length != NULL, NULL);
-
-    /* QmiMessages are built either from a valid raw data buffer or from scratch
-     * with qmi_message_new() and adding the TLVs afterwards with
-     * qmi_message_add_raw_tlv(). In both cases, we must always have valid
-     * messages. TODO: remove this */
-    if (!qmi_message_check (self, error))
-        return NULL;
 
     *length = self->len;
     return self->data;
@@ -632,12 +619,6 @@ qmi_message_add_raw_tlv (QmiMessage *self,
     g_return_val_if_fail (raw != NULL, FALSE);
     g_return_val_if_fail (length > 0, FALSE);
 
-    /* Make sure nothing's broken to start. */
-    if (!qmi_message_check (self, error)) {
-        g_prefix_error (error, "Invalid QMI message detected: ");
-        return FALSE;
-    }
-
     /* Find length of new TLV */
     tlv_len = sizeof (struct tlv) + length;
 
@@ -664,10 +645,7 @@ qmi_message_add_raw_tlv (QmiMessage *self,
     set_all_tlvs_length (self, (guint16)(get_all_tlvs_length (self) + tlv_len));
 
     /* Make sure we didn't break anything. */
-    if (!qmi_message_check (self, error)) {
-        g_prefix_error (error, "Invalid QMI message built: ");
-        return FALSE;
-    }
+    g_assert (message_check (self, error));
 
     return TRUE;
 }
@@ -711,7 +689,7 @@ qmi_message_new_from_raw (GByteArray *raw,
     g_byte_array_remove_range (raw, 0, self->len);
 
     /* Check input message validity as soon as we create the QmiMessage */
-    if (!qmi_message_check (self, error)) {
+    if (!message_check (self, error)) {
         /* Yes, we lose the whole message here */
         qmi_message_unref (self);
         return NULL;
@@ -812,9 +790,6 @@ qmi_message_get_printable (QmiMessage *self,
 
     g_return_val_if_fail (self != NULL, NULL);
     g_return_val_if_fail (line_prefix != NULL, NULL);
-
-    if (!qmi_message_check (self, NULL))
-        return NULL;
 
     if (!line_prefix)
         line_prefix = "";

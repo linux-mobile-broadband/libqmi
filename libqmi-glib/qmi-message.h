@@ -105,9 +105,6 @@ gchar *qmi_message_get_tlv_printable (QmiMessage *self,
                                       const guint8 *raw,
                                       gsize raw_length);
 
-gboolean qmi_message_check (QmiMessage *self,
-                            GError **error);
-
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_MESSAGE_H_ */
