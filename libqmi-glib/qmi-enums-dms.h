@@ -164,6 +164,7 @@ typedef enum {
  * @QMI_DMS_OPERATING_MODE_RESET: Device is in the process of power cycling.
  * @QMI_DMS_OPERATING_MODE_SHUTTING_DOWN: Device is in the process of shutting down.
  * @QMI_DMS_OPERATING_MODE_MODE_ONLY_LOW_POWER: Mode-only Low Power.
+ * @QMI_DMS_OPERATING_MODE_UNKNOWN: Unknown.
  *
  * Operating mode of the device.
  */
@@ -175,7 +176,8 @@ typedef enum {
     QMI_DMS_OPERATING_MODE_RESET                 = 4,
     QMI_DMS_OPERATING_MODE_SHUTTING_DOWN         = 5,
     QMI_DMS_OPERATING_MODE_PERSISTENT_LOW_POWER  = 6,
-    QMI_DMS_OPERATING_MODE_MODE_ONLY_LOW_POWER   = 7
+    QMI_DMS_OPERATING_MODE_MODE_ONLY_LOW_POWER   = 7,
+    QMI_DMS_OPERATING_MODE_UNKNOWN               = 0xFF
 } QmiDmsOperatingMode;
 
 /**
