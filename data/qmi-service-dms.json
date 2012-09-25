@@ -962,6 +962,28 @@
                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Delete Stored Image",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x004A",
+     "version" : "1.3",
+     "input"   : [ { "name"      : "Image",
+                     "id"        : "0x01",
+                     "mandatory" : "yes",
+                     "type"      : "TLV",
+                     "format"    : "struct",
+                     "contents"  : [ { "name"          : "Type",
+                                       "format"        : "guint8",
+                                       "public-format" : "QmiDmsFirmwareImageType" },
+                                     { "name"          : "Unique ID",
+                                       "format"        : "array",
+                                       "fixed-size"    : "16",
+                                       "array-element" : { "format": "guint8" } },
+                                     { "name"   : "Build ID",
+                                       "format" : "string" } ] } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Set Time",
      "type"    : "Message",
      "service" : "DMS",
