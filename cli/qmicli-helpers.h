@@ -37,8 +37,13 @@ gboolean qmicli_read_facility_from_string       (const gchar *str,
                                                  QmiDmsUimFacility *out);
 gboolean qmicli_read_enable_disable_from_string (const gchar *str,
                                                  gboolean *out);
+gboolean qmicli_read_firmware_id_from_string    (const gchar *str,
+                                                 QmiDmsFirmwareImageType *out_type,
+                                                 guint *out_index);
 gboolean qmicli_read_non_empty_string           (const gchar *str,
                                                  const gchar *description,
                                                  gchar **out);
+gboolean qmicli_read_uint_from_string           (const gchar *str,
+                                                 guint *out);
 
 #endif /* __QMICLI_H__ */

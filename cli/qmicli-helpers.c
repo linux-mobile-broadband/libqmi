@@ -19,7 +19,9 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "qmicli-helpers.h"
 
@@ -201,4 +203,48 @@ qmicli_read_non_empty_string (const gchar *str,
 
     *out = (gchar *)str;
     return TRUE;
+}
+
+gboolean
+qmicli_read_firmware_id_from_string (const gchar *str,
+                                     QmiDmsFirmwareImageType *out_type,
+                                     guint *out_index)
+{
+    const gchar *index_str;
+
+    if (g_str_has_prefix (str, "modem")) {
+        *out_type = QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM;
+        index_str = &str[5];
+    } else if (g_str_has_prefix (str, "pri")) {
+        *out_type = QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI;
+        index_str = &str[3];
+    } else {
+        g_printerr ("error: invalid firmware image type value given: '%s'\n", str);
+        return FALSE;
+    }
+
+    return qmicli_read_uint_from_string (index_str, out_index);
+}
+
+gboolean
+qmicli_read_uint_from_string (const gchar *str,
+                              guint *out)
+{
+    gulong num;
+
+    if (!str || !str[0])
+        return FALSE;
+
+    for (num = 0; str[num]; num++) {
+        if (!g_ascii_isdigit (str[num]))
+            return FALSE;
+    }
+
+    errno = 0;
+    num = strtoul (str, NULL, 10);
+    if (!errno && num <= G_MAXUINT) {
+        *out = (guint)num;
+        return TRUE;
+    }
+    return FALSE;
 }

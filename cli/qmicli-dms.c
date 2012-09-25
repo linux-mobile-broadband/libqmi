@@ -78,6 +78,7 @@ static gchar *validate_service_programming_code_str;
 static gboolean get_band_capabilities_flag;
 static gboolean get_factory_sku_flag;
 static gboolean list_stored_images_flag;
+static gchar *delete_stored_image_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -226,6 +227,10 @@ static GOptionEntry entries[] = {
       "List stored images",
       NULL
     },
+    { "dms-delete-stored-image", 0, 0, G_OPTION_ARG_STRING, &delete_stored_image_str,
+      "Delete stored image",
+      "[modem#|pri#] where # is the index"
+    },
     { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -297,6 +302,7 @@ qmicli_dms_options_enabled (void)
                  get_band_capabilities_flag +
                  get_factory_sku_flag +
                  list_stored_images_flag +
+                 !!delete_stored_image_str +
                  reset_flag +
                  noop_flag);
 
@@ -2467,6 +2473,218 @@ list_stored_images_ready (QmiClientDms *client,
     get_image_info (operation_ctx);
 }
 
+typedef struct {
+    QmiClientDms *client;
+    GSimpleAsyncResult *result;
+    QmiDmsFirmwareImageType type;
+    guint index;
+} GetStoredImageContext;
+
+typedef struct {
+    QmiDmsFirmwareImageType type;
+    GArray *unique_id;
+    gchar *build_id;
+} GetStoredImageResult;
+
+static void
+get_stored_image_context_complete_and_free (GetStoredImageContext *operation_ctx)
+{
+    g_simple_async_result_complete (operation_ctx->result);
+    g_object_unref (operation_ctx->result);
+    g_object_unref (operation_ctx->client);
+    g_slice_free (GetStoredImageContext, operation_ctx);
+}
+
+static void
+get_stored_image_finish (QmiClientDms *client,
+                         GAsyncResult *res,
+                         QmiDmsFirmwareImageType *type,
+                         GArray **unique_id,
+                         gchar **build_id)
+{
+    GetStoredImageResult *result;
+
+    result = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
+
+    *type = result->type;
+    *unique_id = g_array_ref (result->unique_id);
+    *build_id = g_strdup (result->build_id);
+}
+
+static void
+get_stored_image_list_stored_images_ready (QmiClientDms *client,
+                                           GAsyncResult *res,
+                                           GetStoredImageContext *operation_ctx)
+{
+    GArray *array;
+    QmiMessageDmsListStoredImagesOutput *output;
+    GError *error = NULL;
+    guint i;
+
+    output = qmi_client_dms_list_stored_images_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_list_stored_images_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't list stored images: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_list_stored_images_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_list_stored_images_output_get_list (
+        output,
+        &array,
+        NULL);
+
+    for (i = 0; i < array->len; i++) {
+        QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement *subimage;
+        QmiMessageDmsListStoredImagesOutputListImage *image;
+        GetStoredImageResult result;
+        gchar *unique_id_str;
+
+        image = &g_array_index (array,
+                                QmiMessageDmsListStoredImagesOutputListImage,
+                                i);
+
+        if (image->type != operation_ctx->type)
+            continue;
+
+        if (operation_ctx->index >= image->sublist->len) {
+            g_printerr ("error: couldn't find '%s' image at index '%u'",
+                        qmi_dms_firmware_image_type_get_string (image->type),
+                        operation_ctx->index);
+            qmi_message_dms_list_stored_images_output_unref (output);
+            shutdown (FALSE);
+            return;
+        }
+
+        subimage = &g_array_index (image->sublist,
+                                   QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement,
+                                   operation_ctx->index);
+
+        unique_id_str = qmicli_get_raw_data_printable (subimage->unique_id, 80, "");
+        unique_id_str[strlen(unique_id_str) - 1] = '\0';
+        g_debug ("Found [%s,%u]: Unique ID: '%s', Build ID: '%s'",
+                 qmi_dms_firmware_image_type_get_string (operation_ctx->type),
+                 operation_ctx->index,
+                 unique_id_str,
+                 subimage->build_id);
+        g_free (unique_id_str);
+
+        /* Build result and complete */
+        result.type = operation_ctx->type;
+        result.unique_id = subimage->unique_id;
+        result.build_id = subimage->build_id;
+        g_simple_async_result_set_op_res_gpointer (operation_ctx->result, &result, NULL);
+        get_stored_image_context_complete_and_free (operation_ctx);
+        qmi_message_dms_list_stored_images_output_unref (output);
+        return;
+    }
+
+    g_printerr ("error: couldn't find any image of type '%s'",
+                qmi_dms_firmware_image_type_get_string (operation_ctx->type));
+    qmi_message_dms_list_stored_images_output_unref (output);
+    shutdown (FALSE);
+}
+
+static void
+get_stored_image (QmiClientDms *client,
+                  const gchar *str,
+                  GAsyncReadyCallback callback,
+                  gpointer user_data)
+{
+    GetStoredImageContext *operation_ctx;
+    QmiDmsFirmwareImageType type;
+    guint index;
+
+    if (!qmicli_read_firmware_id_from_string (str, &type, &index)) {
+        g_printerr ("Couldn't parse input string as firmware index info: '%s'\n", str);
+        shutdown (FALSE);
+        return;
+    }
+
+    operation_ctx = g_slice_new (GetStoredImageContext);
+    operation_ctx->client = g_object_ref (client);
+    operation_ctx->result = g_simple_async_result_new (G_OBJECT (client),
+                                                       callback,
+                                                       user_data,
+                                                       get_stored_image);
+    operation_ctx->type = type;
+    operation_ctx->index = index;
+
+    qmi_client_dms_list_stored_images (
+        ctx->client,
+        NULL,
+        10,
+        ctx->cancellable,
+        (GAsyncReadyCallback)get_stored_image_list_stored_images_ready,
+        operation_ctx);
+}
+
+static void
+delete_stored_image_ready (QmiClientDms *client,
+                           GAsyncResult *res)
+{
+    QmiMessageDmsDeleteStoredImageOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_delete_stored_image_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_delete_stored_image_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't delete stored image: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_delete_stored_image_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Stored image successfully deleted\n",
+             qmi_device_get_path_display (ctx->device));
+    qmi_message_dms_delete_stored_image_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
+get_stored_image_delete_ready (QmiClientDms *client,
+                               GAsyncResult *res)
+{
+    QmiMessageDmsDeleteStoredImageInput *input;
+    QmiMessageDmsDeleteStoredImageInputImage image_id;
+
+    get_stored_image_finish (client,
+                             res,
+                             &image_id.type,
+                             &image_id.unique_id,
+                             &image_id.build_id);
+
+    input = qmi_message_dms_delete_stored_image_input_new ();
+    qmi_message_dms_delete_stored_image_input_set_image (input, &image_id, NULL);
+
+    qmi_client_dms_delete_stored_image (
+        client,
+        input,
+        10,
+        NULL,
+        (GAsyncReadyCallback)delete_stored_image_ready,
+        NULL);
+    qmi_message_dms_delete_stored_image_input_unref (input);
+
+    g_free (image_id.build_id);
+    g_array_unref (image_id.unique_id);
+}
+
 static void
 reset_ready (QmiClientDms *client,
              GAsyncResult *res)
@@ -3057,6 +3275,16 @@ qmicli_dms_run (QmiDevice *device,
                                            ctx->cancellable,
                                            (GAsyncReadyCallback)list_stored_images_ready,
                                            NULL);
+        return;
+    }
+
+    /* Request to delete stored image? */
+    if (delete_stored_image_str) {
+        g_debug ("Asynchronously deleting stored image...");
+        get_stored_image (ctx->client,
+                          delete_stored_image_str,
+                          (GAsyncReadyCallback)get_stored_image_delete_ready,
+                          NULL);
         return;
     }
 
