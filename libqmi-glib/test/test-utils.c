@@ -230,7 +230,7 @@ test_utils_uint64 (void)
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
     static guint64 values[1] = {
-        0x000000B6E2EB500F
+        0x000000B6E2EB500FULL
     };
     guint8 out_buffer[8] = { 0 };
 
@@ -267,7 +267,7 @@ test_utils_int64 (void)
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
     static gint64 values[1] = {
-        0x000000B6E2EB500F
+        0x000000B6E2EB500FLL
     };
     guint8 out_buffer[8] = { 0 };
 
@@ -303,7 +303,7 @@ common_test_utils_uint_sized (guint n_bytes)
     static guint8 in_buffer[8] = {
         0x0F, 0x50, 0xEB, 0xE2, 0xB6, 0x00, 0x00, 0x00
     };
-    guint64 value = 0x000000B6E2EB500F;
+    guint64 value = 0x000000B6E2EB500FULL;
     guint8 expected_out_buffer[8] = { 0 };
     guint8 out_buffer[8] = { 0 };
 
