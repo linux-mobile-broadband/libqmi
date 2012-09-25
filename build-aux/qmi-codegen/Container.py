@@ -88,9 +88,9 @@ class Container:
                 if field_dictionary['type'] == 'TLV':
                     if field_dictionary['format'] == 'struct' and \
                        field_dictionary['name'] == 'Result':
-                        self.fields.append(FieldResult(self.fullname, field_dictionary, common_objects_dictionary))
+                        self.fields.append(FieldResult(self.fullname, field_dictionary, common_objects_dictionary, container_type))
                     else:
-                        self.fields.append(Field(self.fullname, field_dictionary, common_objects_dictionary))
+                        self.fields.append(Field(self.fullname, field_dictionary, common_objects_dictionary, container_type))
 
 
     """

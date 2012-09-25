@@ -31,7 +31,7 @@ class VariableStruct(Variable):
     """
     Constructor
     """
-    def __init__(self, dictionary, struct_type_name):
+    def __init__(self, dictionary, struct_type_name, container_type):
 
         # Call the parent constructor
         Variable.__init__(self, dictionary)
@@ -40,13 +40,14 @@ class VariableStruct(Variable):
         # struct type name
         self.public_format = utils.build_camelcase_name(struct_type_name)
         self.private_format = self.public_format
+        self.container_type = container_type
 
         # Load members of this struct
         self.members = []
         for member_dictionary in dictionary['contents']:
             member = {}
             member['name'] = utils.build_underscore_name(member_dictionary['name'])
-            member['object'] = VariableFactory.create_variable(member_dictionary, struct_type_name + ' ' + member['name'])
+            member['object'] = VariableFactory.create_variable(member_dictionary, struct_type_name + ' ' + member['name'], self.container_type)
             self.members.append(member)
 
         # We'll need to dispose if at least one of the members needs it

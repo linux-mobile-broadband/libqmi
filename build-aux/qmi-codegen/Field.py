@@ -32,7 +32,7 @@ class Field:
     """
     Constructor
     """
-    def __init__(self, prefix, dictionary, common_objects_dictionary):
+    def __init__(self, prefix, dictionary, common_objects_dictionary, container_type):
         # The field prefix, usually the name of the Container,
         #  e.g. "Qmi Message Ctl Something Output"
         self.prefix = prefix
@@ -44,13 +44,15 @@ class Field:
         self.mandatory = dictionary['mandatory']
         # The type, which must always be "TLV"
         self.type = dictionary['type']
+        # The container type, which must be either "Input" or "Output"
+        self.container_type = container_type
 
         # Create the composed full name (prefix + name),
         #  e.g. "Qmi Message Ctl Something Output Result"
         self.fullname = dictionary['fullname'] if 'fullname' in dictionary else self.prefix + ' ' + self.name
 
         # Create our variable object
-        self.variable = VariableFactory.create_variable(dictionary, self.fullname)
+        self.variable = VariableFactory.create_variable(dictionary, self.fullname, self.container_type)
 
         # Create the variable name within the Container
         self.variable_name = 'arg_' + string.lower(utils.build_underscore_name(self.name))

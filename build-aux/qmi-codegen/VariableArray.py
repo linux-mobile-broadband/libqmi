@@ -31,7 +31,7 @@ class VariableArray(Variable):
     """
     Constructor
     """
-    def __init__(self, dictionary, array_element_type):
+    def __init__(self, dictionary, array_element_type, container_type):
 
         # Call the parent constructor
         Variable.__init__(self, dictionary)
@@ -44,11 +44,16 @@ class VariableArray(Variable):
         # The array and its contents need to get disposed
         self.needs_dispose = True
 
+        # We need to know whether the variable comes in an Input container or in
+        # an Output container, as we should not dump the element clear() helper method
+        # if the variable is from an Input container.
+        self.container_type = container_type
+
         # Load variable type of this array
         if 'name' in dictionary['array-element']:
-            self.array_element = VariableFactory.create_variable(dictionary['array-element'], array_element_type + ' ' + dictionary['array-element']['name'])
+            self.array_element = VariableFactory.create_variable(dictionary['array-element'], array_element_type + ' ' + dictionary['array-element']['name'], self.container_type)
         else:
-            self.array_element = VariableFactory.create_variable(dictionary['array-element'], '')
+            self.array_element = VariableFactory.create_variable(dictionary['array-element'], '', self.container_type)
 
         # Load variable type for the array size prefix
         if 'size-prefix-format' in dictionary:
@@ -56,7 +61,7 @@ class VariableArray(Variable):
             if dictionary['size-prefix-format'] not in [ 'guint8', 'guint16', 'guint32' ]:
                 raise ValueError('Invalid size prefix format (%s): not guint8 or guint16 or guint32' % dictionary['size-prefix-format'])
             default_array_size = { 'format' : dictionary['size-prefix-format'] }
-            self.array_size_element = VariableFactory.create_variable(default_array_size, '')
+            self.array_size_element = VariableFactory.create_variable(default_array_size, '', self.container_type)
         elif 'fixed-size' in dictionary:
             # fixed-size arrays have no size element, obviously
             self.fixed_size = dictionary['fixed-size']
@@ -65,7 +70,7 @@ class VariableArray(Variable):
         else:
             # Default to 'guint8' if no explicit array size given
             default_array_size = { 'format' : 'guint8' }
-            self.array_size_element = VariableFactory.create_variable(default_array_size, '')
+            self.array_size_element = VariableFactory.create_variable(default_array_size, '', self.container_type)
 
 
     """
@@ -95,6 +100,11 @@ class VariableArray(Variable):
 
         # No need for the clear func if no need to dispose the contents
         if self.array_element.needs_dispose == False:
+            return
+
+        # No need for the clear func if we were not the ones who created
+        # the array
+        if self.container_type == "Input":
             return
 
         translations = { 'element_format'   : self.array_element.public_format,

@@ -30,16 +30,16 @@ from VariableArray import VariableArray
 Helps in the creation of Variable objects based on the specific 'format' found
 in the given dictionary
 """
-def create_variable(dictionary, new_type_name):
+def create_variable(dictionary, new_type_name, container_type):
     if utils.format_is_integer(dictionary['format']):
         return VariableInteger(dictionary)
     elif dictionary['format'] == 'string':
         return VariableString(dictionary)
     elif dictionary['format'] == 'struct':
-        return VariableStruct(dictionary, new_type_name)
+        return VariableStruct(dictionary, new_type_name, container_type)
     elif dictionary['format'] == 'sequence':
-        return VariableSequence(dictionary, new_type_name)
+        return VariableSequence(dictionary, new_type_name, container_type)
     elif dictionary['format'] == 'array':
-        return VariableArray(dictionary, new_type_name)
+        return VariableArray(dictionary, new_type_name, container_type)
     else:
         raise RuntimeError('Unexpected field format \'%s\'' % dictionary['format'])
