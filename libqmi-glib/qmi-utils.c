@@ -21,6 +21,7 @@
  * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
  */
 
+#include <config.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -61,6 +62,29 @@ qmi_utils_str_hex (gconstpointer mem,
 	return new_str;
 }
 
+#if defined UTILS_ENABLE_TRACE
+static void
+print_read_bytes_trace (const gchar *type,
+                        gconstpointer buffer,
+                        gconstpointer out,
+                        guint n_bytes)
+{
+    gchar *str1;
+    gchar *str2;
+
+    str1 = qmi_utils_str_hex (buffer, n_bytes, ':');
+    str2 = qmi_utils_str_hex (out, n_bytes, ':');
+
+    g_debug ("Read %s (%s) --> (%s)", type, str1, str2);
+    g_warn_if_fail (g_str_equal (str1, str2));
+
+    g_free (str1);
+    g_free (str2);
+}
+#else
+#define print_read_bytes_trace(...)
+#endif
+
 void
 qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
@@ -72,6 +96,8 @@ qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
     g_assert (*buffer_size >= 1);
 
     *out = (*buffer)[0];
+
+    print_read_bytes_trace ("guint8", &(*buffer)[0], out, 1);
 
     *buffer = &((*buffer)[1]);
     *buffer_size = (*buffer_size) - 1;
@@ -87,7 +113,9 @@ qmi_utils_read_gint8_from_buffer (const guint8 **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 1);
 
-    *out = *((gint8 *)(&((*buffer)[0])));
+    *out = (gint8)(*buffer)[0];
+
+    print_read_bytes_trace ("gint8", &(*buffer)[0], out, 1);
 
     *buffer = &((*buffer)[1]);
     *buffer_size = (*buffer_size) - 1;
@@ -103,7 +131,10 @@ qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 2);
 
-    *out = GUINT16_FROM_LE (*((guint16 *)&((*buffer)[0])));
+    memcpy (out, &((*buffer)[0]), 2);
+    *out = GUINT16_FROM_LE (*out);
+
+    print_read_bytes_trace ("guint16", &(*buffer)[0], out, 2);
 
     *buffer = &((*buffer)[2]);
     *buffer_size = (*buffer_size) - 2;
@@ -119,7 +150,10 @@ qmi_utils_read_gint16_from_buffer (const guint8 **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 2);
 
-    *out = GINT16_FROM_LE (*((guint16 *)&((*buffer)[0])));
+    memcpy (out, &((*buffer)[0]), 2);
+    *out = GINT16_FROM_LE (*out);
+
+    print_read_bytes_trace ("gint16", &(*buffer)[0], out, 2);
 
     *buffer = &((*buffer)[2]);
     *buffer_size = (*buffer_size) - 2;
@@ -135,7 +169,10 @@ qmi_utils_read_guint32_from_buffer (const guint8 **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 4);
 
-    *out = GUINT32_FROM_LE (*((guint32 *)&((*buffer)[0])));
+    memcpy (out, &((*buffer)[0]), 4);
+    *out = GUINT32_FROM_LE (*out);
+
+    print_read_bytes_trace ("guint32", &(*buffer)[0], out, 4);
 
     *buffer = &((*buffer)[4]);
     *buffer_size = (*buffer_size) - 4;
@@ -151,7 +188,10 @@ qmi_utils_read_gint32_from_buffer (const guint8 **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 4);
 
-    *out = GUINT32_FROM_LE (*((guint32 *)&((*buffer)[0])));
+    memcpy (out, &((*buffer)[0]), 4);
+    *out = GINT32_FROM_LE (*out);
+
+    print_read_bytes_trace ("gint32", &(*buffer)[0], out, 4);
 
     *buffer = &((*buffer)[4]);
     *buffer_size = (*buffer_size) - 4;
@@ -167,7 +207,10 @@ qmi_utils_read_guint64_from_buffer (const guint8 **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 8);
 
-    *out = GUINT64_FROM_LE (*((guint64 *)&((*buffer)[0])));
+    memcpy (out, &((*buffer)[0]), 8);
+    *out = GUINT64_FROM_LE (*out);
+
+    print_read_bytes_trace ("guint64", &(*buffer)[0], out, 8);
 
     *buffer = &((*buffer)[8]);
     *buffer_size = (*buffer_size) - 8;
@@ -183,7 +226,10 @@ qmi_utils_read_gint64_from_buffer (const guint8 **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 8);
 
-    *out = GUINT64_FROM_LE (*((guint64 *)&((*buffer)[0])));
+    memcpy (out, &((*buffer)[0]), 8);
+    *out = GINT64_FROM_LE (*out);
+
+    print_read_bytes_trace ("gint64", &(*buffer)[0], out, 8);
 
     *buffer = &((*buffer)[8]);
     *buffer_size = (*buffer_size) - 8;
@@ -195,15 +241,14 @@ qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
                                         guint          n_bytes,
                                         guint64       *out)
 {
-    guint64 tmp = 0;
-
     g_assert (out != NULL);
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= n_bytes);
 
-    memcpy (&tmp, *buffer, n_bytes);
-    *out = GUINT64_FROM_LE (tmp);
+    *out = 0;
+    memcpy (out, *buffer, n_bytes);
+    *out = GUINT64_FROM_LE (*out);
 
     *buffer = &((*buffer)[n_bytes]);
     *buffer_size = (*buffer_size) - n_bytes;
@@ -219,7 +264,7 @@ qmi_utils_write_guint8_to_buffer (guint8  **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 1);
 
-    (*buffer)[0] = *in;
+    memcpy (&(*buffer)[0], in, sizeof (*in));
 
     *buffer = &((*buffer)[1]);
     *buffer_size = (*buffer_size) - 1;
@@ -235,7 +280,7 @@ qmi_utils_write_gint8_to_buffer (guint8  **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 1);
 
-    *((gint8 *)(&((*buffer)[0]))) = *in;
+    memcpy (&(*buffer)[0], in, sizeof (*in));
 
     *buffer = &((*buffer)[1]);
     *buffer_size = (*buffer_size) - 1;
@@ -246,12 +291,15 @@ qmi_utils_write_guint16_to_buffer (guint8  **buffer,
                                    guint16  *buffer_size,
                                    guint16  *in)
 {
+    guint16 tmp;
+
     g_assert (in != NULL);
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 2);
 
-    *((guint16 *)(&((*buffer)[0]))) = GUINT16_TO_LE (*in);
+    tmp = GUINT16_TO_LE (*in);
+    memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[2]);
     *buffer_size = (*buffer_size) - 2;
@@ -262,12 +310,15 @@ qmi_utils_write_gint16_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
                                   gint16   *in)
 {
+    gint16 tmp;
+
     g_assert (in != NULL);
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 2);
 
-    *((gint16 *)(&((*buffer)[0]))) = GINT16_TO_LE (*in);
+    tmp = GINT16_TO_LE (*in);
+    memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[2]);
     *buffer_size = (*buffer_size) - 2;
@@ -278,12 +329,15 @@ qmi_utils_write_guint32_to_buffer (guint8  **buffer,
                                    guint16  *buffer_size,
                                    guint32  *in)
 {
+    guint32 tmp;
+
     g_assert (in != NULL);
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 4);
 
-    *((guint32 *)(&((*buffer)[0]))) = GUINT32_TO_LE (*in);
+    tmp = GUINT32_TO_LE (*in);
+    memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[4]);
     *buffer_size = (*buffer_size) - 4;
@@ -294,12 +348,15 @@ qmi_utils_write_gint32_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
                                   gint32   *in)
 {
+    gint32 tmp;
+
     g_assert (in != NULL);
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 4);
 
-    *((gint32 *)(&((*buffer)[0]))) = GINT32_TO_LE (*in);
+    tmp = GINT32_TO_LE (*in);
+    memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[4]);
     *buffer_size = (*buffer_size) - 4;
@@ -310,12 +367,15 @@ qmi_utils_write_guint64_to_buffer (guint8  **buffer,
                                    guint16  *buffer_size,
                                    guint64  *in)
 {
+    guint64 tmp;
+
     g_assert (in != NULL);
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 8);
 
-    *((guint64 *)(&((*buffer)[0]))) = GUINT64_TO_LE (*in);
+    tmp = GUINT64_TO_LE (*in);
+    memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[8]);
     *buffer_size = (*buffer_size) - 8;
@@ -326,12 +386,15 @@ qmi_utils_write_gint64_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
                                   gint64   *in)
 {
+    gint64 tmp;
+
     g_assert (in != NULL);
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 8);
 
-    *((gint64 *)(&((*buffer)[0]))) = GINT64_TO_LE (*in);
+    tmp = GINT64_TO_LE (*in);
+    memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[8]);
     *buffer_size = (*buffer_size) - 8;
