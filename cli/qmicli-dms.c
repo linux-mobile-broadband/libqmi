@@ -2556,27 +2556,27 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
         QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement *subimage;
         QmiMessageDmsListStoredImagesOutputListImage *image;
         gchar *unique_id_str;
-        gint index;
+        gint image_index;
 
         image = &g_array_index (array,
                                 QmiMessageDmsListStoredImagesOutputListImage,
                                 i);
 
         if (image->type == QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM)
-            index = operation_ctx->modem_index;
+            image_index = operation_ctx->modem_index;
         else if (image->type == QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI)
-            index = operation_ctx->pri_index;
+            image_index = operation_ctx->pri_index;
         else
             g_assert_not_reached ();
 
         /* If not looking for the specific image type, go on */
-        if (index < 0)
+        if (image_index < 0)
             continue;
 
-        if (index >= image->sublist->len) {
+        if (image_index >= image->sublist->len) {
             g_printerr ("error: couldn't find '%s' image at index '%d'\n",
                         qmi_dms_firmware_image_type_get_string (image->type),
-                        index);
+                        image_index);
             qmi_message_dms_list_stored_images_output_unref (output);
             shutdown (FALSE);
             return;
@@ -2584,13 +2584,13 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
 
         subimage = &g_array_index (image->sublist,
                                    QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement,
-                                   index);
+                                   image_index);
 
         unique_id_str = qmicli_get_raw_data_printable (subimage->unique_id, 80, "");
         unique_id_str[strlen (unique_id_str) - 1] = '\0';
         g_debug ("Found [%s%d]: Unique ID: '%s', Build ID: '%s'",
                  qmi_dms_firmware_image_type_get_string (image->type),
-                 index,
+                 image_index,
                  unique_id_str,
                  subimage->build_id);
         g_free (unique_id_str);
@@ -2627,7 +2627,7 @@ get_stored_image (QmiClientDms *client,
     split = g_strsplit (str, ",", -1);
     while (split[i]) {
         QmiDmsFirmwareImageType type;
-        guint index;
+        guint image_index;
 
         if (i >= 3) {
             g_printerr ("A maximum of 2 images should be given: '%s'\n", str);
@@ -2635,7 +2635,7 @@ get_stored_image (QmiClientDms *client,
             return;
         }
 
-        if (!qmicli_read_firmware_id_from_string (split[i], &type, &index)) {
+        if (!qmicli_read_firmware_id_from_string (split[i], &type, &image_index)) {
             g_printerr ("Couldn't parse input string as firmware index info: '%s'\n", str);
             shutdown (FALSE);
             return;
@@ -2647,14 +2647,14 @@ get_stored_image (QmiClientDms *client,
                 shutdown (FALSE);
                 return;
             }
-            modem_index = (gint)index;
+            modem_index = (gint)image_index;
         } else if (type == QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI) {
             if (pri_index >= 0) {
                 g_printerr ("Couldn't two 'pri' type firwmare indexes: '%s'\n", str);
                 shutdown (FALSE);
                 return;
             }
-            pri_index = (gint)index;
+            pri_index = (gint)image_index;
         }
 
         i++;
