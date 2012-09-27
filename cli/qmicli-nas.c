@@ -189,7 +189,7 @@ get_signal_info_ready (QmiClientNas *client,
     QmiMessageNasGetSignalInfoOutput *output;
     GError *error = NULL;
     gint8 rssi;
-    guint16 ecio;
+    gint16 ecio;
     QmiNasEvdoSinrLevel sinr_level;
     gint32 io;
     gint8 rsrq;
