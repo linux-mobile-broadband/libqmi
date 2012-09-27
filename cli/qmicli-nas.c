@@ -498,7 +498,7 @@ get_home_network_ready (QmiClientNas *client,
         g_print ("\tHome network:\n"
                  "\t\tMCC: '%" G_GUINT16_FORMAT"'\n"
                  "\t\tMNC: '%" G_GUINT16_FORMAT"'\n"
-                 "\t\tDescription: '%s'",
+                 "\t\tDescription: '%s'\n",
                  mcc,
                  mnc,
                  description);
