@@ -50,12 +50,20 @@ typedef struct _QmiClientPrivate QmiClientPrivate;
 #define QMI_CLIENT_VERSION_MAJOR "client-version-major"
 #define QMI_CLIENT_VERSION_MINOR "client-version-minor"
 
+/**
+ * QmiClient:
+ *
+ * The #QmiClient structure contains private data and should only be accessed
+ * using the provided API.
+ */
 struct _QmiClient {
+    /*< private >*/
     GObject parent;
     QmiClientPrivate *priv;
 };
 
 struct _QmiClientClass {
+    /*< private >*/
     GObjectClass parent;
 
     /* Virtual method to get indications processed */

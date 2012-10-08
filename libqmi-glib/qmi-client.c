@@ -28,6 +28,19 @@
 #include "qmi-client.h"
 #include "qmi-ctl.h"
 
+/**
+ * SECTION:qmi-client
+ * @title: QmiClient
+ * @short_description: Generic QMI client handling routines
+ *
+ * #QmiClient is a generic type representing a QMI client for any kind of
+ * #QmiService.
+ *
+ * These objects are created by a #QmiDevice with qmi_device_allocate_client(),
+ * and before completely disposing them qmi_device_release_client() needs to be
+ * called in order to release the unique client ID reserved.
+ */
+
 G_DEFINE_ABSTRACT_TYPE (QmiClient, qmi_client, G_TYPE_OBJECT);
 
 enum {
@@ -133,7 +146,7 @@ qmi_client_get_cid (QmiClient *self)
  *
  * Get the version of the service handled by this #QmiClient.
  *
- * Returns: #TRUE if the version was properly reported, #FALSE otherwise.
+ * Returns: %TRUE if the version was properly reported, %FALSE otherwise.
  */
 gboolean
 qmi_client_get_version (QmiClient *self,
@@ -161,7 +174,7 @@ qmi_client_get_version (QmiClient *self,
  * Checks if the version of the service handled by this #QmiClient is greater
  * or equal than the given version.
  *
- * Returns: #TRUE if the version of the service is greater or equal than the one given, #FALSE otherwise.
+ * Returns: %TRUE if the version of the service is greater or equal than the one given, %FALSE otherwise.
  */
 gboolean
 qmi_client_check_version (QmiClient *self,

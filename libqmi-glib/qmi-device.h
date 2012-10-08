@@ -46,12 +46,20 @@ typedef struct _QmiDevicePrivate QmiDevicePrivate;
 #define QMI_DEVICE_FILE       "device-file"
 #define QMI_DEVICE_CLIENT_CTL "device-client-ctl"
 
+/**
+ * QmiDevice:
+ *
+ * The #QmiDevice structure contains private data and should only be accessed
+ * using the provided API.
+ */
 struct _QmiDevice {
+    /*< private >*/
     GObject parent;
     QmiDevicePrivate *priv;
 };
 
 struct _QmiDeviceClass {
+    /*< private >*/
     GObjectClass parent;
 };
 

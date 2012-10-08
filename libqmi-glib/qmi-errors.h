@@ -76,7 +76,7 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
   * @QMI_PROTOCOL_ERROR_INVALID_TRANSACTION_ID: Invalid transaction ID.
   * @QMI_PROTOCOL_ERROR_DEVICE_IN_USE: Device in use.
   * @QMI_PROTOCOL_ERROR_NETWORK_UNSUPPORTED: Network unsupported.
-  * @QMI_PROTOCOL_ERROR_DEVICE_UNSUPPORTED Device unsupported.
+  * @QMI_PROTOCOL_ERROR_DEVICE_UNSUPPORTED: Device unsupported.
   * @QMI_PROTOCOL_ERROR_NO_EFFECT: No effect.
   * @QMI_PROTOCOL_ERROR_NO_FREE_PROFILE: No free profile.
   * @QMI_PROTOCOL_ERROR_INVALID_PDP_TYPE: Invalid PDP type.
@@ -117,7 +117,7 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
   * @QMI_PROTOCOL_ERROR_DISABLED: Disabled.
   * @QMI_PROTOCOL_ERROR_INVALID_OPERATION: Invalid operation.
   * @QMI_PROTOCOL_ERROR_INVALID_QMI_COMMAND: Invalid QMI command.
-  * @QMI_PROTOCOL_ERROR_WMS_TPDU_TYPE: WMS TPDU type.
+  * @QMI_PROTOCOL_ERROR_WMS_T_PDU_TYPE: WMS T-PDU type.
   * @QMI_PROTOCOL_ERROR_WMS_SMSC_ADDRESS: WMS SMSC address.
   * @QMI_PROTOCOL_ERROR_INFORMATION_UNAVAILABLE: Information unavailable.
   * @QMI_PROTOCOL_ERROR_SEGMENT_TOO_LONG: Segment too long.

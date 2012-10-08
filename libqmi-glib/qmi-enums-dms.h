@@ -128,7 +128,7 @@ typedef enum {
 /* Helper enums for the 'QMI DMS UIM Get PIN Status' message */
 
 /**
- * QmiDmsPinStatus:
+ * QmiDmsUimPinStatus:
  * @QMI_DMS_UIM_PIN_STATUS_NOT_INITIALIZED: Not initialized.
  * @QMI_DMS_UIM_PIN_STATUS_ENABLED_NOT_VERIFIED: Enabled, not verified.
  * @QMI_DMS_UIM_PIN_STATUS_ENABLED_VERIFIED: Enabled, verified.

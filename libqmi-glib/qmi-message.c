@@ -145,7 +145,7 @@ get_qmi_flags (QmiMessage *self)
  *
  * Checks whether the given #QmiMessage is a response.
  *
- * Returns: #TRUE if @self is a response message, #FALSE otherwise.
+ * Returns: %TRUE if @self is a response message, %FALSE otherwise.
  */
 gboolean
 qmi_message_is_response (QmiMessage *self)
@@ -167,7 +167,7 @@ qmi_message_is_response (QmiMessage *self)
  *
  * Checks whether the given #QmiMessage is an indication.
  *
- * Returns: #TRUE if @self is an indication message, #FALSE otherwise.
+ * Returns: %TRUE if @self is an indication message, %FALSE otherwise.
  */
 gboolean
 qmi_message_is_indication (QmiMessage *self)
@@ -341,7 +341,7 @@ qmi_tlv_next (QmiMessage *self,
  *    field are all consistent.
  * 3. The TLVs in the message fit exactly in the payload size.
  *
- * Returns: #TRUE if the message is valid, #FALSE otherwise.
+ * Returns: %TRUE if the message is valid, %FALSE otherwise.
  */
 static gboolean
 message_check (QmiMessage *self,
@@ -529,7 +529,7 @@ qmi_message_unref (QmiMessage *self)
 /**
  * qmi_message_get_raw:
  * @self: a #QmiMessage.
- * @len: (out): return location for the size of the output buffer.
+ * @length: (out): return location for the size of the output buffer.
  * @error: return location for error or %NULL.
  *
  * Gets the raw data buffer of the #QmiMessage.
@@ -553,7 +553,6 @@ qmi_message_get_raw (QmiMessage *self,
  * @self: a #QmiMessage.
  * @type: specific ID of the TLV to get.
  * @length: (out): return location for the length of the TLV.
- * @error: return location for error or %NULL.
  *
  * Get the raw data buffer of a specific TLV within the #QmiMessage.
  *
@@ -615,7 +614,7 @@ qmi_message_foreach_raw_tlv (QmiMessage *self,
  *
  * Creates a new @type TLV with the value given in @raw, and adds it to the #QmiMessage.
  *
- * Returns: #TRUE if the TLV as successfully added, otherwise #FALSE is returned and @error is set.
+ * Returns: %TRUE if the TLV as successfully added, otherwise %FALSE is returned and @error is set.
  */
 gboolean
 qmi_message_add_raw_tlv (QmiMessage *self,
@@ -875,7 +874,7 @@ qmi_message_get_printable (QmiMessage *self,
  *
  * Gets, if known, the service version in which the given message was first introduced.
  *
- * Returns: #TRUE if @major and @minor are set, #FALSE otherwise.
+ * Returns: %TRUE if @major and @minor are set, %FALSE otherwise.
  */
 gboolean
 qmi_message_get_version_introduced (QmiMessage *self,

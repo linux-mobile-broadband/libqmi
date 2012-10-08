@@ -47,7 +47,7 @@ class Message:
         self.prefix = 'Qmi ' + self.type
 
         # Create the composed full name (prefix + service + name),
-        #  e.g. "Qmi Message Ctl Something Output Result"
+        #  e.g. "Qmi Message Ctl Something"
         self.fullname = self.prefix + ' ' + self.service + ' ' + self.name
 
         # Create the ID enumeration name

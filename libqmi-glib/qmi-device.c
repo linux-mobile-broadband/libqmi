@@ -39,6 +39,17 @@
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
 
+/**
+ * SECTION:qmi-device
+ * @title: QmiDevice
+ * @short_description: Generic QMI device handling routines
+ *
+ * #QmiDevice is a generic type in charge of controlling the access of multiple
+ * #QmiClient objects to the managed QMI port.
+ *
+ * A #QmiDevice can only handle one single QMI port.
+ */
+
 static void async_initable_iface_init (GAsyncInitableIface *iface);
 
 G_DEFINE_TYPE_EXTENDED (QmiDevice, qmi_device, G_TYPE_OBJECT, 0,
@@ -416,7 +427,7 @@ qmi_device_get_path_display (QmiDevice *self)
  *
  * Checks whether the #QmiDevice is open for I/O.
  *
- * Returns: #TRUE if @self is open, #FALSE otherwise.
+ * Returns: %TRUE if @self is open, %FALSE otherwise.
  */
 gboolean
 qmi_device_is_open (QmiDevice *self)
@@ -496,7 +507,7 @@ allocate_client_context_complete_and_free (AllocateClientContext *ctx)
  * qmi_device_allocate_client_finish:
  * @self: a #QmiDevice.
  * @res: a #GAsyncResult.
- * @error: a #GError.
+ * @error: Return location for error or %NULL.
  *
  * Finishes an operation started with qmi_device_allocate_client().
  *
@@ -764,14 +775,14 @@ release_client_context_complete_and_free (ReleaseClientContext *ctx)
  * qmi_device_release_client_finish:
  * @self: a #QmiDevice.
  * @res: a #GAsyncResult.
- * @error: a #GError.
+ * @error: Return location for error or %NULL.
  *
  * Finishes an operation started with qmi_device_release_client().
  *
  * Note that even if the release operation returns an error, the client should
  * anyway be considered released, and shouldn't be used afterwards.
  *
- * Returns: #TRUE if successful, or #NULL if @error is set.
+ * Returns: %TRUE if successful, or #NULL if @error is set.
  */
 gboolean
 qmi_device_release_client_finish (QmiDevice *self,
@@ -922,11 +933,11 @@ qmi_device_release_client (QmiDevice *self,
  * @self: a #QmiDevice.
  * @res: a #GAsyncResult.
  * @link_id: a placeholder for the output #guint16, or #NULL if not required.
- * @error: a #GError.
+ * @error: Return location for error or %NULL.
  *
  * Finishes an operation started with qmi_device_set_instance_id().
  *
- * Returns: #TRUE if successful, #FALSE if @error is set.
+ * Returns: %TRUE if successful, %FALSE if @error is set.
  */
 gboolean
 qmi_device_set_instance_id_finish (QmiDevice *self,
@@ -1303,11 +1314,11 @@ device_open_context_complete_and_free (DeviceOpenContext *ctx)
  * qmi_device_open_finish:
  * @self: a #QmiDevice.
  * @res: a #GAsyncResult.
- * @error: a #GError.
+ * @error: Return location for error or %NULL.
  *
- * Finishes an asynchronous open operation started with qmi_device_open_async().
+ * Finishes an asynchronous open operation started with qmi_device_open().
  *
- * Returns: #TRUE if successful, #FALSE if @error is set.
+ * Returns: %TRUE if successful, %FALSE if @error is set.
  */
 gboolean
 qmi_device_open_finish (QmiDevice *self,
@@ -1638,13 +1649,13 @@ destroy_iochannel (QmiDevice *self,
 /**
  * qmi_device_close:
  * @self: a #QmiDevice
- * @error: a #GError
+ * @error: Return location for error or %NULL.
  *
  * Synchronously closes a #QmiDevice, preventing any further I/O.
  *
  * Closing a #QmiDevice multiple times will not return an error.
  *
- * Returns: #TRUE if successful, #FALSE if @error is set.
+ * Returns: %TRUE if successful, %FALSE if @error is set.
  */
 gboolean
 qmi_device_close (QmiDevice *self,
@@ -1794,7 +1805,7 @@ qmi_device_command (QmiDevice *self,
 /**
  * qmi_device_new_finish:
  * @res: a #GAsyncResult.
- * @error: a #GError.
+ * @error: Return location for error or %NULL.
  *
  * Finishes an operation started with qmi_device_new().
  *
