@@ -7,7 +7,8 @@ qmicli_CPPFLAGS = \
 	$(QMICLI_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libqmi-glib \
-	-I$(top_builddir)/libqmi-glib
+	-I$(top_srcdir)/libqmi-glib/generated \
+	-I$(top_builddir)/libqmi-glib/generated
 
 qmicli_SOURCES = \
 	qmicli.c \
