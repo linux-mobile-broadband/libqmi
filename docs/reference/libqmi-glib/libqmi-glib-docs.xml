@@ -52,39 +52,169 @@
 
   <chapter>
     <title>Control Service (CTL)</title>
-    <xi:include href="xml/qmi-ctl.xml"/>
+    <xi:include href="xml/qmi-client-ctl.xml"/>
+    <xi:include href="xml/qmi-message-ctl-set-instance-id.xml"/>
+    <xi:include href="xml/qmi-message-ctl-get-version-info.xml"/>
+    <xi:include href="xml/qmi-message-ctl-allocate-cid.xml"/>
+    <xi:include href="xml/qmi-message-ctl-release-cid.xml"/>
+    <xi:include href="xml/qmi-message-ctl-set-data-format.xml"/>
+    <xi:include href="xml/qmi-message-ctl-sync.xml"/>
   </chapter>
 
   <chapter>
     <title>Device Management Service (DMS)</title>
-    <xi:include href="xml/qmi-dms.xml"/>
+    <xi:include href="xml/qmi-client-dms.xml"/>
     <xi:include href="xml/qmi-enums-dms.xml"/>
     <xi:include href="xml/qmi-flags64-dms.xml"/>
+    <section>
+      <title>DMS Indications</title>
+      <xi:include href="xml/qmi-indication-dms-event-report.xml"/>
+    </section>
+    <section>
+      <title>DMS Requests</title>
+      <xi:include href="xml/qmi-message-dms-reset.xml"/>
+      <xi:include href="xml/qmi-message-dms-set-event-report.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-capabilities.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-manufacturer.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-model.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-revision.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-msisdn.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-ids.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-power-state.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-set-pin-protection.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-verify-pin.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-unblock-pin.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-change-pin.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-get-pin-status.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-hardware-revision.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-operating-mode.xml"/>
+      <xi:include href="xml/qmi-message-dms-set-operating-mode.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-time.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-prl-version.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-activation-state.xml"/>
+      <xi:include href="xml/qmi-message-dms-activate-automatic.xml"/>
+      <xi:include href="xml/qmi-message-dms-activate-manual.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-user-lock-state.xml"/>
+      <xi:include href="xml/qmi-message-dms-set-user-lock-state.xml"/>
+      <xi:include href="xml/qmi-message-dms-set-user-lock-code.xml"/>
+      <xi:include href="xml/qmi-message-dms-read-user-data.xml"/>
+      <xi:include href="xml/qmi-message-dms-write-user-data.xml"/>
+      <xi:include href="xml/qmi-message-dms-read-eri-file.xml"/>
+      <xi:include href="xml/qmi-message-dms-restore-factory-defaults.xml"/>
+      <xi:include href="xml/qmi-message-dms-validate-service-programming-code.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-get-iccid.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-get-ck-status.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-set-ck-protection.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-unblock-ck.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-get-imsi.xml"/>
+      <xi:include href="xml/qmi-message-dms-uim-get-state.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-band-capabilities.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-factory-sku.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-firmware-preference.xml"/>
+      <xi:include href="xml/qmi-message-dms-set-firmware-preference.xml"/>
+      <xi:include href="xml/qmi-message-dms-list-stored-images.xml"/>
+      <xi:include href="xml/qmi-message-dms-delete-stored-image.xml"/>
+      <xi:include href="xml/qmi-message-dms-set-time.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-stored-image-info.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-alt-net-config.xml"/>
+      <xi:include href="xml/qmi-message-dms-set-alt-net-config.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-software-version.xml"/>
+      <xi:include href="xml/qmi-message-dms-set-service-programming-code.xml"/>
+    </section>
   </chapter>
 
   <chapter>
     <title>Network Access Service (NAS)</title>
-    <xi:include href="xml/qmi-nas.xml"/>
+    <xi:include href="xml/qmi-client-nas.xml"/>
     <xi:include href="xml/qmi-enums-nas.xml"/>
     <xi:include href="xml/qmi-flags64-nas.xml"/>
+    <section>
+      <title>NAS Indications</title>
+      <xi:include href="xml/qmi-indication-nas-event-report.xml"/>
+      <xi:include href="xml/qmi-indication-nas-serving-system.xml"/>
+      <xi:include href="xml/qmi-indication-nas-system-info.xml"/>
+      <xi:include href="xml/qmi-indication-nas-signal-info.xml"/>
+    </section>
+    <section>
+      <title>NAS Requests</title>
+      <xi:include href="xml/qmi-message-nas-reset.xml"/>
+      <xi:include href="xml/qmi-message-nas-set-event-report.xml"/>
+      <xi:include href="xml/qmi-message-nas-register-indications.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-signal-strength.xml"/>
+      <xi:include href="xml/qmi-message-nas-network-scan.xml"/>
+      <xi:include href="xml/qmi-message-nas-initiate-network-register.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-serving-system.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-home-network.xml"/>
+      <xi:include href="xml/qmi-message-nas-set-technology-preference.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-technology-preference.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-rf-band-information.xml"/>
+      <xi:include href="xml/qmi-message-nas-set-system-selection-preference.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-system-selection-preference.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-system-info.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-signal-info.xml"/>
+      <xi:include href="xml/qmi-message-nas-config-signal-info.xml"/>
+    </section>
   </chapter>
 
   <chapter>
     <title>Wireless Data Service (WDS)</title>
-    <xi:include href="xml/qmi-wds.xml"/>
+    <xi:include href="xml/qmi-client-wds.xml"/>
     <xi:include href="xml/qmi-enums-wds.xml"/>
+    <section>
+      <title>WDS Requests</title>
+      <xi:include href="xml/qmi-message-wds-reset.xml"/>
+      <xi:include href="xml/qmi-message-wds-start-network.xml"/>
+      <xi:include href="xml/qmi-message-wds-stop-network.xml"/>
+      <xi:include href="xml/qmi-message-wds-get-packet-service-status.xml"/>
+      <xi:include href="xml/qmi-message-wds-get-current-settings.xml"/>
+      <xi:include href="xml/qmi-message-wds-get-data-bearer-technology.xml"/>
+      <xi:include href="xml/qmi-message-wds-get-current-data-bearer-technology.xml"/>
+      <xi:include href="xml/qmi-message-wds-set-ip-family.xml"/>
+    </section>
   </chapter>
 
   <chapter>
     <title>Wireless Messaging Service (WMS)</title>
-    <xi:include href="xml/qmi-wms.xml"/>
+    <xi:include href="xml/qmi-client-wms.xml"/>
     <xi:include href="xml/qmi-enums-wms.xml"/>
+    <section>
+      <title>WMS Indications</title>
+      <xi:include href="xml/qmi-indication-wms-event-report.xml"/>
+    </section>
+    <section>
+      <title>WMS Requests</title>
+      <xi:include href="xml/qmi-message-wms-reset.xml"/>
+      <xi:include href="xml/qmi-message-wms-set-event-report.xml"/>
+      <xi:include href="xml/qmi-message-wms-raw-send.xml"/>
+      <xi:include href="xml/qmi-message-wms-raw-write.xml"/>
+      <xi:include href="xml/qmi-message-wms-raw-read.xml"/>
+      <xi:include href="xml/qmi-message-wms-modify-tag.xml"/>
+      <xi:include href="xml/qmi-message-wms-delete.xml"/>
+      <xi:include href="xml/qmi-message-wms-get-message-protocol.xml"/>
+      <xi:include href="xml/qmi-message-wms-list-messages.xml"/>
+      <xi:include href="xml/qmi-message-wms-set-routes.xml"/>
+      <xi:include href="xml/qmi-message-wms-get-routes.xml"/>
+      <xi:include href="xml/qmi-message-wms-send-from-memory-storage.xml"/>
+    </section>
   </chapter>
 
   <chapter>
     <title>Position Determination Service (PDS)</title>
-    <xi:include href="xml/qmi-pds.xml"/>
+    <xi:include href="xml/qmi-client-pds.xml"/>
     <xi:include href="xml/qmi-enums-pds.xml"/>
+    <section>
+      <title>PDS Indications</title>
+      <xi:include href="xml/qmi-indication-pds-event-report.xml"/>
+    </section>
+    <section>
+      <title>PDS Requests</title>
+      <xi:include href="xml/qmi-message-pds-reset.xml"/>
+      <xi:include href="xml/qmi-message-pds-set-event-report.xml"/>
+      <xi:include href="xml/qmi-message-pds-get-gps-service-state.xml"/>
+      <xi:include href="xml/qmi-message-pds-set-gps-service-state.xml"/>
+      <xi:include href="xml/qmi-message-pds-get-auto-tracking-state.xml"/>
+      <xi:include href="xml/qmi-message-pds-set-auto-tracking-state.xml"/>
+    </section>
   </chapter>
 
   <chapter id="object-tree">

@@ -71,3 +71,29 @@ def set_get_printable_emitted(type_name):
     else:
         emitted_get_printable.append(type_name)
         return True
+
+
+"""
+List to keep track of sections already emitted to the source/header files.
+"""
+emitted_sections = []
+
+"""
+Checks whether a given section has already been emitted.
+"""
+def is_section_emitted(section_name):
+    for i in emitted_sections:
+        if i == section_name:
+            return True
+    else:
+        return False
+
+"""
+Sets the given section as already emitted.
+"""
+def set_section_emitted(section_name):
+    if is_section_emitted(section_name):
+        return False
+    else:
+        emitted_sections.append(section_name)
+        return True

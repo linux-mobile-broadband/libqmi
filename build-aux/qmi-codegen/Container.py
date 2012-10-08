@@ -117,9 +117,15 @@ class Container:
         # Emit types header
         template = (
             '\n'
+            '/**\n'
+            ' * ${camelcase}:\n'
+            ' *\n'
+            ' * The #${camelcase} structure contains private data and should only be accessed\n'
+            ' * using the provided API.\n'
+            ' */\n'
+            'typedef struct _${camelcase} ${camelcase};\n'
             'GType ${underscore}_get_type (void) G_GNUC_CONST;\n'
-            '#define ${type_macro} (${underscore}_get_type ())\n'
-            'typedef struct _${camelcase} ${camelcase};\n')
+            '#define ${type_macro} (${underscore}_get_type ())\n')
         hfile.write(string.Template(template).substitute(translations))
 
         # Emit types source
@@ -281,3 +287,40 @@ class Container:
 
         # Emit the container core
         self.__emit_core(hfile, cfile, translations)
+
+
+    """
+    Add sections
+    """
+    def add_sections(self, sections):
+        if self.fields is None:
+            return
+
+        translations = { 'name'       : self.name,
+                         'camelcase'  : utils.build_camelcase_name (self.fullname),
+                         'underscore' : utils.build_underscore_name (self.fullname),
+                         'type_macro' : 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(self.fullname), 'QMI_') }
+
+        # Standard
+        template = (
+            '${underscore}_get_type\n'
+            '${type_macro}\n')
+        sections['standard'] += string.Template(template).substitute(translations)
+
+        # Public types
+        template = (
+            '${camelcase}\n')
+        sections['public-types'] += string.Template(template).substitute(translations)
+
+        # Public methods
+        template = '<SUBSECTION ${camelcase}Methods>\n'
+        if self.readonly == False:
+            template += (
+                '${underscore}_new\n')
+        template += (
+            '${underscore}_ref\n'
+            '${underscore}_unref\n')
+        sections['public-methods'] += string.Template(template).substitute(translations)
+
+        for field in self.fields:
+            field.add_sections(sections)

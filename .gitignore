@@ -42,6 +42,7 @@ libqmi-glib/generated/.libs
 libqmi-glib/generated/.deps
 libqmi-glib/generated/*.c
 libqmi-glib/generated/*.h
+libqmi-glib/generated/*.sections
 
 libqmi-glib/test/.libs
 libqmi-glib/test/.deps
@@ -68,8 +69,10 @@ docs/reference/libqmi-glib/libqmi-glib.interfaces
 docs/reference/libqmi-glib/libqmi-glib.prerequisites
 docs/reference/libqmi-glib/libqmi-glib.signals
 docs/reference/libqmi-glib/libqmi-glib.types
+docs/reference/libqmi-glib/*.mstamp
 docs/reference/libqmi-glib/*.stamp
 docs/reference/libqmi-glib/*.txt
+docs/reference/libqmi-glib/*.bak
 docs/reference/libqmi-glib/html
 docs/reference/libqmi-glib/tmpl
 docs/reference/libqmi-glib/xml

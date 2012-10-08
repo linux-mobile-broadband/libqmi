@@ -219,7 +219,7 @@ class VariableString(Variable):
                          'name' : variable_name }
 
         template = (
-            '${lp}@${name}: a placeholder for the output constant string, or #NULL if not required.\n')
+            '${lp}@${name}: a placeholder for the output constant string, or %NULL if not required.\n')
         return string.Template(template).substitute(translations)
 
 
@@ -311,6 +311,27 @@ class VariableString(Variable):
                 '${lp}g_free (${to});\n'
                 '${lp}${to} = g_strdup (${from} ? ${from} : "");\n')
 
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Documentation for the struct field
+    """
+    def build_struct_field_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        if self.is_fixed_size:
+            translations['fixed_size'] = self.fixed_size
+            template = (
+                '${lp}@${name}: a string of exactly ${fixed_size} characters.\n')
+        elif self.max_size != '':
+            translations['max_size'] = self.max_size
+            template = (
+                '${lp}@${name}: a string with a maximum length of ${max_size} characters.\n')
+        else:
+            template = (
+                '${lp}@${name}: a string.\n')
         return string.Template(template).substitute(translations)
 
 

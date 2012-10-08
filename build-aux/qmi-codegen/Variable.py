@@ -125,7 +125,19 @@ class Variable:
         return ''
 
     """
+    Documentation for the struct field
+    """
+    def build_struct_field_documentation(self, line_prefix, variable_name):
+        return ''
+
+    """
     Emits the code to dispose the variable.
     """
     def build_dispose(self, line_prefix, variable_name):
         return ''
+
+    """
+    Add sections
+    """
+    def add_sections(self, sections):
+        pass

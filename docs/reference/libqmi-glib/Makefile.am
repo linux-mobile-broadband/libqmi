@@ -1,22 +1,46 @@
+
 # The name of the module.
 DOC_MODULE = libqmi-glib
 
 # The top-level SGML file.
 DOC_MAIN_SGML_FILE = $(DOC_MODULE)-docs.xml
 
+# Sections file building
+ALL_SECTIONS = \
+	$(srcdir)/libqmi-glib-common.sections \
+	$(top_builddir)/libqmi-glib/generated/qmi-ctl.sections \
+	$(top_builddir)/libqmi-glib/generated/qmi-dms.sections \
+	$(top_builddir)/libqmi-glib/generated/qmi-nas.sections \
+	$(top_builddir)/libqmi-glib/generated/qmi-wds.sections \
+	$(top_builddir)/libqmi-glib/generated/qmi-wms.sections \
+	$(top_builddir)/libqmi-glib/generated/qmi-pds.sections
+
+$(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
+	$(AM_V_GEN) \
+		rm -f $(DOC_MODULE)-sections.txt && \
+		cat $(ALL_SECTIONS) > $(DOC_MODULE)-sections.txt && \
+		touch $(DOC_MODULE)-sections.mstamp
+
+BUILT_SOURCES = $(DOC_MODULE)-sections.mstamp
+
 # Extra options to supply to gtkdoc-scan
-SCAN_OPTIONS =
+SCAN_OPTIONS = --rebuild-types
 
 # The directory containing the source code.
 DOC_SOURCE_DIR = \
-	$(top_srcdir)/libqmi-glib
+	$(top_srcdir)/libqmi-glib \
+	$(top_builddir)/libqmi-glib/generated
 
-HFILE_GLOB =
-CFILE_GLOB =
+# Used for dependencies
+HFILE_GLOB = \
+	$(top_srcdir)/libqmi-glib/*.h \
+	$(top_builddir)/libqmi-glib/generated/*.h
+CFILE_GLOB = \
+	$(top_srcdir)/libqmi-glib/*.c \
+	$(top_builddir)/libqmi-glib/generated/*.c
 
 # Headers to ignore
-IGNORE_HFILES = \
-	$(NULL)
+IGNORE_HFILES =
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.
@@ -24,32 +48,21 @@ INCLUDES = \
 	-I$(srcdir) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
-	$(LIBQMI_GLIB_CFLAGS) \
-	$(NULL)
+	$(LIBQMI_GLIB_CFLAGS)
 
 GTKDOC_LIBS = \
 	$(LIBQMI_GLIB_LIBS) \
-	$(top_builddir)/libqmi-glib/libqmi-glib.la \
-	$(NULL)
+	$(top_builddir)/libqmi-glib/libqmi-glib.la
 
 # Extra options to supply to gtkdoc-mkdb
 MKDB_OPTIONS = --output-format=xml --sgml-mode --name-space=qmi
 
-# Images to copy into HTML directory
-HTML_IMAGES = \
-	$(NULL)
+# Extra SGML files that are included by $(DOC_MAIN_SGML_FILE)
+content_files = version.xml
 
-#  Note that PNG files are also added in content_files so that
-#  the documentation is not built before the PNGs.
-content_files = \
-	$(HTML_IMAGES) \
-	$(NULL)
+expand_content_files =
 
-expand_content_files = \
-	$(NULL)
-
-extra_files = \
-	$(NULL)
+extra_files =
 
 if ENABLE_GTK_DOC
 include $(top_srcdir)/gtk-doc.make
@@ -59,6 +72,9 @@ CLEANFILES =
 endif
 
 EXTRA_DIST += \
+	libqmi-glib-common.sections \
+	$(DOC_MODULE)-sections.txt \
+	$(DOC_MODULE)-sections.mstamp \
 	version.xml.in \
 	$(DIAGRAMS) \
 	$(NULL)
@@ -71,13 +87,14 @@ CLEANFILES += \
 	$(DOC_MODULE)-undocumented.txt \
 	$(DOC_MODULE)-overrides.txt \
 	$(DOC_MODULE)-unused.txt \
-	$(DOC_MODULE)-sections.txt \
 	$(DOC_MODULE).args \
 	$(DOC_MODULE).hierarchy \
 	$(DOC_MODULE).interfaces \
 	$(DOC_MODULE).prerequisites \
 	$(DOC_MODULE).signals \
 	$(DOC_MODULE).types \
+	$(DOC_MODULE)-sections.txt \
+	$(DOC_MODULE)-sections.mstamp
 	*.stamp \
 	-rf xml html tmpl \
 	$(NULL)

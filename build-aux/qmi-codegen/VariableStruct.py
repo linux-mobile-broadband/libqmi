@@ -67,6 +67,16 @@ class VariableStruct(Variable):
         translations = { 'format' : self.public_format }
         template = (
             '\n'
+            '/**\n'
+            ' * ${format}:\n')
+        f.write(string.Template(template).substitute(translations))
+        for member in self.members:
+            f.write(member['object'].build_struct_field_documentation(' * ', member['name']))
+
+        template = (
+            ' *\n'
+            ' * A ${format} struct.\n'
+            ' */\n'
             'typedef struct _${format} {\n')
         f.write(string.Template(template).substitute(translations))
 
@@ -173,7 +183,7 @@ class VariableStruct(Variable):
                          'name'   : variable_name }
 
         template = (
-            '${lp}@${name}: a placeholder for the output constant #${format}, or #NULL if not required.\n')
+            '${lp}@${name}: a placeholder for the output constant #${format}, or %NULL if not required.\n')
         return string.Template(template).substitute(translations)
 
 
@@ -235,6 +245,19 @@ class VariableStruct(Variable):
 
 
     """
+    Documentation for the struct field
+    """
+    def build_struct_field_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'     : line_prefix,
+                         'format' : self.public_format,
+                         'name'   : variable_name }
+
+        template = (
+            '${lp}@${name}: a #${format} struct.\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
     Disposing a struct is just about disposing each of the struct fields one by
     one.
     """
@@ -243,3 +266,14 @@ class VariableStruct(Variable):
         for member in self.members:
             built += member['object'].build_dispose(line_prefix, variable_name + '.' + member['name'])
         return built
+
+
+    """
+    Add sections
+    """
+    def add_sections(self, sections):
+        # Add sections for each member
+        for member in self.members:
+            member['object'].add_sections(sections)
+
+        sections['public-types'] += self.public_format + '\n'

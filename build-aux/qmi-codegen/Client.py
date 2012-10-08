@@ -34,11 +34,14 @@ class Client:
     """
     def __init__(self, objects_dictionary):
         self.name = None
+        self.service = None
 
         # Loop items in the list, looking for the special 'Client' type
         for object_dictionary in objects_dictionary:
             if object_dictionary['type'] == 'Client':
                 self.name = object_dictionary['name']
+            elif object_dictionary['type'] == 'Service':
+                self.service = object_dictionary['name']
 
         # We NEED the Client field
         if self.name is None:
@@ -59,7 +62,9 @@ class Client:
 
         translations = { 'underscore'                 : utils.build_underscore_name(self.name),
                          'no_prefix_underscore_upper' : string.upper(utils.build_underscore_name(self.name[4:])),
-                         'camelcase'                  : utils.build_camelcase_name (self.name) }
+                         'camelcase'                  : utils.build_camelcase_name(self.name),
+                         'hyphened'                   : utils.build_dashed_name(self.name),
+                         'service'                    : string.upper(self.service) }
 
         # Emit class header
         template = (
@@ -73,12 +78,20 @@ class Client:
             'typedef struct _${camelcase} ${camelcase};\n'
             'typedef struct _${camelcase}Class ${camelcase}Class;\n'
             '\n'
+            '/**\n'
+            ' * ${camelcase}:\n'
+            ' *\n'
+            ' * The #${camelcase} structure contains private data and should only be accessed\n'
+            ' * using the provided API.\n'
+            ' */\n'
             'struct _${camelcase} {\n'
+            '    /*< private >*/\n'
             '    QmiClient parent;\n'
             '    gpointer priv_unused;\n'
             '};\n'
             '\n'
             'struct _${camelcase}Class {\n'
+            '    /*< private >*/\n'
             '    QmiClientClass parent;\n'
             '};\n'
             '\n'
@@ -88,6 +101,14 @@ class Client:
 
         # Emit class source
         template = (
+            '\n'
+            '/**\n'
+            ' * SECTION: ${hyphened}\n'
+            ' * @title: ${camelcase}\n'
+            ' * @short_description: #QmiClient for the ${service} service.\n'
+            ' *\n'
+            ' * #QmiClient which handles operations in the ${service} service.\n'
+            ' */\n'
             '\n'
             'G_DEFINE_TYPE (${camelcase}, ${underscore}, QMI_TYPE_CLIENT);\n')
 
@@ -177,11 +198,14 @@ class Client:
             if message.type == 'Indication':
                 translations['signal_name'] = utils.build_dashed_name(message.name)
                 translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
+                translations['message_name'] = message.name
                 inner_template = ''
                 if message.output is not None and message.output.fields is not None:
                     # At least one field in the indication
                     translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
                     translations['bundle_type'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(message.output.fullname), 'QMI_')
+                    translations['service'] = string.upper(self.service)
+                    translations['message_name_dashed'] = string.replace(message.name, ' ', '-')
                     inner_template += (
                         '\n'
                         '    /**\n'
@@ -189,7 +213,7 @@ class Client:
                         '     * @object: A #${camelcase}.\n'
                         '     * @output: A #${output_camelcase}.\n'
                         '     *\n'
-                        '     * The ::${signal_name} signal gets emitted when a \'${message_name}\' indication is received.\n'
+                        '     * The ::${signal_name} signal gets emitted when a \'<link linkend=\"libqmi-glib-${service}-${message_name_dashed}.top_of_page\">${message_name}</link>\' indication is received.\n'
                         '     */\n'
                         '    signals[SIGNAL_${signal_id}] =\n'
                         '        g_signal_new ("${signal_name}",\n'
@@ -242,6 +266,7 @@ class Client:
             if message.type == 'Indication':
                 continue
 
+            translations['message_name'] = message.name
             translations['message_underscore'] = utils.build_underscore_name(message.name)
             translations['message_fullname_underscore'] = utils.build_underscore_name(message.fullname)
             translations['input_camelcase'] = utils.build_camelcase_name(message.input.fullname)
@@ -252,9 +277,11 @@ class Client:
             if message.input.fields is None:
                 input_arg_template = 'gpointer unused'
                 translations['input_var'] = 'NULL'
+                translations['input_doc'] = 'unused: %NULL. This message doesn\'t have any input bundle.'
             else:
                 input_arg_template = '${input_camelcase} *input'
                 translations['input_var'] = 'input'
+                translations['input_doc'] = 'input: a #' + translations['input_camelcase'] + '.'
             template = (
                 '\n'
                 'void ${underscore}_${message_underscore} (\n'
@@ -272,6 +299,16 @@ class Client:
 
             template = (
                 '\n'
+                '/**\n'
+                ' * ${underscore}_${message_underscore}_finish:\n'
+                ' * @self: a #${camelcase}.\n'
+                ' * @res: the #GAsyncResult obtained from the #GAsyncReadyCallback passed to ${underscore}_${message_underscore}().\n'
+                ' * @error: Return location for error or %%NULL.\n'
+                ' *\n'
+                ' * Finishes an async operation started with ${underscore}_${message_underscore}().\n'
+                ' *\n'
+                ' * Returns: a #${output_camelcase}, or %%NULL if @error is set. The returned value should be freed with ${output_underscore}_unref().\n'
+                ' */\n'
                 '${output_camelcase} *\n'
                 '${underscore}_${message_underscore}_finish (\n'
                 '    ${camelcase} *self,\n'
@@ -315,6 +352,21 @@ class Client:
                 '    qmi_message_unref (reply);\n'
                 '}\n'
                 '\n'
+                '/**\n'
+                ' * ${underscore}_${message_underscore}:\n'
+                ' * @self: a #${camelcase}.\n'
+                ' * @${input_doc}\n'
+                ' * @timeout: maximum time to wait for the method to complete, in seconds.\n'
+                ' * @cancellable: a #GCancellable or %%NULL.\n'
+                ' * @callback: a #GAsyncReadyCallback to call when the request is satisfied.\n'
+                ' * @user_data: user data to pass to @callback.\n'
+                ' *\n'
+                ' * Asynchronously sends a ${message_name} request to the device.\n'
+                ' *\n'
+                ' * When the operation is finished, @callback will be invoked in the thread-default main loop of the thread you are calling this method from.\n'
+                ' *\n'
+                ' * You can then call ${underscore}_${message_underscore}_finish() to get the result of the operation.\n'
+                ' */\n'
                 'void\n'
                 '${underscore}_${message_underscore} (\n'
                 '    ${camelcase} *self,\n'
@@ -367,3 +419,31 @@ class Client:
         utils.add_separator(cfile, 'CLIENT', self.name);
         self.__emit_class(hfile, cfile, message_list)
         self.__emit_methods(hfile, cfile, message_list)
+
+
+    """
+    Emit the sections
+    """
+    def emit_sections(self, sfile):
+        translations = { 'underscore'                 : utils.build_underscore_name(self.name),
+                         'no_prefix_underscore_upper' : string.upper(utils.build_underscore_name(self.name[4:])),
+                         'camelcase'                  : utils.build_camelcase_name (self.name),
+                         'hyphened'                   : utils.build_dashed_name (self.name) }
+
+        template = (
+            '<SECTION>\n'
+            '<FILE>${hyphened}</FILE>\n'
+            '<TITLE>${camelcase}</TITLE>\n'
+            '${camelcase}\n'
+            '<SUBSECTION Standard>\n'
+            '${camelcase}Class\n'
+            'QMI_TYPE_${no_prefix_underscore_upper}\n'
+            'QMI_${no_prefix_underscore_upper}\n'
+            'QMI_${no_prefix_underscore_upper}_CLASS\n'
+            'QMI_IS_${no_prefix_underscore_upper}\n'
+            'QMI_IS_${no_prefix_underscore_upper}_CLASS\n'
+            'QMI_${no_prefix_underscore_upper}_GET_CLASS\n'
+            '${underscore}_get_type\n'
+            '</SECTION>\n'
+            '\n')
+        sfile.write(string.Template(template).substitute(translations))

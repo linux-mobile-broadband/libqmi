@@ -318,7 +318,7 @@ class VariableArray(Variable):
                          'name'                        : variable_name }
 
         template = (
-            '${lp}@${name}: a placeholder for the output #GArray of #${public_array_element_format} elements, or #NULL if not required. Do not free it, it is owned by @self.\n')
+            '${lp}@${name}: a placeholder for the output #GArray of #${public_array_element_format} elements, or %NULL if not required. Do not free it, it is owned by @self.\n')
         return string.Template(template).substitute(translations)
 
 
@@ -382,6 +382,19 @@ class VariableArray(Variable):
 
 
     """
+    Documentation for the struct field
+    """
+    def build_struct_field_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'                          : line_prefix,
+                         'public_array_element_format' : self.array_element.public_format,
+                         'name'                        : variable_name }
+
+        template = (
+            '${lp}@${name}: a #GArray of #${public_array_element_format} elements.\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
     Dispose the array just with an unref
     """
     def build_dispose(self, line_prefix, variable_name):
@@ -392,3 +405,10 @@ class VariableArray(Variable):
             '${lp}if (${variable_name})\n'
             '${lp}    g_array_unref (${variable_name});\n')
         return string.Template(template).substitute(translations)
+
+
+    """
+    Add sections
+    """
+    def add_sections(self, sections):
+        self.array_element.add_sections(sections)

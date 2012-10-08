@@ -64,11 +64,11 @@ class FieldResult(Field):
             '/**\n'
             ' * ${prefix_underscore}_get_result:\n'
             ' * @self: a ${prefix_camelcase}.\n'
-            ' * @error: a #GError.\n'
+            ' * @error: Return location for error or %NULL.\n'
             ' *\n'
             ' * Get the result of the QMI operation.\n'
             ' *\n'
-            ' * Returns: #TRUE if the QMI operation succeeded, #FALSE if @error is set.\n'
+            ' * Returns: %TRUE if the QMI operation succeeded, %FALSE if @error is set.\n'
             ' */\n'
             'gboolean\n'
             '${prefix_underscore}_get_result (\n'
@@ -159,3 +159,20 @@ class FieldResult(Field):
             '    return NULL;\n'
             '}\n')
         f.write(string.Template(template).substitute(translations))
+
+
+    """
+    Add sections
+    """
+    def add_sections(self, sections):
+        translations = { 'underscore'        : utils.build_underscore_name(self.name),
+                         'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
+                         'prefix_underscore' : utils.build_underscore_name(self.prefix) }
+
+        # Public methods
+        template = (
+            '${prefix_underscore}_get_${underscore}\n')
+        if self.container_type == 'Input':
+            template += (
+                '${prefix_underscore}_set_${underscore}\n')
+        sections['public-methods'] += string.Template(template).substitute(translations)

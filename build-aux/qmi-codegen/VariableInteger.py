@@ -233,7 +233,7 @@ class VariableInteger(Variable):
                          'name'          : variable_name }
 
         template = (
-            '${lp}@${name}: a placeholder for the output #${public_format}, or #NULL if not required.\n')
+            '${lp}@${name}: a placeholder for the output #${public_format}, or %NULL if not required.\n')
         return string.Template(template).substitute(translations)
 
     """
@@ -297,4 +297,17 @@ class VariableInteger(Variable):
 
         template = (
             '${lp}${to} = ${cast_ini}${from}${cast_end};\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    Documentation for the struct field
+    """
+    def build_struct_field_documentation(self, line_prefix, variable_name):
+        translations = { 'lp'            : line_prefix,
+                         'public_format' : self.public_format,
+                         'name'          : variable_name }
+
+        template = (
+            '${lp}@${name}: a #${public_format}.\n')
         return string.Template(template).substitute(translations)

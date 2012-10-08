@@ -123,11 +123,11 @@ class Field:
             ' * ${prefix_underscore}_get_${underscore}:\n'
             ' * @self: a #${prefix_camelcase}.\n'
             '${variable_getter_doc}'
-            ' * @error: a #GError.\n'
+            ' * @error: Return location for error or %NULL.\n'
             ' *\n'
             ' * Get the \'${name}\' field from @self.\n'
             ' *\n'
-            ' * Returns: #TRUE if the field is found, #FALSE otherwise.\n'
+            ' * Returns: %TRUE if the field is found, %FALSE otherwise.\n'
             ' */\n'
             'gboolean\n'
             '${prefix_underscore}_get_${underscore} (\n'
@@ -186,11 +186,11 @@ class Field:
             ' * ${prefix_underscore}_set_${underscore}:\n'
             ' * @self: a #${prefix_camelcase}.\n'
             '${variable_setter_doc}'
-            ' * @error: a #GError.\n'
+            ' * @error: Return location for error or %NULL.\n'
             ' *\n'
             ' * Set the \'${name}\' field in the message.\n'
             ' *\n'
-            ' * Returns: #TRUE if @value was successfully set, #FALSE otherwise.\n'
+            ' * Returns: %TRUE if @value was successfully set, %FALSE otherwise.\n'
             ' */\n'
             'gboolean\n'
             '${prefix_underscore}_set_${underscore} (\n'
@@ -357,3 +357,24 @@ class Field:
             '    return NULL;\n'
             '}\n')
         f.write(string.Template(template).substitute(translations))
+
+
+    """
+    Add sections
+    """
+    def add_sections(self, sections):
+        translations = { 'underscore'        : utils.build_underscore_name(self.name),
+                         'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
+                         'prefix_underscore' : utils.build_underscore_name(self.prefix) }
+
+        if TypeFactory.is_section_emitted(self.fullname) is False:
+            TypeFactory.set_section_emitted(self.fullname)
+            self.variable.add_sections(sections)
+
+        # Public methods
+        template = (
+            '${prefix_underscore}_get_${underscore}\n')
+        if self.container_type == 'Input':
+            template += (
+                '${prefix_underscore}_set_${underscore}\n')
+        sections['public-methods'] += string.Template(template).substitute(translations)

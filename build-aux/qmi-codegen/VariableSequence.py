@@ -204,3 +204,12 @@ class VariableSequence(Variable):
         for member in self.members:
             built += member['object'].build_dispose(line_prefix, variable_name + '_' + member['name'])
         return built
+
+
+    """
+    Add sections
+    """
+    def add_sections(self, sections):
+        # Add sections for each member
+        for member in self.members:
+            member['object'].add_sections(sections)

@@ -24,6 +24,14 @@ GENERATED_C = \
 	qmi-wms.c \
 	qmi-pds.c
 
+GENERATED_SECTIONS = \
+	qmi-ctl.sections \
+	qmi-dms.sections \
+	qmi-nas.sections \
+	qmi-wds.sections \
+	qmi-wms.sections \
+	qmi-pds.sections
+
 # Error types
 qmi-error-types.h: $(top_srcdir)/libqmi-glib/qmi-errors.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
@@ -81,7 +89,7 @@ qmi-flags64-types.c: $(FLAGS64) qmi-flags64-types.h $(top_srcdir)/build-aux/temp
 		$(FLAGS64) > $@
 
 # CTL service
-qmi-ctl.h qmi-ctl.c: $(top_srcdir)/data/qmi-service-ctl.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-ctl.h qmi-ctl.c qmi-ctl.sections: $(top_srcdir)/data/qmi-service-ctl.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
 	$(AM_V_GEN)  \
 		rm -f qmi-ctl.h && \
 		rm -f qmi-ctl.c && \
@@ -91,7 +99,7 @@ qmi-ctl.h qmi-ctl.c: $(top_srcdir)/data/qmi-service-ctl.json $(top_srcdir)/build
 			--output qmi-ctl
 
 # DMS service
-qmi-dms.h qmi-dms.c: $(top_srcdir)/data/qmi-service-dms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-dms.h qmi-dms.c qmi-dms.sections: $(top_srcdir)/data/qmi-service-dms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
 	$(AM_V_GEN) \
 		rm -f qmi-dms.h && \
 		rm -f qmi-dms.c && \
@@ -101,7 +109,7 @@ qmi-dms.h qmi-dms.c: $(top_srcdir)/data/qmi-service-dms.json $(top_srcdir)/build
 			--output qmi-dms
 
 # WDS service
-qmi-wds.h qmi-wds.c: $(top_srcdir)/data/qmi-service-wds.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-wds.h qmi-wds.c qmi-wds.sections: $(top_srcdir)/data/qmi-service-wds.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
 	$(AM_V_GEN) \
 		rm -f qmi-wds.h && \
 		rm -f qmi-wds.c && \
@@ -111,7 +119,7 @@ qmi-wds.h qmi-wds.c: $(top_srcdir)/data/qmi-service-wds.json $(top_srcdir)/build
 			--output qmi-wds
 
 # NAS service
-qmi-nas.h qmi-nas.c: $(top_srcdir)/data/qmi-service-nas.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-nas.h qmi-nas.c qmi-nas.sections: $(top_srcdir)/data/qmi-service-nas.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
 	$(AM_V_GEN) \
 		rm -f qmi-nas.h && \
 		rm -f qmi-nas.c && \
@@ -121,7 +129,7 @@ qmi-nas.h qmi-nas.c: $(top_srcdir)/data/qmi-service-nas.json $(top_srcdir)/build
 			--output qmi-nas
 
 # WMS service
-qmi-wms.h qmi-wms.c: $(top_srcdir)/data/qmi-service-wms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-wms.h qmi-wms.c qmi-wms.sections: $(top_srcdir)/data/qmi-service-wms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
 	$(AM_V_GEN) \
 		rm -f qmi-wms.h && \
 		rm -f qmi-wms.c && \
@@ -131,7 +139,7 @@ qmi-wms.h qmi-wms.c: $(top_srcdir)/data/qmi-service-wms.json $(top_srcdir)/build
 			--output qmi-wms
 
 # PDS service
-qmi-pds.h qmi-pds.c: $(top_srcdir)/data/qmi-service-pds.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-pds.h qmi-pds.c qmi-pds.sections: $(top_srcdir)/data/qmi-service-pds.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
 	$(AM_V_GEN) \
 		rm -f qmi-pds.h && \
 		rm -f qmi-pds.c && \
@@ -157,5 +165,5 @@ libqmi_glib_generated_la_LIBADD = \
 includedir = @includedir@/libqmi-glib
 nodist_include_HEADERS = $(GENERATED_H)
 
-CLEANFILES = $(GENERATED_H) $(GENERATED_C)
+CLEANFILES = $(GENERATED_H) $(GENERATED_C) $(GENERATED_SECTIONS)
 

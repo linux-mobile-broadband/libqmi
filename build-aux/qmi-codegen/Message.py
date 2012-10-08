@@ -206,7 +206,7 @@ class Message:
             '/**\n'
             ' * ${underscore}_${type}_parse:\n'
             ' * @message: a #QmiMessage ${type}.\n'
-            ' * @error: a #GError.\n'
+            ' * @error: Return location for error or %%NULL.\n'
             ' *\n'
             ' * Parse the \'${name}\' ${type}.\n'
             ' *\n'
@@ -424,3 +424,60 @@ class Message:
         hfile.write('\n/* --- Printable -- */\n');
         cfile.write('\n/* --- Printable -- */\n');
         self.__emit_get_printable(hfile, cfile)
+
+    """
+    Emit the sections
+    """
+    def emit_sections(self, sfile):
+
+        translations = { 'hyphened'            : utils.build_dashed_name (self.fullname),
+                         'fullname_underscore' : utils.build_underscore_name(self.fullname),
+                         'camelcase'           : utils.build_camelcase_name (self.fullname),
+                         'service'             : utils.build_underscore_name (self.service),
+                         'name_underscore'     : utils.build_underscore_name (self.name),
+                         'fullname'            : self.service + ' ' + self.name,
+                         'type'                : 'response' if self.type == 'Message' else 'indication' }
+
+        sections = { 'public-types'   : '',
+                     'public-methods' : '',
+                     'standard'       : '',
+                     'private'        : '' }
+
+        if self.input:
+            self.input.add_sections (sections)
+        self.output.add_sections (sections)
+
+        if self.type == 'Message':
+            template = (
+                '<SUBSECTION ${camelcase}ClientMethods>\n'
+                'qmi_client_${service}_${name_underscore}\n'
+                'qmi_client_${service}_${name_underscore}_finish\n')
+            sections['public-methods'] += string.Template(template).substitute(translations)
+
+        translations['public_types']   = sections['public-types']
+        translations['public_methods'] = sections['public-methods']
+        translations['standard']       = sections['standard']
+        translations['private']        = sections['private']
+
+        template = (
+            '<SECTION>\n'
+            '<FILE>${hyphened}</FILE>\n'
+            '<TITLE>${fullname}</TITLE>\n'
+            '${public_types}'
+            '${public_methods}'
+            '<SUBSECTION Private>\n'
+            '${private}')
+
+        if self.input:
+            template += '${fullname_underscore}_request_create\n'
+
+        if self.output.fields is not None:
+            template += (
+                '${fullname_underscore}_${type}_parse\n')
+
+        template += (
+            '<SUBSECTION Standard>\n'
+            '${standard}'
+            '</SECTION>\n'
+            '\n')
+        sfile.write(string.Template(template).substitute(translations))

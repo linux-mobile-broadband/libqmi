@@ -229,3 +229,25 @@ class MessageList:
         utils.add_separator(cfile, 'Service-specific printable', self.service);
         self.__emit_get_printable(hfile, cfile)
         self.__emit_get_version_introduced(hfile, cfile)
+
+    """
+    Emit the sections
+    """
+    def emit_sections(self, sfile):
+        # Emit all message sections
+        for message in self.list:
+            message.emit_sections(sfile)
+
+        translations = { 'hyphened' : utils.build_dashed_name (self.service + 'Private'),
+                         'service'  : utils.build_underscore_name (self.service) }
+
+        # Emit dummy section for service-specific private methods
+        template = (
+            '<SECTION>\n'
+            '<FILE>${hyphened}</FILE>\n'
+            '<SUBSECTION Private>\n'
+            'qmi_message_${service}_get_printable\n'
+            'qmi_message_${service}_get_version_introduced\n'
+            '</SECTION>\n'
+            '\n')
+        sfile.write(string.Template(template).substitute(translations))
