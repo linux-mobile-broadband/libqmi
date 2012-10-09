@@ -99,17 +99,20 @@ class Client:
             '\n')
         hfile.write(string.Template(template).substitute(translations))
 
-        # Emit class source
-        template = (
-            '\n'
-            '/**\n'
-            ' * SECTION: ${hyphened}\n'
-            ' * @title: ${camelcase}\n'
-            ' * @short_description: #QmiClient for the ${service} service.\n'
-            ' *\n'
-            ' * #QmiClient which handles operations in the ${service} service.\n'
-            ' */\n'
-            '\n'
+        # Emit class source. Documentation skipped for the CTL service.
+        template = ''
+        if self.service != 'CTL':
+            template += (
+                '\n'
+                '/**\n'
+                ' * SECTION: ${hyphened}\n'
+                ' * @title: ${camelcase}\n'
+                ' * @short_description: #QmiClient for the ${service} service.\n'
+                ' *\n'
+                ' * #QmiClient which handles operations in the ${service} service.\n'
+                ' */\n'
+                '\n')
+        template += (
             'G_DEFINE_TYPE (${camelcase}, ${underscore}, QMI_TYPE_CLIENT);\n')
 
         if has_indications:

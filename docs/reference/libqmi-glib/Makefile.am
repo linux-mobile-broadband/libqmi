@@ -8,7 +8,6 @@ DOC_MAIN_SGML_FILE = $(DOC_MODULE)-docs.xml
 # Sections file building
 ALL_SECTIONS = \
 	$(srcdir)/libqmi-glib-common.sections \
-	$(top_builddir)/libqmi-glib/generated/qmi-ctl.sections \
 	$(top_builddir)/libqmi-glib/generated/qmi-dms.sections \
 	$(top_builddir)/libqmi-glib/generated/qmi-nas.sections \
 	$(top_builddir)/libqmi-glib/generated/qmi-wds.sections \
@@ -42,7 +41,8 @@ CFILE_GLOB = \
 # Headers to ignore
 IGNORE_HFILES = \
 	qmi-enums-private.h \
-	qmi-enum-types-private.h
+	qmi-enum-types-private.h \
+	qmi-ctl.h
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.

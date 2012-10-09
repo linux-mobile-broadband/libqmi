@@ -47,8 +47,7 @@ typedef struct _QmiDevice QmiDevice;
 typedef struct _QmiDeviceClass QmiDeviceClass;
 typedef struct _QmiDevicePrivate QmiDevicePrivate;
 
-#define QMI_DEVICE_FILE       "device-file"
-#define QMI_DEVICE_CLIENT_CTL "device-client-ctl"
+#define QMI_DEVICE_FILE "device-file"
 
 /**
  * QmiDevice:

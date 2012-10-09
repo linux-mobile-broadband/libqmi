@@ -51,17 +51,6 @@
   </chapter>
 
   <chapter>
-    <title>Control Service (CTL)</title>
-    <xi:include href="xml/qmi-client-ctl.xml"/>
-    <xi:include href="xml/qmi-message-ctl-set-instance-id.xml"/>
-    <xi:include href="xml/qmi-message-ctl-get-version-info.xml"/>
-    <xi:include href="xml/qmi-message-ctl-allocate-cid.xml"/>
-    <xi:include href="xml/qmi-message-ctl-release-cid.xml"/>
-    <xi:include href="xml/qmi-message-ctl-set-data-format.xml"/>
-    <xi:include href="xml/qmi-message-ctl-sync.xml"/>
-  </chapter>
-
-  <chapter>
     <title>Device Management Service (DMS)</title>
     <xi:include href="xml/qmi-client-dms.xml"/>
     <xi:include href="xml/qmi-enums-dms.xml"/>

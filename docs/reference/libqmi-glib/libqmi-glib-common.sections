@@ -33,7 +33,6 @@ qmi_client_get_type
 <FILE>qmi-device</FILE>
 <TITLE>QmiDevice</TITLE>
 QMI_DEVICE_FILE
-QMI_DEVICE_CLIENT_CTL
 QmiDevice
 QmiDeviceClass
 qmi_device_new

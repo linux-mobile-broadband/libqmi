@@ -58,7 +58,6 @@ G_DEFINE_TYPE_EXTENDED (QmiDevice, qmi_device, G_TYPE_OBJECT, 0,
 enum {
     PROP_0,
     PROP_FILE,
-    PROP_CLIENT_CTL,
     PROP_LAST
 };
 
@@ -1997,10 +1996,6 @@ set_property (GObject *object,
         self->priv->path = g_file_get_path (self->priv->file);
         self->priv->path_display = g_filename_display_name (self->priv->path);
         break;
-    case PROP_CLIENT_CTL:
-        /* Not writable */
-        g_assert_not_reached ();
-        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -2018,9 +2013,6 @@ get_property (GObject *object,
     switch (prop_id) {
     case PROP_FILE:
         g_value_set_object (value, self->priv->file);
-        break;
-    case PROP_CLIENT_CTL:
-        g_value_set_object (value, self->priv->client_ctl);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2131,12 +2123,4 @@ qmi_device_class_init (QmiDeviceClass *klass)
                              G_TYPE_FILE,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_FILE, properties[PROP_FILE]);
-
-    properties[PROP_CLIENT_CTL] =
-        g_param_spec_object (QMI_DEVICE_CLIENT_CTL,
-                             "CTL client",
-                             "Implicit CTL client",
-                             QMI_TYPE_CLIENT_CTL,
-                             G_PARAM_READABLE);
-    g_object_class_install_property (object_class, PROP_CLIENT_CTL, properties[PROP_CLIENT_CTL]);
 }
