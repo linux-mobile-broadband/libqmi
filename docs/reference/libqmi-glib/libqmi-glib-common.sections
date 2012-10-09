@@ -641,7 +641,6 @@ qmi_message_get_tlv_printable
 
 <SECTION>
 <FILE>qmi-utils</FILE>
-qmi_utils_str_hex
 qmi_utils_read_guint8_from_buffer
 qmi_utils_read_gint8_from_buffer
 qmi_utils_read_guint16_from_buffer

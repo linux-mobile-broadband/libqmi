@@ -320,7 +320,7 @@ class Message:
                 '    } else {\n'
                 '        gchar *value_hex;\n'
                 '\n'
-                '        value_hex = qmi_utils_str_hex (value, length, \':\');\n'
+                '        value_hex = __qmi_utils_str_hex (value, length, \':\');\n'
                 '        g_string_append_printf (ctx->printable,\n'
                 '                                "%sTLV:\\n"\n'
                 '                                "%s  type       = \\"%s\\" (0x%02x)\\n"\n'

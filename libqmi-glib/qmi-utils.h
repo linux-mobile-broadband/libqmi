@@ -32,10 +32,6 @@
 
 G_BEGIN_DECLS
 
-gchar *qmi_utils_str_hex (gconstpointer mem,
-                          gsize size,
-                          gchar delimiter);
-
 /* Reading/Writing integer variables */
 
 void qmi_utils_read_guint8_from_buffer  (const guint8 **buffer,
@@ -124,6 +120,15 @@ void qmi_utils_write_fixed_size_string_to_buffer  (guint8      **buffer,
                                                    guint16      *buffer_size,
                                                    guint16       fixed_size,
                                                    const gchar  *in);
+
+/* Other private methods */
+
+#if defined (LIBQMI_GLIB_COMPILATION)
+G_GNUC_INTERNAL
+gchar *__qmi_utils_str_hex (gconstpointer mem,
+                            gsize size,
+                            gchar delimiter);
+#endif
 
 G_END_DECLS
 

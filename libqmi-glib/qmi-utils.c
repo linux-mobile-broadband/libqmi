@@ -29,9 +29,9 @@
 #include "qmi-utils.h"
 
 gchar *
-qmi_utils_str_hex (gconstpointer mem,
-                   gsize size,
-                   gchar delimiter)
+__qmi_utils_str_hex (gconstpointer mem,
+                     gsize size,
+                     gchar delimiter)
 {
     const guint8 *data = mem;
 	gsize i;
@@ -72,8 +72,8 @@ print_read_bytes_trace (const gchar *type,
     gchar *str1;
     gchar *str2;
 
-    str1 = qmi_utils_str_hex (buffer, n_bytes, ':');
-    str2 = qmi_utils_str_hex (out, n_bytes, ':');
+    str1 = __qmi_utils_str_hex (buffer, n_bytes, ':');
+    str2 = __qmi_utils_str_hex (out, n_bytes, ':');
 
     g_debug ("Read %s (%s) --> (%s)", type, str1, str2);
     g_warn_if_fail (g_str_equal (str1, str2));
