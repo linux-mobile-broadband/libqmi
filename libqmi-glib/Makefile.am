@@ -15,8 +15,8 @@ libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
 	qmi-errors.h \
 	qmi-enums-wds.h qmi-enums-wds.c \
-	qmi-enums-dms.h \
-	qmi-enums-nas.h \
+	qmi-enums-dms.h qmi-flags64-dms.h \
+	qmi-enums-nas.h qmi-flags64-nas.h\
 	qmi-enums-wms.h \
 	qmi-enums-pds.h \
 	qmi-enums.h qmi-enums-private.h \
