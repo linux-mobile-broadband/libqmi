@@ -9,7 +9,8 @@ libqmi_glib_la_CPPFLAGS = \
 	-I$(top_builddir) \
 	-I$(top_srcdir)/libqmi-glib \
 	-I$(top_srcdir)/libqmi-glib/generated \
-	-I$(top_builddir)/libqmi-glib/generated
+	-I$(top_builddir)/libqmi-glib/generated \
+	-DLIBQMI_GLIB_COMPILATION
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
@@ -40,6 +41,7 @@ include_HEADERS = \
 	qmi-enums-nas.h qmi-flags64-nas.h \
 	qmi-enums-wms.h \
 	qmi-enums-pds.h \
+	qmi-utils.h \
 	qmi-message.h \
 	qmi-device.h \
 	qmi-client.h

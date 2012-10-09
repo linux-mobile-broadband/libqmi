@@ -21,10 +21,12 @@
  * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
  */
 
-/* NOTE: this is a private non-installable header */
-
 #ifndef _LIBQMI_GLIB_QMI_UTILS_H_
 #define _LIBQMI_GLIB_QMI_UTILS_H_
+
+#if !defined (__LIBQMI_GLIB_H_INSIDE__) && !defined (LIBQMI_GLIB_COMPILATION)
+#error "Only <libqmi-glib.h> can be included directly."
+#endif
 
 #include <glib.h>
 

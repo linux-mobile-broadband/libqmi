@@ -175,7 +175,8 @@ nodist_libqmi_glib_generated_la_SOURCES = \
 libqmi_glib_generated_la_CPPFLAGS = \
 	$(LIBQMI_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
-	-I$(top_srcdir)/libqmi-glib
+	-I$(top_srcdir)/libqmi-glib \
+	-DLIBQMI_GLIB_COMPILATION
 
 libqmi_glib_generated_la_LIBADD = \
 	$(LIBQMI_GLIB_LIBS)
@@ -185,7 +186,6 @@ nodist_include_HEADERS = \
 	qmi-error-types.h \
 	qmi-enum-types.h \
 	qmi-flags64-types.h \
-	qmi-ctl.h \
 	qmi-dms.h \
 	qmi-nas.h \
 	qmi-wds.h \

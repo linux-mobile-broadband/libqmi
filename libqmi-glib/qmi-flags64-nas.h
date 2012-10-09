@@ -23,6 +23,12 @@
 #ifndef _LIBQMI_GLIB_QMI_FLAGS64_NAS_H_
 #define _LIBQMI_GLIB_QMI_FLAGS64_NAS_H_
 
+#if !defined (__LIBQMI_GLIB_H_INSIDE__) && !defined (LIBQMI_GLIB_COMPILATION)
+#error "Only <libqmi-glib.h> can be included directly."
+#endif
+
+#include <glib.h>
+
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get System Selection Preference'
  * request/response */

@@ -23,6 +23,10 @@
 #ifndef _LIBQMI_GLIB_QMI_ENUMS_PDS_H_
 #define _LIBQMI_GLIB_QMI_ENUMS_PDS_H_
 
+#if !defined (__LIBQMI_GLIB_H_INSIDE__) && !defined (LIBQMI_GLIB_COMPILATION)
+#error "Only <libqmi-glib.h> can be included directly."
+#endif
+
 /*****************************************************************************/
 /* Helper enums for the 'QMI PDS Event Report' indication */
 

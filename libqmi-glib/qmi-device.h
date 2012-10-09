@@ -23,6 +23,10 @@
 #ifndef _LIBQMI_GLIB_QMI_DEVICE_H_
 #define _LIBQMI_GLIB_QMI_DEVICE_H_
 
+#if !defined (__LIBQMI_GLIB_H_INSIDE__) && !defined (LIBQMI_GLIB_COMPILATION)
+#error "Only <libqmi-glib.h> can be included directly."
+#endif
+
 #include <glib-object.h>
 #include <gio/gio.h>
 

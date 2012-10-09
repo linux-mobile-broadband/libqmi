@@ -23,6 +23,10 @@
 #ifndef _LIBQMI_GLIB_QMI_ERRORS_H_
 #define _LIBQMI_GLIB_QMI_ERRORS_H_
 
+#if !defined (__LIBQMI_GLIB_H_INSIDE__) && !defined (LIBQMI_GLIB_COMPILATION)
+#error "Only <libqmi-glib.h> can be included directly."
+#endif
+
 /* Prefixes for errors registered in DBus */
 #define QMI_DBUS_ERROR_PREFIX          "org.freedesktop.libqmi.Error"
 #define QMI_CORE_ERROR_DBUS_PREFIX     QMI_DBUS_ERROR_PREFIX ".Core"
