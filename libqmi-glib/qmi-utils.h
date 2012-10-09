@@ -121,6 +121,10 @@ void qmi_utils_write_fixed_size_string_to_buffer  (guint8      **buffer,
                                                    guint16       fixed_size,
                                                    const gchar  *in);
 
+/* Enabling/Disabling traces */
+gboolean qmi_utils_get_traces_enabled (void);
+void     qmi_utils_set_traces_enabled (gboolean enabled);
+
 /* Other private methods */
 
 #if defined (LIBQMI_GLIB_COMPILATION)

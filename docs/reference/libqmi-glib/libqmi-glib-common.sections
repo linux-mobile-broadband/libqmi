@@ -641,6 +641,9 @@ qmi_message_get_tlv_printable
 
 <SECTION>
 <FILE>qmi-utils</FILE>
+<SUBSECTION Traces>
+qmi_utils_get_traces_enabled
+qmi_utils_set_traces_enabled
 <SUBSECTION Readers>
 qmi_utils_read_guint8_from_buffer
 qmi_utils_read_gint8_from_buffer

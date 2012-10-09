@@ -36,6 +36,8 @@
  * with the QMI library.
  **/
 
+/*****************************************************************************/
+
 gchar *
 __qmi_utils_str_hex (gconstpointer mem,
                      gsize size,
@@ -69,6 +71,8 @@ __qmi_utils_str_hex (gconstpointer mem,
 	/* Set output string */
 	return new_str;
 }
+
+/*****************************************************************************/
 
 #if defined UTILS_ENABLE_TRACE
 static void
@@ -883,4 +887,33 @@ qmi_utils_write_fixed_size_string_to_buffer (guint8      **buffer,
     memcpy (*buffer, in, fixed_size);
     *buffer = &((*buffer)[fixed_size]);
     *buffer_size = (*buffer_size) - fixed_size;
+}
+
+/*****************************************************************************/
+
+static volatile gint __traces_enabled = FALSE;
+
+/**
+ * qmi_utils_get_traces_enabled:
+ *
+ * Checks whether QMI message traces are currently enabled.
+ *
+ * Returns: %TRUE if traces are enabled, %FALSE otherwise.
+ */
+gboolean
+qmi_utils_get_traces_enabled (void)
+{
+    return (gboolean) g_atomic_int_get (&__traces_enabled);
+}
+
+/**
+ * qmi_utils_set_traces_enabled:
+ * @enabled: %TRUE to enable traces, %FALSE to disable them.
+ *
+ * Sets whether QMI message traces are enabled or disabled.
+ */
+void
+qmi_utils_set_traces_enabled (gboolean enabled)
+{
+    g_atomic_int_set (&__traces_enabled, enabled);
 }

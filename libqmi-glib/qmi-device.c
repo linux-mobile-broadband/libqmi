@@ -1043,8 +1043,7 @@ static void
 process_message (QmiDevice *self,
                  QmiMessage *message)
 {
-#ifdef MESSAGE_ENABLE_TRACE
-    {
+    if (qmi_utils_get_traces_enabled ()) {
         gchar *printable;
 
         printable = qmi_message_get_printable (message, ">>>>>> ");
@@ -1053,7 +1052,6 @@ process_message (QmiDevice *self,
                  printable);
         g_free (printable);
     }
-#endif /* MESSAGE_ENABLE_TRACE */
 
     if (qmi_message_is_indication (message)) {
         if (qmi_message_get_client_id (message) == QMI_CID_BROADCAST) {
@@ -1715,8 +1713,7 @@ qmi_device_command (QmiDevice *self,
         return;
     }
 
-#ifdef MESSAGE_ENABLE_TRACE
-    {
+    if (qmi_utils_get_traces_enabled ()) {
         gchar *printable;
 
         printable = qmi_message_get_printable (message, "<<<<<< ");
@@ -1725,7 +1722,6 @@ qmi_device_command (QmiDevice *self,
                  printable);
         g_free (printable);
     }
-#endif /* MESSAGE_ENABLE_TRACE */
 
     /* Get raw message */
     raw_message = qmi_message_get_raw (message, &raw_message_len, &error);

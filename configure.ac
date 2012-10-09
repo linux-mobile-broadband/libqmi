@@ -58,17 +58,6 @@ case $with_docs in
 esac
 GTK_DOC_CHECK(1.0)
 
-dnl Protocol message tracing
-AC_ARG_WITH(traces, AS_HELP_STRING([--with-traces], [Enable protocol debugging traces]))
-AM_CONDITIONAL(WITH_TRACES, test "x$with_traces" = "xyes")
-case $with_traces in
-    yes)
-	CFLAGS="-DMESSAGE_ENABLE_TRACE $CFLAGS"
-        ;;
-    *)
-        ;;
-esac
-
 dnl Tests
 AC_ARG_WITH(tests, AS_HELP_STRING([--with-tests], [Build libqmi tests]))
 AM_CONDITIONAL(WITH_TESTS, test "x$with_tests" = "xyes")
