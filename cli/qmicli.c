@@ -495,6 +495,8 @@ int main (int argc, char **argv)
         print_version_and_exit ();
 
     g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, log_handler, NULL);
+    if (verbose_flag)
+        qmi_utils_set_traces_enabled (TRUE);
 
     /* No device path given? */
     if (!device_str) {
