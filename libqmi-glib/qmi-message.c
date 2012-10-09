@@ -839,22 +839,22 @@ qmi_message_get_printable (QmiMessage *self,
     contents = NULL;
     switch (qmi_message_get_service (self)) {
     case QMI_SERVICE_CTL:
-        contents = qmi_message_ctl_get_printable (self, line_prefix);
+        contents = __qmi_message_ctl_get_printable (self, line_prefix);
         break;
     case QMI_SERVICE_DMS:
-        contents = qmi_message_dms_get_printable (self, line_prefix);
+        contents = __qmi_message_dms_get_printable (self, line_prefix);
         break;
     case QMI_SERVICE_WDS:
-        contents = qmi_message_wds_get_printable (self, line_prefix);
+        contents = __qmi_message_wds_get_printable (self, line_prefix);
         break;
     case QMI_SERVICE_NAS:
-        contents = qmi_message_nas_get_printable (self, line_prefix);
+        contents = __qmi_message_nas_get_printable (self, line_prefix);
         break;
     case QMI_SERVICE_WMS:
-        contents = qmi_message_wms_get_printable (self, line_prefix);
+        contents = __qmi_message_wms_get_printable (self, line_prefix);
         break;
     case QMI_SERVICE_PDS:
-        contents = qmi_message_pds_get_printable (self, line_prefix);
+        contents = __qmi_message_pds_get_printable (self, line_prefix);
         break;
     default:
         break;
@@ -891,19 +891,19 @@ qmi_message_get_version_introduced (QmiMessage *self,
         return TRUE;
 
     case QMI_SERVICE_DMS:
-        return qmi_message_dms_get_version_introduced (self, major, minor);
+        return __qmi_message_dms_get_version_introduced (self, major, minor);
 
     case QMI_SERVICE_WDS:
-        return qmi_message_wds_get_version_introduced (self, major, minor);
+        return __qmi_message_wds_get_version_introduced (self, major, minor);
 
     case QMI_SERVICE_NAS:
-        return qmi_message_nas_get_version_introduced (self, major, minor);
+        return __qmi_message_nas_get_version_introduced (self, major, minor);
 
     case QMI_SERVICE_WMS:
-        return qmi_message_wms_get_version_introduced (self, major, minor);
+        return __qmi_message_wms_get_version_introduced (self, major, minor);
 
     case QMI_SERVICE_PDS:
-        return qmi_message_pds_get_version_introduced (self, major, minor);
+        return __qmi_message_pds_get_version_introduced (self, major, minor);
 
     default:
         /* For the still unsupported services, cannot do anything */

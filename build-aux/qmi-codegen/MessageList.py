@@ -113,15 +113,21 @@ class MessageList:
 
         template = (
             '\n'
-            'gchar *qmi_message_${service}_get_printable (\n'
+            '#if defined (LIBQMI_GLIB_COMPILATION)\n'
+            '\n'
+            'G_GNUC_INTERNAL\n'
+            'gchar *__qmi_message_${service}_get_printable (\n'
             '    QmiMessage *self,\n'
-            '    const gchar *line_prefix);\n')
+            '    const gchar *line_prefix);\n'
+            '\n'
+            '#endif\n'
+            '\n')
         hfile.write(string.Template(template).substitute(translations))
 
         template = (
             '\n'
             'gchar *\n'
-            'qmi_message_${service}_get_printable (\n'
+            '__qmi_message_${service}_get_printable (\n'
             '    QmiMessage *self,\n'
             '    const gchar *line_prefix)\n'
             '{\n'
@@ -173,16 +179,22 @@ class MessageList:
 
         template = (
             '\n'
-            'gboolean qmi_message_${service}_get_version_introduced (\n'
+            '#if defined (LIBQMI_GLIB_COMPILATION)\n'
+            '\n'
+            'G_GNUC_INTERNAL\n'
+            'gboolean __qmi_message_${service}_get_version_introduced (\n'
             '    QmiMessage *self,\n'
             '    guint *major,\n'
-            '    guint *minor);\n')
+            '    guint *minor);\n'
+            '\n'
+            '#endif\n'
+            '\n')
         hfile.write(string.Template(template).substitute(translations))
 
         template = (
             '\n'
             'gboolean\n'
-            'qmi_message_${service}_get_version_introduced (\n'
+            '__qmi_message_${service}_get_version_introduced (\n'
             '    QmiMessage *self,\n'
             '    guint *major,\n'
             '    guint *minor)\n'
@@ -237,17 +249,3 @@ class MessageList:
         # Emit all message sections
         for message in self.list:
             message.emit_sections(sfile)
-
-        translations = { 'hyphened' : utils.build_dashed_name (self.service + 'Private'),
-                         'service'  : utils.build_underscore_name (self.service) }
-
-        # Emit dummy section for service-specific private methods
-        template = (
-            '<SECTION>\n'
-            '<FILE>${hyphened}</FILE>\n'
-            '<SUBSECTION Private>\n'
-            'qmi_message_${service}_get_printable\n'
-            'qmi_message_${service}_get_version_introduced\n'
-            '</SECTION>\n'
-            '\n')
-        sfile.write(string.Template(template).substitute(translations))
