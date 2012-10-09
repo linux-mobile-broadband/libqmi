@@ -641,6 +641,7 @@ qmi_message_get_tlv_printable
 
 <SECTION>
 <FILE>qmi-utils</FILE>
+<SUBSECTION Readers>
 qmi_utils_read_guint8_from_buffer
 qmi_utils_read_gint8_from_buffer
 qmi_utils_read_guint16_from_buffer
@@ -650,6 +651,9 @@ qmi_utils_read_gint32_from_buffer
 qmi_utils_read_guint64_from_buffer
 qmi_utils_read_gint64_from_buffer
 qmi_utils_read_sized_guint_from_buffer
+qmi_utils_read_string_from_buffer
+qmi_utils_read_fixed_size_string_from_buffer
+<SUBSECTION Writers>
 qmi_utils_write_guint8_to_buffer
 qmi_utils_write_gint8_to_buffer
 qmi_utils_write_guint16_to_buffer
@@ -659,8 +663,6 @@ qmi_utils_write_gint32_to_buffer
 qmi_utils_write_guint64_to_buffer
 qmi_utils_write_gint64_to_buffer
 qmi_utils_write_sized_guint_to_buffer
-qmi_utils_read_string_from_buffer
 qmi_utils_write_string_to_buffer
-qmi_utils_read_fixed_size_string_from_buffer
 qmi_utils_write_fixed_size_string_to_buffer
 </SECTION>

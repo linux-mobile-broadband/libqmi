@@ -28,6 +28,14 @@
 
 #include "qmi-utils.h"
 
+/**
+ * SECTION:qmi-utils
+ * @title: Common utilities
+ *
+ * This section exposes a set of common utilities that may be used to work
+ * with the QMI library.
+ **/
+
 gchar *
 __qmi_utils_str_hex (gconstpointer mem,
                      gsize size,
@@ -85,6 +93,20 @@ print_read_bytes_trace (const gchar *type,
 #define print_read_bytes_trace(...)
 #endif
 
+/**
+ * qmi_utils_read_guint8_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @out: return location for the read variable.
+ *
+ * Reads an unsigned byte from the buffer.
+ *
+ * The user needs to make sure that at least 1 byte is available
+ * in the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 1 byte
+ * read.
+ */
 void
 qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
@@ -103,6 +125,20 @@ qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - 1;
 }
 
+/**
+ * qmi_utils_read_gint8_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @out: return location for the read variable.
+ *
+ * Reads a signed byte from the buffer.
+ *
+ * The user needs to make sure that at least 1 byte is available
+ * in the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 1 byte
+ * read.
+ */
 void
 qmi_utils_read_gint8_from_buffer (const guint8 **buffer,
                                   guint16       *buffer_size,
@@ -121,6 +157,22 @@ qmi_utils_read_gint8_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - 1;
 }
 
+/**
+ * qmi_utils_read_guint16_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @out: return location for the read variable.
+ *
+ * Reads an unsigned 16-bit integer from the buffer. The number in the buffer is
+ * expected to be given in Little-Endian, and this method takes care of
+ * converting the read value to the proper host endianness.
+ *
+ * The user needs to make sure that at least 2 bytes are available
+ * in the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 2 bytes
+ * read.
+ */
 void
 qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
                                     guint16       *buffer_size,
@@ -140,6 +192,22 @@ qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - 2;
 }
 
+/**
+ * qmi_utils_read_gint16_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @out: return location for the read variable.
+ *
+ * Reads a signed 16-bit integer from the buffer. The number in the buffer is
+ * expected to be given in Little-Endian, and this method takes care of
+ * converting the read value to the proper host endianness.
+ *
+ * The user needs to make sure that at least 2 bytes are available
+ * in the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 2 bytes
+ * read.
+ */
 void
 qmi_utils_read_gint16_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
@@ -159,6 +227,22 @@ qmi_utils_read_gint16_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - 2;
 }
 
+/**
+ * qmi_utils_read_guint32_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @out: return location for the read variable.
+ *
+ * Reads an unsigned 32-bit integer from the buffer. The number in the buffer is
+ * expected to be given in Little-Endian, and this method takes care of
+ * converting the read value to the proper host endianness.
+ *
+ * The user needs to make sure that at least 4 bytes are available
+ * in the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 4 bytes
+ * read.
+ */
 void
 qmi_utils_read_guint32_from_buffer (const guint8 **buffer,
                                     guint16       *buffer_size,
@@ -178,6 +262,22 @@ qmi_utils_read_guint32_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - 4;
 }
 
+/**
+ * qmi_utils_read_gint32_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @out: return location for the read variable.
+ *
+ * Reads a signed 32-bit integer from the buffer. The number in the buffer is
+ * expected to be given in Little-Endian, and this method takes care of
+ * converting the read value to the proper host endianness.
+ *
+ * The user needs to make sure that at least 4 bytes are available
+ * in the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 4 bytes
+ * read.
+ */
 void
 qmi_utils_read_gint32_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
@@ -197,6 +297,22 @@ qmi_utils_read_gint32_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - 4;
 }
 
+/**
+ * qmi_utils_read_guint64_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @out: return location for the read variable.
+ *
+ * Reads an unsigned 64-bit integer from the buffer. The number in the buffer is
+ * expected to be given in Little-Endian, and this method takes care of
+ * converting the read value to the proper host endianness.
+ *
+ * The user needs to make sure that at least 8 bytes are available
+ * in the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 8 bytes
+ * read.
+ */
 void
 qmi_utils_read_guint64_from_buffer (const guint8 **buffer,
                                     guint16       *buffer_size,
@@ -216,6 +332,22 @@ qmi_utils_read_guint64_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - 8;
 }
 
+/**
+ * qmi_utils_read_gint64_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @out: return location for the read variable.
+ *
+ * Reads a signed 64-bit integer from the buffer. The number in the buffer is
+ * expected to be given in Little-Endian, and this method takes care of
+ * converting the read value to the proper host endianness.
+ *
+ * The user needs to make sure that at least 8 bytes are available
+ * in the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 8 bytes
+ * read.
+ */
 void
 qmi_utils_read_gint64_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
@@ -235,6 +367,23 @@ qmi_utils_read_gint64_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - 8;
 }
 
+/**
+ * qmi_utils_read_sized_guint_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @n_bytes: number of bytes to read.
+ * @out: return location for the read variable.
+ *
+ * Reads a @n_bytes-sized unsigned integer from the buffer. The number in the
+ * buffer is expected to be given in Little-Endian, and this method takes care
+ * of converting the read value to the proper host endianness.
+ *
+ * The user needs to make sure that at least @n_bytes bytes are available
+ * in the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the @n_bytes
+ * bytes read.
+ */
 void
 qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
                                         guint16       *buffer_size,
@@ -254,6 +403,19 @@ qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - n_bytes;
 }
 
+/**
+ * qmi_utils_write_guint8_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @in: location of the variable to be written.
+ *
+ * Writes an unsigned byte into the buffer.
+ *
+ * The user needs to make sure that the buffer is at least 1 byte long.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 1 byte
+ * write.
+ */
 void
 qmi_utils_write_guint8_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
@@ -270,6 +432,19 @@ qmi_utils_write_guint8_to_buffer (guint8  **buffer,
     *buffer_size = (*buffer_size) - 1;
 }
 
+/**
+ * qmi_utils_write_gint8_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @in: location of the variable to be written.
+ *
+ * Writes a signed byte into the buffer.
+ *
+ * The user needs to make sure that the buffer is at least 1 byte long.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 1 byte
+ * write.
+ */
 void
 qmi_utils_write_gint8_to_buffer (guint8  **buffer,
                                  guint16  *buffer_size,
@@ -286,6 +461,21 @@ qmi_utils_write_gint8_to_buffer (guint8  **buffer,
     *buffer_size = (*buffer_size) - 1;
 }
 
+/**
+ * qmi_utils_write_guint16_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @in: location of the variable to be written.
+ *
+ * Writes an unsigned 16-bit integer into the buffer. The number to be written
+ * is expected to be given in host endianness, and this method takes care of
+ * converting the value written to Little-Endian.
+ *
+ * The user needs to make sure that the buffer is at least 2 bytes long.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 2 bytes
+ * write.
+ */
 void
 qmi_utils_write_guint16_to_buffer (guint8  **buffer,
                                    guint16  *buffer_size,
@@ -305,6 +495,21 @@ qmi_utils_write_guint16_to_buffer (guint8  **buffer,
     *buffer_size = (*buffer_size) - 2;
 }
 
+/**
+ * qmi_utils_write_gint16_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @in: location of the variable to be written.
+ *
+ * Writes a signed 16-bit integer into the buffer. The number to be written
+ * is expected to be given in host endianness, and this method takes care of
+ * converting the value written to Little-Endian.
+ *
+ * The user needs to make sure that the buffer is at least 2 bytes long.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 2 bytes
+ * write.
+ */
 void
 qmi_utils_write_gint16_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
@@ -324,6 +529,21 @@ qmi_utils_write_gint16_to_buffer (guint8  **buffer,
     *buffer_size = (*buffer_size) - 2;
 }
 
+/**
+ * qmi_utils_write_guint32_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @in: location of the variable to be written.
+ *
+ * Writes an unsigned 32-bit integer into the buffer. The number to be written
+ * is expected to be given in host endianness, and this method takes care of
+ * converting the value written to Little-Endian.
+ *
+ * The user needs to make sure that the buffer is at least 4 bytes long.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 4 bytes
+ * write.
+ */
 void
 qmi_utils_write_guint32_to_buffer (guint8  **buffer,
                                    guint16  *buffer_size,
@@ -343,6 +563,21 @@ qmi_utils_write_guint32_to_buffer (guint8  **buffer,
     *buffer_size = (*buffer_size) - 4;
 }
 
+/**
+ * qmi_utils_write_gint32_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @in: location of the variable to be written.
+ *
+ * Writes a signed 32-bit integer into the buffer. The number to be written
+ * is expected to be given in host endianness, and this method takes care of
+ * converting the value written to Little-Endian.
+ *
+ * The user needs to make sure that the buffer is at least 4 bytes long.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 4 bytes
+ * write.
+ */
 void
 qmi_utils_write_gint32_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
@@ -362,6 +597,21 @@ qmi_utils_write_gint32_to_buffer (guint8  **buffer,
     *buffer_size = (*buffer_size) - 4;
 }
 
+/**
+ * qmi_utils_write_guint64_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @in: location of the variable to be written.
+ *
+ * Writes an unsigned 64-bit integer into the buffer. The number to be written
+ * is expected to be given in host endianness, and this method takes care of
+ * converting the value written to Little-Endian.
+ *
+ * The user needs to make sure that the buffer is at least 8 bytes long.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 8 bytes
+ * write.
+ */
 void
 qmi_utils_write_guint64_to_buffer (guint8  **buffer,
                                    guint16  *buffer_size,
@@ -381,6 +631,21 @@ qmi_utils_write_guint64_to_buffer (guint8  **buffer,
     *buffer_size = (*buffer_size) - 8;
 }
 
+/**
+ * qmi_utils_write_gint64_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @in: location of the variable to be written.
+ *
+ * Writes a signed 64-bit integer into the buffer. The number to be written
+ * is expected to be given in host endianness, and this method takes care of
+ * converting the value written to Little-Endian.
+ *
+ * The user needs to make sure that the buffer is at least 8 bytes long.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 8 bytes
+ * write.
+ */
 void
 qmi_utils_write_gint64_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
@@ -400,6 +665,22 @@ qmi_utils_write_gint64_to_buffer (guint8  **buffer,
     *buffer_size = (*buffer_size) - 8;
 }
 
+/**
+ * qmi_utils_write_sized_guint_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @n_bytes: number of bytes to read.
+ * @in: location of the variable to be written.
+ *
+ * Writes a @n_bytes-sized unsigned integer into the buffer. The number to be
+ * written is expected to be given in host endianness, and this method takes
+ * care of converting the value written to Little-Endian.
+ *
+ * The user needs to make sure that the buffer is at least @n_bytes bytes long.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the @n_bytes
+ * bytes write.
+ */
 void
 qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
                                        guint16  *buffer_size,
@@ -420,6 +701,21 @@ qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
     *buffer_size = (*buffer_size) - n_bytes;
 }
 
+/**
+ * qmi_utils_read_string_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @length_prefix_size: size of the length prefix integer in bits.
+ * @max_size: maximum number of bytes to read, or 0 to read all available bytes.
+ * @out: return location for the read string. The returned value should be freed with g_free().
+ *
+ * Reads a string from the buffer.
+ *
+ * If @length_prefix_size is greater than 0, only the amount of bytes given
+ * there will be read. Otherwise, up to @buffer_size bytes will be read.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the write.
+ */
 void
 qmi_utils_read_string_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
@@ -471,6 +767,18 @@ qmi_utils_read_string_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - string_length;
 }
 
+/**
+ * qmi_utils_read_fixed_size_string_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @fixed_size: number of bytes to read.
+ * @out: return location for the read string. The returned value should be freed with g_free().
+ *
+ * Reads a @fixed_size-sized string from the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the
+ * @fixed_size bytes read.
+ */
 void
 qmi_utils_read_fixed_size_string_from_buffer (const guint8 **buffer,
                                               guint16       *buffer_size,
@@ -488,6 +796,23 @@ qmi_utils_read_fixed_size_string_from_buffer (const guint8 **buffer,
     *buffer_size = (*buffer_size) - fixed_size;
 }
 
+/**
+ * qmi_utils_write_string_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @length_prefix_size: size of the length prefix integer in bits.
+ * @in: string to write.
+ *
+ * Writes a string to the buffer.
+ *
+ * If @length_prefix_size is greater than 0, a length prefix integer will be
+ * included in the write operation.
+ *
+ * The user needs to make sure that the buffer has enough space for both the
+ * whole string and the length prefix.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the write.
+ */
 void
 qmi_utils_write_string_to_buffer (guint8      **buffer,
                                   guint16      *buffer_size,
@@ -529,6 +854,21 @@ qmi_utils_write_string_to_buffer (guint8      **buffer,
     *buffer_size = (*buffer_size) - len;
 }
 
+/**
+ * qmi_utils_write_fixed_size_string_to_buffer:
+ * @buffer: a buffer.
+ * @buffer_size: size of @buffer.
+ * @fixed_size: number of bytes to write.
+ * @in: string to write.
+ *
+ * Writes a @fixed_size-sized string to the buffer, without any length prefix.
+ *
+ * The user needs to make sure that the buffer is at least @fixed_size bytes
+ * long.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the
+ * @fixed_size bytes write.
+ */
 void
 qmi_utils_write_fixed_size_string_to_buffer (guint8      **buffer,
                                              guint16      *buffer_size,
