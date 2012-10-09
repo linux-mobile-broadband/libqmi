@@ -43,10 +43,7 @@
     <xi:include href="xml/qmi-device.xml"/>
     <xi:include href="xml/qmi-client.xml"/>
     <xi:include href="xml/qmi-enums.xml"/>
-    <xi:include href="xml/qmi-enum-types.xml"/>
-    <xi:include href="xml/qmi-flags64-types.xml"/>
     <xi:include href="xml/qmi-errors.xml"/>
-    <xi:include href="xml/qmi-error-types.xml"/>
     <xi:include href="xml/qmi-utils.xml"/>
   </chapter>
 
@@ -54,7 +51,6 @@
     <title>Device Management Service (DMS)</title>
     <xi:include href="xml/qmi-client-dms.xml"/>
     <xi:include href="xml/qmi-enums-dms.xml"/>
-    <xi:include href="xml/qmi-flags64-dms.xml"/>
     <section>
       <title>DMS Indications</title>
       <xi:include href="xml/qmi-indication-dms-event-report.xml"/>
@@ -116,7 +112,6 @@
     <title>Network Access Service (NAS)</title>
     <xi:include href="xml/qmi-client-nas.xml"/>
     <xi:include href="xml/qmi-enums-nas.xml"/>
-    <xi:include href="xml/qmi-flags64-nas.xml"/>
     <section>
       <title>NAS Indications</title>
       <xi:include href="xml/qmi-indication-nas-event-report.xml"/>

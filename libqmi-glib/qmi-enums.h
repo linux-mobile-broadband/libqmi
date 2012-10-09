@@ -28,6 +28,13 @@
 #endif
 
 /**
+ * SECTION: qmi-enums
+ * @title: Common enumerations and flags
+ *
+ * This section defines common enumerations and flags used in the interface.
+ */
+
+/**
  * QmiService:
  * @QMI_SERVICE_UNKNOWN: Unknown service.
  * @QMI_SERVICE_CTL: Control service.

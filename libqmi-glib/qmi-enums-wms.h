@@ -27,6 +27,14 @@
 #error "Only <libqmi-glib.h> can be included directly."
 #endif
 
+/**
+ * SECTION: qmi-enums-wms
+ * @title: WMS enumerations and flags
+ *
+ * This section defines enumerations and flags used in the WMS service
+ * interface.
+ */
+
 /*****************************************************************************/
 /* Helper enums for the 'QMI WMS Event Report' indication */
 

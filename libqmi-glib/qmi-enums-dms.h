@@ -27,6 +27,14 @@
 #error "Only <libqmi-glib.h> can be included directly."
 #endif
 
+/**
+ * SECTION: qmi-enums-dms
+ * @title: DMS enumerations and flags
+ *
+ * This section defines enumerations and flags used in the DMS service
+ * interface.
+ */
+
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS Get Capabilities' message */
 

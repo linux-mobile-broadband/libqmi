@@ -27,6 +27,13 @@
 #error "Only <libqmi-glib.h> can be included directly."
 #endif
 
+/**
+ * SECTION: qmi-errors
+ * @title: Errors
+ *
+ * This section defines common error types used in the interface.
+ */
+
 /* Prefixes for errors registered in DBus */
 #define QMI_DBUS_ERROR_PREFIX          "org.freedesktop.libqmi.Error"
 #define QMI_CORE_ERROR_DBUS_PREFIX     QMI_DBUS_ERROR_PREFIX ".Core"

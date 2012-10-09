@@ -27,6 +27,14 @@
 #error "Only <libqmi-glib.h> can be included directly."
 #endif
 
+/**
+ * SECTION: qmi-enums-wds
+ * @title: WDS enumerations and flags
+ *
+ * This section defines enumerations and flags used in the WDS service
+ * interface.
+ */
+
 #include <glib.h>
 
 /*****************************************************************************/
@@ -916,7 +924,6 @@ typedef enum { /*< underscore_name=qmi_wds_authentication >*/
     QMI_WDS_AUTHENTICATION_PAP  = 1 << 0,
     QMI_WDS_AUTHENTICATION_CHAP = 1 << 1
 } QmiWdsAuthentication;
-
 
 /**
  * QmiWdsProfileType:

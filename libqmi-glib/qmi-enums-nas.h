@@ -27,6 +27,14 @@
 #error "Only <libqmi-glib.h> can be included directly."
 #endif
 
+/**
+ * SECTION: qmi-enums-nas
+ * @title: NAS enumerations and flags
+ *
+ * This section defines enumerations and flags used in the NAS service
+ * interface.
+ */
+
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Event Report' indication */
 
