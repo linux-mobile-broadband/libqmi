@@ -88,21 +88,8 @@ class Message:
         input_arg_template = 'gpointer unused' if self.input.fields is None else '${container} *input'
         template = (
             '\n'
-            'QmiMessage *${underscore}_request_create (\n'
-            '    guint8 transaction_id,\n'
-            '    guint8 cid,\n'
-            '    %s,\n'
-            '    GError **error);\n' % input_arg_template)
-        hfile.write(string.Template(template).substitute(translations))
-
-        # Emit message creator
-        template = (
-            '\n'
-            '/**\n'
-            ' * ${underscore}_request_create:\n'
-            ' */\n'
-            'QmiMessage *\n'
-            '${underscore}_request_create (\n'
+            'static QmiMessage *\n'
+            '__${underscore}_request_create (\n'
             '    guint8 transaction_id,\n'
             '    guint8 cid,\n'
             '    %s,\n'
@@ -196,24 +183,8 @@ class Message:
 
         template = (
             '\n'
-            '${container} *${underscore}_${type}_parse (\n'
-            '    QmiMessage *message,\n'
-            '    GError **error);\n')
-        hfile.write(string.Template(template).substitute(translations))
-
-        template = (
-            '\n'
-            '/**\n'
-            ' * ${underscore}_${type}_parse:\n'
-            ' * @message: a #QmiMessage ${type}.\n'
-            ' * @error: Return location for error or %%NULL.\n'
-            ' *\n'
-            ' * Parse the \'${name}\' ${type}.\n'
-            ' *\n'
-            ' * Returns: a #${container} which should be disposed with ${container_underscore}_unref(), or #NULL if @error is set.\n'
-            ' */\n'
-            '${container} *\n'
-            '${underscore}_${type}_parse (\n'
+            'static ${container} *\n'
+            '__${underscore}_${type}_parse (\n'
             '    QmiMessage *message,\n'
             '    GError **error)\n'
             '{\n'
@@ -466,16 +437,7 @@ class Message:
             '${public_types}'
             '${public_methods}'
             '<SUBSECTION Private>\n'
-            '${private}')
-
-        if self.input:
-            template += '${fullname_underscore}_request_create\n'
-
-        if self.output.fields is not None:
-            template += (
-                '${fullname_underscore}_${type}_parse\n')
-
-        template += (
+            '${private}'
             '<SUBSECTION Standard>\n'
             '${standard}'
             '</SECTION>\n'
