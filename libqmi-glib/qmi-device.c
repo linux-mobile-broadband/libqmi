@@ -154,28 +154,6 @@ build_transaction_key (QmiMessage *message)
     /* We're putting a 32 bit value into a gpointer */
     key = GUINT_TO_POINTER ((((service << 8) | client_id) << 16) | transaction_id);
 
-#ifdef MESSAGE_ENABLE_TRACE
-    {
-        gchar *hex;
-
-        hex = qmi_utils_str_hex (&key, sizeof (key), ':');
-        g_debug ("KEY: %s", hex);
-        g_free (hex);
-
-        hex = qmi_utils_str_hex (&service, sizeof (service), ':');
-        g_debug ("  Service: %s", hex);
-        g_free (hex);
-
-        hex = qmi_utils_str_hex (&client_id, sizeof (client_id), ':');
-        g_debug ("  Client ID: %s", hex);
-        g_free (hex);
-
-        hex = qmi_utils_str_hex (&transaction_id, sizeof (transaction_id), ':');
-        g_debug ("  Transaction ID: %s", hex);
-        g_free (hex);
-    }
-#endif /* MESSAGE_ENABLE_TRACE */
-
     return key;
 }
 
