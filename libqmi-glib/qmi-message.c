@@ -35,6 +35,8 @@
 
 #include "qmi-message.h"
 #include "qmi-utils.h"
+#include "qmi-enums-private.h"
+#include "qmi-enum-types-private.h"
 #include "qmi-enum-types.h"
 #include "qmi-error-types.h"
 

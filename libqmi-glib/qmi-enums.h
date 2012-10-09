@@ -20,8 +20,6 @@
  * Copyright (C) 2012 Google, Inc.
  */
 
-#include "qmi-enums-wds.h"
-
 #ifndef _LIBQMI_GLIB_QMI_ENUMS_H_
 #define _LIBQMI_GLIB_QMI_ENUMS_H_
 
@@ -92,64 +90,5 @@ typedef enum {
     /* Open Mobile Alliance device management service */
     QMI_SERVICE_OMA = 0xE2
 } QmiService;
-
-/*****************************************************************************/
-/* QMI Control */
-
-/**
- * QmiCtlDataFormat:
- * @QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_ABSENT: QoS header absent
- * @QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_PRESENT: QoS header present
- *
- * Controls whether the network port data format includes a QoS header or not.
- * Should normally be set to ABSENT.
- */
-typedef enum {
-    QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_ABSENT  = 0,
-    QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_PRESENT = 1,
-} QmiCtlDataFormat;
-
-/**
- * QmiCtlDataLinkProtocol:
- * @QMI_CTL_DATA_LINK_PROTOCOL_802_3: data frames formatted as 802.3 Ethernet
- * @QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP: data frames are raw IP packets
- *
- * Determines the network port data format.  Despite looking like flags, these
- * values are actually mutually exclusive.
- */
-typedef enum {
-    QMI_CTL_DATA_LINK_PROTOCOL_802_3  = 1 << 0,
-    QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP = 1 << 1,
-} QmiCtlDataLinkProtocol;
-
-/**
- * QmiCtlFlag:
- * @QMI_CTL_FLAG_NONE: None.
- * @QMI_CTL_FLAG_RESPONSE: Message is a response.
- * @QMI_CTL_FLAG_INDICATION: Message is an indication.
- *
- * QMI flags in messages of the %QMI_SERVICE_CTL service.
- */
-typedef enum {
-    QMI_CTL_FLAG_NONE       = 0,
-    QMI_CTL_FLAG_RESPONSE   = 1 << 0,
-    QMI_CTL_FLAG_INDICATION = 1 << 1
-} QmiCtlFlag;
-
-/**
- * QmiServiceFlag:
- * @QMI_SERVICE_FLAG_NONE: None.
- * @QMI_SERVICE_FLAG_COMPOUND: Message is compound.
- * @QMI_SERVICE_FLAG_RESPONSE: Message is a response.
- * @QMI_SERVICE_FLAG_INDICATION: Message is an indication.
- *
- * QMI flags in messages which are not of the %QMI_SERVICE_CTL service.
- */
-typedef enum {
-    QMI_SERVICE_FLAG_NONE       = 0,
-    QMI_SERVICE_FLAG_COMPOUND   = 1 << 0,
-    QMI_SERVICE_FLAG_RESPONSE   = 1 << 1,
-    QMI_SERVICE_FLAG_INDICATION = 1 << 2
-} QmiServiceFlag;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_H_ */

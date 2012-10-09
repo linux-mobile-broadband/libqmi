@@ -40,7 +40,9 @@ CFILE_GLOB = \
 	$(top_builddir)/libqmi-glib/generated/*.c
 
 # Headers to ignore
-IGNORE_HFILES =
+IGNORE_HFILES = \
+	qmi-enums-private.h \
+	qmi-enum-types-private.h
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.

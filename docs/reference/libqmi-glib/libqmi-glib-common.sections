@@ -72,15 +72,7 @@ qmi_device_get_type
 IS_ENUM
 qmi_service_get_string
 qmi_service_build_string_from_mask
-qmi_ctl_data_format_get_string
-qmi_ctl_data_format_build_string_from_mask
 IS_FLAGS
-qmi_ctl_data_link_protocol_get_string
-qmi_ctl_data_link_protocol_build_string_from_mask
-qmi_ctl_flag_get_string
-qmi_ctl_flag_build_string_from_mask
-qmi_service_flag_get_string
-qmi_service_flag_build_string_from_mask
 qmi_wds_ip_family_get_string
 qmi_wds_ip_family_build_string_from_mask
 qmi_wds_technology_preference_get_string
@@ -270,9 +262,6 @@ qmi_pds_data_valid_build_string_from_mask
 qmi_pds_tracking_session_state_get_string
 qmi_pds_tracking_session_state_build_string_from_mask
 <SUBSECTION Standard>
-QMI_TYPE_CTL_DATA_FORMAT
-QMI_TYPE_CTL_DATA_LINK_PROTOCOL
-QMI_TYPE_CTL_FLAG
 QMI_TYPE_DMS_ACTIVATION_STATE
 QMI_TYPE_DMS_DATA_SERVICE_CAPABILITY
 QMI_TYPE_DMS_FIRMWARE_IMAGE_TYPE
@@ -326,7 +315,6 @@ QMI_TYPE_PDS_OPERATION_MODE
 QMI_TYPE_PDS_POSITION_SESSION_STATUS
 QMI_TYPE_PDS_TRACKING_SESSION_STATE
 QMI_TYPE_SERVICE
-QMI_TYPE_SERVICE_FLAG
 QMI_TYPE_WDS_AUTHENTICATION
 QMI_TYPE_WDS_CALL_END_REASON
 QMI_TYPE_WDS_CALL_TYPE
@@ -369,9 +357,6 @@ QMI_TYPE_WMS_NOTIFICATION_TYPE
 QMI_TYPE_WMS_RECEIPT_ACTION
 QMI_TYPE_WMS_STORAGE_TYPE
 QMI_TYPE_WMS_TRANSFER_INDICATION
-qmi_ctl_data_format_get_type
-qmi_ctl_data_link_protocol_get_type
-qmi_ctl_flag_get_type
 qmi_dms_activation_state_get_type
 qmi_dms_data_service_capability_get_type
 qmi_dms_firmware_image_type_get_type
@@ -424,7 +409,6 @@ qmi_pds_data_valid_get_type
 qmi_pds_operation_mode_get_type
 qmi_pds_position_session_status_get_type
 qmi_pds_tracking_session_state_get_type
-qmi_service_flag_get_type
 qmi_service_get_type
 qmi_wds_authentication_get_type
 qmi_wds_call_end_reason_get_type
@@ -473,10 +457,6 @@ qmi_wms_transfer_indication_get_type
 <SECTION>
 <FILE>qmi-enums</FILE>
 QmiService
-QmiCtlDataFormat
-QmiCtlDataLinkProtocol
-QmiCtlFlag
-QmiServiceFlag
 </SECTION>
 
 <SECTION>
