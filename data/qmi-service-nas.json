@@ -471,6 +471,8 @@
      "service" : "NAS",
      "id"      : "0x0021",
      "version" : "1.0",
+     // This method may be aborted
+     "abort"   : "yes",
      "input"   : [  { "name"          : "Network Type",
                       "id"            : "0x10",
                       "mandatory"     : "no",
