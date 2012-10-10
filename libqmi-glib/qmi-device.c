@@ -94,14 +94,23 @@ struct _QmiDevicePrivate {
 /* Message transactions (private) */
 
 typedef struct {
+    QmiDevice *self;
+    gpointer key;
+} TransactionWaitContext;
+
+typedef struct {
     QmiMessage *message;
     GSimpleAsyncResult *result;
     guint timeout_id;
+    GCancellable *cancellable;
+    gulong cancellable_id;
+    TransactionWaitContext *wait_ctx;
 } Transaction;
 
 static Transaction *
 transaction_new (QmiDevice *self,
                  QmiMessage *message,
+                 GCancellable *cancellable,
                  GAsyncReadyCallback callback,
                  gpointer user_data)
 {
@@ -113,6 +122,8 @@ transaction_new (QmiDevice *self,
                                             callback,
                                             user_data,
                                             transaction_new);
+    if (cancellable)
+        tr->cancellable = g_object_ref (cancellable);
 
     return tr;
 }
@@ -126,6 +137,15 @@ transaction_complete_and_free (Transaction *tr,
 
     if (tr->timeout_id)
         g_source_remove (tr->timeout_id);
+
+    if (tr->cancellable) {
+        if (tr->cancellable_id)
+            g_cancellable_disconnect (tr->cancellable, tr->cancellable_id);
+        g_object_unref (tr->cancellable);
+    }
+
+    if (tr->wait_ctx)
+        g_slice_free (TransactionWaitContext, tr->wait_ctx);
 
     if (reply)
         g_simple_async_result_set_op_res_gpointer (tr->result,
@@ -174,19 +194,8 @@ device_release_transaction (QmiDevice *self,
     return tr;
 }
 
-typedef struct {
-    QmiDevice *self;
-    gpointer key;
-} TransactionTimeoutContext;
-
-static void
-transaction_timeout_context_free (TransactionTimeoutContext *ctx)
-{
-    g_slice_free (TransactionTimeoutContext, ctx);
-}
-
 static gboolean
-transaction_timed_out (TransactionTimeoutContext *ctx)
+transaction_timed_out (TransactionWaitContext *ctx)
 {
     Transaction *tr;
     GError *error = NULL;
@@ -205,11 +214,29 @@ transaction_timed_out (TransactionTimeoutContext *ctx)
 }
 
 static void
+transaction_cancelled (GCancellable *cancellable,
+                       TransactionWaitContext *ctx)
+{
+    Transaction *tr;
+    GError *error = NULL;
+
+    tr = device_release_transaction (ctx->self, ctx->key);
+    tr->cancellable_id = 0;
+
+    /* Complete transaction with an abort error */
+    error = g_error_new (QMI_PROTOCOL_ERROR,
+                         QMI_PROTOCOL_ERROR_ABORTED,
+                         "Transaction aborted");
+    transaction_complete_and_free (tr, NULL, error);
+    g_error_free (error);
+}
+
+static gboolean
 device_store_transaction (QmiDevice *self,
                           Transaction *tr,
-                          guint timeout)
+                          guint timeout,
+                          GError **error)
 {
-    TransactionTimeoutContext *timeout_ctx;
     gpointer key;
 
     if (G_UNLIKELY (!self->priv->transactions))
@@ -217,17 +244,35 @@ device_store_transaction (QmiDevice *self,
                                                      g_direct_equal);
 
     key = build_transaction_key (tr->message);
+
+    /* Setup the timeout and cancellation */
+
+    tr->wait_ctx = g_slice_new (TransactionWaitContext);
+    tr->wait_ctx->self = self;
+    tr->wait_ctx->key = key; /* valid as long as the transaction is in the HT */
+
+    tr->timeout_id = g_timeout_add_seconds (timeout,
+                                            (GSourceFunc)transaction_timed_out,
+                                            tr->wait_ctx);
+
+    if (tr->cancellable) {
+        tr->cancellable_id = g_cancellable_connect (tr->cancellable,
+                                                    (GCallback)transaction_cancelled,
+                                                    tr->wait_ctx,
+                                                    NULL);
+        if (!tr->cancellable_id) {
+            g_set_error (error,
+                         QMI_PROTOCOL_ERROR,
+                         QMI_PROTOCOL_ERROR_ABORTED,
+                         "Request is already cancelled");
+            return FALSE;
+        }
+    }
+
+    /* Keep in the HT */
     g_hash_table_insert (self->priv->transactions, key, tr);
 
-    /* Once it gets into the HT, setup the timeout */
-    timeout_ctx = g_slice_new (TransactionTimeoutContext);
-    timeout_ctx->self = self;
-    timeout_ctx->key = key; /* valid as long as the transaction is in the HT */
-    tr->timeout_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT,
-                                                 timeout,
-                                                 (GSourceFunc)transaction_timed_out,
-                                                 timeout_ctx,
-                                                 (GDestroyNotify)transaction_timeout_context_free);
+    return TRUE;
 }
 
 static Transaction *
@@ -1705,7 +1750,7 @@ qmi_device_command (QmiDevice *self,
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (message != NULL);
 
-    tr = transaction_new (self, message, callback, user_data);
+    tr = transaction_new (self, message, cancellable, callback, user_data);
 
     /* Device must be open */
     if (!self->priv->iochannel) {
@@ -1738,16 +1783,6 @@ qmi_device_command (QmiDevice *self,
         return;
     }
 
-    if (qmi_utils_get_traces_enabled ()) {
-        gchar *printable;
-
-        printable = qmi_message_get_printable (message, "<<<<<< ");
-        g_debug ("[%s] Sending message...\n%s",
-                 self->priv->path_display,
-                 printable);
-        g_free (printable);
-    }
-
     /* Get raw message */
     raw_message = qmi_message_get_raw (message, &raw_message_len, &error);
     if (!raw_message) {
@@ -1758,7 +1793,22 @@ qmi_device_command (QmiDevice *self,
     }
 
     /* Setup context to match response */
-    device_store_transaction (self, tr, timeout);
+    if (!device_store_transaction (self, tr, timeout, &error)) {
+        g_prefix_error (&error, "Cannot store transaction: ");
+        transaction_complete_and_free (tr, NULL, error);
+        g_error_free (error);
+        return;
+    }
+
+    if (qmi_utils_get_traces_enabled ()) {
+        gchar *printable;
+
+        printable = qmi_message_get_printable (message, "<<<<<< ");
+        g_debug ("[%s] Sending message...\n%s",
+                 self->priv->path_display,
+                 printable);
+        g_free (printable);
+    }
 
     written = 0;
     write_status = G_IO_STATUS_AGAIN;

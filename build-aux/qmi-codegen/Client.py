@@ -373,7 +373,8 @@ class Client:
 
             if message.abort:
                 template += (
-                    '        if (g_error_matches (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TIMEOUT)) {\n'
+                    '        if (g_error_matches (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TIMEOUT) ||\n'
+                    '            g_error_matches (error, QMI_PROTOCOL_ERROR, QMI_PROTOCOL_ERROR_ABORTED)) {\n'
                     '                QmiMessage *abort;\n'
                     '                GObject *self;\n'
                     '                guint16 transaction_id;\n'
