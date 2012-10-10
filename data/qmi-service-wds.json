@@ -41,6 +41,8 @@
      "service" : "WDS",
      "id"      : "0x0020",
      "version" : "1.0",
+     // This method may be aborted
+     "abort"   : "yes",
      "input"   : [  { "name"      : "Primary DNS Address Preference",
                       "id"        : "0x10",
                       "mandatory" : "no",
