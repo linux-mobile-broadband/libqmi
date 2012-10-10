@@ -1650,6 +1650,16 @@ qmi_device_close (QmiDevice *self,
 /*****************************************************************************/
 /* Command */
 
+/**
+ * qmi_device_command_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qmi_device_command().
+ *
+ * Returns: a #QmiMessage response, or #NULL if @error is set. The returned value should be freed with qmi_message_unref().
+ */
 QmiMessage *
 qmi_device_command_finish (QmiDevice *self,
                            GAsyncResult *res,
@@ -1662,6 +1672,20 @@ qmi_device_command_finish (QmiDevice *self,
                                 G_SIMPLE_ASYNC_RESULT (res)));
 }
 
+/**
+ * qmi_device_command:
+ * @self: a #QmiDevice.
+ * @message: the message to send.
+ * @timeout: maximum time, in seconds, to wait for the response.
+ * @cancellable: a #GCancellable, or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously sends a #QmiMessage to the device.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qmi_device_command_finish() to get the result of the operation.
+ */
 void
 qmi_device_command (QmiDevice *self,
                     QmiMessage *message,
