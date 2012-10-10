@@ -261,12 +261,18 @@ class Client:
     Emits the async methods for each known request/response
     """
     def __emit_methods(self, hfile, cfile, message_list):
-        translations = { 'underscore' : utils.build_underscore_name(self.name),
-                         'camelcase'  : utils.build_camelcase_name (self.name) }
+        translations = { 'underscore'        : utils.build_underscore_name(self.name),
+                         'camelcase'         : utils.build_camelcase_name (self.name),
+                         'service_lowercase' : string.lower(self.service),
+                         'service_uppercase' : string.upper(self.service),
+                         'service_camelcase' : string.capwords(self.service) }
 
         for message in message_list.list:
 
             if message.type == 'Indication':
+                continue
+
+            if message.static:
                 continue
 
             translations['message_name'] = message.name
@@ -306,11 +312,11 @@ class Client:
                 ' * ${underscore}_${message_underscore}_finish:\n'
                 ' * @self: a #${camelcase}.\n'
                 ' * @res: the #GAsyncResult obtained from the #GAsyncReadyCallback passed to ${underscore}_${message_underscore}().\n'
-                ' * @error: Return location for error or %%NULL.\n'
+                ' * @error: Return location for error or %NULL.\n'
                 ' *\n'
                 ' * Finishes an async operation started with ${underscore}_${message_underscore}().\n'
                 ' *\n'
-                ' * Returns: a #${output_camelcase}, or %%NULL if @error is set. The returned value should be freed with ${output_underscore}_unref().\n'
+                ' * Returns: a #${output_camelcase}, or %NULL if @error is set. The returned value should be freed with ${output_underscore}_unref().\n'
                 ' */\n'
                 '${output_camelcase} *\n'
                 '${underscore}_${message_underscore}_finish (\n'
@@ -322,7 +328,35 @@ class Client:
                 '       return NULL;\n'
                 '\n'
                 '   return ${output_underscore}_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));\n'
-                '}\n'
+                '}\n')
+
+            if message.abort:
+                template += (
+                '\n'
+                'static void\n'
+                '${message_underscore}_abort_ready (\n'
+                '    QmiDevice *device,\n'
+                '    GAsyncResult *res)\n'
+                '{\n'
+                '    GError *error = NULL;\n'
+                '    QmiMessage *reply;\n'
+                '    QmiMessage${service_camelcase}AbortOutput *output;\n'
+                '\n'
+                '    reply = qmi_device_command_finish (device, res, &error);\n'
+                '    if (reply) {\n'
+                '        output = __qmi_message_${service_lowercase}_abort_response_parse (reply, &error);\n'
+                '        if (output)\n'
+                '            qmi_message_${service_lowercase}_abort_output_unref (output);\n'
+                '        qmi_message_unref (reply);\n'
+                '    }\n'
+                '\n'
+                '    if (error) {\n'
+                '        g_debug ("Operation to abort \'${message_name}\' failed: %s", error->message);\n'
+                '        g_error_free (error);\n'
+                '    }\n'
+                '}\n')
+
+            template += (
                 '\n'
                 'static void\n'
                 '${message_underscore}_ready (\n'
@@ -335,7 +369,47 @@ class Client:
                 '    ${output_camelcase} *output;\n'
                 '\n'
                 '    reply = qmi_device_command_finish (device, res, &error);\n'
-                '    if (!reply) {\n'
+                '    if (!reply) {\n')
+
+            if message.abort:
+                template += (
+                    '        if (g_error_matches (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TIMEOUT)) {\n'
+                    '                QmiMessage *abort;\n'
+                    '                GObject *self;\n'
+                    '                guint16 transaction_id;\n'
+                    '                QmiMessage${service_camelcase}AbortInput *input;\n'
+                    '\n'
+                    '                self = g_async_result_get_source_object (G_ASYNC_RESULT (simple));\n'
+                    '                g_assert (self != NULL);\n'
+                    '\n'
+                    '                transaction_id = (guint16) GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (simple),\n'
+                    '                                                                                "transaction-id"));\n'
+                    '                g_assert (transaction_id != 0);\n'
+                    '\n'
+                    '                input = qmi_message_${service_lowercase}_abort_input_new ();\n'
+                    '                qmi_message_${service_lowercase}_abort_input_set_transaction_id (\n'
+                    '                    input,\n'
+                    '                    transaction_id,\n'
+                    '                    NULL);\n'
+                    '                abort = __qmi_message_${service_lowercase}_abort_request_create (\n'
+                    '                            qmi_client_get_next_transaction_id (QMI_CLIENT (self)),\n'
+                    '                            qmi_client_get_cid (QMI_CLIENT (self)),\n'
+                    '                            input,\n'
+                    '                            NULL);\n'
+                    '                g_assert (abort != NULL);\n'
+                    '                qmi_device_command (device,\n'
+                    '                                    abort,\n'
+                    '                                    30,\n'
+                    '                                    NULL,\n'
+                    '                                    (GAsyncReadyCallback)${message_underscore}_abort_ready,\n'
+                    '                                    NULL);\n'
+                    '                qmi_message_${service_lowercase}_abort_input_unref (input);\n'
+                    '                qmi_message_unref (abort);\n'
+                    '                g_object_unref (self);\n'
+                    '            }\n'
+                    '\n')
+
+            template += (
                 '        g_simple_async_result_take_error (simple, error);\n'
                 '        g_simple_async_result_complete (simple);\n'
                 '        g_object_unref (simple);\n'
@@ -360,7 +434,7 @@ class Client:
                 ' * @self: a #${camelcase}.\n'
                 ' * @${input_doc}\n'
                 ' * @timeout: maximum time to wait for the method to complete, in seconds.\n'
-                ' * @cancellable: a #GCancellable or %%NULL.\n'
+                ' * @cancellable: a #GCancellable or %NULL.\n'
                 ' * @callback: a #GAsyncReadyCallback to call when the request is satisfied.\n'
                 ' * @user_data: user data to pass to @callback.\n'
                 ' *\n'
@@ -372,8 +446,10 @@ class Client:
                 ' */\n'
                 'void\n'
                 '${underscore}_${message_underscore} (\n'
-                '    ${camelcase} *self,\n'
-                '    %s,\n'
+                '    ${camelcase} *self,\n')
+            template += (
+                '    %s,\n'  % input_arg_template)
+            template += (
                 '    guint timeout,\n'
                 '    GCancellable *cancellable,\n'
                 '    GAsyncReadyCallback callback,\n'
@@ -382,14 +458,17 @@ class Client:
                 '    GSimpleAsyncResult *result;\n'
                 '    QmiMessage *request;\n'
                 '    GError *error = NULL;\n'
+                '    guint16 transaction_id;\n'
                 '\n'
                 '    result = g_simple_async_result_new (G_OBJECT (self),\n'
                 '                                        callback,\n'
                 '                                        user_data,\n'
                 '                                        ${underscore}_${message_underscore});\n'
                 '\n'
+                '    transaction_id = qmi_client_get_next_transaction_id (QMI_CLIENT (self));\n'
+                '\n'
                 '    request = __${message_fullname_underscore}_request_create (\n'
-                '                  qmi_client_get_next_transaction_id (QMI_CLIENT (self)),\n'
+                '                  transaction_id,\n'
                 '                  qmi_client_get_cid (QMI_CLIENT (self)),\n'
                 '                  ${input_var},\n'
                 '                  &error);\n'
@@ -399,7 +478,16 @@ class Client:
                 '        g_simple_async_result_complete_in_idle (result);\n'
                 '        g_object_unref (result);\n'
                 '        return;\n'
-                '    }\n'
+                '    }\n')
+
+            if message.abort:
+                template += (
+                    '\n'
+                    '    g_object_set_data (G_OBJECT (result),\n'
+                    '                       "transaction-id",\n'
+                    '                       GUINT_TO_POINTER (transaction_id));\n')
+
+            template += (
                 '\n'
                 '    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),\n'
                 '                        request,\n'
@@ -409,7 +497,7 @@ class Client:
                 '                        result);\n'
                 '    qmi_message_unref (request);\n'
                 '}\n'
-                '\n'  % input_arg_template)
+                '\n')
             cfile.write(string.Template(template).substitute(translations))
 
 

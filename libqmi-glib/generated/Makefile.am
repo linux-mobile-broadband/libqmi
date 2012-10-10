@@ -176,7 +176,8 @@ libqmi_glib_generated_la_CPPFLAGS = \
 	$(LIBQMI_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libqmi-glib \
-	-DLIBQMI_GLIB_COMPILATION
+	-DLIBQMI_GLIB_COMPILATION \
+	-Wno-unused-function
 
 libqmi_glib_generated_la_LIBADD = \
 	$(LIBQMI_GLIB_LIBS)

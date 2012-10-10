@@ -42,6 +42,8 @@ class Message:
         self.type = dictionary['type']
         # The version info, optional
         self.version_info = dictionary['version'].split('.') if 'version' in dictionary else []
+        self.static = True if 'scope' in dictionary and dictionary['scope'] == 'library-only' else False
+        self.abort = True if 'abort' in dictionary and dictionary['abort'] == 'yes' else False
 
         # The message prefix
         self.prefix = 'Qmi ' + self.type
@@ -61,7 +63,8 @@ class Message:
         self.output = Container(self.fullname,
                                 'Output',
                                 dictionary['output'] if 'output' in dictionary else None,
-                                common_objects_dictionary)
+                                common_objects_dictionary,
+                                self.static)
 
         self.input = None
         if self.type == 'Message':
@@ -72,7 +75,8 @@ class Message:
             self.input = Container(self.fullname,
                                    'Input',
                                    dictionary['input'] if 'input' in dictionary else None,
-                                   common_objects_dictionary)
+                                   common_objects_dictionary,
+                                   self.static)
 
 
     """
@@ -400,6 +404,8 @@ class Message:
     Emit the sections
     """
     def emit_sections(self, sfile):
+        if self.static:
+            return
 
         translations = { 'hyphened'            : utils.build_dashed_name (self.fullname),
                          'fullname_underscore' : utils.build_underscore_name(self.fullname),

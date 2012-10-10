@@ -21,6 +21,21 @@
      "output"  : [  { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
+  {  "name"    : "Abort",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0002",
+     "version" : "1.0",
+     // This magic tag allows us to avoid creating a method in the client
+     "scope"   : "library-only",
+     "input"   : [  { "name"      : "Transaction ID",
+                      "id"        : "0x01",
+                      "mandatory" : "yes",
+                      "type"      : "TLV",
+                      "format"    : "guint16" } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Start Network",
      "type"    : "Message",
      "service" : "WDS",

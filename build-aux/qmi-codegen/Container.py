@@ -33,7 +33,7 @@ class Container:
     """
     Constructor
     """
-    def __init__(self, prefix, container_type, dictionary, common_objects_dictionary):
+    def __init__(self, prefix, container_type, dictionary, common_objects_dictionary, static):
         # The field container prefix usually contains the name of the Message,
         # e.g. "Qmi Message Ctl Something"
         self.prefix = prefix
@@ -47,6 +47,8 @@ class Container:
             raise ValueError('Cannot handle container type \'%s\'' % container_type)
 
         self.name = container_type
+
+        self.static = static
 
         # Create the composed full name (prefix + name),
         #  e.g. "Qmi Message Ctl Something Output"
@@ -88,9 +90,9 @@ class Container:
                 if field_dictionary['type'] == 'TLV':
                     if field_dictionary['format'] == 'struct' and \
                        field_dictionary['name'] == 'Result':
-                        self.fields.append(FieldResult(self.fullname, field_dictionary, common_objects_dictionary, container_type))
+                        self.fields.append(FieldResult(self.fullname, field_dictionary, common_objects_dictionary, container_type, static))
                     else:
-                        self.fields.append(Field(self.fullname, field_dictionary, common_objects_dictionary, container_type))
+                        self.fields.append(Field(self.fullname, field_dictionary, common_objects_dictionary, container_type, static))
 
 
     """
@@ -124,7 +126,7 @@ class Container:
             ' * using the provided API.\n'
             ' */\n'
             'typedef struct _${camelcase} ${camelcase};\n'
-            'GType ${underscore}_get_type (void) G_GNUC_CONST;\n'
+            '${static}GType ${underscore}_get_type (void) G_GNUC_CONST;\n'
             '#define ${type_macro} (${underscore}_get_type ())\n')
         hfile.write(string.Template(template).substitute(translations))
 
@@ -159,17 +161,21 @@ class Container:
         # Emit container core header
         template = (
             '\n'
-            '${camelcase} *${underscore}_ref (${camelcase} *self);\n'
-            'void ${underscore}_unref (${camelcase} *self);\n')
+            '${static}${camelcase} *${underscore}_ref (${camelcase} *self);\n'
+            '${static}void ${underscore}_unref (${camelcase} *self);\n')
         if self.readonly == False:
             template += (
-                '${camelcase} *${underscore}_new (void);\n')
-        hfile.write(string.Template(template).substitute(translations))
+                '${static}${camelcase} *${underscore}_new (void);\n')
+
+        if self.static:
+            cfile.write(string.Template(template).substitute(translations))
+        else:
+            hfile.write(string.Template(template).substitute(translations))
 
         # Emit container core source
         template = (
             '\n'
-            'GType\n'
+            '${static}GType\n'
             '${underscore}_get_type (void)\n'
             '{\n'
             '    static volatile gsize g_define_type_id__volatile = 0;\n'
@@ -194,7 +200,7 @@ class Container:
             ' *\n'
             ' * Returns: the new reference to @self.\n'
             ' */\n'
-            '${camelcase} *\n'
+            '${static}${camelcase} *\n'
             '${underscore}_ref (${camelcase} *self)\n'
             '{\n'
             '    g_return_val_if_fail (self != NULL, NULL);\n'
@@ -210,7 +216,7 @@ class Container:
             ' * Atomically decrements the reference count of @self by one.\n'
             ' * If the reference count drops to 0, @self is completely disposed.\n'
             ' */\n'
-            'void\n'
+            '${static}void\n'
             '${underscore}_unref (${camelcase} *self)\n'
             '{\n'
             '    g_return_if_fail (self != NULL);\n'
@@ -241,7 +247,7 @@ class Container:
             ' *\n'
             ' * Returns: the newly created #${camelcase}. The returned value should be freed with ${underscore}_unref().\n'
             ' */\n'
-            '${camelcase} *\n'
+            '${static}${camelcase} *\n'
             '${underscore}_new (void)\n'
             '{\n'
             '    ${camelcase} *self;\n'
@@ -259,12 +265,15 @@ class Container:
     def emit(self, hfile, cfile):
         translations = { 'name'       : self.name,
                          'camelcase'  : utils.build_camelcase_name (self.fullname),
-                         'underscore' : utils.build_underscore_name (self.fullname) }
+                         'underscore' : utils.build_underscore_name (self.fullname),
+                         'static'     : 'static ' if self.static else '' }
+
+        auxfile = cfile if self.static else hfile
 
         if self.fields is None:
             template = ('\n'
                         '/* Note: no fields in the ${name} container */\n')
-            hfile.write(string.Template(template).substitute(translations))
+            auxfile.write(string.Template(template).substitute(translations))
             cfile.write(string.Template(template).substitute(translations))
             return
 
@@ -272,8 +281,8 @@ class Container:
         # Emit field getter/setter
         if self.fields is not None:
             for field in self.fields:
-                field.emit_types(hfile, cfile)
-        self.__emit_types(hfile, cfile, translations)
+                field.emit_types(auxfile, cfile)
+        self.__emit_types(auxfile, cfile, translations)
 
         # Emit TLV enums
         self.__emit_tlv_ids_enum(cfile)
@@ -281,12 +290,12 @@ class Container:
         # Emit fields
         if self.fields is not None:
             for field in self.fields:
-                field.emit_getter(hfile, cfile)
+                field.emit_getter(auxfile, cfile)
                 if self.readonly == False:
-                    field.emit_setter(hfile, cfile)
+                    field.emit_setter(auxfile, cfile)
 
         # Emit the container core
-        self.__emit_core(hfile, cfile, translations)
+        self.__emit_core(auxfile, cfile, translations)
 
 
     """

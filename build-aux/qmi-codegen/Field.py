@@ -32,7 +32,7 @@ class Field:
     """
     Constructor
     """
-    def __init__(self, prefix, dictionary, common_objects_dictionary, container_type):
+    def __init__(self, prefix, dictionary, common_objects_dictionary, container_type, static):
         # The field prefix, usually the name of the Container,
         #  e.g. "Qmi Message Ctl Something Output"
         self.prefix = prefix
@@ -46,6 +46,8 @@ class Field:
         self.type = dictionary['type']
         # The container type, which must be either "Input" or "Output"
         self.container_type = container_type
+        # Whether the whole field is internally used only
+        self.static = static
 
         # Create the composed full name (prefix + name),
         #  e.g. "Qmi Message Ctl Something Output Result"
@@ -105,12 +107,13 @@ class Field:
                          'variable_getter_imp' : variable_getter_imp,
                          'underscore'          : utils.build_underscore_name(self.name),
                          'prefix_camelcase'    : utils.build_camelcase_name(self.prefix),
-                         'prefix_underscore'   : utils.build_underscore_name(self.prefix) }
+                         'prefix_underscore'   : utils.build_underscore_name(self.prefix),
+                         'static'              : 'static ' if self.static else '' }
 
         # Emit the getter header
         template = (
             '\n'
-            'gboolean ${prefix_underscore}_get_${underscore} (\n'
+            '${static}gboolean ${prefix_underscore}_get_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
             '${variable_getter_dec}'
             '    GError **error);\n')
@@ -129,7 +132,7 @@ class Field:
             ' *\n'
             ' * Returns: %TRUE if the field is found, %FALSE otherwise.\n'
             ' */\n'
-            'gboolean\n'
+            '${static}gboolean\n'
             '${prefix_underscore}_get_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
             '${variable_getter_dec}'
@@ -168,12 +171,13 @@ class Field:
                          'variable_setter_imp' : variable_setter_imp,
                          'underscore'          : utils.build_underscore_name(self.name),
                          'prefix_camelcase'    : utils.build_camelcase_name(self.prefix),
-                         'prefix_underscore'   : utils.build_underscore_name(self.prefix) }
+                         'prefix_underscore'   : utils.build_underscore_name(self.prefix),
+                         'static'              : 'static ' if self.static else '' }
 
         # Emit the setter header
         template = (
             '\n'
-            'gboolean ${prefix_underscore}_set_${underscore} (\n'
+            '${static}gboolean ${prefix_underscore}_set_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
             '${variable_setter_dec}'
             '    GError **error);\n')
@@ -192,7 +196,7 @@ class Field:
             ' *\n'
             ' * Returns: %TRUE if @value was successfully set, %FALSE otherwise.\n'
             ' */\n'
-            'gboolean\n'
+            '${static}gboolean\n'
             '${prefix_underscore}_set_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
             '${variable_setter_dec}'
