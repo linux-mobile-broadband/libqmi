@@ -71,6 +71,7 @@ struct _QmiDevicePrivate {
 
     /* Implicit CTL client */
     QmiClientCtl *client_ctl;
+    guint sync_indication_id;
 
     /* Supported services */
     GArray *supported_services;
@@ -1927,10 +1928,11 @@ query_info_async_ready (GFile *file,
     g_assert_no_error (error);
 
     /* Connect to 'Sync' indications */
-    g_signal_connect (ctx->self->priv->client_ctl,
-                      "sync",
-                      G_CALLBACK (sync_indication_cb),
-                      ctx->self);
+    ctx->self->priv->sync_indication_id =
+        g_signal_connect (ctx->self->priv->client_ctl,
+                          "sync",
+                          G_CALLBACK (sync_indication_cb),
+                          ctx->self);
 
     /* Done we are */
     g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
@@ -2061,6 +2063,12 @@ dispose (GObject *object)
                                  (GHRFunc)foreach_warning,
                                  self);
 
+    if (self->priv->sync_indication_id &&
+        self->priv->client_ctl) {
+        g_signal_handler_disconnect (self->priv->client_ctl,
+                                     self->priv->sync_indication_id);
+        self->priv->sync_indication_id = 0;
+    }
     g_clear_object (&self->priv->client_ctl);
 
     G_OBJECT_CLASS (qmi_device_parent_class)->dispose (object);
