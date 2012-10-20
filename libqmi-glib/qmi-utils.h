@@ -19,6 +19,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
+ * Copyright (C) 2012 Dan Williams <dcbw@redhat.com>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_UTILS_H_
@@ -32,72 +33,102 @@
 
 G_BEGIN_DECLS
 
+/**
+ * QmiEndian:
+ * @QMI_ENDIAN_LITTLE: Little endian.
+ * @QMI_ENDIAN_BIG: Big endian.
+ *
+ * Type of endianness
+ */
+typedef enum {
+    QMI_ENDIAN_LITTLE = 0,
+    QMI_ENDIAN_BIG    = 1
+} QmiEndian;
+
 /* Reading/Writing integer variables */
 
 void qmi_utils_read_guint8_from_buffer  (const guint8 **buffer,
                                          guint16       *buffer_size,
+                                         QmiEndian      endian,
                                          guint8        *out);
 void qmi_utils_read_gint8_from_buffer   (const guint8 **buffer,
                                          guint16       *buffer_size,
+                                         QmiEndian      endian,
                                          gint8         *out);
 
 void qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
                                          guint16       *buffer_size,
+                                         QmiEndian      endian,
                                          guint16       *out);
 void qmi_utils_read_gint16_from_buffer  (const guint8 **buffer,
                                          guint16       *buffer_size,
+                                         QmiEndian      endian,
                                          gint16        *out);
 
 void qmi_utils_read_guint32_from_buffer (const guint8 **buffer,
                                          guint16       *buffer_size,
+                                         QmiEndian      endian,
                                          guint32       *out);
 void qmi_utils_read_gint32_from_buffer  (const guint8 **buffer,
                                          guint16       *buffer_size,
+                                         QmiEndian      endian,
                                          gint32        *out);
 
 void qmi_utils_read_guint64_from_buffer (const guint8 **buffer,
                                          guint16       *buffer_size,
+                                         QmiEndian      endian,
                                          guint64       *out);
 void qmi_utils_read_gint64_from_buffer  (const guint8 **buffer,
                                          guint16       *buffer_size,
+                                         QmiEndian      endian,
                                          gint64        *out);
 
 void qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
                                              guint16       *buffer_size,
                                              guint          n_bytes,
+                                             QmiEndian      endian,
                                              guint64       *out);
 
 void qmi_utils_write_guint8_to_buffer (guint8  **buffer,
                                        guint16  *buffer_size,
+                                       QmiEndian endian,
                                        guint8   *in);
 void qmi_utils_write_gint8_to_buffer  (guint8  **buffer,
                                        guint16  *buffer_size,
+                                       QmiEndian endian,
                                        gint8    *in);
 
 void qmi_utils_write_guint16_to_buffer (guint8  **buffer,
                                         guint16  *buffer_size,
+                                        QmiEndian endian,
                                         guint16  *in);
 void qmi_utils_write_gint16_to_buffer  (guint8  **buffer,
                                         guint16  *buffer_size,
+                                        QmiEndian endian,
                                         gint16   *in);
 
 void qmi_utils_write_guint32_to_buffer (guint8  **buffer,
                                         guint16  *buffer_size,
+                                        QmiEndian endian,
                                         guint32  *in);
 void qmi_utils_write_gint32_to_buffer  (guint8  **buffer,
                                         guint16  *buffer_size,
+                                        QmiEndian endian,
                                         gint32   *in);
 
 void qmi_utils_write_guint64_to_buffer (guint8  **buffer,
                                         guint16  *buffer_size,
+                                        QmiEndian endian,
                                         guint64  *in);
 void qmi_utils_write_gint64_to_buffer  (guint8  **buffer,
                                         guint16  *buffer_size,
+                                        QmiEndian endian,
                                         gint64   *in);
 
 void qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
                                             guint16  *buffer_size,
                                             guint     n_bytes,
+                                            QmiEndian endian,
                                             guint64  *in);
 
 /* Reading/Writing string variables */

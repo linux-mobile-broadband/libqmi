@@ -19,6 +19,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
+ * Copyright (C) 2012 Dan Williams <dcbw@redhat.com>
  */
 
 #include <config.h>
@@ -101,6 +102,7 @@ print_read_bytes_trace (const gchar *type,
  * qmi_utils_read_guint8_from_buffer:
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
+ * @endian: ignored
  * @out: return location for the read variable.
  *
  * Reads an unsigned byte from the buffer.
@@ -114,6 +116,7 @@ print_read_bytes_trace (const gchar *type,
 void
 qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
+                                   QmiEndian      endian,
                                    guint8        *out)
 {
     g_assert (out != NULL);
@@ -133,6 +136,7 @@ qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
  * qmi_utils_read_gint8_from_buffer:
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
+ * @endian: ignored
  * @out: return location for the read variable.
  *
  * Reads a signed byte from the buffer.
@@ -146,6 +150,7 @@ qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
 void
 qmi_utils_read_gint8_from_buffer (const guint8 **buffer,
                                   guint16       *buffer_size,
+                                  QmiEndian      endian,
                                   gint8         *out)
 {
     g_assert (out != NULL);
@@ -165,11 +170,12 @@ qmi_utils_read_gint8_from_buffer (const guint8 **buffer,
  * qmi_utils_read_guint16_from_buffer:
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped to host byte order if necessary
  * @out: return location for the read variable.
  *
  * Reads an unsigned 16-bit integer from the buffer. The number in the buffer is
- * expected to be given in Little-Endian, and this method takes care of
- * converting the read value to the proper host endianness.
+ * expected to be given in the byte order specificed by @endian, and this method
+ * takes care of converting the read value to the proper host endianness.
  *
  * The user needs to make sure that at least 2 bytes are available
  * in the buffer.
@@ -180,6 +186,7 @@ qmi_utils_read_gint8_from_buffer (const guint8 **buffer,
 void
 qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
                                     guint16       *buffer_size,
+                                    QmiEndian      endian,
                                     guint16       *out)
 {
     g_assert (out != NULL);
@@ -188,7 +195,10 @@ qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
     g_assert (*buffer_size >= 2);
 
     memcpy (out, &((*buffer)[0]), 2);
-    *out = GUINT16_FROM_LE (*out);
+    if (endian == QMI_ENDIAN_BIG)
+        *out = GUINT16_FROM_BE (*out);
+    else
+        *out = GUINT16_FROM_LE (*out);
 
     print_read_bytes_trace ("guint16", &(*buffer)[0], out, 2);
 
@@ -200,11 +210,12 @@ qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
  * qmi_utils_read_gint16_from_buffer:
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped to host byte order if necessary
  * @out: return location for the read variable.
  *
  * Reads a signed 16-bit integer from the buffer. The number in the buffer is
- * expected to be given in Little-Endian, and this method takes care of
- * converting the read value to the proper host endianness.
+ * expected to be given in the byte order specified by @endian, and this method
+ * takes care of converting the read value to the proper host endianness.
  *
  * The user needs to make sure that at least 2 bytes are available
  * in the buffer.
@@ -215,6 +226,7 @@ qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
 void
 qmi_utils_read_gint16_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
+                                   QmiEndian      endian,
                                    gint16        *out)
 {
     g_assert (out != NULL);
@@ -223,7 +235,10 @@ qmi_utils_read_gint16_from_buffer (const guint8 **buffer,
     g_assert (*buffer_size >= 2);
 
     memcpy (out, &((*buffer)[0]), 2);
-    *out = GINT16_FROM_LE (*out);
+    if (endian == QMI_ENDIAN_BIG)
+        *out = GINT16_FROM_BE (*out);
+    else
+        *out = GINT16_FROM_LE (*out);
 
     print_read_bytes_trace ("gint16", &(*buffer)[0], out, 2);
 
@@ -235,11 +250,12 @@ qmi_utils_read_gint16_from_buffer (const guint8 **buffer,
  * qmi_utils_read_guint32_from_buffer:
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped to host byte order if necessary
  * @out: return location for the read variable.
  *
  * Reads an unsigned 32-bit integer from the buffer. The number in the buffer is
- * expected to be given in Little-Endian, and this method takes care of
- * converting the read value to the proper host endianness.
+ * expected to be given in the byte order specified by @endian, and this method
+ * takes care of converting the read value to the proper host endianness.
  *
  * The user needs to make sure that at least 4 bytes are available
  * in the buffer.
@@ -250,6 +266,7 @@ qmi_utils_read_gint16_from_buffer (const guint8 **buffer,
 void
 qmi_utils_read_guint32_from_buffer (const guint8 **buffer,
                                     guint16       *buffer_size,
+                                    QmiEndian      endian,
                                     guint32       *out)
 {
     g_assert (out != NULL);
@@ -258,7 +275,10 @@ qmi_utils_read_guint32_from_buffer (const guint8 **buffer,
     g_assert (*buffer_size >= 4);
 
     memcpy (out, &((*buffer)[0]), 4);
-    *out = GUINT32_FROM_LE (*out);
+    if (endian == QMI_ENDIAN_BIG)
+        *out = GUINT32_FROM_BE (*out);
+    else
+        *out = GUINT32_FROM_LE (*out);
 
     print_read_bytes_trace ("guint32", &(*buffer)[0], out, 4);
 
@@ -270,11 +290,12 @@ qmi_utils_read_guint32_from_buffer (const guint8 **buffer,
  * qmi_utils_read_gint32_from_buffer:
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped to host byte order if necessary
  * @out: return location for the read variable.
  *
  * Reads a signed 32-bit integer from the buffer. The number in the buffer is
- * expected to be given in Little-Endian, and this method takes care of
- * converting the read value to the proper host endianness.
+ * expected to be given in the byte order specified by @endian, and this method
+ * takes care of converting the read value to the proper host endianness.
  *
  * The user needs to make sure that at least 4 bytes are available
  * in the buffer.
@@ -285,6 +306,7 @@ qmi_utils_read_guint32_from_buffer (const guint8 **buffer,
 void
 qmi_utils_read_gint32_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
+                                   QmiEndian      endian,
                                    gint32        *out)
 {
     g_assert (out != NULL);
@@ -293,7 +315,10 @@ qmi_utils_read_gint32_from_buffer (const guint8 **buffer,
     g_assert (*buffer_size >= 4);
 
     memcpy (out, &((*buffer)[0]), 4);
-    *out = GINT32_FROM_LE (*out);
+    if (endian == QMI_ENDIAN_BIG)
+        *out = GINT32_FROM_BE (*out);
+    else
+        *out = GINT32_FROM_LE (*out);
 
     print_read_bytes_trace ("gint32", &(*buffer)[0], out, 4);
 
@@ -305,11 +330,12 @@ qmi_utils_read_gint32_from_buffer (const guint8 **buffer,
  * qmi_utils_read_guint64_from_buffer:
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped to host byte order if necessary
  * @out: return location for the read variable.
  *
  * Reads an unsigned 64-bit integer from the buffer. The number in the buffer is
- * expected to be given in Little-Endian, and this method takes care of
- * converting the read value to the proper host endianness.
+ * expected to be given in the byte order specified by @endian, and this method
+ * takes care of converting the read value to the proper host endianness.
  *
  * The user needs to make sure that at least 8 bytes are available
  * in the buffer.
@@ -320,6 +346,7 @@ qmi_utils_read_gint32_from_buffer (const guint8 **buffer,
 void
 qmi_utils_read_guint64_from_buffer (const guint8 **buffer,
                                     guint16       *buffer_size,
+                                    QmiEndian      endian,
                                     guint64       *out)
 {
     g_assert (out != NULL);
@@ -328,7 +355,10 @@ qmi_utils_read_guint64_from_buffer (const guint8 **buffer,
     g_assert (*buffer_size >= 8);
 
     memcpy (out, &((*buffer)[0]), 8);
-    *out = GUINT64_FROM_LE (*out);
+    if (endian == QMI_ENDIAN_BIG)
+        *out = GUINT64_FROM_BE (*out);
+    else
+        *out = GUINT64_FROM_LE (*out);
 
     print_read_bytes_trace ("guint64", &(*buffer)[0], out, 8);
 
@@ -340,11 +370,12 @@ qmi_utils_read_guint64_from_buffer (const guint8 **buffer,
  * qmi_utils_read_gint64_from_buffer:
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped to host byte order if necessary
  * @out: return location for the read variable.
  *
  * Reads a signed 64-bit integer from the buffer. The number in the buffer is
- * expected to be given in Little-Endian, and this method takes care of
- * converting the read value to the proper host endianness.
+ * expected to be given in the byte order specified by @endian, and this method
+ * takes care of converting the read value to the proper host endianness.
  *
  * The user needs to make sure that at least 8 bytes are available
  * in the buffer.
@@ -355,6 +386,7 @@ qmi_utils_read_guint64_from_buffer (const guint8 **buffer,
 void
 qmi_utils_read_gint64_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
+                                   QmiEndian      endian,
                                    gint64        *out)
 {
     g_assert (out != NULL);
@@ -363,7 +395,10 @@ qmi_utils_read_gint64_from_buffer (const guint8 **buffer,
     g_assert (*buffer_size >= 8);
 
     memcpy (out, &((*buffer)[0]), 8);
-    *out = GINT64_FROM_LE (*out);
+    if (endian == QMI_ENDIAN_BIG)
+        *out = GINT64_FROM_BE (*out);
+    else
+        *out = GINT64_FROM_LE (*out);
 
     print_read_bytes_trace ("gint64", &(*buffer)[0], out, 8);
 
@@ -376,11 +411,13 @@ qmi_utils_read_gint64_from_buffer (const guint8 **buffer,
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
  * @n_bytes: number of bytes to read.
+ * @endian: endianness of firmware value; swapped to host byte order if necessary
  * @out: return location for the read variable.
  *
  * Reads a @n_bytes-sized unsigned integer from the buffer. The number in the
- * buffer is expected to be given in Little-Endian, and this method takes care
- * of converting the read value to the proper host endianness.
+ * buffer is expected to be given in the byte order specified by @endian, and
+ * this method takes care of converting the read value to the proper host
+ * endianness.
  *
  * The user needs to make sure that at least @n_bytes bytes are available
  * in the buffer.
@@ -392,6 +429,7 @@ void
 qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
                                         guint16       *buffer_size,
                                         guint          n_bytes,
+                                        QmiEndian      endian,
                                         guint64       *out)
 {
     g_assert (out != NULL);
@@ -401,7 +439,10 @@ qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
 
     *out = 0;
     memcpy (out, *buffer, n_bytes);
-    *out = GUINT64_FROM_LE (*out);
+    if (endian == QMI_ENDIAN_BIG)
+        *out = GUINT64_FROM_BE (*out);
+    else
+        *out = GUINT64_FROM_LE (*out);
 
     *buffer = &((*buffer)[n_bytes]);
     *buffer_size = (*buffer_size) - n_bytes;
@@ -411,6 +452,7 @@ qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
  * qmi_utils_write_guint8_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
+ * @endian: ignored
  * @in: location of the variable to be written.
  *
  * Writes an unsigned byte into the buffer.
@@ -423,6 +465,7 @@ qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
 void
 qmi_utils_write_guint8_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
+                                  QmiEndian endian,
                                   guint8   *in)
 {
     g_assert (in != NULL);
@@ -440,6 +483,7 @@ qmi_utils_write_guint8_to_buffer (guint8  **buffer,
  * qmi_utils_write_gint8_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
+ * @endian: ignored
  * @in: location of the variable to be written.
  *
  * Writes a signed byte into the buffer.
@@ -452,6 +496,7 @@ qmi_utils_write_guint8_to_buffer (guint8  **buffer,
 void
 qmi_utils_write_gint8_to_buffer (guint8  **buffer,
                                  guint16  *buffer_size,
+                                 QmiEndian endian,
                                  gint8    *in)
 {
     g_assert (in != NULL);
@@ -469,11 +514,12 @@ qmi_utils_write_gint8_to_buffer (guint8  **buffer,
  * qmi_utils_write_guint16_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped from host byte order if necessary
  * @in: location of the variable to be written.
  *
  * Writes an unsigned 16-bit integer into the buffer. The number to be written
  * is expected to be given in host endianness, and this method takes care of
- * converting the value written to Little-Endian.
+ * converting the value written to the byte order specified by @endian.
  *
  * The user needs to make sure that the buffer is at least 2 bytes long.
  *
@@ -483,6 +529,7 @@ qmi_utils_write_gint8_to_buffer (guint8  **buffer,
 void
 qmi_utils_write_guint16_to_buffer (guint8  **buffer,
                                    guint16  *buffer_size,
+                                   QmiEndian endian,
                                    guint16  *in)
 {
     guint16 tmp;
@@ -492,7 +539,10 @@ qmi_utils_write_guint16_to_buffer (guint8  **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 2);
 
-    tmp = GUINT16_TO_LE (*in);
+    if (endian == QMI_ENDIAN_BIG)
+        tmp = GUINT16_TO_BE (*in);
+    else
+        tmp = GUINT16_TO_LE (*in);
     memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[2]);
@@ -503,11 +553,12 @@ qmi_utils_write_guint16_to_buffer (guint8  **buffer,
  * qmi_utils_write_gint16_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped from host byte order if necessary
  * @in: location of the variable to be written.
  *
  * Writes a signed 16-bit integer into the buffer. The number to be written
  * is expected to be given in host endianness, and this method takes care of
- * converting the value written to Little-Endian.
+ * converting the value written to the byte order specified by @endian.
  *
  * The user needs to make sure that the buffer is at least 2 bytes long.
  *
@@ -517,6 +568,7 @@ qmi_utils_write_guint16_to_buffer (guint8  **buffer,
 void
 qmi_utils_write_gint16_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
+                                  QmiEndian endian,
                                   gint16   *in)
 {
     gint16 tmp;
@@ -526,7 +578,10 @@ qmi_utils_write_gint16_to_buffer (guint8  **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 2);
 
-    tmp = GINT16_TO_LE (*in);
+    if (endian == QMI_ENDIAN_BIG)
+        tmp = GINT16_TO_BE (*in);
+    else
+        tmp = GINT16_TO_LE (*in);
     memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[2]);
@@ -537,11 +592,12 @@ qmi_utils_write_gint16_to_buffer (guint8  **buffer,
  * qmi_utils_write_guint32_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped from host byte order if necessary
  * @in: location of the variable to be written.
  *
  * Writes an unsigned 32-bit integer into the buffer. The number to be written
  * is expected to be given in host endianness, and this method takes care of
- * converting the value written to Little-Endian.
+ * converting the value written to the byte order specified by @endian.
  *
  * The user needs to make sure that the buffer is at least 4 bytes long.
  *
@@ -551,6 +607,7 @@ qmi_utils_write_gint16_to_buffer (guint8  **buffer,
 void
 qmi_utils_write_guint32_to_buffer (guint8  **buffer,
                                    guint16  *buffer_size,
+                                   QmiEndian endian,
                                    guint32  *in)
 {
     guint32 tmp;
@@ -560,7 +617,10 @@ qmi_utils_write_guint32_to_buffer (guint8  **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 4);
 
-    tmp = GUINT32_TO_LE (*in);
+    if (endian == QMI_ENDIAN_BIG)
+        tmp = GUINT32_TO_BE (*in);
+    else
+        tmp = GUINT32_TO_LE (*in);
     memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[4]);
@@ -571,11 +631,12 @@ qmi_utils_write_guint32_to_buffer (guint8  **buffer,
  * qmi_utils_write_gint32_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped from host byte order if necessary
  * @in: location of the variable to be written.
  *
  * Writes a signed 32-bit integer into the buffer. The number to be written
  * is expected to be given in host endianness, and this method takes care of
- * converting the value written to Little-Endian.
+ * converting the value written to the byte order specified by @endian.
  *
  * The user needs to make sure that the buffer is at least 4 bytes long.
  *
@@ -585,6 +646,7 @@ qmi_utils_write_guint32_to_buffer (guint8  **buffer,
 void
 qmi_utils_write_gint32_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
+                                  QmiEndian endian,
                                   gint32   *in)
 {
     gint32 tmp;
@@ -594,7 +656,10 @@ qmi_utils_write_gint32_to_buffer (guint8  **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 4);
 
-    tmp = GINT32_TO_LE (*in);
+    if (endian == QMI_ENDIAN_BIG)
+        tmp = GINT32_TO_BE (*in);
+    else
+        tmp = GINT32_TO_LE (*in);
     memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[4]);
@@ -605,11 +670,12 @@ qmi_utils_write_gint32_to_buffer (guint8  **buffer,
  * qmi_utils_write_guint64_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped from host byte order if necessary
  * @in: location of the variable to be written.
  *
  * Writes an unsigned 64-bit integer into the buffer. The number to be written
  * is expected to be given in host endianness, and this method takes care of
- * converting the value written to Little-Endian.
+ * converting the value written to the byte order specified by @endian.
  *
  * The user needs to make sure that the buffer is at least 8 bytes long.
  *
@@ -619,6 +685,7 @@ qmi_utils_write_gint32_to_buffer (guint8  **buffer,
 void
 qmi_utils_write_guint64_to_buffer (guint8  **buffer,
                                    guint16  *buffer_size,
+                                   QmiEndian endian,
                                    guint64  *in)
 {
     guint64 tmp;
@@ -628,7 +695,10 @@ qmi_utils_write_guint64_to_buffer (guint8  **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 8);
 
-    tmp = GUINT64_TO_LE (*in);
+    if (endian == QMI_ENDIAN_BIG)
+        tmp = GUINT64_TO_BE (*in);
+    else
+        tmp = GUINT64_TO_LE (*in);
     memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[8]);
@@ -639,11 +709,12 @@ qmi_utils_write_guint64_to_buffer (guint8  **buffer,
  * qmi_utils_write_gint64_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
+ * @endian: endianness of firmware value; swapped from host byte order if necessary
  * @in: location of the variable to be written.
  *
  * Writes a signed 64-bit integer into the buffer. The number to be written
  * is expected to be given in host endianness, and this method takes care of
- * converting the value written to Little-Endian.
+ * converting the value written to the byte order specified by @endian.
  *
  * The user needs to make sure that the buffer is at least 8 bytes long.
  *
@@ -653,6 +724,7 @@ qmi_utils_write_guint64_to_buffer (guint8  **buffer,
 void
 qmi_utils_write_gint64_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
+                                  QmiEndian endian,
                                   gint64   *in)
 {
     gint64 tmp;
@@ -662,7 +734,10 @@ qmi_utils_write_gint64_to_buffer (guint8  **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= 8);
 
-    tmp = GINT64_TO_LE (*in);
+    if (endian == QMI_ENDIAN_BIG)
+        tmp = GINT64_TO_BE (*in);
+    else
+        tmp = GINT64_TO_LE (*in);
     memcpy (&(*buffer)[0], &tmp, sizeof (tmp));
 
     *buffer = &((*buffer)[8]);
@@ -674,11 +749,12 @@ qmi_utils_write_gint64_to_buffer (guint8  **buffer,
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
  * @n_bytes: number of bytes to read.
+ * @endian: endianness of firmware value; swapped from host byte order if necessary
  * @in: location of the variable to be written.
  *
  * Writes a @n_bytes-sized unsigned integer into the buffer. The number to be
  * written is expected to be given in host endianness, and this method takes
- * care of converting the value written to Little-Endian.
+ * care of converting the value written to the byte order specified by @endian.
  *
  * The user needs to make sure that the buffer is at least @n_bytes bytes long.
  *
@@ -689,6 +765,7 @@ void
 qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
                                        guint16  *buffer_size,
                                        guint     n_bytes,
+                                       QmiEndian endian,
                                        guint64  *in)
 {
     guint64 tmp;
@@ -698,7 +775,10 @@ qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= n_bytes);
 
-    tmp = GUINT64_TO_LE (*in);
+    if (endian == QMI_ENDIAN_BIG)
+        tmp = GUINT64_TO_BE (*in);
+    else
+        tmp = GUINT64_TO_LE (*in);
     memcpy (*buffer, &tmp, n_bytes);
 
     *buffer = &((*buffer)[n_bytes]);
@@ -745,11 +825,17 @@ qmi_utils_read_string_from_buffer (const guint8 **buffer,
         string_length = *buffer_size;
         break;
     case 8:
-        qmi_utils_read_guint8_from_buffer (buffer, buffer_size, &string_length_8);
+        qmi_utils_read_guint8_from_buffer (buffer,
+                                           buffer_size,
+                                           QMI_ENDIAN_LITTLE,
+                                           &string_length_8);
         string_length = string_length_8;
         break;
     case 16:
-        qmi_utils_read_guint16_from_buffer (buffer, buffer_size, &string_length_16);
+        qmi_utils_read_guint16_from_buffer (buffer,
+                                            buffer_size,
+                                            QMI_ENDIAN_LITTLE,
+                                            &string_length_16);
         string_length = string_length_16;
         break;
     default:
@@ -842,12 +928,18 @@ qmi_utils_write_string_to_buffer (guint8      **buffer,
     case 8:
         g_warn_if_fail (len <= G_MAXUINT8);
         len_8 = (guint8)len;
-        qmi_utils_write_guint8_to_buffer (buffer, buffer_size, &len_8);
+        qmi_utils_write_guint8_to_buffer (buffer,
+                                          buffer_size,
+                                          QMI_ENDIAN_LITTLE,
+                                          &len_8);
         break;
     case 16:
         g_warn_if_fail (len <= G_MAXUINT16);
         len_16 = (guint16)len;
-        qmi_utils_write_guint16_to_buffer (buffer, buffer_size, &len_16);
+        qmi_utils_write_guint16_to_buffer (buffer,
+                                           buffer_size,
+                                           QMI_ENDIAN_LITTLE,
+                                           &len_16);
         break;
     default:
         g_assert_not_reached ();

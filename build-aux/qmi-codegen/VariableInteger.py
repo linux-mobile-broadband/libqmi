@@ -48,7 +48,6 @@ class VariableInteger(Variable):
             self.private_format = self.format
             self.public_format = dictionary['public-format'] if 'public-format' in dictionary else self.private_format
 
-
     """
     Read a single integer from the raw byte buffer
     """
@@ -59,7 +58,8 @@ class VariableInteger(Variable):
                          'len'            : self.guint_sized_size,
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len }
+                         'buffer_len'     : buffer_len,
+                         'endian'         : self.endian }
 
         if self.format == 'guint-sized':
             template = (
@@ -68,6 +68,7 @@ class VariableInteger(Variable):
                 '${lp}    &${buffer_name},\n'
                 '${lp}    &${buffer_len},\n'
                 '${lp}    ${len},\n'
+                '${lp}    ${endian},\n'
                 '${lp}    &(${variable_name}));\n')
         elif self.private_format == self.public_format:
             template = (
@@ -75,6 +76,7 @@ class VariableInteger(Variable):
                 '${lp}qmi_utils_read_${private_format}_from_buffer (\n'
                 '${lp}    &${buffer_name},\n'
                 '${lp}    &${buffer_len},\n'
+                '${lp}    ${endian},\n'
                 '${lp}    &(${variable_name}));\n')
         else:
             template = (
@@ -85,6 +87,7 @@ class VariableInteger(Variable):
                 '${lp}    qmi_utils_read_${private_format}_from_buffer (\n'
                 '${lp}        &${buffer_name},\n'
                 '${lp}        &${buffer_len},\n'
+                '${lp}        ${endian},\n'
                 '${lp}        &tmp);\n'
                 '${lp}    ${variable_name} = (${public_format})tmp;\n'
                 '${lp}}\n')
@@ -100,7 +103,8 @@ class VariableInteger(Variable):
                          'len'            : self.guint_sized_size,
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len }
+                         'buffer_len'     : buffer_len,
+                         'endian'         : self.endian }
 
         if self.format == 'guint-sized':
             template = (
@@ -109,6 +113,7 @@ class VariableInteger(Variable):
                 '${lp}    &${buffer_name},\n'
                 '${lp}    &${buffer_len},\n'
                 '${lp}    ${len},\n'
+                '${lp}    ${endian},\n'
                 '${lp}    &(${variable_name}));\n')
         elif self.private_format == self.public_format:
             template = (
@@ -116,6 +121,7 @@ class VariableInteger(Variable):
                 '${lp}qmi_utils_write_${private_format}_to_buffer (\n'
                 '${lp}    &${buffer_name},\n'
                 '${lp}    &${buffer_len},\n'
+                '${lp}    ${endian},\n'
                 '${lp}    &(${variable_name}));\n')
         else:
             template = (
@@ -127,6 +133,7 @@ class VariableInteger(Variable):
                 '${lp}    qmi_utils_write_${private_format}_to_buffer (\n'
                 '${lp}        &${buffer_name},\n'
                 '${lp}        &${buffer_len},\n'
+                '${lp}        ${endian},\n'
                 '${lp}        &tmp);\n'
                 '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
@@ -164,7 +171,8 @@ class VariableInteger(Variable):
                          'buffer_name'    : buffer_name,
                          'buffer_len'     : buffer_len,
                          'common_format'  : common_format,
-                         'common_cast'    : common_cast }
+                         'common_cast'    : common_cast,
+                         'endian'         : self.endian }
 
         if self.format == 'guint-sized':
             template = (
@@ -177,6 +185,7 @@ class VariableInteger(Variable):
                 '${lp}        &${buffer_name},\n'
                 '${lp}        &${buffer_len},\n'
                 '${lp}        ${len},\n'
+                '${lp}        ${endian},\n'
                 '${lp}        &tmp);\n'
                 '\n'
                 '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n'
@@ -191,6 +200,7 @@ class VariableInteger(Variable):
                 '${lp}    qmi_utils_read_${private_format}_from_buffer (\n'
                 '${lp}        &${buffer_name},\n'
                 '${lp}        &${buffer_len},\n'
+                '${lp}        ${endian},\n'
                 '${lp}        &tmp);\n'
                 '\n'
                 '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n'

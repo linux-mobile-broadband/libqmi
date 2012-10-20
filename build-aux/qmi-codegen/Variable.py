@@ -44,6 +44,15 @@ class Variable:
         """
         self.needs_dispose = False
 
+        self.endian = "QMI_ENDIAN_LITTLE"
+        if dictionary.has_key('endian'):
+            endian = dictionary['endian']
+            if endian == 'network' or endian == 'big':
+                self.endian = "QMI_ENDIAN_BIG"
+            elif endian == 'little':
+                pass
+            else:
+                raise ValueError("Invalid endian value %s" % endian)
 
     """
     Emits the code to declare specific new types required by the variable.
