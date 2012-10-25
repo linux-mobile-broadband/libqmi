@@ -258,10 +258,9 @@ timeout_get_packet_service_status_ready (QmiClientWds *client,
         &status,
         NULL);
 
-    /* TODO: print string */
-    g_print ("[%s] Connection status: '%u'\n",
+    g_print ("[%s] Connection status: '%s'\n",
              qmi_device_get_path_display (ctx->device),
-             (guint) status);
+             qmi_wds_connection_status_get_string (status));
     qmi_message_wds_get_packet_service_status_output_unref (output);
     shutdown (TRUE);
 }
@@ -388,10 +387,9 @@ get_packet_service_status_ready (QmiClientWds *client,
         &status,
         NULL);
 
-    /* TODO: print string */
-    g_print ("[%s] Connection status: '%u'\n",
+    g_print ("[%s] Connection status: '%s'\n",
              qmi_device_get_path_display (ctx->device),
-             status);
+             qmi_wds_connection_status_get_string (status));
 
     qmi_message_wds_get_packet_service_status_output_unref (output);
     shutdown (TRUE);
