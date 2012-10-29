@@ -43,12 +43,17 @@ static Context *ctx;
 
 /* Options */
 static gboolean read_efspn_flag;
+static gboolean read_efimsi_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "uim-read-efspn", 0, 0, G_OPTION_ARG_NONE, &read_efspn_flag,
       "Read the EFspn file",
+      NULL
+    },
+    { "uim-read-efimsi", 0, 0, G_OPTION_ARG_NONE, &read_efimsi_flag,
+      "Read the EFimsi file",
       NULL
     },
     { "uim-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
@@ -87,6 +92,7 @@ qmicli_uim_options_enabled (void)
         return !!n_actions;
 
     n_actions = (read_efspn_flag +
+                 read_efimsi_flag +
                  reset_flag +
                  noop_flag);
 
@@ -178,6 +184,19 @@ read_transparent_ready (QmiClientUim *client,
     if (!qmi_message_uim_read_transparent_output_get_result (output, &error)) {
         g_printerr ("error: couldn't read transparent file from the UIM: %s\n", error->message);
         g_error_free (error);
+
+        /* Card result */
+        if (qmi_message_uim_read_transparent_output_get_card_result (
+                output,
+                &sw1,
+                &sw2,
+                NULL)) {
+            g_print ("Card result:\n"
+                     "\tSW1: '0x%02x'\n"
+                     "\tSW2: '0x%02x'\n",
+                     sw1, sw2);
+        }
+
         qmi_message_uim_read_transparent_output_unref (output);
         shutdown (FALSE);
         return;
@@ -193,8 +212,8 @@ read_transparent_ready (QmiClientUim *client,
             &sw2,
             NULL)) {
         g_print ("Card result:\n"
-                 "\tSW1: '%u'\n"
-                 "\tSW2: '%u'\n",
+                 "\tSW1: '0x%02x'\n"
+                 "\tSW2: '0x%02x'\n",
                  sw1, sw2);
     }
 
@@ -207,7 +226,7 @@ read_transparent_ready (QmiClientUim *client,
 
         str = qmicli_get_raw_data_printable (read_result, 80, "\t");
         g_print ("Read result:\n"
-                 "\t%s\n",
+                 "%s\n",
                  str);
         g_free (str);
     }
@@ -223,6 +242,7 @@ typedef struct {
 
 static const SimFile sim_files[] = {
     { "EFspn",  { 0x3F00, 0x7F20, 0x6F46 } },
+    { "EFimsi", { 0x3F00, 0x7F20, 0x6F07 } }
 };
 
 static QmiMessageUimReadTransparentInput *
@@ -278,6 +298,22 @@ qmicli_uim_run (QmiDevice *device,
 
         input = read_transparent_build_input ("EFspn");
         g_debug ("Asynchronously reading EFspn...");
+        qmi_client_uim_read_transparent (ctx->client,
+                                         input,
+                                         10,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)read_transparent_ready,
+                                         NULL);
+        qmi_message_uim_read_transparent_input_unref (input);
+        return;
+    }
+
+    /* Request to read EFimsi? */
+    if (read_efimsi_flag) {
+        QmiMessageUimReadTransparentInput *input;
+
+        input = read_transparent_build_input ("EFimsi");
+        g_debug ("Asynchronously reading EFimsi...");
         qmi_client_uim_read_transparent (ctx->client,
                                          input,
                                          10,
