@@ -44,6 +44,7 @@ static Context *ctx;
 /* Options */
 static gboolean read_efspn_flag;
 static gboolean read_efimsi_flag;
+static gboolean read_eficcid_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -54,6 +55,10 @@ static GOptionEntry entries[] = {
     },
     { "uim-read-efimsi", 0, 0, G_OPTION_ARG_NONE, &read_efimsi_flag,
       "Read the EFimsi file",
+      NULL
+    },
+    { "uim-read-eficcid", 0, 0, G_OPTION_ARG_NONE, &read_eficcid_flag,
+      "Read the EFiccid file",
       NULL
     },
     { "uim-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
@@ -93,6 +98,7 @@ qmicli_uim_options_enabled (void)
 
     n_actions = (read_efspn_flag +
                  read_efimsi_flag +
+                 read_eficcid_flag +
                  reset_flag +
                  noop_flag);
 
@@ -241,8 +247,9 @@ typedef struct {
 } SimFile;
 
 static const SimFile sim_files[] = {
-    { "EFspn",  { 0x3F00, 0x7F20, 0x6F46 } },
-    { "EFimsi", { 0x3F00, 0x7F20, 0x6F07 } }
+    { "EFspn",    { 0x3F00, 0x7F20, 0x6F46 } },
+    { "EFimsi",   { 0x3F00, 0x7F20, 0x6F07 } },
+    { "EFiccid",  { 0x3F00, 0x2FE2, 0x0000 } },
 };
 
 static QmiMessageUimReadTransparentInput *
@@ -262,8 +269,14 @@ read_transparent_build_input (const gchar *file_name)
 
     file_path = g_array_sized_new (FALSE, FALSE, sizeof (guint16), 3);
     g_array_append_val (file_path, sim_files[i].path[0]);
-    g_array_append_val (file_path, sim_files[i].path[1]);
-    file_id = sim_files[i].path[2];
+    if (sim_files[i].path[2] != 0) {
+        g_array_append_val (file_path, sim_files[i].path[1]);
+        g_array_append_val (file_path, sim_files[i].path[2]);
+        file_id = sim_files[i].path[2];
+    } else {
+        g_array_append_val (file_path, sim_files[i].path[1]);
+        file_id = sim_files[i].path[1];
+    }
 
     input = qmi_message_uim_read_transparent_input_new ();
     qmi_message_uim_read_transparent_input_set_session_information (
@@ -314,6 +327,22 @@ qmicli_uim_run (QmiDevice *device,
 
         input = read_transparent_build_input ("EFimsi");
         g_debug ("Asynchronously reading EFimsi...");
+        qmi_client_uim_read_transparent (ctx->client,
+                                         input,
+                                         10,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)read_transparent_ready,
+                                         NULL);
+        qmi_message_uim_read_transparent_input_unref (input);
+        return;
+    }
+
+    /* Request to read EFiccid? */
+    if (read_eficcid_flag) {
+        QmiMessageUimReadTransparentInput *input;
+
+        input = read_transparent_build_input ("EFiccid");
+        g_debug ("Asynchronously reading EFiccid...");
         qmi_client_uim_read_transparent (ctx->client,
                                          input,
                                          10,
