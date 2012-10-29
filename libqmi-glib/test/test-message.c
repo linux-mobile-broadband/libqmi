@@ -37,7 +37,8 @@ test_message_parse_common (const guint8 *buffer,
         message = qmi_message_new_from_raw (array, &error);
         if (!message) {
             if (error) {
-                g_debug ("Error creating message from raw data: '%s'", error->message);
+                if (n_messages < n_expected_messages)
+                    g_printerr ("error creating message from raw data: '%s'\n", error->message);
                 g_error_free (error);
             }
             break;
@@ -110,6 +111,32 @@ test_message_parse_complete_and_complete (void)
     test_message_parse_common (buffer, sizeof (buffer), 2);
 }
 
+static void
+test_message_parse_wrong_tlv (void)
+{
+    const guint8 buffer[] = {
+        0x01, 0x4F, 0x00, 0x80, 0x03, 0x03, 0x02, 0x01, 0x00, 0x24, 0x00, 0x43,
+        0x00, 0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x21, 0x04, 0x00, 0x02,
+        0x03, 0x00, 0x00, 0x1D, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1C, 0x02,
+        0x00, 0x00, 0x00, 0x15, 0x03, 0x00, 0x01, 0x05, 0x01, 0x12, 0x0E, 0x00,
+        0x36, 0x01, 0x04, 0x01, 0x09, 0x20, 0x54, 0x2D, 0x4D, 0x6F, 0x62, 0x69,
+        0x6C, 0x65, 0x11, 0x02, 0x00, 0x01, 0x05, 0x10, 0x01, 0x00, 0x01, 0x01,
+        0x06, 0x00, 0x01, 0x01, 0x01, 0x02, 0x01, 0x05
+    };
+
+#if GLIB_CHECK_VERSION (2,34,0)
+    g_test_expect_message ("Qmi",
+                           G_LOG_LEVEL_WARNING,
+                           "Cannot read the '*' TLV: expected '*' bytes, but only got '*' bytes");
+#endif
+
+    test_message_parse_common (buffer, sizeof (buffer), 1);
+
+#if GLIB_CHECK_VERSION (2,34,0)
+    g_test_assert_expected_messages ();
+#endif
+}
+
 int main (int argc, char **argv)
 {
     g_type_init ();
@@ -119,6 +146,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/parse/complete",              test_message_parse_complete);
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-short",    test_message_parse_complete_and_short);
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-complete", test_message_parse_complete_and_complete);
+    g_test_add_func ("/libqmi-glib/message/parse/wrong-tlv",             test_message_parse_wrong_tlv);
 
     return g_test_run ();
 }
