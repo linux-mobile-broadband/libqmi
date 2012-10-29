@@ -46,6 +46,7 @@
 #include "qmi-nas.h"
 #include "qmi-wms.h"
 #include "qmi-pds.h"
+#include "qmi-uim.h"
 
 /**
  * SECTION:qmi-message
@@ -860,6 +861,9 @@ qmi_message_get_printable (QmiMessage *self,
     case QMI_SERVICE_PDS:
         contents = __qmi_message_pds_get_printable (self, line_prefix);
         break;
+    case QMI_SERVICE_UIM:
+        contents = __qmi_message_uim_get_printable (self, line_prefix);
+        break;
     default:
         break;
     }
@@ -908,6 +912,9 @@ qmi_message_get_version_introduced (QmiMessage *self,
 
     case QMI_SERVICE_PDS:
         return __qmi_message_pds_get_version_introduced (self, major, minor);
+
+    case QMI_SERVICE_UIM:
+        return __qmi_message_uim_get_version_introduced (self, major, minor);
 
     default:
         /* For the still unsupported services, cannot do anything */

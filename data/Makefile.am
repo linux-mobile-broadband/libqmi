@@ -8,4 +8,5 @@ EXTRA_DIST = \
 	qmi-service-nas.json \
 	qmi-service-wms.json \
 	qmi-service-pds.json \
-	qmi-service-pbm.json
+	qmi-service-pbm.json \
+	qmi-service-uim.json

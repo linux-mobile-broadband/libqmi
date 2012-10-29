@@ -647,6 +647,18 @@ qmi_pbm_session_type_get_type
 </SECTION>
 
 <SECTION>
+<FILE>qmi-enums-uim</FILE>
+QmiUimSessionType
+<SUBSECTION Methods>
+qmi_uim_session_type_get_string
+<SUBSECTION Private>
+qmi_uim_session_type_build_string_from_mask
+<SUBSECTION Standard>
+QMI_TYPE_UIM_SESSION_TYPE
+qmi_uim_session_type_get_type
+</SECTION>
+
+<SECTION>
 <FILE>qmi-errors</FILE>
 QmiCoreError
 QmiProtocolError

@@ -218,6 +218,17 @@
     </section>
   </chapter>
 
+  <chapter>
+    <title>User Identity Module (UIM) service</title>
+    <xi:include href="xml/qmi-client-uim.xml"/>
+    <xi:include href="xml/qmi-enums-uim.xml"/>
+    <section>
+      <title>UIM Requests</title>
+      <xi:include href="xml/qmi-message-uim-reset.xml"/>
+      <xi:include href="xml/qmi-message-uim-read-record.xml"/>
+    </section>
+  </chapter>
+
   <chapter id="object-tree">
     <title>Object Hierarchy</title>
      <xi:include href="xml/tree_index.sgml"/>
