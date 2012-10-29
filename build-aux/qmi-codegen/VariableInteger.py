@@ -75,8 +75,11 @@ class VariableInteger(Variable):
                 '${lp}/* Read the ${private_format} variable from the buffer */\n'
                 '${lp}qmi_utils_read_${private_format}_from_buffer (\n'
                 '${lp}    &${buffer_name},\n'
-                '${lp}    &${buffer_len},\n'
-                '${lp}    ${endian},\n'
+                '${lp}    &${buffer_len},\n')
+            if self.private_format != 'guint8' and self.private_format != 'gint8':
+                template += (
+                    '${lp}    ${endian},\n')
+            template += (
                 '${lp}    &(${variable_name}));\n')
         else:
             template = (
@@ -86,8 +89,11 @@ class VariableInteger(Variable):
                 '${lp}    /* Read the ${private_format} variable from the buffer */\n'
                 '${lp}    qmi_utils_read_${private_format}_from_buffer (\n'
                 '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n'
-                '${lp}        ${endian},\n'
+                '${lp}        &${buffer_len},\n')
+            if self.private_format != 'guint8' and self.private_format != 'gint8':
+                template += (
+                    '${lp}        ${endian},\n')
+            template += (
                 '${lp}        &tmp);\n'
                 '${lp}    ${variable_name} = (${public_format})tmp;\n'
                 '${lp}}\n')
@@ -120,8 +126,11 @@ class VariableInteger(Variable):
                 '${lp}/* Write the ${private_format} variable to the buffer */\n'
                 '${lp}qmi_utils_write_${private_format}_to_buffer (\n'
                 '${lp}    &${buffer_name},\n'
-                '${lp}    &${buffer_len},\n'
-                '${lp}    ${endian},\n'
+                '${lp}    &${buffer_len},\n')
+            if self.private_format != 'guint8' and self.private_format != 'gint8':
+                template += (
+                    '${lp}    ${endian},\n')
+            template += (
                 '${lp}    &(${variable_name}));\n')
         else:
             template = (
@@ -132,8 +141,11 @@ class VariableInteger(Variable):
                 '${lp}    /* Write the ${private_format} variable to the buffer */\n'
                 '${lp}    qmi_utils_write_${private_format}_to_buffer (\n'
                 '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n'
-                '${lp}        ${endian},\n'
+                '${lp}        &${buffer_len},\n')
+            if self.private_format != 'guint8' and self.private_format != 'gint8':
+                template += (
+                    '${lp}        ${endian},\n')
+            template += (
                 '${lp}        &tmp);\n'
                 '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
@@ -199,8 +211,11 @@ class VariableInteger(Variable):
                 '${lp}    /* Read the ${private_format} variable from the buffer */\n'
                 '${lp}    qmi_utils_read_${private_format}_from_buffer (\n'
                 '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n'
-                '${lp}        ${endian},\n'
+                '${lp}        &${buffer_len},\n')
+            if self.private_format != 'guint8' and self.private_format != 'gint8':
+                template += (
+                    '${lp}        ${endian},\n')
+            template += (
                 '${lp}        &tmp);\n'
                 '\n'
                 '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n'

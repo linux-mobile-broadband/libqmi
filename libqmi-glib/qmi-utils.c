@@ -102,7 +102,6 @@ print_read_bytes_trace (const gchar *type,
  * qmi_utils_read_guint8_from_buffer:
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
- * @endian: ignored
  * @out: return location for the read variable.
  *
  * Reads an unsigned byte from the buffer.
@@ -116,7 +115,6 @@ print_read_bytes_trace (const gchar *type,
 void
 qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
                                    guint16       *buffer_size,
-                                   QmiEndian      endian,
                                    guint8        *out)
 {
     g_assert (out != NULL);
@@ -136,7 +134,6 @@ qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
  * qmi_utils_read_gint8_from_buffer:
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
- * @endian: ignored
  * @out: return location for the read variable.
  *
  * Reads a signed byte from the buffer.
@@ -150,7 +147,6 @@ qmi_utils_read_guint8_from_buffer (const guint8 **buffer,
 void
 qmi_utils_read_gint8_from_buffer (const guint8 **buffer,
                                   guint16       *buffer_size,
-                                  QmiEndian      endian,
                                   gint8         *out)
 {
     g_assert (out != NULL);
@@ -452,7 +448,6 @@ qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
  * qmi_utils_write_guint8_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
- * @endian: ignored
  * @in: location of the variable to be written.
  *
  * Writes an unsigned byte into the buffer.
@@ -465,7 +460,6 @@ qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
 void
 qmi_utils_write_guint8_to_buffer (guint8  **buffer,
                                   guint16  *buffer_size,
-                                  QmiEndian endian,
                                   guint8   *in)
 {
     g_assert (in != NULL);
@@ -483,7 +477,6 @@ qmi_utils_write_guint8_to_buffer (guint8  **buffer,
  * qmi_utils_write_gint8_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
- * @endian: ignored
  * @in: location of the variable to be written.
  *
  * Writes a signed byte into the buffer.
@@ -496,7 +489,6 @@ qmi_utils_write_guint8_to_buffer (guint8  **buffer,
 void
 qmi_utils_write_gint8_to_buffer (guint8  **buffer,
                                  guint16  *buffer_size,
-                                 QmiEndian endian,
                                  gint8    *in)
 {
     g_assert (in != NULL);
@@ -827,7 +819,6 @@ qmi_utils_read_string_from_buffer (const guint8 **buffer,
     case 8:
         qmi_utils_read_guint8_from_buffer (buffer,
                                            buffer_size,
-                                           QMI_ENDIAN_LITTLE,
                                            &string_length_8);
         string_length = string_length_8;
         break;
@@ -930,7 +921,6 @@ qmi_utils_write_string_to_buffer (guint8      **buffer,
         len_8 = (guint8)len;
         qmi_utils_write_guint8_to_buffer (buffer,
                                           buffer_size,
-                                          QMI_ENDIAN_LITTLE,
                                           &len_8);
         break;
     case 16:

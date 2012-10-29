@@ -46,8 +46,8 @@ test_utils_uint8 (void)
     while (in_buffer_size) {
         guint8 tmp;
 
-        qmi_utils_read_guint8_from_buffer (&in_buffer_walker, &in_buffer_size, QMI_ENDIAN_LITTLE, &tmp);
-        qmi_utils_write_guint8_to_buffer (&out_buffer_walker, &out_buffer_size, QMI_ENDIAN_LITTLE, &tmp);
+        qmi_utils_read_guint8_from_buffer (&in_buffer_walker, &in_buffer_size, &tmp);
+        qmi_utils_write_guint8_to_buffer (&out_buffer_walker, &out_buffer_size, &tmp);
     }
 
     g_assert_cmpuint (out_buffer_size, ==, 0);
@@ -75,8 +75,8 @@ test_utils_int8 (void)
     while (in_buffer_size) {
         gint8 tmp;
 
-        qmi_utils_read_gint8_from_buffer (&in_buffer_walker, &in_buffer_size, QMI_ENDIAN_LITTLE, &tmp);
-        qmi_utils_write_gint8_to_buffer (&out_buffer_walker, &out_buffer_size, QMI_ENDIAN_LITTLE, &tmp);
+        qmi_utils_read_gint8_from_buffer (&in_buffer_walker, &in_buffer_size, &tmp);
+        qmi_utils_write_gint8_to_buffer (&out_buffer_walker, &out_buffer_size, &tmp);
     }
 
     g_assert_cmpuint (out_buffer_size, ==, 0);

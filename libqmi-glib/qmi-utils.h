@@ -49,11 +49,9 @@ typedef enum {
 
 void qmi_utils_read_guint8_from_buffer  (const guint8 **buffer,
                                          guint16       *buffer_size,
-                                         QmiEndian      endian,
                                          guint8        *out);
 void qmi_utils_read_gint8_from_buffer   (const guint8 **buffer,
                                          guint16       *buffer_size,
-                                         QmiEndian      endian,
                                          gint8         *out);
 
 void qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
@@ -91,11 +89,9 @@ void qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
 
 void qmi_utils_write_guint8_to_buffer (guint8  **buffer,
                                        guint16  *buffer_size,
-                                       QmiEndian endian,
                                        guint8   *in);
 void qmi_utils_write_gint8_to_buffer  (guint8  **buffer,
                                        guint16  *buffer_size,
-                                       QmiEndian endian,
                                        gint8    *in);
 
 void qmi_utils_write_guint16_to_buffer (guint8  **buffer,
