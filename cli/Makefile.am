@@ -19,7 +19,8 @@ qmicli_SOURCES = \
 	qmicli-dms.c \
 	qmicli-wds.c \
 	qmicli-nas.c \
-	qmicli-pbm.c
+	qmicli-pbm.c \
+	qmicli-uim.c
 
 qmicli_LDADD = \
 	$(QMICLI_LIBS) \
