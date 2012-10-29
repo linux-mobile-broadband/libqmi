@@ -31,6 +31,7 @@
 #include <libqmi-glib.h>
 
 #include "qmicli.h"
+#include "qmicli-helpers.h"
 
 /* Context */
 typedef struct {
@@ -41,10 +42,15 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
+static gboolean read_efspn_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+    { "uim-read-efspn", 0, 0, G_OPTION_ARG_NONE, &read_efspn_flag,
+      "Read the EFspn file",
+      NULL
+    },
     { "uim-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -80,7 +86,8 @@ qmicli_uim_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (reset_flag +
+    n_actions = (read_efspn_flag +
+                 reset_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -150,6 +157,110 @@ noop_cb (gpointer unused)
     return FALSE;
 }
 
+static void
+read_transparent_ready (QmiClientUim *client,
+                        GAsyncResult *res)
+{
+    QmiMessageUimReadTransparentOutput *output;
+    GError *error = NULL;
+    guint8 sw1 = 0;
+    guint8 sw2 = 0;
+    GArray *read_result = NULL;
+
+    output = qmi_client_uim_read_transparent_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_read_transparent_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't read transparent file from the UIM: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_uim_read_transparent_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully read information from the UIM:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    /* Card result */
+    if (qmi_message_uim_read_transparent_output_get_card_result (
+            output,
+            &sw1,
+            &sw2,
+            NULL)) {
+        g_print ("Card result:\n"
+                 "\tSW1: '%u'\n"
+                 "\tSW2: '%u'\n",
+                 sw1, sw2);
+    }
+
+    /* Read result */
+    if (qmi_message_uim_read_transparent_output_get_read_result (
+            output,
+            &read_result,
+            NULL)) {
+        gchar *str;
+
+        str = qmicli_get_raw_data_printable (read_result, 80, "\t");
+        g_print ("Read result:\n"
+                 "\t%s\n",
+                 str);
+        g_free (str);
+    }
+
+    qmi_message_uim_read_transparent_output_unref (output);
+    shutdown (TRUE);
+}
+
+typedef struct {
+    gchar *name;
+    guint16 path[3];
+} SimFile;
+
+static const SimFile sim_files[] = {
+    { "EFspn",  { 0x3F00, 0x7F20, 0x6F46 } },
+};
+
+static QmiMessageUimReadTransparentInput *
+read_transparent_build_input (const gchar *file_name)
+{
+    QmiMessageUimReadTransparentInput *input;
+    guint16 file_id = 0;
+    GArray *file_path = NULL;
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (sim_files); i++) {
+        if (g_str_equal (sim_files[i].name, file_name))
+            break;
+    }
+
+    g_assert (i != G_N_ELEMENTS (sim_files));
+
+    file_path = g_array_sized_new (FALSE, FALSE, sizeof (guint16), 3);
+    g_array_append_val (file_path, sim_files[i].path[0]);
+    g_array_append_val (file_path, sim_files[i].path[1]);
+    file_id = sim_files[i].path[2];
+
+    input = qmi_message_uim_read_transparent_input_new ();
+    qmi_message_uim_read_transparent_input_set_session_information (
+        input,
+        QMI_UIM_SESSION_TYPE_PRIMARY_GW_PROVISIONING,
+        "qmicli",
+        NULL);
+    qmi_message_uim_read_transparent_input_set_file (
+        input,
+        file_id,
+        file_path,
+        NULL);
+    qmi_message_uim_read_transparent_input_set_read_information (input, 0, 0, NULL);
+    g_array_unref (file_path);
+    return input;
+}
+
 void
 qmicli_uim_run (QmiDevice *device,
                 QmiClientUim *client,
@@ -160,6 +271,22 @@ qmicli_uim_run (QmiDevice *device,
     ctx->device = g_object_ref (device);
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
+
+    /* Request to read EFspn? */
+    if (read_efspn_flag) {
+        QmiMessageUimReadTransparentInput *input;
+
+        input = read_transparent_build_input ("EFspn");
+        g_debug ("Asynchronously reading EFspn...");
+        qmi_client_uim_read_transparent (ctx->client,
+                                         input,
+                                         10,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)read_transparent_ready,
+                                         NULL);
+        qmi_message_uim_read_transparent_input_unref (input);
+        return;
+    }
 
     /* Request to reset UIM service? */
     if (reset_flag) {
