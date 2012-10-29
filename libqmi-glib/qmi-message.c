@@ -800,6 +800,7 @@ qmi_message_get_printable (QmiMessage *self,
     GString *printable;
     gchar *qmi_flags_str;
     gchar *contents;
+    gchar *raw;
 
     g_return_val_if_fail (self != NULL, NULL);
     g_return_val_if_fail (line_prefix != NULL, NULL);
@@ -808,6 +809,20 @@ qmi_message_get_printable (QmiMessage *self,
         line_prefix = "";
 
     printable = g_string_new ("");
+
+    /* Print raw binary stream */
+    raw = __qmi_utils_str_hex (((GByteArray *)self)->data,
+                               ((GByteArray *)self)->len,
+                               ':');
+    g_string_append_printf (printable,
+                            "%sRAW:\n"
+                            "%s  length = %u\n"
+                            "%s  data   = %s\n",
+                            line_prefix,
+                            line_prefix, ((GByteArray *)self)->len,
+                            line_prefix, raw);
+    g_free (raw);
+
     g_string_append_printf (printable,
                             "%sQMUX:\n"
                             "%s  length  = %u\n"
