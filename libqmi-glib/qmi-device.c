@@ -1092,8 +1092,20 @@ process_message (QmiDevice *self,
     if (qmi_utils_get_traces_enabled ()) {
         gchar *printable;
 
+        printable = __qmi_utils_str_hex (((GByteArray *)message)->data,
+                                         ((GByteArray *)message)->len,
+                                         ':');
+        g_debug ("[%s] Received message...\n"
+                 ">>>>>> RAW:\n"
+                 ">>>>>>   length = %u\n"
+                 ">>>>>>   data   = %s\n",
+                 self->priv->path_display,
+                 ((GByteArray *)message)->len,
+                 printable);
+        g_free (printable);
+
         printable = qmi_message_get_printable (message, ">>>>>> ");
-        g_debug ("[%s] Received message...\n%s",
+        g_debug ("[%s] Received message (translated)...\n%s",
                  self->priv->path_display,
                  printable);
         g_free (printable);
@@ -1803,8 +1815,20 @@ qmi_device_command (QmiDevice *self,
     if (qmi_utils_get_traces_enabled ()) {
         gchar *printable;
 
+        printable = __qmi_utils_str_hex (((GByteArray *)message)->data,
+                                         ((GByteArray *)message)->len,
+                                         ':');
+        g_debug ("[%s] Sent message...\n"
+                 "<<<<<< RAW:\n"
+                 "<<<<<<   length = %u\n"
+                 "<<<<<<   data   = %s\n",
+                 self->priv->path_display,
+                 ((GByteArray *)message)->len,
+                 printable);
+        g_free (printable);
+
         printable = qmi_message_get_printable (message, "<<<<<< ");
-        g_debug ("[%s] Sending message...\n%s",
+        g_debug ("[%s] Sent message (translated)...\n%s",
                  self->priv->path_display,
                  printable);
         g_free (printable);
