@@ -177,6 +177,7 @@ libqmi_glib_generated_la_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libqmi-glib \
 	-DLIBQMI_GLIB_COMPILATION \
+	-DG_LOG_DOMAIN=\"Qmi\" \
 	-Wno-unused-function
 
 libqmi_glib_generated_la_LIBADD = \
