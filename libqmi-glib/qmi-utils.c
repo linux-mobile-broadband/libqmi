@@ -740,7 +740,7 @@ qmi_utils_write_gint64_to_buffer (guint8  **buffer,
  * qmi_utils_write_sized_guint_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.
- * @n_bytes: number of bytes to read.
+ * @n_bytes: number of bytes to write.
  * @endian: endianness of firmware value; swapped from host byte order if necessary
  * @in: location of the variable to be written.
  *
