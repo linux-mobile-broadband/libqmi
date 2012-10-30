@@ -102,6 +102,45 @@ class VariableString(Variable):
 
 
     """
+    Emits the code involved in computing the size of the variable.
+    """
+    def emit_size_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+        translations = { 'lp'            : line_prefix,
+                         'variable_name' : variable_name,
+                         'buffer_name'   : buffer_name,
+                         'buffer_len'    : buffer_len }
+
+        if self.is_fixed_size:
+            translations['fixed_size'] = self.fixed_size
+            template = (
+                '${lp}${variable_name} += ${fixed_size};\n')
+        elif self.length_prefix_size == 0:
+            template = (
+                '${lp}${variable_name} += ${buffer_len};\n')
+        elif self.length_prefix_size == 8:
+            template = (
+                '${lp}{\n'
+                '${lp}    guint8 size8;\n'
+                '${lp}    const guint8 *aux_buffer = &${buffer_name}[${variable_name}];\n'
+                '${lp}    guint16 aux_buffer_len = ${buffer_len} - ${variable_name};\n'
+                '\n'
+                '${lp}    qmi_utils_read_guint8_from_buffer (&aux_buffer, &aux_buffer_len, &size8);\n'
+                '${lp}    ${variable_name} = 1 + size8;\n'
+                '${lp}}\n')
+        elif self.length_prefix_size == 16:
+            template = (
+                '${lp}{\n'
+                '${lp}    guint16 size16;\n'
+                '${lp}    const guint8 *aux_buffer = &${buffer_name}[${variable_name}];\n'
+                '${lp}    guint16 aux_buffer_len = ${buffer_len} - ${variable_name};\n'
+                '\n'
+                '${lp}    qmi_utils_read_guint16_from_buffer (&aux_buffer, &aux_buffer_len, QMI_ENDIAN_LITTLE, &size16);\n'
+                '${lp}    ${variable_name} = 2 + size16;\n'
+                '${lp}}\n')
+        f.write(string.Template(template).substitute(translations))
+
+
+    """
     Write a string to the raw byte buffer.
     """
     def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len):

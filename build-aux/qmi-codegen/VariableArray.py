@@ -190,6 +190,63 @@ class VariableArray(Variable):
 
 
     """
+    Emits the code involved in computing the size of the variable.
+    """
+    def emit_size_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+        common_var_prefix = utils.build_underscore_name(self.name)
+        translations = { 'lp'             : line_prefix,
+                         'variable_name'  : variable_name,
+                         'buffer_name'    : buffer_name,
+                         'buffer_len'     : buffer_len,
+                         'common_var_prefix' : common_var_prefix }
+
+        template = (
+            '${lp}{\n'
+            '${lp}    guint ${common_var_prefix}_i;\n')
+        f.write(string.Template(template).substitute(translations))
+
+        if self.fixed_size:
+            translations['fixed_size'] = self.fixed_size
+
+            template = (
+                '${lp}    guint16 ${common_var_prefix}_n_items = ${fixed_size};\n'
+                '\n')
+            f.write(string.Template(template).substitute(translations))
+        else:
+            translations['array_size_element_format'] = self.array_size_element.public_format
+            if self.array_size_element.public_format == 'guint8':
+                translations['array_size_element_size'] = '1'
+            elif self.array_size_element.public_format == 'guint16':
+                translations['array_size_element_size'] = '2'
+            elif self.array_size_element.public_format == 'guint32':
+                translations['array_size_element_size'] = '4'
+            else:
+                translations['array_size_element_size'] = '0'
+
+            template = (
+                '${lp}    ${array_size_element_format} ${common_var_prefix}_n_items;\n'
+                '${lp}    const guint8 *${common_var_prefix}_aux_buffer = &${buffer_name}[${variable_name}];\n'
+                '${lp}    guint16 ${common_var_prefix}_aux_buffer_len = ${buffer_len} - ${variable_name};\n'
+                '\n'
+                '${lp}    ${variable_name} += ${array_size_element_size};\n'
+                '\n')
+            f.write(string.Template(template).substitute(translations))
+
+            self.array_size_element.emit_buffer_read(f, line_prefix + '    ', common_var_prefix + '_n_items', common_var_prefix + '_aux_buffer', common_var_prefix + '_aux_buffer_len')
+
+        template = (
+            '${lp}    for (${common_var_prefix}_i = 0; ${common_var_prefix}_i < ${common_var_prefix}_n_items; ${common_var_prefix}_i++) {\n'
+            '\n')
+        f.write(string.Template(template).substitute(translations))
+
+        self.array_element.emit_size_read(f, line_prefix + '        ', variable_name, buffer_name, buffer_len)
+
+        template = (
+            '${lp}    }\n'
+            '${lp}}\n')
+        f.write(string.Template(template).substitute(translations))
+
+    """
     Writing an array to the raw byte buffer is just about providing a loop to
     write every array element one by one.
     """

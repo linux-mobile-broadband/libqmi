@@ -224,17 +224,17 @@ class Message:
     Emit method responsible for getting a printable representation of the whole
     request/response
     """
-    def __emit_get_printable(self, hfile, cfile):
+    def __emit_helpers(self, hfile, cfile):
         need_tlv_printable = False
         if self.input is not None and self.input.fields is not None:
             need_tlv_printable = True
             for field in self.input.fields:
-                field.emit_tlv_get_printable(cfile)
+                field.emit_tlv_helpers(cfile)
 
         if self.output is not None and self.output.fields is not None:
             need_tlv_printable = True
             for field in self.output.fields:
-                field.emit_tlv_get_printable(cfile)
+                field.emit_tlv_helpers(cfile)
 
         translations = { 'name'       : self.name,
                          'service'    : self.service,
@@ -394,11 +394,8 @@ class Message:
         hfile.write('\n/* --- Output -- */\n');
         cfile.write('\n/* --- Output -- */\n');
         self.output.emit(hfile, cfile)
+        self.__emit_helpers(hfile, cfile)
         self.__emit_response_or_indication_parser(hfile, cfile)
-
-        hfile.write('\n/* --- Printable -- */\n');
-        cfile.write('\n/* --- Printable -- */\n');
-        self.__emit_get_printable(hfile, cfile)
 
     """
     Emit the sections

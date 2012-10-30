@@ -86,6 +86,13 @@ class Variable:
 
 
     """
+    Emits the code involved in computing the size of the variable.
+    """
+    def emit_size_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+        pass
+
+
+    """
     Emits the code to get the contents of the given variable as a printable string.
     """
     def emit_get_printable(self, f, line_prefix, printable, buffer_name, buffer_len):

@@ -107,15 +107,35 @@ class FieldResult(Field):
     Emit the method responsible for getting a printable representation of this
     TLV field.
     """
-    def emit_tlv_get_printable(self, f):
-        if TypeFactory.is_get_printable_emitted(self.fullname):
+    def emit_tlv_helpers(self, f):
+        if TypeFactory.helpers_emitted(self.fullname):
             return
 
-        TypeFactory.set_get_printable_emitted(self.fullname)
+        TypeFactory.set_helpers_emitted(self.fullname)
 
         translations = { 'name'       : self.name,
                          'tlv_id'     : self.id_enum_name,
                          'underscore' : utils.build_underscore_name (self.fullname) }
+
+        template = (
+            '\n'
+            'static gboolean\n'
+            '${underscore}_validate (\n'
+            '    const guint8 *buffer,\n'
+            '    guint16 buffer_len)\n'
+            '{\n'
+            '    static const guint expected_len = 4;\n'
+            '\n'
+            '    if (buffer_len < expected_len) {\n'
+            '        g_warning ("Cannot read the \'${name}\' TLV: expected \'%u\' bytes, but only got \'%u\' bytes",\n'
+            '                   expected_len, buffer_len);\n'
+            '        return FALSE;\n'
+            '    }\n'
+            '\n'
+            '    return TRUE;\n'
+            '}\n')
+        f.write(string.Template(template).substitute(translations))
+
         template = (
             '\n'
             'static gchar *\n'

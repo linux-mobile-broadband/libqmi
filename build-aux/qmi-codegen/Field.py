@@ -271,6 +271,7 @@ class Field:
     def emit_output_tlv_get(self, f, line_prefix):
         translations = { 'name'                 : self.name,
                          'container_underscore' : utils.build_underscore_name (self.prefix),
+                         'underscore'           : utils.build_underscore_name (self.fullname),
                          'tlv_id'               : self.id_enum_name,
                          'variable_name'        : self.variable_name,
                          'lp'                   : line_prefix,
@@ -283,7 +284,7 @@ class Field:
             '${lp}buffer = qmi_message_get_raw_tlv (message,\n'
             '${lp}                                  ${tlv_id},\n'
             '${lp}                                  &buffer_len);\n'
-            '${lp} if (buffer) {\n'
+            '${lp}if (buffer && ${underscore}_validate (buffer, buffer_len)) {\n'
             '${lp}    self->${variable_name}_set = TRUE;\n'
             '\n')
         f.write(string.Template(template).substitute(translations))
@@ -317,15 +318,49 @@ class Field:
     """
     Emit the method responsible for creating a printable representation of the TLV
     """
-    def emit_tlv_get_printable(self, f):
-        if TypeFactory.is_get_printable_emitted(self.fullname):
+    def emit_tlv_helpers(self, f):
+        if TypeFactory.helpers_emitted(self.fullname):
             return
 
-        TypeFactory.set_get_printable_emitted(self.fullname)
+        TypeFactory.set_helpers_emitted(self.fullname)
 
         translations = { 'name'       : self.name,
                          'tlv_id'     : self.id_enum_name,
                          'underscore' : utils.build_underscore_name (self.fullname) }
+
+        template = (
+            '\n'
+            'static gboolean\n'
+            '${underscore}_validate (\n'
+            '    const guint8 *buffer,\n'
+            '    guint16 buffer_len)\n'
+            '{\n'
+            '    guint expected_len = 0;\n'
+            '\n')
+        f.write(string.Template(template).substitute(translations))
+
+        # Now, read the size of the expected TLV
+        self.variable.emit_size_read(f, '    ', 'expected_len', 'buffer', 'buffer_len')
+
+        template = (
+            '\n'
+            '    if (buffer_len < expected_len) {\n'
+            '        g_warning ("Cannot read the \'${name}\' TLV: expected \'%u\' bytes, but only got \'%u\' bytes",\n'
+            '                   expected_len, buffer_len);\n'
+            '        return FALSE;\n'
+            '    }\n'
+            '\n'
+            '    if (buffer_len > expected_len) {\n'
+            '        g_debug ("Reading the \'${name}\' TLV: expected \'%u\' bytes, but got \'%u\' bytes",\n'
+            '                 expected_len, buffer_len);\n'
+            '        return TRUE;\n'
+            '    }\n'
+            '\n'
+            '    return TRUE;\n'
+            '}\n'
+            '\n')
+        f.write(string.Template(template).substitute(translations))
+
         template = (
             '\n'
             'static gchar *\n'
@@ -339,7 +374,7 @@ class Field:
             '    buffer = qmi_message_get_raw_tlv (message,\n'
             '                                      ${tlv_id},\n'
             '                                      &buffer_len);\n'
-            '    if (buffer) {\n'
+            '    if (buffer && ${underscore}_validate (buffer, buffer_len)) {\n'
             '        GString *printable;\n'
             '\n'
             '        printable = g_string_new ("");\n')

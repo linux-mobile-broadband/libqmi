@@ -47,16 +47,16 @@ def set_type_emitted(type_name):
 
 
 """
-List to keep track of type-specific get_printable() methods already emitted to
+List to keep track of type-specific helper methods already emitted to
 the source/header files.
 """
-emitted_get_printable = []
+emitted_helpers = []
 
 """
-Checks whether a given type-specific get_printable() has already been emitted.
+Checks whether a given type-specific helpers have already been emitted.
 """
-def is_get_printable_emitted(type_name):
-    for i in emitted_get_printable:
+def helpers_emitted(type_name):
+    for i in emitted_helpers:
         if i == type_name:
             return True
     else:
@@ -65,11 +65,11 @@ def is_get_printable_emitted(type_name):
 """
 Sets the given type-specific get_printable() as already emitted.
 """
-def set_get_printable_emitted(type_name):
-    if is_get_printable_emitted(type_name):
+def set_helpers_emitted(type_name):
+    if helpers_emitted(type_name):
         return False
     else:
-        emitted_get_printable.append(type_name)
+        emitted_helpers.append(type_name)
         return True
 
 

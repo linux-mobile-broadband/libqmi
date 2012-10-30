@@ -101,6 +101,32 @@ class VariableInteger(Variable):
 
 
     """
+    Emits the code involved in computing the size of the variable.
+    """
+    def emit_size_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+        translations = { 'lp'            : line_prefix,
+                         'len'           : self.guint_sized_size,
+                         'variable_name' : variable_name }
+        template = ''
+        if self.format == 'guint-sized':
+            template += (
+                '${lp}${variable_name} += ${len};\n')
+        elif self.private_format == 'guint8' or self.private_format == 'gint8':
+            template += (
+                '${lp}${variable_name} += 1;\n')
+        elif self.private_format == 'guint16' or self.private_format == 'gint16':
+            template += (
+                '${lp}${variable_name} += 2;\n')
+        elif self.private_format == 'guint32' or self.private_format == 'gint32':
+            template += (
+                '${lp}${variable_name} += 4;\n')
+        elif self.private_format == 'guint64' or self.private_format == 'gint64':
+            template += (
+                '${lp}${variable_name} += 8;\n')
+        f.write(string.Template(template).substitute(translations))
+
+
+    """
     Write a single integer to the raw byte buffer
     """
     def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len):
