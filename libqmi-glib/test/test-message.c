@@ -32,6 +32,7 @@ test_message_parse_common (const guint8 *buffer,
 
     do {
         QmiMessage *message;
+        gchar *printable;
 
         message = qmi_message_new_from_raw (array, &error);
         if (!message) {
@@ -41,6 +42,10 @@ test_message_parse_common (const guint8 *buffer,
             }
             break;
         }
+
+        printable = qmi_message_get_printable (message, "");
+        g_print ("\n%s\n", printable);
+        g_free (printable);
 
         n_messages++;
         qmi_message_unref (message);
