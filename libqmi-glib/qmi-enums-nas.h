@@ -822,4 +822,16 @@ typedef enum {
     QMI_NAS_SIM_REJECT_STATE_SIM_CS_PS_INVALID = 4
 } QmiNasSimRejectState;
 
+/**
+ * QmiNasCdmaPilotType:
+ * @QMI_NAS_CDMA_PILOT_TYPE_ACTIVE: the pilot is part of the active set.
+ * @QMI_NAS_CDMA_PILOT_TYPE_NEIGHBOR: the pilot is part of the neighbor set.
+ *
+ * The pilot set the pilot belongs to.
+ */
+typedef enum {
+    QMI_NAS_CDMA_PILOT_TYPE_ACTIVE   = 0,
+    QMI_NAS_CDMA_PILOT_TYPE_NEIGHBOR = 1,
+} QmiNasCdmaPilotType;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
