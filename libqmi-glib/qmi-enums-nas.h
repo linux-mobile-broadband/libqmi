@@ -423,6 +423,7 @@ typedef enum {
 
 /**
  * QmiNasDataCapability:
+ * @QMI_NAS_DATA_CAPABILITY_NONE: None or unknown.
  * @QMI_NAS_DATA_CAPABILITY_GPRS: GPRS.
  * @QMI_NAS_DATA_CAPABILITY_EDGE: EDGE.
  * @QMI_NAS_DATA_CAPABILITY_HSDPA: HSDPA.
@@ -440,6 +441,7 @@ typedef enum {
  * Data capability of the network.
  */
 typedef enum {
+    QMI_NAS_DATA_CAPABILITY_NONE          = 0x00,
     QMI_NAS_DATA_CAPABILITY_GPRS          = 0x01,
     QMI_NAS_DATA_CAPABILITY_EDGE          = 0x02,
     QMI_NAS_DATA_CAPABILITY_HSDPA         = 0x03,
