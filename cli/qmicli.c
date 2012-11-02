@@ -494,7 +494,8 @@ int main (int argc, char **argv)
     if (version_flag)
         print_version_and_exit ();
 
-    g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_MASK, log_handler, NULL);
+    g_log_set_handler (NULL, G_LOG_LEVEL_MASK, log_handler, NULL);
+    g_log_set_handler ("Qmi", G_LOG_LEVEL_MASK, log_handler, NULL);
     if (verbose_flag)
         qmi_utils_set_traces_enabled (TRUE);
 
