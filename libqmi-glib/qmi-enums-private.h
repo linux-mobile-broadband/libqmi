@@ -44,12 +44,12 @@ typedef enum {
  * @QMI_CTL_DATA_LINK_PROTOCOL_802_3: data frames formatted as 802.3 Ethernet
  * @QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP: data frames are raw IP packets
  *
- * Determines the network port data format.  Despite looking like flags, these
- * values are actually mutually exclusive.
+ * Determines the network port data format.
  */
 typedef enum {
-    QMI_CTL_DATA_LINK_PROTOCOL_802_3  = 1 << 0,
-    QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP = 1 << 1,
+    QMI_CTL_DATA_LINK_PROTOCOL_UNKNOWN = 0,
+    QMI_CTL_DATA_LINK_PROTOCOL_802_3   = 1,
+    QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP  = 2,
 } QmiCtlDataLinkProtocol;
 
 /**
