@@ -201,6 +201,7 @@ QmiNasHdrProtocolRevision
 QmiNasWcdmaHsService
 QmiNasCellBroadcastCapability
 QmiNasSimRejectState
+QmiNasCdmaPilotType
 <SUBSECTION Methods>
 qmi_nas_radio_interface_get_string
 qmi_nas_active_band_get_string
@@ -237,6 +238,7 @@ qmi_nas_hdr_protocol_revision_get_string
 qmi_nas_wcdma_hs_service_get_string
 qmi_nas_cell_broadcast_capability_get_string
 qmi_nas_sim_reject_state_get_string
+qmi_nas_cdma_pilot_type_get_string
 <SUBSECTION Private>
 qmi_nas_radio_interface_build_string_from_mask
 qmi_nas_active_band_build_string_from_mask
@@ -271,6 +273,7 @@ qmi_nas_hdr_protocol_revision_build_string_from_mask
 qmi_nas_wcdma_hs_service_build_string_from_mask
 qmi_nas_cell_broadcast_capability_build_string_from_mask
 qmi_nas_sim_reject_state_build_string_from_mask
+qmi_nas_cdma_pilot_type_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_NAS_ACTIVE_BAND
 QMI_TYPE_NAS_ATTACH_STATE
@@ -305,6 +308,7 @@ QMI_TYPE_NAS_SIGNAL_STRENGTH_REQUEST
 QMI_TYPE_NAS_SIM_REJECT_STATE
 QMI_TYPE_NAS_TD_SCDMA_BAND_PREFERENCE
 QMI_TYPE_NAS_WCDMA_HS_SERVICE
+QMI_TYPE_NAS_CDMA_PILOT_TYPE
 qmi_nas_active_band_get_type
 qmi_nas_attach_state_get_type
 qmi_nas_call_barring_status_get_type
@@ -338,6 +342,7 @@ qmi_nas_signal_strength_request_get_type
 qmi_nas_sim_reject_state_get_type
 qmi_nas_td_scdma_band_preference_get_type
 qmi_nas_wcdma_hs_service_get_type
+qmi_nas_cdma_pilot_type_get_type
 </SECTION>
 
 <SECTION>
