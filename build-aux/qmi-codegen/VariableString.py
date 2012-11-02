@@ -125,7 +125,7 @@ class VariableString(Variable):
                 '${lp}    guint16 aux_buffer_len = ${buffer_len} - ${variable_name};\n'
                 '\n'
                 '${lp}    qmi_utils_read_guint8_from_buffer (&aux_buffer, &aux_buffer_len, &size8);\n'
-                '${lp}    ${variable_name} = 1 + size8;\n'
+                '${lp}    ${variable_name} += (1 + size8);\n'
                 '${lp}}\n')
         elif self.length_prefix_size == 16:
             template = (
@@ -135,7 +135,7 @@ class VariableString(Variable):
                 '${lp}    guint16 aux_buffer_len = ${buffer_len} - ${variable_name};\n'
                 '\n'
                 '${lp}    qmi_utils_read_guint16_from_buffer (&aux_buffer, &aux_buffer_len, QMI_ENDIAN_LITTLE, &size16);\n'
-                '${lp}    ${variable_name} = 2 + size16;\n'
+                '${lp}    ${variable_name} += (2 + size16);\n'
                 '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
 
