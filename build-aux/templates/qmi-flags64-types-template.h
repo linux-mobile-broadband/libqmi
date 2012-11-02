@@ -12,6 +12,12 @@ G_BEGIN_DECLS
 
 /*** BEGIN value-header ***/
 
+#define __@ENUMNAME@_IS_@TYPE@__
+
+#if defined __@ENUMNAME@_IS_ENUM__
+#error Only flags expected, @EnumName@ is an enumeration
+#endif
+
 gchar *@enum_name@_build_string_from_mask (@EnumName@ mask);
 
 /*** END value-header ***/

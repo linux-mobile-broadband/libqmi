@@ -17,9 +17,6 @@ static const G@Type@Value @enum_name@_values[] = {
 };
 
 /* Define type-specific symbols */
-#undef __QMI_IS_ENUM__
-#undef __QMI_IS_FLAGS__
-#define __QMI_IS_@TYPE@__
 
 GType
 @enum_name@_get_type (void)
@@ -39,7 +36,7 @@ GType
 /* Enum-specific method to get the value as a string.
  * We get the nick of the GEnumValue. Note that this will be
  * valid even if the GEnumClass is not referenced anywhere. */
-#if defined __QMI_IS_ENUM__
+#if defined __@ENUMNAME@_IS_ENUM__
 /**
  * @enum_name@_get_string:
  * @val: a @EnumName@.
@@ -60,13 +57,13 @@ const gchar *
 
     return NULL;
 }
-#endif /* __QMI_IS_ENUM__ */
+#endif /* __@ENUMNAME@_IS_ENUM__ */
 
 /* Flags-specific method to build a string with the given mask.
  * We get a comma separated list of the nicks of the GFlagsValues.
  * Note that this will be valid even if the GFlagsClass is not referenced
  * anywhere. */
-#if defined __QMI_IS_FLAGS__
+#if defined __@ENUMNAME@_IS_FLAGS__
 /**
  * @enum_name@_build_string_from_mask:
  * @mask: bitmask of @EnumName@ values.
@@ -113,7 +110,7 @@ gchar *
 
     return (str ? g_string_free (str, FALSE) : NULL);
 }
-#endif /* __QMI_IS_FLAGS__ */
+#endif /* __@ENUMNAME@_IS_FLAGS__ */
 
 /*** END value-tail ***/
 

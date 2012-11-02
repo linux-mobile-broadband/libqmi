@@ -183,6 +183,7 @@ class VariableInteger(Variable):
     def emit_get_printable(self, f, line_prefix, printable, buffer_name, buffer_len):
         common_format = ''
         common_cast = ''
+
         if self.private_format == 'guint8':
             common_format = '%u'
             common_cast = '(guint)'
@@ -204,6 +205,7 @@ class VariableInteger(Variable):
 
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
+                         'public_format'  : self.public_format,
                          'len'            : self.guint_sized_size,
                          'printable'      : printable,
                          'buffer_name'    : buffer_name,
@@ -211,13 +213,14 @@ class VariableInteger(Variable):
                          'common_format'  : common_format,
                          'common_cast'    : common_cast,
                          'endian'         : self.endian }
+        template = (
+            '\n'
+            '${lp}{\n'
+            '${lp}    ${private_format} tmp;\n'
+            '\n')
 
         if self.format == 'guint-sized':
-            template = (
-                '\n'
-                '${lp}{\n'
-                '${lp}    ${private_format} tmp;\n'
-                '\n'
+            template += (
                 '${lp}    /* Read the ${len}-byte long variable from the buffer */\n'
                 '${lp}    qmi_utils_read_sized_guint_from_buffer (\n'
                 '${lp}        &${buffer_name},\n'
@@ -225,15 +228,9 @@ class VariableInteger(Variable):
                 '${lp}        ${len},\n'
                 '${lp}        ${endian},\n'
                 '${lp}        &tmp);\n'
-                '\n'
-                '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n'
-                '${lp}}\n')
+                '\n')
         else:
-            template = (
-                '\n'
-                '${lp}{\n'
-                '${lp}    ${private_format} tmp;\n'
-                '\n'
+            template += (
                 '${lp}    /* Read the ${private_format} variable from the buffer */\n'
                 '${lp}    qmi_utils_read_${private_format}_from_buffer (\n'
                 '${lp}        &${buffer_name},\n'
@@ -243,9 +240,35 @@ class VariableInteger(Variable):
                     '${lp}        ${endian},\n')
             template += (
                 '${lp}        &tmp);\n'
+                '\n')
+
+        if self.public_format == 'gboolean':
+            template += (
+                '${lp}    g_string_append_printf (${printable}, "%s", tmp ? "yes" : "no");\n')
+        elif self.public_format != self.private_format:
+            translations['public_type_underscore'] = utils.build_underscore_name_from_camelcase(self.public_format)
+            translations['public_type_underscore_upper'] = string.upper(utils.build_underscore_name_from_camelcase(self.public_format))
+            template += (
+                '#if defined  __${public_type_underscore_upper}_IS_ENUM__\n'
+                '${lp}    g_string_append_printf (${printable}, "%s", ${public_type_underscore}_get_string ((${public_format})tmp));\n'
+                '#elif defined  __${public_type_underscore_upper}_IS_FLAGS__\n'
+                '${lp}    {\n'
+                '${lp}        gchar *flags_str;\n'
                 '\n'
-                '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n'
-                '${lp}}\n')
+                '${lp}        flags_str = ${public_type_underscore}_build_string_from_mask ((${public_format})tmp);\n'
+                '${lp}        g_string_append_printf (${printable}, "%s", flags_str);\n'
+                '${lp}        g_free (flags_str);\n'
+                '${lp}    }\n'
+                '#else\n'
+                '# error unexpected public format: ${public_format}\n'
+                '#endif\n')
+        else:
+            template += (
+                '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n')
+
+        template += (
+            '${lp}}\n')
+
         f.write(string.Template(template).substitute(translations))
 
 
