@@ -111,6 +111,7 @@ test_message_parse_complete_and_complete (void)
     test_message_parse_common (buffer, sizeof (buffer), 2);
 }
 
+#if GLIB_CHECK_VERSION (2,34,0)
 static void
 test_message_parse_wrong_tlv (void)
 {
@@ -124,18 +125,13 @@ test_message_parse_wrong_tlv (void)
         0x06, 0x00, 0x01, 0x01, 0x01, 0x02, 0x01, 0x05
     };
 
-#if GLIB_CHECK_VERSION (2,34,0)
     g_test_expect_message ("Qmi",
                            G_LOG_LEVEL_WARNING,
                            "Cannot read the '*' TLV: expected '*' bytes, but only got '*' bytes");
-#endif
-
     test_message_parse_common (buffer, sizeof (buffer), 1);
-
-#if GLIB_CHECK_VERSION (2,34,0)
     g_test_assert_expected_messages ();
-#endif
 }
+#endif
 
 int main (int argc, char **argv)
 {
@@ -146,7 +142,9 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/parse/complete",              test_message_parse_complete);
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-short",    test_message_parse_complete_and_short);
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-complete", test_message_parse_complete_and_complete);
+#if GLIB_CHECK_VERSION (2,34,0)
     g_test_add_func ("/libqmi-glib/message/parse/wrong-tlv",             test_message_parse_wrong_tlv);
+#endif
 
     return g_test_run ();
 }
