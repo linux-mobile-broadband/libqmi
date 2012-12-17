@@ -208,7 +208,7 @@ class Client:
                     translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
                     translations['bundle_type'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(message.output.fullname), 'QMI_')
                     translations['service'] = self.service.upper()
-                    translations['message_name_dashed'] = string.replace(message.name, ' ', '-')
+                    translations['message_name_dashed'] = message.name.replace(' ', '-')
                     inner_template += (
                         '\n'
                         '    /**\n'
