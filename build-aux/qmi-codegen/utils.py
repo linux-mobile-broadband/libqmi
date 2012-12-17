@@ -54,7 +54,7 @@ def add_copyright(f):
 Build a header guard string based on the given filename
 """
 def build_header_guard(output_name):
-    return "__LIBQMI_GLIB_" + string.upper(string.replace (output_name, '-', '_')) + "__"
+    return "__LIBQMI_GLIB_" + string.replace(output_name, '-', '_').upper() + "__"
 
 
 """
@@ -145,7 +145,7 @@ Build an underscore name from the given full name
 e.g.: "This is a message" --> "this_is_a_message"
 """
 def build_underscore_name(name):
-    return string.lower(string.replace (name, ' ', '_'))
+    return string.replace(name, ' ', '_').lower()
 
 
 """
@@ -153,7 +153,7 @@ Build an underscore uppercase name from the given full name
 e.g.: "This is a message" --> "THIS_IS_A_MESSAGE"
 """
 def build_underscore_uppercase_name(name):
-    return string.upper(string.replace (name, ' ', '_'))
+    return string.replace(name, ' ', '_').upper()
 
 
 """
@@ -178,7 +178,7 @@ Build a dashed lowercase name from the given full name
 e.g.: "This is a message" --> "this-is-a-message"
 """
 def build_dashed_name(name):
-    return string.replace(string.lower(name), ' ', '-')
+    return string.replace(name.lower(), ' ', '-')
 
 
 """
