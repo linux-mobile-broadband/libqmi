@@ -57,8 +57,8 @@ static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
-      "Start network",
-      "[APN]"
+      "Start network (Authentication, Username and Password are optional)",
+      "[(APN),(PAP|CHAP|BOTH),(Username),(Password)]"
     },
     { "wds-follow-network", 0, 0, G_OPTION_ARG_NONE, &follow_network_flag,
       "Follow the network status until disconnected. Use with `--wds-start-network'",
@@ -596,8 +596,40 @@ qmicli_wds_run (QmiDevice *device,
 
         /* Use the input string as APN */
         if (start_network_str[0]) {
+            gchar **split;
+
+            split = g_strsplit (start_network_str, ",", 0);
+
             input = qmi_message_wds_start_network_input_new ();
-            qmi_message_wds_start_network_input_set_apn (input, start_network_str, NULL);
+            qmi_message_wds_start_network_input_set_apn (input, split[0], NULL);
+
+            if (split[1]) {
+                QmiWdsAuthentication qmiwdsauth;
+
+                /* Use authentication method */
+                if (g_ascii_strcasecmp (split[1], "PAP") == 0) {
+                    qmiwdsauth = QMI_WDS_AUTHENTICATION_PAP;
+                } else if (g_ascii_strcasecmp (split[1], "CHAP") == 0) {
+                    qmiwdsauth = QMI_WDS_AUTHENTICATION_CHAP;
+                } else if (g_ascii_strcasecmp (split[1], "BOTH") == 0) {
+                    qmiwdsauth = (QMI_WDS_AUTHENTICATION_PAP | QMI_WDS_AUTHENTICATION_CHAP);
+                } else {
+                    qmiwdsauth = QMI_WDS_AUTHENTICATION_NONE;
+                }
+
+                qmi_message_wds_start_network_input_set_authentication_preference (input, qmiwdsauth, NULL);
+
+                /* Username */
+                if (split[2] && strlen (split[2])) {
+                    qmi_message_wds_start_network_input_set_username (input, split[2], NULL);
+
+                    /* Password */
+                    if (split[3] && strlen (split[3])) {
+                        qmi_message_wds_start_network_input_set_password (input, split[3], NULL);
+                    }
+                }
+            }
+            g_strfreev (split);
         }
 
         g_debug ("Asynchronously starting network...");
