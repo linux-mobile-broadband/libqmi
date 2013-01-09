@@ -603,7 +603,7 @@ qmicli_wds_run (QmiDevice *device,
         g_debug ("Asynchronously starting network...");
         qmi_client_wds_start_network (ctx->client,
                                       input,
-                                      10,
+                                      45,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback)start_network_ready,
                                       NULL);
