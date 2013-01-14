@@ -10,11 +10,13 @@ libmbim_glib_la_CPPFLAGS = \
 	-DG_LOG_DOMAIN=\"Mbim\"
 
 libmbim_glib_la_SOURCES = \
-	libmbim-glib.h
+	libmbim-glib.h \
+	mbim-uuid.h mbim-uuid.c
 
 libmbim_glib_la_LIBADD = \
 	$(LIBMBIM_GLIB_LIBS)
 
 includedir = @includedir@/libmbim-glib
 include_HEADERS = \
-	libmbim-glib.h
+	libmbim-glib.h \
+	mbim-uuid.h

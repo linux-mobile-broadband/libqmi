@@ -27,4 +27,6 @@
 
 /* libmbim-glib headers */
 
+#include "mbim-uuid.h"
+
 #endif /* _LIBMBIM_GLIB_H_ */
