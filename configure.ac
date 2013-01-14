@@ -47,7 +47,8 @@ case $with_tests in
 esac
 
 AC_CONFIG_FILES([Makefile
-                 libmbim-glib/Makefile])
+                 libmbim-glib/Makefile
+                 libmbim-glib/test/Makefile])
 AC_OUTPUT
 
 echo "

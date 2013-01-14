@@ -30,3 +30,7 @@ depcomp
 
 libmbim-glib/.deps
 libmbim-glib/.libs
+
+libmbim-glib/test/.deps
+libmbim-glib/test/.libs
+libmbim-glib/test/test-uuid

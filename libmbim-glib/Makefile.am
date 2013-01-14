@@ -1,4 +1,6 @@
 
+SUBDIRS = . test
+
 lib_LTLIBRARIES = libmbim-glib.la
 
 libmbim_glib_la_CPPFLAGS = \
