@@ -26,7 +26,28 @@ LT_INIT
 dnl Specific warnings to always use
 LIBMBIM_COMPILER_WARNINGS
 
-AC_CONFIG_FILES([Makefile])
+dnl General dependencies for libmbim-glib
+PKG_CHECK_MODULES(LIBMBIM_GLIB,
+                  glib-2.0 >= 2.32
+                  gobject-2.0
+                  gio-2.0)
+AC_SUBST(LIBMBIM_GLIB_CFLAGS)
+AC_SUBST(LIBMBIM_GLIB_LIBS)
+
+dnl Tests
+AC_ARG_WITH(tests, AS_HELP_STRING([--with-tests], [Build libmbim tests]))
+AM_CONDITIONAL(WITH_TESTS, test "x$with_tests" = "xyes")
+case $with_tests in
+    yes)
+        with_tests=yes
+        ;;
+    *)
+        with_tests=no
+        ;;
+esac
+
+AC_CONFIG_FILES([Makefile
+                 libmbim-glib/Makefile])
 AC_OUTPUT
 
 echo "
@@ -36,4 +57,5 @@ echo "
     compiler:                ${CC}
     cflags:                  ${CFLAGS}
     Maintainer mode:         ${USE_MAINTAINER_MODE}
+    Tests:                   ${with_tests}
 "
