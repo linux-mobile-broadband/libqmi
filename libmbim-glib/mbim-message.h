@@ -94,6 +94,20 @@ MbimMessageType  mbim_message_get_message_type     (const MbimMessage  *self);
 guint32          mbim_message_get_message_length   (const MbimMessage  *self);
 guint32          mbim_message_get_transaction_id   (const MbimMessage  *self);
 
+/*****************************************************************************/
+/* 'Open' message interface */
+
+MbimMessage *mbim_message_open_new                      (guint32            transaction_id,
+                                                         guint32            max_control_transfer);
+guint32      mbim_message_open_get_max_control_transfer (const MbimMessage *self);
+
+/*****************************************************************************/
+/* 'Open Done' message interface */
+
+MbimStatusError mbim_message_open_done_get_status_code (const MbimMessage  *self);
+gboolean        mbim_message_open_done_get_result      (const MbimMessage  *self,
+                                                        GError            **error);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_MESSAGE_H_ */

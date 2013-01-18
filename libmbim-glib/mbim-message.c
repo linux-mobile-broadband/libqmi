@@ -272,8 +272,28 @@ mbim_message_get_printable (const MbimMessage *self,
         break;
 
     case MBIM_MESSAGE_TYPE_OPEN:
+        g_string_append_printf (printable,
+                                "%sContents:\n"
+                                "%s  max_control_transfer = %u\n",
+                                line_prefix,
+                                line_prefix, mbim_message_open_get_max_control_transfer (self));
+        break;
+
     case MBIM_MESSAGE_TYPE_CLOSE:
-    case MBIM_MESSAGE_TYPE_OPEN_DONE:
+        break;
+
+    case MBIM_MESSAGE_TYPE_OPEN_DONE: {
+        MbimStatusError status;
+
+        status = mbim_message_open_done_get_status_code (self);
+        g_string_append_printf (printable,
+                                "%sContents:\n"
+                                "%s  status error = '%s' (0x%08x)\n",
+                                line_prefix,
+                                line_prefix, mbim_status_error_get_string (status), status);
+        break;
+    }
+
     case MBIM_MESSAGE_TYPE_CLOSE_DONE:
     case MBIM_MESSAGE_TYPE_HOST_ERROR:
     case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
@@ -284,4 +304,100 @@ mbim_message_get_printable (const MbimMessage *self,
     }
 
     return g_string_free (printable, FALSE);
+}
+
+/*****************************************************************************/
+/* 'Open' message interface */
+
+/**
+ * mbim_message_open_new:
+ * @transaction_id: transaction ID.
+ * @max_control_transfer: maximum control transfer.
+ *
+ * Create a new #MbimMessage of type %MBIM_MESSAGE_TYPE_OPEN with the specified
+ * parameters.
+ *
+ * Returns: (transfer full): a newly created #MbimMessage. The returned value
+ * should be freed with mbim_message_unref().
+ */
+MbimMessage *
+mbim_message_open_new (guint32 transaction_id,
+                       guint32 max_control_transfer)
+{
+    GByteArray *self;
+
+    self = _mbim_message_allocate (MBIM_MESSAGE_TYPE_OPEN,
+                                   transaction_id,
+                                   sizeof (struct open_message));
+
+    /* Open header */
+    ((struct full_message *)(self->data))->message.open.max_control_transfer = GUINT32_TO_LE (max_control_transfer);
+
+    return (MbimMessage *)self;
+}
+
+/**
+ * mbim_message_open_get_max_control_transfer:
+ * @self: a #MbimMessage.
+ *
+ * Get the maximum control transfer set to be used in the #MbimMessage of type
+ * %MBIM_MESSAGE_TYPE_OPEN.
+ *
+ * Returns: the maximum control transfer.
+ */
+guint32
+mbim_message_open_get_max_control_transfer (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, 0);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_OPEN, 0);
+
+    return GUINT32_FROM_LE (((struct full_message *)(self->data))->message.open.max_control_transfer);
+}
+
+/*****************************************************************************/
+/* 'Open Done' message interface */
+
+/**
+ * mbim_message_open_done_get_status_code:
+ * @self: a #MbimMessage.
+ *
+ * Get status code from the %MBIM_MESSAGE_TYPE_OPEN_DONE message.
+ *
+ * Returns: a #MbimStatusError.
+ */
+MbimStatusError
+mbim_message_open_done_get_status_code (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_STATUS_ERROR_FAILURE);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_OPEN_DONE, MBIM_STATUS_ERROR_FAILURE);
+
+    return (MbimStatusError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.open_done.status_code);
+}
+
+/**
+ * mbim_message_open_done_get_result:
+ * @self: a #MbimMessage.
+ *
+ * Gets the result of the 'Open' operation in the %MBIM_MESSAGE_TYPE_OPEN_DONE message.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ */
+gboolean
+mbim_message_open_done_get_result (const MbimMessage  *self,
+                                   GError            **error)
+{
+    MbimStatusError status;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_OPEN_DONE, FALSE);
+
+    status = (MbimStatusError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.open_done.status_code);
+    if (status == MBIM_STATUS_ERROR_NONE)
+        return TRUE;
+
+    g_set_error (error,
+                 MBIM_STATUS_ERROR,
+                 status,
+                 mbim_status_error_get_string (status));
+    return FALSE;
 }

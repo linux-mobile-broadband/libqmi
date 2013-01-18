@@ -52,9 +52,19 @@ struct header {
 #define MBIM_MESSAGE_GET_TRANSACTION_ID(self)                           \
     (MbimMessageType) GUINT32_FROM_LE (((struct header *)(self->data))->transaction_id)
 
+struct open_message {
+    guint32 max_control_transfer;
+} __attribute__((packed));
+
+struct open_done_message {
+    guint32 status_code;
+} __attribute__((packed));
+
 struct full_message {
     struct header header;
     union {
+        struct open_message       open;
+        struct open_done_message  open_done;
     } message;
 } __attribute__((packed));
 
