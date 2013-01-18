@@ -29,6 +29,7 @@
 
 #include "mbim-utils.h"
 #include "mbim-uuid.h"
+#include "mbim-message.h"
 
 /* generated */
 #include "mbim-error-types.h"
