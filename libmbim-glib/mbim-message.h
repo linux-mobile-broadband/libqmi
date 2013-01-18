@@ -108,6 +108,18 @@ MbimStatusError mbim_message_open_done_get_status_code (const MbimMessage  *self
 gboolean        mbim_message_open_done_get_result      (const MbimMessage  *self,
                                                         GError            **error);
 
+/*****************************************************************************/
+/* 'Close' message interface */
+
+MbimMessage *mbim_message_close_new (guint32 transaction_id);
+
+/*****************************************************************************/
+/* 'Close Done' message interface */
+
+MbimStatusError mbim_message_close_done_get_status_code (const MbimMessage  *self);
+gboolean        mbim_message_close_done_get_result      (const MbimMessage  *self,
+                                                         GError            **error);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_MESSAGE_H_ */

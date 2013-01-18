@@ -60,11 +60,17 @@ struct open_done_message {
     guint32 status_code;
 } __attribute__((packed));
 
+struct close_done_message {
+    guint32 status_code;
+} __attribute__((packed));
+
 struct full_message {
     struct header header;
     union {
         struct open_message       open;
         struct open_done_message  open_done;
+        /* nothing needed for close_message */
+        struct close_done_message close_done;
     } message;
 } __attribute__((packed));
 

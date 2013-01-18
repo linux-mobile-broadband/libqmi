@@ -294,7 +294,18 @@ mbim_message_get_printable (const MbimMessage *self,
         break;
     }
 
-    case MBIM_MESSAGE_TYPE_CLOSE_DONE:
+    case MBIM_MESSAGE_TYPE_CLOSE_DONE: {
+        MbimStatusError status;
+
+        status = mbim_message_close_done_get_status_code (self);
+        g_string_append_printf (printable,
+                                "%sContents:\n"
+                                "%s  status error = '%s' (0x%08x)\n",
+                                line_prefix,
+                                line_prefix, mbim_status_error_get_string (status), status);
+        break;
+    }
+
     case MBIM_MESSAGE_TYPE_HOST_ERROR:
     case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
     case MBIM_MESSAGE_TYPE_COMMAND:
@@ -401,3 +412,73 @@ mbim_message_open_done_get_result (const MbimMessage  *self,
                  mbim_status_error_get_string (status));
     return FALSE;
 }
+
+/*****************************************************************************/
+/* 'Close' message interface */
+
+/**
+ * mbim_message_close_new:
+ * @transaction_id: transaction ID.
+ *
+ * Create a new #MbimMessage of type %MBIM_MESSAGE_TYPE_CLOSE with the specified
+ * parameters.
+ *
+ * Returns: (transfer full): a newly created #MbimMessage. The returned value
+ * should be freed with mbim_message_unref().
+ */
+MbimMessage *
+mbim_message_close_new (guint32 transaction_id)
+{
+    return (MbimMessage *) _mbim_message_allocate (MBIM_MESSAGE_TYPE_CLOSE,
+                                                   transaction_id,
+                                                   0);
+}
+
+/*****************************************************************************/
+/* 'Close Done' message interface */
+
+/**
+ * mbim_message_close_done_get_status_code:
+ * @self: a #MbimMessage.
+ *
+ * Get status code from the %MBIM_MESSAGE_TYPE_CLOSE_DONE message.
+ *
+ * Returns: a #MbimStatusError.
+ */
+MbimStatusError
+mbim_message_close_done_get_status_code (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_STATUS_ERROR_FAILURE);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_CLOSE_DONE, MBIM_STATUS_ERROR_FAILURE);
+
+    return (MbimStatusError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.close_done.status_code);
+}
+
+/**
+ * mbim_message_close_done_get_result:
+ * @self: a #MbimMessage.
+ *
+ * Gets the result of the 'Close' operation in the %MBIM_MESSAGE_TYPE_CLOSE_DONE message.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ */
+gboolean
+mbim_message_close_done_get_result (const MbimMessage  *self,
+                                    GError            **error)
+{
+    MbimStatusError status;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_CLOSE_DONE, FALSE);
+
+    status = (MbimStatusError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.close_done.status_code);
+    if (status == MBIM_STATUS_ERROR_NONE)
+        return TRUE;
+
+    g_set_error (error,
+                 MBIM_STATUS_ERROR,
+                 status,
+                 mbim_status_error_get_string (status));
+    return FALSE;
+}
+
