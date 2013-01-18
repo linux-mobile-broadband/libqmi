@@ -52,12 +52,48 @@ test_message_open_done (void)
     mbim_message_unref (message);
 }
 
+static void
+test_message_close (void)
+{
+    MbimMessage *message;
+
+    message = mbim_message_close_new (12345);
+    g_assert (message != NULL);
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 12345);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_CLOSE);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, 12);
+
+    mbim_message_unref (message);
+}
+
+static void
+test_message_close_done (void)
+{
+    MbimMessage *message;
+    const guint8 buffer [] =  { 0x02, 0x00, 0x00, 0x80,
+                                0x10, 0x00, 0x00, 0x00,
+                                0x01, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00 };
+
+    message = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id         (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type           (message), ==, MBIM_MESSAGE_TYPE_CLOSE_DONE);
+    g_assert_cmpuint (mbim_message_get_message_length         (message), ==, 16);
+    g_assert_cmpuint (mbim_message_close_done_get_status_code (message), ==, MBIM_STATUS_ERROR_NONE);
+
+    mbim_message_unref (message);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
     g_test_add_func ("/libmbim-glib/message/open",       test_message_open);
     g_test_add_func ("/libmbim-glib/message/open-done",  test_message_open_done);
+    g_test_add_func ("/libmbim-glib/message/close",      test_message_close);
+    g_test_add_func ("/libmbim-glib/message/close-done", test_message_close_done);
 
     return g_test_run ();
 }
