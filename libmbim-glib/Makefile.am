@@ -18,7 +18,8 @@ libmbim_glib_la_SOURCES = \
 	mbim-errors.h \
 	mbim-utils.h mbim-utils.c \
 	mbim-uuid.h mbim-uuid.c \
-	mbim-message-private.h mbim-message.h mbim-message.c
+	mbim-message-private.h mbim-message.h mbim-message.c \
+	mbim-device.h mbim-device.c
 
 libmbim_glib_la_LIBADD = \
 	${top_builddir}/libmbim-glib/generated/libmbim-glib-generated.la \
@@ -30,4 +31,5 @@ include_HEADERS = \
 	mbim-errors.h \
 	mbim-utils.h \
 	mbim-uuid.h \
-	mbim-message.h
+	mbim-message.h \
+	mbim-device.h

@@ -30,6 +30,7 @@
 #include "mbim-utils.h"
 #include "mbim-uuid.h"
 #include "mbim-message.h"
+#include "mbim-device.h"
 
 /* generated */
 #include "mbim-enum-types.h"
