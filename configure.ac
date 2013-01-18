@@ -34,6 +34,14 @@ PKG_CHECK_MODULES(LIBMBIM_GLIB,
 AC_SUBST(LIBMBIM_GLIB_CFLAGS)
 AC_SUBST(LIBMBIM_GLIB_LIBS)
 
+dnl General dependencies for mbimcli
+PKG_CHECK_MODULES(MBIMCLI,
+                  glib-2.0 >= 2.32
+                  gobject-2.0
+                  gio-2.0)
+AC_SUBST(MBIMCLI_CFLAGS)
+AC_SUBST(MBIMCLI_LIBS)
+
 GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
 
@@ -54,7 +62,8 @@ AC_CONFIG_FILES([Makefile
                  build-aux/templates/Makefile
                  libmbim-glib/Makefile
                  libmbim-glib/generated/Makefile
-                 libmbim-glib/test/Makefile])
+                 libmbim-glib/test/Makefile
+                 cli/Makefile])
 AC_OUTPUT
 
 echo "

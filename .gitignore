@@ -41,3 +41,7 @@ libmbim-glib/generated/.deps
 libmbim-glib/generated/.libs
 libmbim-glib/generated/*.c
 libmbim-glib/generated/*.h
+
+cli/.deps
+cli/.libs
+cli/mbimcli
