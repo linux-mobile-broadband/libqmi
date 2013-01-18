@@ -32,6 +32,10 @@
 
 G_BEGIN_DECLS
 
+/* Enabling/Disabling traces */
+gboolean mbim_utils_get_traces_enabled (void);
+void     mbim_utils_set_traces_enabled (gboolean enabled);
+
 /* Other private methods */
 
 #if defined (LIBMBIM_GLIB_COMPILATION)

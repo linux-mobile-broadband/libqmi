@@ -403,6 +403,28 @@ static void
 process_message (MbimDevice  *self,
                  const MbimMessage *message)
 {
+    if (mbim_utils_get_traces_enabled ()) {
+        gchar *printable;
+
+        printable = __mbim_utils_str_hex (((GByteArray *)message)->data,
+                                          ((GByteArray *)message)->len,
+                                          ':');
+        g_debug ("[%s] Received message...\n"
+                 ">>>>>> RAW:\n"
+                 ">>>>>>   length = %u\n"
+                 ">>>>>>   data   = %s\n",
+                 self->priv->path_display,
+                 ((GByteArray *)message)->len,
+                 printable);
+        g_free (printable);
+
+        printable = mbim_message_get_printable (message, ">>>>>> ");
+        g_debug ("[%s] Received message (translated)...\n%s",
+                 self->priv->path_display,
+                 printable);
+        g_free (printable);
+    }
+
     switch (MBIM_MESSAGE_GET_MESSAGE_TYPE (message)) {
     case MBIM_MESSAGE_TYPE_OPEN_DONE:
     case MBIM_MESSAGE_TYPE_CLOSE_DONE:
@@ -1013,6 +1035,26 @@ device_send (MbimDevice   *self,
     raw_message = mbim_message_get_raw (message, &raw_message_len, NULL);
     g_assert (raw_message);
 
+    if (mbim_utils_get_traces_enabled ()) {
+        gchar *printable;
+
+        printable = __mbim_utils_str_hex (raw_message, raw_message_len, ':');
+        g_debug ("[%s] Sent message...\n"
+                 "<<<<<< RAW:\n"
+                 "<<<<<<   length = %u\n"
+                 "<<<<<<   data   = %s\n",
+                 self->priv->path_display,
+                 ((GByteArray *)message)->len,
+                 printable);
+        g_free (printable);
+
+        printable = mbim_message_get_printable (message, "<<<<<< ");
+        g_debug ("[%s] Sent message (translated)...\n%s",
+                 self->priv->path_display,
+                 printable);
+        g_free (printable);
+    }
+
     /* Single fragment? Send it! */
     if (raw_message_len <= MAX_CONTROL_TRANSFER)
         return device_write (self, raw_message, raw_message_len, error);
@@ -1024,6 +1066,28 @@ device_send (MbimDevice   *self,
                                                MAX_CONTROL_TRANSFER,
                                                &n_fragments);
     for (i = 0; i < n_fragments; i++) {
+        if (mbim_utils_get_traces_enabled ()) {
+            gchar *printable_h;
+            gchar *printable_fh;
+            gchar *printable_d;
+
+            printable_h  = __mbim_utils_str_hex (&fragments[i].header, sizeof (fragments[i].header), ':');
+            printable_fh = __mbim_utils_str_hex (&fragments[i].fragment_header, sizeof (fragments[i].fragment_header), ':');
+            printable_d  = __mbim_utils_str_hex (fragments[i].data, fragments[i].data_length, ':');
+            g_debug ("[%s] Sent fragment (%u)...\n"
+                     "<<<<<< RAW:\n"
+                     "<<<<<<   length = %u\n"
+                     "<<<<<<   data   = %s%s%s\n",
+                     self->priv->path_display, i,
+                     (guint)(sizeof (fragments[i].header) +
+                             sizeof (fragments[i].fragment_header) +
+                             fragments[i].data_length),
+                     printable_h, printable_fh, printable_d);
+            g_free (printable_h);
+            g_free (printable_fh);
+            g_free (printable_d);
+        }
+
         /* Write fragment headers */
         if (!device_write (self,
                            (guint8 *)&fragments[i].header,

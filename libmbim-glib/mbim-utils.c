@@ -71,3 +71,32 @@ __mbim_utils_str_hex (gconstpointer mem,
 	/* Set output string */
 	return new_str;
 }
+
+/*****************************************************************************/
+
+static volatile gint __traces_enabled = FALSE;
+
+/**
+ * mbim_utils_get_traces_enabled:
+ *
+ * Checks whether MBIM message traces are currently enabled.
+ *
+ * Returns: %TRUE if traces are enabled, %FALSE otherwise.
+ */
+gboolean
+mbim_utils_get_traces_enabled (void)
+{
+    return (gboolean) g_atomic_int_get (&__traces_enabled);
+}
+
+/**
+ * mbim_utils_set_traces_enabled:
+ * @enabled: %TRUE to enable traces, %FALSE to disable them.
+ *
+ * Sets whether MBIM message traces are enabled or disabled.
+ */
+void
+mbim_utils_set_traces_enabled (gboolean enabled)
+{
+    g_atomic_int_set (&__traces_enabled, enabled);
+}
