@@ -64,6 +64,10 @@ struct close_done_message {
     guint32 status_code;
 } __attribute__((packed));
 
+struct error_message {
+    guint32 error_status_code;
+} __attribute__((packed));
+
 struct full_message {
     struct header header;
     union {
@@ -71,6 +75,7 @@ struct full_message {
         struct open_done_message  open_done;
         /* nothing needed for close_message */
         struct close_done_message close_done;
+        struct error_message      error;
     } message;
 } __attribute__((packed));
 

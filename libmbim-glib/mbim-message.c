@@ -307,7 +307,17 @@ mbim_message_get_printable (const MbimMessage *self,
     }
 
     case MBIM_MESSAGE_TYPE_HOST_ERROR:
-    case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
+    case MBIM_MESSAGE_TYPE_FUNCTION_ERROR: {
+        MbimProtocolError error;
+
+        error = mbim_message_error_get_error_status_code (self);
+        g_string_append_printf (printable,
+                                "%sContents:\n"
+                                "%s  error = '%s' (0x%08x)\n",
+                                line_prefix,
+                                line_prefix, mbim_protocol_error_get_string (error), error);
+        break;
+    }
     case MBIM_MESSAGE_TYPE_COMMAND:
     case MBIM_MESSAGE_TYPE_COMMAND_DONE:
     case MBIM_MESSAGE_TYPE_INDICATION:
@@ -482,3 +492,80 @@ mbim_message_close_done_get_result (const MbimMessage  *self,
     return FALSE;
 }
 
+/*****************************************************************************/
+/* 'Error' message interface */
+
+/**
+ * mbim_message_error_new:
+ * @transaction_id: transaction ID.
+ * @error_status_code: a #MbimProtocolError.
+ *
+ * Create a new #MbimMessage of type %MBIM_MESSAGE_TYPE_HOST_ERROR with the specified
+ * parameters.
+ *
+ * Returns: (transfer full): a newly created #MbimMessage. The returned value
+ * should be freed with mbim_message_unref().
+ */
+MbimMessage *
+mbim_message_error_new (guint32           transaction_id,
+                        MbimProtocolError error_status_code)
+{
+    GByteArray *self;
+
+    self = _mbim_message_allocate (MBIM_MESSAGE_TYPE_HOST_ERROR,
+                                   transaction_id,
+                                   sizeof (struct open_message));
+
+    /* Open header */
+    ((struct full_message *)(self->data))->message.error.error_status_code = GUINT32_TO_LE (error_status_code);
+
+    return (MbimMessage *)self;
+}
+
+/**
+ * mbim_message_error_get_error_status_code:
+ * @self: a #MbimMessage.
+ *
+ * Get the error code in a %MBIM_MESSAGE_TYPE_HOST_ERROR or
+ * %MBIM_MESSAGE_TYPE_FUNCTION_ERROR message.
+ *
+ * Returns: a #MbimProtocolError.
+ */
+MbimProtocolError
+mbim_message_error_get_error_status_code (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_PROTOCOL_ERROR_INVALID);
+    g_return_val_if_fail ((MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_HOST_ERROR ||
+                           MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_FUNCTION_ERROR),
+                          MBIM_PROTOCOL_ERROR_INVALID);
+
+    return (MbimProtocolError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.error.error_status_code);
+}
+
+/**
+ * mbim_message_error_get_error:
+ * @self: a #MbimMessage.
+ *
+ * Get the error in a %MBIM_MESSAGE_TYPE_HOST_ERROR or
+ * %MBIM_MESSAGE_TYPE_FUNCTION_ERROR message.
+ *
+ * Returns: a newly allocated #GError, which should be freed with g_error_free().
+ */
+GError *
+mbim_message_error_get_error (const MbimMessage *self)
+{
+    MbimProtocolError error_status_code;
+
+
+    g_return_val_if_fail (self != NULL, NULL);
+    g_return_val_if_fail ((MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_HOST_ERROR ||
+                           MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_FUNCTION_ERROR),
+                          NULL);
+
+    error_status_code = (MbimProtocolError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.error.error_status_code);
+
+    return g_error_new (MBIM_PROTOCOL_ERROR,
+                        error_status_code,
+                        "MBIM protocol error: %s",
+                        mbim_protocol_error_get_string (error_status_code));
+}

@@ -120,6 +120,14 @@ MbimStatusError mbim_message_close_done_get_status_code (const MbimMessage  *sel
 gboolean        mbim_message_close_done_get_result      (const MbimMessage  *self,
                                                          GError            **error);
 
+/*****************************************************************************/
+/* 'Error' message interface */
+
+MbimMessage       *mbim_message_error_new                   (guint32            transaction_id,
+                                                             MbimProtocolError  error_status_code);
+MbimProtocolError  mbim_message_error_get_error_status_code (const MbimMessage *self);
+GError            *mbim_message_error_get_error             (const MbimMessage *self);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_MESSAGE_H_ */
