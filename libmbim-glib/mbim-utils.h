@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*
  * libmbim-glib -- GLib/GIO based library to control MBIM devices
  *
@@ -17,20 +18,29 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2013 Aleksander Morgado <aleksander@gnu.org>
+ * Copyright (C) 2013 Aleksander Morgado <aleksander@lanedo.com>
  */
 
-#ifndef _LIBMBIM_GLIB_H_
-#define _LIBMBIM_GLIB_H_
+#ifndef _LIBMBIM_GLIB_MBIM_UTILS_H_
+#define _LIBMBIM_GLIB_MBIM_UTILS_H_
 
-#define __LIBMBIM_GLIB_H_INSIDE__
+#if !defined (__LIBMBIM_GLIB_H_INSIDE__) && !defined (LIBMBIM_GLIB_COMPILATION)
+#error "Only <libmbim-glib.h> can be included directly."
+#endif
 
-/* libmbim-glib headers */
+#include <glib.h>
 
-#include "mbim-utils.h"
-#include "mbim-uuid.h"
+G_BEGIN_DECLS
 
-/* generated */
-#include "mbim-error-types.h"
+/* Other private methods */
 
-#endif /* _LIBMBIM_GLIB_H_ */
+#if defined (LIBMBIM_GLIB_COMPILATION)
+G_GNUC_INTERNAL
+gchar *__mbim_utils_str_hex (gconstpointer mem,
+                             gsize         size,
+                             gchar         delimiter);
+#endif
+
+G_END_DECLS
+
+#endif /* _LIBMBIM_GLIB_MBIM_UTILS_H_ */

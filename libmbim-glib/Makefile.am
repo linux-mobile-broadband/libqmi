@@ -16,6 +16,7 @@ libmbim_glib_la_CPPFLAGS = \
 libmbim_glib_la_SOURCES = \
 	libmbim-glib.h \
 	mbim-errors.h \
+	mbim-utils.h mbim-utils.c \
 	mbim-uuid.h mbim-uuid.c
 
 libmbim_glib_la_LIBADD = \
@@ -26,4 +27,5 @@ includedir = @includedir@/libmbim-glib
 include_HEADERS = \
 	libmbim-glib.h \
 	mbim-errors.h \
+	mbim-utils.h \
 	mbim-uuid.h
