@@ -30,6 +30,7 @@
 #include "mbim-message.h"
 #include "mbim-message-private.h"
 #include "mbim-error-types.h"
+#include "mbim-enum-types.h"
 
 /**
  * SECTION:mbim-message
@@ -258,11 +259,11 @@ mbim_message_get_printable (const MbimMessage *self,
     g_string_append_printf (printable,
                             "%sHeader:\n"
                             "%s  length      = %u\n"
-                            "%s  type        = 0x%08x\n"
+                            "%s  type        = %s (0x%08x)\n"
                             "%s  transaction = %u\n",
                             line_prefix,
                             line_prefix, MBIM_MESSAGE_GET_MESSAGE_LENGTH (self),
-                            line_prefix, MBIM_MESSAGE_GET_MESSAGE_TYPE (self),
+                            line_prefix, mbim_message_type_get_string (MBIM_MESSAGE_GET_MESSAGE_TYPE (self)), MBIM_MESSAGE_GET_MESSAGE_TYPE (self),
                             line_prefix, MBIM_MESSAGE_GET_TRANSACTION_ID (self));
 
     switch (MBIM_MESSAGE_GET_MESSAGE_TYPE (self)) {

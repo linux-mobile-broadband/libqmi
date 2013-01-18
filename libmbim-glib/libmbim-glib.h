@@ -32,6 +32,7 @@
 #include "mbim-message.h"
 
 /* generated */
+#include "mbim-enum-types.h"
 #include "mbim-error-types.h"
 
 #endif /* _LIBMBIM_GLIB_H_ */
