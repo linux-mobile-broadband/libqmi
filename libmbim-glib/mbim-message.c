@@ -318,13 +318,222 @@ mbim_message_get_printable (const MbimMessage *self,
                                 line_prefix, mbim_protocol_error_get_string (error), error);
         break;
     }
+
     case MBIM_MESSAGE_TYPE_COMMAND:
     case MBIM_MESSAGE_TYPE_COMMAND_DONE:
     case MBIM_MESSAGE_TYPE_INDICATION:
+        g_string_append_printf (printable,
+                                "%sFragment header:\n"
+                                "%s  total   = %u\n"
+                                "%s  current = %u\n",
+                                line_prefix,
+                                line_prefix, _mbim_message_fragment_get_total (self),
+                                line_prefix, _mbim_message_fragment_get_current (self));
         break;
     }
 
     return g_string_free (printable, FALSE);
+}
+
+/*****************************************************************************/
+/* Fragment interface */
+
+#define MBIM_MESSAGE_IS_FRAGMENT(self)                                  \
+    (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND || \
+     MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND_DONE || \
+     MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATION)
+
+#define MBIM_MESSAGE_FRAGMENT_GET_TOTAL(self)                           \
+	GUINT32_FROM_LE (((struct full_message *)(self->data))->message.fragment.fragment_header.total)
+
+#define MBIM_MESSAGE_FRAGMENT_GET_CURRENT(self)                         \
+	GUINT32_FROM_LE (((struct full_message *)(self->data))->message.fragment.fragment_header.current)
+
+
+gboolean
+_mbim_message_is_fragment (const MbimMessage *self)
+{
+    return MBIM_MESSAGE_IS_FRAGMENT (self);
+}
+
+guint32
+_mbim_message_fragment_get_total (const MbimMessage  *self)
+{
+    g_assert (MBIM_MESSAGE_IS_FRAGMENT (self));
+
+    return MBIM_MESSAGE_FRAGMENT_GET_TOTAL (self);
+}
+
+guint32
+_mbim_message_fragment_get_current (const MbimMessage  *self)
+{
+    g_assert (MBIM_MESSAGE_IS_FRAGMENT (self));
+
+    return MBIM_MESSAGE_FRAGMENT_GET_CURRENT (self);
+}
+
+const guint8 *
+_mbim_message_fragment_get_payload (const MbimMessage *self,
+                                    guint32           *length)
+{
+    g_assert (MBIM_MESSAGE_IS_FRAGMENT (self));
+
+    *length = (MBIM_MESSAGE_GET_MESSAGE_LENGTH (self) - \
+               sizeof (struct header) -                 \
+               sizeof (struct fragment_header));
+    return ((struct full_message *)(self->data))->message.fragment.buffer;
+}
+
+MbimMessage *
+_mbim_message_fragment_collector_init (const MbimMessage  *fragment,
+                                       GError            **error)
+{
+   g_assert (MBIM_MESSAGE_IS_FRAGMENT (fragment));
+
+   /* Collector must start with fragment #0 */
+   if (MBIM_MESSAGE_FRAGMENT_GET_CURRENT (fragment) != 0) {
+       g_set_error (error,
+                    MBIM_PROTOCOL_ERROR,
+                    MBIM_PROTOCOL_ERROR_FRAGMENT_OUT_OF_SEQUENCE,
+                    "Expecting fragment '0/%u', got '%u/%u'",
+                    MBIM_MESSAGE_FRAGMENT_GET_TOTAL (fragment),
+                    MBIM_MESSAGE_FRAGMENT_GET_CURRENT (fragment),
+                    MBIM_MESSAGE_FRAGMENT_GET_TOTAL (fragment));
+       return NULL;
+   }
+
+   return mbim_message_dup (fragment);
+}
+
+gboolean
+_mbim_message_fragment_collector_add (MbimMessage        *self,
+                                      const MbimMessage  *fragment,
+                                      GError            **error)
+{
+    guint32 buffer_len;
+    const guint8 *buffer;
+
+    g_assert (MBIM_MESSAGE_IS_FRAGMENT (self));
+    g_assert (MBIM_MESSAGE_IS_FRAGMENT (fragment));
+
+    /* We can only add a fragment if it is the next one we're expecting.
+     * Otherwise, we return an error. */
+    if (MBIM_MESSAGE_FRAGMENT_GET_CURRENT (self) != (MBIM_MESSAGE_FRAGMENT_GET_CURRENT (fragment) - 1)) {
+        g_set_error (error,
+                     MBIM_PROTOCOL_ERROR,
+                     MBIM_PROTOCOL_ERROR_FRAGMENT_OUT_OF_SEQUENCE,
+                     "Expecting fragment '%u/%u', got '%u/%u'",
+                     MBIM_MESSAGE_FRAGMENT_GET_CURRENT (self) + 1,
+                     MBIM_MESSAGE_FRAGMENT_GET_TOTAL (self),
+                     MBIM_MESSAGE_FRAGMENT_GET_CURRENT (fragment),
+                     MBIM_MESSAGE_FRAGMENT_GET_TOTAL (fragment));
+        return FALSE;
+    }
+
+    buffer = _mbim_message_fragment_get_payload (fragment, &buffer_len);
+    if (buffer_len) {
+        /* Concatenate information buffers */
+        g_byte_array_append (self, buffer, buffer_len);
+        /* Update the whole message length */
+        ((struct header *)(self->data))->length =
+            GUINT32_TO_LE (MBIM_MESSAGE_GET_MESSAGE_LENGTH (self) + buffer_len);
+    }
+
+    /* Update the current fragment info in the main message; skip endian changes */
+    ((struct full_message *)(self->data))->message.fragment.fragment_header.current =
+        ((struct full_message *)(fragment->data))->message.fragment.fragment_header.current;
+
+    return TRUE;
+}
+
+gboolean
+_mbim_message_fragment_collector_complete (MbimMessage *self)
+{
+    g_assert (MBIM_MESSAGE_IS_FRAGMENT (self));
+
+    if (MBIM_MESSAGE_FRAGMENT_GET_CURRENT (self) != (MBIM_MESSAGE_FRAGMENT_GET_TOTAL (self) - 1))
+        /* Not complete yet */
+        return FALSE;
+
+    /* Reset current & total */
+    ((struct full_message *)(self->data))->message.fragment.fragment_header.current = 0;
+    ((struct full_message *)(self->data))->message.fragment.fragment_header.total = GUINT32_TO_LE (1);
+    return TRUE;
+}
+
+struct fragment_info *
+_mbim_message_split_fragments (const MbimMessage *self,
+                               guint32            max_fragment_size,
+                               guint             *n_fragments)
+{
+    GArray *array;
+    guint32 total_message_length;
+    guint32 total_payload_length;
+    guint32 fragment_header_length;
+    guint32 fragment_payload_length;
+    guint32 total_fragments;
+    guint i;
+    const guint8 *data;
+    guint32 data_length;
+
+    /* A message which is longer than the maximum fragment size needs to be
+     * split in different fragments before sending it. */
+
+    total_message_length = mbim_message_get_message_length (self);
+
+    /* If a single fragment is enough, don't try to split */
+    if (total_message_length <= max_fragment_size)
+        return NULL;
+
+    /* Total payload length is the total length minus the headers of the
+     * input message */
+    fragment_header_length = sizeof (struct header) + sizeof (struct fragment_header);
+    total_payload_length = total_message_length - fragment_header_length;
+
+    /* Fragment payload length is the maximum amount of data that can fit in a
+     * single fragment */
+    fragment_payload_length = max_fragment_size - fragment_header_length;
+
+    /* We can now compute the number of fragments that we'll get */
+    total_fragments = total_payload_length / fragment_payload_length;
+    if (total_payload_length % fragment_payload_length)
+        total_fragments++;
+
+    array = g_array_sized_new (FALSE,
+                               FALSE,
+                               sizeof (struct fragment_info),
+                               total_fragments);
+
+    /* Initialize data walkers */
+    data = ((struct full_message *)(((GByteArray *)self)->data))->message.fragment.buffer;
+    data_length = total_payload_length;
+
+    /* Create fragment infos */
+    for (i = 0; i < total_fragments; i++) {
+        struct fragment_info info;
+
+        /* Set data info */
+        info.data = data;
+        info.data_length = (data_length > fragment_payload_length ? fragment_payload_length : data_length);
+
+        /* Set header info */
+        info.header.type             = GUINT32_TO_LE (MBIM_MESSAGE_GET_MESSAGE_TYPE (self));
+        info.header.length           = GUINT32_TO_LE (fragment_header_length + info.data_length);
+        info.header.transaction_id   = GUINT32_TO_LE (MBIM_MESSAGE_GET_TRANSACTION_ID (self));
+        info.fragment_header.total   = GUINT32_TO_LE (total_fragments);
+        info.fragment_header.current = GUINT32_TO_LE (i);
+
+        g_array_insert_val (array, i, info);
+
+        /* Update walkers */
+        data = &data[info.data_length];
+        data_length -= info.data_length;
+    }
+
+    g_warn_if_fail (data_length == 0);
+
+    *n_fragments = total_fragments;
+    return (struct fragment_info *) g_array_free (array, FALSE);
 }
 
 /*****************************************************************************/
