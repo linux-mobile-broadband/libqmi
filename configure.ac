@@ -34,6 +34,9 @@ PKG_CHECK_MODULES(LIBMBIM_GLIB,
 AC_SUBST(LIBMBIM_GLIB_CFLAGS)
 AC_SUBST(LIBMBIM_GLIB_LIBS)
 
+GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
+AC_SUBST(GLIB_MKENUMS)
+
 dnl Tests
 AC_ARG_WITH(tests, AS_HELP_STRING([--with-tests], [Build libmbim tests]))
 AM_CONDITIONAL(WITH_TESTS, test "x$with_tests" = "xyes")
@@ -47,7 +50,10 @@ case $with_tests in
 esac
 
 AC_CONFIG_FILES([Makefile
+                 build-aux/Makefile
+                 build-aux/templates/Makefile
                  libmbim-glib/Makefile
+                 libmbim-glib/generated/Makefile
                  libmbim-glib/test/Makefile])
 AC_OUTPUT
 

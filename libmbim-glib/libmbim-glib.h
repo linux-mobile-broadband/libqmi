@@ -29,4 +29,7 @@
 
 #include "mbim-uuid.h"
 
+/* generated */
+#include "mbim-error-types.h"
+
 #endif /* _LIBMBIM_GLIB_H_ */
