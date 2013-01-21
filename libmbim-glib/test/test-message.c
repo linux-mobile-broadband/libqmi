@@ -14,8 +14,10 @@
  */
 
 #include <config.h>
+#include <string.h>
 
 #include "mbim-message.h"
+#include "mbim-cid.h"
 
 static void
 test_message_open (void)
@@ -87,18 +89,104 @@ test_message_close_done (void)
 }
 
 static void
-test_message_command (void)
+test_message_command_empty (void)
 {
     MbimMessage *message;
+    guint32 len;
 
     message = mbim_message_command_new (12345,
-                                        MBIM_UUID_BASIC_CONNECT,
-                                        0x01,
-                                        0x01);
+                                        MBIM_SERVICE_BASIC_CONNECT,
+                                        MBIM_CID_BASIC_CONNECT_DEVICE_CAPS,
+                                        MBIM_MESSAGE_COMMAND_TYPE_QUERY);
     g_assert (message != NULL);
 
-    g_assert_cmpuint (mbim_message_get_transaction_id            (message), ==, 12345);
-    g_assert_cmpuint (mbim_message_get_message_type              (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 12345);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, 48);
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_BASIC_CONNECT);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_BASIC_CONNECT_DEVICE_CAPS);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_QUERY);
+
+    g_assert (mbim_message_command_get_raw_information_buffer (message, &len) == NULL);
+    g_assert_cmpuint (len, ==, 0);
+
+    mbim_message_unref (message);
+}
+
+static void
+test_message_command_not_empty (void)
+{
+    MbimMessage *message;
+    const guint8 *buffer;
+    guint32 len;
+    const guint8 information_buffer [] = {
+        0x00, 0x01, 0x02, 0x03,
+        0x04, 0x05, 0x06, 0x07
+    };
+
+    message = mbim_message_command_new (12345,
+                                        MBIM_SERVICE_BASIC_CONNECT,
+                                        MBIM_CID_BASIC_CONNECT_DEVICE_CAPS,
+                                        MBIM_MESSAGE_COMMAND_TYPE_QUERY);
+    g_assert (message != NULL);
+    mbim_message_command_append (message, information_buffer, sizeof (information_buffer));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 12345);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, 56);
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_BASIC_CONNECT);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_BASIC_CONNECT_DEVICE_CAPS);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_QUERY);
+
+    buffer = mbim_message_command_get_raw_information_buffer (message, &len);
+    g_assert (buffer != NULL);
+    g_assert_cmpuint (len, ==, sizeof (information_buffer));
+    g_assert (memcmp (&information_buffer, buffer, sizeof (information_buffer)) == 0);
+
+    mbim_message_unref (message);
+}
+
+static void
+test_message_command_done (void)
+{
+    MbimMessage *message;
+    const guint8 buffer [] =  { 0x03, 0x00, 0x00, 0x80,
+                                0x3c, 0x00, 0x00, 0x00,
+                                0x01, 0x00, 0x00, 0x00,
+                                0x01, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00,
+                                0xa2, 0x89, 0xcc, 0x33,
+                                0xbc, 0xbb, 0x8b, 0x4f,
+                                0xb6, 0xb0, 0x13, 0x3e,
+                                0xc2, 0xaa, 0xe6, 0xdf,
+                                0x04, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00,
+                                0x0c, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00 };
+    const guint8 expected_information_buffer [] = { 0x00, 0x00, 0x00, 0x00,
+                                                    0x00, 0x00, 0x00, 0x00,
+                                                    0x00, 0x00, 0x00, 0x00 };
+    const guint8 *out_information_buffer;
+    guint32 len;
+
+    message = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id           (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type             (message), ==, MBIM_MESSAGE_TYPE_COMMAND_DONE);
+    g_assert_cmpuint (mbim_message_get_message_length           (message), ==, 60);
+
+    g_assert_cmpuint (mbim_message_command_done_get_service     (message), ==, MBIM_SERVICE_BASIC_CONNECT);
+    g_assert_cmpuint (mbim_message_command_done_get_cid         (message), ==, MBIM_CID_BASIC_CONNECT_PIN);
+    g_assert_cmpuint (mbim_message_command_done_get_status_code (message), ==, MBIM_STATUS_ERROR_NONE);
+
+    out_information_buffer = mbim_message_command_done_get_raw_information_buffer (message, &len);
+    g_assert (buffer != NULL);
+    g_assert_cmpuint (len, ==, sizeof (expected_information_buffer));
+    g_assert (memcmp (&expected_information_buffer, out_information_buffer, sizeof (expected_information_buffer)) == 0);
 
     mbim_message_unref (message);
 }
@@ -107,11 +195,13 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libmbim-glib/message/open",       test_message_open);
-    g_test_add_func ("/libmbim-glib/message/open-done",  test_message_open_done);
-    g_test_add_func ("/libmbim-glib/message/close",      test_message_close);
-    g_test_add_func ("/libmbim-glib/message/close-done", test_message_close_done);
-    g_test_add_func ("/libmbim-glib/message/command",    test_message_command);
+    g_test_add_func ("/libmbim-glib/message/open",              test_message_open);
+    g_test_add_func ("/libmbim-glib/message/open-done",         test_message_open_done);
+    g_test_add_func ("/libmbim-glib/message/close",             test_message_close);
+    g_test_add_func ("/libmbim-glib/message/close-done",        test_message_close_done);
+    g_test_add_func ("/libmbim-glib/message/command/empty",     test_message_command_empty);
+    g_test_add_func ("/libmbim-glib/message/command/not-empty", test_message_command_not_empty);
+    g_test_add_func ("/libmbim-glib/message/command-done",      test_message_command_done);
 
     return g_test_run ();
 }
