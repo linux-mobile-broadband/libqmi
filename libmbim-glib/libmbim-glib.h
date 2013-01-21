@@ -29,6 +29,7 @@
 
 #include "mbim-utils.h"
 #include "mbim-uuid.h"
+#include "mbim-cid.h"
 #include "mbim-message.h"
 #include "mbim-device.h"
 
