@@ -40,6 +40,7 @@
 static GMainLoop *loop;
 static GCancellable *cancellable;
 static MbimDevice *device;
+static MbimService service;
 static gboolean operation_status;
 
 /* Main options */
@@ -158,20 +159,6 @@ print_version_and_exit (void)
 /*****************************************************************************/
 /* Running asynchronously */
 
-void
-mbimcli_async_operation_done (gboolean reported_operation_status)
-{
-    /* Keep the result of the operation */
-    operation_status = reported_operation_status;
-
-    if (cancellable) {
-        g_object_unref (cancellable);
-        cancellable = NULL;
-    }
-
-    g_main_loop_quit (loop);
-}
-
 static void
 device_close_ready (MbimDevice   *dev,
                     GAsyncResult *res)
@@ -185,9 +172,25 @@ device_close_ready (MbimDevice   *dev,
         g_debug ("Device closed");
 
     g_main_loop_quit (loop);
+}
 
-    /* We're done now */
-    mbimcli_async_operation_done (TRUE);
+void
+mbimcli_async_operation_done (gboolean reported_operation_status)
+{
+    /* Keep the result of the operation */
+    operation_status = reported_operation_status;
+
+    if (cancellable) {
+        g_object_unref (cancellable);
+        cancellable = NULL;
+    }
+
+    /* Close the device */
+    mbim_device_close (device,
+                       15,
+                       cancellable,
+                       (GAsyncReadyCallback) device_close_ready,
+                       NULL);
 }
 
 static void
@@ -205,15 +208,14 @@ device_open_ready (MbimDevice   *dev,
     g_debug ("MBIM Device at '%s' ready",
              mbim_device_get_path_display (dev));
 
-
-    /* TODO: actions here */
-
-    /* Close the device */
-    mbim_device_close (device,
-                       15,
-                       cancellable,
-                       (GAsyncReadyCallback) device_close_ready,
-                       NULL);
+    /* Run the service-specific action */
+    switch (service) {
+    case MBIM_SERVICE_BASIC_CONNECT:
+        mbimcli_basic_connect_run (dev, cancellable);
+        return;
+    default:
+        g_assert_not_reached ();
+    }
 }
 
 static void
@@ -239,6 +241,32 @@ device_new_ready (GObject      *unused,
 
 /*****************************************************************************/
 
+static void
+parse_actions (void)
+{
+    guint actions_enabled = 0;
+
+    /* Basic Connect options? */
+    if (mbimcli_basic_connect_options_enabled ()) {
+        service = MBIM_SERVICE_BASIC_CONNECT;
+        actions_enabled++;
+    }
+
+    /* Cannot mix actions from different services */
+    if (actions_enabled > 1) {
+        g_printerr ("error: cannot execute multiple actions of different services\n");
+        exit (EXIT_FAILURE);
+    }
+
+    /* No options? */
+    if (actions_enabled == 0) {
+        g_printerr ("error: no actions specified\n");
+        exit (EXIT_FAILURE);
+    }
+
+    /* Go on! */
+}
+
 int main (int argc, char **argv)
 {
     GError *error = NULL;
@@ -251,6 +279,8 @@ int main (int argc, char **argv)
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Control MBIM devices");
+	g_option_context_add_group (context,
+	                            mbimcli_basic_connect_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",
@@ -284,6 +314,8 @@ int main (int argc, char **argv)
     /* Create requirements for async options */
     cancellable = g_cancellable_new ();
     loop = g_main_loop_new (NULL, FALSE);
+
+    parse_actions ();
 
     /* Launch MbimDevice creation */
     mbim_device_new (file,

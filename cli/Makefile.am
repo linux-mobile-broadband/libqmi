@@ -9,8 +9,9 @@ mbimcli_CPPFLAGS = \
 	-I$(top_builddir)/libmbim-glib/generated
 
 mbimcli_SOURCES = \
+	mbimcli.h \
 	mbimcli.c \
-	mbimcli.h
+	mbimcli-basic-connect.c
 
 mbimcli_LDADD = \
 	$(MBIMCLI_LIBS) \
