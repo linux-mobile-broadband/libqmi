@@ -31,6 +31,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include "mbim-uuid.h"
 #include "mbim-errors.h"
 
 G_BEGIN_DECLS
@@ -127,6 +128,50 @@ MbimMessage       *mbim_message_error_new                   (guint32            
                                                              MbimProtocolError  error_status_code);
 MbimProtocolError  mbim_message_error_get_error_status_code (const MbimMessage *self);
 GError            *mbim_message_error_get_error             (const MbimMessage *self);
+
+/*****************************************************************************/
+/* 'Command' message interface */
+
+/**
+ * MbimMessageCommandType:
+ * @MBIM_MESSAGE_COMMAND_TYPE_UNKNOWN: Unknown type.
+ * @MBIM_MESSAGE_COMMAND_TYPE_QUERY: Query command.
+ * @MBIM_MESSAGE_COMMAND_TYPE_SET: Set command.
+ *
+ * Type of command message.
+ */
+typedef enum {
+    MBIM_MESSAGE_COMMAND_TYPE_UNKNOWN = -1,
+    MBIM_MESSAGE_COMMAND_TYPE_QUERY   = 0,
+    MBIM_MESSAGE_COMMAND_TYPE_SET     = 1
+} MbimMessageCommandType;
+
+MbimMessage *mbim_message_command_new    (guint32                 transaction_id,
+                                          MbimService             service,
+                                          guint32                 cid,
+                                          MbimMessageCommandType  command_type);
+void         mbim_message_command_append (MbimMessage            *self,
+                                          const guint8           *buffer,
+                                          guint32                 buffer_size);
+
+MbimService             mbim_message_command_get_service                (const MbimMessage *self);
+const MbimUuid         *mbim_message_command_get_service_id             (const MbimMessage *self);
+guint32                 mbim_message_command_get_cid                    (const MbimMessage *self);
+MbimMessageCommandType  mbim_message_command_get_command_type           (const MbimMessage *self);
+const guint8           *mbim_message_command_get_raw_information_buffer (const MbimMessage *self,
+                                                                         guint32           *length);
+
+/*****************************************************************************/
+/* 'Command Done' message interface */
+
+MbimService      mbim_message_command_done_get_service                (const MbimMessage  *self);
+const MbimUuid  *mbim_message_command_done_get_service_id             (const MbimMessage  *self);
+guint32          mbim_message_command_done_get_cid                    (const MbimMessage  *self);
+MbimStatusError  mbim_message_command_done_get_status_code            (const MbimMessage  *self);
+gboolean         mbim_message_command_done_get_result                 (const MbimMessage  *self,
+                                                                       GError            **error);
+const guint8    *mbim_message_command_done_get_raw_information_buffer (const MbimMessage  *self,
+                                                                       guint32            *length);
 
 G_END_DECLS
 

@@ -319,8 +319,60 @@ mbim_message_get_printable (const MbimMessage *self,
         break;
     }
 
-    case MBIM_MESSAGE_TYPE_COMMAND:
-    case MBIM_MESSAGE_TYPE_COMMAND_DONE:
+    case MBIM_MESSAGE_TYPE_COMMAND: {
+        gchar *uuid_printable;
+        const gchar *cid_printable;
+
+        uuid_printable = mbim_uuid_get_printable (mbim_message_command_get_service_id (self));
+        cid_printable = mbim_cid_get_printable (mbim_message_command_get_service (self),
+                                                mbim_message_command_get_cid (self));
+        g_string_append_printf (printable,
+                                "%sFragment header:\n"
+                                "%s  total   = %u\n"
+                                "%s  current = %u\n"
+                                "%sContents:\n"
+                                "%s  service = '%s' (%s)\n"
+                                "%s  cid     = '%s' (0x%08x)\n"
+                                "%s  type    = '%s' (0x%08x)\n",
+                                line_prefix,
+                                line_prefix, _mbim_message_fragment_get_total (self),
+                                line_prefix, _mbim_message_fragment_get_current (self),
+                                line_prefix,
+                                line_prefix, mbim_service_get_string (mbim_message_command_get_service (self)), uuid_printable,
+                                line_prefix, cid_printable, mbim_message_command_get_cid (self),
+                                line_prefix, mbim_message_command_type_get_string (mbim_message_command_get_command_type (self)), mbim_message_command_get_command_type (self));
+        g_free (uuid_printable);
+        break;
+    }
+
+    case MBIM_MESSAGE_TYPE_COMMAND_DONE: {
+        gchar *uuid_printable;
+        MbimStatusError status;
+        const gchar *cid_printable;
+
+        status = mbim_message_command_done_get_status_code (self);
+        uuid_printable = mbim_uuid_get_printable (mbim_message_command_done_get_service_id (self));
+        cid_printable = mbim_cid_get_printable (mbim_message_command_done_get_service (self),
+                                                mbim_message_command_done_get_cid (self));
+        g_string_append_printf (printable,
+                                "%sFragment header:\n"
+                                "%s  total   = %u\n"
+                                "%s  current = %u\n"
+                                "%sContents:\n"
+                                "%s  status error = '%s' (0x%08x)\n"
+                                "%s  service      = '%s' (%s)\n"
+                                "%s  cid          = '%s' (0x%08x)\n",
+                                line_prefix,
+                                line_prefix, _mbim_message_fragment_get_total (self),
+                                line_prefix, _mbim_message_fragment_get_current (self),
+                                line_prefix,
+                                line_prefix, mbim_status_error_get_string (status), status,
+                                line_prefix, mbim_service_get_string (mbim_message_command_done_get_service (self)), uuid_printable,
+                                line_prefix, cid_printable, mbim_message_command_done_get_cid (self));
+        g_free (uuid_printable);
+        break;
+    }
+
     case MBIM_MESSAGE_TYPE_INDICATION:
         g_string_append_printf (printable,
                                 "%sFragment header:\n"
@@ -777,4 +829,288 @@ mbim_message_error_get_error (const MbimMessage *self)
                         error_status_code,
                         "MBIM protocol error: %s",
                         mbim_protocol_error_get_string (error_status_code));
+}
+
+/*****************************************************************************/
+/* 'Command' message interface */
+
+/**
+ * mbim_message_command_new:
+ * @transaction_id: transaction ID.
+ * @service_id: a #MbimUuid.
+ * @cid: the command ID.
+ * @command_type: the command type.
+ *
+ * Create a new #MbimMessage of type %MBIM_MESSAGE_TYPE_COMMAND with the
+ * specified parameters and an empty information buffer.
+ *
+ * Returns: (transfer full): a newly created #MbimMessage. The returned value
+ * should be freed with mbim_message_unref().
+ */
+MbimMessage *
+mbim_message_command_new (guint32                transaction_id,
+                          MbimService            service,
+                          guint32                cid,
+                          MbimMessageCommandType command_type)
+{
+    GByteArray *self;
+    const MbimUuid *service_id;
+
+    /* Known service required */
+    g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
+    g_return_val_if_fail (service <= MBIM_SERVICE_DSS, FALSE);
+    service_id = mbim_uuid_get (service);
+
+    self = _mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND,
+                                   transaction_id,
+                                   sizeof (struct command_message));
+
+    /* Fragment header */
+    ((struct full_message *)(self->data))->message.command.fragment_header.total   = GUINT32_TO_LE (1);
+    ((struct full_message *)(self->data))->message.command.fragment_header.current = 0;
+
+    /* Command header */
+    memcpy (((struct full_message *)(self->data))->message.command.service_id, service_id, sizeof (*service_id));
+    ((struct full_message *)(self->data))->message.command.command_id    = GUINT32_TO_LE (cid);
+    ((struct full_message *)(self->data))->message.command.command_type  = GUINT32_TO_LE (command_type);
+    ((struct full_message *)(self->data))->message.command.buffer_length = 0;
+
+    return (MbimMessage *)self;
+}
+
+/**
+ * mbim_message_command_add_raw:
+ * @self: a #MbimMessage.
+ * @buffer_len: length of the data in @buffer.
+ * @buffer: raw buffer to append to the message.
+ *
+ * Appends the contents of @buffer to @self.
+ */
+void
+mbim_message_command_append (MbimMessage  *self,
+                             const guint8 *buffer,
+                             guint32       buffer_size)
+{
+    g_byte_array_append ((GByteArray *)self, buffer, buffer_size);
+
+    /* Update message and buffer length */
+    ((struct header *)(self->data))->length =
+        GUINT32_TO_LE (MBIM_MESSAGE_GET_MESSAGE_LENGTH (self) + buffer_size);
+    ((struct full_message *)(self->data))->message.command.buffer_length =
+        GUINT32_TO_LE (GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command.buffer_length) + buffer_size);
+}
+
+/**
+ * mbim_message_command_get_service:
+ * @self: a #MbimMessage.
+ *
+ * Get the service of a %MBIM_MESSAGE_TYPE_COMMAND message.
+ *
+ * Returns: a #MbimService.
+ */
+MbimService
+mbim_message_command_get_service (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_SERVICE_INVALID);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND, MBIM_SERVICE_INVALID);
+
+    return mbim_uuid_to_service ((const MbimUuid *)&(((struct full_message *)(self->data))->message.command.service_id));
+}
+
+/**
+ * mbim_message_command_get_service_id:
+ * @self: a #MbimMessage.
+ *
+ * Get the service UUID of a %MBIM_MESSAGE_TYPE_COMMAND message.
+ *
+ * Returns: a #MbimUuid.
+ */
+const MbimUuid *
+mbim_message_command_get_service_id (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_UUID_INVALID);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND, MBIM_UUID_INVALID);
+
+    return (const MbimUuid *)&(((struct full_message *)(self->data))->message.command.service_id);
+}
+
+/**
+ * mbim_message_command_get_cid:
+ * @self: a #MbimMessage.
+ *
+ * Get the command id of a %MBIM_MESSAGE_TYPE_COMMAND message.
+ *
+ * Returns: a CID.
+ */
+guint32
+mbim_message_command_get_cid (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, 0);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND, 0);
+
+    return GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command.command_id);
+}
+
+/**
+ * mbim_message_command_get_command_type:
+ * @self: a #MbimMessage.
+ *
+ * Get the command type of a %MBIM_MESSAGE_TYPE_COMMAND message.
+ *
+ * Returns: a #MbimMessageCommandType.
+ */
+MbimMessageCommandType
+mbim_message_command_get_command_type (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_MESSAGE_COMMAND_TYPE_UNKNOWN);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND, MBIM_MESSAGE_COMMAND_TYPE_UNKNOWN);
+
+    return (MbimMessageCommandType) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command.command_type);
+}
+
+/**
+ * mbim_message_command_get_raw_information_buffer:
+ * @self: a #MbimMessage.
+ * @length: (out): return location for the size of the output buffer.
+ *
+ * Gets the information buffer of the %MBIM_MESSAGE_TYPE_COMMAND message.
+ *
+ * Returns: (transfer none): The raw data buffer, or #NULL if empty.
+ */
+const guint8 *
+mbim_message_command_get_raw_information_buffer (const MbimMessage *self,
+                                                 guint32           *length)
+{
+    g_return_val_if_fail (self != NULL, NULL);
+    g_return_val_if_fail (length != NULL, NULL);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND, NULL);
+
+    *length = GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command.buffer_length);
+
+    return (*length > 0 ?
+            ((struct full_message *)(self->data))->message.command.buffer :
+            NULL);;
+}
+
+/*****************************************************************************/
+/* 'Command Done' message interface */
+
+/**
+ * mbim_message_command_done_get_service:
+ * @self: a #MbimMessage.
+ *
+ * Get the service of a %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
+ *
+ * Returns: a #MbimService.
+ */
+MbimService
+mbim_message_command_done_get_service (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_SERVICE_INVALID);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND_DONE, MBIM_SERVICE_INVALID);
+
+    return mbim_uuid_to_service ((const MbimUuid *)&(((struct full_message *)(self->data))->message.command_done.service_id));
+}
+
+/**
+ * mbim_message_command_done_get_service_id:
+ * @self: a #MbimMessage.
+ *
+ * Get the service UUID of a %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
+ *
+ * Returns: a #MbimUuid.
+ */
+const MbimUuid *
+mbim_message_command_done_get_service_id (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_UUID_INVALID);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND_DONE, MBIM_UUID_INVALID);
+
+    return (const MbimUuid *)&(((struct full_message *)(self->data))->message.command_done.service_id);
+}
+
+/**
+ * mbim_message_command_done_get_cid:
+ * @self: a #MbimMessage.
+ *
+ * Get the command id of a %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
+ *
+ * Returns: a CID.
+ */
+guint32
+mbim_message_command_done_get_cid (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, 0);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND_DONE, 0);
+
+    return GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command_done.command_id);
+}
+
+/**
+ * mbim_message_command_done_get_status_code:
+ * @self: a #MbimMessage.
+ *
+ * Get status code from the %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
+ *
+ * Returns: a #MbimStatusError.
+ */
+MbimStatusError
+mbim_message_command_done_get_status_code (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_STATUS_ERROR_FAILURE);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND_DONE, MBIM_STATUS_ERROR_FAILURE);
+
+    return (MbimStatusError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command_done.status_code);
+}
+
+/**
+ * mbim_message_command_done_get_result:
+ * @self: a #MbimMessage.
+ *
+ * Gets the result of the 'Command' operation in the %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ */
+gboolean
+mbim_message_command_done_get_result (const MbimMessage  *self,
+                                      GError            **error)
+{
+    MbimStatusError status;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND_DONE, FALSE);
+
+    status = (MbimStatusError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command_done.status_code);
+    if (status == MBIM_STATUS_ERROR_NONE)
+        return TRUE;
+
+    g_set_error (error,
+                 MBIM_STATUS_ERROR,
+                 status,
+                 mbim_status_error_get_string (status));
+    return FALSE;
+}
+
+/**
+ * mbim_message_command_done_get_raw_information_buffer:
+ * @self: a #MbimMessage.
+ * @length: (out): return location for the size of the output buffer.
+ *
+ * Gets the information buffer of the %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
+ *
+ * Returns: (transfer none): The raw data buffer, or #NULL if empty.
+ */
+const guint8 *
+mbim_message_command_done_get_raw_information_buffer (const MbimMessage *self,
+                                                      guint32           *length)
+{
+    g_return_val_if_fail (self != NULL, NULL);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND_DONE, NULL);
+    g_return_val_if_fail (length != NULL, NULL);
+
+    *length = GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command_done.buffer_length);
+
+    return (*length > 0 ?
+            ((struct full_message *)(self->data))->message.command_done.buffer :
+            NULL);
 }
