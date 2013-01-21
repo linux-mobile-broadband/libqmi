@@ -86,6 +86,23 @@ test_message_close_done (void)
     mbim_message_unref (message);
 }
 
+static void
+test_message_command (void)
+{
+    MbimMessage *message;
+
+    message = mbim_message_command_new (12345,
+                                        MBIM_UUID_BASIC_CONNECT,
+                                        0x01,
+                                        0x01);
+    g_assert (message != NULL);
+
+    g_assert_cmpuint (mbim_message_get_transaction_id            (message), ==, 12345);
+    g_assert_cmpuint (mbim_message_get_message_type              (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+
+    mbim_message_unref (message);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -94,6 +111,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/open-done",  test_message_open_done);
     g_test_add_func ("/libmbim-glib/message/close",      test_message_close);
     g_test_add_func ("/libmbim-glib/message/close-done", test_message_close_done);
+    g_test_add_func ("/libmbim-glib/message/command",    test_message_command);
 
     return g_test_run ();
 }

@@ -1,5 +1,6 @@
 noinst_PROGRAMS = \
 	test-uuid \
+	test-cid \
 	test-message \
 	test-fragment
 
@@ -11,6 +12,17 @@ test_uuid_CPPFLAGS = \
 	-I$(top_srcdir)/libmbim-glib \
 	-DLIBMBIM_GLIB_COMPILATION
 test_uuid_LDADD = \
+	$(top_builddir)/libmbim-glib/libmbim-glib.la \
+	$(LIBMBIM_GLIB_LIBS)
+
+test_cid_SOURCES = \
+	test-cid.c
+test_cid_CPPFLAGS = \
+	$(LIBMBIM_GLIB_CFLAGS) \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/libmbim-glib \
+	-DLIBMBIM_GLIB_COMPILATION
+test_cid_LDADD = \
 	$(top_builddir)/libmbim-glib/libmbim-glib.la \
 	$(LIBMBIM_GLIB_LIBS)
 
@@ -38,8 +50,9 @@ test_fragment_LDADD = \
 
 if WITH_TESTS
 
-check-local: test-uuid test-message test-fragment
+check-local: test-uuid test-cid test-message test-fragment
 	$(abs_builddir)/test-uuid
+	$(abs_builddir)/test-cid
 	$(abs_builddir)/test-message
 	$(abs_builddir)/test-fragment
 

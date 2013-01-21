@@ -34,6 +34,7 @@ libmbim-glib/.libs
 libmbim-glib/test/.deps
 libmbim-glib/test/.libs
 libmbim-glib/test/test-uuid
+libmbim-glib/test/test-cid
 libmbim-glib/test/test-message
 libmbim-glib/test/test-fragment
 
