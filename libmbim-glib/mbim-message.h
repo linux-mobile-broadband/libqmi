@@ -161,6 +161,14 @@ MbimMessageCommandType  mbim_message_command_get_command_type           (const M
 const guint8           *mbim_message_command_get_raw_information_buffer (const MbimMessage *self,
                                                                          guint32           *length);
 
+#if defined (LIBMBIM_GLIB_COMPILATION)
+guint32          _mbim_message_command_read_guint32 (const MbimMessage *self,
+                                                     guint32            struct_offset);
+gchar           *_mbim_message_command_read_string  (const MbimMessage *self,
+                                                     guint32            struct_offset_offset,
+                                                     guint32            struct_offset_size);
+#endif
+
 /*****************************************************************************/
 /* 'Command Done' message interface */
 
@@ -172,6 +180,14 @@ gboolean         mbim_message_command_done_get_result                 (const Mbi
                                                                        GError            **error);
 const guint8    *mbim_message_command_done_get_raw_information_buffer (const MbimMessage  *self,
                                                                        guint32            *length);
+
+#if defined (LIBMBIM_GLIB_COMPILATION)
+guint32          _mbim_message_command_done_read_guint32 (const MbimMessage *self,
+                                                          guint32            struct_offset);
+gchar           *_mbim_message_command_done_read_string  (const MbimMessage *self,
+                                                          guint32            struct_offset_offset,
+                                                          guint32            struct_offset_size);
+#endif
 
 G_END_DECLS
 

@@ -83,6 +83,54 @@ _mbim_message_allocate (MbimMessageType message_type,
     return self;
 }
 
+static guint32
+_mbim_message_read_guint32 (const MbimMessage *self,
+                            guint32            absolute_offset)
+{
+    return GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                guint32,
+                                self->data,
+                                absolute_offset));
+}
+
+static gchar *
+_mbim_message_read_string (const MbimMessage *self,
+                           guint32            absolute_offset_buffer,
+                           guint32            absolute_offset_offset,
+                           guint32            absolute_offset_size)
+{
+    guint32 offset;
+    guint32 size;
+    gchar *str;
+    GError *error = NULL;
+
+    offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                  guint32,
+                                  self->data,
+                                  absolute_offset_offset));
+    size   = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                  guint32,
+                                  self->data,
+                                  absolute_offset_size));
+    if (!size)
+        return NULL;
+
+    str = g_convert (G_STRUCT_MEMBER_P (self->data,
+                                        absolute_offset_buffer + offset),
+                     size,
+                     "utf-8",
+                     "utf-16le",
+                     NULL,
+                     NULL,
+                     &error);
+    if (error) {
+        g_warning ("Error converting string: %s", error->message);
+        g_error_free (error);
+    }
+
+    return str;
+}
+
 /*****************************************************************************/
 /* Generic message interface */
 
@@ -989,7 +1037,32 @@ mbim_message_command_get_raw_information_buffer (const MbimMessage *self,
 
     return (*length > 0 ?
             ((struct full_message *)(self->data))->message.command.buffer :
-            NULL);;
+            NULL);
+}
+
+guint32
+_mbim_message_command_read_guint32 (const MbimMessage *self,
+                                    guint32            relative_offset)
+{
+    return _mbim_message_read_guint32 (self, (sizeof (struct header) +
+                                              G_STRUCT_OFFSET (struct command_message, buffer) +
+                                              relative_offset));
+}
+
+gchar *
+_mbim_message_command_read_string (const MbimMessage *self,
+                                   guint32            relative_offset_offset,
+                                   guint32            relative_offset_size)
+{
+    return _mbim_message_read_string (self,
+                                      (sizeof (struct header) +
+                                       G_STRUCT_OFFSET (struct command_message, buffer)),
+                                      (sizeof (struct header) +
+                                       G_STRUCT_OFFSET (struct command_message, buffer) +
+                                       relative_offset_offset),
+                                      (sizeof (struct header) +
+                                       G_STRUCT_OFFSET (struct command_message, buffer) +
+                                       relative_offset_size));
 }
 
 /*****************************************************************************/
@@ -1113,4 +1186,29 @@ mbim_message_command_done_get_raw_information_buffer (const MbimMessage *self,
     return (*length > 0 ?
             ((struct full_message *)(self->data))->message.command_done.buffer :
             NULL);
+}
+
+guint32
+_mbim_message_command_done_read_guint32 (const MbimMessage *self,
+                                         guint32            relative_offset)
+{
+    return _mbim_message_read_guint32 (self, (sizeof (struct header) +
+                                              G_STRUCT_OFFSET (struct command_done_message, buffer) +
+                                              relative_offset));
+}
+
+gchar *
+_mbim_message_command_done_read_string (const MbimMessage *self,
+                                        guint32            relative_offset_offset,
+                                        guint32            relative_offset_size)
+{
+    return _mbim_message_read_string (self,
+                                      (sizeof (struct header) +
+                                       G_STRUCT_OFFSET (struct command_done_message, buffer)),
+                                      (sizeof (struct header) +
+                                       G_STRUCT_OFFSET (struct command_done_message, buffer) +
+                                       relative_offset_offset),
+                                      (sizeof (struct header) +
+                                       G_STRUCT_OFFSET (struct command_done_message, buffer) +
+                                       relative_offset_size));
 }
