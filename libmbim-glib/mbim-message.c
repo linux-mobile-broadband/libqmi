@@ -333,6 +333,7 @@ mbim_message_get_raw (const MbimMessage  *self,
  * mbim_message_get_printable:
  * @self: a #MbimMessage.
  * @line_prefix: prefix string to use in each new generated line.
+ * @headers_only: %TRUE if only basic headers should be printed.
  *
  * Gets a printable string with the contents of the whole MBIM message.
  *
@@ -340,7 +341,8 @@ mbim_message_get_raw (const MbimMessage  *self,
  */
 gchar *
 mbim_message_get_printable (const MbimMessage *self,
-                            const gchar       *line_prefix)
+                            const gchar       *line_prefix,
+                            gboolean           headers_only)
 {
     GString *printable;
 
@@ -367,106 +369,114 @@ mbim_message_get_printable (const MbimMessage *self,
         break;
 
     case MBIM_MESSAGE_TYPE_OPEN:
-        g_string_append_printf (printable,
-                                "%sContents:\n"
-                                "%s  max_control_transfer = %u\n",
-                                line_prefix,
-                                line_prefix, mbim_message_open_get_max_control_transfer (self));
+        if (!headers_only)
+            g_string_append_printf (printable,
+                                    "%sContents:\n"
+                                    "%s  max_control_transfer = %u\n",
+                                    line_prefix,
+                                    line_prefix, mbim_message_open_get_max_control_transfer (self));
         break;
 
     case MBIM_MESSAGE_TYPE_CLOSE:
         break;
 
-    case MBIM_MESSAGE_TYPE_OPEN_DONE: {
-        MbimStatusError status;
+    case MBIM_MESSAGE_TYPE_OPEN_DONE:
+        if (!headers_only) {
+            MbimStatusError status;
 
-        status = mbim_message_open_done_get_status_code (self);
-        g_string_append_printf (printable,
-                                "%sContents:\n"
-                                "%s  status error = '%s' (0x%08x)\n",
-                                line_prefix,
-                                line_prefix, mbim_status_error_get_string (status), status);
+            status = mbim_message_open_done_get_status_code (self);
+            g_string_append_printf (printable,
+                                    "%sContents:\n"
+                                    "%s  status error = '%s' (0x%08x)\n",
+                                    line_prefix,
+                                    line_prefix, mbim_status_error_get_string (status), status);
+        }
         break;
-    }
 
-    case MBIM_MESSAGE_TYPE_CLOSE_DONE: {
-        MbimStatusError status;
+    case MBIM_MESSAGE_TYPE_CLOSE_DONE:
+        if (!headers_only) {
+            MbimStatusError status;
 
-        status = mbim_message_close_done_get_status_code (self);
-        g_string_append_printf (printable,
-                                "%sContents:\n"
-                                "%s  status error = '%s' (0x%08x)\n",
-                                line_prefix,
-                                line_prefix, mbim_status_error_get_string (status), status);
+            status = mbim_message_close_done_get_status_code (self);
+            g_string_append_printf (printable,
+                                    "%sContents:\n"
+                                    "%s  status error = '%s' (0x%08x)\n",
+                                    line_prefix,
+                                    line_prefix, mbim_status_error_get_string (status), status);
+        }
         break;
-    }
 
     case MBIM_MESSAGE_TYPE_HOST_ERROR:
-    case MBIM_MESSAGE_TYPE_FUNCTION_ERROR: {
-        MbimProtocolError error;
+    case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
+        if (!headers_only) {
+            MbimProtocolError error;
 
-        error = mbim_message_error_get_error_status_code (self);
-        g_string_append_printf (printable,
-                                "%sContents:\n"
-                                "%s  error = '%s' (0x%08x)\n",
-                                line_prefix,
-                                line_prefix, mbim_protocol_error_get_string (error), error);
+            error = mbim_message_error_get_error_status_code (self);
+            g_string_append_printf (printable,
+                                    "%sContents:\n"
+                                    "%s  error = '%s' (0x%08x)\n",
+                                    line_prefix,
+                                    line_prefix, mbim_protocol_error_get_string (error), error);
+        }
         break;
-    }
 
-    case MBIM_MESSAGE_TYPE_COMMAND: {
-        gchar *uuid_printable;
-        const gchar *cid_printable;
-
-        uuid_printable = mbim_uuid_get_printable (mbim_message_command_get_service_id (self));
-        cid_printable = mbim_cid_get_printable (mbim_message_command_get_service (self),
-                                                mbim_message_command_get_cid (self));
+    case MBIM_MESSAGE_TYPE_COMMAND:
         g_string_append_printf (printable,
                                 "%sFragment header:\n"
                                 "%s  total   = %u\n"
-                                "%s  current = %u\n"
-                                "%sContents:\n"
-                                "%s  service = '%s' (%s)\n"
-                                "%s  cid     = '%s' (0x%08x)\n"
-                                "%s  type    = '%s' (0x%08x)\n",
+                                "%s  current = %u\n",
                                 line_prefix,
                                 line_prefix, _mbim_message_fragment_get_total (self),
-                                line_prefix, _mbim_message_fragment_get_current (self),
-                                line_prefix,
-                                line_prefix, mbim_service_get_string (mbim_message_command_get_service (self)), uuid_printable,
-                                line_prefix, cid_printable, mbim_message_command_get_cid (self),
-                                line_prefix, mbim_message_command_type_get_string (mbim_message_command_get_command_type (self)), mbim_message_command_get_command_type (self));
-        g_free (uuid_printable);
+                                line_prefix, _mbim_message_fragment_get_current (self));
+        if (!headers_only) {
+            gchar *uuid_printable;
+            const gchar *cid_printable;
+
+            uuid_printable = mbim_uuid_get_printable (mbim_message_command_get_service_id (self));
+            cid_printable = mbim_cid_get_printable (mbim_message_command_get_service (self),
+                                                    mbim_message_command_get_cid (self));
+            g_string_append_printf (printable,
+                                    "%sContents:\n"
+                                    "%s  service = '%s' (%s)\n"
+                                    "%s  cid     = '%s' (0x%08x)\n"
+                                    "%s  type    = '%s' (0x%08x)\n",
+                                    line_prefix,
+                                    line_prefix, mbim_service_get_string (mbim_message_command_get_service (self)), uuid_printable,
+                                    line_prefix, cid_printable, mbim_message_command_get_cid (self),
+                                    line_prefix, mbim_message_command_type_get_string (mbim_message_command_get_command_type (self)), mbim_message_command_get_command_type (self));
+            g_free (uuid_printable);
+        }
         break;
-    }
 
-    case MBIM_MESSAGE_TYPE_COMMAND_DONE: {
-        gchar *uuid_printable;
-        MbimStatusError status;
-        const gchar *cid_printable;
-
-        status = mbim_message_command_done_get_status_code (self);
-        uuid_printable = mbim_uuid_get_printable (mbim_message_command_done_get_service_id (self));
-        cid_printable = mbim_cid_get_printable (mbim_message_command_done_get_service (self),
-                                                mbim_message_command_done_get_cid (self));
+    case MBIM_MESSAGE_TYPE_COMMAND_DONE:
         g_string_append_printf (printable,
                                 "%sFragment header:\n"
                                 "%s  total   = %u\n"
-                                "%s  current = %u\n"
-                                "%sContents:\n"
-                                "%s  status error = '%s' (0x%08x)\n"
-                                "%s  service      = '%s' (%s)\n"
-                                "%s  cid          = '%s' (0x%08x)\n",
+                                "%s  current = %u\n",
                                 line_prefix,
                                 line_prefix, _mbim_message_fragment_get_total (self),
-                                line_prefix, _mbim_message_fragment_get_current (self),
-                                line_prefix,
-                                line_prefix, mbim_status_error_get_string (status), status,
-                                line_prefix, mbim_service_get_string (mbim_message_command_done_get_service (self)), uuid_printable,
-                                line_prefix, cid_printable, mbim_message_command_done_get_cid (self));
-        g_free (uuid_printable);
+                                line_prefix, _mbim_message_fragment_get_current (self));
+        if (!headers_only) {
+            gchar *uuid_printable;
+            MbimStatusError status;
+            const gchar *cid_printable;
+
+            status = mbim_message_command_done_get_status_code (self);
+            uuid_printable = mbim_uuid_get_printable (mbim_message_command_done_get_service_id (self));
+            cid_printable = mbim_cid_get_printable (mbim_message_command_done_get_service (self),
+                                                    mbim_message_command_done_get_cid (self));
+            g_string_append_printf (printable,
+                                    "%sContents:\n"
+                                    "%s  status error = '%s' (0x%08x)\n"
+                                    "%s  service      = '%s' (%s)\n"
+                                    "%s  cid          = '%s' (0x%08x)\n",
+                                    line_prefix,
+                                    line_prefix, mbim_status_error_get_string (status), status,
+                                    line_prefix, mbim_service_get_string (mbim_message_command_done_get_service (self)), uuid_printable,
+                                    line_prefix, cid_printable, mbim_message_command_done_get_cid (self));
+            g_free (uuid_printable);
+        }
         break;
-    }
 
     case MBIM_MESSAGE_TYPE_INDICATION:
         g_string_append_printf (printable,

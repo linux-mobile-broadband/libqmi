@@ -86,7 +86,8 @@ MbimMessage     *mbim_message_ref                  (MbimMessage        *self);
 void             mbim_message_unref                (MbimMessage        *self);
 
 gchar           *mbim_message_get_printable        (const MbimMessage  *self,
-                                                    const gchar        *line_prefix);
+                                                    const gchar        *line_prefix,
+                                                    gboolean            headers_only);
 const guint8    *mbim_message_get_raw              (const MbimMessage  *self,
                                                     guint32            *length,
                                                     GError            **error);
