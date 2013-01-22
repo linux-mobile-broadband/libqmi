@@ -41,10 +41,15 @@ static Context *ctx;
 
 /* Options */
 static gboolean query_device_caps_flag;
+static gboolean query_subscriber_ready_status_flag;
 
 static GOptionEntry entries[] = {
     { "basic-connect-query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
       "Query device capabilities",
+      NULL
+    },
+    { "basic-connect-query-subscriber-ready-status", 0, 0, G_OPTION_ARG_NONE, &query_subscriber_ready_status_flag,
+      "Query subscriber ready status",
       NULL
     },
     { NULL }
@@ -74,7 +79,8 @@ mbimcli_basic_connect_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (query_device_caps_flag);
+    n_actions = (query_device_caps_flag +
+                 query_subscriber_ready_status_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -192,6 +198,62 @@ query_device_caps_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+query_subscriber_ready_status_ready (MbimDevice   *device,
+                                     GAsyncResult *res)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    gchar *subscriber_id;
+    gchar *sim_iccid;
+    gchar *ready_info;
+    gchar **telephone_numbers;
+    gchar *telephone_numbers_str;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    ready_info = (mbim_ready_info_flag_build_string_from_mask (
+                      mbim_message_basic_connect_subscriber_ready_status_query_response_get_ready_info (response)));
+
+    subscriber_id = mbim_message_basic_connect_subscriber_ready_status_query_response_get_subscriber_id (response);
+    sim_iccid = mbim_message_basic_connect_subscriber_ready_status_query_response_get_sim_iccid (response);
+
+    telephone_numbers = mbim_message_basic_connect_subscriber_ready_status_query_response_get_telephone_numbers (response);
+    telephone_numbers_str = (telephone_numbers ? g_strjoinv (", ", telephone_numbers) : NULL);
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    g_print ("[%s] Subscriber ready status retrieved:\n"
+             "\t      Ready state: '%s'\n"
+             "\t    Subscriber ID: '%s'\n"
+             "\t        SIM ICCID: '%s'\n"
+             "\t       Ready info: '%s'\n"
+             "\tTelephone numbers: '%s'\n",
+             mbim_device_get_path_display (device),
+             VALIDATE_UNKNOWN (mbim_subscriber_ready_state_get_string (
+                                   mbim_message_basic_connect_subscriber_ready_status_query_response_get_ready_state (response))),
+             VALIDATE_UNKNOWN (subscriber_id),
+             VALIDATE_UNKNOWN (sim_iccid),
+             VALIDATE_UNKNOWN (ready_info),
+             VALIDATE_UNKNOWN (telephone_numbers_str));
+
+    g_free (subscriber_id);
+    g_free (sim_iccid);
+    g_free (ready_info);
+    g_strfreev (telephone_numbers);
+    g_free (telephone_numbers_str);
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -214,6 +276,23 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_device_caps_ready,
+                             NULL);
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Request to get subscriber ready status? */
+    if (query_subscriber_ready_status_flag) {
+        MbimMessage *request;
+
+        g_debug ("Asynchronously querying subscriber ready status...");
+        request = (mbim_message_basic_connect_subscriber_ready_status_query_request_new (
+                       mbim_device_get_next_transaction_id (ctx->device)));
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_subscriber_ready_status_ready,
                              NULL);
         mbim_message_unref (request);
         return;
