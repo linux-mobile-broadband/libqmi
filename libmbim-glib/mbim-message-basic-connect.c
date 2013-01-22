@@ -37,102 +37,74 @@ mbim_message_basic_connect_device_caps_query_request_new (guint32 transaction_id
                                      MBIM_MESSAGE_COMMAND_TYPE_QUERY);
 }
 
-struct device_caps_query_response {
-    guint32 device_type;
-    guint32 cellular_class;
-    guint32 voice_class;
-    guint32 sim_class;
-    guint32 data_class;
-    guint32 sms_caps;
-    guint32 ctrl_caps;
-    guint32 max_sessions;
-    guint32 custom_data_class_offset;
-    guint32 custom_data_class_size;
-    guint32 device_id_offset;
-    guint32 device_id_size;
-    guint32 firmware_info_offset;
-    guint32 firmware_info_size;
-    guint32 hardware_info_offset;
-    guint32 hardware_info_size;
-    guint8 databuffer[];
-} __attribute__((packed));
-
 MbimDeviceType
 mbim_message_basic_connect_device_caps_query_response_get_device_type (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_guint32 (self, G_STRUCT_OFFSET (struct device_caps_query_response, device_type));
+    return _mbim_message_command_done_read_guint32 (self, 0);
 }
 
 MbimCellularClass
 mbim_message_basic_connect_device_caps_query_response_get_cellular_class (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_guint32 (self, G_STRUCT_OFFSET (struct device_caps_query_response, cellular_class));
+    return _mbim_message_command_done_read_guint32 (self, 4);
 }
 
 MbimVoiceClass
 mbim_message_basic_connect_device_caps_query_response_get_voice_class (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_guint32 (self, G_STRUCT_OFFSET (struct device_caps_query_response, voice_class));
+    return _mbim_message_command_done_read_guint32 (self, 8);
 }
 
 MbimSimClass
 mbim_message_basic_connect_device_caps_query_response_get_sim_class (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_guint32 (self, G_STRUCT_OFFSET (struct device_caps_query_response, sim_class));
+    return _mbim_message_command_done_read_guint32 (self, 12);
 }
 
 MbimDataClass
 mbim_message_basic_connect_device_caps_query_response_get_data_class (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_guint32 (self, G_STRUCT_OFFSET (struct device_caps_query_response, data_class));
+    return _mbim_message_command_done_read_guint32 (self, 16);
 }
 
 MbimSmsCaps
 mbim_message_basic_connect_device_caps_query_response_get_sms_caps (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_guint32 (self, G_STRUCT_OFFSET (struct device_caps_query_response, sms_caps));
+    return _mbim_message_command_done_read_guint32 (self, 20);
 }
 
 MbimCtrlCaps
 mbim_message_basic_connect_device_caps_query_response_get_ctrl_caps (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_guint32 (self, G_STRUCT_OFFSET (struct device_caps_query_response, ctrl_caps));
+    return _mbim_message_command_done_read_guint32 (self, 24);
 }
 
 guint32
 mbim_message_basic_connect_device_caps_query_response_get_max_sessions (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_guint32 (self, G_STRUCT_OFFSET (struct device_caps_query_response, max_sessions));
+    return _mbim_message_command_done_read_guint32 (self, 28);
 }
 
 gchar *
 mbim_message_basic_connect_device_caps_query_response_get_custom_data_class (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_string (self,
-                                                   G_STRUCT_OFFSET (struct device_caps_query_response, custom_data_class_offset),
-                                                   G_STRUCT_OFFSET (struct device_caps_query_response, custom_data_class_size));
+    return _mbim_message_command_done_read_string (self, 32);
 }
 
 gchar *
 mbim_message_basic_connect_device_caps_query_response_get_device_id (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_string (self,
-                                                   G_STRUCT_OFFSET (struct device_caps_query_response, device_id_offset),
-                                                   G_STRUCT_OFFSET (struct device_caps_query_response, device_id_size));
+    return _mbim_message_command_done_read_string (self, 40);
 }
 
 gchar *
 mbim_message_basic_connect_device_caps_query_response_get_firmware_info (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_string (self,
-                                                   G_STRUCT_OFFSET (struct device_caps_query_response, firmware_info_offset),
-                                                   G_STRUCT_OFFSET (struct device_caps_query_response, firmware_info_size));
+    return _mbim_message_command_done_read_string (self, 48);
 }
 
 gchar *
 mbim_message_basic_connect_device_caps_query_response_get_hardware_info (const MbimMessage *self)
 {
-    return _mbim_message_command_done_read_string (self,
-                                                   G_STRUCT_OFFSET (struct device_caps_query_response, hardware_info_offset),
-                                                   G_STRUCT_OFFSET (struct device_caps_query_response, hardware_info_size));
+    return _mbim_message_command_done_read_string (self, 56);
 }

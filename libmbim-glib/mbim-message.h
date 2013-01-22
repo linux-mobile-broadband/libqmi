@@ -163,10 +163,9 @@ const guint8           *mbim_message_command_get_raw_information_buffer (const M
 
 #if defined (LIBMBIM_GLIB_COMPILATION)
 guint32          _mbim_message_command_read_guint32 (const MbimMessage *self,
-                                                     guint32            struct_offset);
+                                                     guint32            relative_offset);
 gchar           *_mbim_message_command_read_string  (const MbimMessage *self,
-                                                     guint32            struct_offset_offset,
-                                                     guint32            struct_offset_size);
+                                                     guint32            relative_offset);
 #endif
 
 /*****************************************************************************/
@@ -183,10 +182,9 @@ const guint8    *mbim_message_command_done_get_raw_information_buffer (const Mbi
 
 #if defined (LIBMBIM_GLIB_COMPILATION)
 guint32          _mbim_message_command_done_read_guint32 (const MbimMessage *self,
-                                                          guint32            struct_offset);
+                                                          guint32            relative_offset);
 gchar           *_mbim_message_command_done_read_string  (const MbimMessage *self,
-                                                          guint32            struct_offset_offset,
-                                                          guint32            struct_offset_size);
+                                                          guint32            relative_offset);
 #endif
 
 G_END_DECLS
