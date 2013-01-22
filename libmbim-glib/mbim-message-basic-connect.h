@@ -180,6 +180,49 @@ gchar             *mbim_message_basic_connect_device_caps_query_response_get_dev
 gchar             *mbim_message_basic_connect_device_caps_query_response_get_firmware_info     (const MbimMessage *self);
 gchar             *mbim_message_basic_connect_device_caps_query_response_get_hardware_info     (const MbimMessage *self);
 
+/*****************************************************************************/
+/* 'Subscriber Ready Status' message interface */
+
+/**
+ * MbimSubscriberReadyState:
+ * @MBIM_SUBSCRIBER_READY_STATE_NOT_INITIALIZED: Not initialized.
+ * @MBIM_SUBSCRIBER_READY_STATE_INITIALIZED: Initialized.
+ * @MBIM_SUBSCRIBER_READY_STATE_SIM_NOT_INSERTED: SIM not inserted.
+ * @MBIM_SUBSCRIBER_READY_STATE_BAD_SIM: Bad SIM.
+ * @MBIM_SUBSCRIBER_READY_STATE_FAILURE: Failure.
+ * @MBIM_SUBSCRIBER_READY_STATE_NOT_ACTIVATED: Not activated.
+ * @MBIM_SUBSCRIBER_READY_STATE_DEVICE_LOCKED: Device locked.
+ *
+ * Ready state of the subscriber.
+ */
+typedef enum {
+    MBIM_SUBSCRIBER_READY_STATE_NOT_INITIALIZED  = 0,
+    MBIM_SUBSCRIBER_READY_STATE_INITIALIZED      = 1,
+    MBIM_SUBSCRIBER_READY_STATE_SIM_NOT_INSERTED = 2,
+    MBIM_SUBSCRIBER_READY_STATE_BAD_SIM          = 3,
+    MBIM_SUBSCRIBER_READY_STATE_FAILURE          = 4,
+    MBIM_SUBSCRIBER_READY_STATE_NOT_ACTIVATED    = 5,
+    MBIM_SUBSCRIBER_READY_STATE_DEVICE_LOCKED    = 6,
+} MbimSubscriberReadyState;
+
+/**
+ * MbimReadyInfoFlag:
+ * @MBIM_READY_INFO_FLAG_PROTECT_UNIQUE_ID: Request to avoid displaying subscriber ID.
+ */
+typedef enum {
+    MBIM_READY_INFO_FLAG_PROTECT_UNIQUE_ID = 1 << 0
+} MbimReadyInfoFlag;
+
+/* Query request */
+MbimMessage *mbim_message_basic_connect_subscriber_ready_status_query_request_new (guint32 transaction_id);
+
+/* Query response */
+MbimSubscriberReadyState   mbim_message_basic_connect_subscriber_ready_status_query_response_get_ready_state       (const MbimMessage *self);
+gchar                     *mbim_message_basic_connect_subscriber_ready_status_query_response_get_subscriber_id     (const MbimMessage *self);
+gchar                     *mbim_message_basic_connect_subscriber_ready_status_query_response_get_sim_iccid         (const MbimMessage *self);
+MbimReadyInfoFlag          mbim_message_basic_connect_subscriber_ready_status_query_response_get_ready_info        (const MbimMessage *self);
+gchar                    **mbim_message_basic_connect_subscriber_ready_status_query_response_get_telephone_numbers (const MbimMessage *self);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_MESSAGE_BASIC_CONNECT_H_ */

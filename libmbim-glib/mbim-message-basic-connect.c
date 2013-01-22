@@ -108,3 +108,45 @@ mbim_message_basic_connect_device_caps_query_response_get_hardware_info (const M
 {
     return _mbim_message_command_done_read_string (self, 56);
 }
+
+/*****************************************************************************/
+/* 'Subscriber Ready State' message interface */
+
+MbimMessage *
+mbim_message_basic_connect_subscriber_ready_status_query_request_new (guint32 transaction_id)
+{
+    return mbim_message_command_new (transaction_id,
+                                     MBIM_SERVICE_BASIC_CONNECT,
+                                     MBIM_CID_BASIC_CONNECT_SUBSCRIBER_READY_STATUS,
+                                     MBIM_MESSAGE_COMMAND_TYPE_QUERY);
+}
+
+MbimSubscriberReadyState
+mbim_message_basic_connect_subscriber_ready_status_query_response_get_ready_state (const MbimMessage *self)
+{
+    return _mbim_message_command_done_read_guint32 (self, 0);
+}
+
+gchar *
+mbim_message_basic_connect_subscriber_ready_status_query_response_get_subscriber_id (const MbimMessage *self)
+{
+    return _mbim_message_command_done_read_string (self, 4);
+}
+
+gchar *
+mbim_message_basic_connect_subscriber_ready_status_query_response_get_sim_iccid (const MbimMessage *self)
+{
+    return _mbim_message_command_done_read_string (self, 12);
+}
+
+MbimReadyInfoFlag
+mbim_message_basic_connect_subscriber_ready_status_query_response_get_ready_info (const MbimMessage *self)
+{
+    return _mbim_message_command_done_read_guint32 (self, 16);
+}
+
+gchar **
+mbim_message_basic_connect_subscriber_ready_status_query_response_get_telephone_numbers (const MbimMessage *self)
+{
+    return _mbim_message_command_done_read_string_array (self, 24);
+}
