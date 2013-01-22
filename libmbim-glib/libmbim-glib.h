@@ -33,6 +33,8 @@
 #include "mbim-message.h"
 #include "mbim-device.h"
 
+#include "mbim-message-basic-connect.h"
+
 /* generated */
 #include "mbim-enum-types.h"
 #include "mbim-error-types.h"

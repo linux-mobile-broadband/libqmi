@@ -33,10 +33,11 @@ mbim-error-quarks.c: $(top_srcdir)/libmbim-glib/mbim-errors.h mbim-error-types.h
 ENUMS = \
 	$(top_srcdir)/libmbim-glib/mbim-uuid.h \
 	$(top_srcdir)/libmbim-glib/mbim-cid.h \
-	$(top_srcdir)/libmbim-glib/mbim-message.h
+	$(top_srcdir)/libmbim-glib/mbim-message.h \
+	$(top_srcdir)/libmbim-glib/mbim-message-basic-connect.h
 mbim-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/mbim-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBMBIM_GLIB_ENUM_TYPES_H__\n#define __LIBMBIM_GLIB_ENUM_TYPES_H__\n#include \"mbim-uuid.h\"\n#include \"mbim-cid.h\"\n#include \"mbim-message.h\"\n" \
+		--fhead "#ifndef __LIBMBIM_GLIB_ENUM_TYPES_H__\n#define __LIBMBIM_GLIB_ENUM_TYPES_H__\n#include \"mbim-uuid.h\"\n#include \"mbim-cid.h\"\n#include \"mbim-message.h\"\n#include \"mbim-message-basic-connect.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/mbim-enum-types-template.h \
 		--ftail "#endif /* __LIBMBIM_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@

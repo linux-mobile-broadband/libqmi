@@ -20,6 +20,7 @@ libmbim_glib_la_SOURCES = \
 	mbim-uuid.h mbim-uuid.c \
 	mbim-cid.h mbim-cid.c \
 	mbim-message-private.h mbim-message.h mbim-message.c \
+	mbim-message-basic-connect.h mbim-message-basic-connect.c \
 	mbim-device.h mbim-device.c
 
 libmbim_glib_la_LIBADD = \
@@ -34,4 +35,5 @@ include_HEADERS = \
 	mbim-uuid.h \
 	mbim-cid.h \
 	mbim-message.h \
+	mbim-message-basic-connect.h \
 	mbim-device.h
