@@ -28,6 +28,8 @@ missing
 stamp-h1
 depcomp
 
+build-aux/mbim-codegen/*.pyc
+
 libmbim-glib/.deps
 libmbim-glib/.libs
 
@@ -42,6 +44,7 @@ libmbim-glib/generated/.deps
 libmbim-glib/generated/.libs
 libmbim-glib/generated/*.c
 libmbim-glib/generated/*.h
+libmbim-glib/generated/*.sections
 
 cli/.deps
 cli/.libs

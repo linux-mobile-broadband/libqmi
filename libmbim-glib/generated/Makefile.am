@@ -2,12 +2,17 @@ noinst_LTLIBRARIES = libmbim-glib-generated.la
 
 GENERATED_H = \
 	mbim-error-types.h \
-	mbim-enum-types.h
+	mbim-enum-types.h \
+	mbim-basic-connect.h
 
 GENERATED_C = \
 	mbim-error-types.c \
 	mbim-error-quarks.c \
-	mbim-enum-types.c
+	mbim-enum-types.c \
+	mbim-basic-connect.c
+
+GENERATED_SECTIONS = \
+	mbim-basic-connect.sections
 
 # Error types
 mbim-error-types.h: $(top_srcdir)/libmbim-glib/mbim-errors.h $(top_srcdir)/build-aux/templates/mbim-error-types-template.h
@@ -48,6 +53,15 @@ mbim-enum-types.c: $(ENUMS) mbim-enum-types.h $(top_srcdir)/build-aux/templates/
 		--template $(top_srcdir)/build-aux/templates/mbim-enum-types-template.c \
 		$(ENUMS) > $@
 
+# Basic Connect service
+mbim-basic-connect.h mbim-basic-connect.c mbim-basic-connect.sections: $(top_srcdir)/data/mbim-service-basic-connect.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-basic-connect.h && \
+		rm -f mbim-basic-connect.c && \
+		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-basic-connect.json \
+			--output mbim-basic-connect
+
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 
 nodist_libmbim_glib_generated_la_SOURCES = \
@@ -66,8 +80,6 @@ libmbim_glib_generated_la_LIBADD = \
 	$(LIBMBIM_GLIB_LIBS)
 
 includedir = @includedir@/libmbim-glib
-nodist_include_HEADERS = \
-	mbim-error-types.h \
-	mbim-enum-types.h
+nodist_include_HEADERS = $(GENERATED_H)
 
-CLEANFILES = $(GENERATED_H) $(GENERATED_C)
+CLEANFILES = $(GENERATED_H) $(GENERATED_C) $(GENERATED_SECTIONS)

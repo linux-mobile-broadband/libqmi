@@ -34,10 +34,9 @@
 #include "mbim-device.h"
 #include "mbim-enums.h"
 
-#include "mbim-message-basic-connect.h"
-
 /* generated */
 #include "mbim-enum-types.h"
 #include "mbim-error-types.h"
+#include "mbim-basic-connect.h"
 
 #endif /* _LIBMBIM_GLIB_H_ */

@@ -1,2 +1,2 @@
 
-SUBDIRS = templates
+SUBDIRS = templates mbim-codegen
