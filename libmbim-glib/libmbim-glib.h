@@ -32,6 +32,7 @@
 #include "mbim-cid.h"
 #include "mbim-message.h"
 #include "mbim-device.h"
+#include "mbim-enums.h"
 
 #include "mbim-message-basic-connect.h"
 
