@@ -233,6 +233,18 @@ _mbim_message_read_string_array (const MbimMessage *self,
     return array;
 }
 
+const MbimUuid *
+_mbim_message_read_uuid (const MbimMessage *self,
+                         guint32            relative_offset)
+{
+    guint32 information_buffer_offset;
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+
+    return (const MbimUuid *) G_STRUCT_MEMBER_P (self->data,
+                                                 (information_buffer_offset + relative_offset));
+}
+
 /*****************************************************************************/
 /* Generic message interface */
 

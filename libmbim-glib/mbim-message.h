@@ -107,6 +107,8 @@ gchar           *_mbim_message_read_string        (const MbimMessage *self,
 gchar          **_mbim_message_read_string_array  (const MbimMessage *self,
                                                    guint32            array_size,
                                                    guint32            relative_offset_array_start);
+const MbimUuid  *_mbim_message_read_uuid          (const MbimMessage *self,
+                                                   guint32            relative_offset);
 #endif
 
 /*****************************************************************************/

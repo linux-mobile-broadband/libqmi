@@ -86,7 +86,11 @@ class Container:
                              'static'                  : 'static ' if 'visibility' in field and field['visibility'] == 'private' else '',
                              'message_type_enum'       : self.message_type_enum }
 
-            if field['format'] == 'guint32':
+            if field['format'] == 'uuid':
+                translations['public_format'] = 'const MbimUuid *'
+                translations['format_description'] = 'a #MbimUuid. Do not free the returned value.'
+                translations['error_return'] = 'NULL';
+            elif field['format'] == 'guint32':
                 if 'public-format' in field:
                     translations['public_format'] = field['public-format']
                 else:
@@ -193,7 +197,9 @@ class Container:
             cfile.write(string.Template(template).substitute(translations))
 
             # Update offset
-            if field['format'] == 'guint32':
+            if field['format'] == 'uuid':
+                offset += 16
+            elif field['format'] == 'guint32':
                 offset += 4
             elif field['format'] == 'string':
                 offset += 8
