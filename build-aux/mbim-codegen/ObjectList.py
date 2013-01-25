@@ -21,37 +21,47 @@
 import string
 
 from Message import Message
+from Struct import Struct
 import utils
 
 """
-The MessageList class handles the generation of all messages for a given
+The ObjectList class handles the generation of all commands and types for a given
 specific service
 """
-class MessageList:
+class ObjectList:
 
     """
     Constructor
     """
     def __init__(self, objects_dictionary):
-        self.list = []
+        self.command_list = []
+        self.struct_list = []
 
         # Loop items in the list, creating Message objects for the messages
         for object_dictionary in objects_dictionary:
-            message = Message(object_dictionary)
-            self.list.append(message)
+            if object_dictionary['type'] == 'Command':
+                self.command_list.append(Message(object_dictionary))
+            elif object_dictionary['type'] == 'Struct':
+                self.struct_list.append(Struct(object_dictionary))
+            else:
+                raise ValueError('Cannot handle object type \'%s\'' % object_dictionary['type'])
+
 
     """
-    Emit the message list handling implementation
+    Emit the structs and commands handling implementation
     """
     def emit(self, hfile, cfile):
-        # Then, emit all message handlers
-        for message in self.list:
-            message.emit(hfile, cfile)
+        # Emit all structs
+        for item in self.struct_list:
+            item.emit(hfile, cfile)
+        # Emit all commands
+        for item in self.command_list:
+            item.emit(hfile, cfile)
+
 
     """
     Emit the sections
     """
     def emit_sections(self, sfile):
-        # Emit all message sections
-        for message in self.list:
-            message.emit_sections(sfile)
+        for item in self.command_list:
+            item.emit_sections(sfile)

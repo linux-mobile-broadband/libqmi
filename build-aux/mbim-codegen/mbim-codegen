@@ -23,7 +23,7 @@ import sys
 import optparse
 import json
 
-from MessageList import MessageList
+from ObjectList import ObjectList
 import utils
 
 def codegen_main():
@@ -50,7 +50,7 @@ def codegen_main():
 
     # Build message list
     object_list_json = json.loads(database_file_contents)
-    message_list = MessageList(object_list_json)
+    object_list = ObjectList(object_list_json)
 
     # Add common stuff to the output files
     utils.add_copyright(output_file_c);
@@ -59,10 +59,10 @@ def codegen_main():
     utils.add_source_start(output_file_c, os.path.basename(opts.output))
 
     # Emit the message creation/parsing code
-    message_list.emit(output_file_h, output_file_c)
+    object_list.emit(output_file_h, output_file_c)
 
     # Emit sections
-    message_list.emit_sections(output_file_sections)
+    object_list.emit_sections(output_file_sections)
 
     utils.add_header_stop(output_file_h, os.path.basename(opts.output))
 

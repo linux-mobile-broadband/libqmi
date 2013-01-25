@@ -3,6 +3,7 @@
   // *********************************************************************************
   { "name"    : "Device Caps",
     "service" : "Basic Connect",
+    "type"    : "Command",
     "query"   : { "output" : [ { "name"          : "Device Type",
                                  "format"        : "guint32",
                                  "public-format" : "MbimDeviceType" },
@@ -42,6 +43,7 @@
   // *********************************************************************************
   { "name"    : "Subscriber Ready Status",
     "service" : "Basic Connect",
+    "type"    : "Command",
     "query"   : { "output" : [ { "name"          : "Ready State",
                                  "format"        : "guint32",
                                  "public-format" : "MbimSubscriberReadyState" },
@@ -57,5 +59,21 @@
 				 "visibility"    : "private" },
                                { "name"             : "Telephone Numbers",
                                  "format"           : "string-array",
-                                 "array-size-field" : "Telephone Numbers Count" } ] } }
+                                 "array-size-field" : "Telephone Numbers Count" } ] } },
+
+  // *********************************************************************************
+  { "name"     : "MbimDeviceServiceElement",
+    "type"     : "Struct",
+    "contents" : [ { "name"   : "Device service ID",
+                     "format" : "uuid" },
+                   { "name"   : "DSS Payload",
+                     "format" : "guint32" },
+                   { "name"   : "Max DSS Instances",
+                     "format" : "guint32" },
+                   { "name"       : "CIDs Count",
+                     "format"     : "guint32",
+                     "visibility" : "private"},
+                   { "name"             : "CIDs",
+                     "format"           : "guint32-array",
+                     "array-size-field" : "CIDs Count" } ] }
 ]
