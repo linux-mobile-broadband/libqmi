@@ -102,6 +102,7 @@ def add_source_start(f, output_name):
         "#include <string.h>\n"
         "\n"
         "#include \"${name}.h\"\n"
+        "#include \"mbim-message-private.h\"\n"
         "#include \"mbim-enum-types.h\"\n"
         "#include \"mbim-error-types.h\"\n"
         "#include \"mbim-device.h\"\n"

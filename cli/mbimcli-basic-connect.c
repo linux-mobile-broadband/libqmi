@@ -224,7 +224,7 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
     subscriber_id = mbim_message_basic_connect_subscriber_ready_status_query_response_get_subscriber_id (response);
     sim_iccid = mbim_message_basic_connect_subscriber_ready_status_query_response_get_sim_iccid (response);
 
-    telephone_numbers = mbim_message_basic_connect_subscriber_ready_status_query_response_get_telephone_numbers (response);
+    telephone_numbers = mbim_message_basic_connect_subscriber_ready_status_query_response_get_telephone_numbers (response, NULL);
     telephone_numbers_str = (telephone_numbers ? g_strjoinv (", ", telephone_numbers) : NULL);
 
 #undef VALIDATE_UNKNOWN

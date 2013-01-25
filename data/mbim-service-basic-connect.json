@@ -52,6 +52,10 @@
                                { "name"          : "Ready Info",
                                  "format"        : "guint32",
                                  "public-format" : "MbimReadyInfoFlag" },
-                               { "name"          : "Telephone numbers",
-                                 "format"        : "string-array" } ] } }
+                               { "name"          : "Telephone Numbers Count",
+                                 "format"        : "guint32",
+				 "visibility"    : "private" },
+                               { "name"             : "Telephone Numbers",
+                                 "format"           : "string-array",
+                                 "array-size-field" : "Telephone Numbers Count" } ] } }
 ]

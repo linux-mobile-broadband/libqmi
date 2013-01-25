@@ -47,11 +47,14 @@ class Container:
         # We may have 'Input' or 'Output' containers
         if container_type == 'Input':
             self.name = 'Request'
+            self.message_type_enum = 'MBIM_MESSAGE_TYPE_COMMAND'
         elif container_type == 'Output':
             if message_type == 'Notify':
                 self.name = 'Indication'
+                self.message_type_enum = 'MBIM_MESSAGE_TYPE_INDICATION'
             else:
                 self.name = 'Response'
+                self.message_type_enum = 'MBIM_MESSAGE_TYPE_COMMAND_DONE'
         else:
             raise ValueError('Cannot handle container type \'%s\'' % container_type)
 
@@ -78,7 +81,10 @@ class Container:
                              'command_underscore'      : utils.build_underscore_name (self.command),
                              'name_underscore'         : utils.build_underscore_name (self.name),
                              'message_type_underscore' : utils.build_underscore_name (self.message_type),
-                             'offset'                  : offset }
+                             'offset'                  : offset,
+                             'method_prefix'           : '_' if 'visibility' in field and field['visibility'] == 'private' else '',
+                             'static'                  : 'static ' if 'visibility' in field and field['visibility'] == 'private' else '',
+                             'message_type_enum'       : self.message_type_enum }
 
             if field['format'] == 'guint32':
                 if 'public-format' in field:
@@ -86,43 +92,101 @@ class Container:
                 else:
                     translations['public_format'] = field['format']
                 translations['format_description'] = 'a #' + translations['public_format']
+                translations['error_return'] = '0';
             elif field['format'] == 'string':
                 translations['public_format'] = 'gchar *'
                 translations['format_description'] = 'a newly allocated string, which should be freed with g_free()'
+                translations['error_return'] = 'NULL';
             elif field['format'] == 'string-array':
                 translations['public_format'] = 'gchar **'
                 translations['format_description'] = 'a newly allocated array of strings, which should be freed with g_strfreev()'
+                translations['error_return'] = 'NULL';
+            elif field['format'] == 'guint32-array':
+                translations['public_format'] = 'guint32 *'
+                translations['format_description'] = 'a newly allocated array of integers, which should be freed with g_free()'
+                translations['error_return'] = 'NULL';
+            else:
+                raise ValueError('Cannot handle field type \'%s\'' % field['format'])
+
+            if 'visibility' not in field or field['visibility'] != 'private':
+                template = (
+                    '\n'
+                    '${public_format} ${underscore}_get_${field_name_underscore} (\n')
+                if field['format'] == 'string-array' or field['format'] == 'guint32-array':
+                    template += (
+                        '    const MbimMessage *self,\n'
+                        '    guint32 *size);\n')
+                else:
+                    template += (
+                        '    const MbimMessage *self);\n')
+                hfile.write(string.Template(template).substitute(translations))
 
             template = (
-                '\n'
-                '${public_format} ${underscore}_get_${field_name_underscore} (const MbimMessage *self);\n')
-            hfile.write(string.Template(template).substitute(translations))
+                '\n')
+            if 'visibility' not in field or field['visibility'] != 'private':
+                template += (
+                    '/**\n'
+                    ' * ${underscore}_get_${field_name_underscore}:\n'
+                    ' * @self: a #MbimMessage.\n')
 
-            template = (
+                if field['format'] == 'string-array' or field['format'] == 'guint32-array':
+                    template += (
+                        ' * @size: (out) (allow-none): number of items in the output array.\n')
+
+                template += (
+                    ' *\n'
+                    ' * Get the \'${field_name}\' field from the \'${command_underscore}\' ${message_type_underscore} ${name_underscore}\n'
+                    ' *\n'
+                    ' * Returns: ${format_description}.\n'
+                    ' */\n')
+
+            template += (
+                '${static}${public_format}\n'
+                '${method_prefix}${underscore}_get_${field_name_underscore} (\n')
+
+            if field['format'] == 'string-array' or field['format'] == 'guint32-array':
+                template += (
+                    '    const MbimMessage *self,\n'
+                    '    guint32 *size)\n')
+            else:
+                template += (
+                    '    const MbimMessage *self)\n')
+
+            template += (
+                '{\n'
+                '    guint32 offset = ${offset};\n')
+
+            if field['format'] == 'string-array' or field['format'] == 'guint32-array':
+                template += (
+                    '    guint32 tmp;\n')
+
+
+            template += (
                 '\n'
-                '/**\n'
-                ' * ${underscore}_get_${field_name_underscore}:\n'
-                ' * @self: a #MbimMessage.\n'
-                ' *\n'
-                ' * Get the \'${field_name}\' field from the \'${command_underscore}\' ${message_type_underscore} ${name_underscore}\n'
-                ' *\n'
-                ' * Returns: ${format_description}.\n'
-                ' */\n'
-                '${public_format}\n'
-                '${underscore}_get_${field_name_underscore} (const MbimMessage *self)\n'
-                '{\n')
+                '    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == ${message_type_enum}, ${error_return});\n')
 
             if additional_offset_str != '':
                 translations['additional_offset_str'] = additional_offset_str
                 template += (
-                    '    guint32 offset = ${offset};\n'
                     '\n'
-                    '    offset += ${additional_offset_str};\n'
-                    '\n'
-                    '    return (${public_format}) _mbim_message_command_done_read_${format_underscore} (self, offset);\n')
+                    '    offset += ${additional_offset_str};\n')
+
+            if field['format'] == 'string-array' or field['format'] == 'guint32-array':
+                translations['array_size_field_name_underscore'] = utils.build_underscore_name (field['array-size-field'])
+                # Arrays need to inputs: offset of the element indicating the size of the array,
+                # and the offset of where the array itself starts. The size of the array will
+                # be given by another field, which we must look for.
+                template += (
+                    '    tmp = _${underscore}_get_${array_size_field_name_underscore} (self);\n'
+                    '    if (size)\n'
+                    '        *size = tmp;\n'
+                    '    return (${public_format}) _mbim_message_read_${format_underscore} (\n'
+                    '                                  self,\n'
+                    '                                  tmp,\n'
+                    '                                  offset);\n')
             else:
                 template += (
-                    '    return (${public_format}) _mbim_message_command_done_read_${format_underscore} (self, ${offset});\n')
+                    '    return (${public_format}) _mbim_message_read_${format_underscore} (self, offset);\n')
 
             template += (
                 '}\n')
@@ -137,4 +201,8 @@ class Container:
                 offset += 4
                 if additional_offset_str != '':
                     additional_offset_str += ' + '
-                additional_offset_str += string.Template('(8 * _mbim_message_command_done_read_guint32 (self, ${offset}))').substitute(translations)
+                additional_offset_str += string.Template('(8 * _mbim_message_read_guint32 (self, ${offset}))').substitute(translations)
+            elif field['format'] == 'guint32-array':
+                offset += 4
+            else:
+                raise ValueError('Cannot handle field type \'%s\'' % field['format'])
