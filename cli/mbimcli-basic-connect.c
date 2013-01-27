@@ -42,6 +42,7 @@ static Context *ctx;
 /* Options */
 static gboolean query_device_caps_flag;
 static gboolean query_subscriber_ready_status_flag;
+static gboolean query_device_services_flag;
 
 static GOptionEntry entries[] = {
     { "basic-connect-query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
@@ -50,6 +51,10 @@ static GOptionEntry entries[] = {
     },
     { "basic-connect-query-subscriber-ready-status", 0, 0, G_OPTION_ARG_NONE, &query_subscriber_ready_status_flag,
       "Query subscriber ready status",
+      NULL
+    },
+    { "basic-connect-query-device-services", 0, 0, G_OPTION_ARG_NONE, &query_device_services_flag,
+      "Query device services",
       NULL
     },
     { NULL }
@@ -80,7 +85,8 @@ mbimcli_basic_connect_options_enabled (void)
         return !!n_actions;
 
     n_actions = (query_device_caps_flag +
-                 query_subscriber_ready_status_flag);
+                 query_subscriber_ready_status_flag +
+                 query_device_services_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -254,6 +260,83 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+query_device_services_ready (MbimDevice   *device,
+                             GAsyncResult *res)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    MbimDeviceServiceElement **device_services;
+    guint32 n_device_services;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    device_services = mbim_message_basic_connect_device_services_query_response_get_device_services (response, &n_device_services);
+
+    g_print ("[%s] Device services retrieved:\n"
+             "\tMax DSS sessions: '%u'\n",
+             mbim_device_get_path_display (device),
+             mbim_message_basic_connect_device_services_query_response_get_max_dss_sessions (response));
+    if (!device_services)
+        g_print ("\t        Services: None\n");
+    else {
+        guint32 i;
+
+        g_print ("\t        Services: (%u)\n", n_device_services);
+        for (i = 0; i < n_device_services; i++) {
+            MbimService service;
+            gchar *uuid_str;
+            GString *cids;
+            guint32 j;
+
+            service = mbim_uuid_to_service (&device_services[i]->device_service_id);
+            uuid_str = mbim_uuid_get_printable (&device_services[i]->device_service_id);
+
+            cids = g_string_new ("");
+            for (j = 0; j < device_services[i]->cids_count; j++) {
+                if (service == MBIM_SERVICE_INVALID) {
+                    g_string_append_printf (cids, "%u", device_services[i]->cids[j]);
+                    if (j < device_services[i]->cids_count - 1)
+                        g_string_append (cids, ", ");
+                } else {
+                    g_string_append_printf (cids, "%s%s (%u)",
+                                            j == 0 ? "" : "\t\t                   ",
+                                            mbim_cid_get_printable (service, device_services[i]->cids[j]),
+                                            device_services[i]->cids[j]);
+                    if (j < device_services[i]->cids_count - 1)
+                        g_string_append (cids, ",\n");
+                }
+            }
+
+            g_print ("\n"
+                     "\t\t          Service: '%s'\n"
+                     "\t\t             UUID: [%s]:\n"
+                     "\t\t      DSS payload: %u\n"
+                     "\t\tMax DSS instances: %u\n"
+                     "\t\t             CIDs: %s\n",
+                     service == MBIM_SERVICE_INVALID ? "unknown" : mbim_service_get_string (service),
+                     uuid_str,
+                     device_services[i]->dss_payload,
+                     device_services[i]->max_dss_instances,
+                     cids->str);
+
+            g_string_free (cids, TRUE);
+            g_free (uuid_str);
+        }
+    }
+
+    mbim_device_service_element_array_free (device_services);
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -293,6 +376,23 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_subscriber_ready_status_ready,
+                             NULL);
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Request to query device services? */
+    if (query_device_services_flag) {
+        MbimMessage *request;
+
+        g_debug ("Asynchronously querying device services...");
+        request = (mbim_message_basic_connect_device_services_query_request_new (
+                       mbim_device_get_next_transaction_id (ctx->device)));
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_device_services_ready,
                              NULL);
         mbim_message_unref (request);
         return;
