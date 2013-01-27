@@ -64,6 +64,7 @@ class Container:
 
         self.fields_dictionary = dictionary
 
+
     """
     Emit the container handling implementation
     """
@@ -101,6 +102,17 @@ class Container:
                 translations['public_format'] = 'gchar *'
                 translations['format_description'] = 'a newly allocated string, which should be freed with g_free()'
                 translations['error_return'] = 'NULL';
+            elif field['format'] == 'struct':
+                translations['struct_type'] = field['struct-type']
+                translations['struct_type_underscore'] = utils.build_underscore_name_from_camelcase (field['struct-type'])
+                translations['public_format'] = field['struct-type'] + ' *'
+                translations['format_description'] = \
+                    'a newly allocated #' + \
+                    field['struct-type'] + \
+                    ', which should be freed with ' + \
+                    translations['struct_type_underscore'] + \
+                    '_free()'
+                translations['error_return'] = 'NULL';
             elif field['format'] == 'string-array':
                 translations['public_format'] = 'gchar **'
                 translations['format_description'] = 'a newly allocated array of strings, which should be freed with g_strfreev()'
@@ -109,6 +121,17 @@ class Container:
                 translations['public_format'] = 'guint32 *'
                 translations['format_description'] = 'a newly allocated array of integers, which should be freed with g_free()'
                 translations['error_return'] = 'NULL';
+            elif field['format'] == 'struct-array':
+                translations['struct_type'] = field['struct-type']
+                translations['struct_type_underscore'] = utils.build_underscore_name_from_camelcase (field['struct-type'])
+                translations['public_format'] = field['struct-type'] + ' **'
+                translations['format_description'] = \
+                    'a newly allocated array of #' + \
+                    field['struct-type'] + \
+                    's, which should be freed with ' + \
+                    translations['struct_type_underscore'] + \
+                    '_array_free()'
+                translations['error_return'] = 'NULL';
             else:
                 raise ValueError('Cannot handle field type \'%s\'' % field['format'])
 
@@ -116,7 +139,7 @@ class Container:
                 template = (
                     '\n'
                     '${public_format} ${underscore}_get_${field_name_underscore} (\n')
-                if field['format'] == 'string-array' or field['format'] == 'guint32-array':
+                if field['format'] == 'string-array' or field['format'] == 'guint32-array' or field['format'] == 'struct-array':
                     template += (
                         '    const MbimMessage *self,\n'
                         '    guint32 *size);\n')
@@ -133,7 +156,7 @@ class Container:
                     ' * ${underscore}_get_${field_name_underscore}:\n'
                     ' * @self: a #MbimMessage.\n')
 
-                if field['format'] == 'string-array' or field['format'] == 'guint32-array':
+                if field['format'] == 'string-array' or field['format'] == 'guint32-array' or field['format'] == 'struct-array':
                     template += (
                         ' * @size: (out) (allow-none): number of items in the output array.\n')
 
@@ -148,7 +171,7 @@ class Container:
                 '${static}${public_format}\n'
                 '${method_prefix}${underscore}_get_${field_name_underscore} (\n')
 
-            if field['format'] == 'string-array' or field['format'] == 'guint32-array':
+            if field['format'] == 'string-array' or field['format'] == 'guint32-array' or field['format'] == 'struct-array':
                 template += (
                     '    const MbimMessage *self,\n'
                     '    guint32 *size)\n')
@@ -160,7 +183,7 @@ class Container:
                 '{\n'
                 '    guint32 offset = ${offset};\n')
 
-            if field['format'] == 'string-array' or field['format'] == 'guint32-array':
+            if field['format'] == 'string-array' or field['format'] == 'guint32-array' or field['format'] == 'struct-array':
                 template += (
                     '    guint32 tmp;\n')
 
@@ -175,19 +198,29 @@ class Container:
                     '\n'
                     '    offset += ${additional_offset_str};\n')
 
-            if field['format'] == 'string-array' or field['format'] == 'guint32-array':
+            if field['format'] == 'string-array' or field['format'] == 'guint32-array' or field['format'] == 'struct-array':
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name (field['array-size-field'])
-                # Arrays need to inputs: offset of the element indicating the size of the array,
+                # Arrays need two inputs: offset of the element indicating the size of the array,
                 # and the offset of where the array itself starts. The size of the array will
                 # be given by another field, which we must look for.
                 template += (
                     '    tmp = _${underscore}_get_${array_size_field_name_underscore} (self);\n'
                     '    if (size)\n'
-                    '        *size = tmp;\n'
-                    '    return (${public_format}) _mbim_message_read_${format_underscore} (\n'
+                    '        *size = tmp;\n')
+
+                if field['format'] == 'struct-array':
+                    template += (
+                        '    return (${public_format}) _${struct_type_underscore}_read_array (\n')
+                else:
+                    template += (
+                        '    return (${public_format}) _mbim_message_read_${format_underscore} (\n')
+                template += (
                     '                                  self,\n'
                     '                                  tmp,\n'
                     '                                  offset);\n')
+            elif field['format'] == 'struct':
+                template += (
+                    '    return _${struct_type_underscore}_read (self, offset);\n')
             else:
                 template += (
                     '    return (${public_format}) _mbim_message_read_${format_underscore} (self, offset);\n')
@@ -203,12 +236,15 @@ class Container:
                 offset += 4
             elif field['format'] == 'string':
                 offset += 8
-            elif field['format'] == 'string-array':
-                offset += 4
+            elif field['format'] == 'struct':
                 if additional_offset_str != '':
                     additional_offset_str += ' + '
-                additional_offset_str += string.Template('(8 * _mbim_message_read_guint32 (self, ${offset}))').substitute(translations)
+                additional_offset_str += string.Template('(_${struct_type_underscore}_size (self, offset))').substitute(translations)
+            elif field['format'] == 'string-array' or field['format'] == 'struct-array':
+                if additional_offset_str != '':
+                    additional_offset_str += ' + '
+                additional_offset_str += string.Template('(8 * _${underscore}_get_${array_size_field_name_underscore} (self))').substitute(translations)
             elif field['format'] == 'guint32-array':
-                offset += 4
+                pass
             else:
                 raise ValueError('Cannot handle field type \'%s\'' % field['format'])
