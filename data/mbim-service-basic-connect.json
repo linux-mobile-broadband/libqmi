@@ -56,7 +56,7 @@
                                  "public-format" : "MbimReadyInfoFlag" },
                                { "name"          : "Telephone Numbers Count",
                                  "format"        : "guint32",
-				 "visibility"    : "private" },
+                                 "visibility"    : "private" },
                                { "name"             : "Telephone Numbers",
                                  "format"           : "string-array",
                                  "array-size-field" : "Telephone Numbers Count" } ] } },
@@ -75,5 +75,19 @@
                      "visibility" : "private"},
                    { "name"             : "CIDs",
                      "format"           : "guint32-array",
-                     "array-size-field" : "CIDs Count" } ] }
+                     "array-size-field" : "CIDs Count" } ] },
+
+  // *********************************************************************************
+  { "name"    : "Device Services",
+    "service" : "Basic Connect",
+    "type"    : "Command",
+    "query"   : { "output" : [ { "name"       : "Device Services Count",
+                                 "format"     : "guint32",
+                                 "visibility" : "private" },
+                               { "name"   : "Max DSS Sessions",
+                                 "format" : "guint32" },
+                               { "name"             : "Device Services",
+                                 "format"           : "struct-array",
+                                 "struct-type"      : "MbimDeviceServiceElement",
+                                 "array-size-field" : "Device Services Count" } ] } }
 ]
