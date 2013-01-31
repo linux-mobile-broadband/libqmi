@@ -19,8 +19,13 @@
 #
 
 import string
-
 import utils
+from ValueUint32      import ValueUint32
+from ValueUint32Array import ValueUint32Array
+from ValueString      import ValueString
+from ValueStringArray import ValueStringArray
+from ValueStruct      import ValueStruct
+from ValueStructArray import ValueStructArray
 
 """
 The Container class takes care of handling collections of Input or
@@ -64,6 +69,25 @@ class Container:
 
         self.fields_dictionary = dictionary
 
+        self.fields = []
+        for field in dictionary:
+            if field['format'] == 'uuid':
+                self.fields.append(ValueUuid(field))
+            elif field['format'] == 'guint32':
+                self.fields.append(ValueUint32(field))
+            elif field['format'] == 'guint32-array':
+                self.fields.append(ValueUint32Array(field))
+            elif field['format'] == 'string':
+                self.fields.append(ValueString(field))
+            elif field['format'] == 'string-array':
+                self.fields.append(ValueStringArray(field))
+            elif field['format'] == 'struct':
+                self.fields.append(ValueStruct(field))
+            elif field['format'] == 'struct-array':
+                self.fields.append(ValueStructArray(field))
+            else:
+                raise ValueError('Cannot handle field type \'%s\'' % field['format'])
+
 
     """
     Emit the container handling implementation
@@ -74,72 +98,35 @@ class Container:
         # Additional offset string computation
         additional_offset_str = ''
 
-        for field in self.fields_dictionary:
-            translations = { 'underscore'              : utils.build_underscore_name (self.fullname),
-                             'field_name'              : field['name'],
-                             'field_name_underscore'   : utils.build_underscore_name (field['name']),
-                             'format_underscore'       : utils.build_underscore_name (field['format']),
-                             'command_underscore'      : utils.build_underscore_name (self.command),
-                             'name_underscore'         : utils.build_underscore_name (self.name),
-                             'message_type_underscore' : utils.build_underscore_name (self.message_type),
-                             'offset'                  : offset,
-                             'method_prefix'           : '_' if 'visibility' in field and field['visibility'] == 'private' else '',
-                             'static'                  : 'static ' if 'visibility' in field and field['visibility'] == 'private' else '',
-                             'message_type_enum'       : self.message_type_enum }
+        translations = { 'underscore'              : utils.build_underscore_name (self.fullname),
+                         'command_underscore'      : utils.build_underscore_name (self.command),
+                         'name_underscore'         : utils.build_underscore_name (self.name),
+                         'message_type_underscore' : utils.build_underscore_name (self.message_type),
+                         'message_type_enum'       : self.message_type_enum }
 
-            if field['format'] == 'uuid':
-                translations['public_format'] = 'const MbimUuid *'
-                translations['format_description'] = 'a #MbimUuid. Do not free the returned value.'
-                translations['error_return'] = 'NULL';
-            elif field['format'] == 'guint32':
-                if 'public-format' in field:
-                    translations['public_format'] = field['public-format']
-                else:
-                    translations['public_format'] = field['format']
-                translations['format_description'] = 'a #' + translations['public_format']
-                translations['error_return'] = '0';
-            elif field['format'] == 'string':
-                translations['public_format'] = 'gchar *'
-                translations['format_description'] = 'a newly allocated string, which should be freed with g_free()'
-                translations['error_return'] = 'NULL';
-            elif field['format'] == 'struct':
-                translations['struct_type'] = field['struct-type']
-                translations['struct_type_underscore'] = utils.build_underscore_name_from_camelcase (field['struct-type'])
-                translations['public_format'] = field['struct-type'] + ' *'
-                translations['format_description'] = \
-                    'a newly allocated #' + \
-                    field['struct-type'] + \
-                    ', which should be freed with ' + \
-                    translations['struct_type_underscore'] + \
-                    '_free()'
-                translations['error_return'] = 'NULL';
-            elif field['format'] == 'string-array':
-                translations['public_format'] = 'gchar **'
-                translations['format_description'] = 'a newly allocated array of strings, which should be freed with g_strfreev()'
-                translations['error_return'] = 'NULL';
-            elif field['format'] == 'guint32-array':
-                translations['public_format'] = 'guint32 *'
-                translations['format_description'] = 'a newly allocated array of integers, which should be freed with g_free()'
-                translations['error_return'] = 'NULL';
-            elif field['format'] == 'struct-array':
-                translations['struct_type'] = field['struct-type']
-                translations['struct_type_underscore'] = utils.build_underscore_name_from_camelcase (field['struct-type'])
-                translations['public_format'] = field['struct-type'] + ' **'
-                translations['format_description'] = \
-                    'a newly allocated array of #' + \
-                    field['struct-type'] + \
-                    's, which should be freed with ' + \
-                    translations['struct_type_underscore'] + \
-                    '_array_free()'
-                translations['error_return'] = 'NULL';
-            else:
-                raise ValueError('Cannot handle field type \'%s\'' % field['format'])
+        for field in self.fields:
+            translations['offset']                    = offset
+            translations['field_name']                = field.name
+            translations['field_name_underscore']     = utils.build_underscore_name (field.name)
+            translations['method_prefix']             = '_' if field.visible == False else ''
+            translations['static']                    = 'static ' if field.visible == False else ''
+            translations['getter_return']             = field.getter_return
+            translations['getter_return_error']       = field.getter_return_error
+            translations['getter_return_description'] = field.getter_return_description
+            translations['reader_method_name']        = field.reader_method_name
+            translations['additional_offset_str']     = additional_offset_str
+            if field.is_array:
+                translations['array_size_field_name_underscore'] = utils.build_underscore_name (field.array_size_field)
+                translations['array_member_size']                = str(field.array_member_size)
 
-            if 'visibility' not in field or field['visibility'] != 'private':
+            cfile.write('\n')
+
+            if field.visible:
+                # Dump the getter header
                 template = (
                     '\n'
-                    '${public_format} ${underscore}_get_${field_name_underscore} (\n')
-                if field['format'] == 'string-array' or field['format'] == 'guint32-array' or field['format'] == 'struct-array':
+                    '${getter_return} ${underscore}_get_${field_name_underscore} (\n')
+                if field.is_array:
                     template += (
                         '    const MbimMessage *self,\n'
                         '    guint32 *size);\n')
@@ -148,15 +135,13 @@ class Container:
                         '    const MbimMessage *self);\n')
                 hfile.write(string.Template(template).substitute(translations))
 
-            template = (
-                '\n')
-            if 'visibility' not in field or field['visibility'] != 'private':
-                template += (
+                # Dump the getter documentation
+                template = (
                     '/**\n'
                     ' * ${underscore}_get_${field_name_underscore}:\n'
                     ' * @self: a #MbimMessage.\n')
 
-                if field['format'] == 'string-array' or field['format'] == 'guint32-array' or field['format'] == 'struct-array':
+                if field.is_array:
                     template += (
                         ' * @size: (out) (allow-none): number of items in the output array.\n')
 
@@ -164,14 +149,16 @@ class Container:
                     ' *\n'
                     ' * Get the \'${field_name}\' field from the \'${command_underscore}\' ${message_type_underscore} ${name_underscore}\n'
                     ' *\n'
-                    ' * Returns: ${format_description}.\n'
+                    ' * Returns: ${getter_return_description}\n'
                     ' */\n')
+                cfile.write(string.Template(template).substitute(translations))
 
-            template += (
-                '${static}${public_format}\n'
+            # Dump the getter source
+            template = (
+                '${static}${getter_return}\n'
                 '${method_prefix}${underscore}_get_${field_name_underscore} (\n')
 
-            if field['format'] == 'string-array' or field['format'] == 'guint32-array' or field['format'] == 'struct-array':
+            if field.is_array:
                 template += (
                     '    const MbimMessage *self,\n'
                     '    guint32 *size)\n')
@@ -183,68 +170,44 @@ class Container:
                 '{\n'
                 '    guint32 offset = ${offset};\n')
 
-            if field['format'] == 'string-array' or field['format'] == 'guint32-array' or field['format'] == 'struct-array':
+            if field.is_array:
                 template += (
                     '    guint32 tmp;\n')
 
-
             template += (
                 '\n'
-                '    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == ${message_type_enum}, ${error_return});\n')
+                '    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == ${message_type_enum}, ${getter_return_error});\n')
 
             if additional_offset_str != '':
-                translations['additional_offset_str'] = additional_offset_str
                 template += (
                     '\n'
                     '    offset += ${additional_offset_str};\n')
 
-            if field['format'] == 'string-array' or field['format'] == 'guint32-array' or field['format'] == 'struct-array':
-                translations['array_size_field_name_underscore'] = utils.build_underscore_name (field['array-size-field'])
+            if field.is_array:
                 # Arrays need two inputs: offset of the element indicating the size of the array,
                 # and the offset of where the array itself starts. The size of the array will
                 # be given by another field, which we must look for.
                 template += (
                     '    tmp = _${underscore}_get_${array_size_field_name_underscore} (self);\n'
                     '    if (size)\n'
-                    '        *size = tmp;\n')
-
-                if field['format'] == 'struct-array':
-                    template += (
-                        '    return (${public_format}) _${struct_type_underscore}_read_array (\n')
-                else:
-                    template += (
-                        '    return (${public_format}) _mbim_message_read_${format_underscore} (\n')
-                template += (
-                    '                                  self,\n'
-                    '                                  tmp,\n'
-                    '                                  offset);\n')
-            elif field['format'] == 'struct':
-                template += (
-                    '    return _${struct_type_underscore}_read (self, offset);\n')
+                    '        *size = tmp;\n'
+                    '    return (${getter_return}) ${reader_method_name} (self, tmp, offset)\n;')
             else:
                 template += (
-                    '    return (${public_format}) _mbim_message_read_${format_underscore} (self, offset);\n')
+                    '    return (${getter_return}) ${reader_method_name} (self, offset);\n')
 
             template += (
                 '}\n')
             cfile.write(string.Template(template).substitute(translations))
 
-            # Update offset
-            if field['format'] == 'uuid':
-                offset += 16
-            elif field['format'] == 'guint32':
-                offset += 4
-            elif field['format'] == 'string':
-                offset += 8
-            elif field['format'] == 'struct':
+            # Update offsets
+            if field.size > 0:
+                offset += field.size
+            if field.size_string != '':
                 if additional_offset_str != '':
                     additional_offset_str += ' + '
-                additional_offset_str += string.Template('(_${struct_type_underscore}_size (self, offset))').substitute(translations)
-            elif field['format'] == 'string-array' or field['format'] == 'struct-array':
+                additional_offset_str += field.size_string
+            if field.is_array:
                 if additional_offset_str != '':
                     additional_offset_str += ' + '
-                additional_offset_str += string.Template('(8 * _${underscore}_get_${array_size_field_name_underscore} (self))').substitute(translations)
-            elif field['format'] == 'guint32-array':
-                pass
-            else:
-                raise ValueError('Cannot handle field type \'%s\'' % field['format'])
+                additional_offset_str += string.Template('(${array_member_size} * _${underscore}_get_${array_size_field_name_underscore} (self))').substitute(translations)
