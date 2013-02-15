@@ -336,7 +336,7 @@ start_network_ready (QmiClientWds *client,
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     g_print ("[%s] Network started\n"
-             "\tPacket data handle: %u\n",
+             "\tPacket data handle: '%u'\n",
              qmi_device_get_path_display (ctx->device),
              (guint)ctx->packet_data_handle);
 
