@@ -119,7 +119,7 @@ start_network ()
 
     # Save the new CID if we didn't use any before
     if [ "x$CID" = "x" ]; then
-        CID=`echo "$START_NETWORK_OUT" | grep CID | sed "s/'//g" | awk 'BEGIN { FS = ":" } ; { print $2 }'`
+        CID=`echo "$START_NETWORK_OUT" | sed -n "s/.*CID.*'\(.*\)'.*/\1/p"`
         if [ "x$CID" = "x" ]; then
             echo "error: network start failed, client not allocated" 1>&2
             exit 1
@@ -128,7 +128,7 @@ start_network ()
         fi
     fi
 
-    PDH=`echo "$START_NETWORK_OUT" | grep handle | sed "s/'//g" | awk 'BEGIN { FS = ":" } ; { print $2 }'`
+    PDH=`echo "$START_NETWORK_OUT" | sed -n "s/.*handle.*'\(.*\)'.*/\1/p"`
     if [ "x$PDH" = "x" ]; then
         echo "error: network start failed, no packet data handle" 1>&2
         # Cleanup the client
@@ -187,7 +187,7 @@ packet_service_status ()
         STATUS_OUT=`$STATUS_CMD`
     fi
 
-    CONN=`echo "$STATUS_OUT" | grep "Connection status" | sed "s/'//g" | awk 'BEGIN { FS = ":" } ; { print $2 }'`
+    CONN=`echo "$STATUS_OUT" | sed -n "s/.*Connection status:.*'\(.*\)'.*/\1/p"`
     if [ "x$CONN" = "x" ]; then
         echo "error: couldn't get packet service status" 1>&2
         exit 2
