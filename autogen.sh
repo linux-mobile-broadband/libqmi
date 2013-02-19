@@ -19,6 +19,6 @@ PKG_NAME=libqmi
     touch README NEWS ChangeLog
     autoreconf --force --install --verbose
     if test -z "$NOCONFIGURE"; then
-        ./configure --enable-maintainer-mode $@
+        ./configure --enable-maintainer-mode "$@"
     fi
 )
