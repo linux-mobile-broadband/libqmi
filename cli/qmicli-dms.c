@@ -3201,12 +3201,12 @@ qmicli_dms_run (QmiDevice *device,
             shutdown (FALSE);
             return;
         }
-        qmi_client_dms_get_activation_state (ctx->client,
-                                             NULL,
-                                             10,
-                                             ctx->cancellable,
-                                             (GAsyncReadyCallback)activate_automatic_ready,
-                                             NULL);
+        qmi_client_dms_activate_automatic (ctx->client,
+                                           input,
+                                           10,
+                                           ctx->cancellable,
+                                           (GAsyncReadyCallback)activate_automatic_ready,
+                                           NULL);
         qmi_message_dms_activate_automatic_input_unref (input);
         return;
     }
