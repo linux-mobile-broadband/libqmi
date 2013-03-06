@@ -49,17 +49,17 @@ class VariableString(Variable):
             self.is_fixed_size = False
             # Variable-length strings in heap
             self.needs_dispose = True
-            # Strings which are given as the full value of a TLV will NOT have a
-            # length prefix
-            if 'type' in dictionary and dictionary['type'] == 'TLV':
-                self.length_prefix_size = 0
-            elif 'size-prefix-format' in dictionary:
+            if 'size-prefix-format' in dictionary:
                 if dictionary['size-prefix-format'] == 'guint8':
                     self.length_prefix_size = 8
                 elif dictionary['size-prefix-format'] == 'guint16':
                     self.length_prefix_size = 16
                 else:
                     raise ValueError('Invalid size prefix format (%s): not guint8 or guint16' % dictionary['size-prefix-format'])
+            # Strings which are given as the full value of a TLV and which don't have
+            # a explicit 'size-prefix-format' will NOT have a length prefix
+            elif 'type' in dictionary and dictionary['type'] == 'TLV':
+                self.length_prefix_size = 0
             else:
                 # Default to UINT8
                 self.length_prefix_size = 8
