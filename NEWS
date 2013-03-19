@@ -1,3 +1,11 @@
+Overview of changes in libqmi 1.2.0
+----------------------------------------
+
+* Builds with Python3
+* Fixed DMS activation code string handling
+* Enhanced "start network" functionality in qmicli
+
+
 Overview of changes in libqmi 1.0
 ----------------------------------------
 
