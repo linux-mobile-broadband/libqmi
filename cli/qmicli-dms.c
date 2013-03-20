@@ -67,6 +67,7 @@ static gboolean get_time_flag;
 static gboolean get_prl_version_flag;
 static gboolean get_activation_state_flag;
 static gchar *activate_automatic_str;
+static gchar *activate_manual_str;
 static gboolean get_user_lock_state_flag;
 static gchar *set_user_lock_state_str;
 static gchar *set_user_lock_code_str;
@@ -184,6 +185,10 @@ static GOptionEntry entries[] = {
       "Request automatic service activation",
       "[Activation Code]"
     },
+    { "dms-activate-manual", 0, 0, G_OPTION_ARG_STRING, &activate_manual_str,
+      "Request manual service activation",
+      "[SPC,SID,MDN,MIN]"
+    },
     { "dms-get-user-lock-state", 0, 0, G_OPTION_ARG_NONE, &get_user_lock_state_flag,
       "Get the state of the user lock",
       NULL,
@@ -296,6 +301,7 @@ qmicli_dms_options_enabled (void)
                  get_prl_version_flag +
                  get_activation_state_flag +
                  !!activate_automatic_str +
+                 !!activate_manual_str +
                  get_user_lock_state_flag +
                  !!set_user_lock_state_str +
                  !!set_user_lock_code_str +
@@ -1701,6 +1707,66 @@ get_activation_state_ready (QmiClientDms *client,
              qmi_dms_activation_state_get_string (activation_state));
 
     qmi_message_dms_get_activation_state_output_unref (output);
+    shutdown (TRUE);
+}
+
+static QmiMessageDmsActivateManualInput *
+activate_manual_input_create (const gchar *str)
+{
+    QmiMessageDmsActivateManualInput *input;
+    gchar **split;
+    GError *error = NULL;
+
+    split = g_strsplit (str, ",", -1);
+    if (g_strv_length (split) != 4) {
+        g_printerr ("error: incorrect number of arguments given\n");
+        g_strfreev (split);
+        return NULL;
+    }
+
+    input = qmi_message_dms_activate_manual_input_new ();
+    if (!qmi_message_dms_activate_manual_input_set_info (
+            input,
+            split[0],
+            split[1],
+            split[2],
+            split[3],
+            &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_dms_activate_manual_input_unref (input);
+        input = NULL;
+    }
+
+    g_strfreev(split);
+    return input;
+}
+
+static void
+activate_manual_ready (QmiClientDms *client,
+                       GAsyncResult *res)
+{
+    QmiMessageDmsActivateManualOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_activate_manual_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_activate_manual_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't request manual service activation: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_activate_manual_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_activate_manual_output_unref (output);
     shutdown (TRUE);
 }
 
@@ -3208,6 +3274,26 @@ qmicli_dms_run (QmiDevice *device,
                                            (GAsyncReadyCallback)activate_automatic_ready,
                                            NULL);
         qmi_message_dms_activate_automatic_input_unref (input);
+        return;
+    }
+
+    /* Request to activate manually? */
+    if (activate_manual_str) {
+        QmiMessageDmsActivateManualInput *input;
+
+        g_debug ("Asynchronously requesting manual activation...");
+        input = activate_manual_input_create (activate_manual_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
+        qmi_client_dms_activate_manual (ctx->client,
+                                        input,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)activate_manual_ready,
+                                        NULL);
+        qmi_message_dms_activate_manual_input_unref (input);
         return;
     }
 
