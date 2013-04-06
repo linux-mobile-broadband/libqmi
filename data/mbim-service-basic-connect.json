@@ -62,6 +62,17 @@
                                  "array-size-field" : "Telephone Numbers Count" } ] } },
 
   // *********************************************************************************
+  { "name"     : "Radio State",
+    "service" : "Basic Connect",
+    "type"    : "Command",
+    "query"   : { "output" : [ { "name"          : "HwRadioState",
+                                 "format"        : "guint32",
+                                 "public-format" : "MbimReadyInfoFlag" },
+			       { "name"          : "SwRadioState",
+                                 "format"        : "guint32",
+                                 "public-format" : "MbimReadyInfoFlag" } ] } },
+
+  // *********************************************************************************
   { "name"     : "MbimDeviceServiceElement",
     "type"     : "Struct",
     "contents" : [ { "name"   : "Device service ID",
