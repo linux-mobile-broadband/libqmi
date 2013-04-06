@@ -1,4 +1,4 @@
 
-SUBDIRS = . build-aux libmbim-glib cli
+SUBDIRS = . build-aux data libmbim-glib cli
 
 ACLOCAL_AMFLAGS = -I m4
