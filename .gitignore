@@ -30,6 +30,8 @@ depcomp
 
 build-aux/mbim-codegen/*.pyc
 
+data/pkg-config/mbim-glib.pc
+
 libmbim-glib/.deps
 libmbim-glib/.libs
 

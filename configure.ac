@@ -62,6 +62,8 @@ AC_CONFIG_FILES([Makefile
                  build-aux/templates/Makefile
                  build-aux/mbim-codegen/Makefile
                  data/Makefile
+                 data/pkg-config/Makefile
+                 data/pkg-config/mbim-glib.pc
                  libmbim-glib/Makefile
                  libmbim-glib/generated/Makefile
                  libmbim-glib/test/Makefile
