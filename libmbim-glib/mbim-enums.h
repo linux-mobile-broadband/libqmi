@@ -194,6 +194,78 @@ typedef enum {
     MBIM_READY_INFO_FLAG_PROTECT_UNIQUE_ID = 1 << 0
 } MbimReadyInfoFlag;
 
+
+/*****************************************************************************/
+/* 'Pin' enums */
+
+/**
+ * MbimPinType:
+ * @MBIM_PIN_TYPE_CUSTOM: The PIN type is a custom type and is none of the other PIN types listed in this enumeration.
+ * @MBIM_PIN_TYPE_PIN1: The PIN1 key.
+ * @MBIM_PIN_TYPE_PIN2: The PIN2 key.
+ * @MBIM_PIN_TYPE_DEVICE_SIM_PIN: The device to SIM key.
+ * @MBIM_PIN_TYPE_DEVICE_FIRST_SIM_PIN: The device to very first SIM key.
+ * @MBIM_PIN_TYPE_NETWORK_PIN: The network personalization key.
+ * @MBIM_PIN_TYPE_NETWORK_SUBSET_PIN: The network subset personalization key.
+ * @MBIM_PIN_TYPE_SERVICE_PROVIDER_PIN: The service provider (SP) personalization key.
+ * @MBIM_PIN_TYPE_CORPORATE_PIN: The corporate personalization key.
+ * @MBIM_PIN_TYPE_SUBSIDY_PIN: The subsidy unlock key.
+ * @MBIM_PIN_TYPE_PUK1: The Personal Identification Number1 Unlock Key (PUK1).
+ * @MBIM_PIN_TYPE_PUK2: The Personal Identification Number2 Unlock Key (PUK2).
+ * @MBIM_PIN_TYPE_DEVICE_FIRST_SIM_PUK: The device to very first SIM PIN unlock key.
+ * @MBIM_PIN_TYPE_NETWORK_PUK: The network personalization unlock key.
+ * @MBIM_PIN_TYPE_NETWORK_SUBSET_PUK: The network subset personalization unlock key.
+ * @MBIM_PIN_TYPE_SERVICE_PROVIDER_PUK: The service provider (SP) personalization unlock key.
+ * @MBIM_PIN_TYPE_CORPORATE_PUK: The corporate personalization unlock key.
+ *
+ * PIN Types.
+ */
+typedef enum {
+    MBIM_PIN_TYPE_CUSTOM               = 1,
+    MBIM_PIN_TYPE_PIN1                 = 2,
+    MBIM_PIN_TYPE_PIN2                 = 3,
+    MBIM_PIN_TYPE_DEVICE_SIM_PIN       = 4,
+    MBIM_PIN_TYPE_DEVICE_FIRST_SIM_PIN = 5,
+    MBIM_PIN_TYPE_NETWORK_PIN          = 6,
+    MBIM_PIN_TYPE_NETWORK_SUBSET_PIN   = 7,
+    MBIM_PIN_TYPE_SERVICE_PROVIDER_PIN = 8,
+    MBIM_PIN_TYPE_CORPORATE_PIN        = 9,
+    MBIM_PIN_TYPE_SUBSIDY_PIN          = 10,
+    MBIM_PIN_TYPE_PUK1                 = 11,
+    MBIM_PIN_TYPE_PUK2                 = 12,
+    MBIM_PIN_TYPE_DEVICE_FIRST_SIM_PUK = 13,
+    MBIM_PIN_TYPE_NETWORK_PUK          = 14,
+    MBIM_PIN_TYPE_NETWORK_SUBSET_PUK   = 15,
+    MBIM_PIN_TYPE_SERVICE_PROVIDER_PUK = 16,
+    MBIM_PIN_TYPE_CORPORATE_PUK        = 17
+} MbimPinType;
+
+/**
+ * MbimPinState:
+ * @MBIM_PIN_STATE_UNLOCKED: The device does not require a PIN.
+ * @MBIM_PIN_STATE_LOCKED: The device requires the user to enter a PIN.
+ *
+ * PIN States.
+ */
+typedef enum {
+    MBIM_PIN_STATE_UNLOCKED = 0,
+    MBIM_PIN_STATE_LOCKED = 1
+} MbimPinState;
+
+/**
+ * MbimPinOperation:
+ * @MBIM_PIN_OPERATION_ENTER: Enter the specified PIN into the device.
+ * @MBIM_PIN_OPERATION_ENABLE: Enable the specified PIN.
+ * @MBIM_PIN_OPERATION_DISABLE: Disable the specified PIN.
+ * @MBIM_PIN_OPERATION_CHANGE:  Change the specified PIN.
+*/
+typedef enum {
+    MBIM_PIN_OPERATION_ENTER = 0,
+    MBIM_PIN_OPERATION_ENABLE = 1,
+    MBIM_PIN_OPERATION_DISABLE = 2,
+    MBIM_PIN_OPERATION_CHANGE = 3
+} MbimPinOperation;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */
