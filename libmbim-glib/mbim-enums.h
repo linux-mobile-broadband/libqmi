@@ -266,6 +266,132 @@ typedef enum {
     MBIM_PIN_OPERATION_CHANGE = 3
 } MbimPinOperation;
 
+/*****************************************************************************/
+/* 'Packet Service' enums */
+
+/**
+ * MbimPacketServiceAction:
+ * @MBIM_PACKET_SERVICE_ACTION_ATTACH: Attach.
+ * @MBIM_PACKET_SERVICE_ACTION_DETACH: Detach.
+ *
+ * Packet Service Action.
+ */
+typedef enum {
+    MBIM_PACKET_SERVICE_ACTION_ATTACH = 0,
+    MBIM_PACKET_SERVICE_ACTION_DETACH = 1
+} MbimPacketServiceAction;
+
+/**
+ * MbimPacketServiceState:
+ * @MBIM_PACKET_SERVICE_STATE_UNKNOWN: Unknown.
+ * @MBIM_PACKET_SERVICE_STATE_ATTACHING: Attaching.
+ * @MBIM_PACKET_SERVICE_STATE_ATTACHED: Attached.
+ * @MBIM_PACKET_SERVICE_STATE_DETACHING: Detaching.
+ * @MBIM_PACKET_SERVICE_STATE_DETACHED: Detached.
+ *
+ * Packet Service State.
+ */
+typedef enum {
+    MBIM_PACKET_SERVICE_STATE_UNKNOWN   = 0,
+    MBIM_PACKET_SERVICE_STATE_ATTACHING = 1,
+    MBIM_PACKET_SERVICE_STATE_ATTACHED  = 2,
+    MBIM_PACKET_SERVICE_STATE_DETACHING = 3,
+    MBIM_PACKET_SERVICE_STATE_DETACHED  = 4
+} MbimPacketServiceState;
+
+/*****************************************************************************/
+/* 'Connect' enums */
+
+/**
+ * MbimActivationCommand:
+ * @MBIM_ACTIVATION_COMMAND_DEACTIVATE: Deactivate.
+ * @MBIM_ACTIVATION_COMMAND_ACTIVATE: Activate.
+ *
+ * Activation Command.
+ */
+typedef enum {
+    MBIM_ACTIVATION_COMMAND_DEACTIVATE = 0,
+    MBIM_ACTIVATION_COMMAND_ACTIVATE   = 1
+} MbimActivationCommand;
+
+/**
+ * MbimCompression:
+ * @MBIM_COMPRESSION_NONE: None.
+ * @MBIM_COMPRESSION_ENABLE: Enable.
+ *
+ * Compression.
+ */
+typedef enum {
+    MBIM_COMPRESSION_NONE   = 0,
+    MBIM_COMPRESSION_ENABLE = 1
+} MbimCompression;
+
+/**
+ * MbimAuthProtocol:
+ * @MBIM_AUTH_PROTOCOL_NONE: None.
+ * @MBIM_AUTH_PROTOCOL_PAP: Pap.
+ * @MBIM_AUTH_PROTOCOL_CHAP: Chap.
+ * @MBIM_AUTH_PROTOCOL_MSCHAPV2: V2.
+ *
+ * Auth Protocol.
+ */
+typedef enum {
+    MBIM_AUTH_PROTOCOL_NONE     = 0,
+    MBIM_AUTH_PROTOCOL_PAP      = 1,
+    MBIM_AUTH_PROTOCOL_CHAP     = 2,
+    MBIM_AUTH_PROTOCOL_MSCHAPV2 = 3
+} MbimAuthProtocol;
+
+/**
+ * MbimContextIpType:
+ * @MBIM_CONTEXT_IPTYPE_DEFAULT: It is up to the function to decide, the host does not care.
+ * @MBIM_CONTEXT_IPTYPE_IPV4: IPv4 context.
+ * @MBIM_CONTEXT_IPTYPE_IPV6: IPv6 context.
+ * @MBIM_CONTEXT_IPTYPE_IPV4V6: The context is IPv4, IPv6 or dualstack IPv4v6.
+ * @MBIM_CONTEXT_IPTYPE_IPV4_AND_IPV6: Both an IPv4 and an IPv6 context.
+ *
+ * Context IP Type.
+ */
+typedef enum {
+    MBIM_CONTEXT_IPTYPE_DEFAULT       = 0,
+    MBIM_CONTEXT_IPTYPE_IPV4          = 1,
+    MBIM_CONTEXT_IPTYPE_IPV6          = 2,
+    MBIM_CONTEXT_IPTYPE_IPV4V6        = 3,
+    MBIM_CONTEXT_IPTYPE_IPV4_AND_IPV6 = 4
+} MbimContextIpType;
+
+/**
+ * MbimActivationState:
+ * @MBIM_ACTIVATION_STATE_UNKNOWN: Unknown.
+ * @MBIM_ACTIVATION_STATE_ACTIVATED: Activated.
+ * @MBIM_ACTIVATION_STATE_ACTIVATING: Activating.
+ * @MBIM_ACTIVATION_STATE_DEACTIVATED: Deactivated.
+ * @MBIM_ACTIVATION_STATE_DEACTIVATING: Deactivating.
+ *
+ * Activation State.
+ */
+typedef enum {
+    MBIM_ACTIVATION_STATE_UNKNOWN      = 0,
+    MBIM_ACTIVATION_STATE_ACTIVATED    = 1,
+    MBIM_ACTIVATION_STATE_ACTIVATING   = 2,
+    MBIM_ACTIVATION_STATE_DEACTIVATED  = 3,
+    MBIM_ACTIVATION_STATE_DEACTIVATING = 4
+} MbimActivationState;
+
+/**
+ * MbimVoiceCallState:
+ * @MBIM_VOICE_CALL_STATE_NONE: None.
+ * @MBIM_VOICE_CALL_STATE_IN_PROGRESS: Progress.
+ * @MBIM_VOICE_CALL_STATE_HANG_UP: Up.
+ *
+ * Voice Call State.
+ */
+typedef enum {
+    MBIM_VOICE_CALL_STATE_NONE        = 0,
+    MBIM_VOICE_CALL_STATE_IN_PROGRESS = 1,
+    MBIM_VOICE_CALL_STATE_HANG_UP     = 2
+} MbimVoiceCallState;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */
