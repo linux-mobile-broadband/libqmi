@@ -42,6 +42,7 @@ static Context *ctx;
 /* Options */
 static gboolean query_device_caps_flag;
 static gboolean query_subscriber_ready_status_flag;
+static gboolean query_radio_state_flag;
 static gboolean query_device_services_flag;
 
 static GOptionEntry entries[] = {
@@ -51,6 +52,10 @@ static GOptionEntry entries[] = {
     },
     { "basic-connect-query-subscriber-ready-status", 0, 0, G_OPTION_ARG_NONE, &query_subscriber_ready_status_flag,
       "Query subscriber ready status",
+      NULL
+    },
+    { "basic-connect-query-radio-state", 0, 0, G_OPTION_ARG_NONE, &query_radio_state_flag,
+      "Query radio state",
       NULL
     },
     { "basic-connect-query-device-services", 0, 0, G_OPTION_ARG_NONE, &query_device_services_flag,
@@ -86,6 +91,7 @@ mbimcli_basic_connect_options_enabled (void)
 
     n_actions = (query_device_caps_flag +
                  query_subscriber_ready_status_flag +
+                 query_radio_state_flag +
                  query_device_services_flag);
 
     if (n_actions > 1) {
@@ -261,6 +267,33 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
 }
 
 static void
+query_radio_state_ready (MbimDevice   *device,
+                                     GAsyncResult *res)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Radio state retrieved:\n"
+             "\t     HwRadioState: '%s'\n"
+             "\t     SwRadioState: '%s'\n",
+             mbim_device_get_path_display (device),
+             mbim_message_basic_connect_radio_state_query_response_get_hwradiostate (response) ? "on" : "off",
+             mbim_message_basic_connect_radio_state_query_response_get_swradiostate (response) ? "on" : "off");
+
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
+static void
 query_device_services_ready (MbimDevice   *device,
                              GAsyncResult *res)
 {
@@ -376,6 +409,23 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_subscriber_ready_status_ready,
+                             NULL);
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Request to get radio state? */
+    if (query_radio_state_flag) {
+        MbimMessage *request;
+
+        g_debug ("Asynchronously querying radio state...");
+        request = (mbim_message_basic_connect_radio_state_query_request_new (
+                       mbim_device_get_next_transaction_id (ctx->device)));
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_radio_state_ready,
                              NULL);
         mbim_message_unref (request);
         return;
