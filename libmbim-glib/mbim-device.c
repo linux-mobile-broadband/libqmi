@@ -28,6 +28,8 @@
 #include <termios.h>
 #include <unistd.h>
 #include <gio/gio.h>
+#include <sys/ioctl.h>
+#define IOCTL_WDM_MAX_COMMAND _IOR('H', 0xA0, guint16)
 
 #include "mbim-utils.h"
 #include "mbim-device.h"
@@ -92,6 +94,9 @@ struct _MbimDevicePrivate {
 
     /* Transaction ID in the device */
     guint32 transaction_id;
+
+    /* message size */
+    guint16 max_control_transfer;
 };
 
 #define MAX_CONTROL_TRANSFER          4096
@@ -592,7 +597,7 @@ data_available (GIOChannel *source,
 
         status = g_io_channel_read_chars (source,
                                           buffer,
-                                          MAX_CONTROL_TRANSFER,
+                                          self->priv->max_control_transfer,
                                           &bytes_read,
                                           &error);
         if (status == G_IO_STATUS_ERROR) {
@@ -619,7 +624,7 @@ data_available (GIOChannel *source,
         parse_response (self);
 
         /* And keep on if we were told to keep on */
-    } while (bytes_read == MAX_CONTROL_TRANSFER || status == G_IO_STATUS_AGAIN);
+    } while (bytes_read == self->priv->max_control_transfer || status == G_IO_STATUS_AGAIN);
 
     return TRUE;
 }
@@ -630,6 +635,7 @@ create_iochannel (MbimDevice *self,
 {
     GError *inner_error = NULL;
     gint fd;
+    guint16 max;
 
     if (self->priv->iochannel) {
         g_set_error (error,
@@ -653,6 +659,18 @@ create_iochannel (MbimDevice *self,
                      strerror (errno));
         return FALSE;
     }
+
+    /* get message size */
+    if (ioctl(fd, IOCTL_WDM_MAX_COMMAND, &max) < 0) {
+        g_set_error (error,
+                    MBIM_CORE_ERROR,
+                    MBIM_CORE_ERROR_FAILED,
+                    "IOCTL_WDM_MAX_COMMAND failed '%s': %s",
+                    self->priv->path_display,
+                    strerror (errno));
+        max = MAX_CONTROL_TRANSFER;
+    }
+    self->priv->max_control_transfer = max;
 
     /* Create new GIOChannel */
     self->priv->iochannel = g_io_channel_unix_new (fd);
@@ -788,7 +806,7 @@ mbim_device_open (MbimDevice          *self,
 
     /* Launch 'Open' command */
     request = mbim_message_open_new (mbim_device_get_next_transaction_id (self),
-                                     MAX_CONTROL_TRANSFER);
+                                     self->priv->max_control_transfer);
     mbim_device_command (self,
                          request,
                          10,
