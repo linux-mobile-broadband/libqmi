@@ -44,6 +44,7 @@ static gboolean query_device_caps_flag;
 static gboolean query_subscriber_ready_status_flag;
 static gboolean query_radio_state_flag;
 static gboolean query_device_services_flag;
+static gboolean query_pin_flag;
 
 static GOptionEntry entries[] = {
     { "basic-connect-query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
@@ -60,6 +61,10 @@ static GOptionEntry entries[] = {
     },
     { "basic-connect-query-device-services", 0, 0, G_OPTION_ARG_NONE, &query_device_services_flag,
       "Query device services",
+      NULL
+    },
+    { "basic-connect-query-pin", 0, 0, G_OPTION_ARG_NONE, &query_pin_flag,
+      "Query PIN state",
       NULL
     },
     { NULL }
@@ -92,7 +97,8 @@ mbimcli_basic_connect_options_enabled (void)
     n_actions = (query_device_caps_flag +
                  query_subscriber_ready_status_flag +
                  query_radio_state_flag +
-                 query_device_services_flag);
+                 query_device_services_flag +
+                 query_pin_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -370,6 +376,35 @@ query_device_services_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+pin_ready (MbimDevice   *device,
+               GAsyncResult *res)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Pin Info:\n"
+             "\t     PinType: '%s'\n"
+             "\t     PinState: '%s'\n"
+             "\t     RemainingAttempts: '%u'\n",
+             mbim_device_get_path_display (device),
+             mbim_pin_type_get_string (
+                mbim_message_basic_connect_pin_set_response_get_pintype (response)),
+             mbim_pin_state_get_string (
+                mbim_message_basic_connect_pin_set_response_get_pinstate (response)),
+            mbim_message_basic_connect_pin_set_response_get_remainingattempts (response));
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -443,6 +478,22 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_device_services_ready,
+                             NULL);
+        mbim_message_unref (request);
+        return;
+    }
+
+    if (query_pin_flag) {
+        MbimMessage *request;
+
+        g_debug ("Asynchronously querying PIN state...");
+        request = (mbim_message_basic_connect_pin_query_request_new (
+                       mbim_device_get_next_transaction_id (ctx->device)));
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)pin_ready,
                              NULL);
         mbim_message_unref (request);
         return;
