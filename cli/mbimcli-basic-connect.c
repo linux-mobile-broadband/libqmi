@@ -291,9 +291,8 @@ query_radio_state_ready (MbimDevice   *device,
              "\t     HwRadioState: '%s'\n"
              "\t     SwRadioState: '%s'\n",
              mbim_device_get_path_display (device),
-             mbim_message_basic_connect_radio_state_query_response_get_hwradiostate (response) ? "on" : "off",
-             mbim_message_basic_connect_radio_state_query_response_get_swradiostate (response) ? "on" : "off");
-
+             mbim_message_basic_connect_radio_state_query_response_get_hardware_radio_state (response) ? "on" : "off",
+             mbim_message_basic_connect_radio_state_query_response_get_software_radio_state (response) ? "on" : "off");
 
     mbim_message_unref (response);
     shutdown (TRUE);
@@ -397,10 +396,10 @@ pin_ready (MbimDevice   *device,
              "\t     RemainingAttempts: '%u'\n",
              mbim_device_get_path_display (device),
              mbim_pin_type_get_string (
-                mbim_message_basic_connect_pin_set_response_get_pintype (response)),
+                 mbim_message_basic_connect_pin_set_response_get_pin_type (response)),
              mbim_pin_state_get_string (
-                mbim_message_basic_connect_pin_set_response_get_pinstate (response)),
-            mbim_message_basic_connect_pin_set_response_get_remainingattempts (response));
+                 mbim_message_basic_connect_pin_set_response_get_pin_state (response)),
+            mbim_message_basic_connect_pin_set_response_get_remaining_attempts (response));
     mbim_message_unref (response);
     shutdown (TRUE);
 }
