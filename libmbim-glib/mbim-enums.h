@@ -194,6 +194,20 @@ typedef enum {
     MBIM_READY_INFO_FLAG_PROTECT_UNIQUE_ID = 1 << 0
 } MbimReadyInfoFlag;
 
+/*****************************************************************************/
+/* 'Radio State' enums */
+
+/**
+ * MbimRadioSwitchState:
+ * @MBIM_RADIO_SWITCH_STATE_OFF: Radio is off.
+ * @MBIM_RADIO_SWITCH_STATE_ON: Radio is on.
+ *
+ * Radio switch state.
+ */
+typedef enum {
+    MBIM_RADIO_SWITCH_STATE_OFF = 0,
+    MBIM_RADIO_SWITCH_STATE_ON  = 1
+} MbimRadioSwitchState;
 
 /*****************************************************************************/
 /* 'Pin' enums */

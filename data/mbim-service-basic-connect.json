@@ -67,10 +67,10 @@
     "type"    : "Command",
     "query"   : { "output" : [ { "name"          : "Hardware Radio State",
                                  "format"        : "guint32",
-                                 "public-format" : "MbimReadyInfoFlag" },
+                                 "public-format" : "MbimRadioSwitchState" },
 			                   { "name"          : "Software Radio State",
                                  "format"        : "guint32",
-                                 "public-format" : "MbimReadyInfoFlag" } ] } },
+                                 "public-format" : "MbimRadioSwitchState" } ] } },
 
   // *********************************************************************************
   { "name"    : "Pin",
