@@ -246,35 +246,34 @@ _mbim_message_read_uuid (const MbimMessage *self,
 }
 
 /*****************************************************************************/
-/* Command message builder interface */
+/* Struct builder interface
+ *
+ * Types like structs consist of a fixed sized prefix plus a variable length
+ * data buffer. Items of variable size are usually given as an offset (with
+ * respect to the start of the struct) plus a size field. */
 
-struct _MbimMessageCommandBuilder {
-    MbimMessage *message;
-    GByteArray  *information_buffer;
-    GByteArray  *data_buffer;
+struct _MbimStructBuilder {
+    GByteArray  *fixed_buffer;
+    GByteArray  *variable_buffer;
     GArray      *offsets;
 };
 
-MbimMessageCommandBuilder *
-_mbim_message_command_builder_new (guint32                transaction_id,
-                                   MbimService            service,
-                                   guint32                cid,
-                                   MbimMessageCommandType command_type)
+MbimStructBuilder *
+_mbim_struct_builder_new (void)
 {
-    MbimMessageCommandBuilder *builder;
+    MbimStructBuilder *builder;
 
-    builder = g_slice_new (MbimMessageCommandBuilder);
-    builder->message = mbim_message_command_new (transaction_id, service, cid, command_type);
-    builder->information_buffer = g_byte_array_new ();
-    builder->data_buffer = g_byte_array_new ();
+    builder = g_slice_new (MbimStructBuilder);
+    builder->fixed_buffer = g_byte_array_new ();
+    builder->variable_buffer = g_byte_array_new ();
     builder->offsets = g_array_new (FALSE, FALSE, sizeof (guint32));
     return builder;
 }
 
-MbimMessage *
-_mbim_message_command_builder_complete (MbimMessageCommandBuilder *builder)
+GByteArray *
+_mbim_struct_builder_complete (MbimStructBuilder *builder)
 {
-    MbimMessage *message;
+    GByteArray *out;
     guint i;
 
     /* Update offsets with the length of the information buffer, and store them
@@ -284,43 +283,40 @@ _mbim_message_command_builder_complete (MbimMessageCommandBuilder *builder)
         guint32 *offset_value;
 
         offset_offset = g_array_index (builder->offsets, guint32, i);
-        offset_value = (guint32 *) &builder->information_buffer->data[offset_offset];
-
-        *offset_value = GUINT32_TO_LE (*offset_value + builder->information_buffer->len);
+        offset_value = (guint32 *) &builder->fixed_buffer->data[offset_offset];
+        *offset_value = GUINT32_TO_LE (*offset_value + builder->fixed_buffer->len);
     }
 
-    /* Merge all three buffers */
-    mbim_message_command_append (builder->message,
-                                 (const guint8 *)builder->information_buffer->data,
-                                 (guint32)builder->information_buffer->len);
-    mbim_message_command_append (builder->message,
-                                 (const guint8 *)builder->data_buffer->data,
-                                 (guint32)builder->data_buffer->len);
+    /* Merge both buffers */
+    g_byte_array_append (builder->fixed_buffer,
+                         (const guint8 *)builder->variable_buffer->data,
+                         (guint32)builder->variable_buffer->len);
 
-    /* Steal the message to return */
-    message = builder->message;
+    /* Steal the buffer to return */
+    out = builder->fixed_buffer;
 
     /* Dispose the builder */
     g_array_unref (builder->offsets);
-    g_byte_array_unref (builder->information_buffer);
-    g_byte_array_unref (builder->data_buffer);
-    g_slice_free (MbimMessageCommandBuilder, builder);
+    g_byte_array_unref (builder->variable_buffer);
+    g_slice_free (MbimStructBuilder, builder);
 
-    return message;
+    return out;
 }
 
 void
-_mbim_message_command_builder_append_guint32 (MbimMessageCommandBuilder *builder,
-                                              guint32                    value)
+_mbim_struct_builder_append_guint32 (MbimStructBuilder *builder,
+                                     guint32            value)
 {
     guint32 tmp;
 
-    /* uint32 values are added in the Information Buffer */
+    /* guint32 values are added in the static buffer only */
     tmp = GUINT32_TO_LE (value);
-    g_byte_array_append (builder->information_buffer, (guint8 *)&tmp, sizeof (tmp));
+    g_byte_array_append (builder->fixed_buffer, (guint8 *)&tmp, sizeof (tmp));
 }
 
 void
+_mbim_struct_builder_append_string (MbimStructBuilder *builder,
+                                    const gchar       *value)
 {
     guint32 offset;
     guint32 length;
@@ -328,8 +324,8 @@ void
     gsize utf16le_bytes = 0;
     GError *error = NULL;
 
-    /* A string consists of Offset+Size in the information buffer, plus the
-     * string itself in the databuffer */
+    /* A string consists of Offset+Size in the static buffer, plus the
+     * string itself in the variable buffer */
 
     /* Convert the string from UTF-8 to UTF-16LE */
     if (value && value[0]) {
@@ -351,33 +347,106 @@ void
      * the offset to 0 and don't configure the update */
     if (utf16le_bytes == 0) {
         offset = 0;
-        g_byte_array_append (builder->information_buffer, (guint8 *)&offset, sizeof (offset));
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
     } else {
         guint32 offset_offset;
 
         /* Offset of the offset */
-        offset_offset = builder->information_buffer->len;
+        offset_offset = builder->fixed_buffer->len;
 
         /* Length *not* in LE yet */
-        offset = builder->data_buffer->len;
+        offset = builder->variable_buffer->len;
         /* Add the offset value */
-        g_byte_array_append (builder->information_buffer, (guint8 *)&offset, sizeof (offset));
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
         /* Configure the value to get updated */
         g_array_append_val (builder->offsets, offset_offset);
     }
 
     /* Add the length value */
     length = GUINT32_TO_LE ((guint32)utf16le_bytes);
-    g_byte_array_append (builder->information_buffer, (guint8 *)&length, sizeof (length));
+    g_byte_array_append (builder->fixed_buffer, (guint8 *)&length, sizeof (length));
 
-    /* And finally, the string itself to the information buffer */
+    /* And finally, the string itself to the variable buffer */
     if (utf16le_bytes)
-        g_byte_array_append (builder->data_buffer, (const guint8 *)utf16le, (guint)utf16le_bytes);
+        g_byte_array_append (builder->variable_buffer, (const guint8 *)utf16le, (guint)utf16le_bytes);
     g_free (utf16le);
 }
 
+void
+_mbim_struct_builder_append_struct (MbimStructBuilder *builder,
+                                    const GByteArray  *value)
+{
+    /* structs are added in the static buffer only */
+    g_byte_array_append (builder->fixed_buffer, value->data, value->len);
+}
+
+/*****************************************************************************/
+/* Command message builder interface */
+
+struct _MbimMessageCommandBuilder {
+    MbimMessage *message;
+    MbimStructBuilder *contents_builder;
+};
+
+MbimMessageCommandBuilder *
+_mbim_message_command_builder_new (guint32                transaction_id,
+                                   MbimService            service,
+                                   guint32                cid,
+                                   MbimMessageCommandType command_type)
+{
+    MbimMessageCommandBuilder *builder;
+
+    builder = g_slice_new (MbimMessageCommandBuilder);
+    builder->message = mbim_message_command_new (transaction_id, service, cid, command_type);
+    builder->contents_builder = _mbim_struct_builder_new ();
+    return builder;
+}
+
+MbimMessage *
+_mbim_message_command_builder_complete (MbimMessageCommandBuilder *builder)
+{
+    MbimMessage *message;
+    GByteArray *contents;
+
+    /* Complete contents, which disposes the builder itself */
+    contents = _mbim_struct_builder_complete (builder->contents_builder);
+
+    /* Merge both buffers */
+    mbim_message_command_append (builder->message,
+                                 (const guint8 *)contents->data,
+                                 (guint32)contents->len);
+    g_byte_array_unref (contents);
+
+    /* Steal the message to return */
+    message = builder->message;
+
+    /* Dispose the remaining stuff from the message builder */
+    g_slice_free (MbimMessageCommandBuilder, builder);
+
+    return message;
+}
+
+void
+_mbim_message_command_builder_append_guint32 (MbimMessageCommandBuilder *builder,
+                                              guint32                    value)
+{
+    _mbim_struct_builder_append_guint32 (builder->contents_builder, value);
+}
+
+void
 _mbim_message_command_builder_append_string (MbimMessageCommandBuilder *builder,
                                              const gchar               *value)
+{
+    _mbim_struct_builder_append_string (builder->contents_builder, value);
+}
+
+void
+_mbim_message_command_builder_append_struct (MbimMessageCommandBuilder *builder,
+                                             const GByteArray          *value)
+{
+    _mbim_struct_builder_append_struct (builder->contents_builder, value);
+}
+
 /*****************************************************************************/
 /* Generic message interface */
 

@@ -179,6 +179,22 @@ const guint8           *mbim_message_command_get_raw_information_buffer (const M
 
 #if defined (LIBMBIM_GLIB_COMPILATION)
 /**
+ * MbimStruct:
+ *
+ * An opaque type representing a struct within a MBIM message command.
+ */
+typedef struct _MbimStructBuilder MbimStructBuilder;
+
+MbimStructBuilder *_mbim_struct_builder_new            (void);
+GByteArray        *_mbim_struct_builder_complete       (MbimStructBuilder *builder);
+void               _mbim_struct_builder_append_guint32 (MbimStructBuilder *builder,
+                                                        guint32            value);
+void               _mbim_struct_builder_append_string  (MbimStructBuilder *builder,
+                                                        const gchar       *value);
+void               _mbim_struct_builder_append_struct  (MbimStructBuilder *builder,
+                                                        const GByteArray  *value);
+
+/**
  * MbimMessageCommandBuilder:
  *
  * An opaque type representing a MBIM message command builder.
@@ -194,6 +210,8 @@ void                       _mbim_message_command_builder_append_guint32 (MbimMes
                                                                          guint32                    value);
 void                       _mbim_message_command_builder_append_string  (MbimMessageCommandBuilder *builder,
                                                                          const gchar               *value);
+void                       _mbim_message_command_builder_append_struct  (MbimMessageCommandBuilder *builder,
+                                                                         const GByteArray          *value);
 #endif
 
 /*****************************************************************************/
