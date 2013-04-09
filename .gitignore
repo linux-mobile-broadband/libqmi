@@ -42,6 +42,7 @@ libmbim-glib/test/test-cid
 libmbim-glib/test/test-message
 libmbim-glib/test/test-fragment
 libmbim-glib/test/test-message-contents
+libmbim-glib/test/test-message-command-builder
 
 libmbim-glib/generated/.deps
 libmbim-glib/generated/.libs

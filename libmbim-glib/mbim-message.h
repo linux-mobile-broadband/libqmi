@@ -162,10 +162,10 @@ typedef enum {
     MBIM_MESSAGE_COMMAND_TYPE_SET     = 1
 } MbimMessageCommandType;
 
-MbimMessage *mbim_message_command_new    (guint32                 transaction_id,
-                                          MbimService             service,
-                                          guint32                 cid,
-                                          MbimMessageCommandType  command_type);
+MbimMessage *mbim_message_command_new    (guint32                transaction_id,
+                                          MbimService            service,
+                                          guint32                cid,
+                                          MbimMessageCommandType command_type);
 void         mbim_message_command_append (MbimMessage            *self,
                                           const guint8           *buffer,
                                           guint32                 buffer_size);
@@ -176,6 +176,25 @@ guint32                 mbim_message_command_get_cid                    (const M
 MbimMessageCommandType  mbim_message_command_get_command_type           (const MbimMessage *self);
 const guint8           *mbim_message_command_get_raw_information_buffer (const MbimMessage *self,
                                                                          guint32           *length);
+
+#if defined (LIBMBIM_GLIB_COMPILATION)
+/**
+ * MbimMessageCommandBuilder:
+ *
+ * An opaque type representing a MBIM message command builder.
+ */
+typedef struct _MbimMessageCommandBuilder MbimMessageCommandBuilder;
+
+MbimMessageCommandBuilder *_mbim_message_command_builder_new            (guint32                    transaction_id,
+                                                                         MbimService                service,
+                                                                         guint32                    cid,
+                                                                         MbimMessageCommandType     command_type);
+MbimMessage               *_mbim_message_command_builder_complete       (MbimMessageCommandBuilder *builder);
+void                       _mbim_message_command_builder_append_guint32 (MbimMessageCommandBuilder *builder,
+                                                                         guint32                    value);
+void                       _mbim_message_command_builder_append_string  (MbimMessageCommandBuilder *builder,
+                                                                         const gchar               *value);
+#endif
 
 /*****************************************************************************/
 /* 'Command Done' message interface */

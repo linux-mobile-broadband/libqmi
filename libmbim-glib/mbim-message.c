@@ -246,6 +246,139 @@ _mbim_message_read_uuid (const MbimMessage *self,
 }
 
 /*****************************************************************************/
+/* Command message builder interface */
+
+struct _MbimMessageCommandBuilder {
+    MbimMessage *message;
+    GByteArray  *information_buffer;
+    GByteArray  *data_buffer;
+    GArray      *offsets;
+};
+
+MbimMessageCommandBuilder *
+_mbim_message_command_builder_new (guint32                transaction_id,
+                                   MbimService            service,
+                                   guint32                cid,
+                                   MbimMessageCommandType command_type)
+{
+    MbimMessageCommandBuilder *builder;
+
+    builder = g_slice_new (MbimMessageCommandBuilder);
+    builder->message = mbim_message_command_new (transaction_id, service, cid, command_type);
+    builder->information_buffer = g_byte_array_new ();
+    builder->data_buffer = g_byte_array_new ();
+    builder->offsets = g_array_new (FALSE, FALSE, sizeof (guint32));
+    return builder;
+}
+
+MbimMessage *
+_mbim_message_command_builder_complete (MbimMessageCommandBuilder *builder)
+{
+    MbimMessage *message;
+    guint i;
+
+    /* Update offsets with the length of the information buffer, and store them
+     * in LE. */
+    for (i = 0; i < builder->offsets->len; i++) {
+        guint32 offset_offset;
+        guint32 *offset_value;
+
+        offset_offset = g_array_index (builder->offsets, guint32, i);
+        offset_value = (guint32 *) &builder->information_buffer->data[offset_offset];
+
+        *offset_value = GUINT32_TO_LE (*offset_value + builder->information_buffer->len);
+    }
+
+    /* Merge all three buffers */
+    mbim_message_command_append (builder->message,
+                                 (const guint8 *)builder->information_buffer->data,
+                                 (guint32)builder->information_buffer->len);
+    mbim_message_command_append (builder->message,
+                                 (const guint8 *)builder->data_buffer->data,
+                                 (guint32)builder->data_buffer->len);
+
+    /* Steal the message to return */
+    message = builder->message;
+
+    /* Dispose the builder */
+    g_array_unref (builder->offsets);
+    g_byte_array_unref (builder->information_buffer);
+    g_byte_array_unref (builder->data_buffer);
+    g_slice_free (MbimMessageCommandBuilder, builder);
+
+    return message;
+}
+
+void
+_mbim_message_command_builder_append_guint32 (MbimMessageCommandBuilder *builder,
+                                              guint32                    value)
+{
+    guint32 tmp;
+
+    /* uint32 values are added in the Information Buffer */
+    tmp = GUINT32_TO_LE (value);
+    g_byte_array_append (builder->information_buffer, (guint8 *)&tmp, sizeof (tmp));
+}
+
+void
+{
+    guint32 offset;
+    guint32 length;
+    gchar *utf16le = NULL;
+    gsize utf16le_bytes = 0;
+    GError *error = NULL;
+
+    /* A string consists of Offset+Size in the information buffer, plus the
+     * string itself in the databuffer */
+
+    /* Convert the string from UTF-8 to UTF-16LE */
+    if (value && value[0]) {
+        utf16le = g_convert (value,
+                             -1,
+                             "utf-16le",
+                             "utf-8",
+                             NULL,
+                             &utf16le_bytes,
+                             &error);
+        if (error) {
+            g_warning ("Error converting string: %s", error->message);
+            g_error_free (error);
+            return;
+        }
+    }
+
+    /* If string length is greater than 0, add the offset to fix, otherwise set
+     * the offset to 0 and don't configure the update */
+    if (utf16le_bytes == 0) {
+        offset = 0;
+        g_byte_array_append (builder->information_buffer, (guint8 *)&offset, sizeof (offset));
+    } else {
+        guint32 offset_offset;
+
+        /* Offset of the offset */
+        offset_offset = builder->information_buffer->len;
+
+        /* Length *not* in LE yet */
+        offset = builder->data_buffer->len;
+        /* Add the offset value */
+        g_byte_array_append (builder->information_buffer, (guint8 *)&offset, sizeof (offset));
+        /* Configure the value to get updated */
+        g_array_append_val (builder->offsets, offset_offset);
+    }
+
+    /* Add the length value */
+    length = GUINT32_TO_LE ((guint32)utf16le_bytes);
+    g_byte_array_append (builder->information_buffer, (guint8 *)&length, sizeof (length));
+
+    /* And finally, the string itself to the information buffer */
+    if (utf16le_bytes)
+        g_byte_array_append (builder->data_buffer, (const guint8 *)utf16le, (guint)utf16le_bytes);
+    g_free (utf16le);
+}
+
+_mbim_message_command_builder_append_string (MbimMessageCommandBuilder *builder,
+                                             const gchar               *value)
+/*****************************************************************************/
 /* Generic message interface */
 
 /**

@@ -39,7 +39,6 @@ void     mbim_utils_set_traces_enabled (gboolean enabled);
 /* Other private methods */
 
 #if defined (LIBMBIM_GLIB_COMPILATION)
-G_GNUC_INTERNAL
 gchar *__mbim_utils_str_hex (gconstpointer mem,
                              gsize         size,
                              gchar         delimiter);
