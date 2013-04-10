@@ -36,14 +36,13 @@ class ValueUint32(Value):
         """ The public format of the value """
         self.public_format = dictionary['public-format'] if 'public-format' in dictionary else 'guint32'
 
-        """ The return type on value getters """
-        self.getter_return = self.public_format
+        """ Type of the value when used as input parameter """
+        self.in_format = self.public_format + ' '
+        self.in_description = 'The \'' + self.name + '\' field, given as a #' + self.public_format + '.'
 
-        """ The return value when getter fails """
-        self.getter_return_error = '0'
-
-        """ The description of the value returned from the getter """
-        self.getter_return_description = 'a #' + self.public_format + '.'
+        """ Type of the value when used as output parameter """
+        self.out_format = self.public_format + ' *'
+        self.out_description = 'Return location for a #' + self.public_format + ', or %NULL if the \'' + self.name + '\' field is not needed.'
 
         """ The name of the method used to read the value """
         self.reader_method_name = '_mbim_message_read_guint32'

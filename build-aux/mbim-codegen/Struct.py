@@ -148,7 +148,7 @@ class Struct:
         template = (
             '\n'
             'static ${name} *\n'
-            '_${name_underscore}_read (\n'
+            '_mbim_message_read_${name_underscore}_struct (\n'
             '    const MbimMessage *self,\n'
             '    guint32 relative_offset)\n'
             '{\n'
@@ -207,7 +207,7 @@ class Struct:
         template = (
             '\n'
             'static ${name} **\n'
-            '_${name_underscore}_read_array (\n'
+            '_mbim_message_read_${name_underscore}_struct_array (\n'
             '    const MbimMessage *self,\n'
             '    guint32 array_size,\n'
             '    guint32 relative_offset_array_start)\n'
@@ -219,7 +219,7 @@ class Struct:
             '    out = g_new (${name} *, array_size + 1);\n'
             '    offset = relative_offset_array_start;\n'
             '    for (i = 0; i < array_size; i++, offset += 8)\n'
-            '        out[i] = _${name_underscore}_read (self, _mbim_message_read_guint32 (self, offset));\n'
+            '        out[i] = _mbim_message_read_${name_underscore}_struct (self, _mbim_message_read_guint32 (self, offset));\n'
             '    out[array_size] = NULL;\n'
             '\n'
             '    return out;\n'

@@ -136,11 +136,21 @@ query_device_caps_ready (MbimDevice   *device,
 {
     MbimMessage *response;
     GError *error = NULL;
-    gchar *cellular_class;
-    gchar *sim_class;
-    gchar *data_class;
-    gchar *sms_caps;
-    gchar *ctrl_caps;
+    MbimDeviceType device_type;
+    const gchar *device_type_str;
+    MbimCellularClass cellular_class;
+    gchar *cellular_class_str;
+    MbimVoiceClass voice_class;
+    const gchar *voice_class_str;
+    MbimSimClass sim_class;
+    gchar *sim_class_str;
+    MbimDataClass data_class;
+    gchar *data_class_str;
+    MbimSmsCaps sms_caps;
+    gchar *sms_caps_str;
+    MbimCtrlCaps ctrl_caps;
+    gchar *ctrl_caps_str;
+    guint32 max_sessions;
     gchar *custom_data_class;
     gchar *device_id;
     gchar *firmware_info;
@@ -154,21 +164,34 @@ query_device_caps_ready (MbimDevice   *device,
         return;
     }
 
-    cellular_class = (mbim_cellular_class_build_string_from_mask (
-                          mbim_message_basic_connect_device_caps_query_response_get_cellular_class (response)));
-    sim_class = (mbim_sim_class_build_string_from_mask (
-                     mbim_message_basic_connect_device_caps_query_response_get_sim_class (response)));
-    data_class = (mbim_data_class_build_string_from_mask (
-                      mbim_message_basic_connect_device_caps_query_response_get_data_class (response)));
-    sms_caps = (mbim_sms_caps_build_string_from_mask (
-                      mbim_message_basic_connect_device_caps_query_response_get_sms_caps (response)));
-    ctrl_caps = (mbim_ctrl_caps_build_string_from_mask (
-                     mbim_message_basic_connect_device_caps_query_response_get_ctrl_caps (response)));
+    if (!mbim_message_basic_connect_device_caps_query_response_parse (
+            response,
+            &device_type,
+            &cellular_class,
+            &voice_class,
+            &sim_class,
+            &data_class,
+            &sms_caps,
+            &ctrl_caps,
+            &max_sessions,
+            &custom_data_class,
+            &device_id,
+            &firmware_info,
+            &hardware_info,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
 
-    custom_data_class = mbim_message_basic_connect_device_caps_query_response_get_custom_data_class (response);
-    device_id = mbim_message_basic_connect_device_caps_query_response_get_device_id (response);
-    firmware_info = mbim_message_basic_connect_device_caps_query_response_get_firmware_info (response);
-    hardware_info = mbim_message_basic_connect_device_caps_query_response_get_hardware_info (response);
+    device_type_str = mbim_device_type_get_string (device_type);
+    cellular_class_str = mbim_cellular_class_build_string_from_mask (cellular_class);
+    voice_class_str = mbim_device_type_get_string (voice_class);
+    sim_class_str = mbim_sim_class_build_string_from_mask (sim_class);
+    data_class_str = mbim_data_class_build_string_from_mask (data_class);
+    sms_caps_str = mbim_sms_caps_build_string_from_mask (sms_caps);
+    ctrl_caps_str = mbim_ctrl_caps_build_string_from_mask (ctrl_caps);
 
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
@@ -187,26 +210,24 @@ query_device_caps_ready (MbimDevice   *device,
              "\t    Firmware info: '%s'\n"
              "\t    Hardware info: '%s'\n",
              mbim_device_get_path_display (device),
-             VALIDATE_UNKNOWN (mbim_device_type_get_string (
-                                   mbim_message_basic_connect_device_caps_query_response_get_device_type (response))),
-             VALIDATE_UNKNOWN (cellular_class),
-             VALIDATE_UNKNOWN (mbim_device_type_get_string (
-                                   mbim_message_basic_connect_device_caps_query_response_get_voice_class (response))),
-             VALIDATE_UNKNOWN (sim_class),
-             VALIDATE_UNKNOWN (data_class),
-             VALIDATE_UNKNOWN (sms_caps),
-             VALIDATE_UNKNOWN (ctrl_caps),
-             mbim_message_basic_connect_device_caps_query_response_get_max_sessions (response),
+             VALIDATE_UNKNOWN (device_type_str),
+             VALIDATE_UNKNOWN (cellular_class_str),
+             VALIDATE_UNKNOWN (voice_class_str),
+             VALIDATE_UNKNOWN (sim_class_str),
+             VALIDATE_UNKNOWN (data_class_str),
+             VALIDATE_UNKNOWN (sms_caps_str),
+             VALIDATE_UNKNOWN (ctrl_caps_str),
+             max_sessions,
              VALIDATE_UNKNOWN (custom_data_class),
              VALIDATE_UNKNOWN (device_id),
              VALIDATE_UNKNOWN (firmware_info),
              VALIDATE_UNKNOWN (hardware_info));
 
-    g_free (cellular_class);
-    g_free (sim_class);
-    g_free (data_class);
-    g_free (sms_caps);
-    g_free (ctrl_caps);
+    g_free (cellular_class_str);
+    g_free (sim_class_str);
+    g_free (data_class_str);
+    g_free (sms_caps_str);
+    g_free (ctrl_caps_str);
     g_free (custom_data_class);
     g_free (device_id);
     g_free (firmware_info);
@@ -222,9 +243,13 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
 {
     MbimMessage *response;
     GError *error = NULL;
+    MbimSubscriberReadyState ready_state;
+    const gchar *ready_state_str;
     gchar *subscriber_id;
     gchar *sim_iccid;
-    gchar *ready_info;
+    MbimReadyInfoFlag ready_info;
+    gchar *ready_info_str;
+    guint32 telephone_numbers_count;
     gchar **telephone_numbers;
     gchar *telephone_numbers_str;
 
@@ -236,14 +261,24 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
         return;
     }
 
-    ready_info = (mbim_ready_info_flag_build_string_from_mask (
-                      mbim_message_basic_connect_subscriber_ready_status_query_response_get_ready_info (response)));
+    if (!mbim_message_basic_connect_subscriber_ready_status_query_response_parse (
+            response,
+            &ready_state,
+            &subscriber_id,
+            &sim_iccid,
+            &ready_info,
+            &telephone_numbers_count,
+            &telephone_numbers,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
 
-    subscriber_id = mbim_message_basic_connect_subscriber_ready_status_query_response_get_subscriber_id (response);
-    sim_iccid = mbim_message_basic_connect_subscriber_ready_status_query_response_get_sim_iccid (response);
-
-    telephone_numbers = mbim_message_basic_connect_subscriber_ready_status_query_response_get_telephone_numbers (response, NULL);
     telephone_numbers_str = (telephone_numbers ? g_strjoinv (", ", telephone_numbers) : NULL);
+    ready_state_str = mbim_subscriber_ready_state_get_string (ready_state);
+    ready_info_str = mbim_ready_info_flag_build_string_from_mask (ready_info);
 
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
@@ -253,18 +288,17 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
              "\t    Subscriber ID: '%s'\n"
              "\t        SIM ICCID: '%s'\n"
              "\t       Ready info: '%s'\n"
-             "\tTelephone numbers: '%s'\n",
+             "\tTelephone numbers: (%u) '%s'\n",
              mbim_device_get_path_display (device),
-             VALIDATE_UNKNOWN (mbim_subscriber_ready_state_get_string (
-                                   mbim_message_basic_connect_subscriber_ready_status_query_response_get_ready_state (response))),
+             VALIDATE_UNKNOWN (ready_state_str),
              VALIDATE_UNKNOWN (subscriber_id),
              VALIDATE_UNKNOWN (sim_iccid),
-             VALIDATE_UNKNOWN (ready_info),
-             VALIDATE_UNKNOWN (telephone_numbers_str));
+             VALIDATE_UNKNOWN (ready_info_str),
+             telephone_numbers_count, VALIDATE_UNKNOWN (telephone_numbers_str));
 
     g_free (subscriber_id);
     g_free (sim_iccid);
-    g_free (ready_info);
+    g_free (ready_info_str);
     g_strfreev (telephone_numbers);
     g_free (telephone_numbers_str);
 
@@ -274,10 +308,14 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
 
 static void
 query_radio_state_ready (MbimDevice   *device,
-                                     GAsyncResult *res)
+                         GAsyncResult *res)
 {
     MbimMessage *response;
     GError *error = NULL;
+    MbimRadioSwitchState hardware_radio_state;
+    const gchar *hardware_radio_state_str;
+    MbimRadioSwitchState software_radio_state;
+    const gchar *software_radio_state_str;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response) {
@@ -287,12 +325,29 @@ query_radio_state_ready (MbimDevice   *device,
         return;
     }
 
+    if (!mbim_message_basic_connect_radio_state_query_response_parse (
+            response,
+            &hardware_radio_state,
+            &software_radio_state,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    hardware_radio_state_str = mbim_radio_switch_state_get_string (hardware_radio_state);
+    software_radio_state_str = mbim_radio_switch_state_get_string (software_radio_state);
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
     g_print ("[%s] Radio state retrieved:\n"
-             "\t     HwRadioState: '%s'\n"
-             "\t     SwRadioState: '%s'\n",
+             "\t     Hardware Radio State: '%s'\n"
+             "\t     Software Radio State: '%s'\n",
              mbim_device_get_path_display (device),
-             mbim_message_basic_connect_radio_state_query_response_get_hardware_radio_state (response) ? "on" : "off",
-             mbim_message_basic_connect_radio_state_query_response_get_software_radio_state (response) ? "on" : "off");
+             VALIDATE_UNKNOWN (hardware_radio_state_str),
+             VALIDATE_UNKNOWN (software_radio_state_str));
 
     mbim_message_unref (response);
     shutdown (TRUE);
@@ -305,7 +360,8 @@ query_device_services_ready (MbimDevice   *device,
     MbimMessage *response;
     GError *error = NULL;
     MbimDeviceServiceElement **device_services;
-    guint32 n_device_services;
+    guint32 device_services_count;
+    guint32 max_dss_sessions;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response) {
@@ -315,19 +371,29 @@ query_device_services_ready (MbimDevice   *device,
         return;
     }
 
-    device_services = mbim_message_basic_connect_device_services_query_response_get_device_services (response, &n_device_services);
+    if (!mbim_message_basic_connect_device_services_query_response_parse (
+            response,
+            &device_services_count,
+            &max_dss_sessions,
+            &device_services,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
 
     g_print ("[%s] Device services retrieved:\n"
              "\tMax DSS sessions: '%u'\n",
              mbim_device_get_path_display (device),
-             mbim_message_basic_connect_device_services_query_response_get_max_dss_sessions (response));
-    if (!device_services)
+             max_dss_sessions);
+    if (device_services_count == 0)
         g_print ("\t        Services: None\n");
     else {
         guint32 i;
 
-        g_print ("\t        Services: (%u)\n", n_device_services);
-        for (i = 0; i < n_device_services; i++) {
+        g_print ("\t        Services: (%u)\n", device_services_count);
+        for (i = 0; i < device_services_count; i++) {
             MbimService service;
             gchar *uuid_str;
             GString *cids;
@@ -381,6 +447,11 @@ pin_ready (MbimDevice   *device,
 {
     MbimMessage *response;
     GError *error = NULL;
+    MbimPinType pin_type;
+    const gchar *pin_type_str;
+    MbimPinState pin_state;
+    const gchar *pin_state_str;
+    guint32 remaining_attempts;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response) {
@@ -390,16 +461,32 @@ pin_ready (MbimDevice   *device,
         return;
     }
 
+    if (!mbim_message_basic_connect_pin_query_response_parse (
+            response,
+            &pin_type,
+            &pin_state,
+            &remaining_attempts,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    pin_type_str = mbim_pin_type_get_string (pin_type);
+    pin_state_str = mbim_pin_state_get_string (pin_state);
+
     g_print ("[%s] Pin Info:\n"
              "\t     PinType: '%s'\n"
              "\t     PinState: '%s'\n"
              "\t     RemainingAttempts: '%u'\n",
              mbim_device_get_path_display (device),
-             mbim_pin_type_get_string (
-                 mbim_message_basic_connect_pin_set_response_get_pin_type (response)),
-             mbim_pin_state_get_string (
-                 mbim_message_basic_connect_pin_set_response_get_pin_state (response)),
-            mbim_message_basic_connect_pin_set_response_get_remaining_attempts (response));
+             pin_type_str,
+             pin_state_str,
+             remaining_attempts);
     mbim_message_unref (response);
     shutdown (TRUE);
 }
@@ -420,7 +507,8 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         g_debug ("Asynchronously querying device capabilities...");
         request = (mbim_message_basic_connect_device_caps_query_request_new (
-                       mbim_device_get_next_transaction_id (ctx->device)));
+                       mbim_device_get_next_transaction_id (ctx->device),
+                       NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -437,7 +525,8 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         g_debug ("Asynchronously querying subscriber ready status...");
         request = (mbim_message_basic_connect_subscriber_ready_status_query_request_new (
-                       mbim_device_get_next_transaction_id (ctx->device)));
+                       mbim_device_get_next_transaction_id (ctx->device),
+                       NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -454,7 +543,8 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         g_debug ("Asynchronously querying radio state...");
         request = (mbim_message_basic_connect_radio_state_query_request_new (
-                       mbim_device_get_next_transaction_id (ctx->device)));
+                       mbim_device_get_next_transaction_id (ctx->device),
+                       NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -471,7 +561,8 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         g_debug ("Asynchronously querying device services...");
         request = (mbim_message_basic_connect_device_services_query_request_new (
-                       mbim_device_get_next_transaction_id (ctx->device)));
+                       mbim_device_get_next_transaction_id (ctx->device),
+                       NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -487,7 +578,8 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         g_debug ("Asynchronously querying PIN state...");
         request = (mbim_message_basic_connect_pin_query_request_new (
-                       mbim_device_get_next_transaction_id (ctx->device)));
+                       mbim_device_get_next_transaction_id (ctx->device),
+                       NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,

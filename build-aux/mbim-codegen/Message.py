@@ -62,20 +62,21 @@ class Message:
         self.set_output = None
         if self.can_set:
             if 'input' in dictionary['set']:
-                self.query_input = Container(self.service, self.name, 'Set', 'Input', dictionary['set']['input'])
+                self.set_input = Container(self.service, self.name, 'Set', 'Input', dictionary['set']['input'])
             if 'output' in dictionary['set']:
-                self.query_output = Container(self.service, self.name, 'Set', 'Output', dictionary['set']['output'])
+                self.set_output = Container(self.service, self.name, 'Set', 'Output', dictionary['set']['output'])
 
         # Build Notify containers
         self.notify_output = None
         if self.can_notify:
             if 'output' in dictionary['notify']:
-                self.query_output = Container(self.service, self.name, 'Notify', 'Output', dictionary['notify']['output'])
+                self.notify_output = Container(self.service, self.name, 'Notify', 'Output', dictionary['notify']['output'])
+
 
     """
-    Emit request creator
+    Emit message creator
     """
-    def _emit_request_creator(self, hfile, cfile, message_type):
+    def _emit_message_creator(self, hfile, cfile, message_type, container):
         translations = { 'name'                     : self.name,
                          'service'                  : self.service,
                          'underscore'               : utils.build_underscore_name (self.fullname),
@@ -85,26 +86,203 @@ class Message:
                          'name_underscore_upper'    : utils.build_underscore_name (self.name).upper() }
         template = (
             '\n'
-            'MbimMessage *${underscore}_${message_type}_request_new (guint32 transaction_id);\n')
+            'MbimMessage *${underscore}_${message_type}_request_new (\n'
+            '    guint32 transaction_id,\n')
+
+        if container != None:
+            for field in container.fields:
+                translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                translations['field_in_format']       = field.in_format
+                inner_template = (
+                    '    ${field_in_format}${field_name_underscore},\n')
+                template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '    GError **error);\n')
         hfile.write(string.Template(template).substitute(translations))
 
         template = (
             '\n'
             '/**\n'
             ' * ${underscore}_${message_type}_request_new:\n'
-            ' * @transaction_id: the transaction ID to use in the request.\n'
+            ' * @transaction_id: the transaction ID to use in the request.\n')
+
+        if container != None:
+            for field in container.fields:
+                translations['field_name']            = field.name
+                translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                translations['field_in_description']  = field.in_description
+                inner_template = (
+                    ' * @${field_name_underscore}: the \'${field_name}\' field, given as ${field_in_description}\n')
+                template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            ' * @error: return location for error or %NULL.\n'
             ' *\n'
-            ' * Create a new request for the \'${name}\' command in the \'${service}\' service.\n'
+            ' * Create a new request for the \'${name}\' ${message_type} command in the \'${service}\' service.\n'
             ' *\n'
             ' * Returns: a newly allocated #MbimMessage, which should be freed with mbim_message_unref().\n'
             ' */\n'
             'MbimMessage *\n'
-            '${underscore}_${message_type}_request_new (guint32 transaction_id)\n'
+            '${underscore}_${message_type}_request_new (\n'
+            '    guint32 transaction_id,\n')
+
+        if container != None:
+            for field in container.fields:
+                translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                translations['field_in_format']       = field.in_format
+                inner_template = (
+                    '    ${field_in_format}${field_name_underscore},\n')
+                template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '    GError **error)\n'
             '{\n'
-            '    return mbim_message_command_new (transaction_id,\n'
-            '                                     MBIM_SERVICE_${service_underscore_upper},\n'
-            '                                     MBIM_CID_${service_underscore_upper}_${name_underscore_upper},\n'
-            '                                     MBIM_MESSAGE_COMMAND_TYPE_${message_type_upper});\n'
+            '    MbimMessageCommandBuilder *builder;\n'
+            '\n'
+            '    builder = _mbim_message_command_builder_new (transaction_id,\n'
+            '                                                 MBIM_SERVICE_${service_underscore_upper},\n'
+            '                                                 MBIM_CID_${service_underscore_upper}_${name_underscore_upper},\n'
+            '                                                 MBIM_MESSAGE_COMMAND_TYPE_${message_type_upper});\n')
+
+        if container != None:
+            template += ('\n')
+            for field in container.fields:
+                translations['field_name_underscore']   = utils.build_underscore_name(field.name)
+                translations['field_format_underscore'] = utils.build_underscore_name(field.format)
+                inner_template = (
+                    '    _mbim_message_command_builder_append_${field_format_underscore} (builder, ${field_name_underscore});\n')
+                template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '\n'
+            '    return _mbim_message_command_builder_complete (builder);\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+
+    """
+    Emit message parser
+    """
+    def _emit_message_parser(self, hfile, cfile, request_or_response, message_type, container):
+        translations = { 'name'                     : self.name,
+                         'service'                  : self.service,
+                         'underscore'               : utils.build_underscore_name (self.fullname),
+                         'request_or_response'      : request_or_response,
+                         'message_type'             : message_type,
+                         'message_type_upper'       : message_type.upper(),
+                         'service_underscore_upper' : utils.build_underscore_name (self.service).upper(),
+                         'name_underscore_upper'    : utils.build_underscore_name (self.name).upper() }
+        template = (
+            '\n'
+            'gboolean ${underscore}_${message_type}_${request_or_response}_parse (\n'
+            '    const MbimMessage *message,\n')
+
+        if container != None:
+            for field in container.fields:
+                translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                translations['field_out_format']      = field.out_format
+                inner_template = (
+                    '    ${field_out_format}${field_name_underscore},\n')
+                template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '    GError **error);\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        template = (
+            '\n'
+            '/**\n'
+            ' * ${underscore}_${message_type}_${request_or_response}_parse:\n'
+            ' * @message: the #MbimMessage.\n')
+
+        if container != None:
+            for field in container.fields:
+                translations['field_name']             = field.name
+                translations['field_name_underscore']  = utils.build_underscore_name (field.name)
+                translations['field_out_description']  = field.out_description
+                inner_template = (
+                    ' * @${field_name_underscore}: ${field_out_description}\n')
+                template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            ' * @error: return location for error or %NULL.\n'
+            ' *\n'
+            ' * Create a new request for the \'${name}\' ${message_type} command in the \'${service}\' service.\n'
+            ' *\n'
+            ' * Returns: %TRUE if the message was correctly parsed, %FALSE if @error is set.\n'
+            ' */\n'
+            'gboolean\n'
+            '${underscore}_${message_type}_${request_or_response}_parse (\n'
+            '    const MbimMessage *message,\n')
+
+        if container != None:
+            for field in container.fields:
+                translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                translations['field_out_format']      = field.out_format
+                inner_template = (
+                    '    ${field_out_format}${field_name_underscore},\n')
+                template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '    GError **error)\n'
+            '{\n'
+            '    guint32 offset = 0;\n')
+        if container != None:
+            for field in container.fields:
+                if field.is_array_size:
+                    translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                    inner_template = (
+                        '    guint32 _${field_name_underscore};\n')
+                    template += (string.Template(inner_template).substitute(translations))
+
+        if container != None:
+            for field in container.fields:
+                translations['field_name_underscore']   = utils.build_underscore_name(field.name)
+                translations['field_format_underscore'] = utils.build_underscore_name(field.format)
+                translations['field_size']              = field.size
+                translations['field_size_string']       = field.size_string
+                translations['field_name']              = field.name
+
+                inner_template = (
+                    '\n'
+                    '    /* Read the \'${field_name}\' variable */\n'
+                    '    {\n')
+
+                if field.is_array:
+                    translations['array_size_field_name_underscore'] = utils.build_underscore_name (field.array_size_field)
+                    translations['array_member_size']                = str(field.array_member_size)
+                    translations['struct_name']                      = (field.struct_type_underscore + '_') if field.format == 'struct-array' else ''
+
+                    inner_template += (
+                        '        if (${field_name_underscore} != NULL)\n'
+                        '            *${field_name_underscore} = _mbim_message_read_${struct_name}${field_format_underscore} (message, _${array_size_field_name_underscore}, offset);\n'
+                        '        offset += (${array_member_size} * _${array_size_field_name_underscore});\n')
+                else:
+                    if field.is_array_size:
+                        inner_template += (
+                            '        _${field_name_underscore} = _mbim_message_read_${field_format_underscore} (message, offset);\n'
+                            '        if (${field_name_underscore} != NULL)\n'
+                            '            *${field_name_underscore} = _${field_name_underscore};\n')
+                    else:
+                        inner_template += (
+                            '        if (${field_name_underscore} != NULL)\n'
+                            '            *${field_name_underscore} = _mbim_message_read_${field_format_underscore} (message, offset);\n')
+                    if field.size > 0:
+                        inner_template += (
+                            '        offset += ${field_size};\n')
+                    if field.size_string != '':
+                        inner_template += (
+                            '        offset += ${field_size_string};\n')
+
+                inner_template += (
+                    '    }\n')
+
+                template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '\n'
+            '    return TRUE;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
 
@@ -117,34 +295,25 @@ class Message:
             utils.add_separator(hfile, 'Message (Query)', self.fullname);
             utils.add_separator(cfile, 'Message (Query)', self.fullname);
 
-            self._emit_request_creator(hfile, cfile, 'query')
-
+            self._emit_message_creator(hfile, cfile, 'query', self.query_input)
             if self.query_input:
-                hfile.write('\n/* Query request */')
-                self.query_input.emit(hfile, cfile)
+                self._emit_message_parser(hfile, cfile, 'request',  'query', self.query_input)
             if self.query_output:
-                hfile.write('\n/* Query response */')
-                self.query_output.emit(hfile, cfile)
+                self._emit_message_parser(hfile, cfile, 'response', 'query', self.query_output)
 
         if self.can_set:
             utils.add_separator(hfile, 'Message (Set)', self.fullname);
             utils.add_separator(cfile, 'Message (Set)', self.fullname);
 
-            self._emit_request_creator(hfile, cfile, 'set')
-
+            self._emit_message_creator(hfile, cfile, 'set', self.set_input)
             if self.set_input:
-                hfile.write('\n/* Set request */')
-                self.set_input.emit(hfile, cfile)
+                self._emit_message_parser(hfile, cfile, 'request',  'set', self.set_input)
             if self.set_output:
-                hfile.write('\n/* Set response */')
-                self.set_output.emit(hfile, cfile)
+                self._emit_message_parser(hfile, cfile, 'response', 'set', self.set_output)
 
         if self.can_notify:
             utils.add_separator(hfile, 'Message (Notify)', self.fullname);
             utils.add_separator(cfile, 'Message (Notify)', self.fullname);
-            if self.notify_output:
-                hfile.write('\n/* Indication */')
-                self.notify_output.emit(hfile, cfile)
 
 
     """

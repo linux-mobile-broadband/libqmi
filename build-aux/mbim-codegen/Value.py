@@ -33,20 +33,25 @@ class Value:
         """ The name of the variable """
         self.name = dictionary['name']
 
+        """ The type of the variable """
+        self.format = dictionary['format']
+
         """ Whether this field is visible or not """
         self.visible = False if 'visibility' in dictionary and dictionary['visibility'] == 'private' else True
 
         """ The public format of the value """
         self.public_format = ''
 
-        """ The return type on value getters """
-        self.getter_return = ''
+        """ Type of the value when used as input parameter """
+        self.in_format = ''
+        self.in_description = ''
 
-        """ The return value when getter fails """
-        self.getter_return_error = ''
+        """ Type of the value when used as output parameter """
+        self.out_format = ''
+        self.out_description = ''
 
-        """ The description of the value returned from the getter """
-        self.getter_return_description = ''
+        """ Flag to identify this value as being used as an array size """
+        self.is_array_size = False
 
         """ The name of the method used to read the value """
         self.reader_method_name = ''

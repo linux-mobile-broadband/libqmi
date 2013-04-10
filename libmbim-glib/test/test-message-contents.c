@@ -24,6 +24,19 @@ static void
 test_message_contents_basic_connect_device_caps (void)
 {
     MbimMessage *response;
+    MbimDeviceType device_type;
+    MbimCellularClass cellular_class;
+    MbimVoiceClass voice_class;
+    MbimSimClass sim_class;
+    MbimDataClass data_class;
+    MbimSmsCaps sms_caps;
+    MbimCtrlCaps ctrl_caps;
+    guint32 max_sessions;
+    gchar *custom_data_class;
+    gchar *device_id;
+    gchar *firmware_info;
+    gchar *hardware_info;
+    GError *error = NULL;
     const guint8 buffer [] =  { 0x03, 0x00, 0x00, 0x80,
                                 0xD0, 0x00, 0x00, 0x00,
                                 0x02, 0x00, 0x00, 0x00,
@@ -76,39 +89,48 @@ test_message_contents_basic_connect_device_caps (void)
                                 0x33, 0x00, 0x36, 0x00,
                                 0x37, 0x00, 0x55, 0x00,
                                 0x4D, 0x00, 0x00, 0x00 };
-    gchar *str;
 
     response = mbim_message_new (buffer, sizeof (buffer));
 
-    g_assert_cmpuint (mbim_message_basic_connect_device_caps_query_response_get_cellular_class (response), ==, MBIM_CELLULAR_CLASS_GSM);
-    g_assert_cmpuint (mbim_message_basic_connect_device_caps_query_response_get_sim_class (response), ==, MBIM_SIM_CLASS_REMOVABLE);
-    g_assert_cmpuint (mbim_message_basic_connect_device_caps_query_response_get_data_class (response), ==,
-                      (MBIM_DATA_CLASS_GPRS |
-                       MBIM_DATA_CLASS_EDGE |
-                       MBIM_DATA_CLASS_UMTS |
-                       MBIM_DATA_CLASS_HSDPA |
-                       MBIM_DATA_CLASS_HSUPA |
-                       MBIM_DATA_CLASS_CUSTOM));
-    g_assert_cmpuint (mbim_message_basic_connect_device_caps_query_response_get_sms_caps (response), ==,
-                      (MBIM_SMS_CAPS_PDU_RECEIVE | MBIM_SMS_CAPS_PDU_SEND));
-    g_assert_cmpuint (mbim_message_basic_connect_device_caps_query_response_get_ctrl_caps (response), ==, MBIM_CTRL_CAPS_REG_MANUAL);
-    g_assert_cmpuint (mbim_message_basic_connect_device_caps_query_response_get_max_sessions (response), ==, 1);
+    g_assert (mbim_message_basic_connect_device_caps_query_response_parse (
+                  response,
+                  &device_type,
+                  &cellular_class,
+                  &voice_class,
+                  &sim_class,
+                  &data_class,
+                  &sms_caps,
+                  &ctrl_caps,
+                  &max_sessions,
+                  &custom_data_class,
+                  &device_id,
+                  &firmware_info,
+                  &hardware_info,
+                  &error));
 
-    str = mbim_message_basic_connect_device_caps_query_response_get_custom_data_class (response);
-    g_assert_cmpstr (str, ==, "HSPA+");
-    g_free (str);
+    g_assert_no_error (error);
 
-    str = mbim_message_basic_connect_device_caps_query_response_get_device_id (response);
-    g_assert_cmpstr (str, ==, "353613048804622");
-    g_free (str);
+    g_assert_cmpuint (device_type, ==, MBIM_DEVICE_TYPE_REMOVABLE);
+    g_assert_cmpuint (cellular_class, ==, MBIM_CELLULAR_CLASS_GSM);
+    g_assert_cmpuint (sim_class, ==, MBIM_SIM_CLASS_REMOVABLE);
+    g_assert_cmpuint (data_class, ==, (MBIM_DATA_CLASS_GPRS |
+                                       MBIM_DATA_CLASS_EDGE |
+                                       MBIM_DATA_CLASS_UMTS |
+                                       MBIM_DATA_CLASS_HSDPA |
+                                       MBIM_DATA_CLASS_HSUPA |
+                                       MBIM_DATA_CLASS_CUSTOM));
+    g_assert_cmpuint (sms_caps, ==, (MBIM_SMS_CAPS_PDU_RECEIVE | MBIM_SMS_CAPS_PDU_SEND));
+    g_assert_cmpuint (ctrl_caps, ==, MBIM_CTRL_CAPS_REG_MANUAL);
+    g_assert_cmpuint (max_sessions, ==, 1);
+    g_assert_cmpstr (custom_data_class, ==, "HSPA+");
+    g_assert_cmpstr (device_id, ==, "353613048804622");
+    g_assert_cmpstr (firmware_info, ==, "11.810.09.00.00");
+    g_assert_cmpstr (hardware_info, ==, "CP1E367UM");
 
-    str = mbim_message_basic_connect_device_caps_query_response_get_firmware_info (response);
-    g_assert_cmpstr (str, ==, "11.810.09.00.00");
-    g_free (str);
-
-    str = mbim_message_basic_connect_device_caps_query_response_get_hardware_info (response);
-    g_assert_cmpstr (str, ==, "CP1E367UM");
-    g_free (str);
+    g_free (custom_data_class);
+    g_free (device_id);
+    g_free (firmware_info);
+    g_free (hardware_info);
 
     mbim_message_unref (response);
 }

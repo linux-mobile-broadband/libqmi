@@ -20,6 +20,7 @@
 #include "mbim-cid.h"
 #include "mbim-enums.h"
 #include "mbim-utils.h"
+#include "mbim-basic-connect.h"
 
 
 #if defined ENABLE_TEST_MESSAGE_TRACES
@@ -63,7 +64,7 @@ test_message_trace (const guint8 *computed,
 #endif
 
 static void
-test_message_command_builder_set_pin (void)
+test_message_command_builder_raw_set_pin (void)
 {
     MbimMessage *message;
     MbimMessageCommandBuilder *builder;
@@ -96,9 +97,9 @@ test_message_command_builder_set_pin (void)
 
     /* PIN set message */
     builder = _mbim_message_command_builder_new (1,
-						 MBIM_SERVICE_BASIC_CONNECT,
-						 MBIM_CID_BASIC_CONNECT_PIN,
-						 MBIM_MESSAGE_COMMAND_TYPE_SET);
+                                                 MBIM_SERVICE_BASIC_CONNECT,
+                                                 MBIM_CID_BASIC_CONNECT_PIN,
+                                                 MBIM_MESSAGE_COMMAND_TYPE_SET);
     _mbim_message_command_builder_append_guint32 (builder, (guint32)MBIM_PIN_TYPE_PIN1);
     _mbim_message_command_builder_append_guint32 (builder, (guint32)MBIM_PIN_OPERATION_ENTER);
     _mbim_message_command_builder_append_string  (builder, "1111");
@@ -126,11 +127,73 @@ test_message_command_builder_set_pin (void)
     mbim_message_unref (message);
 }
 
+static void
+test_message_command_builder_set_pin (void)
+{
+    GError *error = NULL;
+    MbimMessage *message;
+    const guint8 expected_message [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x00, /* type */
+        0x50, 0x00, 0x00, 0x00, /* length */
+        0x01, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_message */
+        0xa2, 0x89, 0xcc, 0x33, /* service id */
+        0xbc, 0xbb, 0x8b, 0x4f,
+        0xb6, 0xb0, 0x13, 0x3e,
+        0xc2, 0xaa, 0xe6, 0xdf,
+        0x04, 0x00, 0x00, 0x00, /* command id */
+        0x01, 0x00, 0x00, 0x00, /* command_type */
+        0x20, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x02, 0x00, 0x00, 0x00, /* pin type */
+        0x00, 0x00, 0x00, 0x00, /* pin operation */
+        0x18, 0x00, 0x00, 0x00, /* pin offset */
+        0x08, 0x00, 0x00, 0x00, /* pin size */
+        0x00, 0x00, 0x00, 0x00, /* new pin offset */
+        0x00, 0x00, 0x00, 0x00, /* new pin size */
+        0x31, 0x00, 0x31, 0x00, /* pin string */
+        0x31, 0x00, 0x31, 0x00
+    };
+
+    /* PIN set message */
+    message = mbim_message_basic_connect_pin_set_request_new (1,
+                                                              MBIM_PIN_TYPE_PIN1,
+                                                              MBIM_PIN_OPERATION_ENTER,
+                                                              "1111",
+                                                              "",
+                                                              &error);
+    g_assert_no_error (error);
+    g_assert (message != NULL);
+
+    test_message_trace ((const guint8 *)((GByteArray *)message)->data,
+                        ((GByteArray *)message)->len,
+                        expected_message,
+                        sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_BASIC_CONNECT);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_BASIC_CONNECT_PIN);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_SET);
+
+    g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
+    g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    mbim_message_unref (message);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libmbim-glib/message/command-builder/set-pin", test_message_command_builder_set_pin);
+    g_test_add_func ("/libmbim-glib/message/command-builder/raw/set-pin", test_message_command_builder_raw_set_pin);
+    g_test_add_func ("/libmbim-glib/message/command-builder/set-pin",     test_message_command_builder_set_pin);
 
     return g_test_run ();
 }

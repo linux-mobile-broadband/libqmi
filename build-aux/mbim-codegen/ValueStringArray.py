@@ -33,17 +33,19 @@ class ValueStringArray(Value):
         # Call the parent constructor
         Value.__init__(self, dictionary)
 
+        """ The type of the variable """
+        self.type = 'string_array'
+
         """ The public format of the value """
         self.public_format = 'gchar **'
 
-        """ The return type on value getters """
-        self.getter_return = self.public_format
+        """ Type of the value when used as input parameter """
+        self.in_format = 'const gchar *const *'
+        self.in_description = 'The \'' + self.name + '\' field, given as an array of strings.'
 
-        """ The return value when getter fails """
-        self.getter_return_error = 'NULL'
-
-        """ The description of the value returned from the getter """
-        self.getter_return_description = 'a newly allocated array of strings, which should be freed with g_strfreev().'
+        """ Type of the value when used as output parameter """
+        self.out_format = 'gchar ***'
+        self.out_description = 'Return location for a newly allocated array of strings, or %NULL if the \'' + self.name + '\' field is not needed. Free the returned value with g_strfreev().'
 
         """ The name of the method used to read the value """
         self.reader_method_name = '_mbim_message_read_string_array'

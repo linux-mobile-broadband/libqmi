@@ -39,16 +39,15 @@ class ValueStruct(Value):
         self.struct_type_underscore = utils.build_underscore_name_from_camelcase (self.struct_type)
 
         """ The public format of the value """
-        self.public_format = self.struct_type + ' *'
+        self.public_format = self.struct_type
 
-        """ The return type on value getters """
-        self.getter_return = self.public_format
+        """ Type of the value when used as input parameter """
+        self.in_format = 'const ' + self.struct_type + ' *'
+        self.in_description = 'The \'' + self.name + '\' field, given as a #' + self.struct_type + '.'
 
-        """ The return value when getter fails """
-        self.getter_return_error = 'NULL'
-
-        """ The description of the value returned from the getter """
-        self.getter_return_description = 'a newly allocated #' + self.struct_type + ', which should be freed with ' + self.struct_type_underscore + '_free().'
+        """ Type of the value when used as output parameter """
+        self.out_format = self.struct_type + ' **'
+        self.out_description = 'Return location for a newly allocated #' + self.struct_type + ', or %NULL if the \'' + self.name + '\' field is not needed. Free the returned value with ' + self.struct_type_underscore + '_free().'
 
         """ The name of the method used to read the value """
         self.reader_method_name = '_' + self.struct_type_underscore + '_read'

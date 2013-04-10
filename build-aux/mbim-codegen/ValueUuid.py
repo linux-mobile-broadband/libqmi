@@ -36,14 +36,13 @@ class ValueUuid(Value):
         """ The public format of the value """
         self.public_format = 'MbimUuid'
 
-        """ The return type on value getters """
-        self.getter_return = 'const MbimUuid *'
+        """ Type of the value when used as input parameter """
+        self.in_format = 'const MbimUuid *'
+        self.in_description = 'The \'' + self.name + '\' field, given as a #MbimUuid.'
 
-        """ The return value when getter fails """
-        self.getter_return_error = 'NULL'
-
-        """ The description of the value returned from the getter """
-        self.getter_return_description = 'a #MbimUuid. Do not free the returned value.'
+        """ Type of the value when used as output parameter """
+        self.out_format = 'const MbimUuid **'
+        self.out_description = 'Return location for a #MbimUuid, or %NULL if the \'' + self.name + '\' field is not needed. Do not free the returned value.'
 
         """ The name of the method used to read the value """
         self.reader_method_name = '_mbim_message_read_uuid'
