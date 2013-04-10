@@ -661,13 +661,11 @@ create_iochannel (MbimDevice *self,
     }
 
     /* get message size */
-    if (ioctl(fd, IOCTL_WDM_MAX_COMMAND, &max) < 0) {
-        g_set_error (error,
-                    MBIM_CORE_ERROR,
-                    MBIM_CORE_ERROR_FAILED,
-                    "IOCTL_WDM_MAX_COMMAND failed '%s': %s",
-                    self->priv->path_display,
-                    strerror (errno));
+    if (ioctl (fd, IOCTL_WDM_MAX_COMMAND, &max) < 0) {
+        g_debug ("[%s] Couldn't query maximum message size: "
+                 "IOCTL_WDM_MAX_COMMAND failed: %s",
+                 self->priv->path_display,
+                 strerror (errno));
         max = MAX_CONTROL_TRANSFER;
     }
     self->priv->max_control_transfer = max;
