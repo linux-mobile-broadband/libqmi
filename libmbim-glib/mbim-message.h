@@ -57,23 +57,23 @@ GType mbim_message_get_type (void) G_GNUC_CONST;
  * @MBIM_MESSAGE_TYPE_CLOSE_DONE: Response to close request.
  * @MBIM_MESSAGE_TYPE_COMMAND_DONE: Response to command request.
  * @MBIM_MESSAGE_TYPE_FUNCTION_ERROR: Function-reported error in the communication.
- * @MBIM_MESSAGE_TYPE_INDICATION: Unsolicited message from the function.
+ * @MBIM_MESSAGE_TYPE_INDICATE_STATUS: Unsolicited message from the function.
  *
  * Type of MBIM messages.
  */
 typedef enum {
-    MBIM_MESSAGE_TYPE_INVALID        = 0x00000000,
+    MBIM_MESSAGE_TYPE_INVALID         = 0x00000000,
     /* From Host to Function */
-    MBIM_MESSAGE_TYPE_OPEN           = 0x00000001,
-    MBIM_MESSAGE_TYPE_CLOSE          = 0x00000002,
-    MBIM_MESSAGE_TYPE_COMMAND        = 0x00000003,
-    MBIM_MESSAGE_TYPE_HOST_ERROR     = 0x00000004,
+    MBIM_MESSAGE_TYPE_OPEN            = 0x00000001,
+    MBIM_MESSAGE_TYPE_CLOSE           = 0x00000002,
+    MBIM_MESSAGE_TYPE_COMMAND         = 0x00000003,
+    MBIM_MESSAGE_TYPE_HOST_ERROR      = 0x00000004,
     /* From Function to Host */
-    MBIM_MESSAGE_TYPE_OPEN_DONE      = 0x80000001,
-    MBIM_MESSAGE_TYPE_CLOSE_DONE     = 0x80000002,
-    MBIM_MESSAGE_TYPE_COMMAND_DONE   = 0x80000003,
-    MBIM_MESSAGE_TYPE_FUNCTION_ERROR = 0x80000004,
-    MBIM_MESSAGE_TYPE_INDICATION     = 0x80000007
+    MBIM_MESSAGE_TYPE_OPEN_DONE       = 0x80000001,
+    MBIM_MESSAGE_TYPE_CLOSE_DONE      = 0x80000002,
+    MBIM_MESSAGE_TYPE_COMMAND_DONE    = 0x80000003,
+    MBIM_MESSAGE_TYPE_FUNCTION_ERROR  = 0x80000004,
+    MBIM_MESSAGE_TYPE_INDICATE_STATUS = 0x80000007
 } MbimMessageType;
 
 /*****************************************************************************/

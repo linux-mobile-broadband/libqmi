@@ -88,7 +88,7 @@ _mbim_message_get_information_buffer_offset (const MbimMessage *self)
 {
     g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND ||
                           MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND_DONE ||
-                          MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATION, 0);
+                          MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATE_STATUS, 0);
 
     switch (MBIM_MESSAGE_GET_MESSAGE_TYPE (self)) {
     case MBIM_MESSAGE_TYPE_COMMAND:
@@ -100,7 +100,7 @@ _mbim_message_get_information_buffer_offset (const MbimMessage *self)
                 G_STRUCT_OFFSET (struct command_done_message, buffer));
         break;
 
-    case MBIM_MESSAGE_TYPE_INDICATION:
+    case MBIM_MESSAGE_TYPE_INDICATE_STATUS:
         /* TODO */
         g_warn_if_reached ();
         return 0;
@@ -768,7 +768,7 @@ mbim_message_get_printable (const MbimMessage *self,
         }
         break;
 
-    case MBIM_MESSAGE_TYPE_INDICATION:
+    case MBIM_MESSAGE_TYPE_INDICATE_STATUS:
         g_string_append_printf (printable,
                                 "%sFragment header:\n"
                                 "%s  total   = %u\n"
@@ -788,7 +788,7 @@ mbim_message_get_printable (const MbimMessage *self,
 #define MBIM_MESSAGE_IS_FRAGMENT(self)                                  \
     (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND || \
      MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND_DONE || \
-     MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATION)
+     MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATE_STATUS)
 
 #define MBIM_MESSAGE_FRAGMENT_GET_TOTAL(self)                           \
 	GUINT32_FROM_LE (((struct full_message *)(self->data))->message.fragment.fragment_header.total)

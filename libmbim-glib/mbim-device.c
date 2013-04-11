@@ -439,11 +439,11 @@ process_message (MbimDevice  *self,
     case MBIM_MESSAGE_TYPE_OPEN_DONE:
     case MBIM_MESSAGE_TYPE_CLOSE_DONE:
     case MBIM_MESSAGE_TYPE_COMMAND_DONE:
-    case MBIM_MESSAGE_TYPE_INDICATION: {
+    case MBIM_MESSAGE_TYPE_INDICATE_STATUS: {
         GError *error = NULL;
         Transaction *tr;
 
-        if (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) == MBIM_MESSAGE_TYPE_INDICATION) {
+        if (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) == MBIM_MESSAGE_TYPE_INDICATE_STATUS) {
             /* Grab transaction */
             tr = device_match_transaction (self, TRANSACTION_TYPE_MODEM, message);
             if (!tr)

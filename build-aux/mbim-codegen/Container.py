@@ -45,7 +45,7 @@ class Container:
         elif message_type == 'response':
             self.message_type_enum = 'MBIM_MESSAGE_TYPE_COMMAND_DONE'
         elif message_type == 'notification':
-            self.message_type_enum = 'MBIM_MESSAGE_TYPE_INDICATION'
+            self.message_type_enum = 'MBIM_MESSAGE_TYPE_INDICATE_STATUS'
         else:
             raise ValueError('Cannot handle message type \'%s\'' % message_type)
 
