@@ -43,7 +43,7 @@ class Struct:
             '\n'
             'typedef struct {\n')
         for field in self.contents:
-            translations['field_name_underscore'] = utils.build_underscore_name(field['name'])
+            translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
             if field['format'] == 'uuid':
                 inner_template = (
                     '    MbimUuid ${field_name_underscore};\n')
@@ -92,7 +92,7 @@ class Struct:
             '{\n')
 
         for field in self.contents:
-            translations['field_name_underscore'] = utils.build_underscore_name(field['name'])
+            translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
             inner_template = ''
             if field['format'] == 'uuid':
                 pass
@@ -160,7 +160,7 @@ class Struct:
             '    out = g_new (${name}, 1);\n')
 
         for field in self.contents:
-            translations['field_name_underscore'] = utils.build_underscore_name(field['name'])
+            translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
             translations['format_underscore']     = utils.build_underscore_name(field['format'])
             translations['offset']                = offset
 
@@ -176,7 +176,7 @@ class Struct:
                     '    out->${field_name_underscore} = _mbim_message_read_guint32 (self, offset);\n'
                     '    offset += 4;\n')
             elif field['format'] == 'guint32-array':
-                translations['array_size_field_name_underscore'] = utils.build_underscore_name (field['array-size-field'])
+                translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                 inner_template += (
                     '\n'
                     '    out->${field_name_underscore} = _mbim_message_read_guint32_array (self, out->${array_size_field_name_underscore}, offset);\n'
@@ -187,7 +187,7 @@ class Struct:
                     '    out->${field_name_underscore} = _mbim_message_read_string (self, offset);\n'
                     '    offset += 8;\n')
             elif field['format'] == 'string-array':
-                translations['array_size_field_name_underscore'] = utils.build_underscore_name (field['array-size-field'])
+                translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                 inner_template += (
                     '\n'
                     '    out->${field_name_underscore} = _mbim_message_read_string_array (self, out->${array_size_field_name_underscore}, offset);\n'

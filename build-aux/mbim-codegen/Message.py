@@ -90,7 +90,7 @@ class Message:
 
         if container != None:
             for field in container.fields:
-                translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase (field.name)
                 translations['field_in_format']       = field.in_format
                 inner_template = (
                     '    ${field_in_format}${field_name_underscore},\n')
@@ -108,7 +108,7 @@ class Message:
         if container != None:
             for field in container.fields:
                 translations['field_name']            = field.name
-                translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase (field.name)
                 translations['field_in_description']  = field.in_description
                 inner_template = (
                     ' * @${field_name_underscore}: the \'${field_name}\' field, given as ${field_in_description}\n')
@@ -126,7 +126,7 @@ class Message:
 
         if container != None:
             for field in container.fields:
-                translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase (field.name)
                 translations['field_in_format']       = field.in_format
                 inner_template = (
                     '    ${field_in_format}${field_name_underscore},\n')
@@ -145,7 +145,7 @@ class Message:
         if container != None:
             template += ('\n')
             for field in container.fields:
-                translations['field_name_underscore']   = utils.build_underscore_name(field.name)
+                translations['field_name_underscore']   = utils.build_underscore_name_from_camelcase(field.name)
                 translations['field_format_underscore'] = utils.build_underscore_name(field.format)
                 inner_template = (
                     '    _mbim_message_command_builder_append_${field_format_underscore} (builder, ${field_name_underscore});\n')
@@ -177,7 +177,7 @@ class Message:
 
         if container != None:
             for field in container.fields:
-                translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field.name)
                 translations['field_out_format']      = field.out_format
                 inner_template = (
                     '    ${field_out_format}${field_name_underscore},\n')
@@ -196,7 +196,7 @@ class Message:
         if container != None:
             for field in container.fields:
                 translations['field_name']             = field.name
-                translations['field_name_underscore']  = utils.build_underscore_name (field.name)
+                translations['field_name_underscore']  = utils.build_underscore_name_from_camelcase(field.name)
                 translations['field_out_description']  = field.out_description
                 inner_template = (
                     ' * @${field_name_underscore}: ${field_out_description}\n')
@@ -215,7 +215,7 @@ class Message:
 
         if container != None:
             for field in container.fields:
-                translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field.name)
                 translations['field_out_format']      = field.out_format
                 inner_template = (
                     '    ${field_out_format}${field_name_underscore},\n')
@@ -228,14 +228,14 @@ class Message:
         if container != None:
             for field in container.fields:
                 if field.is_array_size:
-                    translations['field_name_underscore'] = utils.build_underscore_name (field.name)
+                    translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field.name)
                     inner_template = (
                         '    guint32 _${field_name_underscore};\n')
                     template += (string.Template(inner_template).substitute(translations))
 
         if container != None:
             for field in container.fields:
-                translations['field_name_underscore']   = utils.build_underscore_name(field.name)
+                translations['field_name_underscore']   = utils.build_underscore_name_from_camelcase(field.name)
                 translations['field_format_underscore'] = utils.build_underscore_name(field.format)
                 translations['field_size']              = field.size
                 translations['field_size_string']       = field.size_string
@@ -247,7 +247,7 @@ class Message:
                     '    {\n')
 
                 if field.is_array:
-                    translations['array_size_field_name_underscore'] = utils.build_underscore_name (field.array_size_field)
+                    translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase (field.array_size_field)
                     translations['array_member_size']                = str(field.array_member_size)
                     translations['struct_name']                      = (field.struct_type_underscore + '_') if field.format == 'struct-array' else ''
 

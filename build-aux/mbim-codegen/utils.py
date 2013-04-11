@@ -138,6 +138,7 @@ def build_underscore_uppercase_name(name):
     return name.replace(' ', '_').replace('-', '_').upper()
 
 
+
 """
 Build an underscore name from the given camelcase name
 e.g.: "ThisIsAMessage" --> "this_is_a_message"
@@ -145,6 +146,7 @@ e.g.: "ThisIsAMessage" --> "this_is_a_message"
 def build_underscore_name_from_camelcase(camelcase):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', camelcase)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
 
 
 """
