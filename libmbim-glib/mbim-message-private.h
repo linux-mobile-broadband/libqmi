@@ -48,9 +48,9 @@ struct header {
 #define MBIM_MESSAGE_GET_MESSAGE_TYPE(self)                             \
     (MbimMessageType) GUINT32_FROM_LE (((struct header *)(self->data))->type)
 #define MBIM_MESSAGE_GET_MESSAGE_LENGTH(self)                           \
-    (MbimMessageType) GUINT32_FROM_LE (((struct header *)(self->data))->length)
+    GUINT32_FROM_LE (((struct header *)(self->data))->length)
 #define MBIM_MESSAGE_GET_TRANSACTION_ID(self)                           \
-    (MbimMessageType) GUINT32_FROM_LE (((struct header *)(self->data))->transaction_id)
+    GUINT32_FROM_LE (((struct header *)(self->data))->transaction_id)
 
 struct open_message {
     guint32 max_control_transfer;
