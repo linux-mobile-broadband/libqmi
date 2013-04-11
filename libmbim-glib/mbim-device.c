@@ -1260,12 +1260,21 @@ mbim_device_command (MbimDevice          *self,
 {
     GError *error = NULL;
     Transaction *tr;
+    guint32 transaction_id;
 
     g_return_if_fail (MBIM_IS_DEVICE (self));
     g_return_if_fail (message != NULL);
 
+    /* If the message comes without a explicit transaction ID, add one
+     * ourselves */
+    transaction_id = mbim_message_get_transaction_id (message);
+    if (!transaction_id) {
+        transaction_id = mbim_device_get_next_transaction_id (self);
+        mbim_message_set_transaction_id (message, transaction_id);
+    }
+
     tr = transaction_new (self,
-                          mbim_message_get_transaction_id (message),
+                          transaction_id,
                           cancellable,
                           callback,
                           user_data);
