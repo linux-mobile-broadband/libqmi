@@ -137,49 +137,49 @@ typedef enum {
  * Status of the MBIM request.
  */
 typedef enum {
-    MBIM_STATUS_ERROR_NONE                             = 0,
-    MBIM_STATUS_ERROR_BUSY                             = 1,
-    MBIM_STATUS_ERROR_FAILURE                          = 2,
-    MBIM_STATUS_ERROR_SIM_NOT_INSERTED                 = 3,
-    MBIM_STATUS_ERROR_BAD_SIM                          = 4,
-    MBIM_STATUS_ERROR_PIN_REQUIRED                     = 5,
-    MBIM_STATUS_ERROR_PIN_DISABLED                     = 6,
-    MBIM_STATUS_ERROR_NOT_REGISTERED                   = 7,
-    MBIM_STATUS_ERROR_PROVIDERS_NOT_FOUND              = 8,
-    MBIM_STATUS_ERROR_NO_DEVICE_SUPPORT                = 9,
-    MBIM_STATUS_ERROR_PROVIDER_NOT_VISIBLE             = 10,
-    MBIM_STATUS_ERROR_DATA_CLASS_NOT_AVAILABLE         = 11,
-    MBIM_STATUS_ERROR_PACKET_SERVICE_DETACHED          = 12,
-    MBIM_STATUS_ERROR_MAX_ACTIVATED_CONTEXTS           = 13,
-    MBIM_STATUS_ERROR_NOT_INITIALIZED                  = 14,
-    MBIM_STATUS_ERROR_VOICE_CALL_IN_PROGRESS           = 15,
-    MBIM_STATUS_ERROR_CONTEXT_NOT_ACTIVATED            = 16,
-    MBIM_STATUS_ERROR_SERVICE_NOT_ACTIVATED            = 17,
-    MBIM_STATUS_ERROR_INVALID_ACCESS_STRING            = 18,
-    MBIM_STATUS_ERROR_INVALID_USER_NAME_PWD            = 19,
-    MBIM_STATUS_ERROR_RADIO_POWER_OFF                  = 20,
-    MBIM_STATUS_ERROR_INVALID_PARAMETERS               = 21,
-    MBIM_STATUS_ERROR_READ_FAILURE                     = 22,
-    MBIM_STATUS_ERROR_WRITE_FAILURE                    = 23,
+    MBIM_STATUS_ERROR_NONE                             = 0,  /*< nick=None >*/
+    MBIM_STATUS_ERROR_BUSY                             = 1,  /*< nick=Busy >*/
+    MBIM_STATUS_ERROR_FAILURE                          = 2,  /*< nick=Failure >*/
+    MBIM_STATUS_ERROR_SIM_NOT_INSERTED                 = 3,  /*< nick=SimNotInserted >*/
+    MBIM_STATUS_ERROR_BAD_SIM                          = 4,  /*< nick=BadSim >*/
+    MBIM_STATUS_ERROR_PIN_REQUIRED                     = 5,  /*< nick=PinRequired >*/
+    MBIM_STATUS_ERROR_PIN_DISABLED                     = 6,  /*< nick=PinDisabled >*/
+    MBIM_STATUS_ERROR_NOT_REGISTERED                   = 7,  /*< nick=NotRegistered >*/
+    MBIM_STATUS_ERROR_PROVIDERS_NOT_FOUND              = 8,  /*< nick=ProvidersNotFound >*/
+    MBIM_STATUS_ERROR_NO_DEVICE_SUPPORT                = 9,  /*< nick=NoDeviceSupport >*/
+    MBIM_STATUS_ERROR_PROVIDER_NOT_VISIBLE             = 10, /*< nick=ProviderNotVisible >*/
+    MBIM_STATUS_ERROR_DATA_CLASS_NOT_AVAILABLE         = 11, /*< nick=DataClassNotAvailable >*/
+    MBIM_STATUS_ERROR_PACKET_SERVICE_DETACHED          = 12, /*< nick=PacketServiceDetached >*/
+    MBIM_STATUS_ERROR_MAX_ACTIVATED_CONTEXTS           = 13, /*< nick=MaxActivatedContexts >*/
+    MBIM_STATUS_ERROR_NOT_INITIALIZED                  = 14, /*< nick=NotInitialized >*/
+    MBIM_STATUS_ERROR_VOICE_CALL_IN_PROGRESS           = 15, /*< nick=VoiceCallInProgress >*/
+    MBIM_STATUS_ERROR_CONTEXT_NOT_ACTIVATED            = 16, /*< nick=ContextNotActivated >*/
+    MBIM_STATUS_ERROR_SERVICE_NOT_ACTIVATED            = 17, /*< nick=ServiceNotActivated >*/
+    MBIM_STATUS_ERROR_INVALID_ACCESS_STRING            = 18, /*< nick=InvalidAccessString >*/
+    MBIM_STATUS_ERROR_INVALID_USER_NAME_PWD            = 19, /*< nick=InvalidUserNamePwd >*/
+    MBIM_STATUS_ERROR_RADIO_POWER_OFF                  = 20, /*< nick=RadioPowerOff >*/
+    MBIM_STATUS_ERROR_INVALID_PARAMETERS               = 21, /*< nick=InvalidParameters >*/
+    MBIM_STATUS_ERROR_READ_FAILURE                     = 22, /*< nick=ReadFailure >*/
+    MBIM_STATUS_ERROR_WRITE_FAILURE                    = 23, /*< nick=WriteFailure >*/
     /* 24 = reserved */
-    MBIM_STATUS_ERROR_NO_PHONEBOOK                     = 25,
-    MBIM_STATUS_ERROR_PARAMETER_TOO_LONG               = 26,
-    MBIM_STATUS_ERROR_STK_BUSY                         = 27,
-    MBIM_STATUS_ERROR_OPERATION_NOT_ALLOWED            = 28,
-    MBIM_STATUS_ERROR_MEMORY_FAILURE                   = 29,
-    MBIM_STATUS_ERROR_INVALID_MEMORY_INDEX             = 30,
-    MBIM_STATUS_ERROR_MEMORY_FULL                      = 31,
-    MBIM_STATUS_ERROR_FILTER_NOT_SUPPORTED             = 32,
-    MBIM_STATUS_ERROR_DSS_INSTANCE_LIMIT               = 33,
-    MBIM_STATUS_ERROR_INVALID_DEVICE_SERVICE_OPERATION = 34,
-    MBIM_STATUS_ERROR_AUTH_INCORRECT_AUTN              = 35,
-    MBIM_STATUS_ERROR_AUTH_SYNC_FAILURE                = 36,
-    MBIM_STATUS_ERROR_AUTH_AMF_NOT_SET                 = 37,
-    MBIM_STATUS_ERROR_SMS_UNKNOWN_SMSC_ADDRESS         = 100,
-    MBIM_STATUS_ERROR_SMS_NETWORK_TIMEOUT              = 101,
-    MBIM_STATUS_ERROR_SMS_LANG_NOT_SUPPORTED           = 102,
-    MBIM_STATUS_ERROR_SMS_ENCODING_NOT_SUPPORTED       = 103,
-    MBIM_STATUS_ERROR_SMS_FORMAT_NOT_SUPPORTED         = 104
+    MBIM_STATUS_ERROR_NO_PHONEBOOK                     = 25, /*< nick=NoPhonebook >*/
+    MBIM_STATUS_ERROR_PARAMETER_TOO_LONG               = 26, /*< nick=ParameterTooLong >*/
+    MBIM_STATUS_ERROR_STK_BUSY                         = 27, /*< nick=StkBusy >*/
+    MBIM_STATUS_ERROR_OPERATION_NOT_ALLOWED            = 28, /*< nick=OperationNotAllowed >*/
+    MBIM_STATUS_ERROR_MEMORY_FAILURE                   = 29, /*< nick=MemoryFailure >*/
+    MBIM_STATUS_ERROR_INVALID_MEMORY_INDEX             = 30, /*< nick=InvalidMemoryIndex >*/
+    MBIM_STATUS_ERROR_MEMORY_FULL                      = 31, /*< nick=MemoryFull >*/
+    MBIM_STATUS_ERROR_FILTER_NOT_SUPPORTED             = 32, /*< nick=FilterNotSupported >*/
+    MBIM_STATUS_ERROR_DSS_INSTANCE_LIMIT               = 33, /*< nick=DssInstanceLimit >*/
+    MBIM_STATUS_ERROR_INVALID_DEVICE_SERVICE_OPERATION = 34, /*< nick=InvalidDeviceServiceOperation >*/
+    MBIM_STATUS_ERROR_AUTH_INCORRECT_AUTN              = 35, /*< nick=AuthIncorrectAuth >*/
+    MBIM_STATUS_ERROR_AUTH_SYNC_FAILURE                = 36, /*< nick=AuthSyncFailure >*/
+    MBIM_STATUS_ERROR_AUTH_AMF_NOT_SET                 = 37, /*< nick=AuthAmfNotSet >*/
+    MBIM_STATUS_ERROR_SMS_UNKNOWN_SMSC_ADDRESS         = 100, /*< nick=SmsUnknownSmscAddress >*/
+    MBIM_STATUS_ERROR_SMS_NETWORK_TIMEOUT              = 101, /*< nick=SmsNetworkTimeout >*/
+    MBIM_STATUS_ERROR_SMS_LANG_NOT_SUPPORTED           = 102, /*< nick=SmsLangNotSupported >*/
+    MBIM_STATUS_ERROR_SMS_ENCODING_NOT_SUPPORTED       = 103, /*< nick=SmsEncodingNotSupported >*/
+    MBIM_STATUS_ERROR_SMS_FORMAT_NOT_SUPPORTED         = 104  /*< nick=SmsFormatNotSupported >*/
 } MbimStatusError;
 
 #endif /* _LIBMBIM_GLIB_MBIM_ERRORS_H_ */
