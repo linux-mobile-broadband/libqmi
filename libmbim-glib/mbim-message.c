@@ -530,6 +530,27 @@ mbim_message_get_transaction_id (const MbimMessage *self)
 }
 
 /**
+ * mbim_message_set_transaction_id:
+ * @self: a #MbimMessage.
+ * @transaction_id: the transaction id.
+ *
+ * Sets the transaction ID of the message.
+ */
+void
+mbim_message_set_transaction_id (MbimMessage *self,
+                                 guint32      transaction_id)
+{
+    /* Only allow setting transaction ID in host-generated messages */
+    g_return_if_fail (self != NULL);
+    g_return_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND ||
+                      MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_OPEN ||
+                      MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_CLOSE ||
+                      MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_HOST_ERROR);
+
+    ((struct header *)(self->data))->transaction_id = GUINT32_TO_LE (transaction_id);
+}
+
+/**
  * mbim_message_new:
  * @data: contents of the message.
  * @data_length: length of the message.

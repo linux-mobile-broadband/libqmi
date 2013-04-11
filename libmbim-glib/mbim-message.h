@@ -96,6 +96,9 @@ MbimMessageType  mbim_message_get_message_type     (const MbimMessage  *self);
 guint32          mbim_message_get_message_length   (const MbimMessage  *self);
 guint32          mbim_message_get_transaction_id   (const MbimMessage  *self);
 
+void             mbim_message_set_transaction_id   (MbimMessage        *self,
+                                                    guint32             transaction_id);
+
 #if defined (LIBMBIM_GLIB_COMPILATION)
 guint32          _mbim_message_read_guint32       (const MbimMessage *self,
                                                    guint32            relative_offset);
