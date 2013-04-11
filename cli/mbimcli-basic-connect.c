@@ -506,9 +506,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         MbimMessage *request;
 
         g_debug ("Asynchronously querying device capabilities...");
-        request = (mbim_message_basic_connect_device_caps_query_request_new (
-                       mbim_device_get_next_transaction_id (ctx->device),
-                       NULL));
+        request = (mbim_message_basic_connect_device_caps_query_request_new (NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -524,9 +522,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         MbimMessage *request;
 
         g_debug ("Asynchronously querying subscriber ready status...");
-        request = (mbim_message_basic_connect_subscriber_ready_status_query_request_new (
-                       mbim_device_get_next_transaction_id (ctx->device),
-                       NULL));
+        request = (mbim_message_basic_connect_subscriber_ready_status_query_request_new (NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -542,9 +538,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         MbimMessage *request;
 
         g_debug ("Asynchronously querying radio state...");
-        request = (mbim_message_basic_connect_radio_state_query_request_new (
-                       mbim_device_get_next_transaction_id (ctx->device),
-                       NULL));
+        request = (mbim_message_basic_connect_radio_state_query_request_new (NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -560,9 +554,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         MbimMessage *request;
 
         g_debug ("Asynchronously querying device services...");
-        request = (mbim_message_basic_connect_device_services_query_request_new (
-                       mbim_device_get_next_transaction_id (ctx->device),
-                       NULL));
+        request = (mbim_message_basic_connect_device_services_query_request_new (NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -577,9 +569,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         MbimMessage *request;
 
         g_debug ("Asynchronously querying PIN state...");
-        request = (mbim_message_basic_connect_pin_query_request_new (
-                       mbim_device_get_next_transaction_id (ctx->device),
-                       NULL));
+        request = (mbim_message_basic_connect_pin_query_request_new (NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,

@@ -86,8 +86,7 @@ class Message:
                          'name_underscore_upper'    : utils.build_underscore_name (self.name).upper() }
         template = (
             '\n'
-            'MbimMessage *${underscore}_${message_type}_request_new (\n'
-            '    guint32 transaction_id,\n')
+            'MbimMessage *${underscore}_${message_type}_request_new (\n')
 
         if container != None:
             for field in container.fields:
@@ -104,8 +103,7 @@ class Message:
         template = (
             '\n'
             '/**\n'
-            ' * ${underscore}_${message_type}_request_new:\n'
-            ' * @transaction_id: the transaction ID to use in the request.\n')
+            ' * ${underscore}_${message_type}_request_new:\n')
 
         if container != None:
             for field in container.fields:
@@ -124,8 +122,7 @@ class Message:
             ' * Returns: a newly allocated #MbimMessage, which should be freed with mbim_message_unref().\n'
             ' */\n'
             'MbimMessage *\n'
-            '${underscore}_${message_type}_request_new (\n'
-            '    guint32 transaction_id,\n')
+            '${underscore}_${message_type}_request_new (\n')
 
         if container != None:
             for field in container.fields:
@@ -140,7 +137,7 @@ class Message:
             '{\n'
             '    MbimMessageCommandBuilder *builder;\n'
             '\n'
-            '    builder = _mbim_message_command_builder_new (transaction_id,\n'
+            '    builder = _mbim_message_command_builder_new (0,\n'
             '                                                 MBIM_SERVICE_${service_underscore_upper},\n'
             '                                                 MBIM_CID_${service_underscore_upper}_${name_underscore_upper},\n'
             '                                                 MBIM_MESSAGE_COMMAND_TYPE_${message_type_upper});\n')
