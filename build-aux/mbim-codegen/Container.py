@@ -36,38 +36,18 @@ class Container:
     """
     Constructor
     """
-    def __init__(self, service, command, message_type, container_type, dictionary):
-        self.service = service
-        self.command = command
-
-        # e.g. "Mbim Message Service Something"
-        self.prefix = "Mbim Message " + service + ' ' + command
-
+    def __init__(self, message_type, dictionary):
         # We may have 'Query', 'Set' or 'Notify' message types
-        if message_type == 'Query' or message_type == 'Set' or message_type == 'Notify':
-            self.message_type = message_type
+        if message_type == 'query':
+            self.message_type_enum = 'MBIM_MESSAGE_TYPE_COMMAND'
+        elif message_type == 'set':
+            self.message_type_enum = 'MBIM_MESSAGE_TYPE_COMMAND'
+        elif message_type == 'response':
+            self.message_type_enum = 'MBIM_MESSAGE_TYPE_COMMAND_DONE'
+        elif message_type == 'notification':
+            self.message_type_enum = 'MBIM_MESSAGE_TYPE_INDICATION'
         else:
             raise ValueError('Cannot handle message type \'%s\'' % message_type)
-
-        # We may have 'Input' or 'Output' containers
-        if container_type == 'Input':
-            self.name = 'Request'
-            self.message_type_enum = 'MBIM_MESSAGE_TYPE_COMMAND'
-        elif container_type == 'Output':
-            if message_type == 'Notify':
-                self.name = 'Indication'
-                self.message_type_enum = 'MBIM_MESSAGE_TYPE_INDICATION'
-            else:
-                self.name = 'Response'
-                self.message_type_enum = 'MBIM_MESSAGE_TYPE_COMMAND_DONE'
-        else:
-            raise ValueError('Cannot handle container type \'%s\'' % container_type)
-
-        # Create the composed full name (prefix + name),
-        #  e.g. "Mbim Message Service Something Query Response"
-        self.fullname = self.prefix + ' ' + self.message_type + ' ' + self.name
-
-        self.fields_dictionary = dictionary
 
         self.fields = []
         for field in dictionary:

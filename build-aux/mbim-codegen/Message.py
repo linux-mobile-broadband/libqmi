@@ -38,39 +38,33 @@ class Message:
         self.name = dictionary['name']
 
         # Gather types of command
-        self.can_query  = True if 'query'  in dictionary else False
-        self.can_set    = True if 'set'    in dictionary else False
-        self.can_notify = True if 'notify' in dictionary else False
+        self.query        = True if 'query'    in dictionary else False
+        self.set          = True if 'set'      in dictionary else False
+        self.response     = True if 'response' in dictionary else False
+        self.notification = True if 'notify'   in dictionary else False
 
         # Build Fullname
-        self.fullname = 'MBIM Message ' + self.service + ' ' + self.name
+        self.fullname = 'MBIM Message ' + self.name
 
         # Build CID enum
         self.cid_enum_name = utils.build_underscore_name('MBIM CID' + self.service + ' ' + self.name).upper()
 
-        # Build Query containers
-        self.query_input = None
-        self.query_output = None
-        if self.can_query:
-            if 'input' in dictionary['query']:
-                self.query_input = Container(self.service, self.name, 'Query', 'Input', dictionary['query']['input'])
-            if 'output' in dictionary['query']:
-                self.query_output = Container(self.service, self.name, 'Query', 'Output', dictionary['query']['output'])
+        # Build input containers
+        self.query_container = None
+        if self.query:
+            self.query_container = Container('query', dictionary['query'])
+        self.set_container = None
+        if self.set:
+            self.set_container = Container('set', dictionary['set'])
+        self.notify_container = None
 
-        # Build Set containers
-        self.set_input = None
-        self.set_output = None
-        if self.can_set:
-            if 'input' in dictionary['set']:
-                self.set_input = Container(self.service, self.name, 'Set', 'Input', dictionary['set']['input'])
-            if 'output' in dictionary['set']:
-                self.set_output = Container(self.service, self.name, 'Set', 'Output', dictionary['set']['output'])
-
-        # Build Notify containers
-        self.notify_output = None
-        if self.can_notify:
-            if 'output' in dictionary['notify']:
-                self.notify_output = Container(self.service, self.name, 'Notify', 'Output', dictionary['notify']['output'])
+        # Build output containers
+        self.response_container = None
+        if self.response:
+            self.response_container = Container('response', dictionary['response'])
+        self.notification_container = None
+        if self.notification:
+            self.notification_container = Container('notification', dictionary['notification'])
 
 
     """
@@ -86,7 +80,7 @@ class Message:
                          'name_underscore_upper'    : utils.build_underscore_name (self.name).upper() }
         template = (
             '\n'
-            'MbimMessage *${underscore}_${message_type}_request_new (\n')
+            'MbimMessage *${underscore}_${message_type}_new (\n')
 
         if container != None:
             for field in container.fields:
@@ -103,7 +97,7 @@ class Message:
         template = (
             '\n'
             '/**\n'
-            ' * ${underscore}_${message_type}_request_new:\n')
+            ' * ${underscore}_${message_type}_new:\n')
 
         if container != None:
             for field in container.fields:
@@ -122,7 +116,7 @@ class Message:
             ' * Returns: a newly allocated #MbimMessage, which should be freed with mbim_message_unref().\n'
             ' */\n'
             'MbimMessage *\n'
-            '${underscore}_${message_type}_request_new (\n')
+            '${underscore}_${message_type}_new (\n')
 
         if container != None:
             for field in container.fields:
@@ -161,18 +155,17 @@ class Message:
     """
     Emit message parser
     """
-    def _emit_message_parser(self, hfile, cfile, request_or_response, message_type, container):
+    def _emit_message_parser(self, hfile, cfile, message_type, container):
         translations = { 'name'                     : self.name,
                          'service'                  : self.service,
                          'underscore'               : utils.build_underscore_name (self.fullname),
-                         'request_or_response'      : request_or_response,
                          'message_type'             : message_type,
                          'message_type_upper'       : message_type.upper(),
                          'service_underscore_upper' : utils.build_underscore_name (self.service).upper(),
                          'name_underscore_upper'    : utils.build_underscore_name (self.name).upper() }
         template = (
             '\n'
-            'gboolean ${underscore}_${message_type}_${request_or_response}_parse (\n'
+            'gboolean ${underscore}_${message_type}_parse (\n'
             '    const MbimMessage *message,\n')
 
         if container != None:
@@ -190,7 +183,7 @@ class Message:
         template = (
             '\n'
             '/**\n'
-            ' * ${underscore}_${message_type}_${request_or_response}_parse:\n'
+            ' * ${underscore}_${message_type}_parse:\n'
             ' * @message: the #MbimMessage.\n')
 
         if container != None:
@@ -210,7 +203,7 @@ class Message:
             ' * Returns: %TRUE if the message was correctly parsed, %FALSE if @error is set.\n'
             ' */\n'
             'gboolean\n'
-            '${underscore}_${message_type}_${request_or_response}_parse (\n'
+            '${underscore}_${message_type}_parse (\n'
             '    const MbimMessage *message,\n')
 
         if container != None:
@@ -288,29 +281,25 @@ class Message:
     Emit the message handling implementation
     """
     def emit(self, hfile, cfile):
-        if self.can_query:
+        if self.query:
             utils.add_separator(hfile, 'Message (Query)', self.fullname);
             utils.add_separator(cfile, 'Message (Query)', self.fullname);
+            self._emit_message_creator(hfile, cfile, 'query', self.query_container)
 
-            self._emit_message_creator(hfile, cfile, 'query', self.query_input)
-            if self.query_input:
-                self._emit_message_parser(hfile, cfile, 'request',  'query', self.query_input)
-            if self.query_output:
-                self._emit_message_parser(hfile, cfile, 'response', 'query', self.query_output)
-
-        if self.can_set:
+        if self.set:
             utils.add_separator(hfile, 'Message (Set)', self.fullname);
             utils.add_separator(cfile, 'Message (Set)', self.fullname);
+            self._emit_message_creator(hfile, cfile, 'set', self.set_container)
 
-            self._emit_message_creator(hfile, cfile, 'set', self.set_input)
-            if self.set_input:
-                self._emit_message_parser(hfile, cfile, 'request',  'set', self.set_input)
-            if self.set_output:
-                self._emit_message_parser(hfile, cfile, 'response', 'set', self.set_output)
+        if self.response:
+            utils.add_separator(hfile, 'Message (Response)', self.fullname);
+            utils.add_separator(cfile, 'Message (Response)', self.fullname);
+            self._emit_message_parser(hfile, cfile, 'response', self.response_container)
 
-        if self.can_notify:
-            utils.add_separator(hfile, 'Message (Notify)', self.fullname);
-            utils.add_separator(cfile, 'Message (Notify)', self.fullname);
+        if self.notification:
+            utils.add_separator(hfile, 'Message (Notification)', self.fullname);
+            utils.add_separator(cfile, 'Message (Notification)', self.fullname);
+            self._emit_message_parser(hfile, cfile, 'notification', self.notification_container)
 
 
     """

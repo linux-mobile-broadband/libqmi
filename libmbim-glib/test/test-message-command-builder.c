@@ -160,11 +160,11 @@ test_message_command_builder_set_pin (void)
     };
 
     /* PIN set message */
-    message = mbim_message_basic_connect_pin_set_request_new (MBIM_PIN_TYPE_PIN1,
-                                                              MBIM_PIN_OPERATION_ENTER,
-                                                              "1111",
-                                                              "",
-                                                              &error);
+    message = mbim_message_pin_set_new (MBIM_PIN_TYPE_PIN1,
+                                        MBIM_PIN_OPERATION_ENTER,
+                                        "1111",
+                                        "",
+                                        &error);
     g_assert_no_error (error);
     g_assert (message != NULL);
     mbim_message_set_transaction_id (message, 1);

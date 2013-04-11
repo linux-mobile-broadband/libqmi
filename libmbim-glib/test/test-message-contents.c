@@ -92,7 +92,7 @@ test_message_contents_basic_connect_device_caps (void)
 
     response = mbim_message_new (buffer, sizeof (buffer));
 
-    g_assert (mbim_message_basic_connect_device_caps_query_response_parse (
+    g_assert (mbim_message_device_caps_response_parse (
                   response,
                   &device_type,
                   &cellular_class,
