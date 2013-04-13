@@ -50,7 +50,7 @@ class ValueStruct(Value):
         self.out_description = 'Return location for a newly allocated #' + self.struct_type + ', or %NULL if the \'' + self.name + '\' field is not needed. Free the returned value with ' + self.struct_type_underscore + '_free().'
 
         """ The name of the method used to read the value """
-        self.reader_method_name = '_' + self.struct_type_underscore + '_read'
+        self.reader_method_name = '_mbim_message_read_' + self.struct_type_underscore + '_struct'
 
         """ The size of this variable """
         self.size = 0

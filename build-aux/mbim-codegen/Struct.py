@@ -150,7 +150,8 @@ class Struct:
             'static ${name} *\n'
             '_mbim_message_read_${name_underscore}_struct (\n'
             '    const MbimMessage *self,\n'
-            '    guint32 relative_offset)\n'
+            '    guint32 relative_offset,\n'
+            '    guint32 *bytes_read)\n'
             '{\n'
             '    ${name} *out;\n'
             '    guint32 offset = relative_offset;\n'
@@ -199,6 +200,9 @@ class Struct:
 
         template += (
             '\n'
+            '    if (bytes_read)\n'
+            '        *bytes_read = (offset - relative_offset);\n'
+            '\n'
             '    return out;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
@@ -219,12 +223,13 @@ class Struct:
             '    out = g_new (${name} *, array_size + 1);\n'
             '    offset = relative_offset_array_start;\n'
             '    for (i = 0; i < array_size; i++, offset += 8)\n'
-            '        out[i] = _mbim_message_read_${name_underscore}_struct (self, _mbim_message_read_guint32 (self, offset));\n'
+            '        out[i] = _mbim_message_read_${name_underscore}_struct (self, _mbim_message_read_guint32 (self, offset), NULL);\n'
             '    out[array_size] = NULL;\n'
             '\n'
             '    return out;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
+
 
     """
     Emit the struct handling implementation

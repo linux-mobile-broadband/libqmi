@@ -239,31 +239,59 @@ class Message:
                     '    /* Read the \'${field_name}\' variable */\n'
                     '    {\n')
 
-                if field.is_array:
+                if field.is_array_size:
+                    inner_template += (
+                        '        _${field_name_underscore} = _mbim_message_read_guint32 (message, offset);\n'
+                        '        if (${field_name_underscore} != NULL)\n'
+                        '            *${field_name_underscore} = _${field_name_underscore};\n'
+                        '        offset += 4;\n')
+                elif field.format == 'guint32':
+                    inner_template += (
+                        '        if (${field_name_underscore} != NULL)\n'
+                        '            *${field_name_underscore} =  _mbim_message_read_guint32 (message, offset);\n'
+                        '        offset += 4;\n')
+                elif field.format == 'guint32-array':
+                    translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field.array_size_field)
+                    inner_template += (
+                        '        if (${field_name_underscore} != NULL)\n'
+                        '            *${field_name_underscore} = _mbim_message_read_guint32_array (message, _{array_size_field_name_underscore}, offset);\n'
+                        '        offset += (4 * _${array_size_field_name_underscore});\n')
+                elif field.format == 'string':
+                    inner_template += (
+                        '        if (${field_name_underscore} != NULL)\n'
+                        '            *${field_name_underscore} = _mbim_message_read_string (message, offset);\n'
+                        '        offset += 8;\n')
+                elif field.format == 'string-array':
+                    translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field.array_size_field)
+                    inner_template += (
+                        '        if (${field_name_underscore} != NULL)\n'
+                        '            *${field_name_underscore} = _mbim_message_read_string_array (message, _${array_size_field_name_underscore}, offset);\n'
+                        '        offset += (8 * _${array_size_field_name_underscore});\n')
+                elif field.format == 'struct':
+                    translations['struct_name'] = field.struct_type_underscore
+                    translations['struct_type'] = field.struct_type
+
+                    inner_template += (
+                        '        ${struct_type} *tmp;\n'
+                        '        guint32 bytes_read = 0;\n'
+                        '\n'
+                        '        tmp = _mbim_message_read_${struct_name}_struct (message, offset, &bytes_read);\n'
+                        '        if (${field_name_underscore} != NULL)\n'
+                        '            *${field_name_underscore} = tmp;\n'
+                        '        else\n'
+                        '             ${struct_name}_free (tmp);\n'
+                        '        offset += bytes_read;\n')
+                elif field.format == 'struct-array':
                     translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase (field.array_size_field)
                     translations['array_member_size']                = str(field.array_member_size)
-                    translations['struct_name']                      = (field.struct_type_underscore + '_') if field.format == 'struct-array' else ''
+                    translations['struct_name']                      = field.struct_type_underscore
 
                     inner_template += (
                         '        if (${field_name_underscore} != NULL)\n'
-                        '            *${field_name_underscore} = _mbim_message_read_${struct_name}${field_format_underscore} (message, _${array_size_field_name_underscore}, offset);\n'
+                        '            *${field_name_underscore} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field_name_underscore}, offset);\n'
                         '        offset += (${array_member_size} * _${array_size_field_name_underscore});\n')
                 else:
-                    if field.is_array_size:
-                        inner_template += (
-                            '        _${field_name_underscore} = _mbim_message_read_${field_format_underscore} (message, offset);\n'
-                            '        if (${field_name_underscore} != NULL)\n'
-                            '            *${field_name_underscore} = _${field_name_underscore};\n')
-                    else:
-                        inner_template += (
-                            '        if (${field_name_underscore} != NULL)\n'
-                            '            *${field_name_underscore} = _mbim_message_read_${field_format_underscore} (message, offset);\n')
-                    if field.size > 0:
-                        inner_template += (
-                            '        offset += ${field_size};\n')
-                    if field.size_string != '':
-                        inner_template += (
-                            '        offset += ${field_size_string};\n')
+                    raise ValueError('Cannot handle format \'%s\' as a field' % field.format)
 
                 inner_template += (
                     '    }\n')
