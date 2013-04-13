@@ -92,7 +92,7 @@ static const MbimUuid uuid_dss = {
 };
 
 /**
- * mbim_uuid_get:
+ * mbim_uuid_from_service:
  * @service: a #MbimService.
  *
  * Get the UUID corresponding to @service.
@@ -100,7 +100,7 @@ static const MbimUuid uuid_dss = {
  * Returns: (transfer none): a #MbimUuid.
  */
 const MbimUuid *
-mbim_uuid_get (MbimService service)
+mbim_uuid_from_service (MbimService service)
 {
     g_return_val_if_fail (service >= MBIM_SERVICE_INVALID && service <= MBIM_SERVICE_DSS,
                           &uuid_invalid);
@@ -125,6 +125,41 @@ mbim_uuid_get (MbimService service)
     default:
         g_assert_not_reached ();
     }
+}
+
+/**
+ * mbim_uuid_to_service:
+ * @uuid: a #MbimUuid.
+ *
+ * Get the service corresponding to @uuid.
+ *
+ * Returns: a #MbimService.
+ */
+MbimService
+mbim_uuid_to_service (const MbimUuid *uuid)
+{
+    if (mbim_uuid_cmp (uuid, &uuid_basic_connect))
+        return MBIM_SERVICE_BASIC_CONNECT;
+
+    if (mbim_uuid_cmp (uuid, &uuid_sms))
+        return MBIM_SERVICE_SMS;
+
+    if (mbim_uuid_cmp (uuid, &uuid_ussd))
+        return MBIM_SERVICE_USSD;
+
+    if (mbim_uuid_cmp (uuid, &uuid_phonebook))
+        return MBIM_SERVICE_PHONEBOOK;
+
+    if (mbim_uuid_cmp (uuid, &uuid_stk))
+        return MBIM_SERVICE_STK;
+
+    if (mbim_uuid_cmp (uuid, &uuid_auth))
+        return MBIM_SERVICE_AUTH;
+
+    if (mbim_uuid_cmp (uuid, &uuid_dss))
+        return MBIM_SERVICE_DSS;
+
+    return MBIM_SERVICE_INVALID;
 }
 
 /**
@@ -166,39 +201,4 @@ mbim_uuid_get_printable (const MbimUuid *uuid)
                 uuid->c[0], uuid->c[1],
                 uuid->d[0], uuid->d[1],
                 uuid->e[0], uuid->e[1], uuid->e[2], uuid->e[3], uuid->e[4], uuid->e[5]));
-}
-
-/**
- * mbim_uuid_to_service:
- * @uuid: a #MbimUuid.
- *
- * Get the service corresponding to @uuid.
- *
- * Returns: a #MbimService.
- */
-MbimService
-mbim_uuid_to_service (const MbimUuid *uuid)
-{
-    if (mbim_uuid_cmp (uuid, &uuid_basic_connect))
-        return MBIM_SERVICE_BASIC_CONNECT;
-
-    if (mbim_uuid_cmp (uuid, &uuid_sms))
-        return MBIM_SERVICE_SMS;
-
-    if (mbim_uuid_cmp (uuid, &uuid_ussd))
-        return MBIM_SERVICE_USSD;
-
-    if (mbim_uuid_cmp (uuid, &uuid_phonebook))
-        return MBIM_SERVICE_PHONEBOOK;
-
-    if (mbim_uuid_cmp (uuid, &uuid_stk))
-        return MBIM_SERVICE_STK;
-
-    if (mbim_uuid_cmp (uuid, &uuid_auth))
-        return MBIM_SERVICE_AUTH;
-
-    if (mbim_uuid_cmp (uuid, &uuid_dss))
-        return MBIM_SERVICE_DSS;
-
-    return MBIM_SERVICE_INVALID;
 }

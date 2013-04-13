@@ -77,7 +77,7 @@ typedef enum {
  *
  * Returns: (transfer none): a #MbimUuid.
  */
-#define MBIM_UUID_INVALID mbim_uuid_get (MBIM_SERVICE_INVALID)
+#define MBIM_UUID_INVALID mbim_uuid_from_service (MBIM_SERVICE_INVALID)
 
 /**
  * MBIM_UUID_BASIC_CONNECT:
@@ -86,7 +86,7 @@ typedef enum {
  *
  * Returns: (transfer none): a #MbimUuid.
  */
-#define MBIM_UUID_BASIC_CONNECT mbim_uuid_get (MBIM_SERVICE_BASIC_CONNECT)
+#define MBIM_UUID_BASIC_CONNECT mbim_uuid_from_service (MBIM_SERVICE_BASIC_CONNECT)
 
 /**
  * MBIM_UUID_SMS:
@@ -95,7 +95,7 @@ typedef enum {
  *
  * Returns: (transfer none): a #MbimUuid.
  */
-#define MBIM_UUID_SMS mbim_uuid_get (MBIM_SERVICE_SMS)
+#define MBIM_UUID_SMS mbim_uuid_from_service (MBIM_SERVICE_SMS)
 
 /**
  * MBIM_UUID_USSD:
@@ -104,7 +104,7 @@ typedef enum {
  *
  * Returns: (transfer none): a #MbimUuid.
  */
-#define MBIM_UUID_USSD mbim_uuid_get (MBIM_SERVICE_USSD)
+#define MBIM_UUID_USSD mbim_uuid_from_service (MBIM_SERVICE_USSD)
 
 /**
  * MBIM_UUID_PHONEBOOK:
@@ -113,7 +113,7 @@ typedef enum {
  *
  * Returns: (transfer none): a #MbimUuid.
  */
-#define MBIM_UUID_PHONEBOOK mbim_uuid_get (MBIM_SERVICE_PHONEBOOK)
+#define MBIM_UUID_PHONEBOOK mbim_uuid_from_service (MBIM_SERVICE_PHONEBOOK)
 
 /**
  * MBIM_UUID_STK:
@@ -122,7 +122,7 @@ typedef enum {
  *
  * Returns: (transfer none): a #MbimUuid.
  */
-#define MBIM_UUID_STK mbim_uuid_get (MBIM_SERVICE_STK)
+#define MBIM_UUID_STK mbim_uuid_from_service (MBIM_SERVICE_STK)
 
 /**
  * MBIM_UUID_AUTH:
@@ -131,7 +131,7 @@ typedef enum {
  *
  * Returns: (transfer none): a #MbimUuid.
  */
-#define MBIM_UUID_AUTH mbim_uuid_get (MBIM_SERVICE_AUTH)
+#define MBIM_UUID_AUTH mbim_uuid_from_service (MBIM_SERVICE_AUTH)
 
 /**
  * MBIM_UUID_DSS:
@@ -140,13 +140,15 @@ typedef enum {
  *
  * Returns: (transfer none): a #MbimUuid.
  */
-#define MBIM_UUID_DSS mbim_uuid_get (MBIM_SERVICE_DSS)
+#define MBIM_UUID_DSS mbim_uuid_from_service (MBIM_SERVICE_DSS)
 
-const MbimUuid *mbim_uuid_get           (MbimService     service);
+/* To/From service */
+const MbimUuid *mbim_uuid_from_service  (MbimService     service);
+MbimService     mbim_uuid_to_service    (const MbimUuid *uuid);
+
 gboolean        mbim_uuid_cmp           (const MbimUuid *a,
                                          const MbimUuid *b);
 gchar          *mbim_uuid_get_printable (const MbimUuid *uuid);
-MbimService     mbim_uuid_to_service    (const MbimUuid *uuid);
 
 G_END_DECLS
 
