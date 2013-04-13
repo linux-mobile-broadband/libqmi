@@ -32,6 +32,8 @@
 
 G_BEGIN_DECLS
 
+/*****************************************************************************/
+
 /**
  * MbimUuid:
  *
@@ -45,6 +47,12 @@ struct _MbimUuid {
     guint8 d[2];
     guint8 e[6];
 } __attribute__((packed));
+
+gboolean  mbim_uuid_cmp           (const MbimUuid *a,
+                                   const MbimUuid *b);
+gchar    *mbim_uuid_get_printable (const MbimUuid *uuid);
+
+/*****************************************************************************/
 
 /**
  * MbimService:
@@ -146,9 +154,39 @@ typedef enum {
 const MbimUuid *mbim_uuid_from_service  (MbimService     service);
 MbimService     mbim_uuid_to_service    (const MbimUuid *uuid);
 
-gboolean        mbim_uuid_cmp           (const MbimUuid *a,
-                                         const MbimUuid *b);
-gchar          *mbim_uuid_get_printable (const MbimUuid *uuid);
+/*****************************************************************************/
+
+/**
+ * MbimContextType:
+ * @MBIM_CONTEXT_TYPE_INVALID: Invalid context type.
+ * @MBIM_CONTEXT_TYPE_NONE: Context not yet provisioned.
+ * @MBIM_CONTEXT_TYPE_INTERNET: Connection to the Internet.
+ * @MBIM_CONTEXT_TYPE_VPN: Connection to a VPN.
+ * @MBIM_CONTEXT_TYPE_VOICE: Connection to a VoIP service.
+ * @MBIM_CONTEXT_TYPE_VIDEO_SHARE: Connection to a video sharing service.
+ * @MBIM_CONTEXT_TYPE_PURCHASE: Connection to an over-the-air activation site.
+ * @MBIM_CONTEXT_TYPE_IMS: Connection to IMS.
+ * @MBIM_CONTEXT_TYPE_MMS: Connection to MMS.
+ * @MBIM_CONTEXT_TYPE_LOCAL: A local.
+ *
+ * Enumeration of the generic MBIM context types.
+ */
+typedef enum {
+    MBIM_CONTEXT_TYPE_INVALID     = 0,
+    MBIM_CONTEXT_TYPE_NONE        = 1,
+    MBIM_CONTEXT_TYPE_INTERNET    = 2,
+    MBIM_CONTEXT_TYPE_VPN         = 3,
+    MBIM_CONTEXT_TYPE_VOICE       = 4,
+    MBIM_CONTEXT_TYPE_VIDEO_SHARE = 5,
+    MBIM_CONTEXT_TYPE_PURCHASE    = 6,
+    MBIM_CONTEXT_TYPE_IMS         = 7,
+    MBIM_CONTEXT_TYPE_MMS         = 8,
+    MBIM_CONTEXT_TYPE_LOCAL       = 9,
+} MbimContextType;
+
+/* To/From context type */
+const MbimUuid  *mbim_uuid_from_context_type (MbimContextType  context_type);
+MbimContextType  mbim_uuid_to_context_type   (const MbimUuid  *uuid);
 
 G_END_DECLS
 

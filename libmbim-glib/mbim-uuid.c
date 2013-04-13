@@ -27,6 +27,51 @@
 
 #include "mbim-uuid.h"
 
+/*****************************************************************************/
+
+/**
+ * mbim_uuid_cmp:
+ * @a: a #MbimUuid.
+ * @b: a #MbimUuid.
+ *
+ * Compare two %MbimUuid values.
+ *
+ * Returns: %TRUE if @a and @b are equal, %FALSE otherwise.
+ */
+gboolean
+mbim_uuid_cmp (const MbimUuid *a,
+               const MbimUuid *b)
+{
+    return (memcmp (a, b, sizeof (*a)) == 0);
+}
+
+/**
+ * mbim_uuid_get_printable:
+ * @uuid: a #MbimUuid.
+ *
+ * Get a string with the UUID.
+ *
+ * Returns: (transfer full): a newly allocated string, which should be freed with g_free().
+ */
+gchar *
+mbim_uuid_get_printable (const MbimUuid *uuid)
+
+{
+    return (g_strdup_printf (
+                "%02x%02x%02x%02x-"
+                "%02x%02x-"
+                "%02x%02x-"
+                "%02x%02x-"
+                "%02x%02x%02x%02x%02x%02x",
+                uuid->a[0], uuid->a[1], uuid->a[2], uuid->a[3],
+                uuid->b[0], uuid->b[1],
+                uuid->c[0], uuid->c[1],
+                uuid->d[0], uuid->d[1],
+                uuid->e[0], uuid->e[1], uuid->e[2], uuid->e[3], uuid->e[4], uuid->e[5]));
+}
+
+/*****************************************************************************/
+
 static const MbimUuid uuid_invalid = {
     .a = { 0x00, 0x00, 0x00, 0x00 },
     .b = { 0x00, 0x00 },
@@ -162,43 +207,160 @@ mbim_uuid_to_service (const MbimUuid *uuid)
     return MBIM_SERVICE_INVALID;
 }
 
+/*****************************************************************************/
+
+static const MbimUuid uuid_context_type_none = {
+    .a = { 0xB4, 0x3F, 0x75, 0x8C },
+    .b = { 0xA5, 0x60 },
+    .c = { 0x4B, 0x46 },
+    .d = { 0xB3, 0x5E },
+    .e = { 0xC5, 0x86, 0x96, 0x41, 0xFB, 0x54 }
+};
+
+static const MbimUuid uuid_context_type_internet = {
+    .a = { 0x7E, 0x5E, 0x2A, 0x7E },
+    .b = { 0x4E, 0x6F },
+    .c = { 0x72, 0x72 },
+    .d = { 0x73, 0x6B },
+    .e = { 0x65, 0x6E, 0x7E, 0x5E, 0x2A, 0x7E }
+};
+
+static const MbimUuid uuid_context_type_vpn = {
+    .a = { 0x9B, 0x9F, 0x7B, 0xBE },
+    .b = { 0x89, 0x52 },
+    .c = { 0x44, 0xB7 },
+    .d = { 0x83, 0xAC },
+    .e = { 0xCA, 0x41, 0x31, 0x8D, 0xF7, 0xA0 }
+};
+
+static const MbimUuid uuid_context_type_voice = {
+    .a = { 0x88, 0x91, 0x82, 0x94 },
+    .b = { 0x0E, 0xF4 },
+    .c = { 0x43, 0x96 },
+    .d = { 0x8C, 0xCA },
+    .e = { 0xA8, 0x58, 0x8F, 0xBC, 0x02, 0xB2 }
+};
+
+static const MbimUuid uuid_context_type_video_share = {
+    .a = { 0x05, 0xA2, 0xA7, 0x16 },
+    .b = { 0x7C, 0x34 },
+    .c = { 0x4B, 0x4D },
+    .d = { 0x9A, 0x91 },
+    .e = { 0xC5, 0xEF, 0x0C, 0x7A, 0xAA, 0xCC }
+};
+
+static const MbimUuid uuid_context_type_purchase = {
+    .a = { 0xB3, 0x27, 0x24, 0x96 },
+    .b = { 0xAC, 0x6C },
+    .c = { 0x42, 0x2B },
+    .d = { 0xA8, 0xC0 },
+    .e = { 0xAC, 0xF6, 0x87, 0xA2, 0x72, 0x17 }
+};
+
+static const MbimUuid uuid_context_type_ims = {
+    .a = { 0x21, 0x61, 0x0D, 0x01 },
+    .b = { 0x30, 0x74 },
+    .c = { 0x4B, 0xCE },
+    .d = { 0x94, 0x25 },
+    .e = { 0xB5, 0x3A, 0x07, 0xD6, 0x97, 0xD6 }
+};
+
+static const MbimUuid uuid_context_type_mms = {
+    .a = { 0x46, 0x72, 0x66, 0x64 },
+    .b = { 0x72, 0x69 },
+    .c = { 0x6B, 0xC6 },
+    .d = { 0x96, 0x24 },
+    .e = { 0xD1, 0xD3, 0x53, 0x89, 0xAC, 0xA9 }
+};
+
+static const MbimUuid uuid_context_type_local = {
+    .a = { 0xA5, 0x7A, 0x9A, 0xFC },
+    .b = { 0xB0, 0x9F },
+    .c = { 0x45, 0xD7 },
+    .d = { 0xBB, 0x40 },
+    .e = { 0x03, 0x3C, 0x39, 0xF6, 0x0D, 0xB9 }
+};
+
 /**
- * mbim_uuid_cmp:
- * @a: a #MbimUuid.
- * @b: a #MbimUuid.
+ * mbim_uuid_from_context_type:
+ * @context_type: a #MbimContextType.
  *
- * Compare two %MbimUuid values.
+ * Get the UUID corresponding to @context_type.
  *
- * Returns: %TRUE if @a and @b are equal, %FALSE otherwise.
+ * Returns: (transfer none): a #MbimUuid.
  */
-gboolean
-mbim_uuid_cmp (const MbimUuid *a,
-               const MbimUuid *b)
+const MbimUuid *
+mbim_uuid_from_context_type (MbimContextType context_type)
 {
-    return (memcmp (a, b, sizeof (*a)) == 0);
+    g_return_val_if_fail (context_type >= MBIM_CONTEXT_TYPE_INVALID && context_type <= MBIM_CONTEXT_TYPE_LOCAL,
+                          &uuid_invalid);
+
+    switch (context_type) {
+    case MBIM_CONTEXT_TYPE_INVALID:
+        return &uuid_invalid;
+    case MBIM_CONTEXT_TYPE_NONE:
+        return &uuid_context_type_none;
+    case MBIM_CONTEXT_TYPE_INTERNET:
+        return &uuid_context_type_internet;
+    case MBIM_CONTEXT_TYPE_VPN:
+        return &uuid_context_type_vpn;
+    case MBIM_CONTEXT_TYPE_VOICE:
+        return &uuid_context_type_none;
+    case MBIM_CONTEXT_TYPE_VIDEO_SHARE:
+        return &uuid_context_type_video_share;
+    case MBIM_CONTEXT_TYPE_PURCHASE:
+        return &uuid_context_type_purchase;
+    case MBIM_CONTEXT_TYPE_IMS:
+        return &uuid_context_type_ims;
+    case MBIM_CONTEXT_TYPE_MMS:
+        return &uuid_context_type_mms;
+    case MBIM_CONTEXT_TYPE_LOCAL:
+        return &uuid_context_type_local;
+    default:
+        g_assert_not_reached ();
+    }
 }
 
 /**
- * mbim_uuid_get_printable:
+ * mbim_uuid_to_context_type:
  * @uuid: a #MbimUuid.
  *
- * Get a string with the UUID.
+ * Get the context type corresponding to @uuid.
  *
- * Returns: (transfer full): a newly allocated string, which should be freed with g_free().
+ * Returns: a #MbimContextType.
  */
-gchar *
-mbim_uuid_get_printable (const MbimUuid *uuid)
-
+MbimContextType
+mbim_uuid_to_context_type (const MbimUuid *uuid)
 {
-    return (g_strdup_printf (
-                "%02x%02x%02x%02x-"
-                "%02x%02x-"
-                "%02x%02x-"
-                "%02x%02x-"
-                "%02x%02x%02x%02x%02x%02x",
-                uuid->a[0], uuid->a[1], uuid->a[2], uuid->a[3],
-                uuid->b[0], uuid->b[1],
-                uuid->c[0], uuid->c[1],
-                uuid->d[0], uuid->d[1],
-                uuid->e[0], uuid->e[1], uuid->e[2], uuid->e[3], uuid->e[4], uuid->e[5]));
+    if (mbim_uuid_cmp (uuid, &uuid_dss))
+        return MBIM_SERVICE_DSS;
+
+    if (mbim_uuid_cmp (uuid, &uuid_context_type_none))
+        return MBIM_CONTEXT_TYPE_NONE;
+
+    if (mbim_uuid_cmp (uuid, &uuid_context_type_internet))
+        return MBIM_CONTEXT_TYPE_INTERNET;
+
+    if (mbim_uuid_cmp (uuid, &uuid_context_type_vpn))
+        return MBIM_CONTEXT_TYPE_VPN;
+
+    if (mbim_uuid_cmp (uuid, &uuid_context_type_voice))
+        return MBIM_CONTEXT_TYPE_VOICE;
+
+    if (mbim_uuid_cmp (uuid, &uuid_context_type_video_share))
+        return MBIM_CONTEXT_TYPE_VIDEO_SHARE;
+
+    if (mbim_uuid_cmp (uuid, &uuid_context_type_purchase))
+        return MBIM_CONTEXT_TYPE_PURCHASE;
+
+    if (mbim_uuid_cmp (uuid, &uuid_context_type_ims))
+        return MBIM_CONTEXT_TYPE_IMS;
+
+    if (mbim_uuid_cmp (uuid, &uuid_context_type_mms))
+        return MBIM_CONTEXT_TYPE_MMS;
+
+    if (mbim_uuid_cmp (uuid, &uuid_context_type_local))
+        return MBIM_CONTEXT_TYPE_LOCAL;
+
+    return MBIM_CONTEXT_TYPE_INVALID;
 }
