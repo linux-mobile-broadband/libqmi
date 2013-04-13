@@ -101,9 +101,9 @@ _mbim_message_get_information_buffer_offset (const MbimMessage *self)
         break;
 
     case MBIM_MESSAGE_TYPE_INDICATE_STATUS:
-        /* TODO */
-        g_warn_if_reached ();
-        return 0;
+        return (sizeof (struct header) +
+                G_STRUCT_OFFSET (struct indicate_status_message, buffer));
+        break;
 
     default:
         g_assert_not_reached ();
@@ -1507,5 +1507,83 @@ mbim_message_command_done_get_raw_information_buffer (const MbimMessage *self,
 
     return (*length > 0 ?
             ((struct full_message *)(self->data))->message.command_done.buffer :
+            NULL);
+}
+
+/*****************************************************************************/
+/* 'Indicate Status' message interface */
+
+/**
+ * mbim_message_indicate_status_get_service:
+ * @self: a #MbimMessage.
+ *
+ * Get the service of a %MBIM_MESSAGE_TYPE_INDICATE_STATUS message.
+ *
+ * Returns: a #MbimService.
+ */
+MbimService
+mbim_message_indicate_status_get_service (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_SERVICE_INVALID);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATE_STATUS, MBIM_SERVICE_INVALID);
+
+    return mbim_uuid_to_service ((const MbimUuid *)&(((struct full_message *)(self->data))->message.indicate_status.service_id));
+}
+
+/**
+ * mbim_message_indicate_status_get_service_id:
+ * @self: a #MbimMessage.
+ *
+ * Get the service UUID of a %MBIM_MESSAGE_TYPE_INDICATE_STATUS message.
+ *
+ * Returns: a #MbimUuid.
+ */
+const MbimUuid *
+mbim_message_indicate_status_get_service_id (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, MBIM_UUID_INVALID);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATE_STATUS, MBIM_UUID_INVALID);
+
+    return (const MbimUuid *)&(((struct full_message *)(self->data))->message.indicate_status.service_id);
+}
+
+/**
+ * mbim_message_indicate_status_get_cid:
+ * @self: a #MbimMessage.
+ *
+ * Get the command id of a %MBIM_MESSAGE_TYPE_INDICATE_STATUS message.
+ *
+ * Returns: a CID.
+ */
+guint32
+mbim_message_indicate_status_get_cid (const MbimMessage *self)
+{
+    g_return_val_if_fail (self != NULL, 0);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATE_STATUS, 0);
+
+    return GUINT32_FROM_LE (((struct full_message *)(self->data))->message.indicate_status.command_id);
+}
+
+/**
+ * mbim_message_indicate_status_get_raw_information_buffer:
+ * @self: a #MbimMessage.
+ * @length: (out): return location for the size of the output buffer.
+ *
+ * Gets the information buffer of the %MBIM_MESSAGE_TYPE_INDICATE_STATUS message.
+ *
+ * Returns: (transfer none): The raw data buffer, or #NULL if empty.
+ */
+const guint8 *
+mbim_message_indicate_status_get_raw_information_buffer (const MbimMessage *self,
+                                                         guint32           *length)
+{
+    g_return_val_if_fail (self != NULL, NULL);
+    g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATE_STATUS, NULL);
+    g_return_val_if_fail (length != NULL, NULL);
+
+    *length = GUINT32_FROM_LE (((struct full_message *)(self->data))->message.indicate_status.buffer_length);
+
+    return (*length > 0 ?
+            ((struct full_message *)(self->data))->message.indicate_status.buffer :
             NULL);
 }

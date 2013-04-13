@@ -96,17 +96,26 @@ struct command_done_message {
     guint8                 buffer[];
 } __attribute__((packed));
 
+struct indicate_status_message {
+    struct fragment_header fragment_header;
+    guint8                 service_id[16];
+    guint32                command_id;
+    guint32                buffer_length;
+    guint8                 buffer[];
+} __attribute__((packed));
+
 struct full_message {
     struct header header;
     union {
-        struct open_message         open;
-        struct open_done_message    open_done;
+        struct open_message            open;
+        struct open_done_message       open_done;
         /* nothing needed for close_message */
-        struct close_done_message   close_done;
-        struct error_message        error;
-        struct fragment_message     fragment;
-        struct command_message      command;
-        struct command_done_message command_done;
+        struct close_done_message      close_done;
+        struct error_message           error;
+        struct fragment_message        fragment;
+        struct command_message         command;
+        struct command_done_message    command_done;
+        struct indicate_status_message indicate_status;
     } message;
 } __attribute__((packed));
 
