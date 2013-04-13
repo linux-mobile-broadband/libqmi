@@ -263,7 +263,7 @@ typedef enum {
  */
 typedef enum {
     MBIM_PIN_STATE_UNLOCKED = 0,
-    MBIM_PIN_STATE_LOCKED = 1
+    MBIM_PIN_STATE_LOCKED   = 1
 } MbimPinState;
 
 /**
@@ -274,10 +274,10 @@ typedef enum {
  * @MBIM_PIN_OPERATION_CHANGE:  Change the specified PIN.
 */
 typedef enum {
-    MBIM_PIN_OPERATION_ENTER = 0,
-    MBIM_PIN_OPERATION_ENABLE = 1,
+    MBIM_PIN_OPERATION_ENTER   = 0,
+    MBIM_PIN_OPERATION_ENABLE  = 1,
     MBIM_PIN_OPERATION_DISABLE = 2,
-    MBIM_PIN_OPERATION_CHANGE = 3
+    MBIM_PIN_OPERATION_CHANGE  = 3
 } MbimPinOperation;
 
 /*****************************************************************************/
