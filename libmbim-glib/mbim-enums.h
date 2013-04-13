@@ -312,6 +312,103 @@ typedef enum {
 } MbimPinFormat;
 
 /*****************************************************************************/
+/* 'Register State' enums */
+
+/**
+ * MbimNwError:
+ * @MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR: IMSI unknown in the HLR.
+ * @MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR: IMSI unknown in the VLR.
+ * @MBIM_NW_ERROR_ILLEGAL_ME: Illegal ME.
+ * @MBIM_NW_ERROR_GPRS_NOT_ALLOWED: GPRS not allowed.
+ * @MBIM_NW_ERROR_GPRS_AND_NON_GPRS_NOT_ALLOWED: GPRS and non-GPRS not allowed.
+ * @MBIM_NW_ERROR_PLMN_NOT_ALLOWED: PLMN not allowed.
+ * @MBIM_NW_ERROR_LOCATION_AREA_NOT_ALLOWED: Location area not allowed.
+ * @MBIM_NW_ERROR_ROAMING_NOT_ALLOWED_IN_LOCATION_AREA: Roaming not allowed in the location area.
+ * @MBIM_NW_ERROR_GPRS_NOT_ALLOWED_IN_PLMN: GPRS not allowed in PLMN.
+ * @MBIM_NW_ERROR_NO_CELLS_IN_LOCATION_AREA: No cells in location area.
+ * @MBIM_NW_ERROR_NETWORK_FAILURE: Network failure.
+ * @MBIM_NW_ERROR_CONGESTION: Congestion.
+ *
+ *  Network errors.
+ */
+typedef enum {
+    MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR                  = 2,
+    MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR                  = 4,
+    MBIM_NW_ERROR_ILLEGAL_ME                           = 6,
+    MBIM_NW_ERROR_GPRS_NOT_ALLOWED                     = 7,
+    MBIM_NW_ERROR_GPRS_AND_NON_GPRS_NOT_ALLOWED        = 8,
+    MBIM_NW_ERROR_PLMN_NOT_ALLOWED                     = 11,
+    MBIM_NW_ERROR_LOCATION_AREA_NOT_ALLOWED            = 12,
+    MBIM_NW_ERROR_ROAMING_NOT_ALLOWED_IN_LOCATION_AREA = 13,
+    MBIM_NW_ERROR_GPRS_NOT_ALLOWED_IN_PLMN             = 14,
+    MBIM_NW_ERROR_NO_CELLS_IN_LOCATION_AREA            = 15,
+    MBIM_NW_ERROR_NETWORK_FAILURE                      = 17,
+    MBIM_NW_ERROR_CONGESTION                           = 22
+} MbimNwError;
+
+/**
+ * MbimRegisterAction:
+ * @MBIM_REGISTER_ACTION_AUTOMATIC: Automatic registration.
+ * @MBIM_REGISTER_ACTION_MANUAL: Manual registration.
+ *
+ * Type of registration requested.
+ */
+typedef enum {
+    MBIM_REGISTER_ACTION_AUTOMATIC = 0,
+    MBIM_REGISTER_ACTION_MANUAL    = 1
+} MbimRegisterAction;
+
+/**
+ * MbimRegisterState:
+ * @MBIM_REGISTER_STATE_UNKNOWN: Unknown registration state.
+ * @MBIM_REGISTER_STATE_DEREGISTERED: Not registered.
+ * @MBIM_REGISTER_STATE_SEARCHING: Searching.
+ * @MBIM_REGISTER_STATE_HOME: Registered in home network.
+ * @MBIM_REGISTER_STATE_ROAMING: Registered in roaming network.
+ * @MBIM_REGISTER_STATE_PARTNER: Registered in a preferred roaming network.
+ * @MBIM_REGISTER_STATE_DENIED: Registration denied.
+ *
+ * Registration state.
+ */
+typedef enum {
+    MBIM_REGISTER_STATE_UNKNOWN      = 0,
+    MBIM_REGISTER_STATE_DEREGISTERED = 1,
+    MBIM_REGISTER_STATE_SEARCHING    = 2,
+    MBIM_REGISTER_STATE_HOME         = 3,
+    MBIM_REGISTER_STATE_ROAMING      = 4,
+    MBIM_REGISTER_STATE_PARTNER      = 5,
+    MBIM_REGISTER_STATE_DENIED       = 6
+} MbimRegisterState;
+
+/**
+ * MbimRegisterMode:
+ * @MBIM_REGISTER_MODE_UNKNOWN: Unknown.
+ * @MBIM_REGISTER_MODE_AUTOMATIC: Automatic registration.
+ * @MBIM_REGISTER_MODE_MANUAL: Manual registration.
+ *
+ * Type of registration requested.
+ */
+typedef enum {
+    MBIM_REGISTER_MODE_UNKNOWN   = 0,
+    MBIM_REGISTER_MODE_AUTOMATIC = 1,
+    MBIM_REGISTER_MODE_MANUAL    = 2
+} MbimRegisterMode;
+
+/**
+ * MbimRegistrationFlag:
+ * @MBIM_REGISTRATION_FLAG_NONE: None.
+ * @MBIM_REGISTRATION_FLAG_MANUAL_SELECTION_NOT_AVAILABLE: Network doesn't support manual network selection.
+ * @MBIM_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH: Modem should auto-attach to the network after registration.
+ *
+ * Registration flags.
+ */
+typedef enum {
+    MBIM_REGISTRATION_FLAG_NONE                                   = 0,
+    MBIM_REGISTRATION_FLAG_MANUAL_SELECTION_NOT_AVAILABLE         = 1 << 0,
+    MBIM_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH = 1 << 2,
+} MbimRegistrationFlag;
+
+/*****************************************************************************/
 /* 'Packet Service' enums */
 
 /**
