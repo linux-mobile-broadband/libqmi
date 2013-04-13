@@ -62,7 +62,7 @@ enum {
 static GParamSpec *properties[PROP_LAST];
 
 enum {
-    SIGNAL_INDICATION,
+    SIGNAL_INDICATE_STATUS,
     SIGNAL_ERROR,
     SIGNAL_LAST
 };
@@ -401,7 +401,7 @@ indication_ready (MbimDevice   *self,
     }
 
     indication = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
-    g_signal_emit (self, signals[SIGNAL_INDICATION], 0, indication);
+    g_signal_emit (self, signals[SIGNAL_INDICATE_STATUS], 0, indication);
 }
 
 static void
@@ -1577,8 +1577,8 @@ mbim_device_class_init (MbimDeviceClass *klass)
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_FILE, properties[PROP_FILE]);
 
-    signals[SIGNAL_INDICATION] =
-        g_signal_new (MBIM_DEVICE_SIGNAL_INDICATION,
+    signals[SIGNAL_INDICATE_STATUS] =
+        g_signal_new (MBIM_DEVICE_SIGNAL_INDICATE_STATUS,
                       G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
                       G_SIGNAL_RUN_LAST,
                       0,
