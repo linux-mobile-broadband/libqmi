@@ -38,10 +38,10 @@ class Message:
         self.name = dictionary['name']
 
         # Gather types of command
-        self.query        = True if 'query'    in dictionary else False
-        self.set          = True if 'set'      in dictionary else False
-        self.response     = True if 'response' in dictionary else False
-        self.notification = True if 'notify'   in dictionary else False
+        self.query        = True if 'query'        in dictionary else False
+        self.set          = True if 'set'          in dictionary else False
+        self.response     = True if 'response'     in dictionary else False
+        self.notification = True if 'notification' in dictionary else False
 
         # Build Fullname
         self.fullname = 'MBIM Message ' + self.name
