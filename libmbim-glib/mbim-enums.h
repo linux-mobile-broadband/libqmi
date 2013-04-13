@@ -281,6 +281,37 @@ typedef enum {
 } MbimPinOperation;
 
 /*****************************************************************************/
+/* 'Pin List' enums */
+
+/**
+ * MbimPinMode:
+ * @MBIM_PIN_MODE_NOT_SUPPORTED: Not supported.
+ * @MBIM_PIN_MODE_ENABLED: Enabled.
+ * @MBIM_PIN_MODE_DISABLED: Disabled.
+ *
+ * Whether the lock is enabled or disabled.
+ */
+typedef enum {
+    MBIM_PIN_MODE_NOT_SUPPORTED = 0,
+    MBIM_PIN_MODE_ENABLED       = 1,
+    MBIM_PIN_MODE_DISABLED      = 2
+} MbimPinMode;
+
+/**
+ * MbimPinFormat:
+ * @MBIM_PIN_FORMAT_UNKNOWN: Unknown format.
+ * @MBIM_PIN_FORMAT_NUMERIC: Numeric-only format.
+ * @MBIM_PIN_FORMAT_ALPHANUMERIC: Alphanumeric format.
+ *
+ * Format of the expected PIN code.
+ */
+typedef enum {
+    MBIM_PIN_FORMAT_UNKNOWN      = 0,
+    MBIM_PIN_FORMAT_NUMERIC      = 1,
+    MBIM_PIN_FORMAT_ALPHANUMERIC = 2
+} MbimPinFormat;
+
+/*****************************************************************************/
 /* 'Packet Service' enums */
 
 /**
