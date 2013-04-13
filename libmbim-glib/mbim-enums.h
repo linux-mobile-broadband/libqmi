@@ -389,20 +389,20 @@ typedef enum {
 
 /**
  * MbimContextIpType:
- * @MBIM_CONTEXT_IPTYPE_DEFAULT: It is up to the function to decide, the host does not care.
- * @MBIM_CONTEXT_IPTYPE_IPV4: IPv4 context.
- * @MBIM_CONTEXT_IPTYPE_IPV6: IPv6 context.
- * @MBIM_CONTEXT_IPTYPE_IPV4V6: The context is IPv4, IPv6 or dualstack IPv4v6.
- * @MBIM_CONTEXT_IPTYPE_IPV4_AND_IPV6: Both an IPv4 and an IPv6 context.
+ * @MBIM_CONTEXT_IP_TYPE_DEFAULT: It is up to the function to decide, the host does not care.
+ * @MBIM_CONTEXT_IP_TYPE_IPV4: IPv4 context.
+ * @MBIM_CONTEXT_IP_TYPE_IPV6: IPv6 context.
+ * @MBIM_CONTEXT_IP_TYPE_IPV4V6: The context is IPv4, IPv6 or dualstack IPv4v6.
+ * @MBIM_CONTEXT_IP_TYPE_IPV4_AND_IPV6: Both an IPv4 and an IPv6 context.
  *
  * Context IP Type.
  */
 typedef enum {
-    MBIM_CONTEXT_IPTYPE_DEFAULT       = 0,
-    MBIM_CONTEXT_IPTYPE_IPV4          = 1,
-    MBIM_CONTEXT_IPTYPE_IPV6          = 2,
-    MBIM_CONTEXT_IPTYPE_IPV4V6        = 3,
-    MBIM_CONTEXT_IPTYPE_IPV4_AND_IPV6 = 4
+    MBIM_CONTEXT_IP_TYPE_DEFAULT       = 0,
+    MBIM_CONTEXT_IP_TYPE_IPV4          = 1,
+    MBIM_CONTEXT_IP_TYPE_IPV6          = 2,
+    MBIM_CONTEXT_IP_TYPE_IPV4V6        = 3,
+    MBIM_CONTEXT_IP_TYPE_IPV4_AND_IPV6 = 4
 } MbimContextIpType;
 
 /**
