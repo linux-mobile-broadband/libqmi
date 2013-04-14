@@ -791,6 +791,22 @@ mbim_message_get_printable (const MbimMessage *self,
                                 line_prefix,
                                 line_prefix, _mbim_message_fragment_get_total (self),
                                 line_prefix, _mbim_message_fragment_get_current (self));
+        if (!headers_only) {
+            gchar *uuid_printable;
+            const gchar *cid_printable;
+
+            uuid_printable = mbim_uuid_get_printable (mbim_message_indicate_status_get_service_id (self));
+            cid_printable = mbim_cid_get_printable (mbim_message_indicate_status_get_service (self),
+                                                    mbim_message_indicate_status_get_cid (self));
+            g_string_append_printf (printable,
+                                    "%sContents:\n"
+                                    "%s  service = '%s' (%s)\n"
+                                    "%s  cid     = '%s' (0x%08x)\n",
+                                    line_prefix,
+                                    line_prefix, mbim_service_get_string (mbim_message_indicate_status_get_service (self)), uuid_printable,
+                                    line_prefix, cid_printable, mbim_message_indicate_status_get_cid (self));
+            g_free (uuid_printable);
+        }
         break;
     }
 
