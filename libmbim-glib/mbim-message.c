@@ -304,6 +304,14 @@ _mbim_struct_builder_complete (MbimStructBuilder *builder)
 }
 
 void
+_mbim_struct_builder_append_uuid (MbimStructBuilder *builder,
+                                  const MbimUuid    *value)
+{
+    /* uuids are added in the static buffer only */
+    g_byte_array_append (builder->fixed_buffer, (guint8 *)value, sizeof (MbimUuid));
+}
+
+void
 _mbim_struct_builder_append_guint32 (MbimStructBuilder *builder,
                                      guint32            value)
 {
@@ -424,6 +432,13 @@ _mbim_message_command_builder_complete (MbimMessageCommandBuilder *builder)
     g_slice_free (MbimMessageCommandBuilder, builder);
 
     return message;
+}
+
+void
+_mbim_message_command_builder_append_uuid (MbimMessageCommandBuilder *builder,
+                                           const MbimUuid            *value)
+{
+    _mbim_struct_builder_append_uuid (builder->contents_builder, value);
 }
 
 void

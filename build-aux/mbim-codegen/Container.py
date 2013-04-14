@@ -20,6 +20,7 @@
 
 import string
 import utils
+from ValueUuid        import ValueUuid
 from ValueUint32      import ValueUint32
 from ValueUint32Array import ValueUint32Array
 from ValueString      import ValueString
