@@ -245,6 +245,11 @@ class Message:
                         '        if (${field_name_underscore} != NULL)\n'
                         '            *${field_name_underscore} = _${field_name_underscore};\n'
                         '        offset += 4;\n')
+                elif field.format == 'uuid':
+                    inner_template += (
+                        '        if (${field_name_underscore} != NULL)\n'
+                        '            *${field_name_underscore} =  _mbim_message_read_uuid (message, offset);\n'
+                        '        offset += 16;\n')
                 elif field.format == 'guint32':
                     inner_template += (
                         '        if (${field_name_underscore} != NULL)\n'
