@@ -105,6 +105,8 @@ guint32          _mbim_message_read_guint32       (const MbimMessage *self,
 guint32         *_mbim_message_read_guint32_array (const MbimMessage *self,
                                                    guint32            array_size,
                                                    guint32            relative_offset_array_start);
+guint64          _mbim_message_read_guint64       (const MbimMessage *self,
+                                                   guint64            relative_offset);
 gchar           *_mbim_message_read_string        (const MbimMessage *self,
                                                    guint32            relative_offset);
 gchar          **_mbim_message_read_string_array  (const MbimMessage *self,
@@ -194,6 +196,8 @@ void               _mbim_struct_builder_append_uuid    (MbimStructBuilder *build
                                                         const MbimUuid    *value);
 void               _mbim_struct_builder_append_guint32 (MbimStructBuilder *builder,
                                                         guint32            value);
+void               _mbim_struct_builder_append_guint64 (MbimStructBuilder *builder,
+                                                        guint64            value);
 void               _mbim_struct_builder_append_string  (MbimStructBuilder *builder,
                                                         const gchar       *value);
 void               _mbim_struct_builder_append_struct  (MbimStructBuilder *builder,
@@ -215,6 +219,8 @@ void                       _mbim_message_command_builder_append_uuid    (MbimMes
                                                                          const MbimUuid            *value);
 void                       _mbim_message_command_builder_append_guint32 (MbimMessageCommandBuilder *builder,
                                                                          guint32                    value);
+void                       _mbim_message_command_builder_append_guint64 (MbimMessageCommandBuilder *builder,
+                                                                         guint64                    value);
 void                       _mbim_message_command_builder_append_string  (MbimMessageCommandBuilder *builder,
                                                                          const gchar               *value);
 void                       _mbim_message_command_builder_append_struct  (MbimMessageCommandBuilder *builder,

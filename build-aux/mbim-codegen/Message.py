@@ -261,6 +261,11 @@ class Message:
                         '        if (${field_name_underscore} != NULL)\n'
                         '            *${field_name_underscore} = _mbim_message_read_guint32_array (message, _{array_size_field_name_underscore}, offset);\n'
                         '        offset += (4 * _${array_size_field_name_underscore});\n')
+                elif field.format == 'guint64':
+                    inner_template += (
+                        '        if (${field_name_underscore} != NULL)\n'
+                        '            *${field_name_underscore} =  _mbim_message_read_guint64 (message, offset);\n'
+                        '        offset += 8;\n')
                 elif field.format == 'string':
                     inner_template += (
                         '        if (${field_name_underscore} != NULL)\n'

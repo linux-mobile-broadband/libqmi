@@ -23,6 +23,7 @@ import utils
 from ValueUuid        import ValueUuid
 from ValueUint32      import ValueUint32
 from ValueUint32Array import ValueUint32Array
+from ValueUint64      import ValueUint64
 from ValueString      import ValueString
 from ValueStringArray import ValueStringArray
 from ValueStruct      import ValueStruct
@@ -60,6 +61,8 @@ class Container:
                 new_field = ValueUint32Array(field)
                 self.mark_array_length(new_field.array_size_field)
                 self.fields.append(new_field)
+            elif field['format'] == 'guint64':
+                self.fields.append(ValueUint64(field))
             elif field['format'] == 'string':
                 self.fields.append(ValueString(field))
             elif field['format'] == 'string-array':

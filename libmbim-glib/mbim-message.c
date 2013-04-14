@@ -149,6 +149,19 @@ _mbim_message_read_guint32_array (const MbimMessage *self,
     return out;
 }
 
+guint64
+_mbim_message_read_guint64 (const MbimMessage *self,
+                            guint64            relative_offset)
+{
+    guint64 information_buffer_offset;
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+    return GUINT64_FROM_LE (G_STRUCT_MEMBER (
+                                guint64,
+                                self->data,
+                                (information_buffer_offset + relative_offset)));
+}
+
 gchar *
 _mbim_message_read_string (const MbimMessage *self,
                            guint32            relative_offset)
@@ -323,6 +336,17 @@ _mbim_struct_builder_append_guint32 (MbimStructBuilder *builder,
 }
 
 void
+_mbim_struct_builder_append_guint64 (MbimStructBuilder *builder,
+                                     guint64            value)
+{
+    guint64 tmp;
+
+    /* guint64 values are added in the static buffer only */
+    tmp = GUINT64_TO_LE (value);
+    g_byte_array_append (builder->fixed_buffer, (guint8 *)&tmp, sizeof (tmp));
+}
+
+void
 _mbim_struct_builder_append_string (MbimStructBuilder *builder,
                                     const gchar       *value)
 {
@@ -446,6 +470,13 @@ _mbim_message_command_builder_append_guint32 (MbimMessageCommandBuilder *builder
                                               guint32                    value)
 {
     _mbim_struct_builder_append_guint32 (builder->contents_builder, value);
+}
+
+void
+_mbim_message_command_builder_append_guint64 (MbimMessageCommandBuilder *builder,
+                                              guint64                    value)
+{
+    _mbim_struct_builder_append_guint64 (builder->contents_builder, value);
 }
 
 void

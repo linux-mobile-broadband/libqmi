@@ -53,6 +53,9 @@ class Struct:
             elif field['format'] == 'guint32-array':
                 inner_template = (
                     '    guint32 *${field_name_underscore};\n')
+            elif field['format'] == 'guint64':
+                inner_template = (
+                    '    guint64 ${field_name_underscore};\n')
             elif field['format'] == 'string':
                 inner_template = (
                     '    gchar *${field_name_underscore};\n')
@@ -101,6 +104,8 @@ class Struct:
             elif field['format'] == 'guint32-array':
                 inner_template += (
                     '    g_free (var->${field_name_underscore});\n')
+            elif field['format'] == 'guint64':
+                pass
             elif field['format'] == 'string':
                 inner_template += (
                     '    g_free (var->${field_name_underscore});\n')
@@ -182,6 +187,11 @@ class Struct:
                     '\n'
                     '    out->${field_name_underscore} = _mbim_message_read_guint32_array (self, out->${array_size_field_name_underscore}, offset);\n'
                     '    offset += (4 * out->${array_size_field_name_underscore});\n')
+            elif field['format'] == 'guint64':
+                inner_template += (
+                    '\n'
+                    '    out->${field_name_underscore} = _mbim_message_read_guint64 (self, offset);\n'
+                    '    offset += 8;\n')
             elif field['format'] == 'string':
                 inner_template += (
                     '\n'
