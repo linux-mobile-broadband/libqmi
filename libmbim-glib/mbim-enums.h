@@ -534,6 +534,27 @@ typedef enum {
     MBIM_VOICE_CALL_STATE_HANG_UP     = 2
 } MbimVoiceCallState;
 
+/*****************************************************************************/
+/* 'IP Configuration' enums */
+
+/**
+ * MbimIPConfigurationAvailableFlag:
+ * @MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE: No info available.
+ * @MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS: Address info available.
+ * @MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_GATEWAY: Gateway info available.
+ * @MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS: DNS info available.
+ * @MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_MTU: MTU info available.
+ *
+ * Mask of available information about an IP address.
+ */
+typedef enum { /*< underscore_name=mbim_ip_configuration_available_flag >*/
+    MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE     = 0,
+    MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS  = 1 << 0,
+    MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_GATEWAY  = 1 << 1,
+    MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS      = 1 << 2,
+    MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_MTU      = 1 << 3,
+} MbimIPConfigurationAvailableFlag;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

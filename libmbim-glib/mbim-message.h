@@ -47,6 +47,26 @@ GType mbim_message_get_type (void) G_GNUC_CONST;
 #define MBIM_TYPE_MESSAGE (mbim_message_get_type ())
 
 /**
+ * MbimIPv4:
+ *
+ * An IPv4 address.
+ */
+typedef struct _MbimIPv4 MbimIPv4;
+struct _MbimIPv4 {
+    guint8 addr[4];
+};
+
+/**
+ * MbimIPv6:
+ *
+ * An IPv6 address.
+ */
+typedef struct _MbimIPv6 MbimIPv6;
+struct _MbimIPv6 {
+    guint8 addr[16];
+};
+
+/**
  * MbimMessageType:
  * @MBIM_MESSAGE_TYPE_INVALID: Invalid MBIM message.
  * @MBIM_MESSAGE_TYPE_OPEN: Initialization request.
@@ -114,6 +134,18 @@ gchar          **_mbim_message_read_string_array  (const MbimMessage *self,
                                                    guint32            relative_offset_array_start);
 const MbimUuid  *_mbim_message_read_uuid          (const MbimMessage *self,
                                                    guint32            relative_offset);
+const MbimIPv4  *_mbim_message_read_ipv4          (const MbimMessage *self,
+                                                   guint32            relative_offset,
+                                                   gboolean           ref);
+MbimIPv4        *_mbim_message_read_ipv4_array    (const MbimMessage *self,
+                                                   guint32            array_size,
+                                                   guint32            relative_offset_array_start);
+const MbimIPv6  *_mbim_message_read_ipv6          (const MbimMessage *self,
+                                                   guint32            relative_offset,
+                                                   gboolean           ref);
+MbimIPv6        *_mbim_message_read_ipv6_array    (const MbimMessage *self,
+                                                   guint32            array_size,
+                                                   guint32            relative_offset_array_start);
 #endif
 
 /*****************************************************************************/
@@ -183,48 +215,84 @@ const guint8           *mbim_message_command_get_raw_information_buffer (const M
                                                                          guint32           *length);
 
 #if defined (LIBMBIM_GLIB_COMPILATION)
-/**
- * MbimStruct:
- *
- * An opaque type representing a struct within a MBIM message command.
- */
-typedef struct _MbimStructBuilder MbimStructBuilder;
 
-MbimStructBuilder *_mbim_struct_builder_new            (void);
-GByteArray        *_mbim_struct_builder_complete       (MbimStructBuilder *builder);
-void               _mbim_struct_builder_append_uuid    (MbimStructBuilder *builder,
-                                                        const MbimUuid    *value);
-void               _mbim_struct_builder_append_guint32 (MbimStructBuilder *builder,
-                                                        guint32            value);
-void               _mbim_struct_builder_append_guint64 (MbimStructBuilder *builder,
-                                                        guint64            value);
-void               _mbim_struct_builder_append_string  (MbimStructBuilder *builder,
-                                                        const gchar       *value);
-void               _mbim_struct_builder_append_struct  (MbimStructBuilder *builder,
-                                                        const GByteArray  *value);
+typedef struct {
+    GByteArray  *fixed_buffer;
+    GByteArray  *variable_buffer;
+    GArray      *offsets;
+} MbimStructBuilder;
 
-/**
- * MbimMessageCommandBuilder:
- *
- * An opaque type representing a MBIM message command builder.
- */
-typedef struct _MbimMessageCommandBuilder MbimMessageCommandBuilder;
+MbimStructBuilder *_mbim_struct_builder_new                  (void);
+GByteArray        *_mbim_struct_builder_complete             (MbimStructBuilder *builder);
+void               _mbim_struct_builder_append_uuid          (MbimStructBuilder *builder,
+                                                              const MbimUuid    *value);
+void               _mbim_struct_builder_append_guint32       (MbimStructBuilder *builder,
+                                                              guint32            value);
+void               _mbim_struct_builder_append_guint32_array (MbimStructBuilder *builder,
+                                                              const guint32     *values,
+                                                              guint32            n_values);
+void               _mbim_struct_builder_append_guint64       (MbimStructBuilder *builder,
+                                                              guint64            value);
+void               _mbim_struct_builder_append_guint64_array (MbimStructBuilder *builder,
+                                                              const guint64     *values,
+                                                              guint32            n_values);
+void               _mbim_struct_builder_append_string        (MbimStructBuilder *builder,
+                                                              const gchar       *value);
+void               _mbim_struct_builder_append_string_array  (MbimStructBuilder  *builder,
+                                                              const gchar *const *values,
+                                                              guint32             n_values);
+void               _mbim_struct_builder_append_ipv4          (MbimStructBuilder *builder,
+                                                              const MbimIPv4    *value,
+                                                              gboolean           ref);
+void               _mbim_struct_builder_append_ipv4_array    (MbimStructBuilder *builder,
+                                                              const MbimIPv4    *values,
+                                                              guint32            n_values);
+void               _mbim_struct_builder_append_ipv6          (MbimStructBuilder *builder,
+                                                              const MbimIPv6    *value,
+                                                              gboolean           ref);
+void               _mbim_struct_builder_append_ipv6_array    (MbimStructBuilder *builder,
+                                                              const MbimIPv6    *values,
+                                                              guint32            n_values);
 
-MbimMessageCommandBuilder *_mbim_message_command_builder_new            (guint32                    transaction_id,
-                                                                         MbimService                service,
-                                                                         guint32                    cid,
-                                                                         MbimMessageCommandType     command_type);
-MbimMessage               *_mbim_message_command_builder_complete       (MbimMessageCommandBuilder *builder);
-void                       _mbim_message_command_builder_append_uuid    (MbimMessageCommandBuilder *builder,
-                                                                         const MbimUuid            *value);
-void                       _mbim_message_command_builder_append_guint32 (MbimMessageCommandBuilder *builder,
-                                                                         guint32                    value);
-void                       _mbim_message_command_builder_append_guint64 (MbimMessageCommandBuilder *builder,
-                                                                         guint64                    value);
-void                       _mbim_message_command_builder_append_string  (MbimMessageCommandBuilder *builder,
-                                                                         const gchar               *value);
-void                       _mbim_message_command_builder_append_struct  (MbimMessageCommandBuilder *builder,
-                                                                         const GByteArray          *value);
+typedef struct {
+    MbimMessage *message;
+    MbimStructBuilder *contents_builder;
+} MbimMessageCommandBuilder;
+
+MbimMessageCommandBuilder *_mbim_message_command_builder_new                  (guint32                    transaction_id,
+                                                                               MbimService                service,
+                                                                               guint32                    cid,
+                                                                               MbimMessageCommandType     command_type);
+MbimMessage               *_mbim_message_command_builder_complete             (MbimMessageCommandBuilder *builder);
+void                       _mbim_message_command_builder_append_uuid          (MbimMessageCommandBuilder *builder,
+                                                                               const MbimUuid            *value);
+void                       _mbim_message_command_builder_append_guint32       (MbimMessageCommandBuilder *builder,
+                                                                               guint32                    value);
+void                       _mbim_message_command_builder_append_guint32_array (MbimMessageCommandBuilder *builder,
+                                                                               const guint32             *values,
+                                                                               guint32                    n_values);
+void                       _mbim_message_command_builder_append_guint64       (MbimMessageCommandBuilder *builder,
+                                                                               guint64                    value);
+void                       _mbim_message_command_builder_append_guint64_array (MbimMessageCommandBuilder *builder,
+                                                                               const guint64             *values,
+                                                                               guint32                    n_values);
+void                       _mbim_message_command_builder_append_string        (MbimMessageCommandBuilder *builder,
+                                                                               const gchar               *value);
+void                       _mbim_message_command_builder_append_string_array  (MbimMessageCommandBuilder *builder,
+                                                                               const gchar *const        *values,
+                                                                               guint32                    n_values);
+void                       _mbim_message_command_builder_append_ipv4          (MbimMessageCommandBuilder *builder,
+                                                                               const MbimIPv4            *value,
+                                                                               gboolean                   ref);
+void                       _mbim_message_command_builder_append_ipv4_array    (MbimMessageCommandBuilder *builder,
+                                                                               const MbimIPv4            *values,
+                                                                               guint32                    n_values);
+void                       _mbim_message_command_builder_append_ipv6          (MbimMessageCommandBuilder *builder,
+                                                                               const MbimIPv6            *value,
+                                                                               gboolean                   ref);
+void                       _mbim_message_command_builder_append_ipv6_array    (MbimMessageCommandBuilder *builder,
+                                                                               const MbimIPv6            *values,
+                                                                               guint32                    n_values);
 #endif
 
 /*****************************************************************************/

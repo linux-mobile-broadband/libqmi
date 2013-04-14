@@ -135,11 +135,150 @@ test_message_contents_basic_connect_device_caps (void)
     mbim_message_unref (response);
 }
 
+static void
+test_message_contents_basic_connect_ip_configuration (void)
+{
+    MbimMessage *response;
+    guint32 session_id;
+    MbimIPConfigurationAvailableFlag ipv4configurationavailable;
+    MbimIPConfigurationAvailableFlag ipv6configurationavailable;
+    guint32 ipv4addresscount;
+    MbimIPv4Element **ipv4address;
+    guint32 ipv6addresscount;
+    MbimIPv6Element **ipv6address;
+    const MbimIPv4 *ipv4gateway;
+    const MbimIPv6 *ipv6gateway;
+    guint32 ipv4dnsservercount;
+    MbimIPv4 *ipv4dnsserver;
+    guint32 ipv6dnsservercount;
+    MbimIPv6 *ipv6dnsserver;
+    guint32 ipv4mtu;
+    guint32 ipv6mtu;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x80, 0x00, 0x00, 0x00, /* length */
+        0x1A, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x0F, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x50, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* session id */
+        0x0F, 0x00, 0x00, 0x00, /* IPv4ConfigurationAvailable */
+        0x00, 0x00, 0x00, 0x00, /* IPv6ConfigurationAvailable */
+        0x01, 0x00, 0x00, 0x00, /* IPv4 element count */
+        0x3C, 0x00, 0x00, 0x00, /* IPv4 element offset */
+        0x00, 0x00, 0x00, 0x00, /* IPv6 element count */
+        0x00, 0x00, 0x00, 0x00, /* IPv6 element offset */
+        0x44, 0x00, 0x00, 0x00, /* IPv4 gateway offset */
+        0x00, 0x00, 0x00, 0x00, /* IPv6 gateway offset */
+        0x02, 0x00, 0x00, 0x00, /* IPv4 DNS count */
+        0x48, 0x00, 0x00, 0x00, /* IPv4 DNS offset */
+        0x00, 0x00, 0x00, 0x00, /* IPv6 DNS count */
+        0x00, 0x00, 0x00, 0x00, /* IPv6 DNS offset */
+        0xDC, 0x05, 0x00, 0x00, /* IPv4 MTU */
+        0x00, 0x00, 0x00, 0x00, /* IPv6 MTU */
+        /* data buffer */
+        0x1C, 0x00, 0x00, 0x00, /* IPv4 element (netmask) */
+        0xD4, 0x49, 0x22, 0xF8, /* IPv4 element (address) */
+        0xD4, 0x49, 0x22, 0xF1, /* IPv4 gateway */
+        0xD4, 0xA6, 0xD2, 0x50, /* IPv4 DNS1 */
+        0xD4, 0x49, 0x20, 0x43  /* IPv4 DNS2 */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_ip_configuration_response_parse (
+                  response,
+                  &session_id,
+                  &ipv4configurationavailable,
+                  &ipv6configurationavailable,
+                  &ipv4addresscount,
+                  &ipv4address,
+                  &ipv6addresscount,
+                  &ipv6address,
+                  &ipv4gateway,
+                  &ipv6gateway,
+                  &ipv4dnsservercount,
+                  &ipv4dnsserver,
+                  &ipv6dnsservercount,
+                  &ipv6dnsserver,
+                  &ipv4mtu,
+                  &ipv6mtu,
+                  &error));
+
+    /*
+     *   IPv4 configuration available: 'address, gateway, dns, mtu'
+     *     IP addresses (1)
+     *       IP [0]: '212.166.228.25/28'
+     *     Gateway: '212.166.228.26'
+     *     DNS addresses (2)
+     *       DNS [0]: '212.166.210.80'
+     *       DNS [1]: '212.73.32.67'
+     *     MTU: '1500'
+     */
+
+    g_assert_cmpuint (session_id, ==, 0);
+    g_assert_cmpuint (ipv4configurationavailable, ==, (MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS |
+                                                       MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_GATEWAY |
+                                                       MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS |
+                                                       MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_MTU));
+    g_assert_cmpuint (ipv6configurationavailable, ==, MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE);
+
+    {
+        MbimIPv4 addr = { .addr = { 0xD4, 0x49, 0x22, 0xF8 } };
+
+        g_assert_cmpuint (ipv4addresscount, ==, 1);
+        g_assert_cmpuint (ipv4address[0]->on_link_prefix_length, ==, 28);
+        g_assert (memcmp (&addr, &(ipv4address[0]->ipv4_address), 4) == 0);
+    }
+
+    {
+        MbimIPv4 gateway_addr = { .addr = { 0xD4, 0x49, 0x22, 0xF1 } };
+
+        g_assert (memcmp (&gateway_addr, ipv4gateway, 4) == 0);
+    }
+
+    {
+        MbimIPv4 dns_addr_1 = { .addr = { 0xD4, 0xA6, 0xD2, 0x50 } };
+        MbimIPv4 dns_addr_2 = { .addr = { 0xD4, 0x49, 0x20, 0x43 } };
+
+        g_assert_cmpuint (ipv4dnsservercount, ==, 2);
+        g_assert (memcmp (&dns_addr_1, &ipv4dnsserver[0], 4) == 0);
+        g_assert (memcmp (&dns_addr_2, &ipv4dnsserver[1], 4) == 0);
+    }
+
+    g_assert_cmpuint (ipv4mtu, ==, 1500);
+
+    g_assert_cmpuint (ipv6addresscount, ==, 0);
+    g_assert (ipv6address == NULL);
+    g_assert (ipv6gateway == NULL);
+    g_assert_cmpuint (ipv6dnsservercount, ==, 0);
+    g_assert (ipv6dnsserver == NULL);
+
+    mbim_ipv4_element_array_free (ipv4address);
+    mbim_ipv6_element_array_free (ipv6address);
+    g_free (ipv4dnsserver);
+    g_free (ipv6dnsserver);
+
+    mbim_message_unref (response);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/device-caps", test_message_contents_basic_connect_device_caps);
+    g_test_add_func ("/libmbim-glib/message-contents/basic-connect/ip-configuration", test_message_contents_basic_connect_ip_configuration);
 
     return g_test_run ();
 }

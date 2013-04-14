@@ -133,6 +133,9 @@ _mbim_message_read_guint32_array (const MbimMessage *self,
     guint32 *out;
     guint32 information_buffer_offset;
 
+    if (!array_size)
+        return NULL;
+
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
     out = g_new (guint32, array_size + 1);
@@ -213,6 +216,9 @@ _mbim_message_read_string_array (const MbimMessage *self,
     guint32 i;
     guint32 information_buffer_offset;
 
+    if (!array_size)
+        return NULL;
+
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
     array = g_new (gchar *, array_size + 1);
@@ -258,18 +264,119 @@ _mbim_message_read_uuid (const MbimMessage *self,
                                                  (information_buffer_offset + relative_offset));
 }
 
+const MbimIPv4 *
+_mbim_message_read_ipv4 (const MbimMessage *self,
+                         guint32            relative_offset,
+                         gboolean           ref)
+{
+    guint32 information_buffer_offset;
+    guint32 offset;
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+
+    if (ref) {
+        offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (guint32,
+                                                   self->data,
+                                                   (information_buffer_offset + relative_offset)));
+        if (!offset)
+            return NULL;
+    } else
+        offset = relative_offset;
+
+    return (const MbimIPv4 *) G_STRUCT_MEMBER_P (self->data,
+                                                 (information_buffer_offset + offset));
+}
+
+MbimIPv4 *
+_mbim_message_read_ipv4_array (const MbimMessage *self,
+                               guint32            array_size,
+                               guint32            relative_offset_array_start)
+{
+    MbimIPv4 *array;
+    guint32 offset;
+    guint32 i;
+    guint32 information_buffer_offset;
+
+    if (!array_size)
+        return NULL;
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+
+    array = g_new (MbimIPv4, array_size);
+    offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                  guint32,
+                                  self->data,
+                                  (information_buffer_offset + relative_offset_array_start)));
+
+    for (i = 0; i < array_size; i++, offset += 4) {
+        memcpy (&array[i],
+                G_STRUCT_MEMBER_P (self->data,
+                                   (information_buffer_offset + offset)),
+                4);
+    }
+
+    return array;
+}
+
+const MbimIPv6 *
+_mbim_message_read_ipv6 (const MbimMessage *self,
+                         guint32            relative_offset,
+                         gboolean           ref)
+{
+    guint32 information_buffer_offset;
+    guint32 offset;
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+
+    if (ref) {
+        offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (guint32,
+                                                   self->data,
+                                                   (information_buffer_offset + relative_offset)));
+        if (!offset)
+            return NULL;
+    } else
+        offset = relative_offset;
+
+    return (const MbimIPv6 *) G_STRUCT_MEMBER_P (self->data,
+                                                 (information_buffer_offset + offset));
+}
+
+MbimIPv6 *
+_mbim_message_read_ipv6_array (const MbimMessage *self,
+                               guint32            array_size,
+                               guint32            relative_offset_array_start)
+{
+    MbimIPv6 *array;
+    guint32 offset;
+    guint32 i;
+    guint32 information_buffer_offset;
+
+    if (!array_size)
+        return NULL;
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+
+    array = g_new (MbimIPv6, array_size);
+    offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                  guint32,
+                                  self->data,
+                                  (information_buffer_offset + relative_offset_array_start)));
+    for (i = 0; i < array_size; i++, offset += 16) {
+        memcpy (&array[i],
+                G_STRUCT_MEMBER_P (self->data,
+                                   (information_buffer_offset + offset)),
+                16);
+    }
+
+    return array;
+}
+
 /*****************************************************************************/
 /* Struct builder interface
  *
  * Types like structs consist of a fixed sized prefix plus a variable length
  * data buffer. Items of variable size are usually given as an offset (with
  * respect to the start of the struct) plus a size field. */
-
-struct _MbimStructBuilder {
-    GByteArray  *fixed_buffer;
-    GByteArray  *variable_buffer;
-    GArray      *offsets;
-};
 
 MbimStructBuilder *
 _mbim_struct_builder_new (void)
@@ -320,8 +427,18 @@ void
 _mbim_struct_builder_append_uuid (MbimStructBuilder *builder,
                                   const MbimUuid    *value)
 {
+    static const MbimUuid uuid_invalid = {
+        .a = { 0x00, 0x00, 0x00, 0x00 },
+        .b = { 0x00, 0x00 },
+        .c = { 0x00, 0x00 },
+        .d = { 0x00, 0x00 },
+        .e = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+    };
+
     /* uuids are added in the static buffer only */
-    g_byte_array_append (builder->fixed_buffer, (guint8 *)value, sizeof (MbimUuid));
+    g_byte_array_append (builder->fixed_buffer,
+                         value ? (guint8 *)value : (guint8 *)&uuid_invalid,
+                         sizeof (MbimUuid));
 }
 
 void
@@ -336,6 +453,15 @@ _mbim_struct_builder_append_guint32 (MbimStructBuilder *builder,
 }
 
 void
+_mbim_struct_builder_append_guint32_array (MbimStructBuilder *builder,
+                                           const guint32     *values,
+                                           guint32            n_values)
+{
+    /* TODO */
+    g_assert_not_reached ();
+}
+
+void
 _mbim_struct_builder_append_guint64 (MbimStructBuilder *builder,
                                      guint64            value)
 {
@@ -344,6 +470,15 @@ _mbim_struct_builder_append_guint64 (MbimStructBuilder *builder,
     /* guint64 values are added in the static buffer only */
     tmp = GUINT64_TO_LE (value);
     g_byte_array_append (builder->fixed_buffer, (guint8 *)&tmp, sizeof (tmp));
+}
+
+void
+_mbim_struct_builder_append_guint64_array (MbimStructBuilder *builder,
+                                           const guint64     *values,
+                                           guint32            n_values)
+{
+    /* TODO */
+    g_assert_not_reached ();
 }
 
 void
@@ -405,20 +540,98 @@ _mbim_struct_builder_append_string (MbimStructBuilder *builder,
 }
 
 void
-_mbim_struct_builder_append_struct (MbimStructBuilder *builder,
-                                    const GByteArray  *value)
+_mbim_struct_builder_append_string_array (MbimStructBuilder  *builder,
+                                          const gchar *const *values,
+                                          guint32             n_values)
 {
-    /* structs are added in the static buffer only */
-    g_byte_array_append (builder->fixed_buffer, value->data, value->len);
+    /* TODO */
+    g_assert_not_reached ();
+}
+
+void
+_mbim_struct_builder_append_ipv4 (MbimStructBuilder *builder,
+                                  const MbimIPv4    *value,
+                                  gboolean           ref)
+{
+    if (ref)
+        _mbim_struct_builder_append_ipv4_array (builder, value, value ? 1 : 0);
+    else
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)value, sizeof (MbimIPv4));
+}
+
+void
+_mbim_struct_builder_append_ipv4_array (MbimStructBuilder *builder,
+                                        const MbimIPv4    *values,
+                                        guint32            n_values)
+{
+    guint32 offset;
+
+    if (!n_values) {
+        offset = 0;
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
+    } else {
+        guint32 offset_offset;
+
+        /* Offset of the offset */
+        offset_offset = builder->fixed_buffer->len;
+
+        /* Length *not* in LE yet */
+        offset = builder->variable_buffer->len;
+        /* Add the offset value */
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
+        /* Configure the value to get updated */
+        g_array_append_val (builder->offsets, offset_offset);
+
+        /* NOTE: length of the array must be given in a separate variable */
+
+        /* And finally, the array of IPs itself to the variable buffer */
+        g_byte_array_append (builder->variable_buffer, (guint8 *)values, n_values * sizeof (MbimIPv4));
+    }
+}
+
+void
+_mbim_struct_builder_append_ipv6 (MbimStructBuilder *builder,
+                                  const MbimIPv6    *value,
+                                  gboolean           ref)
+{
+    if (ref)
+        _mbim_struct_builder_append_ipv6_array (builder, value, value ? 1 : 0);
+    else
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)value, sizeof (MbimIPv6));
+}
+
+void
+_mbim_struct_builder_append_ipv6_array (MbimStructBuilder *builder,
+                                        const MbimIPv6    *values,
+                                        guint32            n_values)
+{
+    guint32 offset;
+
+    if (!n_values) {
+        offset = 0;
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
+    } else {
+        guint32 offset_offset;
+
+        /* Offset of the offset */
+        offset_offset = builder->fixed_buffer->len;
+
+        /* Length *not* in LE yet */
+        offset = builder->variable_buffer->len;
+        /* Add the offset value */
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
+        /* Configure the value to get updated */
+        g_array_append_val (builder->offsets, offset_offset);
+
+        /* NOTE: length of the array must be given in a separate variable */
+
+        /* And finally, the array of IPs itself to the variable buffer */
+        g_byte_array_append (builder->variable_buffer, (guint8 *)values, n_values * sizeof (MbimIPv6));
+    }
 }
 
 /*****************************************************************************/
 /* Command message builder interface */
-
-struct _MbimMessageCommandBuilder {
-    MbimMessage *message;
-    MbimStructBuilder *contents_builder;
-};
 
 MbimMessageCommandBuilder *
 _mbim_message_command_builder_new (guint32                transaction_id,
@@ -473,10 +686,26 @@ _mbim_message_command_builder_append_guint32 (MbimMessageCommandBuilder *builder
 }
 
 void
+_mbim_message_command_builder_append_guint32_array (MbimMessageCommandBuilder *builder,
+                                                    const guint32             *values,
+                                                    guint32                    n_values)
+{
+    _mbim_struct_builder_append_guint32_array (builder->contents_builder, values, n_values);
+}
+
+void
 _mbim_message_command_builder_append_guint64 (MbimMessageCommandBuilder *builder,
                                               guint64                    value)
 {
     _mbim_struct_builder_append_guint64 (builder->contents_builder, value);
+}
+
+void
+_mbim_message_command_builder_append_guint64_array (MbimMessageCommandBuilder *builder,
+                                                    const guint64             *values,
+                                                    guint32                    n_values)
+{
+    _mbim_struct_builder_append_guint64_array (builder->contents_builder, values, n_values);
 }
 
 void
@@ -487,10 +716,43 @@ _mbim_message_command_builder_append_string (MbimMessageCommandBuilder *builder,
 }
 
 void
-_mbim_message_command_builder_append_struct (MbimMessageCommandBuilder *builder,
-                                             const GByteArray          *value)
+_mbim_message_command_builder_append_string_array (MbimMessageCommandBuilder *builder,
+                                                   const gchar *const        *values,
+                                                   guint32                    n_values)
 {
-    _mbim_struct_builder_append_struct (builder->contents_builder, value);
+    _mbim_struct_builder_append_string_array (builder->contents_builder, values, n_values);
+}
+
+void
+_mbim_message_command_builder_append_ipv4 (MbimMessageCommandBuilder *builder,
+                                           const MbimIPv4            *value,
+                                           gboolean                   ref)
+{
+    _mbim_struct_builder_append_ipv4 (builder->contents_builder, value, ref);
+}
+
+void
+_mbim_message_command_builder_append_ipv4_array (MbimMessageCommandBuilder *builder,
+                                                 const MbimIPv4            *values,
+                                                 guint32                    n_values)
+{
+    _mbim_struct_builder_append_ipv4_array (builder->contents_builder, values, n_values);
+}
+
+void
+_mbim_message_command_builder_append_ipv6 (MbimMessageCommandBuilder *builder,
+                                           const MbimIPv6            *value,
+                                           gboolean                   ref)
+{
+    _mbim_struct_builder_append_ipv6 (builder->contents_builder, value, ref);
+}
+
+void
+_mbim_message_command_builder_append_ipv6_array (MbimMessageCommandBuilder *builder,
+                                                 const MbimIPv6            *values,
+                                                 guint32                    n_values)
+{
+    _mbim_struct_builder_append_ipv6_array (builder->contents_builder, values, n_values);
 }
 
 /*****************************************************************************/

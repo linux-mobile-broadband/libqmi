@@ -34,6 +34,24 @@ class Struct:
         self.name = dictionary['name']
         self.contents = dictionary['contents']
 
+        # Check whether the struct is composed of fixed-sized fields
+        self.size = 0
+        for field in self.contents:
+            if field['format'] == 'guint32':
+                self.size += 4
+            elif field['format'] == 'guint64':
+                self.size += 8
+            elif field['format'] == 'uuid':
+                self.size += 16
+            elif field['format'] == 'ipv4':
+                self.size += 4
+            elif field['format'] == 'ipv6':
+                self.size += 16
+            else:
+                self.size = 0
+                break
+
+
     """
     Emit the new struct type
     """
@@ -62,6 +80,24 @@ class Struct:
             elif field['format'] == 'string-array':
                 inner_template = (
                     '    gchar **${field_name_underscore};\n')
+            elif field['format'] == 'ipv4':
+                inner_template = (
+                    '    MbimIPv4 ${field_name_underscore};\n')
+            elif field['format'] == 'ref-ipv4':
+                inner_template = (
+                    '    MbimIPv4 ${field_name_underscore};\n')
+            elif field['format'] == 'ipv4-array':
+                inner_template = (
+                    '    MbimIPv4 *${field_name_underscore};\n')
+            elif field['format'] == 'ipv6':
+                inner_template = (
+                    '    MbimIPv6 ${field_name_underscore};\n')
+            elif field['format'] == 'ref-ipv6':
+                inner_template = (
+                    '    MbimIPv6 ${field_name_underscore};\n')
+            elif field['format'] == 'ipv6-array':
+                inner_template = (
+                    '    MbimIPv6 *${field_name_underscore};\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
             template += string.Template(inner_template).substitute(translations)
@@ -92,7 +128,10 @@ class Struct:
             ' */\n'
             'void\n'
             '${name_underscore}_free (${name} *var)\n'
-            '{\n')
+            '{\n'
+            '    if (!var)\n'
+            '        return;\n'
+            '\n')
 
         for field in self.contents:
             translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
@@ -112,6 +151,20 @@ class Struct:
             elif field['format'] == 'string-array':
                 inner_template += (
                     '    g_strfreev (var->${field_name_underscore});\n')
+            elif field['format'] == 'ipv4':
+                pass
+            elif field['format'] == 'ref-ipv4':
+                pass
+            elif field['format'] == 'ipv4-array':
+                inner_template += (
+                    '    g_free (var->${field_name_underscore});\n')
+            elif field['format'] == 'ipv6':
+                pass
+            elif field['format'] == 'ref-ipv6':
+                pass
+            elif field['format'] == 'ipv6-array':
+                inner_template += (
+                    '    g_free (var->${field_name_underscore});\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct clear' % field['format'])
             template += string.Template(inner_template).substitute(translations)
@@ -131,6 +184,9 @@ class Struct:
             '{\n'
             '    guint32 i;\n'
             '\n'
+            '    if (!array)\n'
+            '        return;\n'
+            '\n'
             '    for (i = 0; array[i]; i++)\n'
             '        ${name_underscore}_free (array[i]);\n'
             '    g_free (array);\n'
@@ -142,13 +198,9 @@ class Struct:
     Emit the type's read methods
     """
     def _emit_read(self, cfile):
-        # Setup offset for reading fields
-        offset = 0
-        # Additional offset string computation
-        additional_offset_str = ''
-
         translations = { 'name'            : self.name,
-                         'name_underscore' : utils.build_underscore_name_from_camelcase(self.name) }
+                         'name_underscore' : utils.build_underscore_name_from_camelcase(self.name),
+                         'struct_size'     : self.size }
 
         template = (
             '\n'
@@ -167,14 +219,12 @@ class Struct:
 
         for field in self.contents:
             translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
-            translations['format_underscore']     = utils.build_underscore_name(field['format'])
-            translations['offset']                = offset
 
             inner_template = ''
             if field['format'] == 'uuid':
                 inner_template += (
                     '\n'
-                    '    memcpy (&out->${field_name_underscore}, _mbim_message_read_uuid (self, offset), 16);\n'
+                    '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_uuid (self, offset), 16);\n'
                     '    offset += 16;\n')
             elif field['format'] == 'guint32':
                 inner_template += (
@@ -203,6 +253,36 @@ class Struct:
                     '\n'
                     '    out->${field_name_underscore} = _mbim_message_read_string_array (self, out->${array_size_field_name_underscore}, offset);\n'
                     '    offset += (8 * out->${array_size_field_name_underscore});\n')
+            elif field['format'] == 'ipv4':
+                inner_template += (
+                    '\n'
+                    '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_ipv4 (self, offset, FALSE), 4);\n'
+                    '    offset += 4;\n')
+            elif field['format'] == 'ref-ipv4':
+                inner_template += (
+                    '\n'
+                    '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_ipv4 (self, offset, TRUE), 4);\n'
+                    '    offset += 4;\n')
+            elif field['format'] == 'ipv4-array':
+                inner_template += (
+                    '\n'
+                    '    out->${field_name_underscore} =_mbim_message_read_ipv4_array (self, out->${array_size_field_name_underscore}, offset);\n'
+                    '    offset += 4;\n')
+            elif field['format'] == 'ipv6':
+                inner_template += (
+                    '\n'
+                    '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_ipv6 (self, offset, FALSE), 16);\n'
+                    '    offset += 4;\n')
+            elif field['format'] == 'ref-ipv6':
+                inner_template += (
+                    '\n'
+                    '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_ipv6 (self, offset, TRUE), 16);\n'
+                    '    offset += 4;\n')
+            elif field['format'] == 'ipv6-array':
+                inner_template += (
+                    '\n'
+                    '    out->${field_name_underscore} =_mbim_message_read_ipv6_array (self, out->${array_size_field_name_underscore}, offset);\n'
+                    '    offset += 4;\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
 
@@ -217,26 +297,184 @@ class Struct:
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
 
-
         template = (
             '\n'
             'static ${name} **\n'
             '_mbim_message_read_${name_underscore}_struct_array (\n'
             '    const MbimMessage *self,\n'
             '    guint32 array_size,\n'
-            '    guint32 relative_offset_array_start)\n'
+            '    guint32 relative_offset_array_start,\n'
+            '    gboolean refs)\n'
             '{\n'
             '    ${name} **out;\n'
             '    guint32 i;\n'
             '    guint32 offset;\n'
             '\n'
+            '    if (!array_size)\n'
+            '        return NULL;\n'
+            '\n'
             '    out = g_new (${name} *, array_size + 1);\n'
-            '    offset = relative_offset_array_start;\n'
-            '    for (i = 0; i < array_size; i++, offset += 8)\n'
-            '        out[i] = _mbim_message_read_${name_underscore}_struct (self, _mbim_message_read_guint32 (self, offset), NULL);\n'
+            '\n'
+            '    if (!refs) {\n'
+            '        offset = _mbim_message_read_guint32 (self, relative_offset_array_start);\n'
+            '        for (i = 0; i < array_size; i++, offset += ${struct_size})\n'
+            '            out[i] = _mbim_message_read_${name_underscore}_struct (self, offset, NULL);\n'
+            '    } else {\n'
+            '        offset = relative_offset_array_start;\n'
+            '        for (i = 0; i < array_size; i++, offset += 8)\n'
+            '            out[i] = _mbim_message_read_${name_underscore}_struct (self, _mbim_message_read_guint32 (self, offset), NULL);\n'
+            '    }\n'
             '    out[array_size] = NULL;\n'
             '\n'
             '    return out;\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+
+    """
+    Emit the type's append methods
+    """
+    def _emit_append(self, cfile):
+        translations = { 'name'            : self.name,
+                         'name_underscore' : utils.build_underscore_name_from_camelcase(self.name),
+                         'struct_size'     : self.size }
+
+        template = (
+            '\n'
+            'static GByteArray *\n'
+            '_${name_underscore}_struct_new (const ${name} *value)\n'
+            '{\n'
+            '    MbimStructBuilder *builder;\n'
+            '\n'
+            '    g_assert (value != NULL);\n'
+            '\n'
+            '    builder = _mbim_struct_builder_new ();\n')
+
+        for field in self.contents:
+            translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
+            translations['array_size_field'] = utils.build_underscore_name_from_camelcase(field['array-size-field']) if 'array-size-field' in field else ''
+
+            if field['format'] == 'uuid':
+                inner_template = ('    _mbim_struct_builder_append_uuid (builder, &value->${field});\n')
+            elif field['format'] == 'guint32':
+                inner_template = ('    _mbim_struct_builder_append_guint32 (builder, value->${field});\n')
+            elif field['format'] == 'guint32-array':
+                inner_template = ('    _mbim_struct_builder_append_guint32_array (builder, value->${field}, value->${array_size_field});\n')
+            elif field['format'] == 'guint64':
+                inner_template = ('    _mbim_struct_builder_append_guint64 (builder, value->${field});\n')
+            elif field['format'] == 'guint64-array':
+                inner_template = ('    _mbim_struct_builder_append_guint64_array (builder, value->${field}, value->${array_size_field});\n')
+            elif field['format'] == 'string':
+                inner_template = ('    _mbim_struct_builder_append_string (builder, value->${field});\n')
+            elif field['format'] == 'string-array':
+                inner_template = ('    _mbim_struct_builder_append_string_array (builder, value->${field}, value->${array_size_field});\n')
+            elif field['format'] == 'ipv4':
+                inner_template = ('    _mbim_struct_builder_append_ipv4 (builder, &value->${field}, FALSE);\n')
+            elif field['format'] == 'ref-ipv4':
+                inner_template = ('    _mbim_struct_builder_append_ipv4 (builder, &value->${field}, TRUE);\n')
+            elif field['format'] == 'ipv4-array':
+                inner_template = ('    _mbim_struct_builder_append_ipv4_array (builder, value->${field}, value->${array_size_field});\n')
+            elif field['format'] == 'ipv6':
+                inner_template = ('    _mbim_struct_builder_append_ipv6 (builder, &value->${field}, FALSE);\n')
+            elif field['format'] == 'ref-ipv6':
+                inner_template = ('    _mbim_struct_builder_append_ipv6 (builder, &value->${field}, TRUE);\n')
+            elif field['format'] == 'ipv6-array':
+                inner_template = ('    _mbim_struct_builder_append_ipv6_array (builder, value->${field}, value->${array_size_field});\n')
+            else:
+                raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
+
+            template += string.Template(inner_template).substitute(translations)
+
+        template += (
+            '\n'
+            '    return _mbim_struct_builder_complete (builder);\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+        template = (
+            '\n'
+            'static void\n'
+            '_mbim_struct_builder_append_${name_underscore}_struct (\n'
+            '    MbimStructBuilder *builder,\n'
+            '    const ${name} *value)\n'
+            '{\n'
+            '    GByteArray *raw;\n'
+            '\n'
+            '    raw = _${name_underscore}_struct_new (value);\n'
+            '    g_byte_array_append (builder->fixed_buffer, raw->data, raw->len);\n'
+            '    g_byte_array_unref (raw);\n'
+            '}\n'
+            '\n'
+            'static void\n'
+            '_mbim_message_command_builder_append_${name_underscore}_struct (\n'
+            '    MbimMessageCommandBuilder *builder,\n'
+            '    const ${name} *value)\n'
+            '{\n'
+            '    _mbim_struct_builder_append_${name_underscore}_struct (builder->contents_builder, value);\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+        template = (
+            '\n'
+            'static void\n'
+            '_mbim_struct_builder_append_${name_underscore}_struct_array (\n'
+            '    MbimStructBuilder *builder,\n'
+            '    const ${name} *const *values,\n'
+            '    guint32 n_values,\n'
+            '    gboolean refs)\n'
+            '{\n'
+            '    guint32 offset;\n'
+            '    guint32 i;\n'
+            '    GByteArray *raw_all = NULL;\n'
+            '\n'
+            '    if (!refs) {\n'
+            '        for (i = 0; i < n_values; i++) {\n'
+            '            GByteArray *raw;\n'
+            '\n'
+            '            raw = _${name_underscore}_struct_new (values[i]);\n'
+            '            if (!raw_all)\n'
+            '                raw_all = raw;\n'
+            '            else {\n'
+            '                g_byte_array_append (raw_all, raw->data, raw->len);\n'
+            '                g_byte_array_unref (raw);\n'
+            '            }\n'
+            '        }\n'
+            '\n'
+            '        if (!raw_all) {\n'
+            '            offset = 0;\n'
+            '            g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));\n'
+            '        } else {\n'
+            '            guint32 offset_offset;\n'
+            '\n'
+            '            /* Offset of the offset */\n'
+            '            offset_offset = builder->fixed_buffer->len;\n'
+            '            /* Length *not* in LE yet */\n'
+            '            offset = builder->variable_buffer->len;\n'
+            '            /* Add the offset value */\n'
+            '            g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));\n'
+            '            /* Configure the value to get updated */\n'
+            '            g_array_append_val (builder->offsets, offset_offset);\n'
+            '            /* Add the final array itself */\n'
+            '            g_byte_array_append (builder->variable_buffer, raw_all->data, raw_all->len);\n'
+            '            g_byte_array_unref (raw_all);\n'
+            '        }\n'
+            '    } else {\n'
+            '        /* TODO */\n'
+            '        g_assert_not_reached ();\n'
+            '    }\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+        template = (
+            '\n'
+            'static void\n'
+            '_mbim_message_command_builder_append_${name_underscore}_struct_array (\n'
+            '    MbimMessageCommandBuilder *builder,\n'
+            '    const ${name} *const *values,\n'
+            '    guint32 n_values,\n'
+            '    gboolean refs)\n'
+            '{\n'
+            '    _mbim_struct_builder_append_${name_underscore}_struct_array (builder->contents_builder, values, n_values, refs);\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
 
@@ -254,3 +492,5 @@ class Struct:
         self._emit_free(hfile, cfile)
         # Emit type's read
         self._emit_read(cfile)
+        # Emit type's append
+        self._emit_append(cfile)
