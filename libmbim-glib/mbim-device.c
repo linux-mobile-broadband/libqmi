@@ -738,6 +738,8 @@ mbim_device_open_finish (MbimDevice   *self,
     return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
 }
 
+static void open_message (DeviceOpenContext *ctx);
+
 static void
 open_message_ready (MbimDevice        *self,
                     GAsyncResult      *res,
@@ -747,9 +749,22 @@ open_message_ready (MbimDevice        *self,
     GError *error = NULL;
 
     response = mbim_device_command_finish (self, res, &error);
-    if (!response)
+    if (!response) {
+        /* Check if we should be retrying */
+        if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_TIMEOUT)) {
+            /* The timeout will tell us how many retries we should do */
+            ctx->timeout--;
+            if (ctx->timeout) {
+                g_error_free (error);
+                open_message (ctx);
+                return;
+            }
+
+            /* No more seconds left in the timeout... return error */
+        }
+
         g_simple_async_result_take_error (ctx->result, error);
-    else if (!mbim_message_open_done_get_result (response, &error))
+    } else if (!mbim_message_open_done_get_result (response, &error))
         g_simple_async_result_take_error (ctx->result, error);
     else
         g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
@@ -757,6 +772,23 @@ open_message_ready (MbimDevice        *self,
     if (response)
         mbim_message_unref (response);
     device_open_context_complete_and_free (ctx);
+}
+
+static void
+open_message (DeviceOpenContext *ctx)
+{
+    MbimMessage *request;
+
+    /* Launch 'Open' command */
+    request = mbim_message_open_new (mbim_device_get_next_transaction_id (ctx->self),
+                                     ctx->self->priv->max_control_transfer);
+    mbim_device_command (ctx->self,
+                         request,
+                         1, /* 1s per retry */
+                         ctx->cancellable,
+                         (GAsyncReadyCallback)open_message_ready,
+                         ctx);
+    mbim_message_unref (request);
 }
 
 /**
@@ -781,9 +813,9 @@ mbim_device_open (MbimDevice          *self,
 {
     DeviceOpenContext *ctx;
     GError *error = NULL;
-    MbimMessage *request;
 
     g_return_if_fail (MBIM_IS_DEVICE (self));
+    g_return_if_fail (timeout > 0);
 
     ctx = g_slice_new (DeviceOpenContext);
     ctx->self = g_object_ref (self);
@@ -802,16 +834,7 @@ mbim_device_open (MbimDevice          *self,
         return;
     }
 
-    /* Launch 'Open' command */
-    request = mbim_message_open_new (mbim_device_get_next_transaction_id (self),
-                                     self->priv->max_control_transfer);
-    mbim_device_command (self,
-                         request,
-                         10,
-                         ctx->cancellable,
-                         (GAsyncReadyCallback) open_message_ready,
-                         ctx);
-    mbim_message_unref (request);
+    open_message (ctx);
 }
 
 /*****************************************************************************/
