@@ -28,6 +28,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <gio/gio.h>
+#include <gudev/gudev.h>
 #include <sys/ioctl.h>
 #define IOCTL_WDM_MAX_COMMAND _IOR('H', 0xA0, guint16)
 
@@ -629,6 +630,130 @@ data_available (GIOChannel *source,
     return TRUE;
 }
 
+/* "MBIM Control Model Functional Descriptor" */
+struct usb_cdc_mbim_desc {
+    guint8  bLength;
+    guint8  bDescriptorType;
+    guint8  bDescriptorSubType;
+    guint16 bcdMBIMVersion;
+    guint16 wMaxControlMessage;
+    guint8  bNumberFilters;
+    guint8  bMaxFilterSize;
+    guint16 wMaxSegmentSize;
+    guint8  bmNetworkCapabilities;
+} __attribute__ ((packed));
+
+static guint16
+read_max_control_transfer (MbimDevice *self)
+{
+    static const guint8 mbim_signature[4] = { 0x0c, 0x24, 0x1b, 0x00 };
+    guint16 max = MAX_CONTROL_TRANSFER;
+    GUdevClient *client;
+    GUdevDevice *device = NULL;
+    GUdevDevice *parent_device = NULL;
+    GUdevDevice *grandparent_device = NULL;
+    gchar *descriptors_path = NULL;
+    gchar *device_basename = NULL;
+    GError *error = NULL;
+    gchar *contents = NULL;
+    gsize length = 0;
+    guint i;
+
+    client = g_udev_client_new (NULL);
+    if (!G_UDEV_IS_CLIENT (client)) {
+        g_warning ("[%s] Couldn't get udev client",
+                   self->priv->path_display);
+        goto out;
+    }
+
+    /* We need to get the sysfs of the cdc-wdm's grandfather:
+     *
+     *   * Device's sysfs path is like:
+     *      /sys/devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.5/2-1.5:2.0/usbmisc/cdc-wdm0
+     *   * Parent's sysfs path is like:
+     *      /sys/devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.5/2-1.5:2.0
+     *   * Grandparent's sysfs path is like:
+     *      /sys/devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.5
+     *
+     *   Which is the one with the descriptors file.
+     */
+
+    device_basename = g_path_get_basename (self->priv->path);
+    device = g_udev_client_query_by_subsystem_and_name (client, "usb", device_basename);
+    if (!device) {
+        device = g_udev_client_query_by_subsystem_and_name (client, "usbmisc", device_basename);
+        if (!device) {
+            g_warning ("[%s] Couldn't find udev device",
+                       self->priv->path_display);
+            goto out;
+        }
+    }
+
+    parent_device = g_udev_device_get_parent (device);
+    if (!parent_device) {
+        g_warning ("[%s] Couldn't find parent udev device",
+                   self->priv->path_display);
+        goto out;
+    }
+
+    grandparent_device = g_udev_device_get_parent (parent_device);
+    if (!grandparent_device) {
+        g_warning ("[%s] Couldn't find grandparent udev device",
+                   self->priv->path_display);
+        goto out;
+    }
+
+    descriptors_path = g_build_path (G_DIR_SEPARATOR_S,
+                                     g_udev_device_get_sysfs_path (grandparent_device),
+                                     "descriptors",
+                                     NULL);
+    if (!g_file_get_contents (descriptors_path,
+                              &contents,
+                              &length,
+                              &error)) {
+        g_warning ("[%s] Couldn't read descriptors file: %s",
+                   self->priv->path_display,
+                   error->message);
+        g_error_free (error);
+        goto out;
+    }
+
+    i = 0;
+    while (i <= (length - sizeof (struct usb_cdc_mbim_desc))) {
+        /* Try to match the MBIM descriptor signature */
+        if ((memcmp (&contents[i], mbim_signature, sizeof (mbim_signature)) == 0)) {
+            /* Found! */
+            max = GUINT16_FROM_LE (((struct usb_cdc_mbim_desc *)&contents[i])->wMaxControlMessage);
+            g_debug ("[%s] Read max control message size from descriptors file: %" G_GUINT16_FORMAT,
+                     self->priv->path_display,
+                     max);
+            goto out;
+        }
+
+        /* The first byte of the descriptor info is the length; so keep on
+         * skipping descriptors until we match the MBIM one */
+        i += contents[i];
+    }
+
+    g_warning ("[%s] Couldn't find MBIM signature in descriptors file",
+               self->priv->path_display);
+
+out:
+    g_free (contents);
+    g_free (device_basename);
+    g_free (descriptors_path);
+    if (parent_device)
+        g_object_unref (parent_device);
+    if (grandparent_device)
+        g_object_unref (grandparent_device);
+    if (device)
+        g_object_unref (device);
+    if (client)
+        g_object_unref (client);
+
+    return max;
+}
+
 static gboolean
 create_iochannel (MbimDevice *self,
                   GError **error)
@@ -660,13 +785,18 @@ create_iochannel (MbimDevice *self,
         return FALSE;
     }
 
-    /* get message size */
+    /* Query message size */
     if (ioctl (fd, IOCTL_WDM_MAX_COMMAND, &max) < 0) {
         g_debug ("[%s] Couldn't query maximum message size: "
                  "IOCTL_WDM_MAX_COMMAND failed: %s",
                  self->priv->path_display,
                  strerror (errno));
-        max = MAX_CONTROL_TRANSFER;
+        /* Fallback, try to read the descriptor file */
+        max = read_max_control_transfer (self);
+    } else {
+        g_debug ("[%s] Queried max control message size: %" G_GUINT16_FORMAT,
+                 self->priv->path_display,
+                 max);
     }
     self->priv->max_control_transfer = max;
 
