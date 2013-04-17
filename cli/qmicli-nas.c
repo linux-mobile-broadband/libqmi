@@ -31,6 +31,7 @@
 #include <libqmi-glib.h>
 
 #include "qmicli.h"
+#include "qmicli-helpers.h"
 
 /* Context */
 typedef struct {
@@ -48,6 +49,7 @@ static gboolean get_serving_system_flag;
 static gboolean get_system_info_flag;
 static gboolean get_technology_preference_flag;
 static gboolean get_system_selection_preference_flag;
+static gchar *set_system_selection_preference_str;
 static gboolean network_scan_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -80,6 +82,10 @@ static GOptionEntry entries[] = {
     { "nas-get-system-selection-preference", 0, 0, G_OPTION_ARG_NONE, &get_system_selection_preference_flag,
       "Get system selection preference",
       NULL
+    },
+    { "nas-set-system-selection-preference", 0, 0, G_OPTION_ARG_STRING, &set_system_selection_preference_str,
+      "Set system selection preference",
+      "[cdma-1x|cdma-1xevdo|gsm|umts|lte|td-scdma]"
     },
     { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
       "Scan networks",
@@ -127,6 +133,7 @@ qmicli_nas_options_enabled (void)
                  get_system_info_flag +
                  get_technology_preference_flag +
                  get_system_selection_preference_flag +
+                 !!set_system_selection_preference_str +
                  network_scan_flag +
                  reset_flag +
                  noop_flag);
@@ -1868,6 +1875,89 @@ get_system_selection_preference_ready (QmiClientNas *client,
     shutdown (TRUE);
 }
 
+static QmiMessageNasSetSystemSelectionPreferenceInput *
+set_system_selection_preference_input_create (const gchar *str)
+{
+    QmiMessageNasSetSystemSelectionPreferenceInput *input = NULL;
+    QmiNasRatModePreference pref;
+    GError *error = NULL;
+
+    if (!qmicli_read_rat_mode_pref_from_string (str, &pref)) {
+        g_printerr ("error: failed to parse mode pref\n");
+        return NULL;
+    }
+
+    input = qmi_message_nas_set_system_selection_preference_input_new ();
+    if (!qmi_message_nas_set_system_selection_preference_input_set_mode_preference (
+            input,
+            pref,
+            &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_nas_set_system_selection_preference_input_unref (input);
+        return NULL;
+    }
+
+    if (!qmi_message_nas_set_system_selection_preference_input_set_change_duration (
+            input,
+            QMI_NAS_CHANGE_DURATION_PERMANENT,
+            &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_nas_set_system_selection_preference_input_unref (input);
+        return NULL;
+    }
+
+    if (pref & (QMI_NAS_RAT_MODE_PREFERENCE_GSM |
+                QMI_NAS_RAT_MODE_PREFERENCE_UMTS |
+                QMI_NAS_RAT_MODE_PREFERENCE_LTE)) {
+        if (!qmi_message_nas_set_system_selection_preference_input_set_gsm_wcdma_acquisition_order_preference (
+                input,
+                QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_AUTOMATIC,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_nas_set_system_selection_preference_input_unref (input);
+            return NULL;
+        }
+    }
+
+    return input;
+}
+
+static void
+set_system_selection_preference_ready (QmiClientNas *client,
+                                       GAsyncResult *res)
+{
+    QmiMessageNasSetSystemSelectionPreferenceOutput *output = NULL;
+    GError *error = NULL;
+
+    output = qmi_client_nas_set_system_selection_preference_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_set_system_selection_preference_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set operating mode: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_set_system_selection_preference_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] System selection preference set successfully; replug your device.\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_nas_set_system_selection_preference_output_unref (output);
+    shutdown (TRUE);
+}
+
 static void
 network_scan_ready (QmiClientNas *client,
                     GAsyncResult *res)
@@ -2096,6 +2186,27 @@ qmicli_nas_run (QmiDevice *device,
                                                         ctx->cancellable,
                                                         (GAsyncReadyCallback)get_system_selection_preference_ready,
                                                         NULL);
+        return;
+    }
+
+    /* Request to set system_selection preference? */
+    if (set_system_selection_preference_str) {
+        QmiMessageNasSetSystemSelectionPreferenceInput *input;
+        g_debug ("Asynchronously setting system selection preference...");
+
+        input = set_system_selection_preference_input_create (set_system_selection_preference_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
+
+        qmi_client_nas_set_system_selection_preference (ctx->client,
+                                                        input,
+                                                        10,
+                                                        ctx->cancellable,
+                                                        (GAsyncReadyCallback)set_system_selection_preference_ready,
+                                                        NULL);
+        qmi_message_nas_set_system_selection_preference_input_unref (input);
         return;
     }
 
