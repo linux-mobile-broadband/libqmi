@@ -1714,8 +1714,7 @@ get_technology_preference_ready (QmiClientNas *client,
             &preference,
             NULL)) {
         preference_string = qmi_nas_radio_technology_preference_build_string_from_mask (preference);
-        g_print ("\tPersistent: '%s', duration: '%s'\n",
-                 qmi_device_get_path_display (ctx->device),
+        g_print ("\tPersistent: '%s'\n",
                  preference_string);
         g_free (preference_string);
     }
