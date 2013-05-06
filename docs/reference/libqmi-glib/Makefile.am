@@ -66,12 +66,7 @@ expand_content_files =
 
 extra_files =
 
-if ENABLE_GTK_DOC
 include $(top_srcdir)/gtk-doc.make
-else
-EXTRA_DIST =
-CLEANFILES =
-endif
 
 EXTRA_DIST += \
 	libqmi-glib-common.sections \

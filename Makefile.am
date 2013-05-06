@@ -5,4 +5,4 @@ ACLOCAL_AMFLAGS = -I m4
 
 DISTCHECK_CONFIGURE_FLAGS = \
 	--with-tests=yes \
-	--with-docs=yes
+	--enable-gtk-doc
