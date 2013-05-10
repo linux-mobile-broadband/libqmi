@@ -3,6 +3,7 @@
 *.lo
 *.la
 *.bz2
+*.pyc
 
 INSTALL
 Makefile
