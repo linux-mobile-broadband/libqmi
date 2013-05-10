@@ -1,0 +1,2 @@
+libqmi is a glib-based library for talking to WWAN modems and devices which
+speak the Qualcomm MSM Interface (QMI) protocol.

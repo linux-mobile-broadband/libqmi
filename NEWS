@@ -1,3 +1,13 @@
+Overview of changes in libqmi 1.4.0
+----------------------------------------
+
+* cli: add --dms-activate-manual
+* cli: implemented setting System Selection Preference
+* dms: fix minimum version requirement for DMS Get/Set Operating Mode
+* cli: fix technology preference persistence reporting
+* docs: always generate documentation at dist time
+
+
 Overview of changes in libqmi 1.2.0
 ----------------------------------------
 
