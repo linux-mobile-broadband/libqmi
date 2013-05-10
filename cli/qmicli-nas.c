@@ -1268,7 +1268,7 @@ get_system_info_ready (QmiClientNas *client,
                 if (lac_valid)
                     g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
                 if (cid_valid)
-                    g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
+                    g_print ("\t\tCell ID: '%u'\n", cid);
                 if (registration_reject_info_valid)
                     g_print ("\t\tRegistration reject: '%s' (%u)\n",
                              qmi_nas_network_service_domain_get_string (registration_reject_domain),
@@ -1388,7 +1388,7 @@ get_system_info_ready (QmiClientNas *client,
                 if (lac_valid)
                     g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
                 if (cid_valid)
-                    g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
+                    g_print ("\t\tCell ID: '%u'\n", cid);
                 if (registration_reject_info_valid)
                     g_print ("\t\tRegistration reject: '%s' (%u)\n",
                              qmi_nas_network_service_domain_get_string (registration_reject_domain),
@@ -1502,7 +1502,7 @@ get_system_info_ready (QmiClientNas *client,
                 if (lac_valid)
                     g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
                 if (cid_valid)
-                    g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
+                    g_print ("\t\tCell ID: '%u'\n", cid);
                 if (registration_reject_info_valid)
                     g_print ("\t\tRegistration reject: '%s' (%u)\n",
                              qmi_nas_network_service_domain_get_string (registration_reject_domain),
@@ -1623,7 +1623,7 @@ get_system_info_ready (QmiClientNas *client,
                 if (lac_valid)
                     g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
                 if (cid_valid)
-                    g_print ("\t\tCell ID: '%" G_GUINT16_FORMAT"'\n", cid);
+                    g_print ("\t\tCell ID: '%u'\n", cid);
                 if (registration_reject_info_valid)
                     g_print ("\t\tRegistration reject: '%s' (%u)\n",
                              qmi_nas_network_service_domain_get_string (registration_reject_domain),
