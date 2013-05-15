@@ -27,6 +27,7 @@ m4
 missing
 stamp-h1
 depcomp
+gtk-doc.make
 
 build-aux/mbim-codegen/*.pyc
 

@@ -13,6 +13,7 @@ PKG_NAME=libmbim
 }
 
 (cd $srcdir;
+    gtkdocize || exit 1
     mkdir -p m4
     touch README NEWS ChangeLog
     autoreconf --force --install --verbose

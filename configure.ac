@@ -46,6 +46,9 @@ AC_SUBST(MBIMCLI_LIBS)
 GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
 
+dnl Documentation
+GTK_DOC_CHECK(1.0)
+
 dnl Tests
 AC_ARG_WITH(tests, AS_HELP_STRING([--with-tests], [Build libmbim tests]))
 AM_CONDITIONAL(WITH_TESTS, test "x$with_tests" = "xyes")
@@ -79,4 +82,5 @@ echo "
     cflags:                  ${CFLAGS}
     Maintainer mode:         ${USE_MAINTAINER_MODE}
     Tests:                   ${with_tests}
+    Documentation:           ${enable_gtk_doc}
 "
