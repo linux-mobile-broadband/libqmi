@@ -33,6 +33,22 @@ build-aux/mbim-codegen/*.pyc
 
 data/pkg-config/mbim-glib.pc
 
+docs/reference/libmbim-glib/version.xml
+docs/reference/libmbim-glib/libmbim-glib.args
+docs/reference/libmbim-glib/libmbim-glib.hierarchy
+docs/reference/libmbim-glib/libmbim-glib.interfaces
+docs/reference/libmbim-glib/libmbim-glib.prerequisites
+docs/reference/libmbim-glib/libmbim-glib.signals
+docs/reference/libmbim-glib/libmbim-glib.types
+docs/reference/libmbim-glib/*.mstamp
+docs/reference/libmbim-glib/*.stamp
+docs/reference/libmbim-glib/*.txt
+docs/reference/libmbim-glib/*.bak
+docs/reference/libmbim-glib/html
+docs/reference/libmbim-glib/tmpl
+docs/reference/libmbim-glib/xml
+docs/reference/libmbim-glib/.libs
+
 libmbim-glib/.deps
 libmbim-glib/.libs
 
