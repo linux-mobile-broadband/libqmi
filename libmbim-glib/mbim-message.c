@@ -1396,10 +1396,10 @@ mbim_message_open_done_get_result (const MbimMessage  *self,
     if (status == MBIM_STATUS_ERROR_NONE)
         return TRUE;
 
-    g_set_error (error,
-                 MBIM_STATUS_ERROR,
-                 status,
-                 mbim_status_error_get_string (status));
+    g_set_error_literal (error,
+                         MBIM_STATUS_ERROR,
+                         status,
+                         mbim_status_error_get_string (status));
     return FALSE;
 }
 
@@ -1465,10 +1465,10 @@ mbim_message_close_done_get_result (const MbimMessage  *self,
     if (status == MBIM_STATUS_ERROR_NONE)
         return TRUE;
 
-    g_set_error (error,
-                 MBIM_STATUS_ERROR,
-                 status,
-                 mbim_status_error_get_string (status));
+    g_set_error_literal (error,
+                         MBIM_STATUS_ERROR,
+                         status,
+                         mbim_status_error_get_string (status));
     return FALSE;
 }
 
@@ -1803,10 +1803,10 @@ mbim_message_command_done_get_result (const MbimMessage  *self,
     if (status == MBIM_STATUS_ERROR_NONE)
         return TRUE;
 
-    g_set_error (error,
-                 MBIM_STATUS_ERROR,
-                 status,
-                 mbim_status_error_get_string (status));
+    g_set_error_literal (error,
+                         MBIM_STATUS_ERROR,
+                         status,
+                         mbim_status_error_get_string (status));
     return FALSE;
 }
 
