@@ -14,7 +14,8 @@ if test "$GCC" = "yes" -a "$set_more_warnings" != "no"; then
 		      -Wno-sign-compare -Wunused-but-set-variable \
 		      -Wundef -Wimplicit-function-declaration \
 		      -Wpointer-arith -Winit-self -Wshadow \
-		      -Wmissing-include-dirs -Waggregate-return; do
+		      -Wmissing-include-dirs -Waggregate-return \
+		      -Wformat-security; do
 		SAVE_CFLAGS="$CFLAGS"
 		CFLAGS="$CFLAGS $option"
 		AC_MSG_CHECKING([whether gcc understands $option])
