@@ -272,10 +272,10 @@ device_store_transaction (MbimDevice       *self,
                                                     tr->wait_ctx,
                                                     NULL);
         if (!tr->cancellable_id) {
-            g_set_error (error,
-                         MBIM_CORE_ERROR,
-                         MBIM_CORE_ERROR_ABORTED,
-                         "Request is already cancelled");
+            g_set_error_literal (error,
+                                 MBIM_CORE_ERROR,
+                                 MBIM_CORE_ERROR_ABORTED,
+                                 "Request is already cancelled");
             return FALSE;
         }
     }
@@ -763,10 +763,10 @@ create_iochannel (MbimDevice *self,
     guint16 max;
 
     if (self->priv->iochannel) {
-        g_set_error (error,
-                     MBIM_CORE_ERROR,
-                     MBIM_CORE_ERROR_WRONG_STATE,
-                     "Already open");
+        g_set_error_literal (error,
+                             MBIM_CORE_ERROR,
+                             MBIM_CORE_ERROR_WRONG_STATE,
+                             "Already open");
         return FALSE;
     }
 

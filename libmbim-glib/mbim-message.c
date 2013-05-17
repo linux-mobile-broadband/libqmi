@@ -916,10 +916,10 @@ mbim_message_get_raw (const MbimMessage  *self,
     g_return_val_if_fail (length != NULL, NULL);
 
     if (!self->data || !self->len) {
-        g_set_error (error,
-                     MBIM_CORE_ERROR,
-                     MBIM_CORE_ERROR_FAILED,
-                     "Message is empty");
+        g_set_error_literal (error,
+                             MBIM_CORE_ERROR,
+                             MBIM_CORE_ERROR_FAILED,
+                             "Message is empty");
         return NULL;
     }
 
