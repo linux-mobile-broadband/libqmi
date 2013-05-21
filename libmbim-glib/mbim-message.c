@@ -1600,10 +1600,10 @@ mbim_message_command_new (guint32                transaction_id,
 }
 
 /**
- * mbim_message_command_add_raw:
+ * mbim_message_command_append:
  * @self: a #MbimMessage.
- * @buffer_len: length of the data in @buffer.
  * @buffer: raw buffer to append to the message.
+ * @buffer_size: length of the data in @buffer.
  *
  * Appends the contents of @buffer to @self.
  */
