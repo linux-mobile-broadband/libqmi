@@ -34,6 +34,11 @@ class Struct:
         self.name = dictionary['name']
         self.contents = dictionary['contents']
 
+        # Whether the struct is used as a single field, or as an array of
+        # fields. Will be updated after having created the object.
+        self.single_member = False
+        self.array_member = False
+
         # Check whether the struct is composed of fixed-sized fields
         self.size = 0
         for field in self.contents:
@@ -158,22 +163,19 @@ class Struct:
     def _emit_free(self, hfile, cfile):
         translations = { 'name' : self.name,
                          'name_underscore' : utils.build_underscore_name_from_camelcase(self.name) }
-        template = (
-            '\n'
-            'void ${name_underscore}_free (${name} *var);\n'
-            'void ${name_underscore}_array_free (${name} **array);\n')
-        hfile.write(string.Template(template).substitute(translations))
+        template = ''
+
+        if self.single_member == True:
+            template = (
+                '\n'
+                'void ${name_underscore}_free (${name} *var);\n')
+            hfile.write(string.Template(template).substitute(translations))
+
 
         template = (
             '\n'
-            '/**\n'
-            ' * ${name_underscore}_free:\n'
-            ' * @var: a #${name}.\n'
-            ' *\n'
-            ' * Frees the memory allocated for the #${name}.\n'
-            ' */\n'
-            'void\n'
-            '${name_underscore}_free (${name} *var)\n'
+            'static void\n'
+            '_${name_underscore}_free (${name} *var)\n'
             '{\n'
             '    if (!var)\n'
             '        return;\n'
@@ -217,27 +219,51 @@ class Struct:
 
         template += (
             '    g_free (var);\n'
-            '}\n'
-            '\n'
-            '/**\n'
-            ' * ${name_underscore}_array_free:\n'
-            ' * @array: a #NULL-terminated array of #${name} structs.\n'
-            ' *\n'
-            ' * Frees the memory allocated for the array of #${name}s.\n'
-            ' */\n'
-            'void\n'
-            '${name_underscore}_array_free (${name} **array)\n'
-            '{\n'
-            '    guint32 i;\n'
-            '\n'
-            '    if (!array)\n'
-            '        return;\n'
-            '\n'
-            '    for (i = 0; array[i]; i++)\n'
-            '        ${name_underscore}_free (array[i]);\n'
-            '    g_free (array);\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
+
+        if self.single_member == True:
+            template = (
+                '\n'
+                '/**\n'
+                ' * ${name_underscore}_free:\n'
+                ' * @var: a #${name}.\n'
+                ' *\n'
+                ' * Frees the memory allocated for the #${name}.\n'
+                ' */\n'
+                'void\n'
+                '${name_underscore}_free (${name} *var)\n'
+                '{\n'
+                '    _${name_underscore}_free (var)\n'
+                '}\n')
+
+        if self.array_member:
+            template = (
+                '\n'
+                'void ${name_underscore}_array_free (${name} **array);\n')
+            hfile.write(string.Template(template).substitute(translations))
+
+            template = (
+                '\n'
+                '/**\n'
+                ' * ${name_underscore}_array_free:\n'
+                ' * @array: a #NULL-terminated array of #${name} structs.\n'
+                ' *\n'
+                ' * Frees the memory allocated for the array of #${name}s.\n'
+                ' */\n'
+                'void\n'
+                '${name_underscore}_array_free (${name} **array)\n'
+                '{\n'
+                '    guint32 i;\n'
+                '\n'
+                '    if (!array)\n'
+                '        return;\n'
+                '\n'
+                '    for (i = 0; array[i]; i++)\n'
+                '        _${name_underscore}_free (array[i]);\n'
+                '    g_free (array);\n'
+                '}\n')
+            cfile.write(string.Template(template).substitute(translations))
 
 
     """

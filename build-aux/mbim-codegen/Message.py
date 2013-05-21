@@ -602,7 +602,7 @@ class Message:
                     '        if (${field} != NULL)\n'
                     '            *${field} = tmp;\n'
                     '        else\n'
-                    '             ${struct_name}_free (tmp);\n'
+                    '             _${struct_name}_free (tmp);\n'
                     '        offset += bytes_read;\n')
             elif field['format'] == 'struct-array':
                 inner_template += (

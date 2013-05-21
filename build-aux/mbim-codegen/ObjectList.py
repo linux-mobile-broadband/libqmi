@@ -25,6 +25,22 @@ from Struct import Struct
 import utils
 
 """
+Check field to see if it holds a struct
+"""
+def set_struct_usage(struct, fields):
+    for field in fields:
+        if field['format'] == 'struct' and field['struct-type'] == struct.name:
+            struct.single_member = True
+            break
+        if field['format'] == 'ref-struct-array' and field['struct-type'] == struct.name:
+            struct.array_member = True
+            break
+        if field['format'] == 'struct-array' and field['struct-type'] == struct.name:
+            struct.array_member = True
+            break
+
+
+"""
 The ObjectList class handles the generation of all commands and types for a given
 specific service
 """
@@ -46,6 +62,13 @@ class ObjectList:
             else:
                 raise ValueError('Cannot handle object type \'%s\'' % object_dictionary['type'])
 
+        # Populate struct usages
+        for struct in self.struct_list:
+            for command in self.command_list:
+                set_struct_usage(struct, command.query)
+                set_struct_usage(struct, command.set)
+                set_struct_usage(struct, command.response)
+                set_struct_usage(struct, command.notification)
 
     """
     Emit the structs and commands handling implementation
