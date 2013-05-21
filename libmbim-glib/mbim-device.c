@@ -1730,6 +1730,13 @@ mbim_device_class_init (MbimDeviceClass *klass)
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_FILE, properties[PROP_FILE]);
 
+  /**
+   * MbimDevice::device-indicate-status:
+   * @self: the #MbimDevice
+   * @message: the #MbimMessage indication
+   *
+   * The ::device-indication-status signal is emitted when a MBIM indication is received.
+   */
     signals[SIGNAL_INDICATE_STATUS] =
         g_signal_new (MBIM_DEVICE_SIGNAL_INDICATE_STATUS,
                       G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
@@ -1742,6 +1749,13 @@ mbim_device_class_init (MbimDeviceClass *klass)
                       1,
                       MBIM_TYPE_MESSAGE);
 
+  /**
+   * MbimDevice::device-error:
+   * @self: the #MbimDevice
+   * @message: the #MbimMessage error
+   *
+   * The ::device-error signal is emitted when a MBIM error is received.
+   */
     signals[SIGNAL_ERROR] =
         g_signal_new (MBIM_DEVICE_SIGNAL_ERROR,
                       G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
