@@ -234,8 +234,9 @@ class Struct:
                 'void\n'
                 '${name_underscore}_free (${name} *var)\n'
                 '{\n'
-                '    _${name_underscore}_free (var)\n'
+                '    _${name_underscore}_free (var);\n'
                 '}\n')
+            cfile.write(string.Template(template).substitute(translations))
 
         if self.array_member:
             template = (
