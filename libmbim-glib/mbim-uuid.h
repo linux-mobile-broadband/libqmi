@@ -40,13 +40,15 @@ G_BEGIN_DECLS
  * A UUID as defined in MBIM.
  */
 typedef struct _MbimUuid MbimUuid;
-struct _MbimUuid {
+#define MBIM_PACKED __attribute__((__packed__))
+struct MBIM_PACKED _MbimUuid {
     guint8 a[4];
     guint8 b[2];
     guint8 c[2];
     guint8 d[2];
     guint8 e[6];
-} __attribute__((packed));
+};
+#undef MBIM_PACKED
 
 gboolean  mbim_uuid_cmp           (const MbimUuid *a,
                                    const MbimUuid *b);
