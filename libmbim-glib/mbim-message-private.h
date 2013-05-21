@@ -37,6 +37,15 @@
 G_BEGIN_DECLS
 
 /*****************************************************************************/
+/* The MbimMessage */
+
+/* Defined in the same way as GByteArray */
+struct _MbimMessage {
+  guint8 *data;
+  guint	  len;
+};
+
+/*****************************************************************************/
 /* Basic message types */
 
 struct header {

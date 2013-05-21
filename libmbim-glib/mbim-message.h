@@ -41,7 +41,7 @@ G_BEGIN_DECLS
  *
  * An opaque type representing a MBIM message.
  */
-typedef GByteArray MbimMessage;
+typedef struct _MbimMessage MbimMessage;
 
 GType mbim_message_get_type (void) G_GNUC_CONST;
 #define MBIM_TYPE_MESSAGE (mbim_message_get_type ())

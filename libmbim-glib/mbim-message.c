@@ -771,7 +771,7 @@ mbim_message_ref (MbimMessage *self)
 {
     g_return_val_if_fail (self != NULL, NULL);
 
-    return (MbimMessage *) g_byte_array_ref (self);
+    return (MbimMessage *) g_byte_array_ref ((GByteArray *)self);
 }
 
 /**
@@ -786,7 +786,7 @@ mbim_message_unref (MbimMessage *self)
 {
     g_return_if_fail (self != NULL);
 
-    g_byte_array_unref (self);
+    g_byte_array_unref ((GByteArray *)self);
 }
 
 /**
@@ -871,13 +871,13 @@ MbimMessage *
 mbim_message_new (const guint8 *data,
                   guint32       data_length)
 {
-    MbimMessage *out;
+    GByteArray *out;
 
     /* Create output MbimMessage */
     out = g_byte_array_sized_new (data_length);
     g_byte_array_append (out, data, data_length);
 
-    return out;
+    return (MbimMessage *)out;
 }
 
 /**
@@ -1204,7 +1204,7 @@ _mbim_message_fragment_collector_add (MbimMessage        *self,
     buffer = _mbim_message_fragment_get_payload (fragment, &buffer_len);
     if (buffer_len) {
         /* Concatenate information buffers */
-        g_byte_array_append (self, buffer, buffer_len);
+        g_byte_array_append ((GByteArray *)self, buffer, buffer_len);
         /* Update the whole message length */
         ((struct header *)(self->data))->length =
             GUINT32_TO_LE (MBIM_MESSAGE_GET_MESSAGE_LENGTH (self) + buffer_len);

@@ -1278,7 +1278,7 @@ device_send (MbimDevice   *self,
             bytearray = g_byte_array_new ();
             g_byte_array_append (bytearray, (guint8 *)&fragments[i].header, sizeof (fragments[i].header));
             g_byte_array_append (bytearray, (guint8 *)&fragments[i].fragment_header, sizeof (fragments[i].fragment_header));
-            printable = mbim_message_get_printable (bytearray, "<<<<<< ", TRUE);
+            printable = mbim_message_get_printable ((MbimMessage *)bytearray, "<<<<<< ", TRUE);
             g_debug ("[%s] Sent fragment (translated)...\n%s",
                      self->priv->path_display,
                      printable);
