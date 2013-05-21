@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "mbim-message.h"
+#include "mbim-message-private.h"
 #include "mbim-cid.h"
 #include "mbim-enums.h"
 #include "mbim-utils.h"

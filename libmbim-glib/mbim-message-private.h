@@ -150,6 +150,90 @@ struct fragment_info *_mbim_message_split_fragments (const MbimMessage *self,
                                                      guint32            max_fragment_size,
                                                      guint             *n_fragments);
 
+/*****************************************************************************/
+/* Struct builder */
+
+typedef struct {
+    GByteArray  *fixed_buffer;
+    GByteArray  *variable_buffer;
+    GArray      *offsets;
+} MbimStructBuilder;
+
+MbimStructBuilder *_mbim_struct_builder_new                  (void);
+GByteArray        *_mbim_struct_builder_complete             (MbimStructBuilder *builder);
+void               _mbim_struct_builder_append_uuid          (MbimStructBuilder *builder,
+                                                              const MbimUuid    *value);
+void               _mbim_struct_builder_append_guint32       (MbimStructBuilder *builder,
+                                                              guint32            value);
+void               _mbim_struct_builder_append_guint32_array (MbimStructBuilder *builder,
+                                                              const guint32     *values,
+                                                              guint32            n_values);
+void               _mbim_struct_builder_append_guint64       (MbimStructBuilder *builder,
+                                                              guint64            value);
+void               _mbim_struct_builder_append_guint64_array (MbimStructBuilder *builder,
+                                                              const guint64     *values,
+                                                              guint32            n_values);
+void               _mbim_struct_builder_append_string        (MbimStructBuilder *builder,
+                                                              const gchar       *value);
+void               _mbim_struct_builder_append_string_array  (MbimStructBuilder  *builder,
+                                                              const gchar *const *values,
+                                                              guint32             n_values);
+void               _mbim_struct_builder_append_ipv4          (MbimStructBuilder *builder,
+                                                              const MbimIPv4    *value,
+                                                              gboolean           ref);
+void               _mbim_struct_builder_append_ipv4_array    (MbimStructBuilder *builder,
+                                                              const MbimIPv4    *values,
+                                                              guint32            n_values);
+void               _mbim_struct_builder_append_ipv6          (MbimStructBuilder *builder,
+                                                              const MbimIPv6    *value,
+                                                              gboolean           ref);
+void               _mbim_struct_builder_append_ipv6_array    (MbimStructBuilder *builder,
+                                                              const MbimIPv6    *values,
+                                                              guint32            n_values);
+
+/*****************************************************************************/
+/* Message builder */
+
+typedef struct {
+    MbimMessage *message;
+    MbimStructBuilder *contents_builder;
+} MbimMessageCommandBuilder;
+
+MbimMessageCommandBuilder *_mbim_message_command_builder_new                  (guint32                    transaction_id,
+                                                                               MbimService                service,
+                                                                               guint32                    cid,
+                                                                               MbimMessageCommandType     command_type);
+MbimMessage               *_mbim_message_command_builder_complete             (MbimMessageCommandBuilder *builder);
+void                       _mbim_message_command_builder_append_uuid          (MbimMessageCommandBuilder *builder,
+                                                                               const MbimUuid            *value);
+void                       _mbim_message_command_builder_append_guint32       (MbimMessageCommandBuilder *builder,
+                                                                               guint32                    value);
+void                       _mbim_message_command_builder_append_guint32_array (MbimMessageCommandBuilder *builder,
+                                                                               const guint32             *values,
+                                                                               guint32                    n_values);
+void                       _mbim_message_command_builder_append_guint64       (MbimMessageCommandBuilder *builder,
+                                                                               guint64                    value);
+void                       _mbim_message_command_builder_append_guint64_array (MbimMessageCommandBuilder *builder,
+                                                                               const guint64             *values,
+                                                                               guint32                    n_values);
+void                       _mbim_message_command_builder_append_string        (MbimMessageCommandBuilder *builder,
+                                                                               const gchar               *value);
+void                       _mbim_message_command_builder_append_string_array  (MbimMessageCommandBuilder *builder,
+                                                                               const gchar *const        *values,
+                                                                               guint32                    n_values);
+void                       _mbim_message_command_builder_append_ipv4          (MbimMessageCommandBuilder *builder,
+                                                                               const MbimIPv4            *value,
+                                                                               gboolean                   ref);
+void                       _mbim_message_command_builder_append_ipv4_array    (MbimMessageCommandBuilder *builder,
+                                                                               const MbimIPv4            *values,
+                                                                               guint32                    n_values);
+void                       _mbim_message_command_builder_append_ipv6          (MbimMessageCommandBuilder *builder,
+                                                                               const MbimIPv6            *value,
+                                                                               gboolean                   ref);
+void                       _mbim_message_command_builder_append_ipv6_array    (MbimMessageCommandBuilder *builder,
+                                                                               const MbimIPv6            *values,
+                                                                               guint32                    n_values);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_MESSAGE_PRIVATE_H_ */
