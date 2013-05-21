@@ -59,6 +59,52 @@ class Struct:
         translations = { 'name' : self.name }
         template = (
             '\n'
+            '/**\n'
+            ' * ${name}:\n')
+        for field in self.contents:
+            translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
+            if field['format'] == 'uuid':
+                inner_template = (
+                    ' * @${field_name_underscore}: a #MbimUuid.\n')
+            elif field['format'] == 'guint32':
+                inner_template = (
+                    ' * @${field_name_underscore}: a #guint32.\n')
+            elif field['format'] == 'guint32-array':
+                inner_template = (
+                    ' * @${field_name_underscore}: an array of #guint32 values.\n')
+            elif field['format'] == 'guint64':
+                inner_template = (
+                    ' * @${field_name_underscore}: a #guint64.\n')
+            elif field['format'] == 'string':
+                inner_template = (
+                    ' * @${field_name_underscore}: a string.\n')
+            elif field['format'] == 'string-array':
+                inner_template = (
+                    ' * @${field_name_underscore}: an array of strings.\n')
+            elif field['format'] == 'ipv4':
+                inner_template = (
+                    ' * @${field_name_underscore}: a #MbimIPv4.\n')
+            elif field['format'] == 'ref-ipv4':
+                inner_template = (
+                    ' * @${field_name_underscore}: a #MbimIPv4.\n')
+            elif field['format'] == 'ipv4-array':
+                inner_template = (
+                    ' * @${field_name_underscore}: an array of #MbimIPv4 values.\n')
+            elif field['format'] == 'ipv6':
+                inner_template = (
+                    ' * @${field_name_underscore}: a #MbimIPv6\n')
+            elif field['format'] == 'ref-ipv6':
+                inner_template = (
+                    ' * @${field_name_underscore}: a #MbimIPv6\n')
+            elif field['format'] == 'ipv6-array':
+                inner_template = (
+                    ' * @${field_name_underscore}: an array of #MbimIPv6 values.\n')
+            else:
+                raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
+            template += string.Template(inner_template).substitute(translations)
+
+        template += (
+            ' */\n'
             'typedef struct {\n')
         for field in self.contents:
             translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
