@@ -30,6 +30,13 @@
 
 G_BEGIN_DECLS
 
+/**
+ * SECTION: mbim-enums
+ * @title: Enumerations and Flags
+ *
+ * This section defines common enum and flag types used in the interface.
+ */
+
 /*****************************************************************************/
 /* 'Device Caps' enums */
 

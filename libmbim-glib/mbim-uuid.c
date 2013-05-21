@@ -27,6 +27,13 @@
 
 #include "mbim-uuid.h"
 
+/**
+ * SECTION: mbim-uuid
+ * @title: UUIDs
+ *
+ * This section defines the data type for unique identifiers.
+ */
+
 /*****************************************************************************/
 
 /**

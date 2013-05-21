@@ -24,6 +24,13 @@
 #include "mbim-cid.h"
 #include "mbim-enum-types.h"
 
+/**
+ * SECTION: mbim-cid
+ * @title: Command IDs
+ *
+ * This section defines the interface of the known command IDs.
+ */
+
 typedef struct {
     gboolean set;
     gboolean query;
