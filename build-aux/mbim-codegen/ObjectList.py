@@ -92,5 +92,24 @@ class ObjectList:
     Emit the sections
     """
     def emit_sections(self, sfile):
+        translations = { 'service_dashed' : utils.build_dashed_name(self.service),
+                         'service'        : self.service }
+
+        # Emit the section with all the types for the service
+        template = (
+            '\n'
+            '<SECTION>\n'
+            '<FILE>mbim-${service_dashed}-types</FILE>\n'
+            '<TITLE>${service} data types</TITLE>\n')
+        sfile.write(string.Template(template).substitute(translations))
+
+        for struct in self.struct_list:
+            struct.emit_section_content(sfile)
+
+        template = (
+            '</SECTION>\n')
+        sfile.write(template)
+
+        # Emit per-command sections
         for item in self.command_list:
             item.emit_sections(sfile)

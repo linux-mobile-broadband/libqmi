@@ -566,3 +566,21 @@ class Struct:
         self._emit_read(cfile)
         # Emit type's append
         self._emit_append(cfile)
+
+
+    """
+    Emit the section contents
+    """
+    def emit_section_content(self, sfile):
+        translations = { 'struct_name'     : self.name,
+                         'name_underscore' : utils.build_underscore_name_from_camelcase(self.name) }
+        template = (
+            '<SUBSECTION ${struct_name}>\n'
+            '${struct_name}\n')
+        if self.single_member == True:
+            template += (
+                '${name_underscore}_free\n')
+        if self.array_member == True:
+            template += (
+                '${name_underscore}_array_free\n')
+        sfile.write(string.Template(template).substitute(translations))
