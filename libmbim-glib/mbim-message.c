@@ -1378,6 +1378,7 @@ mbim_message_open_done_get_status_code (const MbimMessage *self)
 /**
  * mbim_message_open_done_get_result:
  * @self: a #MbimMessage.
+ * @error: return location for error or %NULL.
  *
  * Gets the result of the 'Open' operation in the %MBIM_MESSAGE_TYPE_OPEN_DONE message.
  *
@@ -1447,6 +1448,7 @@ mbim_message_close_done_get_status_code (const MbimMessage *self)
 /**
  * mbim_message_close_done_get_result:
  * @self: a #MbimMessage.
+ * @error: return location for error or %NULL.
  *
  * Gets the result of the 'Close' operation in the %MBIM_MESSAGE_TYPE_CLOSE_DONE message.
  *
@@ -1556,7 +1558,7 @@ mbim_message_error_get_error (const MbimMessage *self)
 /**
  * mbim_message_command_new:
  * @transaction_id: transaction ID.
- * @service_id: a #MbimUuid.
+ * @service: a #MbimService.
  * @cid: the command ID.
  * @command_type: the command type.
  *
@@ -1785,6 +1787,7 @@ mbim_message_command_done_get_status_code (const MbimMessage *self)
 /**
  * mbim_message_command_done_get_result:
  * @self: a #MbimMessage.
+ * @error: return location for error or %NULL.
  *
  * Gets the result of the 'Command' operation in the %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
  *

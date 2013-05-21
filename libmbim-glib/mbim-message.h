@@ -48,6 +48,7 @@ GType mbim_message_get_type (void) G_GNUC_CONST;
 
 /**
  * MbimIPv4:
+ * @addr: 4 bytes specifying the IPv4 address.
  *
  * An IPv4 address.
  */
@@ -58,6 +59,7 @@ struct _MbimIPv4 {
 
 /**
  * MbimIPv6:
+ * @addr: 16 bytes specifying the IPv6 address.
  *
  * An IPv6 address.
  */
