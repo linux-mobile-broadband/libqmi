@@ -35,6 +35,14 @@ GType
 /* Enum-specific method to get the value as a string.
  * We get the nick of the GEnumValue. Note that this will be
  * valid even if the GEnumClass is not referenced anywhere. */
+/**
+ * @enum_name@_get_string:
+ * @val: a @EnumName@.
+ *
+ * Gets the nickname string for the #@EnumName@ specified at @val.
+ *
+ * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ */
 const gchar *
 @enum_name@_get_string (@EnumName@ val)
 {
