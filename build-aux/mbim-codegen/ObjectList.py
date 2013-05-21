@@ -95,21 +95,21 @@ class ObjectList:
         translations = { 'service_dashed' : utils.build_dashed_name(self.service),
                          'service'        : self.service }
 
-        # Emit the section with all the types for the service
+        # Emit section header
         template = (
             '\n'
             '<SECTION>\n'
-            '<FILE>mbim-${service_dashed}-types</FILE>\n'
-            '<TITLE>${service} data types</TITLE>\n')
+            '<FILE>mbim-${service_dashed}</FILE>\n'
+            '<TITLE>${service}</TITLE>\n')
         sfile.write(string.Template(template).substitute(translations))
 
+        # Emit subsection per type
         for struct in self.struct_list:
             struct.emit_section_content(sfile)
 
-        template = (
-            '</SECTION>\n')
-        sfile.write(template)
+        # Emit subsection per command
+        for command in self.command_list:
+            command.emit_section_content(sfile)
 
-        # Emit per-command sections
-        for item in self.command_list:
-            item.emit_sections(sfile)
+        sfile.write(
+            '</SECTION>\n')

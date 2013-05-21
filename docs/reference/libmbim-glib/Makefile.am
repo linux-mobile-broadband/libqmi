@@ -5,7 +5,18 @@ DOC_MODULE = libmbim-glib
 # The top-level SGML file.
 DOC_MAIN_SGML_FILE = $(DOC_MODULE)-docs.xml
 
-BUILT_SOURCES =
+# Sections file building
+ALL_SECTIONS = \
+	$(srcdir)/libmbim-glib-common.sections \
+	$(top_builddir)/libmbim-glib/generated/mbim-basic-connect.sections
+
+$(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
+	$(AM_V_GEN) \
+		rm -f $(DOC_MODULE)-sections.txt && \
+		cat $(ALL_SECTIONS) > $(DOC_MODULE)-sections.txt && \
+		touch $(DOC_MODULE)-sections.mstamp
+
+BUILT_SOURCES = $(DOC_MODULE)-sections.mstamp
 
 # Extra options to supply to gtkdoc-scan
 SCAN_OPTIONS = --rebuild-types
@@ -53,6 +64,9 @@ include $(top_srcdir)/gtk-doc.make
 
 
 EXTRA_DIST += \
+	libmbim-glib-common.sections \
+	$(DOC_MODULE)-sections.txt \
+	$(DOC_MODULE)-sections.mstamp \
 	version.xml.in \
 	$(DIAGRAMS) \
 	$(NULL)
@@ -71,6 +85,8 @@ CLEANFILES += \
 	$(DOC_MODULE).prerequisites \
 	$(DOC_MODULE).signals \
 	$(DOC_MODULE).types \
+	$(DOC_MODULE)-sections.txt \
+	$(DOC_MODULE)-sections.mstamp \
 	*.stamp \
 	-rf xml html tmpl \
 	$(NULL)

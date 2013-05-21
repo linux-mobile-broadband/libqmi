@@ -48,6 +48,11 @@
     <xi:include href="xml/mbim-utils.xml"/>
   </chapter>
 
+  <chapter>
+    <title>Services</title>
+    <xi:include href="xml/mbim-basic-connect.xml"/>
+  </chapter>
+
   <chapter id="object-tree">
     <title>Object Hierarchy</title>
      <xi:include href="xml/tree_index.sgml"/>

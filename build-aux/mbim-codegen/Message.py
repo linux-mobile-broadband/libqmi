@@ -658,7 +658,33 @@ class Message:
 
 
     """
-    Emit the sections
+    Emit the section content
     """
-    def emit_sections(self, sfile):
-        pass
+    def emit_section_content(self, sfile):
+        translations = { 'name_dashed' : utils.build_dashed_name(self.name),
+                         'underscore'  : utils.build_underscore_name(self.fullname) }
+
+        template = (
+            '\n'
+            '<SUBSECTION ${name_dashed}>\n')
+        sfile.write(string.Template(template).substitute(translations))
+
+        if self.has_query:
+            template = (
+                '${underscore}_query_new\n')
+            sfile.write(string.Template(template).substitute(translations))
+
+        if self.has_set:
+            template = (
+                '${underscore}_set_new\n')
+            sfile.write(string.Template(template).substitute(translations))
+
+        if self.has_response:
+            template = (
+                '${underscore}_response_parse\n')
+            sfile.write(string.Template(template).substitute(translations))
+
+        if self.has_notification:
+            template = (
+                '${underscore}_notification_parse\n')
+            sfile.write(string.Template(template).substitute(translations))
