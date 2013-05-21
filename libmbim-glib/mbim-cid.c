@@ -226,6 +226,16 @@ mbim_cid_can_notify (MbimService service,
     }
 }
 
+/**
+ * mbim_cid_get_printable:
+ * @service: a #MbimService.
+ * @cid: a command ID.
+ *
+ * Gets a printable string for the command specified by the @service and the
+ * @cid.
+ *
+ * Returns: (transfer none): a constant string.
+ */
 const gchar *
 mbim_cid_get_printable (MbimService service,
                         guint       cid)
