@@ -52,6 +52,7 @@ class ObjectList:
     def __init__(self, objects_dictionary):
         self.command_list = []
         self.struct_list = []
+        self.service = ''
 
         # Loop items in the list, creating Message objects for the messages
         for object_dictionary in objects_dictionary:
@@ -59,8 +60,13 @@ class ObjectList:
                 self.command_list.append(Message(object_dictionary))
             elif object_dictionary['type'] == 'Struct':
                 self.struct_list.append(Struct(object_dictionary))
+            elif object_dictionary['type'] == 'Service':
+                self.service = object_dictionary['name']
             else:
                 raise ValueError('Cannot handle object type \'%s\'' % object_dictionary['type'])
+
+        if self.service == '':
+            raise ValueError('Service name not specified')
 
         # Populate struct usages
         for struct in self.struct_list:
