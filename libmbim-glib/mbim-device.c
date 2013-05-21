@@ -43,8 +43,8 @@
  * @title: MbimDevice
  * @short_description: Generic MBIM device handling routines
  *
- * #MbimDevice is a generic type in charge of controlling the access of multiple
- * #MbimClient objects to the managed MBIM port.
+ * #MbimDevice is a generic type in charge of controlling the access to the
+ * managed MBIM port.
  *
  * A #MbimDevice can only handle one single MBIM port.
  */
