@@ -221,6 +221,7 @@ typedef enum {
 
 /**
  * MbimPinType:
+ * @MBIM_PIN_TYPE_UNKNOWN: Unknown or unset.
  * @MBIM_PIN_TYPE_CUSTOM: The PIN type is a custom type and is none of the other PIN types listed in this enumeration.
  * @MBIM_PIN_TYPE_PIN1: The PIN1 key.
  * @MBIM_PIN_TYPE_PIN2: The PIN2 key.
@@ -242,6 +243,7 @@ typedef enum {
  * PIN Types.
  */
 typedef enum {
+    MBIM_PIN_TYPE_UNKNOWN              = 0,
     MBIM_PIN_TYPE_CUSTOM               = 1,
     MBIM_PIN_TYPE_PIN1                 = 2,
     MBIM_PIN_TYPE_PIN2                 = 3,
