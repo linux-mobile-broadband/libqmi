@@ -325,6 +325,7 @@ typedef enum {
 
 /**
  * MbimNwError:
+ * @MBIM_NW_ERROR_UNKNOWN: Unknown or unset error.
  * @MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR: IMSI unknown in the HLR.
  * @MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR: IMSI unknown in the VLR.
  * @MBIM_NW_ERROR_ILLEGAL_ME: Illegal ME.
@@ -341,6 +342,7 @@ typedef enum {
  *  Network errors.
  */
 typedef enum {
+    MBIM_NW_ERROR_UNKNOWN                              = 0,
     MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR                  = 2,
     MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR                  = 4,
     MBIM_NW_ERROR_ILLEGAL_ME                           = 6,
