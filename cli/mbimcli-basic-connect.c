@@ -40,11 +40,16 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
-static gboolean query_device_caps_flag;
-static gboolean query_subscriber_ready_status_flag;
-static gboolean query_radio_state_flag;
-static gboolean query_device_services_flag;
-static gboolean query_pin_flag;
+static gboolean  query_device_caps_flag;
+static gboolean  query_subscriber_ready_status_flag;
+static gboolean  query_radio_state_flag;
+static gboolean  query_device_services_flag;
+static gboolean  query_pin_flag;
+static gchar    *set_pin_enter_str;
+static gchar    *set_pin_change_str;
+static gchar    *set_pin_enable_str;
+static gchar    *set_pin_disable_str;
+static gchar    *set_pin_enter_puk_str;
 
 static GOptionEntry entries[] = {
     { "basic-connect-query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
@@ -66,6 +71,26 @@ static GOptionEntry entries[] = {
     { "basic-connect-query-pin", 0, 0, G_OPTION_ARG_NONE, &query_pin_flag,
       "Query PIN state",
       NULL
+    },
+    { "basic-connect-set-pin-enter", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_str,
+      "Enter PIN",
+      "[(current PIN)]"
+    },
+    { "basic-connect-set-pin-change", 0, 0, G_OPTION_ARG_STRING, &set_pin_change_str,
+      "Change PIN",
+      "[(current PIN),(new PIN)]"
+    },
+    { "basic-connect-set-pin-enable", 0, 0, G_OPTION_ARG_STRING, &set_pin_enable_str,
+      "Enable PIN",
+      "[(current PIN)]"
+    },
+    { "basic-connect-set-pin-disable", 0, 0, G_OPTION_ARG_STRING, &set_pin_disable_str,
+      "Disable PIN",
+      "[(current PIN)]"
+    },
+    { "basic-connect-set-pin-enter-puk", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_puk_str,
+      "Enter PUK",
+      "[(PUK),(new PIN)]"
     },
     { NULL }
 };
@@ -98,7 +123,12 @@ mbimcli_basic_connect_options_enabled (void)
                  query_subscriber_ready_status_flag +
                  query_radio_state_flag +
                  query_device_services_flag +
-                 query_pin_flag);
+                 query_pin_flag +
+                 !!set_pin_enter_str +
+                 !!set_pin_change_str +
+                 !!set_pin_enable_str +
+                 !!set_pin_disable_str +
+                 !!set_pin_enter_puk_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -443,18 +473,18 @@ query_device_services_ready (MbimDevice   *device,
 
 static void
 pin_ready (MbimDevice   *device,
-               GAsyncResult *res)
+           GAsyncResult *res,
+           gpointer user_data)
 {
     MbimMessage *response;
     GError *error = NULL;
     MbimPinType pin_type;
-    const gchar *pin_type_str;
     MbimPinState pin_state;
     const gchar *pin_state_str;
     guint32 remaining_attempts;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response) {
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         shutdown (FALSE);
@@ -473,22 +503,69 @@ pin_ready (MbimDevice   *device,
         return;
     }
 
+    if (GPOINTER_TO_UINT (user_data))
+        g_print ("[%s] PIN operation successful\n\n",
+                 mbim_device_get_path_display (device));
+
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
-    pin_type_str = mbim_pin_type_get_string (pin_type);
     pin_state_str = mbim_pin_state_get_string (pin_state);
 
     g_print ("[%s] Pin Info:\n"
-             "\t     PinType: '%s'\n"
-             "\t     PinState: '%s'\n"
-             "\t     RemainingAttempts: '%u'\n",
+             "\t         Pin State: '%s'\n",
              mbim_device_get_path_display (device),
-             pin_type_str,
-             pin_state_str,
-             remaining_attempts);
+             VALIDATE_UNKNOWN (pin_state_str));
+    if (pin_type != MBIM_PIN_TYPE_UNKNOWN) {
+        const gchar *pin_type_str;
+
+        pin_type_str = mbim_pin_type_get_string (pin_type);
+        g_print ("\t           PinType: '%s'\n"
+                 "\tRemaining attempts: '%u'\n",
+                 VALIDATE_UNKNOWN (pin_type_str),
+                 remaining_attempts);
+    }
+
     mbim_message_unref (response);
     shutdown (TRUE);
+}
+
+static gboolean
+set_pin_input_parse (guint         n_expected,
+                     const gchar  *str,
+                     gchar       **pin,
+                     gchar       **new_pin)
+{
+    gchar **split;
+
+    g_assert (n_expected == 1 || n_expected == 2);
+    g_assert (pin != NULL);
+    g_assert (new_pin != NULL);
+
+    /* Format of the string is:
+     *    "[(current PIN)]"
+     * or:
+     *    "[(current PIN),(new PIN)]"
+     */
+    split = g_strsplit (str, ",", -1);
+
+    if (g_strv_length (split) > n_expected) {
+        g_printerr ("error: couldn't parse input string, too many arguments");
+        g_strfreev (split);
+        return FALSE;
+    }
+
+    if (g_strv_length (split) < n_expected) {
+        g_printerr ("error: couldn't parse input string, missing arguments");
+        g_strfreev (split);
+        return FALSE;
+    }
+
+    *pin = split[0];
+    *new_pin = split[1] ? split[1] : NULL;
+
+    g_free (split);
+    return TRUE;
 }
 
 void
@@ -565,6 +642,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         return;
     }
 
+    /* Query PIN state? */
     if (query_pin_flag) {
         MbimMessage *request;
 
@@ -575,8 +653,87 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)pin_ready,
-                             NULL);
+                             GUINT_TO_POINTER (FALSE));
         mbim_message_unref (request);
+        return;
+    }
+
+    /* Set PIN? */
+    if (set_pin_enter_str ||
+        set_pin_change_str ||
+        set_pin_enable_str ||
+        set_pin_disable_str ||
+        set_pin_enter_puk_str) {
+        MbimMessage *request;
+        guint n_expected;
+        MbimPinType pin_type;
+        MbimPinOperation pin_operation;
+        gchar *pin;
+        gchar *new_pin;
+        const gchar *input = NULL;
+        GError *error = NULL;
+
+        if (set_pin_enter_puk_str) {
+            g_debug ("Asynchronously entering PUK...");
+            pin_type = MBIM_PIN_TYPE_PUK1;
+            input = set_pin_enter_puk_str;
+            n_expected = 2;
+            pin_operation = MBIM_PIN_OPERATION_ENTER;
+        } else {
+            pin_type = MBIM_PIN_TYPE_PIN1;
+            if (set_pin_change_str) {
+                g_debug ("Asynchronously changing PIN...");
+                input = set_pin_change_str;
+                n_expected = 2;
+                pin_operation = MBIM_PIN_OPERATION_CHANGE;
+            } else if (set_pin_enable_str) {
+                g_debug ("Asynchronously enabling PIN...");
+                input = set_pin_enable_str;
+                n_expected = 1;
+                pin_operation = MBIM_PIN_OPERATION_ENABLE;
+            } else if (set_pin_disable_str) {
+                g_debug ("Asynchronously disabling PIN...");
+                input = set_pin_disable_str;
+                n_expected = 1;
+                pin_operation = MBIM_PIN_OPERATION_DISABLE;
+            } else if (set_pin_enter_str) {
+                g_debug ("Asynchronously entering PIN...");
+                input = set_pin_enter_str;
+                n_expected = 1;
+                pin_operation = MBIM_PIN_OPERATION_ENTER;
+            } else
+                g_assert_not_reached ();
+        }
+
+        if (!set_pin_input_parse (n_expected, input, &pin, &new_pin)) {
+            shutdown (FALSE);
+            return;
+        }
+
+        request = (mbim_message_pin_set_new (pin_type,
+                                             pin_operation,
+                                             pin,
+                                             new_pin,
+                                             &error));
+        g_free (pin);
+        g_free (new_pin);
+
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            g_error_free (error);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)pin_ready,
+                             GUINT_TO_POINTER (TRUE));
+        mbim_message_unref (request);
+        g_free (pin);
+        g_free (new_pin);
         return;
     }
 
