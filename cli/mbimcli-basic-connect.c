@@ -50,6 +50,8 @@ static gchar    *set_pin_change_str;
 static gchar    *set_pin_enable_str;
 static gchar    *set_pin_disable_str;
 static gchar    *set_pin_enter_puk_str;
+static gboolean  query_register_state_flag;
+static gboolean  set_register_state_automatic_flag;
 static gboolean  query_connect_flag;
 static gchar    *set_connect_activate_str;
 static gchar    *set_connect_deactivate_str;
@@ -94,6 +96,14 @@ static GOptionEntry entries[] = {
     { "enter-puk", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_puk_str,
       "Enter PUK",
       "[(PUK),(new PIN)]"
+    },
+    { "query-registration-state", 0, 0, G_OPTION_ARG_NONE, &query_register_state_flag,
+      "Query registration state",
+      NULL
+    },
+    { "register-automatic", 0, 0, G_OPTION_ARG_NONE, &set_register_state_automatic_flag,
+      "Launch automatic registration",
+      NULL
     },
     { "query-connection-state", 0, 0, G_OPTION_ARG_NONE, &query_connect_flag,
       "Query connection state",
@@ -144,6 +154,8 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_pin_enable_str +
                  !!set_pin_disable_str +
                  !!set_pin_enter_puk_str +
+                 query_register_state_flag +
+                 set_register_state_automatic_flag +
                  query_connect_flag +
                  !!set_connect_activate_str +
                  !!set_connect_deactivate_str);
@@ -728,6 +740,94 @@ set_connect_activate_parse (const gchar       *str,
     return TRUE;
 }
 
+static void
+register_state_ready (MbimDevice   *device,
+                      GAsyncResult *res,
+                      gpointer user_data)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    MbimNwError nw_error;
+    MbimRegisterState register_state;
+    MbimRegisterMode register_mode;
+    MbimDataClass available_data_classes;
+    gchar *available_data_classes_str;
+    MbimCellularClass cellular_class;
+    gchar *cellular_class_str;
+    gchar *provider_id;
+    gchar *provider_name;
+    gchar *roaming_text;
+    MbimRegistrationFlag registration_flag;
+    gchar *registration_flag_str;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_register_state_response_parse (response,
+                                                     &nw_error,
+                                                     &register_state,
+                                                     &register_mode,
+                                                     &available_data_classes,
+                                                     &cellular_class,
+                                                     &provider_id,
+                                                     &provider_name,
+                                                     &roaming_text,
+                                                     &registration_flag,
+                                                     &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (GPOINTER_TO_UINT (user_data))
+        g_print ("[%s] Successfully launched automatic registration\n\n",
+                 mbim_device_get_path_display (device));
+
+    available_data_classes_str = mbim_data_class_build_string_from_mask (available_data_classes);
+    cellular_class_str = mbim_cellular_class_build_string_from_mask (cellular_class);
+    registration_flag_str = mbim_registration_flag_build_string_from_mask (registration_flag);
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    g_print ("[%s] Registration status:\n"
+             "\t         Network error: '%s'\n"
+             "\t        Register state: '%s'\n"
+             "\t         Register mode: '%s'\n"
+             "\tAvailable data classes: '%s'\n"
+             "\tCurrent cellular class: '%s'\n"
+             "\t           Provider ID: '%s'\n"
+             "\t         Provider name: '%s'\n"
+             "\t          Roaming text: '%s'\n"
+             "\t    Registration flags: '%s'\n",
+             mbim_device_get_path_display (device),
+             VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)),
+             VALIDATE_UNKNOWN (mbim_register_state_get_string (register_state)),
+             VALIDATE_UNKNOWN (mbim_register_mode_get_string (register_mode)),
+             VALIDATE_UNKNOWN (available_data_classes_str),
+             VALIDATE_UNKNOWN (cellular_class_str),
+             VALIDATE_UNKNOWN (provider_id),
+             VALIDATE_UNKNOWN (provider_name),
+             VALIDATE_UNKNOWN (roaming_text),
+             VALIDATE_UNKNOWN (registration_flag_str));
+
+    g_free (available_data_classes_str);
+    g_free (cellular_class_str);
+    g_free (registration_flag_str);
+    g_free (provider_name);
+    g_free (provider_id);
+    g_free (roaming_text);
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -890,6 +990,47 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)pin_ready,
+                             GUINT_TO_POINTER (TRUE));
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Query registration status? */
+    if (query_register_state_flag) {
+        MbimMessage *request;
+
+        request = mbim_message_register_state_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)register_state_ready,
+                             GUINT_TO_POINTER (FALSE));
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Launch automatic registration? */
+    if (set_register_state_automatic_flag) {
+        MbimMessage *request;
+        GError *error = NULL;
+
+        request = mbim_message_register_state_set_new (NULL,
+                                                       MBIM_REGISTER_ACTION_AUTOMATIC,
+                                                       0,
+                                                       &error);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            g_error_free (error);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)register_state_ready,
                              GUINT_TO_POINTER (TRUE));
         mbim_message_unref (request);
         return;
