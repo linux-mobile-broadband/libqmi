@@ -57,7 +57,7 @@ static gboolean  set_packet_service_attach_flag;
 static gboolean  set_packet_service_detach_flag;
 static gboolean  query_connect_flag;
 static gchar    *set_connect_activate_str;
-static gchar    *set_connect_deactivate_str;
+static gboolean  set_connect_deactivate_flag;
 
 static GOptionEntry entries[] = {
     { "query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
@@ -128,9 +128,9 @@ static GOptionEntry entries[] = {
       "Connect (Authentication, Username and Password are optional)",
       "[(APN),(PAP|CHAP|MSCHAPV2),(Username),(Password)]"
     },
-    { "disconnect", 0, 0, G_OPTION_ARG_STRING, &set_connect_deactivate_str,
+    { "disconnect", 0, 0, G_OPTION_ARG_NONE, &set_connect_deactivate_flag,
       "Disconnect",
-      "[(Session ID)]"
+      NULL
     },
     { NULL }
 };
@@ -176,7 +176,7 @@ mbimcli_basic_connect_options_enabled (void)
                  set_packet_service_detach_flag +
                  query_connect_flag +
                  !!set_connect_activate_str +
-                 !!set_connect_deactivate_str);
+                 set_connect_deactivate_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -1260,20 +1260,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     }
 
     /* Disconnect? */
-    if (set_connect_deactivate_str) {
+    if (set_connect_deactivate_flag) {
         MbimMessage *request;
         GError *error = NULL;
-        gulong session_id;
 
-        session_id = strtoul (set_connect_deactivate_str, NULL, 10);
-        if ((!g_str_equal (set_connect_deactivate_str, "0") && !session_id) || session_id > G_MAXUINT32) {
-            g_printerr ("error: invalid session ID given '%s'\n",
-                        set_connect_deactivate_str);
-            shutdown (FALSE);
-            return;
-        }
-
-        request = mbim_message_connect_set_new ((guint32)session_id,
+        request = mbim_message_connect_set_new (0,
                                                 MBIM_ACTIVATION_COMMAND_DEACTIVATE,
                                                 NULL,
                                                 NULL,
