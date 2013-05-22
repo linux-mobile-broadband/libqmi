@@ -50,6 +50,9 @@ static gchar    *set_pin_change_str;
 static gchar    *set_pin_enable_str;
 static gchar    *set_pin_disable_str;
 static gchar    *set_pin_enter_puk_str;
+static gboolean  query_connect_flag;
+static gchar    *set_connect_activate_str;
+static gchar    *set_connect_deactivate_str;
 
 static GOptionEntry entries[] = {
     { "query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
@@ -92,6 +95,18 @@ static GOptionEntry entries[] = {
       "Enter PUK",
       "[(PUK),(new PIN)]"
     },
+    { "query-connection-state", 0, 0, G_OPTION_ARG_NONE, &query_connect_flag,
+      "Query connection state",
+      NULL
+    },
+    { "connect", 0, 0, G_OPTION_ARG_STRING, &set_connect_activate_str,
+      "Connect (Authentication, Username and Password are optional)",
+      "[(APN),(PAP|CHAP|MSCHAPV2),(Username),(Password)]"
+    },
+    { "disconnect", 0, 0, G_OPTION_ARG_STRING, &set_connect_deactivate_str,
+      "Disconnect",
+      "[(Session ID)]"
+    },
     { NULL }
 };
 
@@ -128,7 +143,10 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_pin_change_str +
                  !!set_pin_enable_str +
                  !!set_pin_disable_str +
-                 !!set_pin_enter_puk_str);
+                 !!set_pin_enter_puk_str +
+                 query_connect_flag +
+                 !!set_connect_activate_str +
+                 !!set_connect_deactivate_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -568,6 +586,148 @@ set_pin_input_parse (guint         n_expected,
     return TRUE;
 }
 
+enum {
+    CONNECTION_STATUS,
+    CONNECT,
+    DISCONNECT
+};
+
+static void
+connect_ready (MbimDevice   *device,
+               GAsyncResult *res,
+               gpointer user_data)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    guint32 session_id;
+    MbimActivationState activation_state;
+    MbimVoiceCallState voice_call_state;
+    MbimContextIpType ip_type;
+    const MbimUuid *context_type;
+    guint32 nw_error;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_connect_response_parse (
+            response,
+            &session_id,
+            &activation_state,
+            &voice_call_state,
+            &ip_type,
+            &context_type,
+            &nw_error,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    switch (GPOINTER_TO_UINT (user_data)) {
+    case CONNECT:
+        g_print ("[%s] Successfully connected\n\n",
+                 mbim_device_get_path_display (device));
+        break;
+    case DISCONNECT:
+        g_print ("[%s] Successfully disconnected\n\n",
+                 mbim_device_get_path_display (device));
+        break;
+    default:
+        break;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    g_print ("[%s] Connection status:\n"
+             "\t      Session ID: '%u'\n"
+             "\tActivation state: '%s'\n"
+             "\tVoice call state: '%s'\n"
+             "\t         IP type: '%s'\n"
+             "\t    Context type: '%s'\n"
+             "\t   Network error: '%s'\n",
+             mbim_device_get_path_display (device),
+             session_id,
+             VALIDATE_UNKNOWN (mbim_activation_state_get_string (activation_state)),
+             VALIDATE_UNKNOWN (mbim_voice_call_state_get_string (voice_call_state)),
+             VALIDATE_UNKNOWN (mbim_context_ip_type_get_string (ip_type)),
+             VALIDATE_UNKNOWN (mbim_context_type_get_string (mbim_uuid_to_context_type (context_type))),
+             VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)));
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
+static gboolean
+set_connect_activate_parse (const gchar       *str,
+                            gchar            **apn,
+                            MbimAuthProtocol  *auth_protocol,
+                            gchar            **username,
+                            gchar            **password)
+{
+    gchar **split;
+
+    g_assert (apn != NULL);
+    g_assert (auth_protocol != NULL);
+    g_assert (username != NULL);
+    g_assert (password != NULL);
+
+    /* Format of the string is:
+     *    "[(APN),(PAP|CHAP|MSCHAPV2),(Username),(Password)]"
+     */
+    split = g_strsplit (str, ",", -1);
+
+    if (g_strv_length (split) > 4) {
+        g_printerr ("error: couldn't parse input string, too many arguments");
+        g_strfreev (split);
+        return FALSE;
+    }
+
+    if (g_strv_length (split) < 1) {
+        g_printerr ("error: couldn't parse input string, missing arguments");
+        g_strfreev (split);
+        return FALSE;
+    }
+
+    /* APN */
+    *apn = split[0];
+
+    /* Some defaults */
+    *auth_protocol = MBIM_AUTH_PROTOCOL_NONE;
+    *username = NULL;
+    *password = NULL;
+
+    /* Use authentication method */
+    if (split[1]) {
+        if (g_ascii_strcasecmp (split[1], "PAP") == 0)
+            *auth_protocol = MBIM_AUTH_PROTOCOL_PAP;
+        else if (g_ascii_strcasecmp (split[1], "CHAP") == 0)
+            *auth_protocol = MBIM_AUTH_PROTOCOL_CHAP;
+        else if (g_ascii_strcasecmp (split[1], "MSCHAPV2") == 0)
+            *auth_protocol = MBIM_AUTH_PROTOCOL_MSCHAPV2;
+        else
+            *auth_protocol = MBIM_AUTH_PROTOCOL_NONE;
+
+        /* Username */
+        if (split[2]) {
+            *username = split[2];
+
+            /* Password */
+            if (split[3])
+                *password = split[3];
+        }
+    }
+
+    g_free (split);
+    return TRUE;
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -732,8 +892,125 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              (GAsyncReadyCallback)pin_ready,
                              GUINT_TO_POINTER (TRUE));
         mbim_message_unref (request);
-        g_free (pin);
-        g_free (new_pin);
+        return;
+    }
+
+    /* Query connection status? */
+    if (query_connect_flag) {
+        MbimMessage *request;
+        GError *error = NULL;
+
+        request = mbim_message_connect_query_new (0,
+                                                  MBIM_ACTIVATION_COMMAND_ACTIVATE,
+                                                  MBIM_VOICE_CALL_STATE_NONE,
+                                                  MBIM_CONTEXT_IP_TYPE_DEFAULT,
+                                                  mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
+                                                  0,
+                                                  &error);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            g_error_free (error);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)connect_ready,
+                             GUINT_TO_POINTER (CONNECTION_STATUS));
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Connect? */
+    if (set_connect_activate_str) {
+        MbimMessage *request;
+        GError *error = NULL;
+        gchar *apn;
+        MbimAuthProtocol auth_protocol;
+        gchar *username = NULL;
+        gchar *password = NULL;
+
+        if (!set_connect_activate_parse (set_connect_activate_str,
+                                         &apn,
+                                         &auth_protocol,
+                                         &username,
+                                         &password)) {
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_connect_set_new (0,
+                                                MBIM_ACTIVATION_COMMAND_ACTIVATE,
+                                                apn,
+                                                username,
+                                                password,
+                                                MBIM_COMPRESSION_NONE,
+                                                auth_protocol,
+                                                MBIM_CONTEXT_IP_TYPE_DEFAULT,
+                                                mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
+                                                &error);
+        g_free (apn);
+        g_free (username);
+        g_free (password);
+
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            g_error_free (error);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)connect_ready,
+                             GUINT_TO_POINTER (CONNECT));
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Disconnect? */
+    if (set_connect_deactivate_str) {
+        MbimMessage *request;
+        GError *error = NULL;
+        gulong session_id;
+
+        session_id = strtoul (set_connect_deactivate_str, NULL, 10);
+        if ((!g_str_equal (set_connect_deactivate_str, "0") && !session_id) || session_id > G_MAXUINT32) {
+            g_printerr ("error: invalid session ID given '%s'\n",
+                        set_connect_deactivate_str);
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_connect_set_new ((guint32)session_id,
+                                                MBIM_ACTIVATION_COMMAND_DEACTIVATE,
+                                                NULL,
+                                                NULL,
+                                                NULL,
+                                                MBIM_COMPRESSION_NONE,
+                                                MBIM_AUTH_PROTOCOL_NONE,
+                                                MBIM_CONTEXT_IP_TYPE_DEFAULT,
+                                                mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
+                                                &error);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            g_error_free (error);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)connect_ready,
+                             GUINT_TO_POINTER (DISCONNECT));
+        mbim_message_unref (request);
         return;
     }
 
