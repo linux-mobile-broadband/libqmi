@@ -1,0 +1,31 @@
+Overview of changes in libmbim 1.0
+----------------------------------------
+
+ * Updated mbimcli with new commands:
+    --enter-pin
+    --change-pin
+    --enable-pin
+    --disable-pin
+    --enter-puk
+    --query-registration-state
+    --register-automatic
+    --query-packet-service-state
+    --attach-packet-service
+    --detach-packet-service
+    --query-connection-state
+    --connect
+    --disconnect
+    --no-close
+
+ * Removed the 'basic-connect' prefix from mbimcli commands.
+
+ * New 'mbim-network' script to help launch a connection through the
+   shell.
+
+ * Added gtk-doc documentation
+
+
+Overview of changes in libmbim 0.0.1
+----------------------------------------
+
+Initial release.
