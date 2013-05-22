@@ -52,6 +52,9 @@ static gchar    *set_pin_disable_str;
 static gchar    *set_pin_enter_puk_str;
 static gboolean  query_register_state_flag;
 static gboolean  set_register_state_automatic_flag;
+static gboolean  query_packet_service_flag;
+static gboolean  set_packet_service_attach_flag;
+static gboolean  set_packet_service_detach_flag;
 static gboolean  query_connect_flag;
 static gchar    *set_connect_activate_str;
 static gchar    *set_connect_deactivate_str;
@@ -105,6 +108,18 @@ static GOptionEntry entries[] = {
       "Launch automatic registration",
       NULL
     },
+    { "query-packet-service-state", 0, 0, G_OPTION_ARG_NONE, &query_packet_service_flag,
+      "Query packet service state",
+      NULL
+    },
+    { "attach-packet-service", 0, 0, G_OPTION_ARG_NONE, &set_packet_service_attach_flag,
+      "Attach to the packet service",
+      NULL
+    },
+    { "detach-packet-service", 0, 0, G_OPTION_ARG_NONE, &set_packet_service_detach_flag,
+      "Detach from the packet service",
+      NULL
+    },
     { "query-connection-state", 0, 0, G_OPTION_ARG_NONE, &query_connect_flag,
       "Query connection state",
       NULL
@@ -156,6 +171,9 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_pin_enter_puk_str +
                  query_register_state_flag +
                  set_register_state_automatic_flag +
+                 query_packet_service_flag +
+                 set_packet_service_attach_flag +
+                 set_packet_service_detach_flag +
                  query_connect_flag +
                  !!set_connect_activate_str +
                  !!set_connect_deactivate_str);
@@ -828,6 +846,84 @@ register_state_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+enum {
+    PACKET_SERVICE_STATUS,
+    PACKET_SERVICE_ATTACH,
+    PACKET_SERVICE_DETACH
+};
+
+static void
+packet_service_ready (MbimDevice   *device,
+                      GAsyncResult *res,
+                      gpointer user_data)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    guint32 nw_error;
+    MbimPacketServiceState packet_service_state;
+    MbimDataClass highest_available_data_class;
+    gchar *highest_available_data_class_str;
+    guint64 uplink_speed;
+    guint64 downlink_speed;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_packet_service_response_parse (response,
+                                                     &nw_error,
+                                                     &packet_service_state,
+                                                     &highest_available_data_class,
+                                                     &uplink_speed,
+                                                     &downlink_speed,
+                                                     &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    switch (GPOINTER_TO_UINT (user_data)) {
+    case PACKET_SERVICE_ATTACH:
+        g_print ("[%s] Successfully attached to packet service\n\n",
+                 mbim_device_get_path_display (device));
+        break;
+    case PACKET_SERVICE_DETACH:
+        g_print ("[%s] Successfully detached from packet service\n\n",
+                 mbim_device_get_path_display (device));
+        break;
+    default:
+        break;
+    }
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    highest_available_data_class_str = mbim_data_class_build_string_from_mask (highest_available_data_class);
+
+    g_print ("[%s] Packet service status:\n"
+             "\t         Network error: '%s'\n"
+             "\t  Packet service state: '%s'\n"
+             "\tAvailable data classes: '%s'\n"
+             "\t          Uplink speed: '%lu bps'\n"
+             "\t        Downlink speed: '%lu bps'\n",
+             mbim_device_get_path_display (device),
+             VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)),
+             VALIDATE_UNKNOWN (mbim_packet_service_state_get_string (packet_service_state)),
+             VALIDATE_UNKNOWN (highest_available_data_class_str),
+             uplink_speed,
+             downlink_speed);
+
+    g_free (highest_available_data_class_str);
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -1032,6 +1128,55 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)register_state_ready,
                              GUINT_TO_POINTER (TRUE));
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Query packet service status? */
+    if (query_packet_service_flag) {
+        MbimMessage *request;
+
+        request = mbim_message_packet_service_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)packet_service_ready,
+                             GUINT_TO_POINTER (PACKET_SERVICE_STATUS));
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Launch packet attach or detach? */
+    if (set_packet_service_attach_flag ||
+        set_packet_service_detach_flag) {
+        MbimMessage *request;
+        MbimPacketServiceAction action;
+        GError *error = NULL;
+
+        if (set_packet_service_attach_flag)
+            action = MBIM_PACKET_SERVICE_ACTION_ATTACH;
+        else if (set_packet_service_detach_flag)
+            action = MBIM_PACKET_SERVICE_ACTION_DETACH;
+        else
+            g_assert_not_reached ();
+
+        request = mbim_message_packet_service_set_new (action, &error);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            g_error_free (error);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)packet_service_ready,
+                             GUINT_TO_POINTER (set_packet_service_attach_flag ?
+                                               PACKET_SERVICE_ATTACH :
+                                               PACKET_SERVICE_DETACH));
         mbim_message_unref (request);
         return;
     }
