@@ -1,0 +1,150 @@
+#!/bin/sh
+
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright (C) 2013 Aleksander Morgado <aleksander@gnu.org>
+#
+# Based on libqmi's qmi-network script
+#
+
+print_usage ()
+{
+    echo "usage: $0 [DEVICE] [COMMAND]"
+}
+
+if [ $# -ne 2 ]; then
+    echo "error: missing arguments" 1>&2
+    print_usage
+    exit 255
+fi
+
+DEVICE=$1
+COMMAND=$2
+PROFILE_FILE=/etc/mbim-network.conf
+
+load_profile ()
+{
+    if [ -f $PROFILE_FILE ]; then
+        echo "Loading profile..."
+        source $PROFILE_FILE
+
+        if [ "x$APN" != "x" ]; then
+            echo "    APN: $APN"
+        fi
+    fi
+}
+
+#
+# $ sudo mbimcli -d /dev/cdc-wdm0 --connect="Internet" --no-close
+#   [/dev/cdc-wdm0] Successfully connected
+#   [/dev/cdc-wdm0] Connection status:
+#             Session ID: '0'
+#       Activation state: 'activated'
+#       Voice call state: 'none'
+#                IP type: 'ipv4'
+#           Context type: 'internet'
+#          Network error: 'unknown'
+#
+connect ()
+{
+    CONNECT_CMD="mbimcli -d $DEVICE --connect=$APN --no-close"
+    echo "Starting network with '$CONNECT_CMD'..."
+
+    CONNECT_OUT=`$CONNECT_CMD`
+    if [ $? -eq 0 ]; then
+        echo "Network started successfully"
+    else
+        echo "Network start failed"
+        echo $CONNECT_OUT
+    fi
+}
+
+#
+# $ sudo mbimcli -d /dev/cdc-wdm0 --disconnect="0"
+#   [/dev/cdc-wdm0] Successfully disconnected
+#   [/dev/cdc-wdm0] Connection status:
+#             Session ID: '0'
+#       Activation state: 'deactivated'
+#       Voice call state: 'none'
+#                IP type: 'default'
+#           Context type: 'internet'
+#          Network error: 'unknown'
+#
+disconnect ()
+{
+    DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect"
+    echo "Stopping network with '$DISCONNECT_CMD'..."
+
+    DISCONNECT_OUT=`$DISCONNECT_CMD`
+    if [ $? -eq 0 ]; then
+        echo "Network stopped successfully"
+    else
+        echo "Network stop failed"
+        echo $DISCONNECT_OUT
+    fi
+}
+
+#
+# $ sudo mbimcli -d /dev/cdc-wdm0 --query-connection-state  --no-close
+# [/dev/cdc-wdm0] Connection status:
+#         Session ID: '0'
+#   Activation state: 'deactivated'
+#   Voice call state: 'none'
+#            IP type: 'default'
+#       Context type: 'none'
+#      Network error: 'unknown'
+#
+status ()
+{
+    STATUS_CMD="mbimcli -d $DEVICE --query-connection-state --no-close"
+    echo "Getting status with '$STATUS_CMD'..."
+
+    STATUS_OUT=`$STATUS_CMD`
+
+    CONN=`echo "$STATUS_OUT" | sed -n "s/.*Activation state:.*'\(.*\)'.*/\1/p"`
+    if [ "x$CONN" = "x" ]; then
+        echo "error: couldn't get connection status" 1>&2
+        exit 2
+    else
+        echo "Status: $CONN"
+        if [ "x$CONN" != "xconnected" ]; then
+            exit 64
+        fi
+    fi
+}
+
+# Main
+
+# Load profile, if any
+load_profile
+
+# Process commands
+case $COMMAND in
+    "start")
+        connect
+        ;;
+    "stop")
+        disconnect
+        ;;
+    "status")
+        status
+        ;;
+    *)
+        echo "error: unexpected command '$COMMAND'" 1>&2
+        print_usage
+        exit 255
+        ;;
+esac
+
+exit 0

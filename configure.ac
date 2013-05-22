@@ -72,6 +72,7 @@ AC_CONFIG_FILES([Makefile
                  libmbim-glib/generated/Makefile
                  libmbim-glib/test/Makefile
                  cli/Makefile
+                 utils/Makefile
                  docs/Makefile
                  docs/reference/Makefile
                  docs/reference/libmbim-glib/Makefile
