@@ -45,6 +45,7 @@ static gboolean operation_status;
 
 /* Main options */
 static gchar *device_str;
+static gboolean no_close_flag;
 static gboolean verbose_flag;
 static gboolean silent_flag;
 static gboolean version_flag;
@@ -53,6 +54,10 @@ static GOptionEntry main_entries[] = {
     { "device", 'd', 0, G_OPTION_ARG_STRING, &device_str,
       "Specify device path",
       "[PATH]"
+    },
+    { "no-close", 'n', 0, G_OPTION_ARG_NONE, &no_close_flag,
+      "Do not close the MBIM device after running the command",
+      NULL
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
       "Run action with verbose logs, including the debug ones",
@@ -183,6 +188,12 @@ mbimcli_async_operation_done (gboolean reported_operation_status)
     if (cancellable) {
         g_object_unref (cancellable);
         cancellable = NULL;
+    }
+
+    if (no_close_flag) {
+        g_debug ("Keeping device open...");
+        g_main_loop_quit (loop);
+        return;
     }
 
     /* Close the device */
