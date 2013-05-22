@@ -598,13 +598,13 @@ set_pin_input_parse (guint         n_expected,
     split = g_strsplit (str, ",", -1);
 
     if (g_strv_length (split) > n_expected) {
-        g_printerr ("error: couldn't parse input string, too many arguments");
+        g_printerr ("error: couldn't parse input string, too many arguments\n");
         g_strfreev (split);
         return FALSE;
     }
 
     if (g_strv_length (split) < n_expected) {
-        g_printerr ("error: couldn't parse input string, missing arguments");
+        g_printerr ("error: couldn't parse input string, missing arguments\n");
         g_strfreev (split);
         return FALSE;
     }
@@ -714,13 +714,13 @@ set_connect_activate_parse (const gchar       *str,
     split = g_strsplit (str, ",", -1);
 
     if (g_strv_length (split) > 4) {
-        g_printerr ("error: couldn't parse input string, too many arguments");
+        g_printerr ("error: couldn't parse input string, too many arguments\n");
         g_strfreev (split);
         return FALSE;
     }
 
     if (g_strv_length (split) < 1) {
-        g_printerr ("error: couldn't parse input string, missing arguments");
+        g_printerr ("error: couldn't parse input string, missing arguments\n");
         g_strfreev (split);
         return FALSE;
     }
