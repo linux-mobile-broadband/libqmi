@@ -52,43 +52,43 @@ static gchar    *set_pin_disable_str;
 static gchar    *set_pin_enter_puk_str;
 
 static GOptionEntry entries[] = {
-    { "basic-connect-query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
+    { "query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
       "Query device capabilities",
       NULL
     },
-    { "basic-connect-query-subscriber-ready-status", 0, 0, G_OPTION_ARG_NONE, &query_subscriber_ready_status_flag,
+    { "query-subscriber-ready-status", 0, 0, G_OPTION_ARG_NONE, &query_subscriber_ready_status_flag,
       "Query subscriber ready status",
       NULL
     },
-    { "basic-connect-query-radio-state", 0, 0, G_OPTION_ARG_NONE, &query_radio_state_flag,
+    { "query-radio-state", 0, 0, G_OPTION_ARG_NONE, &query_radio_state_flag,
       "Query radio state",
       NULL
     },
-    { "basic-connect-query-device-services", 0, 0, G_OPTION_ARG_NONE, &query_device_services_flag,
+    { "query-device-services", 0, 0, G_OPTION_ARG_NONE, &query_device_services_flag,
       "Query device services",
       NULL
     },
-    { "basic-connect-query-pin", 0, 0, G_OPTION_ARG_NONE, &query_pin_flag,
+    { "query-pin-state", 0, 0, G_OPTION_ARG_NONE, &query_pin_flag,
       "Query PIN state",
       NULL
     },
-    { "basic-connect-set-pin-enter", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_str,
+    { "enter-pin", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_str,
       "Enter PIN",
       "[(current PIN)]"
     },
-    { "basic-connect-set-pin-change", 0, 0, G_OPTION_ARG_STRING, &set_pin_change_str,
+    { "change-pin", 0, 0, G_OPTION_ARG_STRING, &set_pin_change_str,
       "Change PIN",
       "[(current PIN),(new PIN)]"
     },
-    { "basic-connect-set-pin-enable", 0, 0, G_OPTION_ARG_STRING, &set_pin_enable_str,
+    { "enable-pin", 0, 0, G_OPTION_ARG_STRING, &set_pin_enable_str,
       "Enable PIN",
       "[(current PIN)]"
     },
-    { "basic-connect-set-pin-disable", 0, 0, G_OPTION_ARG_STRING, &set_pin_disable_str,
+    { "disable-pin", 0, 0, G_OPTION_ARG_STRING, &set_pin_disable_str,
       "Disable PIN",
       "[(current PIN)]"
     },
-    { "basic-connect-set-pin-enter-puk", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_puk_str,
+    { "enter-puk", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_puk_str,
       "Enter PUK",
       "[(PUK),(new PIN)]"
     },
