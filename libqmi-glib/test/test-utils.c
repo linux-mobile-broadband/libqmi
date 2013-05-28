@@ -958,13 +958,27 @@ common_test_utils_uint_sized_le (guint n_bytes)
 }
 
 static void
-test_utils_uint_sized_le (void)
+test_utils_uint_sized_1_le (void)
 {
-    guint i;
+    common_test_utils_uint_sized_le (1);
+}
 
-    for (i = 1; i <= 8; i++) {
-        common_test_utils_uint_sized_le (i);
-    }
+static void
+test_utils_uint_sized_2_le (void)
+{
+    common_test_utils_uint_sized_le (2);
+}
+
+static void
+test_utils_uint_sized_4_le (void)
+{
+    common_test_utils_uint_sized_le (4);
+}
+
+static void
+test_utils_uint_sized_8_le (void)
+{
+    common_test_utils_uint_sized_le (8);
 }
 
 static void
@@ -976,6 +990,7 @@ common_test_utils_uint_sized_be (guint n_bytes)
     guint64 value = 0x000000B6E2EB500FULL;
     guint8 expected_out_buffer[8] = { 0 };
     guint8 out_buffer[8] = { 0 };
+    guint8 in_buffer_aux[8] = { 0 };
 
     guint64 tmp;
     guint i;
@@ -992,31 +1007,59 @@ common_test_utils_uint_sized_be (guint n_bytes)
     }
     value &= tmp;
 
+    /* In BIG ENDIAN buffers, let's read only the bytes we want, starting from
+     * the byte we want, not from the beginning of the input buffer. But we do
+     * want to be aligned while reading, so we copy the bytes to read to the
+     * beginning of an aux buffer */
+    g_assert (n_bytes <= sizeof (in_buffer));
+    memcpy (&in_buffer_aux[0], &in_buffer[sizeof (in_buffer) - n_bytes], n_bytes);
+
     /* Build expected output buffer */
-    memcpy (expected_out_buffer, in_buffer, n_bytes);
+    memcpy (&expected_out_buffer[0], &in_buffer_aux[0], n_bytes);
 
     in_buffer_size = sizeof (in_buffer);
-    in_buffer_walker = &in_buffer[0];
+    in_buffer_walker = &in_buffer_aux[0];
     out_buffer_size = sizeof (out_buffer);
     out_buffer_walker = &out_buffer[0];
-    i = 0;
 
     qmi_utils_read_sized_guint_from_buffer (&in_buffer_walker, &in_buffer_size, n_bytes, QMI_ENDIAN_BIG, &tmp);
     g_assert_cmpuint (tmp, ==, value);
     qmi_utils_write_sized_guint_to_buffer (&out_buffer_walker, &out_buffer_size, n_bytes, QMI_ENDIAN_BIG, &tmp);
 
     g_assert_cmpuint (out_buffer_size, ==, 8 - n_bytes);
+    if (memcmp (expected_out_buffer, out_buffer, sizeof (expected_out_buffer)) != 0) {
+        g_print ("OUTPUT: %x, %x, %x, %x, %x, %x, %x, %x\n",
+                 out_buffer[0], out_buffer[1], out_buffer[2], out_buffer[3],
+                 out_buffer[4], out_buffer[5], out_buffer[6], out_buffer[7]);
+        g_print ("EXPECTED: %x, %x, %x, %x, %x, %x, %x, %x\n",
+                 expected_out_buffer[0], expected_out_buffer[1], expected_out_buffer[2], expected_out_buffer[3],
+                 expected_out_buffer[4], expected_out_buffer[5], expected_out_buffer[6], expected_out_buffer[7]);
+    }
     g_assert (memcmp (expected_out_buffer, out_buffer, sizeof (expected_out_buffer)) == 0);
 }
 
 static void
-test_utils_uint_sized_be (void)
+test_utils_uint_sized_1_be (void)
 {
-    guint i;
+    common_test_utils_uint_sized_be (1);
+}
 
-    for (i = 1; i <= 8; i++) {
-        common_test_utils_uint_sized_be (i);
-    }
+static void
+test_utils_uint_sized_2_be (void)
+{
+    common_test_utils_uint_sized_be (2);
+}
+
+static void
+test_utils_uint_sized_4_be (void)
+{
+    common_test_utils_uint_sized_be (4);
+}
+
+static void
+test_utils_uint_sized_8_be (void)
+{
+    common_test_utils_uint_sized_be (8);
 }
 
 static void
@@ -1051,7 +1094,6 @@ common_test_utils_uint_sized_unaligned_le (guint n_bytes)
     in_buffer_walker = &in_buffer[1];
     out_buffer_size = sizeof (out_buffer);
     out_buffer_walker = &out_buffer[0];
-    i = 0;
 
     qmi_utils_read_sized_guint_from_buffer (&in_buffer_walker, &in_buffer_size, n_bytes, QMI_ENDIAN_LITTLE, &tmp);
     g_assert_cmpuint (tmp, ==, value);
@@ -1062,24 +1104,39 @@ common_test_utils_uint_sized_unaligned_le (guint n_bytes)
 }
 
 static void
-test_utils_uint_sized_unaligned_le (void)
+test_utils_uint_sized_1_unaligned_le (void)
 {
-    guint i;
+    common_test_utils_uint_sized_unaligned_le (1);
+}
 
-    for (i = 1; i <= 8; i++) {
-        common_test_utils_uint_sized_unaligned_le (i);
-    }
+static void
+test_utils_uint_sized_2_unaligned_le (void)
+{
+    common_test_utils_uint_sized_unaligned_le (2);
+}
+
+static void
+test_utils_uint_sized_4_unaligned_le (void)
+{
+    common_test_utils_uint_sized_unaligned_le (4);
+}
+
+static void
+test_utils_uint_sized_8_unaligned_le (void)
+{
+    common_test_utils_uint_sized_unaligned_le (8);
 }
 
 static void
 common_test_utils_uint_sized_unaligned_be (guint n_bytes)
 {
-    static const guint8 in_buffer[9] = {
-        0x00, 0x00, 0x00, 0xB6, 0xE2, 0xEB, 0x50, 0x0F, 0x00
+    static const guint8 in_buffer[8] = {
+        0x00, 0x00, 0x00, 0xB6, 0xE2, 0xEB, 0x50, 0x0F
     };
     guint64 value = 0x000000B6E2EB500FULL;
     guint8 expected_out_buffer[8] = { 0 };
     guint8 out_buffer[8] = { 0 };
+    guint8 in_buffer_aux[9] = { 0 };
 
     guint64 tmp;
     guint i;
@@ -1096,11 +1153,18 @@ common_test_utils_uint_sized_unaligned_be (guint n_bytes)
     }
     value &= tmp;
 
-    /* Build expected output buffer */
-    memcpy (expected_out_buffer, &in_buffer[1], n_bytes);
+    /* In BIG ENDIAN buffers, let's read only the bytes we want, starting from
+     * the byte we want, not from the beginning of the input buffer. But we do
+     * not want to be aligned while reading, so we copy the bytes to read to
+     * almost the beginning of an aux buffer */
+    g_assert (n_bytes <= (sizeof (in_buffer)));
+    memcpy (&in_buffer_aux[1], &in_buffer[sizeof (in_buffer) - n_bytes], n_bytes);
 
-    in_buffer_size = sizeof (in_buffer) - 1;
-    in_buffer_walker = &in_buffer[1];
+    /* Build expected output buffer */
+    memcpy (expected_out_buffer, &in_buffer_aux[1], n_bytes);
+
+    in_buffer_size = sizeof (in_buffer_aux) - 1;
+    in_buffer_walker = &in_buffer_aux[1];
     out_buffer_size = sizeof (out_buffer);
     out_buffer_walker = &out_buffer[0];
     i = 0;
@@ -1110,17 +1174,39 @@ common_test_utils_uint_sized_unaligned_be (guint n_bytes)
     qmi_utils_write_sized_guint_to_buffer (&out_buffer_walker, &out_buffer_size, n_bytes, QMI_ENDIAN_BIG, &tmp);
 
     g_assert_cmpuint (out_buffer_size, ==, 8 - n_bytes);
+    if (memcmp (expected_out_buffer, out_buffer, sizeof (expected_out_buffer)) != 0) {
+        g_print ("OUTPUT: %x, %x, %x, %x, %x, %x, %x, %x\n",
+                 out_buffer[0], out_buffer[1], out_buffer[2], out_buffer[3],
+                 out_buffer[4], out_buffer[5], out_buffer[6], out_buffer[7]);
+        g_print ("EXPECTED: %x, %x, %x, %x, %x, %x, %x, %x\n",
+                 expected_out_buffer[0], expected_out_buffer[1], expected_out_buffer[2], expected_out_buffer[3],
+                 expected_out_buffer[4], expected_out_buffer[5], expected_out_buffer[6], expected_out_buffer[7]);
+    }
     g_assert (memcmp (expected_out_buffer, out_buffer, sizeof (expected_out_buffer)) == 0);
 }
 
 static void
-test_utils_uint_sized_unaligned_be (void)
+test_utils_uint_sized_1_unaligned_be (void)
 {
-    guint i;
+    common_test_utils_uint_sized_unaligned_be (1);
+}
 
-    for (i = 1; i <= 8; i++) {
-        common_test_utils_uint_sized_unaligned_be (i);
-    }
+static void
+test_utils_uint_sized_2_unaligned_be (void)
+{
+    common_test_utils_uint_sized_unaligned_be (2);
+}
+
+static void
+test_utils_uint_sized_4_unaligned_be (void)
+{
+    common_test_utils_uint_sized_unaligned_be (4);
+}
+
+static void
+test_utils_uint_sized_8_unaligned_be (void)
+{
+    common_test_utils_uint_sized_unaligned_be (8);
 }
 
 int main (int argc, char **argv)
@@ -1158,10 +1244,22 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/utils/int64/unaligned-LE",  test_utils_int64_unaligned_le);
     g_test_add_func ("/libqmi-glib/utils/int64/unaligned-BE",  test_utils_int64_unaligned_be);
 
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-LE",           test_utils_uint_sized_le);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-BE",           test_utils_uint_sized_be);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized/unaligned-LE", test_utils_uint_sized_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized/unaligned-BE", test_utils_uint_sized_unaligned_be);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-1-LE",           test_utils_uint_sized_1_le);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-2-LE",           test_utils_uint_sized_2_le);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-4-LE",           test_utils_uint_sized_4_le);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-8-LE",           test_utils_uint_sized_8_le);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-1-BE",           test_utils_uint_sized_1_be);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-2-BE",           test_utils_uint_sized_2_be);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-4-BE",           test_utils_uint_sized_4_be);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-8-BE",           test_utils_uint_sized_8_be);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-1-unaligned-LE", test_utils_uint_sized_1_unaligned_le);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-2-unaligned-LE", test_utils_uint_sized_2_unaligned_le);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-4-unaligned-LE", test_utils_uint_sized_4_unaligned_le);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-8-unaligned-LE", test_utils_uint_sized_8_unaligned_le);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-1-unaligned-BE", test_utils_uint_sized_1_unaligned_be);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-2-unaligned-BE", test_utils_uint_sized_2_unaligned_be);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-4-unaligned-BE", test_utils_uint_sized_4_unaligned_be);
+    g_test_add_func ("/libqmi-glib/utils/uint-sized-8-unaligned-BE", test_utils_uint_sized_8_unaligned_be);
 
     return g_test_run ();
 }

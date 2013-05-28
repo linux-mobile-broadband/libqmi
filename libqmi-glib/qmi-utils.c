@@ -432,13 +432,24 @@ qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= n_bytes);
+    g_assert (n_bytes <= 8);
 
     *out = 0;
-    memcpy (out, *buffer, n_bytes);
-    if (endian == QMI_ENDIAN_BIG)
-        *out = GUINT64_FROM_BE (*out);
-    else
+
+    /* In Little Endian, we copy the bytes to the beginning of the output
+     * buffer. */
+    if (endian == QMI_ENDIAN_LITTLE) {
+        memcpy (out, *buffer, n_bytes);
         *out = GUINT64_FROM_LE (*out);
+    }
+    /* In Big Endian, we copy the bytes to the end of the output buffer */
+    else {
+        guint8 tmp[8] = { 0 };
+
+        memcpy (&tmp[8 - n_bytes], *buffer, n_bytes);
+        memcpy (out, &tmp[0], 8);
+        *out = GUINT64_FROM_BE (*out);
+    }
 
     *buffer = &((*buffer)[n_bytes]);
     *buffer_size = (*buffer_size) - n_bytes;
@@ -766,12 +777,24 @@ qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
     g_assert (*buffer_size >= n_bytes);
+    g_assert (n_bytes <= 8);
 
     if (endian == QMI_ENDIAN_BIG)
         tmp = GUINT64_TO_BE (*in);
     else
         tmp = GUINT64_TO_LE (*in);
-    memcpy (*buffer, &tmp, n_bytes);
+
+    /* In Little Endian, we read the bytes from the beginning of the buffer */
+    if (endian == QMI_ENDIAN_LITTLE) {
+        memcpy (*buffer, &tmp, n_bytes);
+    }
+    /* In Big Endian, we read the bytes from the end of the buffer */
+    else {
+        guint8 tmp_buffer[8];
+
+        memcpy (&tmp_buffer[0], &tmp, 8);
+        memcpy (*buffer, &tmp_buffer[8 - n_bytes], n_bytes);
+    }
 
     *buffer = &((*buffer)[n_bytes]);
     *buffer_size = (*buffer_size) - n_bytes;
