@@ -909,8 +909,8 @@ packet_service_ready (MbimDevice   *device,
              "\t         Network error: '%s'\n"
              "\t  Packet service state: '%s'\n"
              "\tAvailable data classes: '%s'\n"
-             "\t          Uplink speed: '%lu bps'\n"
-             "\t        Downlink speed: '%lu bps'\n",
+             "\t          Uplink speed: '%" G_GUINT64_FORMAT " bps'\n"
+             "\t        Downlink speed: '%" G_GUINT64_FORMAT " bps'\n",
              mbim_device_get_path_display (device),
              VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)),
              VALIDATE_UNKNOWN (mbim_packet_service_state_get_string (packet_service_state)),
