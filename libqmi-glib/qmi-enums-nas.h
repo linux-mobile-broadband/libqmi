@@ -836,4 +836,40 @@ typedef enum {
     QMI_NAS_CDMA_PILOT_TYPE_NEIGHBOR = 1,
 } QmiNasCdmaPilotType;
 
+/**
+ * QmiNasDayOfWeek:
+ * @QMI_NAS_DAY_OF_WEEK_MONDAY: Monday
+ * @QMI_NAS_DAY_OF_WEEK_TUESDAY: Tuesday
+ * @QMI_NAS_DAY_OF_WEEK_WEDNESDAY: Wednesday
+ * @QMI_NAS_DAY_OF_WEEK_THURSDAY: Thursday
+ * @QMI_NAS_DAY_OF_WEEK_FRIDAY: Friday
+ * @QMI_NAS_DAY_OF_WEEK_SATURDAY: Saturday
+ * @QMI_NAS_DAY_OF_WEEK_SUNDAY: Sunday
+ *
+ * The day of the week.
+ */
+typedef enum {
+    QMI_NAS_DAY_OF_WEEK_MONDAY    = 0,
+    QMI_NAS_DAY_OF_WEEK_TUESDAY   = 1,
+    QMI_NAS_DAY_OF_WEEK_WEDNESDAY = 2,
+    QMI_NAS_DAY_OF_WEEK_THURSDAY  = 3,
+    QMI_NAS_DAY_OF_WEEK_FRIDAY    = 4,
+    QMI_NAS_DAY_OF_WEEK_SATURDAY  = 5,
+    QMI_NAS_DAY_OF_WEEK_SUNDAY    = 6
+} QmiNasDayOfWeek;
+
+/**
+ * QmiNasDaylightSavingsAdjustment:
+ * @QMI_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT_NONE: no adjustment
+ * @QMI_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT_ONE_HOUR: one hour adjustment
+ * @QMI_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT_TWO_HOURS: two hours adjustment
+ *
+ * The number of hours a time is adjusted for daylight savings.
+ */
+typedef enum {
+    QMI_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT_NONE      = 0,
+    QMI_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT_ONE_HOUR  = 1,
+    QMI_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT_TWO_HOURS = 2
+} QmiNasDaylightSavingsAdjustment;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */

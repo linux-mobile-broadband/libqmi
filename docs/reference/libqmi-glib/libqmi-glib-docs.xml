@@ -115,6 +115,7 @@
     <section>
       <title>NAS Indications</title>
       <xi:include href="xml/qmi-indication-nas-event-report.xml"/>
+      <xi:include href="xml/qmi-indication-nas-network-time.xml"/>
       <xi:include href="xml/qmi-indication-nas-serving-system.xml"/>
       <xi:include href="xml/qmi-indication-nas-system-info.xml"/>
       <xi:include href="xml/qmi-indication-nas-signal-info.xml"/>
