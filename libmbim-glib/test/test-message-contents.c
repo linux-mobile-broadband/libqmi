@@ -21,6 +21,107 @@
 #include "mbim-cid.h"
 
 static void
+test_message_contents_basic_connect_subscriber_ready_status (void)
+{
+    MbimSubscriberReadyState ready_state;
+    gchar *subscriber_id;
+    gchar *sim_iccid;
+    MbimReadyInfoFlag ready_info;
+    guint32 telephone_numbers_count;
+    gchar **telephone_numbers;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0xB4, 0x00, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x02, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x84, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* 0x00 ready state */
+        0x5C, 0x00, 0x00, 0x00, /* 0x04 subscriber id (offset) */
+        0x1E, 0x00, 0x00, 0x00, /* 0x08 subscriber id (size) */
+        0x7C, 0x00, 0x00, 0x00, /* 0x0C sim iccid (offset) */
+        0x28, 0x00, 0x00, 0x00, /* 0x10 sim iccid (size) */
+        0x00, 0x00, 0x00, 0x00, /* 0x14 ready info */
+        0x02, 0x00, 0x00, 0x00, /* 0x18 telephone numbers count */
+        0x2C, 0x00, 0x00, 0x00, /* 0x1C telephone number #1 (offset) */
+        0x16, 0x00, 0x00, 0x00, /* 0x20 telephone number #1 (size) */
+        0x44, 0x00, 0x00, 0x00, /* 0x24 telephone number #2 (offset) */
+        0x16, 0x00, 0x00, 0x00, /* 0x28 telephone number #2 (size) */
+        /* data buffer */
+        0x31, 0x00, 0x31, 0x00, /* 0x2C telephone number #1 (data) */
+        0x31, 0x00, 0x31, 0x00,
+        0x31, 0x00, 0x31, 0x00,
+        0x31, 0x00, 0x31, 0x00,
+        0x31, 0x00, 0x31, 0x00,
+        0x31, 0x00, 0x00, 0x00, /* last 2 bytes are padding */
+        0x30, 0x00, 0x30, 0x00, /* 0x44 telephone number #2 (data) */
+        0x30, 0x00, 0x30, 0x00,
+        0x30, 0x00, 0x30, 0x00,
+        0x30, 0x00, 0x30, 0x00,
+        0x30, 0x00, 0x30, 0x00,
+        0x30, 0x00, 0x00, 0x00, /* last 2 bytes are padding */
+        0x33, 0x00, 0x31, 0x00, /* 0x5C subscriber id (data) */
+        0x30, 0x00, 0x34, 0x00,
+        0x31, 0x00, 0x30, 0x00,
+        0x30, 0x00, 0x30, 0x00,
+        0x30, 0x00, 0x31, 0x00,
+        0x31, 0x00, 0x30, 0x00,
+        0x37, 0x00, 0x36, 0x00,
+        0x31, 0x00, 0x00, 0x00, /* last 2 bytes are padding */
+        0x38, 0x00, 0x39, 0x00, /* 0x7C sim iccid (data) */
+        0x30, 0x00, 0x31, 0x00,
+        0x30, 0x00, 0x31, 0x00,
+        0x30, 0x00, 0x34, 0x00,
+        0x30, 0x00, 0x35, 0x00,
+        0x34, 0x00, 0x36, 0x00,
+        0x30, 0x00, 0x31, 0x00,
+        0x31, 0x00, 0x30, 0x00,
+        0x30, 0x00, 0x36, 0x00,
+        0x31, 0x00, 0x32, 0x00 };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_subscriber_ready_status_response_parse (
+                  response,
+                  &ready_state,
+                  &subscriber_id,
+                  &sim_iccid,
+                  &ready_info,
+                  &telephone_numbers_count,
+                  &telephone_numbers,
+                  &error));
+
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (ready_state, ==, MBIM_SUBSCRIBER_READY_STATE_INITIALIZED);
+    g_assert_cmpstr (subscriber_id, ==, "310410000110761");
+    g_assert_cmpstr (sim_iccid, ==, "89010104054601100612");
+    g_assert_cmpuint (ready_info, ==, 0);
+    g_assert_cmpuint (telephone_numbers_count, ==, 2);
+    g_assert_cmpstr (telephone_numbers[0], ==, "11111111111");
+    g_assert_cmpstr (telephone_numbers[1], ==, "00000000000");
+    g_assert (telephone_numbers[2] == NULL);
+
+    g_free (subscriber_id);
+    g_free (sim_iccid);
+    g_strfreev (telephone_numbers);
+
+    mbim_message_unref (response);
+}
+
+static void
 test_message_contents_basic_connect_device_caps (void)
 {
     MbimMessage *response;
@@ -277,6 +378,7 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
+    g_test_add_func ("/libmbim-glib/message-contents/basic-connect/subscriber-ready-status", test_message_contents_basic_connect_subscriber_ready_status);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/device-caps", test_message_contents_basic_connect_device_caps);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/ip-configuration", test_message_contents_basic_connect_ip_configuration);
 
