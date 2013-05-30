@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <string.h>
+#include <errno.h>
 
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -45,6 +46,7 @@ static gboolean operation_status;
 
 /* Main options */
 static gchar *device_str;
+static gchar *no_open_str;
 static gboolean no_close_flag;
 static gboolean verbose_flag;
 static gboolean silent_flag;
@@ -55,7 +57,11 @@ static GOptionEntry main_entries[] = {
       "Specify device path",
       "[PATH]"
     },
-    { "no-close", 'n', 0, G_OPTION_ARG_NONE, &no_close_flag,
+    { "no-open", 0, 0, G_OPTION_ARG_STRING, &no_open_str,
+      "Do not explicitly open the MBIM device before running the command",
+      "[Transaction ID]"
+    },
+    { "no-close", 0, 0, G_OPTION_ARG_NONE, &no_close_flag,
       "Do not close the MBIM device after running the command",
       NULL
     },
@@ -176,6 +182,20 @@ device_close_ready (MbimDevice   *dev,
     } else
         g_debug ("Device closed");
 
+    /* If we left the device open, dump next transaction id */
+    if (no_close_flag) {
+        guint transaction_id;
+
+        g_object_get (dev,
+                      MBIM_DEVICE_TRANSACTION_ID, &transaction_id,
+                      NULL);
+
+        g_print ("[%s] Session not closed:\n"
+                 "\t    TRID: '%u'\n",
+                 mbim_device_get_path_display (dev),
+                 transaction_id);
+    }
+
     g_main_loop_quit (loop);
 }
 
@@ -190,11 +210,10 @@ mbimcli_async_operation_done (gboolean reported_operation_status)
         cancellable = NULL;
     }
 
-    if (no_close_flag) {
-        g_debug ("Keeping device open...");
-        g_main_loop_quit (loop);
-        return;
-    }
+    /* Set the in-session setup */
+    g_object_set (device,
+                  MBIM_DEVICE_IN_SESSION, no_close_flag,
+                  NULL);
 
     /* Close the device */
     mbim_device_close (device,
@@ -229,6 +248,27 @@ device_open_ready (MbimDevice   *dev,
     }
 }
 
+static guint
+read_transaction_id (const gchar *str)
+{
+    gulong num;
+
+    if (!str || !str[0])
+        return 0;
+
+    for (num = 0; str[num]; num++) {
+        if (!g_ascii_isdigit (str[num]))
+            return 0;
+    }
+
+    errno = 0;
+    num = strtoul (str, NULL, 10);
+    if (!errno && num <= G_MAXUINT) {
+        return (guint)num;
+    }
+    return 0;
+}
+
 static void
 device_new_ready (GObject      *unused,
                   GAsyncResult *res)
@@ -240,6 +280,23 @@ device_new_ready (GObject      *unused,
         g_printerr ("error: couldn't create MbimDevice: %s\n",
                     error->message);
         exit (EXIT_FAILURE);
+    }
+
+    /* Set the in-session setup */
+    if (no_open_str) {
+        guint transaction_id;
+
+        transaction_id = read_transaction_id (no_open_str);
+        if (!transaction_id) {
+            g_printerr ("error: invalid transaction ID specified: %s\n",
+                        no_open_str);
+            exit (EXIT_FAILURE);
+        }
+
+        g_object_set (device,
+                      MBIM_DEVICE_IN_SESSION,     TRUE,
+                      MBIM_DEVICE_TRANSACTION_ID, transaction_id,
+                      NULL);
     }
 
     /* Open the device */
