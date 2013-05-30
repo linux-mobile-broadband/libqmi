@@ -31,6 +31,7 @@ fi
 
 DEVICE=$1
 COMMAND=$2
+STATE_FILE=/tmp/mbim-network-state
 PROFILE_FILE=/etc/mbim-network.conf
 
 load_profile ()
@@ -43,6 +44,46 @@ load_profile ()
             echo "    APN: $APN"
         fi
     fi
+}
+
+save_state ()
+{
+    KEY=$1
+    VAL=$2
+
+    echo "Saving state... ($KEY: $VAL)"
+
+    if [ -f $STATE_FILE ]; then
+        PREVIOUS=`cat $STATE_FILE`
+        PREVIOUS=`echo "$PREVIOUS" | grep -v $KEY`
+        if [ "x$PREVIOUS" != "x" ]; then
+            echo $PREVIOUS > $STATE_FILE
+        else
+            rm $STATE_FILE
+        fi
+    fi
+
+    if [ "x$VAL" != "x" ]; then
+        echo "$KEY=\"$VAL\"" >> $STATE_FILE
+    fi
+}
+
+load_state ()
+{
+    if [ -f $STATE_FILE ]; then
+        echo "Loading previous state..."
+        source $STATE_FILE
+
+        if [ "x$TRID" != "x" ]; then
+            echo "    Previous Transaction ID: $TRID"
+        fi
+    fi
+}
+
+clear_state ()
+{
+    echo "Clearing state..."
+    rm -f $STATE_FILE
 }
 
 #
@@ -58,6 +99,12 @@ load_profile ()
 #
 connect ()
 {
+    # Always try to connect using a fresh session
+    if [ "x$TRID" != "x" ]; then
+        mbimcli -d $DEVICE --no-open=$TRID
+        clear_state
+    fi
+
     CONNECT_CMD="mbimcli -d $DEVICE --connect=$APN --no-close"
     echo "Starting network with '$CONNECT_CMD'..."
 
@@ -67,6 +114,12 @@ connect ()
     else
         echo "Network start failed"
         echo $CONNECT_OUT
+    fi
+
+    # Save the new TRID
+    TRID=`echo "$CONNECT_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
+    if [ "x$TRID" != "x" ]; then
+        save_state "TRID" $TRID
     fi
 }
 
@@ -83,7 +136,12 @@ connect ()
 #
 disconnect ()
 {
-    DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect"
+    # Always close the session when disconnecting
+    if [ "x$TRID" != "x" ]; then
+        DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect --no-open=$TRID"
+    else
+        DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect"
+    fi
     echo "Stopping network with '$DISCONNECT_CMD'..."
 
     DISCONNECT_OUT=`$DISCONNECT_CMD`
@@ -93,6 +151,8 @@ disconnect ()
         echo "Network stop failed"
         echo $DISCONNECT_OUT
     fi
+
+    clear_state
 }
 
 #
@@ -107,10 +167,20 @@ disconnect ()
 #
 status ()
 {
-    STATUS_CMD="mbimcli -d $DEVICE --query-connection-state --no-close"
+    if [ "x$TRID" != "x" ]; then
+        STATUS_CMD="mbimcli -d $DEVICE --query-connection-state --no-close --no-open=$TRID"
+    else
+        STATUS_CMD="mbimcli -d $DEVICE --query-connection-state"
+    fi
     echo "Getting status with '$STATUS_CMD'..."
 
     STATUS_OUT=`$STATUS_CMD`
+
+    # Save the new TRID
+    TRID=`echo "$STATUS_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
+    if [ "x$TRID" != "x" ]; then
+        save_state "TRID" $TRID
+    fi
 
     CONN=`echo "$STATUS_OUT" | sed -n "s/.*Activation state:.*'\(.*\)'.*/\1/p"`
     if [ "x$CONN" = "x" ]; then
@@ -128,6 +198,9 @@ status ()
 
 # Load profile, if any
 load_profile
+
+# Load previous state, if any
+load_state
 
 # Process commands
 case $COMMAND in
