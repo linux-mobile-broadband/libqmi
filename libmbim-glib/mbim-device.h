@@ -45,7 +45,9 @@ typedef struct _MbimDevice MbimDevice;
 typedef struct _MbimDeviceClass MbimDeviceClass;
 typedef struct _MbimDevicePrivate MbimDevicePrivate;
 
-#define MBIM_DEVICE_FILE "device-file"
+#define MBIM_DEVICE_FILE           "device-file"
+#define MBIM_DEVICE_TRANSACTION_ID "device-transaction-id"
+#define MBIM_DEVICE_IN_SESSION     "device-in-session"
 
 #define MBIM_DEVICE_SIGNAL_INDICATE_STATUS "device-indicate-status"
 #define MBIM_DEVICE_SIGNAL_ERROR           "device-error"

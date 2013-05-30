@@ -57,6 +57,8 @@ G_DEFINE_TYPE_EXTENDED (MbimDevice, mbim_device, G_TYPE_OBJECT, 0,
 enum {
     PROP_0,
     PROP_FILE,
+    PROP_TRANSACTION_ID,
+    PROP_IN_SESSION,
     PROP_LAST
 };
 
@@ -95,6 +97,9 @@ struct _MbimDevicePrivate {
 
     /* Transaction ID in the device */
     guint32 transaction_id;
+
+    /* Flag to specify whether we're in a session */
+    gboolean in_session;
 
     /* message size */
     guint16 max_control_transfer;
@@ -964,6 +969,13 @@ mbim_device_open (MbimDevice          *self,
         return;
     }
 
+    /* If the device is already in-session, avoid the open message */
+    if (self->priv->in_session) {
+        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+        device_open_context_complete_and_free (ctx);
+        return;
+    }
+
     open_message (ctx);
 }
 
@@ -1118,6 +1130,18 @@ mbim_device_close (MbimDevice          *self,
     /* Already closed? */
     if (!self->priv->iochannel) {
         g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+        device_close_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* If the device is in-session, avoid the close message */
+    if (self->priv->in_session) {
+        GError *error = NULL;
+
+        if (!destroy_iochannel (self, &error))
+            g_simple_async_result_take_error (ctx->result, error);
+        else
+            g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
         device_close_context_complete_and_free (ctx);
         return;
     }
@@ -1631,6 +1655,12 @@ set_property (GObject      *object,
         self->priv->path = g_file_get_path (self->priv->file);
         self->priv->path_display = g_filename_display_name (self->priv->path);
         break;
+    case PROP_TRANSACTION_ID:
+        self->priv->transaction_id = g_value_get_uint (value);
+        break;
+    case PROP_IN_SESSION:
+        self->priv->in_session = g_value_get_boolean (value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -1648,6 +1678,12 @@ get_property (GObject    *object,
     switch (prop_id) {
     case PROP_FILE:
         g_value_set_object (value, self->priv->file);
+        break;
+    case PROP_TRANSACTION_ID:
+        g_value_set_uint (value, self->priv->transaction_id);
+        break;
+    case PROP_IN_SESSION:
+        g_value_set_boolean (value, self->priv->in_session);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1729,6 +1765,24 @@ mbim_device_class_init (MbimDeviceClass *klass)
                              G_TYPE_FILE,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_FILE, properties[PROP_FILE]);
+
+    properties[PROP_TRANSACTION_ID] =
+        g_param_spec_uint (MBIM_DEVICE_TRANSACTION_ID,
+                           "Transaction ID",
+                           "Current transaction ID",
+                           0x01,
+                           G_MAXUINT32,
+                           0x01,
+                           G_PARAM_READWRITE);
+    g_object_class_install_property (object_class, PROP_TRANSACTION_ID, properties[PROP_TRANSACTION_ID]);
+
+    properties[PROP_IN_SESSION] =
+        g_param_spec_boolean (MBIM_DEVICE_IN_SESSION,
+                              "In session",
+                              "Flag to specify if the device is within a session",
+                              FALSE,
+                              G_PARAM_READWRITE);
+    g_object_class_install_property (object_class, PROP_IN_SESSION, properties[PROP_IN_SESSION]);
 
   /**
    * MbimDevice::device-indicate-status:
