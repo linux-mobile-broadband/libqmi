@@ -105,7 +105,18 @@ connect ()
         clear_state
     fi
 
-    CONNECT_CMD="mbimcli -d $DEVICE --connect=$APN --no-close"
+    ATTACH_CMD="mbimcli -d $DEVICE --attach-packet-service --no-close"
+    echo "Attaching to packet service with '$ATTACH_CMD'..."
+
+    ATTACH_OUT=`$ATTACH_CMD`
+
+    # Save the new TRID
+    TRID=`echo "$ATTACH_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
+    if [ "x$TRID" != "x" ]; then
+        save_state "TRID" $TRID
+    fi
+
+    CONNECT_CMD="mbimcli -d $DEVICE --connect=$APN --no-open=$TRID --no-close"
     echo "Starting network with '$CONNECT_CMD'..."
 
     CONNECT_OUT=`$CONNECT_CMD`
