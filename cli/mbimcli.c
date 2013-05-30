@@ -48,6 +48,7 @@ static gboolean operation_status;
 static gchar *device_str;
 static gchar *no_open_str;
 static gboolean no_close_flag;
+static gboolean noop_flag;
 static gboolean verbose_flag;
 static gboolean silent_flag;
 static gboolean version_flag;
@@ -63,6 +64,10 @@ static GOptionEntry main_entries[] = {
     },
     { "no-close", 0, 0, G_OPTION_ARG_NONE, &no_close_flag,
       "Do not close the MBIM device after running the command",
+      NULL
+    },
+    { "noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
+      "Don't run any command",
       NULL
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
@@ -238,6 +243,12 @@ device_open_ready (MbimDevice   *dev,
     g_debug ("MBIM Device at '%s' ready",
              mbim_device_get_path_display (dev));
 
+    /* If no operation requested, finish */
+    if (noop_flag) {
+        mbimcli_async_operation_done (TRUE);
+        return;
+    }
+
     /* Run the service-specific action */
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -319,6 +330,10 @@ parse_actions (void)
         service = MBIM_SERVICE_BASIC_CONNECT;
         actions_enabled++;
     }
+
+    /* Noop */
+    if (noop_flag)
+        actions_enabled++;
 
     /* Cannot mix actions from different services */
     if (actions_enabled > 1) {
