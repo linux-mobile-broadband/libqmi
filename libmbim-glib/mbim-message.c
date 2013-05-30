@@ -212,42 +212,19 @@ _mbim_message_read_string_array (const MbimMessage *self,
 {
     gchar **array;
     guint32 offset;
-    guint32 size;
     guint32 i;
-    guint32 information_buffer_offset;
 
     if (!array_size)
         return NULL;
 
-    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
-
     array = g_new (gchar *, array_size + 1);
-    offset = information_buffer_offset + relative_offset_array_start;
-    size = offset + 4;
-    for (i = 0; i < array_size; i++) {
-        GError *error = NULL;
-
-        if (!size)
-            array[i] = g_strdup ("");
-        else
-            array[i] = g_convert (G_STRUCT_MEMBER_P (
-                                      self->data,
-                                      (information_buffer_offset + offset)),
-                                  size,
-                                  "utf-8",
-                                  "utf-16le",
-                                  NULL,
-                                  NULL,
-                                  &error);
-        if (error) {
-            g_warning ("Error converting string: %s", error->message);
-            g_error_free (error);
-        }
-
-        offset += 8;
-        array_size = offset + 4;
+    for (i = 0, offset = relative_offset_array_start;
+         i < array_size;
+         offset += 8, i++) {
+        /* Read next string in the OL pair list */
+        array[i] = _mbim_message_read_string (self, offset);
     }
-    array[array_size] = NULL;
+    array[i] = NULL;
 
     return array;
 }
