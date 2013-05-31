@@ -105,7 +105,32 @@ connect ()
         clear_state
     fi
 
-    ATTACH_CMD="mbimcli -d $DEVICE --attach-packet-service --no-close"
+    SUBSCRIBER_READY_CMD="mbimcli -d $DEVICE --query-subscriber-ready-status --no-close"
+    echo "Querying subscriber ready status '$SUBSCRIBER_READY_CMD'..."
+
+    SUBSCRIBER_READY_OUT=`$SUBSCRIBER_READY_CMD`
+    echo $SUBSCRIBER_READY_OUT
+
+    # Save the new TRID
+    TRID=`echo "$SUBSCRIBER_READY_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
+    if [ "x$TRID" != "x" ]; then
+        save_state "TRID" $TRID
+    fi
+
+
+    REGISTRATION_STATE_CMD="mbimcli -d $DEVICE --query-registration-state --no-open=$TRID --no-close"
+    echo "Querying registration state '$REGISTRATION_STATE_CMD'..."
+
+    REGISTRATION_STATE_OUT=`$REGISTRATION_STATE_CMD`
+    echo $REGISTRATION_STATE_OUT
+
+    # Save the new TRID
+    TRID=`echo "$REGISTRATION_STATE_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
+    if [ "x$TRID" != "x" ]; then
+        save_state "TRID" $TRID
+    fi
+
+    ATTACH_CMD="mbimcli -d $DEVICE --attach-packet-service --no-open=$TRID --no-close"
     echo "Attaching to packet service with '$ATTACH_CMD'..."
 
     ATTACH_OUT=`$ATTACH_CMD`
