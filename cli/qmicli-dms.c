@@ -927,7 +927,7 @@ uim_change_pin_input_create (const gchar *str)
     split = g_strsplit (str, ",", -1);
     if (qmicli_read_pin_id_from_string (split[0], &pin_id) &&
         qmicli_read_non_empty_string (split[1], "old PIN", &old_pin) &&
-        qmicli_read_non_empty_string (split[1], "new PIN", &new_pin)) {
+        qmicli_read_non_empty_string (split[2], "new PIN", &new_pin)) {
         GError *error = NULL;
 
         input = qmi_message_dms_uim_change_pin_input_new ();
