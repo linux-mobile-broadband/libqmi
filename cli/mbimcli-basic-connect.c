@@ -52,6 +52,7 @@ static gchar    *set_pin_disable_str;
 static gchar    *set_pin_enter_puk_str;
 static gboolean  query_register_state_flag;
 static gboolean  set_register_state_automatic_flag;
+static gboolean  query_signal_state_flag;
 static gboolean  query_packet_service_flag;
 static gboolean  set_packet_service_attach_flag;
 static gboolean  set_packet_service_detach_flag;
@@ -106,6 +107,10 @@ static GOptionEntry entries[] = {
     },
     { "register-automatic", 0, 0, G_OPTION_ARG_NONE, &set_register_state_automatic_flag,
       "Launch automatic registration",
+      NULL
+    },
+    { "query-signal-state", 0, 0, G_OPTION_ARG_NONE, &query_signal_state_flag,
+      "Query signal state",
       NULL
     },
     { "query-packet-service-state", 0, 0, G_OPTION_ARG_NONE, &query_packet_service_flag,
@@ -171,6 +176,7 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_pin_enter_puk_str +
                  query_register_state_flag +
                  set_register_state_automatic_flag +
+                 query_signal_state_flag +
                  query_packet_service_flag +
                  set_packet_service_attach_flag +
                  set_packet_service_detach_flag +
@@ -846,6 +852,60 @@ register_state_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+signal_state_ready (MbimDevice   *device,
+                    GAsyncResult *res,
+                    gpointer user_data)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    guint32 rssi;
+    guint32 error_rate;
+    guint32 signal_strength_interval;
+    guint32 rssi_threshold;
+    guint32 error_rate_threshold;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_signal_state_response_parse (response,
+                                                   &rssi,
+                                                   &error_rate,
+                                                   &signal_strength_interval,
+                                                   &rssi_threshold,
+                                                   &error_rate_threshold,
+                                                   &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Signal state:\n"
+             "\t          RSSI [0-31,99]: '%u'\n"
+             "\t     Error rate [0-7,99]: '%u'\n"
+             "\tSignal strength interval: '%u'\n"
+             "\t          RSSI threshold: '%u'\n",
+             mbim_device_get_path_display (device),
+             rssi,
+             error_rate,
+             signal_strength_interval,
+             rssi_threshold);
+
+    if (error_rate_threshold == 0xFFFFFFFF)
+        g_print ("\t    Error rate threshold: 'unspecified'\n");
+    else
+        g_print ("\t    Error rate threshold: '%u'\n", error_rate_threshold);
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
 enum {
     PACKET_SERVICE_STATUS,
     PACKET_SERVICE_ATTACH,
@@ -1128,6 +1188,21 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)register_state_ready,
                              GUINT_TO_POINTER (TRUE));
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Query signal status? */
+    if (query_signal_state_flag) {
+        MbimMessage *request;
+
+        request = mbim_message_signal_state_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)signal_state_ready,
+                             NULL);
         mbim_message_unref (request);
         return;
     }
