@@ -321,6 +321,31 @@ typedef enum {
 } MbimPinFormat;
 
 /*****************************************************************************/
+/* 'Home Provider' enums */
+
+/**
+ * MbimProviderState:
+ * @MBIM_PROVIDER_STATE_UNKNOWN: Unknown.
+ * @MBIM_PROVIDER_STATE_HOME: Home operator.
+ * @MBIM_PROVIDER_STATE_FORBIDDEN: Provider blocked.
+ * @MBIM_PROVIDER_STATE_PREFERRED: Provider is in the preferred list.
+ * @MBIM_PROVIDER_STATE_VISIBLE: Provider is visible.
+ * @MBIM_PROVIDER_STATE_REGISTERED: Currently registered to the provider.
+ * @MBIM_PROVIDER_STATE_PREFERRED_MULTICARRIER: Provider is a preferred multicarrier network.
+ *
+ * State of the provider.
+ */
+typedef enum {
+    MBIM_PROVIDER_STATE_UNKNOWN                = 0,
+    MBIM_PROVIDER_STATE_HOME                   = 1 << 0,
+    MBIM_PROVIDER_STATE_FORBIDDEN              = 1 << 1,
+    MBIM_PROVIDER_STATE_PREFERRED              = 1 << 2,
+    MBIM_PROVIDER_STATE_VISIBLE                = 1 << 3,
+    MBIM_PROVIDER_STATE_REGISTERED             = 1 << 4,
+    MBIM_PROVIDER_STATE_PREFERRED_MULTICARRIER = 1 << 5
+} MbimProviderState;
+
+/*****************************************************************************/
 /* 'Register State' enums */
 
 /**
