@@ -346,6 +346,21 @@ typedef enum {
 } MbimProviderState;
 
 /*****************************************************************************/
+/* 'Visible Providers' enums */
+
+/**
+ * MbimVisibleProvidersAction:
+ * @MBIM_VISIBLE_PROVIDERS_ACTION_FULL_SCAN: Full scan.
+ * @MBIM_VISIBLE_PROVIDERS_ACTION_RESTRICTED_SCAN: Locate preferred multicarrier providers.
+ *
+ * Type of action to perform when listing visible providers.
+ */
+typedef enum {
+    MBIM_VISIBLE_PROVIDERS_ACTION_FULL_SCAN       = 0,
+    MBIM_VISIBLE_PROVIDERS_ACTION_RESTRICTED_SCAN = 1
+} MbimVisibleProvidersAction;
+
+/*****************************************************************************/
 /* 'Register State' enums */
 
 /**

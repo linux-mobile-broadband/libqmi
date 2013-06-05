@@ -191,6 +191,7 @@ MbimPinOperation
 MbimPinMode
 MbimPinFormat
 MbimProviderState
+MbimVisibleProvidersAction
 MbimNwError
 MbimRegisterAction
 MbimRegisterState
@@ -222,6 +223,7 @@ mbim_pin_operation_get_string
 mbim_pin_mode_get_string
 mbim_pin_format_get_string
 mbim_provider_state_build_string_from_mask
+mbim_visible_providers_action_get_string
 mbim_nw_error_get_string
 mbim_register_action_get_string
 mbim_register_state_get_string
@@ -252,6 +254,7 @@ mbim_pin_operation_build_string_from_mask
 mbim_pin_mode_build_string_from_mask
 mbim_pin_format_build_string_from_mask
 mbim_provider_state_get_string
+mbim_visible_providers_action_build_string_from_mask
 mbim_nw_error_build_string_from_mask
 mbim_register_action_build_string_from_mask
 mbim_register_state_build_string_from_mask
@@ -290,6 +293,7 @@ MBIM_TYPE_PIN_OPERATION
 MBIM_TYPE_PIN_STATE
 MBIM_TYPE_PIN_TYPE
 MBIM_TYPE_PROVIDER_STATE
+MBIM_TYPE_VISIBLE_PROVIDERS_ACTION
 MBIM_TYPE_RADIO_SWITCH_STATE
 MBIM_TYPE_READY_INFO_FLAG
 MBIM_TYPE_REGISTER_ACTION
@@ -324,6 +328,7 @@ mbim_pin_operation_get_type
 mbim_pin_state_get_type
 mbim_pin_type_get_type
 mbim_provider_state_get_type
+mbim_visible_providers_action_get_type
 mbim_radio_switch_state_get_type
 mbim_ready_info_flag_get_type
 mbim_register_action_get_type
