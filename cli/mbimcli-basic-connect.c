@@ -50,6 +50,7 @@ static gchar    *set_pin_change_str;
 static gchar    *set_pin_enable_str;
 static gchar    *set_pin_disable_str;
 static gchar    *set_pin_enter_puk_str;
+static gboolean  query_home_provider_flag;
 static gboolean  query_register_state_flag;
 static gboolean  set_register_state_automatic_flag;
 static gboolean  query_signal_state_flag;
@@ -100,6 +101,10 @@ static GOptionEntry entries[] = {
     { "enter-puk", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_puk_str,
       "Enter PUK",
       "[(PUK),(new PIN)]"
+    },
+    { "query-home-provider", 0, 0, G_OPTION_ARG_NONE, &query_home_provider_flag,
+      "Query home provider",
+      NULL
     },
     { "query-registration-state", 0, 0, G_OPTION_ARG_NONE, &query_register_state_flag,
       "Query registration state",
@@ -175,6 +180,7 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_pin_disable_str +
                  !!set_pin_enter_puk_str +
                  query_register_state_flag +
+                 query_home_provider_flag +
                  set_register_state_automatic_flag +
                  query_signal_state_flag +
                  query_packet_service_flag +
@@ -765,6 +771,63 @@ set_connect_activate_parse (const gchar       *str,
 }
 
 static void
+home_provider_ready (MbimDevice   *device,
+                     GAsyncResult *res,
+                     gpointer user_data)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    MbimProvider *provider;
+    gchar *provider_state_str;
+    gchar *cellular_class_str;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_home_provider_response_parse (response,
+                                                    &provider,
+                                                    &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    provider_state_str = mbim_provider_state_build_string_from_mask (provider->provider_state);
+    cellular_class_str = mbim_cellular_class_build_string_from_mask (provider->cellular_class);
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    g_print ("[%s] Home provider:\n"
+             "\t   Provider ID: '%s'\n"
+             "\t Provider Name: '%s'\n"
+             "\t         State: '%s'\n"
+             "\tCellular class: '%s'\n"
+             "\t          RSSI: '%u'\n"
+             "\t    Error rate: '%u'\n",
+             mbim_device_get_path_display (device),
+             VALIDATE_UNKNOWN (provider->provider_id),
+             VALIDATE_UNKNOWN (provider->provider_name),
+             VALIDATE_UNKNOWN (provider_state_str),
+             VALIDATE_UNKNOWN (cellular_class_str),
+             provider->rssi,
+             provider->error_rate);
+
+    g_free (cellular_class_str);
+    g_free (provider_state_str);
+
+    mbim_provider_free (provider);
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
+static void
 register_state_ready (MbimDevice   *device,
                       GAsyncResult *res,
                       gpointer user_data)
@@ -1147,6 +1210,21 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)pin_ready,
                              GUINT_TO_POINTER (TRUE));
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Query home provider? */
+    if (query_home_provider_flag) {
+        MbimMessage *request;
+
+        request = mbim_message_home_provider_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)home_provider_ready,
+                             NULL);
         mbim_message_unref (request);
         return;
     }
