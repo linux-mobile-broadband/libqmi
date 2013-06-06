@@ -249,6 +249,41 @@ void                       _mbim_message_command_builder_append_ipv6_array    (M
                                                                                const MbimIPv6            *values,
                                                                                guint32                    n_values);
 
+/*****************************************************************************/
+/* Message parser */
+
+const guint8    *_mbim_message_read_byte_array    (const MbimMessage *self,
+                                                   guint32            relative_offset,
+                                                   guint32           *array_size);
+const MbimUuid  *_mbim_message_read_uuid          (const MbimMessage *self,
+                                                   guint32            relative_offset);
+guint32          _mbim_message_read_guint32       (const MbimMessage *self,
+                                                   guint32            relative_offset);
+guint32         *_mbim_message_read_guint32_array (const MbimMessage *self,
+                                                   guint32            array_size,
+                                                   guint32            relative_offset_array_start);
+guint64          _mbim_message_read_guint64       (const MbimMessage *self,
+                                                   guint64            relative_offset);
+gchar           *_mbim_message_read_string        (const MbimMessage *self,
+                                                   guint32            struct_start_offset,
+                                                   guint32            relative_offset);
+gchar          **_mbim_message_read_string_array  (const MbimMessage *self,
+                                                   guint32            array_size,
+                                                   guint32            struct_start_offset,
+                                                   guint32            relative_offset_array_start);
+const MbimIPv4  *_mbim_message_read_ipv4          (const MbimMessage *self,
+                                                   guint32            relative_offset,
+                                                   gboolean           ref);
+MbimIPv4        *_mbim_message_read_ipv4_array    (const MbimMessage *self,
+                                                   guint32            array_size,
+                                                   guint32            relative_offset_array_start);
+const MbimIPv6  *_mbim_message_read_ipv6          (const MbimMessage *self,
+                                                   guint32            relative_offset,
+                                                   gboolean           ref);
+MbimIPv6        *_mbim_message_read_ipv6_array    (const MbimMessage *self,
+                                                   guint32            array_size,
+                                                   guint32            relative_offset_array_start);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_MESSAGE_PRIVATE_H_ */
