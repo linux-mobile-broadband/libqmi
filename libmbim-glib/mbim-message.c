@@ -167,6 +167,7 @@ _mbim_message_read_guint64 (const MbimMessage *self,
 
 gchar *
 _mbim_message_read_string (const MbimMessage *self,
+                           guint32            struct_start_offset,
                            guint32            relative_offset)
 {
     guint32 offset;
@@ -190,7 +191,7 @@ _mbim_message_read_string (const MbimMessage *self,
 
     str = g_convert (G_STRUCT_MEMBER_P (
                          self->data,
-                         (information_buffer_offset + offset)),
+                         (information_buffer_offset + struct_start_offset + offset)),
                      size,
                      "utf-8",
                      "utf-16le",
@@ -208,6 +209,7 @@ _mbim_message_read_string (const MbimMessage *self,
 gchar **
 _mbim_message_read_string_array (const MbimMessage *self,
                                  guint32            array_size,
+                                 guint32            struct_start_offset,
                                  guint32            relative_offset_array_start)
 {
     gchar **array;
@@ -222,7 +224,7 @@ _mbim_message_read_string_array (const MbimMessage *self,
          i < array_size;
          offset += 8, i++) {
         /* Read next string in the OL pair list */
-        array[i] = _mbim_message_read_string (self, offset);
+        array[i] = _mbim_message_read_string (self, struct_start_offset, offset);
     }
     array[i] = NULL;
 

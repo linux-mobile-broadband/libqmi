@@ -586,12 +586,12 @@ class Message:
             elif field['format'] == 'string':
                 inner_template += (
                     '        if (${field} != NULL)\n'
-                    '            *${field} = _mbim_message_read_string (message, offset);\n'
+                    '            *${field} = _mbim_message_read_string (message, 0, offset);\n'
                     '        offset += 8;\n')
             elif field['format'] == 'string-array':
                 inner_template += (
                     '        if (${field} != NULL)\n'
-                    '            *${field} = _mbim_message_read_string_array (message, _${array_size_field}, offset);\n'
+                    '            *${field} = _mbim_message_read_string_array (message, _${array_size_field}, 0, offset);\n'
                     '        offset += (8 * _${array_size_field});\n')
             elif field['format'] == 'struct':
                 inner_template += (
