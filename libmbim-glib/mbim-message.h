@@ -122,6 +122,11 @@ void             mbim_message_set_transaction_id   (MbimMessage        *self,
                                                     guint32             transaction_id);
 
 #if defined (LIBMBIM_GLIB_COMPILATION)
+const guint8    *_mbim_message_read_byte_array    (const MbimMessage *self,
+                                                   guint32            relative_offset,
+                                                   guint32           *array_size);
+const MbimUuid  *_mbim_message_read_uuid          (const MbimMessage *self,
+                                                   guint32            relative_offset);
 guint32          _mbim_message_read_guint32       (const MbimMessage *self,
                                                    guint32            relative_offset);
 guint32         *_mbim_message_read_guint32_array (const MbimMessage *self,
@@ -136,8 +141,6 @@ gchar          **_mbim_message_read_string_array  (const MbimMessage *self,
                                                    guint32            array_size,
                                                    guint32            struct_start_offset,
                                                    guint32            relative_offset_array_start);
-const MbimUuid  *_mbim_message_read_uuid          (const MbimMessage *self,
-                                                   guint32            relative_offset);
 const MbimIPv4  *_mbim_message_read_ipv4          (const MbimMessage *self,
                                                    guint32            relative_offset,
                                                    gboolean           ref);

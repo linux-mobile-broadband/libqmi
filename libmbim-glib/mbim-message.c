@@ -231,6 +231,24 @@ _mbim_message_read_string_array (const MbimMessage *self,
     return array;
 }
 
+const guint8 *
+_mbim_message_read_byte_array (const MbimMessage *self,
+                               guint32            relative_offset,
+                               guint32           *array_size)
+{
+    guint32 information_buffer_offset;
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+
+    /* We assume that the byte array goes until the end */
+    if (array_size)
+        *array_size = self->len - (information_buffer_offset + relative_offset);
+
+
+    return (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+                                               (information_buffer_offset + relative_offset));
+}
+
 const MbimUuid *
 _mbim_message_read_uuid (const MbimMessage *self,
                          guint32            relative_offset)
@@ -400,6 +418,14 @@ _mbim_struct_builder_complete (MbimStructBuilder *builder)
     g_slice_free (MbimStructBuilder, builder);
 
     return out;
+}
+
+void
+_mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
+                                        const guint8      *buffer,
+                                        guint32            buffer_len)
+{
+    g_byte_array_append (builder->variable_buffer, buffer, buffer_len);
 }
 
 void
@@ -648,6 +674,14 @@ _mbim_message_command_builder_complete (MbimMessageCommandBuilder *builder)
     g_slice_free (MbimMessageCommandBuilder, builder);
 
     return message;
+}
+
+void
+_mbim_message_command_builder_append_byte_array (MbimMessageCommandBuilder *builder,
+                                                 const guint8              *buffer,
+                                                 guint32                    buffer_len)
+{
+    _mbim_struct_builder_append_byte_array (builder->contents_builder, buffer, buffer_len);
 }
 
 void

@@ -170,6 +170,9 @@ typedef struct {
 
 MbimStructBuilder *_mbim_struct_builder_new                  (void);
 GByteArray        *_mbim_struct_builder_complete             (MbimStructBuilder *builder);
+void               _mbim_struct_builder_append_byte_array    (MbimStructBuilder *builder,
+                                                              const guint8      *buffer,
+                                                              guint32            buffer_len);
 void               _mbim_struct_builder_append_uuid          (MbimStructBuilder *builder,
                                                               const MbimUuid    *value);
 void               _mbim_struct_builder_append_guint32       (MbimStructBuilder *builder,
@@ -213,6 +216,9 @@ MbimMessageCommandBuilder *_mbim_message_command_builder_new                  (g
                                                                                guint32                    cid,
                                                                                MbimMessageCommandType     command_type);
 MbimMessage               *_mbim_message_command_builder_complete             (MbimMessageCommandBuilder *builder);
+void                       _mbim_message_command_builder_append_byte_array    (MbimMessageCommandBuilder *builder,
+                                                                               const guint8              *buffer,
+                                                                               guint32                    buffer_len);
 void                       _mbim_message_command_builder_append_uuid          (MbimMessageCommandBuilder *builder,
                                                                                const MbimUuid            *value);
 void                       _mbim_message_command_builder_append_guint32       (MbimMessageCommandBuilder *builder,
