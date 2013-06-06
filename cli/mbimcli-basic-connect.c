@@ -51,6 +51,7 @@ static gchar    *set_pin_enable_str;
 static gchar    *set_pin_disable_str;
 static gchar    *set_pin_enter_puk_str;
 static gboolean  query_home_provider_flag;
+static gboolean  query_preferred_providers_flag;
 static gboolean  query_register_state_flag;
 static gboolean  set_register_state_automatic_flag;
 static gboolean  query_signal_state_flag;
@@ -104,6 +105,10 @@ static GOptionEntry entries[] = {
     },
     { "query-home-provider", 0, 0, G_OPTION_ARG_NONE, &query_home_provider_flag,
       "Query home provider",
+      NULL
+    },
+    { "query-preferred-providers", 0, 0, G_OPTION_ARG_NONE, &query_preferred_providers_flag,
+      "Query preferred providers",
       NULL
     },
     { "query-registration-state", 0, 0, G_OPTION_ARG_NONE, &query_register_state_flag,
@@ -181,6 +186,7 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_pin_enter_puk_str +
                  query_register_state_flag +
                  query_home_provider_flag +
+                 query_preferred_providers_flag +
                  set_register_state_automatic_flag +
                  query_signal_state_flag +
                  query_packet_service_flag +
@@ -828,6 +834,77 @@ home_provider_ready (MbimDevice   *device,
 }
 
 static void
+preferred_providers_ready (MbimDevice   *device,
+                           GAsyncResult *res,
+                           gpointer user_data)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    MbimProvider **providers;
+    guint n_providers;
+    guint i;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_preferred_providers_response_parse (response,
+                                                          &n_providers,
+                                                          &providers,
+                                                          &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!n_providers)
+        g_print ("[%s] No preferred providers given\n",
+                 mbim_device_get_path_display (device));
+    else
+        g_print ("[%s] Preferred providers (%u):\n",
+                 mbim_device_get_path_display (device),
+                 n_providers);
+
+    for (i = 0; i < n_providers; i++) {
+        gchar *provider_state_str;
+        gchar *cellular_class_str;
+
+        provider_state_str = mbim_provider_state_build_string_from_mask (providers[i]->provider_state);
+        cellular_class_str = mbim_cellular_class_build_string_from_mask (providers[i]->cellular_class);
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+        g_print ("\tProvider [%u]:\n"
+                 "\t\t    Provider ID: '%s'\n"
+                 "\t\t  Provider Name: '%s'\n"
+                 "\t\t          State: '%s'\n"
+                 "\t\t Cellular class: '%s'\n"
+                 "\t\t           RSSI: '%u'\n"
+                 "\t\t     Error rate: '%u'\n",
+                 i,
+                 VALIDATE_UNKNOWN (providers[i]->provider_id),
+                 VALIDATE_UNKNOWN (providers[i]->provider_name),
+                 VALIDATE_UNKNOWN (provider_state_str),
+                 VALIDATE_UNKNOWN (cellular_class_str),
+                 providers[i]->rssi,
+                 providers[i]->error_rate);
+
+        g_free (cellular_class_str);
+        g_free (provider_state_str);
+    }
+
+    mbim_provider_array_free (providers);
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
+static void
 register_state_ready (MbimDevice   *device,
                       GAsyncResult *res,
                       gpointer user_data)
@@ -1224,6 +1301,21 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)home_provider_ready,
+                             NULL);
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Query preferred providers? */
+    if (query_preferred_providers_flag) {
+        MbimMessage *request;
+
+        request = mbim_message_preferred_providers_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)preferred_providers_ready,
                              NULL);
         mbim_message_unref (request);
         return;
