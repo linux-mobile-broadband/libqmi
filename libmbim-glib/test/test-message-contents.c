@@ -21,6 +21,114 @@
 #include "mbim-cid.h"
 
 static void
+test_message_contents_basic_connect_visible_providers (void)
+{
+    MbimProvider **providers;
+    guint32 n_providers;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0xB0, 0x00, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x08, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x80, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x02, 0x00, 0x00, 0x00, /* 0x00 providers count */
+        0x14, 0x00, 0x00, 0x00, /* 0x04 provider 0 offset */
+        0x38, 0x00, 0x00, 0x00, /* 0x08 provider 0 length */
+        0x4C, 0x00, 0x00, 0x00, /* 0x0C provider 1 offset */
+        0x38, 0x00, 0x00, 0x00, /* 0x10 provider 1 length */
+        /* data buffer... struct provider 0 */
+        0x20, 0x00, 0x00, 0x00, /* 0x14 [0x00] id offset */
+        0x0A, 0x00, 0x00, 0x00, /* 0x18 [0x04] id length */
+        0x08, 0x00, 0x00, 0x00, /* 0x1C [0x08] state */
+        0x2C, 0x00, 0x00, 0x00, /* 0x20 [0x0C] name offset */
+        0x0C, 0x00, 0x00, 0x00, /* 0x24 [0x10] name length */
+        0x01, 0x00, 0x00, 0x00, /* 0x28 [0x14] cellular class */
+        0x0B, 0x00, 0x00, 0x00, /* 0x2C [0x18] rssi */
+        0x00, 0x00, 0x00, 0x00, /* 0x30 [0x1C] error rate */
+        0x32, 0x00, 0x31, 0x00, /* 0x34 [0x20] id string (10 bytes) */
+        0x34, 0x00, 0x30, 0x00,
+        0x33, 0x00, 0x00, 0x00,
+        0x4F, 0x00, 0x72, 0x00, /* 0x40 [0x2C] name string (12 bytes) */
+        0x61, 0x00, 0x6E, 0x00,
+        0x67, 0x00, 0x65, 0x00,
+        /* data buffer... struct provider 1 */
+        0x20, 0x00, 0x00, 0x00, /* 0x4C [0x00] id offset */
+        0x0A, 0x00, 0x00, 0x00, /* 0x50 [0x04] id length */
+        0x19, 0x00, 0x00, 0x00, /* 0x51 [0x08] state */
+        0x2C, 0x00, 0x00, 0x00, /* 0x54 [0x0C] name offset */
+        0x0C, 0x00, 0x00, 0x00, /* 0x58 [0x10] name length */
+        0x01, 0x00, 0x00, 0x00, /* 0x5C [0x14] cellular class */
+        0x0B, 0x00, 0x00, 0x00, /* 0x60 [0x18] rssi */
+        0x00, 0x00, 0x00, 0x00, /* 0x64 [0x1C] error rate */
+        0x32, 0x00, 0x31, 0x00, /* 0x68 [0x20] id string (10 bytes) */
+        0x34, 0x00, 0x30, 0x00,
+        0x33, 0x00, 0x00, 0x00,
+        0x4F, 0x00, 0x72, 0x00, /* 0x74 [0x2C] name string (12 bytes) */
+        0x61, 0x00, 0x6E, 0x00,
+        0x67, 0x00, 0x65, 0x00 };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_visible_providers_response_parse (
+                  response,
+                  &n_providers,
+                  &providers,
+                  &error));
+
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (n_providers, ==, 2);
+
+    /* Provider [0]
+     * Provider ID: '21403'
+     * Provider Name: 'Orange'
+     * State: 'visible'
+     * Cellular class: 'gsm'
+     * RSSI: '11'
+     * Error rate: '0'
+     */
+    g_assert_cmpstr (providers[0]->provider_id, ==, "21403");
+    g_assert_cmpstr (providers[0]->provider_name, ==, "Orange");
+    g_assert_cmpuint (providers[0]->provider_state, ==, MBIM_PROVIDER_STATE_VISIBLE);
+    g_assert_cmpuint (providers[0]->cellular_class, ==, MBIM_CELLULAR_CLASS_GSM);
+    g_assert_cmpuint (providers[0]->rssi, ==, 11);
+    g_assert_cmpuint (providers[0]->error_rate, ==, 0);
+
+	/* Provider [1]:
+     * Provider ID: '21403'
+     * Provider Name: 'Orange'
+     * State: 'home, visible, registered'
+     * Cellular class: 'gsm'
+     * RSSI: '11'
+     * Error rate: '0'
+     */
+    g_assert_cmpstr (providers[1]->provider_id, ==, "21403");
+    g_assert_cmpstr (providers[1]->provider_name, ==, "Orange");
+    g_assert_cmpuint (providers[1]->provider_state, ==, (MBIM_PROVIDER_STATE_HOME |
+                                                         MBIM_PROVIDER_STATE_VISIBLE |
+                                                         MBIM_PROVIDER_STATE_REGISTERED));
+    g_assert_cmpuint (providers[1]->cellular_class, ==, MBIM_CELLULAR_CLASS_GSM);
+    g_assert_cmpuint (providers[1]->rssi, ==, 11);
+    g_assert_cmpuint (providers[1]->error_rate, ==, 0);
+
+    mbim_provider_array_free (providers);
+    mbim_message_unref (response);
+}
+
+static void
 test_message_contents_basic_connect_subscriber_ready_status (void)
 {
     MbimSubscriberReadyState ready_state;
@@ -378,6 +486,7 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
+    g_test_add_func ("/libmbim-glib/message-contents/basic-connect/visible-providers", test_message_contents_basic_connect_visible_providers);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/subscriber-ready-status", test_message_contents_basic_connect_subscriber_ready_status);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/device-caps", test_message_contents_basic_connect_device_caps);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/ip-configuration", test_message_contents_basic_connect_ip_configuration);
