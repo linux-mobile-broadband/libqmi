@@ -482,6 +482,57 @@ test_message_contents_basic_connect_ip_configuration (void)
     mbim_message_unref (response);
 }
 
+static void
+test_message_contents_basic_connect_service_activation (void)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    guint32 nw_error;
+    const guint8 *databuffer;
+    guint32 databuffer_size;
+    const guint8 expected_databuffer [] =  {
+        0x01, 0x02, 0x03, 0x04,
+        0x05, 0x06, 0x07, 0x08
+    };
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x3C, 0x00, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x0E, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x0C, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x06, 0x00, 0x00, 0x00, /* nw error */
+        0x01, 0x02, 0x03, 0x04, /* buffer */
+        0x05, 0x06, 0x07, 0x08  };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_service_activation_response_parse (
+                  response,
+                  &nw_error,
+                  &databuffer_size,
+                  &databuffer,
+                  &error));
+
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (nw_error, ==, MBIM_NW_ERROR_ILLEGAL_ME);
+    g_assert_cmpuint (databuffer_size, ==, sizeof (expected_databuffer));
+    g_assert (memcmp (databuffer, expected_databuffer, databuffer_size) == 0);
+
+    mbim_message_unref (response);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -490,6 +541,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/subscriber-ready-status", test_message_contents_basic_connect_subscriber_ready_status);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/device-caps", test_message_contents_basic_connect_device_caps);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/ip-configuration", test_message_contents_basic_connect_ip_configuration);
+    g_test_add_func ("/libmbim-glib/message-contents/basic-connect/service-activation", test_message_contents_basic_connect_service_activation);
 
     return g_test_run ();
 }
