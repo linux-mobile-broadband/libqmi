@@ -1,11 +1,15 @@
 Overview of changes in libqmi 1.4.0
 ----------------------------------------
 
+* dms: fix minimum version requirement for DMS Get/Set Operating Mode
+* nas: added 'Network Time' indication
+* utils: fix reading sized uints in BE systems
 * cli: add --dms-activate-manual
 * cli: implemented setting System Selection Preference
-* dms: fix minimum version requirement for DMS Get/Set Operating Mode
 * cli: fix technology preference persistence reporting
+* cli: fix reading new PIN in '--dms-uim-change-pin'
 * docs: always generate documentation at dist time
+* tests: fixed BE/LE tests in BE systems
 
 
 Overview of changes in libqmi 1.2.0
