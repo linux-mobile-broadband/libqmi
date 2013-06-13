@@ -28,6 +28,9 @@ libmbim_glib_la_LIBADD = \
 	${top_builddir}/libmbim-glib/generated/libmbim-glib-generated.la \
 	$(LIBMBIM_GLIB_LIBS)
 
+libmbim_glib_la_LDFLAGS = \
+	-version-info $(MBIM_GLIB_LT_CURRENT):$(MBIM_GLIB_LT_REVISION):$(MBIM_GLIB_LT_AGE)
+
 includedir = @includedir@/libmbim-glib
 include_HEADERS = \
 	libmbim-glib.h \

@@ -8,6 +8,19 @@ m4_define([mbim_micro_version], [0])
 m4_define([mbim_version],
           [mbim_major_version.mbim_minor_version.mbim_micro_version])
 
+dnl libtool versioning for libmbim-glib (-version-info c:r:a)
+dnl    If the interface is unchanged, but the implementation has changed or
+dnl        been fixed, then increment r.
+dnl    Otherwise, increment c and zero r.
+dnl        If the interface has grown (that is, the new library is compatible
+dnl            with old code), increment a.
+dnl        If the interface has changed in an incompatible way (that is,
+dnl            functions have changed or been removed), then zero a.
+m4_define([mbim_glib_lt_current],  [0])
+m4_define([mbim_glib_lt_revision], [0])
+m4_define([mbim_glib_lt_age],      [0])
+
+
 AC_INIT([libmbim], [mbim_version], [aleksander@gnu.org])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
@@ -42,6 +55,14 @@ AC_SUBST(MBIM_MAJOR_VERSION)
 AC_SUBST(MBIM_MINOR_VERSION)
 AC_SUBST(MBIM_MICRO_VERSION)
 AC_SUBST(MBIM_VERSION)
+
+dnl libtool version stuff
+MBIM_GLIB_LT_CURRENT=mbim_glib_lt_current
+MBIM_GLIB_LT_REVISION=mbim_glib_lt_revision
+MBIM_GLIB_LT_AGE=mbim_glib_lt_age
+AC_SUBST(MBIM_GLIB_LT_CURRENT)
+AC_SUBST(MBIM_GLIB_LT_REVISION)
+AC_SUBST(MBIM_GLIB_LT_AGE)
 
 dnl General dependencies for libmbim-glib
 PKG_CHECK_MODULES(LIBMBIM_GLIB,
