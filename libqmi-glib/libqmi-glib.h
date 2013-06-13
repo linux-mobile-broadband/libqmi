@@ -28,6 +28,7 @@
 
 /* libqmi-glib headers */
 
+#include "qmi-version.h"
 #include "qmi-device.h"
 #include "qmi-client.h"
 #include "qmi-message.h"

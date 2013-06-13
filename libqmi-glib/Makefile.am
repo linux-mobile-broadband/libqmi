@@ -15,6 +15,7 @@ libqmi_glib_la_CPPFLAGS = \
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
+	qmi-version.h \
 	qmi-errors.h \
 	qmi-enums-wds.h qmi-enums-wds.c \
 	qmi-enums-dms.h qmi-flags64-dms.h \
@@ -34,6 +35,7 @@ libqmi_glib_la_LIBADD = \
 includedir = @includedir@/libqmi-glib
 include_HEADERS = \
 	libqmi-glib.h \
+	qmi-version.h \
 	qmi-errors.h \
 	qmi-enums.h \
 	qmi-enums-private.h \
@@ -46,3 +48,6 @@ include_HEADERS = \
 	qmi-message.h \
 	qmi-device.h \
 	qmi-client.h
+
+EXTRA_DIST = \
+	qmi-version.h.in

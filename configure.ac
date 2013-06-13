@@ -1,7 +1,14 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.68])
 
-AC_INIT([libqmi], [1.5.0], [libqmi-devel@lists.freedesktop.org])
+dnl The QMI version number
+m4_define([qmi_major_version], [1])
+m4_define([qmi_minor_version], [5])
+m4_define([qmi_micro_version], [0])
+m4_define([qmi_version],
+          [qmi_major_version.qmi_minor_version.qmi_micro_version])
+
+AC_INIT([libqmi], [qmi_version], [libqmi-devel@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -25,6 +32,16 @@ LT_INIT
 
 dnl Specific warnings to always use
 LIBQMI_COMPILER_WARNINGS
+
+dnl Version stuff
+QMI_MAJOR_VERSION=qmi_major_version
+QMI_MINOR_VERSION=qmi_minor_version
+QMI_MICRO_VERSION=qmi_micro_version
+QMI_VERSION=qmi_version
+AC_SUBST(QMI_MAJOR_VERSION)
+AC_SUBST(QMI_MINOR_VERSION)
+AC_SUBST(QMI_MICRO_VERSION)
+AC_SUBST(QMI_VERSION)
 
 dnl General dependencies for libqmi-glib
 PKG_CHECK_MODULES(LIBQMI_GLIB,
@@ -68,6 +85,7 @@ AC_CONFIG_FILES([Makefile
                  build-aux/templates/Makefile
                  build-aux/qmi-codegen/Makefile
                  libqmi-glib/Makefile
+                 libqmi-glib/qmi-version.h
                  libqmi-glib/generated/Makefile
                  libqmi-glib/test/Makefile
                  cli/Makefile

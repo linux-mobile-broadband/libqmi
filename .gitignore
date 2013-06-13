@@ -35,6 +35,7 @@ libqmi-glib/.deps
 libqmi-glib/Makefile
 libqmi-glib/Makefile.in
 libqmi-glib/libqmi-glib.la
+libqmi-glib/qmi-version.h
 
 libqmi-glib/generated/.libs
 libqmi-glib/generated/.deps
