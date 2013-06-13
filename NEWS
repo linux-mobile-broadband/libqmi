@@ -1,3 +1,26 @@
+Overview of changes in libmbim 1.2
+----------------------------------------
+
+ * Added support for additional MBIM messages:
+    MBIM_VISIBLE_PROVIDERS
+    MBIM_PREFERRED_PROVIDERS
+    MBIM_HOME_PROVIDER
+    MBIM_SERVICE_ACTIVATION
+
+ * Updated mbimcli with new commands:
+    --query-visible-providers
+    --query-preferred-providers
+    --query-home-provider
+    --query-signal-state
+    --no-open
+    --noop
+
+ * Updated mbim-network with session support, keeping TRID sequence between
+   commands.
+
+ * New symbols to check library version.
+
+
 Overview of changes in libmbim 1.0
 ----------------------------------------
 
