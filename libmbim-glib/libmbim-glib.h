@@ -27,6 +27,7 @@
 
 /* libmbim-glib headers */
 
+#include "mbim-version.h"
 #include "mbim-utils.h"
 #include "mbim-uuid.h"
 #include "mbim-cid.h"

@@ -39,6 +39,7 @@
 
   <chapter>
     <title>Core</title>
+    <xi:include href="xml/mbim-version.xml"/>
     <xi:include href="xml/mbim-uuid.xml"/>
     <xi:include href="xml/mbim-cid.xml"/>
     <xi:include href="xml/mbim-message.xml"/>

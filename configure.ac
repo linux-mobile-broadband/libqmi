@@ -1,7 +1,14 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.68])
 
-AC_INIT([libmbim], [1.1.0], [aleksander@gnu.org])
+dnl The libmbim version number
+m4_define([mbim_major_version], [1])
+m4_define([mbim_minor_version], [1])
+m4_define([mbim_micro_version], [0])
+m4_define([mbim_version],
+          [mbim_major_version.mbim_minor_version.mbim_micro_version])
+
+AC_INIT([libmbim], [mbim_version], [aleksander@gnu.org])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -25,6 +32,16 @@ LT_INIT
 
 dnl Specific warnings to always use
 LIBMBIM_COMPILER_WARNINGS
+
+dnl Version stuff
+MBIM_MAJOR_VERSION=mbim_major_version
+MBIM_MINOR_VERSION=mbim_minor_version
+MBIM_MICRO_VERSION=mbim_micro_version
+MBIM_VERSION=mbim_version
+AC_SUBST(MBIM_MAJOR_VERSION)
+AC_SUBST(MBIM_MINOR_VERSION)
+AC_SUBST(MBIM_MICRO_VERSION)
+AC_SUBST(MBIM_VERSION)
 
 dnl General dependencies for libmbim-glib
 PKG_CHECK_MODULES(LIBMBIM_GLIB,
@@ -69,6 +86,7 @@ AC_CONFIG_FILES([Makefile
                  data/pkg-config/Makefile
                  data/pkg-config/mbim-glib.pc
                  libmbim-glib/Makefile
+                 libmbim-glib/mbim-version.h
                  libmbim-glib/generated/Makefile
                  libmbim-glib/test/Makefile
                  cli/Makefile

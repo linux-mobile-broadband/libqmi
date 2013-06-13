@@ -15,6 +15,7 @@ libmbim_glib_la_CPPFLAGS = \
 
 libmbim_glib_la_SOURCES = \
 	libmbim-glib.h \
+	mbim-version.h \
 	mbim-errors.h \
 	mbim-enums.h \
 	mbim-utils.h mbim-utils.c \
@@ -30,6 +31,7 @@ libmbim_glib_la_LIBADD = \
 includedir = @includedir@/libmbim-glib
 include_HEADERS = \
 	libmbim-glib.h \
+	mbim-version.h \
 	mbim-errors.h \
 	mbim-enums.h \
 	mbim-utils.h \
@@ -37,3 +39,6 @@ include_HEADERS = \
 	mbim-cid.h \
 	mbim-message.h \
 	mbim-device.h
+
+EXTRA_DIST = \
+	mbim-version.h.in

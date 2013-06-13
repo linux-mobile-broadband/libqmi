@@ -51,6 +51,7 @@ docs/reference/libmbim-glib/.libs
 
 libmbim-glib/.deps
 libmbim-glib/.libs
+libmbim-glib/mbim-version.h
 
 libmbim-glib/test/.deps
 libmbim-glib/test/.libs
