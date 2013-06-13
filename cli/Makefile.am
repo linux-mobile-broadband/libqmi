@@ -5,6 +5,7 @@ mbimcli_CPPFLAGS = \
 	$(MBIMCLI_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libmbim-glib \
+	-I$(top_builddir)/libmbim-glib \
 	-I$(top_srcdir)/libmbim-glib/generated \
 	-I$(top_builddir)/libmbim-glib/generated
 

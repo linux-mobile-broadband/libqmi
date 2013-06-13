@@ -9,6 +9,7 @@ libmbim_glib_la_CPPFLAGS = \
 	-I$(top_builddir) \
 	-I$(top_srcdir)/libmbim-glib \
 	-I$(top_srcdir)/libmbim-glib/generated \
+	-I$(top_builddir)/libmbim-glib \
 	-I$(top_builddir)/libmbim-glib/generated \
 	-DLIBMBIM_GLIB_COMPILATION \
 	-DG_LOG_DOMAIN=\"Mbim\"

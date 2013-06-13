@@ -24,11 +24,13 @@ SCAN_OPTIONS = --rebuild-types
 # The directory containing the source code.
 DOC_SOURCE_DIR = \
 	$(top_srcdir)/libmbim-glib \
+	$(top_builddir)/libmbim-glib \
 	$(top_builddir)/libmbim-glib/generated
 
 # Used for dependencies
 HFILE_GLOB = \
 	$(top_srcdir)/libmbim-glib/*.h \
+	$(top_builddir)/libmbim-glib/*.h \
 	$(top_builddir)/libmbim-glib/generated/*.h
 CFILE_GLOB = \
 	$(top_srcdir)/libmbim-glib/*.c \

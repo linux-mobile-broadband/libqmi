@@ -12,6 +12,7 @@ test_uuid_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libmbim-glib \
+	-I$(top_builddir)/libmbim-glib \
 	-DLIBMBIM_GLIB_COMPILATION
 test_uuid_LDADD = \
 	$(top_builddir)/libmbim-glib/libmbim-glib.la \
@@ -23,6 +24,7 @@ test_cid_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libmbim-glib \
+	-I$(top_builddir)/libmbim-glib \
 	-DLIBMBIM_GLIB_COMPILATION
 test_cid_LDADD = \
 	$(top_builddir)/libmbim-glib/libmbim-glib.la \
@@ -34,6 +36,7 @@ test_message_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libmbim-glib \
+	-I$(top_builddir)/libmbim-glib \
 	-DLIBMBIM_GLIB_COMPILATION
 test_message_LDADD = \
 	$(top_builddir)/libmbim-glib/libmbim-glib.la \
@@ -45,6 +48,7 @@ test_fragment_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libmbim-glib \
+	-I$(top_builddir)/libmbim-glib \
 	-DLIBMBIM_GLIB_COMPILATION
 test_fragment_LDADD = \
 	$(top_builddir)/libmbim-glib/libmbim-glib.la \
@@ -56,6 +60,7 @@ test_message_contents_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libmbim-glib \
+	-I$(top_builddir)/libmbim-glib \
 	-I$(top_builddir)/libmbim-glib/generated \
 	-DLIBMBIM_GLIB_COMPILATION
 test_message_contents_LDADD = \
@@ -68,6 +73,7 @@ test_message_command_builder_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libmbim-glib \
+	-I$(top_builddir)/libmbim-glib \
 	-I$(top_builddir)/libmbim-glib/generated \
 	-DLIBMBIM_GLIB_COMPILATION
 test_message_command_builder_LDADD = \

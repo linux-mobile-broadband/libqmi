@@ -72,6 +72,7 @@ libmbim_glib_generated_la_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libmbim-glib \
+	-I$(top_builddir)/libmbim-glib \
 	-DLIBMBIM_GLIB_COMPILATION \
 	-DG_LOG_DOMAIN=\"Mbim\" \
 	-Wno-unused-function
