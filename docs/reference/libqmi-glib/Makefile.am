@@ -33,6 +33,7 @@ DOC_SOURCE_DIR = \
 # Used for dependencies
 HFILE_GLOB = \
 	$(top_srcdir)/libqmi-glib/*.h \
+	$(top_builddir)/libqmi-glib/*.h \
 	$(top_builddir)/libqmi-glib/generated/*.h
 CFILE_GLOB = \
 	$(top_srcdir)/libqmi-glib/*.c \

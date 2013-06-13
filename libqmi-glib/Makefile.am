@@ -9,6 +9,7 @@ libqmi_glib_la_CPPFLAGS = \
 	-I$(top_builddir) \
 	-I$(top_srcdir)/libqmi-glib \
 	-I$(top_srcdir)/libqmi-glib/generated \
+	-I$(top_builddir)/libqmi-glib \
 	-I$(top_builddir)/libqmi-glib/generated \
 	-DLIBQMI_GLIB_COMPILATION \
 	-DG_LOG_DOMAIN=\"Qmi\"

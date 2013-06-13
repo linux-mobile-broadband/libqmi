@@ -13,6 +13,7 @@ test_helpers_CPPFLAGS = \
 	-I$(top_srcdir)/cli \
 	-I$(top_srcdir)/libqmi-glib \
 	-I$(top_srcdir)/libqmi-glib/generated \
+	-I$(top_builddir)/libqmi-glib \
 	-I$(top_builddir)/libqmi-glib/generated
 
 test_helpers_LDADD = \
