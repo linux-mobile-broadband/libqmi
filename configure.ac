@@ -8,6 +8,19 @@ m4_define([qmi_micro_version], [0])
 m4_define([qmi_version],
           [qmi_major_version.qmi_minor_version.qmi_micro_version])
 
+dnl libtool versioning for libqmi-glib (-version-info c:r:a)
+dnl    If the interface is unchanged, but the implementation has changed or
+dnl        been fixed, then increment r.
+dnl    Otherwise, increment c and zero r.
+dnl        If the interface has grown (that is, the new library is compatible
+dnl            with old code), increment a.
+dnl        If the interface has changed in an incompatible way (that is,
+dnl            functions have changed or been removed), then zero a.
+m4_define([qmi_glib_lt_current],  [0])
+m4_define([qmi_glib_lt_revision], [0])
+m4_define([qmi_glib_lt_age],      [0])
+
+
 AC_INIT([libqmi], [qmi_version], [libqmi-devel@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
@@ -42,6 +55,14 @@ AC_SUBST(QMI_MAJOR_VERSION)
 AC_SUBST(QMI_MINOR_VERSION)
 AC_SUBST(QMI_MICRO_VERSION)
 AC_SUBST(QMI_VERSION)
+
+dnl libtool version stuff
+QMI_GLIB_LT_CURRENT=qmi_glib_lt_current
+QMI_GLIB_LT_REVISION=qmi_glib_lt_revision
+QMI_GLIB_LT_AGE=qmi_glib_lt_age
+AC_SUBST(QMI_GLIB_LT_CURRENT)
+AC_SUBST(QMI_GLIB_LT_REVISION)
+AC_SUBST(QMI_GLIB_LT_AGE)
 
 dnl General dependencies for libqmi-glib
 PKG_CHECK_MODULES(LIBQMI_GLIB,

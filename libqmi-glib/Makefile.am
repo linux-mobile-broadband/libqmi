@@ -32,6 +32,9 @@ libqmi_glib_la_LIBADD = \
 	${top_builddir}/libqmi-glib/generated/libqmi-glib-generated.la \
 	$(LIBQMI_GLIB_LIBS)
 
+libqmi_glib_la_LDFLAGS = \
+	-version-info $(QMI_GLIB_LT_CURRENT):$(QMI_GLIB_LT_REVISION):$(QMI_GLIB_LT_AGE)
+
 includedir = @includedir@/libqmi-glib
 include_HEADERS = \
 	libqmi-glib.h \
