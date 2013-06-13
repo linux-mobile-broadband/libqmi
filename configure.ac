@@ -21,7 +21,7 @@ m4_define([mbim_glib_lt_revision], [0])
 m4_define([mbim_glib_lt_age],      [0])
 
 
-AC_INIT([libmbim], [mbim_version], [aleksander@gnu.org])
+AC_INIT([libmbim], [mbim_version], [libmbim-devel@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
