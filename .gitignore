@@ -28,6 +28,7 @@ missing
 stamp-h1
 depcomp
 gtk-doc.make
+test-driver
 
 build-aux/mbim-codegen/*.pyc
 
@@ -61,6 +62,8 @@ libmbim-glib/test/test-message
 libmbim-glib/test/test-fragment
 libmbim-glib/test/test-message-contents
 libmbim-glib/test/test-message-command-builder
+libmbim-glib/test/*.log
+libmbim-glib/test/*.trs
 
 libmbim-glib/generated/.deps
 libmbim-glib/generated/.libs

@@ -87,18 +87,6 @@ AC_SUBST(GLIB_MKENUMS)
 dnl Documentation
 GTK_DOC_CHECK(1.0)
 
-dnl Tests
-AC_ARG_WITH(tests, AS_HELP_STRING([--with-tests], [Build libmbim tests]))
-AM_CONDITIONAL(WITH_TESTS, test "x$with_tests" = "xyes")
-case $with_tests in
-    yes)
-        with_tests=yes
-        ;;
-    *)
-        with_tests=no
-        ;;
-esac
-
 AC_CONFIG_FILES([Makefile
                  build-aux/Makefile
                  build-aux/templates/Makefile
@@ -125,6 +113,5 @@ echo "
     compiler:                ${CC}
     cflags:                  ${CFLAGS}
     Maintainer mode:         ${USE_MAINTAINER_MODE}
-    Tests:                   ${with_tests}
     Documentation:           ${enable_gtk_doc}
 "

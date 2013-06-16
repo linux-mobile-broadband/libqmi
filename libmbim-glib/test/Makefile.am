@@ -1,3 +1,5 @@
+include $(top_srcdir)/gtester.make
+
 noinst_PROGRAMS = \
 	test-uuid \
 	test-cid \
@@ -5,6 +7,9 @@ noinst_PROGRAMS = \
 	test-fragment \
 	test-message-contents \
 	test-message-command-builder
+
+TEST_PROGS += $(noinst_PROGRAMS)
+
 
 test_uuid_SOURCES = \
 	test-uuid.c
@@ -79,16 +84,3 @@ test_message_command_builder_CPPFLAGS = \
 test_message_command_builder_LDADD = \
 	$(top_builddir)/libmbim-glib/libmbim-glib.la \
 	$(LIBMBIM_GLIB_LIBS)
-
-
-if WITH_TESTS
-
-check-local: test-uuid test-cid test-message test-fragment test-message-contents test-message-command-builder
-	$(abs_builddir)/test-uuid
-	$(abs_builddir)/test-cid
-	$(abs_builddir)/test-message
-	$(abs_builddir)/test-fragment
-	$(abs_builddir)/test-message-contents
-	$(abs_builddir)/test-message-command-builder
-
-endif
