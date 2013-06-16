@@ -144,7 +144,10 @@ class Message:
             self.notification = []
 
         # Build Fullname
-        self.fullname = 'MBIM Message ' + self.name
+        if self.service == 'Basic Connect':
+            self.fullname = 'MBIM Message ' + self.name
+        else:
+            self.fullname = 'MBIM Message ' + self.service + ' ' + self.name
 
         # Build CID enum
         self.cid_enum_name = utils.build_underscore_name('MBIM CID' + self.service + ' ' + self.name).upper()
