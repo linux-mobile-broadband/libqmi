@@ -3,16 +3,19 @@ noinst_LTLIBRARIES = libmbim-glib-generated.la
 GENERATED_H = \
 	mbim-error-types.h \
 	mbim-enum-types.h \
-	mbim-basic-connect.h
+	mbim-basic-connect.h \
+	mbim-sms.h
 
 GENERATED_C = \
 	mbim-error-types.c \
 	mbim-error-quarks.c \
 	mbim-enum-types.c \
-	mbim-basic-connect.c
+	mbim-basic-connect.c \
+	mbim-sms.c
 
 GENERATED_SECTIONS = \
-	mbim-basic-connect.sections
+	mbim-basic-connect.sections \
+	mbim-sms.sections
 
 # Error types
 mbim-error-types.h: $(top_srcdir)/libmbim-glib/mbim-errors.h $(top_srcdir)/build-aux/templates/mbim-error-types-template.h
@@ -61,6 +64,15 @@ mbim-basic-connect.h mbim-basic-connect.c mbim-basic-connect.sections: $(top_src
 		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-basic-connect.json \
 			--output mbim-basic-connect
+
+# SMS service
+mbim-sms.h mbim-sms.c mbim-sms.sections: $(top_srcdir)/data/mbim-service-sms.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-sms.h && \
+		rm -f mbim-sms.c && \
+		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-sms.json \
+			--output mbim-sms
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 

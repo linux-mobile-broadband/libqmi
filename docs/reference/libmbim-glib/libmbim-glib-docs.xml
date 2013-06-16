@@ -52,6 +52,7 @@
   <chapter>
     <title>Services</title>
     <xi:include href="xml/mbim-basic-connect.xml"/>
+    <xi:include href="xml/mbim-sms.xml"/>
   </chapter>
 
   <chapter id="object-tree">

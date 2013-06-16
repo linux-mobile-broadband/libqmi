@@ -606,6 +606,142 @@ typedef enum { /*< underscore_name=mbim_ip_configuration_available_flag >*/
     MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_MTU      = 1 << 3,
 } MbimIPConfigurationAvailableFlag;
 
+/*****************************************************************************/
+/* 'SMS Configuration' enums */
+
+/**
+ * MbimSmsStorageState:
+ * @MBIM_SMS_STORAGE_STATE_NOT_INITIALIZED: Storage not initialized.
+ * @MBIM_SMS_STORAGE_STATE_INITIALIZED: Storage initialized.
+ *
+ * State of the SMS storage.
+ */
+typedef enum {
+    MBIM_SMS_STORAGE_STATE_NOT_INITIALIZED = 0,
+    MBIM_SMS_STORAGE_STATE_INITIALIZED     = 1
+} MbimSmsStorageState;
+
+/**
+ * MbimSmsFormat:
+ * @MBIM_SMS_FORMAT_PDU: PDU format.
+ * @MBIM_SMS_FORMAT_CDMA: CDMA format.
+ *
+ * SMS format.
+ */
+typedef enum {
+    MBIM_SMS_FORMAT_PDU  = 0,
+    MBIM_SMS_FORMAT_CDMA = 1
+} MbimSmsFormat;
+
+/*****************************************************************************/
+/* 'SMS Read' enums */
+
+/**
+ * MbimSmsFlag:
+ * @MBIM_SMS_FLAG_ALL: All.
+ * @MBIM_SMS_FLAG_INDEX: Index.
+ * @MBIM_SMS_FLAG_NEW: New.
+ * @MBIM_SMS_FLAG_OLD: Old.
+ * @MBIM_SMS_FLAG_SENT: Sent.
+ * @MBIM_SMS_FLAG_DRAFT: Draft.
+ *
+ * Flags to use when requesting to read SMS. @MBIM_SMS_FLAG_ALL and
+ * @MBIM_SMS_FLAG_NEW are mandatory, all the others are optional.
+*/
+typedef enum {
+    MBIM_SMS_FLAG_ALL   = 0,
+    MBIM_SMS_FLAG_INDEX = 1,
+    MBIM_SMS_FLAG_NEW   = 2,
+    MBIM_SMS_FLAG_OLD   = 3,
+    MBIM_SMS_FLAG_SENT  = 4,
+    MBIM_SMS_FLAG_DRAFT = 5
+} MbimSmsFlag;
+
+/**
+ * MbimSmsCdmaLang:
+ * @MBIM_SMS_CDMA_LANG_UNKNOWN: Unknown language.
+ * @MBIM_SMS_CDMA_LANG_ENGLISH: English.
+ * @MBIM_SMS_CDMA_LANG_FRENCH: French.
+ * @MBIM_SMS_CDMA_LANG_SPANISH: Spanish.
+ * @MBIM_SMS_CDMA_LANG_JAPANESE: Japanese.
+ * @MBIM_SMS_CDMA_LANG_KOREAN: Korean.
+ * @MBIM_SMS_CDMA_LANG_CHINESE: Chinese.
+ * @MBIM_SMS_CDMA_LANG_HEBREW: Hebrew.
+ *
+ * Language of a CDMA SMS.
+ */
+typedef enum {
+    MBIM_SMS_CDMA_LANG_UNKNOWN  = 0,
+    MBIM_SMS_CDMA_LANG_ENGLISH  = 1,
+    MBIM_SMS_CDMA_LANG_FRENCH   = 2,
+    MBIM_SMS_CDMA_LANG_SPANISH  = 3,
+    MBIM_SMS_CDMA_LANG_JAPANESE = 4,
+    MBIM_SMS_CDMA_LANG_KOREAN   = 5,
+    MBIM_SMS_CDMA_LANG_CHINESE  = 6,
+    MBIM_SMS_CDMA_LANG_HEBREW   = 7
+} MbimSmsCdmaLang;
+
+/**
+ * MbimSmsCdmaEncoding:
+ * @MBIM_SMS_CDMA_ENCODING_OCTET: Octet.
+ * @MBIM_SMS_CDMA_ENCODING_EPM: EPM.
+ * @MBIM_SMS_CDMA_ENCODING_7BIT_ASCII: 7-bit ASCII.
+ * @MBIM_SMS_CDMA_ENCODING_LA5: LA5.
+ * @MBIM_SMS_CDMA_ENCODING_UNICODE: Unicode.
+ * @MBIM_SMS_CDMA_ENCODING_SHIFT_JIS: Shift JIS.
+ * @MBIM_SMS_CDMA_ENCODING_KOREAN: Korean.
+ * @MBIM_SMS_CDMA_ENCODING_LATIN_HEBREW: Latin hebrew.
+ * @MBIM_SMS_CDMA_ENCODING_LATIN: Latin.
+ * @MBIM_SMS_CDMA_ENCODING_GSM_7BIT: 7-bit GSM.
+ *
+ * Type of encoding of a CDMA SMS.
+ */
+typedef enum {
+    MBIM_SMS_CDMA_ENCODING_OCTET        = 0,
+    MBIM_SMS_CDMA_ENCODING_EPM          = 1,
+    MBIM_SMS_CDMA_ENCODING_7BIT_ASCII   = 2,
+    MBIM_SMS_CDMA_ENCODING_LA5          = 3,
+    MBIM_SMS_CDMA_ENCODING_UNICODE      = 4,
+    MBIM_SMS_CDMA_ENCODING_SHIFT_JIS    = 5,
+    MBIM_SMS_CDMA_ENCODING_KOREAN       = 6,
+    MBIM_SMS_CDMA_ENCODING_LATIN_HEBREW = 7,
+    MBIM_SMS_CDMA_ENCODING_LATIN        = 8,
+    MBIM_SMS_CDMA_ENCODING_GSM_7BIT     = 9
+} MbimSmsCdmaEncoding;
+
+/**
+ * MbimSmsStatus:
+ * @MBIM_SMS_STATUS_NEW: New.
+ * @MBIM_SMS_STATUS_OLD: Old.
+ * @MBIM_SMS_STATUS_DRAFT: Draft.
+ * @MBIM_SMS_STATUS_SENT: Sent.
+ *
+ * Status of a SMS message.
+ */
+typedef enum {
+    MBIM_SMS_STATUS_NEW   = 0,
+    MBIM_SMS_STATUS_OLD   = 1,
+    MBIM_SMS_STATUS_DRAFT = 2,
+    MBIM_SMS_STATUS_SENT  = 3
+} MbimSmsStatus;
+
+/*****************************************************************************/
+/* 'SMS Message Store Status' enums */
+
+/**
+ * MbimSmsStatusFlag:
+ * @MBIM_SMS_STATUS_FLAG_NONE: None.
+ * @MBIM_SMS_STATUS_FLAG_MESSAGE_STORE_FULL: Message store is full.
+ * @MBIM_SMS_STATUS_FLAG_NEW_MESSAGE: New non-Class 0 message arrived.
+ *
+ * SMS status flags.
+ */
+typedef enum {
+    MBIM_SMS_STATUS_FLAG_NONE               = 0,
+    MBIM_SMS_STATUS_FLAG_MESSAGE_STORE_FULL = 1,
+    MBIM_SMS_STATUS_FLAG_NEW_MESSAGE        = 2
+} MbimSmsStatusFlag;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */
