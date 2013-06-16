@@ -23,14 +23,16 @@ import utils
 
 
 """
-Flag the values which are used as length of arrays
+Flag the values which always need to be read
 """
-def flag_array_length_field(fields, field_name):
+def flag_always_read_field(fields, field_name):
     for field in fields:
         if field['name'] == field_name:
-            field['is-array-size'] = True
+            if field['format'] != 'guint32':
+                    raise ValueError('Fields to always read \'%s\' must be a guint32' % field_name)
+            field['always-read'] = True
             return
-    raise ValueError('Couldn\'t find array size field \'%s\'' % array_size_field)
+    raise ValueError('Couldn\'t find field to always read \'%s\'' % field_name)
 
 
 """
@@ -38,6 +40,12 @@ Validate fields in the dictionary
 """
 def validate_fields(fields):
     for field in fields:
+        # Look for condition fields, which need to be always read
+        if 'available-if' in field:
+            condition = field['available-if']
+            flag_always_read_field(fields, condition['field'])
+
+        # Look for array size fields, which need to be always read
         if field['format'] == 'byte-array':
             pass
         elif field['format'] == 'uuid':
@@ -45,24 +53,24 @@ def validate_fields(fields):
         elif field['format'] == 'guint32':
             pass
         elif field['format'] == 'guint32-array':
-            flag_array_length_field(fields, field['array-size-field'])
+            flag_always_read_field(fields, field['array-size-field'])
         elif field['format'] == 'guint64':
             pass
         elif field['format'] == 'guint64-array':
-            flag_array_length_field(fields, field['array-size-field'])
+            flag_always_read_field(fields, field['array-size-field'])
         elif field['format'] == 'string':
             pass
         elif field['format'] == 'string-array':
-            flag_array_length_field(fields, field['array-size-field'])
+            flag_always_read_field(fields, field['array-size-field'])
         elif field['format'] == 'struct':
             if 'struct-type' not in field:
                 raise ValueError('Field type \'struct\' requires \'struct-type\' field')
         elif field['format'] == 'struct-array':
-            flag_array_length_field(fields, field['array-size-field'])
+            flag_always_read_field(fields, field['array-size-field'])
             if 'struct-type' not in field:
                 raise ValueError('Field type \'struct\' requires \'struct-type\' field')
         elif field['format'] == 'ref-struct-array':
-            flag_array_length_field(fields, field['array-size-field'])
+            flag_always_read_field(fields, field['array-size-field'])
             if 'struct-type' not in field:
                 raise ValueError('Field type \'struct\' requires \'struct-type\' field')
         elif field['format'] == 'ipv4':
@@ -70,13 +78,13 @@ def validate_fields(fields):
         elif field['format'] == 'ref-ipv4':
             pass
         elif field['format'] == 'ipv4-array':
-            flag_array_length_field(fields, field['array-size-field'])
+            flag_always_read_field(fields, field['array-size-field'])
         elif field['format'] == 'ipv6':
             pass
         elif field['format'] == 'ref-ipv6':
             pass
         elif field['format'] == 'ipv6-array':
-            flag_array_length_field(fields, field['array-size-field'])
+            flag_always_read_field(fields, field['array-size-field'])
         else:
             raise ValueError('Cannot handle field type \'%s\'' % field['format'])
 
@@ -565,7 +573,7 @@ class Message:
                 '    guint32 offset = 0;\n')
 
         for field in fields:
-            if 'is-array-size' in field:
+            if 'always-read' in field:
                 translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
                 inner_template = ('    guint32 _${field};\n')
                 template += (string.Template(inner_template).substitute(translations))
@@ -580,10 +588,45 @@ class Message:
 
             inner_template = (
                 '\n'
-                '    /* Read the \'${field_name}\' variable */\n'
-                '    {\n')
+                '    /* Read the \'${field_name}\' variable */\n')
+            if 'available-if' in field:
+                condition = field['available-if']
+                translations['condition_field'] = utils.build_underscore_name_from_camelcase(condition['field'])
+                translations['condition_operation'] = condition['operation']
+                translations['condition_value'] = condition['value']
+                inner_template += (
+                    '    if (!(_${condition_field} ${condition_operation} ${condition_value})) {\n')
+                if field['format'] == 'byte-array':
+                    inner_template += (
+                        '        if (${field}_size)\n'
+                        '            *${field}_size = 0;\n'
+                        '        if (${field})\n'
+                        '            *${field} = NULL;\n')
+                elif field['format'] == 'guint32-array' or \
+                     field['format'] == 'string' or \
+                     field['format'] == 'string-array' or \
+                     field['format'] == 'struct' or \
+                     field['format'] == 'struct-array' or \
+                     field['format'] == 'ref-struct-array' or \
+                     field['format'] == 'ipv4' or \
+                     field['format'] == 'ref-ipv4' or \
+                     field['format'] == 'ipv4-array' or \
+                     field['format'] == 'ipv6' or \
+                     field['format'] == 'ref-ipv6' or \
+                     field['format'] == 'ipv6-array':
+                    inner_template += (
+                        '        if (${field} != NULL)\n'
+                        '            *${field} = NULL;\n')
+                else:
+                    raise ValueError('Field format \'%s\' unsupported as optional field' % field['format'])
 
-            if 'is-array-size' in field:
+                inner_template += (
+                    '    } else {\n')
+            else:
+                inner_template += (
+                    '    {\n')
+
+            if 'always-read' in field:
                 inner_template += (
                     '        _${field} = _mbim_message_read_guint32 (message, offset);\n'
                     '        if (${field} != NULL)\n'
