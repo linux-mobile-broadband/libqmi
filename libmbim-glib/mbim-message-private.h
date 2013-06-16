@@ -171,6 +171,7 @@ typedef struct {
 MbimStructBuilder *_mbim_struct_builder_new                  (void);
 GByteArray        *_mbim_struct_builder_complete             (MbimStructBuilder *builder);
 void               _mbim_struct_builder_append_byte_array    (MbimStructBuilder *builder,
+                                                              gboolean           ol_pair,
                                                               const guint8      *buffer,
                                                               guint32            buffer_len);
 void               _mbim_struct_builder_append_uuid          (MbimStructBuilder *builder,
@@ -217,6 +218,7 @@ MbimMessageCommandBuilder *_mbim_message_command_builder_new                  (g
                                                                                MbimMessageCommandType     command_type);
 MbimMessage               *_mbim_message_command_builder_complete             (MbimMessageCommandBuilder *builder);
 void                       _mbim_message_command_builder_append_byte_array    (MbimMessageCommandBuilder *builder,
+                                                                               gboolean                   ol_pair,
                                                                                const guint8              *buffer,
                                                                                guint32                    buffer_len);
 void                       _mbim_message_command_builder_append_uuid          (MbimMessageCommandBuilder *builder,
@@ -253,7 +255,9 @@ void                       _mbim_message_command_builder_append_ipv6_array    (M
 /* Message parser */
 
 const guint8    *_mbim_message_read_byte_array    (const MbimMessage *self,
+                                                   guint32            struct_start_offset,
                                                    guint32            relative_offset,
+                                                   gboolean           ol_pair,
                                                    guint32           *array_size);
 const MbimUuid  *_mbim_message_read_uuid          (const MbimMessage *self,
                                                    guint32            relative_offset);

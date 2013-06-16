@@ -233,20 +233,40 @@ _mbim_message_read_string_array (const MbimMessage *self,
 
 const guint8 *
 _mbim_message_read_byte_array (const MbimMessage *self,
+                               guint32            struct_start_offset,
                                guint32            relative_offset,
+                               gboolean           ol_pair,
                                guint32           *array_size)
 {
     guint32 information_buffer_offset;
+    guint32 size;
+    guint32 offset;
+    const guint8 *data;
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
+    if (ol_pair) {
+        offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                      guint32,
+                                      self->data,
+                                      (information_buffer_offset + relative_offset)));
+        size = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                    guint32,
+                                    self->data,
+                                    (information_buffer_offset + relative_offset + 4)));
+        data = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+                                                   (information_buffer_offset + struct_start_offset + offset));
+    } else {
+        size = self->len - (information_buffer_offset + relative_offset);
+        data = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+                                                   (information_buffer_offset + relative_offset));
+    }
+
     /* We assume that the byte array goes until the end */
     if (array_size)
-        *array_size = self->len - (information_buffer_offset + relative_offset);
+        *array_size = size;
 
-
-    return (const guint8 *) G_STRUCT_MEMBER_P (self->data,
-                                               (information_buffer_offset + relative_offset));
+    return data;
 }
 
 const MbimUuid *
@@ -422,10 +442,47 @@ _mbim_struct_builder_complete (MbimStructBuilder *builder)
 
 void
 _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
+                                        gboolean           ol_pair,
                                         const guint8      *buffer,
                                         guint32            buffer_len)
 {
-    g_byte_array_append (builder->variable_buffer, buffer, buffer_len);
+    guint32 offset;
+    guint32 length;
+
+    if (!ol_pair) {
+        g_byte_array_append (builder->variable_buffer, buffer, buffer_len);
+        return;
+    }
+
+    /* A bytearray consists of Offset+Size in the static buffer, plus the
+     * string itself in the variable buffer */
+
+    /* If string length is greater than 0, add the offset to fix, otherwise set
+     * the offset to 0 and don't configure the update */
+    if (buffer_len == 0) {
+        offset = 0;
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
+    } else {
+        guint32 offset_offset;
+
+        /* Offset of the offset */
+        offset_offset = builder->fixed_buffer->len;
+
+        /* Length *not* in LE yet */
+        offset = builder->variable_buffer->len;
+        /* Add the offset value */
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
+        /* Configure the value to get updated */
+        g_array_append_val (builder->offsets, offset_offset);
+    }
+
+    /* Add the length value */
+    length = GUINT32_TO_LE (buffer_len);
+    g_byte_array_append (builder->fixed_buffer, (guint8 *)&length, sizeof (length));
+
+    /* And finally, the bytearray itself to the variable buffer */
+    if (length)
+        g_byte_array_append (builder->variable_buffer, (const guint8 *)buffer, (guint)buffer_len);
 }
 
 void
@@ -678,10 +735,11 @@ _mbim_message_command_builder_complete (MbimMessageCommandBuilder *builder)
 
 void
 _mbim_message_command_builder_append_byte_array (MbimMessageCommandBuilder *builder,
+                                                 gboolean                   ol_pair,
                                                  const guint8              *buffer,
                                                  guint32                    buffer_len)
 {
-    _mbim_struct_builder_append_byte_array (builder->contents_builder, buffer, buffer_len);
+    _mbim_struct_builder_append_byte_array (builder->contents_builder, ol_pair, buffer, buffer_len);
 }
 
 void
