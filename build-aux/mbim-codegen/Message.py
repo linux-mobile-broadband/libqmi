@@ -558,8 +558,12 @@ class Message:
 
         template += (
             '    GError **error)\n'
-            '{\n'
-            '    guint32 offset = 0;\n')
+            '{\n')
+
+        if fields != []:
+            template += (
+                '    guint32 offset = 0;\n')
+
         for field in fields:
             if 'is-array-size' in field:
                 translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
