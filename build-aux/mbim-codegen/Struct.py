@@ -71,6 +71,9 @@ class Struct:
             if field['format'] == 'uuid':
                 inner_template = (
                     ' * @${field_name_underscore}: a #MbimUuid.\n')
+            elif field['format'] == 'byte-array':
+                inner_template = (' * @${field_name_underscore}_size: size of the ${field_name_underscore} array.\n'
+                                  ' * @${field_name_underscore}: an array of #guint8 values.\n')
             elif field['format'] == 'guint32':
                 inner_template = (
                     ' * @${field_name_underscore}: a #guint32.\n')
@@ -116,6 +119,10 @@ class Struct:
             if field['format'] == 'uuid':
                 inner_template = (
                     '    MbimUuid ${field_name_underscore};\n')
+            elif field['format'] == 'byte-array':
+                inner_template = (
+                    '    guint32 ${field_name_underscore}_size;\n'
+                    '    guint8 *${field_name_underscore};\n')
             elif field['format'] == 'guint32':
                 inner_template = (
                     '    guint32 ${field_name_underscore};\n')
@@ -186,6 +193,9 @@ class Struct:
             inner_template = ''
             if field['format'] == 'uuid':
                 pass
+            elif field['format'] == 'byte-array':
+                inner_template += (
+                    '    g_free (var->${field_name_underscore});\n')
             elif field['format'] == 'guint32':
                 pass
             elif field['format'] == 'guint32-array':
@@ -299,6 +309,17 @@ class Struct:
                     '\n'
                     '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_uuid (self, offset), 16);\n'
                     '    offset += 16;\n')
+            elif field['format'] == 'byte-array':
+                inner_template += (
+                    '\n'
+                    '    {\n'
+                    '        const guint8 *tmp;\n'
+                    '\n'
+                    '        tmp = _mbim_message_read_byte_array (self, offset, &(out->${field_name_underscore}_size));\n'
+                    '        out->${field_name_underscore} = g_malloc (out->${field_name_underscore}_size);\n'
+                    '        memcpy (&(out->${field_name_underscore}), tmp, out->${field_name_underscore}_size);\n'
+                    '    }\n'
+                    '    offset += 8;\n')
             elif field['format'] == 'guint32':
                 inner_template += (
                     '\n'
@@ -428,7 +449,9 @@ class Struct:
             translations['array_size_field'] = utils.build_underscore_name_from_camelcase(field['array-size-field']) if 'array-size-field' in field else ''
 
             if field['format'] == 'uuid':
-                inner_template = ('    _mbim_struct_builder_append_uuid (builder, &value->${field});\n')
+                inner_template = ('    _mbim_struct_builder_append_uuid (builder, &(value->${field}));\n')
+            elif field['format'] == 'byte-array':
+                inner_template = ('    _mbim_struct_builder_append_byte_array (builder, value->${field}, value->${field}_size);\n')
             elif field['format'] == 'guint32':
                 inner_template = ('    _mbim_struct_builder_append_guint32 (builder, value->${field});\n')
             elif field['format'] == 'guint32-array':
