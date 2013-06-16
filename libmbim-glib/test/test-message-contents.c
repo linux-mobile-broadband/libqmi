@@ -17,8 +17,50 @@
 #include <string.h>
 
 #include "mbim-basic-connect.h"
+#include "mbim-sms.h"
 #include "mbim-message.h"
 #include "mbim-cid.h"
+#include "mbim-utils.h"
+
+#if defined ENABLE_TEST_MESSAGE_TRACES
+static void
+test_message_trace (const guint8 *computed,
+                    guint32       computed_size,
+                    const guint8 *expected,
+                    guint32       expected_size)
+{
+    gchar *message_str;
+    gchar *expected_str;
+
+    message_str = __mbim_utils_str_hex (computed, computed_size, ':');
+    expected_str = __mbim_utils_str_hex (expected, expected_size, ':');
+
+    /* Dump all message contents */
+    g_print ("\n"
+             "Message str:\n"
+             "'%s'\n"
+             "Expected str:\n"
+             "'%s'\n",
+             message_str,
+             expected_str);
+
+    /* If they are different, tell which are the different bytes */
+    if (computed_size != expected_size ||
+        memcmp (computed, expected, expected_size)) {
+        guint32 i;
+
+        for (i = 0; i < MIN (computed_size, expected_size); i++) {
+            if (computed[i] != expected[i])
+                g_print ("Byte [%u] is different (computed: 0x%02X vs expected: 0x%02x)\n", i, computed[i], expected[i]);
+        }
+    }
+
+    g_free (message_str);
+    g_free (expected_str);
+}
+#else
+#define test_message_trace(...)
+#endif
 
 static void
 test_message_contents_basic_connect_visible_providers (void)
@@ -533,6 +575,254 @@ test_message_contents_basic_connect_service_activation (void)
     mbim_message_unref (response);
 }
 
+static void
+test_message_contents_sms_read_zero_pdu (void)
+{
+    MbimSmsFormat format;
+    guint32 messages_count;
+    MbimSmsPduReadRecord **pdu_messages;
+    MbimSmsCdmaReadRecord **cdma_messages;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0xB0, 0x00, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x53, 0x3F, 0xBE, 0xEB, /* service id */
+        0x14, 0xFE, 0x44, 0x67,
+        0x9F, 0x90, 0x33, 0xA2,
+        0x23, 0xE5, 0x6C, 0x3F,
+        0x02, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x38, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* 0x00 format */
+        0x00, 0x00, 0x00, 0x00, /* 0x04 messages count */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_sms_read_response_parse (
+                  response,
+                  &format,
+                  &messages_count,
+                  &pdu_messages,
+                  &cdma_messages,
+                  &error));
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (format, ==, MBIM_SMS_FORMAT_PDU);
+    g_assert_cmpuint (messages_count, ==, 0);
+    g_assert (pdu_messages == NULL);
+    g_assert (cdma_messages == NULL);
+
+    mbim_message_unref (response);
+}
+
+static void
+test_message_contents_sms_read_single_pdu (void)
+{
+    MbimSmsFormat format;
+    guint32 messages_count;
+    MbimSmsPduReadRecord **pdu_messages;
+    MbimSmsCdmaReadRecord **cdma_messages;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0xB0, 0x00, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x53, 0x3F, 0xBE, 0xEB, /* service id */
+        0x14, 0xFE, 0x44, 0x67,
+        0x9F, 0x90, 0x33, 0xA2,
+        0x23, 0xE5, 0x6C, 0x3F,
+        0x02, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x60, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* 0x00 format */
+        0x01, 0x00, 0x00, 0x00, /* 0x04 messages count */
+        0x10, 0x00, 0x00, 0x00, /* 0x08 message 1 offset */
+        0x20, 0x00, 0x00, 0x00, /* 0x0C message 1 length */
+        /* data buffer... message 1 */
+        0x07, 0x00, 0x00, 0x00, /* 0x10 0x00 message index */
+        0x03, 0x00, 0x00, 0x00, /* 0x14 0x04 message status */
+        0x10, 0x00, 0x00, 0x00, /* 0x18 0x08 pdu data offset (w.r.t. pdu start */
+        0x10, 0x00, 0x00, 0x00, /* 0x1C 0x0C pdu data length */
+        /*    pdu data... */
+        0x01, 0x02, 0x03, 0x04, /* 0x20 0x10 */
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x0C,
+        0x0D, 0x0E, 0x0F, 0x00
+    };
+
+    const guint8 expected_pdu [] = {
+        0x01, 0x02, 0x03, 0x04,
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x0C,
+        0x0D, 0x0E, 0x0F, 0x00
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_sms_read_response_parse (
+                  response,
+                  &format,
+                  &messages_count,
+                  &pdu_messages,
+                  &cdma_messages,
+                  &error));
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (format, ==, MBIM_SMS_FORMAT_PDU);
+    g_assert_cmpuint (messages_count, ==, 1);
+    g_assert (pdu_messages != NULL);
+    g_assert (cdma_messages == NULL);
+
+    g_assert_cmpuint (pdu_messages[0]->message_index, ==, 7);
+    g_assert_cmpuint (pdu_messages[0]->message_status, ==, MBIM_SMS_STATUS_SENT);
+    test_message_trace (pdu_messages[0]->pdu_data,
+                        pdu_messages[0]->pdu_data_size,
+                        expected_pdu,
+                        sizeof (expected_pdu));
+    g_assert_cmpuint (pdu_messages[0]->pdu_data_size, ==, sizeof (expected_pdu));
+    g_assert (memcmp (pdu_messages[0]->pdu_data, expected_pdu, sizeof (expected_pdu)) == 0);
+
+    mbim_sms_pdu_read_record_array_free (pdu_messages);
+    mbim_message_unref (response);
+}
+
+static void
+test_message_contents_sms_read_multiple_pdu (void)
+{
+    guint32 idx;
+    MbimSmsFormat format;
+    guint32 messages_count;
+    MbimSmsPduReadRecord **pdu_messages;
+    MbimSmsCdmaReadRecord **cdma_messages;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0xB0, 0x00, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x53, 0x3F, 0xBE, 0xEB, /* service id */
+        0x14, 0xFE, 0x44, 0x67,
+        0x9F, 0x90, 0x33, 0xA2,
+        0x23, 0xE5, 0x6C, 0x3F,
+        0x02, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x60, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* 0x00 format */
+        0x02, 0x00, 0x00, 0x00, /* 0x04 messages count */
+        0x18, 0x00, 0x00, 0x00, /* 0x08 message 1 offset */
+        0x20, 0x00, 0x00, 0x00, /* 0x0C message 1 length */
+        0x38, 0x00, 0x00, 0x00, /* 0x10 message 2 offset */
+        0x24, 0x00, 0x00, 0x00, /* 0x14 message 2 length */
+        /* data buffer... message 1 */
+        0x06, 0x00, 0x00, 0x00, /* 0x18 0x00 message index */
+        0x03, 0x00, 0x00, 0x00, /* 0x1C 0x04 message status */
+        0x10, 0x00, 0x00, 0x00, /* 0x20 0x08 pdu data offset (w.r.t. pdu start */
+        0x10, 0x00, 0x00, 0x00, /* 0x24 0x0C pdu data length */
+        /*    pdu data... */
+        0x01, 0x02, 0x03, 0x04, /* 0x28 0x10 */
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x0C,
+        0x0D, 0x0E, 0x0F, 0x00,
+        /* data buffer... message 2 */
+        0x07, 0x00, 0x00, 0x00, /* 0x38 0x00 message index */
+        0x03, 0x00, 0x00, 0x00, /* 0x3C 0x04 message status */
+        0x10, 0x00, 0x00, 0x00, /* 0x40 0x08 pdu data offset (w.r.t. pdu start */
+        0x10, 0x00, 0x00, 0x00, /* 0x44 0x0C pdu data length */
+        /*    pdu data... */
+        0x00, 0x01, 0x02, 0x03, /* 0x48 0x10 */
+        0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F
+    };
+
+    const guint8 expected_pdu_idx6 [] = {
+        0x01, 0x02, 0x03, 0x04,
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x0C,
+        0x0D, 0x0E, 0x0F, 0x00
+    };
+
+    const guint8 expected_pdu_idx7 [] = {
+        0x00, 0x01, 0x02, 0x03,
+        0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_sms_read_response_parse (
+                  response,
+                  &format,
+                  &messages_count,
+                  &pdu_messages,
+                  &cdma_messages,
+                  &error));
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (format, ==, MBIM_SMS_FORMAT_PDU);
+    g_assert_cmpuint (messages_count, ==, 2);
+    g_assert (pdu_messages != NULL);
+    g_assert (cdma_messages == NULL);
+
+    /* First message with index 6 */
+    if (pdu_messages[0]->message_index == 6)
+        idx = 0;
+    else if (pdu_messages[1]->message_index == 6)
+        idx = 1;
+    else
+        g_assert_not_reached ();
+    g_assert_cmpuint (pdu_messages[idx]->message_index, ==, 6);
+    g_assert_cmpuint (pdu_messages[idx]->message_status, ==, MBIM_SMS_STATUS_SENT);
+    test_message_trace (pdu_messages[idx]->pdu_data,
+                        pdu_messages[idx]->pdu_data_size,
+                        expected_pdu_idx6,
+                        sizeof (expected_pdu_idx6));
+    g_assert_cmpuint (pdu_messages[idx]->pdu_data_size, ==, sizeof (expected_pdu_idx6));
+    g_assert (memcmp (pdu_messages[idx]->pdu_data, expected_pdu_idx6, sizeof (expected_pdu_idx6)) == 0);
+
+    /* Second message with index 7 */
+    if (pdu_messages[0]->message_index == 7)
+        idx = 0;
+    else if (pdu_messages[1]->message_index == 7)
+        idx = 1;
+    else
+        g_assert_not_reached ();
+    g_assert_cmpuint (pdu_messages[idx]->message_index, ==, 7);
+    g_assert_cmpuint (pdu_messages[idx]->message_status, ==, MBIM_SMS_STATUS_SENT);
+    test_message_trace (pdu_messages[idx]->pdu_data,
+                        pdu_messages[idx]->pdu_data_size,
+                        expected_pdu_idx7,
+                        sizeof (expected_pdu_idx7));
+    g_assert_cmpuint (pdu_messages[idx]->pdu_data_size, ==, sizeof (expected_pdu_idx7));
+    g_assert (memcmp (pdu_messages[idx]->pdu_data, expected_pdu_idx7, sizeof (expected_pdu_idx7)) == 0);
+
+    mbim_sms_pdu_read_record_array_free (pdu_messages);
+    mbim_message_unref (response);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -542,6 +832,10 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/device-caps", test_message_contents_basic_connect_device_caps);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/ip-configuration", test_message_contents_basic_connect_ip_configuration);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/service-activation", test_message_contents_basic_connect_service_activation);
+
+    g_test_add_func ("/libmbim-glib/message-contents/sms/read/zero-pdu", test_message_contents_sms_read_zero_pdu);
+    g_test_add_func ("/libmbim-glib/message-contents/sms/read/single-pdu", test_message_contents_sms_read_single_pdu);
+    g_test_add_func ("/libmbim-glib/message-contents/sms/read/multiple-pdu", test_message_contents_sms_read_multiple_pdu);
 
     return g_test_run ();
 }
