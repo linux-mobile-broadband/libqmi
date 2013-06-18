@@ -358,41 +358,55 @@ class Message:
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
             translations['struct_underscore'] = utils.build_underscore_name_from_camelcase (translations['struct'])
 
-            inner_template = ('    ')
+            inner_template = ''
+            if 'available-if' in field:
+                condition = field['available-if']
+                translations['condition_field'] = utils.build_underscore_name_from_camelcase(condition['field'])
+                translations['condition_operation'] = condition['operation']
+                translations['condition_value'] = condition['value']
+                inner_template += (
+                    '    if (${condition_field} ${condition_operation} ${condition_value}) {\n')
+            else:
+                inner_template += ('    {\n')
+
             if field['format'] == 'byte-array':
-                inner_template = ('    _mbim_message_command_builder_append_byte_array (builder, FALSE, ${field}, ${field}_size);\n')
-            if field['format'] == 'ref-byte-array':
-                inner_template = ('    _mbim_message_command_builder_append_byte_array (builder, TRUE, ${field}, ${field}_size);\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, ${field}, ${field}_size);\n')
+            elif field['format'] == 'ref-byte-array':
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, TRUE, ${field}, ${field}_size);\n')
             elif field['format'] == 'uuid':
-                inner_template = ('    _mbim_message_command_builder_append_uuid (builder, ${field});\n')
+                inner_template += ('        _mbim_message_command_builder_append_uuid (builder, ${field});\n')
             elif field['format'] == 'guint32':
-                inner_template = ('    _mbim_message_command_builder_append_guint32 (builder, ${field});\n')
+                inner_template += ('        _mbim_message_command_builder_append_guint32 (builder, ${field});\n')
             elif field['format'] == 'guint32-array':
-                inner_template = ('    _mbim_message_command_builder_append_guint32_array (builder, ${field}, ${array_size_field});\n')
+                inner_template += ('        _mbim_message_command_builder_append_guint32_array (builder, ${field}, ${array_size_field});\n')
             elif field['format'] == 'guint64':
-                inner_template = ('    _mbim_message_command_builder_append_guint64 (builder, ${field});\n')
+                inner_template += ('        _mbim_message_command_builder_append_guint64 (builder, ${field});\n')
             elif field['format'] == 'string':
-                inner_template = ('    _mbim_message_command_builder_append_string (builder, ${field});\n')
+                inner_template += ('        _mbim_message_command_builder_append_string (builder, ${field});\n')
             elif field['format'] == 'string-array':
-                inner_template = ('    _mbim_message_command_builder_append_string_array (builder, ${field}, ${array_size_field});\n')
+                inner_template += ('        _mbim_message_command_builder_append_string_array (builder, ${field}, ${array_size_field});\n')
             elif field['format'] == 'struct':
-                inner_template = ('    _mbim_message_command_builder_append_${struct_underscore}_struct (builder, ${field});\n')
+                inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_struct (builder, ${field});\n')
             elif field['format'] == 'struct-array':
-                inner_template = ('    _mbim_message_command_builder_append_${struct_underscore}_struct_array (builder, ${field}, ${array_size_field}, FALSE);\n')
+                inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_struct_array (builder, ${field}, ${array_size_field}, FALSE);\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template = ('    _mbim_message_command_builder_append_${struct_underscore}_struct_array (builder, ${field}, ${array_size_field}, TRUE);\n')
+                inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_struct_array (builder, ${field}, ${array_size_field}, TRUE);\n')
             elif field['format'] == 'ipv4':
-                inner_template = ('    _mbim_message_command_builder_append_ipv4 (builder, ${field}, FALSE);\n')
+                inner_template += ('        _mbim_message_command_builder_append_ipv4 (builder, ${field}, FALSE);\n')
             elif field['format'] == 'ref-ipv4':
-                inner_template = ('    _mbim_message_command_builder_append_ipv4 (builder, ${field}, TRUE);\n')
+                inner_template += ('        _mbim_message_command_builder_append_ipv4 (builder, ${field}, TRUE);\n')
             elif field['format'] == 'ipv4-array':
-                inner_template = ('    _mbim_message_command_builder_append_ipv4_array (builder, ${field}, ${array_size_field});\n')
+                inner_template += ('        _mbim_message_command_builder_append_ipv4_array (builder, ${field}, ${array_size_field});\n')
             elif field['format'] == 'ipv6':
-                inner_template = ('    _mbim_message_command_builder_append_ipv6 (builder, ${field}, FALSE);\n')
+                inner_template += ('        _mbim_message_command_builder_append_ipv6 (builder, ${field}, FALSE);\n')
             elif field['format'] == 'ref-ipv6':
-                inner_template = ('    _mbim_message_command_builder_append_ipv6 (builder, ${field}, TRUE);\n')
+                inner_template += ('        _mbim_message_command_builder_append_ipv6 (builder, ${field}, TRUE);\n')
             elif field['format'] == 'ipv6-array':
-                inner_template = ('    _mbim_message_command_builder_append_ipv6_array (builder, ${field}, ${array_size_field});\n')
+                inner_template += ('        _mbim_message_command_builder_append_ipv6_array (builder, ${field}, ${array_size_field});\n')
+            else:
+                raise ValueError('Cannot handle field type \'%s\'' % field['format'])
+
+            inner_template += ('    }\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
