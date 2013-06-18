@@ -44,6 +44,7 @@ static Context *ctx;
 /* Options */
 static gboolean get_signal_strength_flag;
 static gboolean get_signal_info_flag;
+static gchar *get_tx_rx_info_str;
 static gboolean get_home_network_flag;
 static gboolean get_serving_system_flag;
 static gboolean get_system_info_flag;
@@ -62,6 +63,10 @@ static GOptionEntry entries[] = {
     { "nas-get-signal-info", 0, 0, G_OPTION_ARG_NONE, &get_signal_info_flag,
       "Get signal info",
       NULL
+    },
+    { "nas-get-tx-rx-info", 0, 0, G_OPTION_ARG_STRING, &get_tx_rx_info_str,
+      "Get TX/RX info",
+      "[(Radio Interface)]",
     },
     { "nas-get-home-network", 0, 0, G_OPTION_ARG_NONE, &get_home_network_flag,
       "Get home network",
@@ -128,6 +133,7 @@ qmicli_nas_options_enabled (void)
 
     n_actions = (get_signal_strength_flag +
                  get_signal_info_flag +
+                 !!get_tx_rx_info_str +
                  get_home_network_flag +
                  get_serving_system_flag +
                  get_system_info_flag +
@@ -462,6 +468,161 @@ get_signal_strength_ready (QmiClientNas *client,
 
     qmi_message_nas_get_signal_strength_output_unref (output);
     shutdown (TRUE);
+}
+
+static void
+get_tx_rx_info_ready (QmiClientNas *client,
+                      GAsyncResult *res,
+                      gpointer user_data)
+{
+    QmiNasRadioInterface interface;
+    QmiMessageNasGetTxRxInfoOutput *output;
+    GError *error = NULL;
+    gboolean is_radio_tuned;
+    gboolean is_in_traffic;
+    gint32 power;
+    gint32 ecio;
+    gint32 rscp;
+    gint32 rsrp;
+    guint32 phase;
+
+    interface = GPOINTER_TO_UINT (user_data);
+
+    output = qmi_client_nas_get_tx_rx_info_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_tx_rx_info_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get TX/RX info: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_tx_rx_info_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got TX/RX info\n",
+             qmi_device_get_path_display (ctx->device));
+
+    /* RX Channel 0 */
+    if (qmi_message_nas_get_tx_rx_info_output_get_rx_chain_0_info (
+            output,
+            &is_radio_tuned,
+            &power,
+            &ecio,
+            &rscp,
+            &rsrp,
+            &phase,
+            NULL)) {
+        g_print ("RX Chain 0:\n"
+                 "\tRadio tuned: '%s'\n"
+                 "\tPower: '%.1lf dBm'\n",
+                 is_radio_tuned ? "yes" : "no",
+                 (0.1) * ((gdouble)power));
+        if (interface == QMI_NAS_RADIO_INTERFACE_CDMA_1X ||
+            interface == QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO ||
+            interface == QMI_NAS_RADIO_INTERFACE_GSM ||
+            interface == QMI_NAS_RADIO_INTERFACE_UMTS ||
+            interface == QMI_NAS_RADIO_INTERFACE_LTE)
+            g_print ("\tECIO: '%.1lf dB'\n", (0.1) * ((gdouble)ecio));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_UMTS)
+            g_print ("\tRSCP: '%.1lf dBm'\n", (0.1) * ((gdouble)rscp));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE)
+            g_print ("\tRSRP: '%.1lf dBm'\n", (0.1) * ((gdouble)rsrp));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE) {
+            if (phase == 0xFFFFFFFF)
+                g_print ("\tPhase: 'unknown'\n");
+            else
+                g_print ("\tPhase: '%.2lf degrees'\n", (0.01) * ((gdouble)phase));
+        }
+    }
+
+    /* RX Channel 1 */
+    if (qmi_message_nas_get_tx_rx_info_output_get_rx_chain_1_info (
+            output,
+            &is_radio_tuned,
+            &power,
+            &ecio,
+            &rscp,
+            &rsrp,
+            &phase,
+            NULL)) {
+        g_print ("RX Chain 1:\n"
+                 "\tRadio tuned: '%s'\n"
+                 "\tPower: '%.1lf dBm'\n",
+                 is_radio_tuned ? "yes" : "no",
+                 (0.1) * ((gdouble)power));
+        if (interface == QMI_NAS_RADIO_INTERFACE_CDMA_1X ||
+            interface == QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO ||
+            interface == QMI_NAS_RADIO_INTERFACE_GSM ||
+            interface == QMI_NAS_RADIO_INTERFACE_UMTS ||
+            interface == QMI_NAS_RADIO_INTERFACE_LTE)
+            g_print ("\tECIO: '%.1lf dB'\n", (0.1) * ((gdouble)ecio));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_UMTS)
+            g_print ("\tRSCP: '%.1lf dBm'\n", (0.1) * ((gdouble)rscp));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE)
+            g_print ("\tRSRP: '%.1lf dBm'\n", (0.1) * ((gdouble)rsrp));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE) {
+            if (phase == 0xFFFFFFFF)
+                g_print ("\tPhase: 'unknown'\n");
+            else
+                g_print ("\tPhase: '%.2lf degrees'\n", (0.01) * ((gdouble)phase));
+        }
+    }
+
+    /* TX Channel */
+    if (qmi_message_nas_get_tx_rx_info_output_get_tx_info (
+            output,
+            &is_in_traffic,
+            &power,
+            NULL)) {
+        g_print ("TX:\n");
+        if (is_in_traffic)
+            g_print ("\tIn traffic: 'yes'\n"
+                     "\tPower: '%.1lf dBm'\n",
+                     (0.1) * ((gdouble)power));
+        else
+            g_print ("\tIn traffic: 'no'\n");
+    }
+
+    qmi_message_nas_get_tx_rx_info_output_unref (output);
+    shutdown (TRUE);
+}
+
+static QmiMessageNasGetTxRxInfoInput *
+get_tx_rx_info_input_create (const gchar *str,
+                             QmiNasRadioInterface *interface)
+{
+    QmiMessageNasGetTxRxInfoInput *input = NULL;
+
+    g_assert (interface != NULL);
+
+    if (qmicli_read_radio_interface_from_string (str, interface)) {
+        GError *error = NULL;
+
+        input = qmi_message_nas_get_tx_rx_info_input_new ();
+        if (!qmi_message_nas_get_tx_rx_info_input_set_radio_interface (
+                input,
+                *interface,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_nas_get_tx_rx_info_input_unref (input);
+            input = NULL;
+        }
+    }
+
+    return input;
 }
 
 static void
@@ -2125,6 +2286,29 @@ qmicli_nas_run (QmiDevice *device,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_signal_info_ready,
                                         NULL);
+        return;
+    }
+
+    /* Request to get tx/rx info? */
+    if (get_tx_rx_info_str) {
+        QmiMessageNasGetTxRxInfoInput *input;
+        QmiNasRadioInterface interface;
+
+        input = get_tx_rx_info_input_create (get_tx_rx_info_str,
+                                             &interface);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously getting TX/RX info...");
+        qmi_client_nas_get_tx_rx_info (ctx->client,
+                                       input,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback)get_tx_rx_info_ready,
+                                       GUINT_TO_POINTER (interface));
+        qmi_message_nas_get_tx_rx_info_input_unref (input);
         return;
     }
 

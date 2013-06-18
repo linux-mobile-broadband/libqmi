@@ -264,6 +264,27 @@ qmicli_read_firmware_id_from_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_radio_interface_from_string (const gchar *str,
+                                         QmiNasRadioInterface *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_nas_radio_interface_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiNasRadioInterface)enum_value->value;
+    else
+        g_printerr ("error: invalid radio interface value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
 qmicli_read_uint_from_string (const gchar *str,
                               guint *out)
 {
