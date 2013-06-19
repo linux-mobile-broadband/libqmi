@@ -654,5 +654,32 @@
                    { "name"             : "DeviceServices",
                      "format"           : "ref-struct-array",
                      "struct-type"      : "MbimDeviceServiceElement",
-                     "array-size-field" : "DeviceServicesCount" } ] }
+                     "array-size-field" : "DeviceServicesCount" } ] },
+
+  // *********************************************************************************
+  { "name"     : "MbimEventEntry",
+    "type"     : "Struct",
+    "contents" : [ { "name"   : "DeviceServiceId",
+                     "format" : "uuid" },
+                   { "name"       : "CidsCount",
+                     "format"     : "guint32" },
+                   { "name"             : "Cids",
+                     "format"           : "guint32-array",
+                     "array-size-field" : "CidsCount" } ] },
+
+  { "name"     : "Device Service Subscriber List",
+    "service"  : "Basic Connect",
+    "type"     : "Command",
+    "set"      : [ { "name"   : "EventsCount",
+                     "format" : "guint32" },
+                   { "name"             : "Events",
+                     "format"           : "ref-struct-array",
+                     "struct-type"      : "MbimEventEntry",
+                     "array-size-field" : "EventsCount" } ],
+    "response" : [ { "name"   : "EventsCount",
+                     "format" : "guint32" },
+                   { "name"             : "Events",
+                     "format"           : "ref-struct-array",
+                     "struct-type"      : "MbimEventEntry",
+                     "array-size-field" : "EventsCount" } ] }
 ]
