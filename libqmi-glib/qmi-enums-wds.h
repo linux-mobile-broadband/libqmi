@@ -937,4 +937,35 @@ typedef enum {
     QMI_WDS_PROFILE_TYPE_3GPP2   = 1
 } QmiWdsProfileType;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI WDS Get Packet Statistics' message */
+
+/**
+ * QmiWdsPacketStatisticsMaskFlag:
+ * @QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_PACKETS_OK: Request count of correctly sent packets.
+ * @QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_PACKETS_OK: Request count of correctly received packets.
+ * @QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_PACKETS_ERROR: Request count of sent packets with error.
+ * @QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_PACKETS_ERROR: Request count of received packets with error.
+ * @QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_OVERFLOWS: Request count of transmitter overflows.
+ * @QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_OVERFLOWS: Request count of receiver overflows.
+ * @QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_BYTES_OK: Request count of correctly sent bytes.
+ * @QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_BYTES_OK: Request count of correctly received bytes.
+ * @QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_PACKETS_DROPPED: Request count of dropped packets in transmission.
+ * @QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_PACKETS_DROPPED: Request count of dropped packets in reception.
+ *
+ * Mask to use when requesting packet statistics.
+ */
+typedef enum {
+    QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_PACKETS_OK      = 1 << 0,
+    QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_PACKETS_OK      = 1 << 1,
+    QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_PACKETS_ERROR   = 1 << 2,
+    QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_PACKETS_ERROR   = 1 << 3,
+    QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_OVERFLOWS       = 1 << 4,
+    QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_OVERFLOWS       = 1 << 5,
+    QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_BYTES_OK        = 1 << 6,
+    QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_BYTES_OK        = 1 << 7,
+    QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_PACKETS_DROPPED = 1 << 8,
+    QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_PACKETS_DROPPED = 1 << 9
+} QmiWdsPacketStatisticsMaskFlag;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDS_H_ */

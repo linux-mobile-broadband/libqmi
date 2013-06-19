@@ -391,6 +391,7 @@ QmiWdsPdpType
 QmiWdsTrafficClass
 QmiWdsAuthentication
 QmiWdsProfileType
+QmiWdsPacketStatisticsMaskFlag
 <SUBSECTION Methods>
 qmi_wds_ip_family_get_string
 qmi_wds_technology_preference_build_string_from_mask
@@ -418,6 +419,7 @@ qmi_wds_pdp_type_get_string
 qmi_wds_traffic_class_get_string
 qmi_wds_authentication_build_string_from_mask
 qmi_wds_profile_type_get_string
+qmi_wds_packet_statistics_mask_flag_build_string_from_mask
 <SUBSECTION Private>
 qmi_wds_ip_family_build_string_from_mask
 qmi_wds_technology_preference_get_string
@@ -444,6 +446,7 @@ qmi_wds_pdp_type_build_string_from_mask
 qmi_wds_traffic_class_build_string_from_mask
 qmi_wds_authentication_get_string
 qmi_wds_profile_type_build_string_from_mask
+qmi_wds_packet_statistics_mask_flag_get_string
 <SUBSECTION Standard>
 QMI_TYPE_WDS_AUTHENTICATION
 QMI_TYPE_WDS_CALL_END_REASON
@@ -470,6 +473,7 @@ QMI_TYPE_WDS_VERBOSE_CALL_END_REASON_IPV6
 QMI_TYPE_WDS_VERBOSE_CALL_END_REASON_MIP
 QMI_TYPE_WDS_VERBOSE_CALL_END_REASON_PPP
 QMI_TYPE_WDS_VERBOSE_CALL_END_REASON_TYPE
+QMI_TYPE_WDS_PACKET_STATISTICS_MASK_FLAG
 qmi_wds_authentication_get_type
 qmi_wds_call_end_reason_get_type
 qmi_wds_call_type_get_type
@@ -495,6 +499,7 @@ qmi_wds_verbose_call_end_reason_ipv6_get_type
 qmi_wds_verbose_call_end_reason_mip_get_type
 qmi_wds_verbose_call_end_reason_ppp_get_type
 qmi_wds_verbose_call_end_reason_type_get_type
+qmi_wds_packet_statistics_mask_flag_get_type
 </SECTION>
 
 <SECTION>
