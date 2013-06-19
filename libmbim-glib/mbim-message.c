@@ -519,8 +519,11 @@ _mbim_struct_builder_append_guint32_array (MbimStructBuilder *builder,
                                            const guint32     *values,
                                            guint32            n_values)
 {
-    /* TODO */
-    g_assert_not_reached ();
+    guint i;
+
+    /* guint32 array added directly in the static buffer */
+    for (i = 0; i < n_values; i++)
+        _mbim_struct_builder_append_guint32 (builder, values[i]);
 }
 
 void
@@ -539,8 +542,11 @@ _mbim_struct_builder_append_guint64_array (MbimStructBuilder *builder,
                                            const guint64     *values,
                                            guint32            n_values)
 {
-    /* TODO */
-    g_assert_not_reached ();
+    guint i;
+
+    /* guint64 array added directly in the static buffer */
+    for (i = 0; i < n_values; i++)
+        _mbim_struct_builder_append_guint64 (builder, values[i]);
 }
 
 void
