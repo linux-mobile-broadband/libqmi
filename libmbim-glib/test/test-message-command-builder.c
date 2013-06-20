@@ -406,6 +406,96 @@ test_message_command_builder_set_service_activation (void)
     mbim_message_unref (message);
 }
 
+static void
+test_message_command_builder_set_device_service_subscriber_list (void)
+{
+    GError *error = NULL;
+    MbimEventEntry **entries;
+    MbimMessage *message;
+    const guint8 expected_message [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x00, /* type */
+        0x78, 0x00, 0x00, 0x00, /* length */
+        0x01, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x13, 0x00, 0x00, 0x00, /* command id */
+        0x01, 0x00, 0x00, 0x00, /* command_type */
+        0x48, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x02, 0x00, 0x00, 0x00, /* 0x00 Events count */
+        0x14, 0x00, 0x00, 0x00, /* 0x04 Event 1 offset */
+        0x1C, 0x00, 0x00, 0x00, /* 0x08 Event 1 length */
+        0x30, 0x00, 0x00, 0x00, /* 0x0C Event 2 offset */
+        0x18, 0x00, 0x00, 0x00, /* 0x10 Event 2 length */
+        /* data buffer, event 1 */
+        0xA2, 0x89, 0xCC, 0x33, /* 0x14 Event 1, service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x02, 0x00, 0x00, 0x00, /* 0x24 Event 1, cid count */
+        0x0B, 0x00, 0x00, 0x00, /* 0x28 Event 1, cid 1 */
+        0x09, 0x00, 0x00, 0x00, /* 0x2C Event 1, cid 2 */
+        /* data buffer, event 2 */
+        0x53, 0x3F, 0xBE, 0xEB, /* 0x30 Event 1, service id */
+        0x14, 0xFE, 0x44, 0x67,
+        0x9F, 0x90, 0x33, 0xA2,
+        0x23, 0xE5, 0x6C, 0x3F,
+        0x01, 0x00, 0x00, 0x00, /* 0x40 Event 2, cid count */
+        0x02, 0x00, 0x00, 0x00, /* 0x44 Event 2, cid 1 */
+    };
+
+    /* Device Service Subscribe List set message */
+    entries = g_new0 (MbimEventEntry *, 3);
+
+    entries[0] = g_new (MbimEventEntry, 1);
+    memcpy (&(entries[0]->device_service_id), MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
+    entries[0]->cids_count = 2;
+    entries[0]->cids = g_new0 (guint32, 2);
+    entries[0]->cids[0] = MBIM_CID_BASIC_CONNECT_SIGNAL_STATE;
+    entries[0]->cids[1] = MBIM_CID_BASIC_CONNECT_REGISTER_STATE;
+
+    entries[1] = g_new (MbimEventEntry, 1);
+    memcpy (&(entries[1]->device_service_id), MBIM_UUID_SMS, sizeof (MbimUuid));
+    entries[1]->cids_count = 1;
+    entries[1]->cids = g_new0 (guint32, 1);
+    entries[1]->cids[0] = MBIM_CID_SMS_READ;
+
+    message = (mbim_message_device_service_subscriber_list_set_new (
+                   2,
+                   (const MbimEventEntry *const *)entries,
+                   &error));
+    mbim_event_entry_array_free (entries);
+
+    g_assert_no_error (error);
+    g_assert (message != NULL);
+    mbim_message_set_transaction_id (message, 1);
+
+    test_message_trace ((const guint8 *)((GByteArray *)message)->data,
+                        ((GByteArray *)message)->len,
+                        expected_message,
+                        sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_BASIC_CONNECT);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_SET);
+
+    g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
+    g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    mbim_message_unref (message);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -417,6 +507,8 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/command-builder/set-connect",     test_message_command_builder_set_connect);
 
     g_test_add_func ("/libmbim-glib/message/command-builder/set-service-activation", test_message_command_builder_set_service_activation);
+
+    g_test_add_func ("/libmbim-glib/message/command-builder/set-device-service-subscriber-list", test_message_command_builder_set_device_service_subscriber_list);
 
     return g_test_run ();
 }
