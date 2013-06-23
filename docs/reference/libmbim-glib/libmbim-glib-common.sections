@@ -231,6 +231,7 @@ MbimStkPacProfile
 MbimStkPacType
 MbimNetworkIdleHintState
 MbimEmergencyModeState
+MbimDssLinkState
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -279,6 +280,7 @@ mbim_stk_pac_profile_get_string
 mbim_stk_pac_type_get_string
 mbim_network_idle_hint_state_get_string
 mbim_emergency_mode_state_get_string
+mbim_dss_link_state_get_string
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -329,6 +331,7 @@ mbim_stk_pac_profile_build_string_from_mask
 mbim_stk_pac_type_build_string_from_mask
 mbim_network_idle_hint_state_build_string_from_mask
 mbim_emergency_mode_state_build_string_from_mask
+mbim_dss_link_state_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -382,6 +385,7 @@ MBIM_TYPE_STK_PAC_PROFILE
 MBIM_TYPE_STK_PAC_TYPE
 MBIM_TYPE_NETWORK_IDLE_HINT_STATE
 MBIM_TYPE_EMERGENCY_MODE_STATE
+MBIM_TYPE_DSS_LINK_STATE
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type
@@ -434,6 +438,7 @@ mbim_stk_pac_profile_get_type
 mbim_stk_pac_type_get_type
 mbim_network_idle_hint_state_get_type
 mbim_emergency_mode_state_get_type
+mbim_dss_link_state_get_type
 </SECTION>
 
 <SECTION>

@@ -44,5 +44,6 @@
 #include "mbim-auth.h"
 #include "mbim-phonebook.h"
 #include "mbim-stk.h"
+#include "mbim-dss.h"
 
 #endif /* _LIBMBIM_GLIB_H_ */

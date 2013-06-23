@@ -13,7 +13,8 @@ ALL_SECTIONS = \
 	$(top_builddir)/libmbim-glib/generated/mbim-ussd.sections \
 	$(top_builddir)/libmbim-glib/generated/mbim-auth.sections \
 	$(top_builddir)/libmbim-glib/generated/mbim-phonebook.sections \
-	$(top_builddir)/libmbim-glib/generated/mbim-stk.sections
+	$(top_builddir)/libmbim-glib/generated/mbim-stk.sections \
+	$(top_builddir)/libmbim-glib/generated/mbim-dss.sections
 
 $(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
 	$(AM_V_GEN) \

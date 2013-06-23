@@ -902,6 +902,21 @@ typedef enum {
     MBIM_EMERGENCY_MODE_STATE_ON  = 1
 } MbimEmergencyModeState;
 
+/*****************************************************************************/
+/* 'DSS connect' enums */
+
+/**
+ * MbimDssLinkState:
+ * @MBIM_DSS_LINK_STATE_DEACTIVATE: Deactivate.
+ * @MBIM_DSS_LINK_STATE_ACTIVATE: Activate.
+ *
+ * Action performed in the link state.
+ */
+typedef enum {
+    MBIM_DSS_LINK_STATE_DEACTIVATE = 0,
+    MBIM_DSS_LINK_STATE_ACTIVATE   = 1
+} MbimDssLinkState;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */
