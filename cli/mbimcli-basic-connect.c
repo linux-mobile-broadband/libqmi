@@ -62,6 +62,7 @@ static gboolean  set_packet_service_detach_flag;
 static gboolean  query_connect_flag;
 static gchar    *set_connect_activate_str;
 static gboolean  set_connect_deactivate_flag;
+static gboolean  query_packet_statistics_flag;
 
 static GOptionEntry entries[] = {
     { "query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
@@ -152,6 +153,10 @@ static GOptionEntry entries[] = {
       "Disconnect",
       NULL
     },
+    { "query-packet-statistics", 0, 0, G_OPTION_ARG_NONE, &query_packet_statistics_flag,
+      "Query packet statistics",
+      NULL
+    },
     { NULL }
 };
 
@@ -200,7 +205,8 @@ mbimcli_basic_connect_options_enabled (void)
                  set_packet_service_detach_flag +
                  query_connect_flag +
                  !!set_connect_activate_str +
-                 set_connect_deactivate_flag);
+                 set_connect_deactivate_flag +
+                 query_packet_statistics_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -1201,6 +1207,68 @@ packet_service_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+packet_statistics_ready (MbimDevice   *device,
+                         GAsyncResult *res)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    guint32 in_discards;
+    guint32 in_errors;
+    guint64 in_octets;
+    guint64 in_packets;
+    guint64 out_octets;
+    guint64 out_packets;
+    guint32 out_errors;
+    guint32 out_discards;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_packet_statistics_response_parse (response,
+                                                        &in_discards,
+                                                        &in_errors,
+                                                        &in_octets,
+                                                        &in_packets,
+                                                        &out_octets,
+                                                        &out_packets,
+                                                        &out_errors,
+                                                        &out_discards,
+                                                        &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Packet statistics:\n"
+             "\t   Octets (in): '%" G_GUINT64_FORMAT "'\n"
+             "\t  Packets (in): '%" G_GUINT64_FORMAT "'\n"
+             "\t Discards (in): '%u'\n"
+             "\t   Errors (in): '%u'\n"
+             "\t  Octets (out): '%" G_GUINT64_FORMAT "'\n"
+             "\t Packets (out): '%" G_GUINT64_FORMAT "'\n"
+             "\tDiscards (out): '%u'\n"
+             "\t  Errors (out): '%u'\n",
+             mbim_device_get_path_display (device),
+             in_octets,
+             in_packets,
+             in_discards,
+             in_errors,
+             out_octets,
+             out_packets,
+             out_discards,
+             out_errors);
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -1624,6 +1692,21 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)connect_ready,
                              GUINT_TO_POINTER (DISCONNECT));
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Packet statistics? */
+    if (query_packet_statistics_flag) {
+        MbimMessage *request;
+
+        request = mbim_message_packet_statistics_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)packet_statistics_ready,
+                             NULL);
         mbim_message_unref (request);
         return;
     }
