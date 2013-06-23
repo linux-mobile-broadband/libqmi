@@ -722,7 +722,7 @@ class Message:
                 inner_template += (
                     '        const guint8 *tmp;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, NULL);\n'
+                    '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, NULL);\n'
                     '        if (${field} != NULL)\n'
                     '            *${field} = tmp;\n'
                     '        offset += ${array_size};\n')
@@ -731,7 +731,7 @@ class Message:
                     '        const guint8 *tmp;\n'
                     '        guint32 tmpsize;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, &tmpsize);\n'
+                    '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, &tmpsize);\n'
                     '        if (${field} != NULL)\n'
                     '            *${field} = tmp;\n'
                     '        if (${field}_size != NULL)\n'
@@ -742,7 +742,7 @@ class Message:
                     '        const guint8 *tmp;\n'
                     '        guint32 tmpsize;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_byte_array (message, 0, offset, TRUE, &tmpsize);\n'
+                    '        tmp = _mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, &tmpsize);\n'
                     '        if (${field} != NULL)\n'
                     '            *${field} = tmp;\n'
                     '        if (${field}_size != NULL)\n'

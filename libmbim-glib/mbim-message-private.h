@@ -259,7 +259,8 @@ void                       _mbim_message_command_builder_append_ipv6_array    (M
 const guint8    *_mbim_message_read_byte_array    (const MbimMessage *self,
                                                    guint32            struct_start_offset,
                                                    guint32            relative_offset,
-                                                   gboolean           ol_pair,
+                                                   gboolean           has_offset,
+                                                   gboolean           has_length,
                                                    guint32           *array_size);
 const MbimUuid  *_mbim_message_read_uuid          (const MbimMessage *self,
                                                    guint32            relative_offset);

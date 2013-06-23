@@ -231,42 +231,82 @@ _mbim_message_read_string_array (const MbimMessage *self,
     return array;
 }
 
+/*
+ * Byte arrays may be given in very different ways:
+ *  - (a) Offset + Length pair in static buffer, data in variable buffer.
+ *  - (b) Just length in static buffer, data just afterwards.
+ *  - (c) Just offset in static buffer, length given in another variable, data in variable buffer.
+ *  - (d) Fixed-sized array directly in the static buffer.
+ *  - (e) Unsized array directly in the variable buffer, length is assumed until end of message.
+ */
 const guint8 *
 _mbim_message_read_byte_array (const MbimMessage *self,
                                guint32            struct_start_offset,
                                guint32            relative_offset,
-                               gboolean           ol_pair,
+                               gboolean           has_offset,
+                               gboolean           has_length,
                                guint32           *array_size)
 {
     guint32 information_buffer_offset;
-    guint32 size;
-    guint32 offset;
-    const guint8 *data;
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    if (ol_pair) {
+    /* (a) Offset + Length pair in static buffer, data in variable buffer. */
+    if (has_offset && has_length) {
+        guint32 offset;
+
+        g_assert (array_size != NULL);
+
         offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
                                       guint32,
                                       self->data,
                                       (information_buffer_offset + relative_offset)));
-        size = GUINT32_FROM_LE (G_STRUCT_MEMBER (
-                                    guint32,
-                                    self->data,
-                                    (information_buffer_offset + relative_offset + 4)));
-        data = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+        *array_size = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                           guint32,
+                                           self->data,
+                                           (information_buffer_offset + relative_offset + 4)));
+        return (const guint8 *) G_STRUCT_MEMBER_P (self->data,
                                                    (information_buffer_offset + struct_start_offset + offset));
-    } else {
-        size = self->len - (information_buffer_offset + relative_offset);
-        data = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+    }
+
+    /* (b) Just length in static buffer, data just afterwards. */
+    if (!has_offset && has_length) {
+        g_assert (array_size != NULL);
+
+        *array_size = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                           guint32,
+                                           self->data,
+                                           (information_buffer_offset + relative_offset)));
+        return (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+                                                   (information_buffer_offset + relative_offset + 4));
+    }
+
+    /* (c) Just offset in static buffer, length given in another variable, data in variable buffer. */
+    if (has_offset && !has_length) {
+        guint32 offset;
+
+        g_assert (array_size == NULL);
+
+        offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                      guint32,
+                                      self->data,
+                                      (information_buffer_offset + relative_offset)));
+        return (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+                                                   (information_buffer_offset + struct_start_offset + offset));
+    }
+
+    /* (d) Fixed-sized array directly in the static buffer.
+     * (e) Unsized array directly in the variable buffer, length is assumed until end of message. */
+    if (!has_offset && !has_length) {
+        /* If array size is requested, it's case (e) */
+        if (array_size)
+            *array_size = self->len - (information_buffer_offset + relative_offset);
+
+        return (const guint8 *) G_STRUCT_MEMBER_P (self->data,
                                                    (information_buffer_offset + relative_offset));
     }
 
-    /* We assume that the byte array goes until the end */
-    if (array_size)
-        *array_size = size;
-
-    return data;
+    g_assert_not_reached ();
 }
 
 const MbimUuid *
@@ -440,6 +480,14 @@ _mbim_struct_builder_complete (MbimStructBuilder *builder)
     return out;
 }
 
+/*
+ * Byte arrays may be given in very different ways:
+ *  - (a) Offset + Length pair in static buffer, data in variable buffer.
+ *  - (b) Just length in static buffer, data just afterwards.
+ *  - (c) Just offset in static buffer, length given in another variable, data in variable buffer.
+ *  - (d) Fixed-sized array directly in the static buffer.
+ *  - (e) Unsized array directly in the variable buffer, length is assumed until end of message.
+ */
 void
 _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
                                         gboolean           with_offset,
@@ -447,18 +495,22 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
                                         const guint8      *buffer,
                                         guint32            buffer_len)
 {
-    guint32 offset;
-    guint32 length;
-
+    /*
+     * (d) Fixed-sized array directly in the static buffer.
+     * (e) Unsized array directly in the variable buffer (here end of static buffer is also beginning of variable)
+     */
     if (!with_offset && !with_length) {
         g_byte_array_append (builder->fixed_buffer, buffer, buffer_len);
         return;
     }
 
-    /* A bytearray consists of Offset+Size in the static buffer, plus the
-     * string itself in the variable buffer */
+    /* (a) Offset + Length pair in static buffer, data in variable buffer.
+     * This case is the sum of cases b+c */
 
+    /* (c) Just offset in static buffer, length given in another variable, data in variable buffer. */
     if (with_offset) {
+        guint32 offset;
+
         /* If string length is greater than 0, add the offset to fix, otherwise set
          * the offset to 0 and don't configure the update */
         if (buffer_len == 0) {
@@ -479,14 +531,17 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
         }
     }
 
-    g_assert (with_length == TRUE);
+    /* (b) Just length in static buffer, data just afterwards. */
+    if (with_length) {
+        guint32 length;
 
-    /* Add the length value */
-    length = GUINT32_TO_LE (buffer_len);
-    g_byte_array_append (builder->fixed_buffer, (guint8 *)&length, sizeof (length));
+        /* Add the length value */
+        length = GUINT32_TO_LE (buffer_len);
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&length, sizeof (length));
+    }
 
     /* And finally, the bytearray itself to the variable buffer */
-    if (length)
+    if (buffer_len)
         g_byte_array_append (builder->variable_buffer, (const guint8 *)buffer, (guint)buffer_len);
 }
 
