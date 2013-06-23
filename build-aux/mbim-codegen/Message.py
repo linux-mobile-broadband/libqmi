@@ -635,6 +635,29 @@ class Message:
                 inner_template = ('    guint32 _${field};\n')
                 template += (string.Template(inner_template).substitute(translations))
 
+        if message_type == 'response':
+            template += (
+                '\n'
+                '    if (mbim_message_get_message_type (message) != MBIM_MESSAGE_TYPE_COMMAND_DONE) {\n'
+                '        g_set_error (error,\n'
+                '                     MBIM_CORE_ERROR,\n'
+                '                     MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
+                '                     \"Message is not a response\");\n'
+                '        return FALSE;\n'
+                '    }\n')
+        elif message_type == 'notification':
+            template += (
+                '\n'
+                '    if (mbim_message_get_message_type (message) != MBIM_MESSAGE_TYPE_INDICATE_STATUS) {\n'
+                '        g_set_error (error,\n'
+                '                     MBIM_CORE_ERROR,\n'
+                '                     MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
+                '                     \"Message is not a notification\");\n'
+                '        return FALSE;\n'
+                '    }\n')
+        else:
+            raise ValueError('Unexpected message type \'%s\'' % message_type)
+
         for field in fields:
             translations['field']                   = utils.build_underscore_name_from_camelcase(field['name'])
             translations['field_format_underscore'] = utils.build_underscore_name_from_camelcase(field['format'])
