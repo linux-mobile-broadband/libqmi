@@ -450,7 +450,7 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
     guint32 length;
 
     if (!ol_pair) {
-        g_byte_array_append (builder->variable_buffer, buffer, buffer_len);
+        g_byte_array_append (builder->fixed_buffer, buffer, buffer_len);
         return;
     }
 
