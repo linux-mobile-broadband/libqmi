@@ -662,8 +662,15 @@ _mbim_struct_builder_append_string (MbimStructBuilder *builder,
     g_byte_array_append (builder->fixed_buffer, (guint8 *)&length, sizeof (length));
 
     /* And finally, the string itself to the variable buffer */
-    if (utf16le_bytes)
+    if (utf16le_bytes) {
         g_byte_array_append (builder->variable_buffer, (const guint8 *)utf16le, (guint)utf16le_bytes);
+        while (utf16le_bytes % 4 != 0) {
+            const guint8 padding = 0;
+
+            g_byte_array_append (builder->variable_buffer, &padding, 1);
+            utf16le_bytes++;
+        }
+    }
     g_free (utf16le);
 }
 
