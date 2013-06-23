@@ -501,6 +501,12 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
      */
     if (!with_offset && !with_length) {
         g_byte_array_append (builder->fixed_buffer, buffer, buffer_len);
+        while (buffer_len % 4 != 0) {
+            const guint8 padding = 0;
+
+            g_byte_array_append (builder->fixed_buffer, &padding, 1);
+            buffer_len++;
+        }
         return;
     }
 
@@ -541,8 +547,16 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
     }
 
     /* And finally, the bytearray itself to the variable buffer */
-    if (buffer_len)
+    if (buffer_len) {
         g_byte_array_append (builder->variable_buffer, (const guint8 *)buffer, (guint)buffer_len);
+
+        while (buffer_len % 4 != 0) {
+            const guint8 padding = 0;
+
+            g_byte_array_append (builder->variable_buffer, &padding, 1);
+            buffer_len++;
+        }
+    }
 }
 
 void
