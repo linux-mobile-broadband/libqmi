@@ -681,5 +681,28 @@
                    { "name"             : "Events",
                      "format"           : "ref-struct-array",
                      "struct-type"      : "MbimEventEntry",
-                     "array-size-field" : "EventsCount" } ] }
+                     "array-size-field" : "EventsCount" } ] },
+
+  // *********************************************************************************
+  { "name"     : "Packet Statistics",
+    "service"  : "Basic Connect",
+    "type"     : "Command",
+    "query"    : [],
+    "response" : [ { "name"   : "InDiscards",
+                     "format" : "guint32" },
+                   { "name"   : "InErrors",
+                     "format" : "guint32" },
+                   { "name"   : "InOctets",
+                     "format" : "guint64" },
+                   { "name"   : "InPackets",
+                     "format" : "guint64" },
+                   { "name"   : "OutOctets",
+                     "format" : "guint64" },
+                   { "name"   : "OutPackets",
+                     "format" : "guint64" },
+                   { "name"   : "OutErrors",
+                     "format" : "guint32" },
+                   { "name"   : "OutDiscards",
+                     "format" : "guint32" } ] }
+
 ]
