@@ -791,6 +791,48 @@ typedef enum {
     MBIM_USSD_SESSION_STATE_EXISTING_SESSION = 1
 } MbimUssdSessionState;
 
+/*****************************************************************************/
+/* 'Phonebook configuration' enums */
+
+/**
+ * MbimPhonebookState:
+ * @MBIM_PHONEBOOK_STATE_NOT_INITIALIZED: Not initialized.
+ * @MBIM_PHONEBOOK_STATE_INITIALIZED: Initialized
+ *
+ * Phonebook state.
+ */
+typedef enum {
+    MBIM_PHONEBOOK_STATE_NOT_INITIALIZED = 0,
+    MBIM_PHONEBOOK_STATE_INITIALIZED     = 1
+} MbimPhonebookState;
+
+/*****************************************************************************/
+/* 'Phonebook read' enums */
+
+/**
+ * MbimPhonebookFlag:
+ * @MBIM_PHONEBOOK_FLAG_ALL: Request all.
+ * @MBIM_PHONEBOOK_FLAG_INDEX: Request single entry by index.
+ *
+ * Flags to use when reading the phonebook.
+ */
+typedef enum {
+    MBIM_PHONEBOOK_FLAG_ALL   = 0,
+    MBIM_PHONEBOOK_FLAG_INDEX = 1
+} MbimPhonebookFlag;
+
+/**
+ * MbimPhonebookWriteFlag:
+ * @MBIM_PHONEBOOK_WRITE_FLAG_SAVE_UNUSED: Store the record in an unused slot.
+ * @MBIM_PHONEBOOK_WRITE_FLAG_SAVE_INDEX: Index where to store the record.
+ *
+ * Flags to use when writing the phonebook.
+ */
+typedef enum {
+    MBIM_PHONEBOOK_WRITE_FLAG_SAVE_UNUSED = 0,
+    MBIM_PHONEBOOK_WRITE_FLAG_SAVE_INDEX  = 1,
+} MbimPhonebookWriteFlag;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

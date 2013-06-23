@@ -55,6 +55,7 @@
     <xi:include href="xml/mbim-sms.xml"/>
     <xi:include href="xml/mbim-ussd.xml"/>
     <xi:include href="xml/mbim-auth.xml"/>
+    <xi:include href="xml/mbim-phonebook.xml"/>
   </chapter>
 
   <chapter id="object-tree">

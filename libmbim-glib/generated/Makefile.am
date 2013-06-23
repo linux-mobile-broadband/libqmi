@@ -6,7 +6,8 @@ GENERATED_H = \
 	mbim-basic-connect.h \
 	mbim-sms.h \
 	mbim-ussd.h \
-	mbim-auth.h
+	mbim-auth.h \
+	mbim-phonebook.h
 
 GENERATED_C = \
 	mbim-error-types.c \
@@ -15,13 +16,15 @@ GENERATED_C = \
 	mbim-basic-connect.c \
 	mbim-sms.c \
 	mbim-ussd.c \
-	mbim-auth.c
+	mbim-auth.c \
+	mbim-phonebook.c
 
 GENERATED_SECTIONS = \
 	mbim-basic-connect.sections \
 	mbim-sms.sections \
 	mbim-ussd.sections \
-	mbim-auth.sections
+	mbim-auth.sections \
+	mbim-phonebook.sections
 
 # Error types
 mbim-error-types.h: $(top_srcdir)/libmbim-glib/mbim-errors.h $(top_srcdir)/build-aux/templates/mbim-error-types-template.h
@@ -97,6 +100,15 @@ mbim-auth.h mbim-auth.c mbim-auth.sections: $(top_srcdir)/data/mbim-service-auth
 		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-auth.json \
 			--output mbim-auth
+
+# Phonebook service
+mbim-phonebook.h mbim-phonebook.c mbim-phonebook.sections: $(top_srcdir)/data/mbim-service-phonebook.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-phonebook.h && \
+		rm -f mbim-phonebook.c && \
+		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-phonebook.json \
+			--output mbim-phonebook
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 
