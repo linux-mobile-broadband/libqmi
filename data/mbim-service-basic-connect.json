@@ -767,6 +767,30 @@
                    { "name"             : "PacketFilters",
                      "format"           : "ref-struct-array",
                      "struct-type"      : "MbimPacketFilter",
-                     "array-size-field" : "PacketFiltersCount" } ] }
+                     "array-size-field" : "PacketFiltersCount" } ] },
+
+  // *********************************************************************************
+  { "name"       : "Multicarrier Providers",
+    "service"    : "Basic Connect",
+    "type"       : "Command",
+    "set"        : [ { "name"   : "ProvidersCount",
+                       "format" : "guint32" },
+                     { "name"             : "Providers",
+                       "format"           : "ref-struct-array" ,
+                       "struct-type"      : "MbimProvider",
+                       "array-size-field" : "ProvidersCount" } ],
+    "query"      : [],
+    "response"   : [ { "name"   : "ProvidersCount",
+                       "format" : "guint32" },
+                     { "name"             : "Providers",
+                       "format"           : "ref-struct-array" ,
+                       "struct-type"      : "MbimProvider",
+                       "array-size-field" : "ProvidersCount" } ],
+    "indication" : [ { "name"   : "ProvidersCount",
+                       "format" : "guint32" },
+                     { "name"             : "Providers",
+                       "format"           : "ref-struct-array" ,
+                       "struct-type"      : "MbimProvider",
+                       "array-size-field" : "ProvidersCount" } ] }
 
 ]
