@@ -48,7 +48,7 @@ def validate_fields(fields):
         # Look for array size fields, which need to be always read
         if field['format'] == 'ref-byte-array':
             pass
-        if field['format'] == 'byte-array':
+        elif field['format'] == 'byte-array':
             pass
         elif field['format'] == 'uuid':
             pass
