@@ -5,7 +5,8 @@ GENERATED_H = \
 	mbim-enum-types.h \
 	mbim-basic-connect.h \
 	mbim-sms.h \
-	mbim-ussd.h
+	mbim-ussd.h \
+	mbim-auth.h
 
 GENERATED_C = \
 	mbim-error-types.c \
@@ -13,12 +14,14 @@ GENERATED_C = \
 	mbim-enum-types.c \
 	mbim-basic-connect.c \
 	mbim-sms.c \
-	mbim-ussd.c
+	mbim-ussd.c \
+	mbim-auth.c
 
 GENERATED_SECTIONS = \
 	mbim-basic-connect.sections \
 	mbim-sms.sections \
-	mbim-ussd.sections
+	mbim-ussd.sections \
+	mbim-auth.sections
 
 # Error types
 mbim-error-types.h: $(top_srcdir)/libmbim-glib/mbim-errors.h $(top_srcdir)/build-aux/templates/mbim-error-types-template.h
@@ -85,6 +88,15 @@ mbim-ussd.h mbim-ussd.c mbim-ussd.sections: $(top_srcdir)/data/mbim-service-ussd
 		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-ussd.json \
 			--output mbim-ussd
+
+# Auth service
+mbim-auth.h mbim-auth.c mbim-auth.sections: $(top_srcdir)/data/mbim-service-auth.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-auth.h && \
+		rm -f mbim-auth.c && \
+		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-auth.json \
+			--output mbim-auth
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 

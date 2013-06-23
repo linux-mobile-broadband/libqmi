@@ -10,7 +10,8 @@ ALL_SECTIONS = \
 	$(srcdir)/libmbim-glib-common.sections \
 	$(top_builddir)/libmbim-glib/generated/mbim-basic-connect.sections \
 	$(top_builddir)/libmbim-glib/generated/mbim-sms.sections \
-	$(top_builddir)/libmbim-glib/generated/mbim-ussd.sections
+	$(top_builddir)/libmbim-glib/generated/mbim-ussd.sections \
+	$(top_builddir)/libmbim-glib/generated/mbim-auth.sections
 
 $(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
 	$(AM_V_GEN) \

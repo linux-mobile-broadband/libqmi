@@ -41,5 +41,6 @@
 #include "mbim-basic-connect.h"
 #include "mbim-sms.h"
 #include "mbim-ussd.h"
+#include "mbim-auth.h"
 
 #endif /* _LIBMBIM_GLIB_H_ */
