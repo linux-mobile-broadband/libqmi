@@ -715,6 +715,18 @@
                      "public-format" : "MbimNetworkIdleHintState" } ],
     "response" : [ { "name"          : "State",
                      "format"        : "guint32",
-                     "public-format" : "MbimNetworkIdleHintState" } ] }
+                     "public-format" : "MbimNetworkIdleHintState" } ] },
+
+  // *********************************************************************************
+  { "name"     : "Emergency Mode",
+    "service"  : "Basic Connect",
+    "type"     : "Command",
+    "query"    : [],
+    "set"      : [ { "name"          : "State",
+                     "format"        : "guint32",
+                     "public-format" : "MbimEmergencyModeState" } ],
+    "response" : [ { "name"          : "State",
+                     "format"        : "guint32",
+                     "public-format" : "MbimEmergencyModeState" } ] }
 
 ]

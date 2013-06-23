@@ -887,6 +887,21 @@ typedef enum {
     MBIM_NETWORK_IDLE_HINT_STATE_ENABLED  = 1
 } MbimNetworkIdleHintState;
 
+/*****************************************************************************/
+/* 'Emergency mode' enums */
+
+/**
+ * MbimEmergencyModeState:
+ * @MBIM_EMERGENCY_MODE_STATE_OFF: Off.
+ * @MBIM_EMERGENCY_MODE_STATE_ON: On.
+ *
+ * Emergency mode state.
+ */
+typedef enum {
+    MBIM_EMERGENCY_MODE_STATE_OFF = 0,
+    MBIM_EMERGENCY_MODE_STATE_ON  = 1
+} MbimEmergencyModeState;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */
