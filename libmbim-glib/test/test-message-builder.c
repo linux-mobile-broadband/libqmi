@@ -67,7 +67,7 @@ test_message_trace (const guint8 *computed,
 #endif
 
 static void
-test_message_builder_raw_set_pin (void)
+test_message_builder_basic_connect_pin_set_raw (void)
 {
     MbimMessage *message;
     MbimMessageCommandBuilder *builder;
@@ -131,7 +131,7 @@ test_message_builder_raw_set_pin (void)
 }
 
 static void
-test_message_builder_set_pin (void)
+test_message_builder_basic_connect_pin_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -192,7 +192,7 @@ test_message_builder_set_pin (void)
 }
 
 static void
-test_message_builder_raw_set_connect (void)
+test_message_builder_basic_connect_connect_set_raw (void)
 {
     MbimMessage *message;
     MbimMessageCommandBuilder *builder;
@@ -273,7 +273,7 @@ test_message_builder_raw_set_connect (void)
 }
 
 static void
-test_message_builder_set_connect (void)
+test_message_builder_basic_connect_connect_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -352,7 +352,7 @@ test_message_builder_set_connect (void)
 }
 
 static void
-test_message_builder_set_service_activation (void)
+test_message_builder_basic_connect_service_activation_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -409,7 +409,7 @@ test_message_builder_set_service_activation (void)
 }
 
 static void
-test_message_builder_set_device_service_subscriber_list (void)
+test_message_builder_basic_connect_device_service_subscriber_list_set (void)
 {
     GError *error = NULL;
     MbimEventEntry **entries;
@@ -499,7 +499,7 @@ test_message_builder_set_device_service_subscriber_list (void)
 }
 
 static void
-test_message_builder_set_ussd (void)
+test_message_builder_ussd_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -569,7 +569,7 @@ test_message_builder_set_ussd (void)
 }
 
 static void
-test_message_builder_query_akap_auth (void)
+test_message_builder_auth_akap_query (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -652,14 +652,14 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/raw/set-pin", test_message_builder_raw_set_pin);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/set-pin",     test_message_builder_set_pin);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/raw/set-connect", test_message_builder_raw_set_connect);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/set-connect",     test_message_builder_set_connect);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/set-service-activation", test_message_builder_set_service_activation);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/set-device-service-subscriber-list", test_message_builder_set_device_service_subscriber_list);
-    g_test_add_func ("/libmbim-glib/message/builder/ussd/set", test_message_builder_set_ussd);
-    g_test_add_func ("/libmbim-glib/message/builder/auth/query-akap", test_message_builder_query_akap_auth);
+    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/pin/set/raw", test_message_builder_basic_connect_pin_set_raw);
+    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/pin/set", test_message_builder_basic_connect_pin_set);
+    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/connect/set/raw", test_message_builder_basic_connect_connect_set_raw);
+    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/connect/set", test_message_builder_basic_connect_connect_set);
+    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/service-activation/set", test_message_builder_basic_connect_service_activation_set);
+    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/device-service-subscriber-list/set", test_message_builder_basic_connect_device_service_subscriber_list_set);
+    g_test_add_func ("/libmbim-glib/message/builder/ussd/set", test_message_builder_ussd_set);
+    g_test_add_func ("/libmbim-glib/message/builder/auth/akap/query", test_message_builder_auth_akap_query);
 
     return g_test_run ();
 }
