@@ -23,6 +23,7 @@
 #include "mbim-utils.h"
 #include "mbim-basic-connect.h"
 #include "mbim-ussd.h"
+#include "mbim-auth.h"
 
 
 #if defined ENABLE_TEST_MESSAGE_TRACES
@@ -567,21 +568,98 @@ test_message_command_builder_set_ussd (void)
     mbim_message_unref (message);
 }
 
+static void
+test_message_command_builder_query_akap_auth (void)
+{
+    GError *error = NULL;
+    MbimMessage *message;
+    const guint8 expected_message [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x00, /* type */
+        0x60, 0x00, 0x00, 0x00, /* length */
+        0x01, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_message */
+        0x1D, 0x2B, 0x5F, 0xF7, /* service id */
+        0x0A, 0xA1, 0x48, 0xB2,
+        0xAA, 0x52, 0x50, 0xF1,
+        0x57, 0x67, 0x17, 0x4E,
+        0x02, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* command_type */
+        0x30, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x00, 0x01, 0x02, 0x03, /* 0x00 Rand */
+        0x04, 0x05, 0x06, 0x07, /* 0x04 */
+        0x08, 0x09, 0x0A, 0x0B, /* 0x08 */
+        0x0C, 0x0D, 0x0E, 0x0F, /* 0x0C */
+        0xFF, 0xFE, 0xFD, 0xFC, /* 0x10 Autn */
+        0xFB, 0xFA, 0xF9, 0xF8, /* 0x14 */
+        0xF7, 0xF6, 0xF5, 0xF4, /* 0x18 */
+        0xF3, 0xF2, 0xF1, 0xF0, /* 0x1C */
+        0x28, 0x00, 0x00, 0x00, /* 0x20 Network name (offset) */
+        0x08, 0x00, 0x00, 0x00, /* 0x24 Network name (length) */
+        /* data buffer */
+        0x31, 0x00, 0x31, 0x00, /* 0x28 Network name */
+        0x31, 0x00, 0x31, 0x00
+    };
+
+    const guint8 rand [] = {
+        0x00, 0x01, 0x02, 0x03,
+        0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F
+    };
+    const guint8 autn [] = {
+        0xFF, 0xFE, 0xFD, 0xFC,
+        0xFB, 0xFA, 0xF9, 0xF8,
+        0xF7, 0xF6, 0xF5, 0xF4,
+        0xF3, 0xF2, 0xF1, 0xF0
+    };
+
+    /* AKAP Auth message */
+    message = (mbim_message_auth_akap_query_new (
+                   rand,
+                   autn,
+                   "1111",
+                   &error));
+
+    g_assert_no_error (error);
+    g_assert (message != NULL);
+    mbim_message_set_transaction_id (message, 1);
+
+    test_message_trace ((const guint8 *)((GByteArray *)message)->data,
+                        ((GByteArray *)message)->len,
+                        expected_message,
+                        sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_AUTH);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_AUTH_AKAP);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_QUERY);
+
+    g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
+    g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    mbim_message_unref (message);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
     g_test_add_func ("/libmbim-glib/message/command-builder/raw/set-pin", test_message_command_builder_raw_set_pin);
     g_test_add_func ("/libmbim-glib/message/command-builder/set-pin",     test_message_command_builder_set_pin);
-
     g_test_add_func ("/libmbim-glib/message/command-builder/raw/set-connect", test_message_command_builder_raw_set_connect);
     g_test_add_func ("/libmbim-glib/message/command-builder/set-connect",     test_message_command_builder_set_connect);
-
     g_test_add_func ("/libmbim-glib/message/command-builder/set-service-activation", test_message_command_builder_set_service_activation);
-
     g_test_add_func ("/libmbim-glib/message/command-builder/set-device-service-subscriber-list", test_message_command_builder_set_device_service_subscriber_list);
-
     g_test_add_func ("/libmbim-glib/message/command-builder/set-ussd", test_message_command_builder_set_ussd);
+    g_test_add_func ("/libmbim-glib/message/command-builder/query-akap-auth", test_message_command_builder_query_akap_auth);
 
     return g_test_run ();
 }
