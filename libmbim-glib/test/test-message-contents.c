@@ -19,6 +19,7 @@
 #include "mbim-basic-connect.h"
 #include "mbim-sms.h"
 #include "mbim-ussd.h"
+#include "mbim-auth.h"
 #include "mbim-message.h"
 #include "mbim-cid.h"
 #include "mbim-utils.h"
@@ -896,6 +897,119 @@ test_message_contents_ussd (void)
     mbim_message_unref (response);
 }
 
+static void
+test_message_contents_auth_akap (void)
+{
+    const guint8 *res;
+    guint32 res_len;
+    const guint8 *ik;
+    const guint8 *ck;
+    const guint8 *auts;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x74, 0x00, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x1D, 0x2B, 0x5F, 0xF7, /* service id */
+        0x0A, 0xA1, 0x48, 0xB2,
+        0xAA, 0x52, 0x50, 0xF1,
+        0x57, 0x67, 0x17, 0x4E,
+        0x02, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x44, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x01, 0x02, 0x03, /* 0x00 Res */
+        0x04, 0x05, 0x06, 0x07, /* 0x04 */
+        0x08, 0x09, 0x0A, 0x0B, /* 0x08 */
+        0x0C, 0x0D, 0x0E, 0x0F, /* 0x0C */
+        0x05, 0x00, 0x00, 0x00, /* 0x10 Reslen */
+        0xFF, 0xFE, 0xFD, 0xFC, /* 0x14 IK */
+        0xFB, 0xFA, 0xF9, 0xF8, /* 0x18 */
+        0xF7, 0xF6, 0xF5, 0xF4, /* 0x1C */
+        0xF3, 0xF2, 0xF1, 0xF0, /* 0x20 */
+        0xAF, 0xAE, 0xAD, 0xAC, /* 0x24 CK */
+        0xAB, 0xAA, 0xA9, 0xA8, /* 0x28 */
+        0xA7, 0xA6, 0xA5, 0xA4, /* 0x2C */
+        0xA3, 0xA2, 0xA1, 0xA0, /* 0x30 */
+        0x7F, 0x7E, 0x7D, 0x7C, /* 0x34 Auts */
+        0x7B, 0x7A, 0x79, 0x78, /* 0x38 */
+        0x77, 0x76, 0x75, 0x74, /* 0x3C */
+        0x73, 0x72, 0x00, 0x00, /* 0x40 */
+    };
+
+    const guint8 expected_res [] = {
+        0x00, 0x01, 0x02, 0x03,
+        0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F,
+    };
+    const guint8 expected_ik [] = {
+        0xFF, 0xFE, 0xFD, 0xFC,
+        0xFB, 0xFA, 0xF9, 0xF8,
+        0xF7, 0xF6, 0xF5, 0xF4,
+        0xF3, 0xF2, 0xF1, 0xF0,
+    };
+    const guint8 expected_ck [] = {
+        0xAF, 0xAE, 0xAD, 0xAC,
+        0xAB, 0xAA, 0xA9, 0xA8,
+        0xA7, 0xA6, 0xA5, 0xA4,
+        0xA3, 0xA2, 0xA1, 0xA0,
+    };
+    const guint8 expected_auts [] = {
+        0x7F, 0x7E, 0x7D, 0x7C,
+        0x7B, 0x7A, 0x79, 0x78,
+        0x77, 0x76, 0x75, 0x74,
+        0x73, 0x72
+    };
+
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_auth_akap_response_parse (
+                  response,
+                  &res,
+                  &res_len,
+                  &ik,
+                  &ck,
+                  &auts,
+                  &error));
+    g_assert_no_error (error);
+
+    test_message_trace (res,
+                        sizeof (expected_res),
+                        expected_res,
+                        sizeof (expected_res));
+    g_assert (memcmp (res, expected_res, sizeof (expected_res)) == 0);
+
+    g_assert_cmpuint (res_len, ==, 5);
+
+    test_message_trace (ik,
+                        sizeof (expected_ik),
+                        expected_ik,
+                        sizeof (expected_ik));
+    g_assert (memcmp (ik, expected_ik, sizeof (expected_ik)) == 0);
+
+    test_message_trace (ck,
+                        sizeof (expected_ck),
+                        expected_ck,
+                        sizeof (expected_ck));
+    g_assert (memcmp (ck, expected_ck, sizeof (expected_ck)) == 0);
+
+    test_message_trace (auts,
+                        sizeof (expected_auts),
+                        expected_auts,
+                        sizeof (expected_auts));
+    g_assert (memcmp (auts, expected_auts, sizeof (expected_auts)) == 0);
+
+    mbim_message_unref (response);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -905,12 +1019,11 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/device-caps", test_message_contents_basic_connect_device_caps);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/ip-configuration", test_message_contents_basic_connect_ip_configuration);
     g_test_add_func ("/libmbim-glib/message-contents/basic-connect/service-activation", test_message_contents_basic_connect_service_activation);
-
     g_test_add_func ("/libmbim-glib/message-contents/sms/read/zero-pdu", test_message_contents_sms_read_zero_pdu);
     g_test_add_func ("/libmbim-glib/message-contents/sms/read/single-pdu", test_message_contents_sms_read_single_pdu);
     g_test_add_func ("/libmbim-glib/message-contents/sms/read/multiple-pdu", test_message_contents_sms_read_multiple_pdu);
-
     g_test_add_func ("/libmbim-glib/message-contents/ussd", test_message_contents_ussd);
+    g_test_add_func ("/libmbim-glib/message-contents/auth/akap", test_message_contents_auth_akap);
 
     return g_test_run ();
 }
