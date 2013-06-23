@@ -1327,6 +1327,240 @@ test_message_parser_stk_envelope_response (void)
     mbim_message_unref (response);
 }
 
+static void
+test_message_parser_basic_connect_ip_packet_filters_none (void)
+{
+    MbimPacketFilter **filters = NULL;
+    guint32 n_filters;
+    guint32 session_id;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x38, 0x01, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* indicate_status_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x17, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x08, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* session id */
+        0x00, 0x00, 0x00, 0x00  /* packet filters count */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_ip_packet_filters_response_parse (
+                  response,
+                  &session_id,
+                  &n_filters,
+                  &filters,
+                  &error));
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (session_id, ==, 1);
+    g_assert_cmpuint (n_filters, ==, 0);
+    g_assert (filters == NULL);
+
+    mbim_message_unref (response);
+}
+
+static void
+test_message_parser_basic_connect_ip_packet_filters_one (void)
+{
+    MbimPacketFilter **filters = NULL;
+    guint32 n_filters;
+    guint32 session_id;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x5C, 0x01, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* indicate_status_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x17, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x2C, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* 0x00 session id */
+        0x01, 0x00, 0x00, 0x00, /* 0x04 packet filters count */
+        0x10, 0x00, 0x00, 0x00, /* 0x08 packet filter 1 offset */
+        0x1C, 0x00, 0x00, 0x00, /* 0x0C packet filter 1 length */
+        /* databuffer, packet filter 1 */
+        0x08, 0x00, 0x00, 0x00, /* 0x10 0x00 filter size */
+        0x0C, 0x00, 0x00, 0x00, /* 0x14 0x04 filter offset (from beginning of struct) */
+        0x14, 0x00, 0x00, 0x00, /* 0x18 0x08 mask offset (from beginning of struct) */
+        0x01, 0x02, 0x03, 0x04, /* 0x1C 0x0C filter */
+        0x05, 0x06, 0x07, 0x08,
+        0xF1, 0xF2, 0xF3, 0xF4, /* 0x24 0x14 mask */
+        0xF5, 0xF6, 0xF7, 0xF8,
+    };
+
+    const guint8 expected_filter[] = {
+        0x01, 0x02, 0x03, 0x04,
+        0x05, 0x06, 0x07, 0x08,
+    };
+    const guint8 expected_mask[] = {
+        0xF1, 0xF2, 0xF3, 0xF4,
+        0xF5, 0xF6, 0xF7, 0xF8,
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_ip_packet_filters_response_parse (
+                  response,
+                  &session_id,
+                  &n_filters,
+                  &filters,
+                  &error));
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (session_id, ==, 1);
+    g_assert_cmpuint (n_filters, ==, 1);
+    g_assert (filters != NULL);
+
+    g_assert_cmpuint (filters[0]->filter_size, ==, 8);
+
+    test_message_trace (filters[0]->packet_filter, 8,
+                        expected_filter,
+                        sizeof (expected_filter));
+    g_assert (memcmp (filters[0]->packet_filter, expected_filter, sizeof (expected_filter)) == 0);
+
+    test_message_trace (filters[0]->packet_mask, 8,
+                        expected_mask,
+                        sizeof (expected_mask));
+    g_assert (memcmp (filters[0]->packet_mask, expected_mask, sizeof (expected_mask)) == 0);
+
+    mbim_packet_filter_array_free (filters);
+
+    mbim_message_unref (response);
+}
+
+static void
+test_message_parser_basic_connect_ip_packet_filters_two (void)
+{
+    MbimPacketFilter **filters = NULL;
+    guint32 n_filters;
+    guint32 session_id;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x88, 0x01, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* indicate_status_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x17, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x58, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* 0x00 session id */
+        0x02, 0x00, 0x00, 0x00, /* 0x04 packet filters count */
+        0x18, 0x00, 0x00, 0x00, /* 0x08 packet filter 1 offset */
+        0x1C, 0x00, 0x00, 0x00, /* 0x0C packet filter 1 length */
+        0x34, 0x00, 0x00, 0x00, /* 0x10 packet filter 2 offset */
+        0x24, 0x00, 0x00, 0x00, /* 0x14 packet filter 2 length */
+        /* databuffer, packet filter 2 */
+        0x08, 0x00, 0x00, 0x00, /* 0x18 0x00 filter size */
+        0x0C, 0x00, 0x00, 0x00, /* 0x1C 0x04 filter offset (from beginning of struct) */
+        0x14, 0x00, 0x00, 0x00, /* 0x20 0x08 mask offset (from beginning of struct) */
+        0x01, 0x02, 0x03, 0x04, /* 0x24 0x0C filter */
+        0x05, 0x06, 0x07, 0x08,
+        0xF1, 0xF2, 0xF3, 0xF4, /* 0x2C 0x14 mask */
+        0xF5, 0xF6, 0xF7, 0xF8,
+        /* databuffer, packet filter 2 */
+        0x0C, 0x00, 0x00, 0x00, /* 0x34 0x00 filter size */
+        0x0C, 0x00, 0x00, 0x00, /* 0x38 0x04 filter offset (from beginning of struct) */
+        0x18, 0x00, 0x00, 0x00, /* 0x3C 0x08 mask offset (from beginning of struct) */
+        0x01, 0x02, 0x03, 0x04, /* 0x40 0x0C filter */
+        0x05, 0x06, 0x07, 0x08,
+        0x05, 0x06, 0x07, 0x08,
+        0xF1, 0xF2, 0xF3, 0xF4, /* 0x4C 0x18 mask */
+        0xF5, 0xF6, 0xF7, 0xF8,
+        0xF5, 0xF6, 0xF7, 0xF8,
+    };
+
+    const guint8 expected_filter1[] = {
+        0x01, 0x02, 0x03, 0x04,
+        0x05, 0x06, 0x07, 0x08,
+    };
+    const guint8 expected_mask1[] = {
+        0xF1, 0xF2, 0xF3, 0xF4,
+        0xF5, 0xF6, 0xF7, 0xF8,
+    };
+    const guint8 expected_filter2[] = {
+        0x01, 0x02, 0x03, 0x04,
+        0x05, 0x06, 0x07, 0x08,
+        0x05, 0x06, 0x07, 0x08,
+    };
+    const guint8 expected_mask2[] = {
+        0xF1, 0xF2, 0xF3, 0xF4,
+        0xF5, 0xF6, 0xF7, 0xF8,
+        0xF5, 0xF6, 0xF7, 0xF8,
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_ip_packet_filters_response_parse (
+                  response,
+                  &session_id,
+                  &n_filters,
+                  &filters,
+                  &error));
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (session_id, ==, 1);
+    g_assert_cmpuint (n_filters, ==, 2);
+    g_assert (filters != NULL);
+
+    g_assert_cmpuint (filters[0]->filter_size, ==, 8);
+    test_message_trace (filters[0]->packet_filter, 8,
+                        expected_filter1,
+                        sizeof (expected_filter1));
+    g_assert (memcmp (filters[0]->packet_filter, expected_filter1, sizeof (expected_filter1)) == 0);
+    test_message_trace (filters[0]->packet_mask, 8,
+                        expected_mask1,
+                        sizeof (expected_mask1));
+    g_assert (memcmp (filters[0]->packet_mask, expected_mask1, sizeof (expected_mask1)) == 0);
+
+    g_assert_cmpuint (filters[1]->filter_size, ==, 12);
+    test_message_trace (filters[1]->packet_filter, 12,
+                        expected_filter2,
+                        sizeof (expected_filter2));
+    g_assert (memcmp (filters[1]->packet_filter, expected_filter2, sizeof (expected_filter2)) == 0);
+    test_message_trace (filters[1]->packet_mask, 12,
+                        expected_mask2,
+                        sizeof (expected_mask2));
+    g_assert (memcmp (filters[1]->packet_mask, expected_mask2, sizeof (expected_mask2)) == 0);
+
+    mbim_packet_filter_array_free (filters);
+
+    mbim_message_unref (response);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -1345,6 +1579,9 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/parser/stk/pac/response", test_message_parser_stk_pac_response);
     g_test_add_func ("/libmbim-glib/message/parser/stk/terminal/response", test_message_parser_stk_terminal_response);
     g_test_add_func ("/libmbim-glib/message/parser/stk/envelope/response", test_message_parser_stk_envelope_response);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-packet-filters/none", test_message_parser_basic_connect_ip_packet_filters_none);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-packet-filters/one", test_message_parser_basic_connect_ip_packet_filters_one);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-packet-filters/two", test_message_parser_basic_connect_ip_packet_filters_two);
 
     return g_test_run ();
 }
