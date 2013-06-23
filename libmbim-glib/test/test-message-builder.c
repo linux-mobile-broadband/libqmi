@@ -24,7 +24,7 @@
 #include "mbim-basic-connect.h"
 #include "mbim-ussd.h"
 #include "mbim-auth.h"
-
+#include "mbim-stk.h"
 
 #if defined ENABLE_TEST_MESSAGE_TRACES
 static void
@@ -648,6 +648,224 @@ test_message_builder_auth_akap_query (void)
     mbim_message_unref (message);
 }
 
+static void
+test_message_builder_stk_pac_set (void)
+{
+    GError *error = NULL;
+    MbimMessage *message;
+    const guint8 expected_message [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x00, /* type */
+        0x50, 0x00, 0x00, 0x00, /* length */
+        0x01, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_message */
+        0xD8, 0xF2, 0x01, 0x31, /* service id */
+        0xFC, 0xB5, 0x4E, 0x17,
+        0x86, 0x02, 0xD6, 0xED,
+        0x38, 0x16, 0x16, 0x4C,
+        0x01, 0x00, 0x00, 0x00, /* command id */
+        0x01, 0x00, 0x00, 0x00, /* command_type */
+        0x20, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x00, 0x01, 0x02, 0x03,
+        0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F,
+        0xFF, 0xFE, 0xFD, 0xFC,
+        0xFB, 0xFA, 0xF9, 0xF8,
+        0xF7, 0xF6, 0xF5, 0xF4,
+        0xF3, 0xF2, 0xF1, 0xF0
+    };
+
+    const guint8 pac_host_control [] = {
+        0x00, 0x01, 0x02, 0x03,
+        0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F,
+        0xFF, 0xFE, 0xFD, 0xFC,
+        0xFB, 0xFA, 0xF9, 0xF8,
+        0xF7, 0xF6, 0xF5, 0xF4,
+        0xF3, 0xF2, 0xF1, 0xF0
+    };
+
+    /* STK PAC set message */
+    message = (mbim_message_stk_pac_set_new (
+                   pac_host_control,
+                   &error));
+
+    g_assert_no_error (error);
+    g_assert (message != NULL);
+    mbim_message_set_transaction_id (message, 1);
+
+    test_message_trace ((const guint8 *)((GByteArray *)message)->data,
+                        ((GByteArray *)message)->len,
+                        expected_message,
+                        sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_STK);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_STK_PAC);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_SET);
+
+    g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
+    g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    mbim_message_unref (message);
+}
+
+static void
+test_message_builder_stk_terminal_response_set (void)
+{
+    GError *error = NULL;
+    MbimMessage *message;
+    const guint8 expected_message [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x00, /* type */
+        0x50, 0x00, 0x00, 0x00, /* length */
+        0x01, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_message */
+        0xD8, 0xF2, 0x01, 0x31, /* service id */
+        0xFC, 0xB5, 0x4E, 0x17,
+        0x86, 0x02, 0xD6, 0xED,
+        0x38, 0x16, 0x16, 0x4C,
+        0x02, 0x00, 0x00, 0x00, /* command id */
+        0x01, 0x00, 0x00, 0x00, /* command_type */
+        0x20, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x1C, 0x00, 0x00, 0x00, /* 0x00 Response length */
+        0x04, 0x05, 0x06, 0x07, /* 0x04 Response */
+        0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F,
+        0xFF, 0xFE, 0xFD, 0xFC,
+        0xFB, 0xFA, 0xF9, 0xF8,
+        0xF7, 0xF6, 0xF5, 0xF4,
+        0xF3, 0xF2, 0xF1, 0xF0
+    };
+
+    const guint8 response [] = {
+        0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F,
+        0xFF, 0xFE, 0xFD, 0xFC,
+        0xFB, 0xFA, 0xF9, 0xF8,
+        0xF7, 0xF6, 0xF5, 0xF4,
+        0xF3, 0xF2, 0xF1, 0xF0
+    };
+
+    /* STK Terminal Response set message */
+    message = (mbim_message_stk_terminal_response_set_new (
+                   sizeof (response),
+                   response,
+                   &error));
+
+    g_assert_no_error (error);
+    g_assert (message != NULL);
+    mbim_message_set_transaction_id (message, 1);
+
+    test_message_trace ((const guint8 *)((GByteArray *)message)->data,
+                        ((GByteArray *)message)->len,
+                        expected_message,
+                        sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_STK);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_STK_TERMINAL_RESPONSE);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_SET);
+
+    g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
+    g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    mbim_message_unref (message);
+}
+
+static void
+test_message_builder_stk_envelope_set (void)
+{
+    GError *error = NULL;
+    MbimMessage *message;
+    const guint8 expected_message [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x00, /* type */
+        0x58, 0x00, 0x00, 0x00, /* length */
+        0x01, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_message */
+        0xD8, 0xF2, 0x01, 0x31, /* service id */
+        0xFC, 0xB5, 0x4E, 0x17,
+        0x86, 0x02, 0xD6, 0xED,
+        0x38, 0x16, 0x16, 0x4C,
+        0x03, 0x00, 0x00, 0x00, /* command id */
+        0x01, 0x00, 0x00, 0x00, /* command_type */
+        0x28, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x1C, 0x00, 0x00, 0x00,
+        0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F,
+        0xFF, 0xFE, 0xFD, 0xFC,
+        0xFB, 0xFA, 0xF9, 0xF8,
+        0xF7, 0xF6, 0xF5, 0xF4,
+        0xF3, 0xF2, 0xF1, 0xF0,
+        0xFF, 0xFE, 0xFD, 0xFC,
+        0xFB, 0xFA, 0xF9, 0xF8
+    };
+
+    const guint8 databuffer [] = {
+        0x1C, 0x00, 0x00, 0x00,
+        0x04, 0x05, 0x06, 0x07,
+        0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F,
+        0xFF, 0xFE, 0xFD, 0xFC,
+        0xFB, 0xFA, 0xF9, 0xF8,
+        0xF7, 0xF6, 0xF5, 0xF4,
+        0xF3, 0xF2, 0xF1, 0xF0,
+        0xFF, 0xFE, 0xFD, 0xFC,
+        0xFB, 0xFA, 0xF9, 0xF8
+    };
+
+    /* STK Envelop set message */
+    message = (mbim_message_stk_envelope_set_new (
+                   sizeof (databuffer),
+                   databuffer,
+                   &error));
+
+    g_assert_no_error (error);
+    g_assert (message != NULL);
+    mbim_message_set_transaction_id (message, 1);
+
+    test_message_trace ((const guint8 *)((GByteArray *)message)->data,
+                        ((GByteArray *)message)->len,
+                        expected_message,
+                        sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_STK);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_STK_ENVELOPE);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_SET);
+
+    g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
+    g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    mbim_message_unref (message);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -660,6 +878,9 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/builder/basic-connect/device-service-subscriber-list/set", test_message_builder_basic_connect_device_service_subscriber_list_set);
     g_test_add_func ("/libmbim-glib/message/builder/ussd/set", test_message_builder_ussd_set);
     g_test_add_func ("/libmbim-glib/message/builder/auth/akap/query", test_message_builder_auth_akap_query);
+    g_test_add_func ("/libmbim-glib/message/builder/stk/pac/set", test_message_builder_stk_pac_set);
+    g_test_add_func ("/libmbim-glib/message/builder/stk/terminal-response/set", test_message_builder_stk_terminal_response_set);
+    g_test_add_func ("/libmbim-glib/message/builder/stk/envelope/set", test_message_builder_stk_envelope_set);
 
     return g_test_run ();
 }
