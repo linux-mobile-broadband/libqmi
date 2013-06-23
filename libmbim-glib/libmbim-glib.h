@@ -43,5 +43,6 @@
 #include "mbim-ussd.h"
 #include "mbim-auth.h"
 #include "mbim-phonebook.h"
+#include "mbim-stk.h"
 
 #endif /* _LIBMBIM_GLIB_H_ */

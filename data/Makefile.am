@@ -5,4 +5,5 @@ EXTRA_DIST = \
 	mbim-service-sms.json \
 	mbim-service-ussd.json \
 	mbim-service-auth.json \
-	mbim-service-phonebook.json
+	mbim-service-phonebook.json \
+	mbim-service-stk.json

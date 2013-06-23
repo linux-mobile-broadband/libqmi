@@ -50,6 +50,8 @@ def validate_fields(fields):
             pass
         elif field['format'] == 'ref-byte-array':
             pass
+        elif field['format'] == 'ref-byte-array-no-offset':
+            pass
         elif field['format'] == 'unsized-byte-array':
             pass
         elif field['format'] == 'uuid':
@@ -207,7 +209,9 @@ class Message:
 
             if field['format'] == 'byte-array':
                 inner_template = ('    const guint8 *${field},\n')
-            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
+            elif field['format'] == 'unsized-byte-array' or \
+                 field['format'] == 'ref-byte-array' or \
+                 field['format'] == 'ref-byte-array-no-offset':
                 inner_template = ('    const guint32 ${field}_size,\n'
                                   '    const guint8 *${field},\n')
             elif field['format'] == 'uuid':
@@ -263,7 +267,9 @@ class Message:
 
             if field['format'] == 'byte-array':
                 inner_template = (' * @${field}: the \'${name}\' field, given as an array of ${array_size} #guint8 values.\n')
-            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
+            elif field['format'] == 'unsized-byte-array' or \
+                 field['format'] == 'ref-byte-array' or \
+                 field['format'] == 'ref-byte-array-no-offset':
                 inner_template = (' * @${field}_size: size of the ${field} array.\n'
                                   ' * @${field}: the \'${name}\' field, given as an array of #guint8 values.\n')
             elif field['format'] == 'uuid':
@@ -319,7 +325,9 @@ class Message:
 
             if field['format'] == 'byte-array':
                 inner_template = ('    const guint8 *${field},\n')
-            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
+            elif field['format'] == 'unsized-byte-array' or \
+                 field['format'] == 'ref-byte-array' or \
+                 field['format'] == 'ref-byte-array-no-offset':
                 inner_template = ('    const guint32 ${field}_size,\n'
                                   '    const guint8 *${field},\n')
             elif field['format'] == 'uuid':
@@ -386,11 +394,13 @@ class Message:
                 inner_template += ('    {\n')
 
             if field['format'] == 'byte-array':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, ${field}, ${array_size});\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, FALSE, ${field}, ${array_size});\n')
             elif field['format'] == 'unsized-byte-array':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, ${field}, ${field}_size);\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, FALSE, ${field}, ${field}_size);\n')
             elif field['format'] == 'ref-byte-array':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, TRUE, ${field}, ${field}_size);\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, TRUE, TRUE, ${field}, ${field}_size);\n')
+            elif field['format'] == 'ref-byte-array-no-offset':
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, TRUE, ${field}, ${field}_size);\n')
             elif field['format'] == 'uuid':
                 inner_template += ('        _mbim_message_command_builder_append_uuid (builder, ${field});\n')
             elif field['format'] == 'guint32':
@@ -492,6 +502,8 @@ class Message:
                 inner_template = ('    const MbimIPv6 **${field},\n')
             elif field['format'] == 'ipv6-array':
                 inner_template = ('    MbimIPv6 **${field},\n')
+            else:
+                raise ValueError('Cannot handle field type \'%s\'' % field['format'])
 
             template += (string.Template(inner_template).substitute(translations))
 

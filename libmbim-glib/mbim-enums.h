@@ -833,6 +833,45 @@ typedef enum {
     MBIM_PHONEBOOK_WRITE_FLAG_SAVE_INDEX  = 1,
 } MbimPhonebookWriteFlag;
 
+/*****************************************************************************/
+/* 'STK PAC' enums */
+
+/**
+ * MbimStkPacProfile:
+ * @MBIM_STK_PAC_PROFILE_NOT_HANDLED_BY_FUNCTION_HANDLED_BY_HOST: Command not handled by function but handled by host.
+ * @MBIM_STK_PAC_PROFILE_NOT_HANDLED_BY_FUNCTION_MAY_BE_HANDLED_BY_HOST: Command not handled by function but may be handled by host.
+ * @MBIM_STK_PAC_PROFILE_HANDLED_BY_FUNCTION_ONLY_TRANSPARENT_TO_HOST: Command handled by function without informing the host.
+ * @MBIM_STK_PAC_PROFILE_HANDLED_BY_FUNCTION_NOTIFICATION_TO_HOST_POSSIBLE: Command handled by function without informing the host, but notifications may be sent to host.
+ * @MBIM_STK_PAC_PROFILE_HANDLED_BY_FUNCTION_NOTIFICATIONS_TO_HOST_ENABLED: Command handled by function, and the function wil also send notification to the host.
+ * @MBIM_STK_PAC_PROFILE_HANDLED_BY_FUNCTION_CAN_BE_OVERRIDEN_BY_HOST: Command handled by function, but the host may request full control of the command.
+ * @MBIM_STK_PAC_PROFILE_HANDLED_BY_HOST_FUNCTION_NOT_ABLE_TO_HANDLE: Command will be forwarded to the host. If the host decides not to receive the command, the function will not handle it.
+ * @MBIM_STK_PAC_PROFILE_HANDLED_BY_HOST_FUNCTION_ABLE_TO_HANDLE: Command will be forwarded to the host. If the host decides not to receive the command, the function will handle it.
+ *
+ * Proactive command profile.
+ */
+typedef enum {
+    MBIM_STK_PAC_PROFILE_NOT_HANDLED_BY_FUNCTION_HANDLED_BY_HOST           = 0,
+    MBIM_STK_PAC_PROFILE_NOT_HANDLED_BY_FUNCTION_MAY_BE_HANDLED_BY_HOST    = 1,
+    MBIM_STK_PAC_PROFILE_HANDLED_BY_FUNCTION_ONLY_TRANSPARENT_TO_HOST      = 2,
+    MBIM_STK_PAC_PROFILE_HANDLED_BY_FUNCTION_NOTIFICATION_TO_HOST_POSSIBLE = 3,
+    MBIM_STK_PAC_PROFILE_HANDLED_BY_FUNCTION_NOTIFICATIONS_TO_HOST_ENABLED = 4,
+    MBIM_STK_PAC_PROFILE_HANDLED_BY_FUNCTION_CAN_BE_OVERRIDEN_BY_HOST      = 5,
+    MBIM_STK_PAC_PROFILE_HANDLED_BY_HOST_FUNCTION_NOT_ABLE_TO_HANDLE       = 6,
+    MBIM_STK_PAC_PROFILE_HANDLED_BY_HOST_FUNCTION_ABLE_TO_HANDLE           = 7
+} MbimStkPacProfile;
+
+/**
+ * MbimStkPacType:
+ * @MBIM_STK_PAC_TYPE_PROACTIVE_COMMAND: Host is requested to handle the Proactive command.
+ * @MBIM_STK_PAC_TYPE_NOTIFICATION: Proactive command is handled by the function, but the host is notified.
+ *
+ * Type of proactive command.
+ */
+typedef enum {
+    MBIM_STK_PAC_TYPE_PROACTIVE_COMMAND = 0,
+    MBIM_STK_PAC_TYPE_NOTIFICATION      = 1
+} MbimStkPacType;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

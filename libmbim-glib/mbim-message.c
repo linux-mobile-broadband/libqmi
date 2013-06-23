@@ -442,14 +442,15 @@ _mbim_struct_builder_complete (MbimStructBuilder *builder)
 
 void
 _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
-                                        gboolean           ol_pair,
+                                        gboolean           with_offset,
+                                        gboolean           with_length,
                                         const guint8      *buffer,
                                         guint32            buffer_len)
 {
     guint32 offset;
     guint32 length;
 
-    if (!ol_pair) {
+    if (!with_offset && !with_length) {
         g_byte_array_append (builder->fixed_buffer, buffer, buffer_len);
         return;
     }
@@ -457,24 +458,28 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
     /* A bytearray consists of Offset+Size in the static buffer, plus the
      * string itself in the variable buffer */
 
-    /* If string length is greater than 0, add the offset to fix, otherwise set
-     * the offset to 0 and don't configure the update */
-    if (buffer_len == 0) {
-        offset = 0;
-        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
-    } else {
-        guint32 offset_offset;
+    if (with_offset) {
+        /* If string length is greater than 0, add the offset to fix, otherwise set
+         * the offset to 0 and don't configure the update */
+        if (buffer_len == 0) {
+            offset = 0;
+            g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
+        } else {
+            guint32 offset_offset;
 
-        /* Offset of the offset */
-        offset_offset = builder->fixed_buffer->len;
+            /* Offset of the offset */
+            offset_offset = builder->fixed_buffer->len;
 
-        /* Length *not* in LE yet */
-        offset = builder->variable_buffer->len;
-        /* Add the offset value */
-        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
-        /* Configure the value to get updated */
-        g_array_append_val (builder->offsets, offset_offset);
+            /* Length *not* in LE yet */
+            offset = builder->variable_buffer->len;
+            /* Add the offset value */
+            g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));
+            /* Configure the value to get updated */
+            g_array_append_val (builder->offsets, offset_offset);
+        }
     }
+
+    g_assert (with_length == TRUE);
 
     /* Add the length value */
     length = GUINT32_TO_LE (buffer_len);
@@ -741,11 +746,12 @@ _mbim_message_command_builder_complete (MbimMessageCommandBuilder *builder)
 
 void
 _mbim_message_command_builder_append_byte_array (MbimMessageCommandBuilder *builder,
-                                                 gboolean                   ol_pair,
+                                                 gboolean                   with_offset,
+                                                 gboolean                   with_length,
                                                  const guint8              *buffer,
                                                  guint32                    buffer_len)
 {
-    _mbim_struct_builder_append_byte_array (builder->contents_builder, ol_pair, buffer, buffer_len);
+    _mbim_struct_builder_append_byte_array (builder->contents_builder, with_offset, with_length, buffer, buffer_len);
 }
 
 void
