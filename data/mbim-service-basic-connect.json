@@ -703,6 +703,18 @@
                    { "name"   : "OutErrors",
                      "format" : "guint32" },
                    { "name"   : "OutDiscards",
-                     "format" : "guint32" } ] }
+                     "format" : "guint32" } ] },
+
+  // *********************************************************************************
+  { "name"     : "Network Idle Hint",
+    "service"  : "Basic Connect",
+    "type"     : "Command",
+    "query"    : [],
+    "set"      : [ { "name"          : "State",
+                     "format"        : "guint32",
+                     "public-format" : "MbimNetworkIdleHintState" } ],
+    "response" : [ { "name"          : "State",
+                     "format"        : "guint32",
+                     "public-format" : "MbimNetworkIdleHintState" } ] }
 
 ]

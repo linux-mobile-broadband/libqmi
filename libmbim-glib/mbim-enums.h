@@ -872,6 +872,21 @@ typedef enum {
     MBIM_STK_PAC_TYPE_NOTIFICATION      = 1
 } MbimStkPacType;
 
+/*****************************************************************************/
+/* 'Network idle hint' enums */
+
+/**
+ * MbimNetworkIdleHintState:
+ * @MBIM_NETWORK_IDLE_HINT_STATE_DISABLED: Disabled.
+ * @MBIM_NETWORK_IDLE_HINT_STATE_ENABLED: Enabled.
+ *
+ * Enable or disable network idle hint.
+ */
+typedef enum {
+    MBIM_NETWORK_IDLE_HINT_STATE_DISABLED = 0,
+    MBIM_NETWORK_IDLE_HINT_STATE_ENABLED  = 1
+} MbimNetworkIdleHintState;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */
