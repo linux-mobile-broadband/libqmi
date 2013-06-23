@@ -146,11 +146,16 @@ class Message:
         # Build Fullname
         if self.service == 'Basic Connect':
             self.fullname = 'MBIM Message ' + self.name
+        elif self.name == "":
+            self.fullname = 'MBIM Message ' + self.service
         else:
             self.fullname = 'MBIM Message ' + self.service + ' ' + self.name
 
         # Build CID enum
-        self.cid_enum_name = utils.build_underscore_name('MBIM CID' + self.service + ' ' + self.name).upper()
+        self.cid_enum_name = 'MBIM CID ' + self.service
+        if self.name != "":
+            self.cid_enum_name += (' ' + self.name)
+        self.cid_enum_name = utils.build_underscore_name(self.cid_enum_name).upper()
 
 
     """
@@ -188,7 +193,7 @@ class Message:
                          'message_type'             : message_type,
                          'message_type_upper'       : message_type.upper(),
                          'service_underscore_upper' : utils.build_underscore_name (self.service).upper(),
-                         'name_underscore_upper'    : utils.build_underscore_name (self.name).upper() }
+                         'cid_enum_name'            : self.cid_enum_name }
         template = (
             '\n'
             'MbimMessage *${underscore}_${message_type}_new (\n')
@@ -349,7 +354,7 @@ class Message:
             '\n'
             '    builder = _mbim_message_command_builder_new (0,\n'
             '                                                 MBIM_SERVICE_${service_underscore_upper},\n'
-            '                                                 MBIM_CID_${service_underscore_upper}_${name_underscore_upper},\n'
+            '                                                 ${cid_enum_name},\n'
             '                                                 MBIM_MESSAGE_COMMAND_TYPE_${message_type_upper});\n')
 
         for field in fields:
@@ -426,8 +431,7 @@ class Message:
                          'underscore'               : utils.build_underscore_name (self.fullname),
                          'message_type'             : message_type,
                          'message_type_upper'       : message_type.upper(),
-                         'service_underscore_upper' : utils.build_underscore_name (self.service).upper(),
-                         'name_underscore_upper'    : utils.build_underscore_name (self.name).upper() }
+                         'service_underscore_upper' : utils.build_underscore_name (self.service).upper() }
         template = (
             '\n'
             'gboolean ${underscore}_${message_type}_parse (\n'
