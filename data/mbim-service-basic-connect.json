@@ -488,12 +488,12 @@
     "service"  : "Basic Connect",
     "type"     : "Command",
     "set"      : [ { "name"   : "Buffer",
-                     "format" : "byte-array" } ],
+                     "format" : "unsized-byte-array" } ],
     "response" : [ { "name"          : "NwError",
                      "format"        : "guint32",
                      "public-format" : "MbimNwError" },
                    { "name"   : "Buffer",
-                     "format" : "byte-array" } ] },
+                     "format" : "unsized-byte-array" } ] },
 
   // *********************************************************************************
   { "name"     : "MbimIPv4Element",

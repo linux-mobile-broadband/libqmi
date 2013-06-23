@@ -48,7 +48,7 @@ def validate_fields(fields):
         # Look for array size fields, which need to be always read
         if field['format'] == 'ref-byte-array':
             pass
-        elif field['format'] == 'byte-array':
+        elif field['format'] == 'unsized-byte-array':
             pass
         elif field['format'] == 'uuid':
             pass
@@ -203,7 +203,7 @@ class Message:
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
             translations['public'] = field['public-format'] if 'public-format' in field else field['format']
 
-            if field['format'] == 'byte-array' or field['format'] == 'ref-byte-array':
+            if field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
                 inner_template = ('    const guint32 ${field}_size,\n'
                                   '    const guint8 *${field},\n')
             elif field['format'] == 'uuid':
@@ -256,7 +256,7 @@ class Message:
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
             translations['public'] = field['public-format'] if 'public-format' in field else field['format']
 
-            if field['format'] == 'byte-array' or field['format'] == 'ref-byte-array':
+            if field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
                 inner_template = (' * @${field}_size: size of the ${field} array.\n'
                                   ' * @${field}: the \'${name}\' field, given as an array of #guint8 values.\n')
             elif field['format'] == 'uuid':
@@ -309,7 +309,7 @@ class Message:
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
             translations['public'] = field['public-format'] if 'public-format' in field else field['format']
 
-            if field['format'] == 'byte-array' or field['format'] == 'ref-byte-array':
+            if field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
                 inner_template = ('    const guint32 ${field}_size,\n'
                                   '    const guint8 *${field},\n')
             elif field['format'] == 'uuid':
@@ -374,7 +374,7 @@ class Message:
             else:
                 inner_template += ('    {\n')
 
-            if field['format'] == 'byte-array':
+            if field['format'] == 'unsized-byte-array':
                 inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, ${field}, ${field}_size);\n')
             elif field['format'] == 'ref-byte-array':
                 inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, TRUE, ${field}, ${field}_size);\n')
@@ -442,7 +442,7 @@ class Message:
             translations['public'] = field['public-format'] if 'public-format' in field else field['format']
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
 
-            if field['format'] == 'byte-array' or field['format'] == 'ref-byte-array':
+            if field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
                 inner_template = ('    guint32 *${field}_size,\n'
                                   '    const guint8 **${field},\n')
             elif field['format'] == 'uuid':
@@ -497,7 +497,7 @@ class Message:
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
             translations['struct_underscore'] = utils.build_underscore_name_from_camelcase (translations['struct'])
 
-            if field['format'] == 'byte-array' or field['format'] == 'ref-byte-array':
+            if field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
                 inner_template = (' * @${field}_size: return location for the size of the ${field} array.\n'
                                   ' * @${field}: return location for an array of #guint8 values. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'uuid':
@@ -551,7 +551,7 @@ class Message:
             translations['public'] = field['public-format'] if 'public-format' in field else field['format']
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
 
-            if field['format'] == 'byte-array' or field['format'] == 'ref-byte-array':
+            if field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
                 inner_template = ('    guint32 *${field}_size,\n'
                                   '    const guint8 **${field},\n')
             elif field['format'] == 'uuid':
@@ -621,7 +621,7 @@ class Message:
                 translations['condition_value'] = condition['value']
                 inner_template += (
                     '    if (!(_${condition_field} ${condition_operation} ${condition_value})) {\n')
-                if field['format'] == 'byte-array' or \
+                if field['format'] == 'unsized-byte-array' or \
                    field['format'] == 'ref-byte-array':
                     inner_template += (
                         '        if (${field}_size)\n'
@@ -658,7 +658,7 @@ class Message:
                     '        if (${field} != NULL)\n'
                     '            *${field} = _${field};\n'
                     '        offset += 4;\n')
-            elif field['format'] == 'byte-array':
+            elif field['format'] == 'unsized-byte-array':
                 inner_template += (
                     '        const guint8 *tmp;\n'
                     '        guint32 tmpsize;\n'

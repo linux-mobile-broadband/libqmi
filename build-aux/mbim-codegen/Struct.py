@@ -71,7 +71,7 @@ class Struct:
             if field['format'] == 'uuid':
                 inner_template = (
                     ' * @${field_name_underscore}: a #MbimUuid.\n')
-            elif field['format'] == 'byte-array' or field['format'] == 'ref-byte-array':
+            elif field['format'] =='unsized-byte-array' or field['format'] == 'ref-byte-array':
                 inner_template = (' * @${field_name_underscore}_size: size of the ${field_name_underscore} array.\n'
                                   ' * @${field_name_underscore}: an array of #guint8 values.\n')
             elif field['format'] == 'guint32':
@@ -119,7 +119,7 @@ class Struct:
             if field['format'] == 'uuid':
                 inner_template = (
                     '    MbimUuid ${field_name_underscore};\n')
-            elif field['format'] == 'byte-array' or field['format'] == 'ref-byte-array':
+            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
                 inner_template = (
                     '    guint32 ${field_name_underscore}_size;\n'
                     '    guint8 *${field_name_underscore};\n')
@@ -193,7 +193,7 @@ class Struct:
             inner_template = ''
             if field['format'] == 'uuid':
                 pass
-            elif field['format'] == 'byte-array' or field['format'] == 'ref-byte-array':
+            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
                 inner_template += (
                     '    g_free (var->${field_name_underscore});\n')
             elif field['format'] == 'guint32':
@@ -320,7 +320,7 @@ class Struct:
                     '        memcpy (out->${field_name_underscore}, tmp, out->${field_name_underscore}_size);\n'
                     '        offset += 8;\n'
                     '    }\n')
-            elif field['format'] == 'byte-array':
+            elif field['format'] == 'unsized-byte-array':
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -461,7 +461,7 @@ class Struct:
 
             if field['format'] == 'uuid':
                 inner_template = ('    _mbim_struct_builder_append_uuid (builder, &(value->${field}));\n')
-            elif field['format'] == 'byte-array':
+            elif field['format'] == 'unsized-byte-array':
                 inner_template = ('    _mbim_struct_builder_append_byte_array (builder, FALSE, value->${field}, value->${field}_size);\n')
             elif field['format'] == 'ref-byte-array':
                 inner_template = ('    _mbim_struct_builder_append_byte_array (builder, TRUE, value->${field}, value->${field}_size);\n')
