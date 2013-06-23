@@ -9,7 +9,8 @@ DOC_MAIN_SGML_FILE = $(DOC_MODULE)-docs.xml
 ALL_SECTIONS = \
 	$(srcdir)/libmbim-glib-common.sections \
 	$(top_builddir)/libmbim-glib/generated/mbim-basic-connect.sections \
-	$(top_builddir)/libmbim-glib/generated/mbim-sms.sections
+	$(top_builddir)/libmbim-glib/generated/mbim-sms.sections \
+	$(top_builddir)/libmbim-glib/generated/mbim-ussd.sections
 
 $(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
 	$(AM_V_GEN) \

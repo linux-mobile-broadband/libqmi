@@ -40,5 +40,6 @@
 #include "mbim-error-types.h"
 #include "mbim-basic-connect.h"
 #include "mbim-sms.h"
+#include "mbim-ussd.h"
 
 #endif /* _LIBMBIM_GLIB_H_ */

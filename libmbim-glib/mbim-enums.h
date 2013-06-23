@@ -742,6 +742,55 @@ typedef enum {
     MBIM_SMS_STATUS_FLAG_NEW_MESSAGE        = 2
 } MbimSmsStatusFlag;
 
+/*****************************************************************************/
+/* 'USSD' enums */
+
+/**
+ * MbimUssdAction:
+ * @MBIM_USSD_ACTION_INITIATE: Initiate USSD session.
+ * @MBIM_USSD_ACTION_CONTINUE: Continue USSD session.
+ * @MBIM_USSD_ACTION_CANCEL: Cancel USSD session.
+ *
+ * USSD action.
+ */
+typedef enum {
+    MBIM_USSD_ACTION_INITIATE = 0,
+    MBIM_USSD_ACTION_CONTINUE = 1,
+    MBIM_USSD_ACTION_CANCEL = 2
+} MbimUssdAction;
+
+/**
+ * MbimUssdResponse:
+ * @MBIM_USSD_RESPONSE_NO_ACTION_REQUIRED: No action required.
+ * @MBIM_USSD_RESPONSE_ACTION_REQUIRED: An action is required.
+ * @MBIM_USSD_RESPONSE_TERMINATED_BY_NETWORK: Terminated by network
+ * @MBIM_USSD_RESPONSE_OTHER_LOCAL_CLIENT: Other local client.
+ * @MBIM_USSD_RESPONSE_OPERATION_NOT_SUPPORTED: Operation not supported.
+ * @MBIM_USSD_RESPONSE_NETWORK_TIMEOUT: Network timeout.
+ *
+ * USSD response.
+ */
+typedef enum {
+    MBIM_USSD_RESPONSE_NO_ACTION_REQUIRED      = 0,
+    MBIM_USSD_RESPONSE_ACTION_REQUIRED         = 1,
+    MBIM_USSD_RESPONSE_TERMINATED_BY_NETWORK   = 2,
+    MBIM_USSD_RESPONSE_OTHER_LOCAL_CLIENT      = 3,
+    MBIM_USSD_RESPONSE_OPERATION_NOT_SUPPORTED = 4,
+    MBIM_USSD_RESPONSE_NETWORK_TIMEOUT         = 5
+} MbimUssdResponse;
+
+/**
+ * MbimUssdSessionState:
+ * @MBIM_USSD_SESSION_STATE_NEW_SESSION: New session.
+ * @MBIM_USSD_SESSION_STATE_EXISTING_SESSION: Existing session.
+ *
+ * Session state.
+ */
+typedef enum {
+    MBIM_USSD_SESSION_STATE_NEW_SESSION      = 0,
+    MBIM_USSD_SESSION_STATE_EXISTING_SESSION = 1
+} MbimUssdSessionState;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

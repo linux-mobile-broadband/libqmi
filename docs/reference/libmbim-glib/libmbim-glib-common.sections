@@ -221,6 +221,9 @@ MbimSmsCdmaLang
 MbimSmsCdmaEncoding
 MbimSmsStatus
 MbimSmsStatusFlag
+MbimUssdAction
+MbimUssdResponse
+MbimUssdSessionState
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -259,6 +262,9 @@ mbim_sms_cdma_lang_get_string
 mbim_sms_cdma_encoding_get_string
 mbim_sms_status_get_string
 mbim_sms_status_flag_get_string
+mbim_ussd_action_get_string
+mbim_ussd_response_get_string
+mbim_ussd_session_state_get_string
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -299,6 +305,9 @@ mbim_sms_format_build_string_from_mask
 mbim_sms_status_build_string_from_mask
 mbim_sms_status_flag_build_string_from_mask
 mbim_sms_storage_state_build_string_from_mask
+mbim_ussd_action_build_string_from_mask
+mbim_ussd_response_build_string_from_mask
+mbim_ussd_session_state_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -342,6 +351,9 @@ MBIM_TYPE_SMS_FORMAT
 MBIM_TYPE_SMS_STATUS
 MBIM_TYPE_SMS_STATUS_FLAG
 MBIM_TYPE_SMS_STORAGE_STATE
+MBIM_TYPE_USSD_ACTION
+MBIM_TYPE_USSD_RESPONSE
+MBIM_TYPE_USSD_SESSION_STATE
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type
@@ -384,6 +396,9 @@ mbim_sms_format_get_type
 mbim_sms_status_flag_get_type
 mbim_sms_status_get_type
 mbim_sms_storage_state_get_type
+mbim_ussd_action_get_type
+mbim_ussd_response_get_type
+mbim_ussd_session_state_get_type
 </SECTION>
 
 <SECTION>
