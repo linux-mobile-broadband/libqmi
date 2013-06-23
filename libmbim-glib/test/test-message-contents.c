@@ -18,6 +18,7 @@
 
 #include "mbim-basic-connect.h"
 #include "mbim-sms.h"
+#include "mbim-ussd.h"
 #include "mbim-message.h"
 #include "mbim-cid.h"
 #include "mbim-utils.h"
@@ -823,6 +824,78 @@ test_message_contents_sms_read_multiple_pdu (void)
     mbim_message_unref (response);
 }
 
+static void
+test_message_contents_ussd (void)
+{
+    MbimUssdResponse ussd_response;
+    MbimUssdSessionState ussd_session_state;
+    const guint8 *ussd_payload;
+    guint32 ussd_payload_size;
+    guint32 ussd_dcs;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x54, 0x00, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xE5, 0x50, 0xA0, 0xC8, /* service id */
+        0x5E, 0x82, 0x47, 0x9E,
+        0x82, 0xF7, 0x10, 0xAB,
+        0xF4, 0xC3, 0x35, 0x1F,
+        0x01, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x24, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x05, 0x00, 0x00, 0x00, /* 0x00 response */
+        0x01, 0x00, 0x00, 0x00, /* 0x04 sesstion state */
+        0x01, 0x00, 0x00, 0x00, /* 0x08 coding scheme */
+        0x14, 0x00, 0x00, 0x00, /* 0x0C payload offset */
+        0x10, 0x00, 0x00, 0x00, /* 0x10 payload length */
+        /* data buffer... payload */
+        0x01, 0x02, 0x03, 0x04, /* 0x14 payload */
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x0C,
+        0x0D, 0x0E, 0x0F, 0x00
+    };
+
+    const guint8 expected_payload [] = {
+        0x01, 0x02, 0x03, 0x04,
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x0C,
+        0x0D, 0x0E, 0x0F, 0x00
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_ussd_response_parse (
+                  response,
+                  &ussd_response,
+                  &ussd_session_state,
+                  &ussd_dcs,
+                  &ussd_payload_size,
+                  &ussd_payload,
+                  &error));
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (ussd_response, ==, MBIM_USSD_RESPONSE_NETWORK_TIMEOUT);
+    g_assert_cmpuint (ussd_session_state, ==, MBIM_USSD_SESSION_STATE_EXISTING_SESSION);
+    g_assert_cmpuint (ussd_dcs, ==, 0x01);
+
+    test_message_trace (ussd_payload,
+                        ussd_payload_size,
+                        expected_payload,
+                        sizeof (expected_payload));
+    g_assert_cmpuint (ussd_payload_size, ==, sizeof (expected_payload));
+    g_assert (memcmp (ussd_payload, expected_payload, sizeof (expected_payload)) == 0);
+
+    mbim_message_unref (response);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -836,6 +909,8 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message-contents/sms/read/zero-pdu", test_message_contents_sms_read_zero_pdu);
     g_test_add_func ("/libmbim-glib/message-contents/sms/read/single-pdu", test_message_contents_sms_read_single_pdu);
     g_test_add_func ("/libmbim-glib/message-contents/sms/read/multiple-pdu", test_message_contents_sms_read_multiple_pdu);
+
+    g_test_add_func ("/libmbim-glib/message-contents/ussd", test_message_contents_ussd);
 
     return g_test_run ();
 }
