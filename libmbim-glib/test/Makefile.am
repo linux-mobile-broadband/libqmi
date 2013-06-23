@@ -5,8 +5,8 @@ noinst_PROGRAMS = \
 	test-cid \
 	test-message \
 	test-fragment \
-	test-message-contents \
-	test-message-command-builder
+	test-message-parser \
+	test-message-builder
 
 TEST_PROGS += $(noinst_PROGRAMS)
 
@@ -59,28 +59,28 @@ test_fragment_LDADD = \
 	$(top_builddir)/libmbim-glib/libmbim-glib.la \
 	$(LIBMBIM_GLIB_LIBS)
 
-test_message_contents_SOURCES = \
-	test-message-contents.c
-test_message_contents_CPPFLAGS = \
+test_message_parser_SOURCES = \
+	test-message-parser.c
+test_message_parser_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libmbim-glib \
 	-I$(top_builddir)/libmbim-glib \
 	-I$(top_builddir)/libmbim-glib/generated \
 	-DLIBMBIM_GLIB_COMPILATION
-test_message_contents_LDADD = \
+test_message_parser_LDADD = \
 	$(top_builddir)/libmbim-glib/libmbim-glib.la \
 	$(LIBMBIM_GLIB_LIBS)
 
-test_message_command_builder_SOURCES = \
-	test-message-command-builder.c
-test_message_command_builder_CPPFLAGS = \
+test_message_builder_SOURCES = \
+	test-message-builder.c
+test_message_builder_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/libmbim-glib \
 	-I$(top_builddir)/libmbim-glib \
 	-I$(top_builddir)/libmbim-glib/generated \
 	-DLIBMBIM_GLIB_COMPILATION
-test_message_command_builder_LDADD = \
+test_message_builder_LDADD = \
 	$(top_builddir)/libmbim-glib/libmbim-glib.la \
 	$(LIBMBIM_GLIB_LIBS)

@@ -65,7 +65,7 @@ test_message_trace (const guint8 *computed,
 #endif
 
 static void
-test_message_contents_basic_connect_visible_providers (void)
+test_message_parser_basic_connect_visible_providers (void)
 {
     MbimProvider **providers;
     guint32 n_providers;
@@ -173,7 +173,7 @@ test_message_contents_basic_connect_visible_providers (void)
 }
 
 static void
-test_message_contents_basic_connect_subscriber_ready_status (void)
+test_message_parser_basic_connect_subscriber_ready_status (void)
 {
     MbimSubscriberReadyState ready_state;
     gchar *subscriber_id;
@@ -274,7 +274,7 @@ test_message_contents_basic_connect_subscriber_ready_status (void)
 }
 
 static void
-test_message_contents_basic_connect_device_caps (void)
+test_message_parser_basic_connect_device_caps (void)
 {
     MbimMessage *response;
     MbimDeviceType device_type;
@@ -389,7 +389,7 @@ test_message_contents_basic_connect_device_caps (void)
 }
 
 static void
-test_message_contents_basic_connect_ip_configuration (void)
+test_message_parser_basic_connect_ip_configuration (void)
 {
     MbimMessage *response;
     guint32 session_id;
@@ -527,7 +527,7 @@ test_message_contents_basic_connect_ip_configuration (void)
 }
 
 static void
-test_message_contents_basic_connect_service_activation (void)
+test_message_parser_basic_connect_service_activation (void)
 {
     MbimMessage *response;
     GError *error = NULL;
@@ -578,7 +578,7 @@ test_message_contents_basic_connect_service_activation (void)
 }
 
 static void
-test_message_contents_sms_read_zero_pdu (void)
+test_message_parser_sms_read_zero_pdu (void)
 {
     MbimSmsFormat format;
     guint32 messages_count;
@@ -627,7 +627,7 @@ test_message_contents_sms_read_zero_pdu (void)
 }
 
 static void
-test_message_contents_sms_read_single_pdu (void)
+test_message_parser_sms_read_single_pdu (void)
 {
     MbimSmsFormat format;
     guint32 messages_count;
@@ -705,7 +705,7 @@ test_message_contents_sms_read_single_pdu (void)
 }
 
 static void
-test_message_contents_sms_read_multiple_pdu (void)
+test_message_parser_sms_read_multiple_pdu (void)
 {
     guint32 idx;
     MbimSmsFormat format;
@@ -826,7 +826,7 @@ test_message_contents_sms_read_multiple_pdu (void)
 }
 
 static void
-test_message_contents_ussd (void)
+test_message_parser_ussd (void)
 {
     MbimUssdResponse ussd_response;
     MbimUssdSessionState ussd_session_state;
@@ -898,7 +898,7 @@ test_message_contents_ussd (void)
 }
 
 static void
-test_message_contents_auth_akap (void)
+test_message_parser_auth_akap (void)
 {
     const guint8 *res;
     guint32 res_len;
@@ -1014,16 +1014,16 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libmbim-glib/message-contents/basic-connect/visible-providers", test_message_contents_basic_connect_visible_providers);
-    g_test_add_func ("/libmbim-glib/message-contents/basic-connect/subscriber-ready-status", test_message_contents_basic_connect_subscriber_ready_status);
-    g_test_add_func ("/libmbim-glib/message-contents/basic-connect/device-caps", test_message_contents_basic_connect_device_caps);
-    g_test_add_func ("/libmbim-glib/message-contents/basic-connect/ip-configuration", test_message_contents_basic_connect_ip_configuration);
-    g_test_add_func ("/libmbim-glib/message-contents/basic-connect/service-activation", test_message_contents_basic_connect_service_activation);
-    g_test_add_func ("/libmbim-glib/message-contents/sms/read/zero-pdu", test_message_contents_sms_read_zero_pdu);
-    g_test_add_func ("/libmbim-glib/message-contents/sms/read/single-pdu", test_message_contents_sms_read_single_pdu);
-    g_test_add_func ("/libmbim-glib/message-contents/sms/read/multiple-pdu", test_message_contents_sms_read_multiple_pdu);
-    g_test_add_func ("/libmbim-glib/message-contents/ussd", test_message_contents_ussd);
-    g_test_add_func ("/libmbim-glib/message-contents/auth/akap", test_message_contents_auth_akap);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/visible-providers", test_message_parser_basic_connect_visible_providers);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/subscriber-ready-status", test_message_parser_basic_connect_subscriber_ready_status);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/device-caps", test_message_parser_basic_connect_device_caps);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-configuration", test_message_parser_basic_connect_ip_configuration);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/service-activation", test_message_parser_basic_connect_service_activation);
+    g_test_add_func ("/libmbim-glib/message/parser/sms/read/zero-pdu", test_message_parser_sms_read_zero_pdu);
+    g_test_add_func ("/libmbim-glib/message/parser/sms/read/single-pdu", test_message_parser_sms_read_single_pdu);
+    g_test_add_func ("/libmbim-glib/message/parser/sms/read/multiple-pdu", test_message_parser_sms_read_multiple_pdu);
+    g_test_add_func ("/libmbim-glib/message/parser/ussd", test_message_parser_ussd);
+    g_test_add_func ("/libmbim-glib/message/parser/auth/akap", test_message_parser_auth_akap);
 
     return g_test_run ();
 }

@@ -60,8 +60,8 @@ libmbim-glib/test/test-uuid
 libmbim-glib/test/test-cid
 libmbim-glib/test/test-message
 libmbim-glib/test/test-fragment
-libmbim-glib/test/test-message-contents
-libmbim-glib/test/test-message-command-builder
+libmbim-glib/test/test-message-parser
+libmbim-glib/test/test-message-builder
 libmbim-glib/test/*.log
 libmbim-glib/test/*.trs
 
