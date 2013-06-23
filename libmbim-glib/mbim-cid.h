@@ -111,14 +111,14 @@ typedef enum {
 
 /**
  * MbimCidUssd:
- * @MBIM_CID_UNKNOWN: Unknown command.
+ * @MBIM_CID_USSD_UNKNOWN: Unknown command.
  * @MBIM_CID_USSD: USSD operation.
  *
  * MBIM commands in the %MBIM_SERVICE_USSD service.
  */
 typedef enum {
-    MBIM_CID_UNKNOWN = 0,
-    MBIM_CID_USSD    = 1,
+    MBIM_CID_USSD_UNKNOWN = 0,
+    MBIM_CID_USSD         = 1,
 } MbimCidUssd;
 
 /**
