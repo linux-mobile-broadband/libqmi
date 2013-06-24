@@ -724,7 +724,7 @@ class Message:
                     '            *${field} = tmp;\n'
                     '        if (${field}_size != NULL)\n'
                     '            *${field}_size = tmpsize;\n'
-                    '        offset += tmpsize;\n')
+                    '        offset += 8;\n')
             elif field['format'] == 'uuid':
                 inner_template += (
                     '        if (${field} != NULL)\n'
