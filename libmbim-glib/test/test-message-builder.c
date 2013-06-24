@@ -1188,6 +1188,114 @@ test_message_builder_dss_connect_set (void)
     mbim_message_unref (message);
 }
 
+static void
+test_message_builder_basic_connect_multicarrier_providers_set (void)
+{
+    GError *error = NULL;
+    MbimMessage *message;
+    MbimProvider **providers;
+    const guint8 expected_message [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x00, /* type */
+        0xB4, 0x00, 0x00, 0x00, /* length */
+        0x01, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x18, 0x00, 0x00, 0x00, /* command id */
+        0x01, 0x00, 0x00, 0x00, /* command_type */
+        0x84, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x02, 0x00, 0x00, 0x00, /* 0x00 providers count */
+        0x14, 0x00, 0x00, 0x00, /* 0x04 provider 0 offset */
+        0x38, 0x00, 0x00, 0x00, /* 0x08 provider 0 length */
+        0x4C, 0x00, 0x00, 0x00, /* 0x0C provider 1 offset */
+        0x38, 0x00, 0x00, 0x00, /* 0x10 provider 1 length */
+        /* data buffer... struct provider 0 */
+        0x20, 0x00, 0x00, 0x00, /* 0x14 [0x00] id offset */
+        0x0A, 0x00, 0x00, 0x00, /* 0x18 [0x04] id length */
+        0x08, 0x00, 0x00, 0x00, /* 0x1C [0x08] state */
+        0x2C, 0x00, 0x00, 0x00, /* 0x20 [0x0C] name offset */
+        0x0C, 0x00, 0x00, 0x00, /* 0x24 [0x10] name length */
+        0x01, 0x00, 0x00, 0x00, /* 0x28 [0x14] cellular class */
+        0x0B, 0x00, 0x00, 0x00, /* 0x2C [0x18] rssi */
+        0x00, 0x00, 0x00, 0x00, /* 0x30 [0x1C] error rate */
+        0x32, 0x00, 0x31, 0x00, /* 0x34 [0x20] id string (10 bytes) */
+        0x34, 0x00, 0x30, 0x00,
+        0x33, 0x00, 0x00, 0x00,
+        0x4F, 0x00, 0x72, 0x00, /* 0x40 [0x2C] name string (12 bytes) */
+        0x61, 0x00, 0x6E, 0x00,
+        0x67, 0x00, 0x65, 0x00,
+        /* data buffer... struct provider 1 */
+        0x20, 0x00, 0x00, 0x00, /* 0x4C [0x00] id offset */
+        0x0A, 0x00, 0x00, 0x00, /* 0x50 [0x04] id length */
+        0x19, 0x00, 0x00, 0x00, /* 0x51 [0x08] state */
+        0x2C, 0x00, 0x00, 0x00, /* 0x54 [0x0C] name offset */
+        0x0C, 0x00, 0x00, 0x00, /* 0x58 [0x10] name length */
+        0x01, 0x00, 0x00, 0x00, /* 0x5C [0x14] cellular class */
+        0x0B, 0x00, 0x00, 0x00, /* 0x60 [0x18] rssi */
+        0x00, 0x00, 0x00, 0x00, /* 0x64 [0x1C] error rate */
+        0x32, 0x00, 0x31, 0x00, /* 0x68 [0x20] id string (10 bytes) */
+        0x34, 0x00, 0x30, 0x00,
+        0x33, 0x00, 0x00, 0x00,
+        0x4F, 0x00, 0x72, 0x00, /* 0x74 [0x2C] name string (12 bytes) */
+        0x61, 0x00, 0x6E, 0x00,
+        0x67, 0x00, 0x65, 0x00
+    };
+
+    providers = g_new0 (MbimProvider *, 3);
+    providers[0] = g_new0 (MbimProvider, 1);
+    providers[0]->provider_id = g_strdup ("21403");
+    providers[0]->provider_name = g_strdup ("Orange");
+    providers[0]->provider_state = MBIM_PROVIDER_STATE_VISIBLE;
+    providers[0]->cellular_class = MBIM_CELLULAR_CLASS_GSM;
+    providers[0]->rssi = 11;
+    providers[0]->error_rate = 0;
+    providers[1] = g_new0 (MbimProvider, 1);
+    providers[1]->provider_id = g_strdup ("21403");
+    providers[1]->provider_name = g_strdup ("Orange");
+    providers[1]->provider_state = (MBIM_PROVIDER_STATE_HOME |
+                                    MBIM_PROVIDER_STATE_VISIBLE |
+                                    MBIM_PROVIDER_STATE_REGISTERED);
+    providers[1]->cellular_class = MBIM_CELLULAR_CLASS_GSM;
+    providers[1]->rssi = 11;
+    providers[1]->error_rate = 0;
+
+    /* Multicarrier providers set message */
+    message = (mbim_message_multicarrier_providers_set_new (
+                   2,
+                   (const MbimProvider *const *)providers,
+                   &error));
+
+    g_assert_no_error (error);
+    g_assert (message != NULL);
+    mbim_message_set_transaction_id (message, 1);
+
+    test_message_trace ((const guint8 *)((GByteArray *)message)->data,
+                        ((GByteArray *)message)->len,
+                        expected_message,
+                        sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_get_transaction_id (message), ==, 1);
+    g_assert_cmpuint (mbim_message_get_message_type   (message), ==, MBIM_MESSAGE_TYPE_COMMAND);
+    g_assert_cmpuint (mbim_message_get_message_length (message), ==, sizeof (expected_message));
+
+    g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_BASIC_CONNECT);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_BASIC_CONNECT_MULTICARRIER_PROVIDERS);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_SET);
+
+    g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
+    g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    mbim_message_unref (message);
+    mbim_provider_array_free (providers);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -1207,6 +1315,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/builder/basic-connect/ip-packet-filters/set/one", test_message_builder_basic_connect_ip_packet_filters_set_one);
     g_test_add_func ("/libmbim-glib/message/builder/basic-connect/ip-packet-filters/set/two", test_message_builder_basic_connect_ip_packet_filters_set_two);
     g_test_add_func ("/libmbim-glib/message/builder/dss/connect/set", test_message_builder_dss_connect_set);
+    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/multicarrier-providers/set", test_message_builder_basic_connect_multicarrier_providers_set);
 
     return g_test_run ();
 }
