@@ -434,11 +434,13 @@ process_message (MbimDevice  *self,
                  printable);
         g_free (printable);
 
-        printable = mbim_message_get_printable (message, ">>>>>> ", is_partial_fragment);
-        g_debug ("[%s] Received message (translated)...\n%s",
-                 self->priv->path_display,
-                 printable);
-        g_free (printable);
+        if (is_partial_fragment) {
+            printable = mbim_message_get_printable (message, ">>>>>> ", TRUE);
+            g_debug ("[%s] Received message fragment (translated)...\n%s",
+                     self->priv->path_display,
+                     printable);
+            g_free (printable);
+        }
     }
 
     switch (MBIM_MESSAGE_GET_MESSAGE_TYPE (message)) {
@@ -521,6 +523,16 @@ process_message (MbimDevice  *self,
     case MBIM_MESSAGE_TYPE_FUNCTION_ERROR: {
         GError *error_indication;
 
+        if (mbim_utils_get_traces_enabled ()) {
+            gchar *printable;
+
+            printable = mbim_message_get_printable (message, ">>>>>> ", FALSE);
+            g_debug ("[%s] Received message (translated)...\n%s",
+                     self->priv->path_display,
+                     printable);
+            g_free (printable);
+        }
+
         error_indication = mbim_message_error_get_error (message);
         g_signal_emit (self, signals[SIGNAL_ERROR], 0, error_indication);
         g_error_free (error_indication);
@@ -533,7 +545,7 @@ process_message (MbimDevice  *self,
     case MBIM_MESSAGE_TYPE_COMMAND:
     case MBIM_MESSAGE_TYPE_HOST_ERROR:
         /* Shouldn't expect host-generated messages as replies */
-        g_warning ("[%s] Ignoring host-generated message received",
+        g_warning ("[%s] Host-generated message received: ignoring",
                    self->priv->path_display);
         return;
     }
