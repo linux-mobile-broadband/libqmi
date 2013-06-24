@@ -1,3 +1,37 @@
+
+Overview of changes in libmbim 1.4
+----------------------------------------
+
+ * Added support for additional MBIM messages:
+    MBIM_SMS_CONFIGURATION
+    MBIM_SMS_READ
+    MBIM_SMS_SEND
+    MBIM_SMS_DELETE
+    MBIM_SMS_MESSAGE_STORE_STATUS
+    MBIM_USSD
+    MBIM_PHONEBOOK_CONFIGURATION
+    MBIM_PHONEBOOK_READ
+    MBIM_PHONEBOOK_DELETE
+    MBIM_PHONEBOOK_WRITE
+    MBIM_STK_PAC
+    MBIM_STK_TERMINAL_RESPONSE
+    MBIM_STK_ENVELOPE
+    MBIM_DEVICE_SERVICE_SUBSCRIBER_LIST
+    MBIM_AUTH_AKA
+    MBIM_AUTH_AKAP
+    MBIM_AUTH_SIM
+    MBIM_PACKET_STATISTICS
+    MBIM_NETWORK_IDLE_HINT
+    MBIM_EMERGENCY_MODE
+    MBIM_IP_PACKET_FILTERS
+    MBIM_DSS_CONNECT
+    MBIM_MULTICARRIER_PROVIDERS
+
+ * Updated mbimcli with new commands:
+    --query-packet-statistics
+
+ * Use gtester to run unit tests.
+
 Overview of changes in libmbim 1.2
 ----------------------------------------
 
