@@ -1445,6 +1445,7 @@ version_info_ready (QmiClientCtl *client_ctl,
             ctx->version_check_retries--;
             /* If retries left, retry */
             if (ctx->version_check_retries > 0) {
+                g_error_free (error);
                 qmi_client_ctl_get_version_info (ctx->self->priv->client_ctl,
                                                  NULL,
                                                  1,
