@@ -11,7 +11,8 @@ GENERATED_H = \
 	qmi-nas.h \
 	qmi-wds.h \
 	qmi-wms.h \
-	qmi-pds.h
+	qmi-pds.h \
+	qmi-pbm.h
 
 GENERATED_C = \
 	qmi-error-types.c \
@@ -24,7 +25,8 @@ GENERATED_C = \
 	qmi-nas.c \
 	qmi-wds.c \
 	qmi-wms.c \
-	qmi-pds.c
+	qmi-pds.c \
+	qmi-pbm.c
 
 GENERATED_SECTIONS = \
 	qmi-ctl.sections \
@@ -32,7 +34,8 @@ GENERATED_SECTIONS = \
 	qmi-nas.sections \
 	qmi-wds.sections \
 	qmi-wms.sections \
-	qmi-pds.sections
+	qmi-pds.sections \
+	qmi-pbm.sections
 
 # Error types
 qmi-error-types.h: $(top_srcdir)/libqmi-glib/qmi-errors.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.h
@@ -61,10 +64,11 @@ ENUMS = \
 	$(top_srcdir)/libqmi-glib/qmi-enums-dms.h \
 	$(top_srcdir)/libqmi-glib/qmi-enums-nas.h \
 	$(top_srcdir)/libqmi-glib/qmi-enums-wms.h \
-	$(top_srcdir)/libqmi-glib/qmi-enums-pds.h
+	$(top_srcdir)/libqmi-glib/qmi-enums-pds.h \
+	$(top_srcdir)/libqmi-glib/qmi-enums-pbm.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pbm.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
@@ -166,6 +170,16 @@ qmi-pds.h qmi-pds.c qmi-pds.sections: $(top_srcdir)/data/qmi-service-pds.json $(
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-pds
 
+# PBM service
+qmi-pbm.h qmi-pbm.c qmi-pbm.sections: $(top_srcdir)/data/qmi-service-pbm.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+	$(AM_V_GEN) \
+		rm -f qmi-pbm.h && \
+		rm -f qmi-pbm.c && \
+		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-pbm.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			--output qmi-pbm
+
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 
 nodist_libqmi_glib_generated_la_SOURCES = \
@@ -193,6 +207,7 @@ nodist_include_HEADERS = \
 	qmi-nas.h \
 	qmi-wds.h \
 	qmi-wms.h \
-	qmi-pds.h
+	qmi-pds.h \
+	qmi-pbm.h
 
 CLEANFILES = $(GENERATED_H) $(GENERATED_C) $(GENERATED_SECTIONS)

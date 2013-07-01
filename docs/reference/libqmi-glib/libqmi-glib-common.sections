@@ -625,6 +625,18 @@ qmi_pds_tracking_session_state_get_type
 </SECTION>
 
 <SECTION>
+<FILE>qmi-enums-pbm</FILE>
+QmiPbmEventRegistrationFlag
+<SUBSECTION Methods>
+qmi_pbm_event_registration_flag_build_string_from_mask
+<SUBSECTION Private>
+qmi_pbm_event_registration_flag_get_string
+<SUBSECTION Standard>
+QMI_TYPE_PBM_EVENT_REGISTRATION_FLAG
+qmi_pbm_event_registration_flag_get_type
+</SECTION>
+
+<SECTION>
 <FILE>qmi-errors</FILE>
 QmiCoreError
 QmiProtocolError

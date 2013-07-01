@@ -206,6 +206,16 @@
     </section>
   </chapter>
 
+  <chapter>
+    <title>Phonebook Management Service (PBM)</title>
+    <xi:include href="xml/qmi-client-pbm.xml"/>
+    <xi:include href="xml/qmi-enums-pbm.xml"/>
+    <section>
+      <title>PDS Requests</title>
+      <xi:include href="xml/qmi-message-pbm-indication-register.xml"/>
+    </section>
+  </chapter>
+
   <chapter id="object-tree">
     <title>Object Hierarchy</title>
      <xi:include href="xml/tree_index.sgml"/>
