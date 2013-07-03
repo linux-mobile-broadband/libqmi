@@ -58,4 +58,55 @@ typedef enum {
     QMI_PBM_EVENT_REGISTRATION_FLAG_GAS_UPDATE            = 1 << 5,
 } QmiPbmEventRegistrationFlag;
 
+/*****************************************************************************/
+/* Helper enums for the 'Get Capabilities' request */
+
+/**
+ * QmiPbmPhonebookType:
+ * @QMI_PBM_PHONEBOOK_TYPE_ADN: Abbreviated Dialing Number.
+ * @QMI_PBM_PHONEBOOK_TYPE_FDN: Fixed Dialing Number.
+ * @QMI_PBM_PHONEBOOK_TYPE_MSISDN: Mobile Subscriber Integrated Services Digital Network.
+ * @QMI_PBM_PHONEBOOK_TYPE_MBDN: Mail Box Dialing Number.
+ * @QMI_PBM_PHONEBOOK_TYPE_SDN: Service Dialing Number.
+ * @QMI_PBM_PHONEBOOK_TYPE_BDN: Barred Dialing Number.
+ * @QMI_PBM_PHONEBOOK_TYPE_LND: Last Number Dialed.
+ * @QMI_PBM_PHONEBOOK_TYPE_MBN: Mail Box Number.
+ *
+ * Phonebook type.
+ */
+typedef enum {
+    QMI_PBM_PHONEBOOK_TYPE_ADN    = 1 << 0,
+    QMI_PBM_PHONEBOOK_TYPE_FDN    = 1 << 1,
+    QMI_PBM_PHONEBOOK_TYPE_MSISDN = 1 << 2,
+    QMI_PBM_PHONEBOOK_TYPE_MBDN   = 1 << 3,
+    QMI_PBM_PHONEBOOK_TYPE_SDN    = 1 << 4,
+    QMI_PBM_PHONEBOOK_TYPE_BDN    = 1 << 5,
+    QMI_PBM_PHONEBOOK_TYPE_LND    = 1 << 6,
+    QMI_PBM_PHONEBOOK_TYPE_MBN    = 1 << 7,
+} QmiPbmPhonebookType;
+
+/**
+ * QmiPbmSessionType:
+ * @QMI_PBM_SESSION_TYPE_GW_PRIMARY: Access phonebooks under GSM DF (ICC) or USIM application (UICC).
+ * @QMI_PBM_SESSION_TYPE_1X_PRIMARY: Access phonebooks under CDMA DF (ICC) or CSIM application (UICC).
+ * @QMI_PBM_SESSION_TYPE_GW_SECONDARY: Access phonebooks under GSM DF (ICC) or USIM application (UICC). Dual standby.
+ * @QMI_PBM_SESSION_TYPE_1X_SECONDARY: Access phonebooks under CDMA DF (ICC) or CSIM application (UICC). Dual standby.
+ * @QMI_PBM_SESSION_TYPE_NONPROVISIONING_SLOT_1: Access phonebooks under a nonprovisioning application in slot 1.
+ * @QMI_PBM_SESSION_TYPE_NONPROVISIONING_SLOT_2: Access phonebooks under a nonprovisioning application in slot 2.
+ * @QMI_PBM_SESSION_TYPE_GLOBAL_PHONEBOOK_SLOT_1: Access phonebooks that are not in any application of the card in slot 1.
+ * @QMI_PBM_SESSION_TYPE_GLOBAL_PHONEBOOK_SLOT_2: Access phonebooks that are not in any application of the card in slot 2.
+ *
+ * Type of phonebook management session.
+ */
+typedef enum {
+    QMI_PBM_SESSION_TYPE_GW_PRIMARY              = 0,
+    QMI_PBM_SESSION_TYPE_1X_PRIMARY              = 1,
+    QMI_PBM_SESSION_TYPE_GW_SECONDARY            = 2,
+    QMI_PBM_SESSION_TYPE_1X_SECONDARY            = 3,
+    QMI_PBM_SESSION_TYPE_NONPROVISIONING_SLOT_1  = 4,
+    QMI_PBM_SESSION_TYPE_NONPROVISIONING_SLOT_2  = 5,
+    QMI_PBM_SESSION_TYPE_GLOBAL_PHONEBOOK_SLOT_1 = 6,
+    QMI_PBM_SESSION_TYPE_GLOBAL_PHONEBOOK_SLOT_2 = 7,
+} QmiPbmSessionType;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_PBM_H_ */

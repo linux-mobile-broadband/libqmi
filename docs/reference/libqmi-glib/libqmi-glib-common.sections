@@ -627,13 +627,23 @@ qmi_pds_tracking_session_state_get_type
 <SECTION>
 <FILE>qmi-enums-pbm</FILE>
 QmiPbmEventRegistrationFlag
+QmiPbmPhonebookType
+QmiPbmSessionType
 <SUBSECTION Methods>
 qmi_pbm_event_registration_flag_build_string_from_mask
+qmi_pbm_phonebook_type_build_string_from_mask
+qmi_pbm_session_type_get_string
 <SUBSECTION Private>
 qmi_pbm_event_registration_flag_get_string
+qmi_pbm_phonebook_type_get_string
+qmi_pbm_session_type_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_PBM_EVENT_REGISTRATION_FLAG
+QMI_TYPE_PBM_PHONEBOOK_TYPE
+QMI_TYPE_PBM_SESSION_TYPE
 qmi_pbm_event_registration_flag_get_type
+qmi_pbm_phonebook_type_get_type
+qmi_pbm_session_type_get_type
 </SECTION>
 
 <SECTION>
