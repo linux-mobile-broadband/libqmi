@@ -47,4 +47,11 @@ void          qmicli_nas_run              (QmiDevice *device,
                                            QmiClientNas *client,
                                            GCancellable *cancellable);
 
+/* PBM group */
+GOptionGroup *qmicli_pbm_get_option_group (void);
+gboolean      qmicli_pbm_options_enabled  (void);
+void          qmicli_pbm_run              (QmiDevice *device,
+                                           QmiClientPbm *client,
+                                           GCancellable *cancellable);
+
 #endif /* __QMICLI_H__ */
