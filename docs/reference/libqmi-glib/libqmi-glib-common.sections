@@ -63,6 +63,9 @@ qmi_device_set_instance_id
 qmi_device_set_instance_id_finish
 qmi_device_command
 qmi_device_command_finish
+QmiDeviceServiceVersionInfo
+qmi_device_get_service_version_info
+qmi_device_get_service_version_info_finish
 <SUBSECTION Standard>
 QmiDeviceClass
 QMI_DEVICE

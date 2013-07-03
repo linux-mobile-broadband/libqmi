@@ -171,6 +171,29 @@ QmiMessage  *qmi_device_command_finish (QmiDevice *self,
                                         GAsyncResult *res,
                                         GError **error);
 
+/**
+ * QmiDeviceServiceVersionInfo:
+ * @service: a #QmiService.
+ * @major_version: major version of the service.
+ * @minor_version: minor version of the service.
+ *
+ * Version information for a service.
+ */
+typedef struct {
+    QmiService service;
+    guint16 major_version;
+    guint16 minor_version;
+} QmiDeviceServiceVersionInfo;
+
+void    qmi_device_get_service_version_info        (QmiDevice *self,
+                                                    guint timeout,
+                                                    GCancellable *cancellable,
+                                                    GAsyncReadyCallback callback,
+                                                    gpointer user_data);
+GArray *qmi_device_get_service_version_info_finish (QmiDevice *self,
+                                                    GAsyncResult *res,
+                                                    GError **error);
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_DEVICE_H_ */

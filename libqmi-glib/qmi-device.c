@@ -284,6 +284,114 @@ device_match_transaction (QmiDevice *self,
 }
 
 /*****************************************************************************/
+/* Version info request */
+
+/**
+ * qmi_device_get_service_version_info_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qmi_device_get_service_version_info().
+ *
+ * Returns: a #GArray of #QmiDeviceServiceVersionInfo elements, or #NULL if @error is set. The returned value should be freed with g_array_unref().
+ */
+GArray *
+qmi_device_get_service_version_info_finish (QmiDevice *self,
+                                            GAsyncResult *res,
+                                            GError **error)
+{
+    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+        return NULL;
+
+    return g_array_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+}
+
+static void
+version_info_ready (QmiClientCtl *client_ctl,
+                    GAsyncResult *res,
+                    GSimpleAsyncResult *simple)
+{
+    GArray *service_list = NULL;
+    GArray *out;
+    QmiMessageCtlGetVersionInfoOutput *output;
+    GError *error = NULL;
+    guint i;
+
+    /* Check result of the async operation */
+    output = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
+    if (!output) {
+        g_simple_async_result_take_error (simple, error);
+        g_simple_async_result_complete (simple);
+        g_object_unref (simple);
+        return;
+    }
+
+    /* Check result of the QMI operation */
+    if (!qmi_message_ctl_get_version_info_output_get_result (output, &error)) {
+        qmi_message_ctl_get_version_info_output_unref (output);
+        g_simple_async_result_take_error (simple, error);
+        g_simple_async_result_complete (simple);
+        g_object_unref (simple);
+        return;
+    }
+
+    /* QMI operation succeeded, we can now get the outputs */
+    qmi_message_ctl_get_version_info_output_get_service_list (output, &service_list, NULL);
+    out = g_array_sized_new (FALSE, FALSE, sizeof (QmiDeviceServiceVersionInfo), service_list->len);
+    for (i = 0; i < service_list->len; i++) {
+        QmiMessageCtlGetVersionInfoOutputServiceListService *info;
+        QmiDeviceServiceVersionInfo outinfo;
+
+        info = &g_array_index (service_list,
+                               QmiMessageCtlGetVersionInfoOutputServiceListService,
+                               i);
+        outinfo.service = info->service;
+        outinfo.major_version = info->major_version;
+        outinfo.minor_version = info->minor_version;
+        g_array_append_val (out, outinfo);
+    }
+
+    qmi_message_ctl_get_version_info_output_unref (output);
+    g_simple_async_result_set_op_res_gpointer (simple, out, (GDestroyNotify)g_array_unref);
+    g_simple_async_result_complete (simple);
+    g_object_unref (simple);
+}
+
+/**
+ * qmi_device_get_service_version_info:
+ * @self: a #QmiClientCtl.
+ * @timeout: maximum time to wait for the method to complete, in seconds.
+ * @cancellable: a #GCancellable or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the request is satisfied.
+ * @user_data: user data to pass to @callback.
+ *
+ * Asynchronously requests the service version information of the device.
+ *
+ * When the operation is finished, @callback will be invoked in the thread-default main loop of the thread you are calling this method from.
+ *
+ * You can then call qmi_device_get_service_version_info_finish() to get the result of the operation.
+ */
+void
+qmi_device_get_service_version_info (QmiDevice *self,
+                                     guint timeout,
+                                     GCancellable *cancellable,
+                                     GAsyncReadyCallback callback,
+                                     gpointer user_data)
+{
+    qmi_client_ctl_get_version_info (
+        self->priv->client_ctl,
+        NULL,
+        timeout,
+        cancellable,
+        (GAsyncReadyCallback)version_info_ready,
+        g_simple_async_result_new (G_OBJECT (self),
+                                   callback,
+                                   user_data,
+                                   qmi_device_get_service_version_info));
+}
+
+/*****************************************************************************/
 /* Version info checks (private) */
 
 static const QmiMessageCtlGetVersionInfoOutputServiceListService *
@@ -1428,9 +1536,9 @@ sync_ready (QmiClientCtl *client_ctl,
 }
 
 static void
-version_info_ready (QmiClientCtl *client_ctl,
-                    GAsyncResult *res,
-                    DeviceOpenContext *ctx)
+open_version_info_ready (QmiClientCtl *client_ctl,
+                         GAsyncResult *res,
+                         DeviceOpenContext *ctx)
 {
     GArray *service_list;
     QmiMessageCtlGetVersionInfoOutput *output;
@@ -1450,7 +1558,7 @@ version_info_ready (QmiClientCtl *client_ctl,
                                                  NULL,
                                                  1,
                                                  ctx->cancellable,
-                                                 (GAsyncReadyCallback)version_info_ready,
+                                                 (GAsyncReadyCallback)open_version_info_ready,
                                                  ctx);
                 return;
             }
@@ -1528,7 +1636,7 @@ process_open_flags (DeviceOpenContext *ctx)
                                          NULL,
                                          1,
                                          ctx->cancellable,
-                                         (GAsyncReadyCallback)version_info_ready,
+                                         (GAsyncReadyCallback)open_version_info_ready,
                                          ctx);
         return;
     }
