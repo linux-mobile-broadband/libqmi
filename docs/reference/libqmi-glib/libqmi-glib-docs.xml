@@ -214,6 +214,7 @@
       <title>PDS Requests</title>
       <xi:include href="xml/qmi-message-pbm-indication-register.xml"/>
       <xi:include href="xml/qmi-message-pbm-get-capabilities.xml"/>
+      <xi:include href="xml/qmi-message-pbm-get-all-capabilities.xml"/>
     </section>
   </chapter>
 
