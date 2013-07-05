@@ -170,6 +170,7 @@ get_all_capabilities_ready (QmiClientPbm *client,
     }
 
     if (qmi_message_pbm_get_all_capabilities_output_get_group_capability (output, &array, NULL)) {
+        g_print ("Group capability:\n");
         for (i = 0; i < array->len; i++) {
             QmiMessagePbmGetAllCapabilitiesOutputGroupCapabilityElement *session;
 
@@ -183,6 +184,7 @@ get_all_capabilities_ready (QmiClientPbm *client,
     }
 
     if (qmi_message_pbm_get_all_capabilities_output_get_additional_number_capability (output, &array, NULL)) {
+        g_print ("Additional number capability:\n");
         for (i = 0; i < array->len; i++) {
             QmiMessagePbmGetAllCapabilitiesOutputAdditionalNumberCapabilityElement *session;
 
@@ -197,6 +199,7 @@ get_all_capabilities_ready (QmiClientPbm *client,
     }
 
     if (qmi_message_pbm_get_all_capabilities_output_get_email_capability (output, &array, NULL)) {
+        g_print ("Email capability:\n");
         for (i = 0; i < array->len; i++) {
             QmiMessagePbmGetAllCapabilitiesOutputEmailCapabilityElement *session;
 
@@ -210,6 +213,7 @@ get_all_capabilities_ready (QmiClientPbm *client,
     }
 
     if (qmi_message_pbm_get_all_capabilities_output_get_second_name_capability (output, &array, NULL)) {
+        g_print ("Second name capability:\n");
         for (i = 0; i < array->len; i++) {
             QmiMessagePbmGetAllCapabilitiesOutputSecondNameCapabilityElement *session;
 
@@ -222,6 +226,7 @@ get_all_capabilities_ready (QmiClientPbm *client,
     }
 
     if (qmi_message_pbm_get_all_capabilities_output_get_hidden_records_capability (output, &array, NULL)) {
+        g_print ("Hidden records capability:\n");
         for (i = 0; i < array->len; i++) {
             QmiMessagePbmGetAllCapabilitiesOutputHiddenRecordsCapabilityElement *session;
 
@@ -234,6 +239,7 @@ get_all_capabilities_ready (QmiClientPbm *client,
     }
 
     if (qmi_message_pbm_get_all_capabilities_output_get_grouping_information_alpha_string_capability (output, &array, NULL)) {
+        g_print ("Alpha string capability:\n");
         for (i = 0; i < array->len; i++) {
             QmiMessagePbmGetAllCapabilitiesOutputGroupingInformationAlphaStringCapabilityElement *session;
 
@@ -248,6 +254,7 @@ get_all_capabilities_ready (QmiClientPbm *client,
     }
 
     if (qmi_message_pbm_get_all_capabilities_output_get_additional_number_alpha_string_capability (output, &array, NULL)) {
+        g_print ("Additional number alpha string capability:\n");
         for (i = 0; i < array->len; i++) {
             QmiMessagePbmGetAllCapabilitiesOutputAdditionalNumberAlphaStringCapabilityElement *session;
 
