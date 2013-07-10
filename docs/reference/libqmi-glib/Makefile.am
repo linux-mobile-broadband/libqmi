@@ -54,10 +54,10 @@ AM_CPPFLAGS = \
 	-I$(srcdir) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
-	$(LIBQMI_GLIB_CFLAGS)
+	$(GLIB_CFLAGS)
 
 GTKDOC_LIBS = \
-	$(LIBQMI_GLIB_LIBS) \
+	$(GLIB_LIBS) \
 	$(top_builddir)/src/libqmi-glib/libqmi-glib.la
 
 # Extra options to supply to gtkdoc-mkdb

@@ -215,7 +215,7 @@ nodist_libqmi_glib_generated_la_SOURCES = \
 	$(GENERATED_C)
 
 libqmi_glib_generated_la_CPPFLAGS = \
-	$(LIBQMI_GLIB_CFLAGS) \
+	$(GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/libqmi-glib \
 	-I$(top_builddir)/src/libqmi-glib \
@@ -224,7 +224,7 @@ libqmi_glib_generated_la_CPPFLAGS = \
 	-Wno-unused-function
 
 libqmi_glib_generated_la_LIBADD = \
-	$(LIBQMI_GLIB_LIBS)
+	$(GLIB_LIBS)
 
 includedir = @includedir@/libqmi-glib
 nodist_include_HEADERS = \

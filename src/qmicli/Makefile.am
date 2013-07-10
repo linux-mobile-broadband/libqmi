@@ -4,7 +4,7 @@ SUBDIRS = . test
 bin_PROGRAMS = qmicli
 
 qmicli_CPPFLAGS = \
-	$(QMICLI_CFLAGS) \
+	$(GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/libqmi-glib \
 	-I$(top_srcdir)/src/libqmi-glib/generated \
@@ -23,5 +23,5 @@ qmicli_SOURCES = \
 	qmicli-uim.c
 
 qmicli_LDADD = \
-	$(QMICLI_LIBS) \
+	$(GLIB_LIBS) \
 	$(top_builddir)/src/libqmi-glib/libqmi-glib.la

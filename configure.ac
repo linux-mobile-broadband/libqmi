@@ -64,21 +64,13 @@ AC_SUBST(QMI_GLIB_LT_CURRENT)
 AC_SUBST(QMI_GLIB_LT_REVISION)
 AC_SUBST(QMI_GLIB_LT_AGE)
 
-dnl General dependencies for libqmi-glib
-PKG_CHECK_MODULES(LIBQMI_GLIB,
+dnl Dependencies
+PKG_CHECK_MODULES(GLIB,
                   glib-2.0 >= 2.32
                   gobject-2.0
                   gio-2.0)
-AC_SUBST(LIBQMI_GLIB_CFLAGS)
-AC_SUBST(LIBQMI_GLIB_LIBS)
-
-dnl General dependencies for qmicli
-PKG_CHECK_MODULES(QMICLI,
-                  glib-2.0 >= 2.28
-                  gobject-2.0
-                  gio-2.0)
-AC_SUBST(QMICLI_CFLAGS)
-AC_SUBST(QMICLI_LIBS)
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
 
 GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)

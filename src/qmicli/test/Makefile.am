@@ -11,7 +11,7 @@ test_helpers_SOURCES = \
 	$(top_srcdir)/src/qmicli/qmicli-helpers.c
 
 test_helpers_CPPFLAGS = \
-	$(QMICLI_CFLAGS) \
+	$(GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/qmicli \
 	-I$(top_srcdir)/src/libqmi-glib \
@@ -20,5 +20,5 @@ test_helpers_CPPFLAGS = \
 	-I$(top_builddir)/src/libqmi-glib/generated
 
 test_helpers_LDADD = \
-	$(QMICLI_LIBS) \
+	$(GLIB_LIBS) \
 	$(top_builddir)/src/libqmi-glib/libqmi-glib.la
