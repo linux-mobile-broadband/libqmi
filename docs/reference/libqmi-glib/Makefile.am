@@ -8,14 +8,14 @@ DOC_MAIN_SGML_FILE = $(DOC_MODULE)-docs.xml
 # Sections file building
 ALL_SECTIONS = \
 	$(srcdir)/libqmi-glib-common.sections \
-	$(top_builddir)/libqmi-glib/generated/qmi-dms.sections \
-	$(top_builddir)/libqmi-glib/generated/qmi-nas.sections \
-	$(top_builddir)/libqmi-glib/generated/qmi-wds.sections \
-	$(top_builddir)/libqmi-glib/generated/qmi-wms.sections \
-	$(top_builddir)/libqmi-glib/generated/qmi-pds.sections \
-	$(top_builddir)/libqmi-glib/generated/qmi-pbm.sections \
-	$(top_builddir)/libqmi-glib/generated/qmi-uim.sections \
-	$(top_builddir)/libqmi-glib/generated/qmi-oma.sections
+	$(top_builddir)/src/libqmi-glib/generated/qmi-dms.sections \
+	$(top_builddir)/src/libqmi-glib/generated/qmi-nas.sections \
+	$(top_builddir)/src/libqmi-glib/generated/qmi-wds.sections \
+	$(top_builddir)/src/libqmi-glib/generated/qmi-wms.sections \
+	$(top_builddir)/src/libqmi-glib/generated/qmi-pds.sections \
+	$(top_builddir)/src/libqmi-glib/generated/qmi-pbm.sections \
+	$(top_builddir)/src/libqmi-glib/generated/qmi-uim.sections \
+	$(top_builddir)/src/libqmi-glib/generated/qmi-oma.sections
 
 $(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
 	$(AM_V_GEN) \
@@ -30,17 +30,17 @@ SCAN_OPTIONS = --rebuild-types
 
 # The directory containing the source code.
 DOC_SOURCE_DIR = \
-	$(top_srcdir)/libqmi-glib \
-	$(top_builddir)/libqmi-glib/generated
+	$(top_srcdir)/src/libqmi-glib \
+	$(top_builddir)/src/libqmi-glib/generated
 
 # Used for dependencies
 HFILE_GLOB = \
-	$(top_srcdir)/libqmi-glib/*.h \
-	$(top_builddir)/libqmi-glib/*.h \
-	$(top_builddir)/libqmi-glib/generated/*.h
+	$(top_srcdir)/src/libqmi-glib/*.h \
+	$(top_builddir)/src/libqmi-glib/*.h \
+	$(top_builddir)/src/libqmi-glib/generated/*.h
 CFILE_GLOB = \
-	$(top_srcdir)/libqmi-glib/*.c \
-	$(top_builddir)/libqmi-glib/generated/*.c
+	$(top_srcdir)/src/libqmi-glib/*.c \
+	$(top_builddir)/src/libqmi-glib/generated/*.c
 
 # Headers to ignore
 IGNORE_HFILES = \
@@ -58,7 +58,7 @@ AM_CPPFLAGS = \
 
 GTKDOC_LIBS = \
 	$(LIBQMI_GLIB_LIBS) \
-	$(top_builddir)/libqmi-glib/libqmi-glib.la
+	$(top_builddir)/src/libqmi-glib/libqmi-glib.la
 
 # Extra options to supply to gtkdoc-mkdb
 MKDB_OPTIONS = --output-format=xml --sgml-mode --name-space=qmi

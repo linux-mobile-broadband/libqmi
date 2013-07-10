@@ -7,10 +7,10 @@ libqmi_glib_la_CPPFLAGS = \
 	$(LIBQMI_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
-	-I$(top_srcdir)/libqmi-glib \
-	-I$(top_srcdir)/libqmi-glib/generated \
-	-I$(top_builddir)/libqmi-glib \
-	-I$(top_builddir)/libqmi-glib/generated \
+	-I$(top_srcdir)/src/libqmi-glib \
+	-I$(top_srcdir)/src/libqmi-glib/generated \
+	-I$(top_builddir)/src/libqmi-glib \
+	-I$(top_builddir)/src/libqmi-glib/generated \
 	-DLIBQMI_GLIB_COMPILATION \
 	-DG_LOG_DOMAIN=\"Qmi\"
 
@@ -33,7 +33,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-client.h qmi-client.c
 
 libqmi_glib_la_LIBADD = \
-	${top_builddir}/libqmi-glib/generated/libqmi-glib-generated.la \
+	${top_builddir}/src/libqmi-glib/generated/libqmi-glib-generated.la \
 	$(LIBQMI_GLIB_LIBS)
 
 libqmi_glib_la_LDFLAGS = \

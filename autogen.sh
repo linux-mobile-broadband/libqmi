@@ -7,7 +7,7 @@ REQUIRED_AUTOMAKE_VERSION=1.9
 PKG_NAME=libqmi
 
 (test -f $srcdir/configure.ac \
-  && test -f $srcdir/libqmi-glib/libqmi-glib.h) || {
+  && test -f $srcdir/src/libqmi-glib/libqmi-glib.h) || {
     echo -n "**Error**: Directory "\`$srcdir\'" does not look like the"
     echo " top-level $PKG_NAME directory"
     exit 1

@@ -6,10 +6,10 @@ bin_PROGRAMS = qmicli
 qmicli_CPPFLAGS = \
 	$(QMICLI_CFLAGS) \
 	-I$(top_srcdir) \
-	-I$(top_srcdir)/libqmi-glib \
-	-I$(top_srcdir)/libqmi-glib/generated \
-	-I$(top_builddir)/libqmi-glib \
-	-I$(top_builddir)/libqmi-glib/generated
+	-I$(top_srcdir)/src/libqmi-glib \
+	-I$(top_srcdir)/src/libqmi-glib/generated \
+	-I$(top_builddir)/src/libqmi-glib \
+	-I$(top_builddir)/src/libqmi-glib/generated
 
 qmicli_SOURCES = \
 	qmicli.c \
@@ -24,4 +24,4 @@ qmicli_SOURCES = \
 
 qmicli_LDADD = \
 	$(QMICLI_LIBS) \
-	$(top_builddir)/libqmi-glib/libqmi-glib.la
+	$(top_builddir)/src/libqmi-glib/libqmi-glib.la

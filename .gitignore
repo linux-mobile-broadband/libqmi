@@ -30,34 +30,37 @@ gtk-doc.make
 
 data/pkg-config/qmi-glib.pc
 
-libqmi-glib/.libs
-libqmi-glib/.deps
-libqmi-glib/Makefile
-libqmi-glib/Makefile.in
-libqmi-glib/libqmi-glib.la
-libqmi-glib/qmi-version.h
+src/Makefile
+src/Makefile.in
 
-libqmi-glib/generated/.libs
-libqmi-glib/generated/.deps
-libqmi-glib/generated/*.c
-libqmi-glib/generated/*.h
-libqmi-glib/generated/*.sections
+src/libqmi-glib/.libs
+src/libqmi-glib/.deps
+src/libqmi-glib/Makefile
+src/libqmi-glib/Makefile.in
+src/libqmi-glib/libqmi-glib.la
+src/libqmi-glib/qmi-version.h
 
-libqmi-glib/test/.libs
-libqmi-glib/test/.deps
-libqmi-glib/test/Makefile
-libqmi-glib/test/Makefile.in
-libqmi-glib/test/test-utils
-libqmi-glib/test/test-message
+src/libqmi-glib/generated/.libs
+src/libqmi-glib/generated/.deps
+src/libqmi-glib/generated/*.c
+src/libqmi-glib/generated/*.h
+src/libqmi-glib/generated/*.sections
 
-cli/.deps
-cli/.libs
-cli/qmicli
-cli/test/.libs
-cli/test/.deps
-cli/test/Makefile
-cli/test/Makefile.in
-cli/test/test-helpers
+src/libqmi-glib/test/.libs
+src/libqmi-glib/test/.deps
+src/libqmi-glib/test/Makefile
+src/libqmi-glib/test/Makefile.in
+src/libqmi-glib/test/test-utils
+src/libqmi-glib/test/test-message
+
+src/qmicli/.deps
+src/qmicli/.libs
+src/qmicli/qmicli
+src/qmicli/test/.libs
+src/qmicli/test/.deps
+src/qmicli/test/Makefile
+src/qmicli/test/Makefile.in
+src/qmicli/test/test-helpers
 
 build-aux/qmi-codegen/*.pyc
 

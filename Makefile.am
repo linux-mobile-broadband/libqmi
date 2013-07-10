@@ -1,5 +1,5 @@
 
-SUBDIRS = . data build-aux libqmi-glib cli utils docs
+SUBDIRS = . data build-aux src utils docs
 
 ACLOCAL_AMFLAGS = -I m4
 

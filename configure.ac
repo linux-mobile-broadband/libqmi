@@ -97,12 +97,13 @@ AC_CONFIG_FILES([Makefile
                  build-aux/Makefile
                  build-aux/templates/Makefile
                  build-aux/qmi-codegen/Makefile
-                 libqmi-glib/Makefile
-                 libqmi-glib/qmi-version.h
-                 libqmi-glib/generated/Makefile
-                 libqmi-glib/test/Makefile
-                 cli/Makefile
-                 cli/test/Makefile
+                 src/Makefile
+                 src/libqmi-glib/Makefile
+                 src/libqmi-glib/qmi-version.h
+                 src/libqmi-glib/generated/Makefile
+                 src/libqmi-glib/test/Makefile
+                 src/qmicli/Makefile
+                 src/qmicli/test/Makefile
                  utils/Makefile
                  docs/Makefile
                  docs/reference/Makefile

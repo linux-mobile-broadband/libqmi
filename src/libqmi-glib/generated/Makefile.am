@@ -44,36 +44,36 @@ GENERATED_SECTIONS = \
 	qmi-oma.sections
 
 # Error types
-qmi-error-types.h: $(top_srcdir)/libqmi-glib/qmi-errors.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.h
+qmi-error-types.h: $(top_srcdir)/src/libqmi-glib/qmi-errors.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#ifndef __LIBQMI_GLIB_ERROR_TYPES_H__\n#define __LIBQMI_GLIB_ERROR_TYPES_H__\n#include \"qmi-errors.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-error-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ERROR_TYPES_H__ */\n" \
-		$(top_srcdir)/libqmi-glib/qmi-errors.h > $@
+		$(top_srcdir)/src/libqmi-glib/qmi-errors.h > $@
 
-qmi-error-types.c: $(top_srcdir)/libqmi-glib/qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.c
+qmi-error-types.c: $(top_srcdir)/src/libqmi-glib/qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.c
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#include \"qmi-errors.h\"\n#include \"qmi-error-types.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-error-types-template.c \
-		$(top_srcdir)/libqmi-glib/qmi-errors.h > $@
+		$(top_srcdir)/src/libqmi-glib/qmi-errors.h > $@
 
-qmi-error-quarks.c: $(top_srcdir)/libqmi-glib/qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templates/qmi-error-quarks-template.c
+qmi-error-quarks.c: $(top_srcdir)/src/libqmi-glib/qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templates/qmi-error-quarks-template.c
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#include \"qmi-errors.h\"\n#include \"qmi-error-types.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-error-quarks-template.c \
-		$(top_srcdir)/libqmi-glib/qmi-errors.h > $@
+		$(top_srcdir)/src/libqmi-glib/qmi-errors.h > $@
 
 # Enum/Flag types
 ENUMS = \
-	$(top_srcdir)/libqmi-glib/qmi-enums.h \
-	$(top_srcdir)/libqmi-glib/qmi-enums-wds.h \
-	$(top_srcdir)/libqmi-glib/qmi-enums-dms.h \
-	$(top_srcdir)/libqmi-glib/qmi-enums-nas.h \
-	$(top_srcdir)/libqmi-glib/qmi-enums-wms.h \
-	$(top_srcdir)/libqmi-glib/qmi-enums-pds.h \
-	$(top_srcdir)/libqmi-glib/qmi-enums-pbm.h \
-	$(top_srcdir)/libqmi-glib/qmi-enums-uim.h \
-	$(top_srcdir)/libqmi-glib/qmi-enums-oma.h
+	$(top_srcdir)/src/libqmi-glib/qmi-enums.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-wds.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-dms.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-nas.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-wms.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-pds.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-pbm.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-uim.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-oma.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pbm.h\"\n#include \"qmi-enums-uim.h\"\n#include \"qmi-enums-oma.h\"\n" \
@@ -89,7 +89,7 @@ qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/templates/qm
 
 # Private Enum/Flag types
 PRIVATE_ENUMS = \
-	$(top_srcdir)/libqmi-glib/qmi-enums-private.h
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-private.h
 qmi-enum-types-private.h:  $(PRIVATE_ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__\n#include \"qmi-enums-private.h\"\n" \
@@ -104,7 +104,7 @@ qmi-enum-types-private.c: $(PRIVATE_ENUMS) qmi-enum-types-private.h $(top_srcdir
 		$(PRIVATE_ENUMS) > $@
 
 # 64bit flag types
-FLAGS64 = $(top_srcdir)/libqmi-glib/qmi-flags64-dms.h $(top_srcdir)/libqmi-glib/qmi-flags64-nas.h
+FLAGS64 = $(top_srcdir)/src/libqmi-glib/qmi-flags64-dms.h $(top_srcdir)/src/libqmi-glib/qmi-flags64-nas.h
 qmi-flags64-types.h:  $(FLAGS64) $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
 		--fhead "#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include \"qmi-flags64-dms.h\"\n#include \"qmi-flags64-nas.h\"\n" \
@@ -217,8 +217,8 @@ nodist_libqmi_glib_generated_la_SOURCES = \
 libqmi_glib_generated_la_CPPFLAGS = \
 	$(LIBQMI_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
-	-I$(top_srcdir)/libqmi-glib \
-	-I$(top_builddir)/libqmi-glib \
+	-I$(top_srcdir)/src/libqmi-glib \
+	-I$(top_builddir)/src/libqmi-glib \
 	-DLIBQMI_GLIB_COMPILATION \
 	-DG_LOG_DOMAIN=\"Qmi\" \
 	-Wno-unused-function
