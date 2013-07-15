@@ -25,14 +25,6 @@ List of things left for later:
    detailed sub-types, e.g.: the 'QmiNasRadioTechnologyPreference' flags type,
    where the first two bits define the type of the next ones.
 
- * dms: Support 'Preferred Roaming List' TLV (0x13) in DMS/"Activate Manual".
-   This TLV is based on an array of raw binary data which can be passed to the
-   device over multiple messages, using a sequence number to identify each
-   passed chunk. Probably not worth handling this specific case in qmi-codegen.
-   Also, sending such a message should trigger internally multiple messages
-   being sent automatically, not just one.
-
- * qmicli: Implement `--dms-activate-manual'.
  * qmicli: Implement `--dms-set-time'.
  * qmicli: Implement `--dms-get-alt-net-config'.
  * qmicli: Implement `--dms-set-alt-net-config'.
