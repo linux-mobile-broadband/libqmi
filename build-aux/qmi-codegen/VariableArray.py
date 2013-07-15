@@ -72,6 +72,13 @@ class VariableArray(Variable):
             default_array_size = { 'format' : 'guint8' }
             self.array_size_element = VariableFactory.create_variable(default_array_size, '', self.container_type)
 
+        # Load variable type for the sequence prefix
+        if 'sequence-prefix-format' in dictionary:
+            sequence = { 'format' : dictionary['sequence-prefix-format'] }
+            self.array_sequence_element = VariableFactory.create_variable(sequence, '', self.container_type)
+        else:
+            self.array_sequence_element = ''
+
 
     """
     Emit the type for the array element
@@ -150,14 +157,32 @@ class VariableArray(Variable):
             f.write(string.Template(template).substitute(translations))
         else:
             translations['array_size_element_format'] = self.array_size_element.public_format
-
             template = (
-                '${lp}    ${array_size_element_format} ${common_var_prefix}_n_items;\n'
+                '${lp}    ${array_size_element_format} ${common_var_prefix}_n_items;\n')
+
+            if self.array_sequence_element != '':
+                translations['array_sequence_element_format'] = self.array_sequence_element.public_format
+                template += (
+                    '${lp}    ${array_sequence_element_format} ${common_var_prefix}_sequence;\n')
+
+            template += (
                 '\n'
                 '${lp}    /* Read number of items in the array */\n')
             f.write(string.Template(template).substitute(translations))
-
             self.array_size_element.emit_buffer_read(f, line_prefix + '    ', common_var_prefix + '_n_items', buffer_name, buffer_len)
+
+            if self.array_sequence_element != '':
+                template = (
+                    '\n'
+                    '${lp}    /* Read sequence in the array */\n')
+                f.write(string.Template(template).substitute(translations))
+                self.array_size_element.emit_buffer_read(f, line_prefix + '    ', common_var_prefix + '_sequence', buffer_name, buffer_len)
+
+                template = (
+                    '\n'
+                    '${lp}    ${variable_name}_sequence = ${common_var_prefix}_sequence;\n')
+                f.write(string.Template(template).substitute(translations))
+
 
         template = (
             '\n'
@@ -202,15 +227,15 @@ class VariableArray(Variable):
 
         template = (
             '${lp}{\n'
-            '${lp}    guint ${common_var_prefix}_i;\n')
+            '${lp}    guint ${common_var_prefix}_i;\n'
+            '\n')
         f.write(string.Template(template).substitute(translations))
 
         if self.fixed_size:
             translations['fixed_size'] = self.fixed_size
 
             template = (
-                '${lp}    guint16 ${common_var_prefix}_n_items = ${fixed_size};\n'
-                '\n')
+                '${lp}    guint16 ${common_var_prefix}_n_items = ${fixed_size};\n')
             f.write(string.Template(template).substitute(translations))
         else:
             translations['array_size_element_format'] = self.array_size_element.public_format
@@ -228,13 +253,27 @@ class VariableArray(Variable):
                 '${lp}    const guint8 *${common_var_prefix}_aux_buffer = &${buffer_name}[${variable_name}];\n'
                 '${lp}    guint16 ${common_var_prefix}_aux_buffer_len = ${buffer_len} - ${variable_name};\n'
                 '\n'
-                '${lp}    ${variable_name} += ${array_size_element_size};\n'
-                '\n')
+                '${lp}    ${variable_name} += ${array_size_element_size};\n')
+
+            if self.array_sequence_element != '':
+                if self.array_sequence_element.public_format == 'guint8':
+                    translations['array_sequence_element_size'] = '1'
+                elif self.array_sequence_element.public_format == 'guint16':
+                    translations['array_sequence_element_size'] = '2'
+                elif self.array_sequence_element.public_format == 'guint32':
+                    translations['array_sequence_element_size'] = '4'
+                else:
+                    translations['array_sequence_element_size'] = '0'
+                template += (
+                    '\n'
+                    '${lp}    ${variable_name} += ${array_sequence_element_size};\n')
+
             f.write(string.Template(template).substitute(translations))
 
             self.array_size_element.emit_buffer_read(f, line_prefix + '    ', common_var_prefix + '_n_items', common_var_prefix + '_aux_buffer', common_var_prefix + '_aux_buffer_len')
 
         template = (
+            '\n'
             '${lp}    for (${common_var_prefix}_i = 0; ${common_var_prefix}_i < ${common_var_prefix}_n_items; ${common_var_prefix}_i++) {\n'
             '\n')
         f.write(string.Template(template).substitute(translations))
@@ -275,6 +314,10 @@ class VariableArray(Variable):
 
             self.array_size_element.emit_buffer_write(f, line_prefix + '    ', common_var_prefix + '_n_items', buffer_name, buffer_len)
 
+        if self.array_sequence_element != '':
+            self.array_sequence_element.emit_buffer_write(f, line_prefix + '    ', variable_name + '_sequence', buffer_name, buffer_len)
+
+
         template = (
             '\n'
             '${lp}    for (${common_var_prefix}_i = 0; ${common_var_prefix}_i < ${variable_name}->len; ${common_var_prefix}_i++) {\n')
@@ -314,14 +357,30 @@ class VariableArray(Variable):
             f.write(string.Template(template).substitute(translations))
         else:
             translations['array_size_element_format'] = self.array_size_element.public_format
-
             template = (
-                '${lp}    ${array_size_element_format} ${common_var_prefix}_n_items;\n'
+                '${lp}    ${array_size_element_format} ${common_var_prefix}_n_items;\n')
+
+            if self.array_sequence_element != '':
+                translations['array_sequence_element_format'] = self.array_sequence_element.public_format
+                template += (
+                    '${lp}    ${array_sequence_element_format} ${common_var_prefix}_sequence;\n')
+
+            template += (
                 '\n'
                 '${lp}    /* Read number of items in the array */\n')
             f.write(string.Template(template).substitute(translations))
-
             self.array_size_element.emit_buffer_read(f, line_prefix + '    ', common_var_prefix + '_n_items', buffer_name, buffer_len)
+
+            if self.array_sequence_element != '':
+                template = (
+                    '\n'
+                    '${lp}    /* Read sequence */\n')
+                f.write(string.Template(template).substitute(translations))
+                self.array_sequence_element.emit_buffer_read(f, line_prefix + '    ', common_var_prefix + '_sequence', buffer_name, buffer_len)
+                template = (
+                    '\n'
+                    '${lp}    g_string_append_printf (${printable}, "[[Seq:%u]] ", ${common_var_prefix}_sequence);\n')
+                f.write(string.Template(template).substitute(translations))
 
         template = (
             '\n'
@@ -349,7 +408,13 @@ class VariableArray(Variable):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
-        template = (
+        template = ''
+        if self.array_sequence_element != '':
+            translations['array_sequence_element_format'] = self.array_sequence_element.public_format
+            template += (
+                '${lp}${array_sequence_element_format} ${name}_sequence;\n')
+
+        template += (
             '${lp}GArray *${name};\n')
         return string.Template(template).substitute(translations)
 
@@ -361,7 +426,13 @@ class VariableArray(Variable):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
-        template = (
+        template = ''
+        if self.array_sequence_element != '':
+            translations['array_sequence_element_format'] = self.array_sequence_element.public_format
+            template += (
+                '${lp}${array_sequence_element_format} *${name}_sequence,\n')
+
+        template += (
             '${lp}GArray **${name},\n')
         return string.Template(template).substitute(translations)
 
@@ -374,7 +445,12 @@ class VariableArray(Variable):
                          'public_array_element_format' : self.array_element.public_format,
                          'name'                        : variable_name }
 
-        template = (
+        template = ''
+        if self.array_sequence_element != '':
+            template += (
+                '${lp}@${name}_sequence: a placeholder for the output sequence number, or %NULL if not required.\n')
+
+        template += (
             '${lp}@${name}: a placeholder for the output #GArray of #${public_array_element_format} elements, or %NULL if not required. Do not free it, it is owned by @self.\n')
         return string.Template(template).substitute(translations)
 
@@ -387,15 +463,21 @@ class VariableArray(Variable):
                          'from' : variable_name_from,
                          'to'   : variable_name_to }
 
+        template = ''
+        if self.array_sequence_element != '':
+            template += (
+                '${lp}if (${to}_sequence)\n'
+                '${lp}    *${to}_sequence = ${from}_sequence;\n')
+
         if to_is_reference:
-            template = (
+            template += (
                 '${lp}if (${to})\n'
                 '${lp}    *${to} = ${from};\n')
-            return string.Template(template).substitute(translations)
         else:
-            template = (
+            template += (
                 '${lp}${to} = ${from};\n')
-            return string.Template(template).substitute(translations)
+
+        return string.Template(template).substitute(translations)
 
 
     """
@@ -405,7 +487,13 @@ class VariableArray(Variable):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
-        template = (
+        template = ''
+        if self.array_sequence_element != '':
+            translations['array_sequence_element_format'] = self.array_sequence_element.public_format
+            template += (
+                '${lp}${array_sequence_element_format} ${name}_sequence,\n')
+
+        template += (
             '${lp}GArray *${name},\n')
         return string.Template(template).substitute(translations)
 
@@ -418,7 +506,12 @@ class VariableArray(Variable):
                          'public_array_element_format' : self.array_element.public_format,
                          'name'                        : variable_name }
 
-        template = (
+        template = ''
+        if self.array_sequence_element != '':
+            template += (
+                '${lp}@${name}_sequence: the sequence number.\n')
+
+        template += (
             '${lp}@${name}: a #GArray of #${public_array_element_format} elements. A new reference to @${name} will be taken.\n')
         return string.Template(template).substitute(translations)
 
@@ -431,7 +524,12 @@ class VariableArray(Variable):
                          'from' : variable_name_from,
                          'to'   : variable_name_to }
 
-        template = (
+        template = ''
+        if self.array_sequence_element != '':
+            template += (
+                '${lp}${to}_sequence = ${from}_sequence;\n')
+
+        template += (
             '${lp}if (${to})\n'
             '${lp}    g_array_unref (${to});\n'
             '${lp}${to} = g_array_ref (${from});\n')
@@ -446,7 +544,12 @@ class VariableArray(Variable):
                          'public_array_element_format' : self.array_element.public_format,
                          'name'                        : variable_name }
 
-        template = (
+        template = ''
+        if self.array_sequence_element != '':
+            template += (
+                '${lp}@${name}_sequence: the sequence number.\n')
+
+        template += (
             '${lp}@${name}: a #GArray of #${public_array_element_format} elements.\n')
         return string.Template(template).substitute(translations)
 
