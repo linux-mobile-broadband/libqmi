@@ -1,9 +1,9 @@
 
 SUBDIRS = generated . test
 
-lib_LTLIBRARIES = libmbim-glib.la
-
-libmbim_glib_la_CPPFLAGS = \
+# Core library, built as a noinst
+noinst_LTLIBRARIES = libmbim-glib-core.la
+libmbim_glib_core_la_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
@@ -13,9 +13,7 @@ libmbim_glib_la_CPPFLAGS = \
 	-I$(top_builddir)/libmbim-glib/generated \
 	-DLIBMBIM_GLIB_COMPILATION \
 	-DG_LOG_DOMAIN=\"Mbim\"
-
-libmbim_glib_la_SOURCES = \
-	libmbim-glib.h \
+libmbim_glib_core_la_SOURCES = \
 	mbim-version.h \
 	mbim-errors.h \
 	mbim-enums.h \
@@ -25,12 +23,20 @@ libmbim_glib_la_SOURCES = \
 	mbim-message-private.h mbim-message.h mbim-message.c \
 	mbim-device.h mbim-device.c
 
+# Final installable library
+lib_LTLIBRARIES = libmbim-glib.la
+
+libmbim_glib_la_SOURCES = \
+	libmbim-glib.h
+
 libmbim_glib_la_LIBADD = \
+	libmbim-glib-core.la \
 	${top_builddir}/libmbim-glib/generated/libmbim-glib-generated.la \
 	$(LIBMBIM_GLIB_LIBS)
 
 libmbim_glib_la_LDFLAGS = \
-	-version-info $(MBIM_GLIB_LT_CURRENT):$(MBIM_GLIB_LT_REVISION):$(MBIM_GLIB_LT_AGE)
+	-version-info $(MBIM_GLIB_LT_CURRENT):$(MBIM_GLIB_LT_REVISION):$(MBIM_GLIB_LT_AGE) \
+	-export-symbols-regex '^mbim_.*'
 
 includedir = @includedir@/libmbim-glib
 include_HEADERS = \
