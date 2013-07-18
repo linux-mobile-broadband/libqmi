@@ -1716,6 +1716,7 @@ activate_manual_input_create (const gchar *str)
     QmiMessageDmsActivateManualInput *input;
     gchar **split;
     GError *error = NULL;
+    gulong split_1_int;
 
     split = g_strsplit (str, ",", -1);
     if (g_strv_length (split) != 4) {
@@ -1724,11 +1725,18 @@ activate_manual_input_create (const gchar *str)
         return NULL;
     }
 
+    split_1_int = strtoul (split[1], NULL, 10);
+    if (split_1_int > G_MAXUINT16) {
+        g_printerr ("error: invalid SID given '%s'\n",
+                    split[1]);
+        return NULL;
+    }
+
     input = qmi_message_dms_activate_manual_input_new ();
     if (!qmi_message_dms_activate_manual_input_set_info (
             input,
             split[0],
-            split[1],
+            (guint16)split_1_int,
             split[2],
             split[3],
             &error)) {
