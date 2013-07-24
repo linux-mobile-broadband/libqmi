@@ -136,7 +136,7 @@ mbim-dss.h mbim-dss.c mbim-dss.sections: $(top_srcdir)/data/mbim-service-dss.jso
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 
-libmbim_glib_generated_la_SOURCES = \
+nodist_libmbim_glib_generated_la_SOURCES = \
 	$(GENERATED_H) \
 	$(GENERATED_C)
 
