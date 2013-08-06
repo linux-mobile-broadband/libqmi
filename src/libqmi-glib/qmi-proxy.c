@@ -256,10 +256,15 @@ process_internal_proxy_open (Client *client,
     return FALSE;
 }
 
+typedef struct {
+    Client *client;
+    guint8 in_trid;
+} Request;
+
 static void
 device_command_ready (QmiDevice *device,
                       GAsyncResult *res,
-                      Client *client)
+                      Request *request)
 {
     QmiMessage *response;
     GError *error = NULL;
@@ -271,40 +276,45 @@ device_command_ready (QmiDevice *device,
         return;
     }
 
-    if (!send_message (client, response, &error)) {
-        qmi_message_unref (response);
-        connection_close (client);
-        return;
-    }
+    if (qmi_message_get_service (response) == QMI_SERVICE_CTL)
+        qmi_message_set_transaction_id (response, request->in_trid);
+
+    if (!send_message (request->client, response, &error))
+        connection_close (request->client);
 
     qmi_message_unref (response);
+    g_slice_free (Request, request);
 }
 
 static gboolean
 process_message (Client *client,
                  QmiMessage *message)
 {
+    Request *request;
+
     /* Accept only request messages from the client */
     if (!qmi_message_is_request (message)) {
         g_debug ("invalid message from client: not a request message");
         return FALSE;
     }
 
+    if (qmi_message_get_service (message) == QMI_SERVICE_CTL &&
+        qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN)
+        return process_internal_proxy_open (client, message);
+
+    request = g_slice_new0 (Request);
+    request->client = client;
     if (qmi_message_get_service (message) == QMI_SERVICE_CTL) {
-        if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN)
-            return process_internal_proxy_open (client, message);
-
-        /* CTL, fixup transaction id and keep on */
+        request->in_trid = qmi_message_get_transaction_id (message);
+        qmi_message_set_transaction_id (message, 0);
     }
-
-    /* Non-CTL service, just forward to qmi device */
 
     qmi_device_command (client->device,
                         message,
                         10, /* for now... */
                         NULL,
                         (GAsyncReadyCallback)device_command_ready,
-                        client);
+                        request);
     return TRUE;
 }
 
