@@ -26,6 +26,8 @@
 #include <termios.h>
 #include <unistd.h>
 #include <gio/gio.h>
+#include <gio/gunixinputstream.h>
+#include <gio/gunixoutputstream.h>
 
 #include "qmi-device.h"
 #include "qmi-message.h"
@@ -79,10 +81,11 @@ struct _QmiDevicePrivate {
     /* Supported services */
     GArray *supported_services;
 
-    /* I/O channel, set when the file is open */
-    GIOChannel *iochannel;
-    guint watch_id;
-    GByteArray *response;
+    /* I/O stream, set when the file is open */
+    GInputStream *istream;
+    GOutputStream *ostream;
+    GSource *input_source;
+    GByteArray *buffer;
 
     /* HT to keep track of ongoing transactions */
     GHashTable *transactions;
@@ -568,7 +571,7 @@ qmi_device_is_open (QmiDevice *self)
 {
     g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
 
-    return !!self->priv->iochannel;
+    return !!(self->priv->istream && self->priv->ostream);
 }
 
 /*****************************************************************************/
@@ -1288,15 +1291,15 @@ parse_response (QmiDevice *self)
          * If it doesn't, we broke framing :-/
          * If we broke framing, an error should be reported and the device
          * should get closed */
-        if (self->priv->response->len > 0 &&
-            self->priv->response->data[0] != QMI_MESSAGE_QMUX_MARKER) {
+        if (self->priv->buffer->len > 0 &&
+            self->priv->buffer->data[0] != QMI_MESSAGE_QMUX_MARKER) {
             /* TODO: Report fatal error */
             g_warning ("[%s] QMI framing error detected",
                        self->priv->path_display);
             return;
         }
 
-        message = qmi_message_new_from_raw (self->priv->response, &error);
+        message = qmi_message_new_from_raw (self->priv->buffer, &error);
         if (!message) {
             if (!error)
                 /* More data we need */
@@ -1312,86 +1315,56 @@ parse_response (QmiDevice *self)
             process_message (self, message);
             qmi_message_unref (message);
         }
-    } while (self->priv->response->len > 0);
+    } while (self->priv->buffer->len > 0);
 }
 
 static gboolean
-data_available (GIOChannel *source,
-                GIOCondition condition,
+input_ready_cb (GInputStream *istream,
                 QmiDevice *self)
 {
-    gsize bytes_read;
-    GIOStatus status;
-    gchar buffer[BUFFER_SIZE + 1];
+    guint8 buffer[BUFFER_SIZE];
+    GError *error = NULL;
+    gssize read;
 
-    if (condition & G_IO_HUP) {
-        g_debug ("[%s] unexpected port hangup!",
-                 self->priv->path_display);
+    /* Setup buffer for reading into */
+    if (!G_UNLIKELY (self->priv->buffer))
+        self->priv->buffer = g_byte_array_sized_new (512);
 
-        if (self->priv->response &&
-            self->priv->response->len)
-            g_byte_array_remove_range (self->priv->response, 0, self->priv->response->len);
-
+    read = g_input_stream_read (istream,
+                                buffer,
+                                BUFFER_SIZE,
+                                NULL,
+                                &error);
+    if (read < 0) {
+        g_warning ("Error reading from istream: %s", error ? error->message : "unknown");
+        if (error)
+            g_error_free (error);
+        /* Close the device */
         qmi_device_close (self, NULL);
         return FALSE;
     }
 
-    if (condition & G_IO_ERR) {
-        if (self->priv->response &&
-            self->priv->response->len)
-            g_byte_array_remove_range (self->priv->response, 0, self->priv->response->len);
+    if (read == 0)
         return TRUE;
-    }
 
-    /* If not ready yet, prepare the response with default initial size. */
-    if (G_UNLIKELY (!self->priv->response))
-        self->priv->response = g_byte_array_sized_new (500);
+    /* else, read > 0 */
+    if (!G_UNLIKELY (self->priv->buffer))
+        self->priv->buffer = g_byte_array_sized_new (read);
+    g_byte_array_append (self->priv->buffer, buffer, read);
 
-    do {
-        GError *error = NULL;
-
-        status = g_io_channel_read_chars (source,
-                                          buffer,
-                                          BUFFER_SIZE,
-                                          &bytes_read,
-                                          &error);
-        if (status == G_IO_STATUS_ERROR) {
-            if (error) {
-                g_warning ("[%s] error reading from the IOChannel: '%s'",
-                           self->priv->path_display,
-                           error->message);
-                g_error_free (error);
-            }
-
-            /* Port is closed; we're done */
-            if (self->priv->watch_id == 0)
-                break;
-        }
-
-        /* If no bytes read, just let g_io_channel wait for more data */
-        if (bytes_read == 0)
-            break;
-
-        if (bytes_read > 0)
-            g_byte_array_append (self->priv->response, (const guint8 *)buffer, bytes_read);
-
-        /* Try to parse what we already got */
-        parse_response (self);
-
-        /* And keep on if we were told to keep on */
-    } while (bytes_read == BUFFER_SIZE || status == G_IO_STATUS_AGAIN);
+    /* Try to parse input messages */
+    parse_response (self);
 
     return TRUE;
 }
 
 static gboolean
-create_iochannel (QmiDevice *self,
-                  GError **error)
+create_iostream (QmiDevice *self,
+                 GError **error)
 {
-    GError *inner_error = NULL;
     gint fd;
 
-    if (self->priv->iochannel) {
+    if (self->priv->istream || self->priv->ostream) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_WRONG_STATE,
@@ -1402,7 +1375,6 @@ create_iochannel (QmiDevice *self,
     g_assert (self->priv->file);
     g_assert (self->priv->path);
 
-    errno = 0;
     fd = open (self->priv->path, O_RDWR | O_EXCL | O_NONBLOCK | O_NOCTTY);
     if (fd < 0) {
         g_set_error (error,
@@ -1414,36 +1386,32 @@ create_iochannel (QmiDevice *self,
         return FALSE;
     }
 
-    /* Create new GIOChannel */
-    self->priv->iochannel = g_io_channel_unix_new (fd);
+    self->priv->istream = g_unix_input_stream_new  (fd, TRUE);
+    self->priv->ostream = g_unix_output_stream_new (fd, TRUE);
 
-    /* We don't want UTF-8 encoding, we're playing with raw binary data */
-    g_io_channel_set_encoding (self->priv->iochannel, NULL, NULL);
-
-    /* We don't want to get the channel buffered */
-    g_io_channel_set_buffered (self->priv->iochannel, FALSE);
-
-    /* Let the GIOChannel own the FD */
-    g_io_channel_set_close_on_unref (self->priv->iochannel, TRUE);
-
-    /* We don't want to get blocked while writing stuff */
-    if (!g_io_channel_set_flags (self->priv->iochannel,
-                                 G_IO_FLAG_NONBLOCK,
-                                 &inner_error)) {
-        g_prefix_error (&inner_error, "Cannot set non-blocking channel: ");
-        g_propagate_error (error, inner_error);
-        g_io_channel_shutdown (self->priv->iochannel, FALSE, NULL);
-        g_io_channel_unref (self->priv->iochannel);
-        self->priv->iochannel = NULL;
+    /* Get in/out streams */
+    if (!self->priv->istream || !self->priv->ostream) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "Cannot get input/output streams");
+        g_clear_object (&self->priv->istream);
+        g_clear_object (&self->priv->ostream);
         return FALSE;
     }
 
-    self->priv->watch_id = g_io_add_watch (self->priv->iochannel,
-                                           G_IO_IN | G_IO_ERR | G_IO_HUP,
-                                           (GIOFunc)data_available,
-                                           self);
+    /* Setup input events */
+    self->priv->input_source = (g_pollable_input_stream_create_source (
+                                    G_POLLABLE_INPUT_STREAM (
+                                        self->priv->istream),
+                                    NULL));
+    g_source_set_callback (self->priv->input_source,
+                           (GSourceFunc)input_ready_cb,
+                           self,
+                           NULL);
+    g_source_attach (self->priv->input_source, NULL);
 
-    return !!self->priv->iochannel;
+    return TRUE;
 }
 
 typedef struct {
@@ -1754,9 +1722,8 @@ qmi_device_open (QmiDevice *self,
     ctx->timeout = timeout;
     ctx->cancellable = (cancellable ? g_object_ref (cancellable) : NULL);
 
-    if (!create_iochannel (self, &error)) {
-        g_prefix_error (&error,
-                        "Cannot open QMI device: ");
+    if (!create_iostream (self, &error)) {
+        g_prefix_error (&error, "Cannot open QMI device: ");
         g_simple_async_result_take_error (ctx->result, error);
         device_open_context_complete_and_free (ctx);
         return;
@@ -1767,33 +1734,32 @@ qmi_device_open (QmiDevice *self,
 }
 
 /*****************************************************************************/
-/* Close channel */
+/* Close stream */
 
 static gboolean
-destroy_iochannel (QmiDevice *self,
-                   GError **error)
+destroy_iostream (QmiDevice *self,
+                  GError **error)
 {
     GError *inner_error = NULL;
 
     /* Already closed? */
-    if (!self->priv->iochannel)
+    if (!self->priv->istream && self->priv->ostream)
         return TRUE;
 
-    g_io_channel_shutdown (self->priv->iochannel, TRUE, &inner_error);
+    if (self->priv->input_source) {
+        g_source_destroy (self->priv->input_source);
+        g_source_unref (self->priv->input_source);
+        self->priv->input_source = NULL;
+    }
+
+    if (self->priv->buffer) {
+        g_byte_array_unref (self->priv->buffer);
+        self->priv->buffer = NULL;
+    }
 
     /* Failures when closing still make the device to get closed */
-    g_io_channel_unref (self->priv->iochannel);
-    self->priv->iochannel = NULL;
-
-    if (self->priv->watch_id) {
-        g_source_remove (self->priv->watch_id);
-        self->priv->watch_id = 0;
-    }
-
-    if (self->priv->response) {
-        g_byte_array_unref (self->priv->response);
-        self->priv->response = NULL;
-    }
+    g_clear_object (&self->priv->istream);
+    g_clear_object (&self->priv->ostream);
 
     if (inner_error) {
         g_propagate_error (error, inner_error);
@@ -1820,9 +1786,8 @@ qmi_device_close (QmiDevice *self,
 {
     g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
 
-    if (!destroy_iochannel (self, error)) {
-        g_prefix_error (error,
-                        "Cannot close QMI device: ");
+    if (!destroy_iostream (self, error)) {
+        g_prefix_error (error, "Cannot close QMI device: ");
         return FALSE;
     }
 
@@ -1880,8 +1845,6 @@ qmi_device_command (QmiDevice *self,
     Transaction *tr;
     gconstpointer raw_message;
     gsize raw_message_len;
-    gsize written;
-    GIOStatus write_status;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (message != NULL);
@@ -1889,7 +1852,7 @@ qmi_device_command (QmiDevice *self,
     tr = transaction_new (self, message, cancellable, callback, user_data);
 
     /* Device must be open */
-    if (!self->priv->iochannel) {
+    if (!self->priv->istream || !self->priv->ostream) {
         error = g_error_new (QMI_CORE_ERROR,
                              QMI_CORE_ERROR_WRONG_STATE,
                              "Device must be open to send commands");
@@ -1958,41 +1921,21 @@ qmi_device_command (QmiDevice *self,
         g_free (printable);
     }
 
-    written = 0;
-    write_status = G_IO_STATUS_AGAIN;
-    while (write_status == G_IO_STATUS_AGAIN) {
-        write_status = g_io_channel_write_chars (self->priv->iochannel,
-                                                 raw_message,
-                                                 (gssize)raw_message_len,
-                                                 &written,
-                                                 &error);
-        switch (write_status) {
-        case G_IO_STATUS_ERROR:
-            g_prefix_error (&error, "Cannot write message: ");
-
-            /* Match transaction so that we remove it from our tracking table */
-            tr = device_match_transaction (self, message);
-            transaction_complete_and_free (tr, NULL, error);
-            g_error_free (error);
-            return;
-
-        case G_IO_STATUS_EOF:
-            /* We shouldn't get EOF when writing */
-            g_assert_not_reached ();
-            break;
-
-        case G_IO_STATUS_NORMAL:
-            /* All good, we'll exit the loop now */
-            break;
-
-        case G_IO_STATUS_AGAIN:
-            /* We're in a non-blocking channel and therefore we're up to receive
-             * EAGAIN; just retry in this case. TODO: in an idle? */
-            break;
-        }
+    if (!g_output_stream_write_all (self->priv->ostream,
+                                    raw_message,
+                                    raw_message_len,
+                                    NULL, /* bytes_written */
+                                    NULL, /* cancellable */
+                                    &error)) {
+        g_prefix_error (&error, "Cannot write message: ");
+        /* Match transaction so that we remove it from our tracking table */
+        tr = device_match_transaction (self, message);
+        transaction_complete_and_free (tr, NULL, error);
+        g_error_free (error);
     }
 
-    /* Just return, we'll get response asynchronously */
+    /* Flush explicitly if correctly written */
+    g_output_stream_flush (self->priv->ostream, NULL, NULL);
 }
 
 /*****************************************************************************/
@@ -2292,12 +2235,19 @@ finalize (GObject *object)
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);
-    if (self->priv->watch_id)
-        g_source_remove (self->priv->watch_id);
-    if (self->priv->response)
-        g_byte_array_unref (self->priv->response);
-    if (self->priv->iochannel)
-        g_io_channel_unref (self->priv->iochannel);
+
+    if (self->priv->input_source) {
+        g_source_destroy (self->priv->input_source);
+        g_source_unref (self->priv->input_source);
+    }
+
+    if (self->priv->buffer)
+        g_byte_array_unref (self->priv->buffer);
+
+    if (self->priv->istream)
+        g_object_unref (self->priv->istream);
+    if (self->priv->ostream)
+        g_object_unref (self->priv->ostream);
 
     G_OBJECT_CLASS (qmi_device_parent_class)->finalize (object);
 }
