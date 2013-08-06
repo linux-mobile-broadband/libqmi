@@ -253,6 +253,25 @@ qmi_message_get_transaction_id (QmiMessage *self)
 }
 
 /**
+ * qmi_message_set_transaction_id:
+ * @self: a #QmiMessage.
+ * @transaction_id: transaction id.
+ *
+ * Overwrites the transaction ID of the message.
+ */
+void
+qmi_message_set_transaction_id (QmiMessage *self,
+                                guint16 transaction_id)
+{
+    g_return_if_fail (self != NULL);
+
+    if (message_is_control (self))
+        ((struct full_message *)self->data)->qmi.control.header.transaction = (guint8)transaction_id;
+    else
+        ((struct full_message *)self->data)->qmi.control.header.transaction = GUINT16_TO_LE (transaction_id);
+}
+
+/**
  * qmi_message_get_message_id:
  * @self: a #QmiMessage.
  *

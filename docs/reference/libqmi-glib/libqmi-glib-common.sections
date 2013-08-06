@@ -763,6 +763,7 @@ QmiMessageForeachRawTlvFn
 qmi_message_foreach_raw_tlv
 qmi_message_get_raw_tlv
 qmi_message_add_raw_tlv
+qmi_message_set_transaction_id
 qmi_message_get_printable
 qmi_message_get_tlv_printable
 </SECTION>

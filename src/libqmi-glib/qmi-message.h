@@ -102,6 +102,12 @@ gboolean      qmi_message_add_raw_tlv      (QmiMessage *self,
                                             GError **error);
 
 /*****************************************************************************/
+/* Other helpers */
+
+void qmi_message_set_transaction_id (QmiMessage *self,
+                                     guint16 transaction_id);
+
+/*****************************************************************************/
 /* Printable helpers */
 
 gchar *qmi_message_get_printable (QmiMessage *self,
