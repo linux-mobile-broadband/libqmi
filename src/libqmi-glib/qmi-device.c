@@ -1944,6 +1944,16 @@ qmi_device_command (QmiDevice *self,
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (message != NULL);
 
+    /* Use a proper transaction id for CTL messages if they don't have one */
+    if (qmi_message_get_service (message) == QMI_SERVICE_CTL &&
+        qmi_message_get_transaction_id (message) == 0) {
+        qmi_message_set_transaction_id (
+            message,
+            qmi_client_get_next_transaction_id (
+                QMI_CLIENT (
+                    self->priv->client_ctl)));
+    }
+
     tr = transaction_new (self, message, cancellable, callback, user_data);
 
     /* Device must be open */
