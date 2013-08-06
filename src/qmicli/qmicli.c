@@ -50,6 +50,7 @@ static gboolean get_service_version_info_flag;
 static gchar *device_set_instance_id_str;
 static gboolean device_open_version_info_flag;
 static gboolean device_open_sync_flag;
+static gboolean device_open_proxy_flag;
 static gchar *client_cid_str;
 static gboolean client_no_release_cid_flag;
 static gboolean verbose_flag;
@@ -75,6 +76,10 @@ static GOptionEntry main_entries[] = {
     },
     { "device-open-sync", 0, 0, G_OPTION_ARG_NONE, &device_open_sync_flag,
       "Run sync operation when opening device",
+      NULL
+    },
+    { "device-open-proxy", 'p', 0, G_OPTION_ARG_NONE, &device_open_proxy_flag,
+      "Request to use the 'qmi-proxy' proxy",
       NULL
     },
     { "client-cid", 0, 0, G_OPTION_ARG_STRING, &client_cid_str,
@@ -474,6 +479,8 @@ device_new_ready (GObject *unused,
         open_flags |= QMI_DEVICE_OPEN_FLAGS_VERSION_INFO;
     if (device_open_sync_flag)
         open_flags |= QMI_DEVICE_OPEN_FLAGS_SYNC;
+    if (device_open_proxy_flag)
+        open_flags |= QMI_DEVICE_OPEN_FLAGS_PROXY;
 
     /* Open the device */
     qmi_device_open (device,
