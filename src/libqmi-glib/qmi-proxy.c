@@ -98,6 +98,9 @@ client_free (Client *client)
     g_source_destroy (client->connection_readable_source);
     g_source_unref (client->connection_readable_source);
 
+    if (client->device)
+        g_object_unref (client->device);
+
     g_output_stream_close (g_io_stream_get_output_stream (G_IO_STREAM (client->connection)), NULL, NULL);
 
     if (client->buffer)
@@ -110,14 +113,57 @@ client_free (Client *client)
     g_slice_free (Client, client);
 }
 
+static guint
+get_n_clients_with_device (QmiProxy *self,
+                           QmiDevice *device)
+{
+    GList *l;
+    guint n = 0;
+
+    for (l = self->priv->clients; l; l = g_list_next (l)) {
+        Client *client = l->data;
+
+        if (device == client->device ||
+            g_str_equal (qmi_device_get_path (device), qmi_device_get_path (client->device)))
+            n++;
+    }
+
+    return n;
+}
+
 static void
 connection_close (Client *client)
 {
     QmiProxy *self = client->proxy;
+    QmiDevice *device;
 
+    device = client->device ? g_object_ref (client->device) : NULL;
     client_free (client);
     self->priv->clients = g_list_remove (self->priv->clients, client);
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
+
+    if (!device)
+        return;
+
+    /* If no more clients using the device, close and cleanup */
+    if (get_n_clients_with_device (self, device) == 0) {
+        GList *l;
+
+        for (l = self->priv->devices; l; l = g_list_next (l)) {
+            QmiDevice *device_in_list = QMI_DEVICE (l->data);
+
+            if (device == device_in_list ||
+                g_str_equal (qmi_device_get_path (device), qmi_device_get_path (device_in_list))) {
+                g_debug ("closing device '%s': no longer used", qmi_device_get_path_display (device));
+                qmi_device_close (device_in_list, NULL);
+                g_object_unref (device_in_list);
+                self->priv->devices = g_list_remove (self->priv->devices, device_in_list);
+                break;
+            }
+        }
+    }
+
+    g_object_unref (device);
 }
 
 static QmiDevice *
