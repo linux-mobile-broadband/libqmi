@@ -82,8 +82,10 @@ qmi_device_get_type
 <FILE>qmi-proxy</FILE>
 <TITLE>QmiProxy</TITLE>
 QMI_PROXY_SOCKET_PATH
+QMI_PROXY_N_CLIENTS
 QmiProxy
 qmi_proxy_new
+qmi_proxy_get_n_clients
 <SUBSECTION Standard>
 QmiProxyClass
 QMI_PROXY

@@ -39,6 +39,8 @@ typedef struct _QmiProxyPrivate QmiProxyPrivate;
 
 #define QMI_PROXY_SOCKET_PATH "qmi-proxy"
 
+#define QMI_PROXY_N_CLIENTS   "qmi-proxy-n-clients"
+
 struct _QmiProxy {
     GObject parent;
     QmiProxyPrivate *priv;
@@ -50,6 +52,7 @@ struct _QmiProxyClass {
 
 GType qmi_proxy_get_type (void);
 
-QmiProxy *qmi_proxy_new (GError **error);
+QmiProxy *qmi_proxy_new           (GError **error);
+guint     qmi_proxy_get_n_clients (QmiProxy *self);
 
 #endif /* QMI_PROXY_H */

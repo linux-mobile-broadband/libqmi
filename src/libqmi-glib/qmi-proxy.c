@@ -42,6 +42,14 @@
 
 G_DEFINE_TYPE (QmiProxy, qmi_proxy, G_TYPE_OBJECT)
 
+enum {
+    PROP_0,
+    PROP_N_CLIENTS,
+    PROP_LAST
+};
+
+static GParamSpec *properties[PROP_LAST];
+
 struct _QmiProxyPrivate {
     /* Unix socket service */
     GSocketService *socket_service;
@@ -52,6 +60,24 @@ struct _QmiProxyPrivate {
     /* Devices */
     GList *devices;
 };
+
+/*****************************************************************************/
+
+/**
+ * qmi_proxy_get_n_clients:
+ * @self: a #QmiProxy.
+ *
+ * Get the number of clients currently connected to the proxy.
+ *
+ * Returns: a #guint.
+ */
+guint
+qmi_proxy_get_n_clients (QmiProxy *self)
+{
+    g_return_val_if_fail (QMI_IS_PROXY (self), 0);
+
+    return g_list_length (self->priv->clients);
+}
 
 /*****************************************************************************/
 
@@ -91,6 +117,7 @@ connection_close (Client *client)
 
     client_free (client);
     self->priv->clients = g_list_remove (self->priv->clients, client);
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
 }
 
 static QmiDevice *
@@ -425,6 +452,7 @@ incoming_cb (GSocketService *service,
 
     /* Keep the client info around */
     self->priv->clients = g_list_append (self->priv->clients, client);
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
 }
 
 static gboolean
@@ -499,6 +527,24 @@ qmi_proxy_init (QmiProxy *self)
 }
 
 static void
+get_property (GObject *object,
+              guint prop_id,
+              GValue *value,
+              GParamSpec *pspec)
+{
+    QmiProxy *self = QMI_PROXY (object);
+
+    switch (prop_id) {
+    case PROP_N_CLIENTS:
+        g_value_set_uint (value, g_list_length (self->priv->clients));
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
 dispose (GObject *object)
 {
     QmiProxyPrivate *priv = QMI_PROXY (object)->priv;
@@ -527,5 +573,17 @@ qmi_proxy_class_init (QmiProxyClass *proxy_class)
     g_type_class_add_private (object_class, sizeof (QmiProxyPrivate));
 
     /* Virtual methods */
+    object_class->get_property = get_property;
     object_class->dispose = dispose;
+
+    /* Properties */
+    properties[PROP_N_CLIENTS] =
+        g_param_spec_uint (QMI_PROXY_N_CLIENTS,
+                           "Number of clients",
+                           "Number of clients currently connected to the proxy",
+                           0,
+                           G_MAXUINT,
+                           0,
+                           G_PARAM_READABLE);
+    g_object_class_install_property (object_class, PROP_N_CLIENTS, properties[PROP_N_CLIENTS]);
 }
