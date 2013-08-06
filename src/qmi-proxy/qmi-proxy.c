@@ -35,9 +35,12 @@
 #define PROGRAM_NAME    "qmid"
 #define PROGRAM_VERSION PACKAGE_VERSION
 
+#define EMPTY_PROXY_LIFETIME_SECS 30
+
 /* Globals */
 static GMainLoop *loop;
 static QmiProxy *proxy;
+static guint timeout_id;
 
 /* Main options */
 static gboolean version_flag;
@@ -122,6 +125,35 @@ print_version_and_exit (void)
 
 /*****************************************************************************/
 
+static gboolean
+stop_loop_cb (void)
+{
+    timeout_id = 0;
+    if (loop)
+        g_main_loop_quit (loop);
+    return FALSE;
+}
+
+static void
+proxy_n_clients_changed (QmiProxy *_proxy)
+{
+    if (qmi_proxy_get_n_clients (proxy) == 0) {
+        g_assert (timeout_id == 0);
+        timeout_id = g_timeout_add_seconds (EMPTY_PROXY_LIFETIME_SECS,
+                                            (GSourceFunc)stop_loop_cb,
+                                            NULL);
+        return;
+    }
+
+    /* At least one client, remove timeout if any */
+    if (timeout_id) {
+        g_source_remove (timeout_id);
+        timeout_id = 0;
+    }
+}
+
+/*****************************************************************************/
+
 int main (int argc, char **argv)
 {
     GError *error = NULL;
@@ -159,6 +191,12 @@ int main (int argc, char **argv)
         exit (EXIT_FAILURE);
     }
 
+    proxy_n_clients_changed (proxy);
+    g_signal_connect (proxy,
+                      "notify::" QMI_PROXY_N_CLIENTS,
+                      G_CALLBACK (proxy_n_clients_changed),
+                      NULL);
+
     /* Loop */
     loop = g_main_loop_new (NULL, FALSE);
     g_main_loop_run (loop);
@@ -166,6 +204,8 @@ int main (int argc, char **argv)
 
     /* Cleanup; releases socket and such */
     g_object_unref (proxy);
+
+    g_debug ("exiting 'qmi-proxy'...");
 
     return EXIT_SUCCESS;
 }
