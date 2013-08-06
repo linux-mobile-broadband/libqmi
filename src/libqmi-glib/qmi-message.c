@@ -499,6 +499,73 @@ qmi_message_new (QmiService service,
 }
 
 /**
+ * qmi_message_response_new:
+ * @request: a request #QmiMessage.
+ * @error: a #QmiProtocolError to set in the result TLV.
+ *
+ * Create a new response #QmiMessage for the specified @request.
+ *
+ * Returns: (transfer full): a newly created #QmiMessage. The returned value should be freed with qmi_message_unref().
+ */
+QmiMessage *
+qmi_message_response_new (QmiMessage *request,
+                          QmiProtocolError error)
+{
+    QmiMessage *response;
+    guint8 result_tlv_buffer[4];
+    guint16 result_tlv_buffer_len = 4;
+    guint8 *result_tlv_buffer_aux = result_tlv_buffer;
+    guint16 value;
+
+    response = qmi_message_new (qmi_message_get_service (request),
+                                qmi_message_get_client_id (request),
+                                qmi_message_get_transaction_id (request),
+                                qmi_message_get_message_id (request));
+
+    /* Set the response flag */
+    if (message_is_control (request))
+        ((struct full_message *)(((GByteArray *)response)->data))->qmi.control.header.flags |= QMI_CTL_FLAG_RESPONSE;
+    else
+        ((struct full_message *)(((GByteArray *)response)->data))->qmi.service.header.flags |= QMI_SERVICE_FLAG_RESPONSE;
+
+    /* Add result TLV */
+    if (error != QMI_PROTOCOL_ERROR_NONE) {
+        value = 0x01;
+        qmi_utils_write_guint16_to_buffer (
+            &result_tlv_buffer_aux,
+            &result_tlv_buffer_len,
+            QMI_ENDIAN_LITTLE,
+            &value);
+        value = error;
+        qmi_utils_write_guint16_to_buffer (
+            &result_tlv_buffer_aux,
+            &result_tlv_buffer_len,
+            QMI_ENDIAN_LITTLE,
+            &value);
+    } else {
+        value = 0x00;
+        qmi_utils_write_guint16_to_buffer (
+            &result_tlv_buffer_aux,
+            &result_tlv_buffer_len,
+            QMI_ENDIAN_LITTLE,
+            &value);
+        value = QMI_PROTOCOL_ERROR_NONE;
+        qmi_utils_write_guint16_to_buffer (
+            &result_tlv_buffer_aux,
+            &result_tlv_buffer_len,
+            QMI_ENDIAN_LITTLE,
+            &value);
+    }
+
+    g_assert (qmi_message_add_raw_tlv (response, 0x02, result_tlv_buffer, 4, NULL));
+
+    /* We shouldn't create invalid response messages */
+    g_assert (message_check (response, NULL));
+
+    return response;
+}
+
+/**
  * qmi_message_ref:
  * @self: a #QmiMessage.
  *

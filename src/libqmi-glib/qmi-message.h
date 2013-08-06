@@ -37,6 +37,7 @@
 #include <glib.h>
 
 #include "qmi-enums.h"
+#include "qmi-errors.h"
 
 G_BEGIN_DECLS
 
@@ -58,6 +59,8 @@ QmiMessage   *qmi_message_new          (QmiService service,
                                         guint16 message_id);
 QmiMessage   *qmi_message_new_from_raw (GByteArray *raw,
                                         GError **error);
+QmiMessage   *qmi_message_response_new (QmiMessage *request,
+                                        QmiProtocolError error);
 QmiMessage   *qmi_message_ref          (QmiMessage *self);
 void          qmi_message_unref        (QmiMessage *self);
 
