@@ -97,6 +97,7 @@ AC_CONFIG_FILES([Makefile
                  src/libqmi-glib/test/Makefile
                  src/qmicli/Makefile
                  src/qmicli/test/Makefile
+                 src/qmi-proxy/Makefile
                  utils/Makefile
                  docs/Makefile
                  docs/reference/Makefile

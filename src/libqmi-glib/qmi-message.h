@@ -67,6 +67,7 @@ void          qmi_message_unref        (QmiMessage *self);
 /*****************************************************************************/
 /* QMI Message content getters */
 
+gboolean      qmi_message_is_request            (QmiMessage *self);
 gboolean      qmi_message_is_response           (QmiMessage *self);
 gboolean      qmi_message_is_indication         (QmiMessage *self);
 QmiService    qmi_message_get_service           (QmiMessage *self);

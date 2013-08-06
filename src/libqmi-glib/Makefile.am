@@ -30,7 +30,8 @@ libqmi_glib_la_SOURCES = \
 	qmi-utils.h qmi-utils.c \
 	qmi-message.h qmi-message.c \
 	qmi-device.h qmi-device.c \
-	qmi-client.h qmi-client.c
+	qmi-client.h qmi-client.c \
+	qmi-proxy.h qmi-proxy.c
 
 libqmi_glib_la_LIBADD = \
 	${top_builddir}/src/libqmi-glib/generated/libqmi-glib-generated.la \
@@ -57,7 +58,8 @@ include_HEADERS = \
 	qmi-utils.h \
 	qmi-message.h \
 	qmi-device.h \
-	qmi-client.h
+	qmi-client.h \
+	qmi-proxy.h
 
 EXTRA_DIST = \
 	qmi-version.h.in

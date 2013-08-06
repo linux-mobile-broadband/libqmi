@@ -79,6 +79,24 @@ qmi_device_get_type
 </SECTION>
 
 <SECTION>
+<FILE>qmi-proxy</FILE>
+<TITLE>QmiProxy</TITLE>
+QMI_PROXY_SOCKET_PATH
+QmiProxy
+qmi_proxy_new
+<SUBSECTION Standard>
+QmiProxyClass
+QMI_PROXY
+QMI_PROXY_CLASS
+QMI_PROXY_GET_CLASS
+QMI_IS_PROXY
+QMI_IS_PROXY_CLASS
+QMI_TYPE_PROXY
+QmiProxyPrivate
+qmi_proxy_get_type
+</SECTION>
+
+<SECTION>
 <FILE>qmi-enums</FILE>
 QmiService
 <SUBSECTION Methods>
@@ -731,6 +749,7 @@ qmi_message_new_from_raw
 qmi_message_response_new
 qmi_message_ref
 qmi_message_unref
+qmi_message_is_request
 qmi_message_is_response
 qmi_message_is_indication
 qmi_message_get_service

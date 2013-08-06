@@ -1,2 +1,2 @@
 
-SUBDIRS = libqmi-glib qmicli
+SUBDIRS = libqmi-glib qmicli qmi-proxy

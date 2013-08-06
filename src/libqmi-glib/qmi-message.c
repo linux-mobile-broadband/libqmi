@@ -143,6 +143,20 @@ get_qmi_flags (QmiMessage *self)
 }
 
 /**
+ * qmi_message_is_request:
+ * @self: a #QmiMessage.
+ *
+ * Checks whether the given #QmiMessage is a request.
+ *
+ * Returns: %TRUE if @self is a request message, %FALSE otherwise.
+ */
+gboolean
+qmi_message_is_request (QmiMessage *self)
+{
+    return (!qmi_message_is_response (self) && !qmi_message_is_indication (self));
+}
+
+/**
  * qmi_message_is_response:
  * @self: a #QmiMessage.
  *

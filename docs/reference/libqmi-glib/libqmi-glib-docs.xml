@@ -43,6 +43,7 @@
     <xi:include href="xml/qmi-message.xml"/>
     <xi:include href="xml/qmi-device.xml"/>
     <xi:include href="xml/qmi-client.xml"/>
+    <xi:include href="xml/qmi-proxy.xml"/>
     <xi:include href="xml/qmi-enums.xml"/>
     <xi:include href="xml/qmi-errors.xml"/>
     <xi:include href="xml/qmi-utils.xml"/>

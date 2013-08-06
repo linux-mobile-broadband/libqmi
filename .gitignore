@@ -62,6 +62,10 @@ src/qmicli/test/Makefile
 src/qmicli/test/Makefile.in
 src/qmicli/test/test-helpers
 
+src/qmi-proxy/.deps
+src/qmi-proxy/.libs
+src/qmi-proxy/qmi-proxy
+
 build-aux/qmi-codegen/*.pyc
 
 docs/reference/libqmi-glib/version.xml
