@@ -1,5 +1,5 @@
 
-sbin_PROGRAMS = qmi-proxy
+libexec_PROGRAMS = qmi-proxy
 
 qmi_proxy_CPPFLAGS = \
 	$(GLIB_CFLAGS) \

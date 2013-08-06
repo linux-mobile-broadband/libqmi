@@ -62,6 +62,8 @@ static void async_initable_iface_init (GAsyncInitableIface *iface);
 G_DEFINE_TYPE_EXTENDED (QmiDevice, qmi_device, G_TYPE_OBJECT, 0,
                         G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, async_initable_iface_init))
 
+#define MAX_SPAWN_RETRIES 10
+
 enum {
     PROP_0,
     PROP_FILE,
@@ -1183,7 +1185,7 @@ qmi_device_set_instance_id (QmiDevice *self,
 }
 
 /*****************************************************************************/
-/* Open device */
+/* Input channel processing */
 
 typedef struct {
     QmiClient *client;
@@ -1363,107 +1365,223 @@ input_ready_cb (GInputStream *istream,
     return TRUE;
 }
 
+typedef struct {
+    QmiDevice *self;
+    GSimpleAsyncResult *result;
+    guint spawn_retries;
+} CreateIostreamContext;
+
+static void
+create_iostream_context_complete_and_free (CreateIostreamContext *ctx)
+{
+    g_simple_async_result_complete_in_idle (ctx->result);
+    g_object_unref (ctx->result);
+    g_object_unref (ctx->self);
+    g_slice_free (CreateIostreamContext, ctx);
+}
+
 static gboolean
+create_iostream_finish (QmiDevice *self,
+                        GAsyncResult *res,
+                        GError **error)
+{
+    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+}
+
+static void
+setup_iostream (CreateIostreamContext *ctx)
+{
+    /* Check in/out streams */
+    if (!ctx->self->priv->istream || !ctx->self->priv->ostream) {
+        g_simple_async_result_set_error (
+            ctx->result,
+            QMI_CORE_ERROR,
+            QMI_CORE_ERROR_FAILED,
+            "Cannot get input/output streams");
+        g_clear_object (&ctx->self->priv->istream);
+        g_clear_object (&ctx->self->priv->ostream);
+        g_clear_object (&ctx->self->priv->socket_connection);
+        g_clear_object (&ctx->self->priv->socket_client);
+        create_iostream_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* Setup input events */
+    ctx->self->priv->input_source = (g_pollable_input_stream_create_source (
+                                         G_POLLABLE_INPUT_STREAM (
+                                             ctx->self->priv->istream),
+                                         NULL));
+    g_source_set_callback (ctx->self->priv->input_source,
+                           (GSourceFunc)input_ready_cb,
+                           ctx->self,
+                           NULL);
+    g_source_attach (ctx->self->priv->input_source, NULL);
+    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+    create_iostream_context_complete_and_free (ctx);
+}
+
+static void
+create_iostream_with_fd (CreateIostreamContext *ctx)
+{
+    gint fd;
+
+    fd = open (ctx->self->priv->path, O_RDWR | O_EXCL | O_NONBLOCK | O_NOCTTY);
+    if (fd < 0) {
+        g_simple_async_result_set_error (
+            ctx->result,
+            QMI_CORE_ERROR,
+            QMI_CORE_ERROR_FAILED,
+            "Cannot open device file '%s': %s",
+            ctx->self->priv->path_display,
+            strerror (errno));
+        create_iostream_context_complete_and_free (ctx);
+        return;
+    }
+
+    ctx->self->priv->istream = g_unix_input_stream_new  (fd, TRUE);
+    ctx->self->priv->ostream = g_unix_output_stream_new (fd, TRUE);
+
+    setup_iostream (ctx);
+}
+
+static void create_iostream_with_socket (CreateIostreamContext *ctx);
+
+static gboolean
+wait_for_proxy_cb (CreateIostreamContext *ctx)
+{
+    create_iostream_with_socket (ctx);
+    return FALSE;
+}
+
+static void
+create_iostream_with_socket (CreateIostreamContext *ctx)
+{
+    GSocketAddress *socket_address;
+    GError *error = NULL;
+
+    /* Create socket client */
+    ctx->self->priv->socket_client = g_socket_client_new ();
+    g_socket_client_set_family (ctx->self->priv->socket_client, G_SOCKET_FAMILY_UNIX);
+    g_socket_client_set_socket_type (ctx->self->priv->socket_client, G_SOCKET_TYPE_STREAM);
+    g_socket_client_set_protocol (ctx->self->priv->socket_client, G_SOCKET_PROTOCOL_DEFAULT);
+
+    /* Setup socket address */
+    socket_address = (g_unix_socket_address_new_with_type (
+                          QMI_PROXY_SOCKET_PATH,
+                          -1,
+                          G_UNIX_SOCKET_ADDRESS_ABSTRACT));
+
+    /* Connect to address */
+    ctx->self->priv->socket_connection = (g_socket_client_connect (
+                                              ctx->self->priv->socket_client,
+                                              G_SOCKET_CONNECTABLE (socket_address),
+                                              NULL,
+                                              &error));
+    g_object_unref (socket_address);
+
+    if (!ctx->self->priv->socket_connection) {
+        gchar **argc;
+
+        g_debug ("cannot connect to proxy: %s", error->message);
+        g_clear_error (&error);
+        g_clear_object (&ctx->self->priv->socket_client);
+
+        /* Don't retry forever */
+        ctx->spawn_retries++;
+        if (ctx->spawn_retries > MAX_SPAWN_RETRIES) {
+            g_simple_async_result_set_error (ctx->result,
+                                             QMI_CORE_ERROR,
+                                             QMI_CORE_ERROR_FAILED,
+                                             "Couldn't spawn the qmi-proxy");
+            create_iostream_context_complete_and_free (ctx);
+            return;
+        }
+
+        g_debug ("spawning new qmi-proxy (try %u)...", ctx->spawn_retries);
+
+        argc = g_new0 (gchar *, 2);
+        argc[0] = g_strdup (LIBEXEC_PATH "/qmi-proxy");
+        if (!g_spawn_async (NULL, /* working directory */
+                            argc,
+                            NULL, /* envp */
+                            G_SPAWN_STDOUT_TO_DEV_NULL | G_SPAWN_STDERR_TO_DEV_NULL,
+                            NULL, /* child_setup */
+                            NULL, /* child_setup_user_data */
+                            NULL,
+                            &error)) {
+            g_debug ("error spawning qmi-proxy: %s", error->message);
+            g_clear_error (&error);
+        }
+        g_strfreev (argc);
+
+        /* Wait some ms and retry */
+        g_timeout_add (100, (GSourceFunc)wait_for_proxy_cb, ctx);
+        return;
+    }
+
+    ctx->self->priv->istream = g_io_stream_get_input_stream (G_IO_STREAM (ctx->self->priv->socket_connection));
+    if (ctx->self->priv->istream)
+        g_object_ref (ctx->self->priv->istream);
+
+    ctx->self->priv->ostream = g_io_stream_get_output_stream (G_IO_STREAM (ctx->self->priv->socket_connection));
+    if (ctx->self->priv->ostream)
+        g_object_ref (ctx->self->priv->ostream);
+
+    setup_iostream (ctx);
+}
+
+static void
 create_iostream (QmiDevice *self,
                  gboolean proxy,
-                 GError **error)
+                 GAsyncReadyCallback callback,
+                 gpointer user_data)
 {
+    CreateIostreamContext *ctx;
+
+    ctx = g_slice_new (CreateIostreamContext);
+    ctx->self = g_object_ref (self);
+    ctx->result = g_simple_async_result_new (G_OBJECT (self),
+                                             callback,
+                                             user_data,
+                                             create_iostream);
+    ctx->spawn_retries = 0;
+
     if (self->priv->istream || self->priv->ostream) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_WRONG_STATE,
-                     "Already open");
-        return FALSE;
+        g_simple_async_result_set_error (ctx->result,
+                                         QMI_CORE_ERROR,
+                                         QMI_CORE_ERROR_WRONG_STATE,
+                                         "Already open");
+        create_iostream_context_complete_and_free (ctx);
+        return;
     }
 
     g_assert (self->priv->file);
     g_assert (self->priv->path);
 
-    if (proxy) {
-        GSocketAddress *socket_address;
-
-        /* Create socket client */
-        self->priv->socket_client = g_socket_client_new ();
-        g_socket_client_set_family (self->priv->socket_client, G_SOCKET_FAMILY_UNIX);
-        g_socket_client_set_socket_type (self->priv->socket_client, G_SOCKET_TYPE_STREAM);
-        g_socket_client_set_protocol (self->priv->socket_client, G_SOCKET_PROTOCOL_DEFAULT);
-
-        /* Setup socket address */
-        socket_address = (g_unix_socket_address_new_with_type (
-                              QMI_PROXY_SOCKET_PATH,
-                              -1,
-                              G_UNIX_SOCKET_ADDRESS_ABSTRACT));
-
-        /* Connect to address */
-        self->priv->socket_connection = (g_socket_client_connect (
-                                             self->priv->socket_client,
-                                             G_SOCKET_CONNECTABLE (socket_address),
-                                             NULL,
-                                             error));
-        g_object_unref (socket_address);
-
-        if (!self->priv->socket_connection) {
-            g_prefix_error (error, "Cannot connect to proxy: ");
-            g_object_unref (self->priv->socket_client);
-            return FALSE;
-        }
-
-        self->priv->istream = g_io_stream_get_input_stream (G_IO_STREAM (self->priv->socket_connection));
-        if (self->priv->istream)
-            g_object_ref (self->priv->istream);
-
-        self->priv->ostream = g_io_stream_get_output_stream (G_IO_STREAM (self->priv->socket_connection));
-        if (self->priv->ostream)
-            g_object_ref (self->priv->ostream);
-    } else {
-        gint fd;
-
-        fd = open (self->priv->path, O_RDWR | O_EXCL | O_NONBLOCK | O_NOCTTY);
-        if (fd < 0) {
-            g_set_error (error,
-                         QMI_CORE_ERROR,
-                         QMI_CORE_ERROR_FAILED,
-                         "Cannot open device file '%s': %s",
-                         self->priv->path_display,
-                         strerror (errno));
-            return FALSE;
-        }
-
-        self->priv->istream = g_unix_input_stream_new  (fd, TRUE);
-        self->priv->ostream = g_unix_output_stream_new (fd, TRUE);
-    }
-
-    /* Check in/out streams */
-    if (!self->priv->istream || !self->priv->ostream) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_FAILED,
-                     "Cannot get input/output streams");
-        g_clear_object (&self->priv->istream);
-        g_clear_object (&self->priv->ostream);
-        g_clear_object (&self->priv->socket_connection);
-        g_clear_object (&self->priv->socket_client);
-        return FALSE;
-    }
-
-    /* Setup input events */
-    self->priv->input_source = (g_pollable_input_stream_create_source (
-                                    G_POLLABLE_INPUT_STREAM (
-                                        self->priv->istream),
-                                    NULL));
-    g_source_set_callback (self->priv->input_source,
-                           (GSourceFunc)input_ready_cb,
-                           self,
-                           NULL);
-    g_source_attach (self->priv->input_source, NULL);
-
-    return TRUE;
+    if (proxy)
+        create_iostream_with_socket (ctx);
+    else
+        create_iostream_with_fd (ctx);
 }
+
+/*****************************************************************************/
+/* Open device */
+
+typedef enum {
+    DEVICE_OPEN_CONTEXT_STEP_FIRST = 0,
+    DEVICE_OPEN_CONTEXT_STEP_CREATE_IOSTREAM,
+    DEVICE_OPEN_CONTEXT_STEP_FLAGS_PROXY,
+    DEVICE_OPEN_CONTEXT_STEP_FLAGS_VERSION_INFO,
+    DEVICE_OPEN_CONTEXT_STEP_FLAGS_SYNC,
+    DEVICE_OPEN_CONTEXT_STEP_FLAGS_NETPORT,
+    DEVICE_OPEN_CONTEXT_STEP_LAST
+} DeviceOpenContextStep;
 
 typedef struct {
     QmiDevice *self;
     GSimpleAsyncResult *result;
     GCancellable *cancellable;
+    DeviceOpenContextStep step;
     QmiDeviceOpenFlags flags;
     guint timeout;
     guint version_check_retries;
@@ -1498,7 +1616,7 @@ qmi_device_open_finish (QmiDevice *self,
     return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
 }
 
-static void process_open_flags (DeviceOpenContext *ctx);
+static void device_open_context_step (DeviceOpenContext *ctx);
 
 static void
 ctl_set_data_format_ready (QmiClientCtl *client,
@@ -1527,9 +1645,11 @@ ctl_set_data_format_ready (QmiClientCtl *client,
     g_debug ("[%s] Network port data format operation finished",
              ctx->self->priv->path_display);
 
-    /* Keep on with next flags */
-    process_open_flags (ctx);
     qmi_message_ctl_set_data_format_output_unref (output);
+
+    /* Go on */
+    ctx->step++;
+    device_open_context_step (ctx);
 }
 
 static void
@@ -1559,9 +1679,11 @@ sync_ready (QmiClientCtl *client_ctl,
     g_debug ("[%s] Sync operation finished",
              ctx->self->priv->path_display);
 
-    /* Keep on with next flags */
-    process_open_flags (ctx);
     qmi_message_ctl_sync_output_unref (output);
+
+    /* Go on */
+    ctx->step++;
+    device_open_context_step (ctx);
 }
 
 static void
@@ -1640,9 +1762,11 @@ open_version_info_ready (QmiClientCtl *client_ctl,
                      info->minor_version);
     }
 
-    /* Keep on with next flags */
-    process_open_flags (ctx);
     qmi_message_ctl_get_version_info_output_unref (output);
+
+    /* Go on */
+    ctx->step++;
+    device_open_context_step (ctx);
 }
 
 static void
@@ -1669,9 +1793,29 @@ internal_proxy_open_ready (QmiClientCtl *client_ctl,
         return;
     }
 
-    /* Keep on with next flags */
-    process_open_flags (ctx);
     qmi_message_ctl_internal_proxy_open_output_unref (output);
+
+    /* Go on */
+    ctx->step++;
+    device_open_context_step (ctx);
+}
+
+static void
+create_iostream_ready (QmiDevice *self,
+                       GAsyncResult *res,
+                       DeviceOpenContext *ctx)
+{
+    GError *error = NULL;
+
+    if (!create_iostream_finish (self, res, &error)) {
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
+        return;
+    }
+
+    /* Go on */
+    ctx->step++;
+    device_open_context_step (ctx);
 }
 
 #define NETPORT_FLAGS (QMI_DEVICE_OPEN_FLAGS_NET_802_3 | \
@@ -1680,90 +1824,117 @@ internal_proxy_open_ready (QmiClientCtl *client_ctl,
                        QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER)
 
 static void
-process_open_flags (DeviceOpenContext *ctx)
+device_open_context_step (DeviceOpenContext *ctx)
 {
-    /* Initialize communication with proxy? */
-    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY) {
-        QmiMessageCtlInternalProxyOpenInput *input;
+    switch (ctx->step) {
+    case DEVICE_OPEN_CONTEXT_STEP_FIRST:
+        ctx->step++;
+        /* Fall down */
 
-        ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_PROXY;
+    case DEVICE_OPEN_CONTEXT_STEP_CREATE_IOSTREAM:
+        create_iostream (ctx->self,
+                         !!(ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY),
+                         (GAsyncReadyCallback)create_iostream_ready,
+                         ctx);
+        return;
 
-        input = qmi_message_ctl_internal_proxy_open_input_new ();
-        qmi_message_ctl_internal_proxy_open_input_set_device_path (input, ctx->self->priv->path, NULL);
-        qmi_client_ctl_internal_proxy_open (ctx->self->priv->client_ctl,
+    case DEVICE_OPEN_CONTEXT_STEP_FLAGS_PROXY:
+        /* Initialize communication with proxy? */
+        if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY) {
+            QmiMessageCtlInternalProxyOpenInput *input;
+
+            input = qmi_message_ctl_internal_proxy_open_input_new ();
+            qmi_message_ctl_internal_proxy_open_input_set_device_path (input, ctx->self->priv->path, NULL);
+            qmi_client_ctl_internal_proxy_open (ctx->self->priv->client_ctl,
+                                                input,
+                                                5,
+                                                ctx->cancellable,
+                                                (GAsyncReadyCallback)internal_proxy_open_ready,
+                                                ctx);
+            qmi_message_ctl_internal_proxy_open_input_unref (input);
+            return;
+        }
+        ctx->step++;
+        /* Fall down */
+
+    case DEVICE_OPEN_CONTEXT_STEP_FLAGS_VERSION_INFO:
+        /* Query version info? */
+        if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_VERSION_INFO) {
+            /* Setup how many times to retry... We'll retry once per second */
+            ctx->version_check_retries = ctx->timeout > 0 ? ctx->timeout : 1;
+            g_debug ("[%s] Checking version info (%u retries)...",
+                     ctx->self->priv->path_display,
+                     ctx->version_check_retries);
+            qmi_client_ctl_get_version_info (ctx->self->priv->client_ctl,
+                                             NULL,
+                                             1,
+                                             ctx->cancellable,
+                                             (GAsyncReadyCallback)open_version_info_ready,
+                                             ctx);
+            return;
+        }
+        ctx->step++;
+        /* Fall down */
+
+    case DEVICE_OPEN_CONTEXT_STEP_FLAGS_SYNC:
+        /* Sync? */
+        if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_SYNC) {
+            g_debug ("[%s] Running sync...",
+                     ctx->self->priv->path_display);
+            qmi_client_ctl_sync (ctx->self->priv->client_ctl,
+                                 NULL,
+                                 ctx->timeout,
+                                 ctx->cancellable,
+                                 (GAsyncReadyCallback)sync_ready,
+                                 ctx);
+            return;
+        }
+        ctx->step++;
+        /* Fall down */
+
+    case DEVICE_OPEN_CONTEXT_STEP_FLAGS_NETPORT:
+        /* Network port setup */
+        if (ctx->flags & NETPORT_FLAGS) {
+            QmiMessageCtlSetDataFormatInput *input;
+            QmiCtlDataFormat qos = QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_ABSENT;
+            QmiCtlDataLinkProtocol link_protocol = QMI_CTL_DATA_LINK_PROTOCOL_802_3;
+
+            g_debug ("[%s] Setting network port data format...",
+                     ctx->self->priv->path_display);
+
+            input = qmi_message_ctl_set_data_format_input_new ();
+
+            if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER)
+                qos = QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_PRESENT;
+            qmi_message_ctl_set_data_format_input_set_format (input, qos, NULL);
+
+            if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP)
+                link_protocol = QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP;
+            qmi_message_ctl_set_data_format_input_set_protocol (input, link_protocol, NULL);
+
+            qmi_client_ctl_set_data_format (ctx->self->priv->client_ctl,
                                             input,
                                             5,
-                                            ctx->cancellable,
-                                            (GAsyncReadyCallback)internal_proxy_open_ready,
+                                            NULL,
+                                            (GAsyncReadyCallback)ctl_set_data_format_ready,
                                             ctx);
-        qmi_message_ctl_internal_proxy_open_input_unref (input);
+            qmi_message_ctl_set_data_format_input_unref (input);
+            return;
+        }
+        ctx->step++;
+        /* Fall down */
+
+    case DEVICE_OPEN_CONTEXT_STEP_LAST:
+        /* Nothing else to process, done we are */
+        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+        device_open_context_complete_and_free (ctx);
         return;
+
+    default:
+        break;
     }
 
-    /* Query version info? */
-    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_VERSION_INFO) {
-        ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_VERSION_INFO;
-        /* Setup how many times to retry... We'll retry once per second */
-        ctx->version_check_retries = ctx->timeout > 0 ? ctx->timeout : 1;
-        g_debug ("[%s] Checking version info (%u retries)...",
-                 ctx->self->priv->path_display,
-                 ctx->version_check_retries);
-        qmi_client_ctl_get_version_info (ctx->self->priv->client_ctl,
-                                         NULL,
-                                         1,
-                                         ctx->cancellable,
-                                         (GAsyncReadyCallback)open_version_info_ready,
-                                         ctx);
-        return;
-    }
-
-    /* Sync? */
-    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_SYNC) {
-        g_debug ("[%s] Running sync...",
-                 ctx->self->priv->path_display);
-        ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_SYNC;
-        qmi_client_ctl_sync (ctx->self->priv->client_ctl,
-                             NULL,
-                             ctx->timeout,
-                             ctx->cancellable,
-                             (GAsyncReadyCallback)sync_ready,
-                             ctx);
-        return;
-    }
-
-    /* Network port setup */
-    if (ctx->flags & NETPORT_FLAGS) {
-        QmiMessageCtlSetDataFormatInput *input;
-        QmiCtlDataFormat qos = QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_ABSENT;
-        QmiCtlDataLinkProtocol link_protocol = QMI_CTL_DATA_LINK_PROTOCOL_802_3;
-
-        g_debug ("[%s] Setting network port data format...",
-                 ctx->self->priv->path_display);
-
-        input = qmi_message_ctl_set_data_format_input_new ();
-
-        if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER)
-            qos = QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_PRESENT;
-        qmi_message_ctl_set_data_format_input_set_format (input, qos, NULL);
-
-        if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP)
-            link_protocol = QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP;
-        qmi_message_ctl_set_data_format_input_set_protocol (input, link_protocol, NULL);
-
-        ctx->flags &= ~NETPORT_FLAGS;
-        qmi_client_ctl_set_data_format (ctx->self->priv->client_ctl,
-                                        input,
-                                        5,
-                                        NULL,
-                                        (GAsyncReadyCallback)ctl_set_data_format_ready,
-                                        ctx);
-        qmi_message_ctl_set_data_format_input_unref (input);
-        return;
-    }
-
-    /* No more flags to process, done we are */
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    device_open_context_complete_and_free (ctx);
+    g_assert_not_reached ();
 }
 
 /**
@@ -1789,7 +1960,6 @@ qmi_device_open (QmiDevice *self,
                  gpointer user_data)
 {
     DeviceOpenContext *ctx;
-    GError *error = NULL;
 
     /* Raw IP and 802.3 are mutually exclusive */
     g_return_if_fail (!((flags & QMI_DEVICE_OPEN_FLAGS_NET_802_3) &&
@@ -1811,19 +1981,13 @@ qmi_device_open (QmiDevice *self,
                                              callback,
                                              user_data,
                                              qmi_device_open);
+    ctx->step = DEVICE_OPEN_CONTEXT_STEP_FIRST;
     ctx->flags = flags;
     ctx->timeout = timeout;
     ctx->cancellable = (cancellable ? g_object_ref (cancellable) : NULL);
 
-    if (!create_iostream (self, !!(flags & QMI_DEVICE_OPEN_FLAGS_PROXY), &error)) {
-        g_prefix_error (&error, "Cannot open QMI device: ");
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
-        return;
-    }
-
-    /* Process all open flags */
-    process_open_flags (ctx);
+    /* Start processing */
+    device_open_context_step (ctx);
 }
 
 /*****************************************************************************/

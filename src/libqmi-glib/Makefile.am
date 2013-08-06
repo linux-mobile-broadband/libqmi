@@ -12,6 +12,7 @@ libqmi_glib_la_CPPFLAGS = \
 	-I$(top_builddir)/src/libqmi-glib \
 	-I$(top_builddir)/src/libqmi-glib/generated \
 	-DLIBQMI_GLIB_COMPILATION \
+	-DLIBEXEC_PATH=\""$(libexecdir)"\" \
 	-DG_LOG_DOMAIN=\"Qmi\"
 
 libqmi_glib_la_SOURCES = \
