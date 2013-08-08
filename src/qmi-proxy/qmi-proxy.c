@@ -43,9 +43,14 @@ static QmiProxy *proxy;
 static guint timeout_id;
 
 /* Main options */
+static gboolean verbose_flag;
 static gboolean version_flag;
 
 static GOptionEntry main_entries[] = {
+    { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
+      "Run action with verbose logs, including the debug ones",
+      NULL
+    },
     { "version", 'V', 0, G_OPTION_ARG_NONE, &version_flag,
       "Print version",
       NULL
@@ -102,6 +107,9 @@ log_handler (const gchar *log_domain,
         log_level_str = "";
         break;
     }
+
+    if (!verbose_flag && !err)
+        return;
 
     g_fprintf (err ? stderr : stdout,
                "[%s] %s %s\n",
@@ -178,6 +186,8 @@ int main (int argc, char **argv)
 
     g_log_set_handler (NULL,  G_LOG_LEVEL_MASK, log_handler, NULL);
     g_log_set_handler ("Qmi", G_LOG_LEVEL_MASK, log_handler, NULL);
+    if (verbose_flag)
+        qmi_utils_set_traces_enabled (TRUE);
 
     /* Setup signals */
     g_unix_signal_add (SIGINT,  quit_cb, NULL);
