@@ -30,6 +30,7 @@
 #include <glib/gstdio.h>
 #include <gio/gunixsocketaddress.h>
 
+#include "qmi-enum-types.h"
 #include "qmi-error-types.h"
 #include "qmi-device.h"
 #include "qmi-ctl.h"
@@ -37,6 +38,12 @@
 #include "qmi-proxy.h"
 
 #define BUFFER_SIZE 512
+
+#define QMI_MESSAGE_OUTPUT_TLV_RESULT 0x02
+#define QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO 0x01
+#define QMI_MESSAGE_CTL_ALLOCATE_CID 0x0022
+#define QMI_MESSAGE_CTL_RELEASE_CID 0x0023
+
 #define QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN 0xFF00
 #define QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN_INPUT_TLV_DEVICE_PATH 0x01
 
@@ -82,12 +89,18 @@ qmi_proxy_get_n_clients (QmiProxy *self)
 /*****************************************************************************/
 
 typedef struct {
+    QmiService service;
+    guint8 cid;
+} QmiClientInfo;
+
+typedef struct {
     QmiProxy *proxy; /* not full ref */
     GSocketConnection *connection;
     GSource *connection_readable_source;
     GByteArray *buffer;
     QmiDevice *device;
     QmiMessage *internal_proxy_open_request;
+    GArray *qmi_client_info_array;
 } Client;
 
 static gboolean connection_readable_cb (GSocket *socket, GIOCondition condition, Client *client);
@@ -108,6 +121,8 @@ client_free (Client *client)
 
     if (client->internal_proxy_open_request)
         g_byte_array_unref (client->internal_proxy_open_request);
+
+    g_array_unref (client->qmi_client_info_array);
 
     g_object_unref (client->connection);
     g_slice_free (Client, client);
@@ -329,6 +344,70 @@ process_internal_proxy_open (Client *client,
     return FALSE;
 }
 
+static void
+track_cid (Client *client,
+           gboolean track,
+           QmiMessage *message)
+{
+    const guint8 *buffer;
+    guint16 buffer_len;
+    guint16 error_status;
+    guint16 error_code;
+    guint8 tmp;
+    QmiClientInfo info;
+    guint i;
+    gboolean exists;
+
+    buffer = qmi_message_get_raw_tlv (message, QMI_MESSAGE_OUTPUT_TLV_RESULT, &buffer_len);
+    if (!buffer || buffer_len != 4) {
+        g_warning ("invalid 'CTL allocate CID' response: missing or invalid result TLV");
+        return;
+    }
+
+    qmi_utils_read_guint16_from_buffer (&buffer, &buffer_len, QMI_ENDIAN_LITTLE, &error_status);
+    if (error_status != 0x00)
+        return;
+
+    qmi_utils_read_guint16_from_buffer (&buffer, &buffer_len, QMI_ENDIAN_LITTLE, &error_code);
+    if (error_code != QMI_PROTOCOL_ERROR_NONE)
+        return;
+
+    buffer = qmi_message_get_raw_tlv (message, QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO, &buffer_len);
+    if (!buffer || buffer_len != 2) {
+        g_warning ("invalid 'CTL allocate CID' response: missing or invalid allocation info TLV");
+        return;
+    }
+
+    qmi_utils_read_guint8_from_buffer (&buffer, &buffer_len, &tmp);
+    info.service = (QmiService)tmp;
+    qmi_utils_read_guint8_from_buffer (&buffer, &buffer_len, &(info.cid));
+
+
+    /* Check if it already exists */
+    for (i = 0; i < client->qmi_client_info_array->len; i++) {
+        QmiClientInfo *existing;
+
+        existing = &g_array_index (client->qmi_client_info_array, QmiClientInfo, i);
+        if (existing->service == info.service && existing->cid == info.cid)
+            break;
+    }
+    exists = (i < client->qmi_client_info_array->len);
+
+    if (track && !exists) {
+        g_debug ("QMI client tracked [%s,%s,%u]",
+                 qmi_device_get_path_display (client->device),
+                 qmi_service_get_string (info.service),
+                 info.cid);
+        g_array_append_val (client->qmi_client_info_array, info);
+    } else if (!track && exists) {
+        g_debug ("QMI client untracked [%s,%s,%u]",
+                 qmi_device_get_path_display (client->device),
+                 qmi_service_get_string (info.service),
+                 info.cid);
+        g_array_remove_index (client->qmi_client_info_array, i);
+    }
+}
+
 typedef struct {
     Client *client;
     guint8 in_trid;
@@ -349,8 +428,13 @@ device_command_ready (QmiDevice *device,
         return;
     }
 
-    if (qmi_message_get_service (response) == QMI_SERVICE_CTL)
+    if (qmi_message_get_service (response) == QMI_SERVICE_CTL) {
         qmi_message_set_transaction_id (response, request->in_trid);
+        if (qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID)
+            track_cid (request->client, TRUE, response);
+        else if (qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_RELEASE_CID)
+            track_cid (request->client, FALSE, response);
+    }
 
     if (!send_message (request->client, response, &error))
         connection_close (request->client);
@@ -495,6 +579,7 @@ incoming_cb (GSocketService *service,
                            client,
                            NULL);
     g_source_attach (client->connection_readable_source, NULL);
+    client->qmi_client_info_array = g_array_sized_new (FALSE, FALSE, sizeof (QmiClientInfo), 8);
 
     /* Keep the client info around */
     self->priv->clients = g_list_append (self->priv->clients, client);
