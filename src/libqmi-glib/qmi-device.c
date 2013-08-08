@@ -70,7 +70,13 @@ enum {
     PROP_LAST
 };
 
+enum {
+    SIGNAL_INDICATION,
+    SIGNAL_LAST
+};
+
 static GParamSpec *properties[PROP_LAST];
+static guint       signals   [SIGNAL_LAST] = { 0 };
 
 struct _QmiDevicePrivate {
     /* File */
@@ -1246,6 +1252,9 @@ process_message (QmiDevice *self,
     }
 
     if (qmi_message_is_indication (message)) {
+        /* Generic emission of the indication */
+        g_signal_emit (self, signals[SIGNAL_INDICATION], 0, message);
+
         if (qmi_message_get_client_id (message) == QMI_CID_BROADCAST) {
             GHashTableIter iter;
             gpointer key;
@@ -2551,4 +2560,23 @@ qmi_device_class_init (QmiDeviceClass *klass)
                              G_TYPE_FILE,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_FILE, properties[PROP_FILE]);
+
+    /**
+     * QmiClientDms::event-report:
+     * @object: A #QmiClientDms.
+     * @output: A #QmiIndicationDmsEventReportOutput.
+     *
+     * The ::event-report signal gets emitted when a '<link linkend="libqmi-glib-DMS-Event-Report.top_of_page">Event Report</link>' indication is received.
+     */
+    signals[SIGNAL_INDICATION] =
+        g_signal_new (QMI_DEVICE_SIGNAL_INDICATION,
+                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
+                      G_SIGNAL_RUN_LAST,
+                      0,
+                      NULL,
+                      NULL,
+                      NULL,
+                      G_TYPE_NONE,
+                      1,
+                      G_TYPE_BYTE_ARRAY);
 }

@@ -49,6 +49,8 @@ typedef struct _QmiDevicePrivate QmiDevicePrivate;
 
 #define QMI_DEVICE_FILE "device-file"
 
+#define QMI_DEVICE_SIGNAL_INDICATION "indication"
+
 /**
  * QmiDevice:
  *

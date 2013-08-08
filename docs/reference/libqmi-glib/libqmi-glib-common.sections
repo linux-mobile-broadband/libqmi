@@ -42,6 +42,7 @@ qmi_client_get_type
 <FILE>qmi-device</FILE>
 <TITLE>QmiDevice</TITLE>
 QMI_DEVICE_FILE
+QMI_DEVICE_SIGNAL_INDICATION
 QmiDevice
 qmi_device_new
 qmi_device_new_finish
