@@ -101,6 +101,7 @@ typedef struct {
     QmiDevice *device;
     QmiMessage *internal_proxy_open_request;
     GArray *qmi_client_info_array;
+    guint indication_id;
 } Client;
 
 static gboolean connection_readable_cb (GSocket *socket, GIOCondition condition, Client *client);
@@ -111,8 +112,11 @@ client_free (Client *client)
     g_source_destroy (client->connection_readable_source);
     g_source_unref (client->connection_readable_source);
 
-    if (client->device)
+    if (client->device) {
+        if (g_signal_handler_is_connected (client->device, client->indication_id))
+            g_signal_handler_disconnect (client->device, client->indication_id);
         g_object_unref (client->device);
+    }
 
     g_output_stream_close (g_io_stream_get_output_stream (G_IO_STREAM (client->connection)), NULL, NULL);
 
@@ -241,6 +245,35 @@ complete_internal_proxy_open (Client *client)
 }
 
 static void
+indication_cb (QmiDevice *device,
+               QmiMessage *message,
+               Client *client)
+{
+    guint i;
+
+    for (i = 0; i < client->qmi_client_info_array->len; i++) {
+        QmiClientInfo *info;
+
+        info = &g_array_index (client->qmi_client_info_array, QmiClientInfo, i);
+        /* If service and CID match; or if service and broadcast, forward to
+         * the remote client */
+        if ((qmi_message_get_service (message) == info->service) &&
+            (qmi_message_get_client_id (message) == info->cid ||
+             qmi_message_get_client_id (message) == QMI_CID_BROADCAST)) {
+            GError *error = NULL;
+
+            if (!send_message (client, message, &error)) {
+                g_warning ("couldn't forward indication to client");
+                g_error_free (error);
+            }
+
+            /* Avoid forwarding broadcast messages multiple times */
+            break;
+        }
+    }
+}
+
+static void
 device_open_ready (QmiDevice *device,
                    GAsyncResult *res,
                    Client *client)
@@ -267,6 +300,12 @@ device_open_ready (QmiDevice *device,
         /* Keep the newly added device in the proxy */
         self->priv->devices = g_list_append (self->priv->devices, g_object_ref (client->device));
     }
+
+    /* Register for device indications */
+    client->indication_id = g_signal_connect (client->device,
+                                              "indication",
+                                              G_CALLBACK (indication_cb),
+                                              client);
 
     complete_internal_proxy_open (client);
 }
