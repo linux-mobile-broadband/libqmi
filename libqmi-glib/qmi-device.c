@@ -361,7 +361,7 @@ version_info_ready (QmiClientCtl *client_ctl,
 
 /**
  * qmi_device_get_service_version_info:
- * @self: a #QmiClientCtl.
+ * @self: a #QmiDevice.
  * @timeout: maximum time to wait for the method to complete, in seconds.
  * @cancellable: a #GCancellable or %NULL.
  * @callback: a #GAsyncReadyCallback to call when the request is satisfied.
