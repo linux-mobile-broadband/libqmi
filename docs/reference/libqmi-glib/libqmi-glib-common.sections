@@ -674,6 +674,33 @@ qmi_uim_security_attribute_get_type
 </SECTION>
 
 <SECTION>
+<FILE>qmi-enums-oma</FILE>
+QmiOmaSessionType
+QmiOmaSessionState
+QmiOmaSessionFailedReason
+QmiOmaHfaFeatureDoneState
+<SUBSECTION Methods>
+qmi_oma_session_type_get_string
+qmi_oma_session_state_get_string
+qmi_oma_session_failed_reason_get_string
+qmi_oma_hfa_feature_done_state_get_string
+<SUBSECTION Private>
+qmi_oma_session_type_build_string_from_mask
+qmi_oma_session_state_build_string_from_mask
+qmi_oma_session_failed_reason_build_string_from_mask
+qmi_oma_hfa_feature_done_state_build_string_from_mask
+<SUBSECTION Standard>
+QMI_TYPE_OMA_SESSION_TYPE
+QMI_TYPE_OMA_SESSION_STATE
+QMI_TYPE_OMA_SESSION_FAILED_REASON
+QMI_TYPE_OMA_HFA_FEATURE_DONE_STATE
+qmi_oma_session_type_get_type
+qmi_oma_session_state_get_type
+qmi_oma_session_failed_reason_get_type
+qmi_oma_hfa_feature_done_state_get_type
+</SECTION>
+
+<SECTION>
 <FILE>qmi-errors</FILE>
 QmiCoreError
 QmiProtocolError

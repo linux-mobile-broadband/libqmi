@@ -231,6 +231,27 @@
     </section>
   </chapter>
 
+  <chapter>
+    <title>Open Mobile Alliance Service (OMA)</title>
+    <xi:include href="xml/qmi-client-oma.xml"/>
+    <xi:include href="xml/qmi-enums-oma.xml"/>
+    <section>
+      <title>OMA Indications</title>
+      <xi:include href="xml/qmi-indication-oma-event-report.xml"/>
+    </section>
+    <section>
+      <title>OMA Requests</title>
+      <xi:include href="xml/qmi-message-oma-reset.xml"/>
+      <xi:include href="xml/qmi-message-oma-set-event-report.xml"/>
+      <xi:include href="xml/qmi-message-oma-start-session.xml"/>
+      <xi:include href="xml/qmi-message-oma-cancel-session.xml"/>
+      <xi:include href="xml/qmi-message-oma-get-session-info.xml"/>
+      <xi:include href="xml/qmi-message-oma-send-selection.xml"/>
+      <xi:include href="xml/qmi-message-oma-get-feature-setting.xml"/>
+      <xi:include href="xml/qmi-message-oma-set-feature-setting.xml"/>
+    </section>
+  </chapter>
+
   <chapter id="object-tree">
     <title>Object Hierarchy</title>
      <xi:include href="xml/tree_index.sgml"/>

@@ -58,6 +58,9 @@
 #include "qmi-enums-uim.h"
 #include "qmi-uim.h"
 
+#include "qmi-enums-oma.h"
+#include "qmi-oma.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

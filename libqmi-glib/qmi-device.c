@@ -37,6 +37,7 @@
 #include "qmi-pds.h"
 #include "qmi-pbm.h"
 #include "qmi-uim.h"
+#include "qmi-oma.h"
 #include "qmi-utils.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
@@ -855,6 +856,10 @@ qmi_device_allocate_client (QmiDevice *self,
 
     case QMI_SERVICE_UIM:
         ctx->client_type = QMI_TYPE_CLIENT_UIM;
+        break;
+
+    case QMI_SERVICE_OMA:
+        ctx->client_type = QMI_TYPE_CLIENT_OMA;
         break;
 
     default:
