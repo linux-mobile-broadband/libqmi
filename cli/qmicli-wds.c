@@ -247,7 +247,6 @@ timeout_get_packet_service_status_ready (QmiClientWds *client,
         g_printerr ("error: operation failed: %s\n",
                     error->message);
         g_error_free (error);
-        shutdown (FALSE);
         return;
     }
 
@@ -255,7 +254,6 @@ timeout_get_packet_service_status_ready (QmiClientWds *client,
         g_printerr ("error: couldn't get packet service status: %s\n", error->message);
         g_error_free (error);
         qmi_message_wds_get_packet_service_status_output_unref (output);
-        shutdown (FALSE);
         return;
     }
 
@@ -268,7 +266,13 @@ timeout_get_packet_service_status_ready (QmiClientWds *client,
              qmi_device_get_path_display (ctx->device),
              qmi_wds_connection_status_get_string (status));
     qmi_message_wds_get_packet_service_status_output_unref (output);
-    shutdown (TRUE);
+
+    /* If packet service checks detect disconnection, halt --wds-follow-network */
+    if (status != QMI_WDS_CONNECTION_STATUS_CONNECTED) {
+        g_print ("[%s] Stopping after detecting disconnection\n",
+                 qmi_device_get_path_display (ctx->device));
+        internal_stop_network (NULL, ctx->packet_data_handle);
+    }
 }
 
 static gboolean
