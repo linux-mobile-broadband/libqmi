@@ -2242,7 +2242,8 @@ dispose (GObject *object)
     g_clear_object (&self->priv->file);
 
     /* unregister our CTL client */
-    unregister_client (self, QMI_CLIENT (self->priv->client_ctl));
+    if (self->priv->client_ctl)
+        unregister_client (self, QMI_CLIENT (self->priv->client_ctl));
 
     /* If clients were left unreleased, we'll just warn about it.
      * There is no point in trying to request CID releases, as the device
