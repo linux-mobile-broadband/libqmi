@@ -603,8 +603,31 @@ incoming_cb (GSocketService *service,
              QmiProxy *self)
 {
     Client *client;
+    GCredentials *credentials;
+    GError *error = NULL;
+    uid_t uid;
 
     g_debug ("client connection open...");
+
+    credentials = g_socket_get_credentials (g_socket_connection_get_socket (connection), &error);
+    if (!credentials) {
+        g_warning ("Client not allowed: Error getting socket credentials: %s", error->message);
+        g_error_free (error);
+        return;
+    }
+
+    uid = g_credentials_get_unix_user (credentials, &error);
+    g_object_unref (credentials);
+    if (error) {
+        g_warning ("Client not allowed: Error getting unix user id: %s", error->message);
+        g_error_free (error);
+        return;
+    }
+
+    if (uid != 0) {
+        g_warning ("Client not allowed: Not enough privileges");
+        return;
+    }
 
     /* Create client */
     client = g_slice_new0 (Client);
@@ -680,6 +703,15 @@ QmiProxy *
 qmi_proxy_new (GError **error)
 {
     QmiProxy *self;
+
+    /* Only root can run the qmi-proxy */
+    if (getuid () != 0) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "Not enough privileges");
+        return NULL;
+    }
 
     self = g_object_new (QMI_TYPE_PROXY, NULL);
     if (!setup_socket_service (self, error))
