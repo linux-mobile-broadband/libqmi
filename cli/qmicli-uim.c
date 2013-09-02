@@ -181,6 +181,39 @@ static const SimFile sim_files[] = {
 };
 
 static void
+get_sim_file_id_and_path (const gchar *file_name,
+                          guint16 *file_id,
+                          GArray **file_path)
+{
+    guint i;
+    guint8 val;
+
+    for (i = 0; i < G_N_ELEMENTS (sim_files); i++) {
+        if (g_str_equal (sim_files[i].name, file_name))
+            break;
+    }
+
+    g_assert (i != G_N_ELEMENTS (sim_files));
+
+    *file_path = g_array_sized_new (FALSE, FALSE, sizeof (guint8), 4);
+
+    val = sim_files[i].path[0] & 0xFF;
+    g_array_append_val (*file_path, val);
+    val = (sim_files[i].path[0] >> 8) & 0xFF;
+    g_array_append_val (*file_path, val);
+
+    if (sim_files[i].path[2] != 0) {
+        val = sim_files[i].path[1] & 0xFF;
+        g_array_append_val (*file_path, val);
+        val = (sim_files[i].path[1] >> 8) & 0xFF;
+        g_array_append_val (*file_path, val);
+        *file_id = sim_files[i].path[2];
+    } else {
+        *file_id = sim_files[i].path[1];
+    }
+}
+
+static void
 read_transparent_ready (QmiClientUim *client,
                         GAsyncResult *res)
 {
@@ -258,25 +291,8 @@ read_transparent_build_input (const gchar *file_name)
     QmiMessageUimReadTransparentInput *input;
     guint16 file_id = 0;
     GArray *file_path = NULL;
-    guint i;
 
-    for (i = 0; i < G_N_ELEMENTS (sim_files); i++) {
-        if (g_str_equal (sim_files[i].name, file_name))
-            break;
-    }
-
-    g_assert (i != G_N_ELEMENTS (sim_files));
-
-    file_path = g_array_sized_new (FALSE, FALSE, sizeof (guint16), 3);
-    g_array_append_val (file_path, sim_files[i].path[0]);
-    if (sim_files[i].path[2] != 0) {
-        g_array_append_val (file_path, sim_files[i].path[1]);
-        g_array_append_val (file_path, sim_files[i].path[2]);
-        file_id = sim_files[i].path[2];
-    } else {
-        g_array_append_val (file_path, sim_files[i].path[1]);
-        file_id = sim_files[i].path[1];
-    }
+    get_sim_file_id_and_path (file_name, &file_id, &file_path);
 
     input = qmi_message_uim_read_transparent_input_new ();
     qmi_message_uim_read_transparent_input_set_session_information (
@@ -454,25 +470,8 @@ get_file_attributes_build_input (const gchar *file_name)
     QmiMessageUimGetFileAttributesInput *input;
     guint16 file_id = 0;
     GArray *file_path = NULL;
-    guint i;
 
-    for (i = 0; i < G_N_ELEMENTS (sim_files); i++) {
-        if (g_str_equal (sim_files[i].name, file_name))
-            break;
-    }
-
-    g_assert (i != G_N_ELEMENTS (sim_files));
-
-    file_path = g_array_sized_new (FALSE, FALSE, sizeof (guint16), 3);
-    g_array_append_val (file_path, sim_files[i].path[0]);
-    if (sim_files[i].path[2] != 0) {
-        g_array_append_val (file_path, sim_files[i].path[1]);
-        g_array_append_val (file_path, sim_files[i].path[2]);
-        file_id = sim_files[i].path[2];
-    } else {
-        g_array_append_val (file_path, sim_files[i].path[1]);
-        file_id = sim_files[i].path[1];
-    }
+    get_sim_file_id_and_path (file_name, &file_id, &file_path);
 
     input = qmi_message_uim_get_file_attributes_input_new ();
     qmi_message_uim_get_file_attributes_input_set_session_information (
