@@ -66,4 +66,59 @@ typedef enum {
     QMI_UIM_SESSION_TYPE_LOGICAL_CHANNEL_SLOT_2    = 9
 } QmiUimSessionType;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI UIM Get File Attributes' request/response */
+
+/**
+ * QmiUimFileType:
+ * @QMI_UIM_FILE_TYPE_TRANSPARENT: Transparent.
+ * @QMI_UIM_FILE_TYPE_CYCLIC: Cyclic.
+ * @QMI_UIM_FILE_TYPE_LINEAR_FIXED: Linear fixed.
+ * @QMI_UIM_FILE_TYPE_DEDICATED_FILE: Dedicated file.
+ * @QMI_UIM_FILE_TYPE_MASTER_FILE: Master file.
+ *
+ * Type of UIM file.
+ */
+typedef enum {
+    QMI_UIM_FILE_TYPE_TRANSPARENT    = 0,
+    QMI_UIM_FILE_TYPE_CYCLIC         = 1,
+    QMI_UIM_FILE_TYPE_LINEAR_FIXED   = 2,
+    QMI_UIM_FILE_TYPE_DEDICATED_FILE = 3,
+    QMI_UIM_FILE_TYPE_MASTER_FILE    = 4
+} QmiUimFileType;
+
+/**
+ * QmiUimSecurityAttributeLogic:
+ * @QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_ALWAYS: Always.
+ * @QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_NEVER: Never.
+ * @QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_AND: And.
+ * @QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_OR: Or.
+ * @QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_SINGLE: Single.
+ *
+ * Logic applicable to security attributes.
+ */
+typedef enum {
+    QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_ALWAYS = 0,
+    QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_NEVER  = 1,
+    QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_AND    = 2,
+    QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_OR     = 3,
+    QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_SINGLE = 4
+} QmiUimSecurityAttributeLogic;
+
+/**
+ * QmiUimSecurityAttribute:
+ * @QMI_UIM_SECURITY_ATTRIBUTE_PIN1: PIN1.
+ * @QMI_UIM_SECURITY_ATTRIBUTE_PIN2: PIN2.
+ * @QMI_UIM_SECURITY_ATTRIBUTE_UPIN: UPIN.
+ * @QMI_UIM_SECURITY_ATTRIBUTE_ADM: ADM.
+ *
+ * Security Attributes.
+ */
+typedef enum {
+    QMI_UIM_SECURITY_ATTRIBUTE_PIN1 = 1 << 0,
+    QMI_UIM_SECURITY_ATTRIBUTE_PIN2 = 1 << 1,
+    QMI_UIM_SECURITY_ATTRIBUTE_UPIN = 1 << 2,
+    QMI_UIM_SECURITY_ATTRIBUTE_ADM  = 1 << 3
+} QmiUimSecurityAttribute;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_UIM_H_ */

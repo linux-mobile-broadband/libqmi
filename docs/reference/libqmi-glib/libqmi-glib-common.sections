@@ -649,13 +649,28 @@ qmi_pbm_session_type_get_type
 <SECTION>
 <FILE>qmi-enums-uim</FILE>
 QmiUimSessionType
+QmiUimFileType
+QmiUimSecurityAttributeLogic
+QmiUimSecurityAttribute
 <SUBSECTION Methods>
 qmi_uim_session_type_get_string
+qmi_uim_file_type_get_string
+qmi_uim_security_attribute_logic_get_string
+qmi_uim_security_attribute_build_string_from_mask
 <SUBSECTION Private>
 qmi_uim_session_type_build_string_from_mask
+qmi_uim_file_type_build_string_from_mask
+qmi_uim_security_attribute_logic_build_string_from_mask
+qmi_uim_security_attribute_get_string
 <SUBSECTION Standard>
 QMI_TYPE_UIM_SESSION_TYPE
+QMI_TYPE_UIM_FILE_TYPE
+QMI_TYPE_UIM_SECURITY_ATTRIBUTE_LOGIC
+QMI_TYPE_UIM_SECURITY_ATTRIBUTE
 qmi_uim_session_type_get_type
+qmi_uim_file_type_get_type
+qmi_uim_security_attribute_logic_get_type
+qmi_uim_security_attribute_get_type
 </SECTION>
 
 <SECTION>
