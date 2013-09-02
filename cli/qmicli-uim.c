@@ -169,6 +169,17 @@ noop_cb (gpointer unused)
     return FALSE;
 }
 
+typedef struct {
+    gchar *name;
+    guint16 path[3];
+} SimFile;
+
+static const SimFile sim_files[] = {
+    { "EFspn",    { 0x3F00, 0x7F20, 0x6F46 } },
+    { "EFimsi",   { 0x3F00, 0x7F20, 0x6F07 } },
+    { "EFiccid",  { 0x3F00, 0x2FE2, 0x0000 } },
+};
+
 static void
 read_transparent_ready (QmiClientUim *client,
                         GAsyncResult *res)
@@ -241,17 +252,6 @@ read_transparent_ready (QmiClientUim *client,
     shutdown (TRUE);
 }
 
-typedef struct {
-    gchar *name;
-    guint16 path[3];
-} SimFile;
-
-static const SimFile sim_files[] = {
-    { "EFspn",    { 0x3F00, 0x7F20, 0x6F46 } },
-    { "EFimsi",   { 0x3F00, 0x7F20, 0x6F07 } },
-    { "EFiccid",  { 0x3F00, 0x2FE2, 0x0000 } },
-};
-
 static QmiMessageUimReadTransparentInput *
 read_transparent_build_input (const gchar *file_name)
 {
@@ -282,7 +282,7 @@ read_transparent_build_input (const gchar *file_name)
     qmi_message_uim_read_transparent_input_set_session_information (
         input,
         QMI_UIM_SESSION_TYPE_PRIMARY_GW_PROVISIONING,
-        "qmicli",
+        "",
         NULL);
     qmi_message_uim_read_transparent_input_set_file (
         input,
@@ -292,6 +292,217 @@ read_transparent_build_input (const gchar *file_name)
     qmi_message_uim_read_transparent_input_set_read_information (input, 0, 0, NULL);
     g_array_unref (file_path);
     return input;
+}
+
+static void
+get_file_attributes_ready (QmiClientUim *client,
+                           GAsyncResult *res,
+                           gchar *file_name)
+{
+    QmiMessageUimGetFileAttributesOutput *output;
+    GError *error = NULL;
+    guint8 sw1 = 0;
+    guint8 sw2 = 0;
+    guint16 file_size;
+    guint16 file_id;
+    QmiUimFileType file_type;
+    guint16 record_size;
+    guint16 record_count;
+    QmiUimSecurityAttributeLogic read_security_attributes_logic;
+    QmiUimSecurityAttribute read_security_attributes;
+    QmiUimSecurityAttributeLogic write_security_attributes_logic;
+    QmiUimSecurityAttribute write_security_attributes;
+    QmiUimSecurityAttributeLogic increase_security_attributes_logic;
+    QmiUimSecurityAttribute increase_security_attributes;
+    QmiUimSecurityAttributeLogic deactivate_security_attributes_logic;
+    QmiUimSecurityAttribute deactivate_security_attributes;
+    QmiUimSecurityAttributeLogic activate_security_attributes_logic;
+    QmiUimSecurityAttribute activate_security_attributes;
+    GArray *raw = NULL;
+    QmiMessageUimReadTransparentInput *input;
+
+    output = qmi_client_uim_get_file_attributes_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        g_free (file_name);
+        return;
+    }
+
+    if (!qmi_message_uim_get_file_attributes_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get '%s' file attributes from the UIM: %s\n",
+                    file_name,
+                    error->message);
+        g_error_free (error);
+
+        /* Card result */
+        if (qmi_message_uim_get_file_attributes_output_get_card_result (
+                output,
+                &sw1,
+                &sw2,
+                NULL)) {
+            g_print ("Card result:\n"
+                     "\tSW1: '0x%02x'\n"
+                     "\tSW2: '0x%02x'\n",
+                     sw1, sw2);
+        }
+
+        qmi_message_uim_get_file_attributes_output_unref (output);
+        shutdown (FALSE);
+        g_free (file_name);
+        return;
+    }
+
+    g_print ("[%s] Successfully got file '%s' attributes from the UIM:\n",
+             file_name,
+             qmi_device_get_path_display (ctx->device));
+
+    /* Card result */
+    if (qmi_message_uim_get_file_attributes_output_get_card_result (
+            output,
+            &sw1,
+            &sw2,
+            NULL)) {
+        g_print ("Card result:\n"
+                 "\tSW1: '0x%02x'\n"
+                 "\tSW2: '0x%02x'\n",
+                 sw1, sw2);
+    }
+
+    /* File attributes */
+    if (qmi_message_uim_get_file_attributes_output_get_file_attributes (
+            output,
+            &file_size,
+            &file_id,
+            &file_type,
+            &record_size,
+            &record_count,
+            &read_security_attributes_logic,
+            &read_security_attributes,
+            &write_security_attributes_logic,
+            &write_security_attributes,
+            &increase_security_attributes_logic,
+            &increase_security_attributes,
+            &deactivate_security_attributes_logic,
+            &deactivate_security_attributes,
+            &activate_security_attributes_logic,
+            &activate_security_attributes,
+            &raw,
+            NULL)) {
+        gchar *str;
+
+        g_print ("File attributes:\n");
+        g_print ("\tFile size: %u\n", (guint)file_size);
+        g_print ("\tFile ID: %u\n", (guint)file_id);
+        g_print ("\tFile type: %s\n", qmi_uim_file_type_get_string (file_type));
+        g_print ("\tRecord size: %u\n", (guint)record_size);
+        g_print ("\tRecord count: %u\n", (guint)record_count);
+
+        str = qmi_uim_security_attribute_build_string_from_mask (read_security_attributes);
+        g_print ("\tRead security attributes: (%s) %s\n",
+                 qmi_uim_security_attribute_logic_get_string (read_security_attributes_logic),
+                 str);
+        g_free (str);
+
+        str = qmi_uim_security_attribute_build_string_from_mask (write_security_attributes);
+        g_print ("\tWrite security attributes: (%s) %s\n",
+                 qmi_uim_security_attribute_logic_get_string (write_security_attributes_logic),
+                 str);
+        g_free (str);
+
+        str = qmi_uim_security_attribute_build_string_from_mask (increase_security_attributes);
+        g_print ("\tIncrease security attributes: (%s) %s\n",
+                 qmi_uim_security_attribute_logic_get_string (increase_security_attributes_logic),
+                 str);
+        g_free (str);
+
+        str = qmi_uim_security_attribute_build_string_from_mask (deactivate_security_attributes);
+        g_print ("\tDeactivate security attributes: (%s) %s\n",
+                 qmi_uim_security_attribute_logic_get_string (deactivate_security_attributes_logic),
+                 str);
+        g_free (str);
+
+        str = qmi_uim_security_attribute_build_string_from_mask (activate_security_attributes);
+        g_print ("\tActivate security attributes: (%s) %s\n",
+                 qmi_uim_security_attribute_logic_get_string (activate_security_attributes_logic),
+                 str);
+        g_free (str);
+
+        str = qmicli_get_raw_data_printable (raw, 80, "\t");
+        g_print ("\tRaw: %s\n", str);
+        g_free (str);
+    }
+
+    qmi_message_uim_get_file_attributes_output_unref (output);
+
+    /* Now really read the record */
+    input = read_transparent_build_input (file_name);
+    g_debug ("Asynchronously reading %s...", file_name);
+    qmi_client_uim_read_transparent (ctx->client,
+                                     input,
+                                     10,
+                                     ctx->cancellable,
+                                     (GAsyncReadyCallback)read_transparent_ready,
+                                     NULL);
+    qmi_message_uim_read_transparent_input_unref (input);
+}
+
+static QmiMessageUimGetFileAttributesInput *
+get_file_attributes_build_input (const gchar *file_name)
+{
+    QmiMessageUimGetFileAttributesInput *input;
+    guint16 file_id = 0;
+    GArray *file_path = NULL;
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (sim_files); i++) {
+        if (g_str_equal (sim_files[i].name, file_name))
+            break;
+    }
+
+    g_assert (i != G_N_ELEMENTS (sim_files));
+
+    file_path = g_array_sized_new (FALSE, FALSE, sizeof (guint16), 3);
+    g_array_append_val (file_path, sim_files[i].path[0]);
+    if (sim_files[i].path[2] != 0) {
+        g_array_append_val (file_path, sim_files[i].path[1]);
+        g_array_append_val (file_path, sim_files[i].path[2]);
+        file_id = sim_files[i].path[2];
+    } else {
+        g_array_append_val (file_path, sim_files[i].path[1]);
+        file_id = sim_files[i].path[1];
+    }
+
+    input = qmi_message_uim_get_file_attributes_input_new ();
+    qmi_message_uim_get_file_attributes_input_set_session_information (
+        input,
+        QMI_UIM_SESSION_TYPE_PRIMARY_GW_PROVISIONING,
+        "",
+        NULL);
+    qmi_message_uim_get_file_attributes_input_set_file (
+        input,
+        file_id,
+        file_path,
+        NULL);
+    g_array_unref (file_path);
+    return input;
+}
+
+static void
+read_file (const gchar *file_name)
+{
+    QmiMessageUimGetFileAttributesInput *input;
+
+    input = get_file_attributes_build_input (file_name);
+    g_debug ("Asynchronously reading %s file attributes...", file_name);
+    qmi_client_uim_get_file_attributes (ctx->client,
+                                        input,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)get_file_attributes_ready,
+                                        g_strdup (file_name));
+    qmi_message_uim_get_file_attributes_input_unref (input);
 }
 
 void
@@ -307,49 +518,19 @@ qmicli_uim_run (QmiDevice *device,
 
     /* Request to read EFspn? */
     if (read_efspn_flag) {
-        QmiMessageUimReadTransparentInput *input;
-
-        input = read_transparent_build_input ("EFspn");
-        g_debug ("Asynchronously reading EFspn...");
-        qmi_client_uim_read_transparent (ctx->client,
-                                         input,
-                                         10,
-                                         ctx->cancellable,
-                                         (GAsyncReadyCallback)read_transparent_ready,
-                                         NULL);
-        qmi_message_uim_read_transparent_input_unref (input);
+        read_file ("EFspn");
         return;
     }
 
     /* Request to read EFimsi? */
     if (read_efimsi_flag) {
-        QmiMessageUimReadTransparentInput *input;
-
-        input = read_transparent_build_input ("EFimsi");
-        g_debug ("Asynchronously reading EFimsi...");
-        qmi_client_uim_read_transparent (ctx->client,
-                                         input,
-                                         10,
-                                         ctx->cancellable,
-                                         (GAsyncReadyCallback)read_transparent_ready,
-                                         NULL);
-        qmi_message_uim_read_transparent_input_unref (input);
+        read_file ("EFimsi");
         return;
     }
 
     /* Request to read EFiccid? */
     if (read_eficcid_flag) {
-        QmiMessageUimReadTransparentInput *input;
-
-        input = read_transparent_build_input ("EFiccid");
-        g_debug ("Asynchronously reading EFiccid...");
-        qmi_client_uim_read_transparent (ctx->client,
-                                         input,
-                                         10,
-                                         ctx->cancellable,
-                                         (GAsyncReadyCallback)read_transparent_ready,
-                                         NULL);
-        qmi_message_uim_read_transparent_input_unref (input);
+        read_file ("EFiccid");
         return;
     }
 
