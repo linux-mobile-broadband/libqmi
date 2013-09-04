@@ -88,6 +88,7 @@ GTK_DOC_CHECK(1.0)
 
 dnl Man page
 AC_PATH_PROG(HELP2MAN, help2man, false)
+AM_CONDITIONAL(BUILDOPT_MAN, test x$HELP2MAN != xfalse)
 
 AC_CONFIG_FILES([Makefile
                  data/Makefile

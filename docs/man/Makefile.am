@@ -1,5 +1,9 @@
 
-dist_man_MANS = qmicli.1
+dist_man_MANS =
+
+if BUILDOPT_MAN
+dist_man_MANS += qmicli.1
+endif
 
 # List of all source files which affect the output of --help-all
 SOURCES_WITH_HELP = \
