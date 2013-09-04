@@ -134,6 +134,7 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
   * @QMI_PROTOCOL_ERROR_SEGMENT_TOO_LONG: Segment too long.
   * @QMI_PROTOCOL_ERROR_SEGMENT_ORDER: Segment order.
   * @QMI_PROTOCOL_ERROR_BUNDLING_NOT_SUPPORTED: Bundling not supported.
+  * @QMI_PROTOCOL_ERROR_POLICY_MISMATCH: Policy mismatch.
   * @QMI_PROTOCOL_ERROR_SIM_FILE_NOT_FOUND: SIM file not found.
   * @QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL: Extended internal error.
   * @QMI_PROTOCOL_ERROR_ACCESS_DENIED: Access denied.
@@ -239,6 +240,8 @@ typedef enum { /*< underscore_name=qmi_protocol_error >*/
   QMI_PROTOCOL_ERROR_SEGMENT_TOO_LONG                 = 75, /*< nick=SegmentTooLong >*/
   QMI_PROTOCOL_ERROR_SEGMENT_ORDER                    = 76, /*< nick=SegmentOrder >*/
   QMI_PROTOCOL_ERROR_BUNDLING_NOT_SUPPORTED           = 77, /*< nick=BundlingNotSupported >*/
+  /* 0x004E, 78: unused */
+  QMI_PROTOCOL_ERROR_POLICY_MISMATCH                  = 79, /*< nick=PolicyMismatch >*/
   QMI_PROTOCOL_ERROR_SIM_FILE_NOT_FOUND               = 80, /*< nick=SimFileNotFound >*/
   QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL                = 81, /*< nick=ExtendedInternal >*/
   QMI_PROTOCOL_ERROR_ACCESS_DENIED                    = 82, /*< nick=AccessDenied >*/
