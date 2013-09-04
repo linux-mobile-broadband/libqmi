@@ -86,6 +86,9 @@ AC_SUBST(GLIB_MKENUMS)
 dnl Documentation
 GTK_DOC_CHECK(1.0)
 
+dnl Man page
+AC_PATH_PROG(HELP2MAN, help2man, false)
+
 AC_CONFIG_FILES([Makefile
                  data/Makefile
                  data/pkg-config/Makefile
@@ -103,7 +106,8 @@ AC_CONFIG_FILES([Makefile
                  docs/Makefile
                  docs/reference/Makefile
                  docs/reference/libqmi-glib/Makefile
-                 docs/reference/libqmi-glib/version.xml])
+                 docs/reference/libqmi-glib/version.xml
+                 docs/man/Makefile])
 AC_OUTPUT
 
 echo "
