@@ -53,6 +53,7 @@ static gboolean get_packet_service_status_flag;
 static gboolean get_packet_statistics_flag;
 static gboolean get_data_bearer_technology_flag;
 static gboolean get_current_data_bearer_technology_flag;
+static gchar *get_profile_list_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -84,6 +85,10 @@ static GOptionEntry entries[] = {
     { "wds-get-current-data-bearer-technology", 0, 0, G_OPTION_ARG_NONE, &get_current_data_bearer_technology_flag,
       "Get current data bearer technology",
       NULL
+    },
+    { "wds-get-profile-list", 0, 0, G_OPTION_ARG_STRING, &get_profile_list_str,
+      "Get profile list",
+      "[3gpp|3gpp2]"
     },
     { "wds-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
@@ -126,6 +131,7 @@ qmicli_wds_options_enabled (void)
                  get_packet_statistics_flag +
                  get_data_bearer_technology_flag +
                  get_current_data_bearer_technology_flag +
+                 !!get_profile_list_str +
                  reset_flag +
                  noop_flag);
 
@@ -618,6 +624,70 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
 }
 
 static void
+get_profile_list_ready (QmiClientWds *client,
+                        GAsyncResult *res)
+{
+    GError *error = NULL;
+    QmiMessageWdsGetProfileListOutput *output;
+    GArray *profile_list = NULL;
+
+    output = qmi_client_wds_get_profile_list_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
+                    error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_get_profile_list_output_get_result (output, &error)) {
+        QmiWdsDsProfileError ds_profile_error;
+
+        if (g_error_matches (error,
+                             QMI_PROTOCOL_ERROR,
+                             QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL) &&
+            qmi_message_wds_get_profile_list_output_get_extended_error_code (
+                output,
+                &ds_profile_error,
+                NULL)) {
+            g_printerr ("error: couldn't get profile list: ds profile error: %s\n",
+                        qmi_wds_ds_profile_error_get_string (ds_profile_error));
+        } else {
+            g_printerr ("error: couldn't get profile list: %s\n",
+                        error->message);
+        }
+
+        g_error_free (error);
+        qmi_message_wds_get_profile_list_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_wds_get_profile_list_output_get_profile_list (output, &profile_list, NULL);
+
+    if (!profile_list || !profile_list->len) {
+        g_print ("Profile list empty\n");
+    } else {
+        guint i;
+
+        g_print ("Profile list retrieved:\n");
+
+        for (i = 0; i < profile_list->len; i++) {
+            QmiMessageWdsGetProfileListOutputProfileListProfile *profile;
+
+            profile = &g_array_index (profile_list, QmiMessageWdsGetProfileListOutputProfileListProfile, i);
+            g_print ("\t[%u] %s - %s\n",
+                     profile->profile_index,
+                     qmi_wds_profile_type_get_string (profile->profile_type),
+                     profile->profile_name);
+        }
+    }
+
+    qmi_message_wds_get_profile_list_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
 reset_ready (QmiClientWds *client,
              GAsyncResult *res)
 {
@@ -802,6 +872,32 @@ qmicli_wds_run (QmiDevice *device,
                                                            ctx->cancellable,
                                                            (GAsyncReadyCallback)get_current_data_bearer_technology_ready,
                                                            NULL);
+        return;
+    }
+
+    if (get_profile_list_str) {
+        QmiMessageWdsGetProfileListInput *input;
+
+        input = qmi_message_wds_get_profile_list_input_new ();
+        if (g_str_equal (get_profile_list_str, "3gpp"))
+            qmi_message_wds_get_profile_list_input_set_profile_type (input, QMI_WDS_PROFILE_TYPE_3GPP, NULL);
+        else if (g_str_equal (get_profile_list_str, "3gpp2"))
+            qmi_message_wds_get_profile_list_input_set_profile_type (input, QMI_WDS_PROFILE_TYPE_3GPP2, NULL);
+        else {
+            g_printerr ("error: invalid profile type '%s'. Expected '3gpp' or '3gpp2'.'\n",
+                        get_profile_list_str);
+            shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously get profile list...");
+        qmi_client_wds_get_profile_list (ctx->client,
+                                         input,
+                                         10,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)get_profile_list_ready,
+                                         NULL);
+        qmi_message_wds_get_profile_list_input_unref (input);
         return;
     }
 
