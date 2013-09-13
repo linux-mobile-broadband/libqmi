@@ -49,6 +49,8 @@ docs/reference/libmbim-glib/tmpl
 docs/reference/libmbim-glib/xml
 docs/reference/libmbim-glib/.libs
 
+docs/man/mbimcli.1
+
 libmbim-glib/.deps
 libmbim-glib/.libs
 libmbim-glib/mbim-version.h

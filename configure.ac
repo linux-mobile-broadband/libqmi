@@ -87,6 +87,10 @@ AC_SUBST(GLIB_MKENUMS)
 dnl Documentation
 GTK_DOC_CHECK(1.0)
 
+dnl Man page
+AC_PATH_PROG(HELP2MAN, help2man, false)
+AM_CONDITIONAL(BUILDOPT_MAN, test x$HELP2MAN != xfalse)
+
 AC_CONFIG_FILES([Makefile
                  build-aux/Makefile
                  build-aux/templates/Makefile
@@ -103,7 +107,8 @@ AC_CONFIG_FILES([Makefile
                  docs/Makefile
                  docs/reference/Makefile
                  docs/reference/libmbim-glib/Makefile
-                 docs/reference/libmbim-glib/version.xml])
+                 docs/reference/libmbim-glib/version.xml
+		 docs/man/Makefile])
 AC_OUTPUT
 
 echo "
