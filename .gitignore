@@ -75,3 +75,5 @@ libmbim-glib/generated/*.sections
 cli/.deps
 cli/.libs
 cli/mbimcli
+
+utils/mbim-network
