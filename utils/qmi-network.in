@@ -14,14 +14,47 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright (C) 2012 Aleksander Morgado <aleksander@gnu.org>
+# Copyright (C) 2012-2013 Aleksander Morgado <aleksander@gnu.org>
 
 print_usage ()
 {
     echo "usage: $0 [DEVICE] [COMMAND]"
 }
 
+help ()
+{
+    echo "Usage: qmi-network [OPTIONS] [DEVICE] [COMMAND] - Simple network management of QMI devices"
+    echo
+    echo "Commands:"
+    echo "  start           Start network connection"
+    echo "  stop            Stop network connection"
+    echo "  status          Query network connection status"
+    echo
+    echo "Options:"
+    echo "  --help          Show help options"
+    echo "  --version       Show version"
+    echo
+}
+
+version ()
+{
+    echo "qmi-network @VERSION@"
+    echo "Copyright (2013) Aleksander Morgado"
+    echo "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>"
+    echo "This is free software: you are free to change and redistribute it."
+    echo "There is NO WARRANTY, to the extent permitted by law."
+    echo
+}
+
 if [ $# -ne 2 ]; then
+    if [ $1 == "--help" ]; then
+        help
+        exit 0
+    elif [ $1 == "--version" ]; then
+        version
+        exit 0
+    fi
+
     echo "error: missing arguments" 1>&2
     print_usage
     exit 255

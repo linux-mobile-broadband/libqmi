@@ -85,3 +85,5 @@ docs/reference/libqmi-glib/xml
 docs/reference/libqmi-glib/.libs
 
 docs/man/qmicli.1
+
+utils/qmi-network
