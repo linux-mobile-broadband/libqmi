@@ -50,6 +50,7 @@ docs/reference/libmbim-glib/xml
 docs/reference/libmbim-glib/.libs
 
 docs/man/mbimcli.1
+docs/man/mbim-network.1
 
 libmbim-glib/.deps
 libmbim-glib/.libs
