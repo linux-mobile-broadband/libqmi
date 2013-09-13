@@ -69,7 +69,7 @@ load_profile ()
 {
     if [ -f $PROFILE_FILE ]; then
         echo "Loading profile..."
-        source $PROFILE_FILE
+        . $PROFILE_FILE
 
         if [ "x$APN" != "x" ]; then
             echo "    APN: $APN"
@@ -103,7 +103,7 @@ load_state ()
 {
     if [ -f $STATE_FILE ]; then
         echo "Loading previous state..."
-        source $STATE_FILE
+        . $STATE_FILE
 
         if [ "x$CID" != "x" ]; then
             echo "    Previous CID: $CID"
