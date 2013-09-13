@@ -1341,14 +1341,14 @@ input_ready_cb (GInputStream *istream,
 {
     guint8 buffer[BUFFER_SIZE];
     GError *error = NULL;
-    gssize read;
+    gssize r;
 
-    read = g_pollable_input_stream_read_nonblocking (G_POLLABLE_INPUT_STREAM (istream),
-                                                     buffer,
-                                                     BUFFER_SIZE,
-                                                     NULL,
-                                                     &error);
-    if (read < 0) {
+    r = g_pollable_input_stream_read_nonblocking (G_POLLABLE_INPUT_STREAM (istream),
+                                                  buffer,
+                                                  BUFFER_SIZE,
+                                                  NULL,
+                                                  &error);
+    if (r < 0) {
         g_warning ("Error reading from istream: %s", error ? error->message : "unknown");
         if (error)
             g_error_free (error);
@@ -1357,16 +1357,16 @@ input_ready_cb (GInputStream *istream,
         return FALSE;
     }
 
-    if (read == 0) {
+    if (r == 0) {
         /* HUP! */
         g_warning ("Cannot read from istream: connection broken");
         return FALSE;
     }
 
-    /* else, read > 0 */
+    /* else, r > 0 */
     if (!G_UNLIKELY (self->priv->buffer))
-        self->priv->buffer = g_byte_array_sized_new (read);
-    g_byte_array_append (self->priv->buffer, buffer, read);
+        self->priv->buffer = g_byte_array_sized_new (r);
+    g_byte_array_append (self->priv->buffer, buffer, r);
 
     /* Try to parse input messages */
     parse_response (self);
