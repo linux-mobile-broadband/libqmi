@@ -28,9 +28,12 @@ void mbimcli_async_operation_done (gboolean operation_status);
 
 /* Basic Connect group */
 GOptionGroup *mbimcli_basic_connect_get_option_group (void);
+GOptionGroup *mbimcli_phonebook_get_option_group     (void);
 gboolean      mbimcli_basic_connect_options_enabled  (void);
+gboolean      mbimcli_phonebook_options_enabled      (void);
 void          mbimcli_basic_connect_run              (MbimDevice *device,
                                                       GCancellable *cancellable);
-
+void          mbimcli_phonebook_run                  (MbimDevice *device,
+                                                      GCancellable *cancellable);
 
 #endif /* __MBIMCLI_H__ */

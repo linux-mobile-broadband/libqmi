@@ -254,6 +254,9 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_BASIC_CONNECT:
         mbimcli_basic_connect_run (dev, cancellable);
         return;
+    case MBIM_SERVICE_PHONEBOOK:
+        mbimcli_phonebook_run (dev, cancellable);
+        return;
     default:
         g_assert_not_reached ();
     }
@@ -329,6 +332,9 @@ parse_actions (void)
     if (mbimcli_basic_connect_options_enabled ()) {
         service = MBIM_SERVICE_BASIC_CONNECT;
         actions_enabled++;
+    }else if (mbimcli_phonebook_options_enabled ()) {
+        service = MBIM_SERVICE_PHONEBOOK;
+        actions_enabled++;
     }
 
     /* Noop */
@@ -362,8 +368,10 @@ int main (int argc, char **argv)
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Control MBIM devices");
-	g_option_context_add_group (context,
+    g_option_context_add_group (context,
 	                            mbimcli_basic_connect_get_option_group ());
+    g_option_context_add_group (context,
+	                            mbimcli_phonebook_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",

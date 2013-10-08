@@ -12,7 +12,8 @@ mbimcli_CPPFLAGS = \
 mbimcli_SOURCES = \
 	mbimcli.h \
 	mbimcli.c \
-	mbimcli-basic-connect.c
+	mbimcli-basic-connect.c \
+	mbimcli-phonebook.c 
 
 mbimcli_LDADD = \
 	$(MBIMCLI_LIBS) \
