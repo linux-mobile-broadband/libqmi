@@ -109,7 +109,7 @@ mbimcli_phonebook_options_enabled (void)
                  phonebook_read_all_flag +
                  !!phonebook_write_str +
                  !!phonebook_entry_update_str +
-                 !!phonebook_delete_index + 
+                 !!phonebook_delete_index +
                  phonebook_delete_all_flag);
 
     if (n_actions > 1) {
@@ -174,7 +174,7 @@ phonebook_write_input_parse (guint         n_expected,
     }
 
     *name = split[0];
-    *number = split[1]? split[1] : NULL;
+    *number = split[1] ? split[1] : NULL;
     *index_str = split[2] ? split[2] : NULL;
 
     g_free (split);
@@ -196,14 +196,14 @@ set_phonebook_write_ready (MbimDevice   *device,
         return;
     }
 
-    if(!mbim_message_phonebook_write_response_parse (response, &error)) {
+    if (!mbim_message_phonebook_write_response_parse (response, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         g_error_free (error);
         shutdown (FALSE);
         return;
-    } else {
-        g_print ("Phonebook entry successfully written/updated\n");
     }
+
+    g_print ("Phonebook entry successfully written/updated\n");
 
     mbim_message_unref (response);
     shutdown (TRUE);
@@ -224,14 +224,13 @@ set_phonebook_delete_ready (MbimDevice   *device,
         return;
     }
 
-    if(!mbim_message_phonebook_delete_response_parse (response, &error)) {
+    if (!mbim_message_phonebook_delete_response_parse (response, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         g_error_free (error);
         shutdown (FALSE);
-        return;
-    } else {
-        g_print ("Phonebook entry/entries successfully deleted");   
     }
+
+    g_print ("Phonebook entry/entries successfully deleted");
 
     mbim_message_unref (response);
     shutdown (TRUE);
@@ -255,10 +254,10 @@ query_phonebook_read_ready (MbimDevice   *device,
         return;
     }
 
-    if(!mbim_message_phonebook_read_response_parse (response,
-                                                    &entry_count,
-                                                    &phonebook_entries,
-                                                    &error)) {
+    if (!mbim_message_phonebook_read_response_parse (response,
+                                                     &entry_count,
+                                                     &phonebook_entries,
+                                                     &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         g_error_free (error);
         shutdown (FALSE);
@@ -268,9 +267,8 @@ query_phonebook_read_ready (MbimDevice   *device,
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
-    g_print ("Successfully read phonebook entry/entries\n");
-    g_print ("\tPhonebook entries count: %d\n",entry_count);            
-    for (i=0; i< entry_count;i++) {
+    g_print ("Successfully read phonebook entries (%d)\n", entry_count);
+    for (i = 0; i < entry_count; i++) {
         g_print ("\tEntry index : %d \n"
                  "\t      Number: %s \n"
                  "\t        Name: %s \n",
@@ -305,13 +303,13 @@ query_phonebook_configuration_ready (MbimDevice   *device,
         return;
     }
 
-    if(!mbim_message_phonebook_configuration_response_parse (response,
-                                                             &state,
-                                                             &number_of_entries,
-                                                             &used_entries,
-                                                             &max_number_length,
-                                                             &max_name,
-                                                             &error)) {
+    if (!mbim_message_phonebook_configuration_response_parse (response,
+                                                              &state,
+                                                              &number_of_entries,
+                                                              &used_entries,
+                                                              &max_number_length,
+                                                              &max_name,
+                                                              &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         g_error_free (error);
         shutdown (FALSE);
@@ -371,7 +369,7 @@ mbimcli_phonebook_run (MbimDevice   *device,
 
         g_debug ("Asynchronously querying phonebook read...");
         request = mbim_message_phonebook_read_query_new (MBIM_PHONEBOOK_FLAG_INDEX,
-                                                         phonebook_read_index, 
+                                                         phonebook_read_index,
                                                          NULL);
         mbim_device_command (ctx->device,
                              request,
@@ -386,7 +384,7 @@ mbimcli_phonebook_run (MbimDevice   *device,
     /* Phonebook read all */
     if (phonebook_read_all_flag) {
         MbimMessage *request;
- 
+
         g_debug ("Asynchronously querying phonebook read all...");
         request = mbim_message_phonebook_read_query_new (MBIM_PHONEBOOK_FLAG_ALL, 0, NULL);
         mbim_device_command (ctx->device,
@@ -405,7 +403,7 @@ mbimcli_phonebook_run (MbimDevice   *device,
 
         g_debug ("Asynchronously phonebook delete...");
         request = mbim_message_phonebook_delete_set_new (MBIM_PHONEBOOK_FLAG_INDEX,
-                                                         phonebook_delete_index, 
+                                                         phonebook_delete_index,
                                                          NULL);
         mbim_device_command (ctx->device,
                              request,
@@ -417,10 +415,10 @@ mbimcli_phonebook_run (MbimDevice   *device,
         return;
     }
 
-    /* Phonebook delete all */	
+    /* Phonebook delete all */
     if (phonebook_delete_all_flag) {
         MbimMessage *request;
- 
+
         g_debug ("Asynchronously phonebook delete all...");
         request = mbim_message_phonebook_delete_set_new (MBIM_PHONEBOOK_FLAG_ALL, 0, NULL);
         mbim_device_command (ctx->device,
@@ -445,12 +443,12 @@ mbimcli_phonebook_run (MbimDevice   *device,
             shutdown (FALSE);
             return;
         }
- 
+
         request = mbim_message_phonebook_write_set_new (MBIM_PHONEBOOK_WRITE_FLAG_SAVE_UNUSED,
-                                                         0,
-                                                         number,
-                                                         name,
-                                                         NULL);
+                                                        0,
+                                                        number,
+                                                        name,
+                                                        NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -477,10 +475,10 @@ mbimcli_phonebook_run (MbimDevice   *device,
 
         idx = atoi (index_str);
         request = mbim_message_phonebook_write_set_new (MBIM_PHONEBOOK_WRITE_FLAG_SAVE_INDEX,
-                                                         idx,
-                                                         number,
-                                                         name,
-                                                         NULL);
+                                                        idx,
+                                                        number,
+                                                        name,
+                                                        NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -490,5 +488,6 @@ mbimcli_phonebook_run (MbimDevice   *device,
         mbim_message_unref (request);
         return;
     }
+
     g_warn_if_reached ();
 }

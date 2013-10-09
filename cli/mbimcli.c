@@ -332,7 +332,7 @@ parse_actions (void)
     if (mbimcli_basic_connect_options_enabled ()) {
         service = MBIM_SERVICE_BASIC_CONNECT;
         actions_enabled++;
-    }else if (mbimcli_phonebook_options_enabled ()) {
+    } else if (mbimcli_phonebook_options_enabled ()) {
         service = MBIM_SERVICE_PHONEBOOK;
         actions_enabled++;
     }
