@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <string.h>
+#include <errno.h>
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -44,7 +45,6 @@ static gboolean  phonebook_configuration_flag;
 static gint      phonebook_read_index;
 static gboolean  phonebook_read_all_flag;
 static gchar    *phonebook_write_str;
-static gchar    *phonebook_entry_update_str;
 static gint      phonebook_delete_index;
 static gboolean  phonebook_delete_all_flag;
 
@@ -62,12 +62,8 @@ static GOptionEntry entries[] = {
       NULL
     },
     { "phonebook-write", 0, 0, G_OPTION_ARG_STRING, &phonebook_write_str,
-      "Add new phonebook entry",
-      "[(Name),(Number)]"
-    },
-    { "phonebook-entry-update", 0, 0, G_OPTION_ARG_STRING, &phonebook_entry_update_str,
-      "Update phonebook entry",
-      "[(Name),(Number),(Index)]"
+      "Add new phonebook entry or update an existing one",
+      "[(Name),(Number)[,(Index)]]"
     },
     { "phonebook-delete", 0, 0, G_OPTION_ARG_INT, &phonebook_delete_index,
       "Delete phonebook entry with given index",
@@ -108,7 +104,6 @@ mbimcli_phonebook_options_enabled (void)
                  !!phonebook_read_index +
                  phonebook_read_all_flag +
                  !!phonebook_write_str +
-                 !!phonebook_entry_update_str +
                  !!phonebook_delete_index +
                  phonebook_delete_all_flag);
 
@@ -143,41 +138,58 @@ shutdown (gboolean operation_status)
 }
 
 static gboolean
-phonebook_write_input_parse (guint         n_expected,
-                             const gchar  *str,
+phonebook_write_input_parse (const gchar  *str,
                              gchar       **name,
                              gchar       **number,
-                             gchar       **index_str)
+                             guint        *idx)
 {
     gchar **split;
 
-    g_assert (n_expected == 2 || n_expected == 3);
     g_assert (name != NULL);
     g_assert (number != NULL);
-    g_assert (index_str != NULL);
+    g_assert (idx != NULL);
 
     /* Format of the string is:
-     *    "[(Name),(Number)]"
+     *    "[(Name),(Number)(,[Index])]"
+     * i.e. index is optional
      */
     split = g_strsplit (str, ",", -1);
 
-    if (g_strv_length (split) > n_expected) {
+    if (g_strv_length (split) > 3) {
         g_printerr ("error: couldn't parse input string, too many arguments\n");
         g_strfreev (split);
         return FALSE;
     }
 
-    if (g_strv_length (split) < n_expected) {
+    if (g_strv_length (split) < 2) {
         g_printerr ("error: couldn't parse input string, missing arguments\n");
         g_strfreev (split);
         return FALSE;
     }
 
-    *name = split[0];
-    *number = split[1] ? split[1] : NULL;
-    *index_str = split[2] ? split[2] : NULL;
+    /* Check whether we have the optional Index item */
+    if (split[2]) {
+        gulong num;
 
-    g_free (split);
+        errno = 0;
+        num = strtoul (split[2], NULL, 10);
+        if (errno || num > G_MAXUINT) {
+            g_printerr ("error: couldn't parse input string, invalid index '%s'\n", split[2]);
+            g_strfreev (split);
+            return FALSE;
+        }
+
+        *idx = (guint)num;
+    } else {
+        /* Default to index 0, which is an invalid one */
+        *idx = 0;
+    }
+
+    /* First two items will always be available */
+    *name = g_strdup (split[0]);
+    *number = g_strdup (split[1]);
+
+    g_strfreev (split);
     return TRUE;
 }
 
@@ -203,7 +215,7 @@ set_phonebook_write_ready (MbimDevice   *device,
         return;
     }
 
-    g_print ("Phonebook entry successfully written/updated\n");
+    g_print ("Phonebook entry successfully written\n");
 
     mbim_message_unref (response);
     shutdown (TRUE);
@@ -436,45 +448,17 @@ mbimcli_phonebook_run (MbimDevice   *device,
         MbimMessage *request;
         gchar *name;
         gchar *number;
-        gchar *index_str;
+        guint  idx;
 
         g_debug ("Asynchronously writing phonebook...");
-        if (!phonebook_write_input_parse (2, phonebook_write_str, &name, &number, &index_str)) {
+        if (!phonebook_write_input_parse (phonebook_write_str, &name, &number, &idx)) {
             shutdown (FALSE);
             return;
         }
 
-        request = mbim_message_phonebook_write_set_new (MBIM_PHONEBOOK_WRITE_FLAG_SAVE_UNUSED,
-                                                        0,
-                                                        number,
-                                                        name,
-                                                        NULL);
-        mbim_device_command (ctx->device,
-                             request,
-                             10,
-                             ctx->cancellable,
-                             (GAsyncReadyCallback)set_phonebook_write_ready,
-                             NULL);
-        mbim_message_unref (request);
-        return;
-    }
-
-    /* Phonebook entry update */
-    if (phonebook_entry_update_str) {
-        MbimMessage *request;
-        gchar *name;
-        gchar *number;
-        gchar *index_str;
-        gint   idx;
-
-        g_debug ("Asynchronously updating phonebook entry...");
-        if (!phonebook_write_input_parse (3, phonebook_entry_update_str, &name, &number, &index_str)) {
-            shutdown (FALSE);
-            return;
-        }
-
-        idx = atoi (index_str);
-        request = mbim_message_phonebook_write_set_new (MBIM_PHONEBOOK_WRITE_FLAG_SAVE_INDEX,
+        request = mbim_message_phonebook_write_set_new ((idx ?
+                                                         MBIM_PHONEBOOK_WRITE_FLAG_SAVE_INDEX :
+                                                         MBIM_PHONEBOOK_WRITE_FLAG_SAVE_UNUSED),
                                                         idx,
                                                         number,
                                                         name,
