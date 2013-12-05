@@ -1473,7 +1473,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         request = mbim_message_visible_providers_query_new (MBIM_VISIBLE_PROVIDERS_ACTION_FULL_SCAN, NULL);
         mbim_device_command (ctx->device,
                              request,
-                             60, /* longer timeout, needs to scan */
+                             120, /* longer timeout, needs to scan */
                              ctx->cancellable,
                              (GAsyncReadyCallback)visible_providers_ready,
                              NULL);
