@@ -52,29 +52,29 @@ docs/reference/libmbim-glib/.libs
 docs/man/mbimcli.1
 docs/man/mbim-network.1
 
-libmbim-glib/.deps
-libmbim-glib/.libs
-libmbim-glib/mbim-version.h
+src/libmbim-glib/.deps
+src/libmbim-glib/.libs
+src/libmbim-glib/mbim-version.h
 
-libmbim-glib/test/.deps
-libmbim-glib/test/.libs
-libmbim-glib/test/test-uuid
-libmbim-glib/test/test-cid
-libmbim-glib/test/test-message
-libmbim-glib/test/test-fragment
-libmbim-glib/test/test-message-parser
-libmbim-glib/test/test-message-builder
-libmbim-glib/test/*.log
-libmbim-glib/test/*.trs
+src/libmbim-glib/test/.deps
+src/libmbim-glib/test/.libs
+src/libmbim-glib/test/test-uuid
+src/libmbim-glib/test/test-cid
+src/libmbim-glib/test/test-message
+src/libmbim-glib/test/test-fragment
+src/libmbim-glib/test/test-message-parser
+src/libmbim-glib/test/test-message-builder
+src/libmbim-glib/test/*.log
+src/libmbim-glib/test/*.trs
 
-libmbim-glib/generated/.deps
-libmbim-glib/generated/.libs
-libmbim-glib/generated/*.c
-libmbim-glib/generated/*.h
-libmbim-glib/generated/*.sections
+src/libmbim-glib/generated/.deps
+src/libmbim-glib/generated/.libs
+src/libmbim-glib/generated/*.c
+src/libmbim-glib/generated/*.h
+src/libmbim-glib/generated/*.sections
 
-cli/.deps
-cli/.libs
-cli/mbimcli
+src/mbimcli/.deps
+src/mbimcli/.libs
+src/mbimcli/mbimcli
 
 utils/mbim-network

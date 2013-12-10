@@ -7,10 +7,10 @@ libmbim_glib_core_la_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
-	-I$(top_srcdir)/libmbim-glib \
-	-I$(top_srcdir)/libmbim-glib/generated \
-	-I$(top_builddir)/libmbim-glib \
-	-I$(top_builddir)/libmbim-glib/generated \
+	-I$(top_srcdir)/src/libmbim-glib \
+	-I$(top_srcdir)/src/libmbim-glib/generated \
+	-I$(top_builddir)/src/libmbim-glib \
+	-I$(top_builddir)/src/libmbim-glib/generated \
 	-DLIBMBIM_GLIB_COMPILATION \
 	-DG_LOG_DOMAIN=\"Mbim\"
 libmbim_glib_core_la_SOURCES = \
@@ -31,7 +31,7 @@ libmbim_glib_la_SOURCES = \
 
 libmbim_glib_la_LIBADD = \
 	libmbim-glib-core.la \
-	${top_builddir}/libmbim-glib/generated/libmbim-glib-generated.la \
+	${top_builddir}/src/libmbim-glib/generated/libmbim-glib-generated.la \
 	$(LIBMBIM_GLIB_LIBS)
 
 libmbim_glib_la_LDFLAGS = \

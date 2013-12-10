@@ -5,8 +5,8 @@ dist_man_MANS = \
 
 # List of all source files which affect the output of --help-all
 MBIMCLI_SOURCES_WITH_HELP = \
-	$(top_srcdir)/cli/mbimcli-basic-connect.c \
-	$(top_srcdir)/cli/mbimcli.c
+	$(top_srcdir)/src/mbimcli/mbimcli-basic-connect.c \
+	$(top_srcdir)/src/mbimcli/mbimcli.c
 
 # Depend only in the source files, not in the actual program, so that the
 # manpage doesn't get rebuilt when building from a tarball
@@ -19,7 +19,7 @@ mbimcli.1: $(MBIMCLI_SOURCES_WITH_HELP)
 			--name='Control MBIM devices' \
 			--help-option='--help-all' \
 			--libtool \
-			$(top_builddir)/cli/mbimcli || \
+			$(top_builddir)/src/mbimcli/mbimcli || \
 		touch $@
 
 # Depend only in the .in file, not in the actual script, so that the

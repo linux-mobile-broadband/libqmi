@@ -98,17 +98,18 @@ AC_CONFIG_FILES([Makefile
                  data/Makefile
                  data/pkg-config/Makefile
                  data/pkg-config/mbim-glib.pc
-                 libmbim-glib/Makefile
-                 libmbim-glib/mbim-version.h
-                 libmbim-glib/generated/Makefile
-                 libmbim-glib/test/Makefile
-                 cli/Makefile
+                 src/Makefile
+                 src/libmbim-glib/Makefile
+                 src/libmbim-glib/mbim-version.h
+                 src/libmbim-glib/generated/Makefile
+                 src/libmbim-glib/test/Makefile
+                 src/mbimcli/Makefile
                  utils/Makefile
                  docs/Makefile
                  docs/reference/Makefile
                  docs/reference/libmbim-glib/Makefile
                  docs/reference/libmbim-glib/version.xml
-		 docs/man/Makefile])
+                 docs/man/Makefile])
 AC_OUTPUT
 
 echo "

@@ -8,13 +8,13 @@ DOC_MAIN_SGML_FILE = $(DOC_MODULE)-docs.xml
 # Sections file building
 ALL_SECTIONS = \
 	$(srcdir)/libmbim-glib-common.sections \
-	$(top_builddir)/libmbim-glib/generated/mbim-basic-connect.sections \
-	$(top_builddir)/libmbim-glib/generated/mbim-sms.sections \
-	$(top_builddir)/libmbim-glib/generated/mbim-ussd.sections \
-	$(top_builddir)/libmbim-glib/generated/mbim-auth.sections \
-	$(top_builddir)/libmbim-glib/generated/mbim-phonebook.sections \
-	$(top_builddir)/libmbim-glib/generated/mbim-stk.sections \
-	$(top_builddir)/libmbim-glib/generated/mbim-dss.sections
+	$(top_builddir)/src/libmbim-glib/generated/mbim-basic-connect.sections \
+	$(top_builddir)/src/libmbim-glib/generated/mbim-sms.sections \
+	$(top_builddir)/src/libmbim-glib/generated/mbim-ussd.sections \
+	$(top_builddir)/src/libmbim-glib/generated/mbim-auth.sections \
+	$(top_builddir)/src/libmbim-glib/generated/mbim-phonebook.sections \
+	$(top_builddir)/src/libmbim-glib/generated/mbim-stk.sections \
+	$(top_builddir)/src/libmbim-glib/generated/mbim-dss.sections
 
 $(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
 	$(AM_V_GEN) \
@@ -29,18 +29,18 @@ SCAN_OPTIONS = --rebuild-types
 
 # The directory containing the source code.
 DOC_SOURCE_DIR = \
-	$(top_srcdir)/libmbim-glib \
-	$(top_builddir)/libmbim-glib \
-	$(top_builddir)/libmbim-glib/generated
+	$(top_srcdir)/src/libmbim-glib \
+	$(top_builddir)/src/libmbim-glib \
+	$(top_builddir)/src/libmbim-glib/generated
 
 # Used for dependencies
 HFILE_GLOB = \
-	$(top_srcdir)/libmbim-glib/*.h \
-	$(top_builddir)/libmbim-glib/*.h \
-	$(top_builddir)/libmbim-glib/generated/*.h
+	$(top_srcdir)/src/libmbim-glib/*.h \
+	$(top_builddir)/src/libmbim-glib/*.h \
+	$(top_builddir)/src/libmbim-glib/generated/*.h
 CFILE_GLOB = \
-	$(top_srcdir)/libmbim-glib/*.c \
-	$(top_builddir)/libmbim-glib/generated/*.c
+	$(top_srcdir)/src/libmbim-glib/*.c \
+	$(top_builddir)/src/libmbim-glib/generated/*.c
 
 # Headers to ignore
 IGNORE_HFILES = \
@@ -56,7 +56,7 @@ AM_CPPFLAGS = \
 
 GTKDOC_LIBS = \
 	$(LIBMBIM_GLIB_LIBS) \
-	$(top_builddir)/libmbim-glib/libmbim-glib.la
+	$(top_builddir)/src/libmbim-glib/libmbim-glib.la
 
 # Extra options to supply to gtkdoc-mkdb
 MKDB_OPTIONS = --output-format=xml --sgml-mode --name-space=mbim
