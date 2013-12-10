@@ -1,4 +1,20 @@
 
+Overview of changes in libmbim 1.6
+----------------------------------------
+
+ * Updated mbimcli with new commands:
+    --phonebook-query-configuration
+    --phonebook-read
+    --phonebook-read-all
+    --phonebook-write
+    --phonebook-delete
+    --phonebook-delete-all
+
+ * Added generation of man pages for mbimcli and mbim-network.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libmbim 1.4
 ----------------------------------------
 
@@ -31,6 +47,7 @@ Overview of changes in libmbim 1.4
     --query-packet-statistics
 
  * Use gtester to run unit tests.
+
 
 Overview of changes in libmbim 1.2
 ----------------------------------------
