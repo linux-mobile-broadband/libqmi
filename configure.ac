@@ -3,7 +3,7 @@ AC_PREREQ([2.68])
 
 dnl The QMI version number
 m4_define([qmi_major_version], [1])
-m4_define([qmi_minor_version], [8])
+m4_define([qmi_minor_version], [9])
 m4_define([qmi_micro_version], [0])
 m4_define([qmi_version],
           [qmi_major_version.qmi_minor_version.qmi_micro_version])
