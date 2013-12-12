@@ -285,6 +285,68 @@ qmicli_read_radio_interface_from_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_net_open_flags_from_string (const gchar *str,
+                                        QmiDeviceOpenFlags *out)
+{
+    GType type;
+    GFlagsClass *flags_class;
+    GFlagsValue *flags_value;
+    gboolean success = TRUE, set = FALSE;
+    char **items, **iter;
+
+    type = qmi_device_open_flags_get_type ();
+    flags_class = G_FLAGS_CLASS (g_type_class_ref (type));
+
+    items = g_strsplit_set (str, "|", 0);
+    for (iter = items; iter && *iter && success; iter++) {
+        if (!*iter[0])
+            continue;
+
+        flags_value = g_flags_get_value_by_nick (flags_class, *iter);
+        if (flags_value) {
+            *out |= (QmiDeviceOpenFlags)flags_value->value;
+            set = TRUE;
+        } else {
+            g_printerr ("error: invalid net open flags value given: '%s'\n", *iter);
+            success = FALSE;
+        }
+    }
+
+    if (!set)
+        g_printerr ("error: invalid net open flags input given: '%s'\n", str);
+
+    if (items)
+        g_strfreev (items);
+
+    if (*out & QMI_DEVICE_OPEN_FLAGS_NET_802_3 &&
+        *out & QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP) {
+        g_printerr ("error: cannot give both 802.3 and raw-IP options\n");
+        success = FALSE;
+    }
+
+    if (*out & QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER &&
+        *out & QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER) {
+        g_printerr ("error: cannot request both QoS and no-QoS headers\n");
+        success = FALSE;
+    }
+
+    if ((*out & (QMI_DEVICE_OPEN_FLAGS_NET_802_3 | QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP)) &&
+        !(*out & (QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER | QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER))) {
+        g_printerr ("error: missing QoS or no-QoS header request\n");
+        success = FALSE;
+    }
+
+    if ((*out & (QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER | QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER)) &&
+        !(*out & (QMI_DEVICE_OPEN_FLAGS_NET_802_3 | QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP))) {
+        g_printerr ("error: missing link protocol (802.3 or raw IP)\n");
+        success = FALSE;
+    }
+
+    g_type_class_unref (flags_class);
+    return success && set;
+}
+
+gboolean
 qmicli_read_uint_from_string (const gchar *str,
                               guint *out)
 {
