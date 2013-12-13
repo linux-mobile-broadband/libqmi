@@ -1018,12 +1018,23 @@ qmi_device_release_client (QmiDevice *self,
     ReleaseClientContext *ctx;
     QmiService service;
     guint8 cid;
+    gchar *flags_str;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (QMI_IS_CLIENT (client));
 
+    cid = qmi_client_get_cid (client);
+    service = (guint8)qmi_client_get_service (client);
+
     /* The CTL client should not have been created out of the QmiDevice */
-    g_assert (qmi_client_get_service (client) != QMI_SERVICE_CTL);
+    g_return_if_fail (service != QMI_SERVICE_CTL);
+
+    flags_str = qmi_device_release_client_flags_build_string_from_mask (flags);
+    g_debug ("[%s] Releasing '%s' client with flags '%s'...",
+             self->priv->path_display,
+             qmi_service_get_string (service),
+             flags_str);
+    g_free (flags_str);
 
     /* NOTE! The operation must not take a reference to self, or we won't be
      * able to use it implicitly from our dispose() */
@@ -1034,9 +1045,6 @@ qmi_device_release_client (QmiDevice *self,
                                              callback,
                                              user_data,
                                              qmi_device_release_client);
-
-    cid = qmi_client_get_cid (client);
-    service = (guint8)qmi_client_get_service (client);
 
     /* Do not try to release an already released client */
     if (cid == QMI_CID_NONE) {
@@ -1969,6 +1977,7 @@ qmi_device_open (QmiDevice *self,
                  gpointer user_data)
 {
     DeviceOpenContext *ctx;
+    gchar *flags_str;
 
     /* Raw IP and 802.3 are mutually exclusive */
     g_return_if_fail (!((flags & QMI_DEVICE_OPEN_FLAGS_NET_802_3) &&
@@ -1983,6 +1992,12 @@ qmi_device_open (QmiDevice *self,
         g_return_if_fail (flags & (QMI_DEVICE_OPEN_FLAGS_NET_802_3 | QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP));
 
     g_return_if_fail (QMI_IS_DEVICE (self));
+
+    flags_str = qmi_device_open_flags_build_string_from_mask (flags);
+    g_debug ("[%s] Opening device with flags '%s'...",
+             self->priv->path_display,
+             flags_str);
+    g_free (flags_str);
 
     ctx = g_slice_new (DeviceOpenContext);
     ctx->self = g_object_ref (self);
