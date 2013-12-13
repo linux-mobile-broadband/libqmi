@@ -44,6 +44,9 @@ qmi_client_get_type
 QMI_DEVICE_FILE
 QMI_DEVICE_SIGNAL_INDICATION
 QmiDevice
+QmiDeviceOpenFlags
+QmiDeviceReleaseClientFlags
+QmiDeviceServiceVersionInfo
 qmi_device_new
 qmi_device_new_finish
 qmi_device_get_file
@@ -51,22 +54,21 @@ qmi_device_peek_file
 qmi_device_get_path
 qmi_device_get_path_display
 qmi_device_is_open
-QmiDeviceOpenFlags
 qmi_device_open
 qmi_device_open_finish
 qmi_device_close
 qmi_device_allocate_client
 qmi_device_allocate_client_finish
-QmiDeviceReleaseClientFlags
 qmi_device_release_client
 qmi_device_release_client_finish
 qmi_device_set_instance_id
 qmi_device_set_instance_id_finish
 qmi_device_command
 qmi_device_command_finish
-QmiDeviceServiceVersionInfo
 qmi_device_get_service_version_info
 qmi_device_get_service_version_info_finish
+qmi_device_open_flags_build_string_from_mask
+qmi_device_release_client_flags_build_string_from_mask
 <SUBSECTION Standard>
 QmiDeviceClass
 QMI_DEVICE
@@ -75,8 +77,15 @@ QMI_DEVICE_GET_CLASS
 QMI_IS_DEVICE
 QMI_IS_DEVICE_CLASS
 QMI_TYPE_DEVICE
+QMI_TYPE_DEVICE_OPEN_FLAGS
+QMI_TYPE_DEVICE_RELEASE_CLIENT_FLAGS
 QmiDevicePrivate
 qmi_device_get_type
+qmi_device_open_flags_get_type
+qmi_device_release_client_flags_get_type
+<SUBSECTION Private>
+qmi_device_open_flags_get_string
+qmi_device_release_client_flags_get_string
 </SECTION>
 
 <SECTION>
