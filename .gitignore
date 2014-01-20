@@ -30,6 +30,7 @@ gtk-doc.make
 test-driver
 
 build-aux/mbim-codegen/*.pyc
+build-aux/mbim-codegen/__pycache__
 
 data/pkg-config/mbim-glib.pc
 
