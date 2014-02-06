@@ -168,4 +168,19 @@ typedef enum {
     QMI_PDS_OPERATING_MODE_MS_ASSISTED = 2,
 } QmiPdsOperatingMode;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI PDS Get AGPS Config' request/response */
+
+/**
+ * QmiPdsNetworkMode:
+ * @QMI_PDS_NETWORK_MODE_UMTS: UMTS.
+ * @QMI_PDS_NETWORK_MODE_CDMA: CDMA.
+ *
+ * Network mode used during the A-GPS setup.
+ */
+typedef enum {
+    QMI_PDS_NETWORK_MODE_UMTS = 0,
+    QMI_PDS_NETWORK_MODE_CDMA = 1,
+} QmiPdsNetworkMode;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_PDS_H_ */
