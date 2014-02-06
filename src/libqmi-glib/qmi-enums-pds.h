@@ -151,4 +151,21 @@ typedef enum {
     QMI_PDS_TRACKING_SESSION_STATE_ACTIVE   = 2
 } QmiPdsTrackingSessionState;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI PDS Get Default Tracking Session' request/response */
+
+/**
+ * QmiPdsOperatingMode:
+ * @QMI_PDS_OPERATING_MODE_STANDALONE: Standalone (GPS only).
+ * @QMI_PDS_OPERATING_MODE_MS_BASED: MS-based.
+ * @QMI_PDS_OPERATING_MODE_MS_ASSISTED: MS-assisted (A-GPS).
+ *
+ * GPS operating mode.
+ */
+typedef enum {
+    QMI_PDS_OPERATING_MODE_STANDALONE  = 0,
+    QMI_PDS_OPERATING_MODE_MS_BASED    = 1,
+    QMI_PDS_OPERATING_MODE_MS_ASSISTED = 2,
+} QmiPdsOperatingMode;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_PDS_H_ */

@@ -208,6 +208,8 @@
       <xi:include href="xml/qmi-message-pds-set-gps-service-state.xml"/>
       <xi:include href="xml/qmi-message-pds-get-auto-tracking-state.xml"/>
       <xi:include href="xml/qmi-message-pds-set-auto-tracking-state.xml"/>
+      <xi:include href="xml/qmi-message-pds-get-default-tracking-session.xml"/>
+      <xi:include href="xml/qmi-message-pds-set-default-tracking-session.xml"/>
     </section>
   </chapter>
 
