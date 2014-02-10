@@ -339,9 +339,6 @@ mbim_uuid_from_context_type (MbimContextType context_type)
 MbimContextType
 mbim_uuid_to_context_type (const MbimUuid *uuid)
 {
-    if (mbim_uuid_cmp (uuid, &uuid_dss))
-        return MBIM_SERVICE_DSS;
-
     if (mbim_uuid_cmp (uuid, &uuid_context_type_none))
         return MBIM_CONTEXT_TYPE_NONE;
 
