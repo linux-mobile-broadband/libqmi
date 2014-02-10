@@ -295,7 +295,7 @@ query_device_caps_ready (MbimDevice   *device,
 
     device_type_str = mbim_device_type_get_string (device_type);
     cellular_class_str = mbim_cellular_class_build_string_from_mask (cellular_class);
-    voice_class_str = mbim_device_type_get_string (voice_class);
+    voice_class_str = mbim_voice_class_get_string (voice_class);
     sim_class_str = mbim_sim_class_build_string_from_mask (sim_class);
     data_class_str = mbim_data_class_build_string_from_mask (data_class);
     sms_caps_str = mbim_sms_caps_build_string_from_mask (sms_caps);
@@ -1592,7 +1592,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         GError *error = NULL;
 
         request = mbim_message_connect_query_new (0,
-                                                  MBIM_ACTIVATION_COMMAND_ACTIVATE,
+                                                  MBIM_ACTIVATION_STATE_UNKNOWN,
                                                   MBIM_VOICE_CALL_STATE_NONE,
                                                   MBIM_CONTEXT_IP_TYPE_DEFAULT,
                                                   mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
