@@ -65,6 +65,9 @@
 #include "qmi-enums-wda.h"
 #include "qmi-wda.h"
 
+#include "qmi-enums-voice.h"
+#include "qmi-voice.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

@@ -274,6 +274,23 @@
     </section>
   </chapter>
 
+  <chapter>
+    <title>Voice</title>
+    <xi:include href="xml/qmi-client-voice.xml"/>
+    <xi:include href="xml/qmi-enums-voice.xml"/>
+    <section>
+      <title>Voice Indications</title>
+      <xi:include href="xml/qmi-indication-voice-all-call-status.xml"/>
+    </section>
+    <section>
+      <title>Voice Requests</title>
+      <xi:include href="xml/qmi-message-voice-dial-call.xml"/>
+      <xi:include href="xml/qmi-message-voice-end-call.xml"/>
+      <xi:include href="xml/qmi-message-voice-answer-call.xml"/>
+      <xi:include href="xml/qmi-message-voice-get-config.xml"/>
+    </section>
+  </chapter>
+
   <chapter id="object-tree">
     <title>Object Hierarchy</title>
      <xi:include href="xml/tree_index.sgml"/>

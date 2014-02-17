@@ -50,6 +50,7 @@
 #include "qmi-uim.h"
 #include "qmi-oma.h"
 #include "qmi-wda.h"
+#include "qmi-voice.h"
 
 /**
  * SECTION:qmi-message
@@ -2160,6 +2161,9 @@ qmi_message_get_printable (QmiMessage *self,
         break;
     case QMI_SERVICE_WDA:
         contents = __qmi_message_wda_get_printable (self, line_prefix);
+        break;
+    case QMI_SERVICE_VOICE:
+        contents = __qmi_message_voice_get_printable (self, line_prefix);
         break;
     default:
         break;
