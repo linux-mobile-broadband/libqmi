@@ -682,7 +682,7 @@
                      "format"           : "guint32-array",
                      "array-size-field" : "CidsCount" } ] },
 
-  { "name"     : "Device Service Subscriber List",
+  { "name"     : "Device Service Subscribe List",
     "service"  : "Basic Connect",
     "type"     : "Command",
     "set"      : [ { "name"   : "EventsCount",

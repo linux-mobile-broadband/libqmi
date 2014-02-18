@@ -411,7 +411,7 @@ test_message_builder_basic_connect_service_activation_set (void)
 }
 
 static void
-test_message_builder_basic_connect_device_service_subscriber_list_set (void)
+test_message_builder_basic_connect_device_service_subscribe_list_set (void)
 {
     GError *error = NULL;
     MbimEventEntry **entries;
@@ -471,7 +471,7 @@ test_message_builder_basic_connect_device_service_subscriber_list_set (void)
     entries[1]->cids = g_new0 (guint32, 1);
     entries[1]->cids[0] = MBIM_CID_SMS_READ;
 
-    message = (mbim_message_device_service_subscriber_list_set_new (
+    message = (mbim_message_device_service_subscribe_list_set_new (
                    2,
                    (const MbimEventEntry *const *)entries,
                    &error));
@@ -491,7 +491,7 @@ test_message_builder_basic_connect_device_service_subscriber_list_set (void)
     g_assert_cmpuint (mbim_message_get_message_length (message), ==, sizeof (expected_message));
 
     g_assert_cmpuint (mbim_message_command_get_service      (message), ==, MBIM_SERVICE_BASIC_CONNECT);
-    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST);
+    g_assert_cmpuint (mbim_message_command_get_cid          (message), ==, MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST);
     g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_SET);
 
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
@@ -1355,7 +1355,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/builder/basic-connect/connect/set/raw", test_message_builder_basic_connect_connect_set_raw);
     g_test_add_func ("/libmbim-glib/message/builder/basic-connect/connect/set", test_message_builder_basic_connect_connect_set);
     g_test_add_func ("/libmbim-glib/message/builder/basic-connect/service-activation/set", test_message_builder_basic_connect_service_activation_set);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/device-service-subscriber-list/set", test_message_builder_basic_connect_device_service_subscriber_list_set);
+    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/device-service-subscribe-list/set", test_message_builder_basic_connect_device_service_subscribe_list_set);
     g_test_add_func ("/libmbim-glib/message/builder/ussd/set", test_message_builder_ussd_set);
     g_test_add_func ("/libmbim-glib/message/builder/auth/akap/query", test_message_builder_auth_akap_query);
     g_test_add_func ("/libmbim-glib/message/builder/stk/pac/set", test_message_builder_stk_pac_set);
