@@ -449,14 +449,14 @@ typedef enum {
  * MbimRegistrationFlag:
  * @MBIM_REGISTRATION_FLAG_NONE: None.
  * @MBIM_REGISTRATION_FLAG_MANUAL_SELECTION_NOT_AVAILABLE: Network doesn't support manual network selection.
- * @MBIM_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH: Modem should auto-attach to the network after registration.
+ * @MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH: Modem should auto-attach to the network after registration.
  *
  * Registration flags.
  */
 typedef enum {
-    MBIM_REGISTRATION_FLAG_NONE                                   = 0,
-    MBIM_REGISTRATION_FLAG_MANUAL_SELECTION_NOT_AVAILABLE         = 1 << 0,
-    MBIM_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH = 1 << 2,
+    MBIM_REGISTRATION_FLAG_NONE                            = 0,
+    MBIM_REGISTRATION_FLAG_MANUAL_SELECTION_NOT_AVAILABLE  = 1 << 0,
+    MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH = 1 << 2,
 } MbimRegistrationFlag;
 
 /*****************************************************************************/
