@@ -68,4 +68,11 @@ void          qmicli_wda_run              (QmiDevice *device,
                                            QmiClientWda *client,
                                            GCancellable *cancellable);
 
+/* Voice group */
+GOptionGroup *qmicli_voice_get_option_group (void);
+gboolean      qmicli_voice_options_enabled  (void);
+void          qmicli_voice_run              (QmiDevice *device,
+                                             QmiClientVoice *client,
+                                             GCancellable *cancellable);
+
 #endif /* __QMICLI_H__ */

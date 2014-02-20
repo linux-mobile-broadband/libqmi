@@ -21,7 +21,8 @@ qmicli_SOURCES = \
 	qmicli-nas.c \
 	qmicli-pbm.c \
 	qmicli-uim.c \
-	qmicli-wda.c
+	qmicli-wda.c \
+	qmicli-voice.c
 
 qmicli_LDADD = \
 	$(GLIB_LIBS) \
