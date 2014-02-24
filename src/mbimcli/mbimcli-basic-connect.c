@@ -639,10 +639,10 @@ set_pin_input_parse (guint         n_expected,
         return FALSE;
     }
 
-    *pin = split[0];
-    *new_pin = split[1] ? split[1] : NULL;
+    *pin = g_strdup (split[0]);
+    *new_pin = g_strdup (split[1]);
 
-    g_free (split);
+    g_strfreev (split);
     return TRUE;
 }
 
@@ -756,7 +756,7 @@ set_connect_activate_parse (const gchar       *str,
     }
 
     /* APN */
-    *apn = split[0];
+    *apn = g_strdup (split[0]);
 
     /* Some defaults */
     *auth_protocol = MBIM_AUTH_PROTOCOL_NONE;
@@ -776,15 +776,14 @@ set_connect_activate_parse (const gchar       *str,
 
         /* Username */
         if (split[2]) {
-            *username = split[2];
+            *username = g_strdup (split[2]);
 
             /* Password */
-            if (split[3])
-                *password = split[3];
+            *password = g_strdup (split[3]);
         }
     }
 
-    g_free (split);
+    g_strfreev (split);
     return TRUE;
 }
 
