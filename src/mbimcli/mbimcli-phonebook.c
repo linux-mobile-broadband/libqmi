@@ -276,9 +276,6 @@ query_phonebook_read_ready (MbimDevice   *device,
         return;
     }
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     g_print ("Successfully read phonebook entries (%d)\n", entry_count);
     for (i = 0; i < entry_count; i++) {
         g_print ("\tEntry index : %d \n"
@@ -330,16 +327,13 @@ query_phonebook_configuration_ready (MbimDevice   *device,
 
     state_str = mbim_phonebook_state_get_string (state);
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     g_print ("\n Phonebook configuration retrived... \n"
              "\t   Phonebook state: %s \n"
              "\t Number of entries: %d \n"
              "\t      used entries: %d \n"
              "\t max number length: %d \n"
              "\t         max name : %d \n",
-             VALIDATE_UNKNOWN(state_str),
+             VALIDATE_UNKNOWN (state_str),
              number_of_entries,
              used_entries,
              max_number_length,

@@ -301,9 +301,6 @@ query_device_caps_ready (MbimDevice   *device,
     sms_caps_str = mbim_sms_caps_build_string_from_mask (sms_caps);
     ctrl_caps_str = mbim_ctrl_caps_build_string_from_mask (ctrl_caps);
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     g_print ("[%s] Device capabilities retrieved:\n"
              "\t      Device type: '%s'\n"
              "\t   Cellular class: '%s'\n"
@@ -388,9 +385,6 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
     ready_state_str = mbim_subscriber_ready_state_get_string (ready_state);
     ready_info_str = mbim_ready_info_flag_build_string_from_mask (ready_info);
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     g_print ("[%s] Subscriber ready status retrieved:\n"
              "\t      Ready state: '%s'\n"
              "\t    Subscriber ID: '%s'\n"
@@ -446,9 +440,6 @@ query_radio_state_ready (MbimDevice   *device,
 
     hardware_radio_state_str = mbim_radio_switch_state_get_string (hardware_radio_state);
     software_radio_state_str = mbim_radio_switch_state_get_string (software_radio_state);
-
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     g_print ("[%s] Radio state retrieved:\n"
              "\t     Hardware Radio State: '%s'\n"
@@ -585,9 +576,6 @@ pin_ready (MbimDevice   *device,
         g_print ("[%s] PIN operation successful\n\n",
                  mbim_device_get_path_display (device));
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     pin_state_str = mbim_pin_state_get_string (pin_state);
 
     g_print ("[%s] Pin Info:\n"
@@ -702,9 +690,6 @@ connect_ready (MbimDevice   *device,
         break;
     }
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     g_print ("[%s] Connection status:\n"
              "\t      Session ID: '%u'\n"
              "\tActivation state: '%s'\n"
@@ -818,9 +803,6 @@ home_provider_ready (MbimDevice   *device,
     provider_state_str = mbim_provider_state_build_string_from_mask (provider->provider_state);
     cellular_class_str = mbim_cellular_class_build_string_from_mask (provider->cellular_class);
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     g_print ("[%s] Home provider:\n"
              "\t   Provider ID: '%s'\n"
              "\t Provider Name: '%s'\n"
@@ -887,9 +869,6 @@ preferred_providers_ready (MbimDevice   *device,
 
         provider_state_str = mbim_provider_state_build_string_from_mask (providers[i]->provider_state);
         cellular_class_str = mbim_cellular_class_build_string_from_mask (providers[i]->cellular_class);
-
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
         g_print ("\tProvider [%u]:\n"
                  "\t\t    Provider ID: '%s'\n"
@@ -958,9 +937,6 @@ visible_providers_ready (MbimDevice   *device,
 
         provider_state_str = mbim_provider_state_build_string_from_mask (providers[i]->provider_state);
         cellular_class_str = mbim_cellular_class_build_string_from_mask (providers[i]->cellular_class);
-
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
         g_print ("\tProvider [%u]:\n"
                  "\t\t    Provider ID: '%s'\n"
@@ -1038,9 +1014,6 @@ register_state_ready (MbimDevice   *device,
     available_data_classes_str = mbim_data_class_build_string_from_mask (available_data_classes);
     cellular_class_str = mbim_cellular_class_build_string_from_mask (cellular_class);
     registration_flag_str = mbim_registration_flag_build_string_from_mask (registration_flag);
-
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     g_print ("[%s] Registration status:\n"
              "\t         Network error: '%s'\n"
@@ -1181,9 +1154,6 @@ packet_service_ready (MbimDevice   *device,
     default:
         break;
     }
-
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     highest_available_data_class_str = mbim_data_class_build_string_from_mask (highest_available_data_class);
 
