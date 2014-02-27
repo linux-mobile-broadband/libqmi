@@ -20,6 +20,7 @@ MBIM_UUID_PHONEBOOK
 MBIM_UUID_STK
 MBIM_UUID_AUTH
 MBIM_UUID_DSS
+MBIM_UUID_MS_FIRMWARE_ID
 <SUBSECTION Methods>
 mbim_service_get_string
 mbim_context_type_get_string
@@ -44,6 +45,7 @@ MbimCidPhonebook
 MbimCidStk
 MbimCidAuth
 MbimCidDss
+MbimCidMsFirmwareId
 <SUBSECTION Methods>
 mbim_cid_can_set
 mbim_cid_can_query
@@ -56,6 +58,7 @@ mbim_cid_phonebook_get_string
 mbim_cid_stk_get_string
 mbim_cid_auth_get_string
 mbim_cid_dss_get_string
+mbim_cid_ms_firmware_id_get_string
 <SUBSECTION Private>
 mbim_cid_basic_connect_build_string_from_mask
 mbim_cid_sms_build_string_from_mask
@@ -64,6 +67,7 @@ mbim_cid_phonebook_build_string_from_mask
 mbim_cid_stk_build_string_from_mask
 mbim_cid_auth_build_string_from_mask
 mbim_cid_dss_build_string_from_mask
+mbim_cid_ms_firmware_id_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_CID_AUTH
 MBIM_TYPE_CID_BASIC_CONNECT
@@ -72,6 +76,7 @@ MBIM_TYPE_CID_PHONEBOOK
 MBIM_TYPE_CID_SMS
 MBIM_TYPE_CID_STK
 MBIM_TYPE_CID_USSD
+MBIM_TYPE_CID_MS_FIRMWARE_ID
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
 mbim_cid_dss_get_type
@@ -79,6 +84,7 @@ mbim_cid_phonebook_get_type
 mbim_cid_sms_get_type
 mbim_cid_stk_get_type
 mbim_cid_ussd_get_type
+mbim_cid_ms_firmware_id_get_type
 </SECTION>
 
 <SECTION>
