@@ -265,9 +265,11 @@ query_device_caps_ready (MbimDevice   *device,
     gchar *hardware_info;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response) {
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -359,9 +361,11 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
     gchar *telephone_numbers_str;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response) {
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -420,9 +424,11 @@ query_radio_state_ready (MbimDevice   *device,
     const gchar *software_radio_state_str;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response) {
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -463,9 +469,11 @@ query_device_services_ready (MbimDevice   *device,
     guint32 max_dss_sessions;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response) {
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -556,6 +564,8 @@ pin_ready (MbimDevice   *device,
     if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -658,6 +668,8 @@ connect_ready (MbimDevice   *device,
     if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -787,6 +799,8 @@ home_provider_ready (MbimDevice   *device,
     if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -841,6 +855,8 @@ preferred_providers_ready (MbimDevice   *device,
     if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -909,6 +925,8 @@ visible_providers_ready (MbimDevice   *device,
     if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -986,6 +1004,8 @@ register_state_ready (MbimDevice   *device,
     if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1064,6 +1084,8 @@ signal_state_ready (MbimDevice   *device,
     if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1125,6 +1147,8 @@ packet_service_ready (MbimDevice   *device,
     if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1195,6 +1219,8 @@ packet_statistics_ready (MbimDevice   *device,
     if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }

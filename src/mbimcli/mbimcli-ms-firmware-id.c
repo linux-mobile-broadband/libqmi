@@ -116,9 +116,11 @@ query_firmware_id_ready (MbimDevice   *device,
     gchar *firmware_id_str;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response) {
+    if (!response || !mbim_message_command_done_get_result (response, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
