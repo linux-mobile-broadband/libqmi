@@ -327,7 +327,7 @@ query_phonebook_configuration_ready (MbimDevice   *device,
 
     state_str = mbim_phonebook_state_get_string (state);
 
-    g_print ("\n Phonebook configuration retrived... \n"
+    g_print ("\n Phonebook configuration retrieved... \n"
              "\t   Phonebook state: %s \n"
              "\t Number of entries: %d \n"
              "\t      used entries: %d \n"
