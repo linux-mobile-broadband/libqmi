@@ -183,6 +183,18 @@ typedef enum {
     MBIM_CID_DSS_CONNECT = 1
 } MbimCidDss;
 
+/**
+ * MbimCidMsFirmwareId:
+ * @MBIM_CID_MS_FIRMWARE_ID_UNKNOWN: Unknown command.
+ * @MBIM_CID_MS_FIRMWARE_ID_GET: Get Firmware ID.
+ *
+ * MBIM commands in the %MBIM_SERVICE_MS_FIRMWARE_ID service.
+ */
+typedef enum {
+    MBIM_CID_MS_FIRMWARE_ID_UNKNOWN = 0,
+    MBIM_CID_MS_FIRMWARE_ID_GET     = 1
+} MbimCidMsFirmwareId;
+
 /* Command helpers */
 
 gboolean     mbim_cid_can_set       (MbimService service,

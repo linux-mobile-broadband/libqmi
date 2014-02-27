@@ -105,17 +105,26 @@ test_cid_dss (void)
                  TRUE, FALSE, FALSE);
 }
 
+static void
+test_cid_ms_firmware_id (void)
+{
+    test_common (MBIM_SERVICE_MS_FIRMWARE_ID,
+                 MBIM_CID_MS_FIRMWARE_ID_GET,
+                 FALSE, TRUE, FALSE);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libmbim-glib/cid/basic-connect", test_cid_basic_connect);
-    g_test_add_func ("/libmbim-glib/cid/sms",           test_cid_sms);
-    g_test_add_func ("/libmbim-glib/cid/ussd",          test_cid_ussd);
-    g_test_add_func ("/libmbim-glib/cid/phonebook",     test_cid_phonebook);
-    g_test_add_func ("/libmbim-glib/cid/stk",           test_cid_stk);
-    g_test_add_func ("/libmbim-glib/cid/auth",          test_cid_auth);
-    g_test_add_func ("/libmbim-glib/cid/dss",           test_cid_dss);
+    g_test_add_func ("/libmbim-glib/cid/basic-connect",  test_cid_basic_connect);
+    g_test_add_func ("/libmbim-glib/cid/sms",            test_cid_sms);
+    g_test_add_func ("/libmbim-glib/cid/ussd",           test_cid_ussd);
+    g_test_add_func ("/libmbim-glib/cid/phonebook",      test_cid_phonebook);
+    g_test_add_func ("/libmbim-glib/cid/stk",            test_cid_stk);
+    g_test_add_func ("/libmbim-glib/cid/auth",           test_cid_auth);
+    g_test_add_func ("/libmbim-glib/cid/dss",            test_cid_dss);
+    g_test_add_func ("/libmbim-glib/cid/ms-firmware-id", test_cid_ms_firmware_id);
 
     return g_test_run ();
 }

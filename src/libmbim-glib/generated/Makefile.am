@@ -9,7 +9,8 @@ GENERATED_H = \
 	mbim-auth.h \
 	mbim-phonebook.h \
 	mbim-stk.h \
-	mbim-dss.h
+	mbim-dss.h \
+	mbim-ms-firmware-id.h
 
 GENERATED_C = \
 	mbim-error-types.c \
@@ -21,7 +22,8 @@ GENERATED_C = \
 	mbim-auth.c \
 	mbim-phonebook.c \
 	mbim-stk.c \
-	mbim-dss.c
+	mbim-dss.c \
+	mbim-ms-firmware-id.c
 
 GENERATED_SECTIONS = \
 	mbim-basic-connect.sections \
@@ -30,7 +32,8 @@ GENERATED_SECTIONS = \
 	mbim-auth.sections \
 	mbim-phonebook.sections \
 	mbim-stk.sections \
-	mbim-dss.sections
+	mbim-dss.sections \
+	mbim-ms-firmware-id.sections
 
 # Error types
 mbim-error-types.h: $(top_srcdir)/src/libmbim-glib/mbim-errors.h $(top_srcdir)/build-aux/templates/mbim-error-types-template.h
@@ -133,6 +136,15 @@ mbim-dss.h mbim-dss.c mbim-dss.sections: $(top_srcdir)/data/mbim-service-dss.jso
 		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-dss.json \
 			--output mbim-dss
+
+# Microsoft Firmware ID service
+mbim-ms-firmware-id.h mbim-ms-firmware-id.c mbim-ms-firmware-id.sections: $(top_srcdir)/data/mbim-service-ms-firmware-id.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-ms-firmware-id.h && \
+		rm -f mbim-ms-firmware-id.c && \
+		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-ms-firmware-id.json \
+			--output mbim-ms-firmware-id
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 

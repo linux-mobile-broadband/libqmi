@@ -45,5 +45,6 @@
 #include "mbim-phonebook.h"
 #include "mbim-stk.h"
 #include "mbim-dss.h"
+#include "mbim-ms-firmware-id.h"
 
 #endif /* _LIBMBIM_GLIB_H_ */

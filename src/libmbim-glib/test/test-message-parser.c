@@ -21,6 +21,7 @@
 #include "mbim-ussd.h"
 #include "mbim-auth.h"
 #include "mbim-stk.h"
+#include "mbim-ms-firmware-id.h"
 #include "mbim-message.h"
 #include "mbim-cid.h"
 #include "mbim-utils.h"
@@ -1561,6 +1562,56 @@ test_message_parser_basic_connect_ip_packet_filters_two (void)
     mbim_message_unref (response);
 }
 
+static void
+test_message_parser_ms_firmware_id_get (void)
+{
+    const MbimUuid *firmware_id;
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 buffer [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x40, 0x00, 0x00, 0x00, /* length */
+        0x02, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xE9, 0xF7, 0xDE, 0xA2, /* service id */
+        0xFE, 0xAF, 0x40, 0x09,
+        0x93, 0xCE, 0x90, 0xA3,
+        0x69, 0x41, 0x03, 0xB6,
+        0x01, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x10, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x11, 0x22, 0x33, /* firmware id */
+        0x44, 0x55, 0x66, 0x77,
+        0x88, 0x99, 0xAA, 0xBB,
+        0xCC, 0xDD, 0xEE, 0xFF  };
+
+    const MbimUuid expected_firmware_id = {
+        .a = { 0x00, 0x11, 0x22, 0x33 },
+        .b = { 0x44, 0x55 },
+        .c = { 0x66, 0x77 },
+        .d = { 0x88, 0x99 },
+        .e = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF }
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    g_assert (mbim_message_ms_firmware_id_get_response_parse (
+                  response,
+                  &firmware_id,
+                  &error));
+
+    g_assert_no_error (error);
+
+    g_assert (mbim_uuid_cmp (firmware_id, &expected_firmware_id));
+
+    mbim_message_unref (response);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -1582,6 +1633,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-packet-filters/none", test_message_parser_basic_connect_ip_packet_filters_none);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-packet-filters/one", test_message_parser_basic_connect_ip_packet_filters_one);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-packet-filters/two", test_message_parser_basic_connect_ip_packet_filters_two);
+    g_test_add_func ("/libmbim-glib/message/parser/ms-firmware-id/get", test_message_parser_ms_firmware_id_get);
 
     return g_test_run ();
 }

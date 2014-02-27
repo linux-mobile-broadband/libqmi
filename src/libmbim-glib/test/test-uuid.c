@@ -77,17 +77,24 @@ test_uuid_dss (void)
                           "c08a26dd-7718-4382-8482-6e0d583c4d0e");
 }
 
+static void
+test_uuid_ms_firmware_id (void)
+{
+    compare_uuid_strings (MBIM_UUID_MS_FIRMWARE_ID,
+                          "e9f7dea2-feaf-4009-93ce-90a3694103b6");
+}
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libmbim-glib/uuid/basic-connect", test_uuid_basic_connect);
-    g_test_add_func ("/libmbim-glib/uuid/sms",           test_uuid_sms);
-    g_test_add_func ("/libmbim-glib/uuid/ussd",          test_uuid_ussd);
-    g_test_add_func ("/libmbim-glib/uuid/phonebook",     test_uuid_phonebook);
-    g_test_add_func ("/libmbim-glib/uuid/stk",           test_uuid_stk);
-    g_test_add_func ("/libmbim-glib/uuid/auth",          test_uuid_auth);
-    g_test_add_func ("/libmbim-glib/uuid/dss",           test_uuid_dss);
+    g_test_add_func ("/libmbim-glib/uuid/basic-connect",  test_uuid_basic_connect);
+    g_test_add_func ("/libmbim-glib/uuid/sms",            test_uuid_sms);
+    g_test_add_func ("/libmbim-glib/uuid/ussd",           test_uuid_ussd);
+    g_test_add_func ("/libmbim-glib/uuid/phonebook",      test_uuid_phonebook);
+    g_test_add_func ("/libmbim-glib/uuid/stk",            test_uuid_stk);
+    g_test_add_func ("/libmbim-glib/uuid/auth",           test_uuid_auth);
+    g_test_add_func ("/libmbim-glib/uuid/dss",            test_uuid_dss);
+    g_test_add_func ("/libmbim-glib/uuid/ms-firmware-id", test_uuid_ms_firmware_id);
 
     return g_test_run ();
 }

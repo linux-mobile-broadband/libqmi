@@ -1738,7 +1738,7 @@ mbim_message_command_new (guint32                transaction_id,
 
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_DSS, FALSE);
+    g_return_val_if_fail (service <= MBIM_SERVICE_MS_FIRMWARE_ID, FALSE);
     service_id = mbim_uuid_from_service (service);
 
     self = _mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND,

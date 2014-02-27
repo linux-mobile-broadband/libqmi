@@ -143,6 +143,14 @@ static const MbimUuid uuid_dss = {
     .e = { 0x6e, 0x0d, 0x58, 0x3c, 0x4d, 0x0e }
 };
 
+static const MbimUuid uuid_ms_firmware_id = {
+    .a = { 0xe9, 0xf7, 0xde, 0xa2 },
+    .b = { 0xfe, 0xaf },
+    .c = { 0x40, 0x09 },
+    .d = { 0x93, 0xce },
+    .e = { 0x90, 0xa3, 0x69, 0x41, 0x03, 0xb6 }
+};
+
 /**
  * mbim_uuid_from_service:
  * @service: a #MbimService.
@@ -154,7 +162,7 @@ static const MbimUuid uuid_dss = {
 const MbimUuid *
 mbim_uuid_from_service (MbimService service)
 {
-    g_return_val_if_fail (service >= MBIM_SERVICE_INVALID && service <= MBIM_SERVICE_DSS,
+    g_return_val_if_fail (service >= MBIM_SERVICE_INVALID && service <= MBIM_SERVICE_MS_FIRMWARE_ID,
                           &uuid_invalid);
 
     switch (service) {
@@ -174,6 +182,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_auth;
     case MBIM_SERVICE_DSS:
         return &uuid_dss;
+    case MBIM_SERVICE_MS_FIRMWARE_ID:
+        return &uuid_ms_firmware_id;
     default:
         g_assert_not_reached ();
     }
@@ -210,6 +220,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_dss))
         return MBIM_SERVICE_DSS;
+
+    if (mbim_uuid_cmp (uuid, &uuid_ms_firmware_id))
+        return MBIM_SERVICE_MS_FIRMWARE_ID;
 
     return MBIM_SERVICE_INVALID;
 }
