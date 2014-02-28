@@ -43,6 +43,7 @@ static Context *ctx;
 static gboolean  query_device_caps_flag;
 static gboolean  query_subscriber_ready_status_flag;
 static gboolean  query_radio_state_flag;
+static gchar    *set_radio_state_str;
 static gboolean  query_device_services_flag;
 static gboolean  query_pin_flag;
 static gchar    *set_pin_enter_str;
@@ -76,6 +77,10 @@ static GOptionEntry entries[] = {
     { "query-radio-state", 0, 0, G_OPTION_ARG_NONE, &query_radio_state_flag,
       "Query radio state",
       NULL
+    },
+    { "set-radio-state", 0, 0, G_OPTION_ARG_STRING, &set_radio_state_str,
+      "Set radio state",
+      "[(on|off)]"
     },
     { "query-device-services", 0, 0, G_OPTION_ARG_NONE, &query_device_services_flag,
       "Query device services",
@@ -187,6 +192,7 @@ mbimcli_basic_connect_options_enabled (void)
     n_actions = (query_device_caps_flag +
                  query_subscriber_ready_status_flag +
                  query_radio_state_flag +
+                 !!set_radio_state_str +
                  query_device_services_flag +
                  query_pin_flag +
                  !!set_pin_enter_str +
@@ -1312,6 +1318,34 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         g_debug ("Asynchronously querying radio state...");
         request = (mbim_message_radio_state_query_new (NULL));
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_radio_state_ready,
+                             NULL);
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Request to set radio state? */
+    if (set_radio_state_str) {
+        MbimMessage *request;
+        MbimRadioSwitchState radio_state;
+
+        if (g_ascii_strcasecmp (set_radio_state_str, "on") == 0) {
+            radio_state = MBIM_RADIO_SWITCH_STATE_ON;
+        } else if (g_ascii_strcasecmp (set_radio_state_str, "off") == 0) {
+            radio_state = MBIM_RADIO_SWITCH_STATE_OFF;
+        } else {
+            g_printerr ("error: invalid radio state: '%s'\n", set_radio_state_str);
+            shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously setting radio state to %s...",
+                 radio_state == MBIM_RADIO_SWITCH_STATE_ON ? "on" : "off");
+        request = mbim_message_radio_state_set_new (radio_state, NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
