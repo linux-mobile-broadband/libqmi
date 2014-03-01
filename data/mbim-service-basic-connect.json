@@ -742,7 +742,10 @@
                      "public-format" : "MbimEmergencyModeState" } ],
     "response" : [ { "name"          : "State",
                      "format"        : "guint32",
-                     "public-format" : "MbimEmergencyModeState" } ] },
+                     "public-format" : "MbimEmergencyModeState" } ],
+    "notification" : [ { "name"          : "State",
+                         "format"        : "guint32",
+                         "public-format" : "MbimEmergencyModeState" } ] },
 
   // *********************************************************************************
   { "name"     : "MbimPacketFilter",
