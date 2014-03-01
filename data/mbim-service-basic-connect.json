@@ -221,12 +221,12 @@
                        "format"           : "ref-struct-array" ,
                        "struct-type"      : "MbimProvider",
                        "array-size-field" : "ProvidersCount" } ],
-    "indication" : [ { "name"   : "ProvidersCount",
-                       "format" : "guint32" },
-                     { "name"             : "Providers",
-                       "format"           : "ref-struct-array" ,
-                       "struct-type"      : "MbimProvider",
-                       "array-size-field" : "ProvidersCount" } ] },
+    "notification" : [ { "name"   : "ProvidersCount",
+                         "format" : "guint32" },
+                       { "name"             : "Providers",
+                         "format"           : "ref-struct-array" ,
+                         "struct-type"      : "MbimProvider",
+                         "array-size-field" : "ProvidersCount" } ] },
 
   // *********************************************************************************
   { "name"       : "Visible Providers",
@@ -801,11 +801,11 @@
                        "format"           : "ref-struct-array" ,
                        "struct-type"      : "MbimProvider",
                        "array-size-field" : "ProvidersCount" } ],
-    "indication" : [ { "name"   : "ProvidersCount",
-                       "format" : "guint32" },
-                     { "name"             : "Providers",
-                       "format"           : "ref-struct-array" ,
-                       "struct-type"      : "MbimProvider",
-                       "array-size-field" : "ProvidersCount" } ] }
+    "notification" : [ { "name"   : "ProvidersCount",
+                         "format" : "guint32" },
+                       { "name"             : "Providers",
+                         "format"           : "ref-struct-array" ,
+                         "struct-type"      : "MbimProvider",
+                         "array-size-field" : "ProvidersCount" } ] }
 
 ]
