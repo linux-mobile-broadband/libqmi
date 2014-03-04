@@ -161,39 +161,6 @@ set_dss_ready (MbimDevice *device,
 }
 
 static gboolean
-parse_uuid (const gchar *str,
-            MbimUuid *uuid)
-{
-    guint a0, a1, a2, a3;
-    guint b0, b1;
-    guint c0, c1;
-    guint d0, d1;
-    guint e0, e1, e2, e3, e4, e5;
-
-    if ((strlen (str) != 36) ||
-        (sscanf (str,
-                 "%02x%02x%02x%02x-"
-                 "%02x%02x-"
-                 "%02x%02x-"
-                 "%02x%02x-"
-                 "%02x%02x%02x%02x%02x%02x",
-                 &a0, &a1, &a2, &a3,
-                 &b0, &b1,
-                 &c0, &c1,
-                 &d0, &d1,
-                 &e0, &e1, &e2, &e3, &e4, &e5) == 0))
-        return FALSE;
-
-    uuid->a[0] = a0; uuid->a[1] = a1; uuid->a[2] = a2; uuid->a[3] = a3;
-    uuid->b[0] = b0; uuid->b[1] = b1;
-    uuid->c[0] = c0; uuid->c[1] = c1;
-    uuid->d[0] = d0; uuid->d[1] = d1;
-    uuid->e[0] = e0; uuid->e[1] = e1; uuid->e[2] = e2; uuid->e[3] = e3; uuid->e[4] = e4; uuid->e[5] = e5;
-
-    return TRUE;
-}
-
-static gboolean
 parse_uint (const gchar *str,
             guint *u)
 {
@@ -228,7 +195,7 @@ common_parse (const gchar *str,
         g_printerr ("error: couldn't parse input string, too many arguments\n");
     else if (g_strv_length (split) < 1)
         g_printerr ("error: couldn't parse input string, missing arguments\n");
-    else if (!parse_uuid (split[0], dsid))
+    else if (!mbim_uuid_from_printable (split[0], dsid))
         g_printerr ("error: couldn't parse UUID, should be xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\n");
     else if (!parse_uint (split[1], ssid))
         g_printerr ("error: couldn't parse Session ID, should be a number\n");
