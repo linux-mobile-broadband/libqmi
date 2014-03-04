@@ -18,7 +18,8 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2013 Aleksander Morgado <aleksander@gnu.org>
+ * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@gnu.org>
+ * Copyright (C) 2014 NVDIA Corporation
  */
 
 #include <config.h>
@@ -75,6 +76,55 @@ mbim_uuid_get_printable (const MbimUuid *uuid)
                 uuid->c[0], uuid->c[1],
                 uuid->d[0], uuid->d[1],
                 uuid->e[0], uuid->e[1], uuid->e[2], uuid->e[3], uuid->e[4], uuid->e[5]));
+}
+
+/**
+ * mbim_uuid_from_printable:
+ * @str: a MBIM UUID.
+ * @uuid: pointer to the target #MbimUuid.
+ *
+ * Fills in @uuid from the printable representation give in @str.
+ *
+ * Accepts @str written with or without dashes separating items, e.g.:
+ *  a289cc33-bcbb-8b4f-b6b0-133ec2aae6df
+ *  a289cc33bcbb8b4fb6b0133ec2aae6df
+ *
+ * Returns: %TRUE if @uuid was correctly set, %FALSE otherwise.
+ */
+gboolean
+mbim_uuid_from_printable (const gchar *str,
+                          MbimUuid    *uuid)
+{
+    guint a0, a1, a2, a3;
+    guint b0, b1;
+    guint c0, c1;
+    guint d0, d1;
+    guint e0, e1, e2, e3, e4, e5;
+
+    g_return_val_if_fail (str != NULL, FALSE);
+    g_return_val_if_fail (uuid != NULL, FALSE);
+
+    if ((strlen (str) != 36) ||
+        (sscanf (str,
+                 "%02x%02x%02x%02x-"
+                 "%02x%02x-"
+                 "%02x%02x-"
+                 "%02x%02x-"
+                 "%02x%02x%02x%02x%02x%02x",
+                 &a0, &a1, &a2, &a3,
+                 &b0, &b1,
+                 &c0, &c1,
+                 &d0, &d1,
+                 &e0, &e1, &e2, &e3, &e4, &e5) == 0))
+        return FALSE;
+
+    uuid->a[0] = a0; uuid->a[1] = a1; uuid->a[2] = a2; uuid->a[3] = a3;
+    uuid->b[0] = b0; uuid->b[1] = b1;
+    uuid->c[0] = c0; uuid->c[1] = c1;
+    uuid->d[0] = d0; uuid->d[1] = d1;
+    uuid->e[0] = e0; uuid->e[1] = e1; uuid->e[2] = e2; uuid->e[3] = e3; uuid->e[4] = e4; uuid->e[5] = e5;
+
+    return TRUE;
 }
 
 /*****************************************************************************/

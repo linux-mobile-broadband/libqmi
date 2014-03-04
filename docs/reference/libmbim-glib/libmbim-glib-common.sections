@@ -25,6 +25,7 @@ MBIM_UUID_MS_FIRMWARE_ID
 mbim_service_get_string
 mbim_context_type_get_string
 mbim_uuid_cmp
+mbim_uuid_from_printable
 mbim_uuid_get_printable
 mbim_uuid_from_service
 mbim_uuid_to_service

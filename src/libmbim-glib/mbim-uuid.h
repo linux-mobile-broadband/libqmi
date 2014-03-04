@@ -50,9 +50,11 @@ struct MBIM_PACKED _MbimUuid {
 };
 #undef MBIM_PACKED
 
-gboolean  mbim_uuid_cmp           (const MbimUuid *a,
-                                   const MbimUuid *b);
-gchar    *mbim_uuid_get_printable (const MbimUuid *uuid);
+gboolean  mbim_uuid_cmp            (const MbimUuid *a,
+                                    const MbimUuid *b);
+gchar    *mbim_uuid_get_printable  (const MbimUuid *uuid);
+gboolean  mbim_uuid_from_printable (const gchar *str,
+                                    MbimUuid    *uuid);
 
 /*****************************************************************************/
 

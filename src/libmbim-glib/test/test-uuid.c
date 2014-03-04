@@ -83,6 +83,74 @@ test_uuid_ms_firmware_id (void)
     compare_uuid_strings (MBIM_UUID_MS_FIRMWARE_ID,
                           "e9f7dea2-feaf-4009-93ce-90a3694103b6");
 }
+
+/*****************************************************************************/
+
+static void
+compare_uuid_types (const gchar *uuid_str,
+                    const MbimUuid *other_uuid)
+{
+    MbimUuid uuid;
+
+    g_assert (mbim_uuid_from_printable (uuid_str, &uuid));
+    g_assert (mbim_uuid_cmp (&uuid, other_uuid));
+}
+
+static void
+invalid_uuid_str (const gchar *uuid_str)
+{
+    MbimUuid uuid;
+
+    g_assert (mbim_uuid_from_printable (uuid_str, &uuid) == FALSE);
+}
+
+static void
+test_uuid_valid (void)
+{
+    compare_uuid_types ("a289cc33-bcbb-8b4f-b6b0-133ec2aae6df",
+                        MBIM_UUID_BASIC_CONNECT);
+}
+
+static void
+test_uuid_valid_camelcase (void)
+{
+    compare_uuid_types ("A289cC33-BcBb-8B4f-B6b0-133Ec2Aae6Df",
+                        MBIM_UUID_BASIC_CONNECT);
+}
+
+static void
+test_uuid_invalid_empty (void)
+{
+    invalid_uuid_str ("");
+}
+
+static void
+test_uuid_invalid_short (void)
+{
+    invalid_uuid_str ("a289cc33-bcbb-8b4f-b6b0-");
+}
+
+static void
+test_uuid_invalid_long (void)
+{
+    invalid_uuid_str ("a289cc33-bcbb-8b4f-b6b0-133ec2aae6dfaaa");
+}
+
+static void
+test_uuid_invalid_dashes (void)
+{
+    /* Dashes one too early */
+    invalid_uuid_str ("289cc33-bcbb-8b4f-b6b0-133ec2aae6dfa");
+}
+
+static void
+test_uuid_invalid_no_hex (void)
+{
+    invalid_uuid_str ("hello wo-rld -8b4f-b6b0-133ec2aae6df");
+}
+
+/*****************************************************************************/
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -95,6 +163,15 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/uuid/auth",           test_uuid_auth);
     g_test_add_func ("/libmbim-glib/uuid/dss",            test_uuid_dss);
     g_test_add_func ("/libmbim-glib/uuid/ms-firmware-id", test_uuid_ms_firmware_id);
+
+    g_test_add_func ("/libmbim-glib/uuid/valid",           test_uuid_valid);
+    g_test_add_func ("/libmbim-glib/uuid/valid/camelcase", test_uuid_valid_camelcase);
+
+    g_test_add_func ("/libmbim-glib/uuid/invalid/empty",  test_uuid_invalid_empty);
+    g_test_add_func ("/libmbim-glib/uuid/invalid/short",  test_uuid_invalid_short);
+    g_test_add_func ("/libmbim-glib/uuid/invalid/long",   test_uuid_invalid_long);
+    g_test_add_func ("/libmbim-glib/uuid/invalid/dashes", test_uuid_invalid_dashes);
+    g_test_add_func ("/libmbim-glib/uuid/invalid/no-hex", test_uuid_invalid_no_hex);
 
     return g_test_run ();
 }
