@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Copyright (C) 2014 NVIDIA CORPORATION
+ * Copyright (C) 2014 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include "config.h"
@@ -23,6 +24,7 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <string.h>
+#include <errno.h>
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -39,17 +41,17 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
-static gchar    *set_connect_activate_str;
-static gchar    *set_connect_deactivate_str;
+static gchar    *connect_str;
+static gchar    *disconnect_str;
 
 static GOptionEntry entries[] = {
-    { "dss-connect", 0, 0, G_OPTION_ARG_STRING, &set_connect_activate_str,
-      "DSS Connect (DeviceServiceId, DssSessionId)",
-      "[(UUID),(Session)]"
+    { "dss-connect", 0, 0, G_OPTION_ARG_STRING, &connect_str,
+      "Connect DSS session",
+      "[(UUID),(Session ID)]"
     },
-    { "dss-disconnect", 0, 0, G_OPTION_ARG_STRING, &set_connect_deactivate_str,
-      "DSS Disconnect (DeviceServiceId, DssSessionId)",
-      "[(UUID),(Session)]"
+    { "dss-disconnect", 0, 0, G_OPTION_ARG_STRING, &disconnect_str,
+      "Disconnect DSS session",
+      "[(UUID),(Session ID)]"
     },
     { NULL }
 };
@@ -78,8 +80,8 @@ mbimcli_dss_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (!!set_connect_activate_str +
-                 !!set_connect_deactivate_str );
+    n_actions = (!!connect_str +
+                 !!disconnect_str );
 
     if (n_actions > 1) {
         g_printerr ("error: too many DSS actions requested\n");
@@ -117,7 +119,7 @@ enum {
 };
 
 static void
-set_dss_ready (MbimDevice   *device,
+set_dss_ready (MbimDevice *device,
                GAsyncResult *res,
                gpointer user_data)
 {
@@ -132,25 +134,25 @@ set_dss_ready (MbimDevice   *device,
         return;
     }
 
-    if (!mbim_message_dss_connect_response_parse (
-            response,
-            &error)) {
+    if (!mbim_message_dss_connect_response_parse (response, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         g_error_free (error);
+        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
     switch (GPOINTER_TO_UINT (user_data)) {
     case CONNECT:
-        g_print ("[%s] Successfully connected\n\n",
+        g_print ("[%s] Successfully connected\n",
                  mbim_device_get_path_display (device));
         break;
     case DISCONNECT:
-        g_print ("[%s] Successfully disconnected\n\n",
+        g_print ("[%s] Successfully disconnected\n",
                  mbim_device_get_path_display (device));
         break;
     default:
+        g_assert_not_reached ();
         break;
     }
 
@@ -158,7 +160,9 @@ set_dss_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
-static gboolean parse_uuid(const gchar *str, MbimUuid* uuid)
+static gboolean
+parse_uuid (const gchar *str,
+            MbimUuid *uuid)
 {
     guint a0, a1, a2, a3;
     guint b0, b1;
@@ -166,17 +170,18 @@ static gboolean parse_uuid(const gchar *str, MbimUuid* uuid)
     guint d0, d1;
     guint e0, e1, e2, e3, e4, e5;
 
-    if ( (strlen(str) != 36) ||
-         (0 == sscanf(str, "%02x%02x%02x%02x-"
-                           "%02x%02x-"
-                           "%02x%02x-"
-                           "%02x%02x-"
-                           "%02x%02x%02x%02x%02x%02x",
-                           &a0, &a1, &a2, &a3,
-                           &b0, &b1,
-                           &c0, &c1,
-                           &d0, &d1,
-                           &e0, &e1, &e2, &e3, &e4, &e5)) )
+    if ((strlen (str) != 36) ||
+        (sscanf (str,
+                 "%02x%02x%02x%02x-"
+                 "%02x%02x-"
+                 "%02x%02x-"
+                 "%02x%02x-"
+                 "%02x%02x%02x%02x%02x%02x",
+                 &a0, &a1, &a2, &a3,
+                 &b0, &b1,
+                 &c0, &c1,
+                 &d0, &d1,
+                 &e0, &e1, &e2, &e3, &e4, &e5) == 0))
         return FALSE;
 
     uuid->a[0] = a0; uuid->a[1] = a1; uuid->a[2] = a2; uuid->a[3] = a3;
@@ -184,63 +189,54 @@ static gboolean parse_uuid(const gchar *str, MbimUuid* uuid)
     uuid->c[0] = c0; uuid->c[1] = c1;
     uuid->d[0] = d0; uuid->d[1] = d1;
     uuid->e[0] = e0; uuid->e[1] = e1; uuid->e[2] = e2; uuid->e[3] = e3; uuid->e[4] = e4; uuid->e[5] = e5;
-    return TRUE;
-}
 
-static gboolean parse_uint(const gchar *str, guint32 *u)
-{
-    guint32 t;
-
-    if (0 == sscanf(str, "%u", &t))
-        return FALSE;
-
-    *u = t;
     return TRUE;
 }
 
 static gboolean
-set_dss_command_parse (const gchar *str,
-                       MbimUuid    *dsid,
-                       guint32     *ssid)
+parse_uint (const gchar *str,
+            guint *u)
+{
+    gulong num;
+
+    errno = 0;
+    num = strtoul (str, NULL, 10);
+    if (errno || num > G_MAXUINT)
+        return FALSE;
+
+    *u = (guint)num;
+    return TRUE;
+}
+
+static gboolean
+common_parse (const gchar *str,
+              MbimUuid    *dsid,
+              guint32     *ssid)
 {
     gchar **split;
+    gboolean status = FALSE;
 
     g_assert (dsid != NULL);
     g_assert (ssid != NULL);
 
     /* Format of the string is:
-     * [(DevSrvID),(SessionId)]
+     * [(UUID),(Session ID)]
      */
     split = g_strsplit (str, ",", -1);
 
-    if (g_strv_length (split) > 2) {
+    if (g_strv_length (split) > 2)
         g_printerr ("error: couldn't parse input string, too many arguments\n");
-        g_strfreev (split);
-        return FALSE;
-    }
-
-    if (g_strv_length (split) < 1) {
+    else if (g_strv_length (split) < 1)
         g_printerr ("error: couldn't parse input string, missing arguments\n");
-        g_strfreev (split);
-        return FALSE;
-    }
-
-    /* DeviceServiceId */
-    if (parse_uuid(split[0], dsid) == FALSE) {
+    else if (!parse_uuid (split[0], dsid))
         g_printerr ("error: couldn't parse UUID, should be xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\n");
-        g_strfreev (split);
-        return FALSE;
-    }
-
-    /* SessionId */
-    if (parse_uint(split[1], ssid) == FALSE) {
+    else if (!parse_uint (split[1], ssid))
         g_printerr ("error: couldn't parse Session ID, should be a number\n");
-        g_strfreev (split);
-        return FALSE;
-    }
+    else
+        status = TRUE;
 
     g_strfreev (split);
-    return TRUE;
+    return status;
 }
 
 void
@@ -249,8 +245,6 @@ mbimcli_dss_run (MbimDevice   *device,
 {
     MbimMessage *request;
     GError *error = NULL;
-    MbimUuid service_id;
-    guint32  session_id;
 
     /* Initialize context */
     ctx = g_slice_new (Context);
@@ -259,11 +253,11 @@ mbimcli_dss_run (MbimDevice   *device,
         ctx->cancellable = g_object_ref (cancellable);
 
     /* Connect? */
-    if (set_connect_activate_str) 
-    {
-        if (!set_dss_command_parse (set_connect_activate_str,
-                                    &service_id,
-                                    &session_id)) {
+    if (connect_str) {
+        MbimUuid service_id;
+        guint32 session_id;
+
+        if (!common_parse (connect_str, &service_id, &session_id)) {
             shutdown (FALSE);
             return;
         }
@@ -291,11 +285,11 @@ mbimcli_dss_run (MbimDevice   *device,
     }
 
     /* Disconnect? */
-    if (set_connect_deactivate_str) 
-    {
-        if (!set_dss_command_parse (set_connect_deactivate_str,
-                                    &service_id,
-                                    &session_id)) {
+    if (disconnect_str) {
+        MbimUuid service_id;
+        guint32 session_id;
+
+        if (!common_parse (disconnect_str, &service_id, &session_id)) {
             shutdown (FALSE);
             return;
         }

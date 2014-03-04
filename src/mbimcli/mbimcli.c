@@ -387,7 +387,7 @@ int main (int argc, char **argv)
     g_option_context_add_group (context,
                                 mbimcli_ms_firmware_id_get_option_group ());
     g_option_context_add_group (context,
-	                            mbimcli_dss_get_option_group ());
+                                mbimcli_dss_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",
