@@ -120,7 +120,7 @@ mbim_uuid_from_printable (const gchar *str,
                 &b0, &b1,
                 &c0, &c1,
                 &d0, &d1,
-                &e0, &e1, &e2, &e3, &e4, &e5) == 0)
+                &e0, &e1, &e2, &e3, &e4, &e5) != 16)
         return FALSE;
 
     uuid->a[0] = a0; uuid->a[1] = a1; uuid->a[2] = a2; uuid->a[3] = a3;
