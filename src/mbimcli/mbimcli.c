@@ -260,6 +260,9 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_MS_FIRMWARE_ID:
         mbimcli_ms_firmware_id_run (dev, cancellable);
         return;
+    case MBIM_SERVICE_DSS:
+        mbimcli_dss_run (dev, cancellable);
+        return;
     default:
         g_assert_not_reached ();
     }
@@ -341,6 +344,9 @@ parse_actions (void)
     } else if (mbimcli_ms_firmware_id_options_enabled ()) {
         service = MBIM_SERVICE_MS_FIRMWARE_ID;
         actions_enabled++;
+    } else if (mbimcli_dss_options_enabled ()) {
+        service = MBIM_SERVICE_DSS;
+        actions_enabled++;
     }
 
     /* Noop */
@@ -380,6 +386,8 @@ int main (int argc, char **argv)
 	                            mbimcli_phonebook_get_option_group ());
     g_option_context_add_group (context,
                                 mbimcli_ms_firmware_id_get_option_group ());
+    g_option_context_add_group (context,
+	                            mbimcli_dss_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",
