@@ -119,6 +119,12 @@ static const CidConfig cid_ms_firmware_id_config [MBIM_CID_MS_FIRMWARE_ID_LAST] 
     { FALSE, TRUE,  FALSE }, /* MBIM_CID_MS_FIRMWARE_ID_GET */
 };
 
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_MS_HOST_SHUTDOWN_LAST MBIM_CID_MS_HOST_SHUTDOWN_NOTIFY
+static const CidConfig cid_ms_host_shutdown_config [MBIM_CID_MS_HOST_SHUTDOWN_LAST] = {
+    { TRUE,  FALSE, FALSE }, /* MBIM_CID_MS_HOST_SHUTDOWN_NOTIFY */
+};
+
 /**
  * mbim_cid_can_set:
  * @service: a #MbimService.
@@ -136,7 +142,7 @@ mbim_cid_can_set (MbimService service,
     g_return_val_if_fail (cid > 0, FALSE);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_MS_FIRMWARE_ID, FALSE);
+    g_return_val_if_fail (service <= MBIM_SERVICE_MS_HOST_SHUTDOWN, FALSE);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -155,6 +161,8 @@ mbim_cid_can_set (MbimService service,
         return cid_dss_config[cid - 1].set;
     case MBIM_SERVICE_MS_FIRMWARE_ID:
         return cid_ms_firmware_id_config[cid - 1].set;
+    case MBIM_SERVICE_MS_HOST_SHUTDOWN:
+        return cid_ms_host_shutdown_config[cid - 1].set;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -178,7 +186,7 @@ mbim_cid_can_query (MbimService service,
     g_return_val_if_fail (cid > 0, FALSE);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_MS_FIRMWARE_ID, FALSE);
+    g_return_val_if_fail (service <= MBIM_SERVICE_MS_HOST_SHUTDOWN, FALSE);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -197,6 +205,8 @@ mbim_cid_can_query (MbimService service,
         return cid_dss_config[cid - 1].query;
     case MBIM_SERVICE_MS_FIRMWARE_ID:
         return cid_ms_firmware_id_config[cid - 1].query;
+    case MBIM_SERVICE_MS_HOST_SHUTDOWN:
+        return cid_ms_host_shutdown_config[cid - 1].query;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -220,7 +230,7 @@ mbim_cid_can_notify (MbimService service,
     g_return_val_if_fail (cid > 0, FALSE);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_MS_FIRMWARE_ID, FALSE);
+    g_return_val_if_fail (service <= MBIM_SERVICE_MS_HOST_SHUTDOWN, FALSE);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -239,6 +249,9 @@ mbim_cid_can_notify (MbimService service,
         return cid_dss_config[cid - 1].notify;
     case MBIM_SERVICE_MS_FIRMWARE_ID:
         return cid_ms_firmware_id_config[cid - 1].notify;
+    case MBIM_SERVICE_MS_HOST_SHUTDOWN:
+        return cid_ms_host_shutdown_config[cid - 1].notify;
+
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -263,7 +276,7 @@ mbim_cid_get_printable (MbimService service,
     g_return_val_if_fail (cid > 0, NULL);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, NULL);
-    g_return_val_if_fail (service <= MBIM_SERVICE_MS_FIRMWARE_ID, NULL);
+    g_return_val_if_fail (service <= MBIM_SERVICE_MS_HOST_SHUTDOWN, NULL);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -282,6 +295,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_dss_get_string (cid);
     case MBIM_SERVICE_MS_FIRMWARE_ID:
         return mbim_cid_ms_firmware_id_get_string (cid);
+    case MBIM_SERVICE_MS_HOST_SHUTDOWN:
+        return mbim_cid_ms_host_shutdown_get_string (cid);
     default:
         g_assert_not_reached ();
         return FALSE;

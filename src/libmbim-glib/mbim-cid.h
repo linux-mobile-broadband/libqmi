@@ -195,6 +195,18 @@ typedef enum {
     MBIM_CID_MS_FIRMWARE_ID_GET     = 1
 } MbimCidMsFirmwareId;
 
+/**
+ * MbimCidMsHostShutdown:
+ * @MBIM_CID_MS_HOST_SHUTDOWN_UNKNOWN: Unknown command.
+ * @MBIM_CID_MS_HOST_SHUTDOWN_NOTIFY: Notify that the host is shutting down.
+ *
+ * MBIM commands in the %MBIM_SERVICE_MS_HOST_SHUTDOWN service.
+ */
+typedef enum {
+    MBIM_CID_MS_HOST_SHUTDOWN_UNKNOWN = 0,
+    MBIM_CID_MS_HOST_SHUTDOWN_NOTIFY  = 1
+} MbimCidMsHostShutdown;
+
 /* Command helpers */
 
 gboolean     mbim_cid_can_set       (MbimService service,
