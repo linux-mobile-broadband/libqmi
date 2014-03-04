@@ -318,7 +318,7 @@ device_new_ready (GObject      *unused,
 
     /* Open the device */
     mbim_device_open (device,
-                      15,
+                      30,
                       cancellable,
                       (GAsyncReadyCallback) device_open_ready,
                       NULL);
