@@ -258,11 +258,14 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_PHONEBOOK:
         mbimcli_phonebook_run (dev, cancellable);
         return;
+    case MBIM_SERVICE_DSS:
+        mbimcli_dss_run (dev, cancellable);
+        return;
     case MBIM_SERVICE_MS_FIRMWARE_ID:
         mbimcli_ms_firmware_id_run (dev, cancellable);
         return;
-    case MBIM_SERVICE_DSS:
-        mbimcli_dss_run (dev, cancellable);
+    case MBIM_SERVICE_MS_HOST_SHUTDOWN:
+        mbimcli_ms_host_shutdown_run (dev, cancellable);
         return;
     default:
         g_assert_not_reached ();
@@ -320,11 +323,14 @@ parse_actions (void)
     } else if (mbimcli_phonebook_options_enabled ()) {
         service = MBIM_SERVICE_PHONEBOOK;
         actions_enabled++;
+    } else if (mbimcli_dss_options_enabled ()) {
+        service = MBIM_SERVICE_DSS;
+        actions_enabled++;
     } else if (mbimcli_ms_firmware_id_options_enabled ()) {
         service = MBIM_SERVICE_MS_FIRMWARE_ID;
         actions_enabled++;
-    } else if (mbimcli_dss_options_enabled ()) {
-        service = MBIM_SERVICE_DSS;
+    } else if (mbimcli_ms_host_shutdown_options_enabled ()) {
+        service = MBIM_SERVICE_MS_HOST_SHUTDOWN;
         actions_enabled++;
     }
 
@@ -364,9 +370,11 @@ int main (int argc, char **argv)
     g_option_context_add_group (context,
 	                            mbimcli_phonebook_get_option_group ());
     g_option_context_add_group (context,
+                                mbimcli_dss_get_option_group ());
+    g_option_context_add_group (context,
                                 mbimcli_ms_firmware_id_get_option_group ());
     g_option_context_add_group (context,
-                                mbimcli_dss_get_option_group ());
+                                mbimcli_ms_host_shutdown_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",

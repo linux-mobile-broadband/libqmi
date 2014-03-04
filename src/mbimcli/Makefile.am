@@ -14,8 +14,9 @@ mbimcli_SOURCES = \
 	mbimcli-helpers.h mbimcli-helpers.c \
 	mbimcli-basic-connect.c \
 	mbimcli-phonebook.c \
+	mbimcli-dss.c \
 	mbimcli-ms-firmware-id.c \
-	mbimcli-dss.c
+	mbimcli-ms-host-shutdown.c
 
 mbimcli_LDADD = \
 	$(MBIMCLI_LIBS) \
