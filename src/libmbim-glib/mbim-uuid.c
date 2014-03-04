@@ -104,18 +104,23 @@ mbim_uuid_from_printable (const gchar *str,
     g_return_val_if_fail (str != NULL, FALSE);
     g_return_val_if_fail (uuid != NULL, FALSE);
 
-    if ((strlen (str) != 36) ||
-        (sscanf (str,
-                 "%02x%02x%02x%02x-"
-                 "%02x%02x-"
-                 "%02x%02x-"
-                 "%02x%02x-"
-                 "%02x%02x%02x%02x%02x%02x",
-                 &a0, &a1, &a2, &a3,
-                 &b0, &b1,
-                 &c0, &c1,
-                 &d0, &d1,
-                 &e0, &e1, &e2, &e3, &e4, &e5) == 0))
+    if (strlen (str) != 36)
+        return FALSE;
+
+    if ((str[8] != '-' || str[13] != '-' || str[18] != '-' || str[23] != '-'))
+        return FALSE;
+
+    if (sscanf (str,
+                "%02x%02x%02x%02x-"
+                "%02x%02x-"
+                "%02x%02x-"
+                "%02x%02x-"
+                "%02x%02x%02x%02x%02x%02x",
+                &a0, &a1, &a2, &a3,
+                &b0, &b1,
+                &c0, &c1,
+                &d0, &d1,
+                &e0, &e1, &e2, &e3, &e4, &e5) == 0)
         return FALSE;
 
     uuid->a[0] = a0; uuid->a[1] = a1; uuid->a[2] = a2; uuid->a[3] = a3;
