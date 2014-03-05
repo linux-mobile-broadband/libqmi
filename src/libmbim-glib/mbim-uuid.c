@@ -85,9 +85,8 @@ mbim_uuid_get_printable (const MbimUuid *uuid)
  *
  * Fills in @uuid from the printable representation give in @str.
  *
- * Accepts @str written with or without dashes separating items, e.g.:
+ * Only ccepts @str written with dashes separating items, e.g.:
  *  a289cc33-bcbb-8b4f-b6b0-133ec2aae6df
- *  a289cc33bcbb8b4fb6b0133ec2aae6df
  *
  * Returns: %TRUE if @uuid was correctly set, %FALSE otherwise.
  */
@@ -95,11 +94,11 @@ gboolean
 mbim_uuid_from_printable (const gchar *str,
                           MbimUuid    *uuid)
 {
-    guint a0, a1, a2, a3;
-    guint b0, b1;
-    guint c0, c1;
-    guint d0, d1;
-    guint e0, e1, e2, e3, e4, e5;
+    guint8 tmp[16];
+    guint i;
+    guint k;
+    gint d0;
+    gint d1;
 
     g_return_val_if_fail (str != NULL, FALSE);
     g_return_val_if_fail (uuid != NULL, FALSE);
@@ -107,27 +106,30 @@ mbim_uuid_from_printable (const gchar *str,
     if (strlen (str) != 36)
         return FALSE;
 
-    if ((str[8] != '-' || str[13] != '-' || str[18] != '-' || str[23] != '-'))
-        return FALSE;
+    for (i = 0, k = 0, d0 = -1, d1 = -1; str[i]; i++) {
+        /* Accept dashes in expected positions */
+        if (str[i] == '-') {
+            if (i == 8 || i == 13 || i == 18 || i == 23)
+                continue;
+            return FALSE;
+        }
+        /* Read first digit in the hex pair */
+        else if (d0 == -1) {
+            d0 = g_ascii_xdigit_value (str[i]);
+            if (d0 == -1)
+                return FALSE;
+        }
+        /* Read second digit in the hex pair */
+        else {
+            d1 = g_ascii_xdigit_value (str[i]);
+            if (d1 == -1)
+                return FALSE;
+            tmp[k++] = (d0 << 4) | d1;
+            d0 = d1 = -1;
+        }
+    }
 
-    if (sscanf (str,
-                "%02x%02x%02x%02x-"
-                "%02x%02x-"
-                "%02x%02x-"
-                "%02x%02x-"
-                "%02x%02x%02x%02x%02x%02x",
-                &a0, &a1, &a2, &a3,
-                &b0, &b1,
-                &c0, &c1,
-                &d0, &d1,
-                &e0, &e1, &e2, &e3, &e4, &e5) != 16)
-        return FALSE;
-
-    uuid->a[0] = a0; uuid->a[1] = a1; uuid->a[2] = a2; uuid->a[3] = a3;
-    uuid->b[0] = b0; uuid->b[1] = b1;
-    uuid->c[0] = c0; uuid->c[1] = c1;
-    uuid->d[0] = d0; uuid->d[1] = d1;
-    uuid->e[0] = e0; uuid->e[1] = e1; uuid->e[2] = e2; uuid->e[3] = e3; uuid->e[4] = e4; uuid->e[5] = e5;
+    memcpy (uuid, tmp, sizeof (tmp));
 
     return TRUE;
 }
