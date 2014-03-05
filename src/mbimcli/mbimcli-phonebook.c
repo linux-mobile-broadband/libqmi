@@ -32,6 +32,7 @@
 #include <libmbim-glib.h>
 
 #include "mbimcli.h"
+#include "mbimcli-helpers.h"
 
 /* Context */
 typedef struct {
@@ -169,17 +170,11 @@ phonebook_write_input_parse (const gchar  *str,
 
     /* Check whether we have the optional Index item */
     if (split[2]) {
-        gulong num;
-
-        errno = 0;
-        num = strtoul (split[2], NULL, 10);
-        if (errno || num > G_MAXUINT) {
+        if (!mbimcli_read_uint_from_string (split[2], idx)) {
             g_printerr ("error: couldn't parse input string, invalid index '%s'\n", split[2]);
             g_strfreev (split);
             return FALSE;
         }
-
-        *idx = (guint)num;
     } else {
         /* Default to index 0, which is an invalid one */
         *idx = 0;

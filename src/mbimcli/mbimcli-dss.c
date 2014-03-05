@@ -32,6 +32,7 @@
 #include <libmbim-glib.h>
 
 #include "mbimcli.h"
+#include "mbimcli-helpers.h"
 
 /* Context */
 typedef struct {
@@ -161,21 +162,6 @@ set_dss_ready (MbimDevice *device,
 }
 
 static gboolean
-parse_uint (const gchar *str,
-            guint *u)
-{
-    gulong num;
-
-    errno = 0;
-    num = strtoul (str, NULL, 10);
-    if (errno || num > G_MAXUINT)
-        return FALSE;
-
-    *u = (guint)num;
-    return TRUE;
-}
-
-static gboolean
 common_parse (const gchar *str,
               MbimUuid    *dsid,
               guint32     *ssid)
@@ -197,7 +183,7 @@ common_parse (const gchar *str,
         g_printerr ("error: couldn't parse input string, missing arguments\n");
     else if (!mbim_uuid_from_printable (split[0], dsid))
         g_printerr ("error: couldn't parse UUID, should be xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\n");
-    else if (!parse_uint (split[1], ssid))
+    else if (!mbimcli_read_uint_from_string (split[1], ssid))
         g_printerr ("error: couldn't parse Session ID, should be a number\n");
     else
         status = TRUE;

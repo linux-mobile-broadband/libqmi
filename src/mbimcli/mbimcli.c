@@ -33,6 +33,7 @@
 #include <libmbim-glib.h>
 
 #include "mbimcli.h"
+#include "mbimcli-helpers.h"
 
 #define PROGRAM_NAME    "mbimcli"
 #define PROGRAM_VERSION PACKAGE_VERSION
@@ -268,27 +269,6 @@ device_open_ready (MbimDevice   *dev,
     }
 }
 
-static guint
-read_transaction_id (const gchar *str)
-{
-    gulong num;
-
-    if (!str || !str[0])
-        return 0;
-
-    for (num = 0; str[num]; num++) {
-        if (!g_ascii_isdigit (str[num]))
-            return 0;
-    }
-
-    errno = 0;
-    num = strtoul (str, NULL, 10);
-    if (!errno && num <= G_MAXUINT) {
-        return (guint)num;
-    }
-    return 0;
-}
-
 static void
 device_new_ready (GObject      *unused,
                   GAsyncResult *res)
@@ -306,8 +286,7 @@ device_new_ready (GObject      *unused,
     if (no_open_str) {
         guint transaction_id;
 
-        transaction_id = read_transaction_id (no_open_str);
-        if (!transaction_id) {
+        if (!mbimcli_read_uint_from_string (no_open_str, &transaction_id)) {
             g_printerr ("error: invalid transaction ID specified: %s\n",
                         no_open_str);
             exit (EXIT_FAILURE);

@@ -10,8 +10,8 @@ mbimcli_CPPFLAGS = \
 	-I$(top_builddir)/src/libmbim-glib/generated
 
 mbimcli_SOURCES = \
-	mbimcli.h \
-	mbimcli.c \
+	mbimcli.h mbimcli.c \
+	mbimcli-helpers.h mbimcli-helpers.c \
 	mbimcli-basic-connect.c \
 	mbimcli-phonebook.c \
 	mbimcli-ms-firmware-id.c \
