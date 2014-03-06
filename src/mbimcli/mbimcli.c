@@ -366,9 +366,9 @@ int main (int argc, char **argv)
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Control MBIM devices");
     g_option_context_add_group (context,
-	                            mbimcli_basic_connect_get_option_group ());
+                                mbimcli_basic_connect_get_option_group ());
     g_option_context_add_group (context,
-	                            mbimcli_phonebook_get_option_group ());
+                                mbimcli_phonebook_get_option_group ());
     g_option_context_add_group (context,
                                 mbimcli_dss_get_option_group ());
     g_option_context_add_group (context,
@@ -381,7 +381,7 @@ int main (int argc, char **argv)
                     error->message);
         exit (EXIT_FAILURE);
     }
-	g_option_context_free (context);
+    g_option_context_free (context);
 
     if (version_flag)
         print_version_and_exit ();

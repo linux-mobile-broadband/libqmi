@@ -1274,10 +1274,10 @@ mbim_message_get_printable (const MbimMessage *self,
      MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATE_STATUS)
 
 #define MBIM_MESSAGE_FRAGMENT_GET_TOTAL(self)                           \
-	GUINT32_FROM_LE (((struct full_message *)(self->data))->message.fragment.fragment_header.total)
+    GUINT32_FROM_LE (((struct full_message *)(self->data))->message.fragment.fragment_header.total)
 
 #define MBIM_MESSAGE_FRAGMENT_GET_CURRENT(self)                         \
-	GUINT32_FROM_LE (((struct full_message *)(self->data))->message.fragment.fragment_header.current)
+    GUINT32_FROM_LE (((struct full_message *)(self->data))->message.fragment.fragment_header.current)
 
 
 gboolean

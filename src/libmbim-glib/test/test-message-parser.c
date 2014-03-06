@@ -153,7 +153,7 @@ test_message_parser_basic_connect_visible_providers (void)
     g_assert_cmpuint (providers[0]->rssi, ==, 11);
     g_assert_cmpuint (providers[0]->error_rate, ==, 0);
 
-	/* Provider [1]:
+    /* Provider [1]:
      * Provider ID: '21403'
      * Provider Name: 'Orange'
      * State: 'home, visible, registered'

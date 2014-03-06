@@ -42,7 +42,7 @@ G_BEGIN_DECLS
 /* Defined in the same way as GByteArray */
 struct _MbimMessage {
   guint8 *data;
-  guint	  len;
+  guint   len;
 };
 
 /*****************************************************************************/

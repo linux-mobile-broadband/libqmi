@@ -69,7 +69,7 @@ mbimcli_dss_get_option_group (void)
                                 NULL);
     g_option_group_add_entries (group, entries);
 
-	return group;
+    return group;
 }
 
 gboolean

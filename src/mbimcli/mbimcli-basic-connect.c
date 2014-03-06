@@ -168,16 +168,16 @@ static GOptionEntry entries[] = {
 GOptionGroup *
 mbimcli_basic_connect_get_option_group (void)
 {
-	GOptionGroup *group;
+    GOptionGroup *group;
 
-	group = g_option_group_new ("basic-connect",
-	                            "Basic Connect options",
-	                            "Show Basic Connect Service options",
-	                            NULL,
-	                            NULL);
-	g_option_group_add_entries (group, entries);
+    group = g_option_group_new ("basic-connect",
+                                "Basic Connect options",
+                                "Show Basic Connect Service options",
+                                NULL,
+                                NULL);
+    g_option_group_add_entries (group, entries);
 
-	return group;
+    return group;
 }
 
 gboolean
