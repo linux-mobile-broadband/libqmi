@@ -21,7 +21,8 @@ libmbim_glib_core_la_SOURCES = \
 	mbim-uuid.h mbim-uuid.c \
 	mbim-cid.h mbim-cid.c \
 	mbim-message-private.h mbim-message.h mbim-message.c \
-	mbim-device.h mbim-device.c
+	mbim-device.h mbim-device.c \
+	mbim-compat.h mbim-compat.c
 
 # Final installable library
 lib_LTLIBRARIES = libmbim-glib.la
@@ -48,7 +49,8 @@ include_HEADERS = \
 	mbim-uuid.h \
 	mbim-cid.h \
 	mbim-message.h \
-	mbim-device.h
+	mbim-device.h \
+	mbim-compat.h
 
 EXTRA_DIST = \
 	mbim-version.h.in

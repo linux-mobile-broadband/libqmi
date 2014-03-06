@@ -488,3 +488,11 @@ mbim_status_error_get_type
 mbim_utils_get_traces_enabled
 mbim_utils_set_traces_enabled
 </SECTION>
+
+<SECTION>
+<FILE>mbim-compat</FILE>
+MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST
+MBIM_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH
+mbim_message_device_service_subscriber_list_response_parse
+mbim_message_device_service_subscriber_list_set_new
+</SECTION>
