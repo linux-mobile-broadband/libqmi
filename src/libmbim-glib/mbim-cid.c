@@ -27,6 +27,7 @@
 /**
  * SECTION: mbim-cid
  * @title: Command IDs
+ * @short_description: Generic command handling routines.
  *
  * This section defines the interface of the known command IDs.
  */

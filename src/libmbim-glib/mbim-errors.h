@@ -30,6 +30,7 @@
 /**
  * SECTION: mbim-errors
  * @title: Errors
+ * @short_description: Common error types.
  *
  * This section defines common error types used in the interface.
  */

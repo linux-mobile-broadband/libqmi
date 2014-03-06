@@ -31,6 +31,7 @@
 /**
  * SECTION: mbim-uuid
  * @title: UUIDs
+ * @short_description: Generic UUID handling routines.
  *
  * This section defines the data type for unique identifiers.
  */

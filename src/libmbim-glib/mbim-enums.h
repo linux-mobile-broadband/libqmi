@@ -33,6 +33,7 @@ G_BEGIN_DECLS
 /**
  * SECTION: mbim-enums
  * @title: Enumerations and Flags
+ * @short_description: Common enumeration and flag types.
  *
  * This section defines common enum and flag types used in the interface.
  */
