@@ -1,4 +1,24 @@
 
+Overview of changes in libmbim 1.8
+----------------------------------------
+
+ * Added support for additional MBIM messages:
+    MBIM_CID_MS_FIRMWARE_ID_GET
+    MBIM_CID_MS_HOST_SHUTDOWN_NOTIFY
+
+ * Updated mbimcli with new commands:
+    --set-radio-state
+    --ms-query-firmware-id
+    --ms-notify-host-shutdown
+    --dss-connect
+    --dss-disconnect
+
+ * Several enums and functions were renamed, and marked as deprecated. A small
+   layer is given to provide backwards compatibility.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libmbim 1.6
 ----------------------------------------
 
