@@ -368,34 +368,76 @@ typedef enum {
  * MbimNwError:
  * @MBIM_NW_ERROR_UNKNOWN: Unknown or unset error.
  * @MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR: IMSI unknown in the HLR.
+ * @MBIM_NW_ERROR_ILLEGAL_MS: Illegal MS.
  * @MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR: IMSI unknown in the VLR.
+ * @MBIM_NW_ERROR_IMEI_NOT_ACCEPTED: IMEI not accepted.
  * @MBIM_NW_ERROR_ILLEGAL_ME: Illegal ME.
  * @MBIM_NW_ERROR_GPRS_NOT_ALLOWED: GPRS not allowed.
  * @MBIM_NW_ERROR_GPRS_AND_NON_GPRS_NOT_ALLOWED: GPRS and non-GPRS not allowed.
+ * @MBIM_NW_ERROR_MS_IDENTITY_NOT_DERIVED_BY_NETWORK: MS identity cannot be derived by the network.
+ * @MBIM_NW_ERROR_IMPLICITLY_DETACHED: Implicitly detached.
  * @MBIM_NW_ERROR_PLMN_NOT_ALLOWED: PLMN not allowed.
  * @MBIM_NW_ERROR_LOCATION_AREA_NOT_ALLOWED: Location area not allowed.
  * @MBIM_NW_ERROR_ROAMING_NOT_ALLOWED_IN_LOCATION_AREA: Roaming not allowed in the location area.
  * @MBIM_NW_ERROR_GPRS_NOT_ALLOWED_IN_PLMN: GPRS not allowed in PLMN.
  * @MBIM_NW_ERROR_NO_CELLS_IN_LOCATION_AREA: No cells in location area.
+ * @MBIM_NW_ERROR_MSC_TEMPORARILY_NOT_REACHABLE: MSC temporarily not reachable.
  * @MBIM_NW_ERROR_NETWORK_FAILURE: Network failure.
+ * @MBIM_NW_ERROR_MAC_FAILURE: MAC failure.
+ * @MBIM_NW_ERROR_SYNCH_FAILURE: Synch failure.
  * @MBIM_NW_ERROR_CONGESTION: Congestion.
+ * @MBIM_NW_ERROR_GSM_AUTHENTICATION_UNACCEPTABLE: GSM authentication unacceptable.
+ * @MBIM_NW_ERROR_NOT_AUTHORIZED_FOR_CSG: Not authorized for this CSG.
+ * @MBIM_NW_ERROR_SERVICE_OPTION_NOT_SUPPORTED: Service option not supported.
+ * @MBIM_NW_ERROR_REQUESTED_SERVICE_OPTION_NOT_SUBSCRIBED: Requested service option not subscribed.
+ * @MBIM_NW_ERROR_SERVICE_OPTION_TEMPORARILY_OUT_OF_ORDER: Service option temporarily out of order.
+ * @MBIM_NW_ERROR_NO_PDP_CONTEXT_ACTIVATED: No PDP context activated.
+ * @MBIM_NW_ERROR_SEMANTICALLY_INCORRECT_MESSAGE: Semantically incorrect message.
+ * @MBIM_NW_ERROR_INVALID_MANDATORY_INFORMATION: Invalid mandatory information.
+ * @MBIM_NW_ERROR_MESSAGE_TYPE_NON_EXISTENT_OR_NOT_IMPLEMENTED: Message type non-existent or not implemented.
+ * @MBIM_NW_ERROR_MESSAGE_TYPE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE: Message type not compatible with protocol state.
+ * @MBIM_NW_ERROR_INFORMATION_ELEMENT_NON_EXISTENT_OR_NOT_IMPLEMENTED: Information element non-existent or not implemented.
+ * @MBIM_NW_ERROR_CONDITIONAL_IE_ERROR: Conditional IE error.
+ * @MBIM_NW_ERROR_MESSAGE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE: Message not compatible with protocol state.
+ * @MBIM_NW_ERROR_PROTOCOL_ERROR_UNSPECIFIED: Protocol error, unspecified.
  *
  *  Network errors.
  */
 typedef enum {
-    MBIM_NW_ERROR_UNKNOWN                              = 0,
-    MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR                  = 2,
-    MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR                  = 4,
-    MBIM_NW_ERROR_ILLEGAL_ME                           = 6,
-    MBIM_NW_ERROR_GPRS_NOT_ALLOWED                     = 7,
-    MBIM_NW_ERROR_GPRS_AND_NON_GPRS_NOT_ALLOWED        = 8,
-    MBIM_NW_ERROR_PLMN_NOT_ALLOWED                     = 11,
-    MBIM_NW_ERROR_LOCATION_AREA_NOT_ALLOWED            = 12,
-    MBIM_NW_ERROR_ROAMING_NOT_ALLOWED_IN_LOCATION_AREA = 13,
-    MBIM_NW_ERROR_GPRS_NOT_ALLOWED_IN_PLMN             = 14,
-    MBIM_NW_ERROR_NO_CELLS_IN_LOCATION_AREA            = 15,
-    MBIM_NW_ERROR_NETWORK_FAILURE                      = 17,
-    MBIM_NW_ERROR_CONGESTION                           = 22
+    MBIM_NW_ERROR_UNKNOWN                                             = 0,
+    MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR                                 = 2,
+    MBIM_NW_ERROR_ILLEGAL_MS                                          = 3,
+    MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR                                 = 4,
+    MBIM_NW_ERROR_IMEI_NOT_ACCEPTED                                   = 5,
+    MBIM_NW_ERROR_ILLEGAL_ME                                          = 6,
+    MBIM_NW_ERROR_GPRS_NOT_ALLOWED                                    = 7,
+    MBIM_NW_ERROR_GPRS_AND_NON_GPRS_NOT_ALLOWED                       = 8,
+    MBIM_NW_ERROR_MS_IDENTITY_NOT_DERIVED_BY_NETWORK                  = 9,
+    MBIM_NW_ERROR_IMPLICITLY_DETACHED                                 = 10,
+    MBIM_NW_ERROR_PLMN_NOT_ALLOWED                                    = 11,
+    MBIM_NW_ERROR_LOCATION_AREA_NOT_ALLOWED                           = 12,
+    MBIM_NW_ERROR_ROAMING_NOT_ALLOWED_IN_LOCATION_AREA                = 13,
+    MBIM_NW_ERROR_GPRS_NOT_ALLOWED_IN_PLMN                            = 14,
+    MBIM_NW_ERROR_NO_CELLS_IN_LOCATION_AREA                           = 15,
+    MBIM_NW_ERROR_MSC_TEMPORARILY_NOT_REACHABLE                       = 16,
+    MBIM_NW_ERROR_NETWORK_FAILURE                                     = 17,
+    MBIM_NW_ERROR_MAC_FAILURE                                         = 20,
+    MBIM_NW_ERROR_SYNCH_FAILURE                                       = 21,
+    MBIM_NW_ERROR_CONGESTION                                          = 22,
+    MBIM_NW_ERROR_GSM_AUTHENTICATION_UNACCEPTABLE                     = 23,
+    MBIM_NW_ERROR_NOT_AUTHORIZED_FOR_CSG                              = 25,
+    MBIM_NW_ERROR_SERVICE_OPTION_NOT_SUPPORTED                        = 32,
+    MBIM_NW_ERROR_REQUESTED_SERVICE_OPTION_NOT_SUBSCRIBED             = 33,
+    MBIM_NW_ERROR_SERVICE_OPTION_TEMPORARILY_OUT_OF_ORDER             = 34,
+    MBIM_NW_ERROR_NO_PDP_CONTEXT_ACTIVATED                            = 40,
+    MBIM_NW_ERROR_SEMANTICALLY_INCORRECT_MESSAGE                      = 95,
+    MBIM_NW_ERROR_INVALID_MANDATORY_INFORMATION                       = 96,
+    MBIM_NW_ERROR_MESSAGE_TYPE_NON_EXISTENT_OR_NOT_IMPLEMENTED        = 97,
+    MBIM_NW_ERROR_MESSAGE_TYPE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE     = 98,
+    MBIM_NW_ERROR_INFORMATION_ELEMENT_NON_EXISTENT_OR_NOT_IMPLEMENTED = 99,
+    MBIM_NW_ERROR_CONDITIONAL_IE_ERROR                                = 100,
+    MBIM_NW_ERROR_MESSAGE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE          = 101,
+    MBIM_NW_ERROR_PROTOCOL_ERROR_UNSPECIFIED                          = 111
 } MbimNwError;
 
 /**
