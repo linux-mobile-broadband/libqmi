@@ -176,7 +176,7 @@ typedef enum {
  */
 #define MBIM_UUID_MS_HOST_SHUTDOWN mbim_uuid_from_service (MBIM_SERVICE_MS_HOST_SHUTDOWN)
 
-const gchar *mbim_service_lookup_name (MbimService val);
+const gchar *mbim_service_lookup_name (guint service);
 
 guint mbim_register_custom_service (const MbimUuid *uuid,
                                     const gchar *nickname);
