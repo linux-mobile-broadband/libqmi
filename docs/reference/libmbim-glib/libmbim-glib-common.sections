@@ -24,6 +24,10 @@ MBIM_UUID_MS_FIRMWARE_ID
 MBIM_UUID_MS_HOST_SHUTDOWN
 <SUBSECTION Methods>
 mbim_service_get_string
+mbim_service_lookup_name
+mbim_register_custom_service
+mbim_unregister_custom_service
+mbim_service_id_is_custom
 mbim_context_type_get_string
 mbim_uuid_cmp
 mbim_uuid_from_printable

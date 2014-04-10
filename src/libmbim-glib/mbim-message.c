@@ -1198,7 +1198,7 @@ mbim_message_get_printable (const MbimMessage *self,
                                     "%s  cid     = '%s' (0x%08x)\n"
                                     "%s  type    = '%s' (0x%08x)\n",
                                     line_prefix,
-                                    line_prefix, mbim_service_get_string (mbim_message_command_get_service (self)), uuid_printable,
+                                    line_prefix, mbim_service_lookup_name (mbim_message_command_get_service (self)), uuid_printable,
                                     line_prefix, cid_printable, mbim_message_command_get_cid (self),
                                     line_prefix, mbim_message_command_type_get_string (mbim_message_command_get_command_type (self)), mbim_message_command_get_command_type (self));
             g_free (uuid_printable);
@@ -1229,7 +1229,7 @@ mbim_message_get_printable (const MbimMessage *self,
                                     "%s  cid          = '%s' (0x%08x)\n",
                                     line_prefix,
                                     line_prefix, mbim_status_error_get_string (status), status,
-                                    line_prefix, mbim_service_get_string (mbim_message_command_done_get_service (self)), uuid_printable,
+                                    line_prefix, mbim_service_lookup_name (mbim_message_command_done_get_service (self)), uuid_printable,
                                     line_prefix, cid_printable, mbim_message_command_done_get_cid (self));
             g_free (uuid_printable);
         }
@@ -1255,7 +1255,7 @@ mbim_message_get_printable (const MbimMessage *self,
                                     "%s  service = '%s' (%s)\n"
                                     "%s  cid     = '%s' (0x%08x)\n",
                                     line_prefix,
-                                    line_prefix, mbim_service_get_string (mbim_message_indicate_status_get_service (self)), uuid_printable,
+                                    line_prefix, mbim_service_lookup_name (mbim_message_indicate_status_get_service (self)), uuid_printable,
                                     line_prefix, cid_printable, mbim_message_indicate_status_get_cid (self));
             g_free (uuid_printable);
         }
@@ -1738,7 +1738,7 @@ mbim_message_command_new (guint32                transaction_id,
 
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_MS_HOST_SHUTDOWN, FALSE);
+    g_return_val_if_fail (service <= MBIM_SERVICE_MS_HOST_SHUTDOWN || mbim_service_id_is_custom (service), FALSE);
     service_id = mbim_uuid_from_service (service);
 
     self = _mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND,

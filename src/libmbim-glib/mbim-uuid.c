@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "mbim-uuid.h"
+#include "generated/mbim-enum-types.h"
 
 /**
  * SECTION: mbim-uuid
@@ -217,6 +218,108 @@ static const MbimUuid uuid_ms_host_shutdown = {
     .e = { 0x27, 0xd7, 0xfb, 0x80, 0x95, 0x9c }
 };
 
+static GList *mbim_custom_service_list = NULL;
+
+typedef struct {
+    guint service_id;
+    MbimUuid uuid;
+    gchar *nickname;
+} MbimCustomService;
+
+/**
+ * mbim_register_custom_service:
+ * @uuid: MbimUuid structure corresponding to service
+ * @nickname: a printable name for service
+ *
+ * Register a custom service
+ *
+ * Return: TRUE if service has been registered, FALSE if not
+ */
+guint
+mbim_register_custom_service (const MbimUuid *uuid,
+                              const gchar *nickname)
+{
+    MbimCustomService *s;
+    GList *l;
+    guint service_id = 100;
+
+    for (l = mbim_custom_service_list; l != NULL; l = l->next) {
+        s = (MbimCustomService *)l->data;
+        if (mbim_uuid_cmp (&s->uuid, uuid))
+            return s->service_id;
+        else
+            service_id = MAX (service_id, s->service_id);
+    }
+
+    /* create a new custom service */
+    s = g_slice_new (MbimCustomService);
+    s->service_id = service_id + 1;
+    memcpy (&s->uuid, uuid, sizeof (MbimUuid));
+    s->nickname = g_strdup (nickname);
+
+    mbim_custom_service_list = g_list_append (mbim_custom_service_list, s);
+    return s->service_id;
+}
+
+gboolean
+mbim_unregister_custom_service (const guint id)
+{
+    MbimCustomService *s;
+    GList *l;
+
+    for (l = mbim_custom_service_list; l != NULL; l = l->next) {
+        s = (MbimCustomService *)l->data;
+        if (s->service_id == id) {
+            g_free (s->nickname);
+            g_slice_free (MbimCustomService, s);
+            mbim_custom_service_list = \
+                g_list_delete_link (mbim_custom_service_list, l);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+gboolean
+mbim_service_id_is_custom (const guint id)
+{
+    GList *l;
+
+    if (id <= MBIM_SERVICE_MS_HOST_SHUTDOWN)
+        return FALSE;
+
+    for (l = mbim_custom_service_list; l != NULL; l = l->next) {
+        if (((MbimCustomService *)l->data)->service_id == id)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * mbim_service_lookup_name:
+ * @service: a MbimService or custom service.
+ *
+ * Gets the nickname string for the @service.
+ *
+ * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ */
+const gchar *
+mbim_service_lookup_name (guint service)
+{
+    GList *l;
+
+    if (service <= MBIM_SERVICE_MS_HOST_SHUTDOWN)
+        return mbim_service_get_string (service);
+
+    for (l = mbim_custom_service_list; l != NULL; l = l->next) {
+        if (service == ((MbimCustomService *)l->data)->service_id)
+            return ((MbimCustomService *)l->data)->nickname;
+    }
+    return NULL;
+}
+
 /**
  * mbim_uuid_from_service:
  * @service: a #MbimService.
@@ -228,7 +331,11 @@ static const MbimUuid uuid_ms_host_shutdown = {
 const MbimUuid *
 mbim_uuid_from_service (MbimService service)
 {
-    g_return_val_if_fail (service >= MBIM_SERVICE_INVALID && service <= MBIM_SERVICE_MS_HOST_SHUTDOWN,
+    GList *l;
+
+    g_return_val_if_fail (service >= MBIM_SERVICE_INVALID &&
+                          (service <= MBIM_SERVICE_MS_HOST_SHUTDOWN ||
+                           mbim_service_id_is_custom (service)),
                           &uuid_invalid);
 
     switch (service) {
@@ -253,6 +360,10 @@ mbim_uuid_from_service (MbimService service)
     case MBIM_SERVICE_MS_HOST_SHUTDOWN:
         return &uuid_ms_host_shutdown;
     default:
+        for (l = mbim_custom_service_list; l != NULL; l = l->next) {
+            if (service == ((MbimCustomService *)l->data)->service_id)
+                return &((MbimCustomService *)l->data)->uuid;
+        }
         g_assert_not_reached ();
     }
 }
@@ -268,6 +379,8 @@ mbim_uuid_from_service (MbimService service)
 MbimService
 mbim_uuid_to_service (const MbimUuid *uuid)
 {
+    GList *l;
+
     if (mbim_uuid_cmp (uuid, &uuid_basic_connect))
         return MBIM_SERVICE_BASIC_CONNECT;
 
@@ -294,6 +407,11 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_ms_host_shutdown))
         return MBIM_SERVICE_MS_HOST_SHUTDOWN;
+
+    for (l = mbim_custom_service_list; l != NULL; l = l->next) {
+        if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))
+            return ((MbimCustomService *)l->data)->service_id;
+    }
 
     return MBIM_SERVICE_INVALID;
 }
@@ -371,6 +489,7 @@ static const MbimUuid uuid_context_type_local = {
     .d = { 0xBB, 0x40 },
     .e = { 0x03, 0x3C, 0x39, 0xF6, 0x0D, 0xB9 }
 };
+
 
 /**
  * mbim_uuid_from_context_type:

@@ -176,6 +176,15 @@ typedef enum {
  */
 #define MBIM_UUID_MS_HOST_SHUTDOWN mbim_uuid_from_service (MBIM_SERVICE_MS_HOST_SHUTDOWN)
 
+const gchar *mbim_service_lookup_name (MbimService val);
+
+guint mbim_register_custom_service (const MbimUuid *uuid,
+                                    const gchar *nickname);
+
+gboolean mbim_unregister_custom_service (const guint id);
+
+gboolean mbim_service_id_is_custom (const guint id);
+
 /* To/From service */
 const MbimUuid *mbim_uuid_from_service  (MbimService     service);
 MbimService     mbim_uuid_to_service    (const MbimUuid *uuid);
@@ -209,6 +218,8 @@ typedef enum {
     MBIM_CONTEXT_TYPE_MMS         = 8,
     MBIM_CONTEXT_TYPE_LOCAL       = 9,
 } MbimContextType;
+
+const gchar *mbim_context_type_get_string (MbimContextType val);
 
 /* To/From context type */
 const MbimUuid  *mbim_uuid_from_context_type (MbimContextType  context_type);

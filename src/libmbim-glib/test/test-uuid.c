@@ -158,6 +158,35 @@ test_uuid_invalid_no_hex (void)
 
 /*****************************************************************************/
 
+static void
+test_uuid_custom (void)
+{
+    static const gchar *nick = "register_custom";
+    static const MbimUuid uuid_custom = {
+        .a = { 0x52, 0x65, 0x67, 0x69 },
+        .b = { 0x73, 0x74 },
+        .c = { 0x65, 0x72 },
+        .d = { 0x20, 0x63 },
+        .e = { 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x21 }
+    };
+    guint service;
+
+    /* SERVICE_AUTH is not a custom service */
+    g_assert (!mbim_service_id_is_custom (MBIM_SERVICE_AUTH));
+
+    service = mbim_register_custom_service (&uuid_custom, nick);
+    g_assert (mbim_service_id_is_custom (service));
+    g_assert (g_strcmp0 (mbim_service_lookup_name (service), nick) == 0);
+    g_assert (mbim_uuid_cmp (mbim_uuid_from_service (service), &uuid_custom));
+    g_assert (mbim_uuid_to_service (&uuid_custom) == service);
+    g_assert (mbim_unregister_custom_service (service));
+
+    /* once removed service is not custom */
+    g_assert (!mbim_service_id_is_custom (service));
+}
+
+/*****************************************************************************/
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -180,6 +209,8 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/uuid/invalid/long",   test_uuid_invalid_long);
     g_test_add_func ("/libmbim-glib/uuid/invalid/dashes", test_uuid_invalid_dashes);
     g_test_add_func ("/libmbim-glib/uuid/invalid/no-hex", test_uuid_invalid_no_hex);
+
+    g_test_add_func ("/libmbim-glib/uuid/custom", test_uuid_custom);
 
     return g_test_run ();
 }
