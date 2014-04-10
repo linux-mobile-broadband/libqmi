@@ -233,7 +233,7 @@ typedef struct {
  *
  * Register a custom service
  *
- * Return: TRUE if service has been registered, FALSE if not
+ * Returns: TRUE if service has been registered, FALSE otherwise.
  */
 guint
 mbim_register_custom_service (const MbimUuid *uuid,
@@ -261,6 +261,14 @@ mbim_register_custom_service (const MbimUuid *uuid,
     return s->service_id;
 }
 
+/**
+ * mbim_unregister_custom_service:
+ * @id: ID of the service to unregister.MbimUuid structure corresponding to service
+ *
+ * Unregister a custom service.
+ *
+ * Returns: TRUE if service has been unregistered, FALSE otherwise.
+ */
 gboolean
 mbim_unregister_custom_service (const guint id)
 {
@@ -281,6 +289,14 @@ mbim_unregister_custom_service (const guint id)
     return FALSE;
 }
 
+/**
+ * mbim_service_id_is_custom:
+ * @id: ID of the service
+ *
+ * Checks whether @id is a custom or standard service.
+ *
+ * Returns: TRUE if service is custom, FALSE otherwise.
+ */
 gboolean
 mbim_service_id_is_custom (const guint id)
 {
@@ -302,6 +318,9 @@ mbim_service_id_is_custom (const guint id)
  * @service: a MbimService or custom service.
  *
  * Gets the nickname string for the @service.
+ *
+ * As opposed to mbim_service_get_string(), this methods takes into account
+ * custom services that may have been registered by the user.
  *
  * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
  */
