@@ -3,6 +3,11 @@
 *.lo
 *.la
 *.bz2
+*.swp
+tags
+.*DS_Store
+.deps
+.libs
 
 ChangeLog
 INSTALL
@@ -79,3 +84,6 @@ src/mbimcli/.libs
 src/mbimcli/mbimcli
 
 utils/mbim-network
+
+src/mbim-proxy/mbim-proxy
+.__autoconf_trace_data

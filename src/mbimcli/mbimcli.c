@@ -302,11 +302,12 @@ device_new_ready (GObject      *unused,
     }
 
     /* Open the device */
-    mbim_device_open (device,
-                      30,
-                      cancellable,
-                      (GAsyncReadyCallback) device_open_ready,
-                      NULL);
+    mbim_device_open_full (device,
+                           MBIM_DEVICE_OPEN_FLAGS_PROXY,
+                           30,
+                           cancellable,
+                           (GAsyncReadyCallback) device_open_ready,
+                           NULL);
 }
 
 /*****************************************************************************/

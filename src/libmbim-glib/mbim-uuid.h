@@ -70,6 +70,7 @@ gboolean  mbim_uuid_from_printable (const gchar *str,
  * @MBIM_SERVICE_DSS: Device Service Stream service.
  * @MBIM_SERVICE_MS_FIRMWARE_ID: Microsoft Firmware ID service.
  * @MBIM_SERVICE_MS_HOST_SHUTDOWN: Microsoft Host Shutdown service.
+ * @MBIM_SERVICE_PROXY_CONTROL: Proxy Control service.
  *
  * Enumeration of the generic MBIM services.
  */
@@ -84,6 +85,7 @@ typedef enum {
     MBIM_SERVICE_DSS              = 7,
     MBIM_SERVICE_MS_FIRMWARE_ID   = 8,
     MBIM_SERVICE_MS_HOST_SHUTDOWN = 9,
+    MBIM_SERVICE_PROXY_CONTROL    = 10,
 } MbimService;
 
 /**
@@ -175,6 +177,15 @@ typedef enum {
  * Returns: (transfer none): a #MbimUuid.
  */
 #define MBIM_UUID_MS_HOST_SHUTDOWN mbim_uuid_from_service (MBIM_SERVICE_MS_HOST_SHUTDOWN)
+
+/**
+ * MBIM_UUID_PROXY_CONTROL:
+ *
+ * Get the UUID of the %MBIM_SERVICE_PROXY_CONTROL service.
+ *
+ * Returns: (transfer none): a #MbimUuid.
+ */
+#define MBIM_UUID_PROXY_CONTROL mbim_uuid_from_service (MBIM_SERVICE_PROXY_CONTROL)
 
 const gchar *mbim_service_lookup_name (guint service);
 

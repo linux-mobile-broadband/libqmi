@@ -52,6 +52,8 @@ typedef struct _MbimDevicePrivate MbimDevicePrivate;
 #define MBIM_DEVICE_SIGNAL_INDICATE_STATUS "device-indicate-status"
 #define MBIM_DEVICE_SIGNAL_ERROR           "device-error"
 
+#define MAX_SPAWN_RETRIES 10
+
 /**
  * MbimDevice:
  *
@@ -83,6 +85,24 @@ GFile       *mbim_device_peek_file        (MbimDevice *self);
 const gchar *mbim_device_get_path         (MbimDevice *self);
 const gchar *mbim_device_get_path_display (MbimDevice *self);
 gboolean     mbim_device_is_open          (MbimDevice *self);
+
+/**
+ * MbimDeviceOpenFlags:
+ * @MBIM_DEVICE_OPEN_FLAGS_PROXY: Try to open the port through the 'mbim-proxy'.
+ *
+ * Flags to specify which actions to be performed when the device is open.
+ */
+typedef enum {
+    MBIM_DEVICE_OPEN_FLAGS_NONE  = 0,
+    MBIM_DEVICE_OPEN_FLAGS_PROXY = 1 << 0
+} MbimDeviceOpenFlags;
+
+void     mbim_device_open_full (MbimDevice           *self,
+                                MbimDeviceOpenFlags   flags,
+                                guint                 timeout,
+                                GCancellable         *cancellable,
+                                GAsyncReadyCallback   callback,
+                                gpointer              user_data);
 
 void     mbim_device_open        (MbimDevice           *self,
                                   guint                 timeout,

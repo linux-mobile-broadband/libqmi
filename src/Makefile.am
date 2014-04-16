@@ -1,2 +1,2 @@
 
-SUBDIRS = libmbim-glib mbimcli
+SUBDIRS = libmbim-glib mbimcli mbim-proxy

@@ -20,6 +20,7 @@
  *
  * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
  * Copyright (C) 2014 NVDIA Corporation
+ * Copyright (C) 2014 Greg Suarez <gsuarez@smithmicro.com>
  */
 
 #include <config.h>
@@ -218,6 +219,14 @@ static const MbimUuid uuid_ms_host_shutdown = {
     .e = { 0x27, 0xd7, 0xfb, 0x80, 0x95, 0x9c }
 };
 
+static const MbimUuid uuid_proxy_control = {
+    .a = { 0x83, 0x8c, 0xf7, 0xfb },
+    .b = { 0x8d, 0x0d },
+    .c = { 0x4d, 0x7f }, 
+    .d = { 0x87, 0x1e }, 
+    .e = { 0xd7, 0x1d , 0xbe, 0xfb, 0xb3, 0x9b }
+};
+
 static GList *mbim_custom_service_list = NULL;
 
 typedef struct {
@@ -353,7 +362,7 @@ mbim_uuid_from_service (MbimService service)
     GList *l;
 
     g_return_val_if_fail (service >= MBIM_SERVICE_INVALID &&
-                          (service <= MBIM_SERVICE_MS_HOST_SHUTDOWN ||
+                          (service <= MBIM_SERVICE_PROXY_CONTROL ||
                            mbim_service_id_is_custom (service)),
                           &uuid_invalid);
 
@@ -378,6 +387,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_ms_firmware_id;
     case MBIM_SERVICE_MS_HOST_SHUTDOWN:
         return &uuid_ms_host_shutdown;
+    case MBIM_SERVICE_PROXY_CONTROL:
+        return &uuid_proxy_control;
     default:
         for (l = mbim_custom_service_list; l != NULL; l = l->next) {
             if (service == ((MbimCustomService *)l->data)->service_id)
@@ -426,6 +437,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_ms_host_shutdown))
         return MBIM_SERVICE_MS_HOST_SHUTDOWN;
+
+    if (mbim_uuid_cmp (uuid, &uuid_proxy_control))
+        return MBIM_SERVICE_PROXY_CONTROL;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
         if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))

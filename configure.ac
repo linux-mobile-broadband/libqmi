@@ -69,6 +69,7 @@ PKG_CHECK_MODULES(LIBMBIM_GLIB,
                   glib-2.0 >= 2.32
                   gobject-2.0
                   gio-2.0
+		  gio-unix-2.0
                   gudev-1.0 >= 147)
 AC_SUBST(LIBMBIM_GLIB_CFLAGS)
 AC_SUBST(LIBMBIM_GLIB_LIBS)
@@ -80,6 +81,14 @@ PKG_CHECK_MODULES(MBIMCLI,
                   gio-2.0)
 AC_SUBST(MBIMCLI_CFLAGS)
 AC_SUBST(MBIMCLI_LIBS)
+
+dnl General dependencies for mbim-proxy
+PKG_CHECK_MODULES(MBIMPROXY,
+                  glib-2.0 >= 2.32
+                  gobject-2.0
+                  gio-2.0)
+AC_SUBST(MBIMPROXY_CFLAGS)
+AC_SUBST(MBIMPROXY_LIBS)
 
 GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
@@ -104,6 +113,7 @@ AC_CONFIG_FILES([Makefile
                  src/libmbim-glib/generated/Makefile
                  src/libmbim-glib/test/Makefile
                  src/mbimcli/Makefile
+                 src/mbim-proxy/Makefile
                  utils/Makefile
                  docs/Makefile
                  docs/reference/Makefile

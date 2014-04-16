@@ -207,6 +207,18 @@ typedef enum {
     MBIM_CID_MS_HOST_SHUTDOWN_NOTIFY  = 1
 } MbimCidMsHostShutdown;
 
+/**
+ * MbimCidProxyControl:
+ * @MBIM_CID_PROXY_CONTROL_UNKNOWN: Unknown command.
+ * @MBIM_CID_PROXY_CONTROL_CONFIGURATION: Configuration.
+ *
+ * MBIM commands in the %MBIM_SERVICE_PROXY_CONTROL service.
+ */
+typedef enum {
+    MBIM_CID_PROXY_CONTROL_UNKNOWN       = 0,
+    MBIM_CID_PROXY_CONTROL_CONFIGURATION = 1
+} MbimCidProxyControl;
+
 /* Command helpers */
 
 gboolean     mbim_cid_can_set       (MbimService service,

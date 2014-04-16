@@ -129,6 +129,10 @@ struct full_message {
 } __attribute__((packed));
 
 /*****************************************************************************/
+/* Message creation */
+GByteArray *_mbim_message_allocate (MbimMessageType message_type, guint32 transaction_id, guint32 additional_size);
+
+/*****************************************************************************/
 /* Fragment interface */
 
 gboolean      _mbim_message_is_fragment          (const MbimMessage  *self);

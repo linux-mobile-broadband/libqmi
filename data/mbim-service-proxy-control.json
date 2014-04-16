@@ -1,0 +1,15 @@
+
+[
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Proxy Control" },
+
+  // *********************************************************************************
+  { "name"     : "Configuration",
+    "service"  : "Proxy Control",
+    "type"     : "Command",
+    "set"      : [ { "name"   : "DevicePath",
+                     "format" : "string" } ],
+    "response" : [] }
+
+]

@@ -131,9 +131,11 @@ guint32      mbim_message_open_get_max_control_transfer (const MbimMessage *self
 /*****************************************************************************/
 /* 'Open Done' message interface */
 
-MbimStatusError mbim_message_open_done_get_status_code (const MbimMessage  *self);
-gboolean        mbim_message_open_done_get_result      (const MbimMessage  *self,
-                                                        GError            **error);
+MbimMessage     *mbim_message_open_done_new (guint32         transaction_id,
+                                             MbimStatusError error_status_code);
+MbimStatusError  mbim_message_open_done_get_status_code (const MbimMessage  *self);
+gboolean         mbim_message_open_done_get_result      (const MbimMessage  *self,
+                                                         GError            **error);
 
 /*****************************************************************************/
 /* 'Close' message interface */
@@ -143,9 +145,11 @@ MbimMessage *mbim_message_close_new (guint32 transaction_id);
 /*****************************************************************************/
 /* 'Close Done' message interface */
 
-MbimStatusError mbim_message_close_done_get_status_code (const MbimMessage  *self);
-gboolean        mbim_message_close_done_get_result      (const MbimMessage  *self,
-                                                         GError            **error);
+MbimMessage     *mbim_message_close_done_new (guint32         transaction_id,
+                                              MbimStatusError error_status_code);
+MbimStatusError  mbim_message_close_done_get_status_code (const MbimMessage  *self);
+gboolean         mbim_message_close_done_get_result      (const MbimMessage  *self,
+                                                          GError            **error);
 
 /*****************************************************************************/
 /* 'Error' message interface */

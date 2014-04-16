@@ -12,6 +12,7 @@ libmbim_glib_core_la_CPPFLAGS = \
 	-I$(top_builddir)/src/libmbim-glib \
 	-I$(top_builddir)/src/libmbim-glib/generated \
 	-DLIBMBIM_GLIB_COMPILATION \
+	-DLIBEXEC_PATH=\""$(libexecdir)"\" \
 	-DG_LOG_DOMAIN=\"Mbim\"
 libmbim_glib_core_la_SOURCES = \
 	mbim-version.h \
@@ -22,7 +23,8 @@ libmbim_glib_core_la_SOURCES = \
 	mbim-cid.h mbim-cid.c \
 	mbim-message-private.h mbim-message.h mbim-message.c \
 	mbim-device.h mbim-device.c \
-	mbim-compat.h mbim-compat.c
+	mbim-compat.h mbim-compat.c \
+	mbim-proxy.h mbim-proxy.c
 
 # Final installable library
 lib_LTLIBRARIES = libmbim-glib.la
@@ -50,7 +52,8 @@ include_HEADERS = \
 	mbim-cid.h \
 	mbim-message.h \
 	mbim-device.h \
-	mbim-compat.h
+	mbim-compat.h \
+	mbim-proxy.h
 
 EXTRA_DIST = \
 	mbim-version.h.in
