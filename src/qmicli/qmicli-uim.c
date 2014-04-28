@@ -44,6 +44,7 @@ static Context *ctx;
 /* Options */
 static gchar *read_transparent_str;
 static gchar *get_file_attributes_str;
+static gboolean get_card_status_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -55,6 +56,10 @@ static GOptionEntry entries[] = {
     { "uim-get-file-attributes", 0, 0, G_OPTION_ARG_STRING, &get_file_attributes_str,
       "Get the attributes of a given file",
       "[0xNNNN,0xNNNN,...]"
+    },
+    { "uim-get-card-status", 0, 0, G_OPTION_ARG_NONE, &get_card_status_flag,
+      "Get card status",
+      NULL
     },
     { "uim-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
@@ -93,6 +98,7 @@ qmicli_uim_options_enabled (void)
 
     n_actions = (!!read_transparent_str +
                  !!get_file_attributes_str +
+                 get_card_status_flag +
                  reset_flag +
                  noop_flag);
 
@@ -161,6 +167,156 @@ noop_cb (gpointer unused)
 {
     shutdown (TRUE);
     return FALSE;
+}
+
+static void
+get_card_status_ready (QmiClientUim *client,
+                       GAsyncResult *res)
+{
+    QmiMessageUimGetCardStatusOutput *output;
+    GError *error = NULL;
+    guint16 index_gw_primary;
+    guint16 index_1x_primary;
+    guint16 index_gw_secondary;
+    guint16 index_1x_secondary;
+    GArray *cards;
+    guint i;
+
+    output = qmi_client_uim_get_card_status_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_get_card_status_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get card status: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_uim_get_card_status_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got card status\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_uim_get_card_status_output_get_card_status (
+        output,
+        &index_gw_primary,
+        &index_1x_primary,
+        &index_gw_secondary,
+        &index_1x_secondary,
+        &cards,
+        NULL);
+
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+    g_print ("Provisioning applications:\n");
+    if (index_gw_primary == 0xFFFF)
+        g_print ("\tPrimary GW:   session doesn't exist\n");
+    else
+        g_print ("\tPrimary GW:   slot '%u', application '%u'\n",
+                 ((index_gw_primary & 0xFF00) >> 8),
+                 ((index_gw_primary & 0x00FF)));
+
+    if (index_1x_primary == 0xFFFF)
+        g_print ("\tPrimary 1X:   session doesn't exist\n");
+    else
+        g_print ("\tPrimary 1X:   slot '%u', application '%u'\n",
+                 ((index_1x_primary & 0xFF00) >> 8),
+                 ((index_1x_primary & 0x00FF)));
+
+    if (index_gw_secondary == 0xFFFF)
+        g_print ("\tSecondary GW: session doesn't exist\n");
+    else
+        g_print ("\tSecondary GW: slot '%u', application '%u'\n",
+                 ((index_gw_secondary & 0xFF00) >> 8),
+                 ((index_gw_secondary & 0x00FF)));
+
+    if (index_1x_secondary == 0xFFFF)
+        g_print ("\tSecondary 1X: session doesn't exist\n");
+    else
+        g_print ("\tSecondary 1X: slot '%u', application '%u'\n",
+                 ((index_1x_secondary & 0xFF00) >> 8),
+                 ((index_1x_secondary & 0x00FF)));
+
+    for (i = 0; i < cards->len; i++) {
+        QmiMessageUimGetCardStatusOutputCardStatusCardsElement *card;
+        guint j;
+
+        card = &g_array_index (cards, QmiMessageUimGetCardStatusOutputCardStatusCardsElement, i);
+
+        g_print ("Card [%u]:\n", i);
+
+        if (card->card_state != QMI_UIM_CARD_STATE_ERROR)
+            g_print ("\tCard state: '%s'\n",
+                     qmi_uim_card_state_get_string (card->card_state));
+        else
+            g_print ("\tCard state: '%s: %s (%u)\n",
+                     qmi_uim_card_state_get_string (card->card_state),
+                     VALIDATE_UNKNOWN (qmi_uim_card_error_get_string (card->error_code)),
+                     card->error_code);
+        g_print ("\tUPIN state: '%s'\n"
+                 "\t\tUPIN retries: '%u'\n"
+                 "\t\tUPUK retries: '%u'\n",
+                 qmi_uim_pin_state_get_string (card->upin_state),
+                 card->upin_retries,
+                 card->upuk_retries);
+
+        for (j = 0; j < card->applications->len; j++) {
+            QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElement *app;
+            gchar *str;
+
+            app = &g_array_index (card->applications, QmiMessageUimGetCardStatusOutputCardStatusCardsElementApplicationsElement, j);
+
+            str = qmicli_get_raw_data_printable (app->application_identifier_value, 80, "");
+
+            g_print ("\tApplication [%u]:\n"
+                     "\t\tApplication type:  '%s (%u)'\n"
+                     "\t\tApplication state: '%s'\n"
+                     "\t\tApplication ID:\n"
+                     "\t\t\t%s",
+                     j,
+                     VALIDATE_UNKNOWN (qmi_uim_card_application_type_get_string (app->type)), app->type,
+                     qmi_uim_card_application_state_get_string (app->state),
+                     str);
+
+            if (app->personalization_state == QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_CODE_REQUIRED ||
+                app->personalization_state == QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_PUK_CODE_REQUIRED)
+                g_print ("\t\tPersonalization state: '%s' (feature: %s)\n"
+                         "\t\t\tDisable retries:     '%u'\n"
+                         "\t\t\tUnblock retries:     '%u'\n",
+                         qmi_uim_card_application_personalization_state_get_string (app->personalization_state),
+                         qmi_uim_card_application_personalization_feature_get_string (app->personalization_feature),
+                         app->personalization_retries,
+                         app->personalization_unblock_retries);
+            else
+                g_print ("\t\tPersonalization state: '%s'\n",
+                         qmi_uim_card_application_personalization_state_get_string (app->personalization_state));
+
+            g_print ("\t\tUPIN replaces PIN1: '%s'\n",
+                     app->upin_replaces_pin1 ? "yes" : "no");
+
+            g_print ("\t\tPIN1 state: '%s'\n"
+                     "\t\t\tPIN1 retries: '%u'\n"
+                     "\t\t\tPUK1 retries: '%u'\n"
+                     "\t\tPIN2 state: '%s'\n"
+                     "\t\t\tPIN2 retries: '%u'\n"
+                     "\t\t\tPUK2 retries: '%u'\n",
+                     qmi_uim_pin_state_get_string (app->pin1_state),
+                     app->pin1_retries,
+                     app->puk1_retries,
+                     qmi_uim_pin_state_get_string (app->pin2_state),
+                     app->pin2_retries,
+                     app->puk2_retries);
+            g_free (str);
+        }
+    }
+
+    qmi_message_uim_get_card_status_output_unref (output);
+    shutdown (TRUE);
 }
 
 static gboolean
@@ -531,6 +687,18 @@ qmicli_uim_run (QmiDevice *device,
                                             (GAsyncReadyCallback)get_file_attributes_ready,
                                             NULL);
         qmi_message_uim_get_file_attributes_input_unref (input);
+        return;
+    }
+
+    /* Request to read card status? */
+    if (get_card_status_flag) {
+        g_debug ("Asynchronously getting card status...");
+        qmi_client_uim_get_card_status (ctx->client,
+                                        NULL,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)get_card_status_ready,
+                                        NULL);
         return;
     }
 
