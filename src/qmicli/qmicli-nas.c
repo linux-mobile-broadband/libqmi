@@ -2370,7 +2370,7 @@ get_cell_location_info_ready (QmiClientNas *client,
         for (i = 0; i < array2->len; i++) {
             QmiMessageNasGetCellLocationInfoOutputUmtsInfoGeran_nbr_cellElement *element;
 
-            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputUmtsInfoGeran_nbr_cellElement, i);
+            element = &g_array_index (array2, QmiMessageNasGetCellLocationInfoOutputUmtsInfoGeran_nbr_cellElement, i);
             g_print ("\tGERAN NBR Cell [%u]:\n"
                      "\tAbsolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
                      "\tNetwork Color Code: '%u'\n"
@@ -2494,7 +2494,7 @@ get_cell_location_info_ready (QmiClientNas *client,
             for (j = 0; j < cell_array->len; j++) {
                 QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElementCellElement *cell;
 
-                cell = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElementCellElement, j);
+                cell = &g_array_index (cell_array, QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElementCellElement, j);
                 g_print ("\t\tCell [%u]:\n"
                          "\t\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
                          "\t\t\tRSRQ: '%" G_GINT16_FORMAT"'\n"
@@ -2545,7 +2545,7 @@ get_cell_location_info_ready (QmiClientNas *client,
             for (j = 0; j < cell_array->len; j++) {
                 QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringGsmFrequencyElementCellElement *cell;
 
-                cell = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringGsmFrequencyElementCellElement, j);
+                cell = &g_array_index (cell_array, QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringGsmFrequencyElementCellElement, j);
                 g_print ("\t\tCell [%u]:\n"
                          "\t\t\tAbsolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
                          "\t\t\tBand Is 1900: '%s'\n"
@@ -2597,7 +2597,7 @@ get_cell_location_info_ready (QmiClientNas *client,
             for (j = 0; j < cell_array->len; j++) {
                 QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringWcdmaFrequencyElementCellElement *cell;
 
-                cell = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringWcdmaFrequencyElementCellElement, j);
+                cell = &g_array_index (cell_array, QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringWcdmaFrequencyElementCellElement, j);
                 g_print ("\t\tCell [%u]:\n"
                          "\t\t\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
                          "\t\t\tCPICH RSCP: '%" G_GINT16_FORMAT"'\n"
