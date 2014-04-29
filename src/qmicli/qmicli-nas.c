@@ -52,6 +52,7 @@ static gboolean get_technology_preference_flag;
 static gboolean get_system_selection_preference_flag;
 static gchar *set_system_selection_preference_str;
 static gboolean network_scan_flag;
+static gboolean get_cell_location_info_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -94,6 +95,10 @@ static GOptionEntry entries[] = {
     },
     { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
       "Scan networks",
+      NULL
+    },
+    { "nas-get-cell-location-info", 0, 0, G_OPTION_ARG_NONE, &get_cell_location_info_flag,
+      "Get Cell Location Info",
       NULL
     },
     { "nas-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
@@ -141,6 +146,7 @@ qmicli_nas_options_enabled (void)
                  get_system_selection_preference_flag +
                  !!set_system_selection_preference_str +
                  network_scan_flag +
+                 get_cell_location_info_flag +
                  reset_flag +
                  noop_flag);
 
@@ -2212,6 +2218,412 @@ network_scan_ready (QmiClientNas *client,
 }
 
 static void
+get_cell_location_info_ready (QmiClientNas *client,
+                              GAsyncResult *res)
+{
+    QmiMessageNasGetCellLocationInfoOutput *output;
+    GError *error = NULL;
+    GArray *array;
+    GArray *array2;
+
+    const gchar *operator;
+
+    guint32 cell_id;
+    guint16 location_area_code;
+    guint16 utra_absolute_rfchannel_number;
+    guint8 base_station_identity_code;
+    guint32 timing_advance;
+    gint16 rxlevel;
+
+    guint16 primary_scrambling_code;
+    gint16 received_signal_code_power;
+    guint16 ecio;
+
+    guint16 system_id;
+    guint16 network_id;
+    guint16 base_station_id;
+    guint32 latitude;
+    guint32 longitude;
+
+    gboolean ueinidlemode;
+    guint16 trackingareacode;
+    guint32 globalcellid;
+    guint16 eutraabsoluterfchannelnumber;
+    guint16 servingcellid;
+    guint8 cellreselectionpriority;
+    guint8 snonintrasearchthreshold;
+    guint8 servingcelllowthreshold;
+    guint8 sintrasearchthreshold;
+
+    output = qmi_client_nas_get_cell_location_info_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_cell_location_info_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get cell location info: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_cell_location_info_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got cell location info\n",
+             qmi_device_get_path_display (ctx->device));
+
+    array = NULL;
+    if (qmi_message_nas_get_cell_location_info_output_get_geran_info (
+            output,
+            &cell_id,
+            &operator,
+            &location_area_code,
+            &utra_absolute_rfchannel_number,
+            &base_station_identity_code,
+            &timing_advance,
+            &rxlevel,
+            &array, NULL)) {
+        guint i;
+
+        g_print ("GERAN Info\n"
+                 "\tCell ID: '%" G_GUINT32_FORMAT"'\n"
+                 // FIXME: decode packed BCD operator
+                 "\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n"
+                 "\tUTRA Absolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
+                 "\tBase Station Identity Code: '%" G_GUINT16_FORMAT"'\n"
+                 "\tTiming Advance: '%" G_GUINT32_FORMAT"'\n"
+                "\tRXLevel: '%" G_GINT16_FORMAT"'\n",
+                cell_id,
+                location_area_code,
+                utra_absolute_rfchannel_number,
+                base_station_identity_code,
+                timing_advance,
+                rxlevel);
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetCellLocationInfoOutputGeranInfoNmr_cellElement *element;
+
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputGeranInfoNmr_cellElement, i);
+            g_print ("\tNMR Cell [%u]:\n"
+                     "\t\tCell ID: '%" G_GUINT32_FORMAT"'\n"
+                     // FIXME: decode packed BCD operator
+                     "\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tUTRA Absolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tBase Station Identity Code: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tRXLevel: '%" G_GINT16_FORMAT"'\n",
+                    i,
+                    element->cell_id,
+                    element->location_area_code,
+                    element->utra_absolute_rfchannel_number,
+                    element->base_station_identity_code,
+                    element->rxlevel);
+        }
+    }
+
+    array = NULL;
+    array2 = NULL;
+    if (qmi_message_nas_get_cell_location_info_output_get_umts_info (
+            output,
+            &cell_id,
+            &operator,
+            &location_area_code,
+            &utra_absolute_rfchannel_number,
+            &primary_scrambling_code,
+            &received_signal_code_power,
+            &ecio,
+            &array, &array2, NULL)) {
+        guint i;
+
+        g_print ("UMTS Info\n"
+                 "\tCell ID: '%" G_GUINT32_FORMAT"'\n"
+                 // FIXME: decode packed BCD operator
+                 "\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n"
+                 "\tUTRA Absolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
+                 "\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
+                 "\tReceived Signal Code Power: '%" G_GINT16_FORMAT"'\n"
+                 "\tECIO: '%" G_GUINT16_FORMAT"'\n",
+                 cell_id,
+                 location_area_code,
+                 utra_absolute_rfchannel_number,
+                 primary_scrambling_code,
+                 received_signal_code_power,
+                 ecio);
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetCellLocationInfoOutputUmtsInfoUmts_monitored_cellElement *element;
+
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputUmtsInfoUmts_monitored_cellElement, i);
+            g_print ("\tUMTS Monitored Cell [%u]:\n"
+                     "\tUTRA Absolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
+                     "\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
+                     "\tReceived Signal Code Power: '%" G_GINT16_FORMAT"'\n"
+                     "\tECIO: '%" G_GUINT16_FORMAT"'\n",
+                     i,
+                     element->utra_absolute_rfchannel_number,
+                     element->primary_scrambling_code,
+                     element->receivedsignal_code_power,
+                     element->ecio);
+        }
+
+        for (i = 0; i < array2->len; i++) {
+            QmiMessageNasGetCellLocationInfoOutputUmtsInfoGeran_nbr_cellElement *element;
+
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputUmtsInfoGeran_nbr_cellElement, i);
+            g_print ("\tGERAN NBR Cell [%u]:\n"
+                     "\tAbsolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
+                     "\tNetwork Color Code: '%u'\n"
+                     "\tBase Station Color Code: '%u'\n"
+                     "\tRSSI: '%" G_GUINT16_FORMAT"'\n",
+                     i,
+                     element->absolute_rfchannel_number,
+                     element->network_color_code,
+                     element->base_station_color_code,
+                     element->rssi);
+        }
+    }
+
+    if(qmi_message_nas_get_cell_location_info_output_get_cdma_info  (
+            output,
+            &system_id,
+            &network_id,
+            &base_station_id,
+            &latitude,
+            &longitude,
+            NULL)) {
+
+        g_print ("CDMA Info\n"
+                 "\tSystem ID: '%" G_GUINT16_FORMAT"'\n"
+                 "\tNetwork ID: '%" G_GUINT16_FORMAT"'\n"
+                 "\tBase Station ID: '%" G_GUINT16_FORMAT"'\n"
+                 "\tLatitude: '%" G_GUINT32_FORMAT"'\n"
+                 "\tLongitude: '%" G_GUINT32_FORMAT"'\n",
+                 system_id,
+                 network_id,
+                 base_station_id,
+                 latitude,
+                 longitude);
+    }
+
+    array = NULL;
+    if (qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info (
+            output,
+            &ueinidlemode,
+            &operator,
+            &trackingareacode,
+            &globalcellid,
+            &eutraabsoluterfchannelnumber,
+            &servingcellid,
+            &cellreselectionpriority,
+            &snonintrasearchthreshold,
+            &servingcelllowthreshold,
+            &sintrasearchthreshold,
+            &array, NULL)) {
+        guint i;
+
+        g_print ("Intrafrequency LTE Info\n"
+                 "\tUE In Idle Mode: '%s'\n"
+                 // FIXME: decode packed BCD operator
+                 "\tTracking Area Code: '%" G_GUINT16_FORMAT"'\n"
+                 "\tGlobal Cell ID: '%" G_GUINT32_FORMAT"'\n"
+                 "\tEUTRA Absolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
+                 "\tServing Cell ID: '%" G_GUINT16_FORMAT"'\n"
+                 "\tCell Reselection Priority: '%u'\n"
+                 "\tSNon Intra Search Threshold: '%u'\n"
+                 "\tServing Cell Low Threshold: '%u'\n"
+                 "\tSIntra Search Threshold: '%u'\n",
+                 ueinidlemode ? "yes" : "no",
+                 trackingareacode,
+                 globalcellid,
+                 eutraabsoluterfchannelnumber,
+                 servingcellid,
+                 cellreselectionpriority,
+                 snonintrasearchthreshold,
+                 servingcelllowthreshold,
+                 sintrasearchthreshold);
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement *element;
+
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement, i);
+            g_print ("\tCell [%u]:\n"
+                     "\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tRSRQ: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tRSRP: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tRSSI: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tCell Selection RXLevel: '%" G_GUINT16_FORMAT"'\n",
+                     i,
+                     element->physical_cell_id,
+                     element->rsrq,
+                     element->rsrp,
+                     element->rssi,
+                     element->cell_selection_rxlevel);
+        }
+    }
+
+    array = NULL;
+    if (qmi_message_nas_get_cell_location_info_output_get_interfrequency_lte_info (
+            output,
+            &ueinidlemode,
+            &array, NULL)) {
+        guint i;
+
+        g_print ("Interfrequency LTE Info\n"
+                 "\tUE In Idle Mode: '%s'\n", ueinidlemode ? "yes" : "no");
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElement *element;
+            GArray *cell_array;
+            guint j;
+
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElement, i);
+            g_print ("\tFrequency [%u]:\n"
+                     "\t\tEUTRA Absolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tSelection RXLevel Low Threshold: '%u'\n"
+                     "\t\tCell Selection RXLevel High Threshold: '%u'\n"
+                     "\t\tCell Reselection Priority: '%u'\n",
+                     i,
+                     element->eutra_absolute_rfchannel_number,
+                     element->cell_selection_rxlevel_low_threshold,
+                     element->cell_selection_rxlevel_high_threshold,
+                     element->cell_reselection_priority);
+
+            cell_array = element->cell;
+
+            for (j = 0; j < cell_array->len; j++) {
+                QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElementCellElement *cell;
+
+                cell = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElementCellElement, j);
+                g_print ("\t\tCell [%u]:\n"
+                         "\t\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
+                         "\t\t\tRSRQ: '%" G_GINT16_FORMAT"'\n"
+                         "\t\t\tRSRP: '%" G_GINT16_FORMAT"'\n"
+                         "\t\t\tRSSI: '%" G_GINT16_FORMAT"'\n"
+                         "\t\t\tCell Selection RXLevel: '%" G_GINT16_FORMAT"'\n",
+                         j,
+                         cell->physical_cell_id,
+                         cell->rsrq,
+                         cell->rsrp,
+                         cell->rssi,
+                         cell->cell_selection_rxlevel);
+            }
+        }
+    }
+
+
+    array = NULL;
+    if (qmi_message_nas_get_cell_location_info_output_get_lte_info_neighboring_gsm (
+            output,
+            &ueinidlemode,
+            &array, NULL)) {
+        guint i;
+
+        g_print ("LTE Info Neighboring GSM\n"
+                 "\tUE In Idle Mode: '%s'\n", ueinidlemode ? "yes" : "no");
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringGsmFrequencyElement *element;
+            GArray *cell_array;
+            guint j;
+
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringGsmFrequencyElement, i);
+
+            g_print ("\tFrequency [%u]:\n"
+                     "\t\tCell Reselection Priority: '%u'\n"
+                     "\t\tCell Reselection High Threshold: '%u'\n"
+                     "\t\tCell Reselection Low Threshold: '%u'\n"
+                     "\t\tNCC Permitted: '%u'\n",
+                     i,
+                     element->cell_reselection_priority,
+                     element->cell_reselection_high_threshold,
+                     element->cell_reselection_low_threshold,
+                     element->ncc_permitted);
+
+            cell_array = element->cell;
+
+            for (j = 0; j < cell_array->len; j++) {
+                QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringGsmFrequencyElementCellElement *cell;
+
+                cell = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringGsmFrequencyElementCellElement, j);
+                g_print ("\t\tCell [%u]:\n"
+                         "\t\t\tAbsolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
+                         "\t\t\tBand Is 1900: '%s'\n"
+                         "\t\t\tCell ID Valid: '%s'\n"
+                         "\t\t\tBase Station Identity Code: '%u'\n"
+                         "\t\t\tRSSI: '%" G_GINT16_FORMAT"'\n"
+                         "\t\t\tCell Selection RXLevel: '%" G_GINT16_FORMAT"'\n",
+                         j,
+                         cell->absolute_rfchannel_number,
+                         cell->band_is_1900 ? "yes" : "no",
+                         cell->cell_id_valid ? "yes" : "no",
+                         cell->base_station_identity_code,
+                         cell->rssi,
+                         cell->cell_selection_rxlevel);
+            }
+        }
+    }
+
+    array = NULL;
+    if (qmi_message_nas_get_cell_location_info_output_get_lte_info_neighboring_wcdma (
+            output,
+            &ueinidlemode,
+            &array, NULL)) {
+        guint i;
+
+        g_print ("LTE Info Neighboring WCDMA\n"
+                 "\tUE In Idle Mode: '%s'\n", ueinidlemode ? "yes" : "no");
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringWcdmaFrequencyElement *element;
+            GArray *cell_array;
+            guint j;
+
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringWcdmaFrequencyElement, i);
+
+            g_print ("\tFrequency [%u]:\n"
+                     "\t\tEUTRA Absolute RFChannel Number: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tCell Reselection Priority: '%u'\n"
+                     "\t\tCell Reselection High Threshold: '%" G_GINT16_FORMAT"'\n"
+                     "\t\tCell Reselection Low Threshold: '%" G_GINT16_FORMAT"'\n",
+                     i,
+                     element->eutra_absolute_rfchannel_number,
+                     element->cell_reselection_priority,
+                     element->cell_reselection_high_threshold,
+                     element->cell_reselection_low_threshold);
+
+            cell_array = element->cell;
+
+            for (j = 0; j < cell_array->len; j++) {
+                QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringWcdmaFrequencyElementCellElement *cell;
+
+                cell = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringWcdmaFrequencyElementCellElement, j);
+                g_print ("\t\tCell [%u]:\n"
+                         "\t\t\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
+                         "\t\t\tCPICH RSCP: '%" G_GINT16_FORMAT"'\n"
+                         "\t\t\tCPICH EcNo: '%" G_GINT16_FORMAT"'\n"
+                         "\t\t\tCell Selection RXLevel: '%" G_GUINT16_FORMAT"'\n",
+                         j,
+                         cell->primary_scrambling_code,
+                         cell->cpich_rscp,
+                         cell->cpich_ecno,
+                         cell->cell_selection_rxlevel);
+            }
+        }
+    }
+
+    if (qmi_message_nas_get_cell_location_info_output_get_umts_cell_id (
+            output,
+            &cell_id,
+            NULL)) {
+        g_print ("UMTS Cell ID: '%" G_GUINT32_FORMAT"'\n", cell_id);
+    }
+
+    qmi_message_nas_get_cell_location_info_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
 reset_ready (QmiClientNas *client,
              GAsyncResult *res)
 {
@@ -2402,6 +2814,18 @@ qmicli_nas_run (QmiDevice *device,
                                      ctx->cancellable,
                                      (GAsyncReadyCallback)network_scan_ready,
                                      NULL);
+        return;
+    }
+
+    /* Request to get cell location info? */
+    if (get_cell_location_info_flag) {
+        g_debug ("Asynchronously getting cell location info ...");
+        qmi_client_nas_get_cell_location_info (ctx->client,
+                                               NULL,
+                                               10,
+                                               ctx->cancellable,
+                                               (GAsyncReadyCallback)get_cell_location_info_ready,
+                                               NULL);
         return;
     }
 
