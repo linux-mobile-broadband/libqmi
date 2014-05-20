@@ -306,6 +306,9 @@ allocate_client_ready (QmiDevice *dev,
     case QMI_SERVICE_UIM:
         qmicli_uim_run (dev, QMI_CLIENT_UIM (client), cancellable);
         return;
+    case QMI_SERVICE_WDA:
+        qmicli_wda_run (dev, QMI_CLIENT_WDA (client), cancellable);
+        return;
     default:
         g_assert_not_reached ();
     }
@@ -543,6 +546,12 @@ parse_actions (void)
         actions_enabled++;
     }
 
+    /* WDA options? */
+    if (qmicli_wda_options_enabled ()) {
+        service = QMI_SERVICE_WDA;
+        actions_enabled++;
+    }
+
     /* Cannot mix actions from different services */
     if (actions_enabled > 1) {
         g_printerr ("error: cannot execute multiple actions of different services\n");
@@ -580,6 +589,8 @@ int main (int argc, char **argv)
 	                            qmicli_pbm_get_option_group ());
 	g_option_context_add_group (context,
 	                            qmicli_uim_get_option_group ());
+	g_option_context_add_group (context,
+	                            qmicli_wda_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",

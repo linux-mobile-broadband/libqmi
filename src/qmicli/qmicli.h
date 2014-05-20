@@ -61,4 +61,11 @@ void          qmicli_uim_run              (QmiDevice *device,
                                            QmiClientUim *client,
                                            GCancellable *cancellable);
 
+/* WDA group */
+GOptionGroup *qmicli_wda_get_option_group (void);
+gboolean      qmicli_wda_options_enabled  (void);
+void          qmicli_wda_run              (QmiDevice *device,
+                                           QmiClientWda *client,
+                                           GCancellable *cancellable);
+
 #endif /* __QMICLI_H__ */
