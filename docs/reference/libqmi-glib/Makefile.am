@@ -15,7 +15,8 @@ ALL_SECTIONS = \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-pds.sections \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-pbm.sections \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-uim.sections \
-	$(top_builddir)/src/libqmi-glib/generated/qmi-oma.sections
+	$(top_builddir)/src/libqmi-glib/generated/qmi-oma.sections \
+	$(top_builddir)/src/libqmi-glib/generated/qmi-wda.sections
 
 $(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
 	$(AM_V_GEN) \

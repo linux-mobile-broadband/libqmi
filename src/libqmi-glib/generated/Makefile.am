@@ -14,7 +14,8 @@ GENERATED_H = \
 	qmi-pds.h \
 	qmi-pbm.h \
 	qmi-uim.h \
-	qmi-oma.h
+	qmi-oma.h \
+	qmi-wda.h
 
 GENERATED_C = \
 	qmi-error-types.c \
@@ -30,7 +31,8 @@ GENERATED_C = \
 	qmi-pds.c \
 	qmi-pbm.c \
 	qmi-uim.c \
-	qmi-oma.c
+	qmi-oma.c \
+	qmi-wda.c
 
 GENERATED_SECTIONS = \
 	qmi-ctl.sections \
@@ -41,7 +43,8 @@ GENERATED_SECTIONS = \
 	qmi-pds.sections \
 	qmi-pbm.sections \
 	qmi-uim.sections \
-	qmi-oma.sections
+	qmi-oma.sections \
+	qmi-wda.sections
 
 # Error types
 qmi-error-types.h: $(top_srcdir)/src/libqmi-glib/qmi-errors.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.h
@@ -74,10 +77,11 @@ ENUMS = \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-pbm.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-uim.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-oma.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-wda.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-device.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pbm.h\"\n#include \"qmi-enums-uim.h\"\n#include \"qmi-enums-oma.h\"\n#include \"qmi-device.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pbm.h\"\n#include \"qmi-enums-uim.h\"\n#include \"qmi-enums-oma.h\"\n#include \"qmi-enums-wda.h\"\n#include \"qmi-device.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
@@ -209,6 +213,16 @@ qmi-oma.h qmi-oma.c qmi-oma.sections: $(top_srcdir)/data/qmi-service-oma.json $(
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-oma
 
+# WDA service
+qmi-wda.h qmi-wda.c qmi-wda.sections: $(top_srcdir)/data/qmi-service-wda.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+	$(AM_V_GEN) \
+		rm -f qmi-wda.h && \
+		rm -f qmi-wda.c && \
+		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-wda.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			--output qmi-wda
+
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 
 nodist_libqmi_glib_generated_la_SOURCES = \
@@ -239,6 +253,7 @@ nodist_include_HEADERS = \
 	qmi-pds.h \
 	qmi-pbm.h \
 	qmi-uim.h \
-	qmi-oma.h
+	qmi-oma.h \
+	qmi-wda.h
 
 CLEANFILES = $(GENERATED_H) $(GENERATED_C) $(GENERATED_SECTIONS)

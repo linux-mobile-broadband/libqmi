@@ -62,6 +62,9 @@
 #include "qmi-enums-oma.h"
 #include "qmi-oma.h"
 
+#include "qmi-enums-wda.h"
+#include "qmi-wda.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

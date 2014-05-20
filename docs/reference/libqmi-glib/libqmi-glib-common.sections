@@ -771,6 +771,23 @@ qmi_oma_hfa_feature_done_state_get_type
 </SECTION>
 
 <SECTION>
+<FILE>qmi-enums-wda</FILE>
+QmiWdaLinkLayerProtocol
+QmiWdaDataAggregationProtocol
+<SUBSECTION Methods>
+qmi_wda_link_layer_protocol_get_string
+qmi_wda_data_aggregation_protocol_get_string
+<SUBSECTION Private>
+qmi_wda_link_layer_protocol_build_string_from_mask
+qmi_wda_data_aggregation_protocol_build_string_from_mask
+<SUBSECTION Standard>
+QMI_TYPE_WDA_LINK_LAYER_PROTOCOL
+QMI_TYPE_WDA_DATA_AGGREGATION_PROTOCOL
+qmi_wda_link_layer_protocol_get_type
+qmi_wda_data_aggregation_protocol_get_type
+</SECTION>
+
+<SECTION>
 <FILE>qmi-errors</FILE>
 QmiCoreError
 QmiProtocolError

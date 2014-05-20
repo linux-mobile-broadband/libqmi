@@ -257,6 +257,16 @@
     </section>
   </chapter>
 
+  <chapter>
+    <title>Wireless Data Administrative Service (WDA)</title>
+    <xi:include href="xml/qmi-client-wda.xml"/>
+    <xi:include href="xml/qmi-enums-wda.xml"/>
+    <section>
+      <title>WDA Requests</title>
+      <xi:include href="xml/qmi-message-wda-get-data-format.xml"/>
+    </section>
+  </chapter>
+
   <chapter id="object-tree">
     <title>Object Hierarchy</title>
      <xi:include href="xml/tree_index.sgml"/>
