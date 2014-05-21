@@ -42,10 +42,15 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
+static gchar *set_data_format_str;
 static gboolean get_data_format_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+    { "wda-set-data-format", 0, 0, G_OPTION_ARG_STRING, &set_data_format_str,
+      "Set data format",
+      "[raw-ip|802-3]"
+    },
     { "wda-get-data-format", 0, 0, G_OPTION_ARG_NONE, &get_data_format_flag,
       "Get data format",
       NULL
@@ -81,7 +86,8 @@ qmicli_wda_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (get_data_format_flag +
+    n_actions = (!!set_data_format_str +
+                 get_data_format_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -201,6 +207,112 @@ get_data_format_ready (QmiClientWda *client,
     shutdown (TRUE);
 }
 
+static void
+set_data_format_ready (QmiClientWda *client,
+                       GAsyncResult *res)
+{
+    QmiMessageWdaSetDataFormatOutput *output;
+    GError *error = NULL;
+    gboolean qos_format;
+    QmiWdaLinkLayerProtocol link_layer_protocol;
+    QmiWdaDataAggregationProtocol data_aggregation_protocol;
+    guint32 ndp_signature;
+    guint32 data_aggregation_max_datagrams;
+    guint32 data_aggregation_max_size;
+
+    output = qmi_client_wda_set_data_format_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wda_set_data_format_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set data format: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wda_set_data_format_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully set data format\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_wda_set_data_format_output_get_qos_format (
+            output,
+            &qos_format,
+            NULL))
+        g_print ("                        QoS flow header: %s\n", qos_format ? "yes" : "no");
+
+    if (qmi_message_wda_set_data_format_output_get_link_layer_protocol (
+            output,
+            &link_layer_protocol,
+            NULL))
+        g_print ("                    Link layer protocol: '%s'\n",
+                 qmi_wda_link_layer_protocol_get_string (link_layer_protocol));
+
+    if (qmi_message_wda_set_data_format_output_get_uplink_data_aggregation_protocol (
+            output,
+            &data_aggregation_protocol,
+            NULL))
+        g_print ("       Uplink data aggregation protocol: '%s'\n",
+                 qmi_wda_data_aggregation_protocol_get_string (data_aggregation_protocol));
+
+    if (qmi_message_wda_set_data_format_output_get_downlink_data_aggregation_protocol (
+            output,
+            &data_aggregation_protocol,
+            NULL))
+        g_print ("     Downlink data aggregation protocol: '%s'\n",
+                 qmi_wda_data_aggregation_protocol_get_string (data_aggregation_protocol));
+
+    if (qmi_message_wda_set_data_format_output_get_ndp_signature (
+            output,
+            &ndp_signature,
+            NULL))
+        g_print ("                          NDP signature: '%u'\n", ndp_signature);
+
+    if (qmi_message_wda_set_data_format_output_get_downlink_data_aggregation_max_datagrams (
+            output,
+            &data_aggregation_max_datagrams,
+            NULL))
+        g_print ("Downlink data aggregation max datagrams: '%u'\n", data_aggregation_max_datagrams);
+
+    if (qmi_message_wda_set_data_format_output_get_downlink_data_aggregation_max_size (
+            output,
+            &data_aggregation_max_size,
+            NULL))
+        g_print ("     Downlink data aggregation max size: '%u'\n", data_aggregation_max_size);
+
+    qmi_message_wda_set_data_format_output_unref (output);
+    shutdown (TRUE);
+}
+
+static QmiMessageWdaSetDataFormatInput *
+set_data_format_input_create (const gchar *str)
+{
+    QmiMessageWdaSetDataFormatInput *input = NULL;
+    QmiWdaLinkLayerProtocol link_layer_protocol;
+
+    if (qmicli_read_link_layer_protocol_from_string (str, &link_layer_protocol)) {
+        GError *error = NULL;
+
+        input = qmi_message_wda_set_data_format_input_new ();
+        if (!qmi_message_wda_set_data_format_input_set_link_layer_protocol (
+                input,
+                link_layer_protocol,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_wda_set_data_format_input_unref (input);
+            input = NULL;
+        }
+    }
+
+    return input;
+}
+
 void
 qmicli_wda_run (QmiDevice *device,
                 QmiClientWda *client,
@@ -211,6 +323,23 @@ qmicli_wda_run (QmiDevice *device,
     ctx->device = g_object_ref (device);
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
+
+    /* Request to set data format? */
+    if (set_data_format_str) {
+        QmiMessageWdaSetDataFormatInput *input;
+
+        input = set_data_format_input_create (set_data_format_str);
+
+        g_debug ("Asynchronously setting data format...");
+        qmi_client_wda_set_data_format (ctx->client,
+                                        input,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)set_data_format_ready,
+                                        NULL);
+        qmi_message_wda_set_data_format_input_unref (input);
+        return;
+    }
 
     /* Request to read data format? */
     if (get_data_format_flag) {
