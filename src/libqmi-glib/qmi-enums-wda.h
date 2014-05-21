@@ -39,14 +39,14 @@
  * QmiWdaLinkLayerProtocol:
  * @QMI_WDA_LINK_LAYER_PROTOCOL_UNKNOWN: Unknown.
  * @QMI_WDA_LINK_LAYER_PROTOCOL_802_3: 802.3 ethernet mode.
- * @QMI_WDA_LINK_LAYER_PROTOCOL_IP: IP mode.
+ * @QMI_WDA_LINK_LAYER_PROTOCOL_RAW_IP: Raw IP mode.
  *
  * Link layer protocol.
  */
 typedef enum {
     QMI_WDA_LINK_LAYER_PROTOCOL_UNKNOWN = 0x00,
     QMI_WDA_LINK_LAYER_PROTOCOL_802_3   = 0x01,
-    QMI_WDA_LINK_LAYER_PROTOCOL_IP      = 0x02,
+    QMI_WDA_LINK_LAYER_PROTOCOL_RAW_IP  = 0x02,
 } QmiWdaLinkLayerProtocol;
 
 /**
