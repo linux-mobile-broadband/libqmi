@@ -263,6 +263,7 @@
     <xi:include href="xml/qmi-enums-wda.xml"/>
     <section>
       <title>WDA Requests</title>
+      <xi:include href="xml/qmi-message-wda-set-data-format.xml"/>
       <xi:include href="xml/qmi-message-wda-get-data-format.xml"/>
     </section>
   </chapter>
