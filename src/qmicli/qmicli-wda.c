@@ -142,7 +142,7 @@ get_data_format_ready (QmiClientWda *client,
     }
 
     if (!qmi_message_wda_get_data_format_output_get_result (output, &error)) {
-        g_printerr ("error: couldn't get card status: %s\n", error->message);
+        g_printerr ("error: couldn't get data format: %s\n", error->message);
         g_error_free (error);
         qmi_message_wda_get_data_format_output_unref (output);
         shutdown (FALSE);
