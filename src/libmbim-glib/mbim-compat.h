@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -59,13 +59,13 @@ G_DEPRECATED_FOR (MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST)
 
 G_DEPRECATED_FOR (mbim_message_device_service_subscribe_list_set_new)
 MbimMessage *mbim_message_device_service_subscriber_list_set_new (
-	guint32 events_count,
-	const MbimEventEntry *const *events,
-	GError **error);
+    guint32 events_count,
+    const MbimEventEntry *const *events,
+    GError **error);
 
 G_DEPRECATED_FOR (mbim_message_device_service_subscribe_list_response_parse)
 gboolean mbim_message_device_service_subscriber_list_response_parse (
-	const MbimMessage *message,
+    const MbimMessage *message,
     guint32 *events_count,
     MbimEventEntry ***events,
     GError **error);

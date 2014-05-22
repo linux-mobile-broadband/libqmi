@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -45,14 +45,14 @@
  */
 MbimMessage *
 mbim_message_device_service_subscriber_list_set_new (
-	guint32 events_count,
-	const MbimEventEntry *const *events,
-	GError **error)
+    guint32 events_count,
+    const MbimEventEntry *const *events,
+    GError **error)
 {
     return (mbim_message_device_service_subscribe_list_set_new (
-				events_count,
-				events,
-				error));
+                events_count,
+                events,
+                error));
 }
 
 /**
@@ -70,14 +70,14 @@ mbim_message_device_service_subscriber_list_set_new (
  */
 gboolean
 mbim_message_device_service_subscriber_list_response_parse (
-	const MbimMessage *message,
+    const MbimMessage *message,
     guint32 *events_count,
     MbimEventEntry ***events,
     GError **error)
 {
-	return (mbim_message_device_service_subscribe_list_response_parse (
-				message,
-				events_count,
-				events,
-				error));
+    return (mbim_message_device_service_subscribe_list_response_parse (
+                message,
+                events_count,
+                events,
+                error));
 }
