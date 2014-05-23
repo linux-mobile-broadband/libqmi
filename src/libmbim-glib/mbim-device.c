@@ -1059,6 +1059,16 @@ device_open_context_complete_and_free (DeviceOpenContext *ctx)
 
 static void device_open_context_step (DeviceOpenContext *ctx);
 
+/**
+ * mbim_device_open_full_finish:
+ * @self: a #MbimDevice.
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an asynchronous open operation started with mbim_device_open_full().
+ *
+ * Returns: %TRUE if successful, %FALSE if @error is set.
+ */
 gboolean
 mbim_device_open_full_finish (MbimDevice    *self,
                               GAsyncResult  *res,
@@ -1238,6 +1248,23 @@ device_open_context_step (DeviceOpenContext *ctx)
     g_assert_not_reached ();
 }
 
+/**
+ * mbim_device_open_full:
+ * @self: a #MbimDevice.
+ * @flags: a set of #MbimDeviceOpenFlags.
+ * @timeout: maximum time, in seconds, to wait for the device to be opened.
+ * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously opens a #MbimDevice for I/O.
+ *
+ * This method is an extension of the generic mbim_device_open(), which allows
+ * launching the #MbimDevice with proxy support.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * mbim_device_open_full_finish() to get the result of the operation.
+ */
 void
 mbim_device_open_full (MbimDevice          *self,
                        MbimDeviceOpenFlags  flags,
