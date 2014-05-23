@@ -95,12 +95,15 @@ typedef enum {
     MBIM_DEVICE_OPEN_FLAGS_PROXY = 1 << 0
 } MbimDeviceOpenFlags;
 
-void     mbim_device_open_full (MbimDevice           *self,
-                                MbimDeviceOpenFlags   flags,
-                                guint                 timeout,
-                                GCancellable         *cancellable,
-                                GAsyncReadyCallback   callback,
-                                gpointer              user_data);
+void     mbim_device_open_full        (MbimDevice           *self,
+                                       MbimDeviceOpenFlags   flags,
+                                       guint                 timeout,
+                                       GCancellable         *cancellable,
+                                       GAsyncReadyCallback   callback,
+                                       gpointer              user_data);
+gboolean mbim_device_open_full_finish (MbimDevice           *self,
+                                       GAsyncResult         *res,
+                                       GError              **error);
 
 void     mbim_device_open        (MbimDevice           *self,
                                   guint                 timeout,

@@ -1059,6 +1059,14 @@ device_open_context_complete_and_free (DeviceOpenContext *ctx)
 
 static void device_open_context_step (DeviceOpenContext *ctx);
 
+gboolean
+mbim_device_open_full_finish (MbimDevice    *self,
+                              GAsyncResult  *res,
+                              GError       **error)
+{
+    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+}
+
 /**
  * mbim_device_open_finish:
  * @self: a #MbimDevice.
@@ -1071,11 +1079,12 @@ static void device_open_context_step (DeviceOpenContext *ctx);
  */
 gboolean
 mbim_device_open_finish (MbimDevice   *self,
-                        GAsyncResult  *res,
-                        GError       **error)
+                         GAsyncResult  *res,
+                         GError       **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return mbim_device_open_full_finish (self, res, error);
 }
+
 
 static void open_message (DeviceOpenContext *ctx);
 
