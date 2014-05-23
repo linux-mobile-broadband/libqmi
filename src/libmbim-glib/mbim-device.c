@@ -113,6 +113,7 @@ struct _MbimDevicePrivate {
     guint16 max_control_transfer;
 };
 
+#define MAX_SPAWN_RETRIES             10
 #define MAX_CONTROL_TRANSFER          4096
 #define MAX_TIME_BETWEEN_FRAGMENTS_MS 1250
 
@@ -813,7 +814,6 @@ typedef struct {
     guint spawn_retries;
 } CreateIoChannelContext;
 
-
 static void
 create_iochannel_context_complete_and_free (CreateIoChannelContext *ctx)
 {
@@ -851,8 +851,8 @@ setup_iochannel (CreateIoChannelContext *ctx)
                                  &inner_error)) {
         g_simple_async_result_take_error (ctx->result, inner_error);
         g_io_channel_shutdown (ctx->self->priv->iochannel, FALSE, NULL);
-	g_io_channel_unref (ctx->self->priv->iochannel);
-	ctx->self->priv->iochannel = NULL;
+        g_io_channel_unref (ctx->self->priv->iochannel);
+        ctx->self->priv->iochannel = NULL;
         g_clear_object (&ctx->self->priv->socket_connection);
         g_clear_object (&ctx->self->priv->socket_client);
         create_iochannel_context_complete_and_free (ctx);
@@ -1172,7 +1172,7 @@ create_iochannel_ready (MbimDevice *self,
 {
     GError *error = NULL;
 
-    if( ! create_iochannel_finish (self, res, &error)) {
+    if (!create_iochannel_finish (self, res, &error)) {
         g_simple_async_result_take_error (ctx->result, error);
         device_open_context_complete_and_free (ctx);
         return;
@@ -1285,7 +1285,6 @@ mbim_device_open (MbimDevice          *self,
                            user_data);
 }
 
-
 /*****************************************************************************/
 /* Close channel */
 
@@ -1301,8 +1300,8 @@ destroy_iochannel (MbimDevice  *self,
 
     if (self->priv->iochannel) {
         g_io_channel_shutdown (self->priv->iochannel, TRUE, &inner_error);
-	g_io_channel_unref (self->priv->iochannel);
-	self->priv->iochannel = NULL;
+        g_io_channel_unref (self->priv->iochannel);
+        self->priv->iochannel = NULL;
     }
 
     /* Failures when closing still make the device to get closed */
@@ -1341,6 +1340,7 @@ mbim_device_close_force (MbimDevice *self,
                          GError **error)
 {
     g_return_val_if_fail (MBIM_IS_DEVICE (self), FALSE);
+
     return destroy_iochannel (self, error);
 }
 
@@ -2038,7 +2038,7 @@ finalize (GObject *object)
         if (self->priv->transactions[i]) {
             g_assert (g_hash_table_size (self->priv->transactions[i]) == 0);
             g_hash_table_unref (self->priv->transactions[i]);
-	    self->priv->transactions[i] = NULL;
+            self->priv->transactions[i] = NULL;
         }
     }
 

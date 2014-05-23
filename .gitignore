@@ -8,6 +8,7 @@ tags
 .*DS_Store
 .deps
 .libs
+.__autoconf_trace_data
 
 ChangeLog
 INSTALL
@@ -86,4 +87,3 @@ src/mbimcli/mbimcli
 utils/mbim-network
 
 src/mbim-proxy/mbim-proxy
-.__autoconf_trace_data

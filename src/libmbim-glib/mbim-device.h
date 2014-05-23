@@ -52,8 +52,6 @@ typedef struct _MbimDevicePrivate MbimDevicePrivate;
 #define MBIM_DEVICE_SIGNAL_INDICATE_STATUS "device-indicate-status"
 #define MBIM_DEVICE_SIGNAL_ERROR           "device-error"
 
-#define MAX_SPAWN_RETRIES 10
-
 /**
  * MbimDevice:
  *

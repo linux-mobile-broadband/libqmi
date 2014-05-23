@@ -197,7 +197,7 @@ device_close (MbimProxy *self,
             if (device == device_in_list ||
                 g_str_equal (mbim_device_get_path (device), mbim_device_get_path (device_in_list))) {
                 g_debug ("closing device '%s': no longer used", mbim_device_get_path_display (device));
-                mbim_device_close (device_in_list, 
+                mbim_device_close (device_in_list,
                                    15,
                                    NULL,
                                    (GAsyncReadyCallback) device_close_ready,
@@ -274,7 +274,7 @@ complete_internal_proxy_open (Client *client)
     g_debug ("connection to MBIM device '%s' established", mbim_device_get_path (client->device));
 
     g_assert (client->internal_proxy_open_request != NULL);
-    response = mbim_message_open_done_new (mbim_message_get_transaction_id (client->internal_proxy_open_request), 
+    response = mbim_message_open_done_new (mbim_message_get_transaction_id (client->internal_proxy_open_request),
                                            MBIM_STATUS_ERROR_NONE);
 
     if (!send_message (client, response, &error)) {
@@ -303,7 +303,7 @@ indication_cb (MbimDevice *device,
 
             info = &g_array_index (client->mbim_client_info_array, MbimClientInfo, i);
             /* If service UUID match, forward to the remote client */
-            if (mbim_uuid_cmp(mbim_message_indicate_status_get_service_id (message), &info->uuid)) {
+            if (mbim_uuid_cmp (mbim_message_indicate_status_get_service_id (message), &info->uuid)) {
                 forward_indication = TRUE;
                 break;
             }
@@ -497,9 +497,9 @@ process_internal_proxy_config (Client *client,
         error_status_code = MBIM_STATUS_ERROR_NONE;
     } else
         error_status_code = MBIM_STATUS_ERROR_INVALID_PARAMETERS;
-        
-    response = (MbimMessage *)_mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND_DONE, 
-                                                      mbim_message_get_transaction_id(message), 
+
+    response = (MbimMessage *)_mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND_DONE,
+                                                      mbim_message_get_transaction_id(message),
                                                       sizeof (struct command_done_message));
     command_done = &(((struct full_message *)(response->data))->message.command_done);
     command_done->fragment_header.total   = GUINT32_TO_LE (1);
@@ -528,7 +528,7 @@ track_uuid (Client *client,
     guint i;
     gboolean exists;
 
-    memcpy (&info.uuid, mbim_message_command_done_get_service_id(message), sizeof(info.uuid));
+    memcpy (&info.uuid, mbim_message_command_done_get_service_id (message), sizeof (info.uuid));
     uuid_display = mbim_uuid_get_printable (&info.uuid);
 
     /* Check if it already exists */
@@ -536,7 +536,7 @@ track_uuid (Client *client,
         MbimClientInfo *existing;
 
         existing = &g_array_index (client->mbim_client_info_array, MbimClientInfo, i);
-        if (mbim_uuid_cmp(&info.uuid, &existing->uuid))
+        if (mbim_uuid_cmp (&info.uuid, &existing->uuid))
             break;
     }
     exists = (i < client->mbim_client_info_array->len);
@@ -544,7 +544,7 @@ track_uuid (Client *client,
     if (track && !exists) {
         g_debug ("MBIM client tracked [%s,%s]",
                  mbim_device_get_path_display (client->device),
-        uuid_display);
+                 uuid_display);
         g_array_append_val (client->mbim_client_info_array, info);
     } else if (!track && exists) {
         g_debug ("MBIM client untracked [%s,%s]",
@@ -572,10 +572,10 @@ device_command_ready (MbimDevice *device,
     response = mbim_device_command_finish (device, res, &error);
     if (!response) {
         g_warning ("sending request to device failed: %s", error->message);
-	if (!mbim_device_is_open(device)) {
-	    g_debug ("device is closed");
-	    connection_close (request->client);
-	}
+        if (!mbim_device_is_open (device)) {
+            g_debug ("device is closed");
+            connection_close (request->client);
+        }
 
         g_error_free (error);
         g_slice_free (Request, request);

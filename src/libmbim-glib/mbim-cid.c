@@ -126,6 +126,7 @@ static const CidConfig cid_ms_host_shutdown_config [MBIM_CID_MS_HOST_SHUTDOWN_LA
     { TRUE,  FALSE, FALSE }, /* MBIM_CID_MS_HOST_SHUTDOWN_NOTIFY */
 };
 
+/* Note: index of the array is CID-1 */
 #define MBIM_CID_PROXY_CONTROL_LAST MBIM_CID_PROXY_CONTROL_CONFIGURATION
 static const CidConfig cid_proxy_control_config [MBIM_CID_PROXY_CONTROL_LAST] = {
     { TRUE,  FALSE, FALSE }, /* MBIM_CID_PROXY_CONTROL_CONFIGURATION */

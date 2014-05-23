@@ -69,7 +69,7 @@ PKG_CHECK_MODULES(LIBMBIM_GLIB,
                   glib-2.0 >= 2.32
                   gobject-2.0
                   gio-2.0
-		  gio-unix-2.0
+                  gio-unix-2.0
                   gudev-1.0 >= 147)
 AC_SUBST(LIBMBIM_GLIB_CFLAGS)
 AC_SUBST(LIBMBIM_GLIB_LIBS)
