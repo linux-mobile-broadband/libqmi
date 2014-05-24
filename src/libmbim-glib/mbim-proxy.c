@@ -602,7 +602,6 @@ static gboolean
 process_message (Client *client,
                  MbimMessage *message)
 {
-    guint timeout = 10;
     Request *request;
 
     /* Filter by message type */
@@ -630,36 +629,14 @@ process_message (Client *client,
     /* replace command transaction id with internal proxy transaction id to avoid collision */
     mbim_message_set_transaction_id (message, mbim_device_get_next_transaction_id (client->device));
 
-    if (mbim_message_command_get_service (message) == MBIM_SERVICE_BASIC_CONNECT) {
-        if (mbim_message_command_get_cid (message) == MBIM_CID_BASIC_CONNECT_VISIBLE_PROVIDERS) {
-            /* increase timeout for network scan */
-            timeout = 120;
-        } else if (mbim_message_command_get_cid (message) == MBIM_CID_BASIC_CONNECT_REGISTER_STATE &&
-                   mbim_message_command_get_command_type (message) == MBIM_MESSAGE_COMMAND_TYPE_SET) {
-            /* increase timeout for network registration */
-            timeout = 60;
-        } else if (mbim_message_command_get_cid (message) == MBIM_CID_BASIC_CONNECT_RADIO_STATE &&
-                   mbim_message_command_get_command_type (message) == MBIM_MESSAGE_COMMAND_TYPE_SET) {
-            /* increase timeout for setting radio state */
-            timeout = 30;
-        } else if (mbim_message_command_get_cid (message) == MBIM_CID_BASIC_CONNECT_PACKET_SERVICE &&
-                   mbim_message_command_get_command_type (message) == MBIM_MESSAGE_COMMAND_TYPE_SET) {
-            /* increase timeout for setting packet service */
-            timeout = 30;
-        } else if (mbim_message_command_get_cid (message) == MBIM_CID_BASIC_CONNECT_CONNECT &&
-                   mbim_message_command_get_command_type (message) == MBIM_MESSAGE_COMMAND_TYPE_SET) {
-            /* increase timeout for connecting */
-            timeout = 60;
-        } else if (mbim_message_command_get_cid (message) == MBIM_CID_BASIC_CONNECT_IP_CONFIGURATION &&
-                   mbim_message_command_get_command_type (message) == MBIM_MESSAGE_COMMAND_TYPE_QUERY) {
-            /* increase timeout for querying ip configuration */
-            timeout = 60;
-        }
-    }
-
+    /* The timeout needs to be big enough for any kind of transaction to
+     * complete, otherwise the remote clients will lose the reply if they
+     * configured a timeout bigger than this internal one. We should likely
+     * make this value configurable per-client, instead of a hardcoded value.
+     */
     mbim_device_command (client->device,
                          message,
-                         timeout,
+                         300,
                          NULL,
                          (GAsyncReadyCallback)device_command_ready,
                          request);
