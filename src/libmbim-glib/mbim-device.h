@@ -86,6 +86,7 @@ gboolean     mbim_device_is_open          (MbimDevice *self);
 
 /**
  * MbimDeviceOpenFlags:
+ * @MBIM_DEVICE_OPEN_FLAGS_NONE: None.
  * @MBIM_DEVICE_OPEN_FLAGS_PROXY: Try to open the port through the 'mbim-proxy'.
  *
  * Flags to specify which actions to be performed when the device is open.
