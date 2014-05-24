@@ -605,23 +605,22 @@ process_message (Client *client,
     guint timeout = 10;
     Request *request;
 
-    /* Accept only command messages from the client */
-    if (mbim_message_get_message_type (message) != MBIM_MESSAGE_TYPE_COMMAND &&
-        mbim_message_get_message_type (message) != MBIM_MESSAGE_TYPE_OPEN    &&
-        mbim_message_get_message_type (message) != MBIM_MESSAGE_TYPE_CLOSE) {
+    /* Filter by message type */
+    switch (mbim_message_get_message_type (message)) {
+    case MBIM_MESSAGE_TYPE_OPEN:
+        return process_internal_proxy_open (client, message);
+    case MBIM_MESSAGE_TYPE_CLOSE:
+        return process_internal_proxy_close (client, message);
+    case MBIM_MESSAGE_TYPE_COMMAND:
+        /* Proxy control message? */
+        if (mbim_message_command_get_service (message) == MBIM_SERVICE_PROXY_CONTROL &&
+            mbim_message_command_get_cid (message) == MBIM_CID_PROXY_CONTROL_CONFIGURATION)
+            return process_internal_proxy_config (client, message);
+        /* Non-proxy control message, go on */
+        break;
+    default:
         g_debug ("invalid message from client: not a command message");
         return FALSE;
-    }
-
-    if (mbim_message_get_message_type (message) == MBIM_MESSAGE_TYPE_OPEN) {
-        return process_internal_proxy_open (client, message);
-    }
-    else if (mbim_message_get_message_type (message) == MBIM_MESSAGE_TYPE_CLOSE) {
-        return process_internal_proxy_close (client, message);
-    }
-    else if (mbim_message_command_get_service (message) == MBIM_SERVICE_PROXY_CONTROL &&
-             mbim_message_command_get_cid (message) == MBIM_CID_PROXY_CONTROL_CONFIGURATION) {
-        return process_internal_proxy_config (client, message);
     }
 
     request = g_slice_new0 (Request);
