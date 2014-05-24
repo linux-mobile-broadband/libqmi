@@ -505,9 +505,14 @@ process_message (Client *client,
         qmi_message_set_transaction_id (message, 0);
     }
 
+    /* The timeout needs to be big enough for any kind of transaction to
+     * complete, otherwise the remote clients will lose the reply if they
+     * configured a timeout bigger than this internal one. We should likely
+     * make this value configurable per-client, instead of a hardcoded value.
+     */
     qmi_device_command (client->device,
                         message,
-                        10, /* for now... */
+                        300,
                         NULL,
                         (GAsyncReadyCallback)device_command_ready,
                         request);
