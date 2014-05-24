@@ -22,6 +22,7 @@ MBIM_UUID_AUTH
 MBIM_UUID_DSS
 MBIM_UUID_MS_FIRMWARE_ID
 MBIM_UUID_MS_HOST_SHUTDOWN
+MBIM_UUID_PROXY_CONTROL
 <SUBSECTION Methods>
 mbim_service_get_string
 mbim_service_lookup_name
@@ -53,6 +54,7 @@ MbimCidAuth
 MbimCidDss
 MbimCidMsFirmwareId
 MbimCidMsHostShutdown
+MbimCidProxyControl
 <SUBSECTION Methods>
 mbim_cid_can_set
 mbim_cid_can_query
@@ -67,6 +69,7 @@ mbim_cid_auth_get_string
 mbim_cid_dss_get_string
 mbim_cid_ms_firmware_id_get_string
 mbim_cid_ms_host_shutdown_get_string
+mbim_cid_proxy_control_get_string
 <SUBSECTION Private>
 mbim_cid_basic_connect_build_string_from_mask
 mbim_cid_sms_build_string_from_mask
@@ -77,6 +80,7 @@ mbim_cid_auth_build_string_from_mask
 mbim_cid_dss_build_string_from_mask
 mbim_cid_ms_firmware_id_build_string_from_mask
 mbim_cid_ms_host_shutdown_build_string_from_mask
+mbim_cid_proxy_control_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_CID_AUTH
 MBIM_TYPE_CID_BASIC_CONNECT
@@ -87,6 +91,7 @@ MBIM_TYPE_CID_STK
 MBIM_TYPE_CID_USSD
 MBIM_TYPE_CID_MS_FIRMWARE_ID
 MBIM_TYPE_CID_MS_HOST_SHUTDOWN
+MBIM_TYPE_CID_PROXY_CONTROL
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
 mbim_cid_dss_get_type
@@ -96,6 +101,7 @@ mbim_cid_stk_get_type
 mbim_cid_ussd_get_type
 mbim_cid_ms_firmware_id_get_type
 mbim_cid_ms_host_shutdown_get_type
+mbim_cid_proxy_control_get_type
 </SECTION>
 
 <SECTION>
@@ -154,6 +160,10 @@ mbim_message_indicate_status_get_service_id
 mbim_message_indicate_status_get_cid
 mbim_message_indicate_status_get_raw_information_buffer
 <SUBSECTION Private>
+mbim_message_open_done_new
+mbim_message_close_done_new
+mbim_message_proxy_control_configuration_response_parse
+mbim_message_proxy_control_configuration_set_new
 mbim_message_type_build_string_from_mask
 mbim_message_command_type_build_string_from_mask
 <SUBSECTION Standard>
@@ -174,6 +184,9 @@ mbim_device_get_path_display
 mbim_device_is_open
 mbim_device_open
 mbim_device_open_finish
+MbimDeviceOpenFlags
+mbim_device_open_full
+mbim_device_open_full_finish
 mbim_device_close
 mbim_device_close_finish
 mbim_device_close_force
@@ -196,6 +209,26 @@ MBIM_IS_DEVICE_CLASS
 MBIM_TYPE_DEVICE
 MbimDevicePrivate
 mbim_device_get_type
+</SECTION>
+
+<SECTION>
+<FILE>mbim-proxy</FILE>
+<TITLE>MbimProxy</TITLE>
+MBIM_PROXY_SOCKET_PATH
+MBIM_PROXY_N_CLIENTS
+MbimProxy
+mbim_proxy_new
+mbim_proxy_get_n_clients
+<SUBSECTION Standard>
+MbimProxyClass
+MBIM_PROXY
+MBIM_PROXY_CLASS
+MBIM_PROXY_GET_CLASS
+MBIM_IS_PROXY
+MBIM_IS_PROXY_CLASS
+MBIM_TYPE_PROXY
+MbimProxyPrivate
+mbim_proxy_get_type
 </SECTION>
 
 <SECTION>
