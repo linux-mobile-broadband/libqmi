@@ -47,6 +47,7 @@ static gboolean operation_status;
 
 /* Main options */
 static gchar *device_str;
+static gboolean device_open_proxy_flag;
 static gchar *no_open_str;
 static gboolean no_close_flag;
 static gboolean noop_flag;
@@ -58,6 +59,10 @@ static GOptionEntry main_entries[] = {
     { "device", 'd', 0, G_OPTION_ARG_STRING, &device_str,
       "Specify device path",
       "[PATH]"
+    },
+    { "device-open-proxy", 'p', 0, G_OPTION_ARG_NONE, &device_open_proxy_flag,
+      "Request to use the 'mbim-proxy' proxy",
+      NULL
     },
     { "no-open", 0, 0, G_OPTION_ARG_STRING, &no_open_str,
       "Do not explicitly open the MBIM device before running the command",
@@ -277,6 +282,7 @@ device_new_ready (GObject      *unused,
                   GAsyncResult *res)
 {
     GError *error = NULL;
+    MbimDeviceOpenFlags open_flags = MBIM_DEVICE_OPEN_FLAGS_NONE;
 
     device = mbim_device_new_finish (res, &error);
     if (!device) {
@@ -301,9 +307,13 @@ device_new_ready (GObject      *unused,
                       NULL);
     }
 
+    /* Setup device open flags */
+    if (device_open_proxy_flag)
+        open_flags |= MBIM_DEVICE_OPEN_FLAGS_PROXY;
+
     /* Open the device */
     mbim_device_open_full (device,
-                           MBIM_DEVICE_OPEN_FLAGS_PROXY,
+                           open_flags,
                            30,
                            cancellable,
                            (GAsyncReadyCallback) device_open_ready,
