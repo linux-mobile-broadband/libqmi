@@ -232,6 +232,15 @@ def format_is_signed_integer(fmt):
     else:
         return False
 
+"""
+Returns True if the given format corresponds to a basic floating point type
+"""
+def format_is_float(fmt):
+    if fmt == 'gfloat':
+        return True
+    else:
+        return False
+
 
 """
 Returns True if the given format corresponds to a basic signed or unsigned

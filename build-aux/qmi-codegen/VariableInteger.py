@@ -23,8 +23,13 @@ import utils
 from Variable import Variable
 
 """
-Variable type for signed/unsigned Integers
-('guint8', 'gint8', 'guint16', 'gint16', 'guint32', 'gint32', 'guint64', 'gint64' 'guint-sized' formats)
+Variable type for signed/unsigned Integers and floating point numbers:
+ 'guint8', 'gint8'
+ 'guint16', 'gint16'
+ 'guint32', 'gint32'
+ 'guint64', 'gint64'
+ 'guint-sized'
+ 'gfloat'
 """
 class VariableInteger(Variable):
 
@@ -76,7 +81,7 @@ class VariableInteger(Variable):
                 '${lp}qmi_utils_read_${private_format}_from_buffer (\n'
                 '${lp}    &${buffer_name},\n'
                 '${lp}    &${buffer_len},\n')
-            if self.private_format != 'guint8' and self.private_format != 'gint8':
+            if self.private_format != 'guint8' and self.private_format != 'gint8' and self.private_format != 'gfloat':
                 template += (
                     '${lp}    ${endian},\n')
             template += (
@@ -117,7 +122,7 @@ class VariableInteger(Variable):
         elif self.private_format == 'guint16' or self.private_format == 'gint16':
             template += (
                 '${lp}${variable_name} += 2;\n')
-        elif self.private_format == 'guint32' or self.private_format == 'gint32':
+        elif self.private_format == 'guint32' or self.private_format == 'gint32' or self.private_format == 'gfloat':
             template += (
                 '${lp}${variable_name} += 4;\n')
         elif self.private_format == 'guint64' or self.private_format == 'gint64':
@@ -202,6 +207,8 @@ class VariableInteger(Variable):
             common_format = '%" G_GINT32_FORMAT "'
         elif self.private_format == 'gint64':
             common_format = '%" G_GINT64_FORMAT "'
+        elif self.private_format == 'gfloat':
+            common_format = '%f'
 
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
@@ -235,7 +242,7 @@ class VariableInteger(Variable):
                 '${lp}    qmi_utils_read_${private_format}_from_buffer (\n'
                 '${lp}        &${buffer_name},\n'
                 '${lp}        &${buffer_len},\n')
-            if self.private_format != 'guint8' and self.private_format != 'gint8':
+            if self.private_format != 'guint8' and self.private_format != 'gint8' and self.private_format != 'gfloat':
                 template += (
                     '${lp}        ${endian},\n')
             template += (

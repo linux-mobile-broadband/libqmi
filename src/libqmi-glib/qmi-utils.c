@@ -456,6 +456,39 @@ qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
 }
 
 /**
+ * qmi_utils_read_gfloat_from_buffer:
+ * @buffer: a buffer with raw binary data.
+ * @buffer_size: size of @buffer.
+ * @out: return location for the read variable.
+ *
+ * Reads a 32-bit floating-point number from the buffer.
+ *
+ * The user needs to make sure that at least 4 bytes are available
+ * in the buffer.
+ *
+ * Also note that both @buffer and @buffer_size get updated after the 4 bytes
+ * read.
+ */
+void
+qmi_utils_read_gfloat_from_buffer (const guint8 **buffer,
+                                   guint16       *buffer_size,
+                                   gfloat        *out)
+{
+    g_assert (out != NULL);
+    g_assert (buffer != NULL);
+    g_assert (buffer_size != NULL);
+    g_assert (*buffer_size >= 4);
+
+    /* Yeah, do this for now */
+    memcpy (out, &((*buffer)[0]), 4);
+
+    print_read_bytes_trace ("gfloat", &(*buffer)[0], out, 4);
+
+    *buffer = &((*buffer)[4]);
+    *buffer_size = (*buffer_size) - 4;
+}
+
+/**
  * qmi_utils_write_guint8_to_buffer:
  * @buffer: a buffer.
  * @buffer_size: size of @buffer.

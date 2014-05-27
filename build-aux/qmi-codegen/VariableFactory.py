@@ -33,6 +33,8 @@ in the given dictionary
 def create_variable(dictionary, new_type_name, container_type):
     if utils.format_is_integer(dictionary['format']):
         return VariableInteger(dictionary)
+    elif utils.format_is_float(dictionary['format']):
+        return VariableInteger(dictionary)
     elif dictionary['format'] == 'string':
         return VariableString(dictionary)
     elif dictionary['format'] == 'struct':

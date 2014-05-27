@@ -87,6 +87,10 @@ void qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
                                              QmiEndian      endian,
                                              guint64       *out);
 
+void qmi_utils_read_gfloat_from_buffer  (const guint8 **buffer,
+                                         guint16       *buffer_size,
+                                         gfloat        *out);
+
 void qmi_utils_write_guint8_to_buffer (guint8  **buffer,
                                        guint16  *buffer_size,
                                        guint8   *in);
