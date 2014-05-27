@@ -142,6 +142,7 @@
       <xi:include href="xml/qmi-message-nas-config-signal-info.xml"/>
       <xi:include href="xml/qmi-message-nas-get-cdma-position-info.xml"/>
       <xi:include href="xml/qmi-message-nas-get-tx-rx-info.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-cell-location-info.xml"/>
     </section>
   </chapter>
 
