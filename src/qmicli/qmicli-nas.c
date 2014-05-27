@@ -2242,6 +2242,7 @@ get_cell_location_info_ready (QmiClientNas *client,
     guint16 system_id;
     guint16 network_id;
     guint16 base_station_id;
+    guint16 reference_pn;
     guint32 latitude;
     guint32 longitude;
 
@@ -2384,24 +2385,26 @@ get_cell_location_info_ready (QmiClientNas *client,
         }
     }
 
-    if(qmi_message_nas_get_cell_location_info_output_get_cdma_info  (
+    if (qmi_message_nas_get_cell_location_info_output_get_cdma_info  (
             output,
             &system_id,
             &network_id,
             &base_station_id,
+            &reference_pn,
             &latitude,
             &longitude,
             NULL)) {
-
         g_print ("CDMA Info\n"
                  "\tSystem ID: '%" G_GUINT16_FORMAT"'\n"
                  "\tNetwork ID: '%" G_GUINT16_FORMAT"'\n"
                  "\tBase Station ID: '%" G_GUINT16_FORMAT"'\n"
+                 "\tReference PN: '%" G_GUINT16_FORMAT"'\n"
                  "\tLatitude: '%" G_GUINT32_FORMAT"'\n"
                  "\tLongitude: '%" G_GUINT32_FORMAT"'\n",
                  system_id,
                  network_id,
                  base_station_id,
+                 reference_pn,
                  latitude,
                  longitude);
     }

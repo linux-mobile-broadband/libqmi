@@ -1405,6 +1405,8 @@
                                         "format" : "guint16" },
                                       { "name"   : "Base Station ID",
                                         "format" : "guint16" },
+                                      { "name"   : "Reference PN",
+                                        "format" : "guint16" },
                                       { "name"   : "Latitude",
                                         "format" : "guint32" },
                                       { "name"   : "Longitude",
