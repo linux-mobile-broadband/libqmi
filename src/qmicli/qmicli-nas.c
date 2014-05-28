@@ -2233,11 +2233,12 @@ get_cell_location_info_ready (QmiClientNas *client,
     guint16 absolute_rf_channel_number;
     guint8 base_station_identity_code;
     guint32 timing_advance;
-    gint16 rx_level;
+    guint16 rx_level;
 
+    guint16 cell_id_16;
     guint16 primary_scrambling_code;
     gint16 rscp;
-    guint16 ecio;
+    gint16 ecio;
 
     guint16 system_id;
     guint16 network_id;
@@ -2294,7 +2295,7 @@ get_cell_location_info_ready (QmiClientNas *client,
                  "\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                  "\tBase Station Identity Code: '%" G_GUINT16_FORMAT"'\n"
                  "\tTiming Advance: '%" G_GUINT32_FORMAT"'\n"
-                 "\tRX Level: '%" G_GINT16_FORMAT"'\n",
+                 "\tRX Level: '%" G_GUINT16_FORMAT"'\n",
                  cell_id,
                  lac,
                  absolute_rf_channel_number,
@@ -2312,7 +2313,7 @@ get_cell_location_info_ready (QmiClientNas *client,
                      "\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n"
                      "\t\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                      "\t\tBase Station Identity Code: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tRX Level: '%" G_GINT16_FORMAT"'\n",
+                     "\t\tRX Level: '%" G_GUINT16_FORMAT"'\n",
                     i,
                     element->cell_id,
                     element->lac,
@@ -2326,7 +2327,7 @@ get_cell_location_info_ready (QmiClientNas *client,
     array2 = NULL;
     if (qmi_message_nas_get_cell_location_info_output_get_umts_info (
             output,
-            &cell_id,
+            &cell_id_16,
             &operator,
             &lac,
             &absolute_rf_channel_number,
@@ -2337,14 +2338,14 @@ get_cell_location_info_ready (QmiClientNas *client,
         guint i;
 
         g_print ("UMTS Info\n"
-                 "\tCell ID: '%" G_GUINT32_FORMAT"'\n"
+                 "\tCell ID: '%" G_GUINT16_FORMAT"'\n"
                  // FIXME: decode packed BCD operator
                  "\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n"
                  "\tUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                  "\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
                  "\tReceived Signal Code Power: '%" G_GINT16_FORMAT"'\n"
-                 "\tECIO: '%" G_GUINT16_FORMAT"'\n",
-                 cell_id,
+                 "\tECIO: '%" G_GINT16_FORMAT"'\n",
+                 cell_id_16,
                  lac,
                  absolute_rf_channel_number,
                  primary_scrambling_code,
@@ -2359,7 +2360,7 @@ get_cell_location_info_ready (QmiClientNas *client,
                      "\tUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                      "\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
                      "\tRSCP: '%" G_GINT16_FORMAT"'\n"
-                     "\tECIO: '%" G_GUINT16_FORMAT"'\n",
+                     "\tECIO: '%" G_GINT16_FORMAT"'\n",
                      i,
                      element->utra_absolute_rf_channel_number,
                      element->primary_scrambling_code,
@@ -2451,10 +2452,10 @@ get_cell_location_info_ready (QmiClientNas *client,
             element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement, i);
             g_print ("\tCell [%u]:\n"
                      "\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tRSRQ: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tRSRP: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tRSSI: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tCell Selection RX Level: '%" G_GUINT16_FORMAT"'\n",
+                     "\t\tRSRQ: '%" G_GINT16_FORMAT"'\n"
+                     "\t\tRSRP: '%" G_GINT16_FORMAT"'\n"
+                     "\t\tRSSI: '%" G_GINT16_FORMAT"'\n"
+                     "\t\tCell Selection RX Level: '%" G_GINT16_FORMAT"'\n",
                      i,
                      element->physical_cell_id,
                      element->rsrq,
