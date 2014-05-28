@@ -2359,10 +2359,10 @@ get_cell_location_info_ready (QmiClientNas *client,
 
             element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputUmtsInfoCellElement, i);
             g_print ("\tCell [%u]:\n"
-                     "\tUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
-                     "\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
-                     "\tRSCP: '%" G_GINT16_FORMAT"'\n"
-                     "\tECIO: '%" G_GINT16_FORMAT"'\n",
+                     "\t\tUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tRSCP: '%" G_GINT16_FORMAT"'\n"
+                     "\t\tECIO: '%" G_GINT16_FORMAT"'\n",
                      i,
                      element->utra_absolute_rf_channel_number,
                      element->primary_scrambling_code,
@@ -2375,10 +2375,10 @@ get_cell_location_info_ready (QmiClientNas *client,
 
             element = &g_array_index (array2, QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringGeranElement, i);
             g_print ("\tNeighboring GERAN Cell [%u]:\n"
-                     "\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
-                     "\tNetwork Color Code: '%u'\n"
-                     "\tBase Station Color Code: '%u'\n"
-                     "\tRSSI: '%" G_GUINT16_FORMAT"'\n",
+                     "\t\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tNetwork Color Code: '%u'\n"
+                     "\t\tBase Station Color Code: '%u'\n"
+                     "\t\tRSSI: '%" G_GUINT16_FORMAT"'\n",
                      i,
                      element->geran_absolute_rf_channel_number,
                      element->network_color_code,
