@@ -2217,6 +2217,24 @@ network_scan_ready (QmiClientNas *client,
     shutdown (TRUE);
 }
 
+static gchar *
+str_from_bcd_plmn (const gchar *bcd)
+{
+    static const gchar bcd_chars[] = "0123456789*#abc\0\0";
+    gchar *str;
+    guint i;
+    guint j;
+
+    str = g_malloc (7);
+    for (i = 0, j = 0 ; i < 3; i++) {
+        str[j++] = bcd_chars[bcd[i] & 0xF];
+        str[j++] = bcd_chars[(bcd[i] >> 4) & 0xF];
+    }
+    str[j] = '\0';
+
+    return str;
+}
+
 static void
 get_cell_location_info_ready (QmiClientNas *client,
                               GAsyncResult *res)
@@ -2293,14 +2311,21 @@ get_cell_location_info_ready (QmiClientNas *client,
         g_print ("GERAN Info\n");
         if (cell_id == 0xFFFFFFFF)
             g_print ("\tCell ID: 'unavailable'\n"
+                     "\tPLMN: 'unavailable'\n"
                      "\tLocation Area Code: 'unavailable'\n");
-        else
+        else {
+            gchar *plmn;
+
+            plmn = str_from_bcd_plmn (operator);
             g_print ("\tCell ID: '%" G_GUINT32_FORMAT"'\n"
+                     "\tPLMN: '%s'\n"
                      "\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n",
                      cell_id,
+                     plmn,
                      lac);
-        g_print (// FIXME: decode packed BCD operator
-                 "\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
+            g_free (plmn);
+        }
+        g_print ("\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                  "\tBase Station Identity Code: '%" G_GUINT16_FORMAT"'\n",
                  absolute_rf_channel_number,
                  base_station_identity_code);
@@ -2331,14 +2356,21 @@ get_cell_location_info_ready (QmiClientNas *client,
             g_print ("\tCell [%u]:\n", i);
             if (element->cell_id == 0xFFFFFFFF)
                 g_print ("\t\tCell ID: 'unavailable'\n"
+                         "\t\tPLMN: 'unavailable'\n"
                          "\t\tLocation Area Code: 'unavailable'\n");
-            else
+            else {
+                gchar *plmn;
+
+                plmn = str_from_bcd_plmn (element->plmn);
                 g_print ("\t\tCell ID: '%" G_GUINT32_FORMAT"'\n"
+                         "\t\tPLMN: '%s'\n"
                          "\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n",
                          element->cell_id,
+                         plmn,
                          element->lac);
-            g_print (// FIXME: decode packed BCD operator
-                     "\t\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
+                g_free (plmn);
+            }
+            g_print ("\t\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                      "\t\tBase Station Identity Code: '%" G_GUINT16_FORMAT"'\n",
                      element->geran_absolute_rf_channel_number,
                      element->base_station_identity_code);
@@ -2369,23 +2401,27 @@ get_cell_location_info_ready (QmiClientNas *client,
             &ecio,
             &array, &array2, NULL)) {
         guint i;
+        gchar *plmn;
 
         g_print ("UMTS Info\n");
         if (cell_id_16 == 0xFFFFFFFF)
             g_print ("\tCell ID: 'unavailable'\n");
         else
             g_print ("\tCell ID: '%" G_GUINT16_FORMAT"'\n", cell_id_16);
-        g_print (// FIXME: decode packed BCD operator
+        plmn = str_from_bcd_plmn (operator);
+        g_print ("\tPLMN: '%s'\n"
                  "\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n"
                  "\tUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                  "\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
                  "\tRSCP: '%" G_GINT16_FORMAT"' dBm\n"
                  "\tECIO: '%" G_GINT16_FORMAT"' dBm\n",
+                 plmn,
                  lac,
                  absolute_rf_channel_number,
                  primary_scrambling_code,
                  rscp,
                  ecio);
+        g_free (plmn);
 
         for (i = 0; i < array->len; i++) {
             QmiMessageNasGetCellLocationInfoOutputUmtsInfoCellElement *element;
@@ -2469,19 +2505,23 @@ get_cell_location_info_ready (QmiClientNas *client,
             &s_intra_search_threshold,
             &array, NULL)) {
         guint i;
+        gchar *plmn;
 
+        plmn = str_from_bcd_plmn (operator);
         g_print ("Intrafrequency LTE Info\n"
                  "\tUE In Idle: '%s'\n"
-                 // FIXME: decode packed BCD operator
+                 "\tPLMN: '%s'\n"
                  "\tTracking Area Code: '%" G_GUINT16_FORMAT"'\n"
                  "\tGlobal Cell ID: '%" G_GUINT32_FORMAT"'\n"
                  "\tEUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                  "\tServing Cell ID: '%" G_GUINT16_FORMAT"'\n",
                  ue_in_idle ? "yes" : "no",
+                 plmn,
                  tracking_area_code,
                  global_cell_id,
                  absolute_rf_channel_number,
                  serving_cell_id);
+        g_free (plmn);
         if (ue_in_idle)
             g_print ("\tCell Reselection Priority: '%u'\n"
                      "\tS Non Intra Search Threshold: '%u'\n"
@@ -2561,7 +2601,6 @@ get_cell_location_info_ready (QmiClientNas *client,
             }
         }
     }
-
 
     array = NULL;
     if (qmi_message_nas_get_cell_location_info_output_get_lte_info_neighboring_gsm (
