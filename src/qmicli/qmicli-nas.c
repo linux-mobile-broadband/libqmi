@@ -2307,8 +2307,21 @@ get_cell_location_info_ready (QmiClientNas *client,
         if (timing_advance == 0xFFFFFFFF)
             g_print ("\tTiming Advance: 'unavailable'\n");
         else
-            g_print ("\tTiming Advance: '%" G_GUINT32_FORMAT"'\n", timing_advance);
-        g_print ("\tRX Level: '%" G_GUINT16_FORMAT"'\n", rx_level);
+            g_print ("\tTiming Advance: '%" G_GUINT32_FORMAT"' bit periods ('%lf' us)\n",
+                     timing_advance,
+                     (gdouble)timing_advance * 48.0 / 13.0);
+        if (rx_level == 0)
+            g_print ("\tRX Level: -110 dBm > level ('%" G_GUINT16_FORMAT"')\n", rx_level);
+        else if (rx_level == 63)
+            g_print ("\tRX Level: level > -48 dBm ('%" G_GUINT16_FORMAT"')\n", rx_level);
+        else if (rx_level > 0 && rx_level < 63)
+            g_print ("\tRX Level: %d dBm > level > %d dBm ('%" G_GUINT16_FORMAT"')\n",
+                     (gint32) rx_level - 111,
+                     (gint32) rx_level - 110,
+                     rx_level);
+        else
+            g_print ("\tRX Level: invalid ('%" G_GUINT16_FORMAT"')\n", rx_level);
+
 
         for (i = 0; i < array->len; i++) {
             QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement *element;
@@ -2326,11 +2339,20 @@ get_cell_location_info_ready (QmiClientNas *client,
                          element->lac);
             g_print (// FIXME: decode packed BCD operator
                      "\t\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tBase Station Identity Code: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tRX Level: '%" G_GUINT16_FORMAT"'\n",
+                     "\t\tBase Station Identity Code: '%" G_GUINT16_FORMAT"'\n",
                      element->geran_absolute_rf_channel_number,
-                     element->base_station_identity_code,
-                     element->rx_level);
+                     element->base_station_identity_code);
+            if (element->rx_level == 0)
+                g_print ("\t\tRX Level: -110 dBm > level ('%" G_GUINT16_FORMAT"')\n", element->rx_level);
+            else if (element->rx_level == 63)
+                g_print ("\t\tRX Level: level > -48 dBm ('%" G_GUINT16_FORMAT"')\n", element->rx_level);
+            else if (element->rx_level > 0 && element->rx_level < 63)
+                g_print ("\t\tRX Level: %d dBm > level > %d dBm ('%" G_GUINT16_FORMAT"')\n",
+                         (gint32) element->rx_level - 111,
+                         (gint32) element->rx_level - 110,
+                         element->rx_level);
+            else
+                g_print ("\tRX Level: invalid ('%" G_GUINT16_FORMAT"')\n", element->rx_level);
         }
     }
 
@@ -2357,8 +2379,8 @@ get_cell_location_info_ready (QmiClientNas *client,
                  "\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n"
                  "\tUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                  "\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
-                 "\tReceived Signal Code Power: '%" G_GINT16_FORMAT"'\n"
-                 "\tECIO: '%" G_GINT16_FORMAT"'\n",
+                 "\tRSCP: '%" G_GINT16_FORMAT"' dBm\n"
+                 "\tECIO: '%" G_GINT16_FORMAT"' dBm\n",
                  lac,
                  absolute_rf_channel_number,
                  primary_scrambling_code,
@@ -2372,8 +2394,8 @@ get_cell_location_info_ready (QmiClientNas *client,
             g_print ("\tCell [%u]:\n"
                      "\t\tUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                      "\t\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tRSCP: '%" G_GINT16_FORMAT"'\n"
-                     "\t\tECIO: '%" G_GINT16_FORMAT"'\n",
+                     "\t\tRSCP: '%" G_GINT16_FORMAT"' dBm\n"
+                     "\t\tECIO: '%" G_GINT16_FORMAT"' dBm\n",
                      i,
                      element->utra_absolute_rf_channel_number,
                      element->primary_scrambling_code,
@@ -2411,19 +2433,25 @@ get_cell_location_info_ready (QmiClientNas *client,
             &latitude,
             &longitude,
             NULL)) {
+        gdouble latitude_degrees;
+        gdouble longitude_degrees;
+
+        /* TODO: give degrees, minutes, seconds */
+        latitude_degrees = ((gdouble)latitude * 0.25)/3600.0;
+        longitude_degrees = ((gdouble)longitude * 0.25)/3600.0;
         g_print ("CDMA Info\n"
                  "\tSystem ID: '%" G_GUINT16_FORMAT"'\n"
                  "\tNetwork ID: '%" G_GUINT16_FORMAT"'\n"
                  "\tBase Station ID: '%" G_GUINT16_FORMAT"'\n"
                  "\tReference PN: '%" G_GUINT16_FORMAT"'\n"
-                 "\tLatitude: '%" G_GUINT32_FORMAT"'\n"
-                 "\tLongitude: '%" G_GUINT32_FORMAT"'\n",
+                 "\tLatitude: '%lf'º\n"
+                 "\tLongitude: '%lfº'\n",
                  system_id,
                  network_id,
                  base_station_id,
                  reference_pn,
-                 latitude,
-                 longitude);
+                 latitude_degrees,
+                 longitude_degrees);
     }
 
     array = NULL;
@@ -2470,14 +2498,14 @@ get_cell_location_info_ready (QmiClientNas *client,
             element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement, i);
             g_print ("\tCell [%u]:\n"
                      "\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tRSRQ: '%" G_GINT16_FORMAT"'\n"
-                     "\t\tRSRP: '%" G_GINT16_FORMAT"'\n"
-                     "\t\tRSSI: '%" G_GINT16_FORMAT"'\n",
+                     "\t\tRSRQ: '%lf' dB\n"
+                     "\t\tRSRP: '%lf' dBm\n"
+                     "\t\tRSSI: '%lf' dBm\n",
                      i,
                      element->physical_cell_id,
-                     element->rsrq,
-                     element->rsrp,
-                     element->rssi);
+                     (gdouble) element->rsrq * 0.1,
+                     (gdouble) element->rsrp * 0.1,
+                     (gdouble) element->rssi * 0.1);
             if (ue_in_idle)
                 g_print ("\t\tCell Selection RX Level: '%" G_GINT16_FORMAT"'\n",
                          element->cell_selection_rx_level);
@@ -2520,15 +2548,15 @@ get_cell_location_info_ready (QmiClientNas *client,
                 cell = &g_array_index (cell_array, QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElementCellElement, j);
                 g_print ("\t\tCell [%u]:\n"
                          "\t\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
-                         "\t\t\tRSRQ: '%" G_GINT16_FORMAT"'\n"
-                         "\t\t\tRSRP: '%" G_GINT16_FORMAT"'\n"
-                         "\t\t\tRSSI: '%" G_GINT16_FORMAT"'\n"
+                         "\t\t\tRSRQ: '%lf' dB\n"
+                         "\t\t\tRSRP: '%lf' dBm\n"
+                         "\t\t\tRSSI: '%lf' dBm\n"
                          "\t\t\tCell Selection RX Level: '%" G_GINT16_FORMAT"'\n",
                          j,
                          cell->physical_cell_id,
-                         cell->rsrq,
-                         cell->rsrp,
-                         cell->rssi,
+                         (gdouble) cell->rsrq * 0.1,
+                         (gdouble) cell->rsrp * 0.1,
+                         (gdouble) cell->rssi * 0.1,
                          cell->cell_selection_rx_level);
             }
         }
@@ -2557,7 +2585,7 @@ get_cell_location_info_ready (QmiClientNas *client,
                 g_print ("\t\tCell Reselection Priority: '%u'\n"
                          "\t\tCell Reselection High Threshold: '%u'\n"
                          "\t\tCell Reselection Low Threshold: '%u'\n"
-                         "\t\tNCC Permitted: '%u'\n",
+                         "\t\tNCC Permitted: '0x%2X'\n",
                          element->cell_reselection_priority,
                          element->cell_reselection_high_threshold,
                          element->cell_reselection_low_threshold,
@@ -2580,9 +2608,9 @@ get_cell_location_info_ready (QmiClientNas *client,
                              cell->base_station_identity_code);
                 else
                     g_print ("\t\t\tBase Station Identity Code: 'unknown'\n");
-                g_print ("\t\t\tRSSI: '%" G_GINT16_FORMAT"'\n"
+                g_print ("\t\t\tRSSI: '%lf' dB\n"
                          "\t\t\tCell Selection RX Level: '%" G_GINT16_FORMAT"'\n",
-                         cell->rssi,
+                         (gdouble) cell->rssi * 0.1,
                          cell->cell_selection_rx_level);
             }
         }
@@ -2625,12 +2653,12 @@ get_cell_location_info_ready (QmiClientNas *client,
                 cell = &g_array_index (cell_array, QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringWcdmaFrequencyElementCellElement, j);
                 g_print ("\t\tCell [%u]:\n"
                          "\t\t\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
-                         "\t\t\tCPICH RSCP: '%" G_GINT16_FORMAT"'\n"
-                         "\t\t\tCPICH EcNo: '%" G_GINT16_FORMAT"'\n",
+                         "\t\t\tCPICH RSCP: '%lf' dBm\n"
+                         "\t\t\tCPICH EcNo: '%lf' dB\n",
                          j,
                          cell->primary_scrambling_code,
-                         cell->cpich_rscp,
-                         cell->cpich_ecno);
+                         (gdouble) cell->cpich_rscp * 0.1,
+                         (gdouble) cell->cpich_ecno * 0.1);
                 if (ue_in_idle)
                     g_print ("\t\t\tCell Selection RX Level: '%" G_GUINT16_FORMAT"'\n",
                              cell->cell_selection_rx_level);
@@ -2663,8 +2691,8 @@ get_cell_location_info_ready (QmiClientNas *client,
             g_print ("\tFrequency [%u]:\n"
                      "\t\tEUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                      "\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT "'\n"
-                     "\t\tRSRP: '%f'\n"
-                     "\t\tRSRQ: '%f'\n",
+                     "\t\tRSRP: '%f' dBm\n"
+                     "\t\tRSRQ: '%f' dB\n",
                      i,
                      element->eutra_absolute_rf_channel_number,
                      element->physical_cell_id,
