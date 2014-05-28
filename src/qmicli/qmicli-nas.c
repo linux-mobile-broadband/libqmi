@@ -2256,6 +2256,8 @@ get_cell_location_info_ready (QmiClientNas *client,
     guint8 serving_cell_low_threshold;
     guint8 s_intra_search_threshold;
 
+    QmiNasWcdmaRrcState rrc_state;
+
     output = qmi_client_nas_get_cell_location_info_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
@@ -2620,6 +2622,38 @@ get_cell_location_info_ready (QmiClientNas *client,
             &cell_id,
             NULL)) {
         g_print ("UMTS Cell ID: '%" G_GUINT32_FORMAT"'\n", cell_id);
+    }
+
+    array = NULL;
+    if (qmi_message_nas_get_cell_location_info_output_get_umts_info_neighboring_lte (
+            output,
+            &rrc_state,
+            &array, NULL)) {
+        guint i;
+
+        g_print ("UMTS Info Neighboring LTE\n"
+                 "\tRRC State: '%s'\n", qmi_nas_wcdma_rrc_state_get_string (rrc_state));
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringLteFrequencyElement *element;
+
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringLteFrequencyElement, i);
+
+            g_print ("\tFrequency [%u]:\n"
+                     "\t\tEUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT "'\n"
+                     "\t\tRSRP: '%f'\n"
+                     "\t\tRSRQ: '%f'\n"
+                     "\t\tCell Selection RX Level: '%" G_GINT16_FORMAT"'\n"
+                     "\t\tIs TDD?: '%s'\n",
+                     i,
+                     element->eutra_absolute_rf_channel_number,
+                     element->physical_cell_id,
+                     element->rsrp,
+                     element->rsrq,
+                     element->cell_selection_rx_level,
+                     element->is_tdd ? "yes" : "no");
+        }
     }
 
     qmi_message_nas_get_cell_location_info_output_unref (output);

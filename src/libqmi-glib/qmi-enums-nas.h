@@ -872,4 +872,25 @@ typedef enum {
     QMI_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT_TWO_HOURS = 2
 } QmiNasDaylightSavingsAdjustment;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI NAS Get Cell Location Info' request/response */
+
+/**
+ * QmiNasWcdmaRrcState:
+ * @QMI_NAS_WCDMA_RRC_STATE_DISCONNECTED: Disconnected.
+ * @QMI_NAS_WCDMA_RRC_STATE_CELL_PCH: WCDMA RRC state is CELL_PCH.
+ * @QMI_NAS_WCDMA_RRC_STATE_URA_PCH: WCDMA RRC state is URA_PCH.
+ * @QMI_NAS_WCDMA_RRC_STATE_CELL_FACH: WCDMA RRC state is CELL_FACH.
+ * @QMI_NAS_WCDMA_RRC_STATE_CELL_DCH: WCDMA RRC state is CELL_DCH.
+ *
+ * RRC state.
+ */
+typedef enum {
+    QMI_NAS_WCDMA_RRC_STATE_DISCONNECTED = 0,
+    QMI_NAS_WCDMA_RRC_STATE_CELL_PCH     = 1,
+    QMI_NAS_WCDMA_RRC_STATE_URA_PCH      = 2,
+    QMI_NAS_WCDMA_RRC_STATE_CELL_FACH    = 3,
+    QMI_NAS_WCDMA_RRC_STATE_CELL_DCH     = 4
+} QmiNasWcdmaRrcState;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
