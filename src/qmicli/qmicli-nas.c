@@ -2404,7 +2404,7 @@ get_cell_location_info_ready (QmiClientNas *client,
         gchar *plmn;
 
         g_print ("UMTS Info\n");
-        if (cell_id_16 == 0xFFFFFFFF)
+        if (cell_id_16 == 0xFFFF)
             g_print ("\tCell ID: 'unavailable'\n");
         else
             g_print ("\tCell ID: '%" G_GUINT16_FORMAT"'\n", cell_id_16);
