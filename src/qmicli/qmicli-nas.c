@@ -2326,7 +2326,7 @@ get_cell_location_info_ready (QmiClientNas *client,
             g_free (plmn);
         }
         g_print ("\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
-                 "\tBase Station Identity Code: '%" G_GUINT16_FORMAT"'\n",
+                 "\tBase Station Identity Code: '%u'\n",
                  absolute_rf_channel_number,
                  base_station_identity_code);
         if (timing_advance == 0xFFFFFFFF)
@@ -2371,7 +2371,7 @@ get_cell_location_info_ready (QmiClientNas *client,
                 g_free (plmn);
             }
             g_print ("\t\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tBase Station Identity Code: '%" G_GUINT16_FORMAT"'\n",
+                     "\t\tBase Station Identity Code: '%u'\n",
                      element->geran_absolute_rf_channel_number,
                      element->base_station_identity_code);
             if (element->rx_level == 0)
