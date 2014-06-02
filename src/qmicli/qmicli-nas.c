@@ -297,7 +297,7 @@ get_signal_info_ready (QmiClientNas *client,
                  "\tRSSI: '%d dBm'\n"
                  "\tRSRQ: '%d dB'\n"
                  "\tRSRP: '%d dBm'\n"
-                 "\tSNR: '%.1lf dBm'\n",
+                 "\tSNR: '%.1lf dB'\n",
                  rssi,
                  rsrq,
                  rsrp,
