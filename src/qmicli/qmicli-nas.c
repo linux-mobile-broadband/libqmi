@@ -2538,9 +2538,9 @@ get_cell_location_info_ready (QmiClientNas *client,
             element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement, i);
             g_print ("\tCell [%u]:\n"
                      "\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tRSRQ: '%lf' dB\n"
-                     "\t\tRSRP: '%lf' dBm\n"
-                     "\t\tRSSI: '%lf' dBm\n",
+                     "\t\tRSRQ: '%.1lf' dB\n"
+                     "\t\tRSRP: '%.1lf' dBm\n"
+                     "\t\tRSSI: '%.1lf' dBm\n",
                      i,
                      element->physical_cell_id,
                      (gdouble) element->rsrq * 0.1,
@@ -2588,9 +2588,9 @@ get_cell_location_info_ready (QmiClientNas *client,
                 cell = &g_array_index (cell_array, QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElementCellElement, j);
                 g_print ("\t\tCell [%u]:\n"
                          "\t\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
-                         "\t\t\tRSRQ: '%lf' dB\n"
-                         "\t\t\tRSRP: '%lf' dBm\n"
-                         "\t\t\tRSSI: '%lf' dBm\n"
+                         "\t\t\tRSRQ: '%.1lf' dB\n"
+                         "\t\t\tRSRP: '%.1lf' dBm\n"
+                         "\t\t\tRSSI: '%.1lf' dBm\n"
                          "\t\t\tCell Selection RX Level: '%" G_GINT16_FORMAT"'\n",
                          j,
                          cell->physical_cell_id,
@@ -2647,7 +2647,7 @@ get_cell_location_info_ready (QmiClientNas *client,
                              cell->base_station_identity_code);
                 else
                     g_print ("\t\t\tBase Station Identity Code: 'unknown'\n");
-                g_print ("\t\t\tRSSI: '%lf' dB\n"
+                g_print ("\t\t\tRSSI: '%.1lf' dB\n"
                          "\t\t\tCell Selection RX Level: '%" G_GINT16_FORMAT"'\n",
                          (gdouble) cell->rssi * 0.1,
                          cell->cell_selection_rx_level);
@@ -2692,8 +2692,8 @@ get_cell_location_info_ready (QmiClientNas *client,
                 cell = &g_array_index (cell_array, QmiMessageNasGetCellLocationInfoOutputLteInfoNeighboringWcdmaFrequencyElementCellElement, j);
                 g_print ("\t\tCell [%u]:\n"
                          "\t\t\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
-                         "\t\t\tCPICH RSCP: '%lf' dBm\n"
-                         "\t\t\tCPICH EcNo: '%lf' dB\n",
+                         "\t\t\tCPICH RSCP: '%.1lf' dBm\n"
+                         "\t\t\tCPICH EcNo: '%.1lf' dB\n",
                          j,
                          cell->primary_scrambling_code,
                          (gdouble) cell->cpich_rscp * 0.1,
