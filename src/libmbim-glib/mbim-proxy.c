@@ -38,6 +38,7 @@
 #include "mbim-cid.h"
 #include "mbim-enum-types.h"
 #include "mbim-error-types.h"
+#include "mbim-basic-connect.h"
 
 #define BUFFER_SIZE 512
 
@@ -50,6 +51,7 @@ enum {
 };
 
 static GParamSpec *properties[PROP_LAST];
+
 
 struct _MbimProxyPrivate {
     /* Unix socket service */
@@ -93,10 +95,11 @@ typedef struct {
     GByteArray *buffer;
     MbimDevice *device;
     MbimMessage *internal_proxy_open_request;
-    GArray *mbim_client_info_array;
     guint indication_id;
     gchar *device_file_path;
     gboolean opening_device;
+    gboolean service_subscriber_list_enabled;
+    MbimEventEntry **mbim_event_entry_array;
 } Client;
 
 typedef struct {
@@ -129,7 +132,8 @@ client_free (Client *client)
     if (client->internal_proxy_open_request)
         mbim_message_unref (client->internal_proxy_open_request);
 
-    g_array_unref (client->mbim_client_info_array);
+    if (client->mbim_event_entry_array)
+        mbim_event_entry_array_free (client->mbim_event_entry_array);
 
     g_object_unref (client->connection);
     g_slice_free (Client, client);
@@ -141,9 +145,10 @@ get_n_clients_with_device (MbimProxy *self,
 {
     GList *l;
     guint n = 0;
+    Client *client;
 
     for (l = self->priv->clients; l; l = g_list_next (l)) {
-        Client *client = l->data;
+        client = l->data;
 
         if (device == client->device ||
             g_str_equal (mbim_device_get_path (device), mbim_device_get_path (client->device)))
@@ -296,16 +301,32 @@ indication_cb (MbimDevice *device,
     guint i;
     GError *error = NULL;
     gboolean forward_indication = FALSE;
+    MbimEventEntry *event = NULL;
 
-    if (mbim_message_indicate_status_get_service (message) == MBIM_SERVICE_INVALID) {
-        for (i = 0; i < client->mbim_client_info_array->len; i++) {
-            MbimClientInfo *info;
+    if (client->service_subscriber_list_enabled) {
+        /* if client sent the device service subscribe list with element count 0 then
+           ignore all indications */
+        if (client->mbim_event_entry_array) {
+            for (i = 0; client->mbim_event_entry_array[i]; i++) {
+                if (mbim_uuid_cmp (mbim_message_indicate_status_get_service_id (message),
+                                   &client->mbim_event_entry_array[i]->device_service_id)) {
+                    event = client->mbim_event_entry_array[i];
+                    break;
+                }
+            }
 
-            info = &g_array_index (client->mbim_client_info_array, MbimClientInfo, i);
-            /* If service UUID match, forward to the remote client */
-            if (mbim_uuid_cmp (mbim_message_indicate_status_get_service_id (message), &info->uuid)) {
-                forward_indication = TRUE;
-                break;
+            if (event) {
+                /* found matching service, search for cid */
+                if (event->cids_count) {
+                    for (i = 0; i < event->cids_count; i++) {
+                        if (mbim_message_indicate_status_get_cid (message) == event->cids[i]) {
+                            forward_indication = TRUE;
+                            break;
+                        }
+                    }
+                } else
+                    /* cids_count of 0 enables all indications for the service */
+                    forward_indication = TRUE;
             }
         }
     } else
@@ -518,48 +539,242 @@ process_internal_proxy_config (Client *client,
     return TRUE;
 }
 
-static void
-track_uuid (Client *client,
-            gboolean track,
-            MbimMessage *message)
+
+static MbimEventEntry **
+standard_service_subscribe_list_new( void )
 {
-    gchar *uuid_display;
-    MbimClientInfo info;
-    guint i;
-    gboolean exists;
+    guint32  i, service;
+    MbimEventEntry **out;
 
-    memcpy (&info.uuid, mbim_message_command_done_get_service_id (message), sizeof (info.uuid));
-    uuid_display = mbim_uuid_get_printable (&info.uuid);
 
-    /* Check if it already exists */
-    for (i = 0; i < client->mbim_client_info_array->len; i++) {
-        MbimClientInfo *existing;
+    out = g_new0 (MbimEventEntry *, MBIM_SERVICE_MS_FIRMWARE_ID);
 
-        existing = &g_array_index (client->mbim_client_info_array, MbimClientInfo, i);
-        if (mbim_uuid_cmp (&info.uuid, &existing->uuid))
-            break;
-    }
-    exists = (i < client->mbim_client_info_array->len);
+    for (service = MBIM_SERVICE_BASIC_CONNECT, i = 0;
+         service < MBIM_SERVICE_MS_FIRMWARE_ID;
+         service++, i++) {
 
-    if (track && !exists) {
-        g_debug ("MBIM client tracked [%s,%s]",
-                 mbim_device_get_path_display (client->device),
-                 uuid_display);
-        g_array_append_val (client->mbim_client_info_array, info);
-    } else if (!track && exists) {
-        g_debug ("MBIM client untracked [%s,%s]",
-                 mbim_device_get_path_display (client->device),
-                 uuid_display);
-        g_array_remove_index (client->mbim_client_info_array, i);
+         out[i] = g_new0 (MbimEventEntry, 1);
+         memcpy (&out[i]->device_service_id, mbim_uuid_from_service(service), sizeof (MbimUuid));
     }
 
-    g_free (uuid_display);
+    return out;
+}
+
+static void
+track_service_subscribe_list (Client *client,
+                              MbimMessage *message)
+{
+    guint32 i;
+    guint32 element_count;
+    guint32 offset = 0;
+    guint32 array_offset;
+    MbimEventEntry *event;
+
+
+    client->service_subscriber_list_enabled = TRUE;
+
+    if (client->mbim_event_entry_array) {
+        mbim_event_entry_array_free (client->mbim_event_entry_array);
+        client->mbim_event_entry_array = NULL;
+    }
+
+    element_count = _mbim_message_read_guint32 (message, offset);
+    if (element_count) {
+        client->mbim_event_entry_array = g_new (MbimEventEntry *, element_count + 1);
+
+        offset += 4;
+        for (i = 0; i < element_count; i++) {
+            array_offset = _mbim_message_read_guint32 (message, offset);
+
+            event = g_new (MbimEventEntry, 1);
+
+            memcpy (&(event->device_service_id), _mbim_message_read_uuid (message, array_offset), 16);
+            array_offset += 16;
+
+            event->cids_count = _mbim_message_read_guint32 (message, array_offset);
+            array_offset += 4;
+
+            if (event->cids_count)
+                event->cids = _mbim_message_read_guint32_array (message, event->cids_count, array_offset);
+            else
+                event->cids = NULL;
+
+            client->mbim_event_entry_array[i] = event;
+            offset += 8;
+        }
+
+        client->mbim_event_entry_array[element_count] = NULL;
+    }
+}
+
+static MbimEventEntry **
+merge_client_service_subscribe_lists (MbimProxy *self, guint32 *events_count)
+{
+    guint32 i, ii;
+    guint32 out_idx, out_cid_idx;
+    GList *l;
+    MbimEventEntry *entry;
+    MbimEventEntry **out;
+    Client *client;
+
+    out = standard_service_subscribe_list_new ();
+
+    for (l = self->priv->clients; l; l = g_list_next (l)) {
+        client = l->data;
+        if (!client->mbim_event_entry_array)
+            continue;
+
+        for (i = 0; client->mbim_event_entry_array[i]; i++) {
+            entry = NULL;
+
+            /* look for matching uuid */
+            for (out_idx = 0; out[out_idx]; out_idx++) {
+                if (!memcmp (&client->mbim_event_entry_array[i]->device_service_id,
+                             &out[out_idx]->device_service_id,
+                             sizeof (MbimUuid))) {
+                    entry = out[out_idx];
+                    break;
+                }
+            }
+
+            if (!entry) {
+                /* matching uuid not found in merge array, add it */
+                out = g_realloc (out, sizeof (*out) * (out_idx + 2));
+                out[out_idx] = g_memdup (client->mbim_event_entry_array[i], sizeof (MbimEventEntry));
+                if (client->mbim_event_entry_array[i]->cids_count)
+                    out[out_idx]->cids = g_memdup (client->mbim_event_entry_array[i]->cids,
+                                                   sizeof (guint32) * client->mbim_event_entry_array[i]->cids_count);
+                else
+                    out[out_idx]->cids = NULL;
+
+                out[++out_idx] = NULL;
+                *events_count = out_idx;
+            } else {
+                /* matching uuid found, add cids */
+                if (!entry->cids_count)
+                    /* all cids already enabled for uuid */
+                    continue;
+
+                for (ii = 0; ii < client->mbim_event_entry_array[i]->cids_count; ii++) {
+                    for (out_cid_idx = 0; out_cid_idx < entry->cids_count; out_cid_idx++) {
+                        if (client->mbim_event_entry_array[i]->cids[ii] == entry->cids[out_cid_idx]) {
+                            break;
+                        }
+                    }
+
+                    if (out_cid_idx == entry->cids_count) {
+                        /* cid not found in merge array, add it */
+                        entry->cids = g_realloc (entry->cids, sizeof (guint32) * (entry->cids_count++));
+                        entry->cids[out_cid_idx] = client->mbim_event_entry_array[i]->cids[ii];
+                    }
+                }
+            }
+        }
+    }
+
+    return out;
 }
 
 typedef struct {
     Client *client;
     guint32 transaction_id;
+    gpointer data;
+    guint32 data_len;
 } Request;
+
+static void
+request_free (Request *request)
+{
+    if (request->data)
+        g_free (request->data);
+
+    g_slice_free (Request, request);
+}
+
+static void
+device_service_subscribe_list_set_ready (MbimDevice *device,
+                                         GAsyncResult *res,
+                                         Request *request)
+{
+    MbimMessage *response;
+    MbimStatusError error_status_code;
+    struct command_done_message *command_done;
+    GError *error = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response) {
+        g_warning ("sending request to device failed: %s", error->message);
+        if (!mbim_device_is_open (device)) {
+            g_debug ("device is closed");
+            connection_close (request->client);
+        }
+
+        g_error_free (error);
+        g_slice_free (Request, request);
+        return;
+    }
+    error_status_code = ((struct full_message *)(response->data))->message.command_done.status_code;
+    mbim_message_unref (response);
+
+    response = (MbimMessage *)_mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND_DONE,
+                                                      request->transaction_id,
+                                                      sizeof (struct command_done_message) +
+                                                      request->data_len);
+    command_done = &(((struct full_message *)(response->data))->message.command_done);
+    command_done->fragment_header.total = GUINT32_TO_LE (1);
+    command_done->fragment_header.current = 0;
+    memcpy (command_done->service_id, MBIM_UUID_BASIC_CONNECT, sizeof(MbimUuid));
+    command_done->command_id = GUINT32_TO_LE (MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST);
+    command_done->status_code = error_status_code;
+    command_done->buffer_length = request->data_len;
+    memcpy (&command_done->buffer[0], request->data, request->data_len);
+
+    if (!send_message (request->client, response, &error))
+        connection_close (request->client);
+
+    mbim_message_unref (response);
+    request_free (request);
+}
+
+static gboolean
+process_device_service_subscribe_list (Client *client,
+                                       MbimMessage *message)
+{
+    MbimEventEntry **events;
+    guint32 events_count = 0;
+    Request *request;
+    const guint8 *raw_buff;
+    guint32 raw_len;
+
+
+    /* trace the service subscribe list for the client */
+    track_service_subscribe_list (client, message);
+
+    /* merge all service subscribe list for all clients to set on device */
+    events = merge_client_service_subscribe_lists (client->proxy, &events_count);
+
+    /* save the raw message data to send back as response to client */
+    raw_buff = mbim_message_command_get_raw_information_buffer (message, &raw_len);
+
+    request = g_slice_new0 (Request);
+    request->client = client;
+    request->transaction_id = mbim_message_get_transaction_id (message);
+    request->data = g_memdup (raw_buff, raw_len);
+    request->data_len = raw_len;
+
+    message = mbim_message_device_service_subscribe_list_set_new (events_count, (const MbimEventEntry *const *)events, NULL);
+    mbim_message_set_transaction_id (message, mbim_device_get_next_transaction_id (client->device));
+
+    mbim_device_command (client->device,
+                         message,
+                         300,
+                         NULL,
+                         (GAsyncReadyCallback)device_service_subscribe_list_set_ready,
+                         request);
+
+    mbim_event_entry_array_free (events);
+    return TRUE;
+}
 
 static void
 device_command_ready (MbimDevice *device,
@@ -582,12 +797,6 @@ device_command_ready (MbimDevice *device,
         return;
     }
 
-    /* track custom uuids */
-    if (mbim_message_get_message_type (response) == MBIM_MESSAGE_TYPE_COMMAND_DONE) {
-        if (mbim_message_command_done_get_service (response) == MBIM_SERVICE_INVALID)
-            track_uuid (request->client, TRUE, response);
-    }
-
     /* replace reponse transaction id with the requested transaction id */
     ((struct header *)(response->data))->transaction_id = GUINT32_TO_LE (request->transaction_id);
 
@@ -595,7 +804,7 @@ device_command_ready (MbimDevice *device,
         connection_close (request->client);
 
     mbim_message_unref (response);
-    g_slice_free (Request, request);
+    request_free (request);
 }
 
 static gboolean
@@ -615,7 +824,11 @@ process_message (Client *client,
         if (mbim_message_command_get_service (message) == MBIM_SERVICE_PROXY_CONTROL &&
             mbim_message_command_get_cid (message) == MBIM_CID_PROXY_CONTROL_CONFIGURATION)
             return process_internal_proxy_config (client, message);
-        /* Non-proxy control message, go on */
+
+        /* device service subscribe list message? */
+        if (mbim_message_command_get_service (message) == MBIM_SERVICE_BASIC_CONNECT &&
+            mbim_message_command_get_cid (message) == MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST)
+            return process_device_service_subscribe_list (client, message);
         break;
     default:
         g_debug ("invalid message from client: not a command message");
@@ -762,7 +975,6 @@ incoming_cb (GSocketService *service,
                            client,
                            NULL);
     g_source_attach (client->connection_readable_source, NULL);
-    client->mbim_client_info_array = g_array_sized_new (FALSE, FALSE, sizeof (MbimClientInfo), 8);
 
     /* Keep the client info around */
     self->priv->clients = g_list_append (self->priv->clients, client);
