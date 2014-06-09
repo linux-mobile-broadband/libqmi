@@ -19,7 +19,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2014 Aleksander Morgado <aleksander@lanedo.com>
- * Copyright (C) 2014 Greg Suarez <gsuarez@smithmicro.com>
+ * Copyright (C) 2014 Smith Micro Software, Inc.
  */
 
 #include <string.h>

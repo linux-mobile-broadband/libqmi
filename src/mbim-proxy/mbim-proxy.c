@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Copyright (C) 2014 Aleksander Morgado <aleksander@gnu.org>
- * Copyright (C) 2014 Greg Suarez <gsuarez@smithmicro.com>
+ * Copyright (C) 2014 Smith Micro Software, Inc.
  */
 
 #include "config.h"

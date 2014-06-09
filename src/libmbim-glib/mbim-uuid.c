@@ -20,7 +20,7 @@
  *
  * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
  * Copyright (C) 2014 NVDIA Corporation
- * Copyright (C) 2014 Greg Suarez <gsuarez@smithmicro.com>
+ * Copyright (C) 2014 Smith Micro Software, Inc.
  */
 
 #include <config.h>

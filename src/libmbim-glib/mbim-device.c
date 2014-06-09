@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2013-2014 Aleksander Morgado <aleksander@aleksander.es>
- * Copyright (C) 2014 Greg Suarez <gsuarez@smithmicro.com>
+ * Copyright (C) 2014 Smith Micro Software, Inc.
  *
  * Implementation based on the 'QmiDevice' GObject from libqmi-glib.
  */
