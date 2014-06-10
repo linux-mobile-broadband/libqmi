@@ -123,6 +123,7 @@ typedef struct {
 
 typedef struct {
     MbimMessage *fragments;
+    MbimMessageType type;
     guint32 transaction_id;
     GSimpleAsyncResult *result;
     guint timeout_id;
@@ -133,6 +134,7 @@ typedef struct {
 
 static Transaction *
 transaction_new (MbimDevice          *self,
+                 MbimMessageType      type,
                  guint32              transaction_id,
                  GCancellable        *cancellable,
                  GAsyncReadyCallback  callback,
@@ -141,6 +143,7 @@ transaction_new (MbimDevice          *self,
     Transaction *tr;
 
     tr = g_slice_new0 (Transaction);
+    tr->type = type;
     tr->transaction_id = transaction_id;
     tr->result = g_simple_async_result_new (G_OBJECT (self),
                                             callback,
@@ -187,13 +190,14 @@ transaction_complete_and_free (Transaction  *tr,
 static Transaction *
 device_release_transaction (MbimDevice      *self,
                             TransactionType  type,
+                            MbimMessageType  expected_type,
                             guint32          transaction_id)
 {
     Transaction *tr = NULL;
 
     if (self->priv->transactions[type]) {
         tr = g_hash_table_lookup (self->priv->transactions[type], GUINT_TO_POINTER (transaction_id));
-        if (tr)
+        if (tr && ((tr->type == expected_type) || (expected_type == MBIM_MESSAGE_TYPE_INVALID)))
             /* If found, remove it from the HT */
             g_hash_table_remove (self->priv->transactions[type], GUINT_TO_POINTER (transaction_id));
     }
@@ -207,7 +211,10 @@ transaction_timed_out (TransactionWaitContext *ctx)
     Transaction *tr;
     GError *error = NULL;
 
-    tr = device_release_transaction (ctx->self, ctx->type, ctx->transaction_id);
+    tr = device_release_transaction (ctx->self,
+                                     ctx->type,
+                                     MBIM_MESSAGE_TYPE_INVALID,
+                                     ctx->transaction_id);
     tr->timeout_id = 0;
 
     /* If no fragment was received, complete transaction with a timeout error */
@@ -240,7 +247,10 @@ transaction_cancelled (GCancellable           *cancellable,
     Transaction *tr;
     GError *error = NULL;
 
-    tr = device_release_transaction (ctx->self, ctx->type, ctx->transaction_id);
+    tr = device_release_transaction (ctx->self,
+                                     ctx->type,
+                                     MBIM_MESSAGE_TYPE_INVALID,
+                                     ctx->transaction_id);
     tr->cancellable_id = 0;
 
     /* Complete transaction with an abort error */
@@ -292,15 +302,6 @@ device_store_transaction (MbimDevice       *self,
     g_hash_table_insert (self->priv->transactions[type], GUINT_TO_POINTER (tr->transaction_id), tr);
 
     return TRUE;
-}
-
-static Transaction *
-device_match_transaction (MbimDevice        *self,
-                          TransactionType    type,
-                          const MbimMessage *message)
-{
-    /* msg can be either the original message or the response */
-    return device_release_transaction (self, type, mbim_message_get_transaction_id (message));
 }
 
 /*****************************************************************************/
@@ -456,17 +457,26 @@ process_message (MbimDevice  *self,
 
         if (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) == MBIM_MESSAGE_TYPE_INDICATE_STATUS) {
             /* Grab transaction */
-            tr = device_match_transaction (self, TRANSACTION_TYPE_MODEM, message);
+            tr = device_release_transaction (self,
+                                             TRANSACTION_TYPE_MODEM,
+                                             MBIM_MESSAGE_TYPE_INDICATE_STATUS,
+                                             mbim_message_get_transaction_id (message));
+
             if (!tr)
                 /* Create new transaction for the indication */
                 tr = transaction_new (self,
+                                      MBIM_MESSAGE_TYPE_INDICATE_STATUS,
                                       mbim_message_get_transaction_id (message),
                                       NULL, /* no cancellable */
                                       (GAsyncReadyCallback)indication_ready,
                                       NULL);
         } else {
-            /* Grab transaction */
-            tr = device_match_transaction (self, TRANSACTION_TYPE_HOST, message);
+            /* Grab transaction. This is a _DONE message, so look for the request
+             * that generated the _DONE */
+            tr = device_release_transaction (self,
+                                             TRANSACTION_TYPE_HOST,
+                                             (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) - 0x80000000),
+                                             mbim_message_get_transaction_id (message));
             if (!tr) {
                 g_debug ("[%s] No transaction matched in received message",
                          self->priv->path_display);
@@ -1466,6 +1476,7 @@ mbim_device_command (MbimDevice          *self,
     }
 
     tr = transaction_new (self,
+                          MBIM_MESSAGE_GET_MESSAGE_TYPE (message),
                           transaction_id,
                           cancellable,
                           callback,
@@ -1491,7 +1502,10 @@ mbim_device_command (MbimDevice          *self,
 
     if (!device_send (self, message, &error)) {
         /* Match transaction so that we remove it from our tracking table */
-        tr = device_match_transaction (self, TRANSACTION_TYPE_HOST, message);
+        tr = device_release_transaction (self,
+                                         TRANSACTION_TYPE_HOST,
+                                         MBIM_MESSAGE_GET_MESSAGE_TYPE (message),
+                                         mbim_message_get_transaction_id (message));
         transaction_complete_and_free (tr, error);
         g_error_free (error);
         return;
