@@ -388,6 +388,7 @@ typedef enum {
  * @MBIM_NW_ERROR_CONGESTION: Congestion.
  * @MBIM_NW_ERROR_GSM_AUTHENTICATION_UNACCEPTABLE: GSM authentication unacceptable.
  * @MBIM_NW_ERROR_NOT_AUTHORIZED_FOR_CSG: Not authorized for this CSG.
+ * @MBIM_NW_ERROR_MISSING_OR_UNKNOWN_APN: Missing or unknown access point name.
  * @MBIM_NW_ERROR_SERVICE_OPTION_NOT_SUPPORTED: Service option not supported.
  * @MBIM_NW_ERROR_REQUESTED_SERVICE_OPTION_NOT_SUBSCRIBED: Requested service option not subscribed.
  * @MBIM_NW_ERROR_SERVICE_OPTION_TEMPORARILY_OUT_OF_ORDER: Service option temporarily out of order.
@@ -426,6 +427,7 @@ typedef enum {
     MBIM_NW_ERROR_CONGESTION                                          = 22,
     MBIM_NW_ERROR_GSM_AUTHENTICATION_UNACCEPTABLE                     = 23,
     MBIM_NW_ERROR_NOT_AUTHORIZED_FOR_CSG                              = 25,
+    MBIM_NW_ERROR_MISSING_OR_UNKNOWN_APN                              = 27,
     MBIM_NW_ERROR_SERVICE_OPTION_NOT_SUPPORTED                        = 32,
     MBIM_NW_ERROR_REQUESTED_SERVICE_OPTION_NOT_SUBSCRIBED             = 33,
     MBIM_NW_ERROR_SERVICE_OPTION_TEMPORARILY_OUT_OF_ORDER             = 34,
