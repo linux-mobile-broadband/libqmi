@@ -418,12 +418,13 @@ static void
 process_message (MbimDevice  *self,
                  const MbimMessage *message)
 {
+    gboolean is_partial_fragment;
+
+    is_partial_fragment = (_mbim_message_is_fragment (message) &&
+                           _mbim_message_fragment_get_total (message) > 1);
+
     if (mbim_utils_get_traces_enabled ()) {
         gchar *printable;
-        gboolean is_partial_fragment;
-
-        is_partial_fragment = (_mbim_message_is_fragment (message) &&
-                               _mbim_message_fragment_get_total (message) > 1);
 
         printable = __mbim_utils_str_hex (((GByteArray *)message)->data,
                                           ((GByteArray *)message)->len,
@@ -478,8 +479,18 @@ process_message (MbimDevice  *self,
                                              (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) - 0x80000000),
                                              mbim_message_get_transaction_id (message));
             if (!tr) {
+                gchar *printable;
+
                 g_debug ("[%s] No transaction matched in received message",
                          self->priv->path_display);
+                /* Attempt to print a user friendly dump of the packet anyway */
+                printable = mbim_message_get_printable (message, ">>>>>> ", is_partial_fragment);
+                if (printable) {
+                    g_debug ("[%s] Received unexpected message (translated)...\n%s",
+                             self->priv->path_display,
+                             printable);
+                    g_free (printable);
+                }
                 return;
             }
 
