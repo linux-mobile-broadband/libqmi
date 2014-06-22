@@ -709,7 +709,7 @@ device_service_subscribe_list_set_ready (MbimDevice *device,
         return;
     }
 
-    error_status_code = ((struct full_message *)(response->data))->message.command_done.status_code;
+    error_status_code = GUINT32_FROM_LE (((struct full_message *)(response->data))->message.command_done.status_code);
     mbim_message_unref (response);
 
     /* The raw message data to send back as response to client */
@@ -724,8 +724,8 @@ device_service_subscribe_list_set_ready (MbimDevice *device,
     command_done->fragment_header.current = 0;
     memcpy (command_done->service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
     command_done->command_id = GUINT32_TO_LE (MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST);
-    command_done->status_code = error_status_code;
-    command_done->buffer_length = raw_len;
+    command_done->status_code = GUINT32_TO_LE (error_status_code);
+    command_done->buffer_length = GUINT32_TO_LE (raw_len);
     memcpy (&command_done->buffer[0], raw_data, raw_len);
 
     if (!send_message (request->client, response, &error))
