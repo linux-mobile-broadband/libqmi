@@ -625,9 +625,8 @@ merge_client_service_subscribe_lists (MbimProxy *self,
 
             /* look for matching uuid */
             for (out_idx = 0; out[out_idx]; out_idx++) {
-                if (!memcmp (&client->mbim_event_entry_array[i]->device_service_id,
-                             &out[out_idx]->device_service_id,
-                             sizeof (MbimUuid))) {
+                if (mbim_uuid_cmp (&client->mbim_event_entry_array[i]->device_service_id,
+                                   &out[out_idx]->device_service_id)) {
                     entry = out[out_idx];
                     break;
                 }
