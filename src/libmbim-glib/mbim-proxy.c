@@ -674,16 +674,14 @@ merge_client_service_subscribe_lists (MbimProxy *self,
 typedef struct {
     Client *client;
     guint32 transaction_id;
-    gpointer data;
-    guint32 data_len;
+    MbimMessage *message;
 } Request;
 
 static void
 request_free (Request *request)
 {
-    if (request->data)
-        g_free (request->data);
-
+    if (request->message)
+        mbim_message_unref (request->message);
     g_slice_free (Request, request);
 }
 
@@ -696,6 +694,8 @@ device_service_subscribe_list_set_ready (MbimDevice *device,
     MbimStatusError error_status_code;
     struct command_done_message *command_done;
     GError *error = NULL;
+    guint32 raw_len;
+    const guint8 *raw_data;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response) {
@@ -713,18 +713,21 @@ device_service_subscribe_list_set_ready (MbimDevice *device,
     error_status_code = ((struct full_message *)(response->data))->message.command_done.status_code;
     mbim_message_unref (response);
 
+    /* The raw message data to send back as response to client */
+    raw_data = mbim_message_command_get_raw_information_buffer (request->message, &raw_len);
+
     response = (MbimMessage *)_mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND_DONE,
                                                       request->transaction_id,
                                                       sizeof (struct command_done_message) +
-                                                      request->data_len);
+                                                      raw_len);
     command_done = &(((struct full_message *)(response->data))->message.command_done);
     command_done->fragment_header.total = GUINT32_TO_LE (1);
     command_done->fragment_header.current = 0;
-    memcpy (command_done->service_id, MBIM_UUID_BASIC_CONNECT, sizeof(MbimUuid));
+    memcpy (command_done->service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
     command_done->command_id = GUINT32_TO_LE (MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST);
     command_done->status_code = error_status_code;
-    command_done->buffer_length = request->data_len;
-    memcpy (&command_done->buffer[0], request->data, request->data_len);
+    command_done->buffer_length = raw_len;
+    memcpy (&command_done->buffer[0], raw_data, raw_len);
 
     if (!send_message (request->client, response, &error))
         connection_close (request->client);
@@ -740,8 +743,6 @@ process_device_service_subscribe_list (Client *client,
     MbimEventEntry **events;
     guint32 events_count = 0;
     Request *request;
-    const guint8 *raw_buff;
-    guint32 raw_len;
 
     /* trace the service subscribe list for the client */
     track_service_subscribe_list (client, message);
@@ -749,14 +750,10 @@ process_device_service_subscribe_list (Client *client,
     /* merge all service subscribe list for all clients to set on device */
     events = merge_client_service_subscribe_lists (client->proxy, &events_count);
 
-    /* save the raw message data to send back as response to client */
-    raw_buff = mbim_message_command_get_raw_information_buffer (message, &raw_len);
-
     request = g_slice_new0 (Request);
     request->client = client;
     request->transaction_id = mbim_message_get_transaction_id (message);
-    request->data = g_memdup (raw_buff, raw_len);
-    request->data_len = raw_len;
+    request->message = mbim_message_ref (message);
 
     message = mbim_message_device_service_subscribe_list_set_new (events_count, (const MbimEventEntry *const *)events, NULL);
     mbim_message_set_transaction_id (message, mbim_device_get_next_transaction_id (client->device));
