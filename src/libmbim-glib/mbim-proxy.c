@@ -329,7 +329,9 @@ indication_cb (MbimDevice *device,
                     forward_indication = TRUE;
             }
         }
-    } else
+    } else if (mbim_message_indicate_status_get_service (message) != MBIM_SERVICE_INVALID &&
+               !mbim_service_id_is_custom (mbim_message_indicate_status_get_service (message)))
+        /* only forward standard service indications if service subscriber list is not enabled */
         forward_indication = TRUE;
 
     if (forward_indication) {
