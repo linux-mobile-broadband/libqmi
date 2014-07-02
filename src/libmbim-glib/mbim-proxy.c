@@ -546,10 +546,10 @@ standard_service_subscribe_list_new (void)
     MbimEventEntry **out;
 
 
-    out = g_new0 (MbimEventEntry *, MBIM_SERVICE_PROXY_CONTROL);
+    out = g_new0 (MbimEventEntry *, MBIM_SERVICE_MS_FIRMWARE_ID);
 
     for (service = MBIM_SERVICE_BASIC_CONNECT, i = 0;
-         service < MBIM_SERVICE_PROXY_CONTROL;
+         service < MBIM_SERVICE_MS_FIRMWARE_ID;
          service++, i++) {
          out[i] = g_new0 (MbimEventEntry, 1);
          memcpy (&out[i]->device_service_id, mbim_uuid_from_service (service), sizeof (MbimUuid));
