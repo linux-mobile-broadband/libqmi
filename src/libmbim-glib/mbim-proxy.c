@@ -440,9 +440,6 @@ process_internal_proxy_open (Client *client,
 
     if (client->device_file_path) {
         client->device = find_device_for_path (self, client->device_file_path);
-    } else if (!client->device_file_path && g_list_length (self->priv->devices)) {
-        /* no device file path set, just use first device found */
-        client->device = (MbimDevice *)(g_list_first (self->priv->devices))->data;
     } else {
         g_debug ("missing device file path");
         complete_internal_proxy_open (client);
