@@ -218,18 +218,20 @@ static void
 connection_close (Client *client)
 {
     MbimProxy *self;
-    MbimDevice *device;
+
+    self = client->proxy;
 
     g_debug ("Client (%d) connection closed...", g_socket_get_fd (g_socket_connection_get_socket (client->connection)));
 
-    self = client->proxy;
-    device = client->device ? g_object_ref (client->device) : NULL;
-    client_free (client);
+    /* Close device */
+    if (client->device)
+        device_close (self, client->device);
+
+    /* Remove client */
     self->priv->clients = g_list_remove (self->priv->clients, client);
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
 
-    device_close (self, device);
-    g_object_unref (device);
+    client_free (client);
 }
 
 static MbimDevice *
