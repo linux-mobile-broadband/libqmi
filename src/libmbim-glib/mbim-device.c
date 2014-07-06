@@ -582,7 +582,7 @@ process_message (MbimDevice  *self,
     case MBIM_MESSAGE_TYPE_COMMAND:
     case MBIM_MESSAGE_TYPE_HOST_ERROR:
         /* Shouldn't expect host-generated messages as replies */
-        g_warning ("[%s] Host-generated message received: ignoring",
+        g_message ("[%s] Host-generated message received: ignoring",
                    self->priv->path_display);
         return;
     }
