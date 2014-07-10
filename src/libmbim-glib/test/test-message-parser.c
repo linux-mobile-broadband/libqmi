@@ -580,6 +580,87 @@ test_message_parser_basic_connect_service_activation (void)
 }
 
 static void
+test_message_parser_basic_connect_register_state (void)
+{
+    MbimMessage *response;
+    MbimNwError nw_error;
+    MbimRegisterState register_state;
+    MbimRegisterMode register_mode;
+    MbimDataClass available_data_classes;
+    MbimCellularClass current_cellular_class;
+    gchar *provider_id;
+    gchar *provider_name;
+    gchar *roaming_text;
+    MbimRegistrationFlag registration_flag;
+    GError *error = NULL;
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x6C, 0x00, 0x00, 0x00, /* length */
+        0x12, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x09, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x3C, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* nw error */
+        0x03, 0x00, 0x00, 0x00, /* register state */
+        0x01, 0x00, 0x00, 0x00, /* register mode */
+        0x1C, 0x00, 0x00, 0x00, /* available data classes */
+        0x01, 0x00, 0x00, 0x00, /* current cellular class */
+        0x30, 0x00, 0x00, 0x00, /* provider id offset */
+        0x0A, 0x00, 0x00, 0x00, /* provider id size */
+        0x00, 0x00, 0x00, 0x00, /* provider name offset */
+        0x00, 0x00, 0x00, 0x00, /* provider name size */
+        0x00, 0x00, 0x00, 0x00, /* roaming text offset */
+        0x00, 0x00, 0x00, 0x00, /* roaming text size */
+        0x02, 0x00, 0x00, 0x00, /* registration flag */
+        /* data buffer */
+        0x32, 0x00, 0x36, 0x00,
+        0x30, 0x00, 0x30, 0x00,
+        0x36, 0x00, 0x00, 0x00 };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+
+    g_assert (mbim_message_register_state_response_parse (
+                  response,
+                  &nw_error,
+                  &register_state,
+                  &register_mode,
+                  &available_data_classes,
+                  &current_cellular_class,
+                  &provider_id,
+                  &provider_name,
+                  &roaming_text,
+                  &registration_flag,
+                  &error));
+
+    g_assert_no_error (error);
+
+    g_assert_cmpuint (nw_error, ==, MBIM_NW_ERROR_UNKNOWN);
+    g_assert_cmpuint (register_state, ==, MBIM_REGISTER_STATE_HOME);
+    g_assert_cmpuint (register_mode, ==, MBIM_REGISTER_MODE_AUTOMATIC);
+    g_assert_cmpuint (available_data_classes, ==, (MBIM_DATA_CLASS_UMTS |
+                                                   MBIM_DATA_CLASS_HSDPA |
+                                                   MBIM_DATA_CLASS_HSUPA));
+    g_assert_cmpuint (current_cellular_class, ==, MBIM_CELLULAR_CLASS_GSM);
+    g_assert_cmpstr (provider_id, ==, "26006");
+    g_assert (provider_name == NULL);
+    g_assert (roaming_text == NULL);
+    g_assert_cmpuint (registration_flag, ==, MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH);
+
+    mbim_message_unref (response);
+}
+
+static void
 test_message_parser_sms_read_zero_pdu (void)
 {
     MbimSmsFormat format;
@@ -1621,6 +1702,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/device-caps", test_message_parser_basic_connect_device_caps);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-configuration", test_message_parser_basic_connect_ip_configuration);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/service-activation", test_message_parser_basic_connect_service_activation);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/register-state", test_message_parser_basic_connect_register_state);
     g_test_add_func ("/libmbim-glib/message/parser/sms/read/zero-pdu", test_message_parser_sms_read_zero_pdu);
     g_test_add_func ("/libmbim-glib/message/parser/sms/read/single-pdu", test_message_parser_sms_read_single_pdu);
     g_test_add_func ("/libmbim-glib/message/parser/sms/read/multiple-pdu", test_message_parser_sms_read_multiple_pdu);
