@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2013 Nagaraju Kadiri <kadiri.raju@gmail.com>
+ * Copyright (C) 2013 - 2014 Nagaraju Kadiri <kadiri.raju@gmail.com>
  */
 
 #include "config.h"

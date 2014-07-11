@@ -16,6 +16,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2013 Lanedo GmbH
+ * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _MBIM_VERSION_H_
