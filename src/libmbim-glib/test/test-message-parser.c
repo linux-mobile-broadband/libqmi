@@ -653,6 +653,7 @@ test_message_parser_basic_connect_register_state (void)
                                                    MBIM_DATA_CLASS_HSUPA));
     g_assert_cmpuint (current_cellular_class, ==, MBIM_CELLULAR_CLASS_GSM);
     g_assert_cmpstr (provider_id, ==, "26006");
+    g_free (provider_id);
     g_assert (provider_name == NULL);
     g_assert (roaming_text == NULL);
     g_assert_cmpuint (registration_flag, ==, MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH);
