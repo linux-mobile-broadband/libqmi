@@ -41,6 +41,7 @@ typedef struct _MbimProxyPrivate MbimProxyPrivate;
 #define MBIM_PROXY_SOCKET_PATH "mbim-proxy"
 
 #define MBIM_PROXY_N_CLIENTS   "mbim-proxy-n-clients"
+#define MBIM_PROXY_N_DEVICES   "mbim-proxy-n-devices"
 
 struct _MbimProxy {
     GObject parent;
@@ -55,5 +56,6 @@ GType mbim_proxy_get_type (void);
 
 MbimProxy *mbim_proxy_new           (GError **error);
 guint      mbim_proxy_get_n_clients (MbimProxy *self);
+guint      mbim_proxy_get_n_devices (MbimProxy *self);
 
 #endif /* MBIM_PROXY_H */
