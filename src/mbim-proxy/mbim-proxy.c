@@ -42,6 +42,7 @@
 static GMainLoop *loop;
 static MbimProxy *proxy;
 static guint timeout_id;
+static guint client_connected_once = FALSE;
 
 /* Main options */
 static gboolean verbose_flag;
@@ -147,6 +148,10 @@ stop_loop_cb (void)
 static void
 proxy_n_clients_changed (MbimProxy *_proxy)
 {
+    /* once a client has connected only exit if there are no devices */
+    if (client_connected_once)
+        return;
+
     if (mbim_proxy_get_n_clients (proxy) == 0) {
         g_assert (timeout_id == 0);
         timeout_id = g_timeout_add_seconds (EMPTY_PROXY_LIFETIME_SECS,
@@ -159,6 +164,17 @@ proxy_n_clients_changed (MbimProxy *_proxy)
     if (timeout_id) {
         g_source_remove (timeout_id);
         timeout_id = 0;
+    }
+
+    client_connected_once = TRUE;
+}
+
+static void
+proxy_n_devices_changed (MbimProxy *_proxy)
+{
+    if (mbim_proxy_get_n_devices (proxy) == 0) {
+        if (loop)
+            g_main_loop_quit (loop);
     }
 }
 
@@ -207,6 +223,10 @@ int main (int argc, char **argv)
     g_signal_connect (proxy,
                       "notify::" MBIM_PROXY_N_CLIENTS,
                       G_CALLBACK (proxy_n_clients_changed),
+                      NULL);
+    g_signal_connect (proxy,
+                      "notify::" MBIM_PROXY_N_DEVICES,
+                      G_CALLBACK (proxy_n_devices_changed),
                       NULL);
 
     /* Loop */
