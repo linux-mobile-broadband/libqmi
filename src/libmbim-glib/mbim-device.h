@@ -51,6 +51,7 @@ typedef struct _MbimDevicePrivate MbimDevicePrivate;
 
 #define MBIM_DEVICE_SIGNAL_INDICATE_STATUS "device-indicate-status"
 #define MBIM_DEVICE_SIGNAL_ERROR           "device-error"
+#define MBIM_DEVICE_SIGNAL_REMOVED         "device-removed"
 
 /**
  * MbimDevice:

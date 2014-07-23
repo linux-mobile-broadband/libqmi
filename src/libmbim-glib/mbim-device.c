@@ -71,6 +71,7 @@ static GParamSpec *properties[PROP_LAST];
 enum {
     SIGNAL_INDICATE_STATUS,
     SIGNAL_ERROR,
+    SIGNAL_REMOVED,
     SIGNAL_LAST
 };
 
@@ -633,6 +634,7 @@ data_available (GIOChannel *source,
             g_byte_array_remove_range (self->priv->response, 0, self->priv->response->len);
 
         mbim_device_close_force (self, NULL);
+        g_signal_emit (self, signals[SIGNAL_REMOVED], 0 );
         return FALSE;
     }
 
@@ -2172,4 +2174,22 @@ mbim_device_class_init (MbimDeviceClass *klass)
                       G_TYPE_NONE,
                       1,
                       G_TYPE_ERROR);
+
+  /**
+   * MbimDevice::device-removed:
+   * @self: the #MbimDevice
+   * @message: None
+   *
+   * The ::device-removed signal is emitted when an unexpected port hang-up is received.
+   */
+    signals[SIGNAL_REMOVED] =
+        g_signal_new (MBIM_DEVICE_SIGNAL_REMOVED,
+                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
+                      G_SIGNAL_RUN_LAST,
+                      0,
+                      NULL,
+                      NULL,
+                      NULL,
+                      G_TYPE_NONE,
+                      0);
 }
