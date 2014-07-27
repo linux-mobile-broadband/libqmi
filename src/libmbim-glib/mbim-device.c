@@ -1229,17 +1229,16 @@ device_open_context_step (DeviceOpenContext *ctx)
 
      case DEVICE_OPEN_CONTEXT_STEP_OPEN_MESSAGE:
         /* If the device is already in-session, avoid the open message */
-        if (ctx->self->priv->in_session) {
-            g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-            device_open_context_complete_and_free (ctx);
+        if (!ctx->self->priv->in_session) {
+            open_message (ctx);
             return;
         }
-
-        open_message (ctx);
-        return;
+        ctx->step++;
+        /* Fall down */
 
      case DEVICE_OPEN_CONTEXT_STEP_LAST:
-        /* Nothing else to process, send the open message */
+        /* Nothing else to process */
+         g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
         device_open_context_complete_and_free (ctx);
         return;
 
