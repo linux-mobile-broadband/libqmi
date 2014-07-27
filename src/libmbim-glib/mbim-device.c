@@ -1172,8 +1172,13 @@ proxy_cfg_message_ready (MbimDevice        *self,
     GError *error = NULL;
 
     response = mbim_device_command_finish (self, res, &error);
-    if (response)
-        mbim_message_unref (response);
+    if (!response) {
+        /* Hard error if proxy cfg command fails */
+        device_open_context_complete_and_free (ctx, error);
+        return;
+    }
+
+    mbim_message_unref (response);
 
     ctx->step++;
     device_open_context_step (ctx);
