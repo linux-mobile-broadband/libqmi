@@ -1049,8 +1049,14 @@ typedef struct {
 } DeviceOpenContext;
 
 static void
-device_open_context_complete_and_free (DeviceOpenContext *ctx)
+device_open_context_complete_and_free (DeviceOpenContext *ctx,
+                                       GError            *error)
 {
+    if (error)
+        g_simple_async_result_take_error (ctx->result, error);
+    else
+        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+
     g_simple_async_result_complete_in_idle (ctx->result);
     g_object_unref (ctx->result);
     if (ctx->cancellable)
@@ -1123,15 +1129,19 @@ open_message_ready (MbimDevice        *self,
             /* No more seconds left in the timeout... return error */
         }
 
-        g_simple_async_result_take_error (ctx->result, error);
-    } else if (!mbim_message_open_done_get_result (response, &error))
-        g_simple_async_result_take_error (ctx->result, error);
-    else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+        device_open_context_complete_and_free (ctx, error);
+        return;
+    }
 
-    if (response)
+    if (!mbim_message_open_done_get_result (response, &error)) {
+        device_open_context_complete_and_free (ctx, error);
         mbim_message_unref (response);
+        return;
+    }
 
+    mbim_message_unref (response);
+
+    /* go on */
     ctx->step++;
     device_open_context_step (ctx);
 }
@@ -1194,8 +1204,7 @@ create_iochannel_ready (MbimDevice *self,
     GError *error = NULL;
 
     if (!create_iochannel_finish (self, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        device_open_context_complete_and_free (ctx, error);
         return;
     }
 
@@ -1227,7 +1236,7 @@ device_open_context_step (DeviceOpenContext *ctx)
         ctx->step++;
         /* Fall down */
 
-     case DEVICE_OPEN_CONTEXT_STEP_OPEN_MESSAGE:
+    case DEVICE_OPEN_CONTEXT_STEP_OPEN_MESSAGE:
         /* If the device is already in-session, avoid the open message */
         if (!ctx->self->priv->in_session) {
             open_message (ctx);
@@ -1236,10 +1245,9 @@ device_open_context_step (DeviceOpenContext *ctx)
         ctx->step++;
         /* Fall down */
 
-     case DEVICE_OPEN_CONTEXT_STEP_LAST:
-        /* Nothing else to process */
-         g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        device_open_context_complete_and_free (ctx);
+    case DEVICE_OPEN_CONTEXT_STEP_LAST:
+        /* Nothing else to process, complete without error */
+        device_open_context_complete_and_free (ctx, NULL);
         return;
 
     default:
