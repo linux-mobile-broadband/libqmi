@@ -38,6 +38,8 @@
  * This section defines the data type for unique identifiers.
  */
 
+#define MBIM_SERVICE_LAST MBIM_SERVICE_PROXY_CONTROL
+
 /*****************************************************************************/
 
 /**
@@ -311,7 +313,7 @@ mbim_service_id_is_custom (const guint id)
 {
     GList *l;
 
-    if (id <= MBIM_SERVICE_MS_HOST_SHUTDOWN)
+    if (id <= MBIM_SERVICE_LAST)
         return FALSE;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
@@ -338,7 +340,7 @@ mbim_service_lookup_name (guint service)
 {
     GList *l;
 
-    if (service <= MBIM_SERVICE_MS_HOST_SHUTDOWN)
+    if (service <= MBIM_SERVICE_LAST)
         return mbim_service_get_string (service);
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
