@@ -117,7 +117,6 @@ typedef struct {
 
     MbimDevice *device;
     guint indication_id;
-    gchar *device_file_path;
     gboolean service_subscriber_list_enabled;
     MbimEventEntry **mbim_event_entry_array;
 } Client;
@@ -180,9 +179,6 @@ client_unref (Client *client)
 
         if (client->buffer)
             g_byte_array_unref (client->buffer);
-
-        if (client->device_file_path)
-            g_free (client->device_file_path);
 
         if (client->mbim_event_entry_array)
             mbim_event_entry_array_free (client->mbim_event_entry_array);
@@ -462,7 +458,7 @@ device_new_ready (GObject      *source,
 
     device = mbim_device_new_finish (res, &error);
     if (!device) {
-        g_debug ("couldn't open MBIM device: %s", error->message);
+        g_warning ("couldn't create MBIM device: %s", error->message);
         g_error_free (error);
         /* Untrack client and complete without response */
         untrack_client (request->self, request->client);
@@ -474,15 +470,15 @@ device_new_ready (GObject      *source,
     existing = peek_device_for_path (request->self, mbim_device_get_path (device));
     if (existing) {
         /* Race condition, we created two MbimDevices for the same port, just skip ours, no big deal */
-        g_object_unref (device);
         client_set_device (request->client, existing);
     } else {
         /* Keep the newly added device in the proxy */
         track_device (request->self, device);
         /* Also keep track of the device in the client */
         client_set_device (request->client, device);
-        g_object_unref (device);
     }
+
+    g_object_unref (device);
 
     /* Flag as finished */
     g_assert (request->client->config_ongoing == TRUE);
@@ -498,10 +494,12 @@ process_internal_proxy_config (MbimProxy   *self,
                                MbimMessage *message)
 {
     Request *request;
+    MbimDevice *device;
+    gchar *path;
+    GFile *file;
 
     /* create request holder */
     request = request_new (self, client, message);
-
 
     /* Error out if there is already a proxy config ongoing */
     if (client->config_ongoing) {
@@ -517,35 +515,47 @@ process_internal_proxy_config (MbimProxy   *self,
         return TRUE;
     }
 
-    g_free (client->device_file_path);
-    client->device_file_path = _mbim_message_read_string (message, 0, 0);
-
-    /* create a device to allow clients access without sending the open */
-    if (client->device_file_path) {
-        MbimDevice *device;
-
-        device = peek_device_for_path (self, client->device_file_path);
-        if (!device) {
-            GFile *file;
-
-            /* Flag as ongoing */
-            client->config_ongoing = TRUE;
-
-            file = g_file_new_for_path (client->device_file_path);
-            mbim_device_new (file,
-                             NULL,
-                             (GAsyncReadyCallback)device_new_ready,
-                             request);
-            g_object_unref (file);
-
-            return TRUE;
-        }
-
-        client_set_device (client, device);
+    /* Retrieve path from request */
+    path = _mbim_message_read_string (message, 0, 0);
+    if (!path) {
+        request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
+        request_complete_and_free (request);
+        return TRUE;
     }
 
-    request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_NONE);
-    request_complete_and_free (request);
+    /* Only allow subsequent requests with the same path */
+    if (client->device) {
+        if (g_str_equal (path, mbim_device_get_path (client->device)))
+            request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_NONE);
+        else
+            request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_FAILURE);
+        request_complete_and_free (request);
+        g_free (path);
+        return TRUE;
+    }
+
+    /* Check if some other client already handled the same device */
+    device = peek_device_for_path (self, path);
+    if (device) {
+        /* Keep reference and complete */
+        client_set_device (client, device);
+        request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_NONE);
+        request_complete_and_free (request);
+        g_free (path);
+        return TRUE;
+    }
+
+    /* Flag as ongoing */
+    client->config_ongoing = TRUE;
+
+    /* Create new MBIM device */
+    file = g_file_new_for_path (path);
+    mbim_device_new (file,
+                     NULL,
+                     (GAsyncReadyCallback)device_new_ready,
+                     request);
+    g_object_unref (file);
+    g_free (path);
     return TRUE;
 }
 
