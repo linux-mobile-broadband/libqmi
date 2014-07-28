@@ -579,8 +579,8 @@ proxy_config_internal_device_open_ready (MbimProxy    *self,
         return;
     }
 
-    g_assert (request->client->config_ongoing == TRUE);
-    request->client->config_ongoing = FALSE;
+    if (request->client->config_ongoing == TRUE)
+        request->client->config_ongoing = FALSE;
     request->response = build_proxy_control_command_done (request->message, MBIM_STATUS_ERROR_NONE);
     request_complete_and_free (request);
 }
