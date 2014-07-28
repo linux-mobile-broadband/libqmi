@@ -1199,11 +1199,13 @@ proxy_cfg_message (DeviceOpenContext *ctx)
     GError *error = NULL;
     MbimMessage *request;
 
-    request = mbim_message_proxy_control_configuration_set_new (ctx->self->priv->path, &error);
+    request = mbim_message_proxy_control_configuration_set_new (ctx->self->priv->path, ctx->timeout, &error);
 
+    /* This message is no longer a direct reply; as the proxy will also try to open the device
+     * directly. If it cannot open the device, it will return an error. */
     mbim_device_command (ctx->self,
                          request,
-                         1,
+                         ctx->timeout,
                          ctx->cancellable,
                          (GAsyncReadyCallback)proxy_cfg_message_ready,
                          ctx);

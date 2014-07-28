@@ -305,6 +305,8 @@ typedef struct {
     Client *client;
     MbimMessage *message;
     MbimMessage *response;
+    /* Only used in proxy config */
+    guint32 timeout_secs;
 } Request;
 
 static void
@@ -446,6 +448,7 @@ device_open_ready (MbimDevice   *device,
 static void
 internal_device_open (MbimProxy           *self,
                       MbimDevice          *device,
+                      guint32              timeout_secs,
                       GAsyncReadyCallback  callback,
                       gpointer             user_data)
 {
@@ -478,10 +481,12 @@ internal_device_open (MbimProxy           *self,
     info->pending = g_list_append (info->pending, simple);
     self->priv->opening_devices = g_list_prepend (self->priv->opening_devices, info);
 
+    /* Note: for now, only the first timeout request is taken into account */
+
     /* Need to open the device; and we must make sure the proxy only does this once, even
      * when multiple clients request it */
     mbim_device_open (device,
-                      30,
+                      timeout_secs,
                       NULL,
                       (GAsyncReadyCallback)device_open_ready,
                       g_object_ref (self));
@@ -490,51 +495,28 @@ internal_device_open (MbimProxy           *self,
 /*****************************************************************************/
 /* Proxy open */
 
-static void
-proxy_open_internal_device_open_ready (MbimProxy    *self,
-                                       GAsyncResult *res,
-                                       Request      *request)
-{
-    GError *error = NULL;
-
-    if (!internal_device_open_finish (self, res, &error)) {
-        g_warning ("error opening device: %s", error->message);
-        g_error_free (error);
-        /* Untrack client and complete without response */
-        untrack_client (request->self, request->client);
-        request_complete_and_free (request);
-        return;
-    }
-
-    g_debug ("connection to MBIM device '%s' established", mbim_device_get_path (request->client->device));
-    request->response = mbim_message_open_done_new (mbim_message_get_transaction_id (request->message),
-                                                    MBIM_STATUS_ERROR_NONE);
-    request_complete_and_free (request);
-}
-
 static gboolean
 process_internal_proxy_open (MbimProxy   *self,
                              Client      *client,
                              MbimMessage *message)
 {
     Request *request;
+    MbimStatusError status = MBIM_STATUS_ERROR_FAILURE;
 
     /* create request holder */
     request = request_new (self, client, message);
 
-    if (!client->device) {
-        /* device should've been created in process_internal_proxy_config() */
-        g_debug ("can't find device for path");
-        request->response = mbim_message_open_done_new (mbim_message_get_transaction_id (request->message),
-                                                        MBIM_STATUS_ERROR_FAILURE);
-        request_complete_and_free (request);
-        return FALSE;
+    if (!client->device)
+        g_warning ("cannot process Open: device not set");
+    else if (!mbim_device_is_open (client->device))
+        g_warning ("cannot process Open: device not opened by proxy");
+    else {
+        g_debug ("connection to MBIM device '%s' established", mbim_device_get_path (client->device));
+        status = MBIM_STATUS_ERROR_NONE;
     }
 
-    internal_device_open (request->self,
-                          request->client->device,
-                          (GAsyncReadyCallback)proxy_open_internal_device_open_ready,
-                          request);
+    request->response = mbim_message_open_done_new (mbim_message_get_transaction_id (request->message), status);
+    request_complete_and_free (request);
     return TRUE;
 }
 
@@ -633,6 +615,7 @@ device_new_ready (GObject      *source,
 
     internal_device_open (request->self,
                           request->client->device,
+                          request->timeout_secs,
                           (GAsyncReadyCallback)proxy_config_internal_device_open_ready,
                           request);
 }
@@ -683,6 +666,9 @@ process_internal_proxy_config (MbimProxy   *self,
         return TRUE;
     }
 
+    /* Read requested timeout value */
+    request->timeout_secs = _mbim_message_read_guint32 (message, 8);
+
     /* Check if some other client already handled the same device */
     device = peek_device_for_path (self, path);
     if (device) {
@@ -691,6 +677,7 @@ process_internal_proxy_config (MbimProxy   *self,
 
         internal_device_open (self,
                               device,
+                              request->timeout_secs,
                               (GAsyncReadyCallback)proxy_config_internal_device_open_ready,
                               request);
         g_free (path);

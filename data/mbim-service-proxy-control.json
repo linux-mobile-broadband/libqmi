@@ -9,7 +9,9 @@
     "service"  : "Proxy Control",
     "type"     : "Command",
     "set"      : [ { "name"   : "DevicePath",
-                     "format" : "string" } ],
+                     "format" : "string" },
+                   { "name"   : "Timeout",
+                     "format" : "guint32" } ],
     "response" : [] }
 
 ]
