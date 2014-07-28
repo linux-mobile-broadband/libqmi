@@ -1045,6 +1045,7 @@ setup_socket_service (MbimProxy *self,
                           -1,
                           G_UNIX_SOCKET_ADDRESS_ABSTRACT));
     if (!g_socket_bind (socket, socket_address, TRUE, error)) {
+        g_object_unref (socket_address);
         g_object_unref (socket);
         return FALSE;
     }
