@@ -111,6 +111,10 @@ typedef struct {
     GSocketConnection *connection;
     GSource *connection_readable_source;
     GByteArray *buffer;
+
+    /* Only one proxy config allowed at a time */
+    gboolean config_ongoing;
+
     MbimDevice *device;
     guint indication_id;
     gchar *device_file_path;
@@ -480,6 +484,10 @@ device_new_ready (GObject      *source,
         g_object_unref (device);
     }
 
+    /* Flag as finished */
+    g_assert (request->client->config_ongoing == TRUE);
+    request->client->config_ongoing = FALSE;
+
     request->response = build_proxy_control_command_done (request->message, MBIM_STATUS_ERROR_NONE);
     request_complete_and_free (request);
 }
@@ -493,6 +501,14 @@ process_internal_proxy_config (MbimProxy   *self,
 
     /* create request holder */
     request = request_new (self, client, message);
+
+
+    /* Error out if there is already a proxy config ongoing */
+    if (client->config_ongoing) {
+        request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_BUSY);
+        request_complete_and_free (request);
+        return TRUE;
+    }
 
     /* Only allow SET command */
     if (mbim_message_command_get_command_type (message) != MBIM_MESSAGE_COMMAND_TYPE_SET) {
@@ -511,6 +527,9 @@ process_internal_proxy_config (MbimProxy   *self,
         device = peek_device_for_path (self, client->device_file_path);
         if (!device) {
             GFile *file;
+
+            /* Flag as ongoing */
+            client->config_ongoing = TRUE;
 
             file = g_file_new_for_path (client->device_file_path);
             mbim_device_new (file,
