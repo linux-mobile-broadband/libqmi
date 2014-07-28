@@ -53,7 +53,6 @@ enum {
 
 static GParamSpec *properties[PROP_LAST];
 
-
 struct _MbimProxyPrivate {
     /* Unix socket service */
     GSocketService *socket_service;
@@ -64,6 +63,8 @@ struct _MbimProxyPrivate {
     /* Devices */
     GList *devices;
 };
+
+static void track_device (MbimProxy  *self, MbimDevice *device);
 
 /*****************************************************************************/
 
@@ -112,7 +113,6 @@ typedef struct {
     MbimDevice *device;
     MbimMessage *internal_proxy_open_request;
     guint indication_id;
-    guint device_removed_id;
     gchar *device_file_path;
     gboolean opening_device;
     gboolean service_subscriber_list_enabled;
@@ -144,9 +144,6 @@ static void client_indication_cb (MbimDevice *device,
                                   MbimMessage *message,
                                   Client *client);
 
-static void client_device_removed_cb (MbimDevice *device,
-                                      Client *client);
-
 static void
 client_set_device (Client *client,
                    MbimDevice *device)
@@ -154,8 +151,6 @@ client_set_device (Client *client,
     if (client->device) {
         if (g_signal_handler_is_connected (client->device, client->indication_id))
             g_signal_handler_disconnect (client->device, client->indication_id);
-        if (g_signal_handler_is_connected (client->device, client->device_removed_id))
-            g_signal_handler_disconnect (client->device, client->device_removed_id);
         g_object_unref (client->device);
     }
 
@@ -165,14 +160,9 @@ client_set_device (Client *client,
                                                   MBIM_DEVICE_SIGNAL_INDICATE_STATUS,
                                                   G_CALLBACK (client_indication_cb),
                                                   client);
-        client->device_removed_id = g_signal_connect (client->device,
-                                                      MBIM_DEVICE_SIGNAL_REMOVED,
-                                                      G_CALLBACK (client_device_removed_cb),
-                                                      client);
     } else {
         client->device = NULL;
         client->indication_id = 0;
-        client->device_removed_id = 0;
     }
 }
 
@@ -233,16 +223,6 @@ client_send_message (Client *client,
     }
 
     return TRUE;
-}
-
-static void
-client_device_removed_cb (MbimDevice *device,
-                          Client *client)
-{
-    MbimProxy *self = client->self;
-
-    /* Remove client */
-    untrack_client (self, client);
 }
 
 /*****************************************************************************/
@@ -347,17 +327,6 @@ typedef struct {
     MbimProxy *proxy;
     Client *client;
 } DeviceOpenContext;
-
-static void
-proxy_device_removed_cb (MbimDevice *device,
-                         MbimProxy *self)
-{
-    if (g_list_find (self->priv->devices, device)) {
-        self->priv->devices = g_list_remove (self->priv->devices, device);
-        g_object_unref (device);
-        g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_DEVICES]);
-    }
-}
 
 static void
 complete_internal_proxy_open (Client *client)
@@ -513,13 +482,10 @@ device_new_ready (GObject *source,
         client_set_device (ctx->client, existing);
     } else {
         /* Keep the newly added device in the proxy */
-        self->priv->devices = g_list_append (self->priv->devices, g_object_ref (device));
-        g_signal_connect (device,
-                          MBIM_DEVICE_SIGNAL_REMOVED,
-                          G_CALLBACK (proxy_device_removed_cb),
-                          self);
-        g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_DEVICES]);
+        track_device (self, device);
+        /* Also keep track of the device in the client */
         client_set_device (ctx->client, device);
+        g_object_unref (device);
     }
 
     complete_internal_proxy_config (ctx->client, response);
@@ -1075,6 +1041,47 @@ setup_socket_service (MbimProxy *self,
     g_socket_service_start (self->priv->socket_service);
     g_object_unref (socket);
     return TRUE;
+}
+
+/*****************************************************************************/
+/* Device tracking */
+
+static void
+proxy_device_removed_cb (MbimDevice *device,
+                         MbimProxy *self)
+{
+    GList *l;
+    GList *to_remove = NULL;
+
+    if (!g_list_find (self->priv->devices, device))
+        return;
+
+    /* Lookup all clients with this device */
+    for (l = self->priv->clients; l; l = g_list_next (l)) {
+        if (g_str_equal (mbim_device_get_path (((Client *)(l->data))->device), mbim_device_get_path (device)))
+            to_remove = g_list_append (to_remove, l->data);
+    }
+
+    /* Remove all these clients */
+    for (l = to_remove; l; l = g_list_next (l))
+        untrack_client (self, (Client *)(l->data));
+
+    /* And finally, remove the device */
+    self->priv->devices = g_list_remove (self->priv->devices, device);
+    g_object_unref (device);
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_DEVICES]);
+}
+
+static void
+track_device (MbimProxy *self,
+              MbimDevice *device)
+{
+    self->priv->devices = g_list_append (self->priv->devices, g_object_ref (device));
+    g_signal_connect (device,
+                      MBIM_DEVICE_SIGNAL_REMOVED,
+                      G_CALLBACK (proxy_device_removed_cb),
+                      self);
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_DEVICES]);
 }
 
 /*****************************************************************************/
