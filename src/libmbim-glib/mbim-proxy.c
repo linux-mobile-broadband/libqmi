@@ -907,7 +907,7 @@ parse_request (Client *client)
         guint32 len = 0;
 
         if (client->buffer->len >= sizeof (struct header) &&
-            (len = GUINT32_FROM_LE(((struct header *)client->buffer->data)->length)) > client->buffer->len) {
+            (len = GUINT32_FROM_LE (((struct header *)client->buffer->data)->length)) > client->buffer->len) {
             /* have not received complete message */
             return;
         }
@@ -915,16 +915,15 @@ parse_request (Client *client)
         if (!len)
             return;
 
-        message = mbim_message_new(client->buffer->data, len);
-        if (!message) {
+        message = mbim_message_new (client->buffer->data, len);
+        if (!message)
             return;
-        } else {
-            g_byte_array_remove_range (client->buffer, 0, len);
 
-            /* Play with the received message */
-            process_message (client, message);
-            mbim_message_unref (message);
-        }
+        g_byte_array_remove_range (client->buffer, 0, len);
+
+        /* Play with the received message */
+        process_message (client, message);
+        mbim_message_unref (message);
     } while (client->buffer->len > 0);
 }
 
