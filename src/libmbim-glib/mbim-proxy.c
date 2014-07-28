@@ -62,6 +62,7 @@ struct _MbimProxyPrivate {
 
     /* Devices */
     GList *devices;
+    GList *opening_devices;
 };
 
 static void        track_device         (MbimProxy *self, MbimDevice *device);
@@ -347,20 +348,159 @@ request_new (MbimProxy   *self,
 }
 
 /*****************************************************************************/
-/* Proxy open */
+/* Internal proxy device opening operation */
+
+static gboolean
+internal_device_open_finish (MbimProxy     *self,
+                             GAsyncResult  *res,
+                             GError       **error)
+{
+    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+}
+
+typedef struct {
+    MbimDevice *device;
+    GList *pending;
+} OpeningDevice;
+
+static void
+opening_device_complete_and_free (OpeningDevice *info,
+                                  const GError  *error)
+{
+    GList *l;
+
+    /* Complete all pending open actions */
+    for (l = info->pending; l; l = g_list_next (l)) {
+        GSimpleAsyncResult *simple = (GSimpleAsyncResult *)(l->data);
+
+        if (error)
+            g_simple_async_result_set_from_error (simple, error);
+        else
+            g_simple_async_result_set_op_res_gboolean (simple, TRUE);
+        g_simple_async_result_complete_in_idle (simple);
+        g_object_unref (simple);
+    }
+
+    g_list_free (info->pending);
+    g_object_unref (info->device);
+    g_slice_free (OpeningDevice, info);
+}
+
+static OpeningDevice *
+peek_opening_device_info (MbimProxy  *self,
+                          MbimDevice *device)
+{
+    GList *l;
+
+    /* If already being opened, queue it up */
+    for (l = self->priv->opening_devices; l; l = g_list_next (l)) {
+        OpeningDevice *info;
+
+        info = (OpeningDevice *)(l->data);
+        if (g_str_equal (mbim_device_get_path (device), mbim_device_get_path (info->device)))
+            return info;
+    }
+
+    return NULL;
+}
+
+static void
+cancel_opening_device (MbimProxy  *self,
+                       MbimDevice *device)
+{
+    OpeningDevice *info;
+    GError *error;
+
+    info = peek_opening_device_info (self, device);
+    if (!info)
+        return;
+
+    error = g_error_new (MBIM_CORE_ERROR, MBIM_CORE_ERROR_ABORTED, "Device is gone");
+    opening_device_complete_and_free (info, error);
+    g_error_free (error);
+}
 
 static void
 device_open_ready (MbimDevice   *device,
                    GAsyncResult *res,
-                   Request      *request)
+                   MbimProxy    *self)
+{
+    GError *error = NULL;
+    OpeningDevice *info;
+
+    mbim_device_open_finish (device, res, &error);
+
+    info = peek_opening_device_info (self, device);
+    g_assert (info != NULL);
+
+    /* Remove opening device info */
+    self->priv->opening_devices = g_list_remove (self->priv->opening_devices, info);
+
+    /* Complete all pending open actions */
+    opening_device_complete_and_free (info, error);
+
+    if (error)
+        g_error_free (error);
+}
+
+static void
+internal_device_open (MbimProxy           *self,
+                      MbimDevice          *device,
+                      GAsyncReadyCallback  callback,
+                      gpointer             user_data)
+{
+    OpeningDevice *info;
+    GSimpleAsyncResult *simple;
+
+    simple = g_simple_async_result_new (G_OBJECT (self),
+                                        callback,
+                                        user_data,
+                                        internal_device_open);
+
+    /* If the device is already open, we are done */
+    if (mbim_device_is_open (device)) {
+        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
+        g_simple_async_result_complete_in_idle (simple);
+        g_object_unref (simple);
+        return;
+    }
+
+    /* If already being opened, queue it up */
+    info = peek_opening_device_info (self, device);
+    if (info) {
+        info->pending = g_list_append (info->pending, simple);
+        return;
+    }
+
+    /* First time opening, go on */
+    info = g_slice_new0 (OpeningDevice);
+    info->device = g_object_ref (device);
+    info->pending = g_list_append (info->pending, simple);
+    self->priv->opening_devices = g_list_prepend (self->priv->opening_devices, info);
+
+    /* Need to open the device; and we must make sure the proxy only does this once, even
+     * when multiple clients request it */
+    mbim_device_open (device,
+                      30,
+                      NULL,
+                      (GAsyncReadyCallback)device_open_ready,
+                      g_object_ref (self));
+}
+
+/*****************************************************************************/
+/* Proxy open */
+
+static void
+proxy_open_internal_device_open_ready (MbimProxy    *self,
+                                       GAsyncResult *res,
+                                       Request      *request)
 {
     GError *error = NULL;
 
-    if (!mbim_device_open_finish (device, res, &error)) {
-        g_debug ("couldn't open MBIM device: %s", error->message);
+    if (!internal_device_open_finish (self, res, &error)) {
+        g_warning ("error opening device: %s", error->message);
         g_error_free (error);
-
-        /* Untrack client and complete without sending response */
+        /* Untrack client and complete without response */
         untrack_client (request->self, request->client);
         request_complete_and_free (request);
         return;
@@ -384,28 +524,18 @@ process_internal_proxy_open (MbimProxy   *self,
 
     if (!client->device) {
         /* device should've been created in process_internal_proxy_config() */
-        g_debug ("can't find device for path, send MBIM_CID_PROXY_CONTROL_CONFIGURATION first");
+        g_debug ("can't find device for path");
         request->response = mbim_message_open_done_new (mbim_message_get_transaction_id (request->message),
                                                         MBIM_STATUS_ERROR_FAILURE);
         request_complete_and_free (request);
         return FALSE;
     }
 
-    if (!mbim_device_is_open (client->device)) {
-        /* device found but not open, open it */
-        mbim_device_open (client->device,
-                          30,
-                          NULL,
-                          (GAsyncReadyCallback)device_open_ready,
+    internal_device_open (request->self,
+                          request->client->device,
+                          (GAsyncReadyCallback)proxy_open_internal_device_open_ready,
                           request);
-        return TRUE;
-    }
-
-    g_debug ("connection to MBIM device '%s' established (already open)", mbim_device_get_path (client->device));
-    request->response = mbim_message_open_done_new (mbim_message_get_transaction_id (request->message),
-                                                    MBIM_STATUS_ERROR_NONE);
-    request_complete_and_free (request);
-    return FALSE;
+    return TRUE;
 }
 
 /*****************************************************************************/
@@ -448,6 +578,28 @@ build_proxy_control_command_done (MbimMessage     *message,
 }
 
 static void
+proxy_config_internal_device_open_ready (MbimProxy    *self,
+                                         GAsyncResult *res,
+                                         Request      *request)
+{
+    GError *error = NULL;
+
+    if (!internal_device_open_finish (self, res, &error)) {
+        g_warning ("error opening device: %s", error->message);
+        g_error_free (error);
+        /* Untrack client and complete without response */
+        untrack_client (request->self, request->client);
+        request_complete_and_free (request);
+        return;
+    }
+
+    g_assert (request->client->config_ongoing == TRUE);
+    request->client->config_ongoing = FALSE;
+    request->response = build_proxy_control_command_done (request->message, MBIM_STATUS_ERROR_NONE);
+    request_complete_and_free (request);
+}
+
+static void
 device_new_ready (GObject      *source,
                   GAsyncResult *res,
                   Request      *request)
@@ -477,15 +629,12 @@ device_new_ready (GObject      *source,
         /* Also keep track of the device in the client */
         client_set_device (request->client, device);
     }
-
     g_object_unref (device);
 
-    /* Flag as finished */
-    g_assert (request->client->config_ongoing == TRUE);
-    request->client->config_ongoing = FALSE;
-
-    request->response = build_proxy_control_command_done (request->message, MBIM_STATUS_ERROR_NONE);
-    request_complete_and_free (request);
+    internal_device_open (request->self,
+                          request->client->device,
+                          (GAsyncReadyCallback)proxy_config_internal_device_open_ready,
+                          request);
 }
 
 static gboolean
@@ -537,10 +686,13 @@ process_internal_proxy_config (MbimProxy   *self,
     /* Check if some other client already handled the same device */
     device = peek_device_for_path (self, path);
     if (device) {
-        /* Keep reference and complete */
+        /* Keep reference and continue */
         client_set_device (client, device);
-        request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_NONE);
-        request_complete_and_free (request);
+
+        internal_device_open (self,
+                              device,
+                              (GAsyncReadyCallback)proxy_config_internal_device_open_ready,
+                              request);
         g_free (path);
         return TRUE;
     }
@@ -1061,8 +1213,13 @@ proxy_device_removed_cb (MbimDevice *device,
     GList *l;
     GList *to_remove = NULL;
 
-    if (!g_list_find (self->priv->devices, device))
-        return;
+    g_assert (g_list_find (self->priv->devices, device));
+
+    /* Disconnect right away */
+    g_signal_handlers_disconnect_by_func (device, proxy_device_removed_cb, self);
+
+    /* If pending openings ongoing, complete them with error */
+    cancel_opening_device (self, device);
 
     /* Lookup all clients with this device */
     for (l = self->priv->clients; l; l = g_list_next (l)) {
@@ -1148,6 +1305,9 @@ static void
 dispose (GObject *object)
 {
     MbimProxyPrivate *priv = MBIM_PROXY (object)->priv;
+
+    /* This list should always be empty when disposing */
+    g_assert (priv->opening_devices == NULL);
 
     if (priv->clients) {
         g_list_free_full (priv->clients, (GDestroyNotify) client_unref);
