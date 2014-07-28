@@ -173,8 +173,17 @@ static void
 proxy_n_devices_changed (MbimProxy *_proxy)
 {
     if (mbim_proxy_get_n_devices (proxy) == 0) {
-        if (loop)
-            g_main_loop_quit (loop);
+        g_assert (timeout_id == 0);
+        timeout_id = g_timeout_add_seconds (EMPTY_PROXY_LIFETIME_SECS,
+                                            (GSourceFunc)stop_loop_cb,
+                                            NULL);
+        return;
+    }
+
+    /* At least one device, remove timeout if any */
+    if (timeout_id) {
+        g_source_remove (timeout_id);
+        timeout_id = 0;
     }
 }
 
