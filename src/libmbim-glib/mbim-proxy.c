@@ -446,17 +446,11 @@ process_internal_proxy_close (MbimProxy   *self,
                               Client      *client,
                               MbimMessage *message)
 {
-    MbimMessage *response;
-    GError *error = NULL;
+    Request *request;
 
-    response = mbim_message_close_done_new (mbim_message_get_transaction_id (message), MBIM_STATUS_ERROR_NONE);
-    if (!client_send_message (client, response, &error)) {
-        mbim_message_unref (response);
-        untrack_client (self, client);
-        return FALSE;
-    }
-
-    mbim_message_unref (response);
+    request = request_new (self, client, message);
+    request->response = mbim_message_close_done_new (mbim_message_get_transaction_id (message), MBIM_STATUS_ERROR_NONE);
+    request_complete_and_free (request);
     return TRUE;
 }
 
