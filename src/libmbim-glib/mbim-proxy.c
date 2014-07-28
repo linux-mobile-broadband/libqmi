@@ -241,9 +241,11 @@ untrack_client (MbimProxy *self,
     /* Disconnect the client explicitly when untracking */
     client_disconnect (client);
 
-    self->priv->clients = g_list_remove (self->priv->clients, client);
-    client_unref (client);
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
+    if (g_list_find (self->priv->clients, client)) {
+        self->priv->clients = g_list_remove (self->priv->clients, client);
+        client_unref (client);
+        g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
+    }
 }
 
 /*****************************************************************************/
