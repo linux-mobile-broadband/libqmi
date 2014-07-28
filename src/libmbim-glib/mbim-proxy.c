@@ -112,7 +112,6 @@ typedef struct {
     GSource *connection_readable_source;
     GByteArray *buffer;
     MbimDevice *device;
-    MbimMessage *internal_proxy_open_request;
     guint indication_id;
     gchar *device_file_path;
     gboolean opening_device;
@@ -181,9 +180,6 @@ client_unref (Client *client)
 
         if (client->device_file_path)
             g_free (client->device_file_path);
-
-        if (client->internal_proxy_open_request)
-            mbim_message_unref (client->internal_proxy_open_request);
 
         if (client->mbim_event_entry_array)
             mbim_event_entry_array_free (client->mbim_event_entry_array);
@@ -354,53 +350,27 @@ request_new (MbimProxy   *self,
 /*****************************************************************************/
 /* Proxy open */
 
-typedef struct {
-    MbimProxy *self;
-    Client *client;
-} DeviceOpenContext;
-
 static void
-complete_internal_proxy_open (Client *client)
-{
-    MbimMessage *response;
-    GError *error = NULL;
-
-    g_debug ("connection to MBIM device '%s' established", mbim_device_get_path (client->device));
-
-    g_assert (client->internal_proxy_open_request != NULL);
-    response = mbim_message_open_done_new (mbim_message_get_transaction_id (client->internal_proxy_open_request),
-                                           MBIM_STATUS_ERROR_NONE);
-
-    if (!client_send_message (client, response, &error)) {
-        mbim_message_unref (response);
-        client_disconnect (client);
-        return;
-    }
-
-    mbim_message_unref (response);
-    mbim_message_unref (client->internal_proxy_open_request);
-    client->internal_proxy_open_request = NULL;
-}
-
-static void
-device_open_ready (MbimDevice *device,
+device_open_ready (MbimDevice   *device,
                    GAsyncResult *res,
-                   DeviceOpenContext *ctx)
+                   Request      *request)
 {
     GError *error = NULL;
 
     if (!mbim_device_open_finish (device, res, &error)) {
         g_debug ("couldn't open MBIM device: %s", error->message);
         g_error_free (error);
-        untrack_client (ctx->self, ctx->client);
-        client_unref (ctx->client);
-        g_slice_free (DeviceOpenContext, ctx);
+
+        /* Untrack client and complete without sending response */
+        untrack_client (request->self, request->client);
+        request_complete_and_free (request);
         return;
     }
 
-    complete_internal_proxy_open (ctx->client);
-    client_unref (ctx->client);
-    g_slice_free (DeviceOpenContext, ctx);
+    g_debug ("connection to MBIM device '%s' established", mbim_device_get_path (request->client->device));
+    request->response = mbim_message_open_done_new (mbim_message_get_transaction_id (request->message),
+                                                    MBIM_STATUS_ERROR_NONE);
+    request_complete_and_free (request);
 }
 
 static gboolean
@@ -408,33 +378,34 @@ process_internal_proxy_open (MbimProxy   *self,
                              Client      *client,
                              MbimMessage *message)
 {
-    DeviceOpenContext  *ctx;
+    Request *request;
 
-    /* Keep it */
-    client->internal_proxy_open_request = mbim_message_ref (message);
+    /* create request holder */
+    request = request_new (self, client, message);
 
     if (!client->device) {
         /* device should've been created in process_internal_proxy_config() */
         g_debug ("can't find device for path, send MBIM_CID_PROXY_CONTROL_CONFIGURATION first");
-        complete_internal_proxy_open (client);
+        request->response = mbim_message_open_done_new (mbim_message_get_transaction_id (request->message),
+                                                        MBIM_STATUS_ERROR_FAILURE);
+        request_complete_and_free (request);
         return FALSE;
     }
 
     if (!mbim_device_is_open (client->device)) {
         /* device found but not open, open it */
-        ctx = g_slice_new0 (DeviceOpenContext);
-        ctx->self = self;
-        ctx->client = client_ref (client);
-
         mbim_device_open (client->device,
                           30,
                           NULL,
                           (GAsyncReadyCallback)device_open_ready,
-                          ctx);
+                          request);
         return TRUE;
     }
 
-    complete_internal_proxy_open (client);
+    g_debug ("connection to MBIM device '%s' established (already open)", mbim_device_get_path (client->device));
+    request->response = mbim_message_open_done_new (mbim_message_get_transaction_id (request->message),
+                                                    MBIM_STATUS_ERROR_NONE);
+    request_complete_and_free (request);
     return FALSE;
 }
 
