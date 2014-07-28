@@ -114,7 +114,6 @@ typedef struct {
     MbimDevice *device;
     guint indication_id;
     gchar *device_file_path;
-    gboolean opening_device;
     gboolean service_subscriber_list_enabled;
     MbimEventEntry **mbim_event_entry_array;
 } Client;
