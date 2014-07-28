@@ -802,7 +802,7 @@ device_command_ready (MbimDevice *device,
     }
 
     /* replace reponse transaction id with the requested transaction id */
-    ((struct header *)(request->response->data))->transaction_id = GUINT32_TO_LE (mbim_message_get_transaction_id (request->message));
+    mbim_message_set_transaction_id (request->response, mbim_message_get_transaction_id (request->message));
 
     if (!client_send_message (request->client, request->response, &error)) {
         g_debug ("couldn't send response back to client: %s", error->message);
