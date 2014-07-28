@@ -24,7 +24,8 @@ libmbim_glib_core_la_SOURCES = \
 	mbim-message-private.h mbim-message.h mbim-message.c \
 	mbim-device.h mbim-device.c \
 	mbim-compat.h mbim-compat.c \
-	mbim-proxy.h mbim-proxy.c
+	mbim-proxy.h mbim-proxy.c \
+	mbim-proxy-helpers.h mbim-proxy-helpers.c
 
 # Final installable library
 lib_LTLIBRARIES = libmbim-glib.la

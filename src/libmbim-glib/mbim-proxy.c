@@ -39,6 +39,7 @@
 #include "mbim-enum-types.h"
 #include "mbim-error-types.h"
 #include "mbim-basic-connect.h"
+#include "mbim-proxy-helpers.h"
 
 #define BUFFER_SIZE 512
 
@@ -710,134 +711,35 @@ process_internal_proxy_config (MbimProxy   *self,
 /*****************************************************************************/
 /* Subscriber list */
 
-static MbimEventEntry **
-standard_service_subscribe_list_new (void)
-{
-    guint32  i, service;
-    MbimEventEntry **out;
-
-
-    out = g_new0 (MbimEventEntry *, MBIM_SERVICE_MS_FIRMWARE_ID);
-
-    for (service = MBIM_SERVICE_BASIC_CONNECT, i = 0;
-         service < MBIM_SERVICE_MS_FIRMWARE_ID;
-         service++, i++) {
-         out[i] = g_new0 (MbimEventEntry, 1);
-         memcpy (&out[i]->device_service_id, mbim_uuid_from_service (service), sizeof (MbimUuid));
-    }
-
-    return out;
-}
-
 static void
 track_service_subscribe_list (Client *client,
                               MbimMessage *message)
 {
-    guint32 i;
-    guint32 element_count;
-    guint32 offset = 0;
-    guint32 array_offset;
-    MbimEventEntry *event;
-
     client->service_subscriber_list_enabled = TRUE;
 
-    if (client->mbim_event_entry_array) {
+    if (client->mbim_event_entry_array)
         mbim_event_entry_array_free (client->mbim_event_entry_array);
-        client->mbim_event_entry_array = NULL;
-    }
 
-    element_count = _mbim_message_read_guint32 (message, offset);
-    if (element_count) {
-        client->mbim_event_entry_array = g_new (MbimEventEntry *, element_count + 1);
-
-        offset += 4;
-        for (i = 0; i < element_count; i++) {
-            array_offset = _mbim_message_read_guint32 (message, offset);
-
-            event = g_new (MbimEventEntry, 1);
-
-            memcpy (&(event->device_service_id), _mbim_message_read_uuid (message, array_offset), 16);
-            array_offset += 16;
-
-            event->cids_count = _mbim_message_read_guint32 (message, array_offset);
-            array_offset += 4;
-
-            if (event->cids_count)
-                event->cids = _mbim_message_read_guint32_array (message, event->cids_count, array_offset);
-            else
-                event->cids = NULL;
-
-            client->mbim_event_entry_array[i] = event;
-            offset += 8;
-        }
-
-        client->mbim_event_entry_array[element_count] = NULL;
-    }
+    client->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_request_parse (message);
 }
 
 static MbimEventEntry **
 merge_client_service_subscribe_lists (MbimProxy *self,
                                       guint32   *events_count)
 {
-    guint32 i, ii;
-    guint32 out_idx, out_cid_idx;
     GList *l;
-    MbimEventEntry *entry;
     MbimEventEntry **out;
-    Client *client;
 
-    out = standard_service_subscribe_list_new ();
+    out = _mbim_proxy_helper_service_subscribe_standard_list_new ();
 
     for (l = self->priv->clients; l; l = g_list_next (l)) {
+        Client *client;
+
         client = l->data;
         if (!client->mbim_event_entry_array)
             continue;
 
-        for (i = 0; client->mbim_event_entry_array[i]; i++) {
-            entry = NULL;
-
-            /* look for matching uuid */
-            for (out_idx = 0; out[out_idx]; out_idx++) {
-                if (mbim_uuid_cmp (&client->mbim_event_entry_array[i]->device_service_id,
-                                   &out[out_idx]->device_service_id)) {
-                    entry = out[out_idx];
-                    break;
-                }
-            }
-
-            if (!entry) {
-                /* matching uuid not found in merge array, add it */
-                out = g_realloc (out, sizeof (*out) * (out_idx + 2));
-                out[out_idx] = g_memdup (client->mbim_event_entry_array[i], sizeof (MbimEventEntry));
-                if (client->mbim_event_entry_array[i]->cids_count)
-                    out[out_idx]->cids = g_memdup (client->mbim_event_entry_array[i]->cids,
-                                                   sizeof (guint32) * client->mbim_event_entry_array[i]->cids_count);
-                else
-                    out[out_idx]->cids = NULL;
-
-                out[++out_idx] = NULL;
-                *events_count = out_idx;
-            } else {
-                /* matching uuid found, add cids */
-                if (!entry->cids_count)
-                    /* all cids already enabled for uuid */
-                    continue;
-
-                for (ii = 0; ii < client->mbim_event_entry_array[i]->cids_count; ii++) {
-                    for (out_cid_idx = 0; out_cid_idx < entry->cids_count; out_cid_idx++) {
-                        if (client->mbim_event_entry_array[i]->cids[ii] == entry->cids[out_cid_idx]) {
-                            break;
-                        }
-                    }
-
-                    if (out_cid_idx == entry->cids_count) {
-                        /* cid not found in merge array, add it */
-                        entry->cids = g_realloc (entry->cids, sizeof (guint32) * (entry->cids_count++));
-                        entry->cids[out_cid_idx] = client->mbim_event_entry_array[i]->cids[ii];
-                    }
-                }
-            }
-        }
+        out = _mbim_proxy_helper_service_subscribe_list_merge (out, client->mbim_event_entry_array, events_count);
     }
 
     return out;
