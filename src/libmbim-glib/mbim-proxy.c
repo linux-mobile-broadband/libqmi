@@ -571,6 +571,7 @@ process_internal_proxy_config (MbimProxy   *self,
 }
 
 /*****************************************************************************/
+/* Subscriber list */
 
 static MbimEventEntry **
 standard_service_subscribe_list_new (void)
@@ -785,6 +786,9 @@ process_device_service_subscribe_list (MbimProxy   *self,
     return TRUE;
 }
 
+/*****************************************************************************/
+/* Standard command */
+
 static void
 device_command_ready (MbimDevice *device,
                       GAsyncResult *res,
@@ -815,35 +819,11 @@ device_command_ready (MbimDevice *device,
 }
 
 static gboolean
-process_message (MbimProxy   *self,
+process_command (MbimProxy   *self,
                  Client      *client,
                  MbimMessage *message)
 {
     Request *request;
-
-    /* Filter by message type */
-    switch (mbim_message_get_message_type (message)) {
-    case MBIM_MESSAGE_TYPE_OPEN:
-        return process_internal_proxy_open (self, client, message);
-    case MBIM_MESSAGE_TYPE_CLOSE:
-        return process_internal_proxy_close (self, client, message);
-    case MBIM_MESSAGE_TYPE_COMMAND:
-        /* Proxy control message? */
-        if (mbim_message_command_get_service (message) == MBIM_SERVICE_PROXY_CONTROL &&
-            mbim_message_command_get_cid (message) == MBIM_CID_PROXY_CONTROL_CONFIGURATION)
-            return process_internal_proxy_config (self, client, message);
-
-        /* device service subscribe list message? */
-        if (mbim_message_command_get_service (message) == MBIM_SERVICE_BASIC_CONNECT &&
-            mbim_message_command_get_cid (message) == MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST)
-            return process_device_service_subscribe_list (self, client, message);
-
-        /* Update transaction id and forward to device */
-        break;
-    default:
-        g_debug ("invalid message from client: not a command message");
-        return FALSE;
-    }
 
     /* create request holder */
     request = request_new (self, client, message);
@@ -863,6 +843,38 @@ process_message (MbimProxy   *self,
                          (GAsyncReadyCallback)device_command_ready,
                          request);
     return TRUE;
+}
+
+/*****************************************************************************/
+
+static gboolean
+process_message (MbimProxy   *self,
+                 Client      *client,
+                 MbimMessage *message)
+{
+    /* Filter by message type */
+    switch (mbim_message_get_message_type (message)) {
+    case MBIM_MESSAGE_TYPE_OPEN:
+        return process_internal_proxy_open (self, client, message);
+    case MBIM_MESSAGE_TYPE_CLOSE:
+        return process_internal_proxy_close (self, client, message);
+    case MBIM_MESSAGE_TYPE_COMMAND:
+        /* Proxy control message? */
+        if (mbim_message_command_get_service (message) == MBIM_SERVICE_PROXY_CONTROL &&
+            mbim_message_command_get_cid (message) == MBIM_CID_PROXY_CONTROL_CONFIGURATION)
+            return process_internal_proxy_config (self, client, message);
+        /* device service subscribe list message? */
+        if (mbim_message_command_get_service (message) == MBIM_SERVICE_BASIC_CONNECT &&
+            mbim_message_command_get_cid (message) == MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST)
+            return process_device_service_subscribe_list (self, client, message);
+        /* Otherwise, standard command to forward */
+        return process_command (self, client, message);
+    default:
+        g_debug ("invalid message from client: not a command message");
+        return FALSE;
+    }
+
+    g_assert_not_reached ();
 }
 
 static void
@@ -885,7 +897,6 @@ parse_request (MbimProxy *self,
         message = mbim_message_new (client->buffer->data, len);
         if (!message)
             return;
-
         g_byte_array_remove_range (client->buffer, 0, len);
 
         /* Play with the received message */
