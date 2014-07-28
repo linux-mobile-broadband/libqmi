@@ -301,6 +301,42 @@ client_indication_cb (MbimDevice *device,
     }
 }
 
+/*****************************************************************************/
+/* Request info */
+
+typedef struct {
+    MbimProxy *self;
+    Client *client;
+    MbimMessage *message;
+    MbimMessage *response;
+} Request;
+
+static void
+request_free (Request *request)
+{
+    if (request->message)
+        mbim_message_unref (request->message);
+    if (request->response)
+        mbim_message_unref (request->response);
+    client_unref (request->client);
+    g_object_unref (request->self);
+    g_slice_free (Request, request);
+}
+
+static Request *
+request_new (MbimProxy   *self,
+             Client      *client,
+             MbimMessage *message)
+{
+    Request *request;
+
+    request = g_slice_new0 (Request);
+    request->self = g_object_ref (self);
+    request->client = client_ref (client);
+    request->message = mbim_message_ref (message);
+
+    return request;
+}
 
 /*****************************************************************************/
 /* Proxy open */
@@ -669,25 +705,6 @@ merge_client_service_subscribe_lists (MbimProxy *self,
     return out;
 }
 
-typedef struct {
-    MbimProxy *self; /* soft */
-    Client *client;
-    guint32 transaction_id;
-    MbimMessage *message;
-    MbimMessage *response;
-} Request;
-
-static void
-request_free (Request *request)
-{
-    if (request->message)
-        mbim_message_unref (request->message);
-    if (request->response)
-        mbim_message_unref (request->response);
-    client_unref (request->client);
-    g_slice_free (Request, request);
-}
-
 static void
 device_service_subscribe_list_set_ready (MbimDevice *device,
                                          GAsyncResult *res,
@@ -715,7 +732,7 @@ device_service_subscribe_list_set_ready (MbimDevice *device,
     raw_data = mbim_message_command_get_raw_information_buffer (request->message, &raw_len);
 
     request->response = (MbimMessage *)_mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND_DONE,
-                                                               request->transaction_id,
+                                                               mbim_message_get_transaction_id (request->message),
                                                                sizeof (struct command_done_message) +
                                                                raw_len);
     command_done = &(((struct full_message *)(request->response->data))->message.command_done);
@@ -751,11 +768,8 @@ process_device_service_subscribe_list (MbimProxy   *self,
     /* merge all service subscribe list for all clients to set on device */
     events = merge_client_service_subscribe_lists (self, &events_count);
 
-    request = g_slice_new0 (Request);
-    request->self = self;
-    request->client = client_ref (client);
-    request->transaction_id = mbim_message_get_transaction_id (message);
-    request->message = mbim_message_ref (message);
+    /* create request holder */
+    request = request_new (self, client, message);
 
     message = mbim_message_device_service_subscribe_list_set_new (events_count, (const MbimEventEntry *const *)events, NULL);
     mbim_message_set_transaction_id (message, mbim_device_get_next_transaction_id (client->device));
@@ -788,7 +802,7 @@ device_command_ready (MbimDevice *device,
     }
 
     /* replace reponse transaction id with the requested transaction id */
-    ((struct header *)(request->response->data))->transaction_id = GUINT32_TO_LE (request->transaction_id);
+    ((struct header *)(request->response->data))->transaction_id = GUINT32_TO_LE (mbim_message_get_transaction_id (request->message));
 
     if (!client_send_message (request->client, request->response, &error)) {
         g_debug ("couldn't send response back to client: %s", error->message);
@@ -831,10 +845,8 @@ process_message (MbimProxy   *self,
         return FALSE;
     }
 
-    request = g_slice_new0 (Request);
-    request->self = self;
-    request->client = client_ref (client);
-    request->transaction_id = mbim_message_get_transaction_id (message);
+    /* create request holder */
+    request = request_new (self, client, message);
 
     /* replace command transaction id with internal proxy transaction id to avoid collision */
     mbim_message_set_transaction_id (message, mbim_device_get_next_transaction_id (client->device));
