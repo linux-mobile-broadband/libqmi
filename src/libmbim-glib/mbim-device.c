@@ -83,6 +83,12 @@ typedef enum {
     TRANSACTION_TYPE_LAST  = 2
 } TransactionType;
 
+typedef enum {
+    OPEN_STATUS_CLOSED  = 0,
+    OPEN_STATUS_OPENING = 1,
+    OPEN_STATUS_OPEN    = 2
+} OpenStatus;
+
 struct _MbimDevicePrivate {
     /* File */
     GFile *file;
@@ -93,6 +99,7 @@ struct _MbimDevicePrivate {
     GIOChannel *iochannel;
     guint watch_id;
     GByteArray *response;
+    OpenStatus open_status;
 
     /* Support for mbim-proxy */
     GSocketClient *socket_client;
@@ -403,7 +410,7 @@ mbim_device_is_open (MbimDevice *self)
 {
     g_return_val_if_fail (MBIM_IS_DEVICE (self), FALSE);
 
-    return !!self->priv->iochannel;
+    return (self->priv->open_status == OPEN_STATUS_OPEN);
 }
 
 /*****************************************************************************/
@@ -1103,7 +1110,6 @@ mbim_device_open_finish (MbimDevice   *self,
     return mbim_device_open_full_finish (self, res, error);
 }
 
-
 static void open_message (DeviceOpenContext *ctx);
 
 static void
@@ -1129,11 +1135,13 @@ open_message_ready (MbimDevice        *self,
             /* No more seconds left in the timeout... return error */
         }
 
+        self->priv->open_status = OPEN_STATUS_CLOSED;
         device_open_context_complete_and_free (ctx, error);
         return;
     }
 
     if (!mbim_message_open_done_get_result (response, &error)) {
+        self->priv->open_status = OPEN_STATUS_CLOSED;
         device_open_context_complete_and_free (ctx, error);
         mbim_message_unref (response);
         return;
@@ -1174,6 +1182,7 @@ proxy_cfg_message_ready (MbimDevice        *self,
     response = mbim_device_command_finish (self, res, &error);
     if (!response) {
         /* Hard error if proxy cfg command fails */
+        self->priv->open_status = OPEN_STATUS_CLOSED;
         device_open_context_complete_and_free (ctx, error);
         return;
     }
@@ -1209,6 +1218,7 @@ create_iochannel_ready (MbimDevice *self,
     GError *error = NULL;
 
     if (!create_iochannel_finish (self, res, &error)) {
+        self->priv->open_status = OPEN_STATUS_CLOSED;
         device_open_context_complete_and_free (ctx, error);
         return;
     }
@@ -1223,6 +1233,29 @@ device_open_context_step (DeviceOpenContext *ctx)
 {
     switch (ctx->step) {
     case DEVICE_OPEN_CONTEXT_STEP_FIRST:
+        if (ctx->self->priv->open_status == OPEN_STATUS_OPEN) {
+            GError *error;
+
+            error = g_error_new (MBIM_CORE_ERROR,
+                                 MBIM_CORE_ERROR_WRONG_STATE,
+                                 "Already open");
+            device_open_context_complete_and_free (ctx, error);
+            return;
+        }
+
+        if (ctx->self->priv->open_status == OPEN_STATUS_OPENING) {
+            GError *error;
+
+            error = g_error_new (MBIM_CORE_ERROR,
+                                 MBIM_CORE_ERROR_WRONG_STATE,
+                                 "Already opening");
+            device_open_context_complete_and_free (ctx, error);
+            return;
+        }
+
+        g_assert (ctx->self->priv->open_status == OPEN_STATUS_CLOSED);
+        ctx->self->priv->open_status = OPEN_STATUS_OPENING;
+
         ctx->step++;
         /* Fall down */
 
@@ -1252,6 +1285,7 @@ device_open_context_step (DeviceOpenContext *ctx)
 
     case DEVICE_OPEN_CONTEXT_STEP_LAST:
         /* Nothing else to process, complete without error */
+        ctx->self->priv->open_status = OPEN_STATUS_OPEN;
         device_open_context_complete_and_free (ctx, NULL);
         return;
 
@@ -1343,6 +1377,8 @@ destroy_iochannel (MbimDevice  *self,
                    GError     **error)
 {
     GError *inner_error = NULL;
+
+    self->priv->open_status = OPEN_STATUS_CLOSED;
 
     /* Already closed? */
     if (!self->priv->iochannel && !self->priv->socket_connection && !self->priv->socket_client)
@@ -2064,6 +2100,7 @@ mbim_device_init (MbimDevice *self)
 
     /* Initialize transaction ID */
     self->priv->transaction_id = 0x01;
+    self->priv->open_status = OPEN_STATUS_CLOSED;
 }
 
 static void
