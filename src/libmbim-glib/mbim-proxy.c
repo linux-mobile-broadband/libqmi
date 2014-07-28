@@ -66,6 +66,7 @@ struct _MbimProxyPrivate {
 };
 
 static void        track_device         (MbimProxy *self, MbimDevice *device);
+static void        untrack_device       (MbimProxy *self, MbimDevice *device);
 static MbimDevice *peek_device_for_path (MbimProxy *self, const gchar *path);
 
 /*****************************************************************************/
@@ -441,8 +442,11 @@ device_open_ready (MbimDevice   *device,
     /* Complete all pending open actions */
     opening_device_complete_and_free (info, error);
 
-    if (error)
+    if (error) {
+        /* Fully untrack the device as it wasn't correctly open */
+        untrack_device (self, device);
         g_error_free (error);
+    }
 }
 
 static void
@@ -1197,10 +1201,18 @@ static void
 proxy_device_removed_cb (MbimDevice *device,
                          MbimProxy *self)
 {
+    untrack_device (self, device);
+}
+
+static void
+untrack_device (MbimProxy  *self,
+                MbimDevice *device)
+{
     GList *l;
     GList *to_remove = NULL;
 
-    g_assert (g_list_find (self->priv->devices, device));
+    if (!g_list_find (self->priv->devices, device))
+        return;
 
     /* Disconnect right away */
     g_signal_handlers_disconnect_by_func (device, proxy_device_removed_cb, self);
