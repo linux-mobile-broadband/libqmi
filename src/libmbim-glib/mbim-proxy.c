@@ -563,6 +563,7 @@ build_proxy_control_command_done (MbimMessage     *message,
     memcpy (command_done->service_id, MBIM_UUID_PROXY_CONTROL, sizeof (MbimUuid));
     command_done->command_id  = GUINT32_TO_LE (mbim_message_command_get_cid (message));
     command_done->status_code = GUINT32_TO_LE (status);
+    command_done->buffer_length = 0;
 
     return response;
 }
