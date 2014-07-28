@@ -312,12 +312,25 @@ typedef struct {
 } Request;
 
 static void
-request_free (Request *request)
+request_complete_and_free (Request *request)
 {
+    if (request->response) {
+        GError *error = NULL;
+
+        /* Try to send response to client; if it fails, always assume we have
+         * to close the connection */
+        if (!client_send_message (request->client, request->response, &error)) {
+            g_debug ("couldn't send response back to client: %s", error->message);
+            g_error_free (error);
+            /* Disconnect and untrack client */
+            untrack_client (request->self, request->client);
+        }
+
+        mbim_message_unref (request->response);
+    }
+
     if (request->message)
         mbim_message_unref (request->message);
-    if (request->response)
-        mbim_message_unref (request->response);
     client_unref (request->client);
     g_object_unref (request->self);
     g_slice_free (Request, request);
@@ -711,23 +724,24 @@ device_service_subscribe_list_set_ready (MbimDevice *device,
                                          GAsyncResult *res,
                                          Request *request)
 {
+    MbimMessage *tmp_response;
     MbimStatusError error_status_code;
     struct command_done_message *command_done;
     GError *error = NULL;
     guint32 raw_len;
     const guint8 *raw_data;
 
-    request->response = mbim_device_command_finish (device, res, &error);
-    if (!request->response) {
+    tmp_response = mbim_device_command_finish (device, res, &error);
+    if (!tmp_response) {
         g_debug ("sending request to device failed: %s", error->message);
         g_error_free (error);
         /* Don't disconnect client, just let the request timeout in its side */
-        request_free (request);
+        request_complete_and_free (request);
         return;
     }
 
-    error_status_code = GUINT32_FROM_LE (((struct full_message *)(request->response->data))->message.command_done.status_code);
-    mbim_message_unref (request->response);
+    error_status_code = GUINT32_FROM_LE (((struct full_message *)(tmp_response->data))->message.command_done.status_code);
+    mbim_message_unref (tmp_response);
 
     /* The raw message data to send back as response to client */
     raw_data = mbim_message_command_get_raw_information_buffer (request->message, &raw_len);
@@ -745,13 +759,7 @@ device_service_subscribe_list_set_ready (MbimDevice *device,
     command_done->buffer_length = GUINT32_TO_LE (raw_len);
     memcpy (&command_done->buffer[0], raw_data, raw_len);
 
-    if (!client_send_message (request->client, request->response, &error)) {
-        g_debug ("couldn't send response back to client: %s", error->message);
-        g_error_free (error);
-        untrack_client (request->self, request->client);
-    }
-
-    request_free (request);
+    request_complete_and_free (request);
 }
 
 static gboolean
@@ -801,21 +809,14 @@ device_command_ready (MbimDevice *device,
         g_debug ("sending request to device failed: %s", error->message);
         g_error_free (error);
         /* Don't disconnect client, just let the request timeout in its side */
-        request_free (request);
+        request_complete_and_free (request);
         return;
     }
 
     /* replace reponse transaction id with the requested transaction id */
     mbim_message_set_transaction_id (request->response, mbim_message_get_transaction_id (request->message));
 
-    if (!client_send_message (request->client, request->response, &error)) {
-        g_debug ("couldn't send response back to client: %s", error->message);
-        g_error_free (error);
-        /* Disconnect and untrack client */
-        untrack_client (request->self, request->client);
-    }
-
-    request_free (request);
+    request_complete_and_free (request);
 }
 
 static gboolean
