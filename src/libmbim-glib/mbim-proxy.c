@@ -306,6 +306,7 @@ typedef struct {
     Client *client;
     MbimMessage *message;
     MbimMessage *response;
+    guint32 original_transaction_id;
     /* Only used in proxy config */
     guint32 timeout_secs;
 } Request;
@@ -346,6 +347,7 @@ request_new (MbimProxy   *self,
     request->self = g_object_ref (self);
     request->client = client_ref (client);
     request->message = mbim_message_ref (message);
+    request->original_transaction_id = mbim_message_get_transaction_id (message);
 
     return request;
 }
@@ -933,7 +935,7 @@ device_command_ready (MbimDevice *device,
     }
 
     /* replace reponse transaction id with the requested transaction id */
-    mbim_message_set_transaction_id (request->response, mbim_message_get_transaction_id (request->message));
+    mbim_message_set_transaction_id (request->response, request->original_transaction_id);
 
     request_complete_and_free (request);
 }
