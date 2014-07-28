@@ -1135,12 +1135,14 @@ open_message_ready (MbimDevice        *self,
             /* No more seconds left in the timeout... return error */
         }
 
+        g_debug ("open operation timed out: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
         device_open_context_complete_and_free (ctx, error);
         return;
     }
 
     if (!mbim_message_open_done_get_result (response, &error)) {
+        g_debug ("getting open done result failed: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
         device_open_context_complete_and_free (ctx, error);
         mbim_message_unref (response);
@@ -1182,6 +1184,7 @@ proxy_cfg_message_ready (MbimDevice        *self,
     response = mbim_device_command_finish (self, res, &error);
     if (!response) {
         /* Hard error if proxy cfg command fails */
+        g_debug ("proxy configuration failed: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
         device_open_context_complete_and_free (ctx, error);
         return;
@@ -1220,6 +1223,7 @@ create_iochannel_ready (MbimDevice *self,
     GError *error = NULL;
 
     if (!create_iochannel_finish (self, res, &error)) {
+        g_debug ("creating iochannel failed: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
         device_open_context_complete_and_free (ctx, error);
         return;
@@ -1255,6 +1259,7 @@ device_open_context_step (DeviceOpenContext *ctx)
             return;
         }
 
+        g_debug ("opening device...");
         g_assert (ctx->self->priv->open_status == OPEN_STATUS_CLOSED);
         ctx->self->priv->open_status = OPEN_STATUS_OPENING;
 
