@@ -428,65 +428,61 @@ process_internal_proxy_close (MbimProxy   *self,
 /*****************************************************************************/
 /* Proxy config */
 
-typedef struct {
-    MbimProxy *self;
-    Client *client;
-    MbimMessage *response;
-} DeviceNewContext;
-
-static void
-complete_internal_proxy_config (Client *client,
-                                MbimMessage *response)
+static MbimMessage *
+build_proxy_control_command_done (MbimMessage     *message,
+                                  MbimStatusError  status)
 {
-    GError *error = NULL;
+    MbimMessage *response;
+    struct command_done_message *command_done;
 
-    if (!client_send_message (client, response, &error)) {
-        g_debug ("couldn't send response back to client: %s", error->message);
-        g_error_free (error);
-        untrack_client (client->self, client);
-    }
+    response = (MbimMessage *) _mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND_DONE,
+                                                       mbim_message_get_transaction_id (message),
+                                                       sizeof (struct command_done_message));
+    command_done = &(((struct full_message *)(response->data))->message.command_done);
+    command_done->fragment_header.total   = GUINT32_TO_LE (1);
+    command_done->fragment_header.current = 0;
+    memcpy (command_done->service_id, MBIM_UUID_PROXY_CONTROL, sizeof (MbimUuid));
+    command_done->command_id  = GUINT32_TO_LE (mbim_message_command_get_cid (message));
+    command_done->status_code = GUINT32_TO_LE (status);
 
-    mbim_message_unref (response);
+    return response;
 }
 
 static void
-device_new_ready (GObject *source,
+device_new_ready (GObject      *source,
                   GAsyncResult *res,
-                  DeviceNewContext *ctx)
+                  Request      *request)
 {
     GError *error = NULL;
     MbimDevice *existing;
     MbimDevice *device;
-    MbimMessage *response = ctx->response;
 
     device = mbim_device_new_finish (res, &error);
     if (!device) {
         g_debug ("couldn't open MBIM device: %s", error->message);
         g_error_free (error);
-        untrack_client (ctx->self, ctx->client);
-        mbim_message_unref (response);
-        client_unref (ctx->client);
-        g_slice_free (DeviceNewContext, ctx);
+        /* Untrack client and complete without response */
+        untrack_client (request->self, request->client);
+        request_complete_and_free (request);
         return;
     }
 
     /* Store device in the proxy independently */
-    existing = peek_device_for_path (ctx->self, mbim_device_get_path (device));
+    existing = peek_device_for_path (request->self, mbim_device_get_path (device));
     if (existing) {
         /* Race condition, we created two MbimDevices for the same port, just skip ours, no big deal */
         g_object_unref (device);
-        client_set_device (ctx->client, existing);
+        client_set_device (request->client, existing);
     } else {
         /* Keep the newly added device in the proxy */
-        track_device (ctx->self, device);
+        track_device (request->self, device);
         /* Also keep track of the device in the client */
-        client_set_device (ctx->client, device);
+        client_set_device (request->client, device);
         g_object_unref (device);
     }
 
-    complete_internal_proxy_config (ctx->client, response);
-    client_unref (ctx->client);
-    g_slice_free (DeviceNewContext, ctx);
+    request->response = build_proxy_control_command_done (request->message, MBIM_STATUS_ERROR_NONE);
+    request_complete_and_free (request);
 }
 
 static gboolean
@@ -494,29 +490,20 @@ process_internal_proxy_config (MbimProxy   *self,
                                Client      *client,
                                MbimMessage *message)
 {
-    DeviceNewContext  *ctx;
-    MbimMessage *response;
-    MbimStatusError error_status_code;
-    struct command_done_message *command_done;
+    Request *request;
 
-    if (mbim_message_command_get_command_type (message) == MBIM_MESSAGE_COMMAND_TYPE_SET) {
-        if (client->device_file_path)
-            g_free (client->device_file_path);
+    /* create request holder */
+    request = request_new (self, client, message);
 
-        client->device_file_path = _mbim_message_read_string (message, 0, 0);
-        error_status_code = MBIM_STATUS_ERROR_NONE;
-    } else
-        error_status_code = MBIM_STATUS_ERROR_INVALID_PARAMETERS;
+    /* Only allow SET command */
+    if (mbim_message_command_get_command_type (message) != MBIM_MESSAGE_COMMAND_TYPE_SET) {
+        request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
+        request_complete_and_free (request);
+        return TRUE;
+    }
 
-    response = (MbimMessage *) _mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND_DONE,
-                                                       mbim_message_get_transaction_id(message),
-                                                       sizeof (struct command_done_message));
-    command_done = &(((struct full_message *)(response->data))->message.command_done);
-    command_done->fragment_header.total   = GUINT32_TO_LE (1);
-    command_done->fragment_header.current = 0;
-    memcpy (command_done->service_id, MBIM_UUID_PROXY_CONTROL, sizeof (MbimUuid));
-    command_done->command_id  = GUINT32_TO_LE (mbim_message_command_get_cid(message));
-    command_done->status_code = GUINT32_TO_LE (error_status_code);
+    g_free (client->device_file_path);
+    client->device_file_path = _mbim_message_read_string (message, 0, 0);
 
     /* create a device to allow clients access without sending the open */
     if (client->device_file_path) {
@@ -526,16 +513,11 @@ process_internal_proxy_config (MbimProxy   *self,
         if (!device) {
             GFile *file;
 
-            ctx = g_slice_new0 (DeviceNewContext);
-            ctx->self = self;
-            ctx->client = client_ref (client);
-            ctx->response = response;
-
             file = g_file_new_for_path (client->device_file_path);
             mbim_device_new (file,
                              NULL,
                              (GAsyncReadyCallback)device_new_ready,
-                             ctx);
+                             request);
             g_object_unref (file);
 
             return TRUE;
@@ -544,7 +526,8 @@ process_internal_proxy_config (MbimProxy   *self,
         client_set_device (client, device);
     }
 
-    complete_internal_proxy_config (client, response);
+    request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_NONE);
+    request_complete_and_free (request);
     return TRUE;
 }
 
