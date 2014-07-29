@@ -125,6 +125,13 @@ _mbim_proxy_helper_service_subscribe_list_merge (MbimEventEntry **original,
                 /* all cids already enabled for uuid */
                 continue;
 
+            /* If we're adding all enabled cids, directly apply that */
+            if (merge[i]->cids_count == 0) {
+                g_free (entry->cids);
+                entry->cids = NULL;
+                entry->cids_count = 0;
+            }
+
             for (ii = 0; ii < merge[i]->cids_count; ii++) {
                 for (out_cid_idx = 0; out_cid_idx < entry->cids_count; out_cid_idx++) {
                     if (merge[i]->cids[ii] == entry->cids[out_cid_idx]) {
