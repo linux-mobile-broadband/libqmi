@@ -141,7 +141,7 @@ _mbim_proxy_helper_service_subscribe_list_merge (MbimEventEntry **original,
 
                 if (out_cid_idx == entry->cids_count) {
                     /* cid not found in merge array, add it */
-                    entry->cids = g_realloc (entry->cids, sizeof (guint32) * (entry->cids_count++));
+                    entry->cids = g_realloc (entry->cids, sizeof (guint32) * (++entry->cids_count));
                     entry->cids[out_cid_idx] = merge[i]->cids[ii];
                 }
             }
