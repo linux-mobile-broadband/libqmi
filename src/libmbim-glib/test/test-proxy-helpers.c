@@ -219,6 +219,23 @@ test_standard_list (void)
 /*****************************************************************************/
 
 static void
+test_merge_standard_list_full_none (void)
+{
+    MbimEventEntry **list;
+    guint events_count = 0;
+
+    /* list with all standard services */
+    list = _mbim_proxy_helper_service_subscribe_standard_list_new ();
+
+    /* merge */
+    list = _mbim_proxy_helper_service_subscribe_list_merge (list, NULL, &events_count);
+
+    check_standard_list (list);
+
+    mbim_event_entry_array_free (list);
+}
+
+static void
 test_merge_standard_list_full_subset (void)
 {
     MbimEventEntry **list;
@@ -319,6 +336,23 @@ test_merge_standard_list_subset_full (void)
 
     mbim_event_entry_array_free (list);
     mbim_event_entry_array_free (addition);
+}
+
+static void
+test_merge_standard_list_none_full (void)
+{
+    MbimEventEntry **list;
+    guint events_count = 0;
+
+    /* list with all standard services */
+    list = _mbim_proxy_helper_service_subscribe_standard_list_new ();
+
+    /* merge */
+    list = _mbim_proxy_helper_service_subscribe_list_merge (NULL, list, &events_count);
+
+    check_standard_list (list);
+
+    mbim_event_entry_array_free (list);
 }
 
 static void
@@ -505,9 +539,11 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/proxy/parse/single-service/0",     test_parse_single_service_0_cids);
     g_test_add_func ("/libmbim-glib/proxy/parse/single-service/1",     test_parse_single_service_1_cids);
     g_test_add_func ("/libmbim-glib/proxy/parse/single-service/5",     test_parse_single_service_5_cids);
+    g_test_add_func ("/libmbim-glib/proxy/merge/standard/full_none",   test_merge_standard_list_full_none);
     g_test_add_func ("/libmbim-glib/proxy/merge/standard/full_subset", test_merge_standard_list_full_subset);
     g_test_add_func ("/libmbim-glib/proxy/merge/standard/full_full",   test_merge_standard_list_full_full);
     g_test_add_func ("/libmbim-glib/proxy/merge/standard/subset_full", test_merge_standard_list_subset_full);
+    g_test_add_func ("/libmbim-glib/proxy/merge/standard/none_full",   test_merge_standard_list_none_full);
     g_test_add_func ("/libmbim-glib/proxy/merge/same-service",         test_merge_list_same_service);
     g_test_add_func ("/libmbim-glib/proxy/merge/different-services",   test_merge_list_different_services);
     g_test_add_func ("/libmbim-glib/proxy/merge/merged-services",      test_merge_list_merged_services);
