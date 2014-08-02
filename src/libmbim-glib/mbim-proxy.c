@@ -1147,6 +1147,7 @@ untrack_device (MbimProxy  *self,
     /* Remove all these clients */
     for (l = to_remove; l; l = g_list_next (l))
         untrack_client (self, (Client *)(l->data));
+    g_list_free (to_remove);
 
     /* And finally, remove the device */
     self->priv->devices = g_list_remove (self->priv->devices, device);
