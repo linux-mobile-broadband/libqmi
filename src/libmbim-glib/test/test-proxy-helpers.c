@@ -23,77 +23,6 @@
 
 /*****************************************************************************/
 
-static gboolean
-cmp_event_entry_contents (MbimEventEntry *in,
-                          MbimEventEntry *out)
-{
-    guint i, o;
-
-    g_assert (mbim_uuid_cmp (&(in->device_service_id), &(out->device_service_id)));
-
-    /* First, compare number of cids in the array */
-    if (in->cids_count != out->cids_count)
-        return FALSE;
-
-    if (in->cids_count == 0)
-        g_assert (in->cids == NULL);
-    if (out->cids_count == 0)
-        g_assert (out->cids == NULL);
-
-    for (i = 0; i < in->cids_count; i++) {
-        for (o = 0; o < out->cids_count; o++) {
-            if (in->cids[i] == out->cids[o])
-                break;
-        }
-        if (o == out->cids_count)
-            return FALSE;
-    }
-
-    return TRUE;
-}
-
-static gboolean
-cmp_event_entry_array (MbimEventEntry **in,
-                       gsize            n_in,
-                       MbimEventEntry **out,
-                       gsize            n_out)
-{
-    guint i, o;
-
-    /* First, compare number of entries in the array */
-    for (i = 0; in[i]; i++);
-    for (o = 0; out[o]; o++);
-    if (i != o)
-        return FALSE;
-
-    if (n_in != i)
-        return FALSE;
-    if (n_out != o)
-        return FALSE;
-    if (n_in != n_out)
-        return FALSE;
-
-    /* Now compare each service one by one */
-    for (i = 0; in[i]; i++) {
-        /* Look for this same service in the other array */
-        for (o = 0; out[o]; o++) {
-            /* When service found, compare contents */
-            if (mbim_uuid_cmp (&(in[i]->device_service_id), &(out[o]->device_service_id))) {
-                if (!cmp_event_entry_contents (in[i], out[o]))
-                    return FALSE;
-                break;
-            }
-        }
-        /* Service not found! */
-        if (!out[o])
-            return FALSE;
-    }
-
-    return TRUE;
-}
-
-/*****************************************************************************/
-
 static void
 test_parse_single_service_0_cids (void)
 {
@@ -115,7 +44,8 @@ test_parse_single_service_0_cids (void)
 
     out = _mbim_proxy_helper_service_subscribe_request_parse (message, &out_size);
     g_assert (out != NULL);
-    g_assert (cmp_event_entry_array (in, 1, out, out_size));
+    g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)in, 1,
+                                                             (const MbimEventEntry * const *)out, out_size));
     g_assert_cmpuint (out_size, ==, 1);
 
     mbim_message_unref (message);
@@ -145,7 +75,8 @@ test_parse_single_service_1_cids (void)
 
     out = _mbim_proxy_helper_service_subscribe_request_parse (message, &out_size);
     g_assert (out != NULL);
-    g_assert (cmp_event_entry_array (in, 1, out, out_size));
+    g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)in, 1,
+                                                             (const MbimEventEntry * const *)out, out_size));
     g_assert_cmpuint (out_size, ==, 1);
 
     mbim_message_unref (message);
@@ -179,7 +110,8 @@ test_parse_single_service_5_cids (void)
 
     out = _mbim_proxy_helper_service_subscribe_request_parse (message, &out_size);
     g_assert (out != NULL);
-    g_assert (cmp_event_entry_array (in, 1, out, out_size));
+    g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)in, 1,
+                                                             (const MbimEventEntry * const *)out, out_size));
     g_assert_cmpuint (out_size, ==, 1);
 
     mbim_message_unref (message);
@@ -433,7 +365,8 @@ test_merge_list_same_service (void)
     expected[0]->cids[4] = MBIM_CID_BASIC_CONNECT_NETWORK_IDLE_HINT;
 
     /* Compare */
-    g_assert (cmp_event_entry_array (list, out_size, expected, expected_size));
+    g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)list, out_size,
+                                                             (const MbimEventEntry * const *)expected, expected_size));
 
     mbim_event_entry_array_free (list);
     mbim_event_entry_array_free (addition);
@@ -497,7 +430,8 @@ test_merge_list_different_services (void)
     expected[1]->cids[1] = MBIM_CID_SMS_SEND;
 
     /* Compare */
-    g_assert (cmp_event_entry_array (list, out_size, expected, expected_size));
+    g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)list, out_size,
+                                                             (const MbimEventEntry * const *)expected, expected_size));
 
     mbim_event_entry_array_free (list);
     mbim_event_entry_array_free (addition);
@@ -569,7 +503,8 @@ test_merge_list_merged_services (void)
     expected[1]->cids[1] = MBIM_CID_SMS_SEND;
 
     /* Compare */
-    g_assert (cmp_event_entry_array (list, out_size,  expected, expected_size));
+    g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)list, out_size,
+                                                             (const MbimEventEntry * const *)expected, expected_size));
 
     mbim_event_entry_array_free (list);
     mbim_event_entry_array_free (addition);

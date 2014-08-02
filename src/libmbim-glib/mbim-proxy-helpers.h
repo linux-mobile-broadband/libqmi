@@ -37,6 +37,10 @@
 
 G_BEGIN_DECLS
 
+gboolean         _mbim_proxy_helper_service_subscribe_list_cmp          (const MbimEventEntry * const *a,
+                                                                         gsize                         a_size,
+                                                                         const MbimEventEntry * const *b,
+                                                                         gsize                         b_size);
 void             _mbim_proxy_helper_service_subscribe_list_debug        (const MbimEventEntry * const *list,
                                                                          gsize                         list_size);
 MbimEventEntry **_mbim_proxy_helper_service_subscribe_standard_list_new (gsize           *out_size);

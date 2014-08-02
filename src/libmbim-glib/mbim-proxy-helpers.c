@@ -29,6 +29,70 @@
 #include "mbim-cid.h"
 #include "mbim-uuid.h"
 
+/*****************************************************************************/
+
+static gboolean
+cmp_event_entry_contents (const MbimEventEntry *in,
+                          const MbimEventEntry *out)
+{
+    guint i, o;
+
+    g_assert (mbim_uuid_cmp (&(in->device_service_id), &(out->device_service_id)));
+
+    /* First, compare number of cids in the array */
+    if (in->cids_count != out->cids_count)
+        return FALSE;
+
+    if (in->cids_count == 0)
+        g_assert (in->cids == NULL);
+    if (out->cids_count == 0)
+        g_assert (out->cids == NULL);
+
+    for (i = 0; i < in->cids_count; i++) {
+        for (o = 0; o < out->cids_count; o++) {
+            if (in->cids[i] == out->cids[o])
+                break;
+        }
+        if (o == out->cids_count)
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
+_mbim_proxy_helper_service_subscribe_list_cmp (const MbimEventEntry * const *a,
+                                               gsize                         a_size,
+                                               const MbimEventEntry * const *b,
+                                               gsize                         b_size)
+{
+    gsize i, o;
+
+    /* First, compare number of entries a the array */
+    if (a_size != b_size)
+        return FALSE;
+
+    /* Now compare each service one by one */
+    for (i = 0; i < a_size; i++) {
+        /* Look for this same service a the other array */
+        for (o = 0; o < b_size; o++) {
+            /* When service found, compare contents */
+            if (mbim_uuid_cmp (&(a[i]->device_service_id), &(b[o]->device_service_id))) {
+                if (!cmp_event_entry_contents (a[i], b[o]))
+                    return FALSE;
+                break;
+            }
+        }
+        /* Service not found! */
+        if (!b[o])
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*****************************************************************************/
+
 void
 _mbim_proxy_helper_service_subscribe_list_debug (const MbimEventEntry * const *list,
                                                  gsize                         list_size)
@@ -63,6 +127,8 @@ _mbim_proxy_helper_service_subscribe_list_debug (const MbimEventEntry * const *l
     }
 }
 
+/*****************************************************************************/
+
 MbimEventEntry **
 _mbim_proxy_helper_service_subscribe_standard_list_new (gsize *out_size)
 {
@@ -84,6 +150,8 @@ _mbim_proxy_helper_service_subscribe_standard_list_new (gsize *out_size)
     *out_size = i;
     return out;
 }
+
+/*****************************************************************************/
 
 MbimEventEntry **
 _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message,
@@ -130,6 +198,8 @@ _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message,
     *out_size = element_count;
     return array;
 }
+
+/*****************************************************************************/
 
 MbimEventEntry **
 _mbim_proxy_helper_service_subscribe_list_merge (MbimEventEntry **in,
