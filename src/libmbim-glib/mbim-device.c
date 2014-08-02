@@ -2117,6 +2117,8 @@ dispose (GObject *object)
 
     g_clear_object (&self->priv->file);
 
+    destroy_iochannel (self, NULL);
+
     G_OBJECT_CLASS (mbim_device_parent_class)->dispose (object);
 }
 
@@ -2138,12 +2140,6 @@ finalize (GObject *object)
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);
-    if (self->priv->watch_id)
-        g_source_remove (self->priv->watch_id);
-    if (self->priv->response)
-        g_byte_array_unref (self->priv->response);
-    if (self->priv->iochannel)
-        g_io_channel_unref (self->priv->iochannel);
 
     G_OBJECT_CLASS (mbim_device_parent_class)->finalize (object);
 }
