@@ -934,6 +934,8 @@ create_iochannel_with_socket (CreateIoChannelContext *ctx)
     GError *error = NULL;
 
     /* Create socket client */
+    if (ctx->self->priv->socket_client)
+        g_object_unref (ctx->self->priv->socket_client);
     ctx->self->priv->socket_client = g_socket_client_new ();
     g_socket_client_set_family (ctx->self->priv->socket_client, G_SOCKET_FAMILY_UNIX);
     g_socket_client_set_socket_type (ctx->self->priv->socket_client, G_SOCKET_TYPE_STREAM);
@@ -946,6 +948,8 @@ create_iochannel_with_socket (CreateIoChannelContext *ctx)
                           G_UNIX_SOCKET_ADDRESS_ABSTRACT));
 
     /* Connect to address */
+    if (ctx->self->priv->socket_connection)
+        g_object_unref (ctx->self->priv->socket_connection);
     ctx->self->priv->socket_connection = (g_socket_client_connect (
                                               ctx->self->priv->socket_client,
                                               G_SOCKET_CONNECTABLE (socket_address),
@@ -993,7 +997,6 @@ create_iochannel_with_socket (CreateIoChannelContext *ctx)
         return;
     }
 
-    g_object_ref (ctx->self->priv->socket_connection);
     ctx->self->priv->iochannel = g_io_channel_unix_new (
                                      g_socket_get_fd (
                                          g_socket_connection_get_socket (ctx->self->priv->socket_connection)));
