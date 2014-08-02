@@ -30,11 +30,12 @@
 #include "mbim-uuid.h"
 
 void
-_mbim_proxy_helper_service_subscribe_list_debug (const MbimEventEntry * const *list)
+_mbim_proxy_helper_service_subscribe_list_debug (const MbimEventEntry * const *list,
+                                                 gsize                         list_size)
 {
-    guint i;
+    gsize i;
 
-    for (i = 0; list[i]; i++) {
+    for (i = 0; i < list_size; i++) {
         const MbimEventEntry *entry = list[i];
         MbimService service;
         gchar *str;
@@ -42,31 +43,34 @@ _mbim_proxy_helper_service_subscribe_list_debug (const MbimEventEntry * const *l
         service = mbim_uuid_to_service (&entry->device_service_id);
         str = mbim_uuid_get_printable (&entry->device_service_id);
         g_debug ("[service %u] %s (%s)",
-                 i, str, mbim_service_lookup_name (service));
+                 (guint)i, str, mbim_service_lookup_name (service));
         g_free (str);
 
         if (entry->cids_count == 0)
-            g_debug ("[service %u] all CIDs enabled", i);
+            g_debug ("[service %u] all CIDs enabled", (guint)i);
         else {
             guint j;
 
-            g_debug ("[service %u] %u CIDs enabled", i, entry->cids_count);;
+            g_debug ("[service %u] %u CIDs enabled", (guint)i, entry->cids_count);;
             for (j = 0; j < entry->cids_count; j++) {
                 const gchar *cid_str;
 
                 cid_str = mbim_cid_get_printable (service, entry->cids[j]);
                 g_debug ("[service %u] [cid %u] %u (%s)",
-                         i, j, entry->cids[j], cid_str ? cid_str : "unknown");
+                         (guint)i, j, entry->cids[j], cid_str ? cid_str : "unknown");
             }
         }
     }
 }
 
 MbimEventEntry **
-_mbim_proxy_helper_service_subscribe_standard_list_new (void)
+_mbim_proxy_helper_service_subscribe_standard_list_new (gsize *out_size)
 {
-    guint32  i, service;
+    gsize i;
+    MbimService service;
     MbimEventEntry **out;
+
+    g_assert (out_size != NULL);
 
     out = g_new0 (MbimEventEntry *, 1 + (MBIM_SERVICE_DSS - MBIM_SERVICE_BASIC_CONNECT + 1));
 
@@ -77,11 +81,13 @@ _mbim_proxy_helper_service_subscribe_standard_list_new (void)
          memcpy (&out[i]->device_service_id, mbim_uuid_from_service (service), sizeof (MbimUuid));
     }
 
+    *out_size = i;
     return out;
 }
 
 MbimEventEntry **
-_mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message)
+_mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message,
+                                                    gsize       *out_size)
 {
     MbimEventEntry **array = NULL;
     guint32 i;
@@ -89,6 +95,9 @@ _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message)
     guint32 offset = 0;
     guint32 array_offset;
     MbimEventEntry *event;
+
+    g_assert (message != NULL);
+    g_assert (out_size != NULL);
 
     element_count = _mbim_message_read_guint32 (message, offset);
     if (element_count) {
@@ -118,75 +127,87 @@ _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message)
         array[element_count] = NULL;
     }
 
+    *out_size = element_count;
     return array;
 }
 
 MbimEventEntry **
-_mbim_proxy_helper_service_subscribe_list_merge (MbimEventEntry **original,
+_mbim_proxy_helper_service_subscribe_list_merge (MbimEventEntry **in,
+                                                 gsize            in_size,
                                                  MbimEventEntry **merge,
-                                                 guint           *events_count)
+                                                 gsize            merge_size,
+                                                 gsize           *out_size)
 {
+    gsize m;
 
-    guint32 i, ii;
-    guint32 out_idx, out_cid_idx;
-    MbimEventEntry *entry;
+    g_assert (out_size != NULL);
 
-    if (!merge)
-        return original;
+    *out_size = in_size;
 
-    for (i = 0; merge[i]; i++) {
-        entry = NULL;
+    if (!merge || !merge_size)
+        return in;
+
+    for (m = 0; m < merge_size; m++) {
+        MbimEventEntry *entry = NULL;
 
         /* look for matching uuid */
-        if (original) {
-            for (out_idx = 0; original[out_idx]; out_idx++) {
-                if (mbim_uuid_cmp (&merge[i]->device_service_id, &original[out_idx]->device_service_id)) {
-                    entry = original[out_idx];
+        if (in && in_size) {
+            gsize i;
+
+            for (i = 0; i < in_size; i++) {
+                if (mbim_uuid_cmp (&merge[m]->device_service_id, &in[i]->device_service_id)) {
+                    entry = in[i];
                     break;
                 }
             }
         }
 
+        /* matching uuid not found in merge array, add it */
         if (!entry) {
-            /* matching uuid not found in merge array, add it */
-            original = g_realloc (original, sizeof (*original) * (out_idx + 2));
-            original[out_idx] = g_memdup (merge[i], sizeof (MbimEventEntry));
-            if (merge[i]->cids_count)
-                original[out_idx]->cids = g_memdup (merge[i]->cids,
-                                                    sizeof (guint32) * merge[i]->cids_count);
-            else
-                original[out_idx]->cids = NULL;
+            gsize o;
 
-            original[++out_idx] = NULL;
-            *events_count = out_idx;
+            /* Index of the new element to add... */
+            o = *out_size;
+
+            /* Increase number of events in the output array */
+            (*out_size)++;
+            in = g_realloc (in, sizeof (MbimEventEntry *) * (*out_size + 1));
+            in[o] = g_memdup (merge[m], sizeof (MbimEventEntry));
+            if (merge[m]->cids_count)
+                in[o]->cids = g_memdup (merge[m]->cids, sizeof (guint32) * merge[m]->cids_count);
+            else
+                in[o]->cids = NULL;
+            in[*out_size] = NULL;
         } else {
+            gsize cm, co;
+
             /* matching uuid found, add cids */
             if (!entry->cids_count)
                 /* all cids already enabled for uuid */
                 continue;
 
             /* If we're adding all enabled cids, directly apply that */
-            if (merge[i]->cids_count == 0) {
+            if (merge[m]->cids_count == 0) {
                 g_free (entry->cids);
                 entry->cids = NULL;
                 entry->cids_count = 0;
             }
 
-            for (ii = 0; ii < merge[i]->cids_count; ii++) {
-                for (out_cid_idx = 0; out_cid_idx < entry->cids_count; out_cid_idx++) {
-                    if (merge[i]->cids[ii] == entry->cids[out_cid_idx]) {
+            for (cm = 0; cm < merge[m]->cids_count; cm++) {
+                for (co = 0; co < entry->cids_count; co++) {
+                    if (merge[m]->cids[cm] == entry->cids[co]) {
                         break;
                     }
                 }
 
-                if (out_cid_idx == entry->cids_count) {
+                if (co == entry->cids_count) {
                     /* cid not found in merge array, add it */
                     entry->cids = g_realloc (entry->cids, sizeof (guint32) * (++entry->cids_count));
-                    entry->cids[out_cid_idx] = merge[i]->cids[ii];
+                    entry->cids[co] = merge[m]->cids[cm];
                 }
             }
         }
     }
 
-    return original;
+    return in;
 }
