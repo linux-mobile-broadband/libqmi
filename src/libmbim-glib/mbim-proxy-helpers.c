@@ -26,6 +26,41 @@
 #include "mbim-proxy-helpers.h"
 #include "mbim-message-private.h"
 #include "mbim-message.h"
+#include "mbim-cid.h"
+#include "mbim-uuid.h"
+
+void
+_mbim_proxy_helper_service_subscribe_list_debug (const MbimEventEntry * const *list)
+{
+    guint i;
+
+    for (i = 0; list[i]; i++) {
+        const MbimEventEntry *entry = list[i];
+        MbimService service;
+        gchar *str;
+
+        service = mbim_uuid_to_service (&entry->device_service_id);
+        str = mbim_uuid_get_printable (&entry->device_service_id);
+        g_debug ("[service %u] %s (%s)",
+                 i, str, mbim_service_lookup_name (service));
+        g_free (str);
+
+        if (entry->cids_count == 0)
+            g_debug ("[service %u] all CIDs enabled", i);
+        else {
+            guint j;
+
+            g_debug ("[service %u] %u CIDs enabled", i, entry->cids_count);;
+            for (j = 0; j < entry->cids_count; j++) {
+                const gchar *cid_str;
+
+                cid_str = mbim_cid_get_printable (service, entry->cids[j]);
+                g_debug ("[service %u] [cid %u] %u (%s)",
+                         i, j, entry->cids[j], cid_str ? cid_str : "unknown");
+            }
+        }
+    }
+}
 
 MbimEventEntry **
 _mbim_proxy_helper_service_subscribe_standard_list_new (void)

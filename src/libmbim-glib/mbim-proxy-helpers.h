@@ -37,6 +37,7 @@
 
 G_BEGIN_DECLS
 
+void             _mbim_proxy_helper_service_subscribe_list_debug        (const MbimEventEntry * const *list);
 MbimEventEntry **_mbim_proxy_helper_service_subscribe_standard_list_new (void);
 MbimEventEntry **_mbim_proxy_helper_service_subscribe_request_parse     (MbimMessage     *message);
 MbimEventEntry **_mbim_proxy_helper_service_subscribe_list_merge        (MbimEventEntry **original,

@@ -721,6 +721,11 @@ track_service_subscribe_list (Client *client,
         mbim_event_entry_array_free (client->mbim_event_entry_array);
 
     client->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_request_parse (message);
+
+    if (mbim_utils_get_traces_enabled ()) {
+        g_debug ("Client (%d) service subscribe list built", g_socket_get_fd (g_socket_connection_get_socket (client->connection)));
+        _mbim_proxy_helper_service_subscribe_list_debug ((const MbimEventEntry * const *)client->mbim_event_entry_array);
+    }
 }
 
 static MbimEventEntry **
@@ -740,6 +745,11 @@ merge_client_service_subscribe_lists (MbimProxy *self,
             continue;
 
         out = _mbim_proxy_helper_service_subscribe_list_merge (out, client->mbim_event_entry_array, events_count);
+    }
+
+    if (mbim_utils_get_traces_enabled ()) {
+        g_debug ("Merged service subscribe list built");
+        _mbim_proxy_helper_service_subscribe_list_debug ((const MbimEventEntry * const *)out);
     }
 
     return out;
