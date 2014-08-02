@@ -827,6 +827,7 @@ process_device_service_subscribe_list (MbimProxy   *self,
                          request);
 
     mbim_event_entry_array_free (events);
+    mbim_message_unref (message);
     return TRUE;
 }
 
