@@ -3,7 +3,7 @@ AC_PREREQ([2.68])
 
 dnl The libmbim version number
 m4_define([mbim_major_version], [1])
-m4_define([mbim_minor_version], [9])
+m4_define([mbim_minor_version], [10])
 m4_define([mbim_micro_version], [0])
 m4_define([mbim_version],
           [mbim_major_version.mbim_minor_version.mbim_micro_version])
@@ -16,9 +16,9 @@ dnl        If the interface has grown (that is, the new library is compatible
 dnl            with old code), increment a.
 dnl        If the interface has changed in an incompatible way (that is,
 dnl            functions have changed or been removed), then zero a.
-m4_define([mbim_glib_lt_current],  [3])
+m4_define([mbim_glib_lt_current],  [4])
 m4_define([mbim_glib_lt_revision], [0])
-m4_define([mbim_glib_lt_age],      [3])
+m4_define([mbim_glib_lt_age],      [0])
 
 
 AC_INIT([libmbim], [mbim_version], [libmbim-devel@lists.freedesktop.org])
