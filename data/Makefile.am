@@ -10,4 +10,4 @@ EXTRA_DIST = \
 	mbim-service-dss.json \
 	mbim-service-ms-firmware-id.json \
 	mbim-service-ms-host-shutdown.json \
-	mbim-service-proxy.json
+	mbim-service-proxy-control.json
