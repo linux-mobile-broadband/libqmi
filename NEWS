@@ -1,4 +1,30 @@
 
+Overview of changes in libmbim 1.10
+----------------------------------------
+
+ * API break: Flag values in 'MbimRegistrationFlag' were updated to match the
+   ones in the MBIM documentation.
+
+ * Implemented a new 'mbim-proxy', which allows sharing a single MBIM control
+   port among different processes. The usage of the proxy is optional, and can
+   be requested by specifying the MBIM_DEVICE_OPEN_FLAGS_PROXY flag in the new
+   mbim_device_open_full() method. The 'mbimcli' command line tool was also
+   extended with a new '--device-open-proxy,-p' option, to allow requesting the
+   use of the proxy process.
+
+ * New 'removed' signal added to the MbimDevice, to notify when the underlying
+   connection to the device is lost (e.g. lost connection to the mbim-proxy, or
+   lost access to the MBIM control port).
+
+ * Added support for registering and using custom services.
+
+ * Added additional GMM cause codes to MbimNwError.
+
+ * Transactions are now matched not only by ID but also by type.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libmbim 1.8
 ----------------------------------------
 
