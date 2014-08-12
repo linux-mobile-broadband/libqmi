@@ -301,7 +301,7 @@ test_merge_standard_list_subset_full (void)
 static void
 test_merge_standard_list_none_full (void)
 {
-    MbimEventEntry **list;
+    MbimEventEntry **list, **merged_list;
     gsize addition_size = 0;
     gsize out_size = 0;
 
@@ -309,11 +309,12 @@ test_merge_standard_list_none_full (void)
     list = _mbim_proxy_helper_service_subscribe_standard_list_new (&addition_size);
 
     /* merge */
-    list = _mbim_proxy_helper_service_subscribe_list_merge (NULL, 0, list, addition_size, &out_size);
+    merged_list = _mbim_proxy_helper_service_subscribe_list_merge (NULL, 0, list, addition_size, &out_size);
 
-    check_standard_list (list, out_size);
+    check_standard_list (merged_list, out_size);
 
     mbim_event_entry_array_free (list);
+    mbim_event_entry_array_free (merged_list);
 }
 
 static void
