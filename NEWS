@@ -1,4 +1,14 @@
 
+
+Overview of changes in libqmi 1.12.0
+----------------------------------------
+
+* pds: added "Get Default Tracking Session" request/response
+* pds: added "Set Default Tracking Session" request/response
+* pds: added "Get AGPS Config" request/response
+* pds: added "Set AGPS Config" request/response
+
+
 Overview of changes in libqmi 1.10.0
 ----------------------------------------
 
