@@ -956,7 +956,7 @@ qmi_utils_write_string_to_buffer (guint8      **buffer,
                                   guint8        length_prefix_size,
                                   const gchar  *in)
 {
-    guint16 len;
+    gsize len;
     guint8 len_8;
     guint16 len_16;
 
@@ -967,20 +967,26 @@ qmi_utils_write_string_to_buffer (guint8      **buffer,
               length_prefix_size == 8 ||
               length_prefix_size == 16);
 
-    len = (guint16) strlen (in);
+    len = strlen (in);
+
+    g_assert (   len + (length_prefix_size/8) <= *buffer_size
+              || (length_prefix_size==8 && ((int) G_MAXUINT8 + 1) < *buffer_size));
 
     switch (length_prefix_size) {
     case 0:
         break;
     case 8:
-        g_warn_if_fail (len <= G_MAXUINT8);
+        if (len > G_MAXUINT8) {
+            g_warn_if_reached ();
+            len = G_MAXUINT8;
+        }
         len_8 = (guint8)len;
         qmi_utils_write_guint8_to_buffer (buffer,
                                           buffer_size,
                                           &len_8);
         break;
     case 16:
-        g_warn_if_fail (len <= G_MAXUINT16);
+        /* already asserted that @len is no larger then @buffer_size */
         len_16 = (guint16)len;
         qmi_utils_write_guint16_to_buffer (buffer,
                                            buffer_size,
@@ -1021,6 +1027,7 @@ qmi_utils_write_fixed_size_string_to_buffer (guint8      **buffer,
     g_assert (buffer != NULL);
     g_assert (buffer_size != NULL);
     g_assert (fixed_size > 0);
+    g_assert (fixed_size <= *buffer_size);
 
     memcpy (*buffer, in, fixed_size);
     *buffer = &((*buffer)[fixed_size]);
