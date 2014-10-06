@@ -157,30 +157,37 @@ class VariableString(Variable):
     """
     Write a string to the raw byte buffer.
     """
-    def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+    def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len, error_label):
         translations = { 'lp'             : line_prefix,
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
+                         'error_label'    : error_label,
                          'buffer_len'     : buffer_len }
 
         if self.is_fixed_size:
             translations['fixed_size'] = self.fixed_size
             template = (
                 '${lp}/* Write the fixed-size string variable to the buffer */\n'
-                '${lp}qmi_utils_write_fixed_size_string_to_buffer (\n'
-                '${lp}    &${buffer_name},\n'
-                '${lp}    &${buffer_len},\n'
-                '${lp}    ${fixed_size},\n'
-                '${lp}    ${variable_name});\n')
+                '${lp}if (${buffer_len} < ${fixed_size})\n'
+                '${lp}    goto ${error_label};\n'
+                '${lp}else\n'
+                '${lp}    qmi_utils_write_fixed_size_string_to_buffer (\n'
+                '${lp}        &${buffer_name},\n'
+                '${lp}        &${buffer_len},\n'
+                '${lp}        ${fixed_size},\n'
+                '${lp}        ${variable_name});\n')
         else:
             translations['length_prefix_size'] = self.length_prefix_size
             template = (
                 '${lp}/* Write the string variable to the buffer */\n'
-                '${lp}qmi_utils_write_string_to_buffer (\n'
-                '${lp}    &${buffer_name},\n'
-                '${lp}    &${buffer_len},\n'
-                '${lp}    ${length_prefix_size},\n'
-                '${lp}    ${variable_name});\n')
+                '${lp}if (!${variable_name} || ${buffer_len} < ${length_prefix_size} + strlen (${variable_name}))\n'
+                '${lp}    goto ${error_label};\n'
+                '${lp}else\n'
+                '${lp}    qmi_utils_write_string_to_buffer (\n'
+                '${lp}       &${buffer_name},\n'
+                '${lp}       &${buffer_len},\n'
+                '${lp}       ${length_prefix_size},\n'
+                '${lp}       ${variable_name});\n')
 
         f.write(string.Template(template).substitute(translations))
 
