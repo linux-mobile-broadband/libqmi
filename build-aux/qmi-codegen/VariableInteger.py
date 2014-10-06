@@ -130,22 +130,47 @@ class VariableInteger(Variable):
                 '${lp}${variable_name} += 8;\n')
         f.write(string.Template(template).substitute(translations))
 
+    """
+    Return the data type size of fixed c-types
+    """
+    @staticmethod
+    def fixed_type_byte_size(fmt):
+        if fmt == 'guint8':
+            return 1
+        if fmt == 'guint16':
+            return 2
+        if fmt == 'guint32':
+            return 4
+        if fmt == 'guint64':
+            return 8
+        if fmt == 'gint8':
+            return 1
+        if fmt == 'gint16':
+            return 2
+        if fmt == 'gint32':
+            return 4
+        if fmt == 'gint64':
+            return 8
+        raise Exception("Unsupported format %s" % (fmt))
 
     """
     Write a single integer to the raw byte buffer
     """
-    def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+    def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len, error_label):
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
                          'len'            : self.guint_sized_size,
                          'variable_name'  : variable_name,
                          'buffer_name'    : buffer_name,
                          'buffer_len'     : buffer_len,
+                         'error_label'    : error_label,
                          'endian'         : self.endian }
 
         if self.format == 'guint-sized':
             template = (
                 '${lp}/* Write the ${len}-byte long variable to the buffer */\n'
+                '${lp}if (${buffer_len} < ${len})\n'
+                '${lp}    goto ${error_label};\n'
                 '${lp}qmi_utils_write_sized_guint_to_buffer (\n'
                 '${lp}    &${buffer_name},\n'
                 '${lp}    &${buffer_len},\n'
@@ -153,19 +178,26 @@ class VariableInteger(Variable):
                 '${lp}    ${endian},\n'
                 '${lp}    &(${variable_name}));\n')
         elif self.private_format == self.public_format:
+            translations['byte_size'] = VariableInteger.fixed_type_byte_size(self.private_format)
             template = (
                 '${lp}/* Write the ${private_format} variable to the buffer */\n'
-                '${lp}qmi_utils_write_${private_format}_to_buffer (\n'
-                '${lp}    &${buffer_name},\n'
-                '${lp}    &${buffer_len},\n')
+                '${lp}if (${buffer_len} < ${byte_size})\n'
+                '${lp}    goto ${error_label};\n'
+                '${lp}else\n'
+                '${lp}    qmi_utils_write_${private_format}_to_buffer (\n'
+                '${lp}        &${buffer_name},\n'
+                '${lp}        &${buffer_len},\n')
             if self.private_format != 'guint8' and self.private_format != 'gint8':
                 template += (
-                    '${lp}    ${endian},\n')
+                    '${lp}        ${endian},\n')
             template += (
-                '${lp}    &(${variable_name}));\n')
+                '${lp}        &(${variable_name}));\n')
         else:
+            translations['byte_size'] = VariableInteger.fixed_type_byte_size(self.private_format)
             template = (
-                '${lp}{\n'
+                '${lp}if (${buffer_len} < ${byte_size})\n'
+                '${lp}    goto ${error_label};\n'
+                '${lp}else {\n'
                 '${lp}    ${private_format} tmp;\n'
                 '\n'
                 '${lp}    tmp = (${private_format})${variable_name};\n'
