@@ -251,7 +251,14 @@ class VariableArray(Variable):
             template = (
                 '${lp}    ${array_size_element_format} ${common_var_prefix}_n_items;\n'
                 '${lp}    const guint8 *${common_var_prefix}_aux_buffer = &${buffer_name}[${variable_name}];\n'
-                '${lp}    guint16 ${common_var_prefix}_aux_buffer_len = ${buffer_len} - ${variable_name};\n'
+                '${lp}    guint16 ${common_var_prefix}_aux_buffer_len;\n'
+                '\n'
+                '${lp}    ${common_var_prefix}_aux_buffer_len = ((${buffer_len} >= ${variable_name}) ? ${buffer_len} - ${variable_name} : 0);\n'
+                '${lp}    if (${common_var_prefix}_aux_buffer_len < ${array_size_element_size}) {\n'
+                '${lp}        g_warning ("Cannot read the array size: expected \'%u\' bytes, but only got \'%u\' bytes",\n'
+                '${lp}                   ${array_size_element_size}, ${common_var_prefix}_aux_buffer_len);\n'
+                '${lp}        return FALSE;\n'
+                '${lp}    }\n'
                 '\n'
                 '${lp}    ${variable_name} += ${array_size_element_size};\n')
 
