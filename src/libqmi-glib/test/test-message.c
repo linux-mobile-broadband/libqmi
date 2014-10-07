@@ -131,6 +131,33 @@ test_message_parse_wrong_tlv (void)
     test_message_parse_common (buffer, sizeof (buffer), 1);
     g_test_assert_expected_messages ();
 }
+
+static void
+test_message_parse_missing_size (void)
+{
+    /* PDS Event Report indication: NMEA position */
+    const guint8 buffer[] = {
+        0x01,       /* marker */
+        0x10, 0x00, /* qmux length */
+        0x80,       /* qmux flags */
+        0x06,       /* service: PDS */
+        0x03,       /* client */
+        0x04,       /* service flags: Indication */
+        0x01, 0x00, /* transaction */
+        0x01, 0x00, /* message: Event Report */
+        0x04, 0x00, /* all tlvs length: 4 bytes */
+        /* TLV */
+        0x11,       /* type: Extended NMEA Position (1 guint8 and one 16-bit-sized string) */
+        0x01, 0x00, /* length: 1 byte (WE ONLY GIVE THE GUINT8!!!) */
+        0x01
+    };
+
+    g_test_expect_message ("Qmi",
+                           G_LOG_LEVEL_WARNING,
+                           "Cannot read the string size: expected '*' bytes, but only got '*' bytes");
+    test_message_parse_common (buffer, sizeof (buffer), 1);
+    g_test_assert_expected_messages ();
+}
 #endif
 
 int main (int argc, char **argv)
@@ -144,6 +171,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-complete", test_message_parse_complete_and_complete);
 #if GLIB_CHECK_VERSION (2,34,0)
     g_test_add_func ("/libqmi-glib/message/parse/wrong-tlv",             test_message_parse_wrong_tlv);
+    g_test_add_func ("/libqmi-glib/message/parse/missing-size",          test_message_parse_missing_size);
 #endif
 
     return g_test_run ();

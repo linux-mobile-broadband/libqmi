@@ -339,7 +339,10 @@ class Field:
             '\n')
         f.write(string.Template(template).substitute(translations))
 
-        # Now, read the size of the expected TLV
+        # Now, read the size of the expected TLV.
+        #
+        # Note: the emit_size_read() implementation is allowed to return FALSE
+        # to indicate an error at any time.
         self.variable.emit_size_read(f, '    ', 'expected_len', 'buffer', 'buffer_len')
 
         template = (
