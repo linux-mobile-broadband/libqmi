@@ -345,7 +345,7 @@ class Field:
             '    const guint8 *buffer,\n'
             '    guint16 buffer_len)\n'
             '{\n'
-            '    guint expected_len = 0;\n'
+            '    guint32 expected_len = 0;\n'
             '\n')
         f.write(string.Template(template).substitute(translations))
 
