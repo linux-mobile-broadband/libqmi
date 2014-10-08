@@ -835,6 +835,7 @@ qmi_message_new_from_raw
 qmi_message_response_new
 qmi_message_ref
 qmi_message_unref
+<SUBSECTION Getters>
 qmi_message_is_request
 qmi_message_is_response
 qmi_message_is_indication
@@ -845,11 +846,28 @@ qmi_message_get_message_id
 qmi_message_get_length
 qmi_message_get_raw
 qmi_message_get_version_introduced
+<SUBSECTION TLV writer>
+qmi_message_tlv_write_init
+qmi_message_tlv_write_reset
+qmi_message_tlv_write_complete
+qmi_message_tlv_write_guint8
+qmi_message_tlv_write_gint8
+qmi_message_tlv_write_guint16
+qmi_message_tlv_write_gint16
+qmi_message_tlv_write_guint32
+qmi_message_tlv_write_gint32
+qmi_message_tlv_write_guint64
+qmi_message_tlv_write_gint64
+qmi_message_tlv_write_sized_guint
+qmi_message_tlv_write_string
+<SUBSECTION RAW TLVs>
 QmiMessageForeachRawTlvFn
 qmi_message_foreach_raw_tlv
 qmi_message_get_raw_tlv
 qmi_message_add_raw_tlv
+<SUBSECTION Setters>
 qmi_message_set_transaction_id
+<SUBSECTION Printable>
 qmi_message_get_printable
 qmi_message_get_tlv_printable
 </SECTION>

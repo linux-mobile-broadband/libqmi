@@ -659,6 +659,539 @@ qmi_message_get_raw (QmiMessage *self,
     return self->data;
 }
 
+/*****************************************************************************/
+/* TLV builder & writer */
+
+static gboolean
+tlv_error_if_write_overflow (QmiMessage  *self,
+                             gsize        len,
+                             GError     **error)
+{
+    /* Check for overflow of message size. */
+    if (self->len + len > G_MAXUINT16) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG,
+                     "Writing TLV would overflow");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static struct tlv *
+tlv_get_header (QmiMessage *self,
+                gssize      init_offset)
+{
+    g_assert (init_offset <= self->len);
+    return (struct tlv *)(&self->data[init_offset]);
+}
+
+/**
+ * qmi_message_tlv_write_init:
+ * @self: a #QmiMessage.
+ * @type: specific ID of the TLV to add.
+ * @error: return location for error or %NULL.
+ *
+ * Starts building a new TLV in the #QmiMessage.
+ *
+ * In order to finish adding the TLV, qmi_message_tlv_write_complete() needs to be
+ * called.
+ *
+ * If any error happens adding fields on the TLV, the previous state can be
+ * recovered using qmi_message_tlv_write_reset().
+ *
+ * Returns: the offset where the TLV was started to be added, or 0 if an error happens.
+ *
+ * Since: 1.12
+ */
+gsize
+qmi_message_tlv_write_init (QmiMessage  *self,
+                            guint8       type,
+                            GError     **error)
+{
+    gsize init_offset;
+    struct tlv *tlv;
+
+    g_return_val_if_fail (self != NULL, 0);
+    g_return_val_if_fail (self->len > 0, 0);
+
+    /* Check for overflow of message size. Note that a valid TLV will at least
+     * have 1 byte of value. */
+    if (!tlv_error_if_write_overflow (self, sizeof (struct tlv) + 1, error))
+        return 0;
+
+    /* Store where exactly we started adding the TLV */
+    init_offset = self->len;
+
+    /* Resize buffer to fit the TLV header */
+    g_byte_array_set_size (self, self->len + sizeof (struct tlv));
+
+    /* Write the TLV header */
+    tlv = tlv_get_header (self, init_offset);
+    tlv->type = type;
+    tlv->length = 0; /* Correct value will be set in complete() */
+
+    return init_offset;
+}
+
+/**
+ * qmi_message_tlv_write_reset:
+ * @self: a #QmiMessage.
+ * @tlv_offset: offset that was returned by qmi_message_tlv_write_init().
+ *
+ * Removes the TLV being currently added.
+ *
+ * Since: 1.12
+ */
+void
+qmi_message_tlv_write_reset (QmiMessage *self,
+                             gsize       tlv_offset)
+{
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    g_byte_array_set_size (self, tlv_offset);
+}
+
+/**
+ * qmi_message_tlv_write_complete:
+ * @self: a #QmiMessage.
+ * @tlv_offset: offset that was returned by qmi_message_tlv_write_init().
+ * @error: return location for error or %NULL.
+ *
+ * Completes building a TLV in the #QmiMessage.
+ *
+ * In case of error the TLV will be reseted; i.e. there is no need to explicitly
+ * call qmi_message_tlv_write_reset().
+ *
+ * Returns: %TRUE if the TLV is successfully completed, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_complete (QmiMessage  *self,
+                                gsize        tlv_offset,
+                                GError     **error)
+{
+    gsize tlv_length;
+    struct tlv *tlv;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_val_if_fail (self->len >= (tlv_offset + sizeof (struct tlv)), FALSE);
+
+    tlv_length = self->len - tlv_offset;
+    if (tlv_length == sizeof (struct tlv)) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_TLV_EMPTY,
+                     "Empty TLV, no value set");
+        g_byte_array_set_size (self, tlv_offset);
+        return FALSE;
+    }
+
+    /* Update length fields. */
+    tlv = tlv_get_header (self, tlv_offset);
+    tlv->length = GUINT16_TO_LE (tlv_length - sizeof (struct tlv));
+    set_qmux_length (self, (guint16)(get_qmux_length (self) + tlv_length));
+    set_all_tlvs_length (self, (guint16)(get_all_tlvs_length (self) + tlv_length));
+
+    /* Make sure we didn't break anything. */
+    g_assert (message_check (self, error));
+
+    return TRUE;
+}
+
+/**
+ * qmi_message_tlv_write_guint8:
+ * @self: a #QmiMessage.
+ * @in: a #guint8.
+ * @error: return location for error or %NULL.
+ *
+ * Appends an unsigned byte to the TLV being built.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_guint8 (QmiMessage  *self,
+                              guint8       in,
+                              GError     **error)
+{
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, sizeof (in), error))
+        return FALSE;
+
+    g_byte_array_append (self, &in, sizeof (in));
+    return TRUE;
+}
+
+/**
+ * qmi_message_tlv_write_gint8:
+ * @self: a #QmiMessage.
+ * @in: a #gint8.
+ * @error: return location for error or %NULL.
+ *
+ * Appends a signed byte variable to the TLV being built.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_gint8 (QmiMessage  *self,
+                             gint8        in,
+                             GError     **error)
+{
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, sizeof (in), error))
+        return FALSE;
+
+    g_byte_array_append (self, (guint8 *)&in, sizeof (in));
+    return TRUE;
+}
+
+/**
+ * qmi_message_tlv_write_guint16:
+ * @self: a #QmiMessage.
+ * @endian: target endianness, swapped from host byte order if necessary.
+ * @in: a #guint16 in host byte order.
+ * @error: return location for error or %NULL.
+ *
+ * Appends an unsigned 16-bit integer to the TLV being built. The number to be
+ * written is expected to be given in host endianness, and this method takes
+ * care of converting the value written to the byte order specified by @endian.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_guint16 (QmiMessage  *self,
+                               QmiEndian    endian,
+                               guint16      in,
+                               GError     **error)
+{
+    guint16 tmp;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, sizeof (in), error))
+        return FALSE;
+
+    tmp = (endian == QMI_ENDIAN_BIG ? GUINT16_TO_BE (in) : GUINT16_TO_LE (in));
+    g_byte_array_append (self, (guint8 *)&tmp, sizeof (tmp));
+    return TRUE;
+}
+
+/**
+ * qmi_message_tlv_write_gint16:
+ * @self: a #QmiMessage.
+ * @endian: target endianness, swapped from host byte order if necessary.
+ * @in: a #gint16 in host byte order.
+ * @error: return location for error or %NULL.
+ *
+ * Appends a signed 16-bit integer to the TLV being built. The number to be
+ * written is expected to be given in host endianness, and this method takes
+ * care of converting the value written to the byte order specified by @endian.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_gint16 (QmiMessage  *self,
+                              QmiEndian    endian,
+                              gint16       in,
+                              GError     **error)
+{
+    gint16 tmp;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, sizeof (in), error))
+        return FALSE;
+
+    tmp = (endian == QMI_ENDIAN_BIG ? GINT16_TO_BE (in) : GINT16_TO_LE (in));
+    g_byte_array_append (self, (guint8 *)&tmp, sizeof (tmp));
+    return TRUE;
+}
+
+/**
+ * qmi_message_tlv_write_guint32:
+ * @self: a #QmiMessage.
+ * @endian: target endianness, swapped from host byte order if necessary.
+ * @in: a #guint32 in host byte order.
+ * @error: return location for error or %NULL.
+ *
+ * Appends an unsigned 32-bit integer to the TLV being built. The number to be
+ * written is expected to be given in host endianness, and this method takes
+ * care of converting the value written to the byte order specified by @endian.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_guint32 (QmiMessage  *self,
+                               QmiEndian    endian,
+                               guint32      in,
+                               GError     **error)
+{
+    guint32 tmp;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, sizeof (in), error))
+        return FALSE;
+
+    tmp = (endian == QMI_ENDIAN_BIG ? GUINT32_TO_BE (in) : GUINT32_TO_LE (in));
+    g_byte_array_append (self, (guint8 *)&tmp, sizeof (tmp));
+    return TRUE;
+}
+
+/**
+ * qmi_message_tlv_write_gint32:
+ * @self: a #QmiMessage.
+ * @endian: target endianness, swapped from host byte order if necessary.
+ * @in: a #gint32 in host byte order.
+ * @error: return location for error or %NULL.
+ *
+ * Appends a signed 32-bit integer to the TLV being built. The number to be
+ * written is expected to be given in host endianness, and this method takes
+ * care of converting the value written to the byte order specified by @endian.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_gint32 (QmiMessage  *self,
+                              QmiEndian    endian,
+                              gint32       in,
+                              GError     **error)
+{
+    gint32 tmp;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, sizeof (in), error))
+        return FALSE;
+
+    tmp = (endian == QMI_ENDIAN_BIG ? GINT32_TO_BE (in) : GINT32_TO_LE (in));
+    g_byte_array_append (self, (guint8 *)&tmp, sizeof (tmp));
+    return TRUE;
+}
+
+/**
+ * qmi_message_tlv_write_guint64:
+ * @self: a #QmiMessage.
+ * @endian: target endianness, swapped from host byte order if necessary.
+ * @in: a #guint64 in host byte order.
+ * @error: return location for error or %NULL.
+ *
+ * Appends an unsigned 64-bit integer to the TLV being built. The number to be
+ * written is expected to be given in host endianness, and this method takes
+ * care of converting the value written to the byte order specified by @endian.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_guint64 (QmiMessage  *self,
+                               QmiEndian    endian,
+                               guint64      in,
+                               GError     **error)
+{
+    guint64 tmp;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, sizeof (in), error))
+        return FALSE;
+
+    tmp = (endian == QMI_ENDIAN_BIG ? GUINT64_TO_BE (in) : GUINT64_TO_LE (in));
+    g_byte_array_append (self, (guint8 *)&tmp, sizeof (tmp));
+    return TRUE;
+}
+
+/**
+ * qmi_message_tlv_write_gint64:
+ * @self: a #QmiMessage.
+ * @endian: target endianness, swapped from host byte order if necessary.
+ * @in: a #gint64 in host byte order.
+ * @error: return location for error or %NULL.
+ *
+ * Appends a signed 32-bit integer to the TLV being built. The number to be
+ * written is expected to be given in host endianness, and this method takes
+ * care of converting the value written to the byte order specified by @endian.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_gint64 (QmiMessage  *self,
+                              QmiEndian    endian,
+                              gint64       in,
+                              GError     **error)
+{
+    gint64 tmp;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, sizeof (in), error))
+        return FALSE;
+
+    tmp = (endian == QMI_ENDIAN_BIG ? GINT64_TO_BE (in) : GINT64_TO_LE (in));
+    g_byte_array_append (self, (guint8 *)&tmp, sizeof (tmp));
+    return TRUE;
+}
+
+/**
+ * qmi_message_tlv_write_sized_guint:
+ * @self: a #QmiMessage.
+ * @n_bytes: number of bytes to write.
+ * @endian: target endianness, swapped from host byte order if necessary.
+ * @in: a #guint64 in host byte order.
+ * @error: return location for error or %NULL.
+ *
+ * Appends a @n_bytes-sized unsigned integer to the TLV being built. The number
+ * to be written is expected to be given in host endianness, and this method
+ * takes care of converting the value written to the byte order specified by
+ * @endian.
+ *
+ * Valid values for @n_bytes are: 1, 2, 4, 8.
+ *
+ * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_sized_guint (QmiMessage  *self,
+                                   guint        n_bytes,
+                                   QmiEndian    endian,
+                                   guint64      in,
+                                   GError     **error)
+{
+    guint64 tmp;
+    goffset offset;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_val_if_fail ((n_bytes == 1 ||
+                           n_bytes == 2 ||
+                           n_bytes == 4 ||
+                           n_bytes == 8), FALSE);
+
+    /* Check for overflow of message size */
+    if (!tlv_error_if_write_overflow (self, n_bytes, error))
+        return FALSE;
+
+    tmp = (endian == QMI_ENDIAN_BIG ? GUINT64_TO_BE (in) : GUINT64_TO_LE (in));
+
+    /* Update buffer size */
+    offset = self->len;
+    g_byte_array_set_size (self, self->len + n_bytes);
+
+    /* In Little Endian, we read the bytes from the beginning of the buffer */
+    if (endian == QMI_ENDIAN_LITTLE) {
+        memcpy (&self->data[offset], &tmp, n_bytes);
+    }
+    /* In Big Endian, we read the bytes from the end of the buffer */
+    else {
+        guint8 tmp_buffer[8];
+
+        memcpy (&tmp_buffer[0], &tmp, 8);
+        memcpy (&self->data[offset], &tmp_buffer[8 - n_bytes], n_bytes);
+    }
+
+    return TRUE;
+}
+
+/**
+ * qmi_message_tlv_write_string:
+ * @self: a #QmiMessage.
+ * @n_size_prefix_bytes: number of bytes to use in the size prefix.
+ * @in: string to write.
+ * @in_length: length of @in, or -1 if @in is NUL-terminated.
+ * @error: return location for error or %NULL.
+ *
+ * Appends a string to the TLV being built.
+ *
+ * Fixed-sized strings should give @n_size_prefix_bytes equal to 0.
+ *
+ * Returns: %TRUE if the string is successfully added, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ */
+gboolean
+qmi_message_tlv_write_string (QmiMessage   *self,
+                              guint8        n_size_prefix_bytes,
+                              const gchar  *in,
+                              gssize        in_length,
+                              GError      **error)
+{
+    gsize len;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_val_if_fail (in != NULL, FALSE);
+    g_return_val_if_fail (n_size_prefix_bytes <= 2, FALSE);
+
+    len = (in_length < 0 ? strlen (in) : (gsize) in_length);
+
+    /* Write size prefix first */
+    switch (n_size_prefix_bytes) {
+    case 0:
+        break;
+    case 1:
+        if (len > G_MAXUINT8) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_INVALID_ARGS,
+                         "String too long for a 1 byte size prefix: %" G_GSIZE_FORMAT, len);
+            return FALSE;
+        }
+        if (!qmi_message_tlv_write_guint8 (self, (guint8) len, error)) {
+            g_prefix_error (error, "Cannot append string 1 byte size prefix");
+            return FALSE;
+        }
+        break;
+    case 2:
+        if (len > G_MAXUINT16) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_INVALID_ARGS,
+                         "String too long for a 2 byte size prefix: %" G_GSIZE_FORMAT, len);
+            return FALSE;
+        }
+        if (!qmi_message_tlv_write_guint16 (self, QMI_ENDIAN_LITTLE, (guint16) len, error)) {
+            g_prefix_error (error, "Cannot append string 2 byte size prefix");
+            return FALSE;
+        }
+        break;
+    default:
+        g_assert_not_reached ();
+    }
+
+    /* Check for overflow of string size */
+    if (!tlv_error_if_write_overflow (self, len, error))
+        return FALSE;
+
+    g_byte_array_append (self, (guint8 *)in, len);
+    return TRUE;
+}
+
+/*****************************************************************************/
+
 /**
  * qmi_message_get_raw_tlv:
  * @self: a #QmiMessage.
@@ -725,7 +1258,7 @@ qmi_message_foreach_raw_tlv (QmiMessage *self,
  *
  * Creates a new @type TLV with the value given in @raw, and adds it to the #QmiMessage.
  *
- * Returns: %TRUE if the TLV as successfully added, otherwise %FALSE is returned and @error is set.
+ * Returns: %TRUE if the TLV is successfully added, otherwise %FALSE is returned and @error is set.
  */
 gboolean
 qmi_message_add_raw_tlv (QmiMessage *self,

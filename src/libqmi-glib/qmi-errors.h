@@ -49,6 +49,7 @@
  * @QMI_CORE_ERROR_TLV_NOT_FOUND: TLV not found.
  * @QMI_CORE_ERROR_TLV_TOO_LONG: TLV is too long.
  * @QMI_CORE_ERROR_UNSUPPORTED: Not supported.
+ * @QMI_CORE_ERROR_TLV_EMPTY: TLV has no value.
  *
  * Common errors that may be reported by libqmi-glib.
  */
@@ -60,7 +61,8 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
     QMI_CORE_ERROR_INVALID_MESSAGE  = 4, /*< nick=InvalidMessage >*/
     QMI_CORE_ERROR_TLV_NOT_FOUND    = 5, /*< nick=TlvNotFound >*/
     QMI_CORE_ERROR_TLV_TOO_LONG     = 6, /*< nick=TlvTooLong >*/
-    QMI_CORE_ERROR_UNSUPPORTED      = 7  /*< nick=Unsupported >*/
+    QMI_CORE_ERROR_UNSUPPORTED      = 7, /*< nick=Unsupported >*/
+    QMI_CORE_ERROR_TLV_EMPTY        = 8, /*< nick=TlvEmpty >*/
 } QmiCoreError;
 
 /**
