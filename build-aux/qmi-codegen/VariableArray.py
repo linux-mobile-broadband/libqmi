@@ -246,7 +246,7 @@ class VariableArray(Variable):
             elif self.array_size_element.public_format == 'guint32':
                 translations['array_size_element_size'] = '4'
             else:
-                translations['array_size_element_size'] = '0'
+                raise ValueError('Invalid array size element format in %s array' % (self.name))
 
             template = (
                 '${lp}    ${array_size_element_format} ${common_var_prefix}_n_items;\n'
