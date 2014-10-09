@@ -501,8 +501,19 @@ qmi_message_new (QmiService service,
     buffer_len = (1 +
                   sizeof (struct qmux) +
                   (service == QMI_SERVICE_CTL ? sizeof (struct control_header) : sizeof (struct service_header)));
-    buffer = g_malloc (buffer_len);
 
+    /* NOTE:
+     * Don't use g_byte_array_new_take() along with g_byte_array_set_size()!
+     * Not yet, at least, see:
+     * https://bugzilla.gnome.org/show_bug.cgi?id=738170
+     */
+
+    /* Create the GByteArray with buffer_len bytes preallocated */
+    self = g_byte_array_sized_new (buffer_len);
+    /* Actually flag as all the buffer_len bytes being used. */
+    g_byte_array_set_size (self, buffer_len);
+
+    buffer = (struct full_message *)(self->data);
     buffer->marker = QMI_MESSAGE_QMUX_MARKER;
     buffer->qmux.flags = 0;
     buffer->qmux.service = service;
@@ -517,9 +528,6 @@ qmi_message_new (QmiService service,
         buffer->qmi.service.header.transaction = GUINT16_TO_LE (transaction_id);
         buffer->qmi.service.header.message = GUINT16_TO_LE (message_id);
     }
-
-    /* Create the GByteArray */
-    self = g_byte_array_new_take ((guint8 *)buffer, buffer_len);
 
     /* Update length fields. */
     set_qmux_length (self, buffer_len - 1); /* QMUX marker not included in length */
