@@ -549,14 +549,11 @@ qmi_message_new (QmiService service,
  * Returns: (transfer full): a newly created #QmiMessage. The returned value should be freed with qmi_message_unref().
  */
 QmiMessage *
-qmi_message_response_new (QmiMessage *request,
-                          QmiProtocolError error)
+qmi_message_response_new (QmiMessage       *request,
+                          QmiProtocolError  error)
 {
     QmiMessage *response;
-    guint8 result_tlv_buffer[4];
-    guint16 result_tlv_buffer_len = 4;
-    guint8 *result_tlv_buffer_aux = result_tlv_buffer;
-    guint16 value;
+    gsize       tlv_offset;
 
     response = qmi_message_new (qmi_message_get_service (request),
                                 qmi_message_get_client_id (request),
@@ -569,36 +566,11 @@ qmi_message_response_new (QmiMessage *request,
     else
         ((struct full_message *)(((GByteArray *)response)->data))->qmi.service.header.flags |= QMI_SERVICE_FLAG_RESPONSE;
 
-    /* Add result TLV */
-    if (error != QMI_PROTOCOL_ERROR_NONE) {
-        value = 0x01;
-        qmi_utils_write_guint16_to_buffer (
-            &result_tlv_buffer_aux,
-            &result_tlv_buffer_len,
-            QMI_ENDIAN_LITTLE,
-            &value);
-        value = error;
-        qmi_utils_write_guint16_to_buffer (
-            &result_tlv_buffer_aux,
-            &result_tlv_buffer_len,
-            QMI_ENDIAN_LITTLE,
-            &value);
-    } else {
-        value = 0x00;
-        qmi_utils_write_guint16_to_buffer (
-            &result_tlv_buffer_aux,
-            &result_tlv_buffer_len,
-            QMI_ENDIAN_LITTLE,
-            &value);
-        value = QMI_PROTOCOL_ERROR_NONE;
-        qmi_utils_write_guint16_to_buffer (
-            &result_tlv_buffer_aux,
-            &result_tlv_buffer_len,
-            QMI_ENDIAN_LITTLE,
-            &value);
-    }
-
-    g_assert (qmi_message_add_raw_tlv (response, 0x02, result_tlv_buffer, 4, NULL));
+    /* Add result TLV, should never fail */
+    g_assert ((tlv_offset = qmi_message_tlv_write_init (response, 0x02, NULL)) > 0);
+    g_assert (qmi_message_tlv_write_guint16 (response, QMI_ENDIAN_LITTLE, (error != QMI_PROTOCOL_ERROR_NONE), NULL));
+    g_assert (qmi_message_tlv_write_guint16 (response, QMI_ENDIAN_LITTLE, error, NULL));
+    g_assert (qmi_message_tlv_write_complete (response, tlv_offset, NULL));
 
     /* We shouldn't create invalid response messages */
     g_assert (message_check (response, NULL));
