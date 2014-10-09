@@ -794,7 +794,7 @@ qmi_message_tlv_write_complete (QmiMessage  *self,
     set_all_tlvs_length (self, (guint16)(get_all_tlvs_length (self) + tlv_length));
 
     /* Make sure we didn't break anything. */
-    g_assert (message_check (self, error));
+    g_assert (message_check (self, NULL));
 
     return TRUE;
 }
@@ -1300,7 +1300,7 @@ qmi_message_add_raw_tlv (QmiMessage *self,
     set_all_tlvs_length (self, (guint16)(get_all_tlvs_length (self) + tlv_len));
 
     /* Make sure we didn't break anything. */
-    g_assert (message_check (self, error));
+    g_assert (message_check (self, NULL));
 
     return TRUE;
 }
