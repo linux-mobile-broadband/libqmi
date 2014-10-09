@@ -909,9 +909,9 @@ qmi_utils_read_string_from_buffer (const guint8 **buffer,
  * @buffer: a buffer with raw binary data.
  * @buffer_size: size of @buffer.
  * @fixed_size: number of bytes to read.
- * @out: return location for the read string. The returned value should be freed with g_free().
+ * @out: buffer preallocated by the client, with at least @fixed_size bytes.
  *
- * Reads a @fixed_size-sized string from the buffer.
+ * Reads a @fixed_size-sized string from the buffer into the @out buffer.
  *
  * Also note that both @buffer and @buffer_size get updated after the
  * @fixed_size bytes read.
