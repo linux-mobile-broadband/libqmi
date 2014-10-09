@@ -16,9 +16,66 @@
 #include <config.h>
 #include <glib-object.h>
 #include <string.h>
+#include <stdio.h>
+
 #include "qmi-message.h"
 #include "qmi-errors.h"
 #include "qmi-error-types.h"
+#include "qmi-utils.h"
+
+/*****************************************************************************/
+
+static gchar *
+__str_hex (gconstpointer mem,
+           gsize         size,
+           gchar         delimiter)
+{
+    const guint8 *data = mem;
+    gsize i;
+    gsize j;
+    gsize new_str_length;
+    gchar *new_str;
+
+    /* Get new string length. If input string has N bytes, we need:
+     * - 1 byte for last NUL char
+     * - 2N bytes for hexadecimal char representation of each byte...
+     * - N-1 bytes for the separator ':'
+     * So... a total of (1+2N+N-1) = 3N bytes are needed... */
+    new_str_length =  3 * size;
+
+    /* Allocate memory for new array and initialize contents to NUL */
+    new_str = g_malloc0 (new_str_length);
+
+    /* Print hexadecimal representation of each byte... */
+    for (i = 0, j = 0; i < size; i++, j += 3) {
+        /* Print character in output string... */
+        snprintf (&new_str[j], 3, "%02X", data[i]);
+        /* And if needed, add separator */
+        if (i != (size - 1) )
+            new_str[j + 2] = delimiter;
+    }
+
+    /* Set output string */
+    return new_str;
+}
+
+static void
+_g_assert_cmpmem (gconstpointer mem1,
+                  gsize         size1,
+                  gconstpointer mem2,
+                  gsize         size2)
+{
+    gchar *str1;
+    gchar *str2;
+
+    str1 = __str_hex (mem1, size1, ':');
+    str2 = __str_hex (mem2, size2, ':');
+    g_assert_cmpstr (str1, ==, str2);
+    g_free (str1);
+    g_free (str2);
+}
+
+/*****************************************************************************/
 
 static void
 test_message_parse_common (const guint8 *buffer,
@@ -163,6 +220,125 @@ test_message_parse_missing_size (void)
     g_test_assert_expected_messages ();
 }
 #endif
+
+/*****************************************************************************/
+
+static void
+test_message_new_request (void)
+{
+    static const guint8 expected_buffer [] = {
+        0x01,       /* marker */
+        0x0C, 0x00, /* qmux length */
+        0x00,       /* qmux flags */
+        0x02,       /* service: DMS */
+        0x01,       /* client id */
+        0x00,       /* service flags */
+        0x02, 0x00, /* transaction */
+        0xFF, 0xFF, /* message id */
+        0x00, 0x00, /* all tlvs length */
+    };
+
+    QmiMessage *self;
+    GError *error = NULL;
+    const guint8 *buffer;
+    gsize buffer_length = 0;
+
+    self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
+    g_assert (self);
+
+    buffer = qmi_message_get_raw (self, &buffer_length, &error);
+    g_assert_no_error (error);
+    g_assert (buffer != NULL);
+    g_assert_cmpuint (buffer_length, >, 0);
+
+    _g_assert_cmpmem (buffer, buffer_length, expected_buffer, sizeof (expected_buffer));
+
+    qmi_message_unref (self);
+}
+
+static void
+test_message_new_response_ok (void)
+{
+    static const guint8 expected_buffer [] = {
+        0x01,       /* marker */
+        0x13, 0x00, /* qmux length */
+        0x00,       /* qmux flags */
+        0x02,       /* service: DMS */
+        0x01,       /* client id */
+        0x02,       /* service flags */
+        0x02, 0x00, /* transaction */
+        0xFF, 0xFF, /* message id */
+        0x07, 0x00, /* all tlvs length */
+        /* TLV */
+        0x02,       /* tlv type */
+        0x04, 0x00, /* tlv size */
+        0x00, 0x00, 0x00, 0x00
+    };
+
+    QmiMessage *request;
+    QmiMessage *response;
+    GError *error = NULL;
+    const guint8 *buffer;
+    gsize buffer_length = 0;
+
+    request = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
+    g_assert (request);
+
+    response = qmi_message_response_new (request, QMI_PROTOCOL_ERROR_NONE);
+    g_assert (response);
+
+    buffer = qmi_message_get_raw (response, &buffer_length, &error);
+    g_assert_no_error (error);
+    g_assert (buffer != NULL);
+    g_assert_cmpuint (buffer_length, >, 0);
+
+    _g_assert_cmpmem (buffer, buffer_length, expected_buffer, sizeof (expected_buffer));
+
+    qmi_message_unref (request);
+    qmi_message_unref (response);
+}
+
+static void
+test_message_new_response_error (void)
+{
+    static const guint8 expected_buffer [] = {
+        0x01,       /* marker */
+        0x13, 0x00, /* qmux length */
+        0x00,       /* qmux flags */
+        0x02,       /* service: DMS */
+        0x01,       /* client id */
+        0x02,       /* service flags */
+        0x02, 0x00, /* transaction */
+        0xFF, 0xFF, /* message id */
+        0x07, 0x00, /* all tlvs length */
+        /* TLV */
+        0x02,       /* tlv type */
+        0x04, 0x00, /* tlv size */
+        0x01, 0x00, 0x03, 0x00
+    };
+
+    QmiMessage *request;
+    QmiMessage *response;
+    GError *error = NULL;
+    const guint8 *buffer;
+    gsize buffer_length = 0;
+
+    request = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
+    g_assert (request);
+
+    response = qmi_message_response_new (request, QMI_PROTOCOL_ERROR_INTERNAL);
+    g_assert (response);
+
+    buffer = qmi_message_get_raw (response, &buffer_length, &error);
+    g_assert_no_error (error);
+    g_assert (buffer != NULL);
+    g_assert_cmpuint (buffer_length, >, 0);
+
+    _g_assert_cmpmem (buffer, buffer_length, expected_buffer, sizeof (expected_buffer));
+
+    qmi_message_unref (request);
+    qmi_message_unref (response);
+}
 
 /*****************************************************************************/
 
@@ -944,6 +1120,10 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/parse/wrong-tlv",             test_message_parse_wrong_tlv);
     g_test_add_func ("/libqmi-glib/message/parse/missing-size",          test_message_parse_missing_size);
 #endif
+
+    g_test_add_func ("/libqmi-glib/message/new/request",        test_message_new_request);
+    g_test_add_func ("/libqmi-glib/message/new/response/ok",    test_message_new_response_ok);
+    g_test_add_func ("/libqmi-glib/message/new/response/error", test_message_new_response_error);
 
     g_test_add_func ("/libqmi-glib/message/tlv-write/empty",    test_message_tlv_write_empty);
     g_test_add_func ("/libqmi-glib/message/tlv-write/reset",    test_message_tlv_write_reset);
