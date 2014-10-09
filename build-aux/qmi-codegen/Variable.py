@@ -81,7 +81,7 @@ class Variable:
     Emits the code involved in writing the variable to the raw byte stream
     from the specific private format.
     """
-    def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len, error_label):
+    def emit_buffer_write(self, f, line_prefix, tlv_name, variable_name):
         pass
 
 

@@ -156,60 +156,43 @@ class VariableInteger(Variable):
     """
     Write a single integer to the raw byte buffer
     """
-    def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len, error_label):
+    def emit_buffer_write(self, f, line_prefix, tlv_name, variable_name):
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
                          'len'            : self.guint_sized_size,
-                         'variable_name'  : variable_name,
-                         'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len,
-                         'error_label'    : error_label,
-                         'endian'         : self.endian }
+                         'tlv_name'       : tlv_name,
+                         'variable_name'  : variable_name }
+
+        if self.private_format != 'guint8' and self.private_format != 'gint8':
+            translations['endian'] = ' ' + self.endian + ','
+        else:
+            translations['endian'] = ''
 
         if self.format == 'guint-sized':
             template = (
                 '${lp}/* Write the ${len}-byte long variable to the buffer */\n'
-                '${lp}if (${buffer_len} < ${len})\n'
-                '${lp}    goto ${error_label};\n'
-                '${lp}qmi_utils_write_sized_guint_to_buffer (\n'
-                '${lp}    &${buffer_name},\n'
-                '${lp}    &${buffer_len},\n'
-                '${lp}    ${len},\n'
-                '${lp}    ${endian},\n'
-                '${lp}    &(${variable_name}));\n')
+                '${lp}if (!qmi_message_tlv_write_sized_guint (self, ${len},${endian} ${variable_name}, error)) {\n'
+                '${lp}    g_prefix_error (error, "Cannot write sized integer in TLV \'${tlv_name}\': ");\n'
+                '${lp}    goto error_out;\n'
+                '${lp}}\n')
         elif self.private_format == self.public_format:
-            translations['byte_size'] = VariableInteger.fixed_type_byte_size(self.private_format)
             template = (
                 '${lp}/* Write the ${private_format} variable to the buffer */\n'
-                '${lp}if (${buffer_len} < ${byte_size})\n'
-                '${lp}    goto ${error_label};\n'
-                '${lp}else\n'
-                '${lp}    qmi_utils_write_${private_format}_to_buffer (\n'
-                '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n')
-            if self.private_format != 'guint8' and self.private_format != 'gint8':
-                template += (
-                    '${lp}        ${endian},\n')
-            template += (
-                '${lp}        &(${variable_name}));\n')
+                '${lp}if (!qmi_message_tlv_write_${private_format} (self,${endian} ${variable_name}, error)) {\n'
+                '${lp}    g_prefix_error (error, "Cannot write integer in TLV \'${tlv_name}\': ");\n'
+                '${lp}    goto error_out;\n'
+                '${lp}}\n')
         else:
-            translations['byte_size'] = VariableInteger.fixed_type_byte_size(self.private_format)
             template = (
-                '${lp}if (${buffer_len} < ${byte_size})\n'
-                '${lp}    goto ${error_label};\n'
-                '${lp}else {\n'
+                '${lp}{\n'
                 '${lp}    ${private_format} tmp;\n'
                 '\n'
-                '${lp}    tmp = (${private_format})${variable_name};\n'
+                '${lp}    tmp = (${private_format}) ${variable_name};\n'
                 '${lp}    /* Write the ${private_format} variable to the buffer */\n'
-                '${lp}    qmi_utils_write_${private_format}_to_buffer (\n'
-                '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n')
-            if self.private_format != 'guint8' and self.private_format != 'gint8':
-                template += (
-                    '${lp}        ${endian},\n')
-            template += (
-                '${lp}        &tmp);\n'
+                '${lp}    if (!qmi_message_tlv_write_${private_format} (self,${endian} tmp, error)) {\n'
+                '${lp}        g_prefix_error (error, "Cannot write enum in TLV \'${tlv_name}\': ");\n'
+                '${lp}        goto error_out;\n'
+                '${lp}    }\n'
                 '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
 
@@ -217,7 +200,7 @@ class VariableInteger(Variable):
     """
     Get the integer as a printable string.
     """
-    def emit_get_printable(self, f, line_prefix, printable, buffer_name, buffer_len):
+    def emit_get_printable(self, f, line_prefix):
         common_format = ''
         common_cast = ''
 

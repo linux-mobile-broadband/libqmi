@@ -216,41 +216,29 @@ class Field:
     Emit the code responsible for adding the TLV to the QMI message
     """
     def emit_input_tlv_add(self, f, line_prefix):
-        error_label = 'ERR_EMIT_BUFFER_OVERFLOW_' + self.id_enum_name
         translations = { 'name'          : self.name,
                          'tlv_id'        : self.id_enum_name,
                          'variable_name' : self.variable_name,
-                         'error_label'   : error_label,
                          'lp'            : line_prefix }
 
         template = (
-            '${lp}guint8 buffer[1024];\n'
-            '${lp}guint16 buffer_len = 1024;\n'
-            '${lp}guint8 *buffer_aux = buffer;\n'
+            '${lp}gsize tlv_offset;\n'
+            '\n'
+            '${lp}if (!(tlv_offset = qmi_message_tlv_write_init (self, (guint8)${tlv_id}, error))) {\n'
+            '${lp}    g_prefix_error (error, "Cannot initialize TLV \'${name}\': ");\n'
+            '${lp}    goto error_out;\n'
+            '${lp}}\n'
             '\n')
         f.write(string.Template(template).substitute(translations))
 
         # Now, write the contents of the variable into the buffer
-        self.variable.emit_buffer_write(f, line_prefix, 'input->' + self.variable_name, 'buffer_aux', 'buffer_len', error_label)
+        self.variable.emit_buffer_write(f, line_prefix, self.name, 'input->' + self.variable_name)
 
         template = (
             '\n'
-            '${lp}if (FALSE) {\n'
-            '${lp}    ${error_label}:\n'
-            '${lp}    g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG, "result larger then 1024 bytes");\n'
-            '${lp}    goto OUT_${error_label};\n'
-            '${lp}}\n'
-            '\n'
-            '${lp}g_assert (buffer_len <= 1024);\n'
-            '${lp}if (!qmi_message_add_raw_tlv (self,\n'
-            '${lp}                              (guint8)${tlv_id},\n'
-            '${lp}                              buffer,\n'
-            '${lp}                              (1024 - buffer_len),\n'
-            '${lp}                              error)) {\n'
-            '${lp}    OUT_${error_label}:\n'
-            '${lp}    g_prefix_error (error, \"Couldn\'t set the ${name} TLV: \");\n'
-            '${lp}    qmi_message_unref (self);\n'
-            '${lp}    return NULL;\n'
+            '${lp}if (!qmi_message_tlv_write_complete (self, tlv_offset, error)) {\n'
+            '${lp}    g_prefix_error (error, "Cannot complete TLV \'${name}\': ");\n'
+            '${lp}    goto error_out;\n'
             '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
 

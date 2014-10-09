@@ -296,12 +296,10 @@ class VariableArray(Variable):
     Writing an array to the raw byte buffer is just about providing a loop to
     write every array element one by one.
     """
-    def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len, error_label):
+    def emit_buffer_write(self, f, line_prefix, tlv_name, variable_name):
         common_var_prefix = utils.build_underscore_name(self.name)
-        translations = { 'lp'             : line_prefix,
-                         'variable_name'  : variable_name,
-                         'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len,
+        translations = { 'lp'                : line_prefix,
+                         'variable_name'     : variable_name,
                          'common_var_prefix' : common_var_prefix }
 
         template = (
@@ -319,10 +317,10 @@ class VariableArray(Variable):
                 '${lp}    ${common_var_prefix}_n_items = (${array_size_element_format}) ${variable_name}->len;\n')
             f.write(string.Template(template).substitute(translations))
 
-            self.array_size_element.emit_buffer_write(f, line_prefix + '    ', common_var_prefix + '_n_items', buffer_name, buffer_len, error_label)
+            self.array_size_element.emit_buffer_write(f, line_prefix + '    ', tlv_name, common_var_prefix + '_n_items')
 
         if self.array_sequence_element != '':
-            self.array_sequence_element.emit_buffer_write(f, line_prefix + '    ', variable_name + '_sequence', buffer_name, buffer_len, error_label)
+            self.array_sequence_element.emit_buffer_write(f, line_prefix + '    ', tlv_name, variable_name + '_sequence')
 
 
         template = (
@@ -330,7 +328,7 @@ class VariableArray(Variable):
             '${lp}    for (${common_var_prefix}_i = 0; ${common_var_prefix}_i < ${variable_name}->len; ${common_var_prefix}_i++) {\n')
         f.write(string.Template(template).substitute(translations))
 
-        self.array_element.emit_buffer_write(f, line_prefix + '        ', 'g_array_index (' + variable_name + ', ' + self.array_element.public_format + ',' + common_var_prefix + '_i)', buffer_name, buffer_len, error_label)
+        self.array_element.emit_buffer_write(f, line_prefix + '        ', tlv_name, 'g_array_index (' + variable_name + ', ' + self.array_element.public_format + ',' + common_var_prefix + '_i)')
 
         template = (
             '${lp}    }\n'

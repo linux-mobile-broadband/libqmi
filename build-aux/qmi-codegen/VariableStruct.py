@@ -121,9 +121,9 @@ class VariableStruct(Variable):
     Writing the contents of a struct is just about writing each of the struct
     fields one by one.
     """
-    def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len, error_label):
+    def emit_buffer_write(self, f, line_prefix, tlv_name, variable_name):
         for member in self.members:
-            member['object'].emit_buffer_write(f, line_prefix, variable_name + '.' +  member['name'], buffer_name, buffer_len, error_label)
+            member['object'].emit_buffer_write(f, line_prefix, tlv_name, variable_name + '.' +  member['name'])
 
 
     """

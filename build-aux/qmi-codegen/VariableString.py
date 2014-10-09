@@ -43,27 +43,32 @@ class VariableString(Variable):
             # Fixed-size strings
             self.needs_dispose = False
             self.length_prefix_size = 0
+            self.n_size_prefix_bytes = 0
             self.fixed_size = dictionary['fixed-size']
             self.max_size = ''
         else:
             self.is_fixed_size = False
+            self.fixed_size = '-1'
             # Variable-length strings in heap
             self.needs_dispose = True
             if 'size-prefix-format' in dictionary:
                 if dictionary['size-prefix-format'] == 'guint8':
                     self.length_prefix_size = 8
+                    self.n_size_prefix_bytes = 1
                 elif dictionary['size-prefix-format'] == 'guint16':
                     self.length_prefix_size = 16
+                    self.n_size_prefix_bytes = 2
                 else:
                     raise ValueError('Invalid size prefix format (%s): not guint8 or guint16' % dictionary['size-prefix-format'])
             # Strings which are given as the full value of a TLV and which don't have
             # a explicit 'size-prefix-format' will NOT have a length prefix
             elif 'type' in dictionary and dictionary['type'] == 'TLV':
                 self.length_prefix_size = 0
+                self.n_size_prefix_bytes = 0
             else:
                 # Default to UINT8
                 self.length_prefix_size = 8
-            self.fixed_size = ''
+                self.n_size_prefix_bytes = 1
             self.max_size = dictionary['max-size'] if 'max-size' in dictionary else ''
 
 
@@ -157,37 +162,18 @@ class VariableString(Variable):
     """
     Write a string to the raw byte buffer.
     """
-    def emit_buffer_write(self, f, line_prefix, variable_name, buffer_name, buffer_len, error_label):
-        translations = { 'lp'             : line_prefix,
-                         'variable_name'  : variable_name,
-                         'buffer_name'    : buffer_name,
-                         'error_label'    : error_label,
-                         'buffer_len'     : buffer_len }
+    def emit_buffer_write(self, f, line_prefix, tlv_name, variable_name):
+        translations = { 'lp'                  : line_prefix,
+                         'tlv_name'            : tlv_name,
+                         'variable_name'       : variable_name,
+                         'fixed_size'          : self.fixed_size,
+                         'n_size_prefix_bytes' : self.n_size_prefix_bytes }
 
-        if self.is_fixed_size:
-            translations['fixed_size'] = self.fixed_size
-            template = (
-                '${lp}/* Write the fixed-size string variable to the buffer */\n'
-                '${lp}if (${buffer_len} < ${fixed_size})\n'
-                '${lp}    goto ${error_label};\n'
-                '${lp}else\n'
-                '${lp}    qmi_utils_write_fixed_size_string_to_buffer (\n'
-                '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n'
-                '${lp}        ${fixed_size},\n'
-                '${lp}        ${variable_name});\n')
-        else:
-            translations['length_prefix_size'] = self.length_prefix_size
-            template = (
-                '${lp}/* Write the string variable to the buffer */\n'
-                '${lp}if (!${variable_name} || ${buffer_len} < ${length_prefix_size} + strlen (${variable_name}))\n'
-                '${lp}    goto ${error_label};\n'
-                '${lp}else\n'
-                '${lp}    qmi_utils_write_string_to_buffer (\n'
-                '${lp}       &${buffer_name},\n'
-                '${lp}       &${buffer_len},\n'
-                '${lp}       ${length_prefix_size},\n'
-                '${lp}       ${variable_name});\n')
+        template = (
+            '${lp}if (!qmi_message_tlv_write_string (self, ${n_size_prefix_bytes}, ${variable_name}, ${fixed_size}, error)) {\n'
+            '${lp}    g_prefix_error (error, "Cannot write string in TLV \'${tlv_name}\': ");\n'
+            '${lp}    goto error_out;\n'
+            '${lp}}\n')
 
         f.write(string.Template(template).substitute(translations))
 

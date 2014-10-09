@@ -133,8 +133,7 @@ class Message:
                     '                     QMI_CORE_ERROR,\n'
                     '                     QMI_CORE_ERROR_INVALID_ARGS,\n'
                     '                     "Message \'${name}\' has mandatory TLVs");\n'
-                    '        qmi_message_unref (self);\n'
-                    '        return NULL;\n'
+                    '        goto error_out;\n'
                     '    }\n')
                 cfile.write(string.Template(template).substitute(translations))
 
@@ -158,15 +157,21 @@ class Message:
                         '                     QMI_CORE_ERROR,\n'
                         '                     QMI_CORE_ERROR_INVALID_ARGS,\n'
                         '                     "Missing mandatory TLV \'${tlv_name}\' in message \'${name}\'");\n'
-                        '        qmi_message_unref (self);\n'
-                        '        return NULL;\n')
+                        '        goto error_out;\n')
                     cfile.write(string.Template(template).substitute(translations))
 
                 cfile.write(
                     '    }\n')
         cfile.write(
             '\n'
-            '    return self;\n'
+            '    return self;\n')
+        if self.input.fields is not None:
+            cfile.write(
+                '\n'
+                'error_out:\n'
+                '    qmi_message_unref (self);\n'
+                '    return NULL;\n')
+        cfile.write(
             '}\n')
 
 
