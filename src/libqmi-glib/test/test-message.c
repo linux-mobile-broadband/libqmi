@@ -399,17 +399,17 @@ test_message_tlv_write_reset (void)
 }
 
 static void
-test_message_tlv_write_8 (void)
+test_message_tlv_rw_8 (void)
 {
     QmiMessage *self;
     GError *error = NULL;
     gboolean ret;
     gsize init_offset;
     gsize expected_tlv_payload_size = 0;
-    const guint8 *buffer;
-    guint16 buffer_size = 0;
+    guint16 tlv_length = 0;
+    gsize offset;
     guint8 uint8;
-    gint8  int8;
+    gint8 int8;
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
 
@@ -433,21 +433,28 @@ test_message_tlv_write_8 (void)
     g_assert (ret);
 
     /* Now read */
-    buffer = qmi_message_get_raw_tlv (self, 0x01, &buffer_size);
-    g_assert (buffer);
-    g_assert_cmpuint (buffer_size, ==, expected_tlv_payload_size);
+    init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    g_assert_cmpuint (tlv_length, ==, expected_tlv_payload_size);
 
-    qmi_utils_read_guint8_from_buffer (&buffer, &buffer_size, &uint8);
+    offset = 0;
+
+    ret = qmi_message_tlv_read_guint8 (self, init_offset, &offset, &uint8, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpuint (uint8, ==, 0x12);
 
-    qmi_utils_read_gint8_from_buffer (&buffer, &buffer_size, &int8);
+    ret = qmi_message_tlv_read_gint8 (self, init_offset, &offset, &int8, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpuint (int8, ==, 0 - 0x12);
 
     qmi_message_unref (self);
 }
 
 static void
-test_message_tlv_write_16 (void)
+test_message_tlv_rw_16 (void)
 {
     guint n_bytes_prefixed;
 
@@ -458,9 +465,9 @@ test_message_tlv_write_16 (void)
         GError *error = NULL;
         gboolean ret;
         gsize init_offset;
+        guint16 tlv_length = 0;
+        gsize offset;
         gsize expected_tlv_payload_size = 0;
-        const guint8 *buffer;
-        guint16 buffer_size = 0;
         guint16 uint16;
         gint16 int16;
         guint i;
@@ -504,27 +511,40 @@ test_message_tlv_write_16 (void)
         g_assert (ret);
 
         /* Now read */
-        buffer = qmi_message_get_raw_tlv (self, 0x01, &buffer_size);
-        g_assert (buffer);
-        g_assert_cmpuint (buffer_size, ==, expected_tlv_payload_size);
+        init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+        g_assert_no_error (error);
+        g_assert (init_offset > 0);
+        g_assert_cmpuint (tlv_length, ==, expected_tlv_payload_size);
+
+        offset = 0;
 
         for (i = 0; i < n_bytes_prefixed; i++) {
             guint8 aux;
 
-            qmi_utils_read_guint8_from_buffer (&buffer, &buffer_size, &aux);
+            ret = qmi_message_tlv_read_guint8 (self, init_offset, &offset, &aux, &error);
+            g_assert_no_error (error);
+            g_assert (ret);
             g_assert_cmpuint (aux, ==, 0xFF);
         }
 
-        qmi_utils_read_guint16_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &uint16);
+        ret = qmi_message_tlv_read_guint16 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint16, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (uint16, ==, 0x1212);
 
-        qmi_utils_read_gint16_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &int16);
+        ret = qmi_message_tlv_read_gint16 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int16, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (int16, ==, 0 - 0x1212);
 
-        qmi_utils_read_guint16_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_BIG, &uint16);
+        ret = qmi_message_tlv_read_guint16 (self, init_offset, &offset, QMI_ENDIAN_BIG, &uint16, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (uint16, ==, 0x1212);
 
-        qmi_utils_read_gint16_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_BIG, &int16);
+        ret = qmi_message_tlv_read_gint16 (self, init_offset, &offset, QMI_ENDIAN_BIG, &int16, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (int16, ==, 0 - 0x1212);
 
         qmi_message_unref (self);
@@ -532,7 +552,7 @@ test_message_tlv_write_16 (void)
 }
 
 static void
-test_message_tlv_write_32 (void)
+test_message_tlv_rw_32 (void)
 {
     guint n_bytes_prefixed;
 
@@ -543,9 +563,9 @@ test_message_tlv_write_32 (void)
         GError *error = NULL;
         gboolean ret;
         gsize init_offset;
+        guint16 tlv_length = 0;
+        gsize offset;
         gsize expected_tlv_payload_size = 0;
-        const guint8 *buffer;
-        guint16 buffer_size = 0;
         guint32 uint32;
         gint32 int32;
         guint i;
@@ -589,27 +609,40 @@ test_message_tlv_write_32 (void)
         g_assert (ret);
 
         /* Now read */
-        buffer = qmi_message_get_raw_tlv (self, 0x01, &buffer_size);
-        g_assert (buffer);
-        g_assert_cmpuint (buffer_size, ==, expected_tlv_payload_size);
+        init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+        g_assert_no_error (error);
+        g_assert (init_offset > 0);
+        g_assert_cmpuint (tlv_length, ==, expected_tlv_payload_size);
+
+        offset = 0;
 
         for (i = 0; i < n_bytes_prefixed; i++) {
             guint8 aux;
 
-            qmi_utils_read_guint8_from_buffer (&buffer, &buffer_size, &aux);
+            ret = qmi_message_tlv_read_guint8 (self, init_offset, &offset, &aux, &error);
+            g_assert_no_error (error);
+            g_assert (ret);
             g_assert_cmpuint (aux, ==, 0xFF);
         }
 
-        qmi_utils_read_guint32_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &uint32);
+        ret = qmi_message_tlv_read_guint32 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint32, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (uint32, ==, 0x12121212);
 
-        qmi_utils_read_gint32_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &int32);
+        ret = qmi_message_tlv_read_gint32 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int32, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (int32, ==, 0 - 0x12121212);
 
-        qmi_utils_read_guint32_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_BIG, &uint32);
+        ret = qmi_message_tlv_read_guint32 (self, init_offset, &offset, QMI_ENDIAN_BIG, &uint32, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (uint32, ==, 0x12121212);
 
-        qmi_utils_read_gint32_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_BIG, &int32);
+        ret = qmi_message_tlv_read_gint32 (self, init_offset, &offset, QMI_ENDIAN_BIG, &int32, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (int32, ==, 0 - 0x12121212);
 
         qmi_message_unref (self);
@@ -617,7 +650,7 @@ test_message_tlv_write_32 (void)
 }
 
 static void
-test_message_tlv_write_64 (void)
+test_message_tlv_rw_64 (void)
 {
     guint n_bytes_prefixed;
 
@@ -628,9 +661,9 @@ test_message_tlv_write_64 (void)
         GError *error = NULL;
         gboolean ret;
         gsize init_offset;
+        guint16 tlv_length = 0;
+        gsize offset;
         gsize expected_tlv_payload_size = 0;
-        const guint8 *buffer;
-        guint16 buffer_size = 0;
         guint64 uint64;
         gint64 int64;
         guint i;
@@ -674,27 +707,40 @@ test_message_tlv_write_64 (void)
         g_assert (ret);
 
         /* Now read */
-        buffer = qmi_message_get_raw_tlv (self, 0x01, &buffer_size);
-        g_assert (buffer);
-        g_assert_cmpuint (buffer_size, ==, expected_tlv_payload_size);
+        init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+        g_assert_no_error (error);
+        g_assert (init_offset > 0);
+        g_assert_cmpuint (tlv_length, ==, expected_tlv_payload_size);
+
+        offset = 0;
 
         for (i = 0; i < n_bytes_prefixed; i++) {
             guint8 aux;
 
-            qmi_utils_read_guint8_from_buffer (&buffer, &buffer_size, &aux);
+            ret = qmi_message_tlv_read_guint8 (self, init_offset, &offset, &aux, &error);
+            g_assert_no_error (error);
+            g_assert (ret);
             g_assert_cmpuint (aux, ==, 0xFF);
         }
 
-        qmi_utils_read_guint64_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &uint64);
+        ret = qmi_message_tlv_read_guint64 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint64, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (uint64, ==, 0x1212121212121212);
 
-        qmi_utils_read_gint64_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &int64);
+        ret = qmi_message_tlv_read_gint64 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int64, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (int64, ==, 0 - 0x1212121212121212);
 
-        qmi_utils_read_guint64_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_BIG, &uint64);
+        ret = qmi_message_tlv_read_guint64 (self, init_offset, &offset, QMI_ENDIAN_BIG, &uint64, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (uint64, ==, 0x1212121212121212);
 
-        qmi_utils_read_gint64_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_BIG, &int64);
+        ret = qmi_message_tlv_read_gint64 (self, init_offset, &offset, QMI_ENDIAN_BIG, &int64, &error);
+        g_assert_no_error (error);
+        g_assert (ret);
         g_assert_cmpuint (int64, ==, 0 - 0x1212121212121212);
 
         qmi_message_unref (self);
@@ -702,7 +748,7 @@ test_message_tlv_write_64 (void)
 }
 
 static void
-test_message_tlv_write_sized (void)
+test_message_tlv_rw_sized (void)
 {
     guint sized[] = { 1, 2, 4, 8 };
     guint sized_i;
@@ -717,9 +763,9 @@ test_message_tlv_write_sized (void)
             GError *error = NULL;
             gboolean ret;
             gsize init_offset;
+            guint16 tlv_length = 0;
+            gsize offset;
             gsize expected_tlv_payload_size = 0;
-            const guint8 *buffer;
-            guint16 buffer_size = 0;
             guint64 uint64;
             guint i;
             guint64 value;
@@ -762,21 +808,26 @@ test_message_tlv_write_sized (void)
             g_assert (ret);
 
             /* Now read */
-            buffer = qmi_message_get_raw_tlv (self, 0x01, &buffer_size);
-            g_assert (buffer);
-            g_assert_cmpuint (buffer_size, ==, expected_tlv_payload_size);
+            init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+            g_assert_no_error (error);
+            g_assert (init_offset > 0);
+            g_assert_cmpuint (tlv_length, ==, expected_tlv_payload_size);
+
+            offset = 0;
 
             for (i = 0; i < n_bytes_prefixed; i++) {
                 guint8 aux;
 
-                qmi_utils_read_guint8_from_buffer (&buffer, &buffer_size, &aux);
+                ret = qmi_message_tlv_read_guint8 (self, init_offset, &offset, &aux, &error);
+                g_assert_no_error (error);
+                g_assert (ret);
                 g_assert_cmpuint (aux, ==, 0xFF);
             }
 
-            qmi_utils_read_sized_guint_from_buffer (&buffer, &buffer_size, sized[sized_i], QMI_ENDIAN_LITTLE, &uint64);
+            qmi_message_tlv_read_sized_guint (self, init_offset, &offset, sized[sized_i], QMI_ENDIAN_LITTLE, &uint64, &error);
             g_assert_cmpuint (uint64, ==, value);
 
-            qmi_utils_read_sized_guint_from_buffer (&buffer, &buffer_size, sized[sized_i], QMI_ENDIAN_BIG, &uint64);
+            qmi_message_tlv_read_sized_guint (self, init_offset, &offset, sized[sized_i], QMI_ENDIAN_BIG, &uint64, &error);
             g_assert_cmpuint (uint64, ==, value);
 
             qmi_message_unref (self);
@@ -785,15 +836,15 @@ test_message_tlv_write_sized (void)
 }
 
 static void
-test_message_tlv_write_strings (void)
+test_message_tlv_rw_strings (void)
 {
     QmiMessage *self;
     GError *error = NULL;
     gboolean ret;
     gsize init_offset;
+    guint16 tlv_length = 0;
+    gsize offset;
     gsize expected_tlv_payload_size = 0;
-    const guint8 *buffer;
-    guint16 buffer_size = 0;
     gchar *str;
     gchar fixed_str[5];
 
@@ -821,40 +872,105 @@ test_message_tlv_write_strings (void)
     g_assert_no_error (error);
     g_assert (ret);
 
+    /* FIXED SIZE */
+    expected_tlv_payload_size += 0;
+    ret = qmi_message_tlv_write_string (self, 0, "", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+
+    /* 1-BYTE PREFIX */
+    expected_tlv_payload_size += 1;
+    ret = qmi_message_tlv_write_string (self, 1, "", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+
+    /* 2-BYTE PREFIX */
+    expected_tlv_payload_size += 2;
+    ret = qmi_message_tlv_write_string (self, 2, "", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+
+    /* 0-BYTE PREFIX (same as fixed size, but LAST in TLV) */
+    expected_tlv_payload_size += 4;
+    ret = qmi_message_tlv_write_string (self, 0, "abcd", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+
     ret = qmi_message_tlv_write_complete (self, init_offset, &error);
     g_assert_no_error (error);
     g_assert (ret);
 
     /* Now read */
-    buffer = qmi_message_get_raw_tlv (self, 0x01, &buffer_size);
-    g_assert (buffer);
-    g_assert_cmpuint (buffer_size, ==, expected_tlv_payload_size);
+    init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    g_assert_cmpuint (tlv_length, ==, expected_tlv_payload_size);
 
-    qmi_utils_read_fixed_size_string_from_buffer (&buffer, &buffer_size, 4, fixed_str);
+    offset = 0;
+
+    ret = qmi_message_tlv_read_fixed_size_string (self, init_offset, &offset, 4, fixed_str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     fixed_str[4] = '\0';
     g_assert_cmpstr (fixed_str, ==, "abcd");
 
-    qmi_utils_read_string_from_buffer (&buffer, &buffer_size, 8, 0, &str);
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 1, 0, &str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpstr (str, ==, "abcd");
     g_free (str);
 
-    qmi_utils_read_string_from_buffer (&buffer, &buffer_size, 16, 0, &str);
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 2, 0, &str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpstr (str, ==, "abcd");
+    g_free (str);
+
+    fixed_str[0] = 'z';
+    ret = qmi_message_tlv_read_fixed_size_string (self, init_offset, &offset, 0, fixed_str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    g_assert_cmpuint (fixed_str[0], ==, 'z');
+
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 1, 0, &str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    g_assert_cmpstr (str, ==, "");
+    g_free (str);
+
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 2, 0, &str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    g_assert_cmpstr (str, ==, "");
+    g_free (str);
+
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 0, 0, &str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    g_assert_cmpstr (str, ==, "abcd");
+    g_free (str);
+
+    /* There's no other string added, but we can try to read a new one without
+     * size prefix, and we should get a 0-length string */
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 0, 0, &str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    g_assert_cmpstr (str, ==, "");
     g_free (str);
 
     qmi_message_unref (self);
 }
 
 static void
-test_message_tlv_write_mixed (void)
+test_message_tlv_rw_mixed (void)
 {
     QmiMessage *self;
     GError *error = NULL;
     gboolean ret;
     gsize init_offset;
+    guint16 tlv_length = 0;
+    gsize offset;
     gsize expected_tlv_payload_size = 0;
-    const guint8 *buffer;
-    guint16 buffer_size = 0;
     guint8 uint8;
     gint8  int8;
     guint16 uint16;
@@ -931,32 +1047,51 @@ test_message_tlv_write_mixed (void)
     g_assert (ret);
 
     /* Now read */
-    buffer = qmi_message_get_raw_tlv (self, 0x01, &buffer_size);
-    g_assert (buffer);
-    g_assert_cmpuint (buffer_size, ==, expected_tlv_payload_size);
+    init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    g_assert_cmpuint (tlv_length, ==, expected_tlv_payload_size);
 
-    qmi_utils_read_guint8_from_buffer (&buffer, &buffer_size, &uint8);
+    offset = 0;
+
+    ret = qmi_message_tlv_read_guint8 (self, init_offset, &offset, &uint8, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpuint (uint8, ==, 0x12);
 
-    qmi_utils_read_gint8_from_buffer (&buffer, &buffer_size, &int8);
+    ret = qmi_message_tlv_read_gint8 (self, init_offset, &offset, &int8, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpuint (int8, ==, 0 - 0x12);
 
-    qmi_utils_read_guint16_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &uint16);
+    ret = qmi_message_tlv_read_guint16 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint16, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpuint (uint16, ==, 0x1212);
 
-    qmi_utils_read_gint16_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &int16);
+    ret = qmi_message_tlv_read_gint16 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int16, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpuint (int16, ==, 0 - 0x1212);
 
-    qmi_utils_read_guint32_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &uint32);
+    ret = qmi_message_tlv_read_guint32 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint32, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpuint (uint32, ==, 0x12121212);
 
-    qmi_utils_read_gint32_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &int32);
+    ret = qmi_message_tlv_read_gint32 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int32, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpuint (int32, ==, 0 - 0x12121212);
 
-    qmi_utils_read_guint64_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &uint64);
+    ret = qmi_message_tlv_read_guint64 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint64, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpuint (uint64, ==, 0x1212121212121212);
 
-    qmi_utils_read_gint64_from_buffer (&buffer, &buffer_size, QMI_ENDIAN_LITTLE, &int64);
+    ret = qmi_message_tlv_read_gint64 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int64, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
     g_assert_cmpuint (int64, ==, 0 - 0x1212121212121212);
 
     qmi_message_unref (self);
@@ -1040,6 +1175,16 @@ test_message_tlv_write_overflow (void)
     g_assert (!ret);
     g_clear_error (&error);
 
+    ret = qmi_message_tlv_write_string (self, 2, "a", -1, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+
+    /* Writing an empty string with a 0-size prefix is actually valid :) */
+    ret = qmi_message_tlv_write_string (self, 0, "", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+
     ret = qmi_message_tlv_write_complete (self, init_offset, &error);
     g_assert_no_error (error);
     g_assert (ret);
@@ -1050,6 +1195,241 @@ test_message_tlv_write_overflow (void)
     g_assert (init_offset == 0);
     g_clear_error (&error);
 
+    qmi_message_unref (self);
+}
+
+static void
+test_message_tlv_read_overflow_message (void)
+{
+    QmiMessage *self;
+    GError *error = NULL;
+    gsize init_offset;
+    guint16 tlv_length = 0;
+    gsize offset;
+    gboolean ret;
+    gchar *str;
+    guint8 uint8;
+    gint8  int8;
+    guint16 uint16;
+    gint16 int16;
+    guint32 uint32;
+    gint32 int32;
+    guint64 uint64;
+    gint64 int64;
+
+    self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
+    init_offset = qmi_message_tlv_write_init (self, 0x01, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    /* Create a 1-byte size prefixed string manually, with a wrong length (out of message) */
+    ret = qmi_message_tlv_write_guint8 (self, 5, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    ret = qmi_message_tlv_write_string (self, 0, "abcd", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    ret = qmi_message_tlv_write_complete (self, init_offset, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    /* Now read */
+    init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    offset = 0;
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 1, 0, &str, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    qmi_message_unref (self);
+
+    self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
+    init_offset = qmi_message_tlv_write_init (self, 0x01, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    ret = qmi_message_tlv_write_string (self, 1, "abcd", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    ret = qmi_message_tlv_write_complete (self, init_offset, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    /* Now read */
+    init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    offset = 0;
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 1, 0, &str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    g_assert_cmpstr (str, ==, "abcd");
+    g_free (str);
+    /* Reading more will fail */
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 1, 0, &str, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 2, 0, &str, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_guint8 (self, init_offset, &offset, &uint8, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_gint8 (self, init_offset, &offset, &int8, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_guint16 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint16, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_gint16 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int16, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_guint32 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint32, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_gint32 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int32, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_guint64 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint64, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_gint64 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int64, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    qmi_message_unref (self);
+}
+
+static void
+test_message_tlv_read_overflow_tlv (void)
+{
+    QmiMessage *self;
+    GError *error = NULL;
+    gsize init_offset;
+    guint16 tlv_length = 0;
+    gsize offset;
+    gboolean ret;
+    gchar *str;
+    guint8 uint8;
+    gint8  int8;
+    guint16 uint16;
+    gint16 int16;
+    guint32 uint32;
+    gint32 int32;
+    guint64 uint64;
+    gint64 int64;
+
+    self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
+    init_offset = qmi_message_tlv_write_init (self, 0x01, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    /* Create a 1-byte size prefixed string manually, with a wrong length (out of tlv) */
+    ret = qmi_message_tlv_write_guint8 (self, 5, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    ret = qmi_message_tlv_write_string (self, 0, "abcd", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    ret = qmi_message_tlv_write_complete (self, init_offset, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    init_offset = qmi_message_tlv_write_init (self, 0x02, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    ret = qmi_message_tlv_write_string (self, 1, "efgh", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    ret = qmi_message_tlv_write_complete (self, init_offset, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    /* Now read */
+    init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    offset = 0;
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 1, 0, &str, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    qmi_message_unref (self);
+
+
+    self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
+    init_offset = qmi_message_tlv_write_init (self, 0x01, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    ret = qmi_message_tlv_write_string (self, 1, "abcd", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    ret = qmi_message_tlv_write_complete (self, init_offset, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    init_offset = qmi_message_tlv_write_init (self, 0x02, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    ret = qmi_message_tlv_write_string (self, 1, "efgh", -1, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    ret = qmi_message_tlv_write_complete (self, init_offset, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    /* Now read */
+    init_offset = qmi_message_tlv_read_init (self, 0x01, &tlv_length, &error);
+    g_assert_no_error (error);
+    g_assert (init_offset > 0);
+    offset = 0;
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 1, 0, &str, &error);
+    g_assert_no_error (error);
+    g_assert (ret);
+    g_assert_cmpstr (str, ==, "abcd");
+    g_free (str);
+    /* Reading more will fail */
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 1, 0, &str, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_string (self, init_offset, &offset, 2, 0, &str, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_guint8 (self, init_offset, &offset, &uint8, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_gint8 (self, init_offset, &offset, &int8, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_guint16 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint16, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_gint16 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int16, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_guint32 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint32, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_gint32 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int32, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_guint64 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &uint64, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
+    ret = qmi_message_tlv_read_gint64 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &int64, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
+    g_assert (!ret);
+    g_clear_error (&error);
     qmi_message_unref (self);
 }
 
@@ -1125,16 +1505,18 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/new/response/ok",    test_message_new_response_ok);
     g_test_add_func ("/libqmi-glib/message/new/response/error", test_message_new_response_error);
 
-    g_test_add_func ("/libqmi-glib/message/tlv-write/empty",    test_message_tlv_write_empty);
-    g_test_add_func ("/libqmi-glib/message/tlv-write/reset",    test_message_tlv_write_reset);
-    g_test_add_func ("/libqmi-glib/message/tlv-write/8",        test_message_tlv_write_8);
-    g_test_add_func ("/libqmi-glib/message/tlv-write/16",       test_message_tlv_write_16);
-    g_test_add_func ("/libqmi-glib/message/tlv-write/32",       test_message_tlv_write_32);
-    g_test_add_func ("/libqmi-glib/message/tlv-write/64",       test_message_tlv_write_64);
-    g_test_add_func ("/libqmi-glib/message/tlv-write/sized",    test_message_tlv_write_sized);
-    g_test_add_func ("/libqmi-glib/message/tlv-write/strings",  test_message_tlv_write_strings);
-    g_test_add_func ("/libqmi-glib/message/tlv-write/mixed",    test_message_tlv_write_mixed);
-    g_test_add_func ("/libqmi-glib/message/tlv-write/overflow", test_message_tlv_write_overflow);
+    g_test_add_func ("/libqmi-glib/message/tlv-write/empty",           test_message_tlv_write_empty);
+    g_test_add_func ("/libqmi-glib/message/tlv-write/reset",           test_message_tlv_write_reset);
+    g_test_add_func ("/libqmi-glib/message/tlv-rw/8",                  test_message_tlv_rw_8);
+    g_test_add_func ("/libqmi-glib/message/tlv-rw/16",                 test_message_tlv_rw_16);
+    g_test_add_func ("/libqmi-glib/message/tlv-rw/32",                 test_message_tlv_rw_32);
+    g_test_add_func ("/libqmi-glib/message/tlv-rw/64",                 test_message_tlv_rw_64);
+    g_test_add_func ("/libqmi-glib/message/tlv-rw/sized",              test_message_tlv_rw_sized);
+    g_test_add_func ("/libqmi-glib/message/tlv-rw/strings",            test_message_tlv_rw_strings);
+    g_test_add_func ("/libqmi-glib/message/tlv-rw/mixed",              test_message_tlv_rw_mixed);
+    g_test_add_func ("/libqmi-glib/message/tlv-write/overflow",        test_message_tlv_write_overflow);
+    g_test_add_func ("/libqmi-glib/message/tlv-read/overflow-message", test_message_tlv_read_overflow_message);
+    g_test_add_func ("/libqmi-glib/message/tlv-read/overflow-tlv",     test_message_tlv_read_overflow_tlv);
 
     g_test_add_func ("/libqmi-glib/message/set-transaction-id/ctl",      test_message_set_transaction_id_ctl);
     g_test_add_func ("/libqmi-glib/message/set-transaction-id/services", test_message_set_transaction_id_services);
