@@ -114,6 +114,8 @@ test_message_parse_common (const guint8 *buffer,
     } while (array->len > 0);
 
     g_assert_cmpuint (n_messages, ==, n_expected_messages);
+
+    g_byte_array_unref (array);
 }
 
 static void
