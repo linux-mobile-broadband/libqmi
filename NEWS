@@ -1,4 +1,13 @@
 
+Overview of changes in libqmi 1.10.4
+----------------------------------------
+
+* Ensure available buffer size when reading string/array size variables.
+* Avoid buffer overlow in emit_input_tlv_add().
+* Assert input buffer size when writing strings to buffer.
+* Fix segfault due to race condition in the QmiProxy.
+
+
 Overview of changes in libqmi 1.10.2
 ----------------------------------------
 
