@@ -142,8 +142,8 @@ get_n_clients_with_device (QmiProxy *self,
     for (l = self->priv->clients; l; l = g_list_next (l)) {
         Client *client = l->data;
 
-        if (device == client->device ||
-            g_str_equal (qmi_device_get_path (device), qmi_device_get_path (client->device)))
+        if (client->device && (device == client->device ||
+            g_str_equal (qmi_device_get_path (device), qmi_device_get_path (client->device))))
             n++;
     }
 
@@ -171,8 +171,8 @@ connection_close (Client *client)
         for (l = self->priv->devices; l; l = g_list_next (l)) {
             QmiDevice *device_in_list = QMI_DEVICE (l->data);
 
-            if (device == device_in_list ||
-                g_str_equal (qmi_device_get_path (device), qmi_device_get_path (device_in_list))) {
+            if (device_in_list && (device == device_in_list ||
+                g_str_equal (qmi_device_get_path (device), qmi_device_get_path (device_in_list)))) {
                 g_debug ("closing device '%s': no longer used", qmi_device_get_path_display (device));
                 qmi_device_close (device_in_list, NULL);
                 g_object_unref (device_in_list);
