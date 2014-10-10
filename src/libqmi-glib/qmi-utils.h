@@ -47,46 +47,60 @@ typedef enum {
 
 /* Reading/Writing integer variables */
 
+G_DEPRECATED
 void qmi_utils_read_guint8_from_buffer  (const guint8 **buffer,
                                          guint16       *buffer_size,
                                          guint8        *out);
+
+G_DEPRECATED
 void qmi_utils_read_gint8_from_buffer   (const guint8 **buffer,
                                          guint16       *buffer_size,
                                          gint8         *out);
 
+G_DEPRECATED
 void qmi_utils_read_guint16_from_buffer (const guint8 **buffer,
                                          guint16       *buffer_size,
                                          QmiEndian      endian,
                                          guint16       *out);
+
+G_DEPRECATED
 void qmi_utils_read_gint16_from_buffer  (const guint8 **buffer,
                                          guint16       *buffer_size,
                                          QmiEndian      endian,
                                          gint16        *out);
 
+G_DEPRECATED
 void qmi_utils_read_guint32_from_buffer (const guint8 **buffer,
                                          guint16       *buffer_size,
                                          QmiEndian      endian,
                                          guint32       *out);
+
+G_DEPRECATED
 void qmi_utils_read_gint32_from_buffer  (const guint8 **buffer,
                                          guint16       *buffer_size,
                                          QmiEndian      endian,
                                          gint32        *out);
 
+G_DEPRECATED
 void qmi_utils_read_guint64_from_buffer (const guint8 **buffer,
                                          guint16       *buffer_size,
                                          QmiEndian      endian,
                                          guint64       *out);
+
+G_DEPRECATED
 void qmi_utils_read_gint64_from_buffer  (const guint8 **buffer,
                                          guint16       *buffer_size,
                                          QmiEndian      endian,
                                          gint64        *out);
 
+G_DEPRECATED
 void qmi_utils_read_sized_guint_from_buffer (const guint8 **buffer,
                                              guint16       *buffer_size,
                                              guint          n_bytes,
                                              QmiEndian      endian,
                                              guint64       *out);
 
+G_DEPRECATED
 void qmi_utils_read_gfloat_from_buffer  (const guint8 **buffer,
                                          guint16       *buffer_size,
                                          gfloat        *out);
@@ -146,6 +160,7 @@ void qmi_utils_write_sized_guint_to_buffer (guint8  **buffer,
 
 /* Reading/Writing string variables */
 
+G_DEPRECATED
 void qmi_utils_read_string_from_buffer (const guint8 **buffer,
                                         guint16       *buffer_size,
                                         guint8         length_prefix_size,
@@ -158,6 +173,7 @@ void qmi_utils_write_string_to_buffer  (guint8      **buffer,
                                         guint8        length_prefix_size,
                                         const gchar  *in);
 
+G_DEPRECATED
 void qmi_utils_read_fixed_size_string_from_buffer (const guint8 **buffer,
                                                    guint16       *buffer_size,
                                                    guint16        fixed_size,
