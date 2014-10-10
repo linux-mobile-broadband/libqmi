@@ -104,17 +104,9 @@ class VariableStruct(Variable):
     Reading the contents of a struct is just about reading each of the struct
     fields one by one.
     """
-    def emit_buffer_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+    def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
         for member in self.members:
-            member['object'].emit_buffer_read(f, line_prefix, variable_name + '.' +  member['name'], buffer_name, buffer_len)
-
-
-    """
-    Emits the code involved in computing the size of the variable.
-    """
-    def emit_size_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
-        for member in self.members:
-            member['object'].emit_size_read(f, line_prefix, variable_name, buffer_name, buffer_len)
+            member['object'].emit_buffer_read(f, line_prefix, tlv_out, error, variable_name + '.' +  member['name'])
 
 
     """
@@ -130,28 +122,27 @@ class VariableStruct(Variable):
     The struct will be printed as a list of fields enclosed between square
     brackets
     """
-    def emit_get_printable(self, f, line_prefix, printable, buffer_name, buffer_len):
-        translations = { 'lp'        : line_prefix,
-                         'printable' : printable }
+    def emit_get_printable(self, f, line_prefix):
+        translations = { 'lp' : line_prefix }
 
         template = (
-            '${lp}g_string_append (${printable}, "[");\n')
+            '${lp}g_string_append (printable, "[");\n')
         f.write(string.Template(template).substitute(translations))
 
         for member in self.members:
             translations['variable_name'] = member['name']
             template = (
-                '${lp}g_string_append (${printable}, " ${variable_name} = \'");\n')
+                '${lp}g_string_append (printable, " ${variable_name} = \'");\n')
             f.write(string.Template(template).substitute(translations))
 
-            member['object'].emit_get_printable(f, line_prefix, printable, buffer_name, buffer_len)
+            member['object'].emit_get_printable(f, line_prefix)
 
             template = (
-                '${lp}g_string_append (${printable}, "\'");\n')
+                '${lp}g_string_append (printable, "\'");\n')
             f.write(string.Template(template).substitute(translations))
 
         template = (
-            '${lp}g_string_append (${printable}, " ]");\n')
+            '${lp}g_string_append (printable, " ]");\n')
         f.write(string.Template(template).substitute(translations))
 
 

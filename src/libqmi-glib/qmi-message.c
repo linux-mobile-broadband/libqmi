@@ -1829,6 +1829,21 @@ qmi_message_tlv_read_fixed_size_string (QmiMessage  *self,
     return TRUE;
 }
 
+guint16
+__qmi_message_tlv_read_remaining_size (QmiMessage *self,
+                                       gsize       tlv_offset,
+                                       gsize       offset)
+{
+    struct tlv *tlv;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    tlv = (struct tlv *) &(self->data[tlv_offset]);
+
+    g_warn_if_fail (tlv->length >= offset);
+    return (tlv->length >= offset ? (tlv->length - offset) : 0);
+}
+
 /*****************************************************************************/
 
 /**

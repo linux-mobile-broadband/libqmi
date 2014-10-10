@@ -56,79 +56,39 @@ class VariableInteger(Variable):
     """
     Read a single integer from the raw byte buffer
     """
-    def emit_buffer_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+    def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
         translations = { 'lp'             : line_prefix,
+                         'tlv_out'        : tlv_out,
+                         'variable_name'  : variable_name,
+                         'error'          : error,
                          'public_format'  : self.public_format,
                          'private_format' : self.private_format,
-                         'len'            : self.guint_sized_size,
-                         'variable_name'  : variable_name,
-                         'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len,
-                         'endian'         : self.endian }
+                         'len'            : self.guint_sized_size }
+
+        if self.private_format != 'guint8' and self.private_format != 'gint8' and self.private_format != 'gfloat':
+            translations['endian'] = ' ' + self.endian + ','
+        else:
+            translations['endian'] = ''
 
         if self.format == 'guint-sized':
             template = (
-                '${lp}/* Read the ${len}-byte long variable from the buffer */\n'
-                '${lp}qmi_utils_read_sized_guint_from_buffer (\n'
-                '${lp}    &${buffer_name},\n'
-                '${lp}    &${buffer_len},\n'
-                '${lp}    ${len},\n'
-                '${lp}    ${endian},\n'
-                '${lp}    &(${variable_name}));\n')
+                '${lp}if (!qmi_message_tlv_read_sized_guint (message, init_offset, &offset, ${len},${endian} &(${variable_name}), ${error}))\n'
+                '${lp}    goto ${tlv_out};\n')
         elif self.private_format == self.public_format:
             template = (
-                '${lp}/* Read the ${private_format} variable from the buffer */\n'
-                '${lp}qmi_utils_read_${private_format}_from_buffer (\n'
-                '${lp}    &${buffer_name},\n'
-                '${lp}    &${buffer_len},\n')
-            if self.private_format != 'guint8' and self.private_format != 'gint8' and self.private_format != 'gfloat':
-                template += (
-                    '${lp}    ${endian},\n')
-            template += (
-                '${lp}    &(${variable_name}));\n')
+                '${lp}if (!qmi_message_tlv_read_${private_format} (message, init_offset, &offset,${endian} &(${variable_name}), ${error}))\n'
+                '${lp}    goto ${tlv_out};\n')
         else:
             template = (
                 '${lp}{\n'
                 '${lp}    ${private_format} tmp;\n'
                 '\n'
-                '${lp}    /* Read the ${private_format} variable from the buffer */\n'
-                '${lp}    qmi_utils_read_${private_format}_from_buffer (\n'
-                '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n')
-            if self.private_format != 'guint8' and self.private_format != 'gint8':
-                template += (
-                    '${lp}        ${endian},\n')
-            template += (
-                '${lp}        &tmp);\n'
+                '${lp}    if (!qmi_message_tlv_read_${private_format} (message, init_offset, &offset,${endian} &tmp, ${error}))\n'
+                '${lp}        goto ${tlv_out};\n'
                 '${lp}    ${variable_name} = (${public_format})tmp;\n'
                 '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
 
-
-    """
-    Emits the code involved in computing the size of the variable.
-    """
-    def emit_size_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
-        translations = { 'lp'            : line_prefix,
-                         'len'           : self.guint_sized_size,
-                         'variable_name' : variable_name }
-        template = ''
-        if self.format == 'guint-sized':
-            template += (
-                '${lp}${variable_name} += ${len};\n')
-        elif self.private_format == 'guint8' or self.private_format == 'gint8':
-            template += (
-                '${lp}${variable_name} += 1;\n')
-        elif self.private_format == 'guint16' or self.private_format == 'gint16':
-            template += (
-                '${lp}${variable_name} += 2;\n')
-        elif self.private_format == 'guint32' or self.private_format == 'gint32' or self.private_format == 'gfloat':
-            template += (
-                '${lp}${variable_name} += 4;\n')
-        elif self.private_format == 'guint64' or self.private_format == 'gint64':
-            template += (
-                '${lp}${variable_name} += 8;\n')
-        f.write(string.Template(template).substitute(translations))
 
     """
     Return the data type size of fixed c-types
@@ -229,12 +189,14 @@ class VariableInteger(Variable):
                          'private_format' : self.private_format,
                          'public_format'  : self.public_format,
                          'len'            : self.guint_sized_size,
-                         'printable'      : printable,
-                         'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len,
                          'common_format'  : common_format,
-                         'common_cast'    : common_cast,
-                         'endian'         : self.endian }
+                         'common_cast'    : common_cast }
+
+        if self.private_format != 'guint8' and self.private_format != 'gint8' and self.private_format != 'gfloat':
+            translations['endian'] = ' ' + self.endian + ','
+        else:
+            translations['endian'] = ''
+
         template = (
             '\n'
             '${lp}{\n'
@@ -243,42 +205,28 @@ class VariableInteger(Variable):
 
         if self.format == 'guint-sized':
             template += (
-                '${lp}    /* Read the ${len}-byte long variable from the buffer */\n'
-                '${lp}    qmi_utils_read_sized_guint_from_buffer (\n'
-                '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n'
-                '${lp}        ${len},\n'
-                '${lp}        ${endian},\n'
-                '${lp}        &tmp);\n'
-                '\n')
+                '${lp}    if (!qmi_message_tlv_read_sized_guint (message, init_offset, &offset, ${len},${endian} &tmp, &error))\n'
+                '${lp}        goto out;\n')
         else:
             template += (
-                '${lp}    /* Read the ${private_format} variable from the buffer */\n'
-                '${lp}    qmi_utils_read_${private_format}_from_buffer (\n'
-                '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n')
-            if self.private_format != 'guint8' and self.private_format != 'gint8' and self.private_format != 'gfloat':
-                template += (
-                    '${lp}        ${endian},\n')
-            template += (
-                '${lp}        &tmp);\n'
-                '\n')
+                '${lp}    if (!qmi_message_tlv_read_${private_format} (message, init_offset, &offset,${endian} &tmp, &error))\n'
+                '${lp}        goto out;\n')
 
         if self.public_format == 'gboolean':
             template += (
-                '${lp}    g_string_append_printf (${printable}, "%s", tmp ? "yes" : "no");\n')
+                '${lp}    g_string_append_printf (printable, "%s", tmp ? "yes" : "no");\n')
         elif self.public_format != self.private_format:
             translations['public_type_underscore'] = utils.build_underscore_name_from_camelcase(self.public_format)
             translations['public_type_underscore_upper'] = utils.build_underscore_name_from_camelcase(self.public_format).upper()
             template += (
                 '#if defined  __${public_type_underscore_upper}_IS_ENUM__\n'
-                '${lp}    g_string_append_printf (${printable}, "%s", ${public_type_underscore}_get_string ((${public_format})tmp));\n'
+                '${lp}    g_string_append_printf (printable, "%s", ${public_type_underscore}_get_string ((${public_format})tmp));\n'
                 '#elif defined  __${public_type_underscore_upper}_IS_FLAGS__\n'
                 '${lp}    {\n'
                 '${lp}        gchar *flags_str;\n'
                 '\n'
                 '${lp}        flags_str = ${public_type_underscore}_build_string_from_mask ((${public_format})tmp);\n'
-                '${lp}        g_string_append_printf (${printable}, "%s", flags_str);\n'
+                '${lp}        g_string_append_printf (printable, "%s", flags_str);\n'
                 '${lp}        g_free (flags_str);\n'
                 '${lp}    }\n'
                 '#else\n'
@@ -286,7 +234,7 @@ class VariableInteger(Variable):
                 '#endif\n')
         else:
             template += (
-                '${lp}    g_string_append_printf (${printable}, "${common_format}", ${common_cast}tmp);\n')
+                '${lp}    g_string_append_printf (printable, "${common_format}", ${common_cast}tmp);\n')
 
         template += (
             '${lp}}\n')

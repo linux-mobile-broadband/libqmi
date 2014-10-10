@@ -73,7 +73,7 @@ class Variable:
     Emits the code involved in reading the variable from the raw byte stream
     into the specific private format.
     """
-    def emit_buffer_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
+    def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
         pass
 
 
@@ -86,16 +86,9 @@ class Variable:
 
 
     """
-    Emits the code involved in computing the size of the variable.
-    """
-    def emit_size_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
-        pass
-
-
-    """
     Emits the code to get the contents of the given variable as a printable string.
     """
-    def emit_get_printable(self, f, line_prefix, printable, buffer_name, buffer_len):
+    def emit_get_printable(self, f, line_prefix):
         pass
 
     """

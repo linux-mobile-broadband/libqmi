@@ -174,7 +174,30 @@ test_message_parse_complete_and_complete (void)
     test_message_parse_common (buffer, sizeof (buffer), 2);
 }
 
-#if GLIB_CHECK_VERSION (2,34,0)
+static void
+test_message_overflow_common (const guint8 *buffer,
+                              guint buffer_len)
+{
+    QmiMessage *message;
+    GByteArray *array;
+    GError *error = NULL;
+    gchar *printable;
+
+    array = g_byte_array_sized_new (buffer_len);
+    g_byte_array_append (array, buffer, buffer_len);
+    message = qmi_message_new_from_raw (array, &error);
+    g_assert_no_error (error);
+    g_assert (message);
+
+    printable = qmi_message_get_printable (message, "");
+    g_print ("\n%s\n", printable);
+    g_assert (strstr (printable, "ERROR: Reading TLV would overflow"));
+    g_free (printable);
+
+    g_byte_array_unref (array);
+    qmi_message_unref (message);
+}
+
 static void
 test_message_parse_wrong_tlv (void)
 {
@@ -188,11 +211,7 @@ test_message_parse_wrong_tlv (void)
         0x06, 0x00, 0x01, 0x01, 0x01, 0x02, 0x01, 0x05
     };
 
-    g_test_expect_message ("Qmi",
-                           G_LOG_LEVEL_WARNING,
-                           "Cannot read the '*' TLV: expected '*' bytes, but only got '*' bytes");
-    test_message_parse_common (buffer, sizeof (buffer), 1);
-    g_test_assert_expected_messages ();
+    test_message_overflow_common (buffer, G_N_ELEMENTS (buffer));
 }
 
 static void
@@ -215,13 +234,8 @@ test_message_parse_missing_size (void)
         0x01
     };
 
-    g_test_expect_message ("Qmi",
-                           G_LOG_LEVEL_WARNING,
-                           "Cannot read the string size: expected '*' bytes, but only got '*' bytes");
-    test_message_parse_common (buffer, sizeof (buffer), 1);
-    g_test_assert_expected_messages ();
+    test_message_overflow_common (buffer, G_N_ELEMENTS (buffer));
 }
-#endif
 
 /*****************************************************************************/
 
@@ -1498,10 +1512,8 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/parse/complete",              test_message_parse_complete);
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-short",    test_message_parse_complete_and_short);
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-complete", test_message_parse_complete_and_complete);
-#if GLIB_CHECK_VERSION (2,34,0)
     g_test_add_func ("/libqmi-glib/message/parse/wrong-tlv",             test_message_parse_wrong_tlv);
     g_test_add_func ("/libqmi-glib/message/parse/missing-size",          test_message_parse_missing_size);
-#endif
 
     g_test_add_func ("/libqmi-glib/message/new/request",        test_message_new_request);
     g_test_add_func ("/libqmi-glib/message/new/response/ok",    test_message_new_response_ok);

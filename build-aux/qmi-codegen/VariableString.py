@@ -75,87 +75,24 @@ class VariableString(Variable):
     """
     Read a string from the raw byte buffer.
     """
-    def emit_buffer_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
-        translations = { 'lp'             : line_prefix,
-                         'variable_name'  : variable_name,
-                         'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len }
+    def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
+        translations = { 'lp'            : line_prefix,
+                         'tlv_out'       : tlv_out,
+                         'variable_name' : variable_name,
+                         'error'         : error }
 
         if self.is_fixed_size:
             translations['fixed_size'] = self.fixed_size
             template = (
-                '${lp}/* Read the fixed-size string variable from the buffer */\n'
-                '${lp}qmi_utils_read_fixed_size_string_from_buffer (\n'
-                '${lp}    &${buffer_name},\n'
-                '${lp}    &${buffer_len},\n'
-                '${lp}    ${fixed_size},\n'
-                '${lp}    &${variable_name}[0]);\n'
+                '${lp}if (!qmi_message_tlv_read_fixed_size_string (message, init_offset, &offset, ${fixed_size}, &${variable_name}[0], ${error}))\n'
+                '${lp}    goto ${tlv_out};\n'
                 '${lp}${variable_name}[${fixed_size}] = \'\\0\';\n')
         else:
-            translations['length_prefix_size'] = self.length_prefix_size
+            translations['n_size_prefix_bytes'] = self.n_size_prefix_bytes
             translations['max_size'] = self.max_size if self.max_size != '' else '0'
             template = (
-                '${lp}/* Read the string variable from the buffer */\n'
-                '${lp}qmi_utils_read_string_from_buffer (\n'
-                '${lp}    &${buffer_name},\n'
-                '${lp}    &${buffer_len},\n'
-                '${lp}    ${length_prefix_size},\n'
-                '${lp}    ${max_size},\n'
-                '${lp}    &(${variable_name}));\n')
-
-        f.write(string.Template(template).substitute(translations))
-
-
-    """
-    Emits the code involved in computing the size of the variable.
-    """
-    def emit_size_read(self, f, line_prefix, variable_name, buffer_name, buffer_len):
-        translations = { 'lp'            : line_prefix,
-                         'variable_name' : variable_name,
-                         'buffer_name'   : buffer_name,
-                         'buffer_len'    : buffer_len }
-
-        if self.is_fixed_size:
-            translations['fixed_size'] = self.fixed_size
-            template = (
-                '${lp}${variable_name} += ${fixed_size};\n')
-        elif self.length_prefix_size == 0:
-            template = (
-                '${lp}${variable_name} += ${buffer_len};\n')
-        elif self.length_prefix_size == 8:
-            template = (
-                '${lp}{\n'
-                '${lp}    guint8 size8;\n'
-                '${lp}    const guint8 *aux_buffer = &${buffer_name}[${variable_name}];\n'
-                '${lp}    guint16 aux_buffer_len;\n'
-                '\n'
-                '${lp}    aux_buffer_len = ((${buffer_len} >= ${variable_name}) ? ${buffer_len} - ${variable_name} : 0);\n'
-                '${lp}    if (aux_buffer_len < 1) {\n'
-                '${lp}        g_warning ("Cannot read the string size: expected \'1\' bytes, but only got \'%u\' bytes",\n'
-                '${lp}                   aux_buffer_len);\n'
-                '${lp}        return FALSE;\n'
-                '${lp}    }\n'
-                '\n'
-                '${lp}    qmi_utils_read_guint8_from_buffer (&aux_buffer, &aux_buffer_len, &size8);\n'
-                '${lp}    ${variable_name} += (1 + size8);\n'
-                '${lp}}\n')
-        elif self.length_prefix_size == 16:
-            template = (
-                '${lp}{\n'
-                '${lp}    guint16 size16;\n'
-                '${lp}    const guint8 *aux_buffer = &${buffer_name}[${variable_name}];\n'
-                '${lp}    guint16 aux_buffer_len;\n'
-                '\n'
-                '${lp}    aux_buffer_len = ((${buffer_len} >= ${variable_name}) ? ${buffer_len} - ${variable_name} : 0);\n'
-                '${lp}    if (aux_buffer_len < 2) {\n'
-                '${lp}        g_warning ("Cannot read the string size: expected \'2\' bytes, but only got \'%u\' bytes",\n'
-                '${lp}                   aux_buffer_len);\n'
-                '${lp}        return FALSE;\n'
-                '${lp}    }\n'
-                '\n'
-                '${lp}    qmi_utils_read_guint16_from_buffer (&aux_buffer, &aux_buffer_len, QMI_ENDIAN_LITTLE, &size16);\n'
-                '${lp}    ${variable_name} += (2 + size16);\n'
-                '${lp}}\n')
+                '${lp}if (!qmi_message_tlv_read_string (message, init_offset, &offset, ${n_size_prefix_bytes}, ${max_size}, &(${variable_name}), ${error}))\n'
+                '${lp}    goto ${tlv_out};\n')
         f.write(string.Template(template).substitute(translations))
 
 
@@ -181,47 +118,31 @@ class VariableString(Variable):
     """
     Get the string as printable
     """
-    def emit_get_printable(self, f, line_prefix, printable, buffer_name, buffer_len):
-        translations = { 'lp'             : line_prefix,
-                         'printable'      : printable,
-                         'buffer_name'    : buffer_name,
-                         'buffer_len'     : buffer_len }
+    def emit_get_printable(self, f, line_prefix):
+        translations = { 'lp' : line_prefix }
 
         if self.is_fixed_size:
             translations['fixed_size'] = self.fixed_size
-            translations['fixed_size_plus_one'] = int(self.fixed_size) + 1
             template = (
                 '\n'
                 '${lp}{\n'
-                '${lp}    gchar tmp[${fixed_size_plus_one}];\n'
+                '${lp}    gchar tmp[${fixed_size}];\n'
                 '\n'
-                '${lp}    /* Read the fixed-size string variable from the buffer */\n'
-                '${lp}    qmi_utils_read_fixed_size_string_from_buffer (\n'
-                '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n'
-                '${lp}        ${fixed_size},\n'
-                '${lp}        &tmp[0]);\n'
-                '${lp}    tmp[${fixed_size}] = \'\\0\';\n'
-                '\n'
-                '${lp}    g_string_append_printf (${printable}, "%s", tmp);\n'
+                '${lp}    if (!qmi_message_tlv_read_fixed_size_string (message, init_offset, &offset, ${fixed_size}, &tmp[0], &error))\n'
+                '${lp}        goto out;\n'
+                '${lp}    g_string_append_len (printable, tmp, ${fixed_size});\n'
                 '${lp}}\n')
         else:
-            translations['length_prefix_size'] = self.length_prefix_size
+            translations['n_size_prefix_bytes'] = self.n_size_prefix_bytes
             translations['max_size'] = self.max_size if self.max_size != '' else '0'
             template = (
                 '\n'
                 '${lp}{\n'
                 '${lp}    gchar *tmp;\n'
                 '\n'
-                '${lp}    /* Read the string variable from the buffer */\n'
-                '${lp}    qmi_utils_read_string_from_buffer (\n'
-                '${lp}        &${buffer_name},\n'
-                '${lp}        &${buffer_len},\n'
-                '${lp}        ${length_prefix_size},\n'
-                '${lp}        ${max_size},\n'
-                '${lp}        &tmp);\n'
-                '\n'
-                '${lp}    g_string_append_printf (${printable}, "%s", tmp);\n'
+                '${lp}    if (!qmi_message_tlv_read_string (message, init_offset, &offset, ${n_size_prefix_bytes}, ${max_size}, &tmp, &error))\n'
+                '${lp}        goto out;\n'
+                '${lp}    g_string_append (printable, tmp);\n'
                 '${lp}    g_free (tmp);\n'
                 '${lp}}\n')
 
