@@ -37,6 +37,21 @@
 #include "qmi-utils.h"
 #include "qmi-proxy.h"
 
+/**
+ * SECTION:qmi-proxy
+ * @title: QmiProxy
+ * @short_description: QMI proxy handling routines
+ *
+ * The #QmiProxy will setup an abstract socket listening on a predefined
+ * address, and will take care of synchronizing the access to a set of shared
+ * QMI ports.
+ *
+ * Multiple #QmiDevices may be connected to the #QmiProxy at any given time. The
+ * #QmiProxy acts as a stateless proxy for non-CTL services (messages are
+ * transferred unmodified), and as a stateful proxy for the CTL service (all
+ * remote #QmiDevices will need to share the same CTL message sequence ID).
+ */
+
 #define BUFFER_SIZE 512
 
 #define QMI_MESSAGE_OUTPUT_TLV_RESULT 0x02
@@ -704,6 +719,14 @@ setup_socket_service (QmiProxy *self,
 
 /*****************************************************************************/
 
+/**
+ * qmi_proxy_new:
+ * @error: Return location for error or %NULL.
+ *
+ * Creates a #QmiProxy listening in the default proxy addess.
+ *
+ * Returns: A newly created #QmiProxy, or #NULL if @error is set.
+ */
 QmiProxy *
 qmi_proxy_new (GError **error)
 {
