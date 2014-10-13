@@ -2255,14 +2255,14 @@ QmiDevice *
 qmi_device_new_finish (GAsyncResult *res,
                        GError **error)
 {
-  GObject *ret;
-  GObject *source_object;
+    GObject *ret;
+    GObject *source_object;
 
-  source_object = g_async_result_get_source_object (res);
-  ret = g_async_initable_new_finish (G_ASYNC_INITABLE (source_object), res, error);
-  g_object_unref (source_object);
+    source_object = g_async_result_get_source_object (res);
+    ret = g_async_initable_new_finish (G_ASYNC_INITABLE (source_object), res, error);
+    g_object_unref (source_object);
 
-  return (ret ? QMI_DEVICE (ret) : NULL);
+    return (ret ? QMI_DEVICE (ret) : NULL);
 }
 
 /**
