@@ -17,7 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012 Aleksander Morgado <aleksander@lanedo.com>
+ * Copyright (C) 2012 Lanedo GmbH
+ * Copyright (C) 2012 - 2014 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <errno.h>
@@ -68,6 +69,7 @@ G_DEFINE_TYPE_EXTENDED (QmiDevice, qmi_device, G_TYPE_OBJECT, 0,
 enum {
     PROP_0,
     PROP_FILE,
+    PROP_NO_FILE_CHECK,
     PROP_LAST
 };
 
@@ -84,6 +86,7 @@ struct _QmiDevicePrivate {
     GFile *file;
     gchar *path;
     gchar *path_display;
+    gboolean no_file_check;
 
     /* Implicit CTL client */
     QmiClientCtl *client_ctl;
@@ -2326,6 +2329,36 @@ sync_indication_cb (QmiClientCtl *client_ctl,
 }
 
 static void
+client_ctl_setup (InitContext *ctx)
+{
+    GError *error = NULL;
+
+    /* Create the implicit CTL client */
+    ctx->self->priv->client_ctl = g_object_new (QMI_TYPE_CLIENT_CTL,
+                                                QMI_CLIENT_DEVICE,  ctx->self,
+                                                QMI_CLIENT_SERVICE, QMI_SERVICE_CTL,
+                                                QMI_CLIENT_CID,     QMI_CID_NONE,
+                                                NULL);
+
+    /* Register the CTL client to get indications */
+    register_client (ctx->self,
+                     QMI_CLIENT (ctx->self->priv->client_ctl),
+                     &error);
+    g_assert_no_error (error);
+
+    /* Connect to 'Sync' indications */
+    ctx->self->priv->sync_indication_id =
+        g_signal_connect (ctx->self->priv->client_ctl,
+                          "sync",
+                          G_CALLBACK (sync_indication_cb),
+                          ctx->self);
+
+    /* Done we are */
+    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+    init_context_complete_and_free (ctx);
+}
+
+static void
 query_info_async_ready (GFile *file,
                         GAsyncResult *res,
                         InitContext *ctx)
@@ -2352,30 +2385,6 @@ query_info_async_ready (GFile *file,
         return;
     }
     g_object_unref (info);
-
-    /* Create the implicit CTL client */
-    ctx->self->priv->client_ctl = g_object_new (QMI_TYPE_CLIENT_CTL,
-                                                QMI_CLIENT_DEVICE,  ctx->self,
-                                                QMI_CLIENT_SERVICE, QMI_SERVICE_CTL,
-                                                QMI_CLIENT_CID,     QMI_CID_NONE,
-                                                NULL);
-
-    /* Register the CTL client to get indications */
-    register_client (ctx->self,
-                     QMI_CLIENT (ctx->self->priv->client_ctl),
-                     &error);
-    g_assert_no_error (error);
-
-    /* Connect to 'Sync' indications */
-    ctx->self->priv->sync_indication_id =
-        g_signal_connect (ctx->self->priv->client_ctl,
-                          "sync",
-                          G_CALLBACK (sync_indication_cb),
-                          ctx->self);
-
-    /* Done we are */
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    init_context_complete_and_free (ctx);
 }
 
 static void
@@ -2406,6 +2415,12 @@ initable_init_async (GAsyncInitable *initable,
         return;
     }
 
+    /* If no file check requested, don't do it */
+    if (ctx->self->priv->no_file_check) {
+        client_ctl_setup (ctx);
+        return;
+    }
+
     /* Check the file type. Note that this is just a quick check to avoid
      * creating QmiDevices pointing to a location already known not to be a QMI
      * device. */
@@ -2432,8 +2447,13 @@ set_property (GObject *object,
     case PROP_FILE:
         g_assert (self->priv->file == NULL);
         self->priv->file = g_value_dup_object (value);
-        self->priv->path = g_file_get_path (self->priv->file);
-        self->priv->path_display = g_filename_display_name (self->priv->path);
+        if (self->priv->file) {
+            self->priv->path = g_file_get_path (self->priv->file);
+            self->priv->path_display = g_filename_display_name (self->priv->path);
+        }
+        break;
+    case PROP_NO_FILE_CHECK:
+        self->priv->no_file_check = g_value_get_boolean (value);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2580,6 +2600,14 @@ qmi_device_class_init (QmiDeviceClass *klass)
                              G_TYPE_FILE,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_FILE, properties[PROP_FILE]);
+
+    properties[PROP_NO_FILE_CHECK] =
+        g_param_spec_boolean (QMI_DEVICE_NO_FILE_CHECK,
+                              "No file check",
+                              "Don't check for file existence when creating the Qmi device.",
+                              FALSE,
+                              G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY);
+    g_object_class_install_property (object_class, PROP_NO_FILE_CHECK, properties[PROP_NO_FILE_CHECK]);
 
     /**
      * QmiClientDms::event-report:
