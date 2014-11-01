@@ -70,6 +70,7 @@ enum {
     PROP_0,
     PROP_FILE,
     PROP_NO_FILE_CHECK,
+    PROP_PROXY_PATH,
     PROP_LAST
 };
 
@@ -87,6 +88,7 @@ struct _QmiDevicePrivate {
     gchar *path;
     gchar *path_display;
     gboolean no_file_check;
+    gchar *proxy_path;
 
     /* Implicit CTL client */
     QmiClientCtl *client_ctl;
@@ -1492,7 +1494,7 @@ create_iostream_with_socket (CreateIostreamContext *ctx)
 
     /* Setup socket address */
     socket_address = (g_unix_socket_address_new_with_type (
-                          QMI_PROXY_SOCKET_PATH,
+                          ctx->self->priv->proxy_path,
                           -1,
                           G_UNIX_SOCKET_ADDRESS_ABSTRACT));
 
@@ -2455,6 +2457,10 @@ set_property (GObject *object,
     case PROP_NO_FILE_CHECK:
         self->priv->no_file_check = g_value_get_boolean (value);
         break;
+    case PROP_PROXY_PATH:
+        g_free (self->priv->proxy_path);
+        self->priv->proxy_path = g_value_dup_string (value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -2490,6 +2496,7 @@ qmi_device_init (QmiDevice *self)
                                                             g_direct_equal,
                                                             NULL,
                                                             g_object_unref);
+    self->priv->proxy_path = g_strdup (QMI_PROXY_SOCKET_PATH);
 }
 
 static gboolean
@@ -2553,6 +2560,7 @@ finalize (GObject *object)
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);
+    g_free (self->priv->proxy_path);
 
     if (self->priv->input_source) {
         g_source_destroy (self->priv->input_source);
@@ -2608,6 +2616,14 @@ qmi_device_class_init (QmiDeviceClass *klass)
                               FALSE,
                               G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_NO_FILE_CHECK, properties[PROP_NO_FILE_CHECK]);
+
+    properties[PROP_PROXY_PATH] =
+        g_param_spec_string (QMI_DEVICE_PROXY_PATH,
+                             "Proxy path",
+                             "Path of the abstract socket where the proxy is available.",
+                             QMI_PROXY_SOCKET_PATH,
+                             G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY);
+    g_object_class_install_property (object_class, PROP_PROXY_PATH, properties[PROP_PROXY_PATH]);
 
     /**
      * QmiClientDms::event-report:
