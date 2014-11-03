@@ -47,7 +47,9 @@ CFILE_GLOB = \
 IGNORE_HFILES = \
 	qmi-enums-private.h \
 	qmi-enum-types-private.h \
-	qmi-ctl.h
+	qmi-ctl.h \
+	test-port-context.h \
+	test-fixture.h
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.

@@ -52,6 +52,7 @@ src/libqmi-glib/test/Makefile
 src/libqmi-glib/test/Makefile.in
 src/libqmi-glib/test/test-utils
 src/libqmi-glib/test/test-message
+src/libqmi-glib/test/test-generated
 
 src/qmicli/.deps
 src/qmicli/.libs
