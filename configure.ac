@@ -96,6 +96,17 @@ AC_SUBST(GLIB_MKENUMS)
 dnl Documentation
 GTK_DOC_CHECK(1.0)
 
+# MBIM proxy UID
+AC_ARG_ENABLE(mbim-proxy-username,
+              AS_HELP_STRING([--enable-mbim-proxy-username=<username>], [where mbim proxy username is]),
+              mbim_proxy_username=$enableval,
+              mbim_proxy_username="")
+if ! test x"$mbim_proxy_username" = x""; then
+  AC_DEFINE_UNQUOTED(MBIM_PROXY_USERNAME, $mbim_proxy_username, [Define the MBIM Proxy username])
+else
+  AC_DEFINE(MBIM_PROXY_USERNAME, "root", [Define the MBIM Proxy username])
+fi
+
 dnl Man page
 AC_PATH_PROG(HELP2MAN, help2man, false)
 AM_CONDITIONAL(BUILDOPT_MAN, test x$HELP2MAN != xfalse)

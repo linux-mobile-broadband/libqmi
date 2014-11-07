@@ -25,12 +25,15 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/file.h>
+#include <sys/types.h>
 #include <errno.h>
+#include <pwd.h>
 
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gunixsocketaddress.h>
 
+#include "config.h"
 #include "mbim-device.h"
 #include "mbim-utils.h"
 #include "mbim-proxy.h"
@@ -1041,6 +1044,7 @@ incoming_cb (GSocketService *service,
     Client *client;
     GCredentials *credentials;
     GError *error = NULL;
+    struct passwd *expected_usr = NULL;
     uid_t uid;
 
     g_debug ("Client (%d) connection open...", g_socket_get_fd (g_socket_connection_get_socket (connection)));
@@ -1060,8 +1064,17 @@ incoming_cb (GSocketService *service,
         return;
     }
 
-    if (uid != 0) {
-        g_warning ("Client not allowed: Not enough privileges");
+    expected_usr = getpwnam (MBIM_PROXY_USERNAME);
+    if (!expected_usr) {
+        g_warning ("Unknown user configured: %s", MBIM_PROXY_USERNAME);
+        /* Falling back to check for root user if the configured user is unknown */
+        if (uid != 0) {
+            g_warning ("Client not allowed: Not enough privileges");
+            return;
+        }
+    }
+    else if (uid != expected_usr->pw_uid) {
+        g_warning ("Client not allowed: Not the expected user: %s", MBIM_PROXY_USERNAME);
         return;
     }
 
@@ -1213,13 +1226,26 @@ MbimProxy *
 mbim_proxy_new (GError **error)
 {
     MbimProxy *self;
+    struct passwd *expected_usr = NULL;
 
-    /* Only root can run the mbim-proxy */
-    if (getuid () != 0) {
+    /* Only the specified user can run the mbim-proxy */
+    expected_usr = getpwnam (MBIM_PROXY_USERNAME);
+    if (!expected_usr) {
+        g_warning ("Unknown user configured: %s", MBIM_PROXY_USERNAME);
+        /* Falling back to check for root user if the configured user is unknown */
+        if (getuid () != 0) {
+            g_set_error (error,
+                         MBIM_CORE_ERROR,
+                         MBIM_CORE_ERROR_FAILED,
+                          "Not enough privileges");
+            return NULL;
+        }
+    }
+    else if (getuid () != expected_usr->pw_uid) {
         g_set_error (error,
                      MBIM_CORE_ERROR,
                      MBIM_CORE_ERROR_FAILED,
-                     "Not enough privileges");
+                     "Not started with the expected user: %s", MBIM_PROXY_USERNAME);
         return NULL;
     }
 
