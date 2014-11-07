@@ -79,6 +79,17 @@ AC_SUBST(GLIB_MKENUMS)
 dnl Documentation
 GTK_DOC_CHECK(1.0)
 
+# QMI proxy UID
+AC_ARG_ENABLE(qmi-proxy-username,
+              AS_HELP_STRING([--enable-qmi-proxy-username=<username>], [where qmi proxy username is]),
+              qmi_proxy_username=$enableval,
+              qmi_proxy_username="")
+if ! test x"$qmi_proxy_username" = x""; then
+  AC_DEFINE_UNQUOTED(QMI_PROXY_USERNAME, $qmi_proxy_username, [Define the QMI Proxy username])
+else
+  AC_DEFINE(QMI_PROXY_USERNAME, "root", [Define the QMI Proxy username])
+fi
+
 dnl Man page
 AC_PATH_PROG(HELP2MAN, help2man, false)
 AM_CONDITIONAL(BUILDOPT_MAN, test x$HELP2MAN != xfalse)
