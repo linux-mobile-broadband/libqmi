@@ -45,7 +45,9 @@ test_message_parse_common (const guint8 *buffer,
         }
 
         printable = qmi_message_get_printable (message, "");
+#ifdef TEST_PRINT_MESSAGE
         g_print ("\n%s\n", printable);
+#endif
         g_free (printable);
 
         n_messages++;
