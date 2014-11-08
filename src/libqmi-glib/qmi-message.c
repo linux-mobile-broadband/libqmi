@@ -800,12 +800,8 @@ qmi_message_new_from_raw (GByteArray *raw,
     /* We need to have read the length reported by the QMUX header (plus the
      * initial 1-byte marker) */
     message_len = GUINT16_FROM_LE (((struct full_message *)raw->data)->qmux.length);
-    if (raw->len < (message_len + 1)) {
-        g_printerr ("\ngot '%u' bytes, need '%u' bytes\n",
-                    (guint)raw->len,
-                    (guint)(message_len + 1));
+    if (raw->len < (message_len + 1))
         return NULL;
-    }
 
     /* Ok, so we should have all the data available already */
     self = g_byte_array_sized_new (message_len + 1);
