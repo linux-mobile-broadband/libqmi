@@ -18,10 +18,89 @@
 
 #include "test-fixture.h"
 
+/*****************************************************************************/
+
 static void
 test_generated_core (TestFixture *fixture)
 {
     /* Noop */
+}
+
+/*****************************************************************************/
+/* DMS Get IDs */
+
+static void
+dms_get_ids_ready (QmiClientDms *client,
+                   GAsyncResult *res,
+                   TestFixture  *fixture)
+{
+    QmiMessageDmsGetIdsOutput *output;
+    GError *error = NULL;
+    gboolean st;
+    const gchar *str;
+
+    output = qmi_client_dms_get_ids_finish (client, res, &error);
+    g_assert_no_error (error);
+    g_assert (output);
+
+    st = qmi_message_dms_get_ids_output_get_result (output, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+
+    /* [/dev/cdc-wdm3] Device IDs retrieved:
+     * 	 ESN: '80997874'
+     * 	IMEI: '359225050039973'
+     * 	MEID: '35922505003997' */
+    st = qmi_message_dms_get_ids_output_get_esn (output, &str, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+    g_assert_cmpstr (str, ==, "80997874");
+
+    st = qmi_message_dms_get_ids_output_get_imei (output, &str, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+    g_assert_cmpstr (str, ==, "359225050039973");
+
+    st = qmi_message_dms_get_ids_output_get_meid (output, &str, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+    g_assert_cmpstr (str, ==, "35922505003997");
+
+    qmi_message_dms_get_ids_output_unref (output);
+
+    test_fixture_loop_stop (fixture);
+}
+
+static void
+test_generated_dms_get_ids (TestFixture *fixture)
+{
+    guint8 expected[] = {
+        0x01,
+        0x0C, 0x00, 0x00, 0x02, 0x01,
+        0x00, 0xFF, 0xFF, 0x25, 0x00, 0x00, 0x00
+    };
+    guint8 response[] = {
+        0x01,
+        0x45, 0x00, 0x80, 0x02, 0x01,
+        0x02, 0xFF, 0xFF, 0x25, 0x00, 0x39, 0x00, 0x02,
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x01,
+        0x00, 0x42, 0x12, 0x0E, 0x00, 0x33, 0x35, 0x39,
+        0x32, 0x32, 0x35, 0x30, 0x35, 0x30, 0x30, 0x33,
+        0x39, 0x39, 0x37, 0x10, 0x08, 0x00, 0x38, 0x30,
+        0x39, 0x39, 0x37, 0x38, 0x37, 0x34, 0x11, 0x0F,
+        0x00, 0x33, 0x35, 0x39, 0x32, 0x32, 0x35, 0x30,
+        0x35, 0x30, 0x30, 0x33, 0x39, 0x39, 0x37, 0x33
+    };
+
+    test_port_context_set_command (fixture->ctx,
+                                   expected, G_N_ELEMENTS (expected),
+                                   response, G_N_ELEMENTS (response),
+                                   fixture->service_info[QMI_SERVICE_DMS].transaction_id++);
+
+    qmi_client_dms_get_ids (QMI_CLIENT_DMS (fixture->service_info[QMI_SERVICE_DMS].client), NULL, 3, NULL,
+                            (GAsyncReadyCallback) dms_get_ids_ready,
+                            fixture);
+    test_fixture_loop_run (fixture);
 }
 
 /*****************************************************************************/
@@ -33,6 +112,9 @@ int main (int argc, char **argv)
 
     /* Test the setup/teardown test methods */
     TEST_ADD ("/libqmi-glib/generated/core", test_generated_core);
+
+    /* DMS */
+    TEST_ADD ("/libqmi-glib/generated/dms/get-ids", test_generated_dms_get_ids);
 
     return g_test_run ();
 }
