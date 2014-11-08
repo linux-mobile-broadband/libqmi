@@ -160,6 +160,56 @@ test_message_parse_missing_size (void)
 }
 #endif
 
+static void
+test_message_set_transaction_id_ctl (void)
+{
+    GByteArray *buffer;
+    QmiMessage *message;
+    GError     *error = NULL;
+    guint8      ctl_message[] = {
+        0x01, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xFF, /* TRID to update */
+        0x22, 0x00, 0x04, 0x00, 0x01, 0x01, 0x00, 0x01
+    };
+
+    /* CTL message */
+    buffer = g_byte_array_append (g_byte_array_sized_new (G_N_ELEMENTS (ctl_message)), ctl_message, G_N_ELEMENTS (ctl_message));
+    message = qmi_message_new_from_raw (buffer, &error);
+    g_assert_no_error (error);
+    g_assert (message);
+
+    qmi_message_set_transaction_id (message, 0x55);
+    g_assert_cmpuint (qmi_message_get_transaction_id (message), ==, 0x55);
+
+    qmi_message_unref (message);
+    g_byte_array_unref (buffer);
+}
+
+static void
+test_message_set_transaction_id_services (void)
+{
+    GByteArray *buffer;
+    QmiMessage *message;
+    GError     *error = NULL;
+    guint8      dms_message[] = {
+        0x01, 0x0C, 0x00, 0x00, 0x02, 0x01, 0x00,
+        0xFF, 0xFF, /* TRID to update */
+        0x25, 0x00, 0x00, 0x00
+    };
+
+    /* DMS message */
+    buffer = g_byte_array_append (g_byte_array_sized_new (G_N_ELEMENTS (dms_message)), dms_message, G_N_ELEMENTS (dms_message));
+    message = qmi_message_new_from_raw (buffer, &error);
+    g_assert_no_error (error);
+    g_assert (message);
+
+    qmi_message_set_transaction_id (message, 0x5566);
+    g_assert_cmpuint (qmi_message_get_transaction_id (message), ==, 0x5566);
+
+    qmi_message_unref (message);
+    g_byte_array_unref (buffer);
+}
+
 int main (int argc, char **argv)
 {
     g_type_init ();
@@ -173,6 +223,8 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/parse/wrong-tlv",             test_message_parse_wrong_tlv);
     g_test_add_func ("/libqmi-glib/message/parse/missing-size",          test_message_parse_missing_size);
 #endif
+    g_test_add_func ("/libqmi-glib/message/set-transaction-id/ctl",      test_message_set_transaction_id_ctl);
+    g_test_add_func ("/libqmi-glib/message/set-transaction-id/services", test_message_set_transaction_id_services);
 
     return g_test_run ();
 }
