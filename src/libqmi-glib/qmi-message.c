@@ -268,7 +268,7 @@ qmi_message_set_transaction_id (QmiMessage *self,
     if (message_is_control (self))
         ((struct full_message *)self->data)->qmi.control.header.transaction = (guint8)transaction_id;
     else
-        ((struct full_message *)self->data)->qmi.control.header.transaction = GUINT16_TO_LE (transaction_id);
+        ((struct full_message *)self->data)->qmi.service.header.transaction = GUINT16_TO_LE (transaction_id);
 }
 
 /**
