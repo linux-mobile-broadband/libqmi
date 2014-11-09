@@ -194,6 +194,69 @@ test_generated_dms_uim_get_pin_status (TestFixture *fixture)
 }
 
 /*****************************************************************************/
+/* DMS UIM Verify PIN */
+
+static void
+dms_uim_verify_pin_ready (QmiClientDms *client,
+                          GAsyncResult *res,
+                          TestFixture  *fixture)
+{
+    QmiMessageDmsUimVerifyPinOutput *output;
+    GError *error = NULL;
+    gboolean st;
+
+    output = qmi_client_dms_uim_verify_pin_finish (client, res, &error);
+    g_assert_no_error (error);
+    g_assert (output);
+
+    st = qmi_message_dms_uim_verify_pin_output_get_result (output, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+
+    qmi_message_dms_uim_verify_pin_output_unref (output);
+
+    test_fixture_loop_stop (fixture);
+}
+
+static void
+test_generated_dms_uim_verify_pin (TestFixture *fixture)
+{
+    QmiMessageDmsUimVerifyPinInput *input;
+    gboolean st;
+    GError *error = NULL;
+    guint8 expected[] = {
+        0x01,
+        0x15, 0x00, 0x00, 0x02, 0x01,
+        0x00, 0x01, 0x00, 0x28, 0x00, 0x09, 0x00, 0x01,
+        0x06, 0x00, 0x01, 0x04, 0x31, 0x32, 0x33, 0x34
+    };
+    guint8 response[] = {
+        0x01,
+        0x13, 0x00, 0x80, 0x02, 0x01,
+        0x02, 0xFF, 0xFF, 0x28, 0x00, 0x07, 0x00, 0x02,
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    test_port_context_set_command (fixture->ctx,
+                                   expected, G_N_ELEMENTS (expected),
+                                   response, G_N_ELEMENTS (response),
+                                   fixture->service_info[QMI_SERVICE_DMS].transaction_id++);
+
+    input = qmi_message_dms_uim_verify_pin_input_new ();
+    st = qmi_message_dms_uim_verify_pin_input_set_info (input, QMI_DMS_UIM_PIN_ID_PIN, "1234", &error);
+    g_assert_no_error (error);
+    g_assert (st);
+
+    qmi_client_dms_uim_verify_pin (QMI_CLIENT_DMS (fixture->service_info[QMI_SERVICE_DMS].client), input, 3, NULL,
+                                   (GAsyncReadyCallback) dms_uim_verify_pin_ready,
+                                   fixture);
+
+    qmi_message_dms_uim_verify_pin_input_unref (input);
+
+    test_fixture_loop_run (fixture);
+}
+
+/*****************************************************************************/
 
 int main (int argc, char **argv)
 {
@@ -206,6 +269,7 @@ int main (int argc, char **argv)
     /* DMS */
     TEST_ADD ("/libqmi-glib/generated/dms/get-ids",            test_generated_dms_get_ids);
     TEST_ADD ("/libqmi-glib/generated/dms/uim-get-pin-status", test_generated_dms_uim_get_pin_status);
+    TEST_ADD ("/libqmi-glib/generated/dms/uim-verify-pin",     test_generated_dms_uim_verify_pin);
 
 
     return g_test_run ();
