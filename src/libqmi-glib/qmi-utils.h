@@ -196,6 +196,8 @@ G_GNUC_INTERNAL
 gchar *__qmi_utils_str_hex (gconstpointer mem,
                             gsize size,
                             gchar delimiter);
+gboolean __qmi_user_allowed (uid_t uid,
+                             GError **error);
 #endif
 
 G_END_DECLS
