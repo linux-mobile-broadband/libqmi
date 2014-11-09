@@ -97,7 +97,7 @@ struct _MbimDevicePrivate {
 
     /* I/O channel, set when the file is open */
     GIOChannel *iochannel;
-    guint watch_id;
+    GSource *iochannel_source;
     GByteArray *response;
     OpenStatus open_status;
 
@@ -673,7 +673,7 @@ data_available (GIOChannel *source,
             }
 
             /* Port is closed; we're done */
-            if (self->priv->watch_id == 0)
+            if (!self->priv->iochannel_source)
                 break;
         }
 
@@ -868,10 +868,13 @@ setup_iochannel (CreateIoChannelContext *ctx)
         return;
     }
 
-    ctx->self->priv->watch_id = g_io_add_watch (ctx->self->priv->iochannel,
-                                                G_IO_IN | G_IO_ERR | G_IO_HUP,
-                                                (GIOFunc)data_available,
-                                                ctx->self);
+    ctx->self->priv->iochannel_source = g_io_create_watch (ctx->self->priv->iochannel,
+                                                           G_IO_IN | G_IO_ERR | G_IO_HUP);
+    g_source_set_callback (ctx->self->priv->iochannel_source,
+                           (GSourceFunc)data_available,
+                           ctx->self,
+                           NULL);
+    g_source_attach (ctx->self->priv->iochannel_source, g_main_context_get_thread_default ());
 
     g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
     create_iochannel_context_complete_and_free (ctx);
@@ -1404,9 +1407,10 @@ destroy_iochannel (MbimDevice  *self,
     g_clear_object (&self->priv->socket_connection);
     g_clear_object (&self->priv->socket_client);
 
-    if (self->priv->watch_id) {
-        g_source_remove (self->priv->watch_id);
-        self->priv->watch_id = 0;
+    if (self->priv->iochannel_source) {
+        g_source_destroy (self->priv->iochannel_source);
+        g_source_unref (self->priv->iochannel_source);
+        self->priv->iochannel_source = NULL;
     }
 
     if (self->priv->response) {

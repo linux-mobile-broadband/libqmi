@@ -1077,7 +1077,7 @@ incoming_cb (GSocketService *service,
                            (GSourceFunc)connection_readable_cb,
                            client,
                            NULL);
-    g_source_attach (client->connection_readable_source, NULL);
+    g_source_attach (client->connection_readable_source, g_main_context_get_thread_default ());
 
     /* Keep the client info around */
     track_client (self, client);
