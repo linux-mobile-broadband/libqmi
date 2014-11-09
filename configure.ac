@@ -79,16 +79,11 @@ AC_SUBST(GLIB_MKENUMS)
 dnl Documentation
 GTK_DOC_CHECK(1.0)
 
-# QMI proxy UID
-AC_ARG_ENABLE(qmi-proxy-username,
-              AS_HELP_STRING([--enable-qmi-proxy-username=<username>], [where qmi proxy username is]),
-              qmi_proxy_username=$enableval,
-              qmi_proxy_username="")
-if ! test x"$qmi_proxy_username" = x""; then
-  AC_DEFINE_UNQUOTED(QMI_PROXY_USERNAME, $qmi_proxy_username, [Define the QMI Proxy username])
-else
-  AC_DEFINE(QMI_PROXY_USERNAME, "root", [Define the QMI Proxy username])
-fi
+# QMI username
+AC_ARG_ENABLE(qmi-username,
+              AS_HELP_STRING([--enable-qmi-username=<username>], [user allowed to access QMI devices]),,
+              enable_qmi_username="root")
+AC_DEFINE_UNQUOTED(QMI_USERNAME, "$enable_qmi_username", [Define the QMI username])
 
 dnl Man page
 AC_PATH_PROG(HELP2MAN, help2man, false)
@@ -121,8 +116,9 @@ echo "
     libqmi (libqmi-glib, qmicli) $VERSION
     ==============================================
 
-    compiler:                ${CC}
-    cflags:                  ${CFLAGS}
-    Maintainer mode:         ${USE_MAINTAINER_MODE}
-    Documentation:           ${enable_gtk_doc}
+    compiler:         ${CC}
+    cflags:           ${CFLAGS}
+    Maintainer mode:  ${USE_MAINTAINER_MODE}
+    Documentation:    ${enable_gtk_doc}
+    QMI username:     ${enable_qmi_username}
 "
