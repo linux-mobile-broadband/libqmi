@@ -1442,7 +1442,7 @@ setup_iostream (CreateIostreamContext *ctx)
                            (GSourceFunc)input_ready_cb,
                            ctx->self,
                            NULL);
-    g_source_attach (ctx->self->priv->input_source, NULL);
+    g_source_attach (ctx->self->priv->input_source, g_main_context_get_thread_default ());
     g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
     create_iostream_context_complete_and_free (ctx);
 }
