@@ -257,6 +257,255 @@ test_generated_dms_uim_verify_pin (TestFixture *fixture)
 }
 
 /*****************************************************************************/
+/* NAS Network Scan */
+typedef struct {
+    guint16 mcc;
+    guint16 mnc;
+    gboolean includes_pcs_digit;
+    QmiNasNetworkStatus network_status;
+    QmiNasRadioInterface rat;
+    const gchar *description;
+
+} NetworkScanResult;
+
+static NetworkScanResult scan_results[] =  {
+    {
+        .mcc = 214,
+        .mnc = 1,
+        .includes_pcs_digit = FALSE,
+        .network_status = (QMI_NAS_NETWORK_STATUS_AVAILABLE |
+                           QMI_NAS_NETWORK_STATUS_ROAMING |
+                           QMI_NAS_NETWORK_STATUS_NOT_FORBIDDEN |
+                           QMI_NAS_NETWORK_STATUS_NOT_PREFERRED),
+        .rat = QMI_NAS_RADIO_INTERFACE_GSM,
+        .description = "voda ES"
+    },
+    {
+        .mcc = 214,
+        .mnc = 3,
+        .includes_pcs_digit = FALSE,
+        .network_status = (QMI_NAS_NETWORK_STATUS_AVAILABLE |
+                           QMI_NAS_NETWORK_STATUS_ROAMING |
+                           QMI_NAS_NETWORK_STATUS_NOT_FORBIDDEN |
+                           QMI_NAS_NETWORK_STATUS_NOT_PREFERRED),
+        .rat = QMI_NAS_RADIO_INTERFACE_GSM,
+        .description = "Orange"
+    },
+    {
+        .mcc = 214,
+        .mnc = 4,
+        .includes_pcs_digit = FALSE,
+        .network_status = (QMI_NAS_NETWORK_STATUS_AVAILABLE |
+                           QMI_NAS_NETWORK_STATUS_ROAMING |
+                           QMI_NAS_NETWORK_STATUS_NOT_FORBIDDEN |
+                           QMI_NAS_NETWORK_STATUS_NOT_PREFERRED),
+        .rat = QMI_NAS_RADIO_INTERFACE_UMTS,
+        .description = "YOIGO"
+    },
+    {
+        .mcc = 214,
+        .mnc = 1,
+        .includes_pcs_digit = FALSE,
+        .network_status = (QMI_NAS_NETWORK_STATUS_AVAILABLE |
+                           QMI_NAS_NETWORK_STATUS_ROAMING |
+                           QMI_NAS_NETWORK_STATUS_NOT_FORBIDDEN |
+                           QMI_NAS_NETWORK_STATUS_NOT_PREFERRED),
+        .rat = QMI_NAS_RADIO_INTERFACE_UMTS,
+        .description = "voda ES"
+    },
+    {
+        .mcc = 214,
+        .mnc = 4,
+        .includes_pcs_digit = FALSE,
+        .network_status = (QMI_NAS_NETWORK_STATUS_AVAILABLE |
+                           QMI_NAS_NETWORK_STATUS_ROAMING |
+                           QMI_NAS_NETWORK_STATUS_NOT_FORBIDDEN |
+                           QMI_NAS_NETWORK_STATUS_NOT_PREFERRED),
+        .rat = QMI_NAS_RADIO_INTERFACE_GSM,
+        .description = "YOIGO"
+    },
+    {
+        .mcc = 214,
+        .mnc = 7,
+        .includes_pcs_digit = FALSE,
+        .network_status = (QMI_NAS_NETWORK_STATUS_AVAILABLE |
+                           QMI_NAS_NETWORK_STATUS_ROAMING |
+                           QMI_NAS_NETWORK_STATUS_NOT_FORBIDDEN |
+                           QMI_NAS_NETWORK_STATUS_NOT_PREFERRED),
+        .rat = QMI_NAS_RADIO_INTERFACE_GSM,
+        .description = "Movistar"
+    },
+    {
+        .mcc = 214,
+        .mnc = 7,
+        .includes_pcs_digit = FALSE,
+        .network_status = (QMI_NAS_NETWORK_STATUS_AVAILABLE |
+                           QMI_NAS_NETWORK_STATUS_ROAMING |
+                           QMI_NAS_NETWORK_STATUS_NOT_FORBIDDEN |
+                           QMI_NAS_NETWORK_STATUS_NOT_PREFERRED),
+        .rat = QMI_NAS_RADIO_INTERFACE_UMTS,
+        .description = "Movistar"
+    },
+    {
+        .mcc = 214,
+        .mnc = 3,
+        .includes_pcs_digit = FALSE,
+        .network_status = (QMI_NAS_NETWORK_STATUS_CURRENT_SERVING |
+                           QMI_NAS_NETWORK_STATUS_ROAMING |
+                           QMI_NAS_NETWORK_STATUS_NOT_FORBIDDEN |
+                           QMI_NAS_NETWORK_STATUS_NOT_PREFERRED),
+        .rat = QMI_NAS_RADIO_INTERFACE_UMTS,
+        .description = ""
+    },
+};
+
+static void
+nas_network_scan_ready (QmiClientNas *client,
+                        GAsyncResult *res,
+                        TestFixture  *fixture)
+{
+    QmiMessageNasNetworkScanOutput *output;
+    GError *error = NULL;
+    gboolean st;
+    GArray *network_information = NULL;
+    GArray *radio_access_technology = NULL;
+    GArray *mnc_pcs_digit_include_status = NULL;
+    guint i;
+
+    output = qmi_client_nas_network_scan_finish (client, res, &error);
+    g_assert_no_error (error);
+    g_assert (output);
+
+    st = qmi_message_nas_network_scan_output_get_result (output, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+
+    st = (qmi_message_nas_network_scan_output_get_network_information (
+              output,
+              &network_information,
+              &error));
+    g_assert_no_error (error);
+    g_assert (st);
+    g_assert (network_information);
+    g_assert_cmpuint (network_information->len, ==, 8);
+    for (i = 0; i < network_information->len; i++) {
+        QmiMessageNasNetworkScanOutputNetworkInformationElement *el;
+
+        el = &g_array_index (network_information, QmiMessageNasNetworkScanOutputNetworkInformationElement, i);
+
+        g_assert_cmpuint (el->mcc, ==, scan_results[i].mcc);
+        g_assert_cmpuint (el->mnc, ==, scan_results[i].mnc);
+        g_assert_cmpuint (el->network_status, ==, scan_results[i].network_status);
+        g_assert_cmpstr  (el->description, ==, scan_results[i].description);
+    }
+
+    st = (qmi_message_nas_network_scan_output_get_radio_access_technology (
+              output,
+              &radio_access_technology,
+              &error));
+    g_assert_no_error (error);
+    g_assert (st);
+    g_assert (radio_access_technology);
+    g_assert_cmpuint (radio_access_technology->len, ==, 8);
+    for (i = 0; i < radio_access_technology->len; i++) {
+        QmiMessageNasNetworkScanOutputRadioAccessTechnologyElement *el;
+
+        el = &g_array_index (radio_access_technology, QmiMessageNasNetworkScanOutputRadioAccessTechnologyElement, i);
+
+        g_assert_cmpuint (el->mcc, ==, scan_results[i].mcc);
+        g_assert_cmpuint (el->mnc, ==, scan_results[i].mnc);
+        g_assert_cmpuint (el->radio_interface, ==, scan_results[i].rat);
+    }
+
+    st = (qmi_message_nas_network_scan_output_get_mnc_pcs_digit_include_status (
+              output,
+              &mnc_pcs_digit_include_status,
+              &error));
+    g_assert_no_error (error);
+    g_assert (st);
+    g_assert (mnc_pcs_digit_include_status);
+    g_assert_cmpuint (mnc_pcs_digit_include_status->len, ==, 8);
+    for (i = 0; i < mnc_pcs_digit_include_status->len; i++) {
+        QmiMessageNasNetworkScanOutputMncPcsDigitIncludeStatusElement *el;
+
+        el = &g_array_index (mnc_pcs_digit_include_status, QmiMessageNasNetworkScanOutputMncPcsDigitIncludeStatusElement, i);
+
+        g_assert_cmpuint (el->mcc, ==, scan_results[i].mcc);
+        g_assert_cmpuint (el->mnc, ==, scan_results[i].mnc);
+        g_assert_cmpuint (el->includes_pcs_digit, ==, scan_results[i].includes_pcs_digit);
+    }
+
+    qmi_message_nas_network_scan_output_unref (output);
+
+    test_fixture_loop_stop (fixture);
+}
+
+static void
+test_generated_nas_network_scan (TestFixture *fixture)
+{
+    guint8 expected[] = {
+        0x01,
+        0x0C, 0x00, 0x00, 0x03, 0x01,
+        0x00, 0xFF, 0xFF, 0x21, 0x00, 0x00, 0x00
+    };
+    guint8 response[] = {
+        0x01,
+        0x43, 0x01, 0x80, 0x03, 0x01,
+        0x02, 0xFF, 0xFF, 0x21, 0x00, 0x37, 0x01, 0x02,
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x60,
+        0x00, 0x08, 0x00, 0xD6, 0x00, 0x01, 0x00, 0xAA,
+        0x07, 0x76, 0x6F, 0x64, 0x61, 0x20, 0x45, 0x53,
+        0xD6, 0x00, 0x03, 0x00, 0xAA, 0x06, 0x4F, 0x72,
+        0x61, 0x6E, 0x67, 0x65, 0xD6, 0x00, 0x04, 0x00,
+        0xAA, 0x05, 0x59, 0x4F, 0x49, 0x47, 0x4F, 0xD6,
+        0x00, 0x01, 0x00, 0xAA, 0x07, 0x76, 0x6F, 0x64,
+        0x61, 0x20, 0x45, 0x53, 0xD6, 0x00, 0x04, 0x00,
+        0xAA, 0x05, 0x59, 0x4F, 0x49, 0x47, 0x4F, 0xD6,
+        0x00, 0x07, 0x00, 0xAA, 0x08, 0x4D, 0x6F, 0x76,
+        0x69, 0x73, 0x74, 0x61, 0x72, 0xD6, 0x00, 0x07,
+        0x00, 0xAA, 0x08, 0x4D, 0x6F, 0x76, 0x69, 0x73,
+        0x74, 0x61, 0x72, 0xD6, 0x00, 0x03, 0x00, 0xA9,
+        0x00, 0x11, 0x2A, 0x00, 0x08, 0x00, 0xD6, 0x00,
+        0x01, 0x00, 0x04, 0xD6, 0x00, 0x03, 0x00, 0x04,
+        0xD6, 0x00, 0x04, 0x00, 0x05, 0xD6, 0x00, 0x01,
+        0x00, 0x05, 0xD6, 0x00, 0x04, 0x00, 0x04, 0xD6,
+        0x00, 0x07, 0x00, 0x04, 0xD6, 0x00, 0x07, 0x00,
+        0x05, 0xD6, 0x00, 0x03, 0x00, 0x05, 0x12, 0x2A,
+        0x00, 0x08, 0x00, 0xD6, 0x00, 0x01, 0x00, 0x00,
+        0xD6, 0x00, 0x03, 0x00, 0x00, 0xD6, 0x00, 0x04,
+        0x00, 0x00, 0xD6, 0x00, 0x01, 0x00, 0x00, 0xD6,
+        0x00, 0x04, 0x00, 0x00, 0xD6, 0x00, 0x07, 0x00,
+        0x00, 0xD6, 0x00, 0x07, 0x00, 0x00, 0xD6, 0x00,
+        0x03, 0x00, 0x00, 0x13, 0x04, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x14, 0x69, 0x00, 0x08, 0xD6, 0x00,
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0xD6, 0x00, 0x03, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0xD6, 0x00, 0x04, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD6,
+        0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    test_port_context_set_command (fixture->ctx,
+                                   expected, G_N_ELEMENTS (expected),
+                                   response, G_N_ELEMENTS (response),
+                                   fixture->service_info[QMI_SERVICE_NAS].transaction_id++);
+
+    qmi_client_nas_network_scan (QMI_CLIENT_NAS (fixture->service_info[QMI_SERVICE_NAS].client), NULL, 3, NULL,
+                                 (GAsyncReadyCallback) nas_network_scan_ready,
+                                 fixture);
+
+    test_fixture_loop_run (fixture);
+}
+
+/*****************************************************************************/
 
 int main (int argc, char **argv)
 {
@@ -270,6 +519,8 @@ int main (int argc, char **argv)
     TEST_ADD ("/libqmi-glib/generated/dms/get-ids",            test_generated_dms_get_ids);
     TEST_ADD ("/libqmi-glib/generated/dms/uim-get-pin-status", test_generated_dms_uim_get_pin_status);
     TEST_ADD ("/libqmi-glib/generated/dms/uim-verify-pin",     test_generated_dms_uim_verify_pin);
+    /* NAS */
+    TEST_ADD ("/libqmi-glib/generated/nas/network-scan",       test_generated_nas_network_scan);
 
 
     return g_test_run ();
