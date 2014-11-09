@@ -2387,6 +2387,9 @@ query_info_async_ready (GFile *file,
         return;
     }
     g_object_unref (info);
+
+    /* Go on with client CTL setup */
+    client_ctl_setup (ctx);
 }
 
 static void
