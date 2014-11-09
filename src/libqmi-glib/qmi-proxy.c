@@ -645,7 +645,7 @@ incoming_cb (GSocketService *service,
                            (GSourceFunc)connection_readable_cb,
                            client,
                            NULL);
-    g_source_attach (client->connection_readable_source, NULL);
+    g_source_attach (client->connection_readable_source, g_main_context_get_thread_default ());
     client->qmi_client_info_array = g_array_sized_new (FALSE, FALSE, sizeof (QmiClientInfo), 8);
 
     /* Keep the client info around */
