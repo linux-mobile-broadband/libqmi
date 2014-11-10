@@ -718,7 +718,7 @@ void
 qmi_message_tlv_write_reset (QmiMessage *self,
                              gsize       tlv_offset)
 {
-    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_if_fail (self != NULL);
 
     g_byte_array_set_size (self, tlv_offset);
 }
