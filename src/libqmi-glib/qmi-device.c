@@ -127,7 +127,7 @@ typedef struct {
 typedef struct {
     QmiMessage *message;
     GSimpleAsyncResult *result;
-    guint timeout_id;
+    GSource *timeout_source;
     GCancellable *cancellable;
     gulong cancellable_id;
     TransactionWaitContext *wait_ctx;
@@ -161,8 +161,8 @@ transaction_complete_and_free (Transaction *tr,
 {
     g_assert (reply != NULL || error != NULL);
 
-    if (tr->timeout_id)
-        g_source_remove (tr->timeout_id);
+    if (tr->timeout_source)
+        g_source_destroy (tr->timeout_source);
 
     if (tr->cancellable) {
         if (tr->cancellable_id)
@@ -227,7 +227,7 @@ transaction_timed_out (TransactionWaitContext *ctx)
     GError *error = NULL;
 
     tr = device_release_transaction (ctx->self, ctx->key);
-    tr->timeout_id = 0;
+    tr->timeout_source = NULL;
 
     /* Complete transaction with a timeout error */
     error = g_error_new (QMI_CORE_ERROR,
@@ -277,9 +277,10 @@ device_store_transaction (QmiDevice *self,
     tr->wait_ctx->self = self;
     tr->wait_ctx->key = key; /* valid as long as the transaction is in the HT */
 
-    tr->timeout_id = g_timeout_add_seconds (timeout,
-                                            (GSourceFunc)transaction_timed_out,
-                                            tr->wait_ctx);
+    tr->timeout_source = g_timeout_source_new_seconds (timeout);
+    g_source_set_callback (tr->timeout_source, (GSourceFunc)transaction_timed_out, tr->wait_ctx, NULL);
+    g_source_attach (tr->timeout_source, g_main_context_get_thread_default ());
+    g_source_unref (tr->timeout_source);
 
     if (tr->cancellable) {
         tr->cancellable_id = g_cancellable_connect (tr->cancellable,
@@ -1235,12 +1236,17 @@ report_indication (QmiClient *client,
                    QmiMessage *message)
 {
     IdleIndicationContext *ctx;
+    GSource *source;
 
     /* Setup an idle to Pass the indication down to the client */
     ctx = g_slice_new (IdleIndicationContext);
     ctx->client = g_object_ref (client);
     ctx->message = qmi_message_ref (message);
-    g_idle_add ((GSourceFunc)process_indication_idle, ctx);
+
+    source = g_idle_source_new ();
+    g_source_set_callback (source, (GSourceFunc)process_indication_idle, ctx, NULL);
+    g_source_attach (source, g_main_context_get_thread_default ());
+    g_source_unref (source);
 }
 
 static void
@@ -1508,6 +1514,7 @@ create_iostream_with_socket (CreateIostreamContext *ctx)
 
     if (!ctx->self->priv->socket_connection) {
         gchar **argc;
+        GSource *source;
 
         g_debug ("cannot connect to proxy: %s", error->message);
         g_clear_error (&error);
@@ -1542,7 +1549,10 @@ create_iostream_with_socket (CreateIostreamContext *ctx)
         g_strfreev (argc);
 
         /* Wait some ms and retry */
-        g_timeout_add (100, (GSourceFunc)wait_for_proxy_cb, ctx);
+        source = g_timeout_source_new (100);
+        g_source_set_callback (source, (GSourceFunc)wait_for_proxy_cb, ctx, NULL);
+        g_source_attach (source, g_main_context_get_thread_default ());
+        g_source_unref (source);
         return;
     }
 
