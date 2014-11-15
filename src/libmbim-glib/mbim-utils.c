@@ -25,8 +25,10 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <pwd.h>
 
 #include "mbim-utils.h"
+#include "mbim-error-types.h"
 
 /**
  * SECTION:mbim-utils
@@ -70,6 +72,37 @@ __mbim_utils_str_hex (gconstpointer mem,
 
     /* Set output string */
     return new_str;
+}
+
+/*****************************************************************************/
+gboolean
+__mbim_user_allowed (uid_t uid,
+                     GError **error)
+{
+    struct passwd *expected_usr = NULL;
+
+    expected_usr = getpwnam (MBIM_USERNAME);
+    if (!expected_usr) {
+        g_warning ("Unknown user configured: %s", MBIM_USERNAME);
+        /* Falling back to check for root user if the configured user is unknown */
+        if (uid == 0)
+            return TRUE;
+
+        g_set_error (error,
+                     MBIM_CORE_ERROR,
+                     MBIM_CORE_ERROR_FAILED,
+                     "Not enough privileges (unknown username %s)", MBIM_USERNAME);
+        return FALSE;
+    }
+
+    if (uid == expected_usr->pw_uid)
+        return TRUE;
+
+    g_set_error (error,
+                 MBIM_CORE_ERROR,
+                 MBIM_CORE_ERROR_FAILED,
+                 "Not enough privileges");
+    return FALSE;
 }
 
 /*****************************************************************************/

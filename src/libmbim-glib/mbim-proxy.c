@@ -27,7 +27,6 @@
 #include <sys/file.h>
 #include <sys/types.h>
 #include <errno.h>
-#include <pwd.h>
 
 #include <glib.h>
 #include <glib/gstdio.h>
@@ -1044,7 +1043,6 @@ incoming_cb (GSocketService *service,
     Client *client;
     GCredentials *credentials;
     GError *error = NULL;
-    struct passwd *expected_usr = NULL;
     uid_t uid;
 
     g_debug ("Client (%d) connection open...", g_socket_get_fd (g_socket_connection_get_socket (connection)));
@@ -1064,19 +1062,12 @@ incoming_cb (GSocketService *service,
         return;
     }
 
-    expected_usr = getpwnam (MBIM_USERNAME);
-    if (!expected_usr) {
-        g_warning ("Unknown user configured: %s", MBIM_USERNAME);
-        /* Falling back to check for root user if the configured user is unknown */
-        if (uid != 0) {
-            g_warning ("Client not allowed: Not enough privileges");
-            return;
-        }
-    }
-    else if (uid != expected_usr->pw_uid) {
-        g_warning ("Client not allowed: Not the expected user: %s", MBIM_USERNAME);
+    if (!__mbim_user_allowed (uid, &error)) {
+        g_warning ("Client not allowed: %s", error->message);
+        g_error_free (error);
         return;
     }
+
 
     /* Create client */
     client = g_slice_new0 (Client);
@@ -1226,26 +1217,8 @@ MbimProxy *
 mbim_proxy_new (GError **error)
 {
     MbimProxy *self;
-    struct passwd *expected_usr = NULL;
 
-    /* Only the specified user can run the mbim-proxy */
-    expected_usr = getpwnam (MBIM_USERNAME);
-    if (!expected_usr) {
-        g_warning ("Unknown user configured: %s", MBIM_USERNAME);
-        /* Falling back to check for root user if the configured user is unknown */
-        if (getuid () != 0) {
-            g_set_error (error,
-                         MBIM_CORE_ERROR,
-                         MBIM_CORE_ERROR_FAILED,
-                          "Not enough privileges");
-            return NULL;
-        }
-    }
-    else if (getuid () != expected_usr->pw_uid) {
-        g_set_error (error,
-                     MBIM_CORE_ERROR,
-                     MBIM_CORE_ERROR_FAILED,
-                     "Not started with the expected user: %s", MBIM_USERNAME);
+    if (!__mbim_user_allowed (getuid(), error)) {
         return NULL;
     }
 

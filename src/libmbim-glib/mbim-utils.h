@@ -42,6 +42,8 @@ void     mbim_utils_set_traces_enabled (gboolean enabled);
 gchar *__mbim_utils_str_hex (gconstpointer mem,
                              gsize         size,
                              gchar         delimiter);
+gboolean __mbim_user_allowed (uid_t uid,
+                              GError **error);
 #endif
 
 G_END_DECLS
