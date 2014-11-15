@@ -1064,9 +1064,9 @@ incoming_cb (GSocketService *service,
         return;
     }
 
-    expected_usr = getpwnam (MBIM_PROXY_USERNAME);
+    expected_usr = getpwnam (MBIM_USERNAME);
     if (!expected_usr) {
-        g_warning ("Unknown user configured: %s", MBIM_PROXY_USERNAME);
+        g_warning ("Unknown user configured: %s", MBIM_USERNAME);
         /* Falling back to check for root user if the configured user is unknown */
         if (uid != 0) {
             g_warning ("Client not allowed: Not enough privileges");
@@ -1074,7 +1074,7 @@ incoming_cb (GSocketService *service,
         }
     }
     else if (uid != expected_usr->pw_uid) {
-        g_warning ("Client not allowed: Not the expected user: %s", MBIM_PROXY_USERNAME);
+        g_warning ("Client not allowed: Not the expected user: %s", MBIM_USERNAME);
         return;
     }
 
@@ -1229,9 +1229,9 @@ mbim_proxy_new (GError **error)
     struct passwd *expected_usr = NULL;
 
     /* Only the specified user can run the mbim-proxy */
-    expected_usr = getpwnam (MBIM_PROXY_USERNAME);
+    expected_usr = getpwnam (MBIM_USERNAME);
     if (!expected_usr) {
-        g_warning ("Unknown user configured: %s", MBIM_PROXY_USERNAME);
+        g_warning ("Unknown user configured: %s", MBIM_USERNAME);
         /* Falling back to check for root user if the configured user is unknown */
         if (getuid () != 0) {
             g_set_error (error,
@@ -1245,7 +1245,7 @@ mbim_proxy_new (GError **error)
         g_set_error (error,
                      MBIM_CORE_ERROR,
                      MBIM_CORE_ERROR_FAILED,
-                     "Not started with the expected user: %s", MBIM_PROXY_USERNAME);
+                     "Not started with the expected user: %s", MBIM_USERNAME);
         return NULL;
     }
 

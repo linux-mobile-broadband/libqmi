@@ -96,16 +96,11 @@ AC_SUBST(GLIB_MKENUMS)
 dnl Documentation
 GTK_DOC_CHECK(1.0)
 
-# MBIM proxy UID
-AC_ARG_ENABLE(mbim-proxy-username,
-              AS_HELP_STRING([--enable-mbim-proxy-username=<username>], [where mbim proxy username is]),
-              mbim_proxy_username=$enableval,
-              mbim_proxy_username="")
-if ! test x"$mbim_proxy_username" = x""; then
-  AC_DEFINE_UNQUOTED(MBIM_PROXY_USERNAME, $mbim_proxy_username, [Define the MBIM Proxy username])
-else
-  AC_DEFINE(MBIM_PROXY_USERNAME, "root", [Define the MBIM Proxy username])
-fi
+# MBIM username
+AC_ARG_ENABLE(mbim-username,
+              AS_HELP_STRING([--enable-mbim-username=<username>], [user allowed to access MBIM devices]),,
+              enable_mbim_username="root")
+AC_DEFINE_UNQUOTED(MBIM_USERNAME, "$enable_mbim_username", [Define the MBIM username])
 
 dnl Man page
 AC_PATH_PROG(HELP2MAN, help2man, false)
@@ -137,8 +132,10 @@ echo "
     libmbim $VERSION
     ==============================================
 
-    compiler:                ${CC}
-    cflags:                  ${CFLAGS}
-    Maintainer mode:         ${USE_MAINTAINER_MODE}
-    Documentation:           ${enable_gtk_doc}
+    compiler:         ${CC}
+    cflags:           ${CFLAGS}
+    Maintainer mode:  ${USE_MAINTAINER_MODE}
+    Documentation:    ${enable_gtk_doc}
+    MBIM username:    ${enable_mbim_username}
+
 "
