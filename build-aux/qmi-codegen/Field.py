@@ -280,23 +280,25 @@ class Field:
         template = (
             '${lp}gsize offset = 0;\n'
             '${lp}gsize init_offset;\n'
-            '${lp}gboolean tlv_error = FALSE;\n'
             '\n'
-            '${lp}init_offset = qmi_message_tlv_read_init (message, ${tlv_id}, NULL, ${error});\n')
+            '${lp}if ((init_offset = qmi_message_tlv_read_init (message, ${tlv_id}, NULL, ${error})) == 0) {\n')
+
         if self.mandatory:
             template += (
-                '\n'
-                '${lp}if (init_offset == 0) {\n'
                 '${lp}    g_prefix_error (${error}, "Couldn\'t get the mandatory ${name} TLV: ");\n'
                 '${lp}    ${container_underscore}_unref (self);\n'
-                '${lp}    return NULL;\n'
-                '${lp}}\n')
+                '${lp}    return NULL;\n')
+        else:
+            template += (
+                '${lp}    goto ${tlv_out};\n')
 
+        template += (
+            '${lp}}\n')
 
         f.write(string.Template(template).substitute(translations))
 
         # Now, read the contents of the buffer into the variable
-        self.variable.emit_buffer_read(f, line_prefix + '    ', tlv_out, error, 'self->' + self.variable_name)
+        self.variable.emit_buffer_read(f, line_prefix, tlv_out, error, 'self->' + self.variable_name)
 
         template = (
             '\n'
@@ -305,15 +307,18 @@ class Field:
             '${lp}    g_warning ("Left \'%" G_GSIZE_FORMAT "\' bytes unread when getting the \'${name}\' TLV", offset);\n'
             '${lp}}\n'
             '\n'
-            '${tlv_out}:\n'
-            '${lp}if (!tlv_error)\n'
-            '${lp}    self->${variable_name}_set = TRUE;\n')
+            '${lp}self->${variable_name}_set = TRUE;\n'
+            '\n'
+            '${tlv_out}:\n')
         if self.mandatory:
             template += (
-                '${lp}else {\n'
+                '${lp}if (!self->${variable_name}_set) {\n'
                 '${lp}    ${container_underscore}_unref (self);\n'
                 '${lp}    return NULL;\n'
                 '${lp}}\n')
+        else:
+            template += (
+                '${lp};\n')
         f.write(string.Template(template).substitute(translations))
 
 
