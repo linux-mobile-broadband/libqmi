@@ -50,10 +50,10 @@ version ()
 }
 
 if [ $# -ne 2 ]; then
-    if [ $1 == "--help" ]; then
+    if [ "$1" = "--help" ]; then
         help
         exit 0
-    elif [ $1 == "--version" ]; then
+    elif [ "$1" = "--version" ]; then
         version
         exit 0
     fi
