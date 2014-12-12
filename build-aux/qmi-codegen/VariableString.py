@@ -123,14 +123,16 @@ class VariableString(Variable):
 
         if self.is_fixed_size:
             translations['fixed_size'] = self.fixed_size
+            translations['fixed_size_plus_one'] = int(self.fixed_size) + 1
             template = (
                 '\n'
                 '${lp}{\n'
-                '${lp}    gchar tmp[${fixed_size}];\n'
+                '${lp}    gchar tmp[${fixed_size_plus_one}];\n'
                 '\n'
                 '${lp}    if (!qmi_message_tlv_read_fixed_size_string (message, init_offset, &offset, ${fixed_size}, &tmp[0], &error))\n'
                 '${lp}        goto out;\n'
-                '${lp}    g_string_append_len (printable, tmp, ${fixed_size});\n'
+                '${lp}    tmp[${fixed_size}] = \'\\0\';\n'
+                '${lp}    g_string_append (printable, tmp);\n'
                 '${lp}}\n')
         else:
             translations['n_size_prefix_bytes'] = self.n_size_prefix_bytes
