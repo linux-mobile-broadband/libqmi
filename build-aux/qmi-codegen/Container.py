@@ -140,7 +140,7 @@ class Container:
         if self.fields is not None:
             for field in self.fields:
                 if field.variable is not None:
-                    variable_declaration = field.variable.build_variable_declaration('    ', field.variable_name)
+                    variable_declaration = field.variable.build_variable_declaration(False, '    ', field.variable_name)
                     translations['field_variable_name'] = field.variable_name
                     translations['field_name'] = field.name
                     template = (

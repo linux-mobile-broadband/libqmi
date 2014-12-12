@@ -81,11 +81,7 @@ class VariableStruct(Variable):
         f.write(string.Template(template).substitute(translations))
 
         for member in self.members:
-            translations['variable_format'] = member['object'].public_format
-            translations['variable_name'] = member['name']
-            template = (
-                '    ${variable_format} ${variable_name};\n')
-            f.write(string.Template(template).substitute(translations))
+            f.write(member['object'].build_variable_declaration(True, '    ', member['name']))
 
         template = ('} ${format};\n')
         f.write(string.Template(template).substitute(translations))
@@ -149,7 +145,7 @@ class VariableStruct(Variable):
     """
     Variable declaration
     """
-    def build_variable_declaration(self, line_prefix, variable_name):
+    def build_variable_declaration(self, public, line_prefix, variable_name):
         translations = { 'lp'     : line_prefix,
                          'format' : self.public_format,
                          'name'   : variable_name }

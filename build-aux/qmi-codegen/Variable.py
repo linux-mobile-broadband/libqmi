@@ -94,7 +94,7 @@ class Variable:
     """
     Builds the code to include the declaration of a variable of this kind.
     """
-    def build_variable_declaration(self, line_prefix, variable_name):
+    def build_variable_declaration(self, public, line_prefix, variable_name):
         return ''
 
     """

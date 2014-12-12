@@ -120,10 +120,10 @@ class VariableSequence(Variable):
     """
     Variable declaration
     """
-    def build_variable_declaration(self, line_prefix, variable_name):
+    def build_variable_declaration(self, public, line_prefix, variable_name):
         built = ''
         for member in self.members:
-            built += member['object'].build_variable_declaration(line_prefix, variable_name + '_' + member['name'])
+            built += member['object'].build_variable_declaration(public, line_prefix, variable_name + '_' + member['name'])
         return built
 
 

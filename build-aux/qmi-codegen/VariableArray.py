@@ -325,7 +325,7 @@ class VariableArray(Variable):
     """
     Variable declaration
     """
-    def build_variable_declaration(self, line_prefix, variable_name):
+    def build_variable_declaration(self, public, line_prefix, variable_name):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
