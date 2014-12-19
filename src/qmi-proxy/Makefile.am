@@ -19,7 +19,7 @@ qmi_proxy_LDADD = \
 if INSTALL_QMI_UDEV_RULES
 udevrulesdir = $(UDEV_BASE_DIR)/rules.d
 udevrules_DATA = 76-qmi-proxy-device-ownership.rules
+endif
 
 EXTRA_DIST = \
 	76-qmi-proxy-device-ownership.rules.in
-endif
