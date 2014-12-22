@@ -98,9 +98,25 @@ GTK_DOC_CHECK(1.0)
 
 # MBIM username
 AC_ARG_ENABLE(mbim-username,
-              AS_HELP_STRING([--enable-mbim-username=<username>], [user allowed to access MBIM devices]),,
-              enable_mbim_username="root")
-AC_DEFINE_UNQUOTED(MBIM_USERNAME, "$enable_mbim_username", [Define the MBIM username])
+              AS_HELP_STRING([--enable-mbim-username=<username>], [user allowed to access MBIM devices]))
+if test -n "$enable_mbim_username" ; then
+    MBIM_USERNAME="$enable_mbim_username"
+else
+    MBIM_USERNAME="root"
+fi
+AM_CONDITIONAL([INSTALL_MBIM_UDEV_RULES], [test "x$enable_mbim_username" = "x$MBIM_USERNAME"])
+AC_SUBST(MBIM_USERNAME)
+AC_DEFINE_UNQUOTED(MBIM_USERNAME, "$MBIM_USERNAME", [Define the MBIM username])
+AM_COND_IF([INSTALL_MBIM_UDEV_RULES], [AC_CONFIG_FILES([src/mbim-proxy/76-mbim-proxy-device-ownership.rules])])
+
+# udev base directory
+AC_ARG_WITH(udev-base-dir, AS_HELP_STRING([--with-udev-base-dir=DIR], [where udev base directory is]))
+if test -n "$with_udev_base_dir" ; then
+    UDEV_BASE_DIR="$with_udev_base_dir"
+else
+    UDEV_BASE_DIR="/lib/udev"
+fi
+AC_SUBST(UDEV_BASE_DIR)
 
 dnl Man page
 AC_PATH_PROG(HELP2MAN, help2man, false)
@@ -132,10 +148,10 @@ echo "
     libmbim $VERSION
     ==============================================
 
-    compiler:         ${CC}
-    cflags:           ${CFLAGS}
-    Maintainer mode:  ${USE_MAINTAINER_MODE}
-    Documentation:    ${enable_gtk_doc}
-    MBIM username:    ${enable_mbim_username}
-
+    compiler:             ${CC}
+    cflags:               ${CFLAGS}
+    Maintainer mode:      ${USE_MAINTAINER_MODE}
+    udev base directory:  ${UDEV_BASE_DIR}
+    Documentation:        ${enable_gtk_doc}
+    MBIM username:        ${MBIM_USERNAME}
 "
