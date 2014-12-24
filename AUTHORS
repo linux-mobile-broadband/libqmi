@@ -1,14 +1,17 @@
-Maintainers:
-Aleksander Morgado <aleksander@aleksander.es>
-Dan Williams       <dcbw@redhat.com>
+Current maintainers:
+  Aleksander Morgado <aleksander@aleksander.es>
+  Dan Williams       <dcbw@redhat.com>
 
-Other authors:
-Ben Chan
-Bjørn Mork
-Greg Suarez
-Prathmesh Prabhu
-Shawn J. Goff
-Arnaud Desmier
-Marius B. Kotsbak
-Nagaraju Kadiri
-Scott Lee
+Other contributors:
+  Ben Chan
+  Greg Suarez
+  Bjørn Mork
+  Roshan Pius
+  Prathmesh Prabhu
+  Yunlian Jiang
+  Shawn J. Goff
+  Scott Lee
+  Raju
+  Marius B. Kotsbak
+  Boris Egorov
+  Arnaud Desmier
