@@ -638,6 +638,11 @@ parse_response (MbimDevice *self)
         /* Play with the received message */
         process_message (self, message);
 
+        /* If we were force-closed during the processing of a message, we'd be
+         * losing the response array directly, so check just in case */
+        if (!self->priv->response)
+            break;
+
         /* Remove message from buffer */
         g_byte_array_remove_range (self->priv->response, 0, in_length);
     } while (self->priv->response->len > 0);
