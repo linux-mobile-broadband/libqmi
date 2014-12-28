@@ -1702,7 +1702,7 @@ mbim_message_error_new (guint32           transaction_id,
 
     self = _mbim_message_allocate (MBIM_MESSAGE_TYPE_HOST_ERROR,
                                    transaction_id,
-                                   sizeof (struct open_message));
+                                   sizeof (struct error_message));
 
     /* Open header */
     ((struct full_message *)(self->data))->message.error.error_status_code = GUINT32_TO_LE (error_status_code);
