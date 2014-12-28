@@ -595,10 +595,9 @@ process_message (MbimDevice  *self,
                 mbim_message_unref (tr->fragments);
             tr->fragments = mbim_message_dup (message);
             transaction_complete_and_free (tr, NULL);
-            return;
         }
 
-        /* No transaction matched, use error signal */
+        /* Signals are emitted regardless of whether the transaction matched or not */
         error_indication = mbim_message_error_get_error (message);
         g_signal_emit (self, signals[SIGNAL_ERROR], 0, error_indication);
         g_error_free (error_indication);
