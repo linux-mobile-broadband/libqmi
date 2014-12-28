@@ -126,6 +126,7 @@ typedef struct {
 
     MbimDevice *device;
     guint indication_id;
+    guint function_error_id;
     gboolean service_subscriber_list_enabled;
     MbimEventEntry **mbim_event_entry_array;
     gsize mbim_event_entry_array_size;
@@ -155,6 +156,9 @@ client_disconnect (Client *client)
 static void client_indication_cb (MbimDevice *device,
                                   MbimMessage *message,
                                   Client *client);
+static void client_error_cb      (MbimDevice *device,
+                                  GError     *error,
+                                  Client     *client);
 
 static void
 client_set_device (Client *client,
@@ -163,6 +167,8 @@ client_set_device (Client *client,
     if (client->device) {
         if (g_signal_handler_is_connected (client->device, client->indication_id))
             g_signal_handler_disconnect (client->device, client->indication_id);
+        if (g_signal_handler_is_connected (client->device, client->function_error_id))
+            g_signal_handler_disconnect (client->device, client->function_error_id);
         g_object_unref (client->device);
     }
 
@@ -172,9 +178,14 @@ client_set_device (Client *client,
                                                   MBIM_DEVICE_SIGNAL_INDICATE_STATUS,
                                                   G_CALLBACK (client_indication_cb),
                                                   client);
+        client->function_error_id = g_signal_connect (client->device,
+                                                      MBIM_DEVICE_SIGNAL_ERROR,
+                                                      G_CALLBACK (client_error_cb),
+                                                      client);
     } else {
         client->device = NULL;
         client->indication_id = 0;
+        client->function_error_id = 0;
     }
 }
 
@@ -305,6 +316,20 @@ client_indication_cb (MbimDevice *device,
             g_warning ("couldn't forward indication to client");
             g_error_free (error);
         }
+    }
+}
+
+/*****************************************************************************/
+/* Handling generic function errors */
+
+static void
+client_error_cb (MbimDevice *device,
+                 GError     *error,
+                 Client     *client)
+{
+    if (g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_NOT_OPENED)) {
+        g_debug ("Device not opened error reported, forcing close");
+        mbim_device_close_force (device, NULL);
     }
 }
 
