@@ -1711,6 +1711,33 @@ mbim_message_error_new (guint32           transaction_id,
 }
 
 /**
+ * mbim_message_function_error_new:
+ * @transaction_id: transaction ID.
+ * @error_status_code: a #MbimProtocolError.
+ *
+ * Create a new #MbimMessage of type %MBIM_MESSAGE_TYPE_FUNCTION_ERROR with the specified
+ * parameters.
+ *
+ * Returns: (transfer full): a newly created #MbimMessage. The returned value
+ * should be freed with mbim_message_unref().
+ */
+MbimMessage *
+mbim_message_function_error_new (guint32           transaction_id,
+                                 MbimProtocolError error_status_code)
+{
+    GByteArray *self;
+
+    self = _mbim_message_allocate (MBIM_MESSAGE_TYPE_FUNCTION_ERROR,
+                                   transaction_id,
+                                   sizeof (struct error_message));
+
+    /* Open header */
+    ((struct full_message *)(self->data))->message.error.error_status_code = GUINT32_TO_LE (error_status_code);
+
+    return (MbimMessage *)self;
+}
+
+/**
  * mbim_message_error_get_error_status_code:
  * @self: a #MbimMessage.
  *

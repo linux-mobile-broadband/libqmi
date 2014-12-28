@@ -136,6 +136,7 @@ mbim_message_close_done_get_status_code
 mbim_message_close_done_get_result
 <SUBSECTION MethodsError>
 mbim_message_error_new
+mbim_message_function_error_new
 mbim_message_error_get_error_status_code
 mbim_message_error_get_error
 <SUBSECTION MethodsCommand>
