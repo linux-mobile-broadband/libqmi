@@ -567,7 +567,18 @@ process_message (MbimDevice  *self,
     }
 
     case MBIM_MESSAGE_TYPE_FUNCTION_ERROR: {
+        Transaction *tr;
         GError *error_indication;
+
+        /* Try to match this transaction just per transaction ID */
+        tr = device_release_transaction (self,
+                                         TRANSACTION_TYPE_HOST,
+                                         MBIM_MESSAGE_TYPE_INVALID,
+                                         mbim_message_get_transaction_id (message));
+
+        if (!tr)
+            g_debug ("[%s] No transaction matched in received function error message",
+                     self->priv->path_display);
 
         if (mbim_utils_get_traces_enabled ()) {
             gchar *printable;
@@ -579,6 +590,15 @@ process_message (MbimDevice  *self,
             g_free (printable);
         }
 
+        if (tr) {
+            if (tr->fragments)
+                mbim_message_unref (tr->fragments);
+            tr->fragments = mbim_message_dup (message);
+            transaction_complete_and_free (tr, NULL);
+            return;
+        }
+
+        /* No transaction matched, use error signal */
         error_indication = mbim_message_error_get_error (message);
         g_signal_emit (self, signals[SIGNAL_ERROR], 0, error_indication);
         g_error_free (error_indication);
