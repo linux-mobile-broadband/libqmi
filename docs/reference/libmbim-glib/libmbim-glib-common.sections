@@ -159,6 +159,8 @@ mbim_message_indicate_status_get_service
 mbim_message_indicate_status_get_service_id
 mbim_message_indicate_status_get_cid
 mbim_message_indicate_status_get_raw_information_buffer
+<SUBSECTION MethodsOtherHelpers>
+mbim_message_response_get_result
 <SUBSECTION Private>
 mbim_message_open_done_new
 mbim_message_close_done_new

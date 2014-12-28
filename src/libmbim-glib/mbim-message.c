@@ -2120,3 +2120,73 @@ mbim_message_indicate_status_get_raw_information_buffer (const MbimMessage *self
             ((struct full_message *)(self->data))->message.indicate_status.buffer :
             NULL);
 }
+
+/*****************************************************************************/
+/* Other helpers */
+
+/**
+ * mbim_message_response_get_result:
+ * @self: a #MbimMessage response message.
+ * @expected: expected #MbimMessageType if there isn't any error in the operation.
+ * @error: return location for error or %NULL.
+ *
+ * Gets the result of the operation from the response message, which
+ * can be either a %MBIM_MESSAGE_TYPE_FUNCTION_ERROR message or a message of the
+ * specified @expected type.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ */
+gboolean
+mbim_message_response_get_result (const MbimMessage  *self,
+                                  MbimMessageType     expected,
+                                  GError            **error)
+{
+    MbimStatusError status = MBIM_STATUS_ERROR_NONE;
+    MbimMessageType type;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_val_if_fail (expected == MBIM_MESSAGE_TYPE_OPEN_DONE  ||
+                          expected == MBIM_MESSAGE_TYPE_CLOSE_DONE ||
+                          expected == MBIM_MESSAGE_TYPE_COMMAND_DONE, FALSE);
+
+    type = MBIM_MESSAGE_GET_MESSAGE_TYPE (self);
+    if (type != MBIM_MESSAGE_TYPE_FUNCTION_ERROR && type != expected) {
+        g_set_error (error,
+                     MBIM_CORE_ERROR,
+                     MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "Unexpected response message type: 0x%04X", (guint32) type);
+        return FALSE;
+    }
+
+    switch (type) {
+    case MBIM_MESSAGE_TYPE_OPEN_DONE:
+        status = (MbimStatusError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.open_done.status_code);
+        break;
+
+    case MBIM_MESSAGE_TYPE_CLOSE_DONE:
+        status = (MbimStatusError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.close_done.status_code);
+        break;
+
+    case MBIM_MESSAGE_TYPE_COMMAND_DONE:
+        status = (MbimStatusError) GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command_done.status_code);
+        break;
+
+    case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
+        if (error)
+            *error = mbim_message_error_get_error (self);
+        return FALSE;
+
+    default:
+        g_assert_not_reached ();
+    }
+
+    if (status == MBIM_STATUS_ERROR_NONE)
+        return TRUE;
+
+    /* Build error */
+    g_set_error_literal (error,
+                         MBIM_STATUS_ERROR,
+                         status,
+                         mbim_status_error_get_string (status));
+    return FALSE;
+}

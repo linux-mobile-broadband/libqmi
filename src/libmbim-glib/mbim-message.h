@@ -212,6 +212,13 @@ guint32          mbim_message_indicate_status_get_cid                    (const 
 const guint8    *mbim_message_indicate_status_get_raw_information_buffer (const MbimMessage  *self,
                                                                           guint32            *length);
 
+/*****************************************************************************/
+/* Other helpers */
+
+gboolean mbim_message_response_get_result (const MbimMessage  *self,
+                                           MbimMessageType     expected,
+                                           GError            **error);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_MESSAGE_H_ */

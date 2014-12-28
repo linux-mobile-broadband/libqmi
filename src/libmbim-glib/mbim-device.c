@@ -1172,7 +1172,7 @@ open_message_ready (MbimDevice        *self,
         return;
     }
 
-    if (!mbim_message_open_done_get_result (response, &error)) {
+    if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_OPEN_DONE, &error)) {
         g_debug ("getting open done result failed: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
         device_open_context_complete_and_free (ctx, error);
@@ -1516,9 +1516,7 @@ close_message_ready (MbimDevice         *self,
     response = mbim_device_command_finish (self, res, &error);
     if (!response)
         g_simple_async_result_take_error (ctx->result, error);
-    else if (!mbim_message_close_done_get_result (response, &error))
-        g_simple_async_result_take_error (ctx->result, error);
-    else if (!destroy_iochannel (self, &error))
+    else if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_CLOSE_DONE, &error))
         g_simple_async_result_take_error (ctx->result, error);
     else
         g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);

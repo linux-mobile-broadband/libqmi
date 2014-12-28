@@ -271,7 +271,7 @@ query_device_caps_ready (MbimDevice   *device,
     gchar *hardware_info;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -367,7 +367,7 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
     gchar *telephone_numbers_str;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -430,7 +430,7 @@ query_radio_state_ready (MbimDevice   *device,
     const gchar *software_radio_state_str;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -475,7 +475,7 @@ query_device_services_ready (MbimDevice   *device,
     guint32 max_dss_sessions;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -567,7 +567,7 @@ pin_ready (MbimDevice   *device,
     guint32 remaining_attempts;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -671,7 +671,7 @@ connect_ready (MbimDevice   *device,
     guint32 nw_error;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -802,7 +802,7 @@ home_provider_ready (MbimDevice   *device,
     gchar *cellular_class_str;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -858,7 +858,7 @@ preferred_providers_ready (MbimDevice   *device,
     guint i;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -928,7 +928,7 @@ visible_providers_ready (MbimDevice   *device,
     guint i;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -1007,7 +1007,7 @@ register_state_ready (MbimDevice   *device,
     gchar *registration_flag_str;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -1087,7 +1087,7 @@ signal_state_ready (MbimDevice   *device,
     guint32 error_rate_threshold;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -1150,7 +1150,7 @@ packet_service_ready (MbimDevice   *device,
     guint64 downlink_speed;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
@@ -1222,7 +1222,7 @@ packet_statistics_ready (MbimDevice   *device,
     guint32 out_discards;
 
     response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_command_done_get_result (response, &error)) {
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
         if (response)
