@@ -836,6 +836,13 @@ device_service_subscribe_list_set_ready (MbimDevice   *device,
 
     tmp_response = mbim_device_command_finish (device, res, &error);
     if (!tmp_response) {
+        /* Translate a MbimDevice wrong state error into a Not-Opened function error. */
+        if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_WRONG_STATE)) {
+            request->response = mbim_message_function_error_new (mbim_message_get_transaction_id (request->message), MBIM_PROTOCOL_ERROR_NOT_OPENED);
+            request_complete_and_free (request);
+            return;
+        }
+
         g_debug ("sending request to device failed: %s", error->message);
         g_error_free (error);
         /* Don't disconnect client, just let the request timeout in its side */
@@ -910,6 +917,13 @@ device_command_ready (MbimDevice *device,
 
     request->response = mbim_device_command_finish (device, res, &error);
     if (!request->response) {
+        /* Translate a MbimDevice wrong state error into a Not-Opened function error. */
+        if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_WRONG_STATE)) {
+            request->response = mbim_message_function_error_new (request->original_transaction_id, MBIM_PROTOCOL_ERROR_NOT_OPENED);
+            request_complete_and_free (request);
+            return;
+        }
+
         g_debug ("sending request to device failed: %s", error->message);
         g_error_free (error);
         /* Don't disconnect client, just let the request timeout in its side */
