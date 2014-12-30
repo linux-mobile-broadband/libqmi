@@ -1,4 +1,42 @@
 
+Overview of changes in libmbim 1.12
+----------------------------------------
+
+* New `--enable-mbim-username' option during configure, which allows specifying
+  which will be the user owning the /dev/cdc-wdm character devices of all MBIM
+  modems (udev rules are installed to change file ownership). If this option is
+  used, the mbim-proxy will only allow connections from processes running by the
+  specified user or by the root user.
+
+* Function error messages can now be returned by the MbimDevice as responses to
+  `Command', `Open' or `Close' messages. Users of the library should not assume
+  the type of message returned to the previous actions.
+
+* The MbimProxy will monitor for 'NotOpened' errors, and when one detected it
+  will directly close the internal MbimDevice. Any subsequent request sent by
+  clients to that specific device will be aborted with a proxy-generated
+  'NotOpened' error. Clients will need to explicitly reopen the ports in that
+  case.
+
+* The API now has a new mbim_message_response_get_result() method which allows
+  getting a GError from a message which may be of a specific type (e.g. a
+  `Command Done' message in response to a `Command' request) or instead the
+  generic `Function Error' message type. Users of the library can use this new
+  method to avoid assuming the type of message returned.
+
+      E.g. the following check:
+          mbim_message_command_done_get_result (response, &error);
+      Can be updated as:
+          mbim_message_response_get_result (response,
+                                            MBIM_MESSAGE_TYPE_COMMAND_DONE,
+                                            &error);
+      And the same logic can be applied to `Open' and `Close' messages.
+
+* Other bugfixes and minor improvements:
+  ** Attach timeout and idle events to the thread-default context.
+  ** Fix bashisms in the mbim-network script.
+
+
 Overview of changes in libmbim 1.10
 ----------------------------------------
 
