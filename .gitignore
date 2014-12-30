@@ -88,3 +88,4 @@ src/mbimcli/mbimcli
 utils/mbim-network
 
 src/mbim-proxy/mbim-proxy
+src/mbim-proxy/76-mbim-proxy-device-ownership.rules
