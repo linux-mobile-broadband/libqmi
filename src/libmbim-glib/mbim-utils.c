@@ -79,6 +79,14 @@ gboolean
 __mbim_user_allowed (uid_t uid,
                      GError **error)
 {
+#ifndef MBIM_USERNAME_ENABLED
+    if (uid == 0)
+        return TRUE;
+#else
+# ifndef MBIM_USERNAME
+#  error MBIM username not defined
+# endif
+
     struct passwd *expected_usr = NULL;
 
     expected_usr = getpwnam (MBIM_USERNAME);
@@ -97,6 +105,7 @@ __mbim_user_allowed (uid_t uid,
 
     if (uid == expected_usr->pw_uid)
         return TRUE;
+#endif
 
     g_set_error (error,
                  MBIM_CORE_ERROR,

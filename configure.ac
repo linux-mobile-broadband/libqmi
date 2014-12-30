@@ -97,17 +97,20 @@ dnl Documentation
 GTK_DOC_CHECK(1.0)
 
 # MBIM username
+MBIM_USERNAME="root"
 AC_ARG_ENABLE(mbim-username,
               AS_HELP_STRING([--enable-mbim-username=<username>], [user allowed to access MBIM devices]))
 if test -n "$enable_mbim_username" ; then
+    MBIM_USERNAME_ENABLED=yes
+    AC_DEFINE(MBIM_USERNAME_ENABLED, 1, [Define if we enable MBIM username])
     MBIM_USERNAME="$enable_mbim_username"
+    AC_SUBST(MBIM_USERNAME)
+    AC_DEFINE_UNQUOTED(MBIM_USERNAME, "$MBIM_USERNAME", [Define the MBIM username])
 else
-    MBIM_USERNAME="root"
+    MBIM_USERNAME_ENABLED=no
 fi
-AM_CONDITIONAL([INSTALL_MBIM_UDEV_RULES], [test "x$enable_mbim_username" = "x$MBIM_USERNAME"])
-AC_SUBST(MBIM_USERNAME)
-AC_DEFINE_UNQUOTED(MBIM_USERNAME, "$MBIM_USERNAME", [Define the MBIM username])
-AM_COND_IF([INSTALL_MBIM_UDEV_RULES], [AC_CONFIG_FILES([src/mbim-proxy/76-mbim-proxy-device-ownership.rules])])
+
+AM_CONDITIONAL([MBIM_USERNAME_ENABLED], [test "x$MBIM_USERNAME_ENABLED" = "xyes"])
 
 # udev base directory
 AC_ARG_WITH(udev-base-dir, AS_HELP_STRING([--with-udev-base-dir=DIR], [where udev base directory is]))
@@ -142,6 +145,11 @@ AC_CONFIG_FILES([Makefile
                  docs/reference/libmbim-glib/Makefile
                  docs/reference/libmbim-glib/version.xml
                  docs/man/Makefile])
+
+if test "x$MBIM_USERNAME_ENABLED" = "xyes"; then
+    AC_CONFIG_FILES([src/mbim-proxy/76-mbim-proxy-device-ownership.rules])
+fi
+
 AC_OUTPUT
 
 echo "
@@ -153,5 +161,5 @@ echo "
     Maintainer mode:      ${USE_MAINTAINER_MODE}
     udev base directory:  ${UDEV_BASE_DIR}
     Documentation:        ${enable_gtk_doc}
-    MBIM username:        ${MBIM_USERNAME}
+    MBIM username:        ${MBIM_USERNAME_ENABLED} (${MBIM_USERNAME})
 "

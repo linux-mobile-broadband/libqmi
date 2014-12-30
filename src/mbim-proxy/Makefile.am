@@ -16,7 +16,7 @@ mbim_proxy_LDADD = \
 	$(top_builddir)/src/libmbim-glib/libmbim-glib.la
 
 #Install udev rules only if configured with --enable-mbim-username
-if INSTALL_MBIM_UDEV_RULES
+if MBIM_USERNAME_ENABLED
 udevrulesdir = $(UDEV_BASE_DIR)/rules.d
 udevrules_DATA = 76-mbim-proxy-device-ownership.rules
 endif
