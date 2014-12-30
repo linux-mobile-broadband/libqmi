@@ -1,4 +1,18 @@
 
+Overview of changes in libqmi 1.10.6
+----------------------------------------
+
+* Attach timeout and idle events to the thread-default context.
+
+* Fix bashisms in the qmi-network script.
+
+* Updated minumum available version of several messages:
+  ** dms: "UIM Get IMSI" seems to be available in DMS 1.1 already
+  ** dms: "UIM Get ICCID" seems to be available in DMS 1.1 already
+
+* Fix qmi_message_set_transaction_id() in non-CTL messages.
+
+
 Overview of changes in libqmi 1.10.4
 ----------------------------------------
 
