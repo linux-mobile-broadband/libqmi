@@ -81,6 +81,14 @@ gboolean
 __qmi_user_allowed (uid_t uid,
                     GError **error)
 {
+#ifndef QMI_USERNAME_ENABLED
+    if (uid == 0)
+        return TRUE;
+#else
+# ifndef QMI_USERNAME
+#  error QMI username not defined
+# endif
+
     struct passwd *expected_usr = NULL;
 
     expected_usr = getpwnam (QMI_USERNAME);
@@ -99,6 +107,7 @@ __qmi_user_allowed (uid_t uid,
 
     if (uid == expected_usr->pw_uid)
         return TRUE;
+#endif
 
     g_set_error (error,
                  QMI_CORE_ERROR,

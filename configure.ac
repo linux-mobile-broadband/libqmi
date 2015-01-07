@@ -80,17 +80,20 @@ dnl Documentation
 GTK_DOC_CHECK(1.0)
 
 # QMI username
+QMI_USERNAME="root"
 AC_ARG_ENABLE(qmi-username,
               AS_HELP_STRING([--enable-qmi-username=<username>], [user allowed to access QMI devices]))
 if test -n "$enable_qmi_username" ; then
+    QMI_USERNAME_ENABLED=yes
+    AC_DEFINE(QMI_USERNAME_ENABLED, 1, [Define if we enable QMI username])
     QMI_USERNAME="$enable_qmi_username"
+    AC_SUBST(QMI_USERNAME)
+    AC_DEFINE_UNQUOTED(QMI_USERNAME, "$QMI_USERNAME", [Define the QMI username])
 else
-    QMI_USERNAME="root"
+    QMI_USERNAME_ENABLED=no
 fi
-AM_CONDITIONAL([INSTALL_QMI_UDEV_RULES], [test "x$enable_qmi_username" = "x$QMI_USERNAME"])
-AC_SUBST(QMI_USERNAME)
-AC_DEFINE_UNQUOTED(QMI_USERNAME, "$QMI_USERNAME", [Define the QMI username])
-AM_COND_IF([INSTALL_QMI_UDEV_RULES], [AC_CONFIG_FILES([src/qmi-proxy/76-qmi-proxy-device-ownership.rules])])
+
+AM_CONDITIONAL([QMI_USERNAME_ENABLED], [test "x$QMI_USERNAME_ENABLED" = "xyes"])
 
 # udev base directory
 AC_ARG_WITH(udev-base-dir, AS_HELP_STRING([--with-udev-base-dir=DIR], [where udev base directory is]))
@@ -126,6 +129,11 @@ AC_CONFIG_FILES([Makefile
                  docs/reference/libqmi-glib/Makefile
                  docs/reference/libqmi-glib/version.xml
                  docs/man/Makefile])
+
+if test "x$QMI_USERNAME_ENABLED" = "xyes"; then
+    AC_CONFIG_FILES([src/qmi-proxy/76-qmi-proxy-device-ownership.rules])
+fi
+
 AC_OUTPUT
 
 echo "
@@ -137,5 +145,5 @@ echo "
     Maintainer mode:      ${USE_MAINTAINER_MODE}
     udev base directory:  ${UDEV_BASE_DIR}
     Documentation:        ${enable_gtk_doc}
-    QMI username:         ${QMI_USERNAME}
+    QMI username:         ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
 "
