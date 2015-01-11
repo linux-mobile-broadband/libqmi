@@ -46,6 +46,7 @@ def add_copyright(f):
         " * Boston, MA 02110-1301 USA.\n"
         " *\n"
         " * Copyright (C) 2012 Lanedo GmbH\n"
+        " * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>\n"
         " */\n"
         "\n");
 
