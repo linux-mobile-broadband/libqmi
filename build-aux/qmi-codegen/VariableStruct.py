@@ -16,6 +16,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright (C) 2012 Lanedo GmbH
+# Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
 #
 
 import string
@@ -48,6 +49,8 @@ class VariableStruct(Variable):
             member = {}
             member['name'] = utils.build_underscore_name(member_dictionary['name'])
             member['object'] = VariableFactory.create_variable(member_dictionary, struct_type_name + ' ' + member['name'], self.container_type)
+            # Specify that the variable will be defined in the public header
+            member['object'].flag_public()
             self.members.append(member)
 
         # We'll need to dispose if at least one of the members needs it

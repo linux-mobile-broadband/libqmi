@@ -2,11 +2,6 @@
 Overview of changes in libqmi 1.12.0
 ----------------------------------------
 
-This version comes with one API break:
-* The size of the `QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement'
-  public struct changes, as the `plmn' field is now a fixed-size array of 4
-  bytes instead of a pointer to a char array.
-
 * New `--enable-qmi-username' option during configure, which allows specifying
   which will be the user owning the /dev/cdc-wdm character devices of all QMI
   modems (udev rules are installed to change file ownership). If this option is
