@@ -66,6 +66,7 @@ src/qmicli/test/test-helpers
 src/qmi-proxy/.deps
 src/qmi-proxy/.libs
 src/qmi-proxy/qmi-proxy
+src/qmi-proxy/76-qmi-proxy-device-ownership.rules
 
 build-aux/qmi-codegen/*.pyc
 
