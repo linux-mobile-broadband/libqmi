@@ -89,13 +89,12 @@ __mbim_user_allowed (uid_t uid,
 
     struct passwd *expected_usr = NULL;
 
+    /* Root user is always allowed, regardless of the specified MBIM_USERNAME */
+    if (uid == 0)
+        return TRUE;
+
     expected_usr = getpwnam (MBIM_USERNAME);
     if (!expected_usr) {
-        g_warning ("Unknown user configured: %s", MBIM_USERNAME);
-        /* Falling back to check for root user if the configured user is unknown */
-        if (uid == 0)
-            return TRUE;
-
         g_set_error (error,
                      MBIM_CORE_ERROR,
                      MBIM_CORE_ERROR_FAILED,
