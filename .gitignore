@@ -28,65 +28,65 @@ stamp-h1
 depcomp
 gtk-doc.make
 
-data/pkg-config/qmi-glib.pc
+/data/pkg-config/qmi-glib.pc
 
-src/Makefile
-src/Makefile.in
+/src/Makefile
+/src/Makefile.in
 
-src/libqmi-glib/.libs
-src/libqmi-glib/.deps
-src/libqmi-glib/Makefile
-src/libqmi-glib/Makefile.in
-src/libqmi-glib/libqmi-glib.la
-src/libqmi-glib/qmi-version.h
+/src/libqmi-glib/.libs
+/src/libqmi-glib/.deps
+/src/libqmi-glib/Makefile
+/src/libqmi-glib/Makefile.in
+/src/libqmi-glib/libqmi-glib.la
+/src/libqmi-glib/qmi-version.h
 
-src/libqmi-glib/generated/.libs
-src/libqmi-glib/generated/.deps
-src/libqmi-glib/generated/*.c
-src/libqmi-glib/generated/*.h
-src/libqmi-glib/generated/*.sections
+/src/libqmi-glib/generated/.libs
+/src/libqmi-glib/generated/.deps
+/src/libqmi-glib/generated/*.c
+/src/libqmi-glib/generated/*.h
+/src/libqmi-glib/generated/*.sections
 
-src/libqmi-glib/test/.libs
-src/libqmi-glib/test/.deps
-src/libqmi-glib/test/Makefile
-src/libqmi-glib/test/Makefile.in
-src/libqmi-glib/test/test-utils
-src/libqmi-glib/test/test-message
-src/libqmi-glib/test/test-generated
+/src/libqmi-glib/test/.libs
+/src/libqmi-glib/test/.deps
+/src/libqmi-glib/test/Makefile
+/src/libqmi-glib/test/Makefile.in
+/src/libqmi-glib/test/test-utils
+/src/libqmi-glib/test/test-message
+/src/libqmi-glib/test/test-generated
 
-src/qmicli/.deps
-src/qmicli/.libs
-src/qmicli/qmicli
-src/qmicli/test/.libs
-src/qmicli/test/.deps
-src/qmicli/test/Makefile
-src/qmicli/test/Makefile.in
-src/qmicli/test/test-helpers
+/src/qmicli/.deps
+/src/qmicli/.libs
+/src/qmicli/qmicli
+/src/qmicli/test/.libs
+/src/qmicli/test/.deps
+/src/qmicli/test/Makefile
+/src/qmicli/test/Makefile.in
+/src/qmicli/test/test-helpers
 
-src/qmi-proxy/.deps
-src/qmi-proxy/.libs
-src/qmi-proxy/qmi-proxy
-src/qmi-proxy/76-qmi-proxy-device-ownership.rules
+/src/qmi-proxy/.deps
+/src/qmi-proxy/.libs
+/src/qmi-proxy/qmi-proxy
+/src/qmi-proxy/76-qmi-proxy-device-ownership.rules
 
-build-aux/qmi-codegen/*.pyc
+/build-aux/qmi-codegen/*.pyc
 
-docs/reference/libqmi-glib/version.xml
-docs/reference/libqmi-glib/libqmi-glib.args
-docs/reference/libqmi-glib/libqmi-glib.hierarchy
-docs/reference/libqmi-glib/libqmi-glib.interfaces
-docs/reference/libqmi-glib/libqmi-glib.prerequisites
-docs/reference/libqmi-glib/libqmi-glib.signals
-docs/reference/libqmi-glib/libqmi-glib.types
-docs/reference/libqmi-glib/*.mstamp
-docs/reference/libqmi-glib/*.stamp
-docs/reference/libqmi-glib/*.txt
-docs/reference/libqmi-glib/*.bak
-docs/reference/libqmi-glib/html
-docs/reference/libqmi-glib/tmpl
-docs/reference/libqmi-glib/xml
-docs/reference/libqmi-glib/.libs
+/docs/reference/libqmi-glib/version.xml
+/docs/reference/libqmi-glib/libqmi-glib.args
+/docs/reference/libqmi-glib/libqmi-glib.hierarchy
+/docs/reference/libqmi-glib/libqmi-glib.interfaces
+/docs/reference/libqmi-glib/libqmi-glib.prerequisites
+/docs/reference/libqmi-glib/libqmi-glib.signals
+/docs/reference/libqmi-glib/libqmi-glib.types
+/docs/reference/libqmi-glib/*.mstamp
+/docs/reference/libqmi-glib/*.stamp
+/docs/reference/libqmi-glib/*.txt
+/docs/reference/libqmi-glib/*.bak
+/docs/reference/libqmi-glib/html
+/docs/reference/libqmi-glib/tmpl
+/docs/reference/libqmi-glib/xml
+/docs/reference/libqmi-glib/.libs
 
-docs/man/qmicli.1
-docs/man/qmi-network.1
+/docs/man/qmicli.1
+/docs/man/qmi-network.1
 
-utils/qmi-network
+/utils/qmi-network
