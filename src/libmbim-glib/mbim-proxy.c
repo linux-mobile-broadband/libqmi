@@ -390,6 +390,22 @@ request_new (MbimProxy   *self,
 /*****************************************************************************/
 /* Internal proxy device opening operation */
 
+typedef struct {
+    MbimProxy          *self;
+    MbimDevice         *device;
+    guint32             timeout_secs;
+    GSimpleAsyncResult *result;
+} InternalDeviceOpenContext;
+
+static void
+internal_device_open_context_free (InternalDeviceOpenContext *ctx)
+{
+    g_object_unref (ctx->result);
+    g_object_unref (ctx->device);
+    g_object_unref (ctx->self);
+    g_slice_free (InternalDeviceOpenContext, ctx);
+}
+
 static gboolean
 internal_device_open_finish (MbimProxy     *self,
                              GAsyncResult  *res,
@@ -487,50 +503,109 @@ device_open_ready (MbimDevice   *device,
 }
 
 static void
+internal_open (InternalDeviceOpenContext *ctx)
+{
+    OpeningDevice *info;
+
+    /* If already being opened, queue it up */
+    info = peek_opening_device_info (ctx->self, ctx->device);
+    if (info) {
+        /* Propagate result object from context */
+        info->pending = g_list_append (info->pending, g_object_ref (ctx->result));
+        internal_device_open_context_free (ctx);
+        return;
+    }
+
+    /* First time opening, go on */
+    info = g_slice_new0 (OpeningDevice);
+    info->device = g_object_ref (ctx->device);
+    info->pending = g_list_append (info->pending, g_object_ref (ctx->result));
+    ctx->self->priv->opening_devices = g_list_prepend (ctx->self->priv->opening_devices, info);
+
+    /* Note: for now, only the first timeout request is taken into account */
+
+    /* Need to open the device; and we must make sure the proxy only does this once, even
+     * when multiple clients request it */
+    mbim_device_open (ctx->device,
+                      ctx->timeout_secs,
+                      NULL,
+                      (GAsyncReadyCallback)device_open_ready,
+                      g_object_ref (ctx->self));
+
+    internal_device_open_context_free (ctx);
+}
+
+static void
+internal_device_open_caps_query_ready (MbimDevice                *device,
+                                       GAsyncResult              *res,
+                                       InternalDeviceOpenContext *ctx)
+{
+    GError *error = NULL;
+    MbimMessage *response;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        /* If we get a not-opened error, well, force closing right away and reopen */
+        if (g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_NOT_OPENED)) {
+            g_debug ("device not-opened error reported, reopening");
+            mbim_device_close_force (device, NULL);
+            internal_open (ctx);
+            if (response)
+                mbim_message_unref (response);
+            g_error_free (error);
+            return;
+        }
+
+        /* Warn other (unlikely!) errors, but keep on anyway */
+        g_warning ("device caps query during internal open failed: %s", error->message);
+        g_error_free (error);
+    }
+
+    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+    g_simple_async_result_complete (ctx->result);
+    internal_device_open_context_free (ctx);
+
+    if (response)
+        mbim_message_unref (response);
+}
+
+static void
 internal_device_open (MbimProxy           *self,
                       MbimDevice          *device,
                       guint32              timeout_secs,
                       GAsyncReadyCallback  callback,
                       gpointer             user_data)
 {
-    OpeningDevice *info;
-    GSimpleAsyncResult *simple;
+    InternalDeviceOpenContext *ctx;
 
-    simple = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        internal_device_open);
+    ctx = g_slice_new0 (InternalDeviceOpenContext);
+    ctx->self         = g_object_ref (self);
+    ctx->device       = g_object_ref (device);
+    ctx->timeout_secs = timeout_secs;
+    ctx->result       = g_simple_async_result_new (G_OBJECT (self),
+                                                   callback,
+                                                   user_data,
+                                                   internal_device_open);
 
-    /* If the device is already open, we are done */
+    /* If the device is flagged as already open, we still want to check
+     * whether that's totally true, and we do that with a standard command
+     * (loading caps in this case). */
     if (mbim_device_is_open (device)) {
-        g_simple_async_result_set_op_res_gboolean (simple, TRUE);
-        g_simple_async_result_complete_in_idle (simple);
-        g_object_unref (simple);
+        MbimMessage *message;
+
+        g_debug ("checking device caps during client device open...");
+        message = mbim_message_device_caps_query_new (NULL);
+        mbim_device_command (device,
+                             message,
+                             5,
+                             NULL,
+                             (GAsyncReadyCallback)internal_device_open_caps_query_ready,
+                             ctx);
+        mbim_message_unref (message);
         return;
     }
 
-    /* If already being opened, queue it up */
-    info = peek_opening_device_info (self, device);
-    if (info) {
-        info->pending = g_list_append (info->pending, simple);
-        return;
-    }
-
-    /* First time opening, go on */
-    info = g_slice_new0 (OpeningDevice);
-    info->device = g_object_ref (device);
-    info->pending = g_list_append (info->pending, simple);
-    self->priv->opening_devices = g_list_prepend (self->priv->opening_devices, info);
-
-    /* Note: for now, only the first timeout request is taken into account */
-
-    /* Need to open the device; and we must make sure the proxy only does this once, even
-     * when multiple clients request it */
-    mbim_device_open (device,
-                      timeout_secs,
-                      NULL,
-                      (GAsyncReadyCallback)device_open_ready,
-                      g_object_ref (self));
+    internal_open (ctx);
 }
 
 /*****************************************************************************/
