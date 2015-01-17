@@ -212,14 +212,17 @@ device_release_transaction (MbimDevice      *self,
 {
     Transaction *tr = NULL;
 
+    /* Only return transaction if it was released from the HT */
     if (self->priv->transactions[type]) {
         tr = g_hash_table_lookup (self->priv->transactions[type], GUINT_TO_POINTER (transaction_id));
-        if (tr && ((tr->type == expected_type) || (expected_type == MBIM_MESSAGE_TYPE_INVALID)))
+        if (tr && ((tr->type == expected_type) || (expected_type == MBIM_MESSAGE_TYPE_INVALID))) {
             /* If found, remove it from the HT */
             g_hash_table_remove (self->priv->transactions[type], GUINT_TO_POINTER (transaction_id));
+            return tr;
+        }
     }
 
-    return tr;
+    return NULL;
 }
 
 static gboolean
