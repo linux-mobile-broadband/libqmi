@@ -542,6 +542,11 @@ internal_device_open_caps_query_ready (MbimDevice                *device,
 {
     GError *error = NULL;
     MbimMessage *response;
+    GList *l;
+
+    /* Always unblock all signals from all clients */
+    for (l = ctx->self->priv->clients; l; l = g_list_next (l))
+        g_signal_handlers_unblock_by_func (device, client_error_cb, l->data);
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -592,6 +597,13 @@ internal_device_open (MbimProxy           *self,
      * (loading caps in this case). */
     if (mbim_device_is_open (device)) {
         MbimMessage *message;
+        GList *l;
+
+        /* Avoid getting notified of errors in this internal check, as we're
+         * already going to check for the NotOpened error ourselves in the
+         * ready callback, and we'll reopen silently if we find this. */
+        for (l = self->priv->clients; l; l = g_list_next (l))
+            g_signal_handlers_block_by_func (device, client_error_cb, l->data);
 
         g_debug ("checking device caps during client device open...");
         message = mbim_message_device_caps_query_new (NULL);
