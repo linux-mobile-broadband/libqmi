@@ -139,6 +139,7 @@ typedef struct {
 } TransactionWaitContext;
 
 typedef struct {
+    MbimDevice *self;
     MbimMessage *fragments;
     MbimMessageType type;
     guint32 transaction_id;
@@ -162,6 +163,7 @@ transaction_new (MbimDevice          *self,
     tr = g_slice_new0 (Transaction);
     tr->type = type;
     tr->transaction_id = transaction_id;
+    tr->self = g_object_ref (self);
     tr->result = g_simple_async_result_new (G_OBJECT (self),
                                             callback,
                                             user_data,
@@ -201,6 +203,7 @@ transaction_complete_and_free (Transaction  *tr,
 
     g_simple_async_result_complete_in_idle (tr->result);
     g_object_unref (tr->result);
+    g_object_unref (tr->self);
     g_slice_free (Transaction, tr);
 }
 
