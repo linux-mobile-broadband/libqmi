@@ -39,6 +39,7 @@
 #include "mbim-message.h"
 #include "mbim-message-private.h"
 #include "mbim-error-types.h"
+#include "mbim-enum-types.h"
 #include "mbim-proxy.h"
 #include "mbim-proxy-control.h"
 
@@ -150,6 +151,22 @@ typedef struct {
     TransactionWaitContext *wait_ctx;
 } Transaction;
 
+/* #define TRACE_TRANSACTION 1 */
+#ifdef TRACE_TRANSACTION
+static void
+trace_transaction (Transaction *tr,
+                   const gchar *state)
+{
+    g_debug ("[%s,%u] transaction %s: %s",
+             tr->self->priv->path_display,
+             tr->transaction_id,
+             mbim_message_type_get_string (tr->type),
+             state);
+}
+#else
+# define trace_transaction(...)
+#endif
+
 static Transaction *
 transaction_new (MbimDevice          *self,
                  MbimMessageType      type,
@@ -171,6 +188,8 @@ transaction_new (MbimDevice          *self,
     if (cancellable)
         tr->cancellable = g_object_ref (cancellable);
 
+    trace_transaction (tr, "new");
+
     return tr;
 }
 
@@ -191,10 +210,12 @@ transaction_complete_and_free (Transaction  *tr,
         g_slice_free (TransactionWaitContext, tr->wait_ctx);
 
     if (error) {
+        trace_transaction (tr, "complete: response");
         g_simple_async_result_set_from_error (tr->result, error);
         if (tr->fragments)
             mbim_message_unref (tr->fragments);
     } else {
+        trace_transaction (tr, "complete: error");
         g_assert (tr->fragments != NULL);
         g_simple_async_result_set_op_res_gpointer (tr->result,
                                                    tr->fragments,
@@ -220,6 +241,7 @@ device_release_transaction (MbimDevice      *self,
         tr = g_hash_table_lookup (self->priv->transactions[type], GUINT_TO_POINTER (transaction_id));
         if (tr && ((tr->type == expected_type) || (expected_type == MBIM_MESSAGE_TYPE_INVALID))) {
             /* If found, remove it from the HT */
+            trace_transaction (tr, "release");
             g_hash_table_remove (self->priv->transactions[type], GUINT_TO_POINTER (transaction_id));
             return tr;
         }
@@ -295,6 +317,8 @@ device_store_transaction (MbimDevice       *self,
                           guint             timeout_ms,
                           GError          **error)
 {
+    trace_transaction (tr, "store");
+
     if (G_UNLIKELY (!self->priv->transactions[type]))
         self->priv->transactions[type] = g_hash_table_new (g_direct_hash, g_direct_equal);
 
