@@ -766,7 +766,7 @@ test_message_tlv_rw_64 (void)
 static void
 test_message_tlv_rw_sized (void)
 {
-    guint sized[] = { 1, 2, 4, 8 };
+    guint sized[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
     guint sized_i;
 
     for (sized_i = 0; sized_i < G_N_ELEMENTS (sized); sized_i++) {
