@@ -809,7 +809,7 @@ typedef enum {
 /**
  * QmiNasSimRejectState:
  * @QMI_NAS_SIM_REJECT_STATE_SIM_UNAVAILABLE: SIM not available.
- * @QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE: SIM available.
+ * @QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE: SIM available.
  * @QMI_NAS_SIM_REJECT_STATE_SIM_CS_INVALID: SIM invalid for circuit-switched connections.
  * @QMI_NAS_SIM_REJECT_STATE_SIM_PS_INVALID: SIM invalid for packet-switched connections.
  * @QMI_NAS_SIM_REJECT_STATE_SIM_CS_PS_INVALID: SIM invalid for circuit-switched and packet-switched connections.
@@ -818,7 +818,7 @@ typedef enum {
  */
 typedef enum {
     QMI_NAS_SIM_REJECT_STATE_SIM_UNAVAILABLE   = 0,
-    QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE      = 1,
+    QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE     = 1,
     QMI_NAS_SIM_REJECT_STATE_SIM_CS_INVALID    = 2,
     QMI_NAS_SIM_REJECT_STATE_SIM_PS_INVALID    = 3,
     QMI_NAS_SIM_REJECT_STATE_SIM_CS_PS_INVALID = 4
