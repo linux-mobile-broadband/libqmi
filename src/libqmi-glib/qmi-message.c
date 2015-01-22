@@ -1042,7 +1042,7 @@ qmi_message_tlv_write_gint64 (QmiMessage  *self,
  * takes care of converting the value written to the byte order specified by
  * @endian.
  *
- * Valid values for @n_bytes are: 1, 2, 4, 8.
+ * The value of @n_bytes can be any between 1 and 8.
  *
  * Returns: %TRUE if the variable is successfully added, otherwise %FALSE is returned and @error is set.
  *
@@ -1059,10 +1059,7 @@ qmi_message_tlv_write_sized_guint (QmiMessage  *self,
     goffset offset;
 
     g_return_val_if_fail (self != NULL, FALSE);
-    g_return_val_if_fail ((n_bytes == 1 ||
-                           n_bytes == 2 ||
-                           n_bytes == 4 ||
-                           n_bytes == 8), FALSE);
+    g_return_val_if_fail (n_bytes <= 8, FALSE);
 
     /* Check for overflow of message size */
     if (!tlv_error_if_write_overflow (self, n_bytes, error))
@@ -1627,10 +1624,7 @@ qmi_message_tlv_read_sized_guint (QmiMessage  *self,
     g_return_val_if_fail (self != NULL, FALSE);
     g_return_val_if_fail (offset != NULL, FALSE);
     g_return_val_if_fail (out != NULL, FALSE);
-    g_return_val_if_fail ((n_bytes == 1 ||
-                           n_bytes == 2 ||
-                           n_bytes == 4 ||
-                           n_bytes == 8), FALSE);
+    g_return_val_if_fail (n_bytes <= 8, FALSE);
 
     if (!(ptr = tlv_error_if_read_overflow (self, tlv_offset, *offset, n_bytes, error)))
         return FALSE;
