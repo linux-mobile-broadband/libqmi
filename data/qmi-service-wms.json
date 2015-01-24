@@ -562,6 +562,25 @@
                                            "value"     : "QMI_STATUS_SUCCESS" },
                                          { "field"     : "Result.Error Code",
                                            "operation" : "==",
-                                           "value"     : "QMI_PROTOCOL_ERROR_WMS_CAUSE_CODE" } ] } ] }
+                                           "value"     : "QMI_PROTOCOL_ERROR_WMS_CAUSE_CODE" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "SMSC Address",
+     "type"    : "Indication",
+     "service" : "WMS",
+     "id"      : "0x0046",
+     "version" : "1.4",
+     "output"  : [ { "name"      : "Address",
+                     "id"        : "0x01",
+                     "mandatory" : "yes",
+                     "type"      : "TLV",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"       : "Type",
+                                       "format"     : "string",
+                                       "fixed-size" : "3" },
+                                     { "name"               : "Digits",
+                                       "format"             : "string",
+                                       "size-prefix-format" : "guint8" } ] } ] }
+
 
 ]
