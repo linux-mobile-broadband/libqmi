@@ -434,6 +434,13 @@
                      "contents"  : [ { "name"          : "Auto Tracking State",
                                        "format"        : "guint8",
                                        "public-format" : "gboolean" } ] } ],
-     "output"  : [ { "common-ref" : "Operation Result" } ] }
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "GPS Ready",
+     "type"    : "Indication",
+     "service" : "PDS",
+     "id"      : "0x0060",
+     "version" : "1.14" }
 
 ]
