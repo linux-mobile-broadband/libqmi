@@ -937,6 +937,88 @@ typedef enum { /*< underscore_name=qmi_wds_profile_type >*/
     QMI_WDS_PROFILE_TYPE_3GPP2   = 1
 } QmiWdsProfileType;
 
+/**
+ * QmiWdsDeliveryOrder:
+ * @QMI_WDS_QOS_DELIVERY_ORDER_SUBSCRIBE: Subscribe.
+ * @QMI_WDS_QOS_DELIVERY_ORDER_ON: On.
+ * @QMI_WDS_QOS_DELIVERY_ORDER_OFF: Off.
+ *
+ * QoS delivery order.
+ */
+typedef enum { /*< underscore_name=qmi_wds_delivery_order >*/
+    QMI_WDS_QOS_DELIVERY_ORDER_SUBSCRIBE = 0,
+    QMI_WDS_QOS_DELIVERY_ORDER_ON        = 1,
+    QMI_WDS_QOS_DELIVERY_ORDER_OFF       = 2
+} QmiWdsDeliveryOrder;
+
+/**
+ * QmiWdsSduErrorRatio:
+ * @QMI_WDS_SDU_ERROR_RATIO_SUBSCRIBE: Subscribe.
+ * @QMI_WDS_SDU_ERROR_RATIO_1E2: 1x10^2.
+ * @QMI_WDS_SDU_ERROR_RATIO_7E3: 7x10^3.
+ * @QMI_WDS_SDU_ERROR_RATIO_1E3: 1x10^3.
+ * @QMI_WDS_SDU_ERROR_RATIO_1E4: 1x10^4.
+ * @QMI_WDS_SDU_ERROR_RATIO_1E5: 1x10^5.
+ * @QMI_WDS_SDU_ERROR_RATIO_1E6: 1x10^6.
+ * @QMI_WDS_SDU_ERROR_RATIO_1E1: 1x10^7.
+ *
+ * Target value for the fraction of SDUs lost or detected as erroneous.
+ */
+typedef enum { /*< underscore_name=qmi_wds_sdu_error_ratio >*/
+    QMI_WDS_SDU_ERROR_RATIO_SUBSCRIBE = 0,
+    QMI_WDS_SDU_ERROR_RATIO_1E2       = 1,
+    QMI_WDS_SDU_ERROR_RATIO_7E3       = 2,
+    QMI_WDS_SDU_ERROR_RATIO_1E3       = 3,
+    QMI_WDS_SDU_ERROR_RATIO_1E4       = 4,
+    QMI_WDS_SDU_ERROR_RATIO_1E5       = 5,
+    QMI_WDS_SDU_ERROR_RATIO_1E6       = 6,
+    QMI_WDS_SDU_ERROR_RATIO_1E1       = 7
+} QmiWdsSduErrorRatio;
+
+/**
+ * QmiWdsSduResidualBitErrorRatio:
+ * @QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_SUBSCRIBE: Subscribe.
+ * @QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_5E2: 5x10^2.
+ * @QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E2: 1x10^2.
+ * @QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_5E3: 5x10^3.
+ * @QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_4E3: 4x10^3.
+ * @QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E3: 1x10^3.
+ * @QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E4: 1x10^4.
+ * @QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E5: 1x10^5.
+ * @QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E6: 1x10^6.
+ * @QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_6E8: 6x10^8.
+ *
+ * Target value for the undetected bit error ratio in the delivered SDUs.
+ */
+typedef enum { /*< underscore_name=qmi_wds_sdu_residual_bit_error_ratio >*/
+    QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_SUBSCRIBE = 0,
+    QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_5E2       = 1,
+    QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E2       = 2,
+    QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_5E3       = 3,
+    QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_4E3       = 4,
+    QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E3       = 5,
+    QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E4       = 6,
+    QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E5       = 7,
+    QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E6       = 8,
+    QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_6E8       = 9
+} QmiWdsSduResidualBitErrorRatio;
+
+/**
+ * QmiWdsSduErroneousDelivery:
+ * @QMI_WDS_SDU_ERRONEOUS_DELIVERY_SUBSCRIBE: Subscribe.
+ * @QMI_WDS_SDU_ERRONEOUS_DELIVERY_NO_DETECTION: No detection.
+ * @QMI_WDS_SDU_ERRONEOUS_DELIVERY_ENABLED: Erroneous SDUs are delivered.
+ * @QMI_WDS_SDU_ERRONEOUS_DELIVERY_DISABLED: Erroneous SDUs are delivered.
+ *
+ * Whether SDUs detected as erroneous are delivered or not.
+ */
+typedef enum { /*< underscore_name=qmi_wds_sdu_erroneous_delivery >*/
+    QMI_WDS_SDU_ERRONEOUS_DELIVERY_SUBSCRIBE    = 0,
+    QMI_WDS_SDU_ERRONEOUS_DELIVERY_NO_DETECTION = 1,
+    QMI_WDS_SDU_ERRONEOUS_DELIVERY_ENABLED      = 2,
+    QMI_WDS_SDU_ERRONEOUS_DELIVERY_DISABLED     = 3
+} QmiWdsSduErroneousDelivery;
+
 /*****************************************************************************/
 /* Helper enums for the 'QMI WDS Get Packet Statistics' message */
 
