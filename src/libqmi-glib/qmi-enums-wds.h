@@ -932,7 +932,7 @@ typedef enum { /*< underscore_name=qmi_wds_authentication >*/
  *
  * Profile network type family.
  */
-typedef enum {
+typedef enum { /*< underscore_name=qmi_wds_profile_type >*/
     QMI_WDS_PROFILE_TYPE_3GPP    = 0,
     QMI_WDS_PROFILE_TYPE_3GPP2   = 1
 } QmiWdsProfileType;
