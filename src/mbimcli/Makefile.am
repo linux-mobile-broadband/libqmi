@@ -21,3 +21,15 @@ mbimcli_SOURCES = \
 mbimcli_LDADD = \
 	$(MBIMCLI_LIBS) \
 	$(top_builddir)/src/libmbim-glib/libmbim-glib.la
+
+
+completiondir = $(datadir)/bash-completion/completions
+
+install-data-hook:
+	$(mkinstalldirs) $(DESTDIR)$(completiondir)
+	$(INSTALL_DATA) $(srcdir)/mbimcli-completion $(DESTDIR)$(completiondir)/mbimcli
+
+uninstall-hook:
+	rm -f $(DESTDIR)$(completiondir)/mbimcli
+
+EXTRA_DIST = mbimcli-completion
