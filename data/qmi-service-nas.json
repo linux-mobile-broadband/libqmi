@@ -416,7 +416,7 @@
                       "array-element"      : { "name"     : "Element",
                                                "format"   : "struct",
                                                "contents" : [ { "name"   : "ECIO",
-                                                                "format" : "gint8" },
+                                                                "format" : "guint8" },
                                                               { "name"          : "Radio Interface",
                                                                 "format"        : "gint8",
                                                                 "public-format" : "QmiNasRadioInterface" } ] } },
