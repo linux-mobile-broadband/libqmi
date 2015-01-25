@@ -1,0 +1,147 @@
+# qmicli(1) completion                                      -*- shell-script -*-
+
+_qmicli()
+{
+    local cur prev words cword split
+    _init_completion -s || return
+
+    case $prev in
+        -d|--device)
+            _filedir
+            return 0
+            ;;
+        '--device-set-instance-id')
+            COMPREPLY=( $(compgen -W "[Instance-ID]" -- $cur) )
+            return 0
+            ;;
+        '--device-open-net')
+            COMPREPLY=( $(compgen -W "[net-802-3|net-raw-ip|net-qos-header|net-no-qos-header]" -- $cur) )
+            return 0
+            ;;
+        '--client-cid')
+            COMPREPLY=( $(compgen -W "[CID]" -- $cur) )
+            return 0
+            ;;
+        '--dms-uim-set-pin-protection')
+            COMPREPLY=( $(compgen -W "[(PIN|PIN2),(disable|enable),(current-PIN)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-uim-verify-pin')
+            COMPREPLY=( $(compgen -W "[(PIN|PIN2),(current-PIN)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-uim-unblock-pin')
+            COMPREPLY=( $(compgen -W "[(PIN|PIN2),(PUK),(new-PIN)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-uim-change-pin')
+            COMPREPLY=( $(compgen -W "[(PIN|PIN2),(old-PIN),(new-PIN)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-uim-get-ck-status')
+            COMPREPLY=( $(compgen -W "[(pn|pu|pp|pc|pf)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-uim-set-ck-protection')
+            COMPREPLY=( $(compgen -W "[(pn|pu|pp|pc|pf),(disable),(key)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-uim-unblock-ck')
+            COMPREPLY=( $(compgen -W "[(pn|pu|pp|pc|pf),(key)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-set-operating-mode')
+            COMPREPLY=( $(compgen -W "[(Operating-Mode)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-activate-automatic')
+            COMPREPLY=( $(compgen -W "[Activation-Code]" -- $cur) )
+            return 0
+            ;;
+        '--dms-activate-manual')
+            COMPREPLY=( $(compgen -W "[SPC,SID,MDN,MIN]" -- $cur) )
+            return 0
+            ;;
+        '--dms-set-user-lock-state')
+            COMPREPLY=( $(compgen -W "[(disable|enable),(current-lock-code)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-set-user-lock-code')
+            COMPREPLY=( $(compgen -W "[(old-lock-code),(new-lock-code)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-write-user-data')
+            COMPREPLY=( $(compgen -W "[(User-data)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-restore-factory-defaults')
+            COMPREPLY=( $(compgen -W "[(Service-Programming-Code)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-validate-service-programming-code')
+            COMPREPLY=( $(compgen -W "[(Service-Programming-Code)]" -- $cur) )
+            return 0
+            ;;
+        '--dms-select-stored-image')
+            COMPREPLY=( $(compgen -W "[modem#,pri#]" -- $cur) )
+            return 0
+            ;;
+        '--dms-delete-stored-image')
+            COMPREPLY=( $(compgen -W "[modem#,pri#]" -- $cur) )
+            return 0
+            ;;
+        '--nas-get-tx-rx-info')
+            COMPREPLY=( $(compgen -W "[(Radio-Interface)]" -- $cur) )
+            return 0
+            ;;
+        '--nas-set-system-selection-preference')
+            COMPREPLY=( $(compgen -W "[cdma-1x|cdma-1xevdo|gsm|umts|lte|td-scdma]" -- $cur) )
+            return 0
+            ;;
+        '--wds-start-network')
+            COMPREPLY=( $(compgen -W "[(APN),(PAP|CHAP|BOTH),(Username),(Password)]" -- $cur) )
+            return 0
+            ;;
+        '--wds-stop-network')
+            COMPREPLY=( $(compgen -W "[Packet-data-handle]" -- $cur) )
+            return 0
+            ;;
+        '--wds-get-profile-list')
+            COMPREPLY=( $(compgen -W "[3gpp|3gpp2]" -- $cur) )
+            return 0
+            ;;
+        '--wds-get-default-settings')
+            COMPREPLY=( $(compgen -W "[3gpp|3gpp2]" -- $cur) )
+            return 0
+            ;;
+        '--uim-read-transparent')
+            COMPREPLY=( $(compgen -W "[0xNNNN,0xNNNN,...]" -- $cur) )
+            return 0
+            ;;
+        '--uim-get-file-attributes')
+            COMPREPLY=( $(compgen -W "[0xNNNN,0xNNNN,...]" -- $cur) )
+            return 0
+            ;;
+        '--wda-set-data-format')
+            COMPREPLY=( $(compgen -W "[raw-ip|802-3]" -- $cur) )
+            return 0
+            ;;
+        '-V'|'--version')
+            return 0
+            ;;
+        '-h'|'--help'|'--help-all'|'--help-dms'|'--help-nas'|'--help-wds'|'--help-pbm'|'--help-uim'|'--help-wda')
+            return 0
+            ;;
+    esac
+
+    $split && return 0
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=( $( compgen -W '$( _parse_help "$1" --help-all )' -- "$cur" ) )
+        [[ $COMPREPLY == *= ]] && compopt -o nospace
+        return 0
+    fi
+} &&
+complete -F _qmicli qmicli
+
+# ex: ts=4 sw=4 et filetype=sh
