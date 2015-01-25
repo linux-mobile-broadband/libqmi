@@ -46,7 +46,10 @@
 #include "qmi-nas.h"
 #include "qmi-wms.h"
 #include "qmi-pds.h"
+#include "qmi-pbm.h"
 #include "qmi-uim.h"
+#include "qmi-oma.h"
+#include "qmi-wda.h"
 
 /**
  * SECTION:qmi-message
@@ -2146,8 +2149,17 @@ qmi_message_get_printable (QmiMessage *self,
     case QMI_SERVICE_PDS:
         contents = __qmi_message_pds_get_printable (self, line_prefix);
         break;
+    case QMI_SERVICE_PBM:
+        contents = __qmi_message_pbm_get_printable (self, line_prefix);
+        break;
     case QMI_SERVICE_UIM:
         contents = __qmi_message_uim_get_printable (self, line_prefix);
+        break;
+    case QMI_SERVICE_OMA:
+        contents = __qmi_message_oma_get_printable (self, line_prefix);
+        break;
+    case QMI_SERVICE_WDA:
+        contents = __qmi_message_wda_get_printable (self, line_prefix);
         break;
     default:
         break;
@@ -2198,8 +2210,17 @@ qmi_message_get_version_introduced (QmiMessage *self,
     case QMI_SERVICE_PDS:
         return __qmi_message_pds_get_version_introduced (self, major, minor);
 
+    case QMI_SERVICE_PBM:
+        return __qmi_message_pbm_get_version_introduced (self, major, minor);
+
     case QMI_SERVICE_UIM:
         return __qmi_message_uim_get_version_introduced (self, major, minor);
+
+    case QMI_SERVICE_OMA:
+        return __qmi_message_oma_get_version_introduced (self, major, minor);
+
+    case QMI_SERVICE_WDA:
+        return __qmi_message_wda_get_version_introduced (self, major, minor);
 
     default:
         /* For the still unsupported services, cannot do anything */
