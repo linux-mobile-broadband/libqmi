@@ -43,9 +43,11 @@ class Client:
             elif object_dictionary['type'] == 'Service':
                 self.service = object_dictionary['name']
 
-        # We NEED the Client field
+        # We NEED the Client field and the Service field
         if self.name is None:
             raise ValueError('Missing Client field')
+        if self.service is None:
+            raise ValueError('Missing Service field')
 
 
     """
