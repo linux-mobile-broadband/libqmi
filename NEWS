@@ -2,10 +2,11 @@
 Overview of changes in libqmi 1.14.0
 ----------------------------------------
 
-This version comes with one small API break:
+This version comes with a couple of small API breaks:
 * ECIO value type in "NAS Event Report Indication" is given as unsigned.
 * ECIO value in ECIO List array type in "NAS Get Signal Strenght" is given as
   unsigned.
+* QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE enum name was fixed.
 
 
 Overview of changes in libqmi 1.12.0
