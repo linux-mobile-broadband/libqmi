@@ -48,6 +48,7 @@ static gboolean operation_status;
 /* Main options */
 static gchar *device_str;
 static gboolean get_service_version_info_flag;
+static gboolean get_wwan_iface_flag;
 static gchar *device_set_instance_id_str;
 static gboolean device_open_version_info_flag;
 static gboolean device_open_sync_flag;
@@ -63,6 +64,10 @@ static GOptionEntry main_entries[] = {
     { "device", 'd', 0, G_OPTION_ARG_STRING, &device_str,
       "Specify device path",
       "[PATH]"
+    },
+    { "get-wwan-iface", 'w', 0, G_OPTION_ARG_NONE, &get_wwan_iface_flag,
+      "Get the WWAN iface name associated with this control port",
+      NULL
     },
     { "get-service-version-info", 0, 0, G_OPTION_ARG_NONE, &get_service_version_info_flag,
       "Get service version info",
@@ -208,7 +213,8 @@ generic_options_enabled (void)
         return !!n_actions;
 
     n_actions = (!!device_set_instance_id_str +
-                 get_service_version_info_flag);
+                 get_service_version_info_flag +
+                 get_wwan_iface_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many generic actions requested\n");
@@ -446,6 +452,31 @@ device_get_service_version_info (QmiDevice *dev)
                                          NULL);
 }
 
+static gboolean
+device_get_wwan_iface_cb (QmiDevice *dev)
+{
+    const gchar *wwan_iface;
+
+    wwan_iface = qmi_device_get_wwan_iface (dev);
+    if (!wwan_iface)
+        g_printerr ("error: cannot get WWAN interface name\n");
+    else
+        g_print ("%s\n", wwan_iface);
+
+    /* We're done now */
+    qmicli_async_operation_done (!!wwan_iface);
+
+    g_object_unref (dev);
+    return FALSE;
+}
+
+static void
+device_get_wwan_iface (QmiDevice *dev)
+{
+    g_debug ("Getting WWAN iface for this control port...");
+    g_idle_add ((GSourceFunc) device_get_wwan_iface_cb, g_object_ref (dev));
+}
+
 static void
 device_open_ready (QmiDevice *dev,
                    GAsyncResult *res)
@@ -465,6 +496,8 @@ device_open_ready (QmiDevice *dev,
         device_set_instance_id (dev);
     else if (get_service_version_info_flag)
         device_get_service_version_info (dev);
+    else if (get_wwan_iface_flag)
+        device_get_wwan_iface (dev);
     else
         device_allocate_client (dev);
 }
