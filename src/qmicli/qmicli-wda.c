@@ -329,6 +329,10 @@ qmicli_wda_run (QmiDevice *device,
         QmiMessageWdaSetDataFormatInput *input;
 
         input = set_data_format_input_create (set_data_format_str);
+        if (!input) {
+            shutdown (FALSE);
+            return;
+        }
 
         g_debug ("Asynchronously setting data format...");
         qmi_client_wda_set_data_format (ctx->client,
