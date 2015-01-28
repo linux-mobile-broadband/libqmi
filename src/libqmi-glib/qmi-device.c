@@ -71,6 +71,7 @@ enum {
     PROP_FILE,
     PROP_NO_FILE_CHECK,
     PROP_PROXY_PATH,
+    PROP_WWAN_IFACE,
     PROP_LAST
 };
 
@@ -89,6 +90,10 @@ struct _QmiDevicePrivate {
     gchar *path_display;
     gboolean no_file_check;
     gchar *proxy_path;
+
+    /* WWAN interface */
+    gboolean no_wwan_check;
+    gchar *wwan_iface;
 
     /* Implicit CTL client */
     QmiClientCtl *client_ctl;
@@ -593,6 +598,96 @@ qmi_device_is_open (QmiDevice *self)
     g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
 
     return !!(self->priv->istream && self->priv->ostream);
+}
+
+/*****************************************************************************/
+/* WWAN iface name
+ * Always reload from scratch, to handle possible net interface renames  */
+
+static void
+reload_wwan_iface_name (QmiDevice *self)
+{
+    const gchar *cdc_wdm_device_name;
+    static const gchar *driver_names[] = { "usbmisc", "usb" };
+    guint i;
+
+    /* Early cleanup */
+    g_free (self->priv->wwan_iface);
+    self->priv->wwan_iface = NULL;
+
+    cdc_wdm_device_name = strrchr (self->priv->path, '/');
+    if (!cdc_wdm_device_name) {
+        g_warning ("[%s] invalid path for cdc-wdm control port", self->priv->path_display);
+        return;
+    }
+    cdc_wdm_device_name++;
+
+    for (i = 0; i < G_N_ELEMENTS (driver_names) && !self->priv->wwan_iface; i++) {
+        gchar *sysfs_path;
+        GFile *sysfs_file;
+        GFileEnumerator *enumerator;
+        GError *error = NULL;
+
+        sysfs_path = g_strdup_printf ("/sys/class/%s/%s/device/net/", driver_names[i], cdc_wdm_device_name);
+        sysfs_file = g_file_new_for_path (sysfs_path);
+        enumerator = g_file_enumerate_children (sysfs_file,
+                                                G_FILE_ATTRIBUTE_STANDARD_NAME,
+                                                G_FILE_QUERY_INFO_NONE,
+                                                NULL,
+                                                &error);
+        if (!enumerator) {
+            g_debug ("[%s] cannot enumerate files at path '%s': %s",
+                     self->priv->path_display,
+                     sysfs_path,
+                     error->message);
+            g_error_free (error);
+        } else {
+            GFileInfo *file_info;
+
+            /* Ignore errors when enumerating */
+            while ((file_info = g_file_enumerator_next_file (enumerator, NULL, NULL)) != NULL) {
+                const gchar *name;
+
+                name = g_file_info_get_name (file_info);
+                if (name) {
+                    /* We only expect ONE file in the sysfs directory corresponding
+                     * to this control port, if more found for any reason, warn about it */
+                    if (self->priv->wwan_iface)
+                        g_warning ("[%s] invalid additional wwan iface found: %s",
+                               self->priv->path_display, name);
+                    else
+                        self->priv->wwan_iface = g_strdup (name);
+                }
+                g_object_unref (file_info);
+            }
+
+            g_object_unref (enumerator);
+        }
+
+        g_free (sysfs_path);
+        g_object_unref (sysfs_file);
+    }
+
+    if (!self->priv->wwan_iface)
+        g_warning ("[%s] wwan iface not found", self->priv->path_display);
+}
+
+/**
+ * qmi_device_get_wwan_iface:
+ * @self: a #QmiDevice.
+ *
+ * Get the WWAN interface name associated with this /dev/cdc-wdm control port.
+ * This value will be loaded the first time it's asked for it.
+ *
+ * Returns: UTF-8 encoded network interface name, or %NULL if not available.
+ */
+const gchar *
+qmi_device_get_wwan_iface (QmiDevice *self)
+{
+    g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
+
+    reload_wwan_iface_name (self);
+    return self->priv->wwan_iface;
 }
 
 /*****************************************************************************/
@@ -2492,6 +2587,10 @@ get_property (GObject *object,
     case PROP_FILE:
         g_value_set_object (value, self->priv->file);
         break;
+    case PROP_WWAN_IFACE:
+        reload_wwan_iface_name (self);
+        g_value_set_string (value, self->priv->wwan_iface);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -2574,6 +2673,7 @@ finalize (GObject *object)
     g_free (self->priv->path);
     g_free (self->priv->path_display);
     g_free (self->priv->proxy_path);
+    g_free (self->priv->wwan_iface);
 
     if (self->priv->input_source) {
         g_source_destroy (self->priv->input_source);
@@ -2637,6 +2737,14 @@ qmi_device_class_init (QmiDeviceClass *klass)
                              QMI_PROXY_SOCKET_PATH,
                              G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_PROXY_PATH, properties[PROP_PROXY_PATH]);
+
+    properties[PROP_WWAN_IFACE] =
+        g_param_spec_string (QMI_DEVICE_WWAN_IFACE,
+                             "WWAN iface",
+                             "Name of the WWAN network interface associated with the control port.",
+                             NULL,
+                             G_PARAM_READABLE);
+    g_object_class_install_property (object_class, PROP_WWAN_IFACE, properties[PROP_WWAN_IFACE]);
 
     /**
      * QmiClientDms::event-report:
