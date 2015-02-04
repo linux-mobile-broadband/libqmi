@@ -1575,6 +1575,10 @@ get_time_ready (QmiClientDms *client,
     guint64 time_count;
     QmiDmsTimeSource time_source;
     GError *error = NULL;
+    gchar *str;
+    GTimeZone *timezone;
+    GDateTime *gpstime_epoch;
+    GDateTime *computed_epoch;
 
     output = qmi_client_dms_get_time_finish (client, res, &error);
     if (!output) {
@@ -1598,28 +1602,47 @@ get_time_ready (QmiClientDms *client,
         &time_source,
         NULL);
 
+    /* January 6th 1980 */
+    timezone = g_time_zone_new_utc ();
+    gpstime_epoch = g_date_time_new (timezone, 1980, 1, 6, 0, 0, 0.0);
+
+    computed_epoch = g_date_time_add_seconds (gpstime_epoch, ((gdouble) time_count / 1000.0));
+    str = g_date_time_format (computed_epoch, "%F %T");
     g_print ("[%s] Time retrieved:\n"
-             "\tTime count: '%" G_GUINT64_FORMAT " (x 1.25ms)'\n"
+             "\tTime count: '%" G_GUINT64_FORMAT " (x 1.25ms): %s'\n"
              "\tTime source: '%s'\n",
              qmi_device_get_path_display (ctx->device),
-             time_count,
+             time_count, str,
              qmi_dms_time_source_get_string (time_source));
+    g_free (str);
+    g_date_time_unref (computed_epoch);
 
     if (qmi_message_dms_get_time_output_get_system_time (
         output,
         &time_count,
         NULL)){
-        g_print ("\tSystem time: '%" G_GUINT64_FORMAT " (ms)'\n",
-                 time_count);
+        computed_epoch = g_date_time_add_seconds (gpstime_epoch, ((gdouble) time_count / 1000.0));
+        str = g_date_time_format (computed_epoch, "%F %T");
+        g_print ("\tSystem time: '%" G_GUINT64_FORMAT " (ms): %s'\n",
+                 time_count, str);
+        g_free (str);
+        g_date_time_unref (computed_epoch);
     }
 
     if (qmi_message_dms_get_time_output_get_user_time (
         output,
         &time_count,
         NULL)){
-        g_print ("\tUser time: '%" G_GUINT64_FORMAT " (ms)'\n",
-                 time_count);
+        computed_epoch = g_date_time_add_seconds (gpstime_epoch, ((gdouble) time_count / 1000.0));
+        str = g_date_time_format (computed_epoch, "%F %T");
+        g_print ("\tUser time: '%" G_GUINT64_FORMAT " (ms): %s'\n",
+                 time_count, str);
+        g_free (str);
+        g_date_time_unref (computed_epoch);
     }
+
+    g_date_time_unref (gpstime_epoch);
+    g_time_zone_unref (timezone);
 
     qmi_message_dms_get_time_output_unref (output);
     shutdown (TRUE);
