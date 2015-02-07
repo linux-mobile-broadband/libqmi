@@ -81,6 +81,7 @@ static gboolean get_factory_sku_flag;
 static gboolean list_stored_images_flag;
 static gchar *select_stored_image_str;
 static gchar *delete_stored_image_str;
+static gboolean set_fcc_authentication_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -241,6 +242,10 @@ static GOptionEntry entries[] = {
       "Delete stored image",
       "[modem#|pri#] where # is the index"
     },
+    { "dms-set-fcc-authentication", 0, 0, G_OPTION_ARG_NONE, &set_fcc_authentication_flag,
+      "Set FCC authentication",
+      NULL
+    },
     { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -315,6 +320,7 @@ qmicli_dms_options_enabled (void)
                  list_stored_images_flag +
                  !!select_stored_image_str +
                  !!delete_stored_image_str +
+                 set_fcc_authentication_flag +
                  reset_flag +
                  noop_flag);
 
@@ -2948,6 +2954,36 @@ get_stored_image_delete_ready (QmiClientDms *client,
 }
 
 static void
+set_fcc_authentication_ready (QmiClientDms *client,
+                              GAsyncResult *res)
+{
+    QmiMessageDmsSetFccAuthenticationOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_set_fcc_authentication_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_set_fcc_authentication_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set FCC authentication: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_set_fcc_authentication_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully set FCC authentication\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_set_fcc_authentication_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
 reset_ready (QmiClientDms *client,
              GAsyncResult *res)
 {
@@ -3577,6 +3613,18 @@ qmicli_dms_run (QmiDevice *device,
                           delete_stored_image_str,
                           (GAsyncReadyCallback)get_stored_image_delete_ready,
                           NULL);
+        return;
+    }
+
+    /* Set FCC authentication */
+    if (set_fcc_authentication_flag) {
+        g_debug ("Asynchronously setting FCC auth...");
+        qmi_client_dms_set_fcc_authentication (ctx->client,
+                                               NULL,
+                                               10,
+                                               ctx->cancellable,
+                                               (GAsyncReadyCallback)set_fcc_authentication_ready,
+                                               NULL);
         return;
     }
 

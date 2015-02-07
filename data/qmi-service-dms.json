@@ -1169,6 +1169,14 @@
                       "type"       : "TLV",
                       "format"     : "string",
                       "fixed-size" : "6" } ],
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Set FCC Authentication",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x555F",
+     "version" : "1.0",
      "output"  : [  { "common-ref" : "Operation Result" } ] }
 
 ]
