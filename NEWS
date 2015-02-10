@@ -1,4 +1,13 @@
 
+Overview of changes in libqmi 1.12.4
+----------------------------------------
+
+ * Fix reading last call packet statistics.
+
+ * Added support for the "DMS Set FCC" command, required to bring out of low
+   power mode several new Sierra devices.
+
+
 Overview of changes in libqmi 1.12.2
 ----------------------------------------
 
