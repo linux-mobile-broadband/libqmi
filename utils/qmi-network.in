@@ -18,12 +18,14 @@
 
 print_usage ()
 {
-    echo "usage: $0 [DEVICE] [COMMAND]"
+    echo "usage: $0 [OPTIONS] [DEVICE] [COMMAND]"
 }
 
 help ()
 {
-    echo "Usage: qmi-network [OPTIONS] [DEVICE] [COMMAND] - Simple network management of QMI devices"
+    echo "Usage: qmi-network [OPTIONS] [DEVICE] [COMMAND]"
+    echo
+    echo "Simple network management of QMI devices"
     echo
     echo "Commands:"
     echo "  start           Start network connection"
@@ -34,12 +36,30 @@ help ()
     echo "  --help          Show help options"
     echo "  --version       Show version"
     echo
+    echo "Notes:"
+    echo
+    echo "   1) [DEVICE] is given as the full path to the cdc-wdm character"
+    echo "   device, e.g.:"
+    echo "      /dev/cdc-wdm0"
+    echo
+    echo "   2) The qmi-network script requires a profile to be available"
+    echo "   in the following path:"
+    echo "      /etc/qmi-network.conf"
+    echo
+    echo "   3) The APN to use should be configured in the profile, in the"
+    echo "   following way (e.g. assuming APN is called 'internet':"
+    echo "      APN=internet"
+    echo
+    echo "   4) Once the qmi-network script reports a successful connection"
+    echo "   you still need to run a DHCP client on the associated WWAN network"
+    echo "   interface."
+    echo
 }
 
 version ()
 {
     echo "qmi-network @VERSION@"
-    echo "Copyright (2013) Aleksander Morgado"
+    echo "Copyright (2013-2015) Aleksander Morgado"
     echo "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>"
     echo "This is free software: you are free to change and redistribute it."
     echo "There is NO WARRANTY, to the extent permitted by law."
