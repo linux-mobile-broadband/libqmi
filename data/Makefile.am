@@ -11,4 +11,5 @@ EXTRA_DIST = \
 	qmi-service-pbm.json \
 	qmi-service-uim.json \
 	qmi-service-oma.json \
-	qmi-service-wda.json
+	qmi-service-wda.json \
+	qmi-service-voice.json
