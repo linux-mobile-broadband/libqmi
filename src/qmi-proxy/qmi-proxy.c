@@ -45,8 +45,13 @@ static guint timeout_id;
 /* Main options */
 static gboolean verbose_flag;
 static gboolean version_flag;
+static gboolean no_exit_flag;
 
 static GOptionEntry main_entries[] = {
+    { "no-exit", 0, 0, G_OPTION_ARG_NONE, &no_exit_flag,
+      "Don't exit after being idle without clients",
+      NULL
+    },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
       "Run action with verbose logs, including the debug ones",
       NULL
@@ -123,7 +128,7 @@ print_version_and_exit (void)
 {
     g_print ("\n"
              PROGRAM_NAME " " PROGRAM_VERSION "\n"
-             "Copyright (2013) Aleksander Morgado\n"
+             "Copyright (2013-2015) Aleksander Morgado\n"
              "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>\n"
              "This is free software: you are free to change and redistribute it.\n"
              "There is NO WARRANTY, to the extent permitted by law.\n"
@@ -201,11 +206,14 @@ int main (int argc, char **argv)
         exit (EXIT_FAILURE);
     }
 
-    proxy_n_clients_changed (proxy);
-    g_signal_connect (proxy,
-                      "notify::" QMI_PROXY_N_CLIENTS,
-                      G_CALLBACK (proxy_n_clients_changed),
-                      NULL);
+    /* Don't exit the proxy when no clients are found */
+    if (!no_exit_flag) {
+        proxy_n_clients_changed (proxy);
+        g_signal_connect (proxy,
+                          "notify::" QMI_PROXY_N_CLIENTS,
+                          G_CALLBACK (proxy_n_clients_changed),
+                          NULL);
+    }
 
     /* Loop */
     loop = g_main_loop_new (NULL, FALSE);
