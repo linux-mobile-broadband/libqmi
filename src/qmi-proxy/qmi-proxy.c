@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * qmid -- A proxy to communicate with QMI ports
+ * qmi-proxy -- A proxy to communicate with QMI ports
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 
 #include <libqmi-glib.h>
 
-#define PROGRAM_NAME    "qmid"
+#define PROGRAM_NAME    "qmi-proxy"
 #define PROGRAM_VERSION PACKAGE_VERSION
 
 #define EMPTY_PROXY_LIFETIME_SECS 30
