@@ -1740,7 +1740,7 @@ qmi_message_tlv_read_string (QmiMessage  *self,
 
         /* If no length prefix given, read the remaining TLV buffer into a string */
         tlv = (struct tlv *) &(self->data[tlv_offset]);
-        string_length = (tlv->length - *offset);
+        string_length = (GUINT16_FROM_LE (tlv->length) - *offset);
         break;
     }
     case 1: {
@@ -1837,8 +1837,8 @@ __qmi_message_tlv_read_remaining_size (QmiMessage *self,
 
     tlv = (struct tlv *) &(self->data[tlv_offset]);
 
-    g_warn_if_fail (tlv->length >= offset);
-    return (tlv->length >= offset ? (tlv->length - offset) : 0);
+    g_warn_if_fail (GUINT16_FROM_LE (tlv->length) >= offset);
+    return (GUINT16_FROM_LE (tlv->length) >= offset ? (GUINT16_FROM_LE (tlv->length) - offset) : 0);
 }
 
 /*****************************************************************************/
@@ -2066,7 +2066,7 @@ get_generic_printable (QmiMessage *self,
                                                        line_prefix,
                                                        tlv->type,
                                                        tlv->value,
-                                                       tlv->length);
+                                                       GUINT16_FROM_LE (tlv->length));
         g_string_append (printable, printable_tlv);
         g_free (printable_tlv);
     }
