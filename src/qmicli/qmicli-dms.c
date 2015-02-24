@@ -1582,7 +1582,7 @@ get_time_ready (QmiClientDms *client,
     QmiDmsTimeSource time_source;
     GError *error = NULL;
     gchar *str;
-    GTimeZone *timezone;
+    GTimeZone *time_zone;
     GDateTime *gpstime_epoch;
     GDateTime *computed_epoch;
 
@@ -1609,8 +1609,8 @@ get_time_ready (QmiClientDms *client,
         NULL);
 
     /* January 6th 1980 */
-    timezone = g_time_zone_new_utc ();
-    gpstime_epoch = g_date_time_new (timezone, 1980, 1, 6, 0, 0, 0.0);
+    time_zone = g_time_zone_new_utc ();
+    gpstime_epoch = g_date_time_new (time_zone, 1980, 1, 6, 0, 0, 0.0);
 
     computed_epoch = g_date_time_add_seconds (gpstime_epoch, ((gdouble) time_count / 1000.0));
     str = g_date_time_format (computed_epoch, "%F %T");
@@ -1648,7 +1648,7 @@ get_time_ready (QmiClientDms *client,
     }
 
     g_date_time_unref (gpstime_epoch);
-    g_time_zone_unref (timezone);
+    g_time_zone_unref (time_zone);
 
     qmi_message_dms_get_time_output_unref (output);
     shutdown (TRUE);
