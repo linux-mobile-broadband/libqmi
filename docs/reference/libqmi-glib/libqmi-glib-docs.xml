@@ -194,6 +194,7 @@
       <xi:include href="xml/qmi-message-wms-set-routes.xml"/>
       <xi:include href="xml/qmi-message-wms-get-routes.xml"/>
       <xi:include href="xml/qmi-message-wms-send-from-memory-storage.xml"/>
+      <xi:include href="xml/qmi-message-wms-get-supported-messages.xml"/>
     </section>
   </chapter>
 
