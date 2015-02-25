@@ -61,6 +61,13 @@ void          qmicli_uim_run              (QmiDevice *device,
                                            QmiClientUim *client,
                                            GCancellable *cancellable);
 
+/* WMS group */
+GOptionGroup *qmicli_wms_get_option_group (void);
+gboolean      qmicli_wms_options_enabled  (void);
+void          qmicli_wms_run              (QmiDevice *device,
+                                           QmiClientWms *client,
+                                           GCancellable *cancellable);
+
 /* WDA group */
 GOptionGroup *qmicli_wda_get_option_group (void);
 gboolean      qmicli_wda_options_enabled  (void);

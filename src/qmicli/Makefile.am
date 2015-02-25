@@ -21,6 +21,7 @@ qmicli_SOURCES = \
 	qmicli-nas.c \
 	qmicli-pbm.c \
 	qmicli-uim.c \
+	qmicli-wms.c \
 	qmicli-wda.c \
 	qmicli-voice.c
 

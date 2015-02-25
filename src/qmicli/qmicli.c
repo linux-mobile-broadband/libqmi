@@ -312,6 +312,9 @@ allocate_client_ready (QmiDevice *dev,
     case QMI_SERVICE_UIM:
         qmicli_uim_run (dev, QMI_CLIENT_UIM (client), cancellable);
         return;
+    case QMI_SERVICE_WMS:
+        qmicli_wms_run (dev, QMI_CLIENT_WMS (client), cancellable);
+        return;
     case QMI_SERVICE_WDA:
         qmicli_wda_run (dev, QMI_CLIENT_WDA (client), cancellable);
         return;
@@ -582,6 +585,12 @@ parse_actions (void)
         actions_enabled++;
     }
 
+    /* WMS options? */
+    if (qmicli_wms_options_enabled ()) {
+        service = QMI_SERVICE_WMS;
+        actions_enabled++;
+    }
+
     /* WDA options? */
     if (qmicli_wda_options_enabled ()) {
         service = QMI_SERVICE_WDA;
@@ -631,6 +640,8 @@ int main (int argc, char **argv)
 	                            qmicli_pbm_get_option_group ());
 	g_option_context_add_group (context,
 	                            qmicli_uim_get_option_group ());
+	g_option_context_add_group (context,
+	                            qmicli_wms_get_option_group ());
 	g_option_context_add_group (context,
 	                            qmicli_wda_get_option_group ());
 	g_option_context_add_group (context,
