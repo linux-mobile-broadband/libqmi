@@ -45,6 +45,7 @@ static Context *ctx;
 static gchar *read_transparent_str;
 static gchar *get_file_attributes_str;
 static gboolean get_card_status_flag;
+static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -59,6 +60,10 @@ static GOptionEntry entries[] = {
     },
     { "uim-get-card-status", 0, 0, G_OPTION_ARG_NONE, &get_card_status_flag,
       "Get card status",
+      NULL
+    },
+    { "uim-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
+      "Get supported messages",
       NULL
     },
     { "uim-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
@@ -99,6 +104,7 @@ qmicli_uim_options_enabled (void)
     n_actions = (!!read_transparent_str +
                  !!get_file_attributes_str +
                  get_card_status_flag +
+                 get_supported_messages_flag +
                  reset_flag +
                  noop_flag);
 
@@ -130,6 +136,63 @@ shutdown (gboolean operation_status)
     /* Cleanup context and finish async operation */
     context_free (ctx);
     qmicli_async_operation_done (operation_status);
+}
+
+static void
+get_supported_messages_ready (QmiClientUim *client,
+                              GAsyncResult *res)
+{
+    QmiMessageUimGetSupportedMessagesOutput *output;
+    GError *error = NULL;
+    GArray *bytearray = NULL;
+    GString *str = NULL;
+
+    output = qmi_client_uim_get_supported_messages_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_get_supported_messages_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get supported UIM messages: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_uim_get_supported_messages_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got supported UIM messages:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_uim_get_supported_messages_output_get_list (output, &bytearray, NULL)) {
+
+        guint bytearray_i;
+
+        for (bytearray_i = 0; bytearray_i < bytearray->len; bytearray_i++) {
+            guint bit_i;
+            guint8 bytevalue;
+
+            bytevalue = g_array_index (bytearray, guint8, bytearray_i);
+            for (bit_i = 0; bit_i < 8; bit_i++) {
+                if (bytevalue & (1 << bit_i)) {
+                    if (!str)
+                        str = g_string_new ("");
+                    g_string_append_printf (str, "\t0x%04X\n", (bit_i + (8 * bytearray_i)));
+                }
+            }
+        }
+    }
+
+    if (str) {
+        g_print ("%s", str->str);
+        g_string_free (str, TRUE);
+    } else
+        g_print ("\tnone\n");
+
+    qmi_message_uim_get_supported_messages_output_unref (output);
+    shutdown (TRUE);
 }
 
 static void
@@ -699,6 +762,18 @@ qmicli_uim_run (QmiDevice *device,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_card_status_ready,
                                         NULL);
+        return;
+    }
+
+    /* Request to list supported messages? */
+    if (get_supported_messages_flag) {
+        g_debug ("Asynchronously getting supported UIM messages...");
+        qmi_client_uim_get_supported_messages (ctx->client,
+                                               NULL,
+                                               10,
+                                               ctx->cancellable,
+                                               (GAsyncReadyCallback)get_supported_messages_ready,
+                                               NULL);
         return;
     }
 

@@ -242,6 +242,7 @@
       <xi:include href="xml/qmi-message-uim-read-record.xml"/>
       <xi:include href="xml/qmi-message-uim-get-file-attributes.xml"/>
       <xi:include href="xml/qmi-message-uim-get-card-status.xml"/>
+      <xi:include href="xml/qmi-message-uim-get-supported-messages.xml"/>
     </section>
   </chapter>
 
