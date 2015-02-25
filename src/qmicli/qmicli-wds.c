@@ -55,6 +55,7 @@ static gboolean get_data_bearer_technology_flag;
 static gboolean get_current_data_bearer_technology_flag;
 static gchar *get_profile_list_str;
 static gchar *get_default_settings_str;
+static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -94,6 +95,10 @@ static GOptionEntry entries[] = {
     { "wds-get-default-settings", 0, 0, G_OPTION_ARG_STRING, &get_default_settings_str,
       "Get default settings",
       "[3gpp|3gpp2]"
+    },
+    { "wds-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
+      "Get supported messages",
+      NULL
     },
     { "wds-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
@@ -138,6 +143,7 @@ qmicli_wds_options_enabled (void)
                  get_current_data_bearer_technology_flag +
                  !!get_profile_list_str +
                  !!get_default_settings_str +
+                 get_supported_messages_flag +
                  reset_flag +
                  noop_flag);
 
@@ -850,6 +856,63 @@ get_default_settings_ready (QmiClientWds *client,
 }
 
 static void
+get_supported_messages_ready (QmiClientWds *client,
+                              GAsyncResult *res)
+{
+    QmiMessageWdsGetSupportedMessagesOutput *output;
+    GError *error = NULL;
+    GArray *bytearray = NULL;
+    GString *str = NULL;
+
+    output = qmi_client_wds_get_supported_messages_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_get_supported_messages_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get supported WDS messages: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wds_get_supported_messages_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got supported WDS messages:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_wds_get_supported_messages_output_get_list (output, &bytearray, NULL)) {
+
+        guint bytearray_i;
+
+        for (bytearray_i = 0; bytearray_i < bytearray->len; bytearray_i++) {
+            guint bit_i;
+            guint8 bytevalue;
+
+            bytevalue = g_array_index (bytearray, guint8, bytearray_i);
+            for (bit_i = 0; bit_i < 8; bit_i++) {
+                if (bytevalue & (1 << bit_i)) {
+                    if (!str)
+                        str = g_string_new ("");
+                    g_string_append_printf (str, "\t0x%04X\n", (bit_i + (8 * bytearray_i)));
+                }
+            }
+        }
+    }
+
+    if (str) {
+        g_print ("%s", str->str);
+        g_string_free (str, TRUE);
+    } else
+        g_print ("\tnone\n");
+
+    qmi_message_wds_get_supported_messages_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
 reset_ready (QmiClientWds *client,
              GAsyncResult *res)
 {
@@ -1088,6 +1151,18 @@ qmicli_wds_run (QmiDevice *device,
                                              (GAsyncReadyCallback)get_default_settings_ready,
                                              NULL);
         qmi_message_wds_get_default_settings_input_unref (input);
+        return;
+    }
+
+    /* Request to list supported messages? */
+    if (get_supported_messages_flag) {
+        g_debug ("Asynchronously getting supported WDS messages...");
+        qmi_client_wds_get_supported_messages (ctx->client,
+                                               NULL,
+                                               10,
+                                               ctx->cancellable,
+                                               (GAsyncReadyCallback)get_supported_messages_ready,
+                                               NULL);
         return;
     }
 

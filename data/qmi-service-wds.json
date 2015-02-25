@@ -36,6 +36,22 @@
      "output"  : [  { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
+  {  "name"    : "Get Supported Messages",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x001E",
+     "version" : "1.38",
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"               : "List",
+                     "id"                 : "0x10",
+                     "mandatory"          : "no",
+                     "type"               : "TLV",
+                     "format"             : "array",
+                     "size-prefix-format" : "guint16",
+                     "array-element"      : { "format" : "guint8" },
+                     "prerequisites"      : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "Start Network",
      "type"    : "Message",
      "service" : "WDS",
