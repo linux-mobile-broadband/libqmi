@@ -108,6 +108,7 @@
       <xi:include href="xml/qmi-message-dms-get-software-version.xml"/>
       <xi:include href="xml/qmi-message-dms-set-service-programming-code.xml"/>
       <xi:include href="xml/qmi-message-dms-set-fcc-authentication.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-supported-messages.xml"/>
     </section>
   </chapter>
 

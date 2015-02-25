@@ -82,6 +82,7 @@ static gboolean list_stored_images_flag;
 static gchar *select_stored_image_str;
 static gchar *delete_stored_image_str;
 static gboolean set_fcc_authentication_flag;
+static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -246,6 +247,10 @@ static GOptionEntry entries[] = {
       "Set FCC authentication",
       NULL
     },
+    { "dms-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
+      "Get supported messages",
+      NULL
+    },
     { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -321,6 +326,7 @@ qmicli_dms_options_enabled (void)
                  !!select_stored_image_str +
                  !!delete_stored_image_str +
                  set_fcc_authentication_flag +
+                 get_supported_messages_flag +
                  reset_flag +
                  noop_flag);
 
@@ -2984,6 +2990,63 @@ set_fcc_authentication_ready (QmiClientDms *client,
 }
 
 static void
+get_supported_messages_ready (QmiClientDms *client,
+                              GAsyncResult *res)
+{
+    QmiMessageDmsGetSupportedMessagesOutput *output;
+    GError *error = NULL;
+    GArray *bytearray = NULL;
+    GString *str = NULL;
+
+    output = qmi_client_dms_get_supported_messages_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_supported_messages_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get supported DMS messages: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_supported_messages_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got supported DMS messages:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_dms_get_supported_messages_output_get_list (output, &bytearray, NULL)) {
+
+        guint bytearray_i;
+
+        for (bytearray_i = 0; bytearray_i < bytearray->len; bytearray_i++) {
+            guint bit_i;
+            guint8 bytevalue;
+
+            bytevalue = g_array_index (bytearray, guint8, bytearray_i);
+            for (bit_i = 0; bit_i < 8; bit_i++) {
+                if (bytevalue & (1 << bit_i)) {
+                    if (!str)
+                        str = g_string_new ("");
+                    g_string_append_printf (str, "\t0x%04X\n", (bit_i + (8 * bytearray_i)));
+                }
+            }
+        }
+    }
+
+    if (str) {
+        g_print ("%s", str->str);
+        g_string_free (str, TRUE);
+    } else
+        g_print ("\tnone\n");
+
+    qmi_message_dms_get_supported_messages_output_unref (output);
+    shutdown (TRUE);
+}
+
+static void
 reset_ready (QmiClientDms *client,
              GAsyncResult *res)
 {
@@ -3624,6 +3687,18 @@ qmicli_dms_run (QmiDevice *device,
                                                10,
                                                ctx->cancellable,
                                                (GAsyncReadyCallback)set_fcc_authentication_ready,
+                                               NULL);
+        return;
+    }
+
+    /* Request to list supported messages? */
+    if (get_supported_messages_flag) {
+        g_debug ("Asynchronously getting supported DMS messages...");
+        qmi_client_dms_get_supported_messages (ctx->client,
+                                               NULL,
+                                               10,
+                                               ctx->cancellable,
+                                               (GAsyncReadyCallback)get_supported_messages_ready,
                                                NULL);
         return;
     }
