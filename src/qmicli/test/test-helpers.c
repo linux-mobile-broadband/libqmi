@@ -112,6 +112,37 @@ test_helpers_raw_printable_4 (void)
     g_array_unref (array);
 }
 
+static void
+test_helpers_supported_messages_list (void)
+{
+    const guint8 bytearray[] = {
+        0x03, 0x00, 0x00, 0xC0
+    };
+    const gchar *expected_str =
+        "\t0x0000\n"  /*  0 dec */
+        "\t0x0001\n"  /*  1 dec */
+        "\t0x001E\n"  /* 30 dec */
+        "\t0x001F\n"; /* 31 dec */
+    gchar *str;
+
+    str = qmicli_get_supported_messages_list (bytearray, G_N_ELEMENTS (bytearray));
+    g_assert (str);
+    g_assert_cmpstr (str, ==, expected_str);
+    g_free (str);
+}
+
+static void
+test_helpers_supported_messages_list_none (void)
+{
+    const gchar *expected_str = "\tnone\n";
+    gchar *str;
+
+    str = qmicli_get_supported_messages_list (NULL, 0);
+    g_assert (str);
+    g_assert_cmpstr (str, ==, expected_str);
+    g_free (str);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -120,6 +151,9 @@ int main (int argc, char **argv)
     g_test_add_func ("/qmicli/helpers/raw-printable/2",  test_helpers_raw_printable_2);
     g_test_add_func ("/qmicli/helpers/raw-printable/3",  test_helpers_raw_printable_3);
     g_test_add_func ("/qmicli/helpers/raw-printable/4",  test_helpers_raw_printable_4);
+
+    g_test_add_func ("/qmicli/helpers/supported-message-list",      test_helpers_supported_messages_list);
+    g_test_add_func ("/qmicli/helpers/supported-message-list/none", test_helpers_supported_messages_list_none);
 
     return g_test_run ();
 }

@@ -389,3 +389,28 @@ qmicli_read_uint_from_string (const gchar *str,
     }
     return FALSE;
 }
+
+gchar *
+qmicli_get_supported_messages_list (const guint8 *data,
+                                    gsize len)
+{
+    GString *str = NULL;
+
+    if (len > 0 && data) {
+        guint bytearray_i;
+
+        for (bytearray_i = 0; bytearray_i < len; bytearray_i++) {
+            guint bit_i;
+
+            for (bit_i = 0; bit_i < 8; bit_i++) {
+                if (data[bytearray_i] & (1 << bit_i)) {
+                    if (!str)
+                        str = g_string_new ("");
+                    g_string_append_printf (str, "\t0x%04X\n", (guint16) (bit_i + (8 * bytearray_i)));
+                }
+            }
+        }
+    }
+
+    return (str ? g_string_free (str, FALSE) : g_strdup ("\tnone\n"));
+}

@@ -326,7 +326,7 @@ get_supported_messages_ready (QmiClientWda *client,
     QmiMessageWdaGetSupportedMessagesOutput *output;
     GError *error = NULL;
     GArray *bytearray = NULL;
-    GString *str = NULL;
+    gchar *str;
 
     output = qmi_client_wda_get_supported_messages_finish (client, res, &error);
     if (!output) {
@@ -347,30 +347,11 @@ get_supported_messages_ready (QmiClientWda *client,
     g_print ("[%s] Successfully got supported WDA messages:\n",
              qmi_device_get_path_display (ctx->device));
 
-    if (qmi_message_wda_get_supported_messages_output_get_list (output, &bytearray, NULL)) {
-
-        guint bytearray_i;
-
-        for (bytearray_i = 0; bytearray_i < bytearray->len; bytearray_i++) {
-            guint bit_i;
-            guint8 bytevalue;
-
-            bytevalue = g_array_index (bytearray, guint8, bytearray_i);
-            for (bit_i = 0; bit_i < 8; bit_i++) {
-                if (bytevalue & (1 << bit_i)) {
-                    if (!str)
-                        str = g_string_new ("");
-                    g_string_append_printf (str, "\t0x%04X\n", (bit_i + (8 * bytearray_i)));
-                }
-            }
-        }
-    }
-
-    if (str) {
-        g_print ("%s", str->str);
-        g_string_free (str, TRUE);
-    } else
-        g_print ("\tnone\n");
+    qmi_message_wda_get_supported_messages_output_get_list (output, &bytearray, NULL);
+    str = qmicli_get_supported_messages_list (bytearray ? (const guint8 *)bytearray->data : NULL,
+                                              bytearray ? bytearray->len : 0);
+    g_print ("%s", str);
+    g_free (str);
 
     qmi_message_wda_get_supported_messages_output_unref (output);
     shutdown (TRUE);
