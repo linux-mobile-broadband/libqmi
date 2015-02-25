@@ -293,6 +293,7 @@
       <xi:include href="xml/qmi-message-voice-end-call.xml"/>
       <xi:include href="xml/qmi-message-voice-answer-call.xml"/>
       <xi:include href="xml/qmi-message-voice-get-config.xml"/>
+      <xi:include href="xml/qmi-message-voice-get-supported-messages.xml"/>
     </section>
   </chapter>
 

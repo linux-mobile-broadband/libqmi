@@ -43,11 +43,16 @@ static Context *ctx;
 
 /* Options */
 static gboolean get_config_flag;
+static gboolean get_supported_messages_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "voice-get-config", 0, 0, G_OPTION_ARG_NONE, &get_config_flag,
       "Get Voice service configuration",
+      NULL
+    },
+    { "voice-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
+      "Get supported messages",
       NULL
     },
     { "voice-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -82,6 +87,7 @@ qmicli_voice_options_enabled (void)
         return !!n_actions;
 
     n_actions = (get_config_flag +
+                 get_supported_messages_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -246,6 +252,63 @@ get_config_ready (QmiClientVoice *client,
     shutdown (TRUE);
 }
 
+static void
+get_supported_messages_ready (QmiClientVoice *client,
+                              GAsyncResult *res)
+{
+    QmiMessageVoiceGetSupportedMessagesOutput *output;
+    GError *error = NULL;
+    GArray *bytearray = NULL;
+    GString *str = NULL;
+
+    output = qmi_client_voice_get_supported_messages_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_voice_get_supported_messages_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get supported VOICE messages: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_voice_get_supported_messages_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got supported VOICE messages:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_voice_get_supported_messages_output_get_list (output, &bytearray, NULL)) {
+
+        guint bytearray_i;
+
+        for (bytearray_i = 0; bytearray_i < bytearray->len; bytearray_i++) {
+            guint bit_i;
+            guint8 bytevalue;
+
+            bytevalue = g_array_index (bytearray, guint8, bytearray_i);
+            for (bit_i = 0; bit_i < 8; bit_i++) {
+                if (bytevalue & (1 << bit_i)) {
+                    if (!str)
+                        str = g_string_new ("");
+                    g_string_append_printf (str, "\t0x%04X\n", (bit_i + (8 * bytearray_i)));
+                }
+            }
+        }
+    }
+
+    if (str) {
+        g_print ("%s", str->str);
+        g_string_free (str, TRUE);
+    } else
+        g_print ("\tnone\n");
+
+    qmi_message_voice_get_supported_messages_output_unref (output);
+    shutdown (TRUE);
+}
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -289,6 +352,18 @@ qmicli_voice_run (QmiDevice *device,
                                      (GAsyncReadyCallback)get_config_ready,
                                      NULL);
         qmi_message_voice_get_config_input_unref (input);
+        return;
+    }
+
+    /* Request to list supported messages? */
+    if (get_supported_messages_flag) {
+        g_debug ("Asynchronously getting supported voice messages...");
+        qmi_client_voice_get_supported_messages (ctx->client,
+                                                 NULL,
+                                                 10,
+                                                 ctx->cancellable,
+                                                 (GAsyncReadyCallback)get_supported_messages_ready,
+                                                 NULL);
         return;
     }
 
