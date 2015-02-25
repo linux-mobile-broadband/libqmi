@@ -356,6 +356,9 @@ mbim_service_lookup_name (guint service)
  *
  * Get the UUID corresponding to @service.
  *
+ * The @service needs to be either a generic one (including #MBIM_SERVICE_INVALID)
+ * or a custom registered one.
+ *
  * Returns: (transfer none): a #MbimUuid.
  */
 const MbimUuid *
@@ -396,7 +399,7 @@ mbim_uuid_from_service (MbimService service)
             if (service == ((MbimCustomService *)l->data)->service_id)
                 return &((MbimCustomService *)l->data)->uuid;
         }
-        g_assert_not_reached ();
+        g_return_val_if_reached (NULL);
     }
 }
 
