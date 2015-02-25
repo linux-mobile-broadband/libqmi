@@ -1811,9 +1811,8 @@ mbim_message_command_new (guint32                transaction_id,
     const MbimUuid *service_id;
 
     /* Known service required */
-    g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_PROXY_CONTROL, FALSE);
     service_id = mbim_uuid_from_service (service);
+    g_return_val_if_fail (service_id != NULL, NULL);
 
     self = _mbim_message_allocate (MBIM_MESSAGE_TYPE_COMMAND,
                                    transaction_id,

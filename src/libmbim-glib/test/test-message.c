@@ -149,6 +149,36 @@ test_message_command_not_empty (void)
 }
 
 static void
+test_message_command_custom_service (void)
+{
+    static const gchar *nick = "My custom service";
+    static const MbimUuid uuid_custom = {
+        .a = { 0x11, 0x22, 0x33, 0x44 },
+        .b = { 0x11, 0x11 },
+        .c = { 0x22, 0x22 },
+        .d = { 0x33, 0x33 },
+        .e = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }
+    };
+    guint service;
+    MbimMessage *message;
+
+    service = mbim_register_custom_service (&uuid_custom, nick);
+    g_assert (mbim_service_id_is_custom (service));
+
+    message = mbim_message_command_new (0x01,
+                                        service,
+                                        0x11223344,
+                                        MBIM_MESSAGE_COMMAND_TYPE_QUERY);
+    g_assert (message);
+    g_assert_cmpuint (mbim_message_command_get_service (message), ==, service);
+    g_assert (mbim_uuid_cmp (mbim_message_command_get_service_id (message), &uuid_custom));
+    g_assert_cmpuint (mbim_message_command_get_cid (message), ==, 0x11223344);
+    g_assert_cmpuint (mbim_message_command_get_command_type (message), ==, MBIM_MESSAGE_COMMAND_TYPE_QUERY);
+
+    mbim_message_unref (message);
+}
+
+static void
 test_message_command_done (void)
 {
     MbimMessage *message;
@@ -195,13 +225,14 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libmbim-glib/message/open",              test_message_open);
-    g_test_add_func ("/libmbim-glib/message/open-done",         test_message_open_done);
-    g_test_add_func ("/libmbim-glib/message/close",             test_message_close);
-    g_test_add_func ("/libmbim-glib/message/close-done",        test_message_close_done);
-    g_test_add_func ("/libmbim-glib/message/command/empty",     test_message_command_empty);
-    g_test_add_func ("/libmbim-glib/message/command/not-empty", test_message_command_not_empty);
-    g_test_add_func ("/libmbim-glib/message/command-done",      test_message_command_done);
+    g_test_add_func ("/libmbim-glib/message/open",                   test_message_open);
+    g_test_add_func ("/libmbim-glib/message/open-done",              test_message_open_done);
+    g_test_add_func ("/libmbim-glib/message/close",                  test_message_close);
+    g_test_add_func ("/libmbim-glib/message/close-done",             test_message_close_done);
+    g_test_add_func ("/libmbim-glib/message/command/empty",          test_message_command_empty);
+    g_test_add_func ("/libmbim-glib/message/command/not-empty",      test_message_command_not_empty);
+    g_test_add_func ("/libmbim-glib/message/command/custom-service", test_message_command_custom_service);
+    g_test_add_func ("/libmbim-glib/message/command-done",           test_message_command_done);
 
     return g_test_run ();
 }
