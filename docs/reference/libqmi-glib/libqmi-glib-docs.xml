@@ -175,6 +175,7 @@
     <section>
       <title>WMS Indications</title>
       <xi:include href="xml/qmi-indication-wms-event-report.xml"/>
+      <xi:include href="xml/qmi-indication-wms-smsc-address.xml"/>
     </section>
     <section>
       <title>WMS Requests</title>
