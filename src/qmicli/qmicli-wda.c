@@ -44,6 +44,7 @@ static Context *ctx;
 /* Options */
 static gchar *set_data_format_str;
 static gboolean get_data_format_flag;
+static gboolean get_supported_messages_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -53,6 +54,10 @@ static GOptionEntry entries[] = {
     },
     { "wda-get-data-format", 0, 0, G_OPTION_ARG_NONE, &get_data_format_flag,
       "Get data format",
+      NULL
+    },
+    { "wda-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
+      "Get supported messages",
       NULL
     },
     { "wda-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -88,6 +93,7 @@ qmicli_wda_options_enabled (void)
 
     n_actions = (!!set_data_format_str +
                  get_data_format_flag +
+                 get_supported_messages_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -313,6 +319,63 @@ set_data_format_input_create (const gchar *str)
     return input;
 }
 
+static void
+get_supported_messages_ready (QmiClientWda *client,
+                              GAsyncResult *res)
+{
+    QmiMessageWdaGetSupportedMessagesOutput *output;
+    GError *error = NULL;
+    GArray *bytearray = NULL;
+    GString *str = NULL;
+
+    output = qmi_client_wda_get_supported_messages_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wda_get_supported_messages_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get supported WDA messages: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wda_get_supported_messages_output_unref (output);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got supported WDA messages:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_wda_get_supported_messages_output_get_list (output, &bytearray, NULL)) {
+
+        guint bytearray_i;
+
+        for (bytearray_i = 0; bytearray_i < bytearray->len; bytearray_i++) {
+            guint bit_i;
+            guint8 bytevalue;
+
+            bytevalue = g_array_index (bytearray, guint8, bytearray_i);
+            for (bit_i = 0; bit_i < 8; bit_i++) {
+                if (bytevalue & (1 << bit_i)) {
+                    if (!str)
+                        str = g_string_new ("");
+                    g_string_append_printf (str, "\t0x%04X\n", (bit_i + (8 * bytearray_i)));
+                }
+            }
+        }
+    }
+
+    if (str) {
+        g_print ("%s", str->str);
+        g_string_free (str, TRUE);
+    } else
+        g_print ("\tnone\n");
+
+    qmi_message_wda_get_supported_messages_output_unref (output);
+    shutdown (TRUE);
+}
+
 void
 qmicli_wda_run (QmiDevice *device,
                 QmiClientWda *client,
@@ -354,6 +417,18 @@ qmicli_wda_run (QmiDevice *device,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_data_format_ready,
                                         NULL);
+        return;
+    }
+
+    /* Request to list supported messages? */
+    if (get_supported_messages_flag) {
+        g_debug ("Asynchronously getting supported WDA messages...");
+        qmi_client_wda_get_supported_messages (ctx->client,
+                                               NULL,
+                                               10,
+                                               ctx->cancellable,
+                                               (GAsyncReadyCallback)get_supported_messages_ready,
+                                               NULL);
         return;
     }
 

@@ -273,6 +273,7 @@
       <title>WDA Requests</title>
       <xi:include href="xml/qmi-message-wda-set-data-format.xml"/>
       <xi:include href="xml/qmi-message-wda-get-data-format.xml"/>
+      <xi:include href="xml/qmi-message-wda-get-supported-messages.xml"/>
     </section>
   </chapter>
 
