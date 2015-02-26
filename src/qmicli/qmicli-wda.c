@@ -119,7 +119,7 @@ context_free (Context *context)
 }
 
 static void
-shutdown (gboolean operation_status)
+operation_shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
     context_free (ctx);
@@ -129,7 +129,7 @@ shutdown (gboolean operation_status)
 static gboolean
 noop_cb (gpointer unused)
 {
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
     return FALSE;
 }
 
@@ -149,7 +149,7 @@ get_data_format_ready (QmiClientWda *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -157,7 +157,7 @@ get_data_format_ready (QmiClientWda *client,
         g_printerr ("error: couldn't get data format: %s\n", error->message);
         g_error_free (error);
         qmi_message_wda_get_data_format_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -210,7 +210,7 @@ get_data_format_ready (QmiClientWda *client,
         g_print ("Downlink data aggregation max size: '%u'\n", data_aggregation_max_size);
 
     qmi_message_wda_get_data_format_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -230,7 +230,7 @@ set_data_format_ready (QmiClientWda *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -238,7 +238,7 @@ set_data_format_ready (QmiClientWda *client,
         g_printerr ("error: couldn't set data format: %s\n", error->message);
         g_error_free (error);
         qmi_message_wda_set_data_format_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -291,7 +291,7 @@ set_data_format_ready (QmiClientWda *client,
         g_print ("     Downlink data aggregation max size: '%u'\n", data_aggregation_max_size);
 
     qmi_message_wda_set_data_format_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageWdaSetDataFormatInput *
@@ -332,7 +332,7 @@ get_supported_messages_ready (QmiClientWda *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -340,7 +340,7 @@ get_supported_messages_ready (QmiClientWda *client,
         g_printerr ("error: couldn't get supported WDA messages: %s\n", error->message);
         g_error_free (error);
         qmi_message_wda_get_supported_messages_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -354,7 +354,7 @@ get_supported_messages_ready (QmiClientWda *client,
     g_free (str);
 
     qmi_message_wda_get_supported_messages_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 void
@@ -374,7 +374,7 @@ qmicli_wda_run (QmiDevice *device,
 
         input = set_data_format_input_create (set_data_format_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
 

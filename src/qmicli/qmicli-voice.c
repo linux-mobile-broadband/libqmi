@@ -113,7 +113,7 @@ context_free (Context *context)
 }
 
 static void
-shutdown (gboolean operation_status)
+operation_shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
     context_free (ctx);
@@ -146,7 +146,7 @@ get_config_ready (QmiClientVoice *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -154,7 +154,7 @@ get_config_ready (QmiClientVoice *client,
         g_printerr ("error: couldn't get Voice configuration: %s\n", error->message);
         g_error_free (error);
         qmi_message_voice_get_config_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -249,7 +249,7 @@ get_config_ready (QmiClientVoice *client,
                  qmi_voice_domain_get_string (current_voice_domain_preference));
 
     qmi_message_voice_get_config_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -265,7 +265,7 @@ get_supported_messages_ready (QmiClientVoice *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -273,7 +273,7 @@ get_supported_messages_ready (QmiClientVoice *client,
         g_printerr ("error: couldn't get supported VOICE messages: %s\n", error->message);
         g_error_free (error);
         qmi_message_voice_get_supported_messages_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -287,13 +287,13 @@ get_supported_messages_ready (QmiClientVoice *client,
     g_free (str);
 
     qmi_message_voice_get_supported_messages_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static gboolean
 noop_cb (gpointer unused)
 {
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
     return FALSE;
 }
 

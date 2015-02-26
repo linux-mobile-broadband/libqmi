@@ -113,7 +113,7 @@ context_free (Context *context)
 }
 
 static void
-shutdown (gboolean operation_status)
+operation_shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
     context_free (ctx);
@@ -133,7 +133,7 @@ get_supported_messages_ready (QmiClientWms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -141,7 +141,7 @@ get_supported_messages_ready (QmiClientWms *client,
         g_printerr ("error: couldn't get supported WMS messages: %s\n", error->message);
         g_error_free (error);
         qmi_message_wms_get_supported_messages_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -155,7 +155,7 @@ get_supported_messages_ready (QmiClientWms *client,
     g_free (str);
 
     qmi_message_wms_get_supported_messages_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -169,7 +169,7 @@ reset_ready (QmiClientWms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -177,7 +177,7 @@ reset_ready (QmiClientWms *client,
         g_printerr ("error: couldn't reset the WMS service: %s\n", error->message);
         g_error_free (error);
         qmi_message_wms_reset_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -185,13 +185,13 @@ reset_ready (QmiClientWms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_wms_reset_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static gboolean
 noop_cb (gpointer unused)
 {
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
     return FALSE;
 }
 
