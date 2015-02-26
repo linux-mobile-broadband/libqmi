@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -50,6 +51,7 @@ static Context *ctx;
 static gchar *start_network_str;
 static gboolean follow_network_flag;
 static gchar *stop_network_str;
+static gboolean get_current_settings_flag;
 static gboolean get_packet_service_status_flag;
 static gboolean get_packet_statistics_flag;
 static gboolean get_data_bearer_technology_flag;
@@ -72,6 +74,10 @@ static GOptionEntry entries[] = {
     { "wds-stop-network", 0, 0, G_OPTION_ARG_STRING, &stop_network_str,
       "Stop network",
       "[Packet data handle]"
+    },
+    { "wds-get-current-settings", 0, 0, G_OPTION_ARG_NONE, &get_current_settings_flag,
+      "Get current settings",
+      NULL
     },
     { "wds-get-packet-service-status", 0, 0, G_OPTION_ARG_NONE, &get_packet_service_status_flag,
       "Get packet service status",
@@ -138,6 +144,7 @@ qmicli_wds_options_enabled (void)
 
     n_actions = (!!start_network_str +
                  !!stop_network_str +
+                 get_current_settings_flag +
                  get_packet_service_status_flag +
                  get_packet_statistics_flag +
                  get_data_bearer_technology_flag +
@@ -383,6 +390,147 @@ start_network_ready (QmiClientWds *client,
     }
 
     /* Nothing else to do */
+    operation_shutdown (TRUE);
+}
+
+static void
+get_current_settings_ready (QmiClientWds *client,
+                            GAsyncResult *res)
+{
+    GError *error = NULL;
+    QmiMessageWdsGetCurrentSettingsOutput *output;
+    QmiWdsIpFamily ip_family = QMI_WDS_IP_FAMILY_UNSPECIFIED;
+    guint32 mtu = 0;
+    GArray *array;
+    guint32 addr = 0;
+    struct in_addr in_addr_val;
+    struct in6_addr in6_addr_val;
+    gchar buf4[INET_ADDRSTRLEN];
+    gchar buf6[INET6_ADDRSTRLEN];
+    guint8 prefix = 0;
+    guint i;
+
+    output = qmi_client_wds_get_current_settings_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_get_current_settings_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get current settings: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wds_get_current_settings_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Current settings retrieved:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_wds_get_current_settings_output_get_ip_family (output, &ip_family, NULL))
+        g_print ("           IP Family: %s\n",
+                 ((ip_family == QMI_WDS_IP_FAMILY_IPV4) ? "IPv4" :
+                  ((ip_family == QMI_WDS_IP_FAMILY_IPV6) ? "IPv6" :
+                   "unknown")));
+
+    /* IPv4... */
+
+    if (qmi_message_wds_get_current_settings_output_get_ipv4_address (output, &addr, NULL)) {
+        in_addr_val.s_addr = GUINT32_TO_BE (addr);
+        memset (buf4, 0, sizeof (buf4));
+        inet_ntop (AF_INET, &in_addr_val, buf4, sizeof (buf4));
+        g_print ("        IPv4 address: %s\n", buf4);
+    }
+
+    if (qmi_message_wds_get_current_settings_output_get_ipv4_gateway_subnet_mask (output, &addr, NULL)) {
+        in_addr_val.s_addr = GUINT32_TO_BE (addr);
+        memset (buf4, 0, sizeof (buf4));
+        inet_ntop (AF_INET, &in_addr_val, buf4, sizeof (buf4));
+        g_print ("    IPv4 subnet mask: %s\n", buf4);
+    }
+
+    if (qmi_message_wds_get_current_settings_output_get_ipv4_gateway_address (output, &addr, NULL)) {
+        in_addr_val.s_addr = GUINT32_TO_BE (addr);
+        memset (buf4, 0, sizeof (buf4));
+        inet_ntop (AF_INET, &in_addr_val, buf4, sizeof (buf4));
+        g_print ("IPv4 gateway address: %s\n", buf4);
+    }
+
+    if (qmi_message_wds_get_current_settings_output_get_primary_ipv4_dns_address (output, &addr, NULL)) {
+        in_addr_val.s_addr = GUINT32_TO_BE (addr);
+        memset (buf4, 0, sizeof (buf4));
+        inet_ntop (AF_INET, &in_addr_val, buf4, sizeof (buf4));
+        g_print ("    IPv4 primary DNS: %s\n", buf4);
+    }
+
+    if (qmi_message_wds_get_current_settings_output_get_secondary_ipv4_dns_address (output, &addr, NULL)) {
+        in_addr_val.s_addr = GUINT32_TO_BE (addr);
+        memset (buf4, 0, sizeof (buf4));
+        inet_ntop (AF_INET, &in_addr_val, buf4, sizeof (buf4));
+        g_print ("  IPv4 secondary DNS: %s\n", buf4);
+    }
+
+    /* IPv6... */
+
+    if (qmi_message_wds_get_current_settings_output_get_ipv6_address (output, &array, &prefix, NULL)) {
+        for (i = 0; i < array->len; i++)
+            in6_addr_val.s6_addr16[i] = GUINT16_TO_BE (g_array_index (array, guint16, i));
+        memset (buf6, 0, sizeof (buf6));
+        inet_ntop (AF_INET6, &in6_addr_val, buf6, sizeof (buf6));
+        g_print ("        IPv6 address: %s/%d\n", buf6, prefix);
+    }
+
+    if (qmi_message_wds_get_current_settings_output_get_ipv6_gateway_address (output, &array, &prefix, NULL)) {
+        for (i = 0; i < array->len; i++)
+            in6_addr_val.s6_addr16[i] = GUINT16_TO_BE (g_array_index (array, guint16, i));
+        memset (buf6, 0, sizeof (buf6));
+        inet_ntop (AF_INET6, &in6_addr_val, buf6, sizeof (buf6));
+        g_print ("IPv6 gateway address: %s/%d\n", buf6, prefix);
+    }
+
+    if (qmi_message_wds_get_current_settings_output_get_ipv6_primary_dns_address (output, &array, NULL)) {
+        for (i = 0; i < array->len; i++)
+            in6_addr_val.s6_addr16[i] = GUINT16_TO_BE (g_array_index (array, guint16, i));
+        memset (buf6, 0, sizeof (buf6));
+        inet_ntop (AF_INET6, &in6_addr_val, buf6, sizeof (buf6));
+        g_print ("    IPv6 primary DNS: %s\n", buf6);
+    }
+
+    if (qmi_message_wds_get_current_settings_output_get_ipv6_secondary_dns_address (output, &array, NULL)) {
+        for (i = 0; i < array->len; i++)
+            in6_addr_val.s6_addr16[i] = GUINT16_TO_BE (g_array_index (array, guint16, i));
+        memset (buf6, 0, sizeof (buf6));
+        inet_ntop (AF_INET6, &in6_addr_val, buf6, sizeof (buf6));
+        g_print ("  IPv6 secondary DNS: %s\n", buf6);
+    }
+
+    /* Other... */
+
+    if (qmi_message_wds_get_current_settings_output_get_mtu (output, &mtu, NULL))
+        g_print ("                 MTU: %u\n", mtu);
+
+    if (qmi_message_wds_get_current_settings_output_get_domain_name_list (output, &array, &error)) {
+        GString *s = NULL;
+
+        if (array) {
+            for (i = 0; i < array->len; i++) {
+                if (!s)
+                    s = g_string_new ("");
+                else
+                    g_string_append (s, ", ");
+                g_string_append (s, g_array_index (array, const gchar *, i));
+            }
+        }
+        if (s) {
+            g_print ("             Domains: %s\n", s->str);
+            g_string_free (s, TRUE);
+        } else
+            g_print ("             Domains: none\n");
+    }
+
+    qmi_message_wds_get_current_settings_output_unref (output);
     operation_shutdown (TRUE);
 }
 
@@ -1013,6 +1161,33 @@ qmicli_wds_run (QmiDevice *device,
 
         g_debug ("Asynchronously stopping network...");
         internal_stop_network (ctx->cancellable, (guint32)packet_data_handle);
+        return;
+    }
+
+    /* Request to get current settings? */
+    if (get_current_settings_flag) {
+        QmiMessageWdsGetCurrentSettingsInput *input;
+
+        input = qmi_message_wds_get_current_settings_input_new ();
+        qmi_message_wds_get_current_settings_input_set_requested_settings (
+            input,
+            (QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DNS_ADDRESS      |
+             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GRANTED_QOS      |
+             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_ADDRESS       |
+             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GATEWAY_INFO     |
+             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_MTU              |
+             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST |
+             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_FAMILY),
+            NULL);
+
+        g_debug ("Asynchronously getting current settings...");
+        qmi_client_wds_get_current_settings (client,
+                                             input,
+                                             10,
+                                             ctx->cancellable,
+                                             (GAsyncReadyCallback)get_current_settings_ready,
+                                             NULL);
+        qmi_message_wds_get_current_settings_input_unref (input);
         return;
     }
 
