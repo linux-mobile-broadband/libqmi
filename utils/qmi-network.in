@@ -98,16 +98,16 @@ load_profile ()
 
         if [ "x$APN" != "x" ]; then
             echo "    APN: $APN"
-	else
+	    else
             echo "    APN: unset"
         fi
 
-	if [ "x$PROXY" = "xyes" ]; then
-	    echo "    qmi-proxy: $PROXY"
-	    PROXY_OPT='--device-open-proxy'
-	else
-	    echo "    qmi-proxy: no"
-	fi
+	    if [ "x$PROXY" = "xyes" ]; then
+	        echo "    qmi-proxy: $PROXY"
+	        PROXY_OPT='--device-open-proxy'
+	    else
+	        echo "    qmi-proxy: no"
+	    fi
     else
         echo "Profile at '$PROFILE_FILE' not found..."
     fi
