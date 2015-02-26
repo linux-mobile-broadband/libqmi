@@ -13,6 +13,10 @@
      "type"    : "Message-ID-Enum" },
 
   // *********************************************************************************
+  {  "name"    : "QMI Indication WDS",
+     "type"    : "Indication-ID-Enum" } ,
+
+  // *********************************************************************************
   {  "name"    : "Reset",
      "type"    : "Message",
      "service" : "WDS",
@@ -137,6 +141,8 @@
                       "id"            : "0x34",
                       "mandatory"     : "no",
                       "type"          : "TLV",
+                      // Note: docs give this as gint16 with negative enum values. Instead, we use
+                      // guint16 with equivalent positive enum values.
                       "format"        : "guint16",
                       "public-format" : "QmiWdsExtendedTechnologyPreference" },
                     { "name"          : "Call Type",
@@ -214,6 +220,53 @@
                       "format"        : "guint8",
                       "public-format" : "QmiWdsConnectionStatus",
                       "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  {  "name"    : "Packet Service Status",
+     "type"    : "Indication",
+     "service" : "WDS",
+     "id"      : "0x0022",
+     "version" : "1.0",
+     "output"  : [ { "name"          : "Connection Status",
+                     "id"            : "0x01",
+                     "mandatory"     : "yes",
+                     "type"          : "TLV",
+                     "format"        : "sequence",
+                     "contents"      : [ { "name"          : "Status",
+                                           "format"        : "guint8",
+                                           "public-format" : "QmiWdsConnectionStatus" },
+                                         { "name"          : "Reconfiguration Required",
+                                           "format"        : "guint8",
+                                           "public-format" : "gboolean" } ] },
+                   { "name"          : "Call End Reason",
+                     "id"            : "0x10",
+                     "mandatory"     : "no",
+                     "type"          : "TLV",
+                     "format"        : "guint16",
+                     "public-format" : "QmiWdsCallEndReason" },
+                   { "name"      : "Verbose Call End Reason",
+                     "id"        : "0x11",
+                     "mandatory" : "no",
+                     "type"      : "TLV",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"          : "Type",
+                                       "format"        : "guint16",
+                                       "public-format" : "QmiWdsVerboseCallEndReasonType" },
+                                     { "name"   : "Reason",
+                                       "format" : "gint16" } ] },
+                    { "name"          : "IP Family",
+                      "id"            : "0x12",
+                      "mandatory"     : "no",
+                      "type"          : "TLV",
+                      "format"        : "guint8",
+                      "public-format" : "QmiWdsIpFamily" },
+                    { "name"          : "Extended Technology Preference",
+                      "id"            : "0x34",
+                      "mandatory"     : "no",
+                      "type"          : "TLV",
+                      // Note: docs give this as gint16 with negative enum values. Instead, we use
+                      // guint16 with equivalent positive enum values.
+                      "format"        : "guint16",
+                      "public-format" : "QmiWdsExtendedTechnologyPreference" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get Packet Statistics",
@@ -995,6 +1048,8 @@
                       "id"        : "0x2D",
                       "mandatory" : "no",
                       "type"      : "TLV",
+                      // Note: docs give this as gint16 with negative enum values. Instead, we use
+                      // guint16 with equivalent positive enum values.
                       "format"    : "guint16",
                       "public-format" : "QmiWdsExtendedTechnologyPreference",
                       "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
