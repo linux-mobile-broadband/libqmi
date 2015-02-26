@@ -106,7 +106,7 @@ context_free (Context *context)
 }
 
 static void
-shutdown (gboolean operation_status)
+operation_shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
     context_free (ctx);
@@ -127,7 +127,7 @@ get_all_capabilities_ready (QmiClientPbm *client,
         g_printerr ("error: operation failed: %s\n",
                     error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -135,7 +135,7 @@ get_all_capabilities_ready (QmiClientPbm *client,
         g_printerr ("error: couldn't get capabilities: %s\n", error->message);
         g_error_free (error);
         qmi_message_pbm_get_all_capabilities_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -269,13 +269,13 @@ get_all_capabilities_ready (QmiClientPbm *client,
     }
 
     qmi_message_pbm_get_all_capabilities_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static gboolean
 noop_cb (gpointer unused)
 {
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
     return FALSE;
 }
 

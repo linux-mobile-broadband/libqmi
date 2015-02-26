@@ -179,7 +179,7 @@ context_free (Context *context)
 }
 
 static void
-shutdown (gboolean operation_status)
+operation_shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
     context_free (ctx);
@@ -198,7 +198,7 @@ stop_network_ready (QmiClientWds *client,
         g_printerr ("error: operation failed: %s\n",
                     error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -206,7 +206,7 @@ stop_network_ready (QmiClientWds *client,
         g_printerr ("error: couldn't stop network: %s\n", error->message);
         g_error_free (error);
         qmi_message_wds_stop_network_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -216,7 +216,7 @@ stop_network_ready (QmiClientWds *client,
     g_print ("[%s] Network stopped\n",
              qmi_device_get_path_display (ctx->device));
     qmi_message_wds_stop_network_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -319,7 +319,7 @@ start_network_ready (QmiClientWds *client,
         g_printerr ("error: operation failed: %s\n",
                     error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -354,7 +354,7 @@ start_network_ready (QmiClientWds *client,
 
         g_error_free (error);
         qmi_message_wds_start_network_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -383,7 +383,7 @@ start_network_ready (QmiClientWds *client,
     }
 
     /* Nothing else to do */
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -540,7 +540,7 @@ get_packet_service_status_ready (QmiClientWds *client,
         g_printerr ("error: operation failed: %s\n",
                     error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -548,7 +548,7 @@ get_packet_service_status_ready (QmiClientWds *client,
         g_printerr ("error: couldn't get packet service status: %s\n", error->message);
         g_error_free (error);
         qmi_message_wds_get_packet_service_status_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -562,7 +562,7 @@ get_packet_service_status_ready (QmiClientWds *client,
              qmi_wds_connection_status_get_string (status));
 
     qmi_message_wds_get_packet_service_status_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -579,7 +579,7 @@ get_packet_statistics_ready (QmiClientWds *client,
         g_printerr ("error: operation failed: %s\n",
                     error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -587,7 +587,7 @@ get_packet_statistics_ready (QmiClientWds *client,
         g_printerr ("error: couldn't get packet statistics: %s\n", error->message);
         g_error_free (error);
         qmi_message_wds_get_packet_statistics_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -629,7 +629,7 @@ get_packet_statistics_ready (QmiClientWds *client,
         g_print ("\tRX bytes OK (last): %" G_GUINT64_FORMAT "\n", val64);
 
     qmi_message_wds_get_packet_statistics_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -645,7 +645,7 @@ get_data_bearer_technology_ready (QmiClientWds *client,
         g_printerr ("error: operation failed: %s\n",
                     error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -668,7 +668,7 @@ get_data_bearer_technology_ready (QmiClientWds *client,
 
         g_error_free (error);
         qmi_message_wds_get_data_bearer_technology_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -680,7 +680,7 @@ get_data_bearer_technology_ready (QmiClientWds *client,
              qmi_device_get_path_display (ctx->device),
              qmi_wds_data_bearer_technology_get_string (current));
     qmi_message_wds_get_data_bearer_technology_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -730,7 +730,7 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
         g_printerr ("error: operation failed: %s\n",
                     error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -755,7 +755,7 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
 
         g_error_free (error);
         qmi_message_wds_get_current_data_bearer_technology_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -774,7 +774,7 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
     }
 
     qmi_message_wds_get_current_data_bearer_technology_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 typedef struct {
@@ -852,7 +852,7 @@ get_next_profile_settings (GetProfileListContext *inner_ctx)
         /* All done */
         g_array_unref (inner_ctx->profile_list);
         g_slice_free (GetProfileListContext, inner_ctx);
-        shutdown (TRUE);
+        operation_shutdown (TRUE);
         return;
     }
 
@@ -891,7 +891,7 @@ get_profile_list_ready (QmiClientWds *client,
         g_printerr ("error: operation failed: %s\n",
                     error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -914,7 +914,7 @@ get_profile_list_ready (QmiClientWds *client,
 
         g_error_free (error);
         qmi_message_wds_get_profile_list_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -923,7 +923,7 @@ get_profile_list_ready (QmiClientWds *client,
     if (!profile_list || !profile_list->len) {
         g_print ("Profile list empty\n");
         qmi_message_wds_get_profile_list_output_unref (output);
-        shutdown (TRUE);
+        operation_shutdown (TRUE);
         return;
     }
 
@@ -949,7 +949,7 @@ get_default_settings_ready (QmiClientWds *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -971,7 +971,7 @@ get_default_settings_ready (QmiClientWds *client,
         }
         g_error_free (error);
         qmi_message_wds_get_default_settings_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -994,7 +994,7 @@ get_default_settings_ready (QmiClientWds *client,
     }
 
     qmi_message_wds_get_default_settings_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1008,7 +1008,7 @@ reset_ready (QmiClientWds *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1016,7 +1016,7 @@ reset_ready (QmiClientWds *client,
         g_printerr ("error: couldn't reset the WDS service: %s\n", error->message);
         g_error_free (error);
         qmi_message_wds_reset_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1024,13 +1024,13 @@ reset_ready (QmiClientWds *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_wds_reset_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static gboolean
 noop_cb (gpointer unused)
 {
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
     return FALSE;
 }
 
@@ -1110,7 +1110,7 @@ qmicli_wds_run (QmiDevice *device,
             packet_data_handle > G_MAXUINT32) {
             g_printerr ("error: invalid packet data handle given '%s'\n",
                         stop_network_str);
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
 
@@ -1224,7 +1224,7 @@ qmicli_wds_run (QmiDevice *device,
         else {
             g_printerr ("error: invalid profile type '%s'. Expected '3gpp' or '3gpp2'.'\n",
                         get_profile_list_str);
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
 
@@ -1251,7 +1251,7 @@ qmicli_wds_run (QmiDevice *device,
         else {
             g_printerr ("error: invalid default type '%s'. Expected '3gpp' or '3gpp2'.'\n",
                         get_default_settings_str);
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
 

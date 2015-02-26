@@ -349,7 +349,7 @@ context_free (Context *context)
 }
 
 static void
-shutdown (gboolean operation_status)
+operation_shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
     context_free (ctx);
@@ -370,7 +370,7 @@ get_ids_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -378,7 +378,7 @@ get_ids_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get IDs: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_ids_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -399,7 +399,7 @@ get_ids_ready (QmiClientDms *client,
              VALIDATE_UNKNOWN (meid));
 
     qmi_message_dms_get_ids_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -420,7 +420,7 @@ get_capabilities_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -428,7 +428,7 @@ get_capabilities_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get capabilities: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_capabilities_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -466,7 +466,7 @@ get_capabilities_ready (QmiClientDms *client,
 
     g_string_free (networks, TRUE);
     qmi_message_dms_get_capabilities_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -481,7 +481,7 @@ get_manufacturer_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -489,7 +489,7 @@ get_manufacturer_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get manufacturer: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_manufacturer_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -504,7 +504,7 @@ get_manufacturer_ready (QmiClientDms *client,
              VALIDATE_UNKNOWN (str));
 
     qmi_message_dms_get_manufacturer_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -519,7 +519,7 @@ get_model_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -527,7 +527,7 @@ get_model_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get model: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_model_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -542,7 +542,7 @@ get_model_ready (QmiClientDms *client,
              VALIDATE_UNKNOWN (str));
 
     qmi_message_dms_get_model_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -557,7 +557,7 @@ get_revision_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -565,7 +565,7 @@ get_revision_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get revision: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_revision_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -580,7 +580,7 @@ get_revision_ready (QmiClientDms *client,
              VALIDATE_UNKNOWN (str));
 
     qmi_message_dms_get_revision_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -595,7 +595,7 @@ get_msisdn_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -603,7 +603,7 @@ get_msisdn_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get MSISDN: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_msisdn_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -618,7 +618,7 @@ get_msisdn_ready (QmiClientDms *client,
              VALIDATE_UNKNOWN (str));
 
     qmi_message_dms_get_msisdn_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -635,7 +635,7 @@ get_power_state_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -643,7 +643,7 @@ get_power_state_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get power state: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_power_state_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -662,7 +662,7 @@ get_power_state_ready (QmiClientDms *client,
 
     g_free (power_state_str);
     qmi_message_dms_get_power_state_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsUimSetPinProtectionInput *
@@ -714,7 +714,7 @@ uim_set_pin_protection_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -739,7 +739,7 @@ uim_set_pin_protection_ready (QmiClientDms *client,
         }
 
         qmi_message_dms_uim_set_pin_protection_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -747,7 +747,7 @@ uim_set_pin_protection_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_uim_set_pin_protection_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsUimVerifyPinInput *
@@ -796,7 +796,7 @@ uim_verify_pin_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -821,7 +821,7 @@ uim_verify_pin_ready (QmiClientDms *client,
         }
 
         qmi_message_dms_uim_verify_pin_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -829,7 +829,7 @@ uim_verify_pin_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_uim_verify_pin_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsUimUnblockPinInput *
@@ -881,7 +881,7 @@ uim_unblock_pin_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -906,7 +906,7 @@ uim_unblock_pin_ready (QmiClientDms *client,
         }
 
         qmi_message_dms_uim_unblock_pin_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -914,7 +914,7 @@ uim_unblock_pin_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_uim_unblock_pin_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsUimChangePinInput *
@@ -966,7 +966,7 @@ uim_change_pin_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -991,7 +991,7 @@ uim_change_pin_ready (QmiClientDms *client,
         }
 
         qmi_message_dms_uim_change_pin_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -999,7 +999,7 @@ uim_change_pin_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_uim_change_pin_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1016,7 +1016,7 @@ uim_get_pin_status_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1024,7 +1024,7 @@ uim_get_pin_status_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get PIN status: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_uim_get_pin_status_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1064,7 +1064,7 @@ uim_get_pin_status_ready (QmiClientDms *client,
     }
 
     qmi_message_dms_uim_get_pin_status_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1079,7 +1079,7 @@ uim_get_iccid_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1087,7 +1087,7 @@ uim_get_iccid_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get ICCID: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_uim_get_iccid_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1102,7 +1102,7 @@ uim_get_iccid_ready (QmiClientDms *client,
              VALIDATE_UNKNOWN (str));
 
     qmi_message_dms_uim_get_iccid_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1117,7 +1117,7 @@ uim_get_imsi_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1125,7 +1125,7 @@ uim_get_imsi_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get IMSI: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_uim_get_imsi_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1140,7 +1140,7 @@ uim_get_imsi_ready (QmiClientDms *client,
              VALIDATE_UNKNOWN (str));
 
     qmi_message_dms_uim_get_imsi_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1155,7 +1155,7 @@ uim_get_state_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1163,7 +1163,7 @@ uim_get_state_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get UIM state: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_uim_get_state_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1175,7 +1175,7 @@ uim_get_state_ready (QmiClientDms *client,
              qmi_dms_uim_state_get_string (state));
 
     qmi_message_dms_uim_get_state_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsUimGetCkStatusInput *
@@ -1218,7 +1218,7 @@ uim_get_ck_status_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1226,7 +1226,7 @@ uim_get_ck_status_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get UIM CK status: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_uim_get_ck_status_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1258,7 +1258,7 @@ uim_get_ck_status_ready (QmiClientDms *client,
     }
 
     qmi_message_dms_uim_get_ck_status_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsUimSetCkProtectionInput *
@@ -1316,7 +1316,7 @@ uim_set_ck_protection_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1337,7 +1337,7 @@ uim_set_ck_protection_ready (QmiClientDms *client,
         }
 
         qmi_message_dms_uim_set_ck_protection_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1345,7 +1345,7 @@ uim_set_ck_protection_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_uim_set_ck_protection_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsUimUnblockCkInput *
@@ -1394,7 +1394,7 @@ uim_unblock_ck_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1415,7 +1415,7 @@ uim_unblock_ck_ready (QmiClientDms *client,
         }
 
         qmi_message_dms_uim_unblock_ck_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1423,7 +1423,7 @@ uim_unblock_ck_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_uim_unblock_ck_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1438,7 +1438,7 @@ get_hardware_revision_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1446,7 +1446,7 @@ get_hardware_revision_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get the HW revision: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_hardware_revision_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1461,7 +1461,7 @@ get_hardware_revision_ready (QmiClientDms *client,
              VALIDATE_UNKNOWN (str));
 
     qmi_message_dms_get_hardware_revision_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1477,7 +1477,7 @@ get_operating_mode_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1485,7 +1485,7 @@ get_operating_mode_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get the HW revision: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_operating_mode_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1515,7 +1515,7 @@ get_operating_mode_ready (QmiClientDms *client,
     g_print ("\tHW restricted: '%s'\n", hw_restricted ? "yes" : "no");
 
     qmi_message_dms_get_operating_mode_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsSetOperatingModeInput *
@@ -1554,7 +1554,7 @@ set_operating_mode_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1562,7 +1562,7 @@ set_operating_mode_ready (QmiClientDms *client,
         g_printerr ("error: couldn't set operating mode: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_set_operating_mode_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1570,7 +1570,7 @@ set_operating_mode_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_set_operating_mode_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1586,7 +1586,7 @@ get_time_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1594,7 +1594,7 @@ get_time_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get the device time: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_time_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1628,7 +1628,7 @@ get_time_ready (QmiClientDms *client,
     }
 
     qmi_message_dms_get_time_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1644,7 +1644,7 @@ get_prl_version_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1652,7 +1652,7 @@ get_prl_version_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get the PRL version: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_prl_version_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1675,7 +1675,7 @@ get_prl_version_ready (QmiClientDms *client,
     }
 
     qmi_message_dms_get_prl_version_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1690,7 +1690,7 @@ get_activation_state_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1698,7 +1698,7 @@ get_activation_state_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get the state of the service activation: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_activation_state_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1713,7 +1713,7 @@ get_activation_state_ready (QmiClientDms *client,
              qmi_dms_activation_state_get_string (activation_state));
 
     qmi_message_dms_get_activation_state_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsActivateManualInput *
@@ -1768,7 +1768,7 @@ activate_manual_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1776,12 +1776,12 @@ activate_manual_ready (QmiClientDms *client,
         g_printerr ("error: couldn't request manual service activation: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_activate_manual_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
     qmi_message_dms_activate_manual_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsActivateAutomaticInput *
@@ -1816,7 +1816,7 @@ activate_automatic_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1824,12 +1824,12 @@ activate_automatic_ready (QmiClientDms *client,
         g_printerr ("error: couldn't request automatic service activation: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_activate_automatic_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
     qmi_message_dms_activate_automatic_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -1844,7 +1844,7 @@ get_user_lock_state_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1852,7 +1852,7 @@ get_user_lock_state_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get the state of the user lock: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_user_lock_state_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1867,7 +1867,7 @@ get_user_lock_state_ready (QmiClientDms *client,
              enabled ? "yes" : "no");
 
     qmi_message_dms_get_user_lock_state_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsSetUserLockStateInput *
@@ -1917,7 +1917,7 @@ set_user_lock_state_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1925,7 +1925,7 @@ set_user_lock_state_ready (QmiClientDms *client,
         g_printerr ("error: couldn't set state of the user lock: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_set_user_lock_state_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1933,7 +1933,7 @@ set_user_lock_state_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_set_user_lock_state_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsSetUserLockCodeInput *
@@ -1982,7 +1982,7 @@ set_user_lock_code_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1990,7 +1990,7 @@ set_user_lock_code_ready (QmiClientDms *client,
         g_printerr ("error: couldn't change user lock code: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_set_user_lock_code_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -1998,7 +1998,7 @@ set_user_lock_code_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_set_user_lock_code_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -2014,7 +2014,7 @@ read_user_data_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2022,7 +2022,7 @@ read_user_data_ready (QmiClientDms *client,
         g_printerr ("error: couldn't read user data: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_read_user_data_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2042,7 +2042,7 @@ read_user_data_ready (QmiClientDms *client,
     g_free (user_data_printable);
 
     qmi_message_dms_read_user_data_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsWriteUserDataInput *
@@ -2084,7 +2084,7 @@ write_user_data_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2092,7 +2092,7 @@ write_user_data_ready (QmiClientDms *client,
         g_printerr ("error: couldn't write user data: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_write_user_data_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2100,7 +2100,7 @@ write_user_data_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_write_user_data_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -2116,7 +2116,7 @@ read_eri_file_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2124,7 +2124,7 @@ read_eri_file_ready (QmiClientDms *client,
         g_printerr ("error: couldn't read eri file: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_read_eri_file_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2144,7 +2144,7 @@ read_eri_file_ready (QmiClientDms *client,
     g_free (eri_file_printable);
 
     qmi_message_dms_read_eri_file_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsRestoreFactoryDefaultsInput *
@@ -2179,7 +2179,7 @@ restore_factory_defaults_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2187,7 +2187,7 @@ restore_factory_defaults_ready (QmiClientDms *client,
         g_printerr ("error: couldn't restores factory defaults: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_restore_factory_defaults_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2196,7 +2196,7 @@ restore_factory_defaults_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_restore_factory_defaults_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static QmiMessageDmsValidateServiceProgrammingCodeInput *
@@ -2231,7 +2231,7 @@ validate_service_programming_code_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2239,7 +2239,7 @@ validate_service_programming_code_ready (QmiClientDms *client,
         g_printerr ("error: couldn't validate Service Programming Code: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_validate_service_programming_code_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2247,7 +2247,7 @@ validate_service_programming_code_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_validate_service_programming_code_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -2264,7 +2264,7 @@ get_band_capabilities_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2272,7 +2272,7 @@ get_band_capabilities_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get band capabilities: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_band_capabilities_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2298,7 +2298,7 @@ get_band_capabilities_ready (QmiClientDms *client,
     }
 
     qmi_message_dms_get_band_capabilities_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -2313,7 +2313,7 @@ get_factory_sku_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2321,7 +2321,7 @@ get_factory_sku_ready (QmiClientDms *client,
         g_printerr ("error: couldn't get factory SKU: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_get_factory_sku_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2336,7 +2336,7 @@ get_factory_sku_ready (QmiClientDms *client,
              VALIDATE_UNKNOWN (str));
 
     qmi_message_dms_get_factory_sku_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 typedef struct {
@@ -2478,7 +2478,7 @@ get_image_info (ListImagesContext *operation_ctx)
     if (operation_ctx->i >= array->len) {
         /* We're done */
         list_images_context_free (operation_ctx);
-        shutdown (TRUE);
+        operation_shutdown (TRUE);
         return;
     }
 
@@ -2536,7 +2536,7 @@ list_stored_images_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2544,7 +2544,7 @@ list_stored_images_ready (QmiClientDms *client,
         g_printerr ("error: couldn't list stored images: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_list_stored_images_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2615,7 +2615,7 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2623,7 +2623,7 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
         g_printerr ("error: couldn't list stored images: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_list_stored_images_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2658,7 +2658,7 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
                         qmi_dms_firmware_image_type_get_string (image->type),
                         image_index);
             qmi_message_dms_list_stored_images_output_unref (output);
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
 
@@ -2711,27 +2711,27 @@ get_stored_image (QmiClientDms *client,
 
         if (i >= 3) {
             g_printerr ("A maximum of 2 images should be given: '%s'\n", str);
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
 
         if (!qmicli_read_firmware_id_from_string (split[i], &type, &image_index)) {
             g_printerr ("Couldn't parse input string as firmware index info: '%s'\n", str);
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
 
         if (type == QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM) {
             if (modem_index >= 0) {
                 g_printerr ("Couldn't two 'modem' type firwmare indexes: '%s'\n", str);
-                shutdown (FALSE);
+                operation_shutdown (FALSE);
                 return;
             }
             modem_index = (gint)image_index;
         } else if (type == QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI) {
             if (pri_index >= 0) {
                 g_printerr ("Couldn't two 'pri' type firwmare indexes: '%s'\n", str);
-                shutdown (FALSE);
+                operation_shutdown (FALSE);
                 return;
             }
             pri_index = (gint)image_index;
@@ -2769,7 +2769,7 @@ select_stored_image_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2777,7 +2777,7 @@ select_stored_image_ready (QmiClientDms *client,
         g_printerr ("error: couldn't select stored image: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_set_firmware_preference_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2795,7 +2795,7 @@ select_stored_image_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_set_firmware_preference_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -2820,7 +2820,7 @@ get_stored_image_select_ready (QmiClientDms *client,
     if (!modem_image_id.unique_id || !modem_image_id.build_id ||
         !pri_image_id.unique_id || !pri_image_id.build_id) {
         g_printerr ("error: must specify a pair of 'modem' and 'pri' images to select\n");
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2859,7 +2859,7 @@ delete_stored_image_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2867,14 +2867,14 @@ delete_stored_image_ready (QmiClientDms *client,
         g_printerr ("error: couldn't delete stored image: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_delete_stored_image_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
     g_print ("[%s] Stored image successfully deleted\n",
              qmi_device_get_path_display (ctx->device));
     qmi_message_dms_delete_stored_image_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -2898,7 +2898,7 @@ get_stored_image_delete_ready (QmiClientDms *client,
     if (modem_image_id.unique_id && modem_image_id.build_id &&
         pri_image_id.unique_id && pri_image_id.build_id) {
         g_printerr ("error: cannot specify multiple images to delete\n");
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2909,7 +2909,7 @@ get_stored_image_delete_ready (QmiClientDms *client,
         qmi_message_dms_delete_stored_image_input_set_image (input, &pri_image_id, NULL);
     else {
         g_printerr ("error: didn't specify correctly an image to delete\n");
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2941,7 +2941,7 @@ set_fcc_authentication_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2949,7 +2949,7 @@ set_fcc_authentication_ready (QmiClientDms *client,
         g_printerr ("error: couldn't set FCC authentication: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_set_fcc_authentication_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2957,7 +2957,7 @@ set_fcc_authentication_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_set_fcc_authentication_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -2971,7 +2971,7 @@ reset_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2979,7 +2979,7 @@ reset_ready (QmiClientDms *client,
         g_printerr ("error: couldn't reset the DMS service: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_reset_output_unref (output);
-        shutdown (FALSE);
+        operation_shutdown (FALSE);
         return;
     }
 
@@ -2987,13 +2987,13 @@ reset_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_dms_reset_output_unref (output);
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
 }
 
 static gboolean
 noop_cb (gpointer unused)
 {
-    shutdown (TRUE);
+    operation_shutdown (TRUE);
     return FALSE;
 }
 
@@ -3100,7 +3100,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously setting PIN protection...");
         input = uim_set_pin_protection_input_create (uim_set_pin_protection_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_uim_set_pin_protection (ctx->client,
@@ -3120,7 +3120,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously verifying PIN...");
         input = uim_verify_pin_input_create (uim_verify_pin_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_uim_verify_pin (ctx->client,
@@ -3140,7 +3140,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously unblocking PIN...");
         input = uim_unblock_pin_input_create (uim_unblock_pin_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_uim_unblock_pin (ctx->client,
@@ -3160,7 +3160,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously changing PIN...");
         input = uim_change_pin_input_create (uim_change_pin_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_uim_change_pin (ctx->client,
@@ -3252,7 +3252,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously setting operating mode...");
         input = set_operating_mode_input_create (set_operating_mode_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_set_operating_mode (ctx->client,
@@ -3308,7 +3308,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously requesting automatic activation...");
         input = activate_automatic_input_create (activate_automatic_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_activate_automatic (ctx->client,
@@ -3328,7 +3328,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously requesting manual activation...");
         input = activate_manual_input_create (activate_manual_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_activate_manual (ctx->client,
@@ -3360,7 +3360,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously setting user lock state...");
         input = set_user_lock_state_input_create (set_user_lock_state_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_set_user_lock_state (ctx->client,
@@ -3380,7 +3380,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously changing user lock code...");
         input = set_user_lock_code_input_create (set_user_lock_code_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_set_user_lock_code (ctx->client,
@@ -3412,7 +3412,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously writing user data...");
         input = write_user_data_input_create (write_user_data_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_write_user_data (ctx->client,
@@ -3444,7 +3444,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously restoring factory defaults...");
         input = restore_factory_defaults_input_create (restore_factory_defaults_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_restore_factory_defaults (ctx->client,
@@ -3464,7 +3464,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously validating SPC...");
         input = validate_service_programming_code_input_create (validate_service_programming_code_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_validate_service_programming_code (ctx->client,
@@ -3484,7 +3484,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously getting CK status...");
         input = uim_get_ck_status_input_create (uim_get_ck_status_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_uim_get_ck_status (ctx->client,
@@ -3504,7 +3504,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously setting CK protection...");
         input = uim_set_ck_protection_input_create (uim_set_ck_protection_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_uim_set_ck_protection (ctx->client,
@@ -3524,7 +3524,7 @@ qmicli_dms_run (QmiDevice *device,
         g_debug ("Asynchronously unblocking CK...");
         input = uim_unblock_ck_input_create (uim_unblock_ck_str);
         if (!input) {
-            shutdown (FALSE);
+            operation_shutdown (FALSE);
             return;
         }
         qmi_client_dms_uim_unblock_ck (ctx->client,
