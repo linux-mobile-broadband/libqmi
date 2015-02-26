@@ -5,66 +5,51 @@
 *.bz2
 *.pyc
 
-INSTALL
 Makefile
 Makefile.in
-aclocal.m4
-autom4te.cache
-compile
-config.cache
-config.guess
-config.h
-config.h.in
-config.log
-config.status
-config.sub
-configure
-install-sh
-libtool
-ltmain.sh
-m4
-missing
-stamp-h1
-depcomp
-gtk-doc.make
+.deps
+.libs
+
+/INSTALL
+/aclocal.m4
+/autom4te.cache
+/compile
+/config.*
+/configure
+/install-sh
+/libtool
+/ltmain.sh
+/m4
+/missing
+/stamp-h1
+/depcomp
+/gtk-doc.make
 
 /data/pkg-config/qmi-glib.pc
 
 /src/Makefile
 /src/Makefile.in
 
-/src/libqmi-glib/.libs
-/src/libqmi-glib/.deps
 /src/libqmi-glib/Makefile
 /src/libqmi-glib/Makefile.in
 /src/libqmi-glib/libqmi-glib.la
 /src/libqmi-glib/qmi-version.h
 
-/src/libqmi-glib/generated/.libs
-/src/libqmi-glib/generated/.deps
 /src/libqmi-glib/generated/*.c
 /src/libqmi-glib/generated/*.h
 /src/libqmi-glib/generated/*.sections
 
-/src/libqmi-glib/test/.libs
-/src/libqmi-glib/test/.deps
 /src/libqmi-glib/test/Makefile
 /src/libqmi-glib/test/Makefile.in
 /src/libqmi-glib/test/test-utils
 /src/libqmi-glib/test/test-message
 /src/libqmi-glib/test/test-generated
 
-/src/qmicli/.deps
-/src/qmicli/.libs
 /src/qmicli/qmicli
-/src/qmicli/test/.libs
-/src/qmicli/test/.deps
 /src/qmicli/test/Makefile
 /src/qmicli/test/Makefile.in
 /src/qmicli/test/test-helpers
 
-/src/qmi-proxy/.deps
-/src/qmi-proxy/.libs
 /src/qmi-proxy/qmi-proxy
 /src/qmi-proxy/76-qmi-proxy-device-ownership.rules
 
@@ -84,7 +69,6 @@ gtk-doc.make
 /docs/reference/libqmi-glib/html
 /docs/reference/libqmi-glib/tmpl
 /docs/reference/libqmi-glib/xml
-/docs/reference/libqmi-glib/.libs
 
 /docs/man/qmicli.1
 /docs/man/qmi-network.1
