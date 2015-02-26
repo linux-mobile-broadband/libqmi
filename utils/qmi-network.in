@@ -222,7 +222,7 @@ stop_network ()
         # Cleanup the client
         qmicli -d "$DEVICE" --wds-noop --client-cid="$CID" $PROXY_OPT
     else
-        STOP_NETWORK_CMD="qmicli -d $DEVICE --wds-stop-network=$PDH --client-cid=$CID"
+        STOP_NETWORK_CMD="qmicli -d $DEVICE --wds-stop-network=$PDH --client-cid=$CID $PROXY_OPT"
         echo "Stopping network with '$STOP_NETWORK_CMD'..."
 
         if [ "x$QMIDEBUG" != "x" ]; then
