@@ -38,6 +38,7 @@
 typedef struct {
     MbimDevice *device;
     GCancellable *cancellable;
+    guint32 session_id;
 } Context;
 static Context *ctx;
 
@@ -120,11 +121,36 @@ enum {
 };
 
 static void
+ip_configuration_query_ready (MbimDevice *device,
+                              GAsyncResult *res,
+                              gpointer unused)
+{
+    GError *error = NULL;
+    MbimMessage *response;
+    gboolean success = FALSE;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response ||
+        !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: couldn't get IP configuration response message: %s\n", error->message);
+    } else {
+        success = mbimcli_print_ip_config (device, response, &error);
+        if (!success)
+            g_printerr ("error: couldn't parse IP configuration response message: %s\n", error->message);
+    }
+
+    g_clear_error (&error);
+    if (response)
+        mbim_message_unref (response);
+    shutdown (success);
+}
+
+static void
 set_dss_ready (MbimDevice *device,
                GAsyncResult *res,
                gpointer user_data)
 {
-    MbimMessage *response;
+    MbimMessage *response, *message;
     GError *error = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
@@ -142,23 +168,52 @@ set_dss_ready (MbimDevice *device,
         shutdown (FALSE);
         return;
     }
+    mbim_message_unref (response);
 
-    switch (GPOINTER_TO_UINT (user_data)) {
-    case CONNECT:
-        g_print ("[%s] Successfully connected\n",
-                 mbim_device_get_path_display (device));
-        break;
-    case DISCONNECT:
+    if (GPOINTER_TO_UINT (user_data) == DISCONNECT) {
         g_print ("[%s] Successfully disconnected\n",
                  mbim_device_get_path_display (device));
-        break;
-    default:
-        g_assert_not_reached ();
-        break;
+        shutdown (TRUE);
+        return;
     }
 
-    mbim_message_unref (response);
-    shutdown (TRUE);
+    g_assert (GPOINTER_TO_UINT (user_data) == CONNECT);
+
+    g_print ("[%s] Successfully connected\n",
+             mbim_device_get_path_display (device));
+
+    message = (mbim_message_ip_configuration_query_new (
+               ctx->session_id,
+               MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE, /* ipv4configurationavailable */
+               MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE, /* ipv6configurationavailable */
+               0, /* ipv4addresscount */
+               NULL, /* ipv4address */
+               0, /* ipv6addresscount */
+               NULL, /* ipv6address */
+               NULL, /* ipv4gateway */
+               NULL, /* ipv6gateway */
+               0, /* ipv4dnsservercount */
+               NULL, /* ipv4dnsserver */
+               0, /* ipv6dnsservercount */
+               NULL, /* ipv6dnsserver */
+               0, /* ipv4mtu */
+               0, /* ipv6mtu */
+               &error));
+    if (!message) {
+        g_printerr ("error: couldn't create IP config request: %s\n", error->message);
+        g_error_free (error);
+        mbim_message_unref (message);
+        shutdown (FALSE);
+        return;
+    }
+
+    mbim_device_command (device,
+                         message,
+                         60,
+                         NULL,
+                         (GAsyncReadyCallback)ip_configuration_query_ready,
+                         NULL);
+    mbim_message_unref (message);
 }
 
 static gboolean
@@ -208,15 +263,14 @@ mbimcli_dss_run (MbimDevice   *device,
     /* Connect? */
     if (connect_str) {
         MbimUuid service_id;
-        guint32 session_id;
 
-        if (!common_parse (connect_str, &service_id, &session_id)) {
+        if (!common_parse (connect_str, &service_id, &ctx->session_id)) {
             shutdown (FALSE);
             return;
         }
 
         request = mbim_message_dss_connect_set_new (&service_id,
-                                                    session_id,
+                                                    ctx->session_id,
                                                     MBIM_DSS_LINK_STATE_ACTIVATE,
                                                     &error);
 

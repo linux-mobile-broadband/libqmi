@@ -31,6 +31,7 @@
 #include <libmbim-glib.h>
 
 #include "mbimcli.h"
+#include "mbimcli-helpers.h"
 
 /* Context */
 typedef struct {
@@ -657,6 +658,31 @@ enum {
 };
 
 static void
+ip_configuration_query_ready (MbimDevice *device,
+                              GAsyncResult *res,
+                              gpointer unused)
+{
+    GError *error = NULL;
+    MbimMessage *response;
+    gboolean success = FALSE;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response ||
+        !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: couldn't get IP configuration response message: %s\n", error->message);
+    } else {
+        success = mbimcli_print_ip_config (device, response, &error);
+        if (!success)
+            g_printerr ("error: couldn't parse IP configuration response message: %s\n", error->message);
+    }
+
+    g_clear_error (&error);
+    if (response)
+        mbim_message_unref (response);
+    shutdown (success);
+}
+
+static void
 connect_ready (MbimDevice   *device,
                GAsyncResult *res,
                gpointer user_data)
@@ -694,6 +720,7 @@ connect_ready (MbimDevice   *device,
         shutdown (FALSE);
         return;
     }
+    mbim_message_unref (response);
 
     switch (GPOINTER_TO_UINT (user_data)) {
     case CONNECT:
@@ -723,7 +750,43 @@ connect_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (mbim_context_type_get_string (mbim_uuid_to_context_type (context_type))),
              VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)));
 
-    mbim_message_unref (response);
+    if (GPOINTER_TO_UINT (user_data) == CONNECT) {
+        MbimMessage *message;
+
+        message = (mbim_message_ip_configuration_query_new (
+                   session_id,
+                   MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE, /* ipv4configurationavailable */
+                   MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE, /* ipv6configurationavailable */
+                   0, /* ipv4addresscount */
+                   NULL, /* ipv4address */
+                   0, /* ipv6addresscount */
+                   NULL, /* ipv6address */
+                   NULL, /* ipv4gateway */
+                   NULL, /* ipv6gateway */
+                   0, /* ipv4dnsservercount */
+                   NULL, /* ipv4dnsserver */
+                   0, /* ipv6dnsservercount */
+                   NULL, /* ipv6dnsserver */
+                   0, /* ipv4mtu */
+                   0, /* ipv6mtu */
+                   &error));
+        if (message) {
+            mbim_device_command (device,
+                                 message,
+                                 60,
+                                 NULL,
+                                 (GAsyncReadyCallback)ip_configuration_query_ready,
+                                 NULL);
+            mbim_message_unref (message);
+        } else {
+            g_printerr ("error: couldn't create IP config request: %s\n", error->message);
+            g_error_free (error);
+            mbim_message_unref (message);
+            shutdown (FALSE);
+        }
+        return;
+    }
+
     shutdown (TRUE);
 }
 

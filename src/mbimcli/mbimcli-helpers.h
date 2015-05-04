@@ -28,4 +28,8 @@
 gboolean mbimcli_read_uint_from_string (const gchar *str,
                                         guint *out);
 
+gboolean mbimcli_print_ip_config (MbimDevice *device,
+                                  MbimMessage *response,
+                                  GError **error);
+
 #endif /* __MBIMCLI_H__ */
