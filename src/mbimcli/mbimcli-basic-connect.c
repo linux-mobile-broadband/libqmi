@@ -1606,7 +1606,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         mbim_device_command (ctx->device,
                              request,
-                             10,
+                             120, /* longer timeout, needs to look for the home network */
                              ctx->cancellable,
                              (GAsyncReadyCallback)register_state_ready,
                              GUINT_TO_POINTER (TRUE));
