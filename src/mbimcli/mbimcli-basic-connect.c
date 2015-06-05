@@ -1668,7 +1668,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         mbim_device_command (ctx->device,
                              request,
-                             10,
+                             120,
                              ctx->cancellable,
                              (GAsyncReadyCallback)packet_service_ready,
                              GUINT_TO_POINTER (set_packet_service_attach_flag ?
