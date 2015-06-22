@@ -14,7 +14,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright (C) 2012-2013 Aleksander Morgado <aleksander@gnu.org>
+# Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
 
 print_usage ()
 {
@@ -28,13 +28,14 @@ help ()
     echo "Simple network management of QMI devices"
     echo
     echo "Commands:"
-    echo "  start           Start network connection"
-    echo "  stop            Stop network connection"
-    echo "  status          Query network connection status"
+    echo "  start             Start network connection"
+    echo "  stop              Stop network connection"
+    echo "  status            Query network connection status"
     echo
     echo "Options:"
-    echo "  --help          Show help options"
-    echo "  --version       Show version"
+    echo "  --profile=[PATH]  Use the profile in the specified path"
+    echo "  --help            Show help options"
+    echo "  --version         Show version"
     echo
     echo "Notes:"
     echo
@@ -42,8 +43,9 @@ help ()
     echo "   device, e.g.:"
     echo "      /dev/cdc-wdm0"
     echo
-    echo "   2) The qmi-network script requires a profile to be available"
-    echo "   in the following path:"
+    echo "   2) The qmi-network script requires a profile to work. Unless"
+    echo "   explicitly specified with \`--profile', the file is assumed to"
+    echo "   be available in the following path:"
     echo "      /etc/qmi-network.conf"
     echo
     echo "   3) The APN to use should be configured in the profile, in the"
@@ -71,7 +73,8 @@ version ()
     echo
 }
 
-if [ $# -ne 2 ]; then
+# Basic options
+if [ $# -lt 2 ]; then
     if [ "$1" = "--help" ]; then
         help
         exit 0
@@ -85,15 +88,55 @@ if [ $# -ne 2 ]; then
     exit 255
 fi
 
+# Defaults
+PROFILE_FILE=/etc/qmi-network.conf
+
+# Device + Command with options; options given first
+while [ $# -gt 2 ]; do
+    OPT="$1"
+    shift
+
+    case "$OPT" in
+        "--")
+            break 2;;
+        "--profile")
+            if [ $# -gt 2 ]; then
+                PROFILE_FILE="$1"
+                shift
+            else
+                PROFILE_FILE=""
+            fi
+            ;;
+        "--profile="*)
+            PROFILE_FILE="${OPT#*=}";;
+        *)
+            echo >&2 "Invalid option: $OPT"
+            print_usage
+            exit 255;;
+    esac
+done
+
+if [ "x$PROFILE_FILE" = "x" ]; then
+    echo "error: empty profile path given" 1>&2
+    print_usage
+    exit 255
+fi
+
+if [ $# -ne 2 ] || [[ $1 == --* ]] || [[ $2 == --* ]]; then
+    echo "error: missing arguments" 1>&2
+    print_usage
+    exit 255
+fi
+
 DEVICE=$1
 COMMAND=$2
-STATE_FILE=/tmp/qmi-network-state
-PROFILE_FILE=/etc/qmi-network.conf
+
+STATE_FILE=/tmp/qmi-network-state-`basename $DEVICE`
 
 load_profile ()
 {
     if [ -f $PROFILE_FILE ]; then
-        echo "Loading profile..."
+        echo "Loading profile at ${PROFILE_FILE}..."
         . $PROFILE_FILE
 
         if [ "x$APN" != "x" ]; then
@@ -118,7 +161,7 @@ save_state ()
     KEY=$1
     VAL=$2
 
-    echo "Saving state... ($KEY: $VAL)"
+    echo "Saving state at ${STATE_FILE}... ($KEY: $VAL)"
 
     if [ -f $STATE_FILE ]; then
         PREVIOUS=`cat $STATE_FILE`
@@ -138,7 +181,7 @@ save_state ()
 load_state ()
 {
     if [ -f $STATE_FILE ]; then
-        echo "Loading previous state..."
+        echo "Loading previous state from ${STATE_FILE}..."
         . $STATE_FILE
 
         if [ "x$CID" != "x" ]; then
@@ -152,7 +195,7 @@ load_state ()
 
 clear_state ()
 {
-    echo "Clearing state..."
+    echo "Clearing state at ${STATE_FILE}..."
     rm -f $STATE_FILE
 }
 
