@@ -58,4 +58,6 @@ gboolean qmicli_read_uint_from_string           (const gchar *str,
 gchar *qmicli_get_supported_messages_list (const guint8 *data,
                                            gsize len);
 
+const char *qmicli_earfcn_to_eutra_band_string (guint16 earfcn);
+
 #endif /* __QMICLI_H__ */

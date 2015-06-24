@@ -414,3 +414,69 @@ qmicli_get_supported_messages_list (const guint8 *data,
 
     return (str ? g_string_free (str, FALSE) : g_strdup ("\tnone\n"));
 }
+
+/******************************************************************************/
+
+typedef struct {
+    guint16      min;
+    guint16      max;
+    const gchar *name;
+} EarfcnRange;
+
+/* http://niviuk.free.fr/lte_band.php */
+static const EarfcnRange earfcn_ranges[] = {
+    {     0,   599, "E-UTRA band 1: 2100"           },
+    {   600,  1199, "E-UTRA band 2: 1900 PCS"       },
+    {  1200,  1949, "E-UTRA band 3: 1800+"          },
+    {  1950,  2399, "E-UTRA band 4: AWS-1"          },
+    {  2400,  2649, "E-UTRA band 5: 850"            },
+    {  2650,  2749, "E-UTRA band 6: UMTS only"      },
+    {  2750,  3449, "E-UTRA band 7: 2600"           },
+    {  3450,  3799, "E-UTRA band 8: 900"            },
+    {  3800,  4149, "E-UTRA band 9: 1800"           },
+    {  4150,  4749, "E-UTRA band 10: AWS-1+"        },
+    {  4750,  4999, "E-UTRA band 11: 1500 Lower"    },
+    {  5000,  5179, "E-UTRA band 12: 700 a"         },
+    {  5180,  5279, "E-UTRA band 13: 700 c"         },
+    {  5280,  5379, "E-UTRA band 14: 700 PS"        },
+    {  5730,  5849, "E-UTRA band 17: 700 b"         },
+    {  5850,  5999, "E-UTRA band 18: 800 Lower"     },
+    {  6000,  6149, "E-UTRA band 19: 800 Upper"     },
+    {  6150,  6449, "E-UTRA band 20: 800 DD"        },
+    {  6450,  6599, "E-UTRA band 21: 1500 Upper"    },
+    {  6600,  7399, "E-UTRA band 22: 3500"          },
+    {  7500,  7699, "E-UTRA band 23: 2000 S-band"   },
+    {  7700,  8039, "E-UTRA band 24: 1600 L-band"   },
+    {  8040,  8689, "E-UTRA band 25: 1900+"         },
+    {  8690,  9039, "E-UTRA band 26: 850+"          },
+    {  9040,  9209, "E-UTRA band 27: 800 SMR"       },
+    {  9210,  9659, "E-UTRA band 28: 700 APT"       },
+    {  9660,  9769, "E-UTRA band 29: 700 d"         },
+    {  9770,  9869, "E-UTRA band 30: 2300 WCS"      },
+    {  9870,  9919, "E-UTRA band 31: 450"           },
+    {  9920, 10359, "E-UTRA band 32: 1500 L-band"   },
+    { 36000, 36199, "E-UTRA band 33: TD 1900"       },
+    { 36200, 36349, "E-UTRA band 34: TD 2000"       },
+    { 36350, 36949, "E-UTRA band 35: TD PCS Lower"  },
+    { 36950, 37549, "E-UTRA band 36: TD PCS Upper"  },
+    { 37550, 37749, "E-UTRA band 37: TD PCS Center" },
+    { 37750, 38249, "E-UTRA band 38: TD 2600"       },
+    { 38250, 38649, "E-UTRA band 39: TD 1900+"      },
+    { 38650, 39649, "E-UTRA band 40: TD 2300"       },
+    { 39650, 41589, "E-UTRA band 41: TD 2500"       },
+    { 41590, 43589, "E-UTRA band 42: TD 3500"       },
+    { 43590, 45589, "E-UTRA band 43: TD 3700"       },
+    { 45590, 46589, "E-UTRA band 44: TD 700"        },
+};
+
+const char *
+qmicli_earfcn_to_eutra_band_string (guint16 earfcn)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (earfcn_ranges); i++) {
+        if (earfcn <= earfcn_ranges[i].max && earfcn >= earfcn_ranges[i].min)
+            return earfcn_ranges[i].name;
+    }
+    return "unknown";
+}

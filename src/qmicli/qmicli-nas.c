@@ -2519,13 +2519,13 @@ get_cell_location_info_ready (QmiClientNas *client,
                  "\tPLMN: '%s'\n"
                  "\tTracking Area Code: '%" G_GUINT16_FORMAT"'\n"
                  "\tGlobal Cell ID: '%" G_GUINT32_FORMAT"'\n"
-                 "\tEUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
+                 "\tEUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"' (%s)\n"
                  "\tServing Cell ID: '%" G_GUINT16_FORMAT"'\n",
                  ue_in_idle ? "yes" : "no",
                  plmn,
                  tracking_area_code,
                  global_cell_id,
-                 absolute_rf_channel_number,
+                 absolute_rf_channel_number, qmicli_earfcn_to_eutra_band_string (absolute_rf_channel_number),
                  serving_cell_id);
         g_free (plmn);
         if (ue_in_idle)
@@ -2575,11 +2575,11 @@ get_cell_location_info_ready (QmiClientNas *client,
 
             element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputInterfrequencyLteInfoFrequencyElement, i);
             g_print ("\tFrequency [%u]:\n"
-                     "\t\tEUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tEUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"' (%s)\n"
                      "\t\tSelection RX Level Low Threshold: '%u'\n"
                      "\t\tCell Selection RX Level High Threshold: '%u'\n",
                      i,
-                     element->eutra_absolute_rf_channel_number,
+                     element->eutra_absolute_rf_channel_number, qmicli_earfcn_to_eutra_band_string (element->eutra_absolute_rf_channel_number),
                      element->cell_selection_rx_level_low_threshold,
                      element->cell_selection_rx_level_high_threshold);
             if (ue_in_idle)
@@ -2734,12 +2734,12 @@ get_cell_location_info_ready (QmiClientNas *client,
             element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringLteFrequencyElement, i);
 
             g_print ("\tFrequency [%u]:\n"
-                     "\t\tEUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tEUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"' (%s)\n"
                      "\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT "'\n"
                      "\t\tRSRP: '%f' dBm\n"
                      "\t\tRSRQ: '%f' dB\n",
                      i,
-                     element->eutra_absolute_rf_channel_number,
+                     element->eutra_absolute_rf_channel_number, qmicli_earfcn_to_eutra_band_string (element->eutra_absolute_rf_channel_number),
                      element->physical_cell_id,
                      element->rsrp,
                      element->rsrq);
