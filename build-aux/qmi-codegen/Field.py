@@ -96,7 +96,7 @@ class Field:
     container
     """
     def emit_getter(self, hfile, cfile):
-        input_variable_name = utils.build_underscore_name(self.name)
+        input_variable_name = 'value_' + utils.build_underscore_name(self.name)
         variable_getter_dec = self.variable.build_getter_declaration('    ', input_variable_name)
         variable_getter_doc = self.variable.build_getter_documentation(' * ', input_variable_name)
         variable_getter_imp = self.variable.build_getter_implementation('    ', 'self->' + self.variable_name, input_variable_name, True)
@@ -160,7 +160,7 @@ class Field:
     container
     """
     def emit_setter(self, hfile, cfile):
-        input_variable_name = utils.build_underscore_name(self.name)
+        input_variable_name = 'value_' + utils.build_underscore_name(self.name)
         variable_setter_dec = self.variable.build_setter_declaration('    ', input_variable_name)
         variable_setter_doc = self.variable.build_setter_documentation(' * ', input_variable_name)
         variable_setter_imp = self.variable.build_setter_implementation('    ', input_variable_name, 'self->' + self.variable_name)
