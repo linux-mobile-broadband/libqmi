@@ -189,3 +189,151 @@ mbimcli_print_ip_config (MbimDevice *device,
     return TRUE;
 }
 
+/* Expecting input as:
+ *   key1=string,key2=true,key3=false...
+ * Strings may also be passed enclosed between double or single quotes, like:
+ *   key1="this is a string", key2='and so is this'
+ */
+gboolean
+mbimcli_parse_key_value_string (const gchar *str,
+                                GError **error,
+                                MbimParseKeyValueForeachFn callback,
+                                gpointer user_data)
+{
+    GError *inner_error = NULL;
+    gchar *dup, *p, *key, *key_end, *value, *value_end, quote;
+
+    g_return_val_if_fail (callback != NULL, FALSE);
+    g_return_val_if_fail (str != NULL, FALSE);
+
+    /* Allow empty strings, we'll just return with success */
+    while (g_ascii_isspace (*str))
+        str++;
+    if (!str[0])
+        return TRUE;
+
+    dup = g_strdup (str);
+    p = dup;
+
+    while (TRUE) {
+        gboolean keep_iteration = FALSE;
+
+        /* Skip leading spaces */
+        while (g_ascii_isspace (*p))
+            p++;
+
+        /* Key start */
+        key = p;
+        if (!g_ascii_isalnum (*key)) {
+            inner_error = g_error_new (MBIM_CORE_ERROR,
+                                       MBIM_CORE_ERROR_FAILED,
+                                       "Key must start with alpha/num, starts with '%c'",
+                                       *key);
+            break;
+        }
+
+        /* Key end */
+        while (g_ascii_isalnum (*p) || (*p == '-') || (*p == '_'))
+            p++;
+        key_end = p;
+        if (key_end == key) {
+            inner_error = g_error_new (MBIM_CORE_ERROR,
+                                       MBIM_CORE_ERROR_FAILED,
+                                       "Couldn't find a proper key");
+            break;
+        }
+
+        /* Skip whitespaces, if any */
+        while (g_ascii_isspace (*p))
+            p++;
+
+        /* Equal sign must be here */
+        if (*p != '=') {
+            inner_error = g_error_new (MBIM_CORE_ERROR,
+                                       MBIM_CORE_ERROR_FAILED,
+                                       "Couldn't find equal sign separator");
+            break;
+        }
+        /* Skip the equal */
+        p++;
+
+        /* Skip whitespaces, if any */
+        while (g_ascii_isspace (*p))
+            p++;
+
+        /* Do we have a quote-enclosed string? */
+        if (*p == '\"' || *p == '\'') {
+            quote = *p;
+            /* Skip the quote */
+            p++;
+            /* Value start */
+            value = p;
+            /* Find the closing quote */
+            p = strchr (p, quote);
+            if (!p) {
+                inner_error = g_error_new (MBIM_CORE_ERROR,
+                                           MBIM_CORE_ERROR_FAILED,
+                                           "Unmatched quotes in string value");
+                break;
+            }
+
+            /* Value end */
+            value_end = p;
+            /* Skip the quote */
+            p++;
+        } else {
+            /* Value start */
+            value = p;
+
+            /* Value end */
+            while ((*p != ',') && (*p != '\0') && !g_ascii_isspace (*p))
+                p++;
+            value_end = p;
+        }
+
+        /* Note that we allow value == value_end here */
+
+        /* Skip whitespaces, if any */
+        while (g_ascii_isspace (*p))
+            p++;
+
+        /* If a comma is found, we should keep the iteration */
+        if (*p == ',') {
+            /* skip the comma */
+            p++;
+            keep_iteration = TRUE;
+        }
+
+        /* Got key and value, prepare them and run the callback */
+        *value_end = '\0';
+        *key_end = '\0';
+        if (!callback (key, value, &inner_error, user_data)) {
+            /* We were told to abort */
+            break;
+        }
+        g_assert (!inner_error);
+
+        if (keep_iteration)
+            continue;
+
+        /* Check if no more key/value pairs expected */
+        if (*p == '\0')
+            break;
+
+        inner_error = g_error_new (MBIM_CORE_ERROR,
+                                   MBIM_CORE_ERROR_FAILED,
+                                   "Unexpected content (%s) after value",
+                                   p);
+        break;
+    }
+
+    g_free (dup);
+
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+

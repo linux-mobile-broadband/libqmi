@@ -32,4 +32,14 @@ gboolean mbimcli_print_ip_config (MbimDevice *device,
                                   MbimMessage *response,
                                   GError **error);
 
+typedef gboolean (*MbimParseKeyValueForeachFn) (const gchar *key,
+                                                const gchar *value,
+                                                GError **error,
+                                                gpointer user_data);
+
+gboolean mbimcli_parse_key_value_string (const gchar *str,
+                                         GError **error,
+                                         MbimParseKeyValueForeachFn callback,
+                                         gpointer user_data);
+
 #endif /* __MBIMCLI_H__ */
