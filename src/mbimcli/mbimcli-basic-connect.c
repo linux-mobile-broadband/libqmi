@@ -67,6 +67,16 @@ static gchar    *set_connect_activate_str;
 static gchar    *set_connect_deactivate_str;
 static gboolean  query_packet_statistics_flag;
 
+static gboolean query_connection_state_arg_parse (const char *option_name,
+                                                  const char *value,
+                                                  gpointer user_data,
+                                                  GError **error);
+
+static gboolean disconnect_arg_parse (const char *option_name,
+                                      const char *value,
+                                      gpointer user_data,
+                                      GError **error);
+
 static GOptionEntry entries[] = {
     { "query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
       "Query device capabilities",
@@ -148,7 +158,7 @@ static GOptionEntry entries[] = {
       "Detach from the packet service",
       NULL
     },
-    { "query-connection-state", 0, 0, G_OPTION_ARG_NONE, &query_connect_str,
+    { "query-connection-state", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_connection_state_arg_parse),
       "Query connection state (SessionID is optional, defaults to 0)",
       "[SessionID]"
     },
@@ -156,7 +166,7 @@ static GOptionEntry entries[] = {
       "Connect (allowed keys: session-id, apn, auth (PAP|CHAP|MSCHAPV2), username, password)",
       "[\"key=value,...\"]"
     },
-    { "disconnect", 0, 0, G_OPTION_ARG_STRING, &set_connect_deactivate_str,
+    { "disconnect", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (disconnect_arg_parse),
       "Disconnect (SessionID is optional, defaults to 0)",
       "[SessionID]"
     },
@@ -180,6 +190,26 @@ mbimcli_basic_connect_get_option_group (void)
     g_option_group_add_entries (group, entries);
 
     return group;
+}
+
+static gboolean
+query_connection_state_arg_parse (const char *option_name,
+                                  const char *value,
+                                  gpointer user_data,
+                                  GError **error)
+{
+    query_connect_str = g_strdup (value ? value : "0");
+    return TRUE;
+}
+
+static gboolean
+disconnect_arg_parse (const char *option_name,
+                      const char *value,
+                      gpointer user_data,
+                      GError **error)
+{
+    set_connect_deactivate_str = g_strdup (value ? value : "0");
+    return TRUE;
 }
 
 gboolean
