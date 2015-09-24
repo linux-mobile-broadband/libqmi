@@ -33,6 +33,7 @@
 #include <gudev/gudev.h>
 #include <sys/ioctl.h>
 #define IOCTL_WDM_MAX_COMMAND _IOR('H', 0xA0, guint16)
+#define RETRY_TIMEOUT_SECS 5
 
 #include "mbim-utils.h"
 #include "mbim-device.h"
@@ -1117,7 +1118,7 @@ typedef struct {
     GCancellable *cancellable;
     DeviceOpenContextStep step;
     MbimDeviceOpenFlags flags;
-    guint timeout;
+    gint timeout;
 } DeviceOpenContext;
 
 static void
@@ -1190,8 +1191,8 @@ open_message_ready (MbimDevice        *self,
         /* Check if we should be retrying */
         if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_TIMEOUT)) {
             /* The timeout will tell us how many retries we should do */
-            ctx->timeout--;
-            if (ctx->timeout) {
+            ctx->timeout -= RETRY_TIMEOUT_SECS;
+            if (ctx->timeout > 0) {
                 g_error_free (error);
                 open_message (ctx);
                 return;
@@ -1231,7 +1232,7 @@ open_message (DeviceOpenContext *ctx)
                                      ctx->self->priv->max_control_transfer);
     mbim_device_command (ctx->self,
                          request,
-                         1, /* 1s per retry */
+                         RETRY_TIMEOUT_SECS,
                          ctx->cancellable,
                          (GAsyncReadyCallback)open_message_ready,
                          ctx);
