@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Copyright (C) 2015 Velocloud Inc.
  * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
  */
 
@@ -362,6 +363,48 @@ qmicli_read_link_layer_protocol_from_string (const gchar *str,
         *out = (QmiWdaLinkLayerProtocol)enum_value->value;
     else
         g_printerr ("error: invalid link layer protocol value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
+qmicli_read_autoconnect_setting_from_string (const gchar *str,
+                                             QmiWdsAutoconnectSetting *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_wds_autoconnect_setting_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiWdsAutoconnectSetting)enum_value->value;
+    else
+        g_printerr ("error: invalid autoconnect setting value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
+qmicli_read_autoconnect_setting_roaming_from_string (const gchar *str,
+                                                     QmiWdsAutoconnectSettingRoaming *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_wds_autoconnect_setting_roaming_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiWdsAutoconnectSettingRoaming)enum_value->value;
+    else
+        g_printerr ("error: invalid autoconnect setting roaming value given: '%s'\n", str);
 
     g_type_class_unref (enum_class);
     return !!enum_value;

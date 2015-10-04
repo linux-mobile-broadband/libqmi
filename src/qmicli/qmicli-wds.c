@@ -60,6 +60,7 @@ static gboolean get_current_data_bearer_technology_flag;
 static gchar *get_profile_list_str;
 static gchar *get_default_settings_str;
 static gboolean get_autoconnect_settings_flag;
+static gchar *set_autoconnect_settings_str;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -108,6 +109,10 @@ static GOptionEntry entries[] = {
     { "wds-get-autoconnect-settings", 0, 0, G_OPTION_ARG_NONE, &get_autoconnect_settings_flag,
       "Get autoconnect settings",
       NULL
+    },
+    { "wds-set-autoconnect-settings", 0, 0, G_OPTION_ARG_STRING, &set_autoconnect_settings_str,
+      "Set autoconnect settings (roaming settings optional)",
+      "[(enabled|disabled|paused)[,(roaming-allowed|home-only)]]"
     },
     { "wds-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
@@ -158,6 +163,7 @@ qmicli_wds_options_enabled (void)
                  !!get_profile_list_str +
                  !!get_default_settings_str +
                  get_autoconnect_settings_flag +
+                 !!set_autoconnect_settings_str +
                  get_supported_messages_flag +
                  reset_flag +
                  noop_flag);
@@ -1049,6 +1055,87 @@ get_autoconnect_settings_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+static QmiMessageWdsSetAutoconnectSettingsInput *
+set_autoconnect_settings_input_create (const gchar *str)
+{
+    QmiMessageWdsSetAutoconnectSettingsInput *input = NULL;
+    gchar **split;
+    QmiWdsAutoconnectSetting status;
+    QmiWdsAutoconnectSettingRoaming roaming;
+    GError *error = NULL;
+
+    split = g_strsplit (str, ",", -1);
+    input = qmi_message_wds_set_autoconnect_settings_input_new ();
+
+    if (g_strv_length (split) != 2 && g_strv_length (split) != 1) {
+        g_printerr ("error: expected 1 or 2 options in autoconnect settings\n");
+        goto error_out;
+    }
+
+    g_strstrip (split[0]);
+    if (!qmicli_read_autoconnect_setting_from_string (split[0], &status)) {
+        g_printerr ("error: failed to parse autoconnect setting\n");
+        goto error_out;
+    }
+    if (!qmi_message_wds_set_autoconnect_settings_input_set_status (input, status, &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        goto error_out;
+    }
+
+    if (g_strv_length (split) == 2) {
+        g_strstrip (split[1]);
+        if (!qmicli_read_autoconnect_setting_roaming_from_string (g_str_equal (split[1], "roaming-allowed") ? "allowed" : split[1], &roaming)) {
+            g_printerr ("error: failed to parse autoconnect roaming setting\n");
+            goto error_out;
+        }
+        if (!qmi_message_wds_set_autoconnect_settings_input_set_roaming (input, roaming, &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            goto error_out;
+        }
+    }
+
+    g_strfreev (split);
+    return input;
+
+error_out:
+    if (error)
+        g_error_free (error);
+    g_strfreev (split);
+    qmi_message_wds_set_autoconnect_settings_input_unref (input);
+    return NULL;
+}
+
+static void
+set_autoconnect_settings_ready (QmiClientWds *client,
+                                GAsyncResult *res)
+{
+    QmiMessageWdsSetAutoconnectSettingsOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_wds_set_autoconnect_settings_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_set_autoconnect_settings_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set autoconnect settings: %s\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_wds_set_autoconnect_settings_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Autoconnect settings updated\n");
+    qmi_message_wds_set_autoconnect_settings_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
 static void
 get_supported_messages_ready (QmiClientWds *client,
                               GAsyncResult *res)
@@ -1365,6 +1452,27 @@ qmicli_wds_run (QmiDevice *device,
                                                  ctx->cancellable,
                                                  (GAsyncReadyCallback)get_autoconnect_settings_ready,
                                                  NULL);
+        return;
+    }
+
+    /* Request to print autoconnect settings? */
+    if (set_autoconnect_settings_str) {
+        QmiMessageWdsSetAutoconnectSettingsInput *input;
+
+        input = set_autoconnect_settings_input_create (set_autoconnect_settings_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously set autoconnect settings...");
+        qmi_client_wds_set_autoconnect_settings (ctx->client,
+                                                 input,
+                                                 10,
+                                                 ctx->cancellable,
+                                                 (GAsyncReadyCallback)set_autoconnect_settings_ready,
+                                                 NULL);
+        qmi_message_wds_set_autoconnect_settings_input_unref (input);
         return;
     }
 
