@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Copyright (C) 2015 Velocloud Inc.
  * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
  */
 
@@ -58,6 +59,7 @@ static gboolean get_data_bearer_technology_flag;
 static gboolean get_current_data_bearer_technology_flag;
 static gchar *get_profile_list_str;
 static gchar *get_default_settings_str;
+static gboolean get_autoconnect_settings_flag;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -102,6 +104,10 @@ static GOptionEntry entries[] = {
     { "wds-get-default-settings", 0, 0, G_OPTION_ARG_STRING, &get_default_settings_str,
       "Get default settings",
       "[3gpp|3gpp2]"
+    },
+    { "wds-get-autoconnect-settings", 0, 0, G_OPTION_ARG_NONE, &get_autoconnect_settings_flag,
+      "Get autoconnect settings",
+      NULL
     },
     { "wds-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
@@ -151,6 +157,7 @@ qmicli_wds_options_enabled (void)
                  get_current_data_bearer_technology_flag +
                  !!get_profile_list_str +
                  !!get_default_settings_str +
+                 get_autoconnect_settings_flag +
                  get_supported_messages_flag +
                  reset_flag +
                  noop_flag);
@@ -1005,6 +1012,44 @@ get_default_settings_ready (QmiClientWds *client,
 }
 
 static void
+get_autoconnect_settings_ready (QmiClientWds *client,
+                                GAsyncResult *res)
+{
+    QmiMessageWdsGetAutoconnectSettingsOutput *output;
+    GError *error = NULL;
+    QmiWdsAutoconnectSetting status;
+    QmiWdsAutoconnectSettingRoaming roaming;
+
+    output = qmi_client_wds_get_autoconnect_settings_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_get_autoconnect_settings_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get autoconnect settings: %s\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_wds_get_autoconnect_settings_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Autoconnect settings retrieved:\n");
+
+    qmi_message_wds_get_autoconnect_settings_output_get_status (output, &status, NULL);
+    g_print ("\tStatus: '%s'\n", qmi_wds_autoconnect_setting_get_string (status));
+
+    if (qmi_message_wds_get_autoconnect_settings_output_get_roaming (output, &roaming, NULL))
+        g_print ("\tRoaming: '%s'\n", qmi_wds_autoconnect_setting_roaming_get_string (roaming));
+
+    qmi_message_wds_get_autoconnect_settings_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
 get_supported_messages_ready (QmiClientWds *client,
                               GAsyncResult *res)
 {
@@ -1308,6 +1353,18 @@ qmicli_wds_run (QmiDevice *device,
                                              (GAsyncReadyCallback)get_default_settings_ready,
                                              NULL);
         qmi_message_wds_get_default_settings_input_unref (input);
+        return;
+    }
+
+    /* Request to print autoconnect settings? */
+    if (get_autoconnect_settings_flag) {
+        g_debug ("Asynchronously getting autoconnect settings...");
+        qmi_client_wds_get_autoconnect_settings (ctx->client,
+                                                 NULL,
+                                                 10,
+                                                 ctx->cancellable,
+                                                 (GAsyncReadyCallback)get_autoconnect_settings_ready,
+                                                 NULL);
         return;
     }
 

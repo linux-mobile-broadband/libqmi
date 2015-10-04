@@ -18,6 +18,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2012 Lanedo GmbH
+ * Copyright (C) 2015 Velocloud Inc.
  * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
  */
 
@@ -1101,5 +1102,31 @@ typedef enum {
     QMI_WDS_DS_PROFILE_ERROR_3GPP_OUT_OF_PROFILES        = 1006,
     QMI_WDS_DS_PROFILE_ERROR_3GPP2_INVALID_PROFILE_ID    = 1101,
 } QmiWdsDsProfileError;
+
+/**
+ * QmiWdsAutoconnectSetting:
+ * @QMI_WDS_AUTOCONNECT_SETTING_DISABLED: Disabled.
+ * @QMI_WDS_AUTOCONNECT_SETTING_ENABLED: Enabled.
+ * @QMI_WDS_AUTOCONNECT_SETTING_PAUSED: Paused (resume on power cycle).
+ *
+ * Status of the autoconnect setting.
+ */
+typedef enum {
+    QMI_WDS_AUTOCONNECT_SETTING_DISABLED = 0,
+    QMI_WDS_AUTOCONNECT_SETTING_ENABLED  = 1,
+    QMI_WDS_AUTOCONNECT_SETTING_PAUSED   = 2,
+} QmiWdsAutoconnectSetting;
+
+/**
+ * QmiWdsAutoconnectSettingRoaming:
+ * @QMI_WDS_AUTOCONNECT_SETTING_ROAMING_ALLOWED: Autoconnect always allowed, even when roaming.
+ * @QMI_WDS_AUTOCONNECT_SETTING_ROAMING_HOME_ONLY: Autoconnect allowed only in home network.
+ *
+ * Status of the autoconnect setting while roaming.
+ */
+typedef enum {
+    QMI_WDS_AUTOCONNECT_SETTING_ROAMING_ALLOWED   = 0,
+    QMI_WDS_AUTOCONNECT_SETTING_ROAMING_HOME_ONLY = 1,
+} QmiWdsAutoconnectSettingRoaming;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDS_H_ */

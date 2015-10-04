@@ -1055,6 +1055,28 @@
                       "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Get Autoconnect Settings",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0034",
+     "version" : "1.12",
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"          : "Status",
+                     "id"            : "0x01",
+                     "mandatory"     : "yes",
+                     "type"          : "TLV",
+                     "format"        : "guint8",
+                     "public-format" : "QmiWdsAutoconnectSetting",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] },
+                   { "name"          : "Roaming",
+                     "id"            : "0x10",
+                     "mandatory"     : "yes",
+                     "type"          : "TLV",
+                     "format"        : "guint8",
+                     "public-format" : "QmiWdsAutoconnectSettingRoaming",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get Data Bearer Technology",
      "type"    : "Message",
      "service" : "WDS",
