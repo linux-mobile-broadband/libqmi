@@ -67,8 +67,8 @@ static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
-      "Start network (Authentication, Username and Password are optional)",
-      "[(APN),(PAP|CHAP|BOTH),(Username),(Password)]"
+      "Start network (allowed keys: apn, auth (PAP|CHAP|BOTH), username, password)",
+      "[\"key=value,...\"]"
     },
     { "wds-follow-network", 0, 0, G_OPTION_ARG_NONE, &follow_network_flag,
       "Follow the network status until disconnected. Use with `--wds-start-network'",
@@ -327,63 +327,152 @@ packet_status_timeout (void)
     return TRUE;
 }
 
+typedef struct {
+    gchar                *apn;
+    QmiWdsAuthentication  auth;
+    gboolean              auth_set;
+    gchar                *username;
+    gchar                *password;
+} StartNetworkProperties;
+
+static gboolean
+start_network_properties_handle (const gchar  *key,
+                                 const gchar  *value,
+                                 GError      **error,
+                                 gpointer      user_data)
+{
+    StartNetworkProperties *props = user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "key '%s' required a value",
+                     key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "apn") == 0 && !props->apn) {
+        props->apn = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "auth") == 0 && !props->auth_set) {
+        if (!qmicli_read_authentication_from_string (value, &(props->auth))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown auth protocol '%s'",
+                         value);
+            return FALSE;
+        }
+        props->auth_set = TRUE;
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "username") == 0 && !props->username) {
+        props->username = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "password") == 0 && !props->password) {
+        props->password = g_strdup (value);
+        return TRUE;
+    }
+
+    g_set_error (error,
+                 QMI_CORE_ERROR,
+                 QMI_CORE_ERROR_FAILED,
+                 "unrecognized or duplicate option '%s'",
+                 key);
+    return FALSE;
+}
+
 static QmiMessageWdsStartNetworkInput *
 start_network_input_create (const gchar *str)
 {
-    QmiMessageWdsStartNetworkInput *input = NULL;
-    const gchar *apn      = NULL;
-    const gchar *auth     = NULL;
-    const gchar *username = NULL;
-    const gchar *password = NULL;
+    gchar *aux_auth_str = NULL;
     gchar **split = NULL;
+    QmiMessageWdsStartNetworkInput *input = NULL;
+    StartNetworkProperties props = {
+        .apn      = NULL,
+        .auth     = QMI_WDS_AUTHENTICATION_NONE,
+        .auth_set = FALSE,
+        .username = NULL,
+        .password = NULL,
+    };
 
     /* An empty string is totally valid (i.e. no TLVs) */
     if (!str[0])
         return NULL;
 
+    /* New key=value format */
+    if (strchr (str, '=')) {
+        GError *error = NULL;
+
+        if (!qmicli_parse_key_value_string (str,
+                                            &error,
+                                            start_network_properties_handle,
+                                            &props)) {
+            g_printerr ("error: couldn't parse input string: %s\n", error->message);
+            g_error_free (error);
+            goto out;
+        }
+    }
+    /* Old non key=value format, like this:
+     *    "[(APN),(PAP|CHAP|BOTH),(Username),(Password)]"
+     */
+    else {
+        /* Parse input string into the expected fields */
+        split = g_strsplit (str, ",", 0);
+
+        props.apn = g_strdup (split[0]);
+
+        if (props.apn && split[1]) {
+            if (!qmicli_read_authentication_from_string (split[1], &(props.auth))) {
+                g_printerr ("error: unknown auth protocol '%s'\n", split[1]);
+                goto out;
+            }
+            props.auth_set = TRUE;
+        }
+
+        props.username = (props.auth_set ? g_strdup (split[2]) : NULL);
+        props.password = (props.username ? g_strdup (split[3]) : NULL);
+    }
+
     /* Create input bundle */
     input = qmi_message_wds_start_network_input_new ();
 
-    /* Parse input string into the expected fields */
-    split = g_strsplit (str, ",", 0);
-    apn      = split[0];
-    auth     = (apn      ? split[1] : NULL);
-    username = (auth     ? split[2] : NULL);
-    password = (username ? split[3] : NULL);
-
     /* Set APN */
-    qmi_message_wds_start_network_input_set_apn (input, apn, NULL);
+    if (props.apn)
+        qmi_message_wds_start_network_input_set_apn (input, props.apn, NULL);
 
     /* Set authentication method */
-    if (auth) {
-        QmiWdsAuthentication qmiwdsauth;
-
-        if (g_ascii_strcasecmp (auth, "PAP") == 0)
-            qmiwdsauth = QMI_WDS_AUTHENTICATION_PAP;
-        else if (g_ascii_strcasecmp (auth, "CHAP") == 0)
-            qmiwdsauth = QMI_WDS_AUTHENTICATION_CHAP;
-        else if (g_ascii_strcasecmp (auth, "BOTH") == 0)
-            qmiwdsauth = (QMI_WDS_AUTHENTICATION_PAP | QMI_WDS_AUTHENTICATION_CHAP);
-        else
-            qmiwdsauth = QMI_WDS_AUTHENTICATION_NONE;
-        qmi_message_wds_start_network_input_set_authentication_preference (input, qmiwdsauth, NULL);
+    if (props.auth_set) {
+        aux_auth_str = qmi_wds_authentication_build_string_from_mask (props.auth);
+        qmi_message_wds_start_network_input_set_authentication_preference (input, props.auth, NULL);
     }
 
     /* Set username, avoid empty strings */
-    if (username && username[0])
-        qmi_message_wds_start_network_input_set_username (input, username, NULL);
+    if (props.username && props.username[0])
+        qmi_message_wds_start_network_input_set_username (input, props.username, NULL);
 
     /* Set password, avoid empty strings */
-    if (password && password[0])
-        qmi_message_wds_start_network_input_set_password (input, password, NULL);
+    if (props.password && props.password[0])
+        qmi_message_wds_start_network_input_set_password (input, props.password, NULL);
 
-    g_debug ("Network start parameters set (apn: '%s', auth: '%s', user: '%s', pass: '%s')",
-             apn                       ? apn      : "unspecified",
-             auth                      ? auth     : "unspecified",
-             (username && username[0]) ? username : "unspecified",
-             (password && password[0]) ? password : "unspecified");
+    g_debug ("Network start parameters set (apn: '%s', auth: '%s', username: '%s', password: '%s')",
+             props.apn                             ? props.apn      : "unspecified",
+             aux_auth_str                          ? aux_auth_str   : "unspecified",
+             (props.username && props.username[0]) ? props.username : "unspecified",
+             (props.password && props.password[0]) ? props.password : "unspecified");
 
+out:
     g_strfreev (split);
+    g_free     (props.apn);
+    g_free     (props.username);
+    g_free     (props.password);
+    g_free     (aux_auth_str);
 
     return input;
 }

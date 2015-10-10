@@ -53,6 +53,8 @@ gboolean qmicli_read_autoconnect_setting_from_string         (const gchar *str,
                                                               QmiWdsAutoconnectSetting *out);
 gboolean qmicli_read_autoconnect_setting_roaming_from_string (const gchar *str,
                                                               QmiWdsAutoconnectSettingRoaming *out);
+gboolean qmicli_read_authentication_from_string              (const gchar *str,
+                                                              QmiWdsAuthentication *out);
 
 gboolean qmicli_read_non_empty_string           (const gchar *str,
                                                  const gchar *description,
@@ -64,5 +66,15 @@ gchar *qmicli_get_supported_messages_list (const guint8 *data,
                                            gsize len);
 
 const char *qmicli_earfcn_to_eutra_band_string (guint16 earfcn);
+
+typedef gboolean (*QmiParseKeyValueForeachFn) (const gchar *key,
+                                               const gchar *value,
+                                               GError **error,
+                                               gpointer user_data);
+
+gboolean qmicli_parse_key_value_string (const gchar *str,
+                                        GError **error,
+                                        QmiParseKeyValueForeachFn callback,
+                                        gpointer user_data);
 
 #endif /* __QMICLI_H__ */
