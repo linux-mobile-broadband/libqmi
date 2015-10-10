@@ -201,7 +201,7 @@ mbimcli_parse_key_value_string (const gchar *str,
                                 gpointer user_data)
 {
     GError *inner_error = NULL;
-    gchar *dup, *p, *key, *key_end, *value, *value_end, quote;
+    gchar *dupstr, *p, *key, *key_end, *value, *value_end, quote;
 
     g_return_val_if_fail (callback != NULL, FALSE);
     g_return_val_if_fail (str != NULL, FALSE);
@@ -212,8 +212,8 @@ mbimcli_parse_key_value_string (const gchar *str,
     if (!str[0])
         return TRUE;
 
-    dup = g_strdup (str);
-    p = dup;
+    dupstr = g_strdup (str);
+    p = dupstr;
 
     while (TRUE) {
         gboolean keep_iteration = FALSE;
@@ -327,7 +327,7 @@ mbimcli_parse_key_value_string (const gchar *str,
         break;
     }
 
-    g_free (dup);
+    g_free (dupstr);
 
     if (inner_error) {
         g_propagate_error (error, inner_error);
@@ -336,4 +336,3 @@ mbimcli_parse_key_value_string (const gchar *str,
 
     return TRUE;
 }
-
