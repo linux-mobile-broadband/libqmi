@@ -1282,16 +1282,18 @@ qmicli_wds_run (QmiDevice *device,
     if (stop_network_str) {
         gulong packet_data_handle;
 
-        packet_data_handle = strtoul (stop_network_str, NULL, 10);
-        if (!packet_data_handle ||
-            packet_data_handle > G_MAXUINT32) {
+        if (g_str_has_prefix (stop_network_str, "0x"))
+            packet_data_handle = strtoul (stop_network_str, NULL, 16);
+        else
+            packet_data_handle = strtoul (stop_network_str, NULL, 10);
+        if (!packet_data_handle || packet_data_handle > G_MAXUINT32) {
             g_printerr ("error: invalid packet data handle given '%s'\n",
                         stop_network_str);
             operation_shutdown (FALSE);
             return;
         }
 
-        g_debug ("Asynchronously stopping network...");
+        g_debug ("Asynchronously stopping network (%lu)...", packet_data_handle);
         internal_stop_network (ctx->cancellable, (guint32)packet_data_handle);
         return;
     }
