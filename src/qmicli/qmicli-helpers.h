@@ -61,6 +61,8 @@ gboolean qmicli_read_non_empty_string           (const gchar *str,
                                                  gchar **out);
 gboolean qmicli_read_uint_from_string           (const gchar *str,
                                                  guint *out);
+gboolean qmicli_read_yes_no_from_string         (const gchar *str,
+                                                 gboolean *out);
 
 gchar *qmicli_get_supported_messages_list (const guint8 *data,
                                            gsize len);

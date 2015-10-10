@@ -67,7 +67,7 @@ static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
-      "Start network (allowed keys: apn, auth (PAP|CHAP|BOTH), username, password)",
+      "Start network (allowed keys: apn, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes)",
       "[\"key=value,...\"]"
     },
     { "wds-follow-network", 0, 0, G_OPTION_ARG_NONE, &follow_network_flag,
@@ -76,7 +76,7 @@ static GOptionEntry entries[] = {
     },
     { "wds-stop-network", 0, 0, G_OPTION_ARG_STRING, &stop_network_str,
       "Stop network",
-      "[Packet data handle]"
+      "[Packet data handle] OR [disable-autoconnect]",
     },
     { "wds-get-current-settings", 0, 0, G_OPTION_ARG_NONE, &get_current_settings_flag,
       "Get current settings",
@@ -241,12 +241,15 @@ stop_network_ready (QmiClientWds *client,
 
 static void
 internal_stop_network (GCancellable *cancellable,
-                       guint32 packet_data_handle)
+                       guint32 packet_data_handle,
+                       gboolean disable_autoconnect)
 {
     QmiMessageWdsStopNetworkInput *input;
 
     input = qmi_message_wds_stop_network_input_new ();
     qmi_message_wds_stop_network_input_set_packet_data_handle (input, packet_data_handle, NULL);
+    if (disable_autoconnect)
+        qmi_message_wds_stop_network_input_set_disable_autoconnect (input, TRUE, NULL);
 
     g_print ("Network cancelled... releasing resources\n");
     qmi_client_wds_stop_network (ctx->client,
@@ -270,7 +273,7 @@ network_cancelled (GCancellable *cancellable)
     }
 
     g_print ("Network cancelled... releasing resources\n");
-    internal_stop_network (cancellable, ctx->packet_data_handle);
+    internal_stop_network (cancellable, ctx->packet_data_handle, FALSE);
 }
 
 static void
@@ -310,7 +313,7 @@ timeout_get_packet_service_status_ready (QmiClientWds *client,
     if (status != QMI_WDS_CONNECTION_STATUS_CONNECTED) {
         g_print ("[%s] Stopping after detecting disconnection\n",
                  qmi_device_get_path_display (ctx->device));
-        internal_stop_network (NULL, ctx->packet_data_handle);
+        internal_stop_network (NULL, ctx->packet_data_handle, FALSE);
     }
 }
 
@@ -333,6 +336,8 @@ typedef struct {
     gboolean              auth_set;
     gchar                *username;
     gchar                *password;
+    gboolean              autoconnect;
+    gboolean              autoconnect_set;
 } StartNetworkProperties;
 
 static gboolean
@@ -377,6 +382,19 @@ start_network_properties_handle (const gchar  *key,
 
     if (g_ascii_strcasecmp (key, "password") == 0 && !props->password) {
         props->password = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "autoconnect") == 0 && !props->autoconnect_set) {
+        if (!qmicli_read_yes_no_from_string (value, &(props->autoconnect))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown autoconnect setup '%s'",
+                         value);
+            return FALSE;
+        }
+        props->autoconnect_set = TRUE;
         return TRUE;
     }
 
@@ -461,11 +479,16 @@ start_network_input_create (const gchar *str)
     if (props.password && props.password[0])
         qmi_message_wds_start_network_input_set_password (input, props.password, NULL);
 
-    g_debug ("Network start parameters set (apn: '%s', auth: '%s', username: '%s', password: '%s')",
-             props.apn                             ? props.apn      : "unspecified",
-             aux_auth_str                          ? aux_auth_str   : "unspecified",
-             (props.username && props.username[0]) ? props.username : "unspecified",
-             (props.password && props.password[0]) ? props.password : "unspecified");
+    /* Set autoconnect */
+    if (props.autoconnect_set)
+        qmi_message_wds_start_network_input_set_enable_autoconnect (input, props.autoconnect, NULL);
+
+    g_debug ("Network start parameters set (apn: '%s', auth: '%s', username: '%s', password: '%s', autoconnect: '%s')",
+             props.apn                             ? props.apn                          : "unspecified",
+             aux_auth_str                          ? aux_auth_str                       : "unspecified",
+             (props.username && props.username[0]) ? props.username                     : "unspecified",
+             (props.password && props.password[0]) ? props.password                     : "unspecified",
+             props.autoconnect_set                 ? (props.autoconnect ? "yes" : "no") : "unspecified");
 
 out:
     g_strfreev (split);
@@ -1395,20 +1418,27 @@ qmicli_wds_run (QmiDevice *device,
     /* Request to stop network? */
     if (stop_network_str) {
         gulong packet_data_handle;
+        gboolean disable_autoconnect;
 
-        if (g_str_has_prefix (stop_network_str, "0x"))
-            packet_data_handle = strtoul (stop_network_str, NULL, 16);
-        else
-            packet_data_handle = strtoul (stop_network_str, NULL, 10);
-        if (!packet_data_handle || packet_data_handle > G_MAXUINT32) {
-            g_printerr ("error: invalid packet data handle given '%s'\n",
-                        stop_network_str);
-            operation_shutdown (FALSE);
-            return;
+        if (g_str_equal (stop_network_str, "disable-autoconnect")) {
+            packet_data_handle  = 0xFFFFFFFF;
+            disable_autoconnect = TRUE;
+        } else {
+            disable_autoconnect = FALSE;
+            if (g_str_has_prefix (stop_network_str, "0x"))
+                packet_data_handle = strtoul (stop_network_str, NULL, 16);
+            else
+                packet_data_handle = strtoul (stop_network_str, NULL, 10);
+            if (!packet_data_handle || packet_data_handle > G_MAXUINT32) {
+                g_printerr ("error: invalid packet data handle given '%s'\n",
+                            stop_network_str);
+                operation_shutdown (FALSE);
+                return;
+            }
         }
 
         g_debug ("Asynchronously stopping network (%lu)...", packet_data_handle);
-        internal_stop_network (ctx->cancellable, (guint32)packet_data_handle);
+        internal_stop_network (ctx->cancellable, (guint32)packet_data_handle, disable_autoconnect);
         return;
     }
 

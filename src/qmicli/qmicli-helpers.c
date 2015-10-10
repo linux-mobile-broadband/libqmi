@@ -230,6 +230,29 @@ qmicli_read_enable_disable_from_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_yes_no_from_string (const gchar *str,
+                                gboolean *out)
+{
+    if (!str || str[0] == '\0') {
+        g_printerr ("error: expected 'true', 'false', 'yes' or 'no', got: none\n");
+        return FALSE;
+    }
+
+    if ((g_strcasecmp (str, "yes") == 0) || (g_strcasecmp (str, "true") == 0)) {
+        *out = TRUE;
+        return TRUE;
+    }
+
+    if ((g_strcasecmp (str, "no") == 0) || (g_strcasecmp (str, "false") == 0)) {
+        *out = FALSE;
+        return TRUE;
+    }
+
+    g_printerr ("error: expected 'true', 'false', 'yes' or 'no', got: %s\n", str);
+    return FALSE;
+}
+
+gboolean
 qmicli_read_non_empty_string (const gchar *str,
                               const gchar *description,
                               gchar **out)
