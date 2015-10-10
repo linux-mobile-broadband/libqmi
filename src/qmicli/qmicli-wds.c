@@ -327,6 +327,67 @@ packet_status_timeout (void)
     return TRUE;
 }
 
+static QmiMessageWdsStartNetworkInput *
+start_network_input_create (const gchar *str)
+{
+    QmiMessageWdsStartNetworkInput *input = NULL;
+    const gchar *apn      = NULL;
+    const gchar *auth     = NULL;
+    const gchar *username = NULL;
+    const gchar *password = NULL;
+    gchar **split = NULL;
+
+    /* An empty string is totally valid (i.e. no TLVs) */
+    if (!str[0])
+        return NULL;
+
+    /* Create input bundle */
+    input = qmi_message_wds_start_network_input_new ();
+
+    /* Parse input string into the expected fields */
+    split = g_strsplit (str, ",", 0);
+    apn      = split[0];
+    auth     = (apn      ? split[1] : NULL);
+    username = (auth     ? split[2] : NULL);
+    password = (username ? split[3] : NULL);
+
+    /* Set APN */
+    qmi_message_wds_start_network_input_set_apn (input, apn, NULL);
+
+    /* Set authentication method */
+    if (auth) {
+        QmiWdsAuthentication qmiwdsauth;
+
+        if (g_ascii_strcasecmp (auth, "PAP") == 0)
+            qmiwdsauth = QMI_WDS_AUTHENTICATION_PAP;
+        else if (g_ascii_strcasecmp (auth, "CHAP") == 0)
+            qmiwdsauth = QMI_WDS_AUTHENTICATION_CHAP;
+        else if (g_ascii_strcasecmp (auth, "BOTH") == 0)
+            qmiwdsauth = (QMI_WDS_AUTHENTICATION_PAP | QMI_WDS_AUTHENTICATION_CHAP);
+        else
+            qmiwdsauth = QMI_WDS_AUTHENTICATION_NONE;
+        qmi_message_wds_start_network_input_set_authentication_preference (input, qmiwdsauth, NULL);
+    }
+
+    /* Set username, avoid empty strings */
+    if (username && username[0])
+        qmi_message_wds_start_network_input_set_username (input, username, NULL);
+
+    /* Set password, avoid empty strings */
+    if (password && password[0])
+        qmi_message_wds_start_network_input_set_password (input, password, NULL);
+
+    g_debug ("Network start parameters set (apn: '%s', auth: '%s', user: '%s', pass: '%s')",
+             apn                       ? apn      : "unspecified",
+             auth                      ? auth     : "unspecified",
+             (username && username[0]) ? username : "unspecified",
+             (password && password[0]) ? password : "unspecified");
+
+    g_strfreev (split);
+
+    return input;
+}
+
 static void
 start_network_ready (QmiClientWds *client,
                      GAsyncResult *res)
@@ -1226,45 +1287,9 @@ qmicli_wds_run (QmiDevice *device,
 
     /* Request to start network? */
     if (start_network_str) {
-        QmiMessageWdsStartNetworkInput *input = NULL;
+        QmiMessageWdsStartNetworkInput *input;
 
-        /* Use the input string as APN */
-        if (start_network_str[0]) {
-            gchar **split;
-
-            split = g_strsplit (start_network_str, ",", 0);
-
-            input = qmi_message_wds_start_network_input_new ();
-            qmi_message_wds_start_network_input_set_apn (input, split[0], NULL);
-
-            if (split[1]) {
-                QmiWdsAuthentication qmiwdsauth;
-
-                /* Use authentication method */
-                if (g_ascii_strcasecmp (split[1], "PAP") == 0) {
-                    qmiwdsauth = QMI_WDS_AUTHENTICATION_PAP;
-                } else if (g_ascii_strcasecmp (split[1], "CHAP") == 0) {
-                    qmiwdsauth = QMI_WDS_AUTHENTICATION_CHAP;
-                } else if (g_ascii_strcasecmp (split[1], "BOTH") == 0) {
-                    qmiwdsauth = (QMI_WDS_AUTHENTICATION_PAP | QMI_WDS_AUTHENTICATION_CHAP);
-                } else {
-                    qmiwdsauth = QMI_WDS_AUTHENTICATION_NONE;
-                }
-
-                qmi_message_wds_start_network_input_set_authentication_preference (input, qmiwdsauth, NULL);
-
-                /* Username */
-                if (split[2] && strlen (split[2])) {
-                    qmi_message_wds_start_network_input_set_username (input, split[2], NULL);
-
-                    /* Password */
-                    if (split[3] && strlen (split[3])) {
-                        qmi_message_wds_start_network_input_set_password (input, split[3], NULL);
-                    }
-                }
-            }
-            g_strfreev (split);
-        }
+        input = start_network_input_create (start_network_str);
 
         g_debug ("Asynchronously starting network...");
         qmi_client_wds_start_network (ctx->client,
