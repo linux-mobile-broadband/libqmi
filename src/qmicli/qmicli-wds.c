@@ -67,7 +67,7 @@ static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
-      "Start network (allowed keys: apn, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes)",
+      "Start network (allowed keys: apn, 3gpp-profile, 3gpp2-profile, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes)",
       "[\"key=value,...\"]"
     },
     { "wds-follow-network", 0, 0, G_OPTION_ARG_NONE, &follow_network_flag,
@@ -332,6 +332,8 @@ packet_status_timeout (void)
 
 typedef struct {
     gchar                *apn;
+    guint8                profile_index_3gpp;
+    guint8                profile_index_3gpp2;
     QmiWdsAuthentication  auth;
     gboolean              auth_set;
     gchar                *username;
@@ -359,6 +361,16 @@ start_network_properties_handle (const gchar  *key,
 
     if (g_ascii_strcasecmp (key, "apn") == 0 && !props->apn) {
         props->apn = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "3gpp-profile") == 0 && !props->profile_index_3gpp) {
+        props->profile_index_3gpp = atoi (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "3gpp2-profile") == 0 && !props->profile_index_3gpp2) {
+        props->profile_index_3gpp2 = atoi (value);
         return TRUE;
     }
 
@@ -413,11 +425,13 @@ start_network_input_create (const gchar *str)
     gchar **split = NULL;
     QmiMessageWdsStartNetworkInput *input = NULL;
     StartNetworkProperties props = {
-        .apn      = NULL,
-        .auth     = QMI_WDS_AUTHENTICATION_NONE,
-        .auth_set = FALSE,
-        .username = NULL,
-        .password = NULL,
+        .apn                 = NULL,
+        .profile_index_3gpp  = 0,
+        .profile_index_3gpp2 = 0,
+        .auth                = QMI_WDS_AUTHENTICATION_NONE,
+        .auth_set            = FALSE,
+        .username            = NULL,
+        .password            = NULL,
     };
 
     /* An empty string is totally valid (i.e. no TLVs) */
@@ -465,6 +479,14 @@ start_network_input_create (const gchar *str)
     if (props.apn)
         qmi_message_wds_start_network_input_set_apn (input, props.apn, NULL);
 
+    /* Set 3GPP profile */
+    if (props.profile_index_3gpp > 0)
+        qmi_message_wds_start_network_input_set_profile_index_3gpp (input, props.profile_index_3gpp, NULL);
+
+    /* Set 3GPP2 profile */
+    if (props.profile_index_3gpp2 > 0)
+        qmi_message_wds_start_network_input_set_profile_index_3gpp2 (input, props.profile_index_3gpp2, NULL);
+
     /* Set authentication method */
     if (props.auth_set) {
         aux_auth_str = qmi_wds_authentication_build_string_from_mask (props.auth);
@@ -483,8 +505,10 @@ start_network_input_create (const gchar *str)
     if (props.autoconnect_set)
         qmi_message_wds_start_network_input_set_enable_autoconnect (input, props.autoconnect, NULL);
 
-    g_debug ("Network start parameters set (apn: '%s', auth: '%s', username: '%s', password: '%s', autoconnect: '%s')",
+    g_debug ("Network start parameters set (apn: '%s', 3gpp_profile: '%u', 3gpp2_profile: '%u', auth: '%s', username: '%s', password: '%s', autoconnect: '%s')",
              props.apn                             ? props.apn                          : "unspecified",
+             props.profile_index_3gpp,
+             props.profile_index_3gpp2,
              aux_auth_str                          ? aux_auth_str                       : "unspecified",
              (props.username && props.username[0]) ? props.username                     : "unspecified",
              (props.password && props.password[0]) ? props.password                     : "unspecified",
