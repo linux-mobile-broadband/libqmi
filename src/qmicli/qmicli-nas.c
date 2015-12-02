@@ -206,22 +206,43 @@ operation_shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status);
 }
 
-static gdouble
-get_db_from_sinr_level (QmiNasEvdoSinrLevel level)
+static gboolean
+get_db_from_sinr_level (QmiNasEvdoSinrLevel level,
+                        gdouble *out)
 {
+    g_assert (out != NULL);
+
     switch (level) {
-    case QMI_NAS_EVDO_SINR_LEVEL_0: return -9.0;
-    case QMI_NAS_EVDO_SINR_LEVEL_1: return -6;
-    case QMI_NAS_EVDO_SINR_LEVEL_2: return -4.5;
-    case QMI_NAS_EVDO_SINR_LEVEL_3: return -3;
-    case QMI_NAS_EVDO_SINR_LEVEL_4: return -2;
-    case QMI_NAS_EVDO_SINR_LEVEL_5: return 1;
-    case QMI_NAS_EVDO_SINR_LEVEL_6: return 3;
-    case QMI_NAS_EVDO_SINR_LEVEL_7: return 6;
-    case QMI_NAS_EVDO_SINR_LEVEL_8: return +9;
+    case QMI_NAS_EVDO_SINR_LEVEL_0:
+        *out = -9.0;
+        return TRUE;
+    case QMI_NAS_EVDO_SINR_LEVEL_1:
+        *out = -6.0;
+        return TRUE;
+    case QMI_NAS_EVDO_SINR_LEVEL_2:
+        *out = -4.5;
+        return TRUE;
+    case QMI_NAS_EVDO_SINR_LEVEL_3:
+        *out = -3.0;
+        return TRUE;
+    case QMI_NAS_EVDO_SINR_LEVEL_4:
+        *out = -2.0;
+        return TRUE;
+    case QMI_NAS_EVDO_SINR_LEVEL_5:
+        *out = 1.0;
+        return TRUE;
+    case QMI_NAS_EVDO_SINR_LEVEL_6:
+        *out = 3.0;
+        return TRUE;
+    case QMI_NAS_EVDO_SINR_LEVEL_7:
+        *out = 6.0;
+        return TRUE;
+    case QMI_NAS_EVDO_SINR_LEVEL_8:
+        *out = 9.0;
+        return TRUE;
     default:
         g_warning ("Invalid SINR level '%u'", level);
-        return -G_MAXDOUBLE;
+        return FALSE;
     }
 }
 
@@ -278,15 +299,20 @@ get_signal_info_ready (QmiClientNas *client,
                                                                         &sinr_level,
                                                                         &io,
                                                                         NULL)) {
+        gdouble db_sinr = 0.0;
+
         g_print ("HDR:\n"
                  "\tRSSI: '%d dBm'\n"
                  "\tECIO: '%.1lf dBm'\n"
-                 "\tSINR (%u): '%.1lf dB'\n"
                  "\tIO: '%d dBm'\n",
                  rssi,
                  (-0.5)*((gdouble)ecio),
-                 sinr_level, get_db_from_sinr_level (sinr_level),
                  io);
+
+        if (get_db_from_sinr_level (sinr_level, &db_sinr))
+            g_print ("\tSINR (%u): '%.1lf dB'\n", sinr_level, db_sinr);
+        else
+            g_print ("\tSINR (%u): N/A'\n", sinr_level);
     }
 
     /* GSM */
@@ -466,8 +492,12 @@ get_signal_strength_ready (QmiClientNas *client,
 
     /* SINR level */
     if (qmi_message_nas_get_signal_strength_output_get_sinr (output, &sinr_level, NULL)) {
-        g_print ("SINR: (%u) '%.1lf dB'\n",
-                 sinr_level, get_db_from_sinr_level (sinr_level));
+        gdouble db_sinr = 0.0;
+
+        if (get_db_from_sinr_level (sinr_level, &db_sinr))
+            g_print ("SINR (%u): '%.1lf dB'\n", sinr_level, db_sinr);
+        else
+            g_print ("SINR (%u): N/A'\n", sinr_level);
     }
 
     /* RSRQ */
