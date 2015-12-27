@@ -50,6 +50,7 @@ QmiDevice
 QmiDeviceOpenFlags
 QmiDeviceReleaseClientFlags
 QmiDeviceServiceVersionInfo
+QmiDeviceExpectedDataFormat
 qmi_device_new
 qmi_device_new_finish
 qmi_device_get_file
@@ -57,6 +58,8 @@ qmi_device_peek_file
 qmi_device_get_path
 qmi_device_get_path_display
 qmi_device_get_wwan_iface
+qmi_device_get_expected_data_format
+qmi_device_set_expected_data_format
 qmi_device_is_open
 qmi_device_open
 qmi_device_open_finish
@@ -73,6 +76,7 @@ qmi_device_get_service_version_info
 qmi_device_get_service_version_info_finish
 qmi_device_open_flags_build_string_from_mask
 qmi_device_release_client_flags_build_string_from_mask
+qmi_device_expected_data_format_get_string
 <SUBSECTION Standard>
 QmiDeviceClass
 QMI_DEVICE
@@ -83,13 +87,16 @@ QMI_IS_DEVICE_CLASS
 QMI_TYPE_DEVICE
 QMI_TYPE_DEVICE_OPEN_FLAGS
 QMI_TYPE_DEVICE_RELEASE_CLIENT_FLAGS
+QMI_TYPE_DEVICE_EXPECTED_DATA_FORMAT
 QmiDevicePrivate
 qmi_device_get_type
 qmi_device_open_flags_get_type
 qmi_device_release_client_flags_get_type
+qmi_device_expected_data_format_get_type
 <SUBSECTION Private>
 qmi_device_open_flags_get_string
 qmi_device_release_client_flags_get_string
+qmi_device_expected_data_format_build_string_from_mask
 </SECTION>
 
 <SECTION>

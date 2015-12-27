@@ -21,6 +21,7 @@
  * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
  */
 
+#include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
@@ -678,7 +679,7 @@ reload_wwan_iface_name (QmiDevice *self)
  * @self: a #QmiDevice.
  *
  * Get the WWAN interface name associated with this /dev/cdc-wdm control port.
- * This value will be loaded the first time it's asked for it.
+ * This value will be loaded every time it's asked for it.
  *
  * Returns: UTF-8 encoded network interface name, or %NULL if not available.
  */
@@ -689,6 +690,182 @@ qmi_device_get_wwan_iface (QmiDevice *self)
 
     reload_wwan_iface_name (self);
     return self->priv->wwan_iface;
+}
+
+/*****************************************************************************/
+/* Expected data format */
+
+static gboolean
+get_expected_data_format (QmiDevice *self,
+                          const gchar *sysfs_path,
+                          GError **error)
+{
+    QmiDeviceExpectedDataFormat expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
+    gchar value = '\0';
+    FILE *f;
+
+    g_debug ("[%s] Reading expected data format from: %s",
+             self->priv->path_display,
+             sysfs_path);
+
+    if (!(f = fopen (sysfs_path, "r"))) {
+        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                     "Failed to open file '%s': %s",
+                     sysfs_path, g_strerror (errno));
+        goto out;
+    }
+
+    if (fread (&value, 1, 1, f) != 1) {
+        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                     "Failed to read from file '%s': %s",
+                     sysfs_path, g_strerror (errno));
+        goto out;
+    }
+
+    if (value == 'Y')
+        expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP;
+    else if (value == 'N')
+        expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3;
+    else
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "Unexpected sysfs file contents");
+
+ out:
+    g_prefix_error (error, "Expected data format not retrieved properly: ");
+    if (f)
+        fclose (f);
+    return expected;
+}
+
+static gboolean
+set_expected_data_format (QmiDevice *self,
+                          const gchar *sysfs_path,
+                          QmiDeviceExpectedDataFormat requested,
+                          GError **error)
+{
+    gboolean status = FALSE;
+    gchar value;
+    FILE *f;
+
+    g_debug ("[%s] Writing expected data format to: %s",
+             self->priv->path_display,
+             sysfs_path);
+
+    if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP)
+        value = 'Y';
+    else if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3)
+        value = 'N';
+    else
+        g_assert_not_reached ();
+
+    if (!(f = fopen (sysfs_path, "w"))) {
+        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                     "Failed to open file '%s' for R/W: %s",
+                     sysfs_path, g_strerror (errno));
+        goto out;
+    }
+
+    if (fwrite (&value, 1, 1, f) != 1) {
+        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                     "Failed to write to file '%s': %s",
+                     sysfs_path, g_strerror (errno));
+        goto out;
+    }
+
+    status = TRUE;
+
+ out:
+    g_prefix_error (error, "Expected data format not updated properly: ");
+    if (f)
+        fclose (f);
+    return status;
+}
+
+static QmiDeviceExpectedDataFormat
+common_get_set_expected_data_format (QmiDevice *self,
+                                     QmiDeviceExpectedDataFormat requested,
+                                     GError **error)
+{
+    gchar *sysfs_path = NULL;
+    QmiDeviceExpectedDataFormat expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
+    gboolean readonly;
+
+    readonly = (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN);
+
+    /* Make sure we load the WWAN iface name */
+    reload_wwan_iface_name (self);
+    if (!self->priv->wwan_iface) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "Unknown wwan iface");
+        goto out;
+    }
+
+    /* Build sysfs file path and open it */
+    sysfs_path = g_strdup_printf ("/sys/class/net/%s/qmi/raw_ip", self->priv->wwan_iface);
+
+    /* Set operation? */
+    if (!readonly && !set_expected_data_format (self, sysfs_path, requested, error))
+        goto out;
+
+    /* Get/Set operations */
+    if ((expected = get_expected_data_format (self, sysfs_path, error)) == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN)
+        goto out;
+
+    /* If we requested an update but we didn't read that value, report an error */
+    if (!readonly && (requested != expected)) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "Expected data format not updated properly to '%s': got '%s' instead",
+                     qmi_device_expected_data_format_get_string (requested),
+                     qmi_device_expected_data_format_get_string (expected));
+        expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
+    }
+
+ out:
+    g_free (sysfs_path);
+    return expected;
+}
+
+/**
+ * qmi_device_get_expected_data_format:
+ * @self: a #QmiDevice.
+ * @error: Return location for error or %NULL.
+ *
+ * Retrieves the data format currently expected by the kernel in the network
+ * interface.
+ *
+ * If @QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN is returned, the user should assume
+ * that 802.3 is the expected format.
+ *
+ * Returns: a valid #QmiDeviceExpectedDataFormat, or @QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN if @error is set.
+ */
+QmiDeviceExpectedDataFormat
+qmi_device_get_expected_data_format (QmiDevice  *self,
+                                     GError    **error)
+{
+    g_return_val_if_fail (QMI_IS_DEVICE (self), QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN);
+
+    return common_get_set_expected_data_format (self, QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN, error);
+}
+
+/**
+ * qmi_device_set_expected_data_format:
+ * @self: a #QmiDevice.
+ * @format: a known #QmiDeviceExpectedDataFormat.
+ * @error: Return location for error or %NULL.
+ *
+ * Configures the data format currently expected by the kernel in the network
+ * interface.
+ *
+ * Returns: %TRUE if successful, or #NULL if @error is set.
+ */
+gboolean
+qmi_device_set_expected_data_format (QmiDevice *self,
+                                     QmiDeviceExpectedDataFormat format,
+                                     GError **error)
+{
+    g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
+
+    return (common_get_set_expected_data_format (self, format, error) != QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN);
 }
 
 /*****************************************************************************/

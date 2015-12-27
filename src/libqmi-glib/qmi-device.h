@@ -201,6 +201,25 @@ void    qmi_device_get_service_version_info        (QmiDevice *self,
 GArray *qmi_device_get_service_version_info_finish (QmiDevice *self,
                                                     GAsyncResult *res,
                                                     GError **error);
+/**
+ * QmiDeviceExpectedDataFormat:
+ * @QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN: Unknown.
+ * @QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3: 802.3.
+ * @QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP: Raw IP.
+ *
+ * Data format expected by the kernel.
+ */
+typedef enum {
+    QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN,
+    QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3,
+    QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP,
+} QmiDeviceExpectedDataFormat;
+
+QmiDeviceExpectedDataFormat qmi_device_get_expected_data_format (QmiDevice *self,
+                                                                 GError **error);
+gboolean                    qmi_device_set_expected_data_format (QmiDevice *self,
+                                                                 QmiDeviceExpectedDataFormat format,
+                                                                 GError **error);
 
 G_END_DECLS
 
