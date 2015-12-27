@@ -47,6 +47,8 @@ gboolean qmicli_read_radio_interface_from_string             (const gchar *str,
                                                               QmiNasRadioInterface *out);
 gboolean qmicli_read_net_open_flags_from_string              (const gchar *str,
                                                               QmiDeviceOpenFlags *out);
+gboolean qmicli_read_expected_data_format_from_string        (const gchar *str,
+                                                              QmiDeviceExpectedDataFormat *out);
 gboolean qmicli_read_link_layer_protocol_from_string         (const gchar *str,
                                                               QmiWdaLinkLayerProtocol *out);
 gboolean qmicli_read_autoconnect_setting_from_string         (const gchar *str,

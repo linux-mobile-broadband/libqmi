@@ -49,6 +49,8 @@ static gboolean operation_status;
 static gchar *device_str;
 static gboolean get_service_version_info_flag;
 static gboolean get_wwan_iface_flag;
+static gboolean get_expected_data_format_flag;
+static gchar *set_expected_data_format_str;
 static gchar *device_set_instance_id_str;
 static gboolean device_open_version_info_flag;
 static gboolean device_open_sync_flag;
@@ -68,6 +70,14 @@ static GOptionEntry main_entries[] = {
     { "get-wwan-iface", 'w', 0, G_OPTION_ARG_NONE, &get_wwan_iface_flag,
       "Get the WWAN iface name associated with this control port",
       NULL
+    },
+    { "get-expected-data-format", 'e', 0, G_OPTION_ARG_NONE, &get_expected_data_format_flag,
+      "Get the expected data format in the WWAN iface",
+      NULL
+    },
+    { "set-expected-data-format", 'E', 0, G_OPTION_ARG_STRING, &set_expected_data_format_str,
+      "Set the expected data format in the WWAN iface",
+      "[802-3|raw-ip]"
     },
     { "get-service-version-info", 0, 0, G_OPTION_ARG_NONE, &get_service_version_info_flag,
       "Get service version info",
@@ -214,7 +224,9 @@ generic_options_enabled (void)
 
     n_actions = (!!device_set_instance_id_str +
                  get_service_version_info_flag +
-                 get_wwan_iface_flag);
+                 get_wwan_iface_flag +
+                 get_expected_data_format_flag +
+                 !!set_expected_data_format_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many generic actions requested\n");
@@ -459,6 +471,64 @@ device_get_service_version_info (QmiDevice *dev)
 }
 
 static gboolean
+device_set_expected_data_format_cb (QmiDevice *dev)
+{
+    QmiDeviceExpectedDataFormat expected;
+    GError *error = NULL;
+
+    if (!qmicli_read_expected_data_format_from_string (set_expected_data_format_str, &expected) ||
+        expected == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN)
+        g_printerr ("error: invalid requested data format: %s", set_expected_data_format_str);
+    else if (!qmi_device_set_expected_data_format (dev, expected, &error)) {
+        g_printerr ("error: cannot set expected data format: %s\n", error->message);
+        g_error_free (error);
+    } else
+        g_print ("[%s] expected data format set to: %s\n",
+                 qmi_device_get_path_display (dev),
+                 qmi_device_expected_data_format_get_string (expected));
+
+    /* We're done now */
+    qmicli_async_operation_done (!error);
+
+    g_object_unref (dev);
+    return FALSE;
+}
+
+static void
+device_set_expected_data_format (QmiDevice *dev)
+{
+    g_debug ("Setting expected WWAN data format this control port...");
+    g_idle_add ((GSourceFunc) device_set_expected_data_format_cb, g_object_ref (dev));
+}
+
+static gboolean
+device_get_expected_data_format_cb (QmiDevice *dev)
+{
+    QmiDeviceExpectedDataFormat expected;
+    GError *error = NULL;
+
+    expected = qmi_device_get_expected_data_format (dev, &error);
+    if (expected == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN) {
+        g_printerr ("error: cannot get expected data format: %s\n", error->message);
+        g_error_free (error);
+    } else
+        g_print ("%s\n", qmi_device_expected_data_format_get_string (expected));
+
+    /* We're done now */
+    qmicli_async_operation_done (!error);
+
+    g_object_unref (dev);
+    return FALSE;
+}
+
+static void
+device_get_expected_data_format (QmiDevice *dev)
+{
+    g_debug ("Getting expected WWAN data format this control port...");
+    g_idle_add ((GSourceFunc) device_get_expected_data_format_cb, g_object_ref (dev));
+}
+
+static gboolean
 device_get_wwan_iface_cb (QmiDevice *dev)
 {
     const gchar *wwan_iface;
@@ -504,6 +574,10 @@ device_open_ready (QmiDevice *dev,
         device_get_service_version_info (dev);
     else if (get_wwan_iface_flag)
         device_get_wwan_iface (dev);
+    else if (get_expected_data_format_flag)
+        device_get_expected_data_format (dev);
+    else if (set_expected_data_format_str)
+        device_set_expected_data_format (dev);
     else
         device_allocate_client (dev);
 }

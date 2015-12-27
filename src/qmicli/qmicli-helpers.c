@@ -371,6 +371,27 @@ qmicli_read_net_open_flags_from_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_expected_data_format_from_string (const gchar *str,
+                                              QmiDeviceExpectedDataFormat *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_device_expected_data_format_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiDeviceExpectedDataFormat)enum_value->value;
+    else
+        g_printerr ("error: invalid expected data format value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
 qmicli_read_link_layer_protocol_from_string (const gchar *str,
                                              QmiWdaLinkLayerProtocol *out)
 {
