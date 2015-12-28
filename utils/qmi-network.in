@@ -199,6 +199,105 @@ clear_state ()
     rm -f $STATE_FILE
 }
 
+setup_data_format ()
+{
+    RUN_WDA=0
+
+    # Read link layer protocol setup in the device
+
+    DEVICE_DATA_FORMAT_CMD="qmicli -d $DEVICE --wda-get-data-format $PROXY_OPT"
+    echo "Checking data format with '$DEVICE_DATA_FORMAT_CMD'..."
+    if [ "x$QMIDEBUG" != "x" ]; then
+        DEVICE_DATA_FORMAT_OUT="\
+[/dev/cdc-wdm1] Successfully got data format
+                   QoS flow header: no
+               Link layer protocol: '802-3'
+  Uplink data aggregation protocol: 'disabled'
+Downlink data aggregation protocol: 'disabled'
+                     NDP signature: '0'
+  Uplink data aggregation max size: '0'
+Downlink data aggregation max size: '0'"
+    else
+        DEVICE_DATA_FORMAT_OUT=`$DEVICE_DATA_FORMAT_CMD`
+    fi
+    DEVICE_LLP=`echo "$DEVICE_DATA_FORMAT_OUT" | sed -n "s/.*Link layer protocol:.*'\(.*\)'.*/\1/p"`
+
+    if [ "x$DEVICE_LLP" = "x" ]; then
+        echo "Device link layer protocol not retrieved: WDA unsupported" 1>&2
+        return
+    fi
+
+    if [ "$DEVICE_LLP" != "802-3" -a "$DEVICE_LLP" != "raw-ip" ]; then
+        echo "Device link layer protocol not retrieved: unexpected value reported: '$DEVICE_LLP'" 1>&2
+        return
+    fi
+    echo "Device link layer protocol retrieved: $DEVICE_LLP"
+
+    # Read link layer protocol setup in the kernel
+
+    EXPECTED_DATA_FORMAT_CMD="qmicli -d $DEVICE --get-expected-data-format"
+    echo "Getting expected data format with '$EXPECTED_DATA_FORMAT_CMD'..."
+    if [ "x$QMIDEBUG" != "x" ]; then
+        EXPECTED_LLP="raw-ip"
+    else
+        EXPECTED_DATA_FORMAT_OUT=`$EXPECTED_DATA_FORMAT_CMD`
+        if [ $? -eq 0 ]; then
+            EXPECTED_LLP=$EXPECTED_DATA_FORMAT_OUT
+            echo "Expected link layer protocol retrieved: $EXPECTED_LLP"
+        else
+            echo "Expected link layer protocol not retrieved: kernel unsupported" 1>&2
+            EXPECTED_LLP="802-3"
+            # The kernel doesn't support expected data format, so we change the
+            # device data format instead
+            RUN_WDA=1
+        fi
+    fi
+
+    if [ "$EXPECTED_LLP" != "802-3" -a "$EXPECTED_LLP" != "raw-ip" ]; then
+        echo "Expected link layer protocol not retrieved: unexpected value reported: '$EXPECTED_LLP'" 1>&2
+        return
+    fi
+
+    if [ "$DEVICE_LLP" == "$EXPECTED_LLP" ]; then
+        echo "Device and kernel link layer protocol match: $DEVICE_LLP"
+        return
+    fi
+
+    if [ $RUN_WDA -eq 1 ]; then
+        DEVICE_DATA_FORMAT_SET_CMD="qmicli -d $DEVICE --wda-set-data-format=$EXPECTED_LLP $PROXY_OPT"
+        echo "Updating device link layer protocol with '$DEVICE_DATA_FORMAT_SET_CMD'..."
+        if [ "x$QMIDEBUG" != "x" ]; then
+            DEVICE_DATA_FORMAT_SET_OUT="\
+[/dev/cdc-wdm1] Successfully set data format
+                        QoS flow header: no
+                    Link layer protocol: '802-3'
+       Uplink data aggregation protocol: 'disabled'
+     Downlink data aggregation protocol: 'disabled'
+                          NDP signature: '0'
+Downlink data aggregation max datagrams: '0'
+     Downlink data aggregation max size: '0'"
+        else
+            DEVICE_DATA_FORMAT_SET_OUT=`$DEVICE_DATA_FORMAT_SET_CMD`
+        fi
+
+        LLP=`echo "$DEVICE_DATA_FORMAT_SET_OUT" | sed -n "s/.*Link layer protocol:.*'\(.*\)'.*/\1/p"`
+        if [ "x$LLP" = "x" ]; then
+            echo "Error updating Device link layer protocol" 1>&2
+        else
+            echo "New device link layer protocol retrieved: $LLP"
+        fi
+    else
+        EXPECTED_DATA_FORMAT_SET_CMD="qmicli -d $DEVICE --set-expected-data-format=$DEVICE_LLP"
+        echo "Updating kernel link layer protocol with '$EXPECTED_DATA_FORMAT_SET_CMD'..."
+        EXPECTED_DATA_FORMAT_SET_OUT=`$EXPECTED_DATA_FORMAT_SET_CMD`
+        if [ $? -eq 0 ]; then
+            echo "Kernel link layer protocol updated"
+        else
+            echo "Error updating kernel link layer protocol " 1>&2
+        fi
+    fi
+}
+
 # qmicli -d /dev/cdc-wdm0 --wds-start-network --client-no-release-cid
 # [/dev/cdc-wdm0] Network started
 #   Packet data handle: 3634026241
@@ -216,53 +315,7 @@ start_network ()
         exit 3
     fi
 
-    # Read link layer protocol
-    DATA_FORMAT_CMD="qmicli -d $DEVICE --wda-get-data-format $PROXY_OPT"
-    echo "Checking data format with '$DATA_FORMAT_CMD'..."
-    if [ "x$QMIDEBUG" != "x" ]; then
-        DATA_FORMAT_OUT="\
-[/dev/cdc-wdm1] Successfully got data format
-                   QoS flow header: no
-               Link layer protocol: '802-3'
-  Uplink data aggregation protocol: 'disabled'
-Downlink data aggregation protocol: 'disabled'
-                     NDP signature: '0'
-  Uplink data aggregation max size: '0'
-Downlink data aggregation max size: '0'"
-    else
-        DATA_FORMAT_OUT=`$DATA_FORMAT_CMD`
-    fi
-
-    LLP=`echo "$DATA_FORMAT_OUT" | sed -n "s/.*Link layer protocol:.*'\(.*\)'.*/\1/p"`
-    if [ "x$LLP" = "x" ]; then
-        echo "Link layer protocol not retrieved" 1>&2
-    else
-        echo "Link layer protocol retrieved: $LLP" 1>&2
-        if [ "x$LLP" != "x802-3" ]; then
-            DATA_FORMAT_SET_CMD="qmicli -d $DEVICE --wda-set-data-format=802-3 $PROXY_OPT"
-            echo "Updating data format with '$DATA_FORMAT_SET_CMD'..."
-            if [ "x$QMIDEBUG" != "x" ]; then
-                DATA_FORMAT_SET_OUT="\
-[/dev/cdc-wdm1] Successfully set data format
-                        QoS flow header: no
-                    Link layer protocol: '802-3'
-       Uplink data aggregation protocol: 'disabled'
-     Downlink data aggregation protocol: 'disabled'
-                          NDP signature: '0'
-Downlink data aggregation max datagrams: '0'
-     Downlink data aggregation max size: '0'"
-            else
-                DATA_FORMAT_SET_OUT=`$DATA_FORMAT_SET_CMD`
-            fi
-
-            LLP=`echo "$DATA_FORMAT_SET_OUT" | sed -n "s/.*Link layer protocol:.*'\(.*\)'.*/\1/p"`
-            if [ "x$LLP" = "x" ]; then
-                echo "Link layer protocol not retrieved after update" 1>&2
-            else
-                echo "New link layer protocol retrieved: $LLP" 1>&2
-            fi
-        fi
-    fi
+    setup_data_format
 
     START_NETWORK_CMD="qmicli -d $DEVICE --wds-start-network=$APN $USE_PREVIOUS_CID --client-no-release-cid $PROXY_OPT"
     echo "Starting network with '$START_NETWORK_CMD'..."
