@@ -141,16 +141,16 @@ load_profile ()
 
         if [ "x$APN" != "x" ]; then
             echo "    APN: $APN"
-	    else
+        else
             echo "    APN: unset"
         fi
 
-	    if [ "x$PROXY" = "xyes" ]; then
-	        echo "    qmi-proxy: $PROXY"
-	        PROXY_OPT='--device-open-proxy'
-	    else
-	        echo "    qmi-proxy: no"
-	    fi
+        if [ "x$PROXY" = "xyes" ]; then
+            echo "    qmi-proxy: $PROXY"
+            PROXY_OPT='--device-open-proxy'
+        else
+            echo "    qmi-proxy: no"
+        fi
     else
         echo "Profile at '$PROFILE_FILE' not found..."
     fi
@@ -201,10 +201,10 @@ clear_state ()
 
 # qmicli -d /dev/cdc-wdm0 --wds-start-network --client-no-release-cid
 # [/dev/cdc-wdm0] Network started
-# 	Packet data handle: 3634026241
+#   Packet data handle: 3634026241
 # [/dev/cdc-wdm0] Client ID not released:
-# 	Service: 'wds'
-# 	    CID: '80'
+#   Service: 'wds'
+#       CID: '80'
 start_network ()
 {
     if [ "x$CID" != "x" ]; then
@@ -270,10 +270,10 @@ Downlink data aggregation max datagrams: '0'
     if [ "x$QMIDEBUG" != "x" ]; then
         START_NETWORK_OUT="\
 [/dev/cdc-wdm0] Network started
-	Packet data handle: '3634026241'
+        Packet data handle: '3634026241'
 [/dev/cdc-wdm0] Client ID not released:
-	Service: 'wds'
-	CID: '80'"
+        Service: 'wds'
+        CID: '80'"
     else
         START_NETWORK_OUT=`$START_NETWORK_CMD`
     fi
