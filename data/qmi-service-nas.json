@@ -1153,7 +1153,7 @@
      "output"  : [  { "common-ref" : "Operation Result" },
                     { "name"          : "List",
                       "id"            : "0x01",
-                      "mandatory"     : "no",
+                      "mandatory"     : "yes",
                       "type"          : "TLV",
                       "format"        : "array",
                       "array-element" : { "name"     : "Element",
