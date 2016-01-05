@@ -1451,6 +1451,20 @@ parse_response (QmiDevice *self)
                        self->priv->path_display,
                        error->message);
             g_error_free (error);
+
+            if (qmi_utils_get_traces_enabled ()) {
+                gchar *printable;
+                guint len = CLAMP (self->priv->buffer->len, 0, 2048);
+
+                printable = __qmi_utils_str_hex (self->priv->buffer->data, len, ':');
+                g_debug ("<<<<<< RAW INVALID MESSAGE:\n"
+                         "<<<<<<   length = %u\n"
+                         "<<<<<<   data   = %s\n",
+                         self->priv->buffer->len, /* show full buffer len */
+                         printable);
+                g_free (printable);
+            }
+
         } else {
             /* Play with the received message */
             process_message (self, message);
