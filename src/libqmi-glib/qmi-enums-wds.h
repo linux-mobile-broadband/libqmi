@@ -773,6 +773,18 @@ typedef enum {
 } QmiWdsNetworkType;
 
 /**
+ * QmiWdsDataSystemNetworkType:
+ * @QMI_WDS_DATA_SYSTEM_NETWORK_TYPE_3GPP2: 3GPP2 network type.
+ * @QMI_WDS_DATA_SYSTEM_NETWORK_TYPE_3GPP: 3GPP network type.
+ *
+ * Network type of the data system.
+ */
+typedef enum {
+    QMI_WDS_DATA_SYSTEM_NETWORK_TYPE_3GPP    = 0,
+    QMI_WDS_DATA_SYSTEM_NETWORK_TYPE_3GPP2   = 1,
+} QmiWdsDataSystemNetworkType;
+
+/**
  * QmiWdsRat3gpp2:
  * @QMI_WDS_RAT_3GPP2_NONE: Unknown, to be ignored.
  * @QMI_WDS_RAT_3GPP2_CDMA1X: CDMA 1x.
