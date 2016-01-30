@@ -250,6 +250,7 @@
       <xi:include href="xml/qmi-message-uim-set-pin-protection.xml"/>
       <xi:include href="xml/qmi-message-uim-verify-pin.xml"/>
       <xi:include href="xml/qmi-message-uim-unblock-pin.xml"/>
+      <xi:include href="xml/qmi-message-uim-change-pin.xml"/>
       <xi:include href="xml/qmi-message-uim-read-transparent.xml"/>
       <xi:include href="xml/qmi-message-uim-read-record.xml"/>
       <xi:include href="xml/qmi-message-uim-get-file-attributes.xml"/>
