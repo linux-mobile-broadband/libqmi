@@ -43,6 +43,7 @@ static Context *ctx;
 
 /* Options */
 static gchar *read_transparent_str;
+static gchar *set_pin_protection_str;
 static gchar *get_file_attributes_str;
 static gboolean get_card_status_flag;
 static gboolean get_supported_messages_flag;
@@ -50,6 +51,10 @@ static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+    { "uim-set-pin-protection", 0, 0, G_OPTION_ARG_STRING, &set_pin_protection_str,
+      "Set PIN protection",
+      "[(PIN1|PIN2|UPIN),(disable|enable),(current PIN)]"
+    },
     { "uim-read-transparent", 0, 0, G_OPTION_ARG_STRING, &read_transparent_str,
       "Read a transparent file given the file path",
       "[0xNNNN,0xNNNN,...]"
@@ -101,7 +106,8 @@ qmicli_uim_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (!!read_transparent_str +
+    n_actions = (!!set_pin_protection_str +
+                 !!read_transparent_str +
                  !!get_file_attributes_str +
                  get_card_status_flag +
                  get_supported_messages_flag +
@@ -136,6 +142,96 @@ operation_shutdown (gboolean operation_status)
     /* Cleanup context and finish async operation */
     context_free (ctx);
     qmicli_async_operation_done (operation_status);
+}
+
+static QmiMessageUimSetPinProtectionInput *
+set_pin_protection_input_create (const gchar *str)
+{
+    QmiMessageUimSetPinProtectionInput *input = NULL;
+    gchar **split;
+    QmiUimPinId pin_id;
+    gboolean enable_disable;
+    gchar *current_pin;
+
+    /* Prepare inputs.
+     * Format of the string is:
+     *    "[(PIN1|PIN2|UPIN),(disable|enable),(current PIN)]"
+     */
+    split = g_strsplit (str, ",", -1);
+    if (qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
+        qmicli_read_enable_disable_from_string (split[1], &enable_disable) &&
+        qmicli_read_non_empty_string (split[2], "current PIN", &current_pin)) {
+        GError *error = NULL;
+
+        input = qmi_message_uim_set_pin_protection_input_new ();
+        if (!qmi_message_uim_set_pin_protection_input_set_info (
+                input,
+                pin_id,
+                enable_disable,
+                current_pin,
+                &error) ||
+            !qmi_message_uim_set_pin_protection_input_set_session_information (
+                input,
+                QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
+                "", /* ignored */
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_uim_set_pin_protection_input_unref (input);
+            input = NULL;
+        }
+    }
+    g_strfreev (split);
+
+    return input;
+}
+
+static void
+set_pin_protection_ready (QmiClientUim *client,
+                          GAsyncResult *res)
+{
+    QmiMessageUimSetPinProtectionOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_uim_set_pin_protection_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_set_pin_protection_output_get_result (output, &error)) {
+        guint8 verify_retries_left;
+        guint8 unblock_retries_left;
+
+        g_printerr ("error: couldn't set PIN protection: %s\n", error->message);
+        g_error_free (error);
+
+        if (qmi_message_uim_set_pin_protection_output_get_retries_remaining (
+                output,
+                &verify_retries_left,
+                &unblock_retries_left,
+                NULL)) {
+            g_printerr ("[%s] Retries left:\n"
+                        "\tVerify: %u\n"
+                        "\tUnblock: %u\n",
+                        qmi_device_get_path_display (ctx->device),
+                        verify_retries_left,
+                        unblock_retries_left);
+        }
+
+        qmi_message_uim_set_pin_protection_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] PIN protection updated\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_uim_set_pin_protection_output_unref (output);
+    operation_shutdown (TRUE);
 }
 
 static void
@@ -689,6 +785,26 @@ qmicli_uim_run (QmiDevice *device,
     ctx->device = g_object_ref (device);
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
+
+    /* Set PIN protection */
+    if (set_pin_protection_str) {
+        QmiMessageUimSetPinProtectionInput *input;
+
+        g_debug ("Asynchronously setting PIN protection...");
+        input = set_pin_protection_input_create (set_pin_protection_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+        qmi_client_uim_set_pin_protection (ctx->client,
+                                           input,
+                                           10,
+                                           ctx->cancellable,
+                                           (GAsyncReadyCallback)set_pin_protection_ready,
+                                           NULL);
+        qmi_message_uim_set_pin_protection_input_unref (input);
+        return;
+    }
 
     /* Request to read a transparent file? */
     if (read_transparent_str) {

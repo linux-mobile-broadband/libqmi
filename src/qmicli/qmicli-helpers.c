@@ -105,8 +105,8 @@ qmicli_get_raw_data_printable (const GArray *data,
 }
 
 gboolean
-qmicli_read_pin_id_from_string (const gchar *str,
-                                QmiDmsUimPinId *out)
+qmicli_read_dms_uim_pin_id_from_string (const gchar *str,
+                                        QmiDmsUimPinId *out)
 {
     if (!str || str[0] == '\0') {
         g_printerr ("error: expected 'PIN' or 'PIN2', got: none\n");
@@ -124,6 +124,33 @@ qmicli_read_pin_id_from_string (const gchar *str,
     }
 
     g_printerr ("error: expected 'PIN' or 'PIN2', got: '%s'\n", str);
+    return FALSE;
+}
+
+gboolean
+qmicli_read_uim_pin_id_from_string (const gchar *str,
+                                    QmiUimPinId *out)
+{
+    if (!str || str[0] == '\0') {
+        g_printerr ("error: expected 'PIN1', 'PIN2' or 'UPIN', got: none\n");
+        return FALSE;
+    }
+
+    if (g_str_equal (str, "PIN1")) {
+        *out = QMI_UIM_PIN_ID_PIN1;
+        return TRUE;
+    }
+
+    if (g_str_equal (str, "PIN2")) {
+        *out = QMI_UIM_PIN_ID_PIN2;
+        return TRUE;
+    }
+    if (g_str_equal (str, "UPIN")) {
+        *out = QMI_UIM_PIN_ID_UPIN;
+        return TRUE;
+    }
+
+    g_printerr ("error: expected 'PIN1', 'PIN2' or 'UPIN', got: '%s'\n", str);
     return FALSE;
 }
 

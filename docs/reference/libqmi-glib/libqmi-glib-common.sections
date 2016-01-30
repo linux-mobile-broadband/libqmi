@@ -755,6 +755,7 @@ QmiUimCardApplicationType
 QmiUimCardApplicationState
 QmiUimCardApplicationPersonalizationState
 QmiUimCardApplicationPersonalizationFeature
+QmiUimPinId
 <SUBSECTION Methods>
 qmi_uim_session_type_get_string
 qmi_uim_file_type_get_string
@@ -767,6 +768,7 @@ qmi_uim_card_application_type_get_string
 qmi_uim_card_application_state_get_string
 qmi_uim_card_application_personalization_state_get_string
 qmi_uim_card_application_personalization_feature_get_string
+qmi_uim_pin_id_get_string
 <SUBSECTION Private>
 qmi_uim_session_type_build_string_from_mask
 qmi_uim_file_type_build_string_from_mask
@@ -779,6 +781,7 @@ qmi_uim_card_application_type_build_string_from_mask
 qmi_uim_card_error_build_string_from_mask
 qmi_uim_card_state_build_string_from_mask
 qmi_uim_pin_state_build_string_from_mask
+qmi_uim_pin_id_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_UIM_SESSION_TYPE
 QMI_TYPE_UIM_FILE_TYPE
@@ -791,6 +794,7 @@ QMI_TYPE_UIM_CARD_APPLICATION_TYPE
 QMI_TYPE_UIM_CARD_ERROR
 QMI_TYPE_UIM_CARD_STATE
 QMI_TYPE_UIM_PIN_STATE
+QMI_TYPE_UIM_PIN_ID
 qmi_uim_session_type_get_type
 qmi_uim_file_type_get_type
 qmi_uim_security_attribute_logic_get_type
@@ -802,6 +806,7 @@ qmi_uim_card_application_type_get_type
 qmi_uim_card_error_get_type
 qmi_uim_card_state_get_type
 qmi_uim_pin_state_get_type
+qmi_uim_pin_id_get_type
 </SECTION>
 
 <SECTION>

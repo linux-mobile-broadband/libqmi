@@ -122,6 +122,27 @@ typedef enum {
 } QmiUimSecurityAttribute;
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI UIM Set PIN Protection' */
+
+/**
+ * QmiUimPinId:
+ * @QMI_UIM_PIN_ID_UNKNOWN: Unknown.
+ * @QMI_UIM_PIN_ID_PIN1: PIN1.
+ * @QMI_UIM_PIN_ID_PIN2: PIN2.
+ * @QMI_UIM_PIN_ID_UPIN: UPIN.
+ * @QMI_UIM_PIN_ID_HIDDEN_KEY: Hidden key.
+ *
+ * PIN ID.
+ */
+typedef enum {
+    QMI_UIM_PIN_ID_UNKNOWN    = 0,
+    QMI_UIM_PIN_ID_PIN1       = 1,
+    QMI_UIM_PIN_ID_PIN2       = 2,
+    QMI_UIM_PIN_ID_UPIN       = 3,
+    QMI_UIM_PIN_ID_HIDDEN_KEY = 4
+} QmiUimPinId;
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI UIM Get Card Status' request/response */
 
 /**

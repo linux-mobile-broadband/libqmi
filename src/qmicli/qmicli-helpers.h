@@ -30,8 +30,10 @@ gchar *qmicli_get_raw_data_printable (const GArray *data,
                                       gsize max_line_length,
                                       const gchar *new_line_prefix);
 
-gboolean qmicli_read_pin_id_from_string                      (const gchar *str,
+gboolean qmicli_read_dms_uim_pin_id_from_string              (const gchar *str,
                                                               QmiDmsUimPinId *out);
+gboolean qmicli_read_uim_pin_id_from_string                  (const gchar *str,
+                                                              QmiUimPinId *out);
 gboolean qmicli_read_operating_mode_from_string              (const gchar *str,
                                                               QmiDmsOperatingMode *out);
 gboolean qmicli_read_rat_mode_pref_from_string               (const gchar *str,

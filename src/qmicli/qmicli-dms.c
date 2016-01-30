@@ -685,7 +685,7 @@ uim_set_pin_protection_input_create (const gchar *str)
      *    "[(PIN|PIN2),(disable|enable),(current PIN)]"
      */
     split = g_strsplit (str, ",", -1);
-    if (qmicli_read_pin_id_from_string (split[0], &pin_id) &&
+    if (qmicli_read_dms_uim_pin_id_from_string (split[0], &pin_id) &&
         qmicli_read_enable_disable_from_string (split[1], &enable_disable) &&
         qmicli_read_non_empty_string (split[2], "current PIN", &current_pin)) {
         GError *error = NULL;
@@ -769,7 +769,7 @@ uim_verify_pin_input_create (const gchar *str)
      *    "[(PIN|PIN2),(current PIN)]"
      */
     split = g_strsplit (str, ",", -1);
-    if (qmicli_read_pin_id_from_string (split[0], &pin_id) &&
+    if (qmicli_read_dms_uim_pin_id_from_string (split[0], &pin_id) &&
         qmicli_read_non_empty_string (split[1], "current PIN", &current_pin)) {
         GError *error = NULL;
 
@@ -852,7 +852,7 @@ uim_unblock_pin_input_create (const gchar *str)
      *    "[(PIN|PIN2),(PUK),(new PIN)]"
      */
     split = g_strsplit (str, ",", -1);
-    if (qmicli_read_pin_id_from_string (split[0], &pin_id) &&
+    if (qmicli_read_dms_uim_pin_id_from_string (split[0], &pin_id) &&
         qmicli_read_non_empty_string (split[1], "PUK", &puk) &&
         qmicli_read_non_empty_string (split[2], "new PIN", &new_pin)) {
         GError *error = NULL;
@@ -937,7 +937,7 @@ uim_change_pin_input_create (const gchar *str)
      *    "[(PIN|PIN2),(old PIN),(new PIN)]"
      */
     split = g_strsplit (str, ",", -1);
-    if (qmicli_read_pin_id_from_string (split[0], &pin_id) &&
+    if (qmicli_read_dms_uim_pin_id_from_string (split[0], &pin_id) &&
         qmicli_read_non_empty_string (split[1], "old PIN", &old_pin) &&
         qmicli_read_non_empty_string (split[2], "new PIN", &new_pin)) {
         GError *error = NULL;

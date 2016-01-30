@@ -247,6 +247,7 @@
     <section>
       <title>UIM Requests</title>
       <xi:include href="xml/qmi-message-uim-reset.xml"/>
+      <xi:include href="xml/qmi-message-uim-set-pin-protection.xml"/>
       <xi:include href="xml/qmi-message-uim-read-transparent.xml"/>
       <xi:include href="xml/qmi-message-uim-read-record.xml"/>
       <xi:include href="xml/qmi-message-uim-get-file-attributes.xml"/>
