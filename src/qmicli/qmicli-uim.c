@@ -45,6 +45,7 @@ static Context *ctx;
 static gchar *read_transparent_str;
 static gchar *set_pin_protection_str;
 static gchar *verify_pin_str;
+static gchar *unblock_pin_str;
 static gchar *get_file_attributes_str;
 static gboolean get_card_status_flag;
 static gboolean get_supported_messages_flag;
@@ -59,6 +60,10 @@ static GOptionEntry entries[] = {
     { "uim-verify-pin", 0, 0, G_OPTION_ARG_STRING, &verify_pin_str,
       "Verify PIN",
       "[(PIN1|PIN2|UPIN),(current PIN)]",
+    },
+    { "uim-unblock-pin", 0, 0, G_OPTION_ARG_STRING, &unblock_pin_str,
+      "Unblock PIN",
+      "[(PIN1|PIN2|UPIN),(PUK),(new PIN)]",
     },
     { "uim-read-transparent", 0, 0, G_OPTION_ARG_STRING, &read_transparent_str,
       "Read a transparent file given the file path",
@@ -113,6 +118,7 @@ qmicli_uim_options_enabled (void)
 
     n_actions = (!!set_pin_protection_str +
                  !!verify_pin_str +
+                 !!unblock_pin_str +
                  !!read_transparent_str +
                  !!get_file_attributes_str +
                  get_card_status_flag +
@@ -324,6 +330,96 @@ verify_pin_ready (QmiClientUim *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_uim_verify_pin_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static QmiMessageUimUnblockPinInput *
+unblock_pin_input_create (const gchar *str)
+{
+    QmiMessageUimUnblockPinInput *input = NULL;
+    gchar **split;
+    QmiUimPinId pin_id;
+    gchar *puk;
+    gchar *new_pin;
+
+    /* Prepare inputs.
+     * Format of the string is:
+     *    "[(PIN|PIN2),(PUK),(new PIN)]"
+     */
+    split = g_strsplit (str, ",", -1);
+    if (qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
+        qmicli_read_non_empty_string (split[1], "PUK", &puk) &&
+        qmicli_read_non_empty_string (split[2], "new PIN", &new_pin)) {
+        GError *error = NULL;
+
+        input = qmi_message_uim_unblock_pin_input_new ();
+        if (!qmi_message_uim_unblock_pin_input_set_info (
+                input,
+                pin_id,
+                puk,
+                new_pin,
+                &error) ||
+            !qmi_message_uim_unblock_pin_input_set_session_information (
+                input,
+                QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
+                "", /* ignored */
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_uim_unblock_pin_input_unref (input);
+            input = NULL;
+        }
+    }
+    g_strfreev (split);
+
+    return input;
+}
+
+static void
+unblock_pin_ready (QmiClientUim *client,
+                   GAsyncResult *res)
+{
+    QmiMessageUimUnblockPinOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_uim_unblock_pin_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_unblock_pin_output_get_result (output, &error)) {
+        guint8 verify_retries_left;
+        guint8 unblock_retries_left;
+
+        g_printerr ("error: couldn't unblock PIN: %s\n", error->message);
+        g_error_free (error);
+
+        if (qmi_message_uim_unblock_pin_output_get_retries_remaining (
+                output,
+                &verify_retries_left,
+                &unblock_retries_left,
+                NULL)) {
+            g_printerr ("[%s] Retries left:\n"
+                        "\tVerify: %u\n"
+                        "\tUnblock: %u\n",
+                        qmi_device_get_path_display (ctx->device),
+                        verify_retries_left,
+                        unblock_retries_left);
+        }
+
+        qmi_message_uim_unblock_pin_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] PIN unblocked successfully\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_uim_unblock_pin_output_unref (output);
     operation_shutdown (TRUE);
 }
 
@@ -916,6 +1012,26 @@ qmicli_uim_run (QmiDevice *device,
                                    (GAsyncReadyCallback)verify_pin_ready,
                                    NULL);
         qmi_message_uim_verify_pin_input_unref (input);
+        return;
+    }
+
+    /* Request to unblock PIN? */
+    if (unblock_pin_str) {
+        QmiMessageUimUnblockPinInput *input;
+
+        g_debug ("Asynchronously unblocking PIN...");
+        input = unblock_pin_input_create (unblock_pin_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+        qmi_client_uim_unblock_pin (ctx->client,
+                                    input,
+                                    10,
+                                    ctx->cancellable,
+                                    (GAsyncReadyCallback)unblock_pin_ready,
+                                    NULL);
+        qmi_message_uim_unblock_pin_input_unref (input);
         return;
     }
 
