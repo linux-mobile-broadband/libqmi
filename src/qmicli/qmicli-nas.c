@@ -2227,8 +2227,12 @@ str_from_bcd_plmn (const gchar *bcd)
 
     str = g_malloc (7);
     for (i = 0, j = 0 ; i < 3; i++) {
-        str[j++] = bcd_chars[bcd[i] & 0xF];
-        str[j++] = bcd_chars[(bcd[i] >> 4) & 0xF];
+        str[j] = bcd_chars[bcd[i] & 0xF];
+        if (str[j])
+            j++;
+        str[j] = bcd_chars[(bcd[i] >> 4) & 0xF];
+        if (str[j])
+            j++;
     }
     str[j] = '\0';
 
