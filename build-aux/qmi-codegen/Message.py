@@ -94,7 +94,7 @@ class Message:
             '\n'
             'static QmiMessage *\n'
             '__${underscore}_request_create (\n'
-            '    guint8 transaction_id,\n'
+            '    guint16 transaction_id,\n'
             '    guint8 cid,\n'
             '    %s,\n'
             '    GError **error)\n'
