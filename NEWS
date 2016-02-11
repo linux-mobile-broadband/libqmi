@@ -1,4 +1,18 @@
 
+Overview of changes in libqmi 1.12.8
+----------------------------------------
+
+ * codegen: fix bug which was limiting the transaction ID of request messages
+   generated to just 8bits.
+
+ * device: try to debug-print raw invalid QMI messages too.
+
+ * Additional bugfixes:
+   ** build: avoid C++ reserved keywords.
+   ** nas: correct ID for Get RF Band Information result TLV.
+   ** qmicli: fix PLMN printing.
+
+
 Overview of changes in libqmi 1.12.6
 ----------------------------------------
 
