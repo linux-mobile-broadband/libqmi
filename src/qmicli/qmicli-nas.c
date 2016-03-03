@@ -120,16 +120,16 @@ static GOptionEntry entries[] = {
 GOptionGroup *
 qmicli_nas_get_option_group (void)
 {
-	GOptionGroup *group;
+    GOptionGroup *group;
 
-	group = g_option_group_new ("nas",
-	                            "NAS options",
-	                            "Show Network Access Service options",
-	                            NULL,
-	                            NULL);
-	g_option_group_add_entries (group, entries);
+    group = g_option_group_new ("nas",
+                                "NAS options",
+                                "Show Network Access Service options",
+                                NULL,
+                                NULL);
+    g_option_group_add_entries (group, entries);
 
-	return group;
+    return group;
 }
 
 gboolean

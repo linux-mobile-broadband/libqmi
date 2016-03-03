@@ -704,29 +704,29 @@ int main (int argc, char **argv)
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Control QMI devices");
-	g_option_context_add_group (context,
-	                            qmicli_dms_get_option_group ());
-	g_option_context_add_group (context,
-	                            qmicli_nas_get_option_group ());
-	g_option_context_add_group (context,
-	                            qmicli_wds_get_option_group ());
-	g_option_context_add_group (context,
-	                            qmicli_pbm_get_option_group ());
-	g_option_context_add_group (context,
-	                            qmicli_uim_get_option_group ());
-	g_option_context_add_group (context,
-	                            qmicli_wms_get_option_group ());
-	g_option_context_add_group (context,
-	                            qmicli_wda_get_option_group ());
-	g_option_context_add_group (context,
-	                            qmicli_voice_get_option_group ());
+    g_option_context_add_group (context,
+                                qmicli_dms_get_option_group ());
+    g_option_context_add_group (context,
+                                qmicli_nas_get_option_group ());
+    g_option_context_add_group (context,
+                                qmicli_wds_get_option_group ());
+    g_option_context_add_group (context,
+                                qmicli_pbm_get_option_group ());
+    g_option_context_add_group (context,
+                                qmicli_uim_get_option_group ());
+    g_option_context_add_group (context,
+                                qmicli_wms_get_option_group ());
+    g_option_context_add_group (context,
+                                qmicli_wda_get_option_group ());
+    g_option_context_add_group (context,
+                                qmicli_voice_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",
                     error->message);
         exit (EXIT_FAILURE);
     }
-	g_option_context_free (context);
+    g_option_context_free (context);
 
     if (version_flag)
         print_version_and_exit ();

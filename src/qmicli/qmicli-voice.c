@@ -65,16 +65,16 @@ static GOptionEntry entries[] = {
 GOptionGroup *
 qmicli_voice_get_option_group (void)
 {
-	GOptionGroup *group;
+    GOptionGroup *group;
 
-	group = g_option_group_new ("voice",
-	                            "VOICE options",
-	                            "Show Voice Service options",
-	                            NULL,
-	                            NULL);
-	g_option_group_add_entries (group, entries);
+    group = g_option_group_new ("voice",
+                                "VOICE options",
+                                "Show Voice Service options",
+                                NULL,
+                                NULL);
+    g_option_group_add_entries (group, entries);
 
-	return group;
+    return group;
 }
 
 gboolean
