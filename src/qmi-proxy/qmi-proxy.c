@@ -179,7 +179,7 @@ int main (int argc, char **argv)
                     error->message);
         exit (EXIT_FAILURE);
     }
-	g_option_context_free (context);
+    g_option_context_free (context);
 
     if (version_flag)
         print_version_and_exit ();

@@ -30,11 +30,11 @@ qmicli_get_raw_data_printable (const GArray *data,
                                gsize max_line_length,
                                const gchar *line_prefix)
 {
-	gsize i;
-	gsize j;
+    gsize i;
+    gsize j;
     gsize k;
-	gsize new_str_length;
-	gchar *new_str;
+    gsize new_str_length;
+    gchar *new_str;
     gsize prefix_len;
     guint n_lines;
     gboolean is_new_line;
@@ -44,12 +44,12 @@ qmicli_get_raw_data_printable (const GArray *data,
     if (!data)
         return g_strdup ("");
 
-	/* Get new string length. If input string has N bytes, we need:
-	 * - 1 byte for last NUL char
-	 * - 2N bytes for hexadecimal char representation of each byte...
-	 * - N-1 bytes for the separator ':'
-	 * So... a total of (1+2N+N-1) = 3N bytes are needed... */
-	new_str_length =  3 * data->len;
+    /* Get new string length. If input string has N bytes, we need:
+     * - 1 byte for last NUL char
+     * - 2N bytes for hexadecimal char representation of each byte...
+     * - N-1 bytes for the separator ':'
+     * So... a total of (1+2N+N-1) = 3N bytes are needed... */
+    new_str_length =  3 * data->len;
 
     /* Effective max line length needs to be multiple of 3, we don't want to
      * split in half a given byte representation */
@@ -68,25 +68,25 @@ qmicli_get_raw_data_printable (const GArray *data,
      * line length */
     new_str_length += (n_lines * prefix_len);
 
-	/* Allocate memory for new array and initialize contents to NUL */
-	new_str = g_malloc0 (new_str_length);
+    /* Allocate memory for new array and initialize contents to NUL */
+    new_str = g_malloc0 (new_str_length);
 
-	/* Print hexadecimal representation of each byte... */
+    /* Print hexadecimal representation of each byte... */
     is_new_line = TRUE;
-	for (i = 0, j = 0, k = 0; i < data->len; i++) {
+    for (i = 0, j = 0, k = 0; i < data->len; i++) {
         if (is_new_line) {
             strcpy (&new_str[j], line_prefix);
             j += strlen (line_prefix);
             is_new_line = FALSE;
         }
 
-		/* Print character in output string... */
-		snprintf (&new_str[j], 3, "%02X", g_array_index (data, guint8, i));
+        /* Print character in output string... */
+        snprintf (&new_str[j], 3, "%02X", g_array_index (data, guint8, i));
         j+=2;
         k+=2;
 
-		if (i != (data->len - 1) ) {
-			new_str[j] = ':';
+        if (i != (data->len - 1) ) {
+            new_str[j] = ':';
             j++;
             k++;
         }
@@ -97,10 +97,10 @@ qmicli_get_raw_data_printable (const GArray *data,
             j++;
             is_new_line = TRUE;
         }
-	}
+    }
 
-	/* Set output string */
-	return new_str;
+    /* Set output string */
+    return new_str;
 }
 
 gboolean
