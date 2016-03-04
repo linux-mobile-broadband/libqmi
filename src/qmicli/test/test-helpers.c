@@ -10,11 +10,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details:
  *
- * Copyright (C) 2012 Aleksander Morgado <aleksander@gnu.org>
+ * Copyright (C) 2012-2016 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <glib.h>
 #include "qmicli-helpers.h"
+
+/******************************************************************************/
 
 static void
 test_helpers_raw_printable_1 (void)
@@ -112,6 +114,8 @@ test_helpers_raw_printable_4 (void)
     g_array_unref (array);
 }
 
+/******************************************************************************/
+
 static void
 test_helpers_supported_messages_list (void)
 {
@@ -143,6 +147,92 @@ test_helpers_supported_messages_list_none (void)
     g_free (str);
 }
 
+/******************************************************************************/
+
+typedef struct {
+    const gchar *key;
+    const gchar *value;
+    gboolean     found;
+} KeyValue;
+
+static const KeyValue test_key_values[] = {
+    { "key1", "",          FALSE },
+    { "key2", "value",     FALSE },
+    { "key3", "1234",      FALSE },
+    { "key4", "value1234", FALSE },
+};
+
+static gboolean
+key_value_callback (const gchar   *key,
+                    const gchar   *value,
+                    GError       **error,
+                    gboolean      *found)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS (test_key_values); i++) {
+        if (!g_str_equal (test_key_values[i].key, key))
+            continue;
+        if (!g_str_equal (test_key_values[i].value, value))
+            continue;
+
+        /* Must not be found multiple times */
+        g_assert (!found[i]);
+        found[i] = TRUE;
+        return TRUE;
+    }
+
+    g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                 "Key/value '%s/%s' pair not expected",
+                 key, value);
+    return FALSE;
+}
+
+static void
+common_validate_key_value (const gchar *str)
+{
+    gboolean  found[G_N_ELEMENTS (test_key_values)] = { FALSE };
+    gboolean  result;
+    GError   *error = NULL;
+    guint     i;
+
+    result = qmicli_parse_key_value_string (str,
+                                            &error,
+                                            (QmiParseKeyValueForeachFn) key_value_callback,
+                                            &found[0]);
+    g_assert_no_error (error);
+    g_assert (result);
+
+    for (i = 0; i < G_N_ELEMENTS (test_key_values); i++)
+        g_assert (found[i]);
+}
+
+static void
+test_parse_key_value_string_no_quotes (void)
+{
+    common_validate_key_value ("key1=,key2=value,key3=1234,key4=value1234");
+}
+
+static void
+test_parse_key_value_string_single_quotes (void)
+{
+    common_validate_key_value ("key1='',key2='value',key3='1234',key4='value1234'");
+}
+
+static void
+test_parse_key_value_string_double_quotes (void)
+{
+    common_validate_key_value ("key1=\"\",key2=\"value\",key3=\"1234\",key4=\"value1234\"");
+}
+
+static void
+test_parse_key_value_string_mixed_quotes (void)
+{
+    common_validate_key_value ("key1=\"\",key2='value',key3=1234,key4=\"value1234\"");
+}
+
+/******************************************************************************/
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -154,6 +244,11 @@ int main (int argc, char **argv)
 
     g_test_add_func ("/qmicli/helpers/supported-message-list",      test_helpers_supported_messages_list);
     g_test_add_func ("/qmicli/helpers/supported-message-list/none", test_helpers_supported_messages_list_none);
+
+    g_test_add_func ("/qmicli/helpers/key-value/no-quotes",     test_parse_key_value_string_no_quotes);
+    g_test_add_func ("/qmicli/helpers/key-value/single-quotes", test_parse_key_value_string_single_quotes);
+    g_test_add_func ("/qmicli/helpers/key-value/double-quotes", test_parse_key_value_string_double_quotes);
+    g_test_add_func ("/qmicli/helpers/key-value/mixed-quotes",  test_parse_key_value_string_mixed_quotes);
 
     return g_test_run ();
 }
