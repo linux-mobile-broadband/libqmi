@@ -342,7 +342,7 @@ start_network ()
         fi
     fi
 
-    START_NETWORK_CMD="qmicli -d $DEVICE --wds-start-network=\"$START_NETWORK_ARGS\" $USE_PREVIOUS_CID --client-no-release-cid $PROXY_OPT"
+    START_NETWORK_CMD="qmicli -d $DEVICE --wds-start-network=$START_NETWORK_ARGS $USE_PREVIOUS_CID --client-no-release-cid $PROXY_OPT"
     echo "Starting network with '$START_NETWORK_CMD'..."
 
     if [ -n "$QMIDEBUG" ]; then
