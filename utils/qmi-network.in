@@ -49,15 +49,20 @@ help ()
     echo "      /etc/qmi-network.conf"
     echo
     echo "   3) The APN to use should be configured in the profile, in the"
-    echo "   following way (e.g. assuming APN is called 'internet':"
+    echo "   following way (e.g. assuming APN is called 'internet'):"
     echo "      APN=internet"
     echo
-    echo "   4) If you want to instruct the qmi-network script to use the"
+    echo "   4) Optional APN user/password strings may be given in the following"
+    echo "   way:"
+    echo "      APN_USER=user"
+    echo "      APN_PASS=password"
+    echo
+    echo "   5) If you want to instruct the qmi-network script to use the"
     echo "   qmi-proxy setup, you can do so by configuring the following line"
     echo "   in the profile:"
     echo "      PROXY=yes"
     echo
-    echo "   5) Once the qmi-network script reports a successful connection"
+    echo "   6) Once the qmi-network script reports a successful connection"
     echo "   you still need to run a DHCP client on the associated WWAN network"
     echo "   interface."
     echo
@@ -143,6 +148,18 @@ load_profile ()
             echo "    APN: $APN"
         else
             echo "    APN: unset"
+        fi
+
+        if [ -n "$APN_USER" ]; then
+            echo "    APN user: $APN_USER"
+        else
+            echo "    APN user: unset"
+        fi
+
+        if [ -n "$APN_PASS" ]; then
+            echo "    APN password: $APN_PASS"
+        else
+            echo "    APN password: unset"
         fi
 
         if [ "$PROXY" = "yes" ]; then
@@ -317,7 +334,15 @@ start_network ()
 
     setup_data_format
 
-    START_NETWORK_CMD="qmicli -d $DEVICE --wds-start-network=$APN $USE_PREVIOUS_CID --client-no-release-cid $PROXY_OPT"
+    START_NETWORK_ARGS="apn='$APN'"
+    if [ -n "$APN_USER" ]; then
+        START_NETWORK_ARGS="${START_NETWORK_ARGS},username='$APN_USER'"
+        if [ -n "$APN_PASS" ]; then
+            START_NETWORK_ARGS="${START_NETWORK_ARGS},password='$APN_PASS'"
+        fi
+    fi
+
+    START_NETWORK_CMD="qmicli -d $DEVICE --wds-start-network=\"$START_NETWORK_ARGS\" $USE_PREVIOUS_CID --client-no-release-cid $PROXY_OPT"
     echo "Starting network with '$START_NETWORK_CMD'..."
 
     if [ -n "$QMIDEBUG" ]; then
