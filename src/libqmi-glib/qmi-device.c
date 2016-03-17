@@ -682,6 +682,8 @@ reload_wwan_iface_name (QmiDevice *self)
  * This value will be loaded every time it's asked for it.
  *
  * Returns: UTF-8 encoded network interface name, or %NULL if not available.
+ *
+ * Since: 1.14
  */
 const gchar *
 qmi_device_get_wwan_iface (QmiDevice *self)
@@ -837,6 +839,8 @@ common_get_set_expected_data_format (QmiDevice *self,
  * that 802.3 is the expected format.
  *
  * Returns: a valid #QmiDeviceExpectedDataFormat, or @QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN if @error is set.
+ *
+ * Since: 1.14
  */
 QmiDeviceExpectedDataFormat
 qmi_device_get_expected_data_format (QmiDevice  *self,
@@ -857,6 +861,8 @@ qmi_device_get_expected_data_format (QmiDevice  *self,
  * interface.
  *
  * Returns: %TRUE if successful, or #NULL if @error is set.
+ *
+ * Since: 1.14
  */
 gboolean
 qmi_device_set_expected_data_format (QmiDevice *self,
