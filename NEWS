@@ -2,11 +2,80 @@
 Overview of changes in libqmi 1.14.0
 ----------------------------------------
 
-This version comes with a couple of small API breaks:
-* ECIO value type in "NAS Event Report Indication" is given as unsigned.
-* ECIO value in ECIO List array type in "NAS Get Signal Strenght" is given as
-  unsigned.
-* QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE enum name was fixed.
+* This version comes with a couple of small API breaks:
+  ** ECIO value type in "NAS Event Report Indication" is given as unsigned.
+  ** ECIO value in ECIO List array type in "NAS Get Signal Strenght" is given as
+     unsigned.
+  ** QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE enum name was fixed.
+
+* The library and tools now support working with modems which only implement raw
+  IP (i.e. no ethernet headers) in the WWAN interface. This relies on the kernel
+  to expose '/sys/class/net/<WWAN>/qmi/raw_ip' sysfs files for each WWAN network
+  interface (available since Linux 4.5-rc1).
+
+* New initial support for the 'Voice' service.
+
+* New request/responses:
+  ** wms: new "Get Supported Messages" request/response.
+  ** wds: new "Get Supported Messages" request/response.
+  ** voice: new "Get Supported Messages" request/response.
+  ** uim: new "Get Supported Messages" request/response.
+  ** nas: new "Get Supported Messages" request/response.
+  ** wda: new "Get Supported Messages" request/response.
+  ** dms: new "Get Supported Messages" request/response.
+  ** wds: new "Set Autoconnect Setting" request/response.
+  ** wds: new "Get Autoconnect Setting" request/response.
+  ** wds: new "Get PDN Throttle Info" request/response.
+  ** uim: new "Change PIN" request/response.
+  ** uim: new "Unblock PIN" request/response.
+  ** uim: new "Verify PIN" request/response.
+  ** uim: new "Set PIN protection" request/response.
+  ** voice: new "Dial Call" request/response.
+  ** voice: new "End Call" request/response.
+  ** voice: new "Answer Call" request/response.
+  ** voice: new "Get Config" request/response.
+  ** voice: new "Get Supported Messages" request/response.
+
+* New indications:
+  ** wms: new "SMSC Address" indication.
+  ** pds: new "GPS Ready" indication.
+  ** wds: new "Packet Service Status" indication.
+
+* New TLVs supported in existing messages:
+  ** wds: support "UMTS Granted QoS" TLV in 'Get Current Settings'.
+  ** nas: support "Home Network 3GPP MNC" in "Get Home Network" to know whether
+     MNC is 2 or 3 digits.
+
+* The qmicli tool has been updated with several new functionalities:
+  ** New '--get-wwan-iface' command line option to allow querying which is the
+     WWAN interface associated with a given /dev/cdc-wdm device.
+  ** New '--wds-get-current-settings' command line option to query the current
+     settings in the WDS service.
+  ** New '--get-expected-data-format' and '--set-expected-data-format' actions
+     to get or set the data format expected by the kernel.
+  ** LTE band descriptions are now printed along with the EARFCN.
+  ** Updated '--wds-start-network' arguments to allow specifying "key=value"
+     pairs. The old legacy "[(APN),(PAP|CHAP|BOTH),(Username),(Password)]"
+     format is kept as valid for backwards compatibility, although it should be
+     assumed deprecated.
+  ** Updated '--wds-start/stop-network' to allow autoconnect settings, and 3GPP
+     or 3GPP2 profile parameters.
+
+* The qmi-network helper script has been updated with several new features:
+  ** Allow running with the qmi-proxy.
+  ** Allow running qmi-network with multiple devices at the same time.
+  ** Automatic link layer protocol update before connecting.
+  ** Allow specifying APN user/password.
+
+* Added command completion support in qmicli.
+
+* Other bugfixes and minor improvements.
+
+The following features which were backported to 1.12.x releases are also present
+in libqmi 1.14.0:
+
+* New request/responses:
+  ** dms: new "Set FCC Authentication" request/response.
 
 
 Overview of changes in libqmi 1.12.0
