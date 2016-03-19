@@ -49,7 +49,7 @@ gchar *
         /* Build list with single-bit masks */
         if (mask & @enum_name@_values[i].value) {
             guint c;
-            gulong number = @enum_name@_values[i].value;
+            guint64 number = @enum_name@_values[i].value;
 
             for (c = 0; number; c++)
                 number &= number - 1;
