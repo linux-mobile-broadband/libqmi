@@ -16,7 +16,7 @@ PKG_NAME=libqmi
 (cd $srcdir;
     gtkdocize || exit 1
     mkdir -p m4
-    touch README NEWS ChangeLog
+    touch ChangeLog
     autoreconf --force --install --verbose
 )
 
