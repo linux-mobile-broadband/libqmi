@@ -18,7 +18,8 @@ PKG_NAME=libqmi
     mkdir -p m4
     touch README NEWS ChangeLog
     autoreconf --force --install --verbose
-    if test -z "$NOCONFIGURE"; then
-        ./configure --enable-maintainer-mode "$@"
-    fi
 )
+
+if test -z "$NOCONFIGURE"; then
+    $srcdir/configure --enable-maintainer-mode "$@"
+fi
