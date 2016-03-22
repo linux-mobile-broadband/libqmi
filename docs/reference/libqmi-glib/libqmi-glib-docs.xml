@@ -314,6 +314,11 @@
     </section>
   </chapter>
 
+  <chapter>
+    <title>Compatibility with older versions</title>
+    <xi:include href="xml/qmi-compat.xml"/>
+  </chapter>
+
   <chapter id="object-tree">
     <title>Object Hierarchy</title>
      <xi:include href="xml/tree_index.sgml"/>

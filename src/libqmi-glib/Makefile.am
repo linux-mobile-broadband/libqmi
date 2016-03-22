@@ -31,6 +31,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-enums-voice.h \
 	qmi-enums.h qmi-enums-private.h \
 	qmi-utils.h qmi-utils.c \
+	qmi-compat.h qmi-compat.c \
 	qmi-message.h qmi-message.c \
 	qmi-device.h qmi-device.c \
 	qmi-client.h qmi-client.c \
@@ -50,6 +51,7 @@ include_HEADERS = \
 	qmi-errors.h \
 	qmi-enums.h \
 	qmi-enums-private.h \
+	qmi-compat.h \
 	qmi-enums-dms.h qmi-flags64-dms.h \
 	qmi-enums-wds.h \
 	qmi-enums-nas.h qmi-flags64-nas.h \

@@ -1029,3 +1029,11 @@ qmi_utils_write_sized_guint_to_buffer
 qmi_utils_write_string_to_buffer
 qmi_utils_write_fixed_size_string_to_buffer
 </SECTION>
+
+<SECTION>
+<FILE>qmi-compat</FILE>
+qmi_message_dms_set_service_programming_code_input_get_new
+qmi_message_dms_set_service_programming_code_input_set_new
+qmi_message_dms_set_service_programming_code_input_get_current
+qmi_message_dms_set_service_programming_code_input_set_current
+</SECTION>
