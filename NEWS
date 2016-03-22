@@ -1,4 +1,23 @@
 
+Overview of changes in libqmi 1.12.10
+----------------------------------------
+
+ * Fix API breaks that were introduced between 1.12.6 and 1.12.8 with several
+   method renames:
+   ** qmi_message_dms_set_service_programming_code_input_get_current
+      was renamed to qmi_message_dms_set_service_programming_code_input_get_current_code.
+   ** qmi_message_dms_set_service_programming_code_input_get_new
+      was renamed to qmi_message_dms_set_service_programming_code_input_get_new_code.
+   ** qmi_message_dms_set_service_programming_code_input_set_current
+      was renamed to qmi_message_dms_set_service_programming_code_input_set_current_code.
+   ** qmi_message_dms_set_service_programming_code_input_set_new
+      was renamed to qmi_message_dms_set_service_programming_code_input_set_new_code.
+   This release will recover the old names and still keep the new ones around
+   for compatibility.
+
+ * qmicli: fix --dms-get-band-capabilities output on 32-bit platforms.
+
+
 Overview of changes in libqmi 1.12.8
 ----------------------------------------
 
