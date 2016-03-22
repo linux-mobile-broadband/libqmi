@@ -36,6 +36,8 @@
 #include "qmi-enums.h"
 #include "qmi-utils.h"
 
+#include "qmi-compat.h"
+
 #include "qmi-enums-dms.h"
 #include "qmi-flags64-dms.h"
 #include "qmi-dms.h"
