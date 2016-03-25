@@ -111,7 +111,7 @@ typedef enum {
     QMI_DMS_BAND_CAPABILITY_BC_12            = 1 << 28,
     QMI_DMS_BAND_CAPABILITY_BC_14            = 1 << 29,
     /* Bit 30 reserved */
-    QMI_DMS_BAND_CAPABILITY_BC_15            = 1 << 31,
+    QMI_DMS_BAND_CAPABILITY_BC_15            = ((guint64) 1) << 31,
     /* Bits 32-47 reserved */
     QMI_DMS_BAND_CAPABILITY_WCDMA_2600       = ((guint64) 1) << 48,
     QMI_DMS_BAND_CAPABILITY_WCDMA_900        = ((guint64) 1) << 49,
