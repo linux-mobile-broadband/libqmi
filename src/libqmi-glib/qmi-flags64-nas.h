@@ -108,7 +108,7 @@ typedef enum {
     QMI_NAS_BAND_PREFERENCE_BC_12            = 1 << 28,
     QMI_NAS_BAND_PREFERENCE_BC_14            = 1 << 29,
     /* Bit 30 reserved */
-    QMI_NAS_BAND_PREFERENCE_BC_15            = 1 << 31,
+    QMI_NAS_BAND_PREFERENCE_BC_15            = ((guint64) 1) << 31,
     /* Bits 32-47 reserved */
     QMI_NAS_BAND_PREFERENCE_WCDMA_2600       = ((guint64) 1) << 48,
     QMI_NAS_BAND_PREFERENCE_WCDMA_900        = ((guint64) 1) << 49,
