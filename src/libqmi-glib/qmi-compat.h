@@ -27,6 +27,7 @@
 #endif
 
 #include "qmi-dms.h"
+#include "qmi-enums-nas.h"
 
 /* These are compatibility methods and symbols to cover some API breaks
  * introduced in 1.14.0 */
@@ -54,5 +55,15 @@ gboolean qmi_message_dms_set_service_programming_code_input_set_current (
     QmiMessageDmsSetServiceProgrammingCodeInput *self,
     const gchar *arg_current,
     GError **error);
+
+/**
+ * QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE:
+ *
+ * SIM available.
+ *
+ * Deprecated: 1.14.0: Use the correct #QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE name instead.
+ */
+G_DEPRECATED_FOR (QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE)
+#define QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */
