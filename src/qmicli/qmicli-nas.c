@@ -53,6 +53,7 @@ static gboolean get_system_selection_preference_flag;
 static gchar *set_system_selection_preference_str;
 static gboolean network_scan_flag;
 static gboolean get_cell_location_info_flag;
+static gboolean get_lte_cphy_ca_info_flag;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -100,6 +101,10 @@ static GOptionEntry entries[] = {
     },
     { "nas-get-cell-location-info", 0, 0, G_OPTION_ARG_NONE, &get_cell_location_info_flag,
       "Get Cell Location Info",
+      NULL
+    },
+    { "nas-get-lte-cphy-ca-info", 0, 0, G_OPTION_ARG_NONE, &get_lte_cphy_ca_info_flag,
+      "Get LTE Cphy CA Info",
       NULL
     },
     { "nas-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
@@ -152,6 +157,7 @@ qmicli_nas_options_enabled (void)
                  !!set_system_selection_preference_str +
                  network_scan_flag +
                  get_cell_location_info_flag +
+                 get_lte_cphy_ca_info_flag +
                  get_supported_messages_flag +
                  reset_flag +
                  noop_flag);
@@ -2761,6 +2767,94 @@ get_cell_location_info_ready (QmiClientNas *client,
 }
 
 static void
+get_lte_cphy_ca_info_ready (QmiClientNas *client,
+                            GAsyncResult *res)
+{
+    QmiMessageNasGetLteCphyCaInfoOutput *output;
+    GError *error = NULL;
+    guint16 pci;
+    guint16 channel;
+    QmiNasDLBandwidth dl_bandwidth;
+    QmiNasActiveBand band;
+    QmiNasScellState state;
+    guint8 index;
+
+    output = qmi_client_nas_get_lte_cphy_ca_info_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_lte_cphy_ca_info_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get carrier aggregation info: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_lte_cphy_ca_info_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got carrier aggregation info\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_nas_get_lte_cphy_ca_info_output_get_dl_bandwidth (
+        output,
+        &dl_bandwidth,
+        NULL)) {
+        g_print ("DL Bandwidth: '%s'\n",
+                 qmi_nas_dl_bandwidth_get_string (dl_bandwidth));
+    }
+
+    if (qmi_message_nas_get_lte_cphy_ca_info_output_get_phy_ca_agg_scell_info (
+        output,
+        &pci,
+        &channel,
+        &dl_bandwidth,
+        &band,
+        &state,
+        NULL)) {
+        g_print ("Secondary Cell Info\n");
+        g_print ("\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
+                 "\tTX Channel: '%" G_GUINT16_FORMAT"'\n"
+                 "\tDL Bandwidth: '%s'\n"
+                 "\tLTE Band: '%s'\n"
+                 "\tState: '%s'\n",
+                 pci, channel,
+                 qmi_nas_dl_bandwidth_get_string (dl_bandwidth),
+                 qmi_nas_active_band_get_string (band),
+                 qmi_nas_scell_state_get_string (state));
+    }
+
+    if (qmi_message_nas_get_lte_cphy_ca_info_output_get_phy_ca_agg_pcell_info (
+        output,
+        &pci,
+        &channel,
+        &dl_bandwidth,
+        &band,
+        NULL)) {
+        g_print ("Primary Cell Info\n");
+        g_print ("\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
+                 "\tTX Channel: '%" G_GUINT16_FORMAT"'\n"
+                 "\tDL Bandwidth: '%s'\n"
+                 "\tLTE Band: '%s'\n",
+                 pci, channel,
+                 qmi_nas_dl_bandwidth_get_string (dl_bandwidth),
+                 qmi_nas_active_band_get_string (band));
+    }
+
+    if (qmi_message_nas_get_lte_cphy_ca_info_output_get_scell_index (
+        output,
+        &index,
+        NULL)) {
+        g_print ("Secondary Cell index: '%u'\n", index);
+    }
+
+    qmi_message_nas_get_lte_cphy_ca_info_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
 get_supported_messages_ready (QmiClientNas *client,
                               GAsyncResult *res)
 {
@@ -3001,6 +3095,18 @@ qmicli_nas_run (QmiDevice *device,
                                                ctx->cancellable,
                                                (GAsyncReadyCallback)get_cell_location_info_ready,
                                                NULL);
+        return;
+    }
+
+    /* Request to get carrier aggregation info? */
+    if (get_lte_cphy_ca_info_flag) {
+        g_debug ("Asynchronously getting carrier aggregation info ...");
+        qmi_client_nas_get_lte_cphy_ca_info (ctx->client,
+                                             NULL,
+                                             10,
+                                             ctx->cancellable,
+                                             (GAsyncReadyCallback)get_lte_cphy_ca_info_ready,
+                                             NULL);
         return;
     }
 

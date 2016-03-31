@@ -893,4 +893,44 @@ typedef enum {
     QMI_NAS_WCDMA_RRC_STATE_CELL_DCH     = 4
 } QmiNasWcdmaRrcState;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI NAS Get LTE Cphy CA Info' request/response */
+/**
+ * QmiNasDLBandwidth:
+ * @QMI_NAS_DL_BANDWIDTH_1_4: 1.4 MHz
+ * @QMI_NAS_DL_BANDWIDTH_3: 3 MHz
+ * @QMI_NAS_DL_BANDWIDTH_5: 5 MHz
+ * @QMI_NAS_DL_BANDWIDTH_10: 10 MHz
+ * @QMI_NAS_DL_BANDWIDTH_15: 15 MHz
+ * @QMI_NAS_DL_BANDWIDTH_20: 20 MHz
+ * @QMI_NAS_DL_BANDWIDTH_INVALID: Invalid
+ * @QMI_NAS_DL_BANDWIDTH_UNKNOWN: Unknown
+ *
+ * DL Bandwidth.
+ */
+typedef enum {
+    QMI_NAS_DL_BANDWIDTH_1_4  = 0,
+    QMI_NAS_DL_BANDWIDTH_3,
+    QMI_NAS_DL_BANDWIDTH_5,
+    QMI_NAS_DL_BANDWIDTH_10,
+    QMI_NAS_DL_BANDWIDTH_15,
+    QMI_NAS_DL_BANDWIDTH_20,
+    QMI_NAS_DL_BANDWIDTH_INVALID,
+    QMI_NAS_DL_BANDWIDTH_UNKNOWN  = 0xFF
+} QmiNasDLBandwidth;
+
+/**
+ * QmiNasScellState:
+ * @QMI_NAS_SCELL_STATE_DECONFIGURED: Deconfigured
+ * @QMI_NAS_SCELL_STATE_DEACTIVATED: Deactivated
+ * @QMI_NAS_SCELL_STATE_ACTIVATED: Activated
+ *
+ * SCell State.
+ */
+typedef enum {
+    QMI_NAS_SCELL_STATE_DECONFIGURED = 0,
+    QMI_NAS_SCELL_STATE_DEACTIVATED,
+    QMI_NAS_SCELL_STATE_ACTIVATED
+} QmiNasScellState;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
