@@ -3188,7 +3188,6 @@
      "type"    : "Message",
      "service" : "NAS",
      "id"      : "0x00AC",
-     "version" : "1.25",
      "output"  : [ { "common-ref" : "Operation Result" },
                    { "name"       : "DL Bandwidth",
                      "id"         : "0x11",
