@@ -2777,7 +2777,7 @@ get_lte_cphy_ca_info_ready (QmiClientNas *client,
     QmiNasDLBandwidth dl_bandwidth;
     QmiNasActiveBand band;
     QmiNasScellState state;
-    guint8 index;
+    guint8 scell_index;
 
     output = qmi_client_nas_get_lte_cphy_ca_info_finish (client, res, &error);
     if (!output) {
@@ -2845,9 +2845,9 @@ get_lte_cphy_ca_info_ready (QmiClientNas *client,
 
     if (qmi_message_nas_get_lte_cphy_ca_info_output_get_scell_index (
         output,
-        &index,
+        &scell_index,
         NULL)) {
-        g_print ("Secondary Cell index: '%u'\n", index);
+        g_print ("Secondary Cell index: '%u'\n", scell_index);
     }
 
     qmi_message_nas_get_lte_cphy_ca_info_output_unref (output);
