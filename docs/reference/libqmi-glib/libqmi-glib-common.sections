@@ -258,6 +258,8 @@ QmiNasCdmaPilotType
 QmiNasDayOfWeek
 QmiNasDaylightSavingsAdjustment
 QmiNasWcdmaRrcState
+QmiNasDLBandwidth
+QmiNasScellState
 <SUBSECTION Methods>
 qmi_nas_radio_interface_get_string
 qmi_nas_active_band_get_string
@@ -298,6 +300,8 @@ qmi_nas_cdma_pilot_type_get_string
 qmi_nas_day_of_week_get_string
 qmi_nas_daylight_savings_adjustment_get_string
 qmi_nas_wcdma_rrc_state_get_string
+qmi_nas_dl_bandwidth_get_string
+qmi_nas_scell_state_get_string
 <SUBSECTION Private>
 qmi_nas_radio_interface_build_string_from_mask
 qmi_nas_active_band_build_string_from_mask
@@ -336,6 +340,8 @@ qmi_nas_cdma_pilot_type_build_string_from_mask
 qmi_nas_day_of_week_build_string_from_mask
 qmi_nas_daylight_savings_adjustment_build_string_from_mask
 qmi_nas_wcdma_rrc_state_build_string_from_mask
+qmi_nas_dl_bandwidth_build_string_from_mask
+qmi_nas_scell_state_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_NAS_ACTIVE_BAND
 QMI_TYPE_NAS_ATTACH_STATE
@@ -374,6 +380,8 @@ QMI_TYPE_NAS_CDMA_PILOT_TYPE
 QMI_TYPE_NAS_DAY_OF_WEEK
 QMI_TYPE_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT
 QMI_TYPE_NAS_WCDMA_RRC_STATE
+QMI_TYPE_NAS_DL_BANDWIDTH
+QMI_TYPE_NAS_SCELL_STATE
 qmi_nas_active_band_get_type
 qmi_nas_attach_state_get_type
 qmi_nas_call_barring_status_get_type
@@ -411,6 +419,8 @@ qmi_nas_cdma_pilot_type_get_type
 qmi_nas_day_of_week_get_type
 qmi_nas_daylight_savings_adjustment_get_type
 qmi_nas_wcdma_rrc_state_get_type
+qmi_nas_dl_bandwidth_get_type
+qmi_nas_scell_state_get_type
 </SECTION>
 
 <SECTION>
