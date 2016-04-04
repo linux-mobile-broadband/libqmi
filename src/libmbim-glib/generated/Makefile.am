@@ -12,7 +12,8 @@ GENERATED_H = \
 	mbim-dss.h \
 	mbim-ms-firmware-id.h \
 	mbim-ms-host-shutdown.h \
-	mbim-proxy-control.h
+	mbim-proxy-control.h \
+	mbim-qmi.h
 
 GENERATED_C = \
 	mbim-error-types.c \
@@ -27,7 +28,8 @@ GENERATED_C = \
 	mbim-dss.c \
 	mbim-ms-firmware-id.c \
 	mbim-ms-host-shutdown.c \
-	mbim-proxy-control.c
+	mbim-proxy-control.c \
+	mbim-qmi.c
 
 GENERATED_SECTIONS = \
 	mbim-basic-connect.sections \
@@ -39,7 +41,8 @@ GENERATED_SECTIONS = \
 	mbim-dss.sections \
 	mbim-ms-firmware-id.sections \
 	mbim-ms-host-shutdown.sections \
-	mbim-proxy-control.sections
+	mbim-proxy-control.sections \
+	mbim-qmi.sections
 
 # Error types
 mbim-error-types.h: $(top_srcdir)/src/libmbim-glib/mbim-errors.h $(top_srcdir)/build-aux/templates/mbim-error-types-template.h
@@ -169,6 +172,15 @@ mbim-proxy-control.h mbim-proxy-control.c mbim-proxy-control.sections: $(top_src
 		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-proxy-control.json \
 			--output mbim-proxy-control
+
+# QMI-over-MBIM service
+mbim-qmi.h mbim-qmi.c mbim-qmi.sections: $(top_srcdir)/data/mbim-service-qmi.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-qmi.h && \
+		rm -f mbim-qmi.c && \
+		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-qmi.json \
+			--output mbim-qmi
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 

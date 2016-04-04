@@ -177,6 +177,7 @@ GByteArray        *_mbim_struct_builder_complete             (MbimStructBuilder 
 void               _mbim_struct_builder_append_byte_array    (MbimStructBuilder *builder,
                                                               gboolean           with_offset,
                                                               gboolean           with_length,
+                                                              gboolean           permit_padding,
                                                               const guint8      *buffer,
                                                               guint32            buffer_len);
 void               _mbim_struct_builder_append_uuid          (MbimStructBuilder *builder,
@@ -225,6 +226,7 @@ MbimMessage               *_mbim_message_command_builder_complete             (M
 void                       _mbim_message_command_builder_append_byte_array    (MbimMessageCommandBuilder *builder,
                                                                                gboolean                   with_offset,
                                                                                gboolean                   with_length,
+                                                                               gboolean                   permit_padding,
                                                                                const guint8              *buffer,
                                                                                guint32                    buffer_len);
 void                       _mbim_message_command_builder_append_uuid          (MbimMessageCommandBuilder *builder,

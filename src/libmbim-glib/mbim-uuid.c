@@ -38,7 +38,7 @@
  * This section defines the data type for unique identifiers.
  */
 
-#define MBIM_SERVICE_LAST MBIM_SERVICE_PROXY_CONTROL
+#define MBIM_SERVICE_LAST MBIM_SERVICE_QMI
 
 /*****************************************************************************/
 
@@ -229,6 +229,15 @@ static const MbimUuid uuid_proxy_control = {
     .e = { 0xd7, 0x1d , 0xbe, 0xfb, 0xb3, 0x9b }
 };
 
+/* Note: this UUID is likely to work only for Sierra modems */
+static const MbimUuid uuid_qmi = {
+    .a = { 0xd1, 0xa3, 0x0b, 0xc2 },
+    .b = { 0xf9, 0x7a },
+    .c = { 0x6e, 0x43 },
+    .d = { 0xbf, 0x65 },
+    .e = { 0xc7, 0xe2 , 0x4f, 0xb0, 0xf0, 0xd3 }
+};
+
 static GList *mbim_custom_service_list = NULL;
 
 typedef struct {
@@ -367,7 +376,7 @@ mbim_uuid_from_service (MbimService service)
     GList *l;
 
     g_return_val_if_fail (service >= MBIM_SERVICE_INVALID &&
-                          (service <= MBIM_SERVICE_PROXY_CONTROL ||
+                          (service <= MBIM_SERVICE_LAST ||
                            mbim_service_id_is_custom (service)),
                           &uuid_invalid);
 
@@ -394,6 +403,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_ms_host_shutdown;
     case MBIM_SERVICE_PROXY_CONTROL:
         return &uuid_proxy_control;
+    case MBIM_SERVICE_QMI:
+        return &uuid_qmi;
     default:
         for (l = mbim_custom_service_list; l != NULL; l = l->next) {
             if (service == ((MbimCustomService *)l->data)->service_id)
@@ -445,6 +456,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_proxy_control))
         return MBIM_SERVICE_PROXY_CONTROL;
+
+    if (mbim_uuid_cmp (uuid, &uuid_qmi))
+        return MBIM_SERVICE_QMI;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
         if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))

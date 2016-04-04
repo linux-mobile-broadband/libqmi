@@ -38,6 +38,9 @@ typedef struct {
     gboolean notify;
 } CidConfig;
 
+/* Note: MBIM_SERVICE_LAST from mbim-uuid.c should probably be visible
+ * here somehow, since MBIM_SERVICE_QMI must be used in the error checks */
+
 /* Note: index of the array is CID-1 */
 #define MBIM_CID_BASIC_CONNECT_LAST MBIM_CID_BASIC_CONNECT_MULTICARRIER_PROVIDERS
 static const CidConfig cid_basic_connect_config [MBIM_CID_BASIC_CONNECT_LAST] = {
@@ -132,6 +135,12 @@ static const CidConfig cid_proxy_control_config [MBIM_CID_PROXY_CONTROL_LAST] = 
     { TRUE,  FALSE, FALSE }, /* MBIM_CID_PROXY_CONTROL_CONFIGURATION */
 };
 
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_QMI_LAST MBIM_CID_QMI_MSG
+static const CidConfig cid_qmi_config [MBIM_CID_QMI_LAST] = {
+    { TRUE,  FALSE, FALSE }, /* MBIM_CID_QMI_MSG */
+};
+
 /**
  * mbim_cid_can_set:
  * @service: a #MbimService.
@@ -149,7 +158,7 @@ mbim_cid_can_set (MbimService service,
     g_return_val_if_fail (cid > 0, FALSE);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_PROXY_CONTROL, FALSE);
+    g_return_val_if_fail (service <= MBIM_SERVICE_QMI, FALSE);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -172,6 +181,8 @@ mbim_cid_can_set (MbimService service,
         return cid_ms_host_shutdown_config[cid - 1].set;
     case MBIM_SERVICE_PROXY_CONTROL:
         return cid_proxy_control_config[cid - 1].set;
+    case MBIM_SERVICE_QMI:
+        return cid_qmi_config[cid - 1].set;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -195,7 +206,7 @@ mbim_cid_can_query (MbimService service,
     g_return_val_if_fail (cid > 0, FALSE);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_PROXY_CONTROL, FALSE);
+    g_return_val_if_fail (service <= MBIM_SERVICE_QMI, FALSE);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -218,6 +229,8 @@ mbim_cid_can_query (MbimService service,
         return cid_ms_host_shutdown_config[cid - 1].query;
     case MBIM_SERVICE_PROXY_CONTROL:
         return cid_proxy_control_config[cid - 1].query;
+    case MBIM_SERVICE_QMI:
+        return cid_qmi_config[cid - 1].query;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -241,7 +254,7 @@ mbim_cid_can_notify (MbimService service,
     g_return_val_if_fail (cid > 0, FALSE);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_PROXY_CONTROL, FALSE);
+    g_return_val_if_fail (service <= MBIM_SERVICE_QMI, FALSE);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -264,6 +277,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_ms_host_shutdown_config[cid - 1].notify;
     case MBIM_SERVICE_PROXY_CONTROL:
         return cid_proxy_control_config[cid - 1].notify;
+    case MBIM_SERVICE_QMI:
+        return cid_qmi_config[cid - 1].notify;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -288,7 +303,7 @@ mbim_cid_get_printable (MbimService service,
     g_return_val_if_fail (cid > 0, NULL);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, NULL);
-    g_return_val_if_fail (service <= MBIM_SERVICE_PROXY_CONTROL, NULL);
+    g_return_val_if_fail (service <= MBIM_SERVICE_QMI, NULL);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -311,6 +326,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_ms_host_shutdown_get_string (cid);
     case MBIM_SERVICE_PROXY_CONTROL:
         return mbim_cid_proxy_control_get_string (cid);
+    case MBIM_SERVICE_QMI:
+        return mbim_cid_qmi_get_string (cid);
     default:
         g_assert_not_reached ();
         return FALSE;

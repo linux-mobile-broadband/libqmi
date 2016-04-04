@@ -394,13 +394,13 @@ class Message:
                 inner_template += ('    {\n')
 
             if field['format'] == 'byte-array':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, FALSE, ${field}, ${array_size});\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, FALSE, TRUE, ${field}, ${array_size});\n')
             elif field['format'] == 'unsized-byte-array':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, FALSE, ${field}, ${field}_size);\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, FALSE, FALSE, ${field}, ${field}_size);\n')
             elif field['format'] == 'ref-byte-array':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, TRUE, TRUE, ${field}, ${field}_size);\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, TRUE, TRUE, TRUE, ${field}, ${field}_size);\n')
             elif field['format'] == 'ref-byte-array-no-offset':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, TRUE, ${field}, ${field}_size);\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, TRUE, TRUE, ${field}, ${field}_size);\n')
             elif field['format'] == 'uuid':
                 inner_template += ('        _mbim_message_command_builder_append_uuid (builder, ${field});\n')
             elif field['format'] == 'guint32':

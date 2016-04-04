@@ -219,6 +219,18 @@ typedef enum {
     MBIM_CID_PROXY_CONTROL_CONFIGURATION = 1
 } MbimCidProxyControl;
 
+/**
+ * MbimCidQmi:
+ * @MBIM_CID_QMI_UNKNOWN: Unknown command.
+ * @MBIM_CID_QMI_MSG: Configuration.
+ *
+ * MBIM commands in the %MBIM_SERVICE_QMI service.
+ */
+typedef enum {
+    MBIM_CID_QMI_UNKNOWN = 0,
+    MBIM_CID_QMI_MSG     = 1
+} MbimCidQmi;
+
 /* Command helpers */
 
 gboolean     mbim_cid_can_set       (MbimService service,
