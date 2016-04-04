@@ -56,6 +56,7 @@ static gboolean device_open_version_info_flag;
 static gboolean device_open_sync_flag;
 static gchar *device_open_net_str;
 static gboolean device_open_proxy_flag;
+static gboolean device_open_mbim_flag;
 static gchar *client_cid_str;
 static gboolean client_no_release_cid_flag;
 static gboolean verbose_flag;
@@ -97,6 +98,10 @@ static GOptionEntry main_entries[] = {
     },
     { "device-open-proxy", 'p', 0, G_OPTION_ARG_NONE, &device_open_proxy_flag,
       "Request to use the 'qmi-proxy' proxy",
+      NULL
+    },
+    { "device-open-mbim", 0, 0, G_OPTION_ARG_NONE, &device_open_mbim_flag,
+      "Open an MBIM device with EXT_QMUX support",
       NULL
     },
     { "device-open-net", 0, 0, G_OPTION_ARG_STRING, &device_open_net_str,
@@ -603,6 +608,8 @@ device_new_ready (GObject *unused,
         open_flags |= QMI_DEVICE_OPEN_FLAGS_SYNC;
     if (device_open_proxy_flag)
         open_flags |= QMI_DEVICE_OPEN_FLAGS_PROXY;
+    if (device_open_mbim_flag)
+        open_flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
     if (device_open_net_str)
         if (!qmicli_read_net_open_flags_from_string (device_open_net_str, &open_flags))
             exit (EXIT_FAILURE);
