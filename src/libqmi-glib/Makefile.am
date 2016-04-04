@@ -5,6 +5,7 @@ lib_LTLIBRARIES = libqmi-glib.la
 
 libqmi_glib_la_CPPFLAGS = \
 	$(GLIB_CFLAGS) \
+	$(MBIM_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
 	-I$(top_srcdir)/src/libqmi-glib \
@@ -39,7 +40,8 @@ libqmi_glib_la_SOURCES = \
 
 libqmi_glib_la_LIBADD = \
 	${top_builddir}/src/libqmi-glib/generated/libqmi-glib-generated.la \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(MBIM_LIBS)
 
 libqmi_glib_la_LDFLAGS = \
 	-version-info $(QMI_GLIB_LT_CURRENT):$(QMI_GLIB_LT_REVISION):$(QMI_GLIB_LT_AGE)

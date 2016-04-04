@@ -95,6 +95,18 @@ fi
 
 AM_CONDITIONAL([QMI_USERNAME_ENABLED], [test "x$QMI_USERNAME_ENABLED" = "xyes"])
 
+# MBIM QMUX service support
+AC_ARG_ENABLE(mbim-qmux,
+              AS_HELP_STRING([--enable-mbim-qmux], [support QMI over MBIM QMUX service]))
+if test -n "$enable_mbim_qmux"; then
+    PKG_CHECK_MODULES(MBIM, mbim-glib >= 1.13)
+    MBIM_CFLAGS="$MBIM_CFLAGS -DMBIM_QMUX"
+    AC_SUBST(MBIM_CFLAGS)
+    AC_SUBST(MBIM_LIBS)
+fi
+
+AM_CONDITIONAL(MBIM_QMUX, [test -n "$MBIM_CFLAGS"])
+
 # udev base directory
 AC_ARG_WITH(udev-base-dir, AS_HELP_STRING([--with-udev-base-dir=DIR], [where udev base directory is]))
 if test -n "$with_udev_base_dir" ; then
@@ -146,4 +158,5 @@ echo "
     udev base directory:  ${UDEV_BASE_DIR}
     Documentation:        ${enable_gtk_doc}
     QMI username:         ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
+    QMUX over MBIM:       ${enable_mbim_qmux}
 "

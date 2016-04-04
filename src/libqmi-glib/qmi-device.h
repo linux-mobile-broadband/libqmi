@@ -97,6 +97,7 @@ gboolean      qmi_device_is_open          (QmiDevice *self);
  * @QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER: set network port to transmit/receive QoS headers; mutually exclusive with @QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER
  * @QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER: set network port to not transmit/receive QoS headers; mutually exclusive with @QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER
  * @QMI_DEVICE_OPEN_FLAGS_PROXY: Try to open the port through the 'qmi-proxy'.
+ * @QMI_DEVICE_OPEN_FLAGS_MBIM: open an MBIM port with QMUX tunneling service
  *
  * Flags to specify which actions to be performed when the device is open.
  */
@@ -108,7 +109,8 @@ typedef enum {
     QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP        = 1 << 3,
     QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER    = 1 << 4,
     QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER = 1 << 5,
-    QMI_DEVICE_OPEN_FLAGS_PROXY             = 1 << 6
+    QMI_DEVICE_OPEN_FLAGS_PROXY             = 1 << 6,
+    QMI_DEVICE_OPEN_FLAGS_MBIM              = 1 << 7
 } QmiDeviceOpenFlags;
 
 void         qmi_device_open        (QmiDevice *self,
