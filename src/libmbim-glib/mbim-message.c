@@ -492,7 +492,7 @@ void
 _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
                                         gboolean           with_offset,
                                         gboolean           with_length,
-                                        gboolean           permit_padding,
+                                        gboolean           pad_buffer,
                                         const guint8      *buffer,
                                         guint32            buffer_len)
 {
@@ -502,7 +502,7 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
      */
     if (!with_offset && !with_length) {
         g_byte_array_append (builder->fixed_buffer, buffer, buffer_len);
-        if(permit_padding) {
+        if(pad_buffer) {
             while (buffer_len % 4 != 0) {
                 const guint8 padding = 0;
 
@@ -554,7 +554,7 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
         g_byte_array_append (builder->variable_buffer, (const guint8 *)buffer, (guint)buffer_len);
 
         /* Note: adding zero padding causes trouble for QMI service */
-        if(permit_padding) {
+        if(pad_buffer) {
             while (buffer_len % 4 != 0) {
                 const guint8 padding = 0;
 
@@ -830,11 +830,11 @@ void
 _mbim_message_command_builder_append_byte_array (MbimMessageCommandBuilder *builder,
                                                  gboolean                   with_offset,
                                                  gboolean                   with_length,
-                                                 gboolean                   permit_padding,
+                                                 gboolean                   pad_buffer,
                                                  const guint8              *buffer,
                                                  guint32                    buffer_len)
 {
-    _mbim_struct_builder_append_byte_array (builder->contents_builder, with_offset, with_length, permit_padding, buffer, buffer_len);
+    _mbim_struct_builder_append_byte_array (builder->contents_builder, with_offset, with_length, pad_buffer, buffer, buffer_len);
 }
 
 void
