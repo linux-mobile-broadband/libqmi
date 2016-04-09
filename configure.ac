@@ -156,10 +156,17 @@ echo "
     libmbim $VERSION
     ==============================================
 
-    compiler:             ${CC}
-    cflags:               ${CFLAGS}
-    Maintainer mode:      ${USE_MAINTAINER_MODE}
-    udev base directory:  ${UDEV_BASE_DIR}
-    Documentation:        ${enable_gtk_doc}
-    MBIM username:        ${MBIM_USERNAME_ENABLED} (${MBIM_USERNAME})
+    Build:
+      compiler:             ${CC}
+      cflags:               ${CFLAGS}
+      ldflags:              ${LDFLAGS}
+      Maintainer mode:      ${USE_MAINTAINER_MODE}
+      Documentation:        ${enable_gtk_doc}
+
+    System paths:
+      prefix:               ${prefix}
+      udev base directory:  ${UDEV_BASE_DIR}
+
+    Features:
+      MBIM username:        ${MBIM_USERNAME_ENABLED} (${MBIM_USERNAME})
 "
