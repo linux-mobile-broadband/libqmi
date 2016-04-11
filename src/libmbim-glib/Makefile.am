@@ -5,6 +5,7 @@ SUBDIRS = generated . test
 noinst_LTLIBRARIES = libmbim-glib-core.la
 libmbim_glib_core_la_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
+	$(GUDEV_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
 	-I$(top_srcdir)/src/libmbim-glib \
@@ -36,7 +37,8 @@ libmbim_glib_la_SOURCES = \
 libmbim_glib_la_LIBADD = \
 	libmbim-glib-core.la \
 	${top_builddir}/src/libmbim-glib/generated/libmbim-glib-generated.la \
-	$(LIBMBIM_GLIB_LIBS)
+	$(LIBMBIM_GLIB_LIBS) \
+	$(GUDEV_LIBS)
 
 libmbim_glib_la_LDFLAGS = \
 	-version-info $(MBIM_GLIB_LT_CURRENT):$(MBIM_GLIB_LT_REVISION):$(MBIM_GLIB_LT_AGE) \
