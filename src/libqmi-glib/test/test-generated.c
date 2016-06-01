@@ -289,13 +289,13 @@ dms_get_time_ready (QmiClientDms *client,
     st = qmi_message_dms_get_time_output_get_device_time (output, &device_time_time_count, &device_time_time_source, &error);
     g_assert_no_error (error);
     g_assert (st);
-    g_assert_cmpuint (device_time_time_count, == , 884789480513);
+    g_assert_cmpuint (device_time_time_count, == , 884789480513ULL);
     g_assert_cmpuint (device_time_time_source, ==, QMI_DMS_TIME_SOURCE_HDR_NETWORK);
 
     st = qmi_message_dms_get_time_output_get_system_time (output, &system_time, &error);
     g_assert_no_error (error);
     g_assert (st);
-    g_assert_cmpuint (system_time, ==, 1105986850641);
+    g_assert_cmpuint (system_time, ==, 1105986850641ULL);
 
     st = qmi_message_dms_get_time_output_get_user_time (output, &user_time, &error);
     g_assert_no_error (error);
