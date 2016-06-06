@@ -2235,6 +2235,15 @@ create_mbim_device (DeviceOpenContext *ctx)
 {
     GFile *file;
 
+    if (ctx->self->priv->mbimdev) {
+        g_simple_async_result_set_error (ctx->result,
+                                         QMI_CORE_ERROR,
+                                         QMI_CORE_ERROR_WRONG_STATE,
+                                         "Already open");
+        device_open_context_complete_and_free (ctx);
+        return;
+    }
+
     g_debug ("[%s] creating MBIM device...", ctx->self->priv->path_display);
     file = g_file_new_for_path (ctx->self->priv->path);
     mbim_device_new (file,
