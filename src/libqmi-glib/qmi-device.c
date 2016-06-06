@@ -2149,20 +2149,20 @@ mbim_device_open_ready (MbimDevice *dev,
                         GAsyncResult *res,
                         DeviceOpenContext *ctx)
 {
-        GError *error = NULL;
+    GError *error = NULL;
 
-        if (!mbim_device_open_finish (dev, res, &error)) {
-            g_simple_async_result_take_error (ctx->result, error);
-            device_open_context_complete_and_free (ctx);
-            return;
-        }
-        g_debug ("[%s] MBIM device Open..",
-                ctx->self->priv->path_display);
-
-        /* Go on */
-        ctx->step++;
-        device_open_context_step (ctx);
+    if (!mbim_device_open_finish (dev, res, &error)) {
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
         return;
+    }
+
+    g_debug ("[%s] MBIM device Open..",
+             ctx->self->priv->path_display);
+
+    /* Go on */
+    ctx->step++;
+    device_open_context_step (ctx);
 }
 
 static void
