@@ -87,8 +87,10 @@ typedef enum {
     MBIM_SERVICE_MS_FIRMWARE_ID   = 8,
     MBIM_SERVICE_MS_HOST_SHUTDOWN = 9,
     MBIM_SERVICE_PROXY_CONTROL    = 10,
-    MBIM_SERVICE_QMI              = 11
-    /* Note: update MBIM_SERVICE_LAST when a new value is added */
+    MBIM_SERVICE_QMI              = 11,
+#if defined LIBMBIM_GLIB_COMPILATION
+    MBIM_SERVICE_LAST /*< skip >*/
+#endif
 } MbimService;
 
 /**

@@ -22,6 +22,7 @@
  */
 
 #include "mbim-cid.h"
+#include "mbim-uuid.h"
 #include "mbim-enum-types.h"
 
 /**
@@ -37,9 +38,6 @@ typedef struct {
     gboolean query;
     gboolean notify;
 } CidConfig;
-
-/* Note: MBIM_SERVICE_LAST from mbim-uuid.c should probably be visible
- * here somehow, since MBIM_SERVICE_QMI must be used in the error checks */
 
 /* Note: index of the array is CID-1 */
 #define MBIM_CID_BASIC_CONNECT_LAST MBIM_CID_BASIC_CONNECT_MULTICARRIER_PROVIDERS
@@ -158,7 +156,7 @@ mbim_cid_can_set (MbimService service,
     g_return_val_if_fail (cid > 0, FALSE);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_QMI, FALSE);
+    g_return_val_if_fail (service < MBIM_SERVICE_LAST, FALSE);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -206,7 +204,7 @@ mbim_cid_can_query (MbimService service,
     g_return_val_if_fail (cid > 0, FALSE);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_QMI, FALSE);
+    g_return_val_if_fail (service < MBIM_SERVICE_LAST, FALSE);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -254,7 +252,7 @@ mbim_cid_can_notify (MbimService service,
     g_return_val_if_fail (cid > 0, FALSE);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, FALSE);
-    g_return_val_if_fail (service <= MBIM_SERVICE_QMI, FALSE);
+    g_return_val_if_fail (service < MBIM_SERVICE_LAST, FALSE);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -303,7 +301,7 @@ mbim_cid_get_printable (MbimService service,
     g_return_val_if_fail (cid > 0, NULL);
     /* Known service required */
     g_return_val_if_fail (service > MBIM_SERVICE_INVALID, NULL);
-    g_return_val_if_fail (service <= MBIM_SERVICE_QMI, NULL);
+    g_return_val_if_fail (service < MBIM_SERVICE_LAST, NULL);
 
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
