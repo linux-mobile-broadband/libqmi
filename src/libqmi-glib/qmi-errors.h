@@ -50,19 +50,21 @@
  * @QMI_CORE_ERROR_TLV_TOO_LONG: TLV is too long.
  * @QMI_CORE_ERROR_UNSUPPORTED: Not supported.
  * @QMI_CORE_ERROR_TLV_EMPTY: TLV has no value.
+ * @QMI_CORE_ERROR_UNEXPECTED_MESSAGE: QMI message is unexpected.
  *
  * Common errors that may be reported by libqmi-glib.
  */
 typedef enum { /*< underscore_name=qmi_core_error >*/
-    QMI_CORE_ERROR_FAILED           = 0, /*< nick=Failed >*/
-    QMI_CORE_ERROR_WRONG_STATE      = 1, /*< nick=WrongState >*/
-    QMI_CORE_ERROR_TIMEOUT          = 2, /*< nick=Timeout >*/
-    QMI_CORE_ERROR_INVALID_ARGS     = 3, /*< nick=InvalidArgs >*/
-    QMI_CORE_ERROR_INVALID_MESSAGE  = 4, /*< nick=InvalidMessage >*/
-    QMI_CORE_ERROR_TLV_NOT_FOUND    = 5, /*< nick=TlvNotFound >*/
-    QMI_CORE_ERROR_TLV_TOO_LONG     = 6, /*< nick=TlvTooLong >*/
-    QMI_CORE_ERROR_UNSUPPORTED      = 7, /*< nick=Unsupported >*/
-    QMI_CORE_ERROR_TLV_EMPTY        = 8, /*< nick=TlvEmpty >*/
+    QMI_CORE_ERROR_FAILED             = 0, /*< nick=Failed >*/
+    QMI_CORE_ERROR_WRONG_STATE        = 1, /*< nick=WrongState >*/
+    QMI_CORE_ERROR_TIMEOUT            = 2, /*< nick=Timeout >*/
+    QMI_CORE_ERROR_INVALID_ARGS       = 3, /*< nick=InvalidArgs >*/
+    QMI_CORE_ERROR_INVALID_MESSAGE    = 4, /*< nick=InvalidMessage >*/
+    QMI_CORE_ERROR_TLV_NOT_FOUND      = 5, /*< nick=TlvNotFound >*/
+    QMI_CORE_ERROR_TLV_TOO_LONG       = 6, /*< nick=TlvTooLong >*/
+    QMI_CORE_ERROR_UNSUPPORTED        = 7, /*< nick=Unsupported >*/
+    QMI_CORE_ERROR_TLV_EMPTY          = 8, /*< nick=TlvEmpty >*/
+    QMI_CORE_ERROR_UNEXPECTED_MESSAGE = 9, /*< nick=UnexpectedMessage >*/
 } QmiCoreError;
 
 /**

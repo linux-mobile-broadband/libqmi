@@ -98,7 +98,7 @@ struct _QmiDevicePrivate {
     gchar *path_display;
     gboolean no_file_check;
     gchar *proxy_path;
-    gboolean mbim_qmux;
+
 #if defined MBIM_QMUX_ENABLED
     MbimDevice *mbimdev;
 #endif
@@ -223,7 +223,7 @@ build_transaction_key (QmiMessage *message)
 
 static Transaction *
 device_release_transaction (QmiDevice *self,
-                            gpointer key)
+                            gconstpointer key)
 {
     Transaction *tr = NULL;
 
@@ -294,10 +294,13 @@ device_store_transaction (QmiDevice *self,
     tr->wait_ctx->self = self;
     tr->wait_ctx->key = key; /* valid as long as the transaction is in the HT */
 
-    tr->timeout_source = g_timeout_source_new_seconds (timeout);
-    g_source_set_callback (tr->timeout_source, (GSourceFunc)transaction_timed_out, tr->wait_ctx, NULL);
-    g_source_attach (tr->timeout_source, g_main_context_get_thread_default ());
-    g_source_unref (tr->timeout_source);
+    /* Timeout is optional (e.g. disabled when MBIM is used) */
+    if (timeout > 0) {
+        tr->timeout_source = g_timeout_source_new_seconds (timeout);
+        g_source_set_callback (tr->timeout_source, (GSourceFunc)transaction_timed_out, tr->wait_ctx, NULL);
+        g_source_attach (tr->timeout_source, g_main_context_get_thread_default ());
+        g_source_unref (tr->timeout_source);
+    }
 
     if (tr->cancellable) {
         tr->cancellable_id = g_cancellable_connect (tr->cancellable,
@@ -2550,38 +2553,127 @@ qmi_device_close (QmiDevice *self,
 }
 
 #if defined MBIM_QMUX_ENABLED
-static void
-mbim_device_command_ready (MbimDevice   *dev,
-                           GAsyncResult *res,
-                           QmiDevice *qmidev)
+
+typedef struct {
+    QmiDevice     *self;
+    gconstpointer  transaction_key;
+} MbimTransactionContext;
+
+static MbimTransactionContext *
+mbim_transaction_context_new (QmiDevice     *self,
+                              gconstpointer  transaction_key)
 {
-        MbimMessage *response;
-        GError *error = NULL;
-        const guint8 *buf;
-        guint32 len;
+    MbimTransactionContext *ctx;
 
-        response = mbim_device_command_finish (dev, res, &error);
-        if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
-            g_prefix_error (&error, "MBIM error: ");
-            // transaction_complete_and_free (tr, NULL, error);
-            g_error_free (error);
-            mbim_message_unref (response);
-            return;
-        }
-
-        g_debug ("[%s] Received MBIM message\n", qmidev->priv->path_display);
-
-        /* get the information buffer */
-        buf = mbim_message_command_done_get_raw_information_buffer (response, &len);
-        if (!G_UNLIKELY (qmidev->priv->buffer))
-            qmidev->priv->buffer = g_byte_array_sized_new (len);
-        g_byte_array_append (qmidev->priv->buffer, buf, len);
-
-        /* and parse it as QMI */
-        parse_response(qmidev);
-        mbim_message_unref (response);
-        return;
+    ctx = g_slice_new (MbimTransactionContext);
+    ctx->self = g_object_ref (self);
+    ctx->transaction_key = transaction_key;
+    return ctx;
 }
+
+static void
+mbim_transaction_context_free (MbimTransactionContext *ctx)
+{
+    g_object_unref (ctx->self);
+    g_slice_free (MbimTransactionContext, ctx);
+}
+
+static void
+mbim_device_command_ready (MbimDevice             *dev,
+                           GAsyncResult           *res,
+                           MbimTransactionContext *ctx)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    const guint8 *buf;
+    guint32 len;
+    Transaction *tr;
+
+    /* It is possible that the transaction doesn't exist, when it gets cancelled
+     * by the user before the response arrives. In such a case, we just return
+     * without processing the response */
+    tr = g_hash_table_lookup (ctx->self->priv->transactions, ctx->transaction_key);
+    if (!tr) {
+        mbim_device_command_finish (dev, res, NULL);
+        mbim_transaction_context_free (ctx);
+        return;
+    }
+
+    response = mbim_device_command_finish (dev, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_prefix_error (&error, "MBIM error: ");
+        transaction_complete_and_free (tr, NULL, error);
+        mbim_message_unref (response);
+        mbim_transaction_context_free (ctx);
+        return;
+    }
+
+    g_debug ("[%s] Received MBIM message", ctx->self->priv->path_display);
+
+    /* Store the raw information buffer in the internal reception buffer,
+     * as if we had read from a iochannel. */
+    buf = mbim_message_command_done_get_raw_information_buffer (response, &len);
+    if (!G_UNLIKELY (ctx->self->priv->buffer))
+        ctx->self->priv->buffer = g_byte_array_sized_new (len);
+    g_byte_array_append (ctx->self->priv->buffer, buf, len);
+
+    /* And parse it as QMI; it should remove and cleanup the transaction */
+    parse_response (ctx->self);
+    mbim_message_unref (response);
+
+    /* After processing the QMI message, we check whether the transaction id was
+     * removed from our tables, and if it wasn't (e.g. the QMI message embedded
+     * in MBIM wasn't the proper one), we remove it ourselves. This is so that
+     * we don't leave unused transactions in the HT, given that we've disabled
+     * the transaction timeout for MBIM based ones */
+    tr = device_release_transaction (ctx->self, ctx->transaction_key);
+    if (tr) {
+        /* Complete transaction with a timeout error */
+        error = g_error_new (QMI_CORE_ERROR,
+                             QMI_CORE_ERROR_UNEXPECTED_MESSAGE,
+                             "Transaction received unexpected message");
+        transaction_complete_and_free (tr, NULL, error);
+        g_error_free (error);
+    }
+
+    mbim_transaction_context_free (ctx);
+}
+
+static gboolean
+mbim_command (QmiDevice      *self,
+              gconstpointer   raw_message,
+              gsize           raw_message_len,
+              gconstpointer   transaction_key,
+              guint           timeout,
+              GCancellable   *cancellable,
+              GError        **error)
+{
+    MbimMessage *mbim_message;
+
+    g_debug ("[%s] sending message as MBIM...", self->priv->path_display);
+
+    mbim_message = (mbim_message_qmi_msg_set_new (raw_message_len, raw_message, error));
+    if (!mbim_message)
+        return FALSE;
+
+    /* Note:
+     *
+     * Pass a full reference to the original QMI device to the MBIM command
+     * operation, so that we make sure the parent object is valid regardless
+     * of when the underlying device is fully disposed. This is required
+     * because device close is async().
+     */
+    mbim_device_command (self->priv->mbimdev,
+                         mbim_message,
+                         timeout,
+                         cancellable,
+                         (GAsyncReadyCallback) mbim_device_command_ready,
+                         mbim_transaction_context_new (self, transaction_key));
+
+    mbim_message_unref (mbim_message);
+    return TRUE;
+}
+
 #endif
 
 /*****************************************************************************/
@@ -2635,9 +2727,11 @@ qmi_device_command (QmiDevice *self,
     Transaction *tr;
     gconstpointer raw_message;
     gsize raw_message_len;
+    guint transaction_timeout;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (message != NULL);
+    g_return_if_fail (timeout > 0);
 
     /* Use a proper transaction id for CTL messages if they don't have one */
     if (qmi_message_get_service (message) == QMI_SERVICE_CTL &&
@@ -2652,7 +2746,7 @@ qmi_device_command (QmiDevice *self,
     tr = transaction_new (self, message, cancellable, callback, user_data);
 
     /* Device must be open */
-    if ((!self->priv->istream || !self->priv->ostream) && !self->priv->mbim_qmux) {
+    if ((!self->priv->istream || !self->priv->ostream) && !self->priv->mbimdev) {
         error = g_error_new (QMI_CORE_ERROR,
                              QMI_CORE_ERROR_WRONG_STATE,
                              "Device must be open to send commands");
@@ -2691,8 +2785,16 @@ qmi_device_command (QmiDevice *self,
         return;
     }
 
+    /* For transactions using the MBIM backend, no explicit timeout is set.
+     * Instead, we rely on the timeout management in libmbim. */
+    transaction_timeout = timeout;
+#if defined MBIM_QMUX_ENABLED
+    if (self->priv->mbimdev)
+        transaction_timeout = 0;
+#endif
+
     /* Setup context to match response */
-    if (!device_store_transaction (self, tr, timeout, &error)) {
+    if (!device_store_transaction (self, tr, transaction_timeout, &error)) {
         g_prefix_error (&error, "Cannot store transaction: ");
         transaction_complete_and_free (tr, NULL, error);
         g_error_free (error);
@@ -2722,23 +2824,22 @@ qmi_device_command (QmiDevice *self,
     }
 
 #if defined MBIM_QMUX_ENABLED
-    /* wrap QMUX in MBIM? */
-    if (self->priv->mbim_qmux) {
-        MbimMessage *mbim;
-
-        mbim = (mbim_message_qmi_msg_set_new (raw_message_len, raw_message, &error));
-        mbim_device_command (self->priv->mbimdev,
-                             mbim,
-                             30,
-                             NULL, /* cancellable */
-                             (GAsyncReadyCallback)mbim_device_command_ready,
-                             self);
-        g_debug ("[%s] Message sent as MBIM\n", self->priv->path_display);
-
-        /* FIXME: check errors, set proper MBIM TID */
+    if (self->priv->mbimdev) {
+        if (!mbim_command (self,
+                           raw_message,
+                           raw_message_len,
+                           build_transaction_key (message),
+                           timeout,
+                           cancellable,
+                           &error)) {
+            g_prefix_error (&error, "Cannot create MBIM command: ");
+            transaction_complete_and_free (tr, NULL, error);
+            g_error_free (error);
+        }
         return;
-     }
+    }
 #endif
+
     if (!g_output_stream_write_all (self->priv->ostream,
                                     raw_message,
                                     raw_message_len,
