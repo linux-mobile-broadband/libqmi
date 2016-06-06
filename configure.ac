@@ -96,16 +96,25 @@ fi
 AM_CONDITIONAL([QMI_USERNAME_ENABLED], [test "x$QMI_USERNAME_ENABLED" = "xyes"])
 
 # MBIM QMUX service support
+MBIM_GLIB_VERSION=1.14.0
+PKG_CHECK_MODULES([MBIM], [mbim-glib >= ${MBIM_GLIB_VERSION}], [have_mbim=yes], [have_mbim=no])
 AC_ARG_ENABLE(mbim-qmux,
-              AS_HELP_STRING([--enable-mbim-qmux], [support QMI over MBIM QMUX service]))
-if test -n "$enable_mbim_qmux"; then
-    PKG_CHECK_MODULES(MBIM, mbim-glib >= 1.13)
-    MBIM_CFLAGS="$MBIM_CFLAGS -DMBIM_QMUX"
+              AS_HELP_STRING([--enable-mbim-qmux], [Enable support for QMI over MBIM QMUX service [default=auto]]),
+              [enable_mbim_qmux=$enableval],
+              [enable_mbim_qmux=auto])
+
+if test "x$enable_mbim_qmux" = "xauto"; then
+    enable_mbim_qmux=$have_mbim
+fi
+
+if test "x$enable_mbim_qmux" = "xyes"; then
+    if test "xhave_mbim" = "xno"; then
+        AC_MSG_ERROR([Couldn't find `libmbim-glib` >= ${MBIM_GLIB_VERSION}. Install it, or otherwise configure using --disable-mbim-qmux to disable the QMI over MBIM QMUX service.])
+    fi
+    AC_DEFINE(MBIM_QMUX_ENABLED, 1, [Define if MBIM QMUX support enabled])
     AC_SUBST(MBIM_CFLAGS)
     AC_SUBST(MBIM_LIBS)
 fi
-
-AM_CONDITIONAL(MBIM_QMUX, [test -n "$MBIM_CFLAGS"])
 
 # udev base directory
 AC_ARG_WITH(udev-base-dir, AS_HELP_STRING([--with-udev-base-dir=DIR], [where udev base directory is]))

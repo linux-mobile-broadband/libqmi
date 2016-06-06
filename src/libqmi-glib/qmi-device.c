@@ -21,6 +21,8 @@
  * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
  */
 
+#include <config.h>
+
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -32,7 +34,7 @@
 #include <gio/gunixoutputstream.h>
 #include <gio/gunixsocketaddress.h>
 
-#ifdef MBIM_QMUX
+#if defined MBIM_QMUX_ENABLED
 #include <libmbim-glib.h>
 #endif
 
@@ -97,7 +99,7 @@ struct _QmiDevicePrivate {
     gboolean no_file_check;
     gchar *proxy_path;
     gboolean mbim_qmux;
-#ifdef MBIM_QMUX
+#if defined MBIM_QMUX_ENABLED
     MbimDevice *mbimdev;
 #endif
 
@@ -2141,7 +2143,7 @@ internal_proxy_open_ready (QmiClientCtl *client_ctl,
     device_open_context_step (ctx);
 }
 
-#ifdef MBIM_QMUX
+#if defined MBIM_QMUX_ENABLED
 static void
 mbim_device_open_ready (MbimDevice *dev,
                         GAsyncResult *res,
@@ -2223,7 +2225,7 @@ device_open_context_step (DeviceOpenContext *ctx)
         /* Fall down */
 
     case DEVICE_OPEN_CONTEXT_STEP_CREATE_IOSTREAM:
-#ifdef MBIM_QMUX
+#if defined MBIM_QMUX_ENABLED
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
             GFile *file;
 
@@ -2441,7 +2443,7 @@ destroy_iostream (QmiDevice *self,
     return TRUE;
 }
 
-#ifdef MBIM_QMUX
+#if defined MBIM_QMUX_ENABLED
 static void
 mbim_device_close_ready (MbimDevice   *dev,
                     GAsyncResult *res)
@@ -2473,7 +2475,7 @@ qmi_device_close (QmiDevice *self,
 {
     g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
 
-#ifdef MBIM_QMUX
+#if defined MBIM_QMUX_ENABLED
     if (self->priv->mbim_qmux)
         mbim_device_close (self->priv->mbimdev,
                            15,
@@ -2490,7 +2492,7 @@ qmi_device_close (QmiDevice *self,
     return TRUE;
 }
 
-#ifdef MBIM_QMUX
+#if defined MBIM_QMUX_ENABLED
 static void
 mbim_device_command_ready (MbimDevice   *dev,
                            GAsyncResult *res,
@@ -2662,7 +2664,7 @@ qmi_device_command (QmiDevice *self,
         g_free (printable);
     }
 
-#ifdef MBIM_QMUX
+#if defined MBIM_QMUX_ENABLED
     /* wrap QMUX in MBIM? */
     if (self->priv->mbim_qmux) {
         MbimMessage *mbim;
