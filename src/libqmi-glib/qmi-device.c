@@ -2483,18 +2483,38 @@ destroy_iostream (QmiDevice *self,
 }
 
 #if defined MBIM_QMUX_ENABLED
+
 static void
 mbim_device_close_ready (MbimDevice   *dev,
-                    GAsyncResult *res)
+                         GAsyncResult *res,
+                         QmiDevice    *self)
 {
     GError *error = NULL;
 
     if (!mbim_device_close_finish (dev, res, &error)) {
-        g_printerr ("error: couldn't close device: %s", error->message);
+        g_warning ("[%s] error: couldn't close device: %s",
+                   self->priv->path_display, error->message);
         g_error_free (error);
     } else
-        g_debug ("Device closed");
+        g_debug ("[%s] MBIM device closed", self->priv->path_display);
+    g_object_unref (self);
 }
+
+static void
+destroy_mbim_device (QmiDevice *self)
+{
+    /* TODO: make this sync */
+    mbim_device_close (self->priv->mbimdev,
+                       15,
+                       NULL,
+                       (GAsyncReadyCallback) mbim_device_close_ready,
+                       g_object_ref (self));
+
+    /* Cleanup right away, we don't want multiple close attempts on the
+     * device */
+    g_clear_object (&self->priv->mbimdev);
+}
+
 #endif
 
 /**
@@ -2515,14 +2535,12 @@ qmi_device_close (QmiDevice *self,
     g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
 
 #if defined MBIM_QMUX_ENABLED
-    if (self->priv->mbim_qmux)
-        mbim_device_close (self->priv->mbimdev,
-                           15,
-                           NULL,
-                           (GAsyncReadyCallback) mbim_device_close_ready,
-                           NULL);
-    else
+    if (self->priv->mbimdev) {
+        destroy_mbim_device (self);
+        return TRUE;
+    }
 #endif
+
     if (!destroy_iostream (self, error)) {
         g_prefix_error (error, "Cannot close QMI device: ");
         return FALSE;
