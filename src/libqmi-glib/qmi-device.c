@@ -2496,35 +2496,57 @@ destroy_iostream (QmiDevice *self,
 
 #if defined MBIM_QMUX_ENABLED
 
-static void
-mbim_device_close_ready (MbimDevice   *dev,
-                         GAsyncResult *res,
-                         QmiDevice    *self)
-{
-    GError *error = NULL;
+typedef struct {
+    GError    *error;
+    GMainLoop *loop;
+} SyncMbimClose;
 
-    if (!mbim_device_close_finish (dev, res, &error)) {
-        g_warning ("[%s] error: couldn't close device: %s",
-                   self->priv->path_display, error->message);
-        g_error_free (error);
-    } else
-        g_debug ("[%s] MBIM device closed", self->priv->path_display);
-    g_object_unref (self);
+static void
+mbim_device_close_ready (MbimDevice    *dev,
+                         GAsyncResult  *res,
+                         SyncMbimClose *ctx)
+{
+    mbim_device_close_finish (dev, res, &ctx->error);
+    g_main_loop_quit (ctx->loop);
 }
 
-static void
-destroy_mbim_device (QmiDevice *self)
+static gboolean
+destroy_mbim_device (QmiDevice  *self,
+                     GError    **error)
 {
-    /* TODO: make this sync */
+    GMainContext  *main_ctx;
+    SyncMbimClose  ctx;
+
+    main_ctx = g_main_context_new ();
+    g_main_context_push_thread_default (main_ctx);
+
+    ctx.loop = g_main_loop_new (main_ctx, FALSE);
+    ctx.error = NULL;
+
+    /* Schedule in new main context */
     mbim_device_close (self->priv->mbimdev,
                        15,
                        NULL,
                        (GAsyncReadyCallback) mbim_device_close_ready,
-                       g_object_ref (self));
+                       &ctx);
 
     /* Cleanup right away, we don't want multiple close attempts on the
      * device */
     g_clear_object (&self->priv->mbimdev);
+
+    /* Run */
+    g_main_loop_run (ctx.loop);
+    g_main_loop_unref (ctx.loop);
+    g_main_context_pop_thread_default (main_ctx);
+    g_main_context_unref (main_ctx);
+
+    /* Report error, if any found */
+    if (error) {
+        g_propagate_error (error, ctx.error);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 #endif
@@ -2547,10 +2569,8 @@ qmi_device_close (QmiDevice *self,
     g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
 
 #if defined MBIM_QMUX_ENABLED
-    if (self->priv->mbimdev) {
-        destroy_mbim_device (self);
-        return TRUE;
-    }
+    if (self->priv->mbimdev)
+        return destroy_mbim_device (self, error);
 #endif
 
     if (!destroy_iostream (self, error)) {
