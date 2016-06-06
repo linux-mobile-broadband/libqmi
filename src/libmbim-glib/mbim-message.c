@@ -502,7 +502,7 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
      */
     if (!with_offset && !with_length) {
         g_byte_array_append (builder->fixed_buffer, buffer, buffer_len);
-        if(pad_buffer) {
+        if (pad_buffer) {
             while (buffer_len % 4 != 0) {
                 const guint8 padding = 0;
 
