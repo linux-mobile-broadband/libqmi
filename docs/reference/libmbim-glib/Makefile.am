@@ -16,7 +16,8 @@ ALL_SECTIONS = \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-stk.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-dss.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-ms-firmware-id.sections \
-	$(top_builddir)/src/libmbim-glib/generated/mbim-ms-host-shutdown.sections
+	$(top_builddir)/src/libmbim-glib/generated/mbim-ms-host-shutdown.sections \
+	$(top_builddir)/src/libmbim-glib/generated/mbim-qmi.sections
 
 $(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
 	$(AM_V_GEN) \

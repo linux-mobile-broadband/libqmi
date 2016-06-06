@@ -23,6 +23,7 @@ MBIM_UUID_DSS
 MBIM_UUID_MS_FIRMWARE_ID
 MBIM_UUID_MS_HOST_SHUTDOWN
 MBIM_UUID_PROXY_CONTROL
+MBIM_UUID_QMI
 <SUBSECTION Methods>
 mbim_service_get_string
 mbim_service_lookup_name
@@ -55,6 +56,7 @@ MbimCidDss
 MbimCidMsFirmwareId
 MbimCidMsHostShutdown
 MbimCidProxyControl
+MbimCidQmi
 <SUBSECTION Methods>
 mbim_cid_can_set
 mbim_cid_can_query
@@ -70,6 +72,7 @@ mbim_cid_dss_get_string
 mbim_cid_ms_firmware_id_get_string
 mbim_cid_ms_host_shutdown_get_string
 mbim_cid_proxy_control_get_string
+mbim_cid_qmi_get_string
 <SUBSECTION Private>
 mbim_cid_basic_connect_build_string_from_mask
 mbim_cid_sms_build_string_from_mask
@@ -81,6 +84,7 @@ mbim_cid_dss_build_string_from_mask
 mbim_cid_ms_firmware_id_build_string_from_mask
 mbim_cid_ms_host_shutdown_build_string_from_mask
 mbim_cid_proxy_control_build_string_from_mask
+mbim_cid_qmi_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_CID_AUTH
 MBIM_TYPE_CID_BASIC_CONNECT
@@ -92,6 +96,7 @@ MBIM_TYPE_CID_USSD
 MBIM_TYPE_CID_MS_FIRMWARE_ID
 MBIM_TYPE_CID_MS_HOST_SHUTDOWN
 MBIM_TYPE_CID_PROXY_CONTROL
+MBIM_TYPE_CID_QMI
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
 mbim_cid_dss_get_type
@@ -102,6 +107,7 @@ mbim_cid_ussd_get_type
 mbim_cid_ms_firmware_id_get_type
 mbim_cid_ms_host_shutdown_get_type
 mbim_cid_proxy_control_get_type
+mbim_cid_qmi_get_type
 </SECTION>
 
 <SECTION>
