@@ -114,7 +114,11 @@ if test "x$enable_mbim_qmux" = "xyes"; then
     AC_DEFINE(MBIM_QMUX_ENABLED, 1, [Define if MBIM QMUX support enabled])
     AC_SUBST(MBIM_CFLAGS)
     AC_SUBST(MBIM_LIBS)
+    QMI_MBIM_QMUX_SUPPORTED=1
+else
+    QMI_MBIM_QMUX_SUPPORTED=0
 fi
+AC_SUBST(QMI_MBIM_QMUX_SUPPORTED)
 
 # udev base directory
 AC_ARG_WITH(udev-base-dir, AS_HELP_STRING([--with-udev-base-dir=DIR], [where udev base directory is]))
