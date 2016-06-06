@@ -1912,6 +1912,10 @@ create_iostream (QmiDevice *self,
 
 typedef enum {
     DEVICE_OPEN_CONTEXT_STEP_FIRST = 0,
+#if defined MBIM_QMUX_ENABLED
+    DEVICE_OPEN_CONTEXT_STEP_DEVICE_MBIM,
+    DEVICE_OPEN_CONTEXT_STEP_OPEN_DEVICE_MBIM,
+#endif
     DEVICE_OPEN_CONTEXT_STEP_CREATE_IOSTREAM,
     DEVICE_OPEN_CONTEXT_STEP_FLAGS_PROXY,
     DEVICE_OPEN_CONTEXT_STEP_FLAGS_VERSION_INFO,
@@ -2143,56 +2147,6 @@ internal_proxy_open_ready (QmiClientCtl *client_ctl,
     device_open_context_step (ctx);
 }
 
-#if defined MBIM_QMUX_ENABLED
-static void
-mbim_device_open_ready (MbimDevice *dev,
-                        GAsyncResult *res,
-                        DeviceOpenContext *ctx)
-{
-    GError *error = NULL;
-
-    if (!mbim_device_open_finish (dev, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
-        return;
-    }
-
-    g_debug ("[%s] MBIM device Open..",
-             ctx->self->priv->path_display);
-
-    /* Go on */
-    ctx->step++;
-    device_open_context_step (ctx);
-}
-
-static void
-mbim_device_new_ready (GObject *source,
-                       GAsyncResult *res,
-                       DeviceOpenContext *ctx)
-{
-    MbimDeviceOpenFlags open_flags = MBIM_DEVICE_OPEN_FLAGS_NONE;
-    GError *error = NULL;
-    MbimDevice *device;
-
-    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY)
-        open_flags |= MBIM_DEVICE_OPEN_FLAGS_PROXY;
-    device = mbim_device_new_finish (res, &error);
-    if (!device) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
-        return;
-    }
-    ctx->self->priv->mbimdev = device;
-
-    mbim_device_open_full(device,
-                          open_flags,
-                          30,
-                          ctx->cancellable,
-                          (GAsyncReadyCallback)mbim_device_open_ready,
-                          ctx);
-}
-#endif
-
 static void
 create_iostream_ready (QmiDevice *self,
                        GAsyncResult *res,
@@ -2211,6 +2165,84 @@ create_iostream_ready (QmiDevice *self,
     device_open_context_step (ctx);
 }
 
+#if defined MBIM_QMUX_ENABLED
+
+static void
+mbim_device_open_ready (MbimDevice *dev,
+                        GAsyncResult *res,
+                        DeviceOpenContext *ctx)
+{
+    GError *error = NULL;
+
+    if (!mbim_device_open_finish (dev, res, &error)) {
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
+        return;
+    }
+
+    g_debug ("[%s] MBIM device open", ctx->self->priv->path_display);
+
+    /* Go on */
+    ctx->step++;
+    device_open_context_step (ctx);
+}
+
+static void
+open_mbim_device (DeviceOpenContext *ctx)
+{
+    MbimDeviceOpenFlags open_flags = MBIM_DEVICE_OPEN_FLAGS_NONE;
+
+    /* If QMI proxy was requested, use MBIM proxy instead */
+    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY)
+        open_flags |= MBIM_DEVICE_OPEN_FLAGS_PROXY;
+
+    /* We pass the original timeout of the request to the open operation */
+    g_debug ("[%s] opening MBIM device...", ctx->self->priv->path_display);
+    mbim_device_open_full (ctx->self->priv->mbimdev,
+                           open_flags,
+                           ctx->timeout,
+                           ctx->cancellable,
+                           (GAsyncReadyCallback) mbim_device_open_ready,
+                           ctx);
+}
+
+static void
+mbim_device_new_ready (GObject *source,
+                       GAsyncResult *res,
+                       DeviceOpenContext *ctx)
+{
+    GError *error = NULL;
+
+    ctx->self->priv->mbimdev = mbim_device_new_finish (res, &error);
+    if (!ctx->self->priv->mbimdev) {
+        g_simple_async_result_take_error (ctx->result, error);
+        device_open_context_complete_and_free (ctx);
+        return;
+    }
+
+    g_debug ("[%s] MBIM device created", ctx->self->priv->path_display);
+
+    /* Go on */
+    ctx->step++;
+    device_open_context_step (ctx);
+}
+
+static void
+create_mbim_device (DeviceOpenContext *ctx)
+{
+    GFile *file;
+
+    g_debug ("[%s] creating MBIM device...", ctx->self->priv->path_display);
+    file = g_file_new_for_path (ctx->self->priv->path);
+    mbim_device_new (file,
+                     ctx->cancellable,
+                     (GAsyncReadyCallback) mbim_device_new_ready,
+                     ctx);
+    g_object_unref (file);
+}
+
+#endif
+
 #define NETPORT_FLAGS (QMI_DEVICE_OPEN_FLAGS_NET_802_3 | \
                        QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP | \
                        QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER | \
@@ -2224,31 +2256,38 @@ device_open_context_step (DeviceOpenContext *ctx)
         ctx->step++;
         /* Fall down */
 
-    case DEVICE_OPEN_CONTEXT_STEP_CREATE_IOSTREAM:
 #if defined MBIM_QMUX_ENABLED
+    case DEVICE_OPEN_CONTEXT_STEP_DEVICE_MBIM:
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
-            GFile *file;
-
-            ctx->self->priv->mbim_qmux = TRUE;
-            file = g_file_new_for_path (ctx->self->priv->path);
-            mbim_device_new (file,
-                             ctx->cancellable,
-                             (GAsyncReadyCallback)mbim_device_new_ready,
-                             ctx);
-            g_object_unref (file);
+            create_mbim_device (ctx);
             return;
         }
+        ctx->step++;
+        /* Fall down */
+
+    case DEVICE_OPEN_CONTEXT_STEP_OPEN_DEVICE_MBIM:
+        if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
+            open_mbim_device (ctx);
+            return;
+        }
+        ctx->step++;
+        /* Fall down */
 #endif
-        create_iostream (ctx->self,
-                         !!(ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY),
-                         (GAsyncReadyCallback)create_iostream_ready,
-                         ctx);
-        return;
+
+    case DEVICE_OPEN_CONTEXT_STEP_CREATE_IOSTREAM:
+        if (!(ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM)) {
+            create_iostream (ctx->self,
+                             !!(ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY),
+                             (GAsyncReadyCallback)create_iostream_ready,
+                             ctx);
+            return;
+        }
+        ctx->step++;
+        /* Fall down */
 
     case DEVICE_OPEN_CONTEXT_STEP_FLAGS_PROXY:
         /* Initialize communication with proxy? */
-        if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY &&
-            !(ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM)) {
+        if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY && !(ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM)) {
             QmiMessageCtlInternalProxyOpenInput *input;
 
             input = qmi_message_ctl_internal_proxy_open_input_new ();
