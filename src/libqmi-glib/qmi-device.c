@@ -2775,13 +2775,18 @@ qmi_device_command (QmiDevice *self,
     tr = transaction_new (self, message, cancellable, callback, user_data);
 
     /* Device must be open */
-    if ((!self->priv->istream || !self->priv->ostream) && !self->priv->mbimdev) {
-        error = g_error_new (QMI_CORE_ERROR,
-                             QMI_CORE_ERROR_WRONG_STATE,
-                             "Device must be open to send commands");
-        transaction_complete_and_free (tr, NULL, error);
-        g_error_free (error);
-        return;
+    if (!self->priv->istream || !self->priv->ostream) {
+#if defined MBIM_QMUX_ENABLED
+        if (!self->priv->mbimdev)
+#endif
+        {
+            error = g_error_new (QMI_CORE_ERROR,
+                                 QMI_CORE_ERROR_WRONG_STATE,
+                                 "Device must be open to send commands");
+            transaction_complete_and_free (tr, NULL, error);
+            g_error_free (error);
+            return;
+        }
     }
 
     /* Non-CTL services should use a proper CID */
