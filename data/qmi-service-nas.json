@@ -3144,6 +3144,14 @@
                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Force Network Search",
+     "type"    : "Message",
+     "service" : "NAS",
+     "id"      : "0x0067",
+     "version" : "1.21",
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get CDMA Position Info",
      "type"    : "Message",
      "service" : "NAS",

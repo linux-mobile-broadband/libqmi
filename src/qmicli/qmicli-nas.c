@@ -53,6 +53,7 @@ static gboolean get_system_selection_preference_flag;
 static gchar *set_system_selection_preference_str;
 static gboolean network_scan_flag;
 static gboolean get_cell_location_info_flag;
+static gboolean force_network_search_flag;
 static gboolean get_lte_cphy_ca_info_flag;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
@@ -101,6 +102,10 @@ static GOptionEntry entries[] = {
     },
     { "nas-get-cell-location-info", 0, 0, G_OPTION_ARG_NONE, &get_cell_location_info_flag,
       "Get Cell Location Info",
+      NULL
+    },
+    { "nas-force-network-search", 0, 0, G_OPTION_ARG_NONE, &force_network_search_flag,
+      "Force network search",
       NULL
     },
     { "nas-get-lte-cphy-ca-info", 0, 0, G_OPTION_ARG_NONE, &get_lte_cphy_ca_info_flag,
@@ -157,6 +162,7 @@ qmicli_nas_options_enabled (void)
                  !!set_system_selection_preference_str +
                  network_scan_flag +
                  get_cell_location_info_flag +
+                 force_network_search_flag +
                  get_lte_cphy_ca_info_flag +
                  get_supported_messages_flag +
                  reset_flag +
@@ -2767,6 +2773,35 @@ get_cell_location_info_ready (QmiClientNas *client,
 }
 
 static void
+force_network_search_ready (QmiClientNas *client,
+                            GAsyncResult *res)
+{
+    QmiMessageNasForceNetworkSearchOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_nas_force_network_search_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_force_network_search_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't force network search: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_force_network_search_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully forced network search\n",
+             qmi_device_get_path_display (ctx->device));
+    qmi_message_nas_force_network_search_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
 get_lte_cphy_ca_info_ready (QmiClientNas *client,
                             GAsyncResult *res)
 {
@@ -3095,6 +3130,18 @@ qmicli_nas_run (QmiDevice *device,
                                                ctx->cancellable,
                                                (GAsyncReadyCallback)get_cell_location_info_ready,
                                                NULL);
+        return;
+    }
+
+    /* Request to force network search */
+    if (force_network_search_flag) {
+        g_debug ("Forcing network search...");
+        qmi_client_nas_force_network_search (ctx->client,
+                                             NULL,
+                                             10,
+                                             ctx->cancellable,
+                                             (GAsyncReadyCallback)force_network_search_ready,
+                                             NULL);
         return;
     }
 
