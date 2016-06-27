@@ -2632,7 +2632,8 @@ mbim_device_command_ready (MbimDevice             *dev,
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_prefix_error (&error, "MBIM error: ");
         transaction_complete_and_free (tr, NULL, error);
-        mbim_message_unref (response);
+        if (response)
+            mbim_message_unref (response);
         mbim_transaction_context_free (ctx);
         return;
     }
