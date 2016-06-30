@@ -138,7 +138,7 @@ load_profile ()
         echo "Loading profile at ${PROFILE_FILE}..."
         . $PROFILE_FILE
 
-        if [ "x$APN" != "x" ]; then
+        if [ -n "$APN" ]; then
             echo "    APN: $APN"
         fi
     else
@@ -156,14 +156,14 @@ save_state ()
     if [ -f "$STATE_FILE" ]; then
         PREVIOUS=`cat $STATE_FILE`
         PREVIOUS=`echo "$PREVIOUS" | grep -v $KEY`
-        if [ "x$PREVIOUS" != "x" ]; then
+        if [ -n "$PREVIOUS" ]; then
             echo $PREVIOUS > $STATE_FILE
         else
             rm $STATE_FILE
         fi
     fi
 
-    if [ "x$VAL" != "x" ]; then
+    if [ -n "$VAL" ]; then
         echo "$KEY=\"$VAL\"" >> $STATE_FILE
     fi
 }
@@ -174,7 +174,7 @@ load_state ()
         echo "Loading previous state from ${STATE_FILE}..."
         . $STATE_FILE
 
-        if [ "x$TRID" != "x" ]; then
+        if [ -n "$TRID" ]; then
             echo "    Previous Transaction ID: $TRID"
         fi
     fi
@@ -200,7 +200,7 @@ clear_state ()
 connect ()
 {
     # Always try to connect using a fresh session
-    if [ "x$TRID" != "x" ]; then
+    if [ -n "$TRID" ]; then
         mbimcli -d $DEVICE --no-open=$TRID
         clear_state
     fi
@@ -213,7 +213,7 @@ connect ()
 
     # Save the new TRID
     TRID=`echo "$SUBSCRIBER_READY_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
-    if [ "x$TRID" != "x" ]; then
+    if [ -n "$TRID" ]; then
         save_state "TRID" $TRID
     fi
 
@@ -226,7 +226,7 @@ connect ()
 
     # Save the new TRID
     TRID=`echo "$REGISTRATION_STATE_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
-    if [ "x$TRID" != "x" ]; then
+    if [ -n "$TRID" ]; then
         save_state "TRID" $TRID
     fi
 
@@ -237,7 +237,7 @@ connect ()
 
     # Save the new TRID
     TRID=`echo "$ATTACH_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
-    if [ "x$TRID" != "x" ]; then
+    if [ -n "$TRID" ]; then
         save_state "TRID" $TRID
     fi
 
@@ -254,7 +254,7 @@ connect ()
 
     # Save the new TRID
     TRID=`echo "$CONNECT_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
-    if [ "x$TRID" != "x" ]; then
+    if [ -n "$TRID" ]; then
         save_state "TRID" $TRID
     fi
 }
@@ -273,7 +273,7 @@ connect ()
 disconnect ()
 {
     # Always close the session when disconnecting
-    if [ "x$TRID" != "x" ]; then
+    if [ -n "$TRID" ]; then
         DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect --no-open=$TRID"
     else
         DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect"
@@ -303,7 +303,7 @@ disconnect ()
 #
 status ()
 {
-    if [ "x$TRID" != "x" ]; then
+    if [ -n "$TRID" ]; then
         STATUS_CMD="mbimcli -d $DEVICE --query-connection-state --no-close --no-open=$TRID"
     else
         STATUS_CMD="mbimcli -d $DEVICE --query-connection-state"
@@ -314,17 +314,17 @@ status ()
 
     # Save the new TRID
     TRID=`echo "$STATUS_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
-    if [ "x$TRID" != "x" ]; then
+    if [ -n "$TRID" ]; then
         save_state "TRID" $TRID
     fi
 
     CONN=`echo "$STATUS_OUT" | sed -n "s/.*Activation state:.*'\(.*\)'.*/\1/p"`
-    if [ "x$CONN" = "x" ]; then
+    if [ -z "$CONN" ]; then
         echo "error: couldn't get connection status" 1>&2
         exit 2
     else
         echo "Status: $CONN"
-        if [ "x$CONN" != "xconnected" ]; then
+        if [ "$CONN" != "connected" ]; then
             exit 64
         fi
     fi
