@@ -65,7 +65,12 @@ help ()
     echo "   the following way:"
     echo "      APN_AUTH=protocol"
     echo
-    echo "   6) Once the mbim-network script reports a successful connection"
+    echo "   6) If you want to instruct the mbim-network script to use the"
+    echo "   mbim-proxy setup, you can do so by configuring the following line"
+    echo "   in the profile:"
+    echo "      PROXY=yes"
+    echo
+    echo "   7) Once the mbim-network script reports a successful connection"
     echo "   you still need to run a DHCP client on the associated WWAN network"
     echo "   interface."
     echo
@@ -179,6 +184,13 @@ load_profile ()
         else
             echo "    APN password: unset"
         fi
+
+        if [ "$PROXY" = "yes" ]; then
+            echo "    mbim-proxy: $PROXY"
+            PROXY_OPT='--device-open-proxy'
+        else
+            echo "    mbim-proxy: no"
+        fi
     else
         echo "Profile at '$PROFILE_FILE' not found..."
     fi
@@ -239,11 +251,11 @@ connect ()
 {
     # Always try to connect using a fresh session
     if [ -n "$TRID" ]; then
-        mbimcli -d $DEVICE --no-open=$TRID
+        mbimcli -d $DEVICE --no-open=$TRID $PROXY_OPT
         clear_state
     fi
 
-    SUBSCRIBER_READY_CMD="mbimcli -d $DEVICE --query-subscriber-ready-status --no-close"
+    SUBSCRIBER_READY_CMD="mbimcli -d $DEVICE --query-subscriber-ready-status --no-close $PROXY_OPT"
     echo "Querying subscriber ready status '$SUBSCRIBER_READY_CMD'..."
 
     SUBSCRIBER_READY_OUT=`$SUBSCRIBER_READY_CMD`
@@ -255,7 +267,7 @@ connect ()
         save_state "TRID" $TRID
     fi
 
-    REGISTRATION_STATE_CMD="mbimcli -d $DEVICE --query-registration-state --no-open=$TRID --no-close"
+    REGISTRATION_STATE_CMD="mbimcli -d $DEVICE --query-registration-state --no-open=$TRID --no-close $PROXY_OPT"
     echo "Querying registration state '$REGISTRATION_STATE_CMD'..."
 
     REGISTRATION_STATE_OUT=`$REGISTRATION_STATE_CMD`
@@ -267,7 +279,7 @@ connect ()
         save_state "TRID" $TRID
     fi
 
-    ATTACH_CMD="mbimcli -d $DEVICE --attach-packet-service --no-open=$TRID --no-close"
+    ATTACH_CMD="mbimcli -d $DEVICE --attach-packet-service --no-open=$TRID --no-close $PROXY_OPT"
     echo "Attaching to packet service with '$ATTACH_CMD'..."
 
     ATTACH_OUT=`$ATTACH_CMD`
@@ -289,7 +301,7 @@ connect ()
         fi
     fi
 
-    CONNECT_CMD="mbimcli -d $DEVICE --connect=$CONNECT_ARGS --no-open=$TRID --no-close"
+    CONNECT_CMD="mbimcli -d $DEVICE --connect=$CONNECT_ARGS --no-open=$TRID --no-close $PROXY_OPT"
     echo "Starting network with '$CONNECT_CMD'..."
 
     CONNECT_OUT=`$CONNECT_CMD`
@@ -322,9 +334,9 @@ disconnect ()
 {
     # Always close the session when disconnecting
     if [ -n "$TRID" ]; then
-        DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect --no-open=$TRID"
+        DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect --no-open=$TRID $PROXY_OPT"
     else
-        DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect"
+        DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect $PROXY_OPT"
     fi
     echo "Stopping network with '$DISCONNECT_CMD'..."
 
@@ -352,9 +364,9 @@ disconnect ()
 status ()
 {
     if [ -n "$TRID" ]; then
-        STATUS_CMD="mbimcli -d $DEVICE --query-connection-state --no-close --no-open=$TRID"
+        STATUS_CMD="mbimcli -d $DEVICE --query-connection-state --no-close --no-open=$TRID $PROXY_OPT"
     else
-        STATUS_CMD="mbimcli -d $DEVICE --query-connection-state"
+        STATUS_CMD="mbimcli -d $DEVICE --query-connection-state $PROXY_OPT"
     fi
     echo "Getting status with '$STATUS_CMD'..."
 
