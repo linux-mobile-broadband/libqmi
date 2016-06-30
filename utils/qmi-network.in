@@ -275,7 +275,7 @@ Downlink data aggregation max size: '0'"
         return
     fi
 
-    if [ "$DEVICE_LLP" == "$EXPECTED_LLP" ]; then
+    if [ "$DEVICE_LLP" = "$EXPECTED_LLP" ]; then
         echo "Device and kernel link layer protocol match: $DEVICE_LLP"
         return
     fi
