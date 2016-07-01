@@ -923,7 +923,8 @@ static gboolean connect_activate_properties_handle (const gchar  *key,
 {
     ConnectActivateProperties *props = user_data;
 
-    if (!value || !value[0]) {
+    /* APN may be empty */
+    if ((g_ascii_strcasecmp (key, "apn") != 0) && (!value || !value[0])) {
         g_set_error (error,
                      MBIM_CORE_ERROR,
                      MBIM_CORE_ERROR_FAILED,
@@ -1008,27 +1009,22 @@ set_connect_activate_parse (const gchar       *str,
             goto error;
         }
 
-        if (g_strv_length (split) < 1) {
-            g_printerr ("error: couldn't parse input string, missing arguments\n");
-            goto error;
-        }
+        if (g_strv_length (split) > 0) {
+            /* APN */
+            props.apn = g_strdup (split[0]);
 
-        /* APN */
-        props.apn = g_strdup (split[0]);
-
-        /* Use authentication method */
-        if (split[1]) {
-            if (!mbim_auth_protocol_from_string (split[1], &props.auth_protocol)) {
-                g_printerr ("error: couldn't parse input string, unknown auth protocol '%s'\n", split[1]);
-                goto error;
-            }
-
-            /* Username */
-            if (split[2]) {
-                props.username = g_strdup (split[2]);
-
-                /* Password */
-                props.password = g_strdup (split[3]);
+            /* Use authentication method */
+            if (split[1]) {
+                if (!mbim_auth_protocol_from_string (split[1], &props.auth_protocol)) {
+                    g_printerr ("error: couldn't parse input string, unknown auth protocol '%s'\n", split[1]);
+                    goto error;
+                }
+                /* Username */
+                if (split[2]) {
+                    props.username = g_strdup (split[2]);
+                    /* Password */
+                    props.password = g_strdup (split[3]);
+                }
             }
         }
     }
