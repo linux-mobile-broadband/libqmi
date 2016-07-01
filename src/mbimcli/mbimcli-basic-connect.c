@@ -64,10 +64,16 @@ static gboolean  set_packet_service_attach_flag;
 static gboolean  set_packet_service_detach_flag;
 static gchar    *query_connect_str;
 static gchar    *set_connect_activate_str;
+static gchar    *query_ip_configuration_str;
 static gchar    *set_connect_deactivate_str;
 static gboolean  query_packet_statistics_flag;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
+                                                  const char *value,
+                                                  gpointer user_data,
+                                                  GError **error);
+
+static gboolean query_ip_configuration_arg_parse (const char *option_name,
                                                   const char *value,
                                                   gpointer user_data,
                                                   GError **error);
@@ -166,6 +172,10 @@ static GOptionEntry entries[] = {
       "Connect (allowed keys: session-id, apn, auth (PAP|CHAP|MSCHAPV2), username, password)",
       "[\"key=value,...\"]"
     },
+    { "query-ip-configuration", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_ip_configuration_arg_parse),
+      "Query IP configuration (SessionID is optional, defaults to 0)",
+      "[SessionID]"
+    },
     { "disconnect", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (disconnect_arg_parse),
       "Disconnect (SessionID is optional, defaults to 0)",
       "[SessionID]"
@@ -199,6 +209,16 @@ query_connection_state_arg_parse (const char *option_name,
                                   GError **error)
 {
     query_connect_str = g_strdup (value ? value : "0");
+    return TRUE;
+}
+
+static gboolean
+query_ip_configuration_arg_parse (const char *option_name,
+                                  const char *value,
+                                  gpointer user_data,
+                                  GError **error)
+{
+    query_ip_configuration_str = g_strdup (value ? value : "0");
     return TRUE;
 }
 
@@ -243,6 +263,7 @@ mbimcli_basic_connect_options_enabled (void)
                  set_packet_service_detach_flag +
                  !!query_connect_str +
                  !!set_connect_activate_str +
+                 !!query_ip_configuration_str +
                  !!set_connect_deactivate_str +
                  query_packet_statistics_flag);
 
@@ -714,6 +735,47 @@ ip_configuration_query_ready (MbimDevice *device,
 }
 
 static void
+ip_configuration_query (MbimDevice *device,
+                        guint session_id)
+{
+    MbimMessage *message;
+    GError *error = NULL;
+
+    message = (mbim_message_ip_configuration_query_new (
+                   session_id,
+                   MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE, /* ipv4configurationavailable */
+                   MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE, /* ipv6configurationavailable */
+                   0, /* ipv4addresscount */
+                   NULL, /* ipv4address */
+                   0, /* ipv6addresscount */
+                   NULL, /* ipv6address */
+                   NULL, /* ipv4gateway */
+                   NULL, /* ipv6gateway */
+                   0, /* ipv4dnsservercount */
+                   NULL, /* ipv4dnsserver */
+                   0, /* ipv6dnsservercount */
+                   NULL, /* ipv6dnsserver */
+                   0, /* ipv4mtu */
+                   0, /* ipv6mtu */
+                   &error));
+    if (!message) {
+        g_printerr ("error: couldn't create IP config request: %s\n", error->message);
+        g_error_free (error);
+        mbim_message_unref (message);
+        shutdown (FALSE);
+        return;
+    }
+
+    mbim_device_command (device,
+                         message,
+                         60,
+                         NULL,
+                         (GAsyncReadyCallback)ip_configuration_query_ready,
+                         NULL);
+    mbim_message_unref (message);
+}
+
+static void
 connect_ready (MbimDevice   *device,
                GAsyncResult *res,
                gpointer user_data)
@@ -782,39 +844,7 @@ connect_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)));
 
     if (GPOINTER_TO_UINT (user_data) == CONNECT) {
-        MbimMessage *message;
-
-        message = (mbim_message_ip_configuration_query_new (
-                   session_id,
-                   MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE, /* ipv4configurationavailable */
-                   MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE, /* ipv6configurationavailable */
-                   0, /* ipv4addresscount */
-                   NULL, /* ipv4address */
-                   0, /* ipv6addresscount */
-                   NULL, /* ipv6address */
-                   NULL, /* ipv4gateway */
-                   NULL, /* ipv6gateway */
-                   0, /* ipv4dnsservercount */
-                   NULL, /* ipv4dnsserver */
-                   0, /* ipv6dnsservercount */
-                   NULL, /* ipv6dnsserver */
-                   0, /* ipv4mtu */
-                   0, /* ipv6mtu */
-                   &error));
-        if (message) {
-            mbim_device_command (device,
-                                 message,
-                                 60,
-                                 NULL,
-                                 (GAsyncReadyCallback)ip_configuration_query_ready,
-                                 NULL);
-            mbim_message_unref (message);
-        } else {
-            g_printerr ("error: couldn't create IP config request: %s\n", error->message);
-            g_error_free (error);
-            mbim_message_unref (message);
-            shutdown (FALSE);
-        }
+        ip_configuration_query (device, session_id);
         return;
     }
 
@@ -1945,6 +1975,22 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              (GAsyncReadyCallback)connect_ready,
                              GUINT_TO_POINTER (CONNECT));
         mbim_message_unref (request);
+        return;
+    }
+
+    /* Query IP configuration? */
+    if (query_ip_configuration_str) {
+        GError *error = NULL;
+        guint session_id = 0;
+
+        if (!connect_session_id_parse (query_ip_configuration_str, TRUE, &session_id, &error)) {
+            g_printerr ("error: couldn't parse session ID: %s\n", error->message);
+            g_error_free (error);
+            shutdown (FALSE);
+            return;
+        }
+
+        ip_configuration_query (ctx->device, session_id);
         return;
     }
 
