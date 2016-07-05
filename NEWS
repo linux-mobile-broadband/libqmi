@@ -1,4 +1,45 @@
 
+Overview of changes in libmbim 1.14
+----------------------------------------
+
+* New support for the 'QMI over MBIM' service, so that clients can use libqmi to
+  build messages and libmbim to transport them.
+
+* The GUDev library, which we use to read the max message size from the USB
+  descriptor, is now optional. When configuring, it will be used by default only
+  if it's found. It can also be explicitly disabled using the new configure
+  switch '--without-udev' or explicitly enabled using '--with-udev'. If GUDev
+  isn't used, libmbim-glib will rely on sysfs directly.
+
+* libmbim-glib updates:
+  ** Added support for building messages of custom services.
+
+* mbim-network updates:
+  ** Added support for loading profiles from different paths using the new
+     '--profile' option. This makes it possible to use mbim-network with
+     multiple devices running in the same system.
+  ** Added support to allow specifying APN user (APN_USER), password (APN_PASS)
+     and authentication type (APN_AUTH) in the profile.
+  ** Added support to allow using the mbim-proxy setup by configuring it in
+     the profile file (PROXY=yes).
+
+* Several other minor improvements and fixes.
+
+The following features which were backported to 1.12.x releases are also present
+in libmbim 1.14.0:
+
+ * mbimcli updates:
+   ** Updated '--connect' arguments to allow specifying "key=value" pairs. The
+      old legacy "[(APN),(PAP|CHAP|MSCHAPV2),(Username),(Password)]" format is
+      kept as valid for backwards compatibility, although it should be assumed
+      deprecated.
+   ** Longer timeouts for connect/register operations.
+   ** Report IP configuration when connected.
+   ** Allow specifying session ids.
+
+ * libmbim-glib updates:
+   ** Probing retry interval increased to 5s.
+
 Overview of changes in libmbim 1.12
 ----------------------------------------
 
