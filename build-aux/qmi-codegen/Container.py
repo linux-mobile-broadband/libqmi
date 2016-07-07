@@ -58,6 +58,7 @@ class Container:
         if dictionary is not None:
             self.fields = []
 
+            new_dict = []
             # First, look for references to common types
             for field_dictionary in dictionary:
                 if 'common-ref' in field_dictionary:
@@ -69,12 +70,13 @@ class Container:
                            copy = dict(common)
                            if 'prerequisites' in field_dictionary:
                                copy['prerequisites'] = field_dictionary['prerequisites']
-                           dictionary.remove(field_dictionary)
-                           dictionary.append(copy)
+                           new_dict.append(copy)
                            break
                     else:
                         raise RuntimeError('Common type \'%s\' not found' % field_dictionary['name'])
-
+                else:
+                    new_dict.append(field_dictionary)
+            dictionary = new_dict
             # We need to sort the fields, so that the ones with prerequisites are
             # include after the prerequisites themselves. Note: we don't currently
             # support complex setups yet.
