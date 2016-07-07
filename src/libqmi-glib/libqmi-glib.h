@@ -55,6 +55,9 @@
 #include "qmi-enums-pds.h"
 #include "qmi-pds.h"
 
+#include "qmi-enums-pdc.h"
+#include "qmi-pdc.h"
+
 #include "qmi-enums-pbm.h"
 #include "qmi-pbm.h"
 

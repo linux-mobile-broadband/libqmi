@@ -45,6 +45,10 @@ gboolean qmicli_read_enable_disable_from_string              (const gchar *str,
 gboolean qmicli_read_firmware_id_from_string                 (const gchar *str,
                                                               QmiDmsFirmwareImageType *out_type,
                                                               guint *out_index);
+gboolean qmicli_read_binary_array_from_string                (const gchar *str,
+                                                              GArray **out);
+gboolean qmicli_read_pdc_configuration_type_from_string      (const gchar *str,
+                                                              QmiPdcConfigurationType *out);
 gboolean qmicli_read_radio_interface_from_string             (const gchar *str,
                                                               QmiNasRadioInterface *out);
 gboolean qmicli_read_net_open_flags_from_string              (const gchar *str,
@@ -65,6 +69,10 @@ gboolean qmicli_read_non_empty_string           (const gchar *str,
                                                  gchar **out);
 gboolean qmicli_read_uint_from_string           (const gchar *str,
                                                  guint *out);
+gboolean qmicli_read_uint16_from_string         (const gchar *str,
+                                                 guint16 *out);
+gboolean qmicli_read_uint8_from_string         (const gchar *str,
+                                                guint8 *out);
 gboolean qmicli_read_yes_no_from_string         (const gchar *str,
                                                  gboolean *out);
 

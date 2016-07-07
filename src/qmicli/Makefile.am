@@ -20,6 +20,7 @@ qmicli_SOURCES = \
 	qmicli-wds.c \
 	qmicli-nas.c \
 	qmicli-pbm.c \
+	qmicli-pdc.c \
 	qmicli-uim.c \
 	qmicli-wms.c \
 	qmicli-wda.c \

@@ -45,6 +45,7 @@
 #include "qmi-wds.h"
 #include "qmi-nas.h"
 #include "qmi-wms.h"
+#include "qmi-pdc.h"
 #include "qmi-pds.h"
 #include "qmi-pbm.h"
 #include "qmi-uim.h"
@@ -2146,6 +2147,9 @@ qmi_message_get_printable (QmiMessage *self,
         break;
     case QMI_SERVICE_WMS:
         contents = __qmi_message_wms_get_printable (self, line_prefix);
+        break;
+    case QMI_SERVICE_PDC:
+        contents = __qmi_message_pdc_get_printable (self, line_prefix);
         break;
     case QMI_SERVICE_PDS:
         contents = __qmi_message_pds_get_printable (self, line_prefix);

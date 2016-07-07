@@ -765,6 +765,18 @@ qmi_wms_transfer_indication_get_type
 </SECTION>
 
 <SECTION>
+<FILE>qmi-enums-pdc</FILE>
+QmiPdcConfigurationType
+<SUBSECTION Methods>
+qmi_pdc_configuration_type_get_string
+<SUBSECTION Private>
+qmi_pdc_configuration_type_build_string_from_mask
+<SUBSECTION Standard>
+QMI_TYPE_PDC_CONFIGURATION_TYPE
+qmi_pdc_configuration_type_get_type
+</SECTION>
+
+<SECTION>
 <FILE>qmi-enums-pds</FILE>
 QmiPdsOperationMode
 QmiPdsPositionSessionStatus

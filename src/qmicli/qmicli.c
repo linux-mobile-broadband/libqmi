@@ -326,6 +326,9 @@ allocate_client_ready (QmiDevice *dev,
     case QMI_SERVICE_PBM:
         qmicli_pbm_run (dev, QMI_CLIENT_PBM (client), cancellable);
         return;
+    case QMI_SERVICE_PDC:
+        qmicli_pdc_run (dev, QMI_CLIENT_PDC (client), cancellable);
+        return;
     case QMI_SERVICE_UIM:
         qmicli_uim_run (dev, QMI_CLIENT_UIM (client), cancellable);
         return;
@@ -660,6 +663,12 @@ parse_actions (void)
         actions_enabled++;
     }
 
+    /* PDC options? */
+    if (qmicli_pdc_options_enabled ()) {
+        service = QMI_SERVICE_PDC;
+        actions_enabled++;
+    }
+
     /* UIM options? */
     if (qmicli_uim_options_enabled ()) {
         service = QMI_SERVICE_UIM;
@@ -719,6 +728,8 @@ int main (int argc, char **argv)
                                 qmicli_wds_get_option_group ());
     g_option_context_add_group (context,
                                 qmicli_pbm_get_option_group ());
+    g_option_context_add_group (context,
+                                qmicli_pdc_get_option_group ());
     g_option_context_add_group (context,
                                 qmicli_uim_get_option_group ());
     g_option_context_add_group (context,

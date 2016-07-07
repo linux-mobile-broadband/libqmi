@@ -12,6 +12,7 @@ ALL_SECTIONS = \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-nas.sections \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-wds.sections \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-wms.sections \
+	$(top_builddir)/src/libqmi-glib/generated/qmi-pdc.sections \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-pds.sections \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-pbm.sections \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-uim.sections \

@@ -221,6 +221,38 @@
   </chapter>
 
   <chapter>
+    <title>Persistent Device Configuration (PDC)</title>
+    <xi:include href="xml/qmi-client-pdc.xml"/>
+    <xi:include href="xml/qmi-enums-pdc.xml"/>
+    <section>
+      <title>PDC Indications</title>
+      <xi:include href="xml/qmi-indication-pdc-activate-config.xml"/>
+      <xi:include href="xml/qmi-indication-pdc-deactivate-config.xml"/>
+      <xi:include href="xml/qmi-indication-pdc-get-config-info.xml"/>
+      <xi:include href="xml/qmi-indication-pdc-get-selected-config.xml"/>
+      <xi:include href="xml/qmi-indication-pdc-list-configs.xml"/>
+      <xi:include href="xml/qmi-indication-pdc-load-config.xml"/>
+      <xi:include href="xml/qmi-indication-pdc-set-selected-config.xml"/>
+    </section>
+    <section>
+      <title>PDC Requests</title>
+      <xi:include href="xml/qmi-message-pdc-reset.xml"/>
+      <xi:include href="xml/qmi-message-pdc-register.xml"/>
+      <xi:include href="xml/qmi-message-pdc-config-change.xml"/>
+      <xi:include href="xml/qmi-message-pdc-get-selected-config.xml"/>
+      <xi:include href="xml/qmi-message-pdc-set-selected-config.xml"/>
+      <xi:include href="xml/qmi-message-pdc-list-configs.xml"/>
+      <xi:include href="xml/qmi-message-pdc-delete-config.xml"/>
+      <xi:include href="xml/qmi-message-pdc-load-config.xml"/>
+      <xi:include href="xml/qmi-message-pdc-activate-config.xml"/>
+      <xi:include href="xml/qmi-message-pdc-get-config-info.xml"/>
+      <xi:include href="xml/qmi-message-pdc-get-config-limits.xml"/>
+      <xi:include href="xml/qmi-message-pdc-get-default-config-info.xml"/>
+      <xi:include href="xml/qmi-message-pdc-deactivate-config.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Position Determination Service (PDS)</title>
     <xi:include href="xml/qmi-client-pds.xml"/>
     <xi:include href="xml/qmi-enums-pds.xml"/>

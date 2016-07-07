@@ -54,6 +54,13 @@ void          qmicli_pbm_run              (QmiDevice *device,
                                            QmiClientPbm *client,
                                            GCancellable *cancellable);
 
+/* PBM group */
+GOptionGroup *qmicli_pdc_get_option_group (void);
+gboolean      qmicli_pdc_options_enabled  (void);
+void          qmicli_pdc_run              (QmiDevice *device,
+                                           QmiClientPdc *client,
+                                           GCancellable *cancellable);
+
 /* UIM group */
 GOptionGroup *qmicli_uim_get_option_group (void);
 gboolean      qmicli_uim_options_enabled  (void);

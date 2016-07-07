@@ -45,6 +45,7 @@
 #include "qmi-wds.h"
 #include "qmi-nas.h"
 #include "qmi-wms.h"
+#include "qmi-pdc.h"
 #include "qmi-pds.h"
 #include "qmi-pbm.h"
 #include "qmi-uim.h"
@@ -1182,6 +1183,10 @@ qmi_device_allocate_client (QmiDevice *self,
 
     case QMI_SERVICE_PDS:
         ctx->client_type = QMI_TYPE_CLIENT_PDS;
+        break;
+
+    case QMI_SERVICE_PDC:
+        ctx->client_type = QMI_TYPE_CLIENT_PDC;
         break;
 
     case QMI_SERVICE_PBM:

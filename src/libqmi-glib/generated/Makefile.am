@@ -12,6 +12,7 @@ GENERATED_H = \
 	qmi-wds.h \
 	qmi-wms.h \
 	qmi-pds.h \
+	qmi-pdc.h \
 	qmi-pbm.h \
 	qmi-uim.h \
 	qmi-oma.h \
@@ -30,6 +31,7 @@ GENERATED_C = \
 	qmi-wds.c \
 	qmi-wms.c \
 	qmi-pds.c \
+	qmi-pdc.c \
 	qmi-pbm.c \
 	qmi-uim.c \
 	qmi-oma.c \
@@ -43,6 +45,7 @@ GENERATED_SECTIONS = \
 	qmi-wds.sections \
 	qmi-wms.sections \
 	qmi-pds.sections \
+	qmi-pdc.sections \
 	qmi-pbm.sections \
 	qmi-uim.sections \
 	qmi-oma.sections \
@@ -76,6 +79,7 @@ ENUMS = \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-dms.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-nas.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-wms.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-pdc.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-pds.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-pbm.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-uim.h \
@@ -85,7 +89,7 @@ ENUMS = \
 	$(top_srcdir)/src/libqmi-glib/qmi-device.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pbm.h\"\n#include \"qmi-enums-uim.h\"\n#include \"qmi-enums-oma.h\"\n#include \"qmi-enums-wda.h\"\n#include \"qmi-enums-voice.h\"\n#include \"qmi-device.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pdc.h\"\n#include \"qmi-enums-pbm.h\"\n#include \"qmi-enums-uim.h\"\n#include \"qmi-enums-oma.h\"\n#include \"qmi-enums-wda.h\"\n#include \"qmi-enums-voice.h\"\n#include \"qmi-device.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
@@ -186,6 +190,16 @@ qmi-pds.h qmi-pds.c qmi-pds.sections: $(top_srcdir)/data/qmi-service-pds.json $(
 			--input $(top_srcdir)/data/qmi-service-pds.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-pds
+
+# PDC service
+qmi-pdc.h qmi-pdc.c qmi-pdc.sections: $(top_srcdir)/data/qmi-service-pdc.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+	$(AM_V_GEN) \
+		rm -f qmi-pdc.h && \
+		rm -f qmi-pdc.c && \
+		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-pdc.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			--output qmi-pdc
 
 # PBM service
 qmi-pbm.h qmi-pbm.c qmi-pbm.sections: $(top_srcdir)/data/qmi-service-pbm.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen

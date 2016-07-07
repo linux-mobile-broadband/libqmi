@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "qmicli-helpers.h"
 
@@ -315,6 +316,64 @@ qmicli_read_firmware_id_from_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_binary_array_from_string (const gchar *str,
+                                      GArray **out) {
+    char a;
+    gsize i,len;
+    if (!str) return FALSE;
+
+    if((len = strlen(str)) & 1) return FALSE;
+
+    *out = g_array_sized_new(FALSE, TRUE, 1, len >> 1);
+    g_array_set_size(*out, len >> 1);
+
+    for (i = 0; i < len; i++) {
+        a = toupper(str[i]);
+        if (!isxdigit(a))
+            break;
+        if (isdigit(a)) {
+            a -= '0';
+        } else {
+            a = a - 'A' + 10;
+        }
+
+        if (i & 1) {
+            g_array_index(*out, gchar, i >> 1) |= a;
+        } else {
+            g_array_index(*out, gchar, i >> 1) = a<<4;
+        }
+    }
+    if (i < len) {
+        g_free(out);
+        out = NULL;
+    }
+
+    return TRUE;
+}
+
+
+gboolean
+qmicli_read_pdc_configuration_type_from_string (const gchar *str,
+                                                QmiPdcConfigurationType *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_pdc_configuration_type_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiPdcConfigurationType)enum_value->value;
+    else
+        g_printerr ("error: invalid configuration type value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
 qmicli_read_radio_interface_from_string (const gchar *str,
                                          QmiNasRadioInterface *out)
 {
@@ -517,6 +576,52 @@ qmicli_read_uint_from_string (const gchar *str,
     num = strtoul (str, NULL, 10);
     if (!errno && num <= G_MAXUINT) {
         *out = (guint)num;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+gboolean
+qmicli_read_uint16_from_string (const gchar *str,
+                                guint16 *out)
+{
+    gulong num;
+
+    if (!str || !str[0])
+        return FALSE;
+
+    for (num = 0; str[num]; num++) {
+        if (!g_ascii_isdigit (str[num]))
+            return FALSE;
+    }
+
+    errno = 0;
+    num = strtoul (str, NULL, 10);
+    if (!errno && num <= G_MAXUINT16) {
+        *out = (guint16)num;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+gboolean
+qmicli_read_uint8_from_string (const gchar *str,
+                               guint8 *out)
+{
+    gulong num;
+
+    if (!str || !str[0])
+        return FALSE;
+
+    for (num = 0; str[num]; num++) {
+        if (!g_ascii_isdigit (str[num]))
+            return FALSE;
+    }
+
+    errno = 0;
+    num = strtoul (str, NULL, 10);
+    if (!errno && num <= G_MAXUINT8) {
+        *out = (guint8)num;
         return TRUE;
     }
     return FALSE;
