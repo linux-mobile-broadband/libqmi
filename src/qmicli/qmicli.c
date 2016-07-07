@@ -760,7 +760,7 @@ int main (int argc, char **argv)
     qmi_device_new (file,
                     cancellable,
                     (GAsyncReadyCallback)device_new_ready,
-                    GUINT_TO_POINTER (service));
+                    NULL);
     g_main_loop_run (loop);
 
     if (cancellable)
