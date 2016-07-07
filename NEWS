@@ -1,4 +1,44 @@
 
+Overview of changes in libqmi 1.16.0
+----------------------------------------
+
+* New `--enable-mbim-qmux' option during configure, which enables the support
+  for using an MBIM control device as transport for the QMI messages, only if
+  the MBIM device implements the "QMI service". This setting is automatically
+  enabled if libmbim >= 1.14.0 is found in the system, and can be explicitly
+  disabled with `--disable-mbim-qmux'.
+
+* New request/responses:
+  ** nas: new "Get LTE Cphy CA Info" request/response.
+  ** nas: new "Force Network Search" request/response.
+
+* qmi-network:
+  ** Fixed several bashisms.
+
+The following features which were backported to 1.14.x releases are also present
+in libqmi 1.16.0:
+
+* Added compatibility symbols for some API breaks introduced in 1.14.0:
+  ** qmi_message_dms_set_service_programming_code_input_get_current
+     was renamed to qmi_message_dms_set_service_programming_code_input_get_current_code.
+  ** qmi_message_dms_set_service_programming_code_input_get_new
+     was renamed to qmi_message_dms_set_service_programming_code_input_get_new_code.
+  ** qmi_message_dms_set_service_programming_code_input_set_current
+     was renamed to qmi_message_dms_set_service_programming_code_input_set_current_code.
+  ** qmi_message_dms_set_service_programming_code_input_set_new
+     was renamed to qmi_message_dms_set_service_programming_code_input_set_new_code.
+  ** QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE was renamed to
+     QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE.
+
+* libqmi-glib:
+  ** Fixed QMI_DMS_BAND_CAPABILITY_BC_15 enum value so that it isn't treated as
+     a negative value.
+
+* qmicli:
+  ** Fixed --dms-get-band-capabilities output on 32-bit platforms.
+  ** Fixed license text of the voice service implementation.
+
+
 Overview of changes in libqmi 1.14.0
 ----------------------------------------
 
