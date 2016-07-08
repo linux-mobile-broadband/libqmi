@@ -108,7 +108,7 @@ if test "x$enable_mbim_qmux" = "xauto"; then
 fi
 
 if test "x$enable_mbim_qmux" = "xyes"; then
-    if test "xhave_mbim" = "xno"; then
+    if test "x$have_mbim" = "xno"; then
         AC_MSG_ERROR([Couldn't find `libmbim-glib` >= ${MBIM_GLIB_VERSION}. Install it, or otherwise configure using --disable-mbim-qmux to disable the QMI over MBIM QMUX service.])
     fi
     AC_DEFINE(MBIM_QMUX_ENABLED, 1, [Define if MBIM QMUX support enabled])
