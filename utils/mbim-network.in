@@ -135,7 +135,7 @@ if [ -z "$PROFILE_FILE" ]; then
     exit 255
 fi
 
-if [ $# -ne 2 ] || [[ $1 == --* ]] || [[ $2 == --* ]]; then
+if [ $# -ne 2 ] || [ "$1" = "--*" ] || [ "$2" = "--*" ]; then
     echo "error: missing arguments" 1>&2
     print_usage
     exit 255
@@ -145,7 +145,6 @@ DEVICE=$1
 COMMAND=$2
 
 STATE_FILE=/tmp/mbim-network-state-`basename $DEVICE`
-
 
 load_profile ()
 {
