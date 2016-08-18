@@ -67,7 +67,7 @@ static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
-      "Start network (allowed keys: apn, 3gpp-profile, 3gpp2-profile, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes)",
+      "Start network (allowed keys: apn, 3gpp-profile, 3gpp2-profile, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes, ip-type (4|6))",
       "[\"key=value,...\"]"
     },
     { "wds-follow-network", 0, 0, G_OPTION_ARG_NONE, &follow_network_flag,
@@ -336,6 +336,7 @@ typedef struct {
     guint8                profile_index_3gpp2;
     QmiWdsAuthentication  auth;
     gboolean              auth_set;
+    QmiWdsIpFamily        ip_type;
     gchar                *username;
     gchar                *password;
     gboolean              autoconnect;
@@ -407,6 +408,25 @@ start_network_properties_handle (const gchar  *key,
             return FALSE;
         }
         props->autoconnect_set = TRUE;
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ip-type") == 0 && props->ip_type == 0) {
+        switch (atoi (value)) {
+        case 4:
+            props->ip_type = QMI_WDS_IP_FAMILY_IPV4;
+            break;
+        case 6:
+            props->ip_type = QMI_WDS_IP_FAMILY_IPV6;
+            break;
+        default:
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown IP type '%s' (not 4 or 6)",
+                         value);
+            return FALSE;
+        }
         return TRUE;
     }
 
@@ -486,6 +506,10 @@ start_network_input_create (const gchar *str)
     /* Set 3GPP2 profile */
     if (props.profile_index_3gpp2 > 0)
         qmi_message_wds_start_network_input_set_profile_index_3gpp2 (input, props.profile_index_3gpp2, NULL);
+
+    /* Set IP Type */
+    if (props.ip_type != QMI_WDS_IP_FAMILY_UNSPECIFIED)
+        qmi_message_wds_start_network_input_set_ip_family_preference (input, props.ip_type, NULL);
 
     /* Set authentication method */
     if (props.auth_set) {
