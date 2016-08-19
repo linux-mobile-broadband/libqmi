@@ -81,6 +81,7 @@ static gboolean get_factory_sku_flag;
 static gboolean list_stored_images_flag;
 static gchar *select_stored_image_str;
 static gchar *delete_stored_image_str;
+static gchar *set_firmware_pref_str;
 static gboolean set_fcc_authentication_flag;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
@@ -243,6 +244,10 @@ static GOptionEntry entries[] = {
       "Delete stored image",
       "[modem#|pri#] where # is the index"
     },
+    { "dms-set-firmware-pref", 0, 0, G_OPTION_ARG_STRING, &set_firmware_pref_str,
+      "Set firmware preference",
+      "[(fwver),(config),(carrier)]"
+    },
     { "dms-set-fcc-authentication", 0, 0, G_OPTION_ARG_NONE, &set_fcc_authentication_flag,
       "Set FCC authentication",
       NULL
@@ -325,6 +330,7 @@ qmicli_dms_options_enabled (void)
                  list_stored_images_flag +
                  !!select_stored_image_str +
                  !!delete_stored_image_str +
+                 !!set_firmware_pref_str +
                  set_fcc_authentication_flag +
                  get_supported_messages_flag +
                  reset_flag +
@@ -2959,6 +2965,50 @@ get_stored_image_delete_ready (QmiClientDms *client,
         g_array_unref (pri_image_id.unique_id);
 }
 
+static QmiMessageDmsSetFirmwarePreferenceInput *
+set_firmware_pref_input_create (const gchar *str)
+{
+    QmiMessageDmsSetFirmwarePreferenceInput *input;
+    GArray *array;
+    QmiMessageDmsSetFirmwarePreferenceInputListImage modem_image_id;
+    QmiMessageDmsSetFirmwarePreferenceInputListImage pri_image_id;
+    gchar **split;
+
+    /* Prepare inputs.
+     * Format of the string is:
+     *    "[(fwver),(config),(carrier)]"
+     */
+    split = g_strsplit (str, ",", -1);
+
+    modem_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM;
+    pri_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI;
+
+    modem_image_id.unique_id = g_array_sized_new (FALSE, TRUE, 1, 16);
+    pri_image_id.unique_id = g_array_sized_new (FALSE, TRUE, 1, 16);
+
+    /* modem unique id is the fixed wildcard string '?_?' matching any pri */
+    g_array_insert_vals (modem_image_id.unique_id, 0, "?_?", 3);
+    g_array_set_size (modem_image_id.unique_id, 16);
+
+    /* modem build id format is "(fwver)_?", matching any carrier */
+    modem_image_id.build_id = g_strdup_printf ("%s_?", split[0]);
+
+    /* pri unique id is the "(config)" input */
+    g_array_insert_vals (pri_image_id.unique_id, 0, split[1], strlen (split[1]));
+    g_array_set_size (pri_image_id.unique_id, 16);
+
+    pri_image_id.build_id = g_strdup_printf ("%s_%s", split[0], split[2]);
+
+    array = g_array_sized_new (FALSE, FALSE, sizeof (QmiMessageDmsSetFirmwarePreferenceInputListImage), 2);
+    g_array_append_val (array, modem_image_id);
+    g_array_append_val (array, pri_image_id);
+
+    input = qmi_message_dms_set_firmware_preference_input_new ();
+    qmi_message_dms_set_firmware_preference_input_set_list (input, array, NULL);
+
+    return input;
+}
+
 static void
 set_fcc_authentication_ready (QmiClientDms *client,
                               GAsyncResult *res)
@@ -3657,6 +3707,28 @@ qmicli_dms_run (QmiDevice *device,
                           delete_stored_image_str,
                           (GAsyncReadyCallback)get_stored_image_delete_ready,
                           NULL);
+        return;
+    }
+
+    /* Set firmware preference? */
+    if (set_firmware_pref_str) {
+        QmiMessageDmsSetFirmwarePreferenceInput *input;
+
+        g_debug ("Asynchronously setting firmware preference...");
+        input = set_firmware_pref_input_create (set_firmware_pref_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        qmi_client_dms_set_firmware_preference (
+            client,
+            input,
+            10,
+            NULL,
+            (GAsyncReadyCallback)select_stored_image_ready,
+            NULL);
+        qmi_message_dms_set_firmware_preference_input_unref (input);
         return;
     }
 
