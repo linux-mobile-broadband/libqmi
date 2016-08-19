@@ -2851,7 +2851,7 @@ get_lte_cphy_ca_info_ready (QmiClientNas *client,
         NULL)) {
         g_print ("Secondary Cell Info\n");
         g_print ("\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
-                 "\tTX Channel: '%" G_GUINT16_FORMAT"'\n"
+                 "\tRX Channel: '%" G_GUINT16_FORMAT"'\n"
                  "\tDL Bandwidth: '%s'\n"
                  "\tLTE Band: '%s'\n"
                  "\tState: '%s'\n",
@@ -2870,7 +2870,7 @@ get_lte_cphy_ca_info_ready (QmiClientNas *client,
         NULL)) {
         g_print ("Primary Cell Info\n");
         g_print ("\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
-                 "\tTX Channel: '%" G_GUINT16_FORMAT"'\n"
+                 "\tRX Channel: '%" G_GUINT16_FORMAT"'\n"
                  "\tDL Bandwidth: '%s'\n"
                  "\tLTE Band: '%s'\n",
                  pci, channel,
