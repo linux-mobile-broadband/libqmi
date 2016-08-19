@@ -2799,6 +2799,7 @@ select_stored_image_ready (QmiClientDms *client,
 {
     QmiMessageDmsSetFirmwarePreferenceOutput *output;
     GError *error = NULL;
+    GArray *array;
 
     output = qmi_client_dms_set_firmware_preference_finish (client, res, &error);
     if (!output) {
@@ -2828,6 +2829,25 @@ select_stored_image_ready (QmiClientDms *client,
              "\tIf the Mode is reported as 'offline' with a 'pri-version-incompatible' reason, you chose an incorrect pair\n"
              "\n",
              qmi_device_get_path_display (ctx->device));
+
+    /* do we need to download a new modem and/or pri image? */
+    if (qmi_message_dms_set_firmware_preference_output_get_image_download_list (output, &array, &error)) {
+        guint i;
+        GString *images;
+        QmiDmsFirmwareImageType *type;
+
+        images = g_string_new ("");
+        for (i = 0; i < array->len; i++) {
+            type = &g_array_index (array, QmiDmsFirmwareImageType, i);
+            g_string_append (images, qmi_dms_firmware_image_type_get_string (*type));
+            if (i < array->len -1)
+                g_string_append (images, ", ");
+        }
+        if (array->len)
+            g_print ("\tAfter reset, the modem will wait in QDL mode for new firmware.\n"
+                     "\tImages to download: '%s'\n\n", images->str);
+        g_string_free (images, TRUE);
+    }
 
     qmi_message_dms_set_firmware_preference_output_unref (output);
     operation_shutdown (TRUE);
