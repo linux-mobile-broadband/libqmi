@@ -442,6 +442,7 @@ static QmiMessageWdsStartNetworkInput *
 start_network_input_create (const gchar *str)
 {
     gchar *aux_auth_str = NULL;
+    gchar *ip_type_str = NULL;
     gchar **split = NULL;
     QmiMessageWdsStartNetworkInput *input = NULL;
     StartNetworkProperties props = {
@@ -508,8 +509,13 @@ start_network_input_create (const gchar *str)
         qmi_message_wds_start_network_input_set_profile_index_3gpp2 (input, props.profile_index_3gpp2, NULL);
 
     /* Set IP Type */
-    if (props.ip_type != QMI_WDS_IP_FAMILY_UNSPECIFIED)
+    if (props.ip_type != QMI_WDS_IP_FAMILY_UNSPECIFIED) {
         qmi_message_wds_start_network_input_set_ip_family_preference (input, props.ip_type, NULL);
+        if (props.ip_type == QMI_WDS_IP_FAMILY_IPV4)
+            ip_type_str = "4";
+        else if (props.ip_type == QMI_WDS_IP_FAMILY_IPV6)
+            ip_type_str = "6";
+    }
 
     /* Set authentication method */
     if (props.auth_set) {
@@ -529,11 +535,12 @@ start_network_input_create (const gchar *str)
     if (props.autoconnect_set)
         qmi_message_wds_start_network_input_set_enable_autoconnect (input, props.autoconnect, NULL);
 
-    g_debug ("Network start parameters set (apn: '%s', 3gpp_profile: '%u', 3gpp2_profile: '%u', auth: '%s', username: '%s', password: '%s', autoconnect: '%s')",
+    g_debug ("Network start parameters set (apn: '%s', 3gpp_profile: '%u', 3gpp2_profile: '%u', auth: '%s', ip-type: '%s', username: '%s', password: '%s', autoconnect: '%s')",
              props.apn                             ? props.apn                          : "unspecified",
              props.profile_index_3gpp,
              props.profile_index_3gpp2,
              aux_auth_str                          ? aux_auth_str                       : "unspecified",
+             ip_type_str                           ? ip_type_str                        : "unspecified",
              (props.username && props.username[0]) ? props.username                     : "unspecified",
              (props.password && props.password[0]) ? props.password                     : "unspecified",
              props.autoconnect_set                 ? (props.autoconnect ? "yes" : "no") : "unspecified");
