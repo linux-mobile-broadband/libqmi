@@ -81,7 +81,7 @@ static gboolean get_factory_sku_flag;
 static gboolean list_stored_images_flag;
 static gchar *select_stored_image_str;
 static gchar *delete_stored_image_str;
-static gchar *set_firmware_pref_str;
+static gchar *set_firmware_preference_str;
 static gboolean set_fcc_authentication_flag;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
@@ -244,7 +244,7 @@ static GOptionEntry entries[] = {
       "Delete stored image",
       "[modem#|pri#] where # is the index"
     },
-    { "dms-set-firmware-pref", 0, 0, G_OPTION_ARG_STRING, &set_firmware_pref_str,
+    { "dms-set-firmware-preference", 0, 0, G_OPTION_ARG_STRING, &set_firmware_preference_str,
       "Set firmware preference",
       "[(fwver),(config),(carrier)]"
     },
@@ -330,7 +330,7 @@ qmicli_dms_options_enabled (void)
                  list_stored_images_flag +
                  !!select_stored_image_str +
                  !!delete_stored_image_str +
-                 !!set_firmware_pref_str +
+                 !!set_firmware_preference_str +
                  set_fcc_authentication_flag +
                  get_supported_messages_flag +
                  reset_flag +
@@ -2986,7 +2986,7 @@ get_stored_image_delete_ready (QmiClientDms *client,
 }
 
 static QmiMessageDmsSetFirmwarePreferenceInput *
-set_firmware_pref_input_create (const gchar *str)
+set_firmware_preference_input_create (const gchar *str)
 {
     QmiMessageDmsSetFirmwarePreferenceInput *input;
     GArray *array;
@@ -3731,11 +3731,11 @@ qmicli_dms_run (QmiDevice *device,
     }
 
     /* Set firmware preference? */
-    if (set_firmware_pref_str) {
+    if (set_firmware_preference_str) {
         QmiMessageDmsSetFirmwarePreferenceInput *input;
 
         g_debug ("Asynchronously setting firmware preference...");
-        input = set_firmware_pref_input_create (set_firmware_pref_str);
+        input = set_firmware_preference_input_create (set_firmware_preference_str);
         if (!input) {
             operation_shutdown (FALSE);
             return;
