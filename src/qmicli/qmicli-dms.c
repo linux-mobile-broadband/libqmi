@@ -2834,12 +2834,12 @@ select_stored_image_ready (QmiClientDms *client,
     if (qmi_message_dms_set_firmware_preference_output_get_image_download_list (output, &array, &error)) {
         guint i;
         GString *images;
-        QmiDmsFirmwareImageType *type;
+        QmiDmsFirmwareImageType type;
 
         images = g_string_new ("");
         for (i = 0; i < array->len; i++) {
-            type = &g_array_index (array, QmiDmsFirmwareImageType, i);
-            g_string_append (images, qmi_dms_firmware_image_type_get_string (*type));
+            type = g_array_index (array, QmiDmsFirmwareImageType, i);
+            g_string_append (images, qmi_dms_firmware_image_type_get_string (type));
             if (i < array->len -1)
                 g_string_append (images, ", ");
         }
