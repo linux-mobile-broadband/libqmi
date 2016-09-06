@@ -69,10 +69,6 @@ gboolean qmicli_read_non_empty_string           (const gchar *str,
                                                  gchar **out);
 gboolean qmicli_read_uint_from_string           (const gchar *str,
                                                  guint *out);
-gboolean qmicli_read_uint16_from_string         (const gchar *str,
-                                                 guint16 *out);
-gboolean qmicli_read_uint8_from_string         (const gchar *str,
-                                                guint8 *out);
 gboolean qmicli_read_yes_no_from_string         (const gchar *str,
                                                  gboolean *out);
 

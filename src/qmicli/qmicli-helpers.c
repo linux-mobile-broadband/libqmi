@@ -576,52 +576,6 @@ qmicli_read_uint_from_string (const gchar *str,
     return FALSE;
 }
 
-gboolean
-qmicli_read_uint16_from_string (const gchar *str,
-                                guint16 *out)
-{
-    gulong num;
-
-    if (!str || !str[0])
-        return FALSE;
-
-    for (num = 0; str[num]; num++) {
-        if (!g_ascii_isdigit (str[num]))
-            return FALSE;
-    }
-
-    errno = 0;
-    num = strtoul (str, NULL, 10);
-    if (!errno && num <= G_MAXUINT16) {
-        *out = (guint16)num;
-        return TRUE;
-    }
-    return FALSE;
-}
-
-gboolean
-qmicli_read_uint8_from_string (const gchar *str,
-                               guint8 *out)
-{
-    gulong num;
-
-    if (!str || !str[0])
-        return FALSE;
-
-    for (num = 0; str[num]; num++) {
-        if (!g_ascii_isdigit (str[num]))
-            return FALSE;
-    }
-
-    errno = 0;
-    num = strtoul (str, NULL, 10);
-    if (!errno && num <= G_MAXUINT8) {
-        *out = (guint8)num;
-        return TRUE;
-    }
-    return FALSE;
-}
-
 gchar *
 qmicli_get_supported_messages_list (const guint8 *data,
                                     gsize len)
