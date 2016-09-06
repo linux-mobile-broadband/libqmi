@@ -16,14 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Copyright (C) 2015 Velocloud Inc.
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2016 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <ctype.h>
 
 #include "qmicli-helpers.h"
 
@@ -317,40 +316,36 @@ qmicli_read_firmware_id_from_string (const gchar *str,
 
 gboolean
 qmicli_read_binary_array_from_string (const gchar *str,
-                                      GArray **out) {
-    char a;
-    gsize i,len;
-    if (!str) return FALSE;
+                                      GArray **out)
+{
+    gsize i, j, len;
 
-    if((len = strlen(str)) & 1) return FALSE;
+    g_return_val_if_fail (out != NULL, FALSE);
+    g_return_val_if_fail (str, FALSE);
 
-    *out = g_array_sized_new(FALSE, TRUE, 1, len >> 1);
-    g_array_set_size(*out, len >> 1);
+    /* Length must be a multiple of 2 */
+    len = strlen (str);
+    if (len & 1)
+        return FALSE;
 
-    for (i = 0; i < len; i++) {
-        a = toupper(str[i]);
-        if (!isxdigit(a))
-            break;
-        if (isdigit(a)) {
-            a -= '0';
-        } else {
-            a = a - 'A' + 10;
+    *out = g_array_sized_new (FALSE, TRUE, sizeof (guint8), len >> 1);
+    g_array_set_size (*out, len >> 1);
+
+    for (i = 0, j = 0; i < len; i += 2, j++) {
+        gint a, b;
+
+        a = g_ascii_xdigit_value (str[i]);
+        b = g_ascii_xdigit_value (str[i + 1]);
+        if (a < 0 || b < 0) {
+            g_array_unref (*out);
+            return FALSE;
         }
 
-        if (i & 1) {
-            g_array_index(*out, gchar, i >> 1) |= a;
-        } else {
-            g_array_index(*out, gchar, i >> 1) = a<<4;
-        }
-    }
-    if (i < len) {
-        g_free(out);
-        out = NULL;
+        g_array_index (*out, guint8, j) = (a << 4) | b;
     }
 
     return TRUE;
 }
-
 
 gboolean
 qmicli_read_pdc_configuration_type_from_string (const gchar *str,
