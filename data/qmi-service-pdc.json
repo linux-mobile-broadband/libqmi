@@ -68,7 +68,7 @@
      "service" : "PDC",
      "id"      : "0x20",
      "version" : "1.15",
-     "input"   : [ { "name"          : "EnableReporting",
+     "input"   : [ { "name"          : "Enable Reporting",
                      "id"            : "0x10",
                      "mandatory"     : "yes",
                      "type"          : "TLV",
