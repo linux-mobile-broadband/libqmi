@@ -1511,7 +1511,7 @@ get_operating_mode_ready (QmiClientDms *client,
              qmi_device_get_path_display (ctx->device),
              qmi_dms_operating_mode_get_string (mode));
 
-    if (mode == QMI_DMS_OPERATING_MODE_OFFLINE) {
+    if (mode == QMI_DMS_OPERATING_MODE_OFFLINE || mode == QMI_DMS_OPERATING_MODE_LOW_POWER) {
         QmiDmsOfflineReason reason;
         gchar *reason_str = NULL;
 
