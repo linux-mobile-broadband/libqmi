@@ -26,6 +26,20 @@
     // *********************************************************************************
     // WDS common TLVs
 
+   { "common-ref"    : "WDS Extended Error Code",
+     "name"          : "Extended Error Code",
+     "id"            : "0xE0",
+     "mandatory"     : "no",
+     "type"          : "TLV",
+     "format"        : "guint16",
+     "public-format" : "QmiWdsDsProfileError",
+     "prerequisites" : [ { "field"     : "Result.Error Status",
+                           "operation" : "!=",
+                           "value"     : "QMI_STATUS_SUCCESS" },
+                         { "field"     : "Result.Error Code",
+                           "operation" : "==",
+                           "value"     : "QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL" } ] },
+
    { "common-ref" : "WDS Profile Identifier",
      "name"       : "Profile Identifier",
      "id"         : "0x01",

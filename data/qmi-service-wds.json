@@ -739,18 +739,7 @@
      "output"  : [ { "common-ref" : "Operation Result" },
                    { "common-ref" : "WDS Profile Identifier",
                      "prerequisites" : [ { "common-ref" : "Success" } ] },
-                   { "name"          : "Extended Error Code",
-                     "id"            : "0xE0",
-                     "mandatory"     : "no",
-                     "type"          : "TLV",
-                     "format"        : "guint16",
-                     "public-format" : "QmiWdsDsProfileError",
-                     "prerequisites" : [ { "field"     : "Result.Error Status",
-                                           "operation" : "!=",
-                                           "value"     : "QMI_STATUS_SUCCESS" },
-                                         { "field"     : "Result.Error Code",
-                                           "operation" : "==",
-                                           "value"     : "QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL" } ] } ] },
+                   { "common-ref" : "WDS Extended Error Code" } ] },
 
   // *********************************************************************************
   {  "name"    : "Modify Profile",
@@ -822,18 +811,7 @@
                     // 0xAA, PDN inactivity timeout
                     // 0xAB, APN class
      "output"  : [ { "common-ref" : "Operation Result" },
-                   { "name"          : "Extended Error Code",
-                     "id"            : "0xE0",
-                     "mandatory"     : "no",
-                     "type"          : "TLV",
-                     "format"        : "guint16",
-                     "public-format" : "QmiWdsDsProfileError",
-                     "prerequisites" : [ { "field"     : "Result.Error Status",
-                                           "operation" : "!=",
-                                           "value"     : "QMI_STATUS_SUCCESS" },
-                                         { "field"     : "Result.Error Code",
-                                           "operation" : "==",
-                                           "value"     : "QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL" } ] } ] },
+                   { "common-ref" : "WDS Extended Error Code" } ] },
 
   // *********************************************************************************
   {  "name"    : "Delete Profile",
@@ -843,18 +821,7 @@
      "version" : "1.1",
      "input"   : [ { "common-ref" : "WDS Profile Identifier" } ],
      "output"  : [ { "common-ref" : "Operation Result" },
-                   { "name"          : "Extended Error Code",
-                     "id"            : "0xE0",
-                     "mandatory"     : "no",
-                     "type"          : "TLV",
-                     "format"        : "guint16",
-                     "public-format" : "QmiWdsDsProfileError",
-                     "prerequisites" : [ { "field"     : "Result.Error Status",
-                                           "operation" : "!=",
-                                           "value"     : "QMI_STATUS_SUCCESS" },
-                                         { "field"     : "Result.Error Code",
-                                           "operation" : "==",
-                                           "value"     : "QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL" } ] } ] },
+                   { "common-ref" : "WDS Extended Error Code" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get Profile List",
@@ -884,18 +851,7 @@
                                                         { "name"   : "Profile Name",
                                                           "format" : "string" } ] },
                      "prerequisites" : [ { "common-ref" : "Success" } ] },
-                   { "name"          : "Extended Error Code",
-                     "id"            : "0xE0",
-                     "mandatory"     : "no",
-                     "type"          : "TLV",
-                     "format"        : "guint16",
-                     "public-format" : "QmiWdsDsProfileError",
-                     "prerequisites" : [ { "field"     : "Result.Error Status",
-                                           "operation" : "!=",
-                                           "value"     : "QMI_STATUS_SUCCESS" },
-                                         { "field"     : "Result.Error Code",
-                                           "operation" : "==",
-                                           "value"     : "QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL" } ] } ] },
+                   { "common-ref" : "WDS Extended Error Code" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get Profile Settings",
@@ -1003,18 +959,7 @@
                     // 0xA9, APN enabled
                     // 0xAA, PDN inactivity timeout
                     // 0xAB, APN class
-                    { "name"          : "Extended Error Code",
-                      "id"            : "0xE0",
-                      "mandatory"     : "no",
-                      "type"          : "TLV",
-                      "format"        : "guint16",
-                      "public-format" : "QmiWdsDsProfileError",
-                      "prerequisites" : [ { "field"     : "Result.Error Status",
-                                            "operation" : "!=",
-                                            "value"     : "QMI_STATUS_SUCCESS" },
-                                          { "field"     : "Result.Error Code",
-                                            "operation" : "==",
-                                            "value"     : "QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL" } ] } ] },
+                   { "common-ref" : "WDS Extended Error Code" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get Default Settings",
@@ -1118,18 +1063,7 @@
                     // 0xA9, APN enabled
                     // 0xAA, PDN inactivity timeout
                     // 0xAB, APN class
-                    { "name"          : "Extended Error Code",
-                      "id"            : "0xE0",
-                      "mandatory"     : "no",
-                      "type"          : "TLV",
-                      "format"        : "guint16",
-                      "public-format" : "QmiWdsDsProfileError",
-                      "prerequisites" : [ { "field"     : "Result.Error Status",
-                                            "operation" : "!=",
-                                            "value"     : "QMI_STATUS_SUCCESS" },
-                                          { "field"     : "Result.Error Code",
-                                            "operation" : "==",
-                                            "value"     : "QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL" } ] } ] },
+                   { "common-ref" : "WDS Extended Error Code" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get Current Settings",
