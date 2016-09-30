@@ -175,6 +175,8 @@
       <xi:include href="xml/qmi-message-wds-go-dormant.xml"/>
       <xi:include href="xml/qmi-message-wds-go-active.xml"/>
       <xi:include href="xml/qmi-message-wds-create-profile.xml"/>
+      <xi:include href="xml/qmi-message-wds-modify-profile.xml"/>
+      <xi:include href="xml/qmi-message-wds-delete-profile.xml"/>
       <xi:include href="xml/qmi-message-wds-get-profile-list.xml"/>
       <xi:include href="xml/qmi-message-wds-get-profile-settings.xml"/>
       <xi:include href="xml/qmi-message-wds-get-default-settings.xml"/>

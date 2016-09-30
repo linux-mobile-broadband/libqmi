@@ -695,16 +695,16 @@
                     { "common-ref"    : "WDS IMCN Flag" },
                     // 0x23, TFT ID1 Parameters
                     // 0x24, TFT ID2 Parameters
-                    // 0x25, PDP context number
-                    // 0x26, PDP context secondary flag
-                    // 0x27, PDP context primary id
+                    { "common-ref"    : "WDS PDP Context Number" },
+                    { "common-ref"    : "WDS PDP Context Secondary Flag" },
+                    { "common-ref"    : "WDS PDP Context Primary ID" },
                     { "common-ref"    : "WDS IPv6 Address Preference" },
-                    // 0x29, UMTS requested QoS with Signaling Indication Flag
-                    // 0x2A, UMTS minimum QoS with Signaling Indication Flag
+                    { "common-ref"    : "WDS UMTS Requested QoS With Signaling Indication Flag" },
+                    { "common-ref"    : "WDS UMTS Minimum QoS With Signaling Indication Flag" },
                     { "common-ref"    : "WDS IPv6 Primary DNS Address Preference" },
-                    { "common-ref"    : "WDS IPv6 Secondary DNS Address Preference" } ],
+                    { "common-ref"    : "WDS IPv6 Secondary DNS Address Preference" },
                     // 0x2D, DHCP/NAS Preference
-                    // 0x2E, 3GPP LTE QoS Parameters
+                    { "common-ref"    : "WDS LTE QoS Parameters" } ],
                     // 0x2F, APN disabled flag
                     // 0x30, PDN inactivity timeout
                     // 0x31, APN class
@@ -737,17 +737,112 @@
                     // 0xAA, PDN inactivity timeout
                     // 0xAB, APN class
      "output"  : [ { "common-ref" : "Operation Result" },
-                   { "name"      : "Profile Identifier",
-                     "id"        : "0x01",
-                     "mandatory" : "yes",
-                     "type"      : "TLV",
-                     "format"    : "sequence",
-                     "contents"  : [ { "name"   : "Profile Type",
-                                       "format" : "guint8",
-                                       "public-format" : "QmiWdsProfileType" },
-                                     { "name"   : "Profile Index",
-                                       "format" : "guint8" } ],
+                   { "common-ref" : "WDS Profile Identifier",
                      "prerequisites" : [ { "common-ref" : "Success" } ] },
+                   { "name"          : "Extended Error Code",
+                     "id"            : "0xE0",
+                     "mandatory"     : "no",
+                     "type"          : "TLV",
+                     "format"        : "guint16",
+                     "public-format" : "QmiWdsDsProfileError",
+                     "prerequisites" : [ { "field"     : "Result.Error Status",
+                                           "operation" : "!=",
+                                           "value"     : "QMI_STATUS_SUCCESS" },
+                                         { "field"     : "Result.Error Code",
+                                           "operation" : "==",
+                                           "value"     : "QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Modify Profile",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0028",
+     "version" : "1.1",
+     "input"   : [  { "common-ref"    : "WDS Profile Identifier" },
+                    { "common-ref"    : "WDS Profile Name" },
+                    { "common-ref"    : "WDS PDP Type" },
+                    { "common-ref"    : "WDS PDP Header Compression Type" },
+                    { "common-ref"    : "WDS PDP Data Compression Type" },
+                    { "common-ref"    : "WDS APN Name" },
+                    { "common-ref"    : "WDS Primary IPv4 DNS Address" },
+                    { "common-ref"    : "WDS Secondary IPv4 DNS Address" },
+                    { "common-ref"    : "WDS UMTS Requested QoS" },
+                    { "common-ref"    : "WDS UMTS Minimum QoS" },
+                    { "common-ref"    : "WDS GPRS Requested QoS" },
+                    { "common-ref"    : "WDS GPRS Minimum QoS" },
+                    { "common-ref"    : "WDS Username" },
+                    { "common-ref"    : "WDS Password" },
+                    { "common-ref"    : "WDS Authentication" },
+                    { "common-ref"    : "WDS IPv4 Address Preference" },
+                    { "common-ref"    : "WDS PCSCF Address Using PCO" },
+                    // 0x20, PDP access control flag
+                    { "common-ref"    : "WDS PCSCF Address Using DHCP" },
+                    { "common-ref"    : "WDS IMCN Flag" },
+                    // 0x23, TFT ID1 Parameters
+                    // 0x24, TFT ID2 Parameters
+                    { "common-ref"    : "WDS PDP Context Number" },
+                    { "common-ref"    : "WDS PDP Context Secondary Flag" },
+                    { "common-ref"    : "WDS PDP Context Primary ID" },
+                    { "common-ref"    : "WDS IPv6 Address Preference" },
+                    { "common-ref"    : "WDS UMTS Requested QoS With Signaling Indication Flag" },
+                    { "common-ref"    : "WDS UMTS Minimum QoS With Signaling Indication Flag" },
+                    { "common-ref"    : "WDS IPv6 Primary DNS Address Preference" },
+                    { "common-ref"    : "WDS IPv6 Secondary DNS Address Preference" },
+                    // 0x2D, DHCP/NAS Preference
+                    { "common-ref"    : "WDS LTE QoS Parameters" } ],
+                    // 0x2F, APN disabled flag
+                    // 0x30, PDN inactivity timeout
+                    // 0x31, APN class
+                    // 0x90, Negotiate DNS server preference
+                    // 0x91, PPP session close timer for DO
+                    // 0x92, PPP session close timer for 1X
+                    // 0x93, Allow/disallow lingering of interface
+                    // 0x94, LCP ACK timeout
+                    // 0x95, IPCP ACK timeout
+                    // 0x96, AUTH timeout
+                    // 0x97, LCP configuration request retry count value
+                    // 0x98, IPCP configuration request retry count value
+                    // 0x99, Authentication retry
+                    // 0x9A, Authentication protocol,
+                    // 0x9B, User ID
+                    // 0x9C, Authentication password
+                    // 0x9D, Data rate
+                    // 0x9E, Application type
+                    // 0x9F, Data mode
+                    // 0xA0, Application priority
+                    // 0xA1, APN string
+                    // 0xA2, PDN type
+                    // 0xA3, Is PCSCF address needed
+                    // 0xA4, IPv4 Primary DNS address
+                    // 0xA5, IPv4 Secondary DNS address
+                    // 0xA6, IPv6 Primary DNS address
+                    // 0xA7, IPv6 Secondary DNS address
+                    // 0xA8, RAT type
+                    // 0xA9, APN enabled
+                    // 0xAA, PDN inactivity timeout
+                    // 0xAB, APN class
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"          : "Extended Error Code",
+                     "id"            : "0xE0",
+                     "mandatory"     : "no",
+                     "type"          : "TLV",
+                     "format"        : "guint16",
+                     "public-format" : "QmiWdsDsProfileError",
+                     "prerequisites" : [ { "field"     : "Result.Error Status",
+                                           "operation" : "!=",
+                                           "value"     : "QMI_STATUS_SUCCESS" },
+                                         { "field"     : "Result.Error Code",
+                                           "operation" : "==",
+                                           "value"     : "QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Delete Profile",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0029",
+     "version" : "1.1",
+     "input"   : [ { "common-ref" : "WDS Profile Identifier" } ],
+     "output"  : [ { "common-ref" : "Operation Result" },
                    { "name"          : "Extended Error Code",
                      "id"            : "0xE0",
                      "mandatory"     : "no",
@@ -858,19 +953,25 @@
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x23, TFT ID1 Parameters
                     // 0x24, TFT ID2 Parameters
-                    // 0x25, PDP context number
-                    // 0x26, PDP context secondary flag
-                    // 0x27, PDP context primary id
+                    { "common-ref"    : "WDS PDP Context Number",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
+                    { "common-ref"    : "WDS PDP Context Secondary Flag",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
+                    { "common-ref"    : "WDS PDP Context Primary ID",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "WDS IPv6 Address Preference",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
-                    // 0x29, UMTS requested QoS with Signaling Indication Flag
-                    // 0x2A, UMTS minimum QoS with Signaling Indication Flag
+                    { "common-ref"    : "WDS UMTS Requested QoS With Signaling Indication Flag",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
+                    { "common-ref"    : "WDS UMTS Minimum QoS With Signaling Indication Flag",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "WDS IPv6 Primary DNS Address Preference",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "WDS IPv6 Secondary DNS Address Preference",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x2D, DHCP/NAS Preference
-                    // 0x2E, 3GPP LTE QoS Parameters
+                    { "common-ref"    : "WDS LTE QoS Parameters",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x2F, APN disabled flag
                     // 0x30, PDN inactivity timeout
                     // 0x31, APN class
@@ -967,19 +1068,25 @@
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x23, TFT ID1 Parameters
                     // 0x24, TFT ID2 Parameters
-                    // 0x25, PDP context number
-                    // 0x26, PDP context secondary flag
-                    // 0x27, PDP context primary id
+                    { "common-ref"    : "WDS PDP Context Number",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
+                    { "common-ref"    : "WDS PDP Context Secondary Flag",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
+                    { "common-ref"    : "WDS PDP Context Primary ID",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "WDS IPv6 Address Preference",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
-                    // 0x29, UMTS requested QoS with Signaling Indication Flag
-                    // 0x2A, UMTS minimum QoS with Signaling Indication Flag
+                    { "common-ref"    : "WDS UMTS Requested QoS With Signaling Indication Flag",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
+                    { "common-ref"    : "WDS UMTS Minimum QoS With Signaling Indication Flag",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "WDS IPv6 Primary DNS Address Preference",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "WDS IPv6 Secondary DNS Address Preference",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x2D, DHCP/NAS Preference
-                    // 0x2E, 3GPP LTE QoS Parameters
+                    { "common-ref"    : "WDS LTE QoS Parameters",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x2F, APN disabled flag
                     // 0x30, PDN inactivity timeout
                     // 0x31, APN class
