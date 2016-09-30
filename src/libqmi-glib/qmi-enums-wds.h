@@ -1252,7 +1252,6 @@ typedef enum {
     QMI_WDS_AUTOCONNECT_SETTING_ROAMING_HOME_ONLY = 1,
 } QmiWdsAutoconnectSettingRoaming;
 
-
 /*****************************************************************************/
 /* Helper enums for the 'QMI WDS Set Event Report' message */
 
@@ -1448,5 +1447,42 @@ typedef enum {
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP2_HDR_REV_B_MMPA      = 1 << 11,
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP2_HDR_EVDO_FMC        = 1 << 12,
 } QmiWdsExtendedDataBearerTechnology3gpp2;
+
+/*****************************************************************************/
+/* Helper enums for the 'QMI WDS Profile'-related messages */
+
+/**
+ * QmiWdsPdpHeaderCompressionType:
+ * @QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_OFF: no header compression
+ * @QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_MANUFACTURER_PREFERRED: manufacturer preferred
+ * @QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_RFC1144: RFC1144
+ * @QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_RFC2507: RFC2507
+ * @QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_RFC3095: RFC3095
+ *
+ * PDP header compression types.
+ */
+typedef enum { /*< underscore_name=qmi_wds_pdp_header_compression_type >*/
+    QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_OFF                    = 0,
+    QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_MANUFACTURER_PREFERRED = 1,
+    QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_RFC1144                = 2,
+    QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_RFC2507                = 3,
+    QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_RFC3095                = 4,
+} QmiWdsPdpHeaderCompressionType;
+
+/**
+ * QmiWdsPdpDataCompressionType:
+ * @QMI_WDS_PDP_DATA_COMPRESSION_TYPE_OFF: no data compression
+ * @QMI_WDS_PDP_DATA_COMPRESSION_TYPE_MANUFACTURER_PREFERRED: manufacturer preferred
+ * @QMI_WDS_PDP_DATA_COMPRESSION_TYPE_V42BIS: V42bis
+ * @QMI_WDS_PDP_DATA_COMPRESSION_TYPE_V44: V44
+ *
+ * PDP data compression types.
+ */
+typedef enum { /*< underscore_name=qmi_wds_pdp_data_compression_type >*/
+    QMI_WDS_PDP_DATA_COMPRESSION_TYPE_OFF                    = 0,
+    QMI_WDS_PDP_DATA_COMPRESSION_TYPE_MANUFACTURER_PREFERRED = 1,
+    QMI_WDS_PDP_DATA_COMPRESSION_TYPE_V42BIS                 = 2,
+    QMI_WDS_PDP_DATA_COMPRESSION_TYPE_V44                    = 3,
+} QmiWdsPdpDataCompressionType;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDS_H_ */
