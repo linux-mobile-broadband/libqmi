@@ -170,6 +170,7 @@
       <xi:include href="xml/qmi-message-wds-stop-network.xml"/>
       <xi:include href="xml/qmi-message-wds-get-packet-service-status.xml"/>
       <xi:include href="xml/qmi-message-wds-get-packet-statistics.xml"/>
+      <xi:include href="xml/qmi-message-wds-create-profile.xml"/>
       <xi:include href="xml/qmi-message-wds-get-profile-list.xml"/>
       <xi:include href="xml/qmi-message-wds-get-profile-settings.xml"/>
       <xi:include href="xml/qmi-message-wds-get-default-settings.xml"/>
