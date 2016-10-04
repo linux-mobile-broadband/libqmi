@@ -647,6 +647,22 @@
                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Go Dormant",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0025",
+     "version" : "1.0",
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Go Active",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0026",
+     "version" : "1.0",
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Create Profile",
      "type"    : "Message",
      "service" : "WDS",
@@ -1549,6 +1565,21 @@
                       "format"    : "guint16",
                       "public-format" : "QmiWdsExtendedTechnologyPreference",
                       "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Get Dormancy Status",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0030",
+     "version" : "1.0",
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"          : "Dormancy Status",
+                     "id"            : "0x01",
+                     "mandatory"     : "no",
+                     "type"          : "TLV",
+                     "format"        : "guint8",
+                     "public-format" : "QmiWdsDormancyStatus",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
   {  "name"    : "Get Autoconnect Settings",

@@ -57,6 +57,10 @@ static gboolean get_packet_service_status_flag;
 static gboolean get_packet_statistics_flag;
 static gboolean get_data_bearer_technology_flag;
 static gboolean get_current_data_bearer_technology_flag;
+static gboolean get_current_data_bearer_technology_flag;
+static gboolean go_dormant_flag;
+static gboolean go_active_flag;
+static gboolean get_dormancy_status_flag;
 static gchar *get_profile_list_str;
 static gchar *get_default_settings_str;
 static gboolean get_autoconnect_settings_flag;
@@ -96,6 +100,18 @@ static GOptionEntry entries[] = {
     },
     { "wds-get-current-data-bearer-technology", 0, 0, G_OPTION_ARG_NONE, &get_current_data_bearer_technology_flag,
       "Get current data bearer technology",
+      NULL
+    },
+    { "wds-go-dormant", 0, 0, G_OPTION_ARG_NONE, &go_dormant_flag,
+      "Make the active data connection go dormant",
+      NULL
+    },
+    { "wds-go-active", 0, 0, G_OPTION_ARG_NONE, &go_active_flag,
+      "Make the active data connection go active",
+      NULL
+    },
+    { "wds-get-dormancy-status", 0, 0, G_OPTION_ARG_NONE, &get_dormancy_status_flag,
+      "Get the dormancy status of the active data connection",
       NULL
     },
     { "wds-get-profile-list", 0, 0, G_OPTION_ARG_STRING, &get_profile_list_str,
@@ -160,6 +176,9 @@ qmicli_wds_options_enabled (void)
                  get_packet_statistics_flag +
                  get_data_bearer_technology_flag +
                  get_current_data_bearer_technology_flag +
+                 go_dormant_flag +
+                 go_active_flag +
+                 get_dormancy_status_flag +
                  !!get_profile_list_str +
                  !!get_default_settings_str +
                  get_autoconnect_settings_flag +
@@ -1025,6 +1044,100 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+static void
+go_dormant_ready (QmiClientWds *client,
+                  GAsyncResult *res)
+{
+    GError *error = NULL;
+    QmiMessageWdsGoDormantOutput *output;
+
+    output = qmi_client_wds_go_dormant_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
+                    error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_go_dormant_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't go dormant: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wds_go_dormant_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_wds_go_dormant_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
+go_active_ready (QmiClientWds *client,
+                 GAsyncResult *res)
+{
+    GError *error = NULL;
+    QmiMessageWdsGoActiveOutput *output;
+
+    output = qmi_client_wds_go_active_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
+                    error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_go_active_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't go active: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wds_go_active_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_wds_go_active_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
+get_dormancy_status_ready (QmiClientWds *client,
+                           GAsyncResult *res)
+{
+    GError *error = NULL;
+    QmiMessageWdsGetDormancyStatusOutput *output;
+    QmiWdsDormancyStatus status;
+
+    output = qmi_client_wds_get_dormancy_status_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n",
+                    error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_get_dormancy_status_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get dormancy status: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wds_get_dormancy_status_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (qmi_message_wds_get_dormancy_status_output_get_dormancy_status (
+            output,
+            &status,
+            NULL)) {
+        g_print ("[%s] Dormancy Status: '%s'\n",
+                 qmi_device_get_path_display (ctx->device),
+                 qmi_wds_dormancy_status_get_string (status));
+    }
+
+    qmi_message_wds_get_dormancy_status_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
 typedef struct {
     guint i;
     GArray *profile_list;
@@ -1587,6 +1700,42 @@ qmicli_wds_run (QmiDevice *device,
                                                            ctx->cancellable,
                                                            (GAsyncReadyCallback)get_current_data_bearer_technology_ready,
                                                            NULL);
+        return;
+    }
+
+    /* Request to go dormant? */
+    if (go_dormant_flag) {
+        g_debug ("Asynchronously going dormant...");
+        qmi_client_wds_go_dormant (ctx->client,
+                                   NULL,
+                                   10,
+                                   ctx->cancellable,
+                                   (GAsyncReadyCallback)go_dormant_ready,
+                                   NULL);
+        return;
+    }
+
+    /* Request to go active? */
+    if (go_active_flag) {
+        g_debug ("Asynchronously going active...");
+        qmi_client_wds_go_active (ctx->client,
+                                   NULL,
+                                   10,
+                                   ctx->cancellable,
+                                   (GAsyncReadyCallback)go_active_ready,
+                                   NULL);
+        return;
+    }
+
+    /* Request to get dormancy status? */
+    if (get_dormancy_status_flag) {
+        g_debug ("Asynchronously getting dormancy status...");
+        qmi_client_wds_get_dormancy_status (ctx->client,
+                                            NULL,
+                                            10,
+                                            ctx->cancellable,
+                                            (GAsyncReadyCallback)get_dormancy_status_ready,
+                                            NULL);
         return;
     }
 

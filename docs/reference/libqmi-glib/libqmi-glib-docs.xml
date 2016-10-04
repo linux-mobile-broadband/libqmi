@@ -172,11 +172,14 @@
       <xi:include href="xml/qmi-message-wds-stop-network.xml"/>
       <xi:include href="xml/qmi-message-wds-get-packet-service-status.xml"/>
       <xi:include href="xml/qmi-message-wds-get-packet-statistics.xml"/>
+      <xi:include href="xml/qmi-message-wds-go-dormant.xml"/>
+      <xi:include href="xml/qmi-message-wds-go-active.xml"/>
       <xi:include href="xml/qmi-message-wds-create-profile.xml"/>
       <xi:include href="xml/qmi-message-wds-get-profile-list.xml"/>
       <xi:include href="xml/qmi-message-wds-get-profile-settings.xml"/>
       <xi:include href="xml/qmi-message-wds-get-default-settings.xml"/>
       <xi:include href="xml/qmi-message-wds-get-current-settings.xml"/>
+      <xi:include href="xml/qmi-message-wds-get-dormancy-status.xml"/>
       <xi:include href="xml/qmi-message-wds-get-autoconnect-settings.xml"/>
       <xi:include href="xml/qmi-message-wds-set-autoconnect-settings.xml"/>
       <xi:include href="xml/qmi-message-wds-get-data-bearer-technology.xml"/>
