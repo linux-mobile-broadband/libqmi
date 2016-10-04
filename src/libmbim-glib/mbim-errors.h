@@ -129,6 +129,7 @@ typedef enum {
  * @MBIM_STATUS_ERROR_AUTH_INCORRECT_AUTN: Incorrect AUTN when sending authentication.
  * @MBIM_STATUS_ERROR_AUTH_SYNC_FAILURE: Synchronization failure during the authentication.
  * @MBIM_STATUS_ERROR_AUTH_AMF_NOT_SET: AMF bit not set in the authentication.
+ * @MBIM_STATUS_ERROR_CONTEXT_NOT_SUPPORTED: ContextType not supported by the operation.
  * @MBIM_STATUS_ERROR_SMS_UNKNOWN_SMSC_ADDRESS: Unknown SMSC address.
  * @MBIM_STATUS_ERROR_SMS_NETWORK_TIMEOUT: Network timeout when sending SMS.
  * @MBIM_STATUS_ERROR_SMS_LANG_NOT_SUPPORTED: Language not supported in SMS.
@@ -176,6 +177,7 @@ typedef enum {
     MBIM_STATUS_ERROR_AUTH_INCORRECT_AUTN              = 35, /*< nick=AuthIncorrectAuth >*/
     MBIM_STATUS_ERROR_AUTH_SYNC_FAILURE                = 36, /*< nick=AuthSyncFailure >*/
     MBIM_STATUS_ERROR_AUTH_AMF_NOT_SET                 = 37, /*< nick=AuthAmfNotSet >*/
+    MBIM_STATUS_ERROR_CONTEXT_NOT_SUPPORTED            = 38, /*< nick=ContextNotSupported >*/
     MBIM_STATUS_ERROR_SMS_UNKNOWN_SMSC_ADDRESS         = 100, /*< nick=SmsUnknownSmscAddress >*/
     MBIM_STATUS_ERROR_SMS_NETWORK_TIMEOUT              = 101, /*< nick=SmsNetworkTimeout >*/
     MBIM_STATUS_ERROR_SMS_LANG_NOT_SUPPORTED           = 102, /*< nick=SmsLangNotSupported >*/
