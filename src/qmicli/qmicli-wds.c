@@ -509,7 +509,7 @@ start_network_input_create (const gchar *str)
         qmi_message_wds_start_network_input_set_profile_index_3gpp2 (input, props.profile_index_3gpp2, NULL);
 
     /* Set IP Type */
-    if (props.ip_type != QMI_WDS_IP_FAMILY_UNSPECIFIED) {
+    if (props.ip_type != 0) {
         qmi_message_wds_start_network_input_set_ip_family_preference (input, props.ip_type, NULL);
         if (props.ip_type == QMI_WDS_IP_FAMILY_IPV4)
             ip_type_str = "4";
