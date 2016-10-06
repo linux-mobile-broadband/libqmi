@@ -193,6 +193,9 @@ class VariableString(Variable):
     Getter for the string type
     """
     def build_getter_declaration(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
@@ -205,6 +208,9 @@ class VariableString(Variable):
     Documentation for the getter
     """
     def build_getter_documentation(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
@@ -217,6 +223,9 @@ class VariableString(Variable):
     Builds the String getter implementation
     """
     def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+        if not self.visible:
+            return ""
+
         translations = { 'lp'   : line_prefix,
                          'from' : variable_name_from,
                          'to'   : variable_name_to }
@@ -236,6 +245,9 @@ class VariableString(Variable):
     Setter for the string type
     """
     def build_setter_declaration(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
@@ -248,6 +260,9 @@ class VariableString(Variable):
     Documentation for the setter
     """
     def build_setter_documentation(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
@@ -269,6 +284,9 @@ class VariableString(Variable):
     Builds the String setter implementation
     """
     def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
+        if not self.visible:
+            return ""
+
         translations = { 'lp'   : line_prefix,
                          'from' : variable_name_from,
                          'to'   : variable_name_to }

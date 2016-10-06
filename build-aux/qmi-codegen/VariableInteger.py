@@ -264,6 +264,9 @@ class VariableInteger(Variable):
     Getter for the integer type
     """
     def build_getter_declaration(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         translations = { 'lp'            : line_prefix,
                          'public_format' : self.public_format,
                          'name'          : variable_name }
@@ -277,6 +280,9 @@ class VariableInteger(Variable):
     Documentation for the getter
     """
     def build_getter_documentation(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         translations = { 'lp'            : line_prefix,
                          'public_format' : self.public_format,
                          'name'          : variable_name }
@@ -289,6 +295,9 @@ class VariableInteger(Variable):
     Builds the Integer getter implementation
     """
     def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+        if not self.visible:
+            return ""
+
         needs_cast = True if self.public_format != self.private_format else False
         translations = { 'lp'       : line_prefix,
                          'from'     : variable_name_from,
@@ -311,6 +320,9 @@ class VariableInteger(Variable):
     Setter for the integer type
     """
     def build_setter_declaration(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         translations = { 'lp'            : line_prefix,
                          'public_format' : self.public_format,
                          'name'          : variable_name }
@@ -324,6 +336,9 @@ class VariableInteger(Variable):
     Documentation for the setter
     """
     def build_setter_documentation(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         translations = { 'lp'            : line_prefix,
                          'public_format' : self.public_format,
                          'name'          : variable_name }
@@ -337,6 +352,9 @@ class VariableInteger(Variable):
     Implementation of the setter
     """
     def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
+        if not self.visible:
+            return ""
+
         needs_cast = True if self.public_format != self.private_format else False
         translations = { 'lp'       : line_prefix,
                          'from'     : variable_name_from,

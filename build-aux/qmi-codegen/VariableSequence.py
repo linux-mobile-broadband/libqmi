@@ -132,6 +132,9 @@ class VariableSequence(Variable):
     of the variables in the sequence.
     """
     def build_getter_declaration(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         built = ''
         for member in self.members:
             built += member['object'].build_getter_declaration(line_prefix, variable_name + '_' + member['name'])
@@ -142,6 +145,9 @@ class VariableSequence(Variable):
     Documentation for the getter
     """
     def build_getter_documentation(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         built = ''
         for member in self.members:
             built += member['object'].build_getter_documentation(line_prefix, variable_name + '_' + member['name'])
@@ -152,6 +158,9 @@ class VariableSequence(Variable):
     Builds the Struct getter implementation
     """
     def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+        if not self.visible:
+            return ""
+
         built = ''
         for member in self.members:
             built += member['object'].build_getter_implementation(line_prefix,
@@ -166,6 +175,9 @@ class VariableSequence(Variable):
     of the variables in the sequence.
     """
     def build_setter_declaration(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         built = ''
         for member in self.members:
             built += member['object'].build_setter_declaration(line_prefix, variable_name + '_' + member['name'])
@@ -176,6 +188,9 @@ class VariableSequence(Variable):
     Documentation for the setter
     """
     def build_setter_documentation(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
         built = ''
         for member in self.members:
             built += member['object'].build_setter_documentation(line_prefix, variable_name + '_' + member['name'])
@@ -186,6 +201,9 @@ class VariableSequence(Variable):
     Builds the Sequence setter implementation
     """
     def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
+        if not self.visible:
+            return ""
+
         built = ''
         for member in self.members:
             built += member['object'].build_setter_implementation(line_prefix,

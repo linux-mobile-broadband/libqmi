@@ -41,6 +41,11 @@ class Variable:
         self.private_format = None
 
         """
+        Whether the variable is visible in public API or is reserved
+        """
+        self.visible = False if ('visible' in dictionary and dictionary['visible'] == 'no') else True
+
+        """
         Variables that get allocated in heap need to get properly disposed.
         """
         self.needs_dispose = False
