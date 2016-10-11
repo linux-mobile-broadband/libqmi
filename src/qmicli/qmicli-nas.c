@@ -55,6 +55,7 @@ static gboolean network_scan_flag;
 static gboolean get_cell_location_info_flag;
 static gboolean force_network_search_flag;
 static gboolean get_lte_cphy_ca_info_flag;
+static gboolean get_rf_band_info_flag;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -112,6 +113,10 @@ static GOptionEntry entries[] = {
       "Get LTE Cphy CA Info",
       NULL
     },
+    { "nas-get-rf-band-info", 0, 0, G_OPTION_ARG_NONE, &get_rf_band_info_flag,
+      "Get RF Band Info",
+      NULL
+    },
     { "nas-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
       NULL
@@ -164,6 +169,7 @@ qmicli_nas_options_enabled (void)
                  get_cell_location_info_flag +
                  force_network_search_flag +
                  get_lte_cphy_ca_info_flag +
+                 get_rf_band_info_flag +
                  get_supported_messages_flag +
                  reset_flag +
                  noop_flag);
@@ -2890,6 +2896,61 @@ get_lte_cphy_ca_info_ready (QmiClientNas *client,
 }
 
 static void
+get_rf_band_info_ready (QmiClientNas *client,
+                        GAsyncResult *res)
+{
+    QmiMessageNasGetRfBandInformationOutput *output;
+    GError *error = NULL;
+    GArray *band_array = NULL;
+    guint i;
+
+    output = qmi_client_nas_get_rf_band_information_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_rf_band_information_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get rf band info: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_rf_band_information_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got RF band info\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (!qmi_message_nas_get_rf_band_information_output_get_list (
+        output,
+        &band_array,
+        &error)) {
+        g_printerr ("error: couldn't get rf band list: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_rf_band_information_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    for (i = 0; band_array && i < band_array->len; i++) {
+        QmiMessageNasGetRfBandInformationOutputListElement *info;
+
+        info = &g_array_index (band_array, QmiMessageNasGetRfBandInformationOutputListElement, i);
+        g_print ("\tRadio Interface:   '%s'\n"
+                 "\tActive Band Class: '%s'\n"
+                 "\tActive Channel:    '%" G_GUINT16_FORMAT"'\n",
+                 qmi_nas_radio_interface_get_string (info->radio_interface),
+                 qmi_nas_active_band_get_string (info->active_band_class),
+                 info->active_channel);
+    }
+
+    qmi_message_nas_get_rf_band_information_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
 get_supported_messages_ready (QmiClientNas *client,
                               GAsyncResult *res)
 {
@@ -3154,6 +3215,18 @@ qmicli_nas_run (QmiDevice *device,
                                              ctx->cancellable,
                                              (GAsyncReadyCallback)get_lte_cphy_ca_info_ready,
                                              NULL);
+        return;
+    }
+
+    /* Request to get rf band info? */
+    if (get_rf_band_info_flag) {
+        g_debug ("Asynchronously getting RF band info ...");
+        qmi_client_nas_get_rf_band_information (ctx->client,
+                                                NULL,
+                                                10,
+                                                ctx->cancellable,
+                                                (GAsyncReadyCallback)get_rf_band_info_ready,
+                                                NULL);
         return;
     }
 
