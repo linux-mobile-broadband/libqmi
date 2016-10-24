@@ -1188,6 +1188,19 @@
                      "prerequisites"      : [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Change Device Download Mode",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x5556",
+     "version" : "1.0",
+     "input"   : [ { "name"         : "Mode",
+                     "id"           : "0x01",
+                     "mandatory"    : "yes",
+                     "type"         : "TLV",
+                     "format"       : "guint8" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Set FCC Authentication",
      "type"    : "Message",
      "service" : "DMS",

@@ -84,6 +84,7 @@ static gchar *delete_stored_image_str;
 static gchar *set_firmware_preference_str;
 static gboolean set_fcc_authentication_flag;
 static gboolean get_supported_messages_flag;
+static gchar *change_device_download_mode_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -256,6 +257,10 @@ static GOptionEntry entries[] = {
       "Get supported messages",
       NULL
     },
+    { "dms-change-device-download-mode", 0, 0, G_OPTION_ARG_STRING, &change_device_download_mode_str,
+      "Change device download mode",
+      "[mode]"
+    },
     { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -333,6 +338,7 @@ qmicli_dms_options_enabled (void)
                  !!set_firmware_preference_str +
                  set_fcc_authentication_flag +
                  get_supported_messages_flag +
+                 !!change_device_download_mode_str +
                  reset_flag +
                  noop_flag);
 
@@ -3097,6 +3103,57 @@ get_supported_messages_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+static QmiMessageDmsChangeDeviceDownloadModeInput *
+change_device_download_mode_input_create (const gchar *str)
+{
+    QmiMessageDmsChangeDeviceDownloadModeInput *input = NULL;
+    guint mode;
+    GError *error = NULL;
+
+    if (!qmicli_read_uint_from_string (str, &mode) || mode > G_MAXUINT8) {
+        g_printerr ("error: couldn't parse input data : '%s'\n", str);
+        return NULL;
+    }
+
+    input = qmi_message_dms_change_device_download_mode_input_new ();
+    if (!qmi_message_dms_change_device_download_mode_input_set_mode (input, mode, &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_dms_change_device_download_mode_input_unref (input);
+        return NULL;
+    }
+
+    return input;
+}
+
+static void
+change_device_download_mode_ready (QmiClientDms *client,
+                                   GAsyncResult *res)
+{
+    QmiMessageDmsChangeDeviceDownloadModeOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_change_device_download_mode_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_change_device_download_mode_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't change device download mode: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_change_device_download_mode_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_change_device_download_mode_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
 static void
 reset_ready (QmiClientDms *client,
              GAsyncResult *res)
@@ -3773,6 +3830,28 @@ qmicli_dms_run (QmiDevice *device,
                                                ctx->cancellable,
                                                (GAsyncReadyCallback)get_supported_messages_ready,
                                                NULL);
+        return;
+    }
+
+    /* Request to change device download mode */
+    if (change_device_download_mode_str) {
+        QmiMessageDmsChangeDeviceDownloadModeInput *input;
+
+        g_debug ("Asynchronously changing device download mode...");
+
+        input = change_device_download_mode_input_create (change_device_download_mode_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        qmi_client_dms_change_device_download_mode (ctx->client,
+                                                    input,
+                                                    10,
+                                                    ctx->cancellable,
+                                                    (GAsyncReadyCallback)change_device_download_mode_ready,
+                                                    NULL);
+        qmi_message_dms_change_device_download_mode_input_unref (input);
         return;
     }
 
