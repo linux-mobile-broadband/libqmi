@@ -34,6 +34,7 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#define LIST_CONFIGS_TIMEOUT_SECS 2
 #define LOAD_CONFIG_CHUNK_SIZE 0x400
 
 /* Info about config */
@@ -60,6 +61,7 @@ typedef struct {
     GCancellable *cancellable;
 
     /* local data */
+    guint timeout_id;
     GArray *config_list;
     guint configs_loaded;
     GArray *active_config_id;
@@ -367,6 +369,18 @@ get_config_info_ready_indication (QmiClientPdc *client,
     check_list_config_completed ();
 }
 
+static gboolean
+list_configs_timeout (void)
+{
+    /* No indication yet, cancelling */
+    if (!ctx->config_list) {
+        g_printf ("Total configurations: 0\n");
+        operation_shutdown (TRUE);
+    }
+
+    return FALSE;
+}
+
 static void
 list_configs_ready (QmiClientPdc *client,
                     GAsyncResult *res)
@@ -401,6 +415,12 @@ list_configs_ready_indication (QmiClientPdc *client,
     GArray *configs = NULL;
     int i;
     guint16 error_code = 0;
+
+    /* Remove timeout as soon as we get the indication */
+    if (ctx->timeout_id) {
+        g_source_remove (ctx->timeout_id);
+        ctx->timeout_id = 0;
+    }
 
     if (!qmi_indication_pdc_list_configs_output_get_indication_result (output, &error_code, &error)) {
         g_printerr ("error: couldn't list configs: %s\n", error->message);
@@ -1173,6 +1193,12 @@ qmicli_pdc_run (QmiDevice *device,
             operation_shutdown (FALSE);
             return;
         }
+
+        /* We need a timeout, because there will be no indications if no configs
+         * are loaded */
+        ctx->timeout_id = g_timeout_add_seconds (LIST_CONFIGS_TIMEOUT_SECS,
+                                                 (GSourceFunc) list_configs_timeout,
+                                                 NULL);
 
         qmi_client_pdc_list_configs (ctx->client,
                                      input,
