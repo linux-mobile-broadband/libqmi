@@ -529,7 +529,8 @@ get_selected_config_ready_indication (QmiClientPdc *client,
         return;
     }
 
-    if (error_code != 0) {
+    if (error_code != 0 &&
+        error_code != QMI_PROTOCOL_ERROR_NOT_PROVISIONED) { /* No configs active */
         g_printerr ("error: couldn't get selected config: %s\n",
                     qmi_protocol_error_get_string ((QmiProtocolError) error_code));
         operation_shutdown (FALSE);
