@@ -251,6 +251,8 @@ complete_internal_proxy_open (Client *client)
     response = qmi_message_response_new (client->internal_proxy_open_request, QMI_PROTOCOL_ERROR_NONE);
 
     if (!send_message (client, response, &error)) {
+        g_warning ("couldn't send proxy open response to client: %s", error->message);
+        g_error_free (error);
         qmi_message_unref (response);
         connection_close (client);
         return;
