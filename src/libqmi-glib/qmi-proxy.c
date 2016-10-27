@@ -483,6 +483,7 @@ device_command_ready (QmiDevice *device,
     if (!response) {
         g_warning ("sending request to device failed: %s", error->message);
         g_error_free (error);
+        g_slice_free (Request, request);
         return;
     }
 
