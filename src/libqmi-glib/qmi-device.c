@@ -280,7 +280,8 @@ device_store_transaction (QmiDevice *self,
                           guint timeout,
                           GError **error)
 {
-    gpointer key;
+    gpointer     key;
+    Transaction *existing;
 
     if (G_UNLIKELY (!self->priv->transactions))
         self->priv->transactions = g_hash_table_new (g_direct_hash,
@@ -314,6 +315,22 @@ device_store_transaction (QmiDevice *self,
                          "Request is already cancelled");
             return FALSE;
         }
+    }
+
+    /* If we have already a transaction with the same ID complete the existing
+     * one with an error before the new one is added, or we'll end up with
+     * dangling timeouts and cancellation handlers that may be fired off later
+     * on. */
+    existing = device_release_transaction (self, key);
+    if (existing) {
+        GError *inner_error;
+
+        /* Complete transaction with an abort error */
+        inner_error = g_error_new (QMI_PROTOCOL_ERROR,
+                                   QMI_PROTOCOL_ERROR_ABORTED,
+                                   "Transaction overwritten");
+        transaction_complete_and_free (existing, NULL, inner_error);
+        g_error_free (inner_error);
     }
 
     /* Keep in the HT */
