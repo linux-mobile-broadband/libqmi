@@ -2419,6 +2419,23 @@ qmi_device_command_finish (QmiDevice *self,
                                 G_SIMPLE_ASYNC_RESULT (res)));
 }
 
+static void
+transaction_early_error (QmiDevice   *self,
+                         Transaction *tr,
+                         gboolean     stored,
+                         GError      *error)
+{
+    g_assert (error);
+
+    if (stored) {
+        /* Match transaction so that we remove it from our tracking table */
+        tr = device_match_transaction (self, tr->message);
+        g_assert (tr);
+    }
+    transaction_complete_and_free (tr, NULL, error);
+    g_error_free (error);
+}
+
 /**
  * qmi_device_command:
  * @self: a #QmiDevice.
@@ -2466,8 +2483,7 @@ qmi_device_command (QmiDevice *self,
         error = g_error_new (QMI_CORE_ERROR,
                              QMI_CORE_ERROR_WRONG_STATE,
                              "Device must be open to send commands");
-        transaction_complete_and_free (tr, NULL, error);
-        g_error_free (error);
+        transaction_early_error (self, tr, FALSE, error);
         return;
     }
 
@@ -2478,8 +2494,7 @@ qmi_device_command (QmiDevice *self,
                              QMI_CORE_ERROR_FAILED,
                              "Cannot send message in service '%s' without a CID",
                              qmi_service_get_string (qmi_message_get_service (message)));
-        transaction_complete_and_free (tr, NULL, error);
-        g_error_free (error);
+        transaction_early_error (self, tr, FALSE, error);
         return;
     }
 
@@ -2487,8 +2502,7 @@ qmi_device_command (QmiDevice *self,
      * (only applicable if we did version info check when opening) */
     if (!check_message_supported (self, message, &error)) {
         g_prefix_error (&error, "Cannot send message: ");
-        transaction_complete_and_free (tr, NULL, error);
-        g_error_free (error);
+        transaction_early_error (self, tr, FALSE, error);
         return;
     }
 
@@ -2496,18 +2510,19 @@ qmi_device_command (QmiDevice *self,
     raw_message = qmi_message_get_raw (message, &raw_message_len, &error);
     if (!raw_message) {
         g_prefix_error (&error, "Cannot get raw message: ");
-        transaction_complete_and_free (tr, NULL, error);
-        g_error_free (error);
+        transaction_early_error (self, tr, FALSE, error);
         return;
     }
 
     /* Setup context to match response */
     if (!device_store_transaction (self, tr, timeout, &error)) {
         g_prefix_error (&error, "Cannot store transaction: ");
-        transaction_complete_and_free (tr, NULL, error);
-        g_error_free (error);
+        transaction_early_error (self, tr, FALSE, error);
         return;
     }
+
+    /* From now on, if we want to complete the transaction with an early error,
+     *  it needs to be removed from the tracking table as well. */
 
     if (qmi_utils_get_traces_enabled ()) {
         gchar *printable;
@@ -2538,10 +2553,8 @@ qmi_device_command (QmiDevice *self,
                                     NULL, /* cancellable */
                                     &error)) {
         g_prefix_error (&error, "Cannot write message: ");
-        /* Match transaction so that we remove it from our tracking table */
-        tr = device_match_transaction (self, message);
-        transaction_complete_and_free (tr, NULL, error);
-        g_error_free (error);
+        transaction_early_error (self, tr, TRUE, error);
+        return;
     }
 
     /* Flush explicitly if correctly written */
