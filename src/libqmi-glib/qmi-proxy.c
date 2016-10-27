@@ -494,8 +494,11 @@ device_command_ready (QmiDevice *device,
             track_cid (request->client, FALSE, response);
     }
 
-    if (!send_message (request->client, response, &error))
+    if (!send_message (request->client, response, &error)) {
+        g_warning ("sending request to device failed: %s", error->message);
+        g_error_free (error);
         connection_close (request->client);
+    }
 
     qmi_message_unref (response);
     g_slice_free (Request, request);
