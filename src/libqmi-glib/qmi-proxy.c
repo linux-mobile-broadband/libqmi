@@ -280,7 +280,7 @@ indication_cb (QmiDevice *device,
             GError *error = NULL;
 
             if (!send_message (client, message, &error)) {
-                g_warning ("couldn't forward indication to client");
+                g_warning ("couldn't forward indication to client: %s", error->message);
                 g_error_free (error);
             }
 
