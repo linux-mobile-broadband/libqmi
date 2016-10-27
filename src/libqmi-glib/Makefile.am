@@ -25,6 +25,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-enums-nas.h qmi-flags64-nas.h\
 	qmi-enums-wms.h \
 	qmi-enums-pds.h \
+	qmi-enums-pdc.h \
 	qmi-enums-pbm.h \
 	qmi-enums-uim.h \
 	qmi-enums-oma.h \
@@ -59,6 +60,7 @@ include_HEADERS = \
 	qmi-enums-nas.h qmi-flags64-nas.h \
 	qmi-enums-wms.h \
 	qmi-enums-pds.h \
+	qmi-enums-pdc.h \
 	qmi-enums-pbm.h \
 	qmi-enums-uim.h \
 	qmi-enums-oma.h \
