@@ -111,6 +111,8 @@ typedef struct {
 } QmiClientInfo;
 
 typedef struct {
+    volatile gint ref_count;
+
     QmiProxy *proxy; /* not full ref */
     GSocketConnection *connection;
     GSource *connection_readable_source;
@@ -122,31 +124,94 @@ typedef struct {
 } Client;
 
 static gboolean connection_readable_cb (GSocket *socket, GIOCondition condition, Client *client);
+static void     track_client           (QmiProxy *self, Client *client);
+static void     untrack_client         (QmiProxy *self, Client *client);
 
 static void
-client_free (Client *client)
+client_disconnect (Client *client)
 {
-    g_source_destroy (client->connection_readable_source);
-    g_source_unref (client->connection_readable_source);
-
-    if (client->device) {
-        if (g_signal_handler_is_connected (client->device, client->indication_id))
-            g_signal_handler_disconnect (client->device, client->indication_id);
-        g_object_unref (client->device);
+    if (client->connection_readable_source) {
+        g_source_destroy (client->connection_readable_source);
+        g_source_unref (client->connection_readable_source);
+        client->connection_readable_source = 0;
     }
 
-    g_output_stream_close (g_io_stream_get_output_stream (G_IO_STREAM (client->connection)), NULL, NULL);
+    if (client->connection) {
+        g_debug ("Client (%d) connection closed...", g_socket_get_fd (g_socket_connection_get_socket (client->connection)));
+        g_output_stream_close (g_io_stream_get_output_stream (G_IO_STREAM (client->connection)), NULL, NULL);
+        g_object_unref (client->connection);
+        client->connection = NULL;
+    }
+}
 
-    if (client->buffer)
-        g_byte_array_unref (client->buffer);
+static void
+client_unref (Client *client)
+{
+    if (g_atomic_int_dec_and_test (&client->ref_count)) {
+        /* Ensure disconnected */
+        client_disconnect (client);
 
-    if (client->internal_proxy_open_request)
-        g_byte_array_unref (client->internal_proxy_open_request);
+        if (client->device) {
+            if (g_signal_handler_is_connected (client->device, client->indication_id))
+                g_signal_handler_disconnect (client->device, client->indication_id);
+            g_object_unref (client->device);
+        }
 
-    g_array_unref (client->qmi_client_info_array);
+        if (client->buffer)
+            g_byte_array_unref (client->buffer);
 
-    g_object_unref (client->connection);
-    g_slice_free (Client, client);
+        if (client->internal_proxy_open_request)
+            g_byte_array_unref (client->internal_proxy_open_request);
+
+        g_array_unref (client->qmi_client_info_array);
+
+        g_slice_free (Client, client);
+    }
+}
+
+static Client *
+client_ref (Client *client)
+{
+    g_atomic_int_inc (&client->ref_count);
+    return client;
+}
+
+static gboolean
+client_send_message (Client      *client,
+                     QmiMessage  *message,
+                     GError     **error)
+{
+    if (!client->connection) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_WRONG_STATE,
+                     "Cannot send message: not connected");
+        return FALSE;
+    }
+
+    g_debug ("Client (%d) TX: %u bytes", g_socket_get_fd (g_socket_connection_get_socket (client->connection)), message->len);
+    if (!g_output_stream_write_all (g_io_stream_get_output_stream (G_IO_STREAM (client->connection)),
+                                    message->data,
+                                    message->len,
+                                    NULL, /* bytes_written */
+                                    NULL, /* cancellable */
+                                    error)) {
+        g_prefix_error (error, "Cannot send message to client: ");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*****************************************************************************/
+/* Track/untrack clients */
+
+static void
+track_client (QmiProxy *self,
+              Client   *client)
+{
+    self->priv->clients = g_list_append (self->priv->clients, client_ref (client));
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
 }
 
 static guint
@@ -168,15 +233,21 @@ get_n_clients_with_device (QmiProxy *self,
 }
 
 static void
-connection_close (Client *client)
+untrack_client (QmiProxy *self,
+                Client   *client)
 {
-    QmiProxy *self = client->proxy;
     QmiDevice *device;
 
     device = client->device ? g_object_ref (client->device) : NULL;
-    client_free (client);
-    self->priv->clients = g_list_remove (self->priv->clients, client);
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
+
+    /* Disconnect the client explicitly when untracking */
+    client_disconnect (client);
+
+    if (g_list_find (self->priv->clients, client)) {
+        self->priv->clients = g_list_remove (self->priv->clients, client);
+        client_unref (client);
+        g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
+    }
 
     if (!device)
         return;
@@ -221,26 +292,9 @@ find_device_for_path (QmiProxy *self,
     return NULL;
 }
 
-static gboolean
-send_message (Client *client,
-              QmiMessage *message,
-              GError **error)
-{
-    if (!g_output_stream_write_all (g_io_stream_get_output_stream (G_IO_STREAM (client->connection)),
-                                    message->data,
-                                    message->len,
-                                    NULL, /* bytes_written */
-                                    NULL, /* cancellable */
-                                    error)) {
-        g_prefix_error (error, "Cannot send message to client: ");
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
 static void
-complete_internal_proxy_open (Client *client)
+complete_internal_proxy_open (QmiProxy *self,
+                              Client   *client)
 {
     QmiMessage *response;
     GError *error = NULL;
@@ -249,18 +303,16 @@ complete_internal_proxy_open (Client *client)
 
     g_assert (client->internal_proxy_open_request != NULL);
     response = qmi_message_response_new (client->internal_proxy_open_request, QMI_PROTOCOL_ERROR_NONE);
+    qmi_message_unref (client->internal_proxy_open_request);
+    client->internal_proxy_open_request = NULL;
 
-    if (!send_message (client, response, &error)) {
+    if (!client_send_message (client, response, &error)) {
         g_warning ("couldn't send proxy open response to client: %s", error->message);
         g_error_free (error);
-        qmi_message_unref (response);
-        connection_close (client);
-        return;
+        untrack_client (self, client);
     }
 
     qmi_message_unref (response);
-    qmi_message_unref (client->internal_proxy_open_request);
-    client->internal_proxy_open_request = NULL;
 }
 
 static void
@@ -281,7 +333,7 @@ indication_cb (QmiDevice *device,
              qmi_message_get_client_id (message) == QMI_CID_BROADCAST)) {
             GError *error = NULL;
 
-            if (!send_message (client, message, &error)) {
+            if (!client_send_message (client, message, &error)) {
                 g_warning ("couldn't forward indication to client: %s", error->message);
                 g_error_free (error);
             }
@@ -301,12 +353,13 @@ device_open_ready (QmiDevice *device,
     QmiDevice *existing;
     GError *error = NULL;
 
+    /* Note: we get a full client ref */
+
     if (!qmi_device_open_finish (device, res, &error)) {
         g_debug ("couldn't open QMI device: %s", error->message);
-        g_debug ("client connection closed");
-        connection_close (client);
         g_error_free (error);
-        return;
+        untrack_client (self, client);
+        goto out;
     }
 
     /* Store device in the proxy independently */
@@ -326,7 +379,11 @@ device_open_ready (QmiDevice *device,
                                               G_CALLBACK (indication_cb),
                                               client);
 
-    complete_internal_proxy_open (client);
+    complete_internal_proxy_open (self, client);
+
+out:
+    /* Balance out the reference we got */
+    client_unref (client);
 }
 
 static void
@@ -334,15 +391,17 @@ device_new_ready (GObject *source,
                   GAsyncResult *res,
                   Client *client)
 {
+    QmiProxy *self = client->proxy;
     GError *error = NULL;
+
+    /* Note: we get a full client ref */
 
     client->device = qmi_device_new_finish (res, &error);
     if (!client->device) {
         g_debug ("couldn't open QMI device: %s", error->message);
-        g_debug ("client connection closed");
-        connection_close (client);
         g_error_free (error);
-        return;
+        untrack_client (self, client);
+        goto out;
     }
 
     qmi_device_open (client->device,
@@ -350,14 +409,18 @@ device_new_ready (GObject *source,
                      10,
                      NULL,
                      (GAsyncReadyCallback)device_open_ready,
-                     client);
+                     client_ref (client)); /* Full ref */
+
+out:
+    /* Balance out the reference we got */
+    client_unref (client);
 }
 
 static gboolean
-process_internal_proxy_open (Client *client,
+process_internal_proxy_open (QmiProxy   *self,
+                             Client     *client,
                              QmiMessage *message)
 {
-    QmiProxy *self = client->proxy;
     const guint8 *buffer;
     guint16 buffer_len;
     gchar *device_file_path;
@@ -373,7 +436,6 @@ process_internal_proxy_open (Client *client,
     qmi_utils_read_string_from_buffer (&buffer, &buffer_len, 0, 0, &device_file_path);
     g_debug ("valid request to open connection to QMI device file: %s", device_file_path);
 
-
     /* Keep it */
     client->internal_proxy_open_request = qmi_message_ref (message);
 
@@ -387,7 +449,7 @@ process_internal_proxy_open (Client *client,
         qmi_device_new (file,
                         NULL,
                         (GAsyncReadyCallback)device_new_ready,
-                        client);
+                        client_ref (client)); /* Full ref */
         g_object_unref (file);
         g_free (device_file_path);
         return TRUE;
@@ -398,7 +460,7 @@ process_internal_proxy_open (Client *client,
     /* Keep a reference to the device in the client */
     g_object_ref (client->device);
 
-    complete_internal_proxy_open (client);
+    complete_internal_proxy_open (self, client);
     return FALSE;
 }
 
@@ -467,9 +529,20 @@ track_cid (Client *client,
 }
 
 typedef struct {
-    Client *client;
-    guint8 in_trid;
+    QmiProxy *self;   /* Full ref */
+    Client   *client; /* Full ref */
+    guint8    in_trid;
 } Request;
+
+static void
+request_free (Request *request)
+{
+    if (!request)
+        return;
+    client_unref (request->client);
+    g_object_unref (request->self);
+    g_slice_free (Request, request);
+}
 
 static void
 device_command_ready (QmiDevice *device,
@@ -483,7 +556,7 @@ device_command_ready (QmiDevice *device,
     if (!response) {
         g_warning ("sending request to device failed: %s", error->message);
         g_error_free (error);
-        g_slice_free (Request, request);
+        request_free (request);
         return;
     }
 
@@ -495,18 +568,19 @@ device_command_ready (QmiDevice *device,
             track_cid (request->client, FALSE, response);
     }
 
-    if (!send_message (request->client, response, &error)) {
+    if (!client_send_message (request->client, response, &error)) {
         g_warning ("sending request to device failed: %s", error->message);
         g_error_free (error);
-        connection_close (request->client);
+        untrack_client (request->self, request->client);
     }
 
     qmi_message_unref (response);
-    g_slice_free (Request, request);
+    request_free (request);
 }
 
 static gboolean
-process_message (Client *client,
+process_message (QmiProxy   *self,
+                 Client     *client,
                  QmiMessage *message)
 {
     Request *request;
@@ -519,10 +593,12 @@ process_message (Client *client,
 
     if (qmi_message_get_service (message) == QMI_SERVICE_CTL &&
         qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN)
-        return process_internal_proxy_open (client, message);
+        return process_internal_proxy_open (self, client, message);
 
     request = g_slice_new0 (Request);
-    request->client = client;
+    request->self = g_object_ref (self);
+    request->client = client_ref (client);
+
     if (qmi_message_get_service (message) == QMI_SERVICE_CTL) {
         request->in_trid = qmi_message_get_transaction_id (message);
         qmi_message_set_transaction_id (message, 0);
@@ -543,7 +619,8 @@ process_message (Client *client,
 }
 
 static void
-parse_request (Client *client)
+parse_request (QmiProxy *self,
+               Client   *client)
 {
     do {
         GError *error = NULL;
@@ -572,7 +649,7 @@ parse_request (Client *client)
             g_error_free (error);
         } else {
             /* Play with the received message */
-            process_message (client, message);
+            process_message (self, client, message);
             qmi_message_unref (message);
         }
     } while (client->buffer->len > 0);
@@ -583,13 +660,15 @@ connection_readable_cb (GSocket *socket,
                         GIOCondition condition,
                         Client *client)
 {
+    QmiProxy *self;
     guint8 buffer[BUFFER_SIZE];
     GError *error = NULL;
     gssize r;
 
+    self = client->proxy;
+
     if (condition & G_IO_HUP || condition & G_IO_ERR) {
-        g_debug ("client connection closed");
-        connection_close (client);
+        untrack_client (self, client);
         return FALSE;
     }
 
@@ -605,8 +684,7 @@ connection_readable_cb (GSocket *socket,
         g_warning ("Error reading from istream: %s", error ? error->message : "unknown");
         if (error)
             g_error_free (error);
-        /* Close the device */
-        connection_close (client);
+        untrack_client (self, client);
         return FALSE;
     }
 
@@ -619,7 +697,7 @@ connection_readable_cb (GSocket *socket,
     g_byte_array_append (client->buffer, buffer, r);
 
     /* Try to parse input messages */
-    parse_request (client);
+    parse_request (self, client);
 
     return TRUE;
 }
@@ -635,7 +713,7 @@ incoming_cb (GSocketService *service,
     GError *error = NULL;
     uid_t uid;
 
-    g_debug ("client connection open...");
+    g_debug ("Client (%d) connection open...", g_socket_get_fd (g_socket_connection_get_socket (connection)));
 
     credentials = g_socket_get_credentials (g_socket_connection_get_socket (connection), &error);
     if (!credentials) {
@@ -659,6 +737,7 @@ incoming_cb (GSocketService *service,
 
     /* Create client */
     client = g_slice_new0 (Client);
+    client->ref_count = 1;
     client->proxy = self;
     client->connection = g_object_ref (connection);
     client->connection_readable_source = g_socket_create_source (g_socket_connection_get_socket (client->connection),
@@ -672,8 +751,9 @@ incoming_cb (GSocketService *service,
     client->qmi_client_info_array = g_array_sized_new (FALSE, FALSE, sizeof (QmiClientInfo), 8);
 
     /* Keep the client info around */
-    self->priv->clients = g_list_append (self->priv->clients, client);
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
+    track_client (self, client);
+
+    client_unref (client);
 }
 
 static gboolean
@@ -782,7 +862,7 @@ dispose (GObject *object)
     QmiProxyPrivate *priv = QMI_PROXY (object)->priv;
 
     if (priv->clients) {
-        g_list_free_full (priv->clients, (GDestroyNotify) client_free);
+        g_list_free_full (priv->clients, (GDestroyNotify) client_unref);
         priv->clients = NULL;
     }
 
