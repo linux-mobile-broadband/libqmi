@@ -279,6 +279,7 @@ nodist_include_HEADERS = \
 	qmi-wds.h \
 	qmi-wms.h \
 	qmi-pds.h \
+	qmi-pdc.h \
 	qmi-pbm.h \
 	qmi-uim.h \
 	qmi-oma.h \
