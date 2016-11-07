@@ -1,4 +1,18 @@
 
+Overview of changes in libqmi 1.14.4
+----------------------------------------
+
+ * DMS: flagged several methods as available since DMS 1.1.
+
+ * qmi-proxy:
+   ** Fix segfault when trying to use already disposed clients.
+   ** Fix segfault when trying to use already disposed transactions.
+   ** Plug several memleaks in error conditions.
+
+ * qmicli:
+   ** Added support for IP type in --wds-start-network.
+
+
 Overview of changes in libqmi 1.14.2
 ----------------------------------------
 
