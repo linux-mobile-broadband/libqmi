@@ -1019,7 +1019,7 @@ load_config_input_create_chunk (LoadConfigFileData *config_file)
 
     file_content = (guint8 *) g_mapped_file_get_contents (config_file->mapped_file);
     g_array_append_vals (chunk, &file_content[config_file->offset], chunk_size);
-    g_debug ("Uploaded %" G_GSIZE_FORMAT "  of %" G_GSIZE_FORMAT "\n", config_file->offset, full_size);
+    g_print ("Uploaded %" G_GSIZE_FORMAT "  of %" G_GSIZE_FORMAT "\n", config_file->offset, full_size);
 
     if (!qmi_message_pdc_load_config_input_set_config_chunk (input,
                                                              QMI_PDC_CONFIGURATION_TYPE_SOFTWARE,
@@ -1127,7 +1127,7 @@ load_config_ready_indication (QmiClientPdc *client,
         return;
     }
 
-    g_debug ("Loading next chunk (%u bytes remaining)\n", remaining_size);
+    g_print ("Loading next chunk (%u bytes remaining)\n", remaining_size);
     input = load_config_input_create_chunk (ctx->load_config_file_data);
     if (!input) {
         g_printerr ("error: couldn't create next chunk\n");
