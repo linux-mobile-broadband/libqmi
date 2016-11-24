@@ -74,3 +74,4 @@ Makefile.in
 /docs/man/qmi-network.1
 
 /utils/qmi-network
+/utils/swi-update
