@@ -72,7 +72,6 @@ static void print_packet(const char *pfx, void *buf, int len)
 
 
 #define CHUNK (1024 * 1024)
-static char *buf = NULL;
 
 /** DLOAD protocol **/
 
@@ -785,7 +784,7 @@ static __u8 filename2type(const char *filename)
 	return QDL_IMAGE_CWE;
 }
 
-static int download_image(int serfd, const char *image)
+static int download_image(int serfd, char *buf, const char *image)
 {
 	int imgfd = -1, ret = 0, seq = 0;
 	size_t chunksize, rlen, filelen;
@@ -890,6 +889,7 @@ static void usage(const char *prog)
 int main(int argc, char *argv[])
 {
 	int opt, serfd = -1, ret = 0, version;
+	char *buffer = NULL;
 
 	fprintf(stderr, "%s\n", DESCRIPTION);
 	while ((opt = getopt_long(argc, argv, "i:s:m:dvh", main_options, NULL)) != -1) {
@@ -908,8 +908,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	buf = malloc(BUFSIZE);
-	if (!buf) {
+	buffer = malloc(BUFSIZE);
+	if (!buffer) {
 		ret = -ENOMEM;
 		goto err;
 	}
@@ -971,11 +971,11 @@ int main(int argc, char *argv[])
 
 	/* download all images */
 	while (optind < argc && ret >= 0)
-		ret = download_image(serfd, argv[optind++]);
+		ret = download_image(serfd, buffer, argv[optind++]);
 
 	/* close unframed session */
-	buf[0] = QDL_CMD_SESSION_DONE_REQ;
-	write_hdlc(serfd, buf, 1);
+	buffer[0] = QDL_CMD_SESSION_DONE_REQ;
+	write_hdlc(serfd, buffer, 1);
 
 	/* read close response  */
 	if (!read_and_parse(serfd, false))
@@ -983,8 +983,8 @@ int main(int argc, char *argv[])
 
 	/* terminate SDP session */
 	fprintf(stderr, "Terminating session - rebooting modem...\n");
-	buf[0] = QDL_CMD_SESSION_CLOSE_REQ;
-	write_hdlc(serfd, buf, 1);
+	buffer[0] = QDL_CMD_SESSION_CLOSE_REQ;
+	write_hdlc(serfd, buffer, 1);
 
 	/* no response? */
 	read_and_parse(serfd, false);
@@ -992,6 +992,6 @@ int main(int argc, char *argv[])
 err:
 	if (serfd > 0)
 		close(serfd);
-	free(buf);
+	free(buffer);
 	return ret;
 }
