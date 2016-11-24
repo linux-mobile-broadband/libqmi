@@ -1,6 +1,22 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * Copyright 2016 Bjørn Mork <bjorn@mork.no>
- * 
+ * swi-update -- Command line tool to update QMI firmware
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright (C) Copyright 2016 Bjørn Mork <bjorn@mork.no>
+ *
  * crc16 and hdlc parts:
  *   Copyright (C) 2010 Red Hat, Inc.
  *
@@ -10,9 +26,8 @@
  *   Alexander Shumakovitch <shurik@gwu.edu>
  *
  *   Gobi 2000 support provided by Anssi Hannula <anssi.hannula@iki.fi>"
- *
- * GPLv2
  */
+
 #include <endian.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -200,7 +215,7 @@ static struct qdl_hello_req qdl_hello_req = {
 	.minver = 0,
 	.features = QDL_FEATURE_QDL_UNFRAMED | QDL_FEATURE_GENERIC_UNFRAMED,
 };
-	
+
 struct qdl_hello_rsp {
 	__u8 cmd; /* 0x02 */
 	char magic[32];
@@ -284,7 +299,7 @@ struct qdl_imagepref_rsp {
 	} image[];
 }  __attribute__ ((packed));
 
-/* 
+/*
  * crc16 and HDLC escape code borrowed from modemmanager/libqcdm
  * Copyright (C) 2010 Red Hat, Inc.
  */
@@ -361,7 +376,7 @@ static size_t unescape(const char *in, size_t inlen, char *out, size_t outlen)
 {
 	size_t i, j = 0;
 	bool escaping = false;
-       
+
 	for (i = 0; i < inlen; i++) {
 		if (j >= outlen) {
 			debug("i=%zu, j=%zu, inlen=%zu, outlen=%zu\n", i, j, inlen, outlen);
@@ -476,7 +491,7 @@ static size_t create_ufopen_req(char *in, size_t filelen, __u8 type)
 static size_t create_ufwrite_req(char *out, size_t chunksize, int sequence)
 {
 	struct qdl_ufwrite_req *req = (void *)out;
-	
+
 	req->cmd = QDL_CMD_WRITE_UNFRAMED_REQ;
 	req->sequence = sequence;
 	req->reserved = 0;
@@ -640,7 +655,7 @@ static int read_and_parse(int fd, bool silent)
 		debug("timeout: no data read\n");
 		return 0;
 	}
-	
+
 	rlen = read(fd, rbuf, sizeof(rbuf));
 	if (rlen <= 0)
 		return rlen;
@@ -684,7 +699,7 @@ static int write_hdlc(int fd, const char *in, size_t inlen)
 {
 	char wbuf[512];
 	int wlen;
-	
+
 	wlen = hdlc_frame(in, inlen, wbuf, sizeof(wbuf));
 	if (wlen > 0) {
 		write(fd,  wbuf, wlen);
@@ -711,7 +726,7 @@ static int serial_open(const char *dev)
 	return fd;
 }
 
-/* Sierra Wireless CWE file header 
+/* Sierra Wireless CWE file header
  *   Note: 32bit numbers are big endian
  */
 struct cwehdr {
@@ -776,7 +791,7 @@ static int download_image(int serfd, const char *image)
 	size_t chunksize, rlen, filelen;
 	struct stat img_data;
 	__u8 type = filename2type(image);
-	
+
 	/* FIXME: verify that this image matches the modem */
 	imgfd = open(image, O_RDONLY);
 	if (imgfd < 0) {
@@ -875,7 +890,7 @@ static void usage(const char *prog)
 int main(int argc, char *argv[])
 {
 	int opt, serfd = -1, ret = 0, version;
-	
+
 	fprintf(stderr, "%s\n", DESCRIPTION);
 	while ((opt = getopt_long(argc, argv, "i:s:m:dvh", main_options, NULL)) != -1) {
 		switch(opt) {
@@ -917,7 +932,7 @@ int main(int argc, char *argv[])
  *    - allow multiple images to be uploaded in one run
  * How do we do this properly?
  */
-	
+
 	/* need at least one firmware filename */
 	if (optind == argc) {
 		usage(argv[0]);
@@ -970,7 +985,7 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "Terminating session - rebooting modem...\n");
 	buf[0] = QDL_CMD_SESSION_CLOSE_REQ;
 	write_hdlc(serfd, buf, 1);
-		
+
 	/* no response? */
 	read_and_parse(serfd, false);
 
