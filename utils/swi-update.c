@@ -835,8 +835,6 @@ static int download_image(int serfd, char *buf, const char *image)
 			chunksize = filelen;
 
 		debug("write #%d (%zu)...", seq, chunksize);
-		if (!debug)
-			fprintf(stderr, ".");
 		rlen = create_ufwrite_req(buf, chunksize, seq++);
 		rlen += read(imgfd, buf + rlen, CHUNK);
 		filelen -= chunksize;
