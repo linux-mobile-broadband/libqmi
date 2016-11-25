@@ -140,8 +140,8 @@ signals_handler (int signum)
             g_printerr ("%s\n",
                         "cancelling the operation...\n");
             g_cancellable_cancel (cancellable);
+            return;
         }
-        return;
     }
 
     if (loop &&
