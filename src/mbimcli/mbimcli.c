@@ -218,10 +218,8 @@ mbimcli_async_operation_done (gboolean reported_operation_status)
     /* Keep the result of the operation */
     operation_status = reported_operation_status;
 
-    if (cancellable) {
-        g_object_unref (cancellable);
-        cancellable = NULL;
-    }
+    /* Cleanup cancellation */
+    g_clear_object (&cancellable);
 
     /* Set the in-session setup */
     g_object_set (device,
