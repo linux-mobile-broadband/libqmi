@@ -24,6 +24,8 @@
 #include <gio/gio.h>
 #include <gudev/gudev.h>
 
+#include <libqmi-glib.h>
+
 #include "qfu-updater.h"
 #include "qfu-udev-helpers.h"
 
@@ -48,6 +50,10 @@ static const gchar *cdc_wdm_subsys[] = { "usbmisc", "usb", NULL };
 typedef enum {
     RUN_CONTEXT_STEP_USB_INFO = 0,
     RUN_CONTEXT_STEP_SELECT_IMAGE,
+    RUN_CONTEXT_STEP_QMI_DEVICE,
+    RUN_CONTEXT_STEP_QMI_DEVICE_OPEN,
+    RUN_CONTEXT_STEP_QMI_CLIENT,
+    RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE,
     RUN_CONTEXT_STEP_CLEANUP_IMAGE,
     RUN_CONTEXT_STEP_LAST
 } RunContextStep;
@@ -62,11 +68,26 @@ typedef struct {
     GFileInfo *current_image_info;
     /* USB info */
     gchar *sysfs_path;
+    /* QMI device and client */
+    QmiDevice    *qmi_device;
+    QmiClientDms *qmi_client;
 } RunContext;
 
 static void
 run_context_free (RunContext *ctx)
 {
+    if (ctx->qmi_client) {
+        g_assert (ctx->qmi_device);
+        qmi_device_release_client (ctx->qmi_device,
+                                   QMI_CLIENT (ctx->qmi_client),
+                                   QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
+                                   10, NULL, NULL, NULL);
+        g_object_unref (ctx->qmi_client);
+    }
+    if (ctx->qmi_device) {
+        qmi_device_close (ctx->qmi_device, NULL);
+        g_object_unref (ctx->qmi_device);
+    }
     if (ctx->current_image_info)
         g_object_unref (ctx->current_image_info);
     if (ctx->current_image)
@@ -120,6 +141,186 @@ run_context_step_cleanup_image (GTask *task)
 
     /* Select next image */
     run_context_step_next (task, RUN_CONTEXT_STEP_SELECT_IMAGE);
+}
+
+static void
+qmi_client_release_ready (QmiDevice    *device,
+                          GAsyncResult *res,
+                          GTask        *task)
+{
+    RunContext *ctx;
+    GError     *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    if (!qmi_device_release_client_finish (device, res, &error)) {
+        g_prefix_error (&error, "couldn't release DMS QMI client: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[qfu-updater] DMS QMI client released");
+
+    if (!qmi_device_close (ctx->qmi_device, &error)) {
+        g_prefix_error (&error, "couldn't close QMI device: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[qfu-updater] QMI device closed");
+
+    g_clear_object (&ctx->qmi_device);
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_cleanup_qmi_device (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_debug ("[qfu-updater] releasing DMS QMI client...");
+    qmi_device_release_client (ctx->qmi_device,
+                               QMI_CLIENT (ctx->qmi_client),
+                               QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
+                               10,
+                               g_task_get_cancellable (task),
+                               (GAsyncReadyCallback) qmi_client_release_ready,
+                               task);
+
+    g_clear_object (&ctx->qmi_client);
+}
+
+static void
+qmi_client_ready (QmiDevice    *device,
+                  GAsyncResult *res,
+                  GTask        *task)
+{
+    RunContext *ctx;
+    GError     *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    ctx->qmi_client = QMI_CLIENT_DMS (qmi_device_allocate_client_finish (device, res, &error));
+    if (!ctx->qmi_client) {
+        g_prefix_error (&error, "couldn't allocate DMS QMI client: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[qfu-updater] DMS QMI client allocated");
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_qmi_client (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_debug ("[qfu-updater] allocating new DMS QMI client...");
+    qmi_device_allocate_client (ctx->qmi_device,
+                                QMI_SERVICE_DMS,
+                                QMI_CID_NONE,
+                                10,
+                                g_task_get_cancellable (task),
+                                (GAsyncReadyCallback) qmi_client_ready,
+                                task);
+}
+
+static void
+qmi_device_open_ready (QmiDevice    *device,
+                       GAsyncResult *res,
+                       GTask        *task)
+{
+    RunContext *ctx;
+    GError     *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    if (!qmi_device_open_finish (device, res, &error)) {
+        g_prefix_error (&error, "couldn't open QMI device: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[qfu-updater] QMI device open");
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_qmi_device_open (GTask *task)
+{
+    QfuUpdater         *self;
+    RunContext         *ctx;
+    QmiDeviceOpenFlags  flags = QMI_DEVICE_OPEN_FLAGS_NONE;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+
+    if (self->priv->device_open_proxy)
+        flags |= QMI_DEVICE_OPEN_FLAGS_PROXY;
+
+    if (self->priv->device_open_mbim)
+        flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
+
+    g_debug ("[qfu-updater] opening QMI device...");
+    qmi_device_open (ctx->qmi_device,
+                     flags,
+                     20,
+                     g_task_get_cancellable (task),
+                     (GAsyncReadyCallback) qmi_device_open_ready,
+                     task);
+}
+
+static void
+qmi_device_ready (GObject      *source,
+                  GAsyncResult *res,
+                  GTask        *task)
+{
+    RunContext *ctx;
+    GError     *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    ctx->qmi_device = qmi_device_new_finish (res, &error);
+    if (!ctx->qmi_device) {
+        g_prefix_error (&error, "couldn't create QMI device: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[qfu-updater] QMI device created");
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_qmi_device (GTask *task)
+{
+    QfuUpdater *self;
+
+    self = g_task_get_source_object (task);
+
+    g_debug ("[qfu-updater] creating QMI device...");
+    qmi_device_new (self->priv->cdc_wdm_file,
+                    g_task_get_cancellable (task),
+                    (GAsyncReadyCallback) qmi_device_ready,
+                    task);
 }
 
 static void
@@ -188,9 +389,13 @@ run_context_step_usb_info (GTask *task)
 
 typedef void (* RunContextStepFunc) (GTask *task);
 static const RunContextStepFunc run_context_step_func[] = {
-    [RUN_CONTEXT_STEP_USB_INFO]      = run_context_step_usb_info,
-    [RUN_CONTEXT_STEP_SELECT_IMAGE]  = run_context_step_select_image,
-    [RUN_CONTEXT_STEP_CLEANUP_IMAGE] = run_context_step_cleanup_image,
+    [RUN_CONTEXT_STEP_USB_INFO]           = run_context_step_usb_info,
+    [RUN_CONTEXT_STEP_SELECT_IMAGE]       = run_context_step_select_image,
+    [RUN_CONTEXT_STEP_QMI_DEVICE]         = run_context_step_qmi_device,
+    [RUN_CONTEXT_STEP_QMI_DEVICE_OPEN]    = run_context_step_qmi_device_open,
+    [RUN_CONTEXT_STEP_QMI_CLIENT]         = run_context_step_qmi_client,
+    [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE] = run_context_step_cleanup_qmi_device,
+    [RUN_CONTEXT_STEP_CLEANUP_IMAGE]      = run_context_step_cleanup_image,
 };
 
 G_STATIC_ASSERT (G_N_ELEMENTS (run_context_step_func) == RUN_CONTEXT_STEP_LAST);
