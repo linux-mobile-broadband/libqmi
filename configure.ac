@@ -64,9 +64,13 @@ AC_SUBST(QMI_GLIB_LT_CURRENT)
 AC_SUBST(QMI_GLIB_LT_REVISION)
 AC_SUBST(QMI_GLIB_LT_AGE)
 
-dnl Dependencies
+dnl Required dependency versions
+GLIB_REQUIRED=2.36
+GUDEV_REQUIRED=147
+
+dnl GLib, GIO...
 PKG_CHECK_MODULES(GLIB,
-                  glib-2.0 >= 2.36
+                  glib-2.0 >= $GLIB_REQUIRED
                   gobject-2.0
                   gio-2.0
                   gio-unix-2.0)
@@ -75,6 +79,26 @@ AC_SUBST(GLIB_LIBS)
 
 GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
+
+dnl GUdev
+PKG_CHECK_MODULES(GUDEV,
+                  [gudev-1.0 >= $GUDEV_REQUIRED],
+                  [have_gudev=yes],[have_gudev=no])
+AC_SUBST(GUDEV_CFLAGS)
+AC_SUBST(GUDEV_LIBS)
+
+dnl qmi-firmware-update is optional, enabled by default
+AC_ARG_ENABLE([firmware-update],
+              AS_HELP_STRING([--enable-firmware-update],
+                             [enable compilation of `qmi-firmware-update' [default=yes]]),
+              [build_firmware_update=$enableval],
+              [build_firmware_update=yes])
+if test "x$build_firmware_update" = "xyes"; then
+   if test "x$have_gudev" = "xno"; then
+      AC_MSG_ERROR([Cannot build `qmi-firmware-update' if GUDev >= GUDEV_REQUIRED is not available. Install it, or otherwise configure using --disable-firmware-update to disable building `qmi-firmware-update'.])
+   fi
+fi
+AM_CONDITIONAL([BUILD_FIRMWARE_UPDATE], [test "x$build_firmware_update" = "xyes"])
 
 dnl Documentation
 GTK_DOC_CHECK(1.0)
@@ -166,11 +190,16 @@ echo "
     libqmi (libqmi-glib, qmicli) $VERSION
     ==============================================
 
-    compiler:             ${CC}
-    cflags:               ${CFLAGS}
-    Maintainer mode:      ${USE_MAINTAINER_MODE}
-    udev base directory:  ${UDEV_BASE_DIR}
-    Documentation:        ${enable_gtk_doc}
-    QMI username:         ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
-    QMUX over MBIM:       ${enable_mbim_qmux}
+    compiler:              ${CC}
+    cflags:                ${CFLAGS}
+    Maintainer mode:       ${USE_MAINTAINER_MODE}
+    udev base directory:   ${UDEV_BASE_DIR}
+    Documentation:         ${enable_gtk_doc}
+    QMI username:          ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
+    QMUX over MBIM:        ${enable_mbim_qmux}
+
+    Built items:
+      libqmi-glib:         yes
+      qmicli:              yes
+      qmi-firmware-update: ${build_firmware_update}
 "

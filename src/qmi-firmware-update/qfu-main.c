@@ -33,6 +33,8 @@
 
 #include <libqmi-glib.h>
 
+#include "qfu-updater.h"
+
 #define PROGRAM_NAME    "qmi-firmware-update"
 #define PROGRAM_VERSION PACKAGE_VERSION
 
@@ -79,7 +81,7 @@ static GOptionEntry main_entries[] = {
 
 GMainLoop    *loop;
 GCancellable *cancellable;
-gint          exit_status;
+gint          exit_status = EXIT_FAILURE;
 
 /*****************************************************************************/
 /* Signal handlers */
@@ -87,9 +89,6 @@ gint          exit_status;
 static gboolean
 signals_handler (gpointer psignum)
 {
-    /* Flag failed exit */
-    exit_status = EXIT_FAILURE;
-
     /* Ignore consecutive requests of cancellation */
     if (!g_cancellable_is_cancelled (cancellable)) {
         g_printerr ("cancelling the operation...\n");
@@ -184,10 +183,29 @@ print_version_and_exit (void)
 
 /*****************************************************************************/
 
+static void
+run_ready (QfuUpdater   *updater,
+           GAsyncResult *res)
+{
+    GError *error = NULL;
+
+    if (!qfu_updater_run_finish (updater, res, &error)) {
+        g_printerr ("error: firmware update operation finished: %s\n", error->message);
+        g_error_free (error);
+    } else {
+        g_print ("firmware update operation finished successfully\n");
+        exit_status = EXIT_SUCCESS;
+    }
+
+    g_idle_add ((GSourceFunc) g_main_loop_quit, loop);
+}
+
 int main (int argc, char **argv)
 {
     GError         *error = NULL;
     GOptionContext *context;
+    QfuUpdater     *updater;
+    GFile          *cdc_wdm_file;
 
     setlocale (LC_ALL, "");
 
@@ -197,11 +215,10 @@ int main (int argc, char **argv)
     context = g_option_context_new ("- Update firmware in QMI devices");
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
-        g_printerr ("error: %s\n",
-                    error->message);
-        exit (EXIT_FAILURE);
+        g_printerr ("error: couldn't parse option context: %s\n", error->message);
+        g_error_free (error);
+        goto out;
     }
-    g_option_context_free (context);
 
     if (version_flag)
         print_version_and_exit ();
@@ -214,7 +231,7 @@ int main (int argc, char **argv)
     /* No device path given? */
     if (!device_str) {
         g_printerr ("error: no device path specified\n");
-        exit (EXIT_FAILURE);
+        goto out;
     }
 
     /* Create runtime context */
@@ -223,15 +240,30 @@ int main (int argc, char **argv)
     exit_status = EXIT_SUCCESS;
 
     /* Setup signals */
-    g_unix_signal_add (SIGINT,  (GSourceFunc)signals_handler, GUINT_TO_POINTER (SIGINT));
-    g_unix_signal_add (SIGHUP,  (GSourceFunc)signals_handler, GUINT_TO_POINTER (SIGHUP));
-    g_unix_signal_add (SIGTERM, (GSourceFunc)signals_handler, GUINT_TO_POINTER (SIGTERM));
+    g_unix_signal_add (SIGINT,  (GSourceFunc)signals_handler, GINT_TO_POINTER (SIGINT));
+    g_unix_signal_add (SIGHUP,  (GSourceFunc)signals_handler, GINT_TO_POINTER (SIGHUP));
+    g_unix_signal_add (SIGTERM, (GSourceFunc)signals_handler, GINT_TO_POINTER (SIGTERM));
+
+    /* Create updater and run it */
+    cdc_wdm_file = g_file_new_for_commandline_arg (device_str);
+    updater = qfu_updater_new (cdc_wdm_file,
+                               device_open_proxy_flag,
+                               device_open_mbim_flag);
+    qfu_updater_run (updater, cancellable, (GAsyncReadyCallback) run_ready, NULL);
 
     /* Run! */
     g_main_loop_run (loop);
 
-    g_object_unref    (cancellable);
-    g_main_loop_unref (loop);
+out:
+    /* Clean exit for a clean memleak report */
+    if (context)
+        g_option_context_free (context);
+    if (updater)
+        g_object_unref (updater);
+    if (cancellable)
+        g_object_unref (cancellable);
+    if (loop)
+        g_main_loop_unref (loop);
 
     return (exit_status);
 }
