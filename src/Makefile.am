@@ -1,2 +1,2 @@
 
-SUBDIRS = libqmi-glib qmicli qmi-proxy
+SUBDIRS = libqmi-glib qmicli qmi-proxy qmi-firmware-update
