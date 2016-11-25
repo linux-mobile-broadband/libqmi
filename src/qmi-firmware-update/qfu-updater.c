@@ -32,6 +32,9 @@ G_DEFINE_TYPE (QfuUpdater, qfu_updater, G_TYPE_OBJECT)
 struct _QfuUpdaterPrivate {
     /* Inputs */
     GFile    *cdc_wdm_file;
+    gchar    *firmware_version;
+    gchar    *config_version;
+    gchar    *carrier;
     GList    *image_file_list;
     gboolean  device_open_proxy;
     gboolean  device_open_mbim;
@@ -236,10 +239,13 @@ qfu_updater_run (QfuUpdater          *self,
 /******************************************************************************/
 
 QfuUpdater *
-qfu_updater_new (GFile    *cdc_wdm_file,
-                 GList    *image_file_list,
-                 gboolean  device_open_proxy,
-                 gboolean  device_open_mbim)
+qfu_updater_new (GFile       *cdc_wdm_file,
+                 const gchar *firmware_version,
+                 const gchar *config_version,
+                 const gchar *carrier,
+                 GList       *image_file_list,
+                 gboolean     device_open_proxy,
+                 gboolean     device_open_mbim)
 {
     QfuUpdater *self;
 
@@ -250,6 +256,9 @@ qfu_updater_new (GFile    *cdc_wdm_file,
     self->priv->cdc_wdm_file = g_object_ref (cdc_wdm_file);
     self->priv->device_open_proxy = device_open_proxy;
     self->priv->device_open_mbim = device_open_mbim;
+    self->priv->firmware_version = g_strdup (firmware_version);
+    self->priv->config_version = g_strdup (config_version);
+    self->priv->carrier = g_strdup (carrier);
     self->priv->image_file_list = g_list_copy_deep (image_file_list, (GCopyFunc) g_object_ref, NULL);
 
     return self;
@@ -276,6 +285,18 @@ dispose (GObject *object)
 }
 
 static void
+finalize (GObject *object)
+{
+    QfuUpdater *self = QFU_UPDATER (object);
+
+    g_free (self->priv->firmware_version);
+    g_free (self->priv->config_version);
+    g_free (self->priv->carrier);
+
+    G_OBJECT_CLASS (qfu_updater_parent_class)->finalize (object);
+}
+
+static void
 qfu_updater_class_init (QfuUpdaterClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -283,4 +304,5 @@ qfu_updater_class_init (QfuUpdaterClass *klass)
     g_type_class_add_private (object_class, sizeof (QfuUpdaterPrivate));
 
     object_class->dispose = dispose;
+    object_class->finalize = finalize;
 }

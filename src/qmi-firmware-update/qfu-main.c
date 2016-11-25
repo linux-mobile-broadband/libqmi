@@ -43,13 +43,16 @@
 
 static gchar     *device_str;
 static gchar    **image_strv;
+static gchar     *firmware_version_str;
+static gchar     *config_version_str;
+static gchar     *carrier_str;
 static gboolean   device_open_proxy_flag;
 static gboolean   device_open_mbim_flag;
 static gboolean   verbose_flag;
 static gboolean   silent_flag;
 static gboolean   version_flag;
 
-static GOptionEntry main_entries[] = {
+static GOptionEntry context_main_entries[] = {
     { "device", 'd', 0, G_OPTION_ARG_FILENAME, &device_str,
       "Specify device path.",
       "[PATH]"
@@ -57,6 +60,18 @@ static GOptionEntry main_entries[] = {
     { "image", 'i', 0, G_OPTION_ARG_FILENAME_ARRAY, &image_strv,
       "Specify image to download to the device. May be given multiple times.",
       "[PATH]"
+    },
+    { "firmware-version", 'f', 0, G_OPTION_ARG_STRING, &firmware_version_str,
+      "Firmware version (e.g. '05.05.58.00').",
+      "[VERSION]",
+    },
+    { "config-version", 'c', 0, G_OPTION_ARG_STRING, &config_version_str,
+      "Config version (e.g. '005.025_002').",
+      "[VERSION]",
+    },
+    { "carrier", 'C', 0, G_OPTION_ARG_STRING, &carrier_str,
+      "Carrier name (e.g. 'Generic')",
+      "[CARRIER]",
     },
     { "device-open-proxy", 'p', 0, G_OPTION_ARG_NONE, &device_open_proxy_flag,
       "Request to use the 'qmi-proxy' proxy.",
@@ -80,6 +95,18 @@ static GOptionEntry main_entries[] = {
     },
     { NULL }
 };
+
+static const gchar *context_description =
+    " E.g.:\n"
+    " $ sudo " PROGRAM_NAME " \\\n"
+    "       --verbose \\\n"
+    "       --device /dev/cdc-wdm4 \\\n"
+    "       --firmware-version 05.05.58.00 \\\n"
+    "       --config-version 005.025_002 \\\n"
+    "       --carrier Generic \\\n"
+    "       --image SWI9X15C_05.05.58.00.cwe \\\n"
+    "       --image SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+    "\n";
 
 /*****************************************************************************/
 /* Runtime globals */
@@ -220,7 +247,8 @@ int main (int argc, char **argv)
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Update firmware in QMI devices");
-    g_option_context_add_main_entries (context, main_entries, NULL);
+    g_option_context_add_main_entries (context, context_main_entries, NULL);
+    g_option_context_set_description (context, context_description);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: couldn't parse option context: %s\n", error->message);
         g_error_free (error);
@@ -238,6 +266,24 @@ int main (int argc, char **argv)
     /* No device path given? */
     if (!device_str) {
         g_printerr ("error: no device path specified\n");
+        goto out;
+    }
+
+    /* No firmware version given? */
+    if (!firmware_version_str) {
+        g_printerr ("error: no firmware version specified\n");
+        goto out;
+    }
+
+    /* No config version given? */
+    if (!config_version_str) {
+        g_printerr ("error: no config version specified\n");
+        goto out;
+    }
+
+    /* No carrier given? */
+    if (!carrier_str) {
+        g_printerr ("error: no carrier specified\n");
         goto out;
     }
 
@@ -264,6 +310,9 @@ int main (int argc, char **argv)
     /* Create updater */
     device_file = g_file_new_for_commandline_arg (device_str);
     updater = qfu_updater_new (device_file,
+                               firmware_version_str,
+                               config_version_str,
+                               carrier_str,
                                image_file_list,
                                device_open_proxy_flag,
                                device_open_mbim_flag);

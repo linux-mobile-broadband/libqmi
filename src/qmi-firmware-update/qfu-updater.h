@@ -49,6 +49,9 @@ struct _QfuUpdaterClass {
 
 GType       qfu_updater_get_type   (void);
 QfuUpdater *qfu_updater_new        (GFile                *cdc_wdm_file,
+                                    const gchar          *firmware_version,
+                                    const gchar          *config_version,
+                                    const gchar          *carrier,
                                     GList                *image_file_list,
                                     gboolean              device_open_proxy,
                                     gboolean              device_open_mbim);
