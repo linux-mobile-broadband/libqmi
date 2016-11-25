@@ -28,6 +28,7 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <gio/gio.h>
+#include <glib-unix.h>
 
 #include <libqmi-glib.h>
 
@@ -131,25 +132,26 @@ static GOptionEntry main_entries[] = {
     { NULL }
 };
 
-static void
-signals_handler (int signum)
+static gboolean
+signals_handler (gpointer psignum)
 {
     if (cancellable) {
         /* Ignore consecutive requests of cancellation */
         if (!g_cancellable_is_cancelled (cancellable)) {
-            g_printerr ("%s\n",
-                        "cancelling the operation...\n");
+            g_printerr ("cancelling the operation...\n");
             g_cancellable_cancel (cancellable);
-            return;
+            /* Re-set the signal handler to allow main loop cancellation on
+             * second signal */
+            g_unix_signal_add (GPOINTER_TO_INT (psignum),  (GSourceFunc) signals_handler, psignum);
+            return FALSE;
         }
     }
 
-    if (loop &&
-        g_main_loop_is_running (loop)) {
-        g_printerr ("%s\n",
-                    "cancelling the main loop...\n");
-        g_main_loop_quit (loop);
+    if (loop && g_main_loop_is_running (loop)) {
+        g_printerr ("cancelling the main loop...\n");
+        g_idle_add ((GSourceFunc) g_main_loop_quit, loop);
     }
+    return FALSE;
 }
 
 static void
@@ -763,16 +765,16 @@ int main (int argc, char **argv)
     /* Build new GFile from the commandline arg */
     file = g_file_new_for_commandline_arg (device_str);
 
-    /* Setup signals */
-    signal (SIGINT, signals_handler);
-    signal (SIGHUP, signals_handler);
-    signal (SIGTERM, signals_handler);
-
     parse_actions ();
 
     /* Create requirements for async options */
     cancellable = g_cancellable_new ();
     loop = g_main_loop_new (NULL, FALSE);
+
+    /* Setup signals */
+    g_unix_signal_add (SIGINT,  (GSourceFunc)signals_handler, GUINT_TO_POINTER (SIGINT));
+    g_unix_signal_add (SIGHUP,  (GSourceFunc)signals_handler, GUINT_TO_POINTER (SIGHUP));
+    g_unix_signal_add (SIGTERM, (GSourceFunc)signals_handler, GUINT_TO_POINTER (SIGTERM));
 
     /* Launch QmiDevice creation */
     qmi_device_new (file,
