@@ -270,10 +270,8 @@ qmicli_async_operation_done (gboolean reported_operation_status)
     /* Keep the result of the operation */
     operation_status = reported_operation_status;
 
-    if (cancellable) {
-        g_object_unref (cancellable);
-        cancellable = NULL;
-    }
+    /* Cleanup cancellation */
+    g_clear_object (&cancellable);
 
     /* If no client was allocated (e.g. generic action), just quit */
     if (!client) {
