@@ -41,16 +41,21 @@
 /*****************************************************************************/
 /* Main options */
 
-static gchar    *device_str;
-static gboolean  device_open_proxy_flag;
-static gboolean  device_open_mbim_flag;
-static gboolean  verbose_flag;
-static gboolean  silent_flag;
-static gboolean  version_flag;
+static gchar     *device_str;
+static gchar    **image_strv;
+static gboolean   device_open_proxy_flag;
+static gboolean   device_open_mbim_flag;
+static gboolean   verbose_flag;
+static gboolean   silent_flag;
+static gboolean   version_flag;
 
 static GOptionEntry main_entries[] = {
     { "device", 'd', 0, G_OPTION_ARG_FILENAME, &device_str,
       "Specify device path.",
+      "[PATH]"
+    },
+    { "image", 'i', 0, G_OPTION_ARG_FILENAME_ARRAY, &image_strv,
+      "Specify image to download to the device. May be given multiple times.",
       "[PATH]"
     },
     { "device-open-proxy", 'p', 0, G_OPTION_ARG_NONE, &device_open_proxy_flag,
@@ -205,7 +210,9 @@ int main (int argc, char **argv)
     GError         *error = NULL;
     GOptionContext *context;
     QfuUpdater     *updater;
-    GFile          *cdc_wdm_file;
+    GFile          *device_file;
+    GList          *image_file_list = NULL;
+    guint           i;
 
     setlocale (LC_ALL, "");
 
@@ -234,6 +241,12 @@ int main (int argc, char **argv)
         goto out;
     }
 
+    /* No images given? */
+    if (!image_strv) {
+        g_printerr ("error: no image path(s) specified\n");
+        goto out;
+    }
+
     /* Create runtime context */
     loop        = g_main_loop_new (NULL, FALSE);
     cancellable = g_cancellable_new ();
@@ -244,14 +257,21 @@ int main (int argc, char **argv)
     g_unix_signal_add (SIGHUP,  (GSourceFunc)signals_handler, GINT_TO_POINTER (SIGHUP));
     g_unix_signal_add (SIGTERM, (GSourceFunc)signals_handler, GINT_TO_POINTER (SIGTERM));
 
-    /* Create updater and run it */
-    cdc_wdm_file = g_file_new_for_commandline_arg (device_str);
-    updater = qfu_updater_new (cdc_wdm_file,
+    /* Create list of image files */
+    for (i = 0; image_strv[i]; i++)
+        image_file_list = g_list_append (image_file_list, g_file_new_for_commandline_arg (image_strv[i]));
+
+    /* Create updater */
+    device_file = g_file_new_for_commandline_arg (device_str);
+    updater = qfu_updater_new (device_file,
+                               image_file_list,
                                device_open_proxy_flag,
                                device_open_mbim_flag);
-    qfu_updater_run (updater, cancellable, (GAsyncReadyCallback) run_ready, NULL);
+    g_object_unref (device_file);
+    g_list_free_full (image_file_list, (GDestroyNotify) g_object_unref);
 
     /* Run! */
+    qfu_updater_run (updater, cancellable, (GAsyncReadyCallback) run_ready, NULL);
     g_main_loop_run (loop);
 
 out:
