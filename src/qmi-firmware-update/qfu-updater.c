@@ -58,6 +58,7 @@ typedef enum {
     RUN_CONTEXT_STEP_OFFLINE,
     RUN_CONTEXT_STEP_RESET,
     RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE,
+    RUN_CONTEXT_STEP_WAIT_FOR_TTY,
     RUN_CONTEXT_STEP_CLEANUP_IMAGE,
     RUN_CONTEXT_STEP_LAST
 } RunContextStep;
@@ -75,11 +76,15 @@ typedef struct {
     /* QMI device and client */
     QmiDevice    *qmi_device;
     QmiClientDms *qmi_client;
+    /* TTY file */
+    GFile *tty;
 } RunContext;
 
 static void
 run_context_free (RunContext *ctx)
 {
+    if (ctx->tty)
+        g_object_unref (ctx->tty);
     if (ctx->qmi_client) {
         g_assert (ctx->qmi_device);
         qmi_device_release_client (ctx->qmi_device,
@@ -145,6 +150,47 @@ run_context_step_cleanup_image (GTask *task)
 
     /* Select next image */
     run_context_step_next (task, RUN_CONTEXT_STEP_SELECT_IMAGE);
+}
+
+static void
+wait_for_tty_ready (gpointer      unused,
+                    GAsyncResult *res,
+                    GTask        *task)
+{
+    GError     *error = NULL;
+    RunContext *ctx;
+    gchar      *tty_path;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    ctx->tty = qfu_udev_helper_wait_for_tty_finish (res, &error);
+    if (!ctx->tty) {
+        g_prefix_error (&error, "error waiting for TTY: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    tty_path = g_file_get_path (ctx->tty);
+    g_debug ("[qfu-updater] TTY device found: %s", tty_path);
+    g_free (tty_path);
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_wait_for_tty (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_debug ("[qfu-updater] reset requested, now waiting for TTY device...");
+    qfu_udev_helper_wait_for_tty (ctx->sysfs_path,
+                                  g_task_get_cancellable (task),
+                                  (GAsyncReadyCallback) wait_for_tty_ready,
+                                  task);
 }
 
 static void
@@ -586,6 +632,7 @@ static const RunContextStepFunc run_context_step_func[] = {
     [RUN_CONTEXT_STEP_OFFLINE]             = run_context_step_offline,
     [RUN_CONTEXT_STEP_RESET]               = run_context_step_reset,
     [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE]  = run_context_step_cleanup_qmi_device,
+    [RUN_CONTEXT_STEP_WAIT_FOR_TTY]        = run_context_step_wait_for_tty,
     [RUN_CONTEXT_STEP_CLEANUP_IMAGE]       = run_context_step_cleanup_image,
 };
 

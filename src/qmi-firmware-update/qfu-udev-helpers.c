@@ -108,3 +108,160 @@ qfu_udev_helper_get_sysfs_path (GFile               *file,
     g_object_unref (udev);
     return sysfs_path;
 }
+
+/******************************************************************************/
+
+#define WAIT_FOR_TTY_TIMEOUT_SECS 15
+
+typedef struct {
+    GUdevClient *udev;
+    gchar       *sysfs_path;
+    guint        timeout_id;
+    gulong       uevent_id;
+    gulong       cancellable_id;
+} WaitForTtyContext;
+
+static void
+wait_for_tty_context_free (WaitForTtyContext *ctx)
+{
+    g_assert (!ctx->timeout_id);
+    g_assert (!ctx->uevent_id);
+    g_assert (!ctx->cancellable_id);
+
+    g_object_unref (ctx->udev);
+    g_free (ctx->sysfs_path);
+    g_slice_free (WaitForTtyContext, ctx);
+}
+
+GFile *
+qfu_udev_helper_wait_for_tty_finish (GAsyncResult  *res,
+                                     GError       **error)
+{
+    return G_FILE (g_task_propagate_pointer (G_TASK (res), error));
+}
+
+static void
+handle_uevent (GUdevClient *client,
+               const char  *action,
+               GUdevDevice *device,
+               GTask       *task)
+{
+    gchar             *sysfs_path;
+    WaitForTtyContext *ctx;
+
+    ctx = (WaitForTtyContext *) g_task_get_task_data (task);
+
+    if (!g_str_equal (action, "add") && !g_str_equal (action, "move") && !g_str_equal (action, "change"))
+        return;
+
+    sysfs_path = qfu_udev_helper_get_udev_device_sysfs_path (device, NULL);
+    if (!sysfs_path)
+        return;
+
+    /* If sysfs_path matches and driver is 'qcserial', we're done */
+    if ((g_strcmp0 (sysfs_path, ctx->sysfs_path) == 0) &&
+        (g_strcmp0 (g_udev_device_get_property (device, "ID_USB_DRIVER"), "qcserial") == 0)) {
+        gchar *path;
+
+        /* Disconnect this handler */
+        g_signal_handler_disconnect (ctx->udev, ctx->uevent_id);
+        ctx->uevent_id = 0;
+
+        /* Disconnect the other handlers */
+        g_cancellable_disconnect (g_task_get_cancellable (task), ctx->cancellable_id);
+        ctx->cancellable_id = 0;
+        g_source_remove (ctx->timeout_id);
+        ctx->timeout_id = 0;
+
+        path = g_strdup_printf ("/dev/%s", g_udev_device_get_name (device));
+        g_task_return_pointer (task, g_file_new_for_path (path), g_object_unref);
+        g_object_unref (task);
+        g_free (path);
+    }
+
+    g_free (sysfs_path);
+}
+
+static gboolean
+wait_for_tty_timed_out (GTask *task)
+{
+    WaitForTtyContext *ctx;
+
+    ctx = (WaitForTtyContext *) g_task_get_task_data (task);
+
+    /* Disconnect this handler */
+    ctx->timeout_id = 0;
+
+    /* Disconnect the other handlers */
+    g_cancellable_disconnect (g_task_get_cancellable (task), ctx->cancellable_id);
+    ctx->cancellable_id = 0;
+    g_signal_handler_disconnect (ctx->udev, ctx->uevent_id);
+    ctx->uevent_id = 0;
+
+    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_TIMED_OUT,
+                             "waiting for TTY at '%s' timed out",
+                             ctx->sysfs_path);
+    g_object_unref (task);
+    return FALSE;
+}
+
+static void
+wait_for_tty_cancelled (GCancellable *cancellable,
+                        GTask        *task)
+{
+    WaitForTtyContext *ctx;
+
+    ctx = (WaitForTtyContext *) g_task_get_task_data (task);
+
+    /* Disconnect this handler */
+    g_cancellable_disconnect (g_task_get_cancellable (task), ctx->cancellable_id);
+    ctx->cancellable_id = 0;
+
+    /* Disconnect the other handlers */
+    g_source_remove (ctx->timeout_id);
+    ctx->timeout_id = 0;
+    g_signal_handler_disconnect (ctx->udev, ctx->uevent_id);
+    ctx->uevent_id = 0;
+
+    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_CANCELLED,
+                             "waiting for TTY at '%s' cancelled",
+                             ctx->sysfs_path);
+    g_object_unref (task);
+}
+
+void
+qfu_udev_helper_wait_for_tty (const gchar         *sysfs_path,
+                              GCancellable        *cancellable,
+                              GAsyncReadyCallback  callback,
+                              gpointer             user_data)
+{
+    static const gchar *subsys_monitor[] = { "tty", NULL };
+    GTask              *task;
+    WaitForTtyContext  *ctx;
+
+    ctx = g_slice_new0 (WaitForTtyContext);
+    ctx->sysfs_path = g_strdup (sysfs_path);
+    ctx->udev = g_udev_client_new (subsys_monitor);
+
+    task = g_task_new (NULL, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify) wait_for_tty_context_free);
+
+    /* Monitor for tty additions. */
+    ctx->uevent_id = g_signal_connect (ctx->udev,
+                                       "uevent",
+                                       G_CALLBACK (handle_uevent),
+                                       task);
+
+    /* Allow cancellation */
+    ctx->cancellable_id = g_cancellable_connect (cancellable,
+                                                 (GCallback) wait_for_tty_cancelled,
+                                                 task,
+                                                 NULL);
+
+    /* And also, setup a timeout to avoid waiting forever. */
+    ctx->timeout_id = g_timeout_add_seconds (WAIT_FOR_TTY_TIMEOUT_SECS,
+                                             (GSourceFunc) wait_for_tty_timed_out,
+                                             task);
+
+    /* Note: task ownership is shared between the signals and the timeout */
+}
