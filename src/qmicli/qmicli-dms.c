@@ -3029,6 +3029,11 @@ set_firmware_preference_input_create (const gchar                  *str,
      *    "[(fwver),(config),(carrier)]"
      */
     split = g_strsplit (str, ",", -1);
+    if (g_strv_length (split) != 3) {
+        g_printerr ("error: invalid format string, expected 3 elements: [(fwver),(config),(carrier)]\n");
+        g_strfreev (split);
+        return NULL;
+    }
 
     /* modem unique id is the fixed wildcard string '?_?' matching any pri.
      * modem build id format is "(fwver)_?", matching any carrier */
