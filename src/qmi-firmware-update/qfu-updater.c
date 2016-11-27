@@ -59,6 +59,7 @@ typedef enum {
     RUN_CONTEXT_STEP_RESET,
     RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE,
     RUN_CONTEXT_STEP_WAIT_FOR_TTY,
+    RUN_CONTEXT_STEP_DOWNLOAD_IMAGE,
     RUN_CONTEXT_STEP_CLEANUP_IMAGE,
     RUN_CONTEXT_STEP_LAST
 } RunContextStep;
@@ -150,6 +151,19 @@ run_context_step_cleanup_image (GTask *task)
 
     /* Select next image */
     run_context_step_next (task, RUN_CONTEXT_STEP_SELECT_IMAGE);
+}
+
+static void
+run_context_step_download_image (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+                             "image '%s' download failed",
+                             g_file_info_get_display_name (ctx->current_image_info));
+    g_object_unref (task);
 }
 
 static void
@@ -633,6 +647,7 @@ static const RunContextStepFunc run_context_step_func[] = {
     [RUN_CONTEXT_STEP_RESET]               = run_context_step_reset,
     [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE]  = run_context_step_cleanup_qmi_device,
     [RUN_CONTEXT_STEP_WAIT_FOR_TTY]        = run_context_step_wait_for_tty,
+    [RUN_CONTEXT_STEP_DOWNLOAD_IMAGE]      = run_context_step_download_image,
     [RUN_CONTEXT_STEP_CLEANUP_IMAGE]       = run_context_step_cleanup_image,
 };
 
