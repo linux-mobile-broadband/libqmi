@@ -2991,13 +2991,27 @@ get_stored_image_delete_ready (QmiClientDms *client,
         g_array_unref (pri_image_id.unique_id);
 }
 
+typedef struct {
+    QmiMessageDmsSetFirmwarePreferenceInputListImage modem_image_id;
+    QmiMessageDmsSetFirmwarePreferenceInputListImage pri_image_id;
+} SetFirmwarePreferenceContext;
+
+static void
+set_firmware_preference_context_clear (SetFirmwarePreferenceContext *firmware_preference_ctx)
+{
+    g_clear_pointer (&firmware_preference_ctx->modem_image_id.unique_id, (GDestroyNotify) g_array_unref);
+    g_free (firmware_preference_ctx->modem_image_id.build_id);
+
+    g_clear_pointer (&firmware_preference_ctx->pri_image_id.unique_id, (GDestroyNotify) g_array_unref);
+    g_free (firmware_preference_ctx->pri_image_id.build_id);
+}
+
 static QmiMessageDmsSetFirmwarePreferenceInput *
-set_firmware_preference_input_create (const gchar *str)
+set_firmware_preference_input_create (const gchar                  *str,
+                                      SetFirmwarePreferenceContext *firmware_preference_ctx)
 {
     QmiMessageDmsSetFirmwarePreferenceInput *input;
     GArray *array;
-    QmiMessageDmsSetFirmwarePreferenceInputListImage modem_image_id;
-    QmiMessageDmsSetFirmwarePreferenceInputListImage pri_image_id;
     gchar **split;
 
     /* Prepare inputs.
@@ -3006,31 +3020,34 @@ set_firmware_preference_input_create (const gchar *str)
      */
     split = g_strsplit (str, ",", -1);
 
-    modem_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM;
-    pri_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI;
-
-    modem_image_id.unique_id = g_array_sized_new (FALSE, TRUE, 1, 16);
-    pri_image_id.unique_id = g_array_sized_new (FALSE, TRUE, 1, 16);
-
-    /* modem unique id is the fixed wildcard string '?_?' matching any pri */
-    g_array_insert_vals (modem_image_id.unique_id, 0, "?_?", 3);
-    g_array_set_size (modem_image_id.unique_id, 16);
-
-    /* modem build id format is "(fwver)_?", matching any carrier */
-    modem_image_id.build_id = g_strdup_printf ("%s_?", split[0]);
+    /* modem unique id is the fixed wildcard string '?_?' matching any pri.
+     * modem build id format is "(fwver)_?", matching any carrier */
+    firmware_preference_ctx->modem_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM;
+    firmware_preference_ctx->modem_image_id.unique_id = g_array_sized_new (FALSE, TRUE, 1, 16);
+    g_array_insert_vals (firmware_preference_ctx->modem_image_id.unique_id, 0, "?_?", 3);
+    g_array_set_size (firmware_preference_ctx->modem_image_id.unique_id, 16);
+    firmware_preference_ctx->modem_image_id.build_id = g_strdup_printf ("%s_?", split[0]);
 
     /* pri unique id is the "(config)" input */
-    g_array_insert_vals (pri_image_id.unique_id, 0, split[1], strlen (split[1]));
-    g_array_set_size (pri_image_id.unique_id, 16);
+    firmware_preference_ctx->pri_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI;
+    firmware_preference_ctx->pri_image_id.unique_id = g_array_sized_new (FALSE, TRUE, 1, 16);
+    g_array_insert_vals (firmware_preference_ctx->pri_image_id.unique_id, 0, split[1], strlen (split[1]));
+    g_array_set_size (firmware_preference_ctx->pri_image_id.unique_id, 16);
+    firmware_preference_ctx->pri_image_id.build_id = g_strdup_printf ("%s_%s", split[0], split[2]);
 
-    pri_image_id.build_id = g_strdup_printf ("%s_%s", split[0], split[2]);
-
+    /* Create an array with both images, the contents of each image struct,
+     * though, aren't owned by the array (i.e. need to be disposed afterwards
+     * when no longer used). */
     array = g_array_sized_new (FALSE, FALSE, sizeof (QmiMessageDmsSetFirmwarePreferenceInputListImage), 2);
-    g_array_append_val (array, modem_image_id);
-    g_array_append_val (array, pri_image_id);
+    g_array_append_val (array, firmware_preference_ctx->modem_image_id);
+    g_array_append_val (array, firmware_preference_ctx->pri_image_id);
 
+    /* The input bundle takes a reference to the array itself */
     input = qmi_message_dms_set_firmware_preference_input_new ();
     qmi_message_dms_set_firmware_preference_input_set_list (input, array, NULL);
+    g_array_unref (array);
+
+    g_strfreev (split);
 
     return input;
 }
@@ -3790,9 +3807,12 @@ qmicli_dms_run (QmiDevice *device,
     /* Set firmware preference? */
     if (set_firmware_preference_str) {
         QmiMessageDmsSetFirmwarePreferenceInput *input;
+        SetFirmwarePreferenceContext             firmware_preference_ctx;
+
+        memset (&firmware_preference_ctx, 0, sizeof (firmware_preference_ctx));
 
         g_debug ("Asynchronously setting firmware preference...");
-        input = set_firmware_preference_input_create (set_firmware_preference_str);
+        input = set_firmware_preference_input_create (set_firmware_preference_str, &firmware_preference_ctx);
         if (!input) {
             operation_shutdown (FALSE);
             return;
@@ -3805,6 +3825,7 @@ qmicli_dms_run (QmiDevice *device,
             NULL,
             (GAsyncReadyCallback)select_stored_image_ready,
             NULL);
+        set_firmware_preference_context_clear (&firmware_preference_ctx);
         qmi_message_dms_set_firmware_preference_input_unref (input);
         return;
     }
