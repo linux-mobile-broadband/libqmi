@@ -60,6 +60,7 @@ typedef enum {
     RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE,
     RUN_CONTEXT_STEP_WAIT_FOR_TTY,
     RUN_CONTEXT_STEP_DOWNLOAD_IMAGE,
+    RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM,
     RUN_CONTEXT_STEP_CLEANUP_IMAGE,
     RUN_CONTEXT_STEP_LAST
 } RunContextStep;
@@ -154,6 +155,48 @@ run_context_step_cleanup_image (GTask *task)
 }
 
 static void
+wait_for_cdc_wdm_ready (gpointer      unused,
+                        GAsyncResult *res,
+                        GTask        *task)
+{
+    GError     *error = NULL;
+    RunContext *ctx;
+    gchar      *tty_path;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    ctx->tty = qfu_udev_helper_wait_for_device_finish (res, &error);
+    if (!ctx->tty) {
+        g_prefix_error (&error, "error waiting for cdc-wdm: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    tty_path = g_file_get_path (ctx->tty);
+    g_debug ("[qfu-updater] cdc-wdm device found: %s", tty_path);
+    g_free (tty_path);
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_wait_for_cdc_wdm (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_debug ("[qfu-updater] now waiting for cdc-wdm device...");
+    qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM,
+                                     ctx->sysfs_path,
+                                     g_task_get_cancellable (task),
+                                     (GAsyncReadyCallback) wait_for_cdc_wdm_ready,
+                                     task);
+}
+
+static void
 run_context_step_download_image (GTask *task)
 {
     RunContext *ctx;
@@ -177,7 +220,7 @@ wait_for_tty_ready (gpointer      unused,
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
-    ctx->tty = qfu_udev_helper_wait_for_tty_finish (res, &error);
+    ctx->tty = qfu_udev_helper_wait_for_device_finish (res, &error);
     if (!ctx->tty) {
         g_prefix_error (&error, "error waiting for TTY: ");
         g_task_return_error (task, error);
@@ -201,10 +244,11 @@ run_context_step_wait_for_tty (GTask *task)
     ctx = (RunContext *) g_task_get_task_data (task);
 
     g_debug ("[qfu-updater] reset requested, now waiting for TTY device...");
-    qfu_udev_helper_wait_for_tty (ctx->sysfs_path,
-                                  g_task_get_cancellable (task),
-                                  (GAsyncReadyCallback) wait_for_tty_ready,
-                                  task);
+    qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_TTY,
+                                     ctx->sysfs_path,
+                                     g_task_get_cancellable (task),
+                                     (GAsyncReadyCallback) wait_for_tty_ready,
+                                     task);
 }
 
 static void
@@ -648,6 +692,7 @@ static const RunContextStepFunc run_context_step_func[] = {
     [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE]  = run_context_step_cleanup_qmi_device,
     [RUN_CONTEXT_STEP_WAIT_FOR_TTY]        = run_context_step_wait_for_tty,
     [RUN_CONTEXT_STEP_DOWNLOAD_IMAGE]      = run_context_step_download_image,
+    [RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM]    = run_context_step_wait_for_cdc_wdm,
     [RUN_CONTEXT_STEP_CLEANUP_IMAGE]       = run_context_step_cleanup_image,
 };
 

@@ -111,18 +111,19 @@ qfu_udev_helper_get_sysfs_path (GFile               *file,
 
 /******************************************************************************/
 
-#define WAIT_FOR_TTY_TIMEOUT_SECS 15
+#define WAIT_FOR_DEVICE_TIMEOUT_SECS 15
 
 typedef struct {
-    GUdevClient *udev;
-    gchar       *sysfs_path;
-    guint        timeout_id;
-    gulong       uevent_id;
-    gulong       cancellable_id;
-} WaitForTtyContext;
+    QfuUdevHelperWaitForDeviceType  device_type;
+    GUdevClient                    *udev;
+    gchar                          *sysfs_path;
+    guint                           timeout_id;
+    gulong                          uevent_id;
+    gulong                          cancellable_id;
+} WaitForDeviceContext;
 
 static void
-wait_for_tty_context_free (WaitForTtyContext *ctx)
+wait_for_device_context_free (WaitForDeviceContext *ctx)
 {
     g_assert (!ctx->timeout_id);
     g_assert (!ctx->uevent_id);
@@ -130,14 +131,47 @@ wait_for_tty_context_free (WaitForTtyContext *ctx)
 
     g_object_unref (ctx->udev);
     g_free (ctx->sysfs_path);
-    g_slice_free (WaitForTtyContext, ctx);
+    g_slice_free (WaitForDeviceContext, ctx);
 }
 
 GFile *
-qfu_udev_helper_wait_for_tty_finish (GAsyncResult  *res,
-                                     GError       **error)
+qfu_udev_helper_wait_for_device_finish (GAsyncResult  *res,
+                                        GError       **error)
 {
     return G_FILE (g_task_propagate_pointer (G_TASK (res), error));
+}
+
+static gchar *
+udev_helper_get_udev_device_driver (GUdevDevice  *device,
+                                    GError      **error)
+{
+    GUdevDevice *parent;
+    gchar       *driver;
+
+    /* We need to look for the parent GUdevDevice which has a "usb_interface"
+     * devtype. */
+
+    parent = g_udev_device_get_parent (device);
+    while (parent) {
+        GUdevDevice *next;
+
+        if (g_strcmp0 (g_udev_device_get_devtype (parent), "usb_interface") == 0)
+            break;
+
+        /* Check next parent */
+        next = g_udev_device_get_parent (parent);
+        g_object_unref (parent);
+        parent = next;
+    }
+
+    if (!parent) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "couldn't find parent interface USB device");
+        return NULL;
+    }
+
+    driver = g_strdup (g_udev_device_get_driver (parent));
+    g_object_unref (parent);
+    return driver;
 }
 
 static void
@@ -146,48 +180,66 @@ handle_uevent (GUdevClient *client,
                GUdevDevice *device,
                GTask       *task)
 {
-    gchar             *sysfs_path;
-    WaitForTtyContext *ctx;
+    WaitForDeviceContext *ctx;
+    gchar                *sysfs_path = NULL;
+    gchar                *driver = NULL;
+    gchar                *path;
 
-    ctx = (WaitForTtyContext *) g_task_get_task_data (task);
+    ctx = (WaitForDeviceContext *) g_task_get_task_data (task);
 
     if (!g_str_equal (action, "add") && !g_str_equal (action, "move") && !g_str_equal (action, "change"))
-        return;
+        goto out;
 
     sysfs_path = qfu_udev_helper_get_udev_device_sysfs_path (device, NULL);
     if (!sysfs_path)
-        return;
+        goto out;
 
-    /* If sysfs_path matches and driver is 'qcserial', we're done */
-    if ((g_strcmp0 (sysfs_path, ctx->sysfs_path) == 0) &&
-        (g_strcmp0 (g_udev_device_get_property (device, "ID_USB_DRIVER"), "qcserial") == 0)) {
-        gchar *path;
+    driver = udev_helper_get_udev_device_driver (device, NULL);
+    if (!driver)
+        goto out;
 
-        /* Disconnect this handler */
-        g_signal_handler_disconnect (ctx->udev, ctx->uevent_id);
-        ctx->uevent_id = 0;
+    if (g_strcmp0 (sysfs_path, ctx->sysfs_path) != 0)
+        goto out;
 
-        /* Disconnect the other handlers */
-        g_cancellable_disconnect (g_task_get_cancellable (task), ctx->cancellable_id);
-        ctx->cancellable_id = 0;
-        g_source_remove (ctx->timeout_id);
-        ctx->timeout_id = 0;
-
-        path = g_strdup_printf ("/dev/%s", g_udev_device_get_name (device));
-        g_task_return_pointer (task, g_file_new_for_path (path), g_object_unref);
-        g_object_unref (task);
-        g_free (path);
+    switch (ctx->device_type) {
+    case QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_TTY:
+        if (g_strcmp0 (driver, "qcserial") != 0)
+            goto out;
+        break;
+    case QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM:
+        if (g_strcmp0 (driver, "cdc_wdm") != 0)
+            goto out;
+        break;
+    default:
+        g_assert_not_reached ();
     }
 
+    /* Disconnect this handler */
+    g_signal_handler_disconnect (ctx->udev, ctx->uevent_id);
+    ctx->uevent_id = 0;
+
+    /* Disconnect the other handlers */
+    g_cancellable_disconnect (g_task_get_cancellable (task), ctx->cancellable_id);
+    ctx->cancellable_id = 0;
+    g_source_remove (ctx->timeout_id);
+    ctx->timeout_id = 0;
+
+    path = g_strdup_printf ("/dev/%s", g_udev_device_get_name (device));
+    g_task_return_pointer (task, g_file_new_for_path (path), g_object_unref);
+    g_object_unref (task);
+    g_free (path);
+
+out:
     g_free (sysfs_path);
+    g_free (driver);
 }
 
 static gboolean
-wait_for_tty_timed_out (GTask *task)
+wait_for_device_timed_out (GTask *task)
 {
-    WaitForTtyContext *ctx;
+    WaitForDeviceContext *ctx;
 
-    ctx = (WaitForTtyContext *) g_task_get_task_data (task);
+    ctx = (WaitForDeviceContext *) g_task_get_task_data (task);
 
     /* Disconnect this handler */
     ctx->timeout_id = 0;
@@ -199,19 +251,19 @@ wait_for_tty_timed_out (GTask *task)
     ctx->uevent_id = 0;
 
     g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_TIMED_OUT,
-                             "waiting for TTY at '%s' timed out",
+                             "waiting for device at '%s' timed out",
                              ctx->sysfs_path);
     g_object_unref (task);
     return FALSE;
 }
 
 static void
-wait_for_tty_cancelled (GCancellable *cancellable,
-                        GTask        *task)
+wait_for_device_cancelled (GCancellable *cancellable,
+                           GTask        *task)
 {
-    WaitForTtyContext *ctx;
+    WaitForDeviceContext *ctx;
 
-    ctx = (WaitForTtyContext *) g_task_get_task_data (task);
+    ctx = (WaitForDeviceContext *) g_task_get_task_data (task);
 
     /* Disconnect this handler */
     g_cancellable_disconnect (g_task_get_cancellable (task), ctx->cancellable_id);
@@ -224,29 +276,38 @@ wait_for_tty_cancelled (GCancellable *cancellable,
     ctx->uevent_id = 0;
 
     g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_CANCELLED,
-                             "waiting for TTY at '%s' cancelled",
+                             "waiting for device at '%s' cancelled",
                              ctx->sysfs_path);
     g_object_unref (task);
 }
 
 void
-qfu_udev_helper_wait_for_tty (const gchar         *sysfs_path,
-                              GCancellable        *cancellable,
-                              GAsyncReadyCallback  callback,
-                              gpointer             user_data)
+qfu_udev_helper_wait_for_device (QfuUdevHelperWaitForDeviceType  device_type,
+                                 const gchar                    *sysfs_path,
+                                 GCancellable                   *cancellable,
+                                 GAsyncReadyCallback             callback,
+                                 gpointer                        user_data)
 {
-    static const gchar *subsys_monitor[] = { "tty", NULL };
-    GTask              *task;
-    WaitForTtyContext  *ctx;
+    static const gchar   *tty_subsys_monitor[]     = { "tty", NULL };
+    static const gchar   *cdc_wdm_subsys_monitor[] = { "usbmisc", "usb", NULL };
+    GTask                *task;
+    WaitForDeviceContext *ctx;
 
-    ctx = g_slice_new0 (WaitForTtyContext);
+    ctx = g_slice_new0 (WaitForDeviceContext);
+    ctx->device_type = device_type;
     ctx->sysfs_path = g_strdup (sysfs_path);
-    ctx->udev = g_udev_client_new (subsys_monitor);
+
+    if (ctx->device_type == QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_TTY)
+        ctx->udev = g_udev_client_new (tty_subsys_monitor);
+    else if (ctx->device_type == QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM)
+        ctx->udev = g_udev_client_new (cdc_wdm_subsys_monitor);
+    else
+        g_assert_not_reached ();
 
     task = g_task_new (NULL, cancellable, callback, user_data);
-    g_task_set_task_data (task, ctx, (GDestroyNotify) wait_for_tty_context_free);
+    g_task_set_task_data (task, ctx, (GDestroyNotify) wait_for_device_context_free);
 
-    /* Monitor for tty additions. */
+    /* Monitor for device additions. */
     ctx->uevent_id = g_signal_connect (ctx->udev,
                                        "uevent",
                                        G_CALLBACK (handle_uevent),
@@ -254,13 +315,13 @@ qfu_udev_helper_wait_for_tty (const gchar         *sysfs_path,
 
     /* Allow cancellation */
     ctx->cancellable_id = g_cancellable_connect (cancellable,
-                                                 (GCallback) wait_for_tty_cancelled,
+                                                 (GCallback) wait_for_device_cancelled,
                                                  task,
                                                  NULL);
 
     /* And also, setup a timeout to avoid waiting forever. */
-    ctx->timeout_id = g_timeout_add_seconds (WAIT_FOR_TTY_TIMEOUT_SECS,
-                                             (GSourceFunc) wait_for_tty_timed_out,
+    ctx->timeout_id = g_timeout_add_seconds (WAIT_FOR_DEVICE_TIMEOUT_SECS,
+                                             (GSourceFunc) wait_for_device_timed_out,
                                              task);
 
     /* Note: task ownership is shared between the signals and the timeout */

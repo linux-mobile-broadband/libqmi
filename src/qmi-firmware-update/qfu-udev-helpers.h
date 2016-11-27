@@ -33,12 +33,18 @@ gchar *qfu_udev_helper_get_sysfs_path             (GFile               *file,
                                                    const gchar *const  *subsys,
                                                    GError             **error);
 
-void   qfu_udev_helper_wait_for_tty        (const gchar          *sysfs_path,
-                                            GCancellable         *cancellable,
-                                            GAsyncReadyCallback   callback,
-                                            gpointer              user_data);
-GFile *qfu_udev_helper_wait_for_tty_finish (GAsyncResult         *res,
-                                            GError              **error);
+typedef enum {
+    QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_TTY,
+    QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM,
+} QfuUdevHelperWaitForDeviceType;
+
+void   qfu_udev_helper_wait_for_device        (QfuUdevHelperWaitForDeviceType   device_type,
+                                               const gchar                     *sysfs_path,
+                                               GCancellable                    *cancellable,
+                                               GAsyncReadyCallback              callback,
+                                               gpointer                         user_data);
+GFile *qfu_udev_helper_wait_for_device_finish (GAsyncResult                    *res,
+                                               GError                         **error);
 
 G_END_DECLS
 
