@@ -20,6 +20,7 @@
  */
 
 #include <config.h>
+#include <string.h>
 
 #include <gio/gio.h>
 #include <gudev/gudev.h>
@@ -53,6 +54,7 @@ typedef enum {
     RUN_CONTEXT_STEP_QMI_DEVICE,
     RUN_CONTEXT_STEP_QMI_DEVICE_OPEN,
     RUN_CONTEXT_STEP_QMI_CLIENT,
+    RUN_CONTEXT_STEP_FIRMWARE_PREFERENCE,
     RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE,
     RUN_CONTEXT_STEP_CLEANUP_IMAGE,
     RUN_CONTEXT_STEP_LAST
@@ -194,6 +196,116 @@ run_context_step_cleanup_qmi_device (GTask *task)
                                task);
 
     g_clear_object (&ctx->qmi_client);
+}
+
+static void
+set_firmware_preference_ready (QmiClientDms *client,
+                               GAsyncResult *res,
+                               GTask        *task)
+{
+    RunContext                               *ctx;
+    QmiMessageDmsSetFirmwarePreferenceOutput *output;
+    GError                                   *error = NULL;
+    GArray                                   *array = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    output = qmi_client_dms_set_firmware_preference_finish (client, res, &error);
+    if (!output) {
+        g_prefix_error (&error, "QMI operation failed, couldn't set firmware preference: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    if (!qmi_message_dms_set_firmware_preference_output_get_result (output, &error)) {
+        g_prefix_error (&error, "couldn't set firmware preference: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        qmi_message_dms_set_firmware_preference_output_unref (output);
+        return;
+    }
+
+    /* list images we need to download? */
+    if (qmi_message_dms_set_firmware_preference_output_get_image_download_list (output, &array, &error)) {
+        if (!array->len) {
+            g_debug ("[qfu-updater] no more images needed to download");
+        } else {
+            GString                 *images = NULL;
+            QmiDmsFirmwareImageType  type;
+            guint                    i;
+
+            images = g_string_new ("");
+            for (i = 0; i < array->len; i++) {
+                type = g_array_index (array, QmiDmsFirmwareImageType, i);
+                g_string_append (images, qmi_dms_firmware_image_type_get_string (type));
+                if (i < array->len -1)
+                    g_string_append (images, ", ");
+            }
+
+            g_debug ("[qfu-updater] need to download the following images: %s", images->str);
+            g_string_free (images, TRUE);
+        }
+    }
+
+    qmi_message_dms_set_firmware_preference_output_unref (output);
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_firmware_preference (GTask *task)
+{
+    QfuUpdater                                       *self;
+    RunContext                                       *ctx;
+    QmiMessageDmsSetFirmwarePreferenceInput          *input;
+    GArray                                           *array;
+    QmiMessageDmsSetFirmwarePreferenceInputListImage  modem_image_id;
+    QmiMessageDmsSetFirmwarePreferenceInputListImage  pri_image_id;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+
+    /* Set modem image info */
+    modem_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM;
+    modem_image_id.unique_id = g_array_sized_new (FALSE, TRUE, sizeof (gchar), 16);
+    g_array_insert_vals (modem_image_id.unique_id, 0, "?_?", 3);
+    g_array_set_size (modem_image_id.unique_id, 16);
+    modem_image_id.build_id = g_strdup_printf ("%s_?", self->priv->firmware_version);
+
+    /* Set pri image info */
+    pri_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI;
+    pri_image_id.unique_id = g_array_sized_new (FALSE, TRUE, sizeof (gchar), 16);
+    g_array_insert_vals (pri_image_id.unique_id, 0, self->priv->config_version, strlen (self->priv->config_version));
+    g_array_set_size (pri_image_id.unique_id, 16);
+    pri_image_id.build_id = g_strdup_printf ("%s_%s", self->priv->firmware_version, self->priv->carrier);
+
+    array = g_array_sized_new (FALSE, FALSE, sizeof (QmiMessageDmsSetFirmwarePreferenceInputListImage), 2);
+    g_array_append_val (array, modem_image_id);
+    g_array_append_val (array, pri_image_id);
+
+    input = qmi_message_dms_set_firmware_preference_input_new ();
+    qmi_message_dms_set_firmware_preference_input_set_list (input, array, NULL);
+    g_array_unref (array);
+
+    g_debug ("[qfu-updater] setting firmware preference...");
+    g_debug ("[qfu-updater]   modem image: unique id '%.16s', build id '%s'",
+             (gchar *) (modem_image_id.unique_id->data), modem_image_id.build_id);
+    g_debug ("[qfu-updater]   pri image:   unique id '%.16s', build id '%s'",
+             (gchar *) (pri_image_id.unique_id->data), pri_image_id.build_id);
+
+    qmi_client_dms_set_firmware_preference (ctx->qmi_client,
+                                            input,
+                                            10,
+                                            g_task_get_cancellable (task),
+                                            (GAsyncReadyCallback) set_firmware_preference_ready,
+                                            task);
+
+    g_array_unref (modem_image_id.unique_id);
+    g_free        (modem_image_id.build_id);
+    g_array_unref (pri_image_id.unique_id);
+    g_free        (pri_image_id.build_id);
 }
 
 static void
@@ -389,13 +501,14 @@ run_context_step_usb_info (GTask *task)
 
 typedef void (* RunContextStepFunc) (GTask *task);
 static const RunContextStepFunc run_context_step_func[] = {
-    [RUN_CONTEXT_STEP_USB_INFO]           = run_context_step_usb_info,
-    [RUN_CONTEXT_STEP_SELECT_IMAGE]       = run_context_step_select_image,
-    [RUN_CONTEXT_STEP_QMI_DEVICE]         = run_context_step_qmi_device,
-    [RUN_CONTEXT_STEP_QMI_DEVICE_OPEN]    = run_context_step_qmi_device_open,
-    [RUN_CONTEXT_STEP_QMI_CLIENT]         = run_context_step_qmi_client,
-    [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE] = run_context_step_cleanup_qmi_device,
-    [RUN_CONTEXT_STEP_CLEANUP_IMAGE]      = run_context_step_cleanup_image,
+    [RUN_CONTEXT_STEP_USB_INFO]            = run_context_step_usb_info,
+    [RUN_CONTEXT_STEP_SELECT_IMAGE]        = run_context_step_select_image,
+    [RUN_CONTEXT_STEP_QMI_DEVICE]          = run_context_step_qmi_device,
+    [RUN_CONTEXT_STEP_QMI_DEVICE_OPEN]     = run_context_step_qmi_device_open,
+    [RUN_CONTEXT_STEP_QMI_CLIENT]          = run_context_step_qmi_client,
+    [RUN_CONTEXT_STEP_FIRMWARE_PREFERENCE] = run_context_step_firmware_preference,
+    [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE]  = run_context_step_cleanup_qmi_device,
+    [RUN_CONTEXT_STEP_CLEANUP_IMAGE]       = run_context_step_cleanup_image,
 };
 
 G_STATIC_ASSERT (G_N_ELEMENTS (run_context_step_func) == RUN_CONTEXT_STEP_LAST);
