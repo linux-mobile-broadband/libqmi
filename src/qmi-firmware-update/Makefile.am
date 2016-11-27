@@ -15,6 +15,7 @@ qmi_firmware_update_SOURCES = \
 	qfu-main.c \
 	qfu-updater.h qfu-updater.c \
 	qfu-udev-helpers.h qfu-udev-helpers.c \
+	qfu-download-helpers.h qfu-download-helpers.c \
 	$(NULL)
 
 qmi_firmware_update_LDADD = \
