@@ -2799,13 +2799,17 @@ get_stored_image (QmiClientDms *client,
         operation_ctx);
 }
 
+/* Note:
+ *  used by both --dms-set-firmware-preference and --dms-select-stored-image
+ */
 static void
-select_stored_image_ready (QmiClientDms *client,
-                           GAsyncResult *res)
+dms_set_firmware_preference_ready (QmiClientDms *client,
+                                   GAsyncResult *res)
 {
     QmiMessageDmsSetFirmwarePreferenceOutput *output;
-    GError *error = NULL;
-    GArray *array;
+    GError                                   *error = NULL;
+    GArray                                   *array;
+    GString                                  *pending_images = NULL;
 
     output = qmi_client_dms_set_firmware_preference_finish (client, res, &error);
     if (!output) {
@@ -2823,36 +2827,44 @@ select_stored_image_ready (QmiClientDms *client,
         return;
     }
 
-    g_print ("[%s] Stored image successfully selected\n"
+    g_print ("[%s] Firmware preference successfully selected\n"
              "\n"
              "\tYou may want to power-cycle the modem now, or just set it offline and reset it:\n"
              "\t\t$> sudo qmicli ... --dms-set-operating-mode=offline\n"
              "\t\t$> sudo qmicli ... --dms-set-operating-mode=reset\n"
-             "\n"
-             "\tYou should check that the modem|pri image pair is valid by checking the current operating mode:\n"
-             "\t\t$> sudo qmicli .... --dms-get-operating-mode\n"
-             "\tIf the Mode is reported as 'online', you're good to go.\n"
-             "\tIf the Mode is reported as 'offline' with a 'pri-version-incompatible' reason, you chose an incorrect pair\n"
              "\n",
              qmi_device_get_path_display (ctx->device));
 
     /* do we need to download a new modem and/or pri image? */
-    if (qmi_message_dms_set_firmware_preference_output_get_image_download_list (output, &array, &error)) {
-        guint i;
-        GString *images;
+    if (qmi_message_dms_set_firmware_preference_output_get_image_download_list (output, &array, NULL) && array->len) {
+        guint                   i;
         QmiDmsFirmwareImageType type;
 
-        images = g_string_new ("");
+        pending_images = g_string_new ("");
         for (i = 0; i < array->len; i++) {
             type = g_array_index (array, QmiDmsFirmwareImageType, i);
-            g_string_append (images, qmi_dms_firmware_image_type_get_string (type));
+            g_string_append (pending_images, qmi_dms_firmware_image_type_get_string (type));
             if (i < array->len -1)
-                g_string_append (images, ", ");
+                g_string_append (pending_images, ", ");
         }
-        if (array->len)
-            g_print ("\tAfter reset, the modem will wait in QDL mode for new firmware.\n"
-                     "\tImages to download: '%s'\n\n", images->str);
-        g_string_free (images, TRUE);
+    }
+
+    if (pending_images) {
+        g_print ("\tAfter reset, the modem will wait in QDL mode for new firmware.\n"
+                 "\tImages to download: '%s'\n"
+                 "\n",
+                 pending_images->str);
+        g_string_free (pending_images, TRUE);
+    } else {
+        /* If we're selecting an already stored image, or if we don't need any
+         * more images to be downloaded, we're done. */
+        g_print ("\tNo new images are required to be downloaded.\n"
+                 "\n"
+                 "\tYou should check that the modem|pri image pair is valid by checking the current operating mode:\n"
+                 "\t\t$> sudo qmicli .... --dms-get-operating-mode\n"
+                 "\tIf the Mode is reported as 'online', you're good to go.\n"
+                 "\tIf the Mode is reported as 'offline' with a 'pri-version-incompatible' reason, you chose an incorrect pair\n"
+                 "\n");
     }
 
     qmi_message_dms_set_firmware_preference_output_unref (output);
@@ -2897,16 +2909,14 @@ get_stored_image_select_ready (QmiClientDms *client,
         input,
         10,
         NULL,
-        (GAsyncReadyCallback)select_stored_image_ready,
+        (GAsyncReadyCallback)dms_set_firmware_preference_ready,
         NULL);
     qmi_message_dms_set_firmware_preference_input_unref (input);
 
-    g_free (modem_image_id.build_id);
-    if (modem_image_id.unique_id)
-        g_array_unref (modem_image_id.unique_id);
-    g_free (pri_image_id.build_id);
-    if (pri_image_id.unique_id)
-        g_array_unref (pri_image_id.unique_id);
+    g_free        (modem_image_id.build_id);
+    g_array_unref (modem_image_id.unique_id);
+    g_free        (pri_image_id.build_id);
+    g_array_unref (pri_image_id.unique_id);
 }
 
 static void
@@ -3823,7 +3833,7 @@ qmicli_dms_run (QmiDevice *device,
             input,
             10,
             NULL,
-            (GAsyncReadyCallback)select_stored_image_ready,
+            (GAsyncReadyCallback)dms_set_firmware_preference_ready,
             NULL);
         set_firmware_preference_context_clear (&firmware_preference_ctx);
         qmi_message_dms_set_firmware_preference_input_unref (input);
