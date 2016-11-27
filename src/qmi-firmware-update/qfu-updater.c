@@ -29,6 +29,7 @@
 
 #include "qfu-updater.h"
 #include "qfu-udev-helpers.h"
+#include "qfu-download-helpers.h"
 
 G_DEFINE_TYPE (QfuUpdater, qfu_updater, G_TYPE_OBJECT)
 
@@ -197,16 +198,42 @@ run_context_step_wait_for_cdc_wdm (GTask *task)
 }
 
 static void
+download_image_ready (gpointer      unused,
+                      GAsyncResult *res,
+                      GTask        *task)
+{
+    RunContext *ctx;
+    GError     *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    if (!qfu_download_helper_run_finish (res, &error)) {
+        g_prefix_error (&error, "error downloading image: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[qfu-updater] image '%s' successfully downloaded",
+             g_file_info_get_display_name (ctx->current_image_info));
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
 run_context_step_download_image (GTask *task)
 {
     RunContext *ctx;
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
-    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
-                             "image '%s' download failed",
-                             g_file_info_get_display_name (ctx->current_image_info));
-    g_object_unref (task);
+    qfu_download_helper_run (ctx->tty,
+                             ctx->current_image,
+                             ctx->current_image_info,
+                             g_task_get_cancellable (task),
+                             (GAsyncReadyCallback) download_image_ready,
+                             task);
 }
 
 static void

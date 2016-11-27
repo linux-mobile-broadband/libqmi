@@ -32,6 +32,7 @@
 
 #include <config.h>
 
+#include <stdio.h>
 #include <endian.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -44,7 +45,19 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <libqmi-glib.h>
+
 #include "qfu-download-helpers.h"
+
+static gboolean write_hdlc     (gint          fd,
+                                const gchar  *in,
+                                gsize         inlen,
+                                GError      **error);
+static gboolean read_hdlc      (gint          fd,
+                                GError      **error);
+static gboolean read_hdlc_full (gint          fd,
+                                guint16      *seq_ack,
+                                GError      **error);
 
 /******************************************************************************/
 
@@ -109,10 +122,34 @@ struct _DloadSdp {
     guint16 reserved;  /* 0x0000 */
 } __attribute__ ((packed));
 
-static DloadSdp dload_sdp = {
-    .cmd      = 0x70,
-    .reserved = 0x0000,
-};
+static gboolean
+dload_switch_to_sdp (gint     fd,
+                     GError **error)
+{
+    static const DloadSdp dload_sdp = {
+        .cmd      = DLOAD_CMD_SDP,
+        .reserved = 0x0000,
+    };
+
+    GError *inner_error = NULL;
+
+    /* switch to SDP - this is required for some modems like MC7710 */
+    if (!write_hdlc (fd, (const gchar *) &dload_sdp, sizeof (DloadSdp), error)) {
+        g_prefix_error (error, "couldn't write request: ");
+        return FALSE;
+    }
+
+	/* The modem could already be in SDP mode, so ignore "unsupported" errors */
+    if (!read_hdlc (fd, &inner_error)) {
+        if (!g_error_matches (inner_error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+            g_propagate_error (error, inner_error);
+            return FALSE;
+        }
+        g_error_free (inner_error);
+    }
+
+    return TRUE;
+}
 
 /******************************************************************************/
 /* HDLC */
@@ -288,48 +325,39 @@ hdlc_unframe (const gchar  *in,
     return j;
 }
 
-static gboolean
-write_hdlc (gint          fd,
-            const gchar  *in,
-            gsize         inlen,
-            GError      **error)
+/******************************************************************************/
+/* Sierra */
+
+/* Sierra Wireless CWE file header
+ *   Note: 32bit numbers are big endian
+ */
+typedef struct _CweHdr CweHdr;
+struct _CweHdr {
+	gchar   reserved1[256];
+	guint32 crc;		 /* 32bit CRC of "reserved1" field */
+	guint32 rev;		 /* header revision */
+	guint32 val;		 /* CRC validity indicator */
+	gchar   type[4];	 /* ASCII - not null terminated */
+	gchar   product[4];  /* ASCII - not null terminated */
+	guint32 imgsize;	 /* image size */
+	guint32 imgcrc;		 /* 32bit CRC of the image */
+	gchar   version[84]; /* ASCII - null terminated */
+	gchar   date[8];	 /* ASCII - null terminated */
+	guint32 compat;		 /* backward compatibility */
+	gchar   reserved2[20];
+} __attribute__ ((packed));
+
+static void
+verify_cwehdr (gchar *buf)
 {
-    gchar  wbuf[512];
-    gsize  wlen;
-    gssize written;
+	CweHdr *hdr = (void *) buf;
 
-    /* Pack into an HDLC frame */
-    wlen = hdlc_frame (in, inlen, wbuf, sizeof (wbuf));
-    g_assert_cmpuint (wlen, >, 0);
-
-    /* Send HDLC frame to device */
-    written = write (fd, wbuf, wlen);
-    if (written < 0) {
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                     "couldn't write HDLC frame: %s",
-                     g_strerror (errno));
-        return FALSE;
-    }
-
-    /* Treat this as an error, we may want to improve this by writing out the
-     * remaning amount of bytes */
-    if (written != wlen) {
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                     "error writing full HDLC frame: only %" G_GSSIZE_FORMAT "/" G_GSIZE_FORMAT " bytes written",
-                     written, wlen);
-        return FALSE;
-    }
-
-    /* Debug output */
-    if (qmi_utils_get_traces_enabled ()) {
-        gchar *printable;
-
-        printable = utils_str_hex (wbuf, wlen);
-        g_debug ("[qfu-download,hdlc] >> %s", printable);
-        g_free (printable);
-    }
-
-    return TRUE;
+    g_debug ("[qfu-download,cwe] revision:   %u",   GUINT32_FROM_BE (hdr->rev));
+    g_debug ("[qfu-download,cwe] type:       %.4s", hdr->type);
+    g_debug ("[qfu-download,cwe] product:    %.4s", hdr->product);
+    g_debug ("[qfu-download,cwe] image size: %u",   GUINT32_FROM_BE (hdr->imgsize));
+    g_debug ("[qfu-download,cwe] version:    %s",   hdr->version);
+    g_debug ("[qfu-download,cwe] date:       %s",   hdr->date);
 }
 
 /******************************************************************************/
@@ -422,7 +450,7 @@ typedef enum {
 } QdlError;
 
 static const gchar *qdl_error_str[] = {
-    [QDL_ERROR_NONE              ] = "None"
+    [QDL_ERROR_NONE              ] = "None",
     [QDL_ERROR_01_RESERVED       ] = "Reserved",
     [QDL_ERROR_BAD_ADDR          ] = "Invalid destination address",
     [QDL_ERROR_BAD_LEN           ] = "Invalid length",
@@ -453,6 +481,17 @@ static const gchar *qdl_error_str[] = {
 
 G_STATIC_ASSERT (G_N_ELEMENTS (qdl_error_str) == QDL_ERROR_LAST);
 
+static GIOErrorEnum
+qdl_error_to_gio_error_enum (QdlError err)
+{
+    switch (err) {
+    case QDL_ERROR_CMD_UNSUPPORTED:
+        return G_IO_ERROR_NOT_SUPPORTED;
+    default:
+        return G_IO_ERROR_FAILED;
+    }
+}
+
 static const gchar *
 qdl_error_to_string (QdlError err)
 {
@@ -472,32 +511,32 @@ qdl_error_to_string (QdlError err)
  */
 
 typedef enum {
-    QDL_IMAGE_TYPE_AMSS_MODEM       = 0x05, /* 05 AMSS modem image         */
-    QDL_IMAGE_TYPE_AMSS_APPLICATION = 0x06, /* 06 AMSS application image   */
-    QDL_IMAGE_TYPE_AMSS_UQCN        = 0x0d, /* 13 Provisioning information */
-    QDL_IMAGE_TYPE_DBL              = 0x0f, /* 15 DBL image                */
-    QDL_IMAGE_TYPE_OSBL             = 0x10, /* 16 OSBL image               */
-    QDL_IMAGE_TYPE_CWE              = 0x80, /* 128 CWE image               */
+    QDL_IMAGE_TYPE_AMSS_MODEM       = 0x05,
+    QDL_IMAGE_TYPE_AMSS_APPLICATION = 0x06,
+    QDL_IMAGE_TYPE_AMSS_UQCN        = 0x0d,
+    QDL_IMAGE_TYPE_DBL              = 0x0f,
+    QDL_IMAGE_TYPE_OSBL             = 0x10,
+    QDL_IMAGE_TYPE_CWE              = 0x80,
 } QdlImageType;
 
 static const gchar *
-qdl_type_to_string (QdlImageType type)
+qdl_image_type_to_string (QdlImageType type)
 {
     switch (type) {
-    case QDL_IMAGE_AMSS_MODEM:
+    case QDL_IMAGE_TYPE_AMSS_MODEM:
         return "AMSS modem image";
-    case QDL_IMAGE_AMSS_APPLICATION:
+    case QDL_IMAGE_TYPE_AMSS_APPLICATION:
         return "AMSS application image";
-    case QDL_IMAGE_AMSS_UQCN:
-        return "AMSS Provisioning information";
-    case QDL_IMAGE_DBL:
+    case QDL_IMAGE_TYPE_AMSS_UQCN:
+        return "AMSS Provisioning information image";
+    case QDL_IMAGE_TYPE_DBL:
         return "DBL image";
-    case QDL_IMAGE_OSBL:
+    case QDL_IMAGE_TYPE_OSBL:
         return "OSBL image";
-    case QDL_IMAGE_CWE:
+    case QDL_IMAGE_TYPE_CWE:
         return "CWE image";
     default:
-        return "UNKNOWN";
+        return "Unknown image";
     }
 }
 
@@ -506,6 +545,12 @@ qdl_type_to_string (QdlImageType type)
 #define QDL_FEATURE_QDL_UNFRAMED     0x20
 #define QDL_FEATURE_BAR_MODE         0x40
 
+/* Generic message for operations that just require the command id */
+typedef struct _QdlMsg QdlMsg;
+struct _QdlMsg {
+    guint8 cmd;
+} __attribute__ ((packed));
+
 typedef struct _QdlHelloReq QdlHelloReq;
 struct _QdlHelloReq {
     guint8 cmd; /* 0x01 */
@@ -513,7 +558,7 @@ struct _QdlHelloReq {
     guint8 maxver;
     guint8 minver;
     guint8 features;
-}  __attribute__ ((packed));
+} __attribute__ ((packed));
 
 static const QdlHelloReq qdl_hello_req = {
     .cmd = QDL_CMD_HELLO_REQ,
@@ -535,14 +580,14 @@ struct _QdlHelloRsp {
     guint16 reserved4;
     guint16 reserved5;
     guint8  features;
-}  __attribute__ ((packed));
+} __attribute__ ((packed));
 
 typedef struct _QdlErrRsp QdlErrRsp;
 struct _QdlErrRsp {
     guint8  cmd; /* 0x0d */
     guint32 error;
     guint8  errortxt;
-}  __attribute__ ((packed));
+} __attribute__ ((packed));
 
 typedef struct _QdlUfopenReq QdlUfopenReq;
 struct _QdlUfopenReq {
@@ -559,7 +604,7 @@ struct _QdlUfopenReq {
      * The file header inclusion here seems to depend on the file
      * type
      */
-}  __attribute__ ((packed));
+} __attribute__ ((packed));
 
 typedef struct _QdlUfopenRsp QdlUfopenRsp;
 struct _QdlUfopenRsp {
@@ -567,17 +612,17 @@ struct _QdlUfopenRsp {
     guint16 status;
     guint8  windowsize;
     guint32 chunksize;
-}  __attribute__ ((packed));
+} __attribute__ ((packed));
 
 /* This request is not HDLC framed, so this "header" includes the crc */
 typedef struct _QdlUfwriteReq QdlUfwriteReq;
-struct QdlUfwriteReq {
+struct _QdlUfwriteReq {
     guint8  cmd; /* 0x27 */
     guint16 sequence;
     guint32 reserved;
     guint32 chunksize;
     guint16 crc;
-}  __attribute__ ((packed));
+} __attribute__ ((packed));
 
 /* the buffer most hold a file chunk + this header */
 #define CHUNK   (1024 * 1024)
@@ -590,17 +635,17 @@ struct _QdlUfwriteRsp {
     guint16 sequence;
     guint32 reserved;
     guint16 status;
-}  __attribute__ ((packed));
+} __attribute__ ((packed));
 
 /* 0x29 - cmd only */
 
 typedef struct _QdlUfcloseRsp QdlUfcloseRsp;
-struct QdlUfcloseRsp {
+struct _QdlUfcloseRsp {
     guint8  cmd; /* 0x2a */
     guint16 status;
     guint8  type;
     guint8  errortxt;
-}  __attribute__ ((packed));
+} __attribute__ ((packed));
 
 /* 0x2d - cmd only */
 /* 0x2e - cmd only */
@@ -613,13 +658,14 @@ struct _QdlImageprefRsp {
         guint8 type;
         gchar  id[16];
     } image[];
-}  __attribute__ ((packed));
+} __attribute__ ((packed));
 
 /* should the unframed open request include a file header? */
-static inline size_t hdrlen(__u8 type)
+static inline gsize
+qdl_image_get_hdrlen (QdlImageType type)
 {
 	switch (type) {
-	case QDL_IMAGE_CWE:
+	case QDL_IMAGE_TYPE_CWE:
 		return 400;
 	default:
 		return 0;
@@ -627,173 +673,657 @@ static inline size_t hdrlen(__u8 type)
 }
 
 /* some image types contain trailing garbage - from gobi-loader */
-static inline size_t imglen(__u8 type, size_t len)
+static inline gsize
+qdl_image_get_len (QdlImageType type, gsize len)
 {
 	switch (type) {
-	case QDL_IMAGE_AMSS_MODEM:
+	case QDL_IMAGE_TYPE_AMSS_MODEM:
 		return len - 8;
 	default:
 		return len;
 	}
 }
 
-static size_t create_ufopen_req(char *in, size_t filelen, __u8 type)
+static gsize
+create_ufopen_req (gchar        *out,
+                   gsize         outlen,
+                   gsize         filelen,
+                   QdlImageType  type)
 {
-	struct qdl_ufopen_req *req = (void *)in;
+    QdlUfopenReq *req = (void *) out;
+
+    g_assert (outlen >= sizeof (QdlUfopenReq));
 
 	req->cmd = QDL_CMD_OPEN_UNFRAMED_REQ;
-	req->type = type;
-	req ->windowsize = 1; /* snooped */
-	req->length = imglen(type, filelen);
-	req->chunksize = imglen(type, filelen) - hdrlen(type);
-	return sizeof(struct qdl_ufopen_req);
+	req->type = (guint8) type;
+	req->windowsize = 1; /* snooped */
+	req->length = qdl_image_get_len (type, filelen);
+	req->chunksize = req->length - qdl_image_get_hdrlen (type);
+	return sizeof (QdlUfopenReq);
 }
 
-static size_t create_ufwrite_req(char *out, size_t chunksize, int sequence)
+static gsize
+create_ufwrite_req (gchar *out,
+                    gsize  outlen,
+                    gsize  chunksize,
+                    gint   sequence)
 {
-	struct qdl_ufwrite_req *req = (void *)out;
+    QdlUfwriteReq *req = (void *) out;
 
 	req->cmd = QDL_CMD_WRITE_UNFRAMED_REQ;
 	req->sequence = sequence;
 	req->reserved = 0;
 	req->chunksize = chunksize;
-	req->crc = crc16(out, sizeof(*req) - 2);
-	return sizeof(*req);
+	req->crc = crc16 (out, sizeof (QdlUfwriteReq) - 2);
+	return sizeof (QdlUfwriteReq);
 }
 
-static int parse_sdp_hello(const char *in, size_t inlen)
+static gboolean
+process_sdp_hello (const gchar  *in,
+                   gsize         inlen,
+                   GError      **error)
 {
-	struct qdl_hello_rsp *r;
-	char buf[sizeof(*r) + sizeof(__u16)];
-	char magicbuf[33] = {0};
-	size_t ret;
+	gchar        buf[sizeof (QdlHelloRsp) + sizeof (guint16)];
+    QdlHelloRsp *rsp;
+	gsize        ret;
 
-	r = (struct qdl_hello_rsp *)buf;
-	ret = hdlc_unframe(in, inlen, buf, sizeof(buf));
-	if (ret == sizeof(*r) && r->cmd == QDL_CMD_HELLO_RSP) {
-		memcpy(magicbuf, r->magic, r->maxver <= 5 ? 24 : 32);
-		debug("magic: '%s'\nmaxver: %u\nminver: %u\nfeatures: 0x%02x\n", magicbuf, r->maxver, r->minver, r->features);
-		return 0;
-	}
-	return -1; /* unexpected error */
+	rsp = (QdlHelloRsp *) buf;
+
+	ret = hdlc_unframe (in, inlen, buf, sizeof (buf), error);
+    if (ret == 0) {
+        g_prefix_error (error, "error unframing message: ");
+        return FALSE;
+    }
+	if (ret != sizeof (QdlHelloRsp)) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "unframed message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
+                     ret, sizeof (QdlHelloRsp));
+        return FALSE;
+    }
+
+    /* Unframing should keep command */
+    g_assert (rsp->cmd == QDL_CMD_HELLO_RSP);
+
+    g_debug ("[qfu-download,qdl] %s:", qdl_cmd_to_string ((QdlCmd) rsp->cmd));
+    g_debug ("[qfu-download,qdl]   magic:           %.*s\n",   rsp->maxver <= 5 ? 24 : 32, rsp->magic);
+    g_debug ("[qfu-download,qdl]   maximum version: %u\n",     rsp->maxver);
+    g_debug ("[qfu-download,qdl]   minimum version: %u\n",     rsp->minver);
+    g_debug ("[qfu-download,qdl]   features:        0x%02x\n", rsp->features);
+
+    return TRUE;
 }
 
-static int parse_sdp_err(const char *in, size_t inlen, bool silent)
+static gboolean
+process_sdp_err (const gchar  *in,
+                 gsize         inlen,
+                 GError      **error)
 {
-	struct qdl_err_rsp *r;
-	char buf[sizeof(*r) + sizeof(__u16)];
-	size_t ret;
+	gchar      buf[sizeof (QdlErrRsp) + sizeof (guint16)];
+    QdlErrRsp *rsp;
+	gsize      ret;
 
-	r = (struct qdl_err_rsp *)buf;
-	ret = hdlc_unframe(in, inlen, buf, sizeof(buf));
-	if (ret == sizeof(*r) && r->cmd == QDL_CMD_ERROR) {
-		if (!silent)
-			fprintf(stderr, "SDP error %d (%d): %s\n", r->error, r->errortxt, sdperr2str(r->error));
-		return -r->error;
-	}
-	return -1; /* not an proper error frame */
+	rsp = (QdlErrRsp *) buf;
+
+	ret = hdlc_unframe (in, inlen, buf, sizeof (buf), error);
+    if (ret == 0) {
+        g_prefix_error (error, "error unframing message: ");
+        return FALSE;
+    }
+	if (ret != sizeof (QdlErrRsp)) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "unframed message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
+                     ret, sizeof (QdlErrRsp));
+        return FALSE;
+    }
+
+    /* Unframing should keep command */
+    g_assert (rsp->cmd == QDL_CMD_ERROR);
+
+    g_debug ("[qfu-download,qdl] %s", qdl_cmd_to_string ((QdlCmd) rsp->cmd));
+    g_debug ("[qfu-download,qdl]   error:    %d", rsp->error);
+    g_debug ("[qfu-download,qdl]   errortxt: %d", rsp->errortxt);
+
+    /* Always return an error in this case */
+
+    g_set_error (error, G_IO_ERROR, qdl_error_to_gio_error_enum (rsp->error),
+                 "%s", qdl_error_to_string ((QdlError) rsp->error));
+    return FALSE;
 }
 
-static int parse_ufopen(const char *in, size_t inlen)
+static gboolean
+process_ufopen (const gchar  *in,
+                gsize         inlen,
+                GError      **error)
 {
-	struct qdl_ufopen_rsp *r;
-	char buf[sizeof(*r) + sizeof(__u16)];
-	size_t ret;
+	gchar         buf[sizeof (QdlUfopenRsp) + sizeof (guint16)];
+    QdlUfopenRsp *rsp;
+	gsize         ret;
 
-	r = (struct qdl_ufopen_rsp *)buf;
-	ret = hdlc_unframe(in, inlen, buf, sizeof(buf));
-	if (ret != sizeof(*r) || r->cmd != QDL_CMD_OPEN_UNFRAMED_RSP)
-		return -1;
-	debug("status=%d, windowsize=%d, chunksize=%d\n", r->status, r->windowsize, r->chunksize);
-	return -r->status;
+	rsp = (QdlUfopenRsp *) buf;
+
+	ret = hdlc_unframe (in, inlen, buf, sizeof (buf), error);
+    if (ret == 0) {
+        g_prefix_error (error, "error unframing message: ");
+        return FALSE;
+    }
+	if (ret != sizeof (QdlUfopenRsp)) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "unframed message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
+                     ret, sizeof (QdlUfopenRsp));
+        return FALSE;
+    }
+
+    /* Unframing should keep command */
+    g_assert (rsp->cmd == QDL_CMD_OPEN_UNFRAMED_RSP);
+
+    g_debug ("[qfu-download,qdl] %s", qdl_cmd_to_string ((QdlCmd) rsp->cmd));
+    g_debug ("[qfu-download,qdl]   status:      %d", rsp->status);
+    g_debug ("[qfu-download,qdl]   window size: %d", rsp->windowsize);
+    g_debug ("[qfu-download,qdl]   chunk size:  %d", rsp->chunksize);
+
+    /* Return error if status != 0 */
+    if (rsp->status != 0) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "operation returned an error status: %d",
+                     rsp->status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
-static int parse_ufwrite(const char *in, size_t inlen)
+static gboolean
+process_ufwrite (const gchar  *in,
+                 gsize         inlen,
+                 guint16      *sequence,
+                 GError      **error)
 {
-	struct qdl_ufwrite_rsp *r;
-	char buf[sizeof(*r) + sizeof(__u16)];
-	size_t ret;
+	gchar          buf[sizeof (QdlUfwriteRsp) + sizeof (guint16)];
+    QdlUfwriteRsp *rsp;
+	gsize          ret;
 
-	r = (struct qdl_ufwrite_rsp *)buf;
-	ret = hdlc_unframe(in, inlen, buf, sizeof(buf));
-	if (ret != sizeof(*r) || r->cmd != QDL_CMD_WRITE_UNFRAMED_RSP)
-		return -1;
-	if (r->status) {
-		fprintf(stderr, "seq 0x%04x status=%d\n", r->sequence, r->status);
-		return -r->status;
-	}
-	debug("ack: %d\n", r->sequence);
-	return r->sequence;
+	rsp = (QdlUfwriteRsp *) buf;
+
+	ret = hdlc_unframe (in, inlen, buf, sizeof (buf), error);
+    if (ret == 0) {
+        g_prefix_error (error, "error unframing message: ");
+        return FALSE;
+    }
+	if (ret != sizeof (QdlUfwriteRsp)) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "unframed message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
+                     ret, sizeof (QdlUfwriteRsp));
+        return FALSE;
+    }
+
+    /* Unframing should keep command */
+    g_assert (rsp->cmd == QDL_CMD_WRITE_UNFRAMED_RSP);
+
+    g_debug ("[qfu-download,qdl] %s", qdl_cmd_to_string ((QdlCmd) rsp->cmd));
+    g_debug ("[qfu-download,qdl]   status:   %d",     rsp->status);
+    g_debug ("[qfu-download,qdl]   sequence: 0x%04x", rsp->sequence);
+
+    /* Return error if status != 0 */
+    if (rsp->status != 0) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "operation returned an error status: %d",
+                     rsp->status);
+        return FALSE;
+    }
+
+    if (sequence)
+        *sequence = rsp->sequence;
+    return TRUE;
 }
 
-static int parse_ufdone(const char *in, size_t inlen)
+static gboolean
+process_ufdone (const gchar  *in,
+                gsize         inlen,
+                GError      **error)
 {
-	struct qdl_ufclose_rsp *r;
-	char buf[sizeof(*r) + sizeof(__u16)];
-	size_t ret;
+	gchar          buf[sizeof (QdlUfcloseRsp) + sizeof (guint16)];
+    QdlUfcloseRsp *rsp;
+	gsize          ret;
 
-	r = (struct qdl_ufclose_rsp *)buf;
-	ret = hdlc_unframe(in, inlen, buf, sizeof(buf));
-	if (ret != sizeof(*r) || r->cmd != QDL_CMD_SESSION_DONE_RSP)
-		return -1;
-	debug("UF close: status=%d, type=%d, errortxt=%d\n", r->status, r->type, r->errortxt);
-	return -r->status;
+	rsp = (QdlUfcloseRsp *) buf;
+
+	ret = hdlc_unframe (in, inlen, buf, sizeof (buf), error);
+    if (ret == 0) {
+        g_prefix_error (error, "error unframing message: ");
+        return FALSE;
+    }
+	if (ret != sizeof (QdlUfcloseRsp)) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "unframed message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
+                     ret, sizeof (QdlUfcloseRsp));
+        return FALSE;
+    }
+
+    /* Unframing should keep command */
+    g_assert (rsp->cmd == QDL_CMD_SESSION_DONE_RSP);
+
+    g_debug ("[qfu-download,qdl] %s", qdl_cmd_to_string ((QdlCmd) rsp->cmd));
+    g_debug ("[qfu-download,qdl]   status:   %d", rsp->status);
+    g_debug ("[qfu-download,qdl]   type:     %d", rsp->type);
+    g_debug ("[qfu-download,qdl]   errortxt: %d", rsp->errortxt);
+
+    /* Return error if status != 0 */
+    if (rsp->status != 0) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "operation returned an error status: %d",
+                     rsp->status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
-/* read and parse QDL if available.  Will return unless data is
- * available withing 5 ms
+static gboolean
+qdl_detect_version (gint     fd,
+                    GError **error)
+{
+    guint    version;
+    gboolean found = FALSE;
+
+	/* Attempt to probe supported protocol version
+	 *  Newer modems like Sierra Wireless MC7710 must use '6' for both fields
+	 *  Gobi2000 modems like HP un2420 must use '5' for both fields
+	 *  Gobi1000 modems  must use '4' for both fields
+	 */
+	for (version = 4; !found && version < 7; version++) {
+        QdlHelloReq req;
+
+        memcpy (&req, &qdl_hello_req, sizeof (QdlHelloReq));
+		req.minver = version;
+		req.maxver = version;
+
+		if (!write_hdlc (fd, (const gchar *) &req, sizeof (QdlHelloReq), error)) {
+            g_prefix_error (error, "couldn't write request: ");
+            return FALSE;
+        }
+
+        /* If no error processing the response, we assume version is found */
+        found = read_hdlc (fd, NULL);
+    }
+
+    if (!found) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "couldn't detect QDL version");
+        return FALSE;
+    }
+
+    g_debug ("[qfu-download,qdl] QDL version detected: %u", version);
+    return TRUE;
+}
+
+static gboolean
+qdl_session_done (gint     fd,
+                  GError **error)
+{
+    static const QdlMsg session_done = {
+        .cmd =  QDL_CMD_SESSION_DONE_REQ,
+    };
+
+    if (!write_hdlc (fd, (const gchar *) &session_done, sizeof (QdlMsg), error)) {
+        g_prefix_error (error, "couldn't write session done request: ");
+        return FALSE;
+    }
+
+    if (!read_hdlc (fd, error)) {
+        g_prefix_error (error, "error reported in session done request: ");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+qdl_session_close (gint     fd,
+                   GError **error)
+{
+    static const QdlMsg session_close = {
+        .cmd =  QDL_CMD_SESSION_CLOSE_REQ,
+    };
+
+    if (!write_hdlc (fd, (const gchar *) &session_close, sizeof (QdlMsg), error)) {
+        g_prefix_error (error, "couldn't write session close request: ");
+        return FALSE;
+    }
+
+    if (!read_hdlc (fd, error)) {
+        g_prefix_error (error, "error reported in session close request: ");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/* guessing image type based on the well known Gobi 1k and 2k
+ * filenames, and assumes anything else is a CWE image
+ *
+ * This is based on the types in gobi-loader's snooped magic strings:
+ *   0x05 => "amss.mbn"
+ *   0x06 => "apps.mbn"
+ *   0x0d => "uqcn.mbn" (Gobi 2000 only)
  */
-static int read_and_parse(int fd, bool silent)
+static QdlImageType
+qdl_image_image_get_type_from_file (GFile *image)
 {
-	char *end, *p, rbuf[512];
-	int rlen, framelen, ret = 0;
-	fd_set rd;
-	struct timeval tv = { .tv_sec = 1, .tv_usec = 0, };
+	gchar        *basename;
+    QdlImageType  image_type;
 
-	FD_ZERO(&rd);
-	FD_SET(fd, &rd);
-	if (select(fd + 1, &rd, NULL, NULL, &tv) <= 0) {
-		debug("timeout: no data read\n");
-		return 0;
+    g_assert (G_IS_FILE (image));
+    basename = g_file_get_basename (image);
+
+    if (g_ascii_strcasecmp (basename, "amss.mbn") == 0)
+        image_type = QDL_IMAGE_TYPE_AMSS_MODEM;
+    else if (g_ascii_strcasecmp (basename, "apps.mbn") == 0)
+        image_type = QDL_IMAGE_TYPE_AMSS_APPLICATION;
+    else if (g_ascii_strcasecmp (basename, "uqcn.mbn") == 0)
+        image_type = QDL_IMAGE_TYPE_AMSS_UQCN;
+    else
+        image_type = QDL_IMAGE_TYPE_CWE;
+
+    g_free (basename);
+    return image_type;
+}
+
+static gboolean
+qdl_download_image (gint           fd,
+                    gchar         *buf,
+                    gsize          buflen,
+                    GFile         *image,
+                    GFileInfo     *image_info,
+                    GCancellable  *cancellable,
+                    GError       **error)
+{
+    gint          image_fd;
+    gchar        *image_path;
+    GError       *inner_error = NULL;
+    gssize        image_datalen;
+    QdlImageType  image_type;
+    gsize         reqlen;
+    gsize         image_hdrlen;
+    guint16       seq = 0;
+    guint16       acked_sequence = 0;
+
+    image_path = g_file_get_path (image);
+
+    image_fd = open (image_path, O_RDONLY);
+    if (image_fd < 0) {
+        inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
+                                   "error opening image file: %s",
+                                   g_strerror (errno));
+        goto out;
+    }
+
+    image_type = qdl_image_image_get_type_from_file (image);
+    image_hdrlen = qdl_image_get_hdrlen (image_type);
+    image_datalen = qdl_image_get_len (image_type, (gsize) g_file_info_get_size (image_info)) - image_hdrlen;
+	if (image_datalen < 0) {
+        inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
+                                   "image is too short");
+		goto out;
 	}
 
-	rlen = read(fd, rbuf, sizeof(rbuf));
-	if (rlen <= 0)
-		return rlen;
-	print_packet("read", rbuf, rlen);
+    g_debug ("[qfu-download,qdl] downloading %s: %s",
+             qdl_image_type_to_string (image_type),
+             g_file_info_get_display_name (image_info));
+
+	/* send open request */
+	reqlen = create_ufopen_req (buf, buflen, (gsize) g_file_info_get_size (image_info), image_type);
+	if (image_hdrlen > 0) {
+		g_assert (image_hdrlen + reqlen <= buflen);
+        /* read header from image file */
+		if (read (image_fd, buf + reqlen, image_hdrlen) != image_hdrlen) {
+            inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
+                                       "couldn't read image header: %s",
+                                       g_strerror (errno));
+            goto out;
+        }
+		if (image_type == QDL_IMAGE_TYPE_CWE)
+			verify_cwehdr (buf + reqlen);
+	}
+	if (!write_hdlc (fd, buf, reqlen + image_hdrlen, &inner_error)) {
+        g_prefix_error (&inner_error, "couldn't write open request");
+        goto out;
+    }
+
+	/* read ufopen response */
+	if (!read_hdlc (fd, &inner_error)) {
+        g_prefix_error (&inner_error, "error detected in open request: ");
+        goto out;
+    }
+
+	/* remaining data to send */
+	while (image_datalen > 0) {
+        gsize          chunksize;
+		fd_set         wr;
+		struct timeval tv = { .tv_sec = 2, .tv_usec = 0, };
+        gint           aux;
+
+        /* Check cancellable on every loop */
+        if (g_cancellable_is_cancelled (cancellable)) {
+            inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_CANCELLED,
+                                       "download operation cancelled");
+            goto out;
+        }
+
+		chunksize = MIN (CHUNK, image_datalen);
+
+		g_debug ("[qfu-download,qdl] writing chunk #%u (%" G_GSIZE_FORMAT ")...", (guint) seq, chunksize);
+		reqlen = create_ufwrite_req (buf, buflen, chunksize, seq);
+		aux = read (image_fd, buf + reqlen, chunksize);
+        if (aux != chunksize) {
+            inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
+                                       "error reading chunk #%u: %s",
+                                       seq, g_strerror (errno));
+            goto out;
+        }
+
+		FD_ZERO (&wr);
+		FD_SET (fd, &wr);
+        aux = select (fd + 1, NULL, &wr, NULL, &tv);
+        if (aux < 0) {
+            inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
+                                       "error waiting to write #%u: %s",
+                                       seq, g_strerror (errno));
+            goto out;
+        }
+        if (aux == 0) {
+            inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
+                                       "timed out waiting to write chunk #%u",
+                                       seq);
+            goto out;
+        }
+
+        /* Note: no HDLC here */
+		if (write (fd, buf, reqlen + chunksize) < 0) {
+            inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
+                                       "error writing chunk #%u: %s",
+                                       seq, g_strerror (errno));
+            goto out;
+        }
+
+        if (read_hdlc_full (fd, &acked_sequence, NULL))
+            g_debug ("[qfu-download,qdl] ack-ed chunk #%u", (guint) acked_sequence);
+
+		image_datalen -= chunksize;
+        g_assert (image_datalen >= 0);
+
+        seq++;
+	}
+
+    g_debug ("[qfu-download,qdl] finished writing: waiting for final chunk #%u ack", (seq - 1));
+
+	/* This may take a considerable amount of time */
+	while (acked_sequence != (seq - 1)) {
+        /* Wait some time */
+        g_usleep (3 * G_USEC_PER_SEC);
+
+        /* Check cancellable on every loop */
+        if (g_cancellable_is_cancelled (cancellable)) {
+            inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_CANCELLED,
+                                       "download operation cancelled");
+            goto out;
+        }
+
+        if (read_hdlc_full (fd, &acked_sequence, NULL))
+            g_debug ("[qfu-download,qdl] ack-ed chunk #%u", (guint) acked_sequence);
+	}
+
+    g_debug ("[qfu-download,qdl] all chunks ack-ed");
+
+out:
+
+	if (!(image_fd < 0))
+		close (image_fd);
+    g_free (image_path);
+
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return FALSE;
+    }
+
+	return TRUE;
+}
+
+/******************************************************************************/
+/* R/W HDLC */
+
+static gboolean
+write_hdlc (gint          fd,
+            const gchar  *in,
+            gsize         inlen,
+            GError      **error)
+{
+    gchar  wbuf[512];
+    gsize  wlen;
+    gssize written;
+
+    /* Pack into an HDLC frame */
+    wlen = hdlc_frame (in, inlen, wbuf, sizeof (wbuf));
+    g_assert_cmpuint (wlen, >, 0);
+
+    /* Send HDLC frame to device */
+    written = write (fd, wbuf, wlen);
+    if (written < 0) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "couldn't write HDLC frame: %s",
+                     g_strerror (errno));
+        return FALSE;
+    }
+
+    /* Treat this as an error, we may want to improve this by writing out the
+     * remaning amount of bytes */
+    if (written != wlen) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "error writing full HDLC frame: only %" G_GSSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes written",
+                     written, wlen);
+        return FALSE;
+    }
+
+    /* Debug output */
+    if (qmi_utils_get_traces_enabled ()) {
+        gchar *printable;
+
+        printable = utils_str_hex (wbuf, wlen, ':');
+        g_debug ("[qfu-download,hdlc] >> %s", printable);
+        g_free (printable);
+    }
+
+    return TRUE;
+}
+
+static gboolean
+read_hdlc_full (gint      fd,
+                guint16  *seq_ack,
+                GError  **error)
+{
+	gchar          *end;
+    gchar          *p;
+    gchar           rbuf[512];
+	gsize           rlen;
+    gsize           framelen;
+	fd_set          rd;
+	struct timeval  tv = { .tv_sec = 1, .tv_usec = 0, };
+
+	FD_ZERO (&rd);
+	FD_SET (fd, &rd);
+	if (select (fd + 1, &rd, NULL, NULL, &tv) <= 0) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT,
+                     "read operation timed out");
+        return FALSE;
+	}
+
+	rlen = read (fd, rbuf, sizeof (rbuf));
+	if (rlen < 0) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "couldn't read HDLC frame: %s",
+                     g_strerror (errno));
+        return FALSE;
+    }
+
+    if (rlen == 0) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "couldn't read HDLC frame: HUP detected");
+        return FALSE;
+    }
+
+    /* Debug output */
+    if (qmi_utils_get_traces_enabled ()) {
+        gchar *printable;
+
+        printable = utils_str_hex (rbuf, rlen, ':');
+        g_debug ("[qfu-download,hdlc] << %s", printable);
+        g_free (printable);
+    }
 
 	p = rbuf;
-	while (rlen > 0 && (end = memchr(p + 1, CONTROL, rlen - 1)) != NULL) {
+	while (rlen > 0 && (end = memchr (p + 1, CONTROL, rlen - 1)) != NULL) {
 		end++;
 		framelen = end - p;
 		switch (p[1]) {
 		case QDL_CMD_ERROR:
-			ret = parse_sdp_err(p, framelen, silent);
-			break;
-		case QDL_CMD_HELLO_RSP: /* == DLOAD_ACK */
-			if (framelen != 5)
-				ret = parse_sdp_hello(p, framelen);
-			else
-				debug("Got DLOAD_ACK\n");
+            if (!process_sdp_err (p, framelen, error))
+                return FALSE;
+            break;
+		case QDL_CMD_HELLO_RSP: /* == DLOAD_CMD_ACK */
+			if (framelen != 5) {
+                if (!process_sdp_hello (p, framelen, error))
+                    return FALSE;
+            } else
+				g_debug("[qfu-download,dload] ack");
 			break;
 		case QDL_CMD_OPEN_UNFRAMED_RSP:
-			ret = parse_ufopen(p, framelen);
+            if (!process_ufopen (p, framelen, error))
+                return FALSE;
 			break;
 		case QDL_CMD_WRITE_UNFRAMED_RSP:
-			ret = parse_ufwrite(p, framelen);
+            if (!process_ufwrite (p, framelen, seq_ack, error))
+                return FALSE;
 			break;
 		case QDL_CMD_SESSION_DONE_RSP:
-			ret = parse_ufdone(p, framelen);
+            if (!process_ufdone (p, framelen, error))
+                return FALSE;
 			break;
 		default:
-			fprintf(stderr, "Unsupported response code: 0x%02x\n", p[1]);
+            g_warning ("qfu-download,hdlc] unsupported message received: 0x%02x\n", p[1]);
+            break;
 		}
-		if (ret < 0)
-			return ret;
+
 		p = end;
 		rlen -= framelen;
 	}
-	return ret;
+
+	return TRUE;
+}
+
+static gboolean
+read_hdlc (gint      fd,
+           GError  **error)
+{
+    return read_hdlc_full (fd, NULL, error);
 }
 
 /******************************************************************************/
@@ -834,11 +1364,15 @@ typedef struct {
     GFile     *image;
     GFileInfo *image_info;
     gint       fd;
+    gchar     *buffer;
 } RunContext;
 
 static void
 run_context_free (RunContext *ctx)
 {
+    if (!(ctx->fd < 0))
+        close (ctx->fd);
+    g_free (ctx->buffer);
     g_object_unref (ctx->image_info);
     g_object_unref (ctx->image);
     g_object_unref (ctx->tty);
@@ -860,17 +1394,63 @@ download_helper_run (GTask *task)
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
-    /* Open serial */
+    g_debug ("[qfu-download] opening tty...");
     ctx->fd = serial_open (ctx->tty, &error);
     if (ctx->fd < 0) {
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
+        g_prefix_error (&error, "couldn't open serial device:");
+        goto out;
     }
 
-    /* switch to SDP - this is required for some modems like MC7710 */
-    if (write_hdlc (ctx->fd, (const gchar *) &dload_sdp, sizeof (dload_sdp)) < 0)
-    ret = read_and_parse (serfd, true);
+    if (g_task_return_error_if_cancelled (task))
+        return;
+
+    g_debug ("[qfu-download] switching to SDP...");
+    if (!dload_switch_to_sdp (ctx->fd, &error)) {
+        g_prefix_error (&error, "couldn't switch to SDP: ");
+        goto out;
+    }
+
+    if (g_task_return_error_if_cancelled (task))
+        return;
+
+    g_debug ("[qfu-download] detecting QDL version...");
+    if (!qdl_detect_version (ctx->fd, &error)) {
+        g_prefix_error (&error, "couldn't detect QDL version: ");
+        goto out;
+    }
+
+    if (g_task_return_error_if_cancelled (task))
+        return;
+
+    if (!qdl_download_image (ctx->fd,
+                             ctx->buffer,
+                             BUFSIZE,
+                             ctx->image,
+                             ctx->image_info,
+                             g_task_get_cancellable (task),
+                             &error)) {
+        g_prefix_error (&error, "couldn't download image: ");
+        goto out;
+    }
+
+    if (!qdl_session_done (ctx->fd, &error)) {
+        /* Error not fatal */
+        g_debug ("[qfu-download] error reporting session done: %s", error->message);
+        g_clear_error (&error);
+    }
+
+    if (!qdl_session_close (ctx->fd, &error)) {
+        /* Error not fatal */
+        g_debug ("[qfu-download] error closing session: %s", error->message);
+        g_clear_error (&error);
+    }
+
+out:
+    if (error)
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 void
@@ -888,9 +1468,11 @@ qfu_download_helper_run (GFile               *tty,
     g_assert (G_IS_FILE (image));
 
     ctx = g_slice_new0 (RunContext);
+    ctx->fd = -1;
     ctx->tty = g_object_ref (tty);
     ctx->image = g_object_ref (image);
     ctx->image_info = g_object_ref (image_info);
+    ctx->buffer = g_malloc (BUFSIZE);
 
     task = g_task_new (NULL, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify) run_context_free);
