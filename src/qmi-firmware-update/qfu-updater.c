@@ -49,6 +49,8 @@ static const gchar *cdc_wdm_subsys[] = { "usbmisc", "usb", NULL };
 /******************************************************************************/
 /* Run */
 
+#define QMI_CLIENT_RETRIES 3
+
 typedef enum {
     RUN_CONTEXT_STEP_USB_INFO = 0,
     RUN_CONTEXT_STEP_SELECT_IMAGE,
@@ -79,6 +81,7 @@ typedef struct {
     /* QMI device and client */
     QmiDevice    *qmi_device;
     QmiClientDms *qmi_client;
+    gint          qmi_client_retries;
     /* TTY file */
     GFile *tty;
 } RunContext;
@@ -527,9 +530,20 @@ qmi_client_ready (QmiDevice    *device,
 
     ctx->qmi_client = QMI_CLIENT_DMS (qmi_device_allocate_client_finish (device, res, &error));
     if (!ctx->qmi_client) {
-        g_prefix_error (&error, "couldn't allocate DMS QMI client: ");
-        g_task_return_error (task, error);
-        g_object_unref (task);
+        /* If this was the last attempt, error out */
+        if (!ctx->qmi_client_retries) {
+            g_prefix_error (&error, "couldn't allocate DMS QMI client: ");
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+        }
+
+        /* Retry allocation */
+        g_debug ("[qfu-updater: DMS QMI client allocation failed: %s", error->message);
+        g_error_free (error);
+
+        g_debug ("[qfu-updater: retrying...");
+        run_context_step_next (task, ctx->step);
         return;
     }
 
@@ -545,6 +559,10 @@ run_context_step_qmi_client (GTask *task)
     RunContext *ctx;
 
     ctx = (RunContext *) g_task_get_task_data (task);
+
+    /* Consume one retry attempt */
+    ctx->qmi_client_retries--;
+    g_assert (ctx->qmi_client_retries >= 0);
 
     g_debug ("[qfu-updater] allocating new DMS QMI client...");
     qmi_device_allocate_client (ctx->qmi_device,
@@ -659,6 +677,9 @@ run_context_step_select_image (GTask *task)
         run_context_step_next (task, RUN_CONTEXT_STEP_LAST);
         return;
     }
+
+    /* Cleanup the QmiClient allocation retries */
+    ctx->qmi_client_retries = QMI_CLIENT_RETRIES;
 
     /* Select new current image */
     ctx->current_image = G_FILE (ctx->pending_images->data);
