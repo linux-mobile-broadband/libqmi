@@ -30,6 +30,8 @@ gchar *qmicli_get_raw_data_printable (const GArray *data,
                                       gsize max_line_length,
                                       const gchar *new_line_prefix);
 
+gchar *qmicli_get_firmware_image_unique_id_printable (const GArray *unique_id);
+
 gboolean qmicli_read_dms_uim_pin_id_from_string              (const gchar *str,
                                                               QmiDmsUimPinId *out);
 gboolean qmicli_read_uim_pin_id_from_string                  (const gchar *str,

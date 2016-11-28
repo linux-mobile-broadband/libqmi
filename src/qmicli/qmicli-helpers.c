@@ -104,6 +104,32 @@ qmicli_get_raw_data_printable (const GArray *data,
     return new_str;
 }
 
+gchar *
+qmicli_get_firmware_image_unique_id_printable (const GArray *unique_id)
+{
+    gchar *unique_id_str;
+
+#define UNIQUE_ID_LEN 16
+
+    g_warn_if_fail (unique_id->len <= UNIQUE_ID_LEN);
+    unique_id_str = g_malloc0 (UNIQUE_ID_LEN + 1);
+    memcpy (unique_id_str, unique_id->data, UNIQUE_ID_LEN);
+
+#undef UNIQUE_ID_LEN
+
+    /* If this is ASCII (more than likely), return it */
+    if (g_str_is_ascii (unique_id_str))
+        return unique_id_str;
+
+    g_free (unique_id_str);
+
+    /* Get a raw hex string otherwise */
+    unique_id_str = qmicli_get_raw_data_printable (unique_id, 80, "");
+    unique_id_str[strlen (unique_id_str) - 1] = '\0'; /* remove EOL */
+
+    return unique_id_str;
+}
+
 gboolean
 qmicli_read_dms_uim_pin_id_from_string (const gchar *str,
                                         QmiDmsUimPinId *out)

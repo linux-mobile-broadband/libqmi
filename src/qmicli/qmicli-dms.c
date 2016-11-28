@@ -2431,8 +2431,7 @@ get_stored_image_info_ready (QmiClientDms *client,
                                QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement,
                                operation_ctx->j);
 
-    unique_id_str = qmicli_get_raw_data_printable (subimage->unique_id, 80, "");
-    unique_id_str[strlen(unique_id_str) - 1] = '\0';
+    unique_id_str = qmicli_get_firmware_image_unique_id_printable (subimage->unique_id);
 
     g_print ("%s"
              "\t\t[%s%u]\n"
@@ -2713,8 +2712,7 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
                                    QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement,
                                    image_index);
 
-        unique_id_str = qmicli_get_raw_data_printable (subimage->unique_id, 80, "");
-        unique_id_str[strlen (unique_id_str) - 1] = '\0';
+        unique_id_str = qmicli_get_firmware_image_unique_id_printable (subimage->unique_id);
         g_debug ("Found [%s%d]: Unique ID: '%s', Build ID: '%s'",
                  qmi_dms_firmware_image_type_get_string (image->type),
                  image_index,
@@ -3043,8 +3041,7 @@ dms_get_firmware_preference_ready (QmiClientDms *client,
 
             image = &g_array_index (array, QmiMessageDmsGetFirmwarePreferenceOutputListImage, i);
 
-            unique_id_str = qmicli_get_raw_data_printable (image->unique_id, 80, "");
-            unique_id_str[strlen(unique_id_str) - 1] = '\0';
+            unique_id_str = qmicli_get_firmware_image_unique_id_printable (image->unique_id);
 
             g_print ("[image %u]\n"
                      "\tImage type: '%s'\n"
