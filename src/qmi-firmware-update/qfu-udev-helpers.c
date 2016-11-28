@@ -111,7 +111,7 @@ qfu_udev_helper_get_sysfs_path (GFile               *file,
 
 /******************************************************************************/
 
-#define WAIT_FOR_DEVICE_TIMEOUT_SECS 15
+#define WAIT_FOR_DEVICE_TIMEOUT_SECS 60
 
 typedef struct {
     QfuUdevHelperWaitForDeviceType  device_type;
