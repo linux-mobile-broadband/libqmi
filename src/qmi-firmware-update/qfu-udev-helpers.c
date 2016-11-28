@@ -187,19 +187,23 @@ handle_uevent (GUdevClient *client,
 
     ctx = (WaitForDeviceContext *) g_task_get_task_data (task);
 
+    g_debug ("[qfu-udev] event: %s %s", action, g_udev_device_get_name (device));
+
     if (!g_str_equal (action, "add") && !g_str_equal (action, "move") && !g_str_equal (action, "change"))
         goto out;
 
     sysfs_path = qfu_udev_helper_get_udev_device_sysfs_path (device, NULL);
     if (!sysfs_path)
         goto out;
+    g_debug ("[qfu-udev]   sysfs path: %s", sysfs_path);
+
+    if (g_strcmp0 (sysfs_path, ctx->sysfs_path) != 0)
+        goto out;
 
     driver = udev_helper_get_udev_device_driver (device, NULL);
     if (!driver)
         goto out;
-
-    if (g_strcmp0 (sysfs_path, ctx->sysfs_path) != 0)
-        goto out;
+    g_debug ("[qfu-udev]   driver: %s", driver);
 
     switch (ctx->device_type) {
     case QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_TTY:
@@ -213,6 +217,8 @@ handle_uevent (GUdevClient *client,
     default:
         g_assert_not_reached ();
     }
+
+    g_debug ("[qfu-udev]   waiting device matched");
 
     /* Disconnect this handler */
     g_signal_handler_disconnect (ctx->udev, ctx->uevent_id);
