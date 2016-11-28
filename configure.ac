@@ -66,7 +66,7 @@ AC_SUBST(QMI_GLIB_LT_AGE)
 
 dnl Dependencies
 PKG_CHECK_MODULES(GLIB,
-                  glib-2.0 >= 2.32
+                  glib-2.0 >= 2.36
                   gobject-2.0
                   gio-2.0
                   gio-unix-2.0)
