@@ -109,8 +109,8 @@ qmicli_get_firmware_image_unique_id_printable (const GArray *unique_id)
 {
     gchar    *unique_id_str;
     guint     i;
-    guint     n_ascii;
-    gboolean  end;
+    guint     n_ascii = 0;
+    gboolean  end = FALSE;
 
 #define UNIQUE_ID_LEN 16
 
