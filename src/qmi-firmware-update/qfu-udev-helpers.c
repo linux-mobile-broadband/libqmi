@@ -207,7 +207,7 @@ handle_uevent (GUdevClient *client,
             goto out;
         break;
     case QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM:
-        if (g_strcmp0 (driver, "cdc_wdm") != 0)
+        if (g_strcmp0 (driver, "qmi_wwan") != 0 && g_strcmp0 (driver, "cdc_mbim") != 0)
             goto out;
         break;
     default:
