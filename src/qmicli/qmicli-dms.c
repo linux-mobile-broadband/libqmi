@@ -81,6 +81,7 @@ static gboolean get_factory_sku_flag;
 static gboolean list_stored_images_flag;
 static gchar *select_stored_image_str;
 static gchar *delete_stored_image_str;
+static gboolean get_firmware_preference_flag;
 static gchar *set_firmware_preference_str;
 static gboolean set_fcc_authentication_flag;
 static gboolean get_supported_messages_flag;
@@ -245,6 +246,10 @@ static GOptionEntry entries[] = {
       "Delete stored image",
       "[modem#|pri#] where # is the index"
     },
+    { "dms-get-firmware-preference", 0, 0, G_OPTION_ARG_NONE, &get_firmware_preference_flag,
+      "Get firmware preference",
+      NULL
+    },
     { "dms-set-firmware-preference", 0, 0, G_OPTION_ARG_STRING, &set_firmware_preference_str,
       "Set firmware preference",
       "[(fwver),(config),(carrier)]"
@@ -335,6 +340,7 @@ qmicli_dms_options_enabled (void)
                  list_stored_images_flag +
                  !!select_stored_image_str +
                  !!delete_stored_image_str +
+                 get_firmware_preference_flag +
                  !!set_firmware_preference_str +
                  set_fcc_authentication_flag +
                  get_supported_messages_flag +
@@ -3001,6 +3007,63 @@ get_stored_image_delete_ready (QmiClientDms *client,
         g_array_unref (pri_image_id.unique_id);
 }
 
+static void
+dms_get_firmware_preference_ready (QmiClientDms *client,
+                                   GAsyncResult *res)
+{
+    GError                                   *error = NULL;
+    QmiMessageDmsGetFirmwarePreferenceOutput *output;
+    GArray                                   *array;
+    guint                                     i;
+
+    output = qmi_client_dms_get_firmware_preference_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_firmware_preference_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get firmware preference: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_firmware_preference_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_firmware_preference_output_get_list (output, &array, NULL);
+
+    g_print ("firmware preference successfully retrieved:\n");
+
+    if (array->len > 0) {
+        for (i = 0; i < array->len; i++) {
+            QmiMessageDmsGetFirmwarePreferenceOutputListImage *image;
+            gchar                                             *unique_id_str;
+
+            image = &g_array_index (array, QmiMessageDmsGetFirmwarePreferenceOutputListImage, i);
+
+            unique_id_str = qmicli_get_raw_data_printable (image->unique_id, 80, "");
+            unique_id_str[strlen(unique_id_str) - 1] = '\0';
+
+            g_print ("[image %u]\n"
+                     "\tImage type: '%s'\n"
+                     "\tUnique ID:  '%s'\n"
+                     "\tBuild ID:   '%s'\n",
+                     i,
+                     qmi_dms_firmware_image_type_get_string (image->type),
+                     unique_id_str,
+                     image->build_id);
+
+            g_free (unique_id_str);
+        }
+    } else
+        g_print ("no images specified\n");
+
+    qmi_message_dms_get_firmware_preference_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
 typedef struct {
     QmiMessageDmsSetFirmwarePreferenceInputListImage modem_image_id;
     QmiMessageDmsSetFirmwarePreferenceInputListImage pri_image_id;
@@ -3816,6 +3879,18 @@ qmicli_dms_run (QmiDevice *device,
                           delete_stored_image_str,
                           (GAsyncReadyCallback)get_stored_image_delete_ready,
                           NULL);
+        return;
+    }
+
+    /* Get firmware preference? */
+    if (get_firmware_preference_flag) {
+        qmi_client_dms_get_firmware_preference (
+            client,
+            NULL,
+            10,
+            NULL,
+            (GAsyncReadyCallback)dms_get_firmware_preference_ready,
+            NULL);
         return;
     }
 
