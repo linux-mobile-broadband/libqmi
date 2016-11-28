@@ -1439,11 +1439,8 @@ download_helper_run (GTask *task)
         g_clear_error (&error);
     }
 
-    if (!qdl_session_close (ctx->fd, &error)) {
-        /* Error not fatal */
-        g_debug ("[qfu-download] error closing session: %s", error->message);
-        g_clear_error (&error);
-    }
+    /* Ignore error completely, we likely get a HUP when reading */
+    qdl_session_close (ctx->fd, NULL);
 
 out:
     if (error)
