@@ -107,7 +107,10 @@ qmicli_get_raw_data_printable (const GArray *data,
 gchar *
 qmicli_get_firmware_image_unique_id_printable (const GArray *unique_id)
 {
-    gchar *unique_id_str;
+    gchar    *unique_id_str;
+    guint     i;
+    guint     n_ascii;
+    gboolean  end;
 
 #define UNIQUE_ID_LEN 16
 
@@ -115,11 +118,31 @@ qmicli_get_firmware_image_unique_id_printable (const GArray *unique_id)
     unique_id_str = g_malloc0 (UNIQUE_ID_LEN + 1);
     memcpy (unique_id_str, unique_id->data, UNIQUE_ID_LEN);
 
-#undef UNIQUE_ID_LEN
+    /* We want an ASCII string that, if finished before the 16 bytes,
+     * is suffixed with NUL bytes. */
+    for (i = 0; i < UNIQUE_ID_LEN; i++) {
+        /* If a byte isn't ASCII, stop */
+        if (unique_id_str[i] & 0x80)
+            break;
+        /* If string isn't finished yet... */
+        if (!end) {
+            /* String finished now */
+            if (unique_id_str[i] == '\0')
+                end = TRUE;
+            else
+                n_ascii++;
+        } else {
+            /* String finished but we then got
+             * another ASCII byte? not possible */
+            if (unique_id_str[i] != '\0')
+                break;
+        }
+    }
 
-    /* If this is ASCII (more than likely), return it */
-    if (g_str_is_ascii (unique_id_str))
+    if (i == UNIQUE_ID_LEN && n_ascii > 0)
         return unique_id_str;
+
+#undef UNIQUE_ID_LEN
 
     g_free (unique_id_str);
 
