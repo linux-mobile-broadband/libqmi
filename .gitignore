@@ -77,3 +77,5 @@ Makefile.in
 
 /utils/qmi-network
 /utils/swi-update
+
+/src/qmi-firmware-update/qfu-enum-types.*
