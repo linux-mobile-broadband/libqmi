@@ -33,6 +33,7 @@ gboolean qfu_operation_download_run (const gchar  *device,
                                      const gchar **images,
                                      gboolean      device_open_proxy,
                                      gboolean      device_open_mbim);
+gboolean qfu_operation_verify_run   (const gchar  *image_path);
 
 G_END_DECLS
 

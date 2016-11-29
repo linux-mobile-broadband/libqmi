@@ -49,6 +49,9 @@ static gchar     *carrier_str;
 static gboolean   device_open_proxy_flag;
 static gboolean   device_open_mbim_flag;
 
+/* Verify */
+static gchar *verify_image_str;
+
 /* Main */
 static gboolean verbose_flag;
 static gboolean silent_flag;
@@ -87,6 +90,14 @@ static GOptionEntry context_download_entries[] = {
     { NULL }
 };
 
+static GOptionEntry context_verify_entries[] = {
+    { "verify-image", 'z', 0, G_OPTION_ARG_FILENAME, &verify_image_str,
+      "Specify image to verify.",
+      "[PATH]"
+    },
+    { NULL }
+};
+
 static GOptionEntry context_main_entries[] = {
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
       "Run action with verbose logs, including the debug ones.",
@@ -117,6 +128,11 @@ static const gchar *context_description =
     "       --carrier Generic \\\n"
     "       --image SWI9X15C_05.05.58.00.cwe \\\n"
     "       --image SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+    "\n"
+    " E.g. a verify operation:\n"
+    " $ sudo " PROGRAM_NAME " \\\n"
+    "       --verbose \\\n"
+    "       --verify-image SWI9X15C_05.05.58.00.cwe\n"
     "\n";
 
 /*****************************************************************************/
@@ -221,6 +237,10 @@ int main (int argc, char **argv)
     g_option_group_add_entries (group, context_download_entries);
     g_option_context_add_group (context, group);
 
+    group = g_option_group_new ("verify", "Verify options", "", NULL, NULL);
+    g_option_group_add_entries (group, context_verify_entries);
+    g_option_context_add_group (context, group);
+
     g_option_context_add_main_entries (context, context_main_entries, NULL);
     g_option_context_set_description  (context, context_description);
     g_option_context_set_help_enabled (context, FALSE);
@@ -249,7 +269,7 @@ int main (int argc, char **argv)
         qmi_utils_set_traces_enabled (TRUE);
 
     /* We don't allow multiple actions at the same time */
-    n_actions = (!!image_strv);
+    n_actions = (!!verify_image_str + !!image_strv);
     if (n_actions == 0) {
         g_printerr ("error: no actions specified\n");
         goto out;
@@ -268,6 +288,8 @@ int main (int argc, char **argv)
                                              (const gchar **) image_strv,
                                              device_open_proxy_flag,
                                              device_open_mbim_flag);
+    else if (verify_image_str)
+        result = qfu_operation_verify_run (verify_image_str);
     else
         g_assert_not_reached ();
 
@@ -275,13 +297,6 @@ out:
     /* Clean exit for a clean memleak report */
     if (context)
         g_option_context_free (context);
-    if (updater)
-        g_object_unref (updater);
-    if (cancellable)
-        g_object_unref (cancellable);
-    if (loop)
-        g_main_loop_unref (loop);
-
 
     return (result ? EXIT_SUCCESS : EXIT_FAILURE);
 }
