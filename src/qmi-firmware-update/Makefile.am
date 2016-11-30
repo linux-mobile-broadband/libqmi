@@ -13,6 +13,7 @@ qmi_firmware_update_CPPFLAGS = \
 
 ENUMS = \
 	qfu-image.h \
+	qfu-qdl-message.h \
 	$(NULL)
 
 ENUMS_GENERATED = \
@@ -21,7 +22,7 @@ ENUMS_GENERATED = \
 
 qfu-enum-types.h: Makefile.am $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef QFU_ENUM_TYPES_H\n#define QFU_ENUM_TYPES_H\n#include \"qfu-image.h\"\n" \
+		--fhead "#ifndef QFU_ENUM_TYPES_H\n#define QFU_ENUM_TYPES_H\n#include \"qfu-image.h\"\n#include \"qfu-qdl-message.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __QFUENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
@@ -47,6 +48,7 @@ qmi_firmware_update_SOURCES = \
 	qfu-image.h qfu-image.c \
 	qfu-image-cwe.h qfu-image-cwe.c \
 	qfu-image-factory.h qfu-image-factory.c \
+	qfu-qdl-message.h qfu-qdl-message.c \
 	qfu-utils.h qfu-utils.c \
 	$(NULL)
 
