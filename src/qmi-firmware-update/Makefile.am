@@ -47,6 +47,7 @@ qmi_firmware_update_SOURCES = \
 	qfu-image.h qfu-image.c \
 	qfu-image-cwe.h qfu-image-cwe.c \
 	qfu-image-factory.h qfu-image-factory.c \
+	qfu-utils.h qfu-utils.c \
 	$(NULL)
 
 qmi_firmware_update_LDADD = \
