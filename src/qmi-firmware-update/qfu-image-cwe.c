@@ -21,6 +21,7 @@
  */
 
 #include <string.h>
+
 #include "qfu-image-cwe.h"
 
 static GInitableIface *iface_initable_parent;
@@ -48,44 +49,142 @@ struct _QfuCweFileHeader {
     gchar   reserved2[20];
 } __attribute__ ((packed));
 
-struct _QfuImageCwePrivate {
+typedef struct {
+    guint             parent_image_index;
     QfuCweFileHeader  hdr;
     gchar            *type;
     gchar            *product;
+} ImageInfo;
+
+struct _QfuImageCwePrivate {
+    GArray *images;
 };
 
 /******************************************************************************/
 
+guint
+qfu_image_cwe_get_n_embedded_headers (QfuImageCwe *self)
+{
+    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), 0);
+
+    return (self->priv->images ? self->priv->images->len : 0);
+}
+
+gint
+qfu_image_cwe_embedded_header_get_parent_index (QfuImageCwe *self,
+                                                guint        embedded_i)
+{
+    ImageInfo *info;
+
+    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), -1);
+    g_return_val_if_fail (self->priv->images, -1);
+    g_return_val_if_fail (embedded_i < self->priv->images->len, -1);
+
+    info = &g_array_index (self->priv->images, ImageInfo, embedded_i);
+    return info->parent_image_index;
+}
+
+const gchar *
+qfu_image_cwe_embedded_header_get_type (QfuImageCwe *self,
+                                        guint        embedded_i)
+{
+    ImageInfo *info;
+
+    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
+    g_return_val_if_fail (self->priv->images, NULL);
+    g_return_val_if_fail (embedded_i < self->priv->images->len, NULL);
+
+    info = &g_array_index (self->priv->images, ImageInfo, embedded_i);
+    return info->type;
+}
+
+const gchar *
+qfu_image_cwe_embedded_header_get_product (QfuImageCwe *self,
+                                           guint        embedded_i)
+{
+    ImageInfo *info;
+
+    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
+    g_return_val_if_fail (self->priv->images, NULL);
+    g_return_val_if_fail (embedded_i < self->priv->images->len, NULL);
+
+    info = &g_array_index (self->priv->images, ImageInfo, embedded_i);
+    return info->product;
+}
+
+const gchar *
+qfu_image_cwe_embedded_header_get_version (QfuImageCwe *self,
+                                           guint        embedded_i)
+{
+    ImageInfo *info;
+
+    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
+    g_return_val_if_fail (self->priv->images, NULL);
+    g_return_val_if_fail (embedded_i < self->priv->images->len, NULL);
+
+    info = &g_array_index (self->priv->images, ImageInfo, embedded_i);
+    return info->hdr.version;
+}
+
+const gchar *
+qfu_image_cwe_embedded_header_get_date (QfuImageCwe *self,
+                                        guint        embedded_i)
+{
+    ImageInfo *info;
+
+    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
+    g_return_val_if_fail (self->priv->images, NULL);
+    g_return_val_if_fail (embedded_i < self->priv->images->len, NULL);
+
+    info = &g_array_index (self->priv->images, ImageInfo, embedded_i);
+    return info->hdr.date;
+}
+
+guint32
+qfu_image_cwe_embedded_header_get_image_size (QfuImageCwe *self,
+                                              guint        embedded_i)
+{
+    ImageInfo *info;
+
+    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), 0);
+    g_return_val_if_fail (self->priv->images, 0);
+    g_return_val_if_fail (embedded_i < self->priv->images->len, 0);
+
+    info = &g_array_index (self->priv->images, ImageInfo, embedded_i);
+    return GUINT32_FROM_BE (info->hdr.imgsize);
+}
+
+/******************************************************************************/
+/* The 'main' header is the one at index 0 of the array, always */
+
 const gchar *
 qfu_image_cwe_header_get_type (QfuImageCwe *self)
 {
-    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
-
-    return self->priv->type;
+    return qfu_image_cwe_embedded_header_get_type (self, 0);
 }
 
 const gchar *
 qfu_image_cwe_header_get_product (QfuImageCwe *self)
 {
-    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
-
-    return self->priv->product;
+    return qfu_image_cwe_embedded_header_get_product (self, 0);
 }
 
 const gchar *
 qfu_image_cwe_header_get_version (QfuImageCwe *self)
 {
-    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
-
-    return self->priv->hdr.version;
+    return qfu_image_cwe_embedded_header_get_version (self, 0);
 }
 
 const gchar *
 qfu_image_cwe_header_get_date (QfuImageCwe *self)
 {
-    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
+    return qfu_image_cwe_embedded_header_get_date (self, 0);
+}
 
-    return self->priv->hdr.date;
+guint32
+qfu_image_cwe_header_get_image_size (QfuImageCwe *self)
+{
+    return qfu_image_cwe_embedded_header_get_image_size (self, 0);
 }
 
 /******************************************************************************/
@@ -110,6 +209,7 @@ read_header (QfuImage      *_self,
              GError       **error)
 {
     QfuImageCwe *self = QFU_IMAGE_CWE (_self);
+    ImageInfo   *info;
 
     if (out_buffer_size < sizeof (QfuCweFileHeader)) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
@@ -117,11 +217,134 @@ read_header (QfuImage      *_self,
         return -1;
     }
 
-    memcpy (out_buffer, &self->priv->hdr, sizeof (QfuCweFileHeader));
+    info = &g_array_index (self->priv->images, ImageInfo, 0);
+    memcpy (out_buffer, &(info->hdr), sizeof (QfuCweFileHeader));
     return sizeof (QfuCweFileHeader);
 }
 
 /******************************************************************************/
+
+static void
+clear_image_info (ImageInfo *info)
+{
+    g_free (info->type);
+    g_free (info->product);
+}
+
+static gboolean
+is_ascii_str (const gchar *str,
+              guint        str_len)
+{
+    guint i;
+    guint real_len = 0;
+
+    for (i = 0; (str[i] != '\0') && (i < str_len); i++)
+        real_len++;
+
+    /* All valid characters need to be printable */
+    for (i = 0; i < real_len; i++) {
+        if (!g_ascii_isprint (str[i]))
+            return FALSE;
+    }
+
+    /* All remaining characters need to be zero */
+    for (i = real_len; i < str_len; i++) {
+        if (str[i] != '\0')
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+load_image_info (QfuImageCwe   *self,
+                 GInputStream  *input_stream,
+                 const gchar   *parent_prefix,
+                 gint           parent_image_index,
+                 goffset        parent_image_end_offset,
+                 GCancellable  *cancellable,
+                 GError       **error)
+{
+    ImageInfo  info;
+    gssize     n_read;
+    gchar     *image_prefix;
+    guint      image_index;
+    goffset    image_start_offset;
+    goffset    image_end_offset;
+    goffset    walker;
+
+    /* Store image start offset */
+    image_start_offset = g_seekable_tell (G_SEEKABLE (input_stream));
+
+    memset (&info, 0, sizeof (info));
+
+    /* Store parent image index */
+    info.parent_image_index = parent_image_index;
+
+    /* Read header from file */
+    n_read = g_input_stream_read (input_stream, &(info.hdr), sizeof (QfuCweFileHeader), cancellable, error);
+    if (n_read < 0) {
+        g_prefix_error (error, "couldn't read file header: ");
+        return FALSE;
+    }
+    if (n_read != sizeof (QfuCweFileHeader)) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "CWE firmware image file is too short: full header not available");
+        return FALSE;
+    }
+
+    /* Check limits of the current image */
+    image_end_offset = image_start_offset + GUINT32_FROM_BE (info.hdr.imgsize) + sizeof (QfuCweFileHeader);
+    if (parent_image_end_offset > 0 && parent_image_end_offset < image_end_offset) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "embedded image out of parent image bounds");
+        return FALSE;
+    }
+
+    /* Validate strings */
+    if (!is_ascii_str (info.hdr.type,    sizeof (info.hdr.type)) ||
+        !is_ascii_str (info.hdr.product, sizeof (info.hdr.product)) ||
+        !is_ascii_str (info.hdr.version, sizeof (info.hdr.version)) ||
+        !is_ascii_str (info.hdr.date,    sizeof (info.hdr.date))) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "invalid strings given in image");
+        return FALSE;
+    }
+
+    /* Preload non-NUL terminated strings */
+    info.type    = g_strndup (info.hdr.type,    sizeof (info.hdr.type));
+    info.product = g_strndup (info.hdr.product, sizeof (info.hdr.product));
+
+    /* Valid image! We'll append to the array */
+    image_index = self->priv->images->len;
+    g_array_insert_val (self->priv->images, image_index, info);
+
+    g_debug ("[qfu-image-cwe] %simage offset range: [%" G_GOFFSET_FORMAT ",%" G_GOFFSET_FORMAT "]",
+             parent_prefix, image_start_offset, image_end_offset);
+
+    /* And check if it has embedded images */
+    image_prefix = g_strdup_printf ("%s  ", parent_prefix);
+    walker = image_start_offset;
+    while (walker < image_end_offset) {
+        goffset tested_offset;
+        /* Read embedded image */
+
+        tested_offset = g_seekable_tell (G_SEEKABLE (input_stream));
+        g_debug ("[qfu-image-cwe] %schecking image at offset %" G_GOFFSET_FORMAT "...", parent_prefix, tested_offset);
+        if (!load_image_info (self, input_stream, image_prefix, image_index, image_end_offset, cancellable, NULL)) {
+            g_debug ("[qfu-image-cwe] %simage at offset %" G_GOFFSET_FORMAT " was NOT valid", parent_prefix, tested_offset);
+            break;
+        }
+        g_debug ("[qfu-image-cwe] %simage at offset %" G_GOFFSET_FORMAT " was valid", parent_prefix, tested_offset);
+        walker = g_seekable_tell (G_SEEKABLE (input_stream));
+    }
+
+    /* Finally, seek to just after this image */
+    if (!g_seekable_seek (G_SEEKABLE (input_stream), image_end_offset, G_SEEK_SET, cancellable, error)) {
+        g_prefix_error (error, "couldn't seek after image: ");
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 static gboolean
 initable_init (GInitable     *initable,
@@ -131,7 +354,6 @@ initable_init (GInitable     *initable,
     QfuImageCwe  *self;
     GInputStream *input_stream = NULL;
     gboolean      result = FALSE;
-    gssize        n_read;
 
     self = QFU_IMAGE_CWE (initable);
 
@@ -142,41 +364,21 @@ initable_init (GInitable     *initable,
     g_object_get (self, "input-stream", &input_stream, NULL);
     g_assert (G_IS_FILE_INPUT_STREAM (input_stream));
 
-    /* Preload file header */
-
-    g_debug ("[qfu-image-cwe] reading file header");
-
+    g_debug ("[qfu-image-cwe] reading image headers...");
     if (!g_seekable_seek (G_SEEKABLE (input_stream), 0, G_SEEK_SET, cancellable, error)) {
         g_prefix_error (error, "couldn't seek input stream: ");
         goto out;
     }
-
-    n_read = g_input_stream_read (input_stream,
-                                  &self->priv->hdr,
-                                  sizeof (QfuCweFileHeader),
-                                  cancellable,
-                                  error);
-    if (n_read < 0) {
+    if (!load_image_info (self, input_stream, "", -1, (goffset) -1, cancellable, error)) {
         g_prefix_error (error, "couldn't read file header: ");
         goto out;
     }
 
-    if (n_read != sizeof (QfuCweFileHeader)) {
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                     "CWE firmware image file is too short: full header not available");
-        goto out;
-    }
-
-    /* Preload non-NUL terminated strings */
-    self->priv->type    = g_strndup (self->priv->hdr.type,    sizeof (self->priv->hdr.type));
-    self->priv->product = g_strndup (self->priv->hdr.product, sizeof (self->priv->hdr.product));
-
     g_debug ("[qfu-image-cwe] validating data size...");
-
-    /* Validate image size as reported in the header */
-    if (qfu_image_get_data_size (QFU_IMAGE (self)) != GUINT32_FROM_BE (self->priv->hdr.imgsize)) {
+    if (qfu_image_get_data_size (QFU_IMAGE (self)) != qfu_image_cwe_header_get_image_size (self)) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                     "CWE firmware image file is too short: full data not available");
+                     "CWE image file size mismatch (expected size: %" G_GUINT32_FORMAT " bytes, real size: %" G_GOFFSET_FORMAT " bytes)",
+                     qfu_image_cwe_header_get_image_size (self), qfu_image_get_data_size (QFU_IMAGE (self)));
         goto out;
     }
 
@@ -209,6 +411,9 @@ static void
 qfu_image_cwe_init (QfuImageCwe *self)
 {
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, QFU_TYPE_IMAGE_CWE, QfuImageCwePrivate);
+
+    self->priv->images = g_array_new (FALSE, FALSE, sizeof (ImageInfo));
+    g_array_set_clear_func (self->priv->images, (GDestroyNotify) clear_image_info);
 }
 
 static void
@@ -216,8 +421,7 @@ finalize (GObject *object)
 {
     QfuImageCwe *self = QFU_IMAGE_CWE (object);
 
-    g_free (self->priv->type);
-    g_free (self->priv->product);
+    g_array_unref (self->priv->images);
 
     G_OBJECT_CLASS (qfu_image_cwe_parent_class)->finalize (object);
 }

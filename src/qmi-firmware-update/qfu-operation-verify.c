@@ -28,6 +28,45 @@
 #include "qfu-image-factory.h"
 #include "qfu-enum-types.h"
 
+static void
+print_image_cwe (QfuImageCwe *image,
+                 const gchar *indent_prefix,
+                 const gchar *id_str,
+                 guint        idx)
+{
+    guint i;
+    guint j;
+
+    g_print ("%s-------------------------------------\n", indent_prefix);
+    g_print ("%s[cwe %s] type:    %s\n",
+             indent_prefix, id_str, qfu_image_cwe_embedded_header_get_type (image, idx));
+    g_print ("%s[cwe %s] product: %s\n",
+             indent_prefix, id_str, qfu_image_cwe_embedded_header_get_product (image, idx));
+    g_print ("%s[cwe %s] version: %s\n",
+             indent_prefix, id_str, qfu_image_cwe_embedded_header_get_version (image, idx));
+    g_print ("%s[cwe %s] date:    %s\n",
+             indent_prefix, id_str, qfu_image_cwe_embedded_header_get_date (image, idx));
+    g_print ("%s[cwe %s] size:    %" G_GUINT32_FORMAT "\n",
+             indent_prefix, id_str, qfu_image_cwe_embedded_header_get_image_size (image, idx));
+
+    for (i = idx + 1, j = 0; i < qfu_image_cwe_get_n_embedded_headers (image); i++) {
+        gchar *sub_id_str;
+        gchar *sub_indent_prefix;
+
+        /* As soon as we find one which doesn't have the expected parent index, break */
+        if (qfu_image_cwe_embedded_header_get_parent_index (image, i) != idx)
+            continue;
+
+        sub_id_str = g_strdup_printf ("%s.%u", id_str, j++);
+        sub_indent_prefix = g_strdup_printf ("%s    ", indent_prefix);
+
+        print_image_cwe (image, sub_indent_prefix, sub_id_str, i);
+
+        g_free (sub_id_str);
+        g_free (sub_indent_prefix);
+    }
+}
+
 gboolean
 qfu_operation_verify_run (const gchar *image_path)
 {
@@ -39,8 +78,7 @@ qfu_operation_verify_run (const gchar *image_path)
     file = g_file_new_for_commandline_arg (image_path);
     image = qfu_image_factory_build (file, NULL, &error);
     if (!image) {
-        g_printerr ("error: couldn't detect image type: %s",
-                    error->message);
+        g_printerr ("error: couldn't detect image type: %s\n", error->message);
         g_error_free (error);
         goto out;
     }
@@ -53,12 +91,8 @@ qfu_operation_verify_run (const gchar *image_path)
     g_print ("    data:        %" G_GOFFSET_FORMAT " bytes\n", qfu_image_get_data_size (image));
     g_print ("  data chunks:   %" G_GUINT16_FORMAT " (%lu bytes/chunk)\n", qfu_image_get_n_data_chunks (image), (gulong) QFU_IMAGE_CHUNK_SIZE);
 
-    if (QFU_IS_IMAGE_CWE (image)) {
-        g_print ("  [cwe] type:    %s\n", qfu_image_cwe_header_get_type    (QFU_IMAGE_CWE (image)));
-        g_print ("  [cwe] product: %s\n", qfu_image_cwe_header_get_product (QFU_IMAGE_CWE (image)));
-        g_print ("  [cwe] version: %s\n", qfu_image_cwe_header_get_version (QFU_IMAGE_CWE (image)));
-        g_print ("  [cwe] date:    %s\n", qfu_image_cwe_header_get_date    (QFU_IMAGE_CWE (image)));
-    }
+    if (QFU_IS_IMAGE_CWE (image))
+        print_image_cwe (QFU_IMAGE_CWE (image), "  ", "0", 0);
 
     result = TRUE;
 
