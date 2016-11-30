@@ -27,6 +27,10 @@
 
 G_BEGIN_DECLS
 
+gchar *qfu_utils_str_hex (gconstpointer mem,
+                          gsize         size,
+                          gchar         delimiter);
+
 guint16 qfu_utils_crc16 (const guint8 *buffer,
                          gsize         len);
 
