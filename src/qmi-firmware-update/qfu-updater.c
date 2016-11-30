@@ -30,7 +30,8 @@
 #include "qfu-image-factory.h"
 #include "qfu-updater.h"
 #include "qfu-udev-helpers.h"
-#include "qfu-download-helpers.h"
+#include "qfu-qdl-device.h"
+#include "qfu-enum-types.h"
 
 G_DEFINE_TYPE (QfuUpdater, qfu_updater, G_TYPE_OBJECT)
 
@@ -196,19 +197,59 @@ run_context_step_wait_for_cdc_wdm (GTask *task)
 }
 
 static void
-download_image_ready (gpointer      unused,
-                      GAsyncResult *res,
-                      GTask        *task)
+run_context_step_download_image (GTask *task)
 {
-    RunContext *ctx;
-    GError     *error = NULL;
+    RunContext   *ctx;
+    QfuQdlDevice *device = NULL;
+    guint16       sequence;
+    guint16       n_chunks;
+    GError       *error = NULL;
+    GCancellable *cancellable;
 
     ctx = (RunContext *) g_task_get_task_data (task);
+    cancellable = g_task_get_cancellable (task);
 
-    if (!qfu_download_helper_run_finish (res, &error)) {
+    device = qfu_qdl_device_new (ctx->tty, cancellable, &error);
+    if (!device) {
+        g_prefix_error (&error, "error creating device: ");
+        goto out;
+    }
+
+    g_debug ("[qfu-updater] downloading %s: %s (header %" G_GOFFSET_FORMAT " bytes, data %" G_GOFFSET_FORMAT " bytes)",
+             qfu_image_type_get_string (qfu_image_get_image_type (ctx->current_image)),
+             qfu_image_get_display_name (ctx->current_image),
+             qfu_image_get_header_size (ctx->current_image),
+             qfu_image_get_data_size (ctx->current_image));
+
+    if (!qfu_qdl_device_ufopen (device, ctx->current_image, cancellable, &error)) {
+        g_prefix_error (&error, "couldn't open session: ");
+        goto out;
+    }
+
+    n_chunks = qfu_image_get_n_data_chunks (ctx->current_image);
+    for (sequence = 0; sequence < n_chunks; sequence++) {
+        if (!qfu_qdl_device_ufwrite (device, ctx->current_image, sequence, cancellable, &error)) {
+            g_prefix_error (&error, "couldn't write in session: ");
+            goto out;
+        }
+    }
+
+    g_debug ("[qfu-updater] all chunks ack-ed");
+
+    if (!qfu_qdl_device_ufclose (device, cancellable, &error)) {
+        g_prefix_error (&error, "couldn't close session: ");
+        goto out;
+    }
+
+    g_debug ("[qfu-updater] reset");
+    qfu_qdl_device_reset (device, cancellable, NULL);
+
+out:
+    g_clear_object (&device);
+
+    if (error) {
         g_prefix_error (&error, "error downloading image: ");
         g_task_return_error (task, error);
-        g_object_unref (task);
         return;
     }
 
@@ -217,20 +258,6 @@ download_image_ready (gpointer      unused,
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
-}
-
-static void
-run_context_step_download_image (GTask *task)
-{
-    RunContext *ctx;
-
-    ctx = (RunContext *) g_task_get_task_data (task);
-
-    qfu_download_helper_run (ctx->tty,
-                             ctx->current_image,
-                             g_task_get_cancellable (task),
-                             (GAsyncReadyCallback) download_image_ready,
-                             task);
 }
 
 static void

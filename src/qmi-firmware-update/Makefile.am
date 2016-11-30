@@ -45,7 +45,6 @@ qmi_firmware_update_SOURCES = \
 	qfu-operation-verify.c \
 	qfu-updater.h qfu-updater.c \
 	qfu-udev-helpers.h qfu-udev-helpers.c \
-	qfu-download-helpers.h qfu-download-helpers.c \
 	qfu-image.h qfu-image.c \
 	qfu-image-cwe.h qfu-image-cwe.c \
 	qfu-image-factory.h qfu-image-factory.c \
