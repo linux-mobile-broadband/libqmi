@@ -34,12 +34,12 @@
 #define QFU_DOWNLOAD_HELPERS_H
 
 #include <gio/gio.h>
+#include "qfu-image.h"
 
 G_BEGIN_DECLS
 
 void     qfu_download_helper_run        (GFile                *tty,
-                                         GFile                *image,
-                                         GFileInfo            *image_info,
+                                         QfuImage             *image,
                                          GCancellable         *cancellable,
                                          GAsyncReadyCallback   callback,
                                          gpointer              user_data);

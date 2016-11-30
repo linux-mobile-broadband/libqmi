@@ -48,6 +48,7 @@
 #include <libqmi-glib.h>
 
 #include "qfu-download-helpers.h"
+#include "qfu-enum-types.h"
 
 static gboolean write_hdlc     (gint          fd,
                                 const gchar  *in,
@@ -326,41 +327,6 @@ hdlc_unframe (const gchar  *in,
 }
 
 /******************************************************************************/
-/* Sierra */
-
-/* Sierra Wireless CWE file header
- *   Note: 32bit numbers are big endian
- */
-typedef struct _CweHdr CweHdr;
-struct _CweHdr {
-	gchar   reserved1[256];
-	guint32 crc;		 /* 32bit CRC of "reserved1" field */
-	guint32 rev;		 /* header revision */
-	guint32 val;		 /* CRC validity indicator */
-	gchar   type[4];	 /* ASCII - not null terminated */
-	gchar   product[4];  /* ASCII - not null terminated */
-	guint32 imgsize;	 /* image size */
-	guint32 imgcrc;		 /* 32bit CRC of the image */
-	gchar   version[84]; /* ASCII - null terminated */
-	gchar   date[8];	 /* ASCII - null terminated */
-	guint32 compat;		 /* backward compatibility */
-	gchar   reserved2[20];
-} __attribute__ ((packed));
-
-static void
-verify_cwehdr (gchar *buf)
-{
-	CweHdr *hdr = (void *) buf;
-
-    g_debug ("[qfu-download,cwe] revision:   %u",   GUINT32_FROM_BE (hdr->rev));
-    g_debug ("[qfu-download,cwe] type:       %.4s", hdr->type);
-    g_debug ("[qfu-download,cwe] product:    %.4s", hdr->product);
-    g_debug ("[qfu-download,cwe] image size: %u",   GUINT32_FROM_BE (hdr->imgsize));
-    g_debug ("[qfu-download,cwe] version:    %s",   hdr->version);
-    g_debug ("[qfu-download,cwe] date:       %s",   hdr->date);
-}
-
-/******************************************************************************/
 /* QDL */
 
 /* from GobiAPI_1.0.40/Core/QDLEnum.h and
@@ -498,48 +464,6 @@ qdl_error_to_string (QdlError err)
     return (err < QDL_ERROR_LAST ? qdl_error_str[err] : "Unknown");
 }
 
-/* most of these origin from GobiAPI_1.0.40/Core/QDLEnum.h
- *
- * The gobi-loader's snooped magic strings use types
- *   0x05 => "amss.mbn"
- *   0x06 => "apps.mbn"
- *   0x0d => "uqcn.mbn" (Gobi 2000 only)
- *  with no file header data
- *
- * The 0x80 type is snooped from the Sierra Wireless firmware
- * uploaders, using 400 bytes file header data
- */
-
-typedef enum {
-    QDL_IMAGE_TYPE_AMSS_MODEM       = 0x05,
-    QDL_IMAGE_TYPE_AMSS_APPLICATION = 0x06,
-    QDL_IMAGE_TYPE_AMSS_UQCN        = 0x0d,
-    QDL_IMAGE_TYPE_DBL              = 0x0f,
-    QDL_IMAGE_TYPE_OSBL             = 0x10,
-    QDL_IMAGE_TYPE_CWE              = 0x80,
-} QdlImageType;
-
-static const gchar *
-qdl_image_type_to_string (QdlImageType type)
-{
-    switch (type) {
-    case QDL_IMAGE_TYPE_AMSS_MODEM:
-        return "AMSS modem image";
-    case QDL_IMAGE_TYPE_AMSS_APPLICATION:
-        return "AMSS application image";
-    case QDL_IMAGE_TYPE_AMSS_UQCN:
-        return "AMSS Provisioning information image";
-    case QDL_IMAGE_TYPE_DBL:
-        return "DBL image";
-    case QDL_IMAGE_TYPE_OSBL:
-        return "OSBL image";
-    case QDL_IMAGE_TYPE_CWE:
-        return "CWE image";
-    default:
-        return "Unknown image";
-    }
-}
-
 /* feature bits */
 #define QDL_FEATURE_GENERIC_UNFRAMED 0x10
 #define QDL_FEATURE_QDL_UNFRAMED     0x20
@@ -660,35 +584,12 @@ struct _QdlImageprefRsp {
     } image[];
 } __attribute__ ((packed));
 
-/* should the unframed open request include a file header? */
-static inline gsize
-qdl_image_get_hdrlen (QdlImageType type)
-{
-	switch (type) {
-	case QDL_IMAGE_TYPE_CWE:
-		return 400;
-	default:
-		return 0;
-	}
-}
-
-/* some image types contain trailing garbage - from gobi-loader */
-static inline gsize
-qdl_image_get_len (QdlImageType type, gsize len)
-{
-	switch (type) {
-	case QDL_IMAGE_TYPE_AMSS_MODEM:
-		return len - 8;
-	default:
-		return len;
-	}
-}
-
 static gsize
 create_ufopen_req (gchar        *out,
                    gsize         outlen,
-                   gsize         filelen,
-                   QdlImageType  type)
+                   gsize         header_size,
+                   gsize         data_size,
+                   QfuImageType  type)
 {
     QdlUfopenReq *req = (void *) out;
 
@@ -697,8 +598,8 @@ create_ufopen_req (gchar        *out,
 	req->cmd = QDL_CMD_OPEN_UNFRAMED_REQ;
 	req->type = (guint8) type;
 	req->windowsize = 1; /* snooped */
-	req->length = qdl_image_get_len (type, filelen);
-	req->chunksize = req->length - qdl_image_get_hdrlen (type);
+	req->length = header_size + data_size;
+	req->chunksize = data_size;
 	return sizeof (QdlUfopenReq);
 }
 
@@ -998,93 +899,42 @@ qdl_session_close (gint     fd,
     return TRUE;
 }
 
-/* guessing image type based on the well known Gobi 1k and 2k
- * filenames, and assumes anything else is a CWE image
- *
- * This is based on the types in gobi-loader's snooped magic strings:
- *   0x05 => "amss.mbn"
- *   0x06 => "apps.mbn"
- *   0x0d => "uqcn.mbn" (Gobi 2000 only)
- */
-static QdlImageType
-qdl_image_image_get_type_from_file (GFile *image)
-{
-	gchar        *basename;
-    QdlImageType  image_type;
-
-    g_assert (G_IS_FILE (image));
-    basename = g_file_get_basename (image);
-
-    if (g_ascii_strcasecmp (basename, "amss.mbn") == 0)
-        image_type = QDL_IMAGE_TYPE_AMSS_MODEM;
-    else if (g_ascii_strcasecmp (basename, "apps.mbn") == 0)
-        image_type = QDL_IMAGE_TYPE_AMSS_APPLICATION;
-    else if (g_ascii_strcasecmp (basename, "uqcn.mbn") == 0)
-        image_type = QDL_IMAGE_TYPE_AMSS_UQCN;
-    else
-        image_type = QDL_IMAGE_TYPE_CWE;
-
-    g_free (basename);
-    return image_type;
-}
-
 static gboolean
 qdl_download_image (gint           fd,
                     gchar         *buf,
                     gsize          buflen,
-                    GFile         *image,
-                    GFileInfo     *image_info,
+                    QfuImage      *image,
                     GCancellable  *cancellable,
                     GError       **error)
 {
-    gint          image_fd;
-    gchar        *image_path;
-    GError       *inner_error = NULL;
-    gssize        image_datalen;
-    QdlImageType  image_type;
-    gsize         reqlen;
-    gsize         image_hdrlen;
-    guint16       seq = 0;
-    guint16       acked_sequence = 0;
+    GError  *inner_error = NULL;
+    gsize    reqlen;
+    gssize   aux;
+    guint16  seq = 0;
+    guint16  acked_sequence = 0;
+    guint16  n_chunks;
 
-    image_path = g_file_get_path (image);
+    g_debug ("[qfu-download,qdl] downloading %s: %s (header %" G_GOFFSET_FORMAT " bytes, data %" G_GOFFSET_FORMAT " bytes)",
+             qfu_image_type_get_string (qfu_image_get_image_type (image)),
+             qfu_image_get_display_name (image),
+             qfu_image_get_header_size (image),
+             qfu_image_get_data_size (image));
 
-    image_fd = open (image_path, O_RDONLY);
-    if (image_fd < 0) {
-        inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
-                                   "error opening image file: %s",
-                                   g_strerror (errno));
+	/* prepare open request */
+	reqlen = create_ufopen_req (buf, buflen,
+                                (gsize) qfu_image_get_header_size (image),
+                                (gsize) qfu_image_get_data_size (image),
+                                qfu_image_get_image_type (image));
+
+    /* append header */
+    aux = qfu_image_read_header (image, (guint8 *)(buf + reqlen), buflen - reqlen, cancellable, &inner_error);
+    if (aux < 0) {
+        g_prefix_error (&inner_error, "couldn't read image header: ");
         goto out;
     }
+    reqlen += aux;
 
-    image_type = qdl_image_image_get_type_from_file (image);
-    image_hdrlen = qdl_image_get_hdrlen (image_type);
-    image_datalen = qdl_image_get_len (image_type, (gsize) g_file_info_get_size (image_info)) - image_hdrlen;
-	if (image_datalen < 0) {
-        inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
-                                   "image is too short");
-		goto out;
-	}
-
-    g_debug ("[qfu-download,qdl] downloading %s: %s",
-             qdl_image_type_to_string (image_type),
-             g_file_info_get_display_name (image_info));
-
-	/* send open request */
-	reqlen = create_ufopen_req (buf, buflen, (gsize) g_file_info_get_size (image_info), image_type);
-	if (image_hdrlen > 0) {
-		g_assert (image_hdrlen + reqlen <= buflen);
-        /* read header from image file */
-		if (read (image_fd, buf + reqlen, image_hdrlen) != image_hdrlen) {
-            inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
-                                       "couldn't read image header: %s",
-                                       g_strerror (errno));
-            goto out;
-        }
-		if (image_type == QDL_IMAGE_TYPE_CWE)
-			verify_cwehdr (buf + reqlen);
-	}
-	if (!write_hdlc (fd, buf, reqlen + image_hdrlen, &inner_error)) {
+	if (!write_hdlc (fd, buf, reqlen, &inner_error)) {
         g_prefix_error (&inner_error, "couldn't write open request");
         goto out;
     }
@@ -1096,11 +946,11 @@ qdl_download_image (gint           fd,
     }
 
 	/* remaining data to send */
-	while (image_datalen > 0) {
+    n_chunks = qfu_image_get_n_data_chunks (image);
+    for (seq = 0; seq < n_chunks; seq++) {
         gsize          chunksize;
 		fd_set         wr;
 		struct timeval tv = { .tv_sec = 2, .tv_usec = 0, };
-        gint           aux;
 
         /* Check cancellable on every loop */
         if (g_cancellable_is_cancelled (cancellable)) {
@@ -1109,17 +959,17 @@ qdl_download_image (gint           fd,
             goto out;
         }
 
-		chunksize = MIN (CHUNK, image_datalen);
+		g_debug ("[qfu-download,qdl] writing chunk #%" G_GUINT16_FORMAT "...", seq);
 
-		g_debug ("[qfu-download,qdl] writing chunk #%u (%" G_GSIZE_FORMAT ")...", (guint) seq, chunksize);
+        chunksize = qfu_image_get_data_chunk_size (image, seq);
+
 		reqlen = create_ufwrite_req (buf, buflen, chunksize, seq);
-		aux = read (image_fd, buf + reqlen, chunksize);
-        if (aux != chunksize) {
-            inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
-                                       "error reading chunk #%u: %s",
-                                       seq, g_strerror (errno));
+        aux = qfu_image_read_data_chunk (image, seq, (guint8 *)(buf + reqlen), buflen - reqlen, cancellable, &inner_error);
+        if (aux < 0) {
+            g_prefix_error (&inner_error, "couldn't read image chunk #%u: ", seq);
             goto out;
         }
+        reqlen += aux;
 
 		FD_ZERO (&wr);
 		FD_SET (fd, &wr);
@@ -1138,7 +988,7 @@ qdl_download_image (gint           fd,
         }
 
         /* Note: no HDLC here */
-		if (write (fd, buf, reqlen + chunksize) < 0) {
+		if (write (fd, buf, reqlen) < 0) {
             inner_error = g_error_new (G_IO_ERROR, G_IO_ERROR_FAILED,
                                        "error writing chunk #%u: %s",
                                        seq, g_strerror (errno));
@@ -1147,11 +997,6 @@ qdl_download_image (gint           fd,
 
         if (read_hdlc_full (fd, &acked_sequence, NULL))
             g_debug ("[qfu-download,qdl] ack-ed chunk #%u", (guint) acked_sequence);
-
-		image_datalen -= chunksize;
-        g_assert (image_datalen >= 0);
-
-        seq++;
 	}
 
     g_debug ("[qfu-download,qdl] finished writing: waiting for final chunk #%u ack", (seq - 1));
@@ -1175,10 +1020,6 @@ qdl_download_image (gint           fd,
     g_debug ("[qfu-download,qdl] all chunks ack-ed");
 
 out:
-
-	if (!(image_fd < 0))
-		close (image_fd);
-    g_free (image_path);
 
     if (inner_error) {
         g_propagate_error (error, inner_error);
@@ -1360,11 +1201,10 @@ serial_open (GFile   *tty,
 /******************************************************************************/
 
 typedef struct {
-    GFile     *tty;
-    GFile     *image;
-    GFileInfo *image_info;
-    gint       fd;
-    gchar     *buffer;
+    GFile    *tty;
+    QfuImage *image;
+    gint      fd;
+    gchar    *buffer;
 } RunContext;
 
 static void
@@ -1373,7 +1213,6 @@ run_context_free (RunContext *ctx)
     if (!(ctx->fd < 0))
         close (ctx->fd);
     g_free (ctx->buffer);
-    g_object_unref (ctx->image_info);
     g_object_unref (ctx->image);
     g_object_unref (ctx->tty);
     g_slice_free (RunContext, ctx);
@@ -1426,7 +1265,6 @@ download_helper_run (GTask *task)
                              ctx->buffer,
                              BUFSIZE,
                              ctx->image,
-                             ctx->image_info,
                              g_task_get_cancellable (task),
                              &error)) {
         g_prefix_error (&error, "couldn't download image: ");
@@ -1452,8 +1290,7 @@ out:
 
 void
 qfu_download_helper_run (GFile               *tty,
-                         GFile               *image,
-                         GFileInfo           *image_info,
+                         QfuImage            *image,
                          GCancellable        *cancellable,
                          GAsyncReadyCallback  callback,
                          gpointer             user_data)
@@ -1462,13 +1299,12 @@ qfu_download_helper_run (GFile               *tty,
     RunContext *ctx;
 
     g_assert (G_IS_FILE (tty));
-    g_assert (G_IS_FILE (image));
+    g_assert (QFU_IS_IMAGE (image));
 
     ctx = g_slice_new0 (RunContext);
     ctx->fd = -1;
     ctx->tty = g_object_ref (tty);
     ctx->image = g_object_ref (image);
-    ctx->image_info = g_object_ref (image_info);
     ctx->buffer = g_malloc (BUFSIZE);
 
     task = g_task_new (NULL, cancellable, callback, user_data);

@@ -27,6 +27,7 @@
 
 #include <libqmi-glib.h>
 
+#include "qfu-image-factory.h"
 #include "qfu-updater.h"
 #include "qfu-udev-helpers.h"
 #include "qfu-download-helpers.h"
@@ -71,11 +72,10 @@ typedef enum {
 typedef struct {
     /* Context step */
     RunContextStep step;
-    /* List of pending image files to download */
+    /* List of pending QfuImages to download */
     GList *pending_images;
     /* Current image being downloaded */
-    GFile     *current_image;
-    GFileInfo *current_image_info;
+    QfuImage *current_image;
     /* USB info */
     gchar *sysfs_path;
     /* QMI device and client */
@@ -103,8 +103,6 @@ run_context_free (RunContext *ctx)
         qmi_device_close (ctx->qmi_device, NULL);
         g_object_unref (ctx->qmi_device);
     }
-    if (ctx->current_image_info)
-        g_object_unref (ctx->current_image_info);
     if (ctx->current_image)
         g_object_unref (ctx->current_image);
     g_list_free_full (ctx->pending_images, (GDestroyNotify) g_object_unref);
@@ -149,10 +147,7 @@ run_context_step_cleanup_image (GTask *task)
     ctx = (RunContext *) g_task_get_task_data (task);
 
     g_assert (ctx->current_image);
-    g_assert (ctx->current_image_info);
-
     g_clear_object (&ctx->current_image);
-    g_clear_object (&ctx->current_image_info);
 
     /* Select next image */
     run_context_step_next (task, RUN_CONTEXT_STEP_SELECT_IMAGE);
@@ -218,7 +213,7 @@ download_image_ready (gpointer      unused,
     }
 
     g_debug ("[qfu-updater] image '%s' successfully downloaded",
-             g_file_info_get_display_name (ctx->current_image_info));
+             qfu_image_get_display_name (ctx->current_image));
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -233,7 +228,6 @@ run_context_step_download_image (GTask *task)
 
     qfu_download_helper_run (ctx->tty,
                              ctx->current_image,
-                             ctx->current_image_info,
                              g_task_get_cancellable (task),
                              (GAsyncReadyCallback) download_image_ready,
                              task);
@@ -664,12 +658,10 @@ static void
 run_context_step_select_image (GTask *task)
 {
     RunContext *ctx;
-    GError     *error = NULL;
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
     g_assert (!ctx->current_image);
-    g_assert (!ctx->current_image_info);
 
     /* If no more files to download, we're done! */
     if (!ctx->pending_images) {
@@ -682,23 +674,12 @@ run_context_step_select_image (GTask *task)
     ctx->qmi_client_retries = QMI_CLIENT_RETRIES;
 
     /* Select new current image */
-    ctx->current_image = G_FILE (ctx->pending_images->data);
+    ctx->current_image = QFU_IMAGE (ctx->pending_images->data);
     ctx->pending_images = g_list_delete_link (ctx->pending_images, ctx->pending_images);
-    ctx->current_image_info = g_file_query_info (ctx->current_image,
-                                                 G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME "," G_FILE_ATTRIBUTE_STANDARD_SIZE,
-                                                 G_FILE_QUERY_INFO_NONE,
-                                                 g_task_get_cancellable (task),
-                                                 &error);
-    if (!ctx->current_image_info) {
-        g_prefix_error (&error, "couldn't get image file info: ");
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
 
     g_debug ("[qfu-updater] selected file '%s' (%" G_GOFFSET_FORMAT " bytes)",
-             g_file_info_get_display_name (ctx->current_image_info),
-             g_file_info_get_size (ctx->current_image_info));
+             qfu_image_get_display_name (ctx->current_image),
+             qfu_image_get_size (ctx->current_image));
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -777,12 +758,26 @@ qfu_updater_run (QfuUpdater          *self,
 {
     RunContext  *ctx;
     GTask       *task;
+    GList       *l;
 
     ctx = g_slice_new0 (RunContext);
-    ctx->pending_images = g_list_copy_deep (self->priv->image_file_list, (GCopyFunc) g_object_ref, NULL);
 
     task = g_task_new (self, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify) run_context_free);
+
+    /* Build QfuImage objects for each image file given */
+    for (l = self->priv->image_file_list; l; l = g_list_next (l)) {
+        GError   *error = NULL;
+        QfuImage *image;
+
+        image = qfu_image_factory_build (G_FILE (l->data), cancellable, &error);
+        if (!image) {
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+        }
+        ctx->pending_images = g_list_append (ctx->pending_images, image);
+    }
 
     run_context_step (task);
 }
