@@ -50,6 +50,7 @@
 #include "qfu-download-helpers.h"
 #include "qfu-enum-types.h"
 #include "qfu-qdl-message.h"
+#include "qfu-dload-message.h"
 #include "qfu-utils.h"
 
 static gboolean write_hdlc     (gint          fd,
@@ -101,43 +102,19 @@ utils_str_hex (gconstpointer mem,
 /******************************************************************************/
 /* DLOAD protocol */
 
-/*
- * Most of this is from Josuah Hill's DLOAD tool for iPhone
- * Some spec is also available in document 80-39912-1 Rev. E  DMSS Download Protocol Interface Specification and Operational Description
- * https://github.com/posixninja/DLOADTool/blob/master/dloadtool/dload.h
- *
- * The 0x70 switching command was found by snooping on firmware updates
- */
-
-typedef enum {
-    DLOAD_CMD_ACK = 0x02, /* Acknowledge receiving a packet */
-    DLOAD_CMD_NOP = 0x06, /* No operation, useful for debugging */
-    DLOAD_CMD_SDP = 0x70, /* Switch to Streaming DLOAD */
-} DloadCmd;
-
-/* 0x02 - guint8 cmd only */
-/* 0x06 - guint8 cmd only */
-
-typedef struct _DloadSdp DloadSdp;
-
-struct _DloadSdp {
-    guint8  cmd;       /* 0x70 */
-    guint16 reserved;  /* 0x0000 */
-} __attribute__ ((packed));
-
 static gboolean
 dload_switch_to_sdp (gint     fd,
+                     gchar   *buf,
+                     gsize    buflen,
                      GError **error)
 {
-    static const DloadSdp dload_sdp = {
-        .cmd      = DLOAD_CMD_SDP,
-        .reserved = 0x0000,
-    };
-
+    gsize   reqlen;
     GError *inner_error = NULL;
 
+    reqlen = qfu_dload_request_sdp_build ((guint8 *)buf, buflen);
+
     /* switch to SDP - this is required for some modems like MC7710 */
-    if (!write_hdlc (fd, (const gchar *) &dload_sdp, sizeof (DloadSdp), error)) {
+    if (!write_hdlc (fd, (const gchar *) buf, reqlen, error)) {
         g_prefix_error (error, "couldn't write request: ");
         return FALSE;
     }
@@ -781,7 +758,10 @@ download_helper_run (GTask *task)
         return;
 
     g_debug ("[qfu-download] switching to SDP...");
-    if (!dload_switch_to_sdp (ctx->fd, &error)) {
+    if (!dload_switch_to_sdp (ctx->fd,
+                              ctx->buffer,
+                              QFU_QDL_MESSAGE_MAX_SIZE,
+                              &error)) {
         g_prefix_error (&error, "couldn't switch to SDP: ");
         goto out;
     }

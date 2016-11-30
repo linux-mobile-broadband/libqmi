@@ -27,6 +27,7 @@
 
 #include "qfu-dload-message.h"
 #include "qfu-utils.h"
+#include "qfu-enum-types.h"
 
 /******************************************************************************/
 /* DLOAD SDP */
@@ -52,6 +53,8 @@ qfu_dload_request_sdp_build (guint8 *buffer,
     req = (DloadSdpReq *) buffer;
     memset (buffer, 0, sizeof (DloadSdpReq));
     req->cmd = (guint8) QFU_DLOAD_CMD_SDP;
+
+    g_debug ("[qfu,dload-message] sent %s:", qfu_dload_cmd_get_string ((QfuDloadCmd) req->cmd));
 
 	return (sizeof (DloadSdpReq));
 }
@@ -82,6 +85,8 @@ qfu_dload_response_ack_parse (const guint8  *buffer,
 
     rsp = (DloadAckRsp *) buffer;
     g_assert (rsp->cmd == QFU_DLOAD_CMD_ACK);
+
+    g_debug ("[qfu,dload-message] received %s:", qfu_dload_cmd_get_string ((QfuDloadCmd) rsp->cmd));
 
     return TRUE;
 }
