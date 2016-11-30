@@ -133,7 +133,7 @@ static GOptionEntry main_entries[] = {
 };
 
 static gboolean
-signals_handler (gpointer psignum)
+signals_handler (void)
 {
     if (cancellable) {
         /* Ignore consecutive requests of cancellation */
@@ -142,8 +142,7 @@ signals_handler (gpointer psignum)
             g_cancellable_cancel (cancellable);
             /* Re-set the signal handler to allow main loop cancellation on
              * second signal */
-            g_unix_signal_add (GPOINTER_TO_INT (psignum),  (GSourceFunc) signals_handler, psignum);
-            return FALSE;
+            return G_SOURCE_CONTINUE;
         }
     }
 
@@ -151,7 +150,7 @@ signals_handler (gpointer psignum)
         g_printerr ("cancelling the main loop...\n");
         g_idle_add ((GSourceFunc) g_main_loop_quit, loop);
     }
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void
@@ -770,9 +769,9 @@ int main (int argc, char **argv)
     loop = g_main_loop_new (NULL, FALSE);
 
     /* Setup signals */
-    g_unix_signal_add (SIGINT,  (GSourceFunc)signals_handler, GUINT_TO_POINTER (SIGINT));
-    g_unix_signal_add (SIGHUP,  (GSourceFunc)signals_handler, GUINT_TO_POINTER (SIGHUP));
-    g_unix_signal_add (SIGTERM, (GSourceFunc)signals_handler, GUINT_TO_POINTER (SIGTERM));
+    g_unix_signal_add (SIGINT,  (GSourceFunc) signals_handler, NULL);
+    g_unix_signal_add (SIGHUP,  (GSourceFunc) signals_handler, NULL);
+    g_unix_signal_add (SIGTERM, (GSourceFunc) signals_handler, NULL);
 
     /* Launch QmiDevice creation */
     qmi_device_new (file,
