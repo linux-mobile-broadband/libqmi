@@ -188,6 +188,8 @@ run_context_step_wait_for_cdc_wdm (GTask *task)
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
+    g_print ("rebooting in normal mode...\n");
+
     g_debug ("[qfu-updater] now waiting for cdc-wdm device...");
     qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM,
                                      ctx->sysfs_path,
@@ -205,9 +207,14 @@ run_context_step_download_image (GTask *task)
     guint16       n_chunks;
     GError       *error = NULL;
     GCancellable *cancellable;
+    GTimer       *timer;
+    gdouble       elapsed;
+    gchar        *aux;
 
     ctx = (RunContext *) g_task_get_task_data (task);
     cancellable = g_task_get_cancellable (task);
+
+    timer = g_timer_new ();
 
     device = qfu_qdl_device_new (ctx->tty, cancellable, &error);
     if (!device) {
@@ -215,11 +222,12 @@ run_context_step_download_image (GTask *task)
         goto out;
     }
 
-    g_debug ("[qfu-updater] downloading %s: %s (header %" G_GOFFSET_FORMAT " bytes, data %" G_GOFFSET_FORMAT " bytes)",
+    aux = g_format_size ((guint64) qfu_image_get_size (ctx->current_image));
+    g_print ("downloading %s image: %s (%s)...\n",
              qfu_image_type_get_string (qfu_image_get_image_type (ctx->current_image)),
              qfu_image_get_display_name (ctx->current_image),
-             qfu_image_get_header_size (ctx->current_image),
-             qfu_image_get_data_size (ctx->current_image));
+             aux);
+    g_free (aux);
 
     if (!qfu_qdl_device_ufopen (device, ctx->current_image, cancellable, &error)) {
         g_prefix_error (&error, "couldn't open session: ");
@@ -245,6 +253,9 @@ run_context_step_download_image (GTask *task)
     qfu_qdl_device_reset (device, cancellable, NULL);
 
 out:
+    elapsed = g_timer_elapsed (timer, NULL);
+
+    g_timer_destroy (timer);
     g_clear_object (&device);
 
     if (error) {
@@ -253,8 +264,9 @@ out:
         return;
     }
 
-    g_debug ("[qfu-updater] image '%s' successfully downloaded",
-             qfu_image_get_display_name (ctx->current_image));
+    aux = g_format_size ((guint64) ((qfu_image_get_size (ctx->current_image)) / elapsed));
+    g_print ("successfully downloaded in %.2lfs (%s/s)\n", elapsed, aux);
+    g_free (aux);
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -293,6 +305,8 @@ run_context_step_wait_for_tty (GTask *task)
     RunContext *ctx;
 
     ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_print ("rebooting in download mode...\n");
 
     g_debug ("[qfu-updater] reset requested, now waiting for TTY device...");
     qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_TTY,
