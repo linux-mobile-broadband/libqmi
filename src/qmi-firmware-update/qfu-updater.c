@@ -791,6 +791,12 @@ run_context_step (GTask *task)
     g_object_unref (task);
 }
 
+static gint
+image_sort_by_size (QfuImage *a, QfuImage *b)
+{
+    return qfu_image_get_size (b) - qfu_image_get_size (a);
+}
+
 void
 qfu_updater_run (QfuUpdater          *self,
                  GCancellable        *cancellable,
@@ -819,6 +825,10 @@ qfu_updater_run (QfuUpdater          *self,
         }
         ctx->pending_images = g_list_append (ctx->pending_images, image);
     }
+
+    /* Sort by size, we want to download bigger images first, as that is usually
+     * the use case anyway, first flash e.g. the .cwe file, then the .nvu one. */
+    ctx->pending_images = g_list_sort (ctx->pending_images, (GCompareFunc) image_sort_by_size);
 
     run_context_step (task);
 }
