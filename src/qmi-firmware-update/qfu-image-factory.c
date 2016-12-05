@@ -29,15 +29,15 @@ qfu_image_factory_build (GFile        *file,
                          GCancellable *cancellable,
                          GError       **error)
 {
-	gchar        *basename;
-    QfuImageType  image_type;
-    QfuImage     *image = NULL;
+    gchar    *basename;
+    QfuImage *image = NULL;
+    GError   *inner_error = NULL;
 
     g_assert (G_IS_FILE (file));
     basename = g_file_get_basename (file);
 
     /* guessing image type based on the well known Gobi 1k and 2k
-     * filenames, and assumes anything else is a CWE image
+     * filenames, and assumes anything else could be a CWE image
      *
      * This is based on the types in gobi-loader's snooped magic strings:
      *   0x05 => "amss.mbn"
@@ -45,27 +45,23 @@ qfu_image_factory_build (GFile        *file,
      *   0x0d => "uqcn.mbn" (Gobi 2000 only)
      */
     if (g_ascii_strcasecmp (basename, "amss.mbn") == 0)
-        image_type = QFU_IMAGE_TYPE_AMSS_MODEM;
+        image = qfu_image_new (file, QFU_IMAGE_TYPE_AMSS_MODEM, cancellable, error);
     else if (g_ascii_strcasecmp (basename, "apps.mbn") == 0)
-        image_type = QFU_IMAGE_TYPE_AMSS_APPLICATION;
+        image = qfu_image_new (file, QFU_IMAGE_TYPE_AMSS_APPLICATION, cancellable, error);
     else if (g_ascii_strcasecmp (basename, "uqcn.mbn") == 0)
-        image_type = QFU_IMAGE_TYPE_AMSS_UQCN;
-    else
-        /* Note: should check validity of the image as this is the one used as
-         * default fallback */
-        image_type = QFU_IMAGE_TYPE_CWE;
+        image = qfu_image_new (file, QFU_IMAGE_TYPE_AMSS_UQCN, cancellable, error);
+    else {
+        /* Try to autodetect format */
 
-    switch (image_type) {
-    case QFU_IMAGE_TYPE_AMSS_MODEM:
-    case QFU_IMAGE_TYPE_AMSS_APPLICATION:
-    case QFU_IMAGE_TYPE_AMSS_UQCN:
-        image = qfu_image_new (file, image_type, cancellable, error);
-        break;
-    case QFU_IMAGE_TYPE_CWE:
-        image = qfu_image_cwe_new (file, cancellable, error);
-        break;
-    default:
-        g_assert_not_reached ();
+        /* Maybe a CWE image? */
+        image = qfu_image_cwe_new (file, cancellable, &inner_error);
+        if (!image) {
+            g_debug ("[qfu-image-factory] not a CWE file: %s", inner_error->message);
+            g_error_free (inner_error);
+
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+                         "unknown firmware image file");
+        }
     }
 
     g_free (basename);
