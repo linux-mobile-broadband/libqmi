@@ -52,8 +52,6 @@ struct _QfuUpdaterPrivate {
     gboolean     device_open_mbim;
 };
 
-static const gchar *cdc_wdm_subsys[] = { "usbmisc", "usb", NULL };
-
 /******************************************************************************/
 /* Run */
 
@@ -194,7 +192,7 @@ run_context_step_wait_for_cdc_wdm (GTask *task)
     ctx = (RunContext *) g_task_get_task_data (task);
 
     g_debug ("[qfu-updater] now waiting for cdc-wdm device...");
-    qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM,
+    qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM,
                                      ctx->sysfs_path,
                                      g_task_get_cancellable (task),
                                      (GAsyncReadyCallback) wait_for_cdc_wdm_ready,
@@ -399,7 +397,7 @@ run_context_step_wait_for_tty (GTask *task)
     g_print ("rebooting in download mode...\n");
 
     g_debug ("[qfu-updater] reset requested, now waiting for TTY device...");
-    qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_TTY,
+    qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_DEVICE_TYPE_TTY,
                                      ctx->sysfs_path,
                                      g_task_get_cancellable (task),
                                      (GAsyncReadyCallback) wait_for_tty_ready,
@@ -798,9 +796,10 @@ run_context_step_usb_info (GTask *task)
     self = g_task_get_source_object (task);
 
     g_assert (self->priv->cdc_wdm_file);
+    g_assert (!ctx->sysfs_path);
 
     g_debug ("[qfu-updater] looking for device sysfs path...");
-    ctx->sysfs_path = qfu_udev_helper_get_sysfs_path (self->priv->cdc_wdm_file, cdc_wdm_subsys, &error);
+    ctx->sysfs_path = qfu_udev_helper_find_by_file (self->priv->cdc_wdm_file, &error);
     if (!ctx->sysfs_path) {
         g_prefix_error (&error, "couldn't get cdc-wdm device sysfs path: ");
         g_task_return_error (task, error);

@@ -33,12 +33,19 @@
 #include <libqmi-glib.h>
 
 #include "qfu-operation.h"
+#include "qfu-udev-helpers.h"
 
 #define PROGRAM_NAME    "qmi-firmware-update"
 #define PROGRAM_VERSION PACKAGE_VERSION
 
 /*****************************************************************************/
 /* Options */
+
+/* Generic device selections */
+static guint      busnum;
+static guint      devnum;
+static guint16    vid;
+static guint16    pid;
 
 /* Update */
 static gboolean   action_update_flag;
@@ -54,7 +61,7 @@ static gboolean   action_update_qdl_flag;
 static gchar     *serial_str;
 
 /* Verify */
-static gboolean   action_verify_flag;;
+static gboolean   action_verify_flag;
 
 /* Main */
 static gchar    **image_strv;
@@ -62,6 +69,113 @@ static gboolean   verbose_flag;
 static gboolean   silent_flag;
 static gboolean   version_flag;
 static gboolean   help_flag;
+
+static gboolean
+parse_busnum_devnum (const gchar  *option_name,
+                     const gchar  *value,
+                     gpointer      data,
+                     GError      **error)
+{
+    gchar    **strv;
+    gint       busnum_idx = -1;
+    gint       devnum_idx = 0;
+    gulong     aux;
+    gboolean   result = FALSE;
+
+    strv = g_strsplit (value, ":", -1);
+    g_assert (strv[0]);
+    if (strv[1]) {
+        busnum_idx = 0;
+        devnum_idx = 1;
+        if (strv[2]) {
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                         "invalid busnum-devnum string: too many fields");
+            goto out;
+        }
+    }
+
+    if (busnum_idx != -1) {
+        aux = strtoul (strv[busnum_idx], NULL, 10);
+        if (aux == 0 || aux > G_MAXUINT) {
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                         "invalid bus number: %s", strv[busnum_idx]);
+            goto out;
+        }
+        busnum = (guint) aux;
+    }
+
+    aux = strtoul (strv[devnum_idx], NULL, 10);
+    if (aux == 0 || aux > G_MAXUINT) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "invalid dev number: %s", strv[devnum_idx]);
+        goto out;
+    }
+    devnum = (guint) aux;
+    result = TRUE;
+
+out:
+    g_strfreev (strv);
+    return result;
+}
+
+static gboolean
+parse_vid_pid (const gchar  *option_name,
+               const gchar  *value,
+               gpointer      data,
+               GError      **error)
+{
+    gchar    **strv;
+    gint       vid_idx = 0;
+    gint       pid_idx = -1;
+    gulong     aux;
+    gboolean   result = FALSE;
+
+    strv = g_strsplit (value, ":", -1);
+    g_assert (strv[0]);
+    if (strv[1]) {
+        pid_idx = 1;
+        if (strv[2]) {
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                         "invalid vid-pid string: too many fields");
+            goto out;
+        }
+    }
+
+    if (pid_idx != -1) {
+        aux = strtoul (strv[pid_idx], NULL, 16);
+        if (aux == 0 || aux > G_MAXUINT16) {
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                         "invalid product id: %s", strv[pid_idx]);
+            goto out;
+        }
+        pid = (guint) aux;
+    }
+
+    aux = strtoul (strv[vid_idx], NULL, 16);
+    if (aux == 0 || aux > G_MAXUINT16) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "invalid vendor id: %s", strv[vid_idx]);
+        goto out;
+    }
+    vid = (guint16) aux;
+    result = TRUE;
+
+out:
+    g_strfreev (strv);
+    return result;
+}
+
+static GOptionEntry context_selection_entries[] = {
+    { "busnum-devnum", 'N', 0, G_OPTION_ARG_CALLBACK, &parse_busnum_devnum,
+      "Select device by bus and device number (in decimal).",
+      "[BUS:]DEV"
+    },
+    { "vid-pid", 'D', 0, G_OPTION_ARG_CALLBACK, &parse_vid_pid,
+      "Select device by device vendor and product id (in hexadecimal).",
+      "VID:[PID]"
+    },
+    { NULL }
+};
 
 static GOptionEntry context_update_entries[] = {
     { "update", 'u', 0, G_OPTION_ARG_NONE, &action_update_flag,
@@ -239,6 +353,58 @@ print_help (GOptionContext *context)
     g_free (str);
 }
 
+static gchar *
+select_path (const char              *manual,
+             QfuUdevHelperDeviceType  type)
+{
+    gchar  *path = NULL;
+    GError *error = NULL;
+    gchar  *sysfs_path = NULL;
+    GList  *list = NULL;
+
+    if (manual && (vid != 0 || pid != 0)) {
+        g_printerr ("error: cannot specify device path and vid:pid lookup\n");
+        return NULL;
+    }
+
+    if (manual && (busnum != 0 || devnum != 0)) {
+        g_printerr ("error: cannot specify device path and busnum:devnum lookup\n");
+        return NULL;
+    }
+
+    if ((vid != 0 || pid != 0) && (busnum != 0 || devnum != 0)) {
+        g_printerr ("error: cannot specify busnum:devnum and vid:pid lookups\n");
+        return NULL;
+    }
+
+    if (manual) {
+        path = g_strdup (manual);
+        goto out;
+    }
+
+    /* lookup sysfs path */
+    sysfs_path = qfu_udev_helper_find_by_device_info (vid, pid, busnum, devnum, &error);
+    if (!sysfs_path) {
+        g_printerr ("error: %s\n", error->message);
+        g_error_free (error);
+        goto out;
+    }
+
+    list = qfu_udev_helper_list_devices (type, sysfs_path);
+    if (!list) {
+        g_printerr ("error: no devices found in sysfs path: %s\n", sysfs_path);
+        goto out;
+    }
+
+    path = g_file_get_path (G_FILE (list->data));
+
+out:
+    if (list)
+        g_list_free_full (list, (GDestroyNotify) g_object_unref);
+
+    return path;
+}
+
 int main (int argc, char **argv)
 {
     GError         *error = NULL;
@@ -253,6 +419,10 @@ int main (int argc, char **argv)
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Update firmware in QMI devices");
+
+    group = g_option_group_new ("selection", "Generic device selection options", "", NULL, NULL);
+    g_option_group_add_entries (group, context_selection_entries);
+    g_option_context_add_group (context, group);
 
     group = g_option_group_new ("update", "Update options", "", NULL, NULL);
     g_option_group_add_entries (group, context_update_entries);
@@ -311,18 +481,32 @@ int main (int argc, char **argv)
     }
 
     /* Run */
-    if (action_update_flag)
+    if (action_update_flag) {
+        gchar *path;
+
+        path = select_path (device_str, QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM);
+        if (!path)
+            goto out;
+        g_debug ("using cdc-wdm device: %s", path);
         result = qfu_operation_update_run ((const gchar **) image_strv,
-                                           device_str,
+                                           path,
                                            firmware_version_str,
                                            config_version_str,
                                            carrier_str,
                                            device_open_proxy_flag,
                                            device_open_mbim_flag);
-    else if (action_update_qdl_flag)
+        g_free (path);
+    } else if (action_update_qdl_flag) {
+        gchar *path;
+
+        path = select_path (serial_str, QFU_UDEV_HELPER_DEVICE_TYPE_TTY);
+        if (!path)
+            goto out;
+        g_debug ("using tty device: %s", path);
         result = qfu_operation_update_qdl_run ((const gchar **) image_strv,
-                                               serial_str);
-    else if (action_verify_flag)
+                                               path);
+        g_free (path);
+    } else if (action_verify_flag)
         result = qfu_operation_verify_run ((const gchar **) image_strv);
     else
         g_assert_not_reached ();

@@ -19,17 +19,83 @@
  * Copyright (C) 2016 Aleksander Morgado <aleksander@aleksander.es>
  */
 
+#include <stdlib.h>
+
 #include <gio/gio.h>
 #include <gudev/gudev.h>
 
 #include "qfu-udev-helpers.h"
 
-gchar *
-qfu_udev_helper_get_udev_device_sysfs_path (GUdevDevice  *device,
-                                            GError      **error)
+static const gchar *tty_subsys_list[]     = { "tty", NULL };
+static const gchar *cdc_wdm_subsys_list[] = { "usbmisc", "usb", NULL };
+
+/******************************************************************************/
+
+static GUdevDevice *
+find_udev_device_for_file (GFile   *file,
+                           GError **error)
+{
+    GUdevClient  *client = NULL;
+    GUdevDevice  *device = NULL;
+    gchar        *basename = NULL;
+    const gchar **subsys_list = NULL;
+    guint         i;
+
+    basename = g_file_get_basename (file);
+    if (!basename) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "couldn't get filename");
+        goto out;
+    }
+
+    client = g_udev_client_new (NULL);
+
+    if (g_str_has_prefix (basename, "tty"))
+        subsys_list = tty_subsys_list;
+    else if  (g_str_has_prefix (basename, "cdc-wdm"))
+        subsys_list = cdc_wdm_subsys_list;
+    else {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "unknown device file type");
+        goto out;
+    }
+
+    for (i = 0; !device && subsys_list[i]; i++)
+        device = g_udev_client_query_by_subsystem_and_name (client, subsys_list[i], basename);
+
+    if (!device) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "device not found");
+        goto out;
+    }
+
+out:
+    g_free (basename);
+    if (client)
+        g_object_unref (client);
+
+    return device;
+}
+
+static gboolean
+udev_helper_get_udev_device_details (GUdevDevice  *device,
+                                     gchar       **out_sysfs_path,
+                                     guint16      *out_vid,
+                                     guint16      *out_pid,
+                                     guint        *out_busnum,
+                                     guint        *out_devnum,
+                                     GError      **error)
 {
     GUdevDevice *parent;
-    gchar       *sysfs_path;
+    gulong       aux;
+
+    if (out_vid)
+        *out_vid = 0;
+    if (out_pid)
+        *out_pid = 0;
+    if (out_sysfs_path)
+        *out_sysfs_path = NULL;
+    if (out_busnum)
+        *out_busnum = 0;
+    if (out_devnum)
+        *out_devnum = 0;
 
     /* We need to look for the parent GUdevDevice which has a "usb_device"
      * devtype. */
@@ -49,64 +115,311 @@ qfu_udev_helper_get_udev_device_sysfs_path (GUdevDevice  *device,
 
     if (!parent) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "couldn't find parent physical USB device");
-        return NULL;
+        return FALSE;
     }
 
-    sysfs_path = g_strdup (g_udev_device_get_sysfs_path (parent));
+    if (out_sysfs_path)
+        *out_sysfs_path = g_strdup (g_udev_device_get_sysfs_path (parent));
+
+    if (out_vid) {
+        aux = strtoul (g_udev_device_get_property (parent, "ID_VENDOR_ID"), NULL, 16);
+        if (aux <= G_MAXUINT16)
+            *out_vid = (guint16) aux;
+    }
+
+    if (out_pid) {
+        aux = strtoul (g_udev_device_get_property (parent, "ID_MODEL_ID"), NULL, 16);
+        if (aux <= G_MAXUINT16)
+            *out_pid = (guint16) aux;
+    }
+
+    if (out_busnum) {
+        aux = strtoul (g_udev_device_get_property (parent, "BUSNUM"), NULL, 10);
+        if (aux <= G_MAXUINT)
+            *out_busnum = (guint16) aux;
+    }
+
+    if (out_devnum) {
+        aux = strtoul (g_udev_device_get_property (parent, "DEVNUM"), NULL, 10);
+        if (aux <= G_MAXUINT)
+            *out_devnum = (guint16) aux;
+    }
+
     g_object_unref (parent);
+    return TRUE;
+}
+
+static gboolean
+udev_helper_get_udev_interface_details (GUdevDevice  *device,
+                                        gchar       **out_driver,
+                                        GError      **error)
+{
+    GUdevDevice *parent;
+
+    /* We need to look for the parent GUdevDevice which has a "usb_interface"
+     * devtype. */
+
+    parent = g_udev_device_get_parent (device);
+    while (parent) {
+        GUdevDevice *next;
+
+        if (g_strcmp0 (g_udev_device_get_devtype (parent), "usb_interface") == 0)
+            break;
+
+        /* Check next parent */
+        next = g_udev_device_get_parent (parent);
+        g_object_unref (parent);
+        parent = next;
+    }
+
+    if (!parent) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "couldn't find parent interface USB device");
+        return FALSE;
+    }
+
+    if (out_driver)
+        *out_driver = g_strdup (g_udev_device_get_driver (parent));
+
+    g_object_unref (parent);
+    return TRUE;
+}
+
+/******************************************************************************/
+
+gchar *
+qfu_udev_helper_find_by_file (GFile    *file,
+                              GError  **error)
+{
+    GUdevDevice *device;
+    gchar       *sysfs_path = NULL;
+
+    device = find_udev_device_for_file (file, error);
+    if (device) {
+        udev_helper_get_udev_device_details (device,
+                                             &sysfs_path, NULL, NULL, NULL, NULL,
+                                             error);
+        g_object_unref (device);
+    }
     return sysfs_path;
 }
 
-gchar *
-qfu_udev_helper_get_sysfs_path (GFile               *file,
-                                const gchar *const  *subsys,
-                                GError             **error)
-{
-    guint        i;
-    GUdevClient *udev;
-    gchar       *sysfs_path = NULL;
-    gchar       *basename;
-    gboolean     matched = FALSE;
+/******************************************************************************/
 
-    /* Get the filename */
-    basename = g_file_get_basename (file);
-    if (!basename) {
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "couldn't get filename");
-        return NULL;
+static gboolean
+udev_helper_device_already_added (GPtrArray   *ptr,
+                                  const gchar *sysfs_path)
+{
+    guint i;
+
+    for (i = 0; i < ptr->len; i++) {
+        if (g_strcmp0 (g_ptr_array_index (ptr, i), sysfs_path) == 0)
+            return TRUE;
     }
+
+    return FALSE;
+}
+
+static GPtrArray *
+udev_helper_find_by_device_info_in_subsystem (GPtrArray    *sysfs_paths,
+                                              GUdevClient  *udev,
+                                              const gchar  *subsystem,
+                                              guint16       vid,
+                                              guint16       pid,
+                                              guint         busnum,
+                                              guint         devnum)
+{
+    GList     *devices;
+    GList     *iter;
+
+    devices = g_udev_client_query_by_subsystem (udev, subsystem);
+    for (iter = devices; iter; iter = g_list_next (iter)) {
+        GUdevDevice *device;
+        guint16      device_vid = 0;
+        guint16      device_pid = 0;
+        guint        device_busnum = 0;
+        guint        device_devnum = 0;
+        gchar       *device_sysfs_path = NULL;
+
+        device = G_UDEV_DEVICE (iter->data);
+
+        if (udev_helper_get_udev_device_details (device,
+                                                 &device_sysfs_path,
+                                                 &device_vid,
+                                                 &device_pid,
+                                                 &device_busnum,
+                                                 &device_devnum,
+                                                 NULL)) {
+            if ((vid == 0 || vid == device_vid) &&
+                (pid == 0 || pid == device_pid) &&
+                (busnum == 0 || busnum == device_busnum) &&
+                (devnum == 0 || devnum == device_devnum) &&
+                (!udev_helper_device_already_added (sysfs_paths, device_sysfs_path)))
+                g_ptr_array_add (sysfs_paths, device_sysfs_path);
+            else
+                g_free (device_sysfs_path);
+        }
+
+        g_object_unref (device);
+    }
+    g_list_free (devices);
+    return sysfs_paths;
+}
+
+gchar *
+qfu_udev_helper_find_by_device_info (guint16   vid,
+                                     guint16   pid,
+                                     guint     busnum,
+                                     guint     devnum,
+                                     GError  **error)
+{
+    GUdevClient *udev;
+    guint        i;
+    GPtrArray   *sysfs_paths;
+    GString     *match_str;
+    gchar       *sysfs_path = NULL;
+
+    sysfs_paths = g_ptr_array_new ();
+    udev        = g_udev_client_new (NULL);
+    match_str   = g_string_new ("");
+
+    if (vid != 0)
+        g_string_append_printf (match_str, "vid 0x%04x", vid);
+    if (pid != 0)
+        g_string_append_printf (match_str, "%spid 0x%04x", match_str->len > 0 ? ", " : "", pid);
+    if (busnum != 0)
+        g_string_append_printf (match_str, "%sbus %03u", match_str->len > 0 ? ", " : "", busnum);
+    if (devnum != 0)
+        g_string_append_printf (match_str, "%sdev %03u", match_str->len > 0 ? ", " : "", devnum);
+    g_assert (match_str->len > 0);
+
+    for (i = 0; tty_subsys_list[i]; i++)
+        sysfs_paths = udev_helper_find_by_device_info_in_subsystem (sysfs_paths,
+                                                                    udev,
+                                                                    tty_subsys_list[i],
+                                                                    vid, pid, busnum, devnum);
+
+    for (i = 0; cdc_wdm_subsys_list[i]; i++)
+        sysfs_paths = udev_helper_find_by_device_info_in_subsystem (sysfs_paths,
+                                                                    udev,
+                                                                    cdc_wdm_subsys_list[i],
+                                                                    vid, pid, busnum, devnum);
+
+    for (i = 0; i < sysfs_paths->len; i++)
+        g_debug ("[%s] sysfs path: %s", match_str->str, (gchar *) g_ptr_array_index (sysfs_paths, i));
+
+    if (sysfs_paths->len == 0) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "no device found with matching criteria: %s",
+                     match_str->str);
+        goto out;
+    }
+
+    if (sysfs_paths->len > 1) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "multiple devices (%u) found with matching criteria: %s",
+                     sysfs_paths->len, match_str->str);
+        goto out;
+    }
+
+    sysfs_path = g_strdup (g_ptr_array_index (sysfs_paths, 0));
+
+out:
+
+    g_ptr_array_unref (sysfs_paths);
+    g_string_free (match_str, TRUE);
+    g_object_unref (udev);
+
+    return sysfs_path;
+}
+
+/******************************************************************************/
+
+static GFile *
+device_matches_sysfs_and_type (GUdevDevice             *device,
+                               const gchar             *sysfs_path,
+                               QfuUdevHelperDeviceType  type)
+{
+    GFile *file = NULL;
+    gchar *device_sysfs_path = NULL;
+    gchar *device_driver = NULL;
+    gchar *device_path = NULL;
+
+    if (!udev_helper_get_udev_device_details (device,
+                                              &device_sysfs_path, NULL, NULL, NULL, NULL,
+                                              NULL))
+    if (!device_sysfs_path)
+        goto out;
+
+    if (g_strcmp0 (device_sysfs_path, sysfs_path) != 0)
+        goto out;
+
+    if (!udev_helper_get_udev_interface_details (device,
+                                                 &device_driver,
+                                                 NULL))
+        goto out;
+
+    switch (type) {
+    case QFU_UDEV_HELPER_DEVICE_TYPE_TTY:
+        if (g_strcmp0 (device_driver, "qcserial") != 0)
+            goto out;
+        break;
+    case QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM:
+        if (g_strcmp0 (device_driver, "qmi_wwan") != 0 && g_strcmp0 (device_driver, "cdc_mbim") != 0)
+            goto out;
+        break;
+    default:
+        g_assert_not_reached ();
+    }
+
+    device_path = g_strdup_printf ("/dev/%s", g_udev_device_get_name (device));
+    file = g_file_new_for_path (device_path);
+    g_free (device_path);
+
+out:
+    g_free (device_sysfs_path);
+    g_free (device_driver);
+    return file;
+}
+
+GList *
+qfu_udev_helper_list_devices (QfuUdevHelperDeviceType  device_type,
+                              const gchar             *sysfs_path)
+{
+    GUdevClient  *udev;
+    const gchar **subsys_list = NULL;
+    guint         i;
+    GList        *files = NULL;
 
     udev = g_udev_client_new (NULL);
 
-    /* Note: we'll only get devices reported in either one subsystem or the
-     * other, never in both */
-    for (i = 0; !matched && subsys[i]; i++) {
+    switch (device_type) {
+    case QFU_UDEV_HELPER_DEVICE_TYPE_TTY:
+        subsys_list = tty_subsys_list;
+        break;
+    case QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM:
+        subsys_list = cdc_wdm_subsys_list;
+        break;
+    default:
+        g_assert_not_reached ();
+    }
+
+    for (i = 0; subsys_list[i]; i++) {
         GList *devices, *iter;
 
-        devices = g_udev_client_query_by_subsystem (udev, subsys[i]);
-        for (iter = devices; !matched && iter; iter = g_list_next (iter)) {
-            const gchar *name;
-            GUdevDevice *device;
+        devices = g_udev_client_query_by_subsystem (udev, subsys_list[i]);
+        for (iter = devices; iter; iter = g_list_next (iter)) {
+            GFile *file;
 
-            device = G_UDEV_DEVICE (iter->data);
-            name = g_udev_device_get_name (device);
-            if (g_strcmp0 (name, basename) != 0)
-                continue;
-
-            /* We'll halt the search once this has been processed */
-            matched = TRUE;
-            sysfs_path = qfu_udev_helper_get_udev_device_sysfs_path (device, error);
+            file = device_matches_sysfs_and_type (G_UDEV_DEVICE (iter->data), sysfs_path, device_type);
+            if (file)
+                files = g_list_prepend (files, file);
+            g_object_unref (G_OBJECT (iter->data));
         }
-        g_list_free_full (devices, (GDestroyNotify) g_object_unref);
+        g_list_free (devices);
     }
 
-    if (!matched) {
-        g_assert (!sysfs_path);
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "couldn't find device");
-    }
-
-    g_free (basename);
     g_object_unref (udev);
-    return sysfs_path;
+    return files;
 }
 
 /******************************************************************************/
@@ -114,12 +427,12 @@ qfu_udev_helper_get_sysfs_path (GFile               *file,
 #define WAIT_FOR_DEVICE_TIMEOUT_SECS 60
 
 typedef struct {
-    QfuUdevHelperWaitForDeviceType  device_type;
-    GUdevClient                    *udev;
-    gchar                          *sysfs_path;
-    guint                           timeout_id;
-    gulong                          uevent_id;
-    gulong                          cancellable_id;
+    QfuUdevHelperDeviceType  device_type;
+    GUdevClient             *udev;
+    gchar                   *sysfs_path;
+    guint                    timeout_id;
+    gulong                   uevent_id;
+    gulong                   cancellable_id;
 } WaitForDeviceContext;
 
 static void
@@ -141,39 +454,6 @@ qfu_udev_helper_wait_for_device_finish (GAsyncResult  *res,
     return G_FILE (g_task_propagate_pointer (G_TASK (res), error));
 }
 
-static gchar *
-udev_helper_get_udev_device_driver (GUdevDevice  *device,
-                                    GError      **error)
-{
-    GUdevDevice *parent;
-    gchar       *driver;
-
-    /* We need to look for the parent GUdevDevice which has a "usb_interface"
-     * devtype. */
-
-    parent = g_udev_device_get_parent (device);
-    while (parent) {
-        GUdevDevice *next;
-
-        if (g_strcmp0 (g_udev_device_get_devtype (parent), "usb_interface") == 0)
-            break;
-
-        /* Check next parent */
-        next = g_udev_device_get_parent (parent);
-        g_object_unref (parent);
-        parent = next;
-    }
-
-    if (!parent) {
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "couldn't find parent interface USB device");
-        return NULL;
-    }
-
-    driver = g_strdup (g_udev_device_get_driver (parent));
-    g_object_unref (parent);
-    return driver;
-}
-
 static void
 handle_uevent (GUdevClient *client,
                const char  *action,
@@ -181,42 +461,18 @@ handle_uevent (GUdevClient *client,
                GTask       *task)
 {
     WaitForDeviceContext *ctx;
-    gchar                *sysfs_path = NULL;
-    gchar                *driver = NULL;
-    gchar                *path;
+    GFile                *file;
 
     ctx = (WaitForDeviceContext *) g_task_get_task_data (task);
 
     g_debug ("[qfu-udev] event: %s %s", action, g_udev_device_get_name (device));
 
     if (!g_str_equal (action, "add") && !g_str_equal (action, "move") && !g_str_equal (action, "change"))
-        goto out;
+        return;
 
-    sysfs_path = qfu_udev_helper_get_udev_device_sysfs_path (device, NULL);
-    if (!sysfs_path)
-        goto out;
-    g_debug ("[qfu-udev]   sysfs path: %s", sysfs_path);
-
-    if (g_strcmp0 (sysfs_path, ctx->sysfs_path) != 0)
-        goto out;
-
-    driver = udev_helper_get_udev_device_driver (device, NULL);
-    if (!driver)
-        goto out;
-    g_debug ("[qfu-udev]   driver: %s", driver);
-
-    switch (ctx->device_type) {
-    case QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_TTY:
-        if (g_strcmp0 (driver, "qcserial") != 0)
-            goto out;
-        break;
-    case QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM:
-        if (g_strcmp0 (driver, "qmi_wwan") != 0 && g_strcmp0 (driver, "cdc_mbim") != 0)
-            goto out;
-        break;
-    default:
-        g_assert_not_reached ();
-    }
+    file = device_matches_sysfs_and_type (device, ctx->sysfs_path, ctx->device_type);
+    if (!file)
+        return;
 
     g_debug ("[qfu-udev]   waiting device matched");
 
@@ -230,14 +486,7 @@ handle_uevent (GUdevClient *client,
     g_source_remove (ctx->timeout_id);
     ctx->timeout_id = 0;
 
-    path = g_strdup_printf ("/dev/%s", g_udev_device_get_name (device));
-    g_task_return_pointer (task, g_file_new_for_path (path), g_object_unref);
-    g_object_unref (task);
-    g_free (path);
-
-out:
-    g_free (sysfs_path);
-    g_free (driver);
+    g_task_return_pointer (task, file, g_object_unref);
 }
 
 static gboolean
@@ -288,14 +537,12 @@ wait_for_device_cancelled (GCancellable *cancellable,
 }
 
 void
-qfu_udev_helper_wait_for_device (QfuUdevHelperWaitForDeviceType  device_type,
-                                 const gchar                    *sysfs_path,
-                                 GCancellable                   *cancellable,
-                                 GAsyncReadyCallback             callback,
-                                 gpointer                        user_data)
+qfu_udev_helper_wait_for_device (QfuUdevHelperDeviceType  device_type,
+                                 const gchar             *sysfs_path,
+                                 GCancellable            *cancellable,
+                                 GAsyncReadyCallback      callback,
+                                 gpointer                 user_data)
 {
-    static const gchar   *tty_subsys_monitor[]     = { "tty", NULL };
-    static const gchar   *cdc_wdm_subsys_monitor[] = { "usbmisc", "usb", NULL };
     GTask                *task;
     WaitForDeviceContext *ctx;
 
@@ -303,10 +550,10 @@ qfu_udev_helper_wait_for_device (QfuUdevHelperWaitForDeviceType  device_type,
     ctx->device_type = device_type;
     ctx->sysfs_path = g_strdup (sysfs_path);
 
-    if (ctx->device_type == QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_TTY)
-        ctx->udev = g_udev_client_new (tty_subsys_monitor);
-    else if (ctx->device_type == QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM)
-        ctx->udev = g_udev_client_new (cdc_wdm_subsys_monitor);
+    if (ctx->device_type == QFU_UDEV_HELPER_DEVICE_TYPE_TTY)
+        ctx->udev = g_udev_client_new (tty_subsys_list);
+    else if (ctx->device_type == QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM)
+        ctx->udev = g_udev_client_new (cdc_wdm_subsys_list);
     else
         g_assert_not_reached ();
 

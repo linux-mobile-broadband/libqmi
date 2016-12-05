@@ -27,24 +27,29 @@
 
 G_BEGIN_DECLS
 
-gchar *qfu_udev_helper_get_udev_device_sysfs_path (GUdevDevice         *device,
-                                                   GError             **error);
-gchar *qfu_udev_helper_get_sysfs_path             (GFile               *file,
-                                                   const gchar *const  *subsys,
-                                                   GError             **error);
+gchar *qfu_udev_helper_find_by_file          (GFile    *file,
+                                              GError  **error);
+gchar *qfu_udev_helper_find_by_device_info   (guint16   vid,
+                                              guint16   pid,
+                                              guint     busnum,
+                                              guint     devnum,
+                                              GError  **error);
 
 typedef enum {
-    QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_TTY,
-    QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM,
-} QfuUdevHelperWaitForDeviceType;
+    QFU_UDEV_HELPER_DEVICE_TYPE_TTY,
+    QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM,
+} QfuUdevHelperDeviceType;
 
-void   qfu_udev_helper_wait_for_device        (QfuUdevHelperWaitForDeviceType   device_type,
-                                               const gchar                     *sysfs_path,
-                                               GCancellable                    *cancellable,
-                                               GAsyncReadyCallback              callback,
-                                               gpointer                         user_data);
-GFile *qfu_udev_helper_wait_for_device_finish (GAsyncResult                    *res,
-                                               GError                         **error);
+GList *qfu_udev_helper_list_devices           (QfuUdevHelperDeviceType   device_type,
+                                               const gchar              *sysfs_path);
+
+void   qfu_udev_helper_wait_for_device        (QfuUdevHelperDeviceType   device_type,
+                                               const gchar              *sysfs_path,
+                                               GCancellable             *cancellable,
+                                               GAsyncReadyCallback       callback,
+                                               gpointer                  user_data);
+GFile *qfu_udev_helper_wait_for_device_finish (GAsyncResult             *res,
+                                               GError                  **error);
 
 G_END_DECLS
 
