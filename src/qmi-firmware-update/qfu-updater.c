@@ -35,15 +35,21 @@
 
 G_DEFINE_TYPE (QfuUpdater, qfu_updater, G_TYPE_OBJECT)
 
+typedef enum {
+    UPDATER_TYPE_UNKNOWN,
+    UPDATER_TYPE_GENERIC,
+    UPDATER_TYPE_QDL,
+} UpdaterType;
+
 struct _QfuUpdaterPrivate {
-    /* Inputs */
-    GFile    *cdc_wdm_file;
-    gchar    *firmware_version;
-    gchar    *config_version;
-    gchar    *carrier;
-    GList    *image_file_list;
-    gboolean  device_open_proxy;
-    gboolean  device_open_mbim;
+    UpdaterType  type;
+    GFile       *cdc_wdm_file;
+    GFile       *serial_file;
+    gchar       *firmware_version;
+    gchar       *config_version;
+    gchar       *carrier;
+    gboolean     device_open_proxy;
+    gboolean     device_open_mbim;
 };
 
 static const gchar *cdc_wdm_subsys[] = { "usbmisc", "usb", NULL };
@@ -73,31 +79,33 @@ typedef enum {
 } RunContextStep;
 
 typedef struct {
+    /* Device files and common USB sysfs path*/
+    GFile *cdc_wdm_file;
+    GFile *serial_file;
+    gchar *sysfs_path;
+
     /* Context step */
     RunContextStep step;
-    /* List of pending QfuImages to download */
-    GList *pending_images;
-    /* Current image being downloaded */
+
+    /* List of pending QfuImages to download, and the current one being
+     * processed. */
+    GList    *pending_images;
     QfuImage *current_image;
-    /* USB info */
-    gchar *sysfs_path;
+
     /* QMI device and client */
     QmiDevice    *qmi_device;
     QmiClientDms *qmi_client;
     gint          qmi_client_retries;
-    /* TTY file */
-    GFile *tty;
+
     /* QDL device */
-    QfuQdlDevice *qdl;
+    QfuQdlDevice *qdl_device;
 } RunContext;
 
 static void
 run_context_free (RunContext *ctx)
 {
-    if (ctx->qdl)
-        g_object_unref (&ctx->qdl);
-    if (ctx->tty)
-        g_object_unref (ctx->tty);
+    if (ctx->qdl_device)
+        g_object_unref (&ctx->qdl_device);
     if (ctx->qmi_client) {
         g_assert (ctx->qmi_device);
         qmi_device_release_client (ctx->qmi_device,
@@ -114,6 +122,10 @@ run_context_free (RunContext *ctx)
         g_object_unref (ctx->current_image);
     g_list_free_full (ctx->pending_images, (GDestroyNotify) g_object_unref);
     g_free (ctx->sysfs_path);
+    if (ctx->serial_file)
+        g_object_unref (ctx->serial_file);
+    if (ctx->cdc_wdm_file)
+        g_object_unref (ctx->cdc_wdm_file);
     g_slice_free (RunContext, ctx);
 }
 
@@ -153,21 +165,22 @@ wait_for_cdc_wdm_ready (gpointer      unused,
 {
     GError     *error = NULL;
     RunContext *ctx;
-    gchar      *tty_path;
+    gchar      *path;
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
-    ctx->tty = qfu_udev_helper_wait_for_device_finish (res, &error);
-    if (!ctx->tty) {
+    g_assert (!ctx->cdc_wdm_file);
+    ctx->cdc_wdm_file = qfu_udev_helper_wait_for_device_finish (res, &error);
+    if (!ctx->cdc_wdm_file) {
         g_prefix_error (&error, "error waiting for cdc-wdm: ");
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
 
-    tty_path = g_file_get_path (ctx->tty);
-    g_debug ("[qfu-updater] cdc-wdm device found: %s", tty_path);
-    g_free (tty_path);
+    path = g_file_get_path (ctx->cdc_wdm_file);
+    g_debug ("[qfu-updater] cdc-wdm device found: %s", path);
+    g_free (path);
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -179,8 +192,6 @@ run_context_step_wait_for_cdc_wdm (GTask *task)
     RunContext *ctx;
 
     ctx = (RunContext *) g_task_get_task_data (task);
-
-    g_print ("rebooting in normal mode...\n");
 
     g_debug ("[qfu-updater] now waiting for cdc-wdm device...");
     qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_WAIT_FOR_DEVICE_TYPE_CDC_WDM,
@@ -194,14 +205,26 @@ static void
 run_context_step_cleanup_qdl_device (GTask *task)
 {
     RunContext *ctx;
+    QfuUpdater *self;
 
     ctx = (RunContext *) g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
 
-    g_assert (ctx->qdl);
+    g_assert (ctx->qdl_device);
+    g_assert (ctx->serial_file);
 
     g_debug ("[qfu-updater] QDL reset");
-    qfu_qdl_device_reset (ctx->qdl, g_task_get_cancellable (task), NULL);
-    g_clear_object (&ctx->qdl);
+    qfu_qdl_device_reset (ctx->qdl_device, g_task_get_cancellable (task), NULL);
+    g_clear_object (&ctx->qdl_device);
+    g_clear_object (&ctx->serial_file);
+
+    g_print ("rebooting in normal mode...\n");
+
+    /* If we were running in QDL mode, we don't even wait for the reboot to finish */
+    if (self->priv->type == UPDATER_TYPE_QDL) {
+        run_context_step_next (task, RUN_CONTEXT_STEP_LAST);
+        return;
+    }
 
     run_context_step_next (task, ctx->step + 1);
 }
@@ -251,19 +274,19 @@ run_context_step_download_image (GTask *task)
              aux);
     g_free (aux);
 
-    if (!qfu_qdl_device_hello (ctx->qdl, cancellable, &error)) {
+    if (!qfu_qdl_device_hello (ctx->qdl_device, cancellable, &error)) {
         g_prefix_error (&error, "couldn't send greetings to device: ");
         goto out;
     }
 
-    if (!qfu_qdl_device_ufopen (ctx->qdl, ctx->current_image, cancellable, &error)) {
+    if (!qfu_qdl_device_ufopen (ctx->qdl_device, ctx->current_image, cancellable, &error)) {
         g_prefix_error (&error, "couldn't open session: ");
         goto out;
     }
 
     n_chunks = qfu_image_get_n_data_chunks (ctx->current_image);
     for (sequence = 0; sequence < n_chunks; sequence++) {
-        if (!qfu_qdl_device_ufwrite (ctx->qdl, ctx->current_image, sequence, cancellable, &error)) {
+        if (!qfu_qdl_device_ufwrite (ctx->qdl_device, ctx->current_image, sequence, cancellable, &error)) {
             g_prefix_error (&error, "couldn't write in session: ");
             goto out;
         }
@@ -271,7 +294,7 @@ run_context_step_download_image (GTask *task)
 
     g_debug ("[qfu-updater] all chunks ack-ed");
 
-    if (!qfu_qdl_device_ufclose (ctx->qdl, cancellable, &error)) {
+    if (!qfu_qdl_device_ufclose (ctx->qdl_device, cancellable, &error)) {
         g_prefix_error (&error, "couldn't close session: ");
         goto out;
     }
@@ -325,9 +348,10 @@ run_context_step_qdl_device (GTask *task)
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
-    g_assert (!ctx->qdl);
-    ctx->qdl = qfu_qdl_device_new (ctx->tty, g_task_get_cancellable (task), &error);
-    if (!ctx->qdl) {
+    g_assert (ctx->serial_file);
+    g_assert (!ctx->qdl_device);
+    ctx->qdl_device = qfu_qdl_device_new (ctx->serial_file, g_task_get_cancellable (task), &error);
+    if (!ctx->qdl_device) {
         g_prefix_error (&error, "error creating device: ");
         g_task_return_error (task, error);
         g_object_unref (task);
@@ -344,21 +368,22 @@ wait_for_tty_ready (gpointer      unused,
 {
     GError     *error = NULL;
     RunContext *ctx;
-    gchar      *tty_path;
+    gchar      *path;
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
-    ctx->tty = qfu_udev_helper_wait_for_device_finish (res, &error);
-    if (!ctx->tty) {
+    g_assert (!ctx->serial_file);
+    ctx->serial_file = qfu_udev_helper_wait_for_device_finish (res, &error);
+    if (!ctx->serial_file) {
         g_prefix_error (&error, "error waiting for TTY: ");
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
 
-    tty_path = g_file_get_path (ctx->tty);
-    g_debug ("[qfu-updater] TTY device found: %s", tty_path);
-    g_free (tty_path);
+    path = g_file_get_path (ctx->serial_file);
+    g_debug ("[qfu-updater] TTY device found: %s", path);
+    g_free (path);
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -410,6 +435,7 @@ qmi_client_release_ready (QmiDevice    *device,
     g_debug ("[qfu-updater] QMI device closed");
 
     g_clear_object (&ctx->qmi_device);
+    g_clear_object (&ctx->cdc_wdm_file);
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -754,6 +780,7 @@ run_context_step_qmi_device (GTask *task)
     self = g_task_get_source_object (task);
 
     g_debug ("[qfu-updater] creating QMI device...");
+    g_assert (self->priv->cdc_wdm_file);
     qmi_device_new (self->priv->cdc_wdm_file,
                     g_task_get_cancellable (task),
                     (GAsyncReadyCallback) qmi_device_ready,
@@ -769,6 +796,8 @@ run_context_step_usb_info (GTask *task)
 
     ctx = (RunContext *) g_task_get_task_data (task);
     self = g_task_get_source_object (task);
+
+    g_assert (self->priv->cdc_wdm_file);
 
     g_debug ("[qfu-updater] looking for device sysfs path...");
     ctx->sysfs_path = qfu_udev_helper_get_sysfs_path (self->priv->cdc_wdm_file, cdc_wdm_subsys, &error);
@@ -835,6 +864,7 @@ image_sort_by_size (QfuImage *a, QfuImage *b)
 
 void
 qfu_updater_run (QfuUpdater          *self,
+                 GList               *image_file_list,
                  GCancellable        *cancellable,
                  GAsyncReadyCallback  callback,
                  gpointer             user_data)
@@ -843,13 +873,15 @@ qfu_updater_run (QfuUpdater          *self,
     GTask       *task;
     GList       *l;
 
+    g_assert (image_file_list);
+
     ctx = g_slice_new0 (RunContext);
 
     task = g_task_new (self, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify) run_context_free);
 
     /* Build QfuImage objects for each image file given */
-    for (l = self->priv->image_file_list; l; l = g_list_next (l)) {
+    for (l = image_file_list; l; l = g_list_next (l)) {
         GError   *error = NULL;
         QfuImage *image;
 
@@ -866,8 +898,19 @@ qfu_updater_run (QfuUpdater          *self,
      * the use case anyway, first flash e.g. the .cwe file, then the .nvu one. */
     ctx->pending_images = g_list_sort (ctx->pending_images, (GCompareFunc) image_sort_by_size);
 
-    /* Define amount of retries trying to allocate a QMI DMS client */
-    ctx->qmi_client_retries = QMI_CLIENT_RETRIES;
+    switch (self->priv->type) {
+    case UPDATER_TYPE_GENERIC:
+        ctx->step = RUN_CONTEXT_STEP_USB_INFO;
+        ctx->qmi_client_retries = QMI_CLIENT_RETRIES;
+        ctx->cdc_wdm_file = g_object_ref (self->priv->cdc_wdm_file);
+        break;
+    case UPDATER_TYPE_QDL:
+        ctx->step = RUN_CONTEXT_STEP_QDL_DEVICE;
+        ctx->serial_file = g_object_ref (self->priv->serial_file);
+        break;
+    default:
+        g_assert_not_reached ();
+    }
 
     run_context_step (task);
 }
@@ -879,23 +922,35 @@ qfu_updater_new (GFile       *cdc_wdm_file,
                  const gchar *firmware_version,
                  const gchar *config_version,
                  const gchar *carrier,
-                 GList       *image_file_list,
                  gboolean     device_open_proxy,
                  gboolean     device_open_mbim)
 {
     QfuUpdater *self;
 
     g_assert (G_IS_FILE (cdc_wdm_file));
-    g_assert (image_file_list);
 
     self = g_object_new (QFU_TYPE_UPDATER, NULL);
+    self->priv->type = UPDATER_TYPE_GENERIC;
     self->priv->cdc_wdm_file = g_object_ref (cdc_wdm_file);
     self->priv->device_open_proxy = device_open_proxy;
     self->priv->device_open_mbim = device_open_mbim;
     self->priv->firmware_version = g_strdup (firmware_version);
     self->priv->config_version = g_strdup (config_version);
     self->priv->carrier = g_strdup (carrier);
-    self->priv->image_file_list = g_list_copy_deep (image_file_list, (GCopyFunc) g_object_ref, NULL);
+
+    return self;
+}
+
+QfuUpdater *
+qfu_updater_new_qdl (GFile *serial_file)
+{
+    QfuUpdater *self;
+
+    g_assert (G_IS_FILE (serial_file));
+
+    self = g_object_new (QFU_TYPE_UPDATER, NULL);
+    self->priv->type = UPDATER_TYPE_QDL;
+    self->priv->serial_file = g_object_ref (serial_file);
 
     return self;
 }
@@ -904,6 +959,7 @@ static void
 qfu_updater_init (QfuUpdater *self)
 {
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, QFU_TYPE_UPDATER, QfuUpdaterPrivate);
+    self->priv->type = UPDATER_TYPE_UNKNOWN;
 }
 
 static void
@@ -911,11 +967,8 @@ dispose (GObject *object)
 {
     QfuUpdater *self = QFU_UPDATER (object);
 
+    g_clear_object (&self->priv->serial_file);
     g_clear_object (&self->priv->cdc_wdm_file);
-    if (self->priv->image_file_list) {
-        g_list_free_full (self->priv->image_file_list, (GDestroyNotify) g_object_unref);
-        self->priv->image_file_list = NULL;
-    }
 
     G_OBJECT_CLASS (qfu_updater_parent_class)->dispose (object);
 }

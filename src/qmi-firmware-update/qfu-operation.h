@@ -26,14 +26,16 @@
 
 G_BEGIN_DECLS
 
-gboolean qfu_operation_update_run (const gchar **images,
-                                   const gchar  *device,
-                                   const gchar  *firmware_version,
-                                   const gchar  *config_version,
-                                   const gchar  *carrier,
-                                   gboolean      device_open_proxy,
-                                   gboolean      device_open_mbim);
-gboolean qfu_operation_verify_run (const gchar **images);
+gboolean qfu_operation_update_run     (const gchar **images,
+                                       const gchar  *device,
+                                       const gchar  *firmware_version,
+                                       const gchar  *config_version,
+                                       const gchar  *carrier,
+                                       gboolean      device_open_proxy,
+                                       gboolean      device_open_mbim);
+gboolean qfu_operation_update_qdl_run (const gchar **images,
+                                       const gchar  *serial);
+gboolean qfu_operation_verify_run     (const gchar **images);
 
 G_END_DECLS
 

@@ -49,6 +49,10 @@ static gchar     *carrier_str;
 static gboolean   device_open_proxy_flag;
 static gboolean   device_open_mbim_flag;
 
+/* Update (QDL mode) */
+static gboolean   action_update_qdl_flag;
+static gchar     *serial_str;
+
 /* Verify */
 static gboolean   action_verify_flag;;
 
@@ -87,6 +91,18 @@ static GOptionEntry context_update_entries[] = {
     { "device-open-mbim", 0, 0, G_OPTION_ARG_NONE, &device_open_mbim_flag,
       "Open an MBIM device with EXT_QMUX support.",
       NULL
+    },
+    { NULL }
+};
+
+static GOptionEntry context_update_qdl_entries[] = {
+    { "update-qdl", 'U', 0, G_OPTION_ARG_NONE, &action_update_qdl_flag,
+      "Launch firmware update process in QDL mode.",
+      NULL
+    },
+    { "serial", 's', 0, G_OPTION_ARG_FILENAME, &serial_str,
+      "Specify QDL serial device path (e.g. /dev/ttyUSB0).",
+      "[PATH]"
     },
     { NULL }
 };
@@ -242,6 +258,10 @@ int main (int argc, char **argv)
     g_option_group_add_entries (group, context_update_entries);
     g_option_context_add_group (context, group);
 
+    group = g_option_group_new ("update-qdl", "Update options (QDL mode)", "", NULL, NULL);
+    g_option_group_add_entries (group, context_update_qdl_entries);
+    g_option_context_add_group (context, group);
+
     group = g_option_group_new ("verify", "Verify options", "", NULL, NULL);
     g_option_group_add_entries (group, context_verify_entries);
     g_option_context_add_group (context, group);
@@ -274,7 +294,7 @@ int main (int argc, char **argv)
         qmi_utils_set_traces_enabled (TRUE);
 
     /* We don't allow multiple actions at the same time */
-    n_actions = (action_verify_flag + action_update_flag);
+    n_actions = (action_verify_flag + action_update_flag + action_update_qdl_flag);
     if (n_actions == 0) {
         g_printerr ("error: no actions specified\n");
         goto out;
@@ -299,6 +319,9 @@ int main (int argc, char **argv)
                                            carrier_str,
                                            device_open_proxy_flag,
                                            device_open_mbim_flag);
+    else if (action_update_qdl_flag)
+        result = qfu_operation_update_qdl_run ((const gchar **) image_strv,
+                                               serial_str);
     else if (action_verify_flag)
         result = qfu_operation_verify_run ((const gchar **) image_strv);
     else

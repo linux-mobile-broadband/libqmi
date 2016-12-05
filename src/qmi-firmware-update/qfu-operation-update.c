@@ -72,50 +72,20 @@ run_ready (QfuUpdater        *updater,
     g_idle_add ((GSourceFunc) g_main_loop_quit, operation->loop);
 }
 
-gboolean
-qfu_operation_update_run (const gchar **images,
-                          const gchar  *device,
-                          const gchar  *firmware_version,
-                          const gchar  *config_version,
-                          const gchar  *carrier,
-                          gboolean      device_open_proxy,
-                          gboolean      device_open_mbim)
+static gboolean
+operation_update_run (QfuUpdater   *updater,
+                      const gchar **images)
 {
     UpdateOperation operation = {
         .loop        = NULL,
         .cancellable = NULL,
         .result      = FALSE,
     };
-    QfuUpdater *updater = NULL;
-    GFile      *device_file = NULL;
-    GList      *image_file_list = NULL;
-    guint       i;
+    GList *image_file_list = NULL;
+    guint  i;
 
     g_assert (images);
-
-    /* No device path given? */
-    if (!device) {
-        g_printerr ("error: no device path specified\n");
-        goto out;
-    }
-
-    /* No firmware version given? */
-    if (!firmware_version) {
-        g_printerr ("error: no firmware version specified\n");
-        goto out;
-    }
-
-    /* No config version given? */
-    if (!config_version) {
-        g_printerr ("error: no config version specified\n");
-        goto out;
-    }
-
-    /* No carrier given? */
-    if (!carrier) {
-        g_printerr ("error: no carrier specified\n");
-        goto out;
-    }
+    g_assert (QFU_IS_UPDATER (updater));
 
     /* Create runtime context */
     operation.loop        = g_main_loop_new (NULL, FALSE);
@@ -130,29 +100,99 @@ qfu_operation_update_run (const gchar **images,
     for (i = 0; images[i]; i++)
         image_file_list = g_list_append (image_file_list, g_file_new_for_commandline_arg (images[i]));
 
-    /* Create updater */
-    device_file = g_file_new_for_commandline_arg (device);
-    updater = qfu_updater_new (device_file,
-                               firmware_version,
-                               config_version,
-                               carrier,
-                               image_file_list,
-                               device_open_proxy,
-                               device_open_mbim);
-    g_object_unref (device_file);
-    g_list_free_full (image_file_list, (GDestroyNotify) g_object_unref);
-
     /* Run! */
-    qfu_updater_run (updater, operation.cancellable, (GAsyncReadyCallback) run_ready, &operation);
+    qfu_updater_run (updater, image_file_list, operation.cancellable, (GAsyncReadyCallback) run_ready, &operation);
+    g_list_free_full (image_file_list, (GDestroyNotify) g_object_unref);
     g_main_loop_run (operation.loop);
 
-out:
-    if (updater)
-        g_object_unref (updater);
     if (operation.cancellable)
         g_object_unref (operation.cancellable);
     if (operation.loop)
         g_main_loop_unref (operation.loop);
 
     return operation.result;
+}
+
+gboolean
+qfu_operation_update_run (const gchar **images,
+                          const gchar  *device,
+                          const gchar  *firmware_version,
+                          const gchar  *config_version,
+                          const gchar  *carrier,
+                          gboolean      device_open_proxy,
+                          gboolean      device_open_mbim)
+{
+    QfuUpdater *updater = NULL;
+    GFile      *device_file = NULL;
+    gboolean    result;
+
+    g_assert (images);
+
+    /* No device path given? */
+    if (!device) {
+        g_printerr ("error: no device path specified\n");
+        return FALSE;
+    }
+
+    /* No firmware version given? */
+    if (!firmware_version) {
+        g_printerr ("error: no firmware version specified\n");
+        return FALSE;
+    }
+
+    /* No config version given? */
+    if (!config_version) {
+        g_printerr ("error: no config version specified\n");
+        return FALSE;
+    }
+
+    /* No carrier given? */
+    if (!carrier) {
+        g_printerr ("error: no carrier specified\n");
+        return FALSE;
+    }
+
+    /* Create updater */
+    device_file = g_file_new_for_commandline_arg (device);
+    updater = qfu_updater_new (device_file,
+                               firmware_version,
+                               config_version,
+                               carrier,
+                               device_open_proxy,
+                               device_open_mbim);
+    g_object_unref (device_file);
+
+    /* Run! */
+    result = operation_update_run (updater, images);
+
+    g_object_unref (updater);
+    return result;
+}
+
+gboolean
+qfu_operation_update_qdl_run (const gchar **images,
+                              const gchar  *serial)
+{
+    QfuUpdater *updater = NULL;
+    GFile      *serial_file = NULL;
+    gboolean    result;
+
+    g_assert (images);
+
+    /* No device path given? */
+    if (!serial) {
+        g_printerr ("error: no serial path specified\n");
+        return FALSE;
+    }
+
+    /* Create updater */
+    serial_file = g_file_new_for_commandline_arg (serial);
+    updater = qfu_updater_new_qdl (serial_file);
+    g_object_unref (serial_file);
+
+    /* Run! */
+    result = operation_update_run (updater, images);
+
+    g_object_unref (updater);
+    return result;
 }

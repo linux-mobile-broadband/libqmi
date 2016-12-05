@@ -52,10 +52,11 @@ QfuUpdater *qfu_updater_new        (GFile                *cdc_wdm_file,
                                     const gchar          *firmware_version,
                                     const gchar          *config_version,
                                     const gchar          *carrier,
-                                    GList                *image_file_list,
                                     gboolean              device_open_proxy,
                                     gboolean              device_open_mbim);
+QfuUpdater *qfu_updater_new_qdl    (GFile                *serial_file);
 void        qfu_updater_run        (QfuUpdater           *self,
+                                    GList                *image_file_list,
                                     GCancellable         *cancellable,
                                     GAsyncReadyCallback   callback,
                                     gpointer              user_data);
