@@ -58,6 +58,7 @@ static GParamSpec *properties[PROP_LAST];
 struct _QfuQdlDevicePrivate {
     GFile      *file;
     gint        fd;
+    guint       qdl_version;
     GByteArray *buffer;
     GByteArray *secondary_buffer;
 };
@@ -583,6 +584,38 @@ qfu_qdl_device_ufclose (QfuQdlDevice  *self,
 /******************************************************************************/
 
 gboolean
+qfu_qdl_device_hello (QfuQdlDevice  *self,
+                      GCancellable  *cancellable,
+                      GError       **error)
+{
+    gsize   reqlen;
+    gssize  rsplen;
+    guint8 *rsp = NULL;
+
+    g_assert (self->priv->qdl_version > 0);
+
+    /* If no error, we assume version is found */
+    reqlen = qfu_qdl_request_hello_build (self->priv->buffer->data, self->priv->buffer->len, self->priv->qdl_version, self->priv->qdl_version);
+    rsplen = send_receive (self, self->priv->buffer->data, reqlen, TRUE, 1, &rsp, cancellable, error);
+    if (rsplen < 0)
+        return FALSE;
+
+    switch (rsp[0]) {
+    case QFU_QDL_CMD_HELLO_RSP:
+        return qfu_qdl_response_hello_parse (rsp, rsplen, error);
+    case QFU_QDL_CMD_ERROR:
+        return qfu_qdl_response_error_parse (rsp, rsplen, error);
+    default:
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "unexpected response received in hello: 0x%02x (%s)",
+                     rsp[0], qfu_qdl_cmd_get_string (rsp[0]) ? qfu_qdl_cmd_get_string (rsp[0]) : "unknown");
+        return FALSE;
+    }
+}
+
+/******************************************************************************/
+
+gboolean
 qfu_qdl_device_reset (QfuQdlDevice  *self,
                       GCancellable  *cancellable,
                       GError       **error)
@@ -674,6 +707,8 @@ qdl_device_detect_version (QfuQdlDevice  *self,
     }
 
     g_debug ("[qfu-qdl-device] QDL version detected: %u", version);
+    self->priv->qdl_version = version;
+
     return TRUE;
 }
 

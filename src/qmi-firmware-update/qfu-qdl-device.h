@@ -52,6 +52,9 @@ GType         qfu_qdl_device_get_type  (void);
 QfuQdlDevice *qfu_qdl_device_new       (GFile         *file,
                                         GCancellable  *cancellable,
                                         GError       **error);
+gboolean      qfu_qdl_device_hello     (QfuQdlDevice  *self,
+                                        GCancellable  *cancellable,
+                                        GError       **error);
 gboolean      qfu_qdl_device_ufopen    (QfuQdlDevice  *self,
                                         QfuImage      *image,
                                         GCancellable  *cancellable,

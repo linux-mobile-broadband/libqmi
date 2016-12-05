@@ -55,7 +55,6 @@ static const gchar *cdc_wdm_subsys[] = { "usbmisc", "usb", NULL };
 
 typedef enum {
     RUN_CONTEXT_STEP_USB_INFO = 0,
-    RUN_CONTEXT_STEP_SELECT_IMAGE,
     RUN_CONTEXT_STEP_QMI_DEVICE,
     RUN_CONTEXT_STEP_QMI_DEVICE_OPEN,
     RUN_CONTEXT_STEP_QMI_CLIENT,
@@ -64,9 +63,12 @@ typedef enum {
     RUN_CONTEXT_STEP_RESET,
     RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE,
     RUN_CONTEXT_STEP_WAIT_FOR_TTY,
+    RUN_CONTEXT_STEP_QDL_DEVICE,
+    RUN_CONTEXT_STEP_SELECT_IMAGE,
     RUN_CONTEXT_STEP_DOWNLOAD_IMAGE,
-    RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM,
     RUN_CONTEXT_STEP_CLEANUP_IMAGE,
+    RUN_CONTEXT_STEP_CLEANUP_QDL_DEVICE,
+    RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM,
     RUN_CONTEXT_STEP_LAST
 } RunContextStep;
 
@@ -85,11 +87,15 @@ typedef struct {
     gint          qmi_client_retries;
     /* TTY file */
     GFile *tty;
+    /* QDL device */
+    QfuQdlDevice *qdl;
 } RunContext;
 
 static void
 run_context_free (RunContext *ctx)
 {
+    if (ctx->qdl)
+        g_object_unref (&ctx->qdl);
     if (ctx->tty)
         g_object_unref (ctx->tty);
     if (ctx->qmi_client) {
@@ -141,20 +147,6 @@ run_context_step_next (GTask *task, RunContextStep next)
 }
 
 static void
-run_context_step_cleanup_image (GTask *task)
-{
-    RunContext *ctx;
-
-    ctx = (RunContext *) g_task_get_task_data (task);
-
-    g_assert (ctx->current_image);
-    g_clear_object (&ctx->current_image);
-
-    /* Select next image */
-    run_context_step_next (task, RUN_CONTEXT_STEP_SELECT_IMAGE);
-}
-
-static void
 wait_for_cdc_wdm_ready (gpointer      unused,
                         GAsyncResult *res,
                         GTask        *task)
@@ -199,10 +191,46 @@ run_context_step_wait_for_cdc_wdm (GTask *task)
 }
 
 static void
+run_context_step_cleanup_qdl_device (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_assert (ctx->qdl);
+
+    g_debug ("[qfu-updater] QDL reset");
+    qfu_qdl_device_reset (ctx->qdl, g_task_get_cancellable (task), NULL);
+    g_clear_object (&ctx->qdl);
+
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_cleanup_image (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_assert (ctx->current_image);
+    g_clear_object (&ctx->current_image);
+
+    /* Select next image */
+    if (ctx->pending_images) {
+        run_context_step_next (task, RUN_CONTEXT_STEP_SELECT_IMAGE);
+        return;
+    }
+
+    /* If no more files to download, we're done! */
+    g_debug ("[qfu-updater] no more files to download");
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
 run_context_step_download_image (GTask *task)
 {
     RunContext   *ctx;
-    QfuQdlDevice *device = NULL;
     guint16       sequence;
     guint16       n_chunks;
     GError       *error = NULL;
@@ -216,12 +244,6 @@ run_context_step_download_image (GTask *task)
 
     timer = g_timer_new ();
 
-    device = qfu_qdl_device_new (ctx->tty, cancellable, &error);
-    if (!device) {
-        g_prefix_error (&error, "error creating device: ");
-        goto out;
-    }
-
     aux = g_format_size ((guint64) qfu_image_get_size (ctx->current_image));
     g_print ("downloading %s image: %s (%s)...\n",
              qfu_image_type_get_string (qfu_image_get_image_type (ctx->current_image)),
@@ -229,14 +251,19 @@ run_context_step_download_image (GTask *task)
              aux);
     g_free (aux);
 
-    if (!qfu_qdl_device_ufopen (device, ctx->current_image, cancellable, &error)) {
+    if (!qfu_qdl_device_hello (ctx->qdl, cancellable, &error)) {
+        g_prefix_error (&error, "couldn't send greetings to device: ");
+        goto out;
+    }
+
+    if (!qfu_qdl_device_ufopen (ctx->qdl, ctx->current_image, cancellable, &error)) {
         g_prefix_error (&error, "couldn't open session: ");
         goto out;
     }
 
     n_chunks = qfu_image_get_n_data_chunks (ctx->current_image);
     for (sequence = 0; sequence < n_chunks; sequence++) {
-        if (!qfu_qdl_device_ufwrite (device, ctx->current_image, sequence, cancellable, &error)) {
+        if (!qfu_qdl_device_ufwrite (ctx->qdl, ctx->current_image, sequence, cancellable, &error)) {
             g_prefix_error (&error, "couldn't write in session: ");
             goto out;
         }
@@ -244,19 +271,15 @@ run_context_step_download_image (GTask *task)
 
     g_debug ("[qfu-updater] all chunks ack-ed");
 
-    if (!qfu_qdl_device_ufclose (device, cancellable, &error)) {
+    if (!qfu_qdl_device_ufclose (ctx->qdl, cancellable, &error)) {
         g_prefix_error (&error, "couldn't close session: ");
         goto out;
     }
-
-    g_debug ("[qfu-updater] reset");
-    qfu_qdl_device_reset (device, cancellable, NULL);
 
 out:
     elapsed = g_timer_elapsed (timer, NULL);
 
     g_timer_destroy (timer);
-    g_clear_object (&device);
 
     if (error) {
         g_prefix_error (&error, "error downloading image: ");
@@ -269,6 +292,48 @@ out:
     g_free (aux);
 
     /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_select_image (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_assert (!ctx->current_image);
+    g_assert (ctx->pending_images);
+
+    /* Select new current image */
+    ctx->current_image = QFU_IMAGE (ctx->pending_images->data);
+    ctx->pending_images = g_list_delete_link (ctx->pending_images, ctx->pending_images);
+
+    g_debug ("[qfu-updater] selected file '%s' (%" G_GOFFSET_FORMAT " bytes)",
+             qfu_image_get_display_name (ctx->current_image),
+             qfu_image_get_size (ctx->current_image));
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_qdl_device (GTask *task)
+{
+    RunContext *ctx;
+    GError     *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_assert (!ctx->qdl);
+    ctx->qdl = qfu_qdl_device_new (ctx->tty, g_task_get_cancellable (task), &error);
+    if (!ctx->qdl) {
+        g_prefix_error (&error, "error creating device: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
     run_context_step_next (task, ctx->step + 1);
 }
 
@@ -696,37 +761,6 @@ run_context_step_qmi_device (GTask *task)
 }
 
 static void
-run_context_step_select_image (GTask *task)
-{
-    RunContext *ctx;
-
-    ctx = (RunContext *) g_task_get_task_data (task);
-
-    g_assert (!ctx->current_image);
-
-    /* If no more files to download, we're done! */
-    if (!ctx->pending_images) {
-        g_debug ("[qfu-updater] no more files to download");
-        run_context_step_next (task, RUN_CONTEXT_STEP_LAST);
-        return;
-    }
-
-    /* Cleanup the QmiClient allocation retries */
-    ctx->qmi_client_retries = QMI_CLIENT_RETRIES;
-
-    /* Select new current image */
-    ctx->current_image = QFU_IMAGE (ctx->pending_images->data);
-    ctx->pending_images = g_list_delete_link (ctx->pending_images, ctx->pending_images);
-
-    g_debug ("[qfu-updater] selected file '%s' (%" G_GOFFSET_FORMAT " bytes)",
-             qfu_image_get_display_name (ctx->current_image),
-             qfu_image_get_size (ctx->current_image));
-
-    /* Go on */
-    run_context_step_next (task, ctx->step + 1);
-}
-
-static void
 run_context_step_usb_info (GTask *task)
 {
     QfuUpdater *self;
@@ -752,7 +786,6 @@ run_context_step_usb_info (GTask *task)
 typedef void (* RunContextStepFunc) (GTask *task);
 static const RunContextStepFunc run_context_step_func[] = {
     [RUN_CONTEXT_STEP_USB_INFO]            = run_context_step_usb_info,
-    [RUN_CONTEXT_STEP_SELECT_IMAGE]        = run_context_step_select_image,
     [RUN_CONTEXT_STEP_QMI_DEVICE]          = run_context_step_qmi_device,
     [RUN_CONTEXT_STEP_QMI_DEVICE_OPEN]     = run_context_step_qmi_device_open,
     [RUN_CONTEXT_STEP_QMI_CLIENT]          = run_context_step_qmi_client,
@@ -761,9 +794,12 @@ static const RunContextStepFunc run_context_step_func[] = {
     [RUN_CONTEXT_STEP_RESET]               = run_context_step_reset,
     [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE]  = run_context_step_cleanup_qmi_device,
     [RUN_CONTEXT_STEP_WAIT_FOR_TTY]        = run_context_step_wait_for_tty,
+    [RUN_CONTEXT_STEP_QDL_DEVICE]          = run_context_step_qdl_device,
+    [RUN_CONTEXT_STEP_SELECT_IMAGE]        = run_context_step_select_image,
     [RUN_CONTEXT_STEP_DOWNLOAD_IMAGE]      = run_context_step_download_image,
-    [RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM]    = run_context_step_wait_for_cdc_wdm,
     [RUN_CONTEXT_STEP_CLEANUP_IMAGE]       = run_context_step_cleanup_image,
+    [RUN_CONTEXT_STEP_CLEANUP_QDL_DEVICE]  = run_context_step_cleanup_qdl_device,
+    [RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM]    = run_context_step_wait_for_cdc_wdm,
 };
 
 G_STATIC_ASSERT (G_N_ELEMENTS (run_context_step_func) == RUN_CONTEXT_STEP_LAST);
@@ -829,6 +865,9 @@ qfu_updater_run (QfuUpdater          *self,
     /* Sort by size, we want to download bigger images first, as that is usually
      * the use case anyway, first flash e.g. the .cwe file, then the .nvu one. */
     ctx->pending_images = g_list_sort (ctx->pending_images, (GCompareFunc) image_sort_by_size);
+
+    /* Define amount of retries trying to allocate a QMI DMS client */
+    ctx->qmi_client_retries = QMI_CLIENT_RETRIES;
 
     run_context_step (task);
 }
