@@ -30,10 +30,10 @@ typedef struct {
     GMainLoop    *loop;
     GCancellable *cancellable;
     gboolean      result;
-} DownloadOperation;
+} UpdateOperation;
 
 static gboolean
-signal_handler (DownloadOperation *operation)
+signal_handler (UpdateOperation *operation)
 {
     operation->result = FALSE;
 
@@ -57,7 +57,7 @@ signal_handler (DownloadOperation *operation)
 static void
 run_ready (QfuUpdater        *updater,
            GAsyncResult      *res,
-           DownloadOperation *operation)
+           UpdateOperation *operation)
 {
     GError *error = NULL;
 
@@ -73,15 +73,15 @@ run_ready (QfuUpdater        *updater,
 }
 
 gboolean
-qfu_operation_download_run (const gchar  *device,
-                            const gchar  *firmware_version,
-                            const gchar  *config_version,
-                            const gchar  *carrier,
-                            const gchar **images,
-                            gboolean      device_open_proxy,
-                            gboolean      device_open_mbim)
+qfu_operation_update_run (const gchar **images,
+                          const gchar  *device,
+                          const gchar  *firmware_version,
+                          const gchar  *config_version,
+                          const gchar  *carrier,
+                          gboolean      device_open_proxy,
+                          gboolean      device_open_mbim)
 {
-    DownloadOperation operation = {
+    UpdateOperation operation = {
         .loop        = NULL,
         .cancellable = NULL,
         .result      = FALSE,

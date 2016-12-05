@@ -67,8 +67,8 @@ print_image_cwe (QfuImageCwe *image,
     }
 }
 
-gboolean
-qfu_operation_verify_run (const gchar *image_path)
+static gboolean
+operation_verify_run_single (const gchar *image_path)
 {
     QfuImage *image;
     GFile    *file;
@@ -83,6 +83,7 @@ qfu_operation_verify_run (const gchar *image_path)
         goto out;
     }
 
+    g_print ("\n");
     g_print ("Firmware image:\n");
     g_print ("  filename:      %s\n", qfu_image_get_display_name (image));
     g_print ("  detected type: %s\n", qfu_image_type_get_string (qfu_image_get_image_type (image)));
@@ -100,4 +101,16 @@ out:
     if (image)
         g_object_unref (image);
     return result;
+}
+
+gboolean
+qfu_operation_verify_run (const gchar **images)
+{
+    guint invalid_images = 0;
+    guint i;
+
+    for (i = 0; images[i] ; i++)
+        invalid_images += !operation_verify_run_single (images[i]);
+
+    return !invalid_images;
 }

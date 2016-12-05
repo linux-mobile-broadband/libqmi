@@ -40,9 +40,9 @@
 /*****************************************************************************/
 /* Options */
 
-/* Download */
+/* Update */
+static gboolean   action_update_flag;
 static gchar     *device_str;
-static gchar    **image_strv;
 static gchar     *firmware_version_str;
 static gchar     *config_version_str;
 static gchar     *carrier_str;
@@ -50,21 +50,22 @@ static gboolean   device_open_proxy_flag;
 static gboolean   device_open_mbim_flag;
 
 /* Verify */
-static gchar *verify_image_str;
+static gboolean   action_verify_flag;;
 
 /* Main */
-static gboolean verbose_flag;
-static gboolean silent_flag;
-static gboolean version_flag;
-static gboolean help_flag;
+static gchar    **image_strv;
+static gboolean   verbose_flag;
+static gboolean   silent_flag;
+static gboolean   version_flag;
+static gboolean   help_flag;
 
-static GOptionEntry context_download_entries[] = {
-    { "device", 'd', 0, G_OPTION_ARG_FILENAME, &device_str,
-      "Specify device path.",
-      "[PATH]"
+static GOptionEntry context_update_entries[] = {
+    { "update", 'u', 0, G_OPTION_ARG_NONE, &action_update_flag,
+      "Launch firmware update process.",
+      NULL
     },
-    { "image", 'i', 0, G_OPTION_ARG_FILENAME_ARRAY, &image_strv,
-      "Specify image to download to the device. May be given multiple times.",
+    { "device", 'd', 0, G_OPTION_ARG_FILENAME, &device_str,
+      "Specify cdc-wdm device path (e.g. /dev/cdc-wdm0).",
       "[PATH]"
     },
     { "firmware-version", 'f', 0, G_OPTION_ARG_STRING, &firmware_version_str,
@@ -91,14 +92,17 @@ static GOptionEntry context_download_entries[] = {
 };
 
 static GOptionEntry context_verify_entries[] = {
-    { "verify-image", 'z', 0, G_OPTION_ARG_FILENAME, &verify_image_str,
-      "Specify image to verify.",
-      "[PATH]"
+    { "verify", 'z', 0, G_OPTION_ARG_NONE, &action_verify_flag,
+      "Analyze and Verify firmware images.",
+      NULL
     },
     { NULL }
 };
 
 static GOptionEntry context_main_entries[] = {
+    { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &image_strv, "",
+      "FILE1 FILE2..."
+    },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
       "Run action with verbose logs, including the debug ones.",
       NULL
@@ -119,20 +123,21 @@ static GOptionEntry context_main_entries[] = {
 };
 
 static const gchar *context_description =
-    " E.g. a download operation:\n"
+    " E.g. an update operation:\n"
     " $ sudo " PROGRAM_NAME " \\\n"
-    "       --verbose \\\n"
+    "       --update \\\n"
     "       --device /dev/cdc-wdm4 \\\n"
     "       --firmware-version 05.05.58.00 \\\n"
     "       --config-version 005.025_002 \\\n"
     "       --carrier Generic \\\n"
-    "       --image SWI9X15C_05.05.58.00.cwe \\\n"
-    "       --image SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+    "       SWI9X15C_05.05.58.00.cwe \\\n"
+    "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
     "\n"
     " E.g. a verify operation:\n"
     " $ sudo " PROGRAM_NAME " \\\n"
-    "       --verbose \\\n"
-    "       --verify-image SWI9X15C_05.05.58.00.cwe\n"
+    "       --verify \\\n"
+    "       SWI9X15C_05.05.58.00.cwe \\\n"
+    "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
     "\n";
 
 /*****************************************************************************/
@@ -233,8 +238,8 @@ int main (int argc, char **argv)
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Update firmware in QMI devices");
 
-    group = g_option_group_new ("download", "Download options", "", NULL, NULL);
-    g_option_group_add_entries (group, context_download_entries);
+    group = g_option_group_new ("update", "Update options", "", NULL, NULL);
+    g_option_group_add_entries (group, context_update_entries);
     g_option_context_add_group (context, group);
 
     group = g_option_group_new ("verify", "Verify options", "", NULL, NULL);
@@ -269,7 +274,7 @@ int main (int argc, char **argv)
         qmi_utils_set_traces_enabled (TRUE);
 
     /* We don't allow multiple actions at the same time */
-    n_actions = (!!verify_image_str + !!image_strv);
+    n_actions = (action_verify_flag + action_update_flag);
     if (n_actions == 0) {
         g_printerr ("error: no actions specified\n");
         goto out;
@@ -279,17 +284,23 @@ int main (int argc, char **argv)
         goto out;
     }
 
-    /* Run operation */
-    if (image_strv)
-        result = qfu_operation_download_run (device_str,
-                                             firmware_version_str,
-                                             config_version_str,
-                                             carrier_str,
-                                             (const gchar **) image_strv,
-                                             device_open_proxy_flag,
-                                             device_open_mbim_flag);
-    else if (verify_image_str)
-        result = qfu_operation_verify_run (verify_image_str);
+    /* A list of images must always be provided */
+    if (!image_strv) {
+        g_printerr ("error: no firmware images specified\n");
+        goto out;
+    }
+
+    /* Run */
+    if (action_update_flag)
+        result = qfu_operation_update_run ((const gchar **) image_strv,
+                                           device_str,
+                                           firmware_version_str,
+                                           config_version_str,
+                                           carrier_str,
+                                           device_open_proxy_flag,
+                                           device_open_mbim_flag);
+    else if (action_verify_flag)
+        result = qfu_operation_verify_run ((const gchar **) image_strv);
     else
         g_assert_not_reached ();
 
