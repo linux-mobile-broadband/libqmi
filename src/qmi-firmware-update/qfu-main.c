@@ -273,6 +273,17 @@ static GOptionEntry context_main_entries[] = {
     { NULL }
 };
 
+static const gchar *context_description =
+    "   ***************************************************************************\n"
+    "                                Warning!\n"
+    "   ***************************************************************************\n"
+    "\n"
+    "   Use this program with caution. The authors take *no* responsibility if any\n"
+    "   device gets broken as a result of using this program.\n"
+    "\n"
+    "   Please report issues to the libqmi mailing list at:\n"
+    "     libqmi-devel@lists.freedesktop.org\n";
+
 /*****************************************************************************/
 /* Logging output */
 
@@ -336,9 +347,11 @@ print_version (void)
 {
     g_print ("\n"
              PROGRAM_NAME " " PROGRAM_VERSION "\n"
-             "Copyright (C) 2016 Bjørn Mork\n"
-             "Copyright (C) 2016 Zodiac Inflight Innovations\n"
-             "Copyright (C) 2016 Aleksander Morgado\n"
+             "\n"
+             "  Copyright (C) 2016 Bjørn Mork\n"
+             "  Copyright (C) 2016 Zodiac Inflight Innovations\n"
+             "  Copyright (C) 2016 Aleksander Morgado\n"
+             "\n"
              "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>\n"
              "This is free software: you are free to change and redistribute it.\n"
              "There is NO WARRANTY, to the extent permitted by law.\n"
@@ -362,6 +375,22 @@ print_help_examples (void)
     g_print ("\n"
              "********************************************************************************\n"
              "\n"
+             " Example 1: Updating a Sierra Wireless MC7354.\n"
+             "\n"
+             " The MC7354 is a 9x15 device which requires the firmware updater to specify the\n"
+             " firmware version string, the config version string and the carrier string, so\n"
+             " that they are included as identifiers of the firmware images downloaded.\n"
+             "\n"
+             " While in normal operation, the device will expose multiple cdc-wdm ports, and\n"
+             " the updater application just needs one of those cdc-wdm ports to start the\n"
+             " operation. The user can explicitly specify the cdc-wdm port to use, or\n"
+             " otherwise use the generic device selection options (i.e. --busnum-devnum or\n"
+             " --vid-pid) to do that automatically.\n"
+             "\n"
+             " Note that the firmware for the MC7354 is usually composed of a core system image\n"
+             " (.cwe) and a carrier-specific image (.nvu). These two images need to be flashed\n"
+             " on the same operation.\n"
+             "\n"
              " 1a) An update operation specifying the QMI cdc-wdm device:\n"
              " $ sudo " PROGRAM_NAME " \\\n"
              "       --update \\\n"
@@ -381,28 +410,59 @@ print_help_examples (void)
              "       --config-version 005.025_002 \\\n"
              "       --carrier Generic \\\n"
              "       SWI9X15C_05.05.58.00.cwe \\\n"
-             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
-             "\n"
+             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n");
+
+    g_print ("\n"
              "********************************************************************************\n"
              "\n"
-             " 2a) An update operation while in QDL mode, specifying the QDL serial device:\n"
-             " $ sudo " PROGRAM_NAME " \\\n"
-             "       --update-qdl \\\n"
-             "       --qdl-serial /dev/ttyUSB0 \\\n"
-             "       SWI9X15C_05.05.58.00.cwe \\\n"
-             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+             " Example 2: Updating a Sierra Wireless MC7700.\n"
              "\n"
-             " 2b) An update operation while in QDL mode, specifying the device number (fails\n"
-             "     if there are other devices with the same device number in another bus):\n"
-             " $ sudo " PROGRAM_NAME " \\\n"
-             "       --update-qdl \\\n"
-             "       -s 019 \\\n"
-             "       SWI9X15C_05.05.58.00.cwe \\\n"
-             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+             " The MC7700 is a 9200 device which doesn't require the explicit firmware, config\n"
+             " and carrier strings. Unlike the MC7354, which would reboot itself into QDL\n"
+             " download mode once these previous strings were configured, the MC7700 requires\n"
+             " an AT command to be sent in a TTY port to request the reset in QDL download\n"
+             " mode.\n"
              "\n"
+             " The user doesn't need to explicitly specify the path to the TTY, though, it will\n"
+             " be automatically detected and processed during the firmware update process.\n"
+             "\n"
+             " 2a) An update operation specifying the QMI cdc-wdm device:\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       --update \\\n"
+             "       --cdc-wdm /dev/cdc-wdm0 \\\n"
+             "       9999999_9999999_9200_03.05.14.00_00_generic_000.000_001_SPKG_MC.cwe\n"
+             "\n"
+             " 2b) An update operation specifying the vid:pid of the device (fails if multiple\n"
+             "     devices with the same vid:pid are found):\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       --update \\\n"
+             "       -d 1199:68a2 \\\n"
+             "       9999999_9999999_9200_03.05.14.00_00_generic_000.000_001_SPKG_MC.cwe\n");
+
+    g_print ("\n"
              "********************************************************************************\n"
              "\n"
-             " 3) A verify operation:\n"
+             " Example 3: Manual process to update a Sierra Wireless MC7700.\n"
+             "\n"
+             " Instead of letting the " PROGRAM_NAME " manage the full firmware update\n"
+             " operation, the user can trigger the actions manually as follows:\n"
+             "\n"
+             " 3a) Request device to go into QDL download mode:\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       -d 1199:68a2 \\\n"
+             "       --reset\n"
+             "\n"
+             " 3b) Run updater operation while in QDL download mode:\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       -d 1199:68a2 \\\n"
+             "       --update-qdl \\\n"
+             "       9999999_9999999_9200_03.05.14.00_00_generic_000.000_001_SPKG_MC.cwe\n");
+
+    g_print ("\n"
+             "********************************************************************************\n"
+             "\n"
+             " Example 4: Verify firmware images.\n"
+             "\n"
              " $ sudo " PROGRAM_NAME " \\\n"
              "       --verify \\\n"
              "       SWI9X15C_05.05.58.00.cwe \\\n"
@@ -531,6 +591,7 @@ int main (int argc, char **argv)
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Update firmware in QMI devices");
+    g_option_context_set_description (context, context_description);
 
     group = g_option_group_new ("selection", "Generic device selection options", "", NULL, NULL);
     g_option_group_add_entries (group, context_selection_entries);
