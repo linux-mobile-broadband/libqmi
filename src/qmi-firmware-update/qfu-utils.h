@@ -31,6 +31,8 @@ gchar *qfu_utils_str_hex (gconstpointer mem,
                           gsize         size,
                           gchar         delimiter);
 
+gchar *qfu_utils_get_firmware_image_unique_id_printable (const GArray *unique_id);
+
 guint16 qfu_utils_crc16 (const guint8 *buffer,
                          gsize         len);
 

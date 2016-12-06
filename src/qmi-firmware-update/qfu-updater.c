@@ -29,6 +29,7 @@
 
 #include "qfu-image-factory.h"
 #include "qfu-updater.h"
+#include "qfu-utils.h"
 #include "qfu-udev-helpers.h"
 #include "qfu-qdl-device.h"
 #include "qfu-enum-types.h"
@@ -62,7 +63,8 @@ typedef enum {
     RUN_CONTEXT_STEP_QMI_DEVICE,
     RUN_CONTEXT_STEP_QMI_DEVICE_OPEN,
     RUN_CONTEXT_STEP_QMI_CLIENT,
-    RUN_CONTEXT_STEP_FIRMWARE_PREFERENCE,
+    RUN_CONTEXT_STEP_GET_FIRMWARE_PREFERENCE,
+    RUN_CONTEXT_STEP_SET_FIRMWARE_PREFERENCE,
     RUN_CONTEXT_STEP_OFFLINE,
     RUN_CONTEXT_STEP_RESET,
     RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE,
@@ -589,7 +591,7 @@ set_firmware_preference_ready (QmiClientDms *client,
 }
 
 static void
-run_context_step_firmware_preference (GTask *task)
+run_context_step_set_firmware_preference (GTask *task)
 {
     QfuUpdater                                       *self;
     RunContext                                       *ctx;
@@ -640,6 +642,77 @@ run_context_step_firmware_preference (GTask *task)
     g_free        (modem_image_id.build_id);
     g_array_unref (pri_image_id.unique_id);
     g_free        (pri_image_id.build_id);
+}
+
+static void
+get_firmware_preference_ready (QmiClientDms *client,
+                               GAsyncResult *res,
+                               GTask        *task)
+{
+    RunContext                               *ctx;
+    GError                                   *error = NULL;
+    QmiMessageDmsGetFirmwarePreferenceOutput *output;
+    GArray                                   *array;
+    guint                                     i;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    output = qmi_client_dms_get_firmware_preference_finish (client, res, &error);
+    if (!output) {
+        g_prefix_error (&error, "QMI operation failed, couldn't get firmware preference: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    if (!qmi_message_dms_get_firmware_preference_output_get_result (output, &error)) {
+        g_prefix_error (&error, "couldn't get firmware preference: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        qmi_message_dms_get_firmware_preference_output_unref (output);
+        return;
+    }
+
+    qmi_message_dms_get_firmware_preference_output_get_list (output, &array, NULL);
+
+    if (array->len > 0) {
+        for (i = 0; i < array->len; i++) {
+            QmiMessageDmsGetFirmwarePreferenceOutputListImage *image;
+            gchar                                             *unique_id_str;
+
+            image = &g_array_index (array, QmiMessageDmsGetFirmwarePreferenceOutputListImage, i);
+            unique_id_str = qfu_utils_get_firmware_image_unique_id_printable (image->unique_id);
+
+            g_debug ("[qfu-updater] [image %u]",         i);
+            g_debug ("[qfu-updater] \tImage type: '%s'", qmi_dms_firmware_image_type_get_string (image->type));
+            g_debug ("[qfu-updater] \tUnique ID:  '%s'", unique_id_str);
+            g_debug ("[qfu-updater] \tBuild ID:   '%s'", image->build_id);
+
+            g_free (unique_id_str);
+        }
+    } else
+        g_debug ("[qfu-updater] no images specified");
+
+    qmi_message_dms_get_firmware_preference_output_unref (output);
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_get_firmware_preference (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_debug ("[qfu-updater] getting firmware preference...");
+    qmi_client_dms_get_firmware_preference (ctx->qmi_client,
+                                            NULL,
+                                            10,
+                                            g_task_get_cancellable (task),
+                                            (GAsyncReadyCallback) get_firmware_preference_ready,
+                                            task);
 }
 
 static void
@@ -813,21 +886,22 @@ run_context_step_usb_info (GTask *task)
 
 typedef void (* RunContextStepFunc) (GTask *task);
 static const RunContextStepFunc run_context_step_func[] = {
-    [RUN_CONTEXT_STEP_USB_INFO]            = run_context_step_usb_info,
-    [RUN_CONTEXT_STEP_QMI_DEVICE]          = run_context_step_qmi_device,
-    [RUN_CONTEXT_STEP_QMI_DEVICE_OPEN]     = run_context_step_qmi_device_open,
-    [RUN_CONTEXT_STEP_QMI_CLIENT]          = run_context_step_qmi_client,
-    [RUN_CONTEXT_STEP_FIRMWARE_PREFERENCE] = run_context_step_firmware_preference,
-    [RUN_CONTEXT_STEP_OFFLINE]             = run_context_step_offline,
-    [RUN_CONTEXT_STEP_RESET]               = run_context_step_reset,
-    [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE]  = run_context_step_cleanup_qmi_device,
-    [RUN_CONTEXT_STEP_WAIT_FOR_TTY]        = run_context_step_wait_for_tty,
-    [RUN_CONTEXT_STEP_QDL_DEVICE]          = run_context_step_qdl_device,
-    [RUN_CONTEXT_STEP_SELECT_IMAGE]        = run_context_step_select_image,
-    [RUN_CONTEXT_STEP_DOWNLOAD_IMAGE]      = run_context_step_download_image,
-    [RUN_CONTEXT_STEP_CLEANUP_IMAGE]       = run_context_step_cleanup_image,
-    [RUN_CONTEXT_STEP_CLEANUP_QDL_DEVICE]  = run_context_step_cleanup_qdl_device,
-    [RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM]    = run_context_step_wait_for_cdc_wdm,
+    [RUN_CONTEXT_STEP_USB_INFO]                = run_context_step_usb_info,
+    [RUN_CONTEXT_STEP_QMI_DEVICE]              = run_context_step_qmi_device,
+    [RUN_CONTEXT_STEP_QMI_DEVICE_OPEN]         = run_context_step_qmi_device_open,
+    [RUN_CONTEXT_STEP_QMI_CLIENT]              = run_context_step_qmi_client,
+    [RUN_CONTEXT_STEP_GET_FIRMWARE_PREFERENCE] = run_context_step_get_firmware_preference,
+    [RUN_CONTEXT_STEP_SET_FIRMWARE_PREFERENCE] = run_context_step_set_firmware_preference,
+    [RUN_CONTEXT_STEP_OFFLINE]                 = run_context_step_offline,
+    [RUN_CONTEXT_STEP_RESET]                   = run_context_step_reset,
+    [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE]      = run_context_step_cleanup_qmi_device,
+    [RUN_CONTEXT_STEP_WAIT_FOR_TTY]            = run_context_step_wait_for_tty,
+    [RUN_CONTEXT_STEP_QDL_DEVICE]              = run_context_step_qdl_device,
+    [RUN_CONTEXT_STEP_SELECT_IMAGE]            = run_context_step_select_image,
+    [RUN_CONTEXT_STEP_DOWNLOAD_IMAGE]          = run_context_step_download_image,
+    [RUN_CONTEXT_STEP_CLEANUP_IMAGE]           = run_context_step_cleanup_image,
+    [RUN_CONTEXT_STEP_CLEANUP_QDL_DEVICE]      = run_context_step_cleanup_qdl_device,
+    [RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM]        = run_context_step_wait_for_cdc_wdm,
 };
 
 G_STATIC_ASSERT (G_N_ELEMENTS (run_context_step_func) == RUN_CONTEXT_STEP_LAST);

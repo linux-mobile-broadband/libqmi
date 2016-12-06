@@ -24,6 +24,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include <glib.h>
 
@@ -63,6 +64,56 @@ qfu_utils_str_hex (gconstpointer mem,
 
     /* Set output string */
     return new_str;
+}
+
+/******************************************************************************/
+
+gchar *
+qfu_utils_get_firmware_image_unique_id_printable (const GArray *unique_id)
+{
+    gchar    *unique_id_str;
+    guint     i;
+    guint     n_ascii = 0;
+    gboolean  end = FALSE;
+
+#define UNIQUE_ID_LEN 16
+
+    g_warn_if_fail (unique_id->len <= UNIQUE_ID_LEN);
+    unique_id_str = g_malloc0 (UNIQUE_ID_LEN + 1);
+    memcpy (unique_id_str, unique_id->data, UNIQUE_ID_LEN);
+
+    /* We want an ASCII string that, if finished before the 16 bytes,
+     * is suffixed with NUL bytes. */
+    for (i = 0; i < UNIQUE_ID_LEN; i++) {
+        /* If a byte isn't ASCII, stop */
+        if (unique_id_str[i] & 0x80)
+            break;
+        /* If string isn't finished yet... */
+        if (!end) {
+            /* String finished now */
+            if (unique_id_str[i] == '\0')
+                end = TRUE;
+            else
+                n_ascii++;
+        } else {
+            /* String finished but we then got
+             * another ASCII byte? not possible */
+            if (unique_id_str[i] != '\0')
+                break;
+        }
+    }
+
+    if (i == UNIQUE_ID_LEN && n_ascii > 0)
+        return unique_id_str;
+
+#undef UNIQUE_ID_LEN
+
+    g_free (unique_id_str);
+
+    /* Get a raw hex string otherwise */
+    unique_id_str = qfu_utils_str_hex (unique_id->data, unique_id->len, ':');
+
+    return unique_id_str;
 }
 
 /******************************************************************************/
