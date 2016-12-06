@@ -29,6 +29,7 @@
 
 #include "qfu-image-factory.h"
 #include "qfu-updater.h"
+#include "qfu-reseter.h"
 #include "qfu-utils.h"
 #include "qfu-udev-helpers.h"
 #include "qfu-qdl-device.h"
@@ -99,6 +100,9 @@ typedef struct {
 
     /* QDL device */
     QfuQdlDevice *qdl_device;
+
+    /* Reset configuration */
+    gboolean boothold_reset;
 } RunContext;
 
 static void
@@ -494,23 +498,68 @@ reset_or_offline_ready (QmiClientDms *client,
 }
 
 static void
+reseter_run_ready (QfuReseter   *reseter,
+                   GAsyncResult *res,
+                   GTask        *task)
+{
+    GError     *error = NULL;
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    if (!qfu_reseter_run_finish (reseter, res, &error)) {
+        g_prefix_error (&error, "boothold reseter operation failed: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[qfu-updater] boothold reset requested successfully...");
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
 run_context_step_reset (GTask *task)
 {
     RunContext                         *ctx;
     QmiMessageDmsSetOperatingModeInput *input;
+    GList                              *ttys;
+    QfuReseter                         *reseter;
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
-    g_debug ("[qfu-updater] setting operating mode 'reset'...");
-    input = qmi_message_dms_set_operating_mode_input_new ();
-    qmi_message_dms_set_operating_mode_input_set_mode (input, QMI_DMS_OPERATING_MODE_RESET, NULL);
-    qmi_client_dms_set_operating_mode (ctx->qmi_client,
-                                       input,
-                                       10,
-                                       g_task_get_cancellable (task),
-                                       (GAsyncReadyCallback) reset_or_offline_ready,
-                                       task);
-    qmi_message_dms_set_operating_mode_input_unref (input);
+    if (!ctx->boothold_reset) {
+        g_debug ("[qfu-updater] setting operating mode 'reset'...");
+        input = qmi_message_dms_set_operating_mode_input_new ();
+        qmi_message_dms_set_operating_mode_input_set_mode (input, QMI_DMS_OPERATING_MODE_RESET, NULL);
+        qmi_client_dms_set_operating_mode (ctx->qmi_client,
+                                           input,
+                                           10,
+                                           g_task_get_cancellable (task),
+                                           (GAsyncReadyCallback) reset_or_offline_ready,
+                                           task);
+        qmi_message_dms_set_operating_mode_input_unref (input);
+        return;
+    }
+
+    /* Boothold reset */
+    ttys = qfu_udev_helper_list_devices (QFU_UDEV_HELPER_DEVICE_TYPE_TTY, ctx->sysfs_path);
+    if (!ttys) {
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+                                 "no TTYs found to run boothold reset");
+        g_object_unref (task);
+        return;
+    }
+
+    reseter = qfu_reseter_new (ttys);
+    qfu_reseter_run (reseter,
+                     g_task_get_cancellable (task),
+                     (GAsyncReadyCallback) reseter_run_ready,
+                     task);
+    g_object_unref (reseter);
+    g_list_free_full (ttys, (GDestroyNotify) g_object_unref);
 }
 
 
@@ -649,6 +698,7 @@ get_firmware_preference_ready (QmiClientDms *client,
                                GAsyncResult *res,
                                GTask        *task)
 {
+    QfuUpdater                               *self;
     RunContext                               *ctx;
     GError                                   *error = NULL;
     QmiMessageDmsGetFirmwarePreferenceOutput *output;
@@ -656,20 +706,29 @@ get_firmware_preference_ready (QmiClientDms *client,
     guint                                     i;
 
     ctx = (RunContext *) g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
 
     output = qmi_client_dms_get_firmware_preference_finish (client, res, &error);
     if (!output) {
-        g_prefix_error (&error, "QMI operation failed, couldn't get firmware preference: ");
+        g_prefix_error (&error, "QMI operation failed: couldn't set operating mode: ");
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
 
-    if (!qmi_message_dms_get_firmware_preference_output_get_result (output, &error)) {
-        g_prefix_error (&error, "couldn't get firmware preference: ");
-        g_task_return_error (task, error);
-        g_object_unref (task);
+    if (!qmi_message_dms_get_firmware_preference_output_get_result (output, NULL)) {
         qmi_message_dms_get_firmware_preference_output_unref (output);
+        /* Firmware preference setting not supported; fail if we got those settings */
+        if (self->priv->firmware_version || self->priv->config_version || self->priv->carrier) {
+            g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+                                     "setting firmware/config/carrier is not supported by this device");
+            g_object_unref (task);
+            return;
+        }
+
+        /* Jump to the reset step and run boothold there */
+        ctx->boothold_reset = TRUE;
+        run_context_step_next (task, RUN_CONTEXT_STEP_RESET);
         return;
     }
 
@@ -694,6 +753,32 @@ get_firmware_preference_ready (QmiClientDms *client,
         g_debug ("[qfu-updater] no images specified");
 
     qmi_message_dms_get_firmware_preference_output_unref (output);
+
+    /* Firmware preference setting is supported so we require firmware/config/carrier */
+
+    /* No firmware version given? */
+    if (!self->priv->firmware_version) {
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+                                 "firmware version required");
+        g_object_unref (task);
+        return;
+    }
+
+    /* No config version given? */
+    if (!self->priv->config_version) {
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+                                 "config version required");
+        g_object_unref (task);
+        return;
+    }
+
+    /* No carrier given? */
+    if (!self->priv->carrier) {
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+                                 "carrier required");
+        g_object_unref (task);
+        return;
+    }
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -1007,9 +1092,9 @@ qfu_updater_new (GFile       *cdc_wdm_file,
     self->priv->cdc_wdm_file = g_object_ref (cdc_wdm_file);
     self->priv->device_open_proxy = device_open_proxy;
     self->priv->device_open_mbim = device_open_mbim;
-    self->priv->firmware_version = g_strdup (firmware_version);
-    self->priv->config_version = g_strdup (config_version);
-    self->priv->carrier = g_strdup (carrier);
+    self->priv->firmware_version = (firmware_version ? g_strdup (firmware_version) : NULL);
+    self->priv->config_version = (config_version ? g_strdup (config_version) : NULL);
+    self->priv->carrier = (carrier ? g_strdup (carrier) : NULL);
 
     return self;
 }

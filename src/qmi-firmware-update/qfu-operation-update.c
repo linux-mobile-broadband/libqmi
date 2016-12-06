@@ -134,24 +134,6 @@ qfu_operation_update_run (const gchar **images,
         return FALSE;
     }
 
-    /* No firmware version given? */
-    if (!firmware_version) {
-        g_printerr ("error: no firmware version specified\n");
-        return FALSE;
-    }
-
-    /* No config version given? */
-    if (!config_version) {
-        g_printerr ("error: no config version specified\n");
-        return FALSE;
-    }
-
-    /* No carrier given? */
-    if (!carrier) {
-        g_printerr ("error: no carrier specified\n");
-        return FALSE;
-    }
-
     /* Create updater */
     device_file = g_file_new_for_commandline_arg (device);
     updater = qfu_updater_new (device_file,
