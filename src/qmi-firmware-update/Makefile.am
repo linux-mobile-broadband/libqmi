@@ -51,6 +51,8 @@ qmi_firmware_update_SOURCES = \
 	qfu-dload-message.h qfu-dload-message.c \
 	qfu-qdl-message.h qfu-qdl-message.c \
 	qfu-qdl-device.h qfu-qdl-device.c \
+	qfu-reseter.h qfu-reseter.c \
+	qfu-at-device.h qfu-at-device.c \
 	qfu-utils.h qfu-utils.c \
 	$(NULL)
 
