@@ -49,7 +49,7 @@ static guint16    pid;
 
 /* Update */
 static gboolean   action_update_flag;
-static gchar     *device_str;
+static gchar     *cdc_wdm_str;
 static gchar     *firmware_version_str;
 static gchar     *config_version_str;
 static gchar     *carrier_str;
@@ -69,6 +69,7 @@ static gboolean   verbose_flag;
 static gboolean   silent_flag;
 static gboolean   version_flag;
 static gboolean   help_flag;
+static gboolean   help_examples_flag;
 
 static gboolean
 parse_busnum_devnum (const gchar  *option_name,
@@ -166,11 +167,11 @@ out:
 }
 
 static GOptionEntry context_selection_entries[] = {
-    { "busnum-devnum", 'N', 0, G_OPTION_ARG_CALLBACK, &parse_busnum_devnum,
+    { "busnum-devnum", 's', 0, G_OPTION_ARG_CALLBACK, &parse_busnum_devnum,
       "Select device by bus and device number (in decimal).",
       "[BUS:]DEV"
     },
-    { "vid-pid", 'D', 0, G_OPTION_ARG_CALLBACK, &parse_vid_pid,
+    { "vid-pid", 'd', 0, G_OPTION_ARG_CALLBACK, &parse_vid_pid,
       "Select device by device vendor and product id (in hexadecimal).",
       "VID:[PID]"
     },
@@ -182,8 +183,8 @@ static GOptionEntry context_update_entries[] = {
       "Launch firmware update process.",
       NULL
     },
-    { "device", 'd', 0, G_OPTION_ARG_FILENAME, &device_str,
-      "Specify cdc-wdm device path (e.g. /dev/cdc-wdm0).",
+    { "cdc-wdm", 'w', 0, G_OPTION_ARG_FILENAME, &cdc_wdm_str,
+      "Select device by QMI/MBIM cdc-wdm device path (e.g. /dev/cdc-wdm0).",
       "[PATH]"
     },
     { "firmware-version", 'f', 0, G_OPTION_ARG_STRING, &firmware_version_str,
@@ -195,7 +196,7 @@ static GOptionEntry context_update_entries[] = {
       "[VERSION]",
     },
     { "carrier", 'C', 0, G_OPTION_ARG_STRING, &carrier_str,
-      "Carrier name (e.g. 'Generic')",
+      "Carrier name (e.g. 'Generic').",
       "[CARRIER]",
     },
     { "device-open-proxy", 'p', 0, G_OPTION_ARG_NONE, &device_open_proxy_flag,
@@ -214,8 +215,8 @@ static GOptionEntry context_update_qdl_entries[] = {
       "Launch firmware update process in QDL mode.",
       NULL
     },
-    { "serial", 's', 0, G_OPTION_ARG_FILENAME, &serial_str,
-      "Specify QDL serial device path (e.g. /dev/ttyUSB0).",
+    { "serial", 'q', 0, G_OPTION_ARG_FILENAME, &serial_str,
+      "Select device by QDL serial device path (e.g. /dev/ttyUSB0).",
       "[PATH]"
     },
     { NULL }
@@ -223,7 +224,7 @@ static GOptionEntry context_update_qdl_entries[] = {
 
 static GOptionEntry context_verify_entries[] = {
     { "verify", 'z', 0, G_OPTION_ARG_NONE, &action_verify_flag,
-      "Analyze and Verify firmware images.",
+      "Analyze and verify firmware images.",
       NULL
     },
     { NULL }
@@ -237,7 +238,7 @@ static GOptionEntry context_main_entries[] = {
       "Run action with verbose logs, including the debug ones.",
       NULL
     },
-    { "silent", 0, 0, G_OPTION_ARG_NONE, &silent_flag,
+    { "silent", 'S', 0, G_OPTION_ARG_NONE, &silent_flag,
       "Run action with no logs; not even the error/warning ones.",
       NULL
     },
@@ -246,29 +247,15 @@ static GOptionEntry context_main_entries[] = {
       NULL
     },
     { "help", 'h', 0, G_OPTION_ARG_NONE, &help_flag,
-      "Show help",
+      "Show help.",
+      NULL
+    },
+    { "help-examples", 'H', 0, G_OPTION_ARG_NONE, &help_examples_flag,
+      "Show help examples.",
       NULL
     },
     { NULL }
 };
-
-static const gchar *context_description =
-    " E.g. an update operation:\n"
-    " $ sudo " PROGRAM_NAME " \\\n"
-    "       --update \\\n"
-    "       --device /dev/cdc-wdm4 \\\n"
-    "       --firmware-version 05.05.58.00 \\\n"
-    "       --config-version 005.025_002 \\\n"
-    "       --carrier Generic \\\n"
-    "       SWI9X15C_05.05.58.00.cwe \\\n"
-    "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
-    "\n"
-    " E.g. a verify operation:\n"
-    " $ sudo " PROGRAM_NAME " \\\n"
-    "       --verify \\\n"
-    "       SWI9X15C_05.05.58.00.cwe \\\n"
-    "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
-    "\n";
 
 /*****************************************************************************/
 /* Logging output */
@@ -352,6 +339,62 @@ print_help (GOptionContext *context)
     g_print ("%s", str);
     g_free (str);
 }
+
+static void
+print_help_examples (void)
+{
+    g_print ("\n"
+             "********************************************************************************\n"
+             "\n"
+             " 1a) An update operation specifying the QMI cdc-wdm device:\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       --update \\\n"
+             "       --cdc-wdm /dev/cdc-wdm0 \\\n"
+             "       --firmware-version 05.05.58.00 \\\n"
+             "       --config-version 005.025_002 \\\n"
+             "       --carrier Generic \\\n"
+             "       SWI9X15C_05.05.58.00.cwe \\\n"
+             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+             "\n"
+             " 1b) An update operation specifying the vid:pid of the device (fails if multiple\n"
+             "     devices with the same vid:pid are found):\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       --update \\\n"
+             "       -d 1199:68c0 \\\n"
+             "       --firmware-version 05.05.58.00 \\\n"
+             "       --config-version 005.025_002 \\\n"
+             "       --carrier Generic \\\n"
+             "       SWI9X15C_05.05.58.00.cwe \\\n"
+             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+             "\n"
+             "********************************************************************************\n"
+             "\n"
+             " 2a) An update operation while in QDL mode, specifying the QDL serial device:\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       --update-qdl \\\n"
+             "       --serial /dev/ttyUSB0 \\\n"
+             "       SWI9X15C_05.05.58.00.cwe \\\n"
+             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+             "\n"
+             " 2b) An update operation while in QDL mode, specifying the device number (fails\n"
+             "     if there are other devices with the same device number in another bus):\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       --update-qdl \\\n"
+             "       -s 019 \\\n"
+             "       SWI9X15C_05.05.58.00.cwe \\\n"
+             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+             "\n"
+             "********************************************************************************\n"
+             "\n"
+             " 3) A verify operation:\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       --verify \\\n"
+             "       SWI9X15C_05.05.58.00.cwe \\\n"
+             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+             "\n");
+}
+
+/*****************************************************************************/
 
 static gchar *
 select_path (const char              *manual,
@@ -437,7 +480,6 @@ int main (int argc, char **argv)
     g_option_context_add_group (context, group);
 
     g_option_context_add_main_entries (context, context_main_entries, NULL);
-    g_option_context_set_description  (context, context_description);
     g_option_context_set_help_enabled (context, FALSE);
 
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
@@ -454,6 +496,12 @@ int main (int argc, char **argv)
 
     if (help_flag) {
         print_help (context);
+        result = TRUE;
+        goto out;
+    }
+
+    if (help_examples_flag) {
+        print_help_examples ();
         result = TRUE;
         goto out;
     }
@@ -484,7 +532,7 @@ int main (int argc, char **argv)
     if (action_update_flag) {
         gchar *path;
 
-        path = select_path (device_str, QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM);
+        path = select_path (cdc_wdm_str, QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM);
         if (!path)
             goto out;
         g_debug ("using cdc-wdm device: %s", path);
