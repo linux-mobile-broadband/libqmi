@@ -109,7 +109,7 @@ run_context_step (GTask *task)
     g_assert (ctx->current);
 
     at_device = QFU_AT_DEVICE (ctx->current->data);
-    if (!qfu_at_device_reseter (at_device, g_task_get_cancellable (task), &error)) {
+    if (!qfu_at_device_boothold (at_device, g_task_get_cancellable (task), &error)) {
         g_debug ("error: %s", error->message);
         g_error_free (error);
         run_context_step_next (task);

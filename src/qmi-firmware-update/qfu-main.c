@@ -56,9 +56,13 @@ static gchar     *carrier_str;
 static gboolean   device_open_proxy_flag;
 static gboolean   device_open_mbim_flag;
 
+/* Reset */
+static gboolean   action_reset_flag;
+static gchar     *at_serial_str;
+
 /* Update (QDL mode) */
 static gboolean   action_update_qdl_flag;
-static gchar     *serial_str;
+static gchar     *qdl_serial_str;
 
 /* Verify */
 static gboolean   action_verify_flag;
@@ -210,12 +214,24 @@ static GOptionEntry context_update_entries[] = {
     { NULL }
 };
 
+static GOptionEntry context_reset_entries[] = {
+    { "reset", 'b', 0, G_OPTION_ARG_NONE, &action_reset_flag,
+      "Reset device into QDL download mode.",
+      NULL
+    },
+    { "at-serial", 'a', 0, G_OPTION_ARG_FILENAME, &at_serial_str,
+      "Select device by AT serial device path (e.g. /dev/ttyUSB2).",
+      "[PATH]"
+    },
+    { NULL }
+};
+
 static GOptionEntry context_update_qdl_entries[] = {
     { "update-qdl", 'U', 0, G_OPTION_ARG_NONE, &action_update_qdl_flag,
       "Launch firmware update process in QDL mode.",
       NULL
     },
-    { "serial", 'q', 0, G_OPTION_ARG_FILENAME, &serial_str,
+    { "qdl-serial", 'q', 0, G_OPTION_ARG_FILENAME, &qdl_serial_str,
       "Select device by QDL serial device path (e.g. /dev/ttyUSB0).",
       "[PATH]"
     },
@@ -372,7 +388,7 @@ print_help_examples (void)
              " 2a) An update operation while in QDL mode, specifying the QDL serial device:\n"
              " $ sudo " PROGRAM_NAME " \\\n"
              "       --update-qdl \\\n"
-             "       --serial /dev/ttyUSB0 \\\n"
+             "       --qdl-serial /dev/ttyUSB0 \\\n"
              "       SWI9X15C_05.05.58.00.cwe \\\n"
              "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
              "\n"
@@ -396,29 +412,38 @@ print_help_examples (void)
 
 /*****************************************************************************/
 
+static gboolean
+validate_inputs (const char *manual)
+{
+    if (manual && (vid != 0 || pid != 0)) {
+        g_printerr ("error: cannot specify device path and vid:pid lookup\n");
+        return FALSE;
+    }
+
+    if (manual && (busnum != 0 || devnum != 0)) {
+        g_printerr ("error: cannot specify device path and busnum:devnum lookup\n");
+        return FALSE;
+    }
+
+    if ((vid != 0 || pid != 0) && (busnum != 0 || devnum != 0)) {
+        g_printerr ("error: cannot specify busnum:devnum and vid:pid lookups\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 static gchar *
-select_path (const char              *manual,
-             QfuUdevHelperDeviceType  type)
+select_single_path (const char              *manual,
+                    QfuUdevHelperDeviceType  type)
 {
     gchar  *path = NULL;
     GError *error = NULL;
     gchar  *sysfs_path = NULL;
     GList  *list = NULL;
 
-    if (manual && (vid != 0 || pid != 0)) {
-        g_printerr ("error: cannot specify device path and vid:pid lookup\n");
-        return NULL;
-    }
-
-    if (manual && (busnum != 0 || devnum != 0)) {
-        g_printerr ("error: cannot specify device path and busnum:devnum lookup\n");
-        return NULL;
-    }
-
-    if ((vid != 0 || pid != 0) && (busnum != 0 || devnum != 0)) {
-        g_printerr ("error: cannot specify busnum:devnum and vid:pid lookups\n");
-        return NULL;
-    }
+    if (!validate_inputs (manual))
+        goto out;
 
     if (manual) {
         path = g_strdup (manual);
@@ -448,6 +473,50 @@ out:
     return path;
 }
 
+static gchar **
+select_multiple_paths (const char              *manual,
+                       QfuUdevHelperDeviceType  type)
+{
+    GError  *error = NULL;
+    gchar   *sysfs_path = NULL;
+    GList   *list = NULL;
+    GList   *l;
+    gchar  **paths = NULL;
+    guint    i;
+
+    if (!validate_inputs (manual))
+        goto out;
+
+    if (manual) {
+        paths = g_strsplit (manual, ",", -1);
+        goto out;
+    }
+
+    /* lookup sysfs path */
+    sysfs_path = qfu_udev_helper_find_by_device_info (vid, pid, busnum, devnum, &error);
+    if (!sysfs_path) {
+        g_printerr ("error: %s\n", error->message);
+        g_error_free (error);
+        goto out;
+    }
+
+    list = qfu_udev_helper_list_devices (type, sysfs_path);
+    if (!list) {
+        g_printerr ("error: no devices found in sysfs path: %s\n", sysfs_path);
+        goto out;
+    }
+
+    paths = g_new0 (gchar *, g_list_length (list) + 1);
+    for (l = list, i = 0; l; l = g_list_next (l), i++)
+        paths[i] = g_file_get_path (G_FILE (l->data));
+
+out:
+    if (list)
+        g_list_free_full (list, (GDestroyNotify) g_object_unref);
+
+    return paths;
+}
+
 int main (int argc, char **argv)
 {
     GError         *error = NULL;
@@ -467,8 +536,12 @@ int main (int argc, char **argv)
     g_option_group_add_entries (group, context_selection_entries);
     g_option_context_add_group (context, group);
 
-    group = g_option_group_new ("update", "Update options", "", NULL, NULL);
+    group = g_option_group_new ("update", "Update options (normal mode)", "", NULL, NULL);
     g_option_group_add_entries (group, context_update_entries);
+    g_option_context_add_group (context, group);
+
+    group = g_option_group_new ("reset", "Reset options (normal mode)", "", NULL, NULL);
+    g_option_group_add_entries (group, context_reset_entries);
     g_option_context_add_group (context, group);
 
     group = g_option_group_new ("update-qdl", "Update options (QDL mode)", "", NULL, NULL);
@@ -512,7 +585,10 @@ int main (int argc, char **argv)
         qmi_utils_set_traces_enabled (TRUE);
 
     /* We don't allow multiple actions at the same time */
-    n_actions = (action_verify_flag + action_update_flag + action_update_qdl_flag);
+    n_actions = (action_verify_flag +
+                 action_update_flag +
+                 action_update_qdl_flag +
+                 action_reset_flag);
     if (n_actions == 0) {
         g_printerr ("error: no actions specified\n");
         goto out;
@@ -522,42 +598,66 @@ int main (int argc, char **argv)
         goto out;
     }
 
-    /* A list of images must always be provided */
-    if (!image_strv) {
+    /* A list of images must be provided for update and verify operations */
+    if ((action_verify_flag || action_update_flag || action_update_qdl_flag) && !image_strv) {
         g_printerr ("error: no firmware images specified\n");
         goto out;
     }
 
     /* Run */
+
     if (action_update_flag) {
         gchar *path;
 
-        path = select_path (cdc_wdm_str, QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM);
-        if (!path)
-            goto out;
-        g_debug ("using cdc-wdm device: %s", path);
-        result = qfu_operation_update_run ((const gchar **) image_strv,
-                                           path,
-                                           firmware_version_str,
-                                           config_version_str,
-                                           carrier_str,
-                                           device_open_proxy_flag,
-                                           device_open_mbim_flag);
-        g_free (path);
-    } else if (action_update_qdl_flag) {
+        path = select_single_path (cdc_wdm_str, QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM);
+        if (path) {
+            g_debug ("using cdc-wdm device: %s", path);
+            result = qfu_operation_update_run ((const gchar **) image_strv,
+                                               path,
+                                               firmware_version_str,
+                                               config_version_str,
+                                               carrier_str,
+                                               device_open_proxy_flag,
+                                               device_open_mbim_flag);
+            g_free (path);
+        }
+        goto out;
+    }
+
+    if (action_update_qdl_flag) {
         gchar *path;
 
-        path = select_path (serial_str, QFU_UDEV_HELPER_DEVICE_TYPE_TTY);
-        if (!path)
-            goto out;
-        g_debug ("using tty device: %s", path);
-        result = qfu_operation_update_qdl_run ((const gchar **) image_strv,
-                                               path);
-        g_free (path);
-    } else if (action_verify_flag)
+        path = select_single_path (qdl_serial_str, QFU_UDEV_HELPER_DEVICE_TYPE_TTY);
+        if (path) {
+            g_debug ("using tty device: %s", path);
+            result = qfu_operation_update_qdl_run ((const gchar **) image_strv,
+                                                   path);
+            g_free (path);
+        }
+        goto out;
+    }
+
+    if (action_reset_flag) {
+        gchar **paths;
+
+        paths = select_multiple_paths (at_serial_str, QFU_UDEV_HELPER_DEVICE_TYPE_TTY);
+        if (paths) {
+            guint i;
+
+            for (i = 0; paths[i]; i++)
+                g_debug ("using tty device #%u: %s", i, paths[i]);
+            result = qfu_operation_reset_run ((const gchar **) paths);
+            g_strfreev (paths);
+        }
+        goto out;
+    }
+
+    if (action_verify_flag) {
         result = qfu_operation_verify_run ((const gchar **) image_strv);
-    else
-        g_assert_not_reached ();
+        goto out;
+    }
+
+    g_assert_not_reached ();
 
 out:
     /* Clean exit for a clean memleak report */

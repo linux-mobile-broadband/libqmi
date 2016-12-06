@@ -36,6 +36,7 @@ gboolean qfu_operation_update_run     (const gchar **images,
 gboolean qfu_operation_update_qdl_run (const gchar **images,
                                        const gchar  *serial);
 gboolean qfu_operation_verify_run     (const gchar **images);
+gboolean qfu_operation_reset_run      (const gchar **ttys);
 
 G_END_DECLS
 
