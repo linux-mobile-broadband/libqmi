@@ -398,7 +398,8 @@ print_help_examples (void)
              " Note that the firmware for the MC7354 is usually composed of a core system image\n"
              " (.cwe) and a carrier-specific image (.nvu). These two images need to be flashed\n"
              " on the same operation, unless upgrading the carrier-specific image on a device\n"
-             " which already has the matching firmware version.\n"
+             " which already has the matching firmware version. The two images may be given\n"
+             " combined into a single image (.spk) file.\n"
              "\n"
              " 1a) An update operation specifying the vid:pid of the device (fails if multiple\n"
              "     devices with the same vid:pid are found):\n"
@@ -423,7 +424,14 @@ print_help_examples (void)
              "       --config-version 005.025_002 \\\n"
              "       --carrier Generic \\\n"
              "       SWI9X15C_05.05.58.00.cwe \\\n"
-             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n");
+             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+             "\n"
+             " 1d) An update operation with a combined image containing both system and carrier\n"
+             "     specific images::\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       --update \\\n"
+             "       -d 1199:68c0 \\\n"
+             "       9999999_9902574_SWI9X15C_05.05.66.00_00_GENNA-UMTS_005.028_000-field.spk\n");
 
     g_print ("\n"
              "********************************************************************************\n"
