@@ -753,8 +753,13 @@ initable_init (GInitable     *initable,
         goto out;
     }
 
-    if (!qdl_device_dload_sdp (self, cancellable, &inner_error))
-        goto out;
+    if (!qdl_device_dload_sdp (self, cancellable, &inner_error)) {
+        if (!g_error_matches (inner_error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED))
+            goto out;
+
+        g_debug ("[qfu-qdl-device] error (ignored): DLOAD SDP not supported");
+        g_clear_error (&inner_error);
+    }
 
     if (!qdl_device_detect_version (self, cancellable, &inner_error))
         goto out;
