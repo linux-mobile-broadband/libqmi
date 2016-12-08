@@ -441,6 +441,12 @@ qmi_client_release_ready (QmiDevice    *device,
     g_clear_object (&ctx->qmi_device);
     g_clear_object (&ctx->cdc_wdm_file);
 
+    /* If nothing to download, we're done */
+    if (!ctx->pending_images) {
+        run_context_step_next (task, RUN_CONTEXT_STEP_LAST);
+        return;
+    }
+
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
 }
@@ -592,6 +598,7 @@ set_firmware_preference_ready (QmiClientDms *client,
     QmiMessageDmsSetFirmwarePreferenceOutput *output;
     GError                                   *error = NULL;
     GArray                                   *array = NULL;
+    guint                                     next_step;
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
@@ -611,10 +618,16 @@ set_firmware_preference_ready (QmiClientDms *client,
         return;
     }
 
+    /* We'll go to next step, unless told to finish early */
+    next_step = ctx->step + 1;
+
     /* list images we need to download? */
     if (qmi_message_dms_set_firmware_preference_output_get_image_download_list (output, &array, &error)) {
         if (!array->len) {
-            g_debug ("[qfu-updater] no more images needed to download");
+            g_print ("device already reports the given firmware/config version: nothing to do\n");
+            g_list_free_full (ctx->pending_images, (GDestroyNotify) g_object_unref);
+            ctx->pending_images = NULL;
+            next_step = RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE;
         } else {
             GString                 *images = NULL;
             QmiDmsFirmwareImageType  type;
@@ -636,7 +649,7 @@ set_firmware_preference_ready (QmiClientDms *client,
     qmi_message_dms_set_firmware_preference_output_unref (output);
 
     /* Go on */
-    run_context_step_next (task, ctx->step + 1);
+    run_context_step_next (task, next_step);
 }
 
 static void
