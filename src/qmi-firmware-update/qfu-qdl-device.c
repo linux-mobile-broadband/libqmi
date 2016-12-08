@@ -31,8 +31,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include <libqmi-glib.h>
-
+#include "qfu-log.h"
 #include "qfu-qdl-message.h"
 #include "qfu-dload-message.h"
 #include "qfu-qdl-device.h"
@@ -242,7 +241,7 @@ send_request (QfuQdlDevice  *self,
     }
 
     /* Debug output */
-    if (qmi_utils_get_traces_enabled ()) {
+    if (qfu_log_get_verbose ()) {
         gchar    *printable;
         gsize     printable_size = request_size;
         gboolean  shorted = FALSE;
@@ -288,7 +287,7 @@ send_framed_request (QfuQdlDevice  *self,
     gsize framed_size;
 
     /* Debug output */
-    if (qmi_utils_get_traces_enabled ()) {
+    if (qfu_log_get_verbose ()) {
         gchar    *printable;
         gsize     printable_size = request_size;
         gboolean  shorted = FALSE;
@@ -373,7 +372,7 @@ receive_response (QfuQdlDevice  *self,
     }
 
     /* Debug output */
-    if (qmi_utils_get_traces_enabled ()) {
+    if (qfu_log_get_verbose ()) {
         gchar    *printable;
         gsize     printable_size = rlen;
         gboolean  shorted = FALSE;
@@ -418,7 +417,7 @@ receive_response (QfuQdlDevice  *self,
     }
 
     /* Debug output */
-    if (qmi_utils_get_traces_enabled ()) {
+    if (qfu_log_get_verbose ()) {
         gchar    *printable;
         gsize     printable_size = unframed_size;
         gboolean  shorted = FALSE;

@@ -27,6 +27,7 @@
 
 #include <libqmi-glib.h>
 
+#include "qfu-log.h"
 #include "qfu-image-factory.h"
 #include "qfu-updater.h"
 #include "qfu-reseter.h"
@@ -314,7 +315,7 @@ run_context_step_download_image (GTask *task)
 
     n_chunks = qfu_image_get_n_data_chunks (ctx->current_image);
     for (sequence = 0; sequence < n_chunks; sequence++) {
-        if (!qmi_utils_get_traces_enabled ())
+        if (!qfu_log_get_verbose ())
             g_print (CLEAR_LINE "%s %04.1lf%%", progress[sequence % G_N_ELEMENTS (progress)], 100.0 * ((gdouble) sequence / (gdouble) n_chunks));
         if (!qfu_qdl_device_ufwrite (ctx->qdl_device, ctx->current_image, sequence, cancellable, &error)) {
             g_prefix_error (&error, "couldn't write in session: ");
@@ -322,7 +323,7 @@ run_context_step_download_image (GTask *task)
         }
     }
 
-    if (!qmi_utils_get_traces_enabled ())
+    if (!qfu_log_get_verbose ())
         g_print (CLEAR_LINE "%s %04.1lf%%\n", progress[sequence % G_N_ELEMENTS (progress)], 100.0);
     g_debug ("[qfu-updater] all chunks ack-ed");
 

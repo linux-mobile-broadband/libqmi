@@ -32,6 +32,7 @@
 
 #include <libqmi-glib.h>
 
+#include "qfu-log.h"
 #include "qfu-at-device.h"
 #include "qfu-utils.h"
 
@@ -96,7 +97,7 @@ send_request (QfuAtDevice   *self,
     }
 
     /* Debug output */
-    if (qmi_utils_get_traces_enabled ())
+    if (qfu_log_get_verbose ())
         g_debug ("[qfu-at-device,%s] >> %s", self->priv->name, request);
 
     wlen = write (self->priv->fd, request, strlen (request));
@@ -197,7 +198,7 @@ receive_response (QfuAtDevice   *self,
     }
 
     /* Debug output */
-    if (qmi_utils_get_traces_enabled ())
+    if (qfu_log_get_verbose ())
         g_debug ("[qfu-at-device,%s] << %s", self->priv->name, start);
 
     if (response)

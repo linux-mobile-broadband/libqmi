@@ -27,11 +27,9 @@
 #include <string.h>
 
 #include <glib.h>
-#include <glib/gprintf.h>
 #include <gio/gio.h>
 
-#include <libqmi-glib.h>
-
+#include "qfu-log.h"
 #include "qfu-operation.h"
 #include "qfu-udev-helpers.h"
 
@@ -288,62 +286,6 @@ static const gchar *context_description =
     "\n"
     "   Please report issues to the libqmi mailing list at:\n"
     "     libqmi-devel@lists.freedesktop.org\n";
-
-/*****************************************************************************/
-/* Logging output */
-
-static void
-log_handler (const gchar    *log_domain,
-             GLogLevelFlags  log_level,
-             const gchar    *message,
-             gpointer        user_data)
-{
-    const gchar *log_level_str;
-    time_t       now;
-    gchar        time_str[64];
-    struct tm   *local_time;
-    gboolean     err;
-
-    /* Nothing to do if we're silent */
-    if (silent_flag)
-        return;
-
-    now = time ((time_t *) NULL);
-    local_time = localtime (&now);
-    strftime (time_str, 64, "%d %b %Y, %H:%M:%S", local_time);
-    err = FALSE;
-
-    switch (log_level) {
-    case G_LOG_LEVEL_WARNING:
-        log_level_str = "-Warning **";
-        err = TRUE;
-        break;
-
-    case G_LOG_LEVEL_CRITICAL:
-    case G_LOG_FLAG_FATAL:
-    case G_LOG_LEVEL_ERROR:
-        log_level_str = "-Error **";
-        err = TRUE;
-        break;
-
-    case G_LOG_LEVEL_DEBUG:
-        log_level_str = "[Debug]";
-        break;
-
-    default:
-        log_level_str = "";
-        break;
-    }
-
-    if (!verbose_flag && !err)
-        return;
-
-    g_fprintf (err ? stderr : stdout,
-               "[%s] %s %s\n",
-               time_str,
-               log_level_str,
-               message);
-}
 
 /*****************************************************************************/
 
@@ -675,10 +617,8 @@ int main (int argc, char **argv)
         goto out;
     }
 
-    g_log_set_handler (NULL, G_LOG_LEVEL_MASK, log_handler, NULL);
-    g_log_set_handler ("Qmi", G_LOG_LEVEL_MASK, log_handler, NULL);
-    if (verbose_flag)
-        qmi_utils_set_traces_enabled (TRUE);
+    /* Initialize logging */
+    qfu_log_init (verbose_flag, silent_flag);
 
     /* We don't allow multiple actions at the same time */
     n_actions = (action_verify_flag +
