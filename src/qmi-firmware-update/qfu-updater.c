@@ -449,22 +449,16 @@ qmi_client_release_ready (QmiDevice    *device,
     ctx = (RunContext *) g_task_get_task_data (task);
 
     if (!qmi_device_release_client_finish (device, res, &error)) {
-        g_prefix_error (&error, "couldn't release DMS QMI client: ");
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    g_debug ("[qfu-updater] DMS QMI client released");
+        g_debug ("[qfu-updater] error (ignored): couldn't release DMS QMI client: %s", error->message);
+        g_clear_error (&error);
+    } else
+        g_debug ("[qfu-updater] DMS QMI client released");
 
     if (!qmi_device_close (ctx->qmi_device, &error)) {
-        g_prefix_error (&error, "couldn't close QMI device: ");
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    g_debug ("[qfu-updater] QMI device closed");
+        g_debug ("[qfu-updater] error (ignored): couldn't close QMI device: %s", error->message);
+        g_clear_error (&error);
+    } else
+        g_debug ("[qfu-updater] QMI device closed");
 
     g_clear_object (&ctx->qmi_device);
     g_clear_object (&ctx->cdc_wdm_file);
