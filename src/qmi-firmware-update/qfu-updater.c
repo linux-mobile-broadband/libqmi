@@ -758,7 +758,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
                 ctx->firmware_version = g_strdup (firmware_version);
             else if (!g_str_equal (firmware_version, ctx->firmware_version)) {
                 if (!self->priv->force) {
-                    g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+                    g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                                  "couldn't detect firmware version: "
                                  "firmware version strings don't match on specified images: "
                                  "'%s' != '%s'",
@@ -776,7 +776,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
                 ctx->config_version = g_strdup (config_version);
             else if (!g_str_equal (config_version, ctx->config_version)) {
                 if (!self->priv->force) {
-                    g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+                    g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                                  "couldn't detect config version: "
                                  "config version strings don't match on specified images: "
                                  "'%s' != '%s'",
@@ -794,7 +794,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
                 ctx->carrier = g_strdup (carrier);
             else if (!g_str_equal (carrier, ctx->carrier)) {
                 if (!self->priv->force) {
-                    g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+                    g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                                  "couldn't detect carrier: "
                                  "carrier strings don't match on specified images: "
                                  "'%s' != '%s'",
@@ -811,7 +811,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
     /* If given firmware version doesn't match the one in the image, error out */
     if (self->priv->firmware_version && (g_strcmp0 (self->priv->firmware_version, ctx->firmware_version) != 0)) {
         if (!self->priv->force) {
-            g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                          "error validating firmware version: "
                          "user provided firmware version doesn't match the one in the specified images: "
                          "'%s' != '%s'",
@@ -826,7 +826,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
     /* If given config version doesn't match the one in the image, error out */
     if (self->priv->config_version && (g_strcmp0 (self->priv->config_version, ctx->config_version) != 0)) {
         if (!self->priv->force) {
-            g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                          "error validating firmware version: "
                          "user provided firmware version doesn't match the one in the specified images: "
                          "'%s' != '%s'",
@@ -841,7 +841,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
     /* If given carrier doesn't match the one in the image, error out */
     if (self->priv->carrier && (g_strcmp0 (self->priv->carrier, ctx->carrier) != 0)) {
         if (!self->priv->force) {
-            g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                          "error validating carrier: "
                          "user provided carrier doesn't match the one in the specified images: "
                          "'%s' != '%s'",

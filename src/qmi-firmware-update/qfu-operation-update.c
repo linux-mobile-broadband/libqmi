@@ -63,10 +63,8 @@ run_ready (QfuUpdater        *updater,
 
     if (!qfu_updater_run_finish (updater, res, &error)) {
         g_printerr ("error: %s\n", error->message);
-        if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA) ||
-            g_error_matches (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+        if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED))
             g_printerr ("note: you can ignore this error using --force\n");
-        }
         g_error_free (error);
     } else {
         g_print ("firmware update operation finished successfully\n");
