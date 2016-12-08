@@ -463,10 +463,19 @@ print_help_examples (void)
              "\n"
              " Example 4: Verify firmware images.\n"
              "\n"
-             " $ sudo " PROGRAM_NAME " \\\n"
+             " 3a) Verify several images at once:\n"
+             " $ " PROGRAM_NAME " \\\n"
              "       --verify \\\n"
              "       SWI9X15C_05.05.58.00.cwe \\\n"
              "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+             "\n"
+             " 3b) Verify all .cwe, .nvu and .spk images inside a directory:\n"
+             " $ find . -regex \".*\\.\\(nvu\\|spk\\|cwe\\)\" -exec " PROGRAM_NAME " -v -z {} \\;\n"
+             "\n"
+             " 3c) Image files may be given within .exe files; extract them with 7-Zip:\n"
+             " $ 7z x SWI9200M_3.5-Release13-SWI9200X_03.05.29.03.exe\n"
+             " $ ls *.{cwe,nvu,spk} 2>/dev/null\n"
+             "   9999999_9999999_9200_03.05.29.03_00_generic_000.000_001_SPKG_MC.cwe\n"
              "\n");
 }
 
