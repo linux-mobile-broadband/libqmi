@@ -527,7 +527,7 @@ qfu_qdl_device_ufwrite (QfuQdlDevice  *self,
 
     /* NOTE: the last chunk will require a long timeout, so just define the
      * same one for all chunks */
-    rsplen = send_receive (self, self->priv->buffer->data, reqlen, FALSE, 60, &rsp, cancellable, error);
+    rsplen = send_receive (self, self->priv->buffer->data, reqlen, FALSE, 120, &rsp, cancellable, error);
     if (rsplen < 0)
         return FALSE;
 
