@@ -19,10 +19,16 @@
  * Copyright (C) 2016 Aleksander Morgado <aleksander@aleksander.es>
  */
 
+#include <config.h>
+
 #include <glib.h>
 #include <glib/gprintf.h>
 
 #include <libqmi-glib.h>
+
+#if defined MBIM_QMUX_ENABLED
+#include <libmbim-glib.h>
+#endif
 
 #include "qfu-log.h"
 
@@ -108,6 +114,13 @@ qfu_log_init (gboolean verbose,
     g_log_set_handler ("Qmi", G_LOG_LEVEL_MASK, log_handler, NULL);
     if (verbose_flag)
         qmi_utils_set_traces_enabled (TRUE);
+
+#if defined MBIM_QMUX_ENABLED
+    /* libmbim logging */
+    g_log_set_handler ("Mbim", G_LOG_LEVEL_MASK, log_handler, NULL);
+    if (verbose_flag)
+        mbim_utils_set_traces_enabled (TRUE);
+#endif
 
     return TRUE;
 }

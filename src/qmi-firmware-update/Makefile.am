@@ -20,6 +20,7 @@ bin_PROGRAMS = qmi-firmware-update
 qmi_firmware_update_CPPFLAGS = \
 	$(GLIB_CFLAGS) \
 	$(GUDEV_CFLAGS) \
+	$(MBIM_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/libqmi-glib \
 	-I$(top_srcdir)/src/libqmi-glib/generated \
@@ -75,6 +76,7 @@ qmi_firmware_update_SOURCES = \
 	$(NULL)
 
 qmi_firmware_update_LDADD = \
+	$(MBIM_LIBS) \
 	$(GUDEV_LIBS) \
 	$(GLIB_LIBS) \
 	$(builddir)/libutils.la \
