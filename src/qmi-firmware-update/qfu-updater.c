@@ -52,6 +52,7 @@ struct _QfuUpdaterPrivate {
     gchar       *carrier;
     gboolean     device_open_proxy;
     gboolean     device_open_mbim;
+    gboolean     force;
 };
 
 /******************************************************************************/
@@ -103,11 +104,19 @@ typedef struct {
 
     /* Reset configuration */
     gboolean boothold_reset;
+
+    /* Information gathered from the firmware images themselves */
+    gchar *firmware_version;
+    gchar *config_version;
+    gchar *carrier;
 } RunContext;
 
 static void
 run_context_free (RunContext *ctx)
 {
+    g_free (ctx->firmware_version);
+    g_free (ctx->config_version);
+    g_free (ctx->carrier);
     if (ctx->qdl_device)
         g_object_unref (&ctx->qdl_device);
     if (ctx->qmi_client) {
@@ -661,23 +670,39 @@ run_context_step_set_firmware_preference (GTask *task)
     GArray                                           *array;
     QmiMessageDmsSetFirmwarePreferenceInputListImage  modem_image_id;
     QmiMessageDmsSetFirmwarePreferenceInputListImage  pri_image_id;
+    const gchar                                      *firmware_version;
+    const gchar                                      *config_version;
+    const gchar                                      *carrier;
 
     ctx = (RunContext *) g_task_get_task_data (task);
     self = g_task_get_source_object (task);
+
+    firmware_version = self->priv->firmware_version ? self->priv->firmware_version : ctx->firmware_version;
+    config_version   = self->priv->config_version   ? self->priv->config_version   : ctx->config_version;
+    carrier          = self->priv->carrier          ? self->priv->carrier          : ctx->carrier;
+
+    g_assert (firmware_version);
+    g_assert (config_version);
+    g_assert (carrier);
+
+    g_print ("setting firmware preference:\n");
+    g_print ("  firmware version: '%s'\n", firmware_version);
+    g_print ("  config version:   '%s'\n", config_version);
+    g_print ("  carrier:          '%s'\n", carrier);
 
     /* Set modem image info */
     modem_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM;
     modem_image_id.unique_id = g_array_sized_new (FALSE, TRUE, sizeof (gchar), 16);
     g_array_insert_vals (modem_image_id.unique_id, 0, "?_?", 3);
     g_array_set_size (modem_image_id.unique_id, 16);
-    modem_image_id.build_id = g_strdup_printf ("%s_?", self->priv->firmware_version);
+    modem_image_id.build_id = g_strdup_printf ("%s_?", firmware_version);
 
     /* Set pri image info */
     pri_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI;
     pri_image_id.unique_id = g_array_sized_new (FALSE, TRUE, sizeof (gchar), 16);
-    g_array_insert_vals (pri_image_id.unique_id, 0, self->priv->config_version, strlen (self->priv->config_version));
+    g_array_insert_vals (pri_image_id.unique_id, 0, config_version, strlen (config_version));
     g_array_set_size (pri_image_id.unique_id, 16);
-    pri_image_id.build_id = g_strdup_printf ("%s_%s", self->priv->firmware_version, self->priv->carrier);
+    pri_image_id.build_id = g_strdup_printf ("%s_%s", firmware_version, carrier);
 
     array = g_array_sized_new (FALSE, FALSE, sizeof (QmiMessageDmsSetFirmwarePreferenceInputListImage), 2);
     g_array_append_val (array, modem_image_id);
@@ -706,6 +731,152 @@ run_context_step_set_firmware_preference (GTask *task)
     g_free        (pri_image_id.build_id);
 }
 
+static gboolean
+validate_firmware_config_carrier (QfuUpdater  *self,
+                                  RunContext  *ctx,
+                                  GError     **error)
+{
+    GList *l;
+
+    /* Try to preload information like firmware/config/carrier from CWE images */
+    for (l = ctx->pending_images; l; l = g_list_next (l)) {
+        const gchar *firmware_version;
+        const gchar *config_version;
+        const gchar *carrier;
+        QfuImageCwe *image;
+
+        if (!QFU_IS_IMAGE_CWE (l->data))
+            continue;
+
+        image = QFU_IMAGE_CWE (l->data);
+        firmware_version = qfu_image_cwe_get_parsed_firmware_version (image);
+        config_version   = qfu_image_cwe_get_parsed_config_version   (image);
+        carrier          = qfu_image_cwe_get_parsed_carrier          (image);
+
+        if (firmware_version) {
+            if (!ctx->firmware_version)
+                ctx->firmware_version = g_strdup (firmware_version);
+            else if (!g_str_equal (firmware_version, ctx->firmware_version)) {
+                if (!self->priv->force) {
+                    g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+                                 "couldn't detect firmware version: "
+                                 "firmware version strings don't match on specified images: "
+                                 "'%s' != '%s'",
+                                 firmware_version, ctx->firmware_version);
+                    return FALSE;
+                }
+                g_warning ("firmware version strings don't match on specified images: "
+                           "'%s' != '%s' (IGNORED with --force)",
+                           firmware_version, ctx->firmware_version);
+            }
+        }
+
+        if (config_version) {
+            if (!ctx->config_version)
+                ctx->config_version = g_strdup (config_version);
+            else if (!g_str_equal (config_version, ctx->config_version)) {
+                if (!self->priv->force) {
+                    g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+                                 "couldn't detect config version: "
+                                 "config version strings don't match on specified images: "
+                                 "'%s' != '%s'",
+                                 config_version, ctx->config_version);
+                    return FALSE;
+                }
+                g_warning ("[qfu-updater] config version strings don't match on specified images: "
+                           "'%s' != '%s' (IGNORED with --force)",
+                           config_version, ctx->config_version);
+            }
+        }
+
+        if (carrier) {
+            if (!ctx->carrier)
+                ctx->carrier = g_strdup (carrier);
+            else if (!g_str_equal (carrier, ctx->carrier)) {
+                if (!self->priv->force) {
+                    g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
+                                 "couldn't detect carrier: "
+                                 "carrier strings don't match on specified images: "
+                                 "'%s' != '%s'",
+                                 carrier, ctx->carrier);
+                    return FALSE;
+                }
+                g_warning ("[qfu-updater] carrier strings don't match on specified images: "
+                           "'%s' != '%s' (IGNORED with --force)",
+                           carrier, ctx->carrier);
+            }
+        }
+    }
+
+    /* If given firmware version doesn't match the one in the image, error out */
+    if (self->priv->firmware_version && (g_strcmp0 (self->priv->firmware_version, ctx->firmware_version) != 0)) {
+        if (!self->priv->force) {
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                         "error validating firmware version: "
+                         "user provided firmware version doesn't match the one in the specified images: "
+                         "'%s' != '%s'",
+                         self->priv->firmware_version, ctx->firmware_version);
+            return FALSE;
+        }
+        g_warning ("[qfu-updater] user provided firmware version doesn't match the one in the specified images: "
+                   "'%s' != '%s' (IGNORED with --force)",
+                   self->priv->firmware_version, ctx->firmware_version);
+    }
+
+    /* If given config version doesn't match the one in the image, error out */
+    if (self->priv->config_version && (g_strcmp0 (self->priv->config_version, ctx->config_version) != 0)) {
+        if (!self->priv->force) {
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                         "error validating firmware version: "
+                         "user provided firmware version doesn't match the one in the specified images: "
+                         "'%s' != '%s'",
+                         self->priv->config_version, ctx->config_version);
+            return FALSE;
+        }
+        g_warning ("[qfu-updater] user provided config version doesn't match the one in the specified images: "
+                   "'%s' != '%s' (IGNORED with --force)",
+                   self->priv->firmware_version, ctx->firmware_version);
+    }
+
+    /* If given carrier doesn't match the one in the image, error out */
+    if (self->priv->carrier && (g_strcmp0 (self->priv->carrier, ctx->carrier) != 0)) {
+        if (!self->priv->force) {
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                         "error validating carrier: "
+                         "user provided carrier doesn't match the one in the specified images: "
+                         "'%s' != '%s'",
+                         self->priv->carrier, ctx->carrier);
+        }
+        g_warning ("[qfu-updater] user provided carrier doesn't match the one in the specified images: "
+                   "'%s' != '%s' (IGNORED with --force)",
+                   self->priv->carrier, ctx->carrier);
+        return FALSE;
+    }
+
+    /* No firmware version? */
+    if (!self->priv->firmware_version && !ctx->firmware_version) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "firmware version required");
+        return FALSE;
+    }
+
+    /* No config version? */
+    if (!self->priv->config_version && !ctx->config_version) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "config version required");
+        return FALSE;
+    }
+
+    /* No carrier? */
+    if (!self->priv->carrier && !ctx->carrier) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "carrier required");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 static void
 get_firmware_preference_ready (QmiClientDms *client,
                                GAsyncResult *res,
@@ -731,7 +902,7 @@ get_firmware_preference_ready (QmiClientDms *client,
 
     if (!qmi_message_dms_get_firmware_preference_output_get_result (output, NULL)) {
         qmi_message_dms_get_firmware_preference_output_unref (output);
-        /* Firmware preference setting not supported; fail if we got those settings */
+        /* Firmware preference setting not supported; fail if we got those settings explicitly */
         if (self->priv->firmware_version || self->priv->config_version || self->priv->carrier) {
             g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
                                      "setting firmware/config/carrier is not supported by this device");
@@ -768,27 +939,8 @@ get_firmware_preference_ready (QmiClientDms *client,
     qmi_message_dms_get_firmware_preference_output_unref (output);
 
     /* Firmware preference setting is supported so we require firmware/config/carrier */
-
-    /* No firmware version given? */
-    if (!self->priv->firmware_version) {
-        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
-                                 "firmware version required");
-        g_object_unref (task);
-        return;
-    }
-
-    /* No config version given? */
-    if (!self->priv->config_version) {
-        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
-                                 "config version required");
-        g_object_unref (task);
-        return;
-    }
-
-    /* No carrier given? */
-    if (!self->priv->carrier) {
-        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
-                                 "carrier required");
+    if (!validate_firmware_config_carrier (self, ctx, &error)) {
+        g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
@@ -1033,6 +1185,32 @@ image_sort_by_size (QfuImage *a, QfuImage *b)
     return qfu_image_get_size (b) - qfu_image_get_size (a);
 }
 
+static gboolean
+preload_images (RunContext    *ctx,
+                GList         *image_file_list,
+                GCancellable  *cancellable,
+                GError       **error)
+{
+    GList *l;
+
+    /* Build QfuImage objects for each image file given */
+    for (l = image_file_list; l; l = g_list_next (l)) {
+        QfuImage *image;
+
+        image = qfu_image_factory_build (G_FILE (l->data), cancellable, error);
+        if (!image)
+            return FALSE;
+
+        ctx->pending_images = g_list_append (ctx->pending_images, image);
+    }
+
+    /* Sort by size, we want to download bigger images first, as that is usually
+     * the use case anyway, first flash e.g. the .cwe file, then the .nvu one. */
+    ctx->pending_images = g_list_sort (ctx->pending_images, (GCompareFunc) image_sort_by_size);
+
+    return TRUE;
+}
+
 void
 qfu_updater_run (QfuUpdater          *self,
                  GList               *image_file_list,
@@ -1040,9 +1218,9 @@ qfu_updater_run (QfuUpdater          *self,
                  GAsyncReadyCallback  callback,
                  gpointer             user_data)
 {
-    RunContext  *ctx;
-    GTask       *task;
-    GList       *l;
+    RunContext *ctx;
+    GTask      *task;
+    GError     *error = NULL;
 
     g_assert (image_file_list);
 
@@ -1051,23 +1229,11 @@ qfu_updater_run (QfuUpdater          *self,
     task = g_task_new (self, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify) run_context_free);
 
-    /* Build QfuImage objects for each image file given */
-    for (l = image_file_list; l; l = g_list_next (l)) {
-        GError   *error = NULL;
-        QfuImage *image;
-
-        image = qfu_image_factory_build (G_FILE (l->data), cancellable, &error);
-        if (!image) {
-            g_task_return_error (task, error);
-            g_object_unref (task);
-            return;
-        }
-        ctx->pending_images = g_list_append (ctx->pending_images, image);
+    if (!preload_images (ctx, image_file_list, cancellable, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
     }
-
-    /* Sort by size, we want to download bigger images first, as that is usually
-     * the use case anyway, first flash e.g. the .cwe file, then the .nvu one. */
-    ctx->pending_images = g_list_sort (ctx->pending_images, (GCompareFunc) image_sort_by_size);
 
     switch (self->priv->type) {
     case UPDATER_TYPE_GENERIC:
@@ -1094,7 +1260,8 @@ qfu_updater_new (GFile       *cdc_wdm_file,
                  const gchar *config_version,
                  const gchar *carrier,
                  gboolean     device_open_proxy,
-                 gboolean     device_open_mbim)
+                 gboolean     device_open_mbim,
+                 gboolean     force)
 {
     QfuUpdater *self;
 
@@ -1108,6 +1275,7 @@ qfu_updater_new (GFile       *cdc_wdm_file,
     self->priv->firmware_version = (firmware_version ? g_strdup (firmware_version) : NULL);
     self->priv->config_version = (config_version ? g_strdup (config_version) : NULL);
     self->priv->carrier = (carrier ? g_strdup (carrier) : NULL);
+    self->priv->force = force;
 
     return self;
 }

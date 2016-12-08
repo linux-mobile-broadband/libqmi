@@ -55,6 +55,7 @@ static gchar     *config_version_str;
 static gchar     *carrier_str;
 static gboolean   device_open_proxy_flag;
 static gboolean   device_open_mbim_flag;
+static gboolean   force_flag;
 
 /* Reset */
 static gboolean   action_reset_flag;
@@ -209,6 +210,10 @@ static GOptionEntry context_update_entries[] = {
     },
     { "device-open-mbim", 0, 0, G_OPTION_ARG_NONE, &device_open_mbim_flag,
       "Open an MBIM device with EXT_QMUX support.",
+      NULL
+    },
+    { "force", 0, 0, G_OPTION_ARG_NONE, &force_flag,
+      "Force update operation even with version string errors.",
       NULL
     },
     { NULL }
@@ -379,7 +384,10 @@ print_help_examples (void)
              "\n"
              " The MC7354 is a 9x15 device which requires the firmware updater to specify the\n"
              " firmware version string, the config version string and the carrier string, so\n"
-             " that they are included as identifiers of the firmware images downloaded.\n"
+             " that they are included as identifiers of the firmware images downloaded. The\n"
+             " core logic in the application will try to automatically detect these strings,\n"
+             " although the user can also use specific options to override them or if the\n"
+             " automatic detection failed.\n"
              "\n"
              " While in normal operation, the device will expose multiple cdc-wdm ports, and\n"
              " the updater application just needs one of those cdc-wdm ports to start the\n"
@@ -389,20 +397,25 @@ print_help_examples (void)
              "\n"
              " Note that the firmware for the MC7354 is usually composed of a core system image\n"
              " (.cwe) and a carrier-specific image (.nvu). These two images need to be flashed\n"
-             " on the same operation.\n"
+             " on the same operation, unless upgrading the carrier-specific image on a device\n"
+             " which already has the matching firmware version.\n"
              "\n"
-             " 1a) An update operation specifying the QMI cdc-wdm device:\n"
+             " 1a) An update operation specifying the vid:pid of the device (fails if multiple\n"
+             "     devices with the same vid:pid are found):\n"
              " $ sudo " PROGRAM_NAME " \\\n"
              "       --update \\\n"
-             "       --cdc-wdm /dev/cdc-wdm0 \\\n"
-             "       --firmware-version 05.05.58.00 \\\n"
-             "       --config-version 005.025_002 \\\n"
-             "       --carrier Generic \\\n"
+             "       -d 1199:68c0 \\\n"
              "       SWI9X15C_05.05.58.00.cwe \\\n"
              "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
              "\n"
-             " 1b) An update operation specifying the vid:pid of the device (fails if multiple\n"
-             "     devices with the same vid:pid are found):\n"
+             " 1b) An update operation specifying an explicit QMI cdc-wdm device:\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       --update \\\n"
+             "       --cdc-wdm /dev/cdc-wdm0 \\\n"
+             "       SWI9X15C_05.05.58.00.cwe \\\n"
+             "       SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
+             "\n"
+             " 1c) An update operation specifying explicit firmware, config and carrier strings:\n"
              " $ sudo " PROGRAM_NAME " \\\n"
              "       --update \\\n"
              "       -d 1199:68c0 \\\n"
@@ -426,17 +439,17 @@ print_help_examples (void)
              " The user doesn't need to explicitly specify the path to the TTY, though, it will\n"
              " be automatically detected and processed during the firmware update process.\n"
              "\n"
-             " 2a) An update operation specifying the QMI cdc-wdm device:\n"
-             " $ sudo " PROGRAM_NAME " \\\n"
-             "       --update \\\n"
-             "       --cdc-wdm /dev/cdc-wdm0 \\\n"
-             "       9999999_9999999_9200_03.05.14.00_00_generic_000.000_001_SPKG_MC.cwe\n"
-             "\n"
-             " 2b) An update operation specifying the vid:pid of the device (fails if multiple\n"
+             " 2a) An update operation specifying the vid:pid of the device (fails if multiple\n"
              "     devices with the same vid:pid are found):\n"
              " $ sudo " PROGRAM_NAME " \\\n"
              "       --update \\\n"
              "       -d 1199:68a2 \\\n"
+             "       9999999_9999999_9200_03.05.14.00_00_generic_000.000_001_SPKG_MC.cwe\n"
+             "\n"
+             " 2b) An update operation specifying an explicit QMI cdc-wdm device:\n"
+             " $ sudo " PROGRAM_NAME " \\\n"
+             "       --update \\\n"
+             "       --cdc-wdm /dev/cdc-wdm0 \\\n"
              "       9999999_9999999_9200_03.05.14.00_00_generic_000.000_001_SPKG_MC.cwe\n");
 
     g_print ("\n"
@@ -445,7 +458,8 @@ print_help_examples (void)
              " Example 3: Manual process to update a Sierra Wireless MC7700.\n"
              "\n"
              " Instead of letting the " PROGRAM_NAME " manage the full firmware update\n"
-             " operation, the user can trigger the actions manually as follows:\n"
+             " operation (include the module reboots into the different modes), the user can\n"
+             " trigger the actions manually as follows:\n"
              "\n"
              " 3a) Request device to go into QDL download mode:\n"
              " $ sudo " PROGRAM_NAME " \\\n"
@@ -688,7 +702,8 @@ int main (int argc, char **argv)
                                                config_version_str,
                                                carrier_str,
                                                device_open_proxy_flag,
-                                               device_open_mbim_flag);
+                                               device_open_mbim_flag,
+                                               force_flag);
             g_free (path);
         }
         goto out;

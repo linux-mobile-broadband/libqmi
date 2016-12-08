@@ -53,7 +53,8 @@ QfuUpdater *qfu_updater_new        (GFile                *cdc_wdm_file,
                                     const gchar          *config_version,
                                     const gchar          *carrier,
                                     gboolean              device_open_proxy,
-                                    gboolean              device_open_mbim);
+                                    gboolean              device_open_mbim,
+                                    gboolean              force);
 QfuUpdater *qfu_updater_new_qdl    (GFile                *serial_file);
 void        qfu_updater_run        (QfuUpdater           *self,
                                     GList                *image_file_list,
