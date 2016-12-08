@@ -1,4 +1,20 @@
 
+SUBDIRS = . test
+
+noinst_LTLIBRARIES = libutils.la
+
+libutils_la_SOURCES = \
+	qfu-utils.h qfu-utils.c \
+	$(NULL)
+
+libutils_la_CPPFLAGS = \
+	$(GLIB_CFLAGS) \
+	$(NULL)
+
+libutils_la_LIBADD = \
+	$(GLIB_CFLAGS) \
+	$(NULL)
+
 bin_PROGRAMS = qmi-firmware-update
 
 qmi_firmware_update_CPPFLAGS = \
@@ -60,6 +76,7 @@ qmi_firmware_update_SOURCES = \
 qmi_firmware_update_LDADD = \
 	$(GUDEV_LIBS) \
 	$(GLIB_LIBS) \
+	$(builddir)/libutils.la \
 	$(top_builddir)/src/libqmi-glib/libqmi-glib.la \
 	$(NULL)
 

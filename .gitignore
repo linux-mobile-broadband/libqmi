@@ -79,3 +79,5 @@ Makefile.in
 /utils/swi-update
 
 /src/qmi-firmware-update/qfu-enum-types.*
+
+/src/qmi-firmware-update/test/test-utils

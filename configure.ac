@@ -173,6 +173,7 @@ AC_CONFIG_FILES([Makefile
                  src/qmicli/test/Makefile
                  src/qmi-proxy/Makefile
                  src/qmi-firmware-update/Makefile
+                 src/qmi-firmware-update/test/Makefile
                  utils/Makefile
                  docs/Makefile
                  docs/reference/Makefile

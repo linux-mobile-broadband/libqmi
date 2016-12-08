@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include <glib.h>
+#include <gio/gio.h>
 
 #include "qfu-utils.h"
 
@@ -164,4 +165,51 @@ qfu_utils_crc16 (const guint8 *buffer,
     while (len--)
             crc = crc_table[(crc ^ *buffer++) & 0xff] ^ (crc >> 8);
     return ~crc;
+}
+
+/******************************************************************************/
+
+gboolean
+qfu_utils_parse_cwe_version_string (const gchar  *version,
+                                    gchar       **firmware_version,
+                                    gchar       **config_version,
+                                    gchar       **carrier,
+                                    GError      **error)
+{
+    GRegex     *regex;
+    GMatchInfo *match_info = NULL;
+    gboolean    result = FALSE;
+
+    regex = g_regex_new ("(?:.*)"
+                         "_([0-9][0-9]\\.[0-9][0-9]\\.[0-9][0-9]\\.[0-9][0-9])" /* firmware version */
+                         "(?:"
+                             "(?:.*)"
+                             "_([a-zA-Z\\-]+)" /* carrier */
+                             "_([0-9][0-9][0-9]\\.[0-9][0-9][0-9]_[0-9][0-9][0-9])" /* config version */
+                         ")?",
+                         0, 0, NULL);
+    g_assert (regex);
+
+    if (!g_regex_match_full (regex, version, strlen (version), 0, 0, &match_info, NULL)) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "couldn't parse CWE version string '%s': didn't match",
+                     version);
+        goto out;
+    }
+
+    if (firmware_version)
+        *firmware_version = g_match_info_fetch (match_info, 1);
+    if (carrier)
+        *carrier = (g_match_info_get_match_count (match_info) > 2 ? g_match_info_fetch (match_info, 2) : NULL);
+    if (config_version)
+        *config_version = (g_match_info_get_match_count (match_info) > 3 ? g_match_info_fetch (match_info, 3) : NULL);
+
+    result = TRUE;
+
+out:
+    if (match_info)
+        g_match_info_free (match_info);
+    g_regex_unref (regex);
+
+    return result;
 }

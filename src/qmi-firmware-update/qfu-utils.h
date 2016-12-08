@@ -24,6 +24,7 @@
 #define QFU_UTILS_H
 
 #include <glib.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -35,6 +36,12 @@ gchar *qfu_utils_get_firmware_image_unique_id_printable (const GArray *unique_id
 
 guint16 qfu_utils_crc16 (const guint8 *buffer,
                          gsize         len);
+
+gboolean qfu_utils_parse_cwe_version_string (const gchar  *version,
+                                             gchar       **firmware_version,
+                                             gchar       **config_version,
+                                             gchar       **carrier,
+                                             GError      **error);
 
 G_END_DECLS
 
