@@ -111,7 +111,7 @@ send_request (QfuAtDevice   *self,
      * were wlen */
     if (wlen != strlen (request)) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                     "error writing: only %" G_GSSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes wlen",
+                     "error writing: only %" G_GSSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes written",
                      wlen, wlen);
         return FALSE;
     }
