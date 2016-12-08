@@ -498,6 +498,10 @@ print_help_examples (void)
 static gboolean
 validate_inputs (const char *manual)
 {
+    if (!manual && !vid && !pid && !busnum && !devnum) {
+        g_printerr ("error: device not specified\n");
+        return FALSE;
+    }
     if (manual && (vid != 0 || pid != 0)) {
         g_printerr ("error: cannot specify device path and vid:pid lookup\n");
         return FALSE;
