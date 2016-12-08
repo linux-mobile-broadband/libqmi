@@ -315,16 +315,22 @@ run_context_step_download_image (GTask *task)
 
     n_chunks = qfu_image_get_n_data_chunks (ctx->current_image);
     for (sequence = 0; sequence < n_chunks; sequence++) {
-        if (!qfu_log_get_verbose ())
-            g_print (CLEAR_LINE "%s %04.1lf%%", progress[sequence % G_N_ELEMENTS (progress)], 100.0 * ((gdouble) sequence / (gdouble) n_chunks));
+        if (!qfu_log_get_verbose ()) {
+            /* Use n-1 chunks for progress reporting; because the last one will take
+             * a lot longer. */
+            if (n_chunks > 1 && sequence < (n_chunks - 1))
+                g_print (CLEAR_LINE "%s %04.1lf%%",
+                         progress[sequence % G_N_ELEMENTS (progress)],
+                         100.0 * ((gdouble) sequence / (gdouble) (n_chunks - 1)));
+            else if (sequence == (n_chunks - 1))
+                g_print (CLEAR_LINE "finalizing download...\n");
+        }
         if (!qfu_qdl_device_ufwrite (ctx->qdl_device, ctx->current_image, sequence, cancellable, &error)) {
             g_prefix_error (&error, "couldn't write in session: ");
             goto out;
         }
     }
 
-    if (!qfu_log_get_verbose ())
-        g_print (CLEAR_LINE "%s %04.1lf%%\n", progress[sequence % G_N_ELEMENTS (progress)], 100.0);
     g_debug ("[qfu-updater] all chunks ack-ed");
 
     if (!qfu_qdl_device_ufclose (ctx->qdl_device, cancellable, &error)) {
