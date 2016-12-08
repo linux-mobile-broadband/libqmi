@@ -37,6 +37,8 @@
 
 G_DEFINE_TYPE (QfuUpdater, qfu_updater, G_TYPE_OBJECT)
 
+#define CLEAR_LINE "\33[2K\r"
+
 typedef enum {
     UPDATER_TYPE_UNKNOWN,
     UPDATER_TYPE_GENERIC,
@@ -263,6 +265,19 @@ run_context_step_cleanup_image (GTask *task)
     run_context_step_next (task, ctx->step + 1);
 }
 
+static const gchar *progress[] = {
+    "(*-----)",
+    "(-*----)",
+    "(--*---)",
+    "(---*--)",
+    "(----*-)",
+    "(-----*)",
+    "(----*-)",
+    "(---*--)",
+    "(--*---)",
+    "(-*----)"
+};
+
 static void
 run_context_step_download_image (GTask *task)
 {
@@ -299,12 +314,16 @@ run_context_step_download_image (GTask *task)
 
     n_chunks = qfu_image_get_n_data_chunks (ctx->current_image);
     for (sequence = 0; sequence < n_chunks; sequence++) {
+        if (!qmi_utils_get_traces_enabled ())
+            g_print (CLEAR_LINE "%s %04.1lf%%", progress[sequence % G_N_ELEMENTS (progress)], 100.0 * ((gdouble) sequence / (gdouble) n_chunks));
         if (!qfu_qdl_device_ufwrite (ctx->qdl_device, ctx->current_image, sequence, cancellable, &error)) {
             g_prefix_error (&error, "couldn't write in session: ");
             goto out;
         }
     }
 
+    if (!qmi_utils_get_traces_enabled ())
+        g_print (CLEAR_LINE "%s %04.1lf%%\n", progress[sequence % G_N_ELEMENTS (progress)], 100.0);
     g_debug ("[qfu-updater] all chunks ack-ed");
 
     if (!qfu_qdl_device_ufclose (ctx->qdl_device, cancellable, &error)) {
