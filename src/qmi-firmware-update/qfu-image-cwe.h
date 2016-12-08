@@ -54,11 +54,17 @@ GType        qfu_image_cwe_get_type                         (void);
 QfuImage    *qfu_image_cwe_new                              (GFile         *file,
                                                              GCancellable  *cancellable,
                                                              GError       **error);
+
 const gchar *qfu_image_cwe_header_get_type                  (QfuImageCwe   *self);
 const gchar *qfu_image_cwe_header_get_product               (QfuImageCwe   *self);
 const gchar *qfu_image_cwe_header_get_version               (QfuImageCwe   *self);
 const gchar *qfu_image_cwe_header_get_date                  (QfuImageCwe   *self);
 guint32      qfu_image_cwe_header_get_image_size            (QfuImageCwe   *self);
+
+const gchar *qfu_image_cwe_get_parsed_firmware_version      (QfuImageCwe   *self);
+const gchar *qfu_image_cwe_get_parsed_config_version        (QfuImageCwe   *self);
+const gchar *qfu_image_cwe_get_parsed_carrier               (QfuImageCwe   *self);
+
 guint        qfu_image_cwe_get_n_embedded_headers           (QfuImageCwe   *self);
 gint         qfu_image_cwe_embedded_header_get_parent_index (QfuImageCwe   *self,
                                                              guint          embedded_i);

@@ -28,6 +28,8 @@
 #include "qfu-image-factory.h"
 #include "qfu-enum-types.h"
 
+#define VALIDATE_STR_NA(str) (str && str[0] ? str : "n/a")
+
 static void
 print_image_cwe (QfuImageCwe *image,
                  const gchar *indent_prefix,
@@ -39,13 +41,13 @@ print_image_cwe (QfuImageCwe *image,
 
     g_print ("%s-------------------------------------\n", indent_prefix);
     g_print ("%s[cwe %s] type:    %s\n",
-             indent_prefix, id_str, qfu_image_cwe_embedded_header_get_type (image, idx));
+             indent_prefix, id_str, VALIDATE_STR_NA (qfu_image_cwe_embedded_header_get_type (image, idx)));
     g_print ("%s[cwe %s] product: %s\n",
-             indent_prefix, id_str, qfu_image_cwe_embedded_header_get_product (image, idx));
+             indent_prefix, id_str, VALIDATE_STR_NA (qfu_image_cwe_embedded_header_get_product (image, idx)));
     g_print ("%s[cwe %s] version: %s\n",
-             indent_prefix, id_str, qfu_image_cwe_embedded_header_get_version (image, idx));
+             indent_prefix, id_str, VALIDATE_STR_NA (qfu_image_cwe_embedded_header_get_version (image, idx)));
     g_print ("%s[cwe %s] date:    %s\n",
-             indent_prefix, id_str, qfu_image_cwe_embedded_header_get_date (image, idx));
+             indent_prefix, id_str, VALIDATE_STR_NA (qfu_image_cwe_embedded_header_get_date (image, idx)));
     g_print ("%s[cwe %s] size:    %" G_GUINT32_FORMAT "\n",
              indent_prefix, id_str, qfu_image_cwe_embedded_header_get_image_size (image, idx));
 
@@ -92,8 +94,18 @@ operation_verify_run_single (const gchar *image_path)
     g_print ("    data:        %" G_GOFFSET_FORMAT " bytes\n", qfu_image_get_data_size (image));
     g_print ("  data chunks:   %" G_GUINT16_FORMAT " (%lu bytes/chunk)\n", qfu_image_get_n_data_chunks (image), (gulong) QFU_IMAGE_CHUNK_SIZE);
 
-    if (QFU_IS_IMAGE_CWE (image))
-        print_image_cwe (QFU_IMAGE_CWE (image), "  ", "0", 0);
+    if (QFU_IS_IMAGE_CWE (image)) {
+        QfuImageCwe *image_cwe = QFU_IMAGE_CWE (image);
+
+        g_print ("  [cwe] detected firmware version: %s\n",
+                 VALIDATE_STR_NA (qfu_image_cwe_get_parsed_firmware_version (image_cwe)));
+        g_print ("  [cwe] detected config version:   %s\n",
+                 VALIDATE_STR_NA (qfu_image_cwe_get_parsed_config_version (image_cwe)));
+        g_print ("  [cwe] detected carrier:          %s\n",
+                 VALIDATE_STR_NA (qfu_image_cwe_get_parsed_carrier (image_cwe)));
+
+        print_image_cwe (image_cwe, "  ", "0", 0);
+    }
 
     result = TRUE;
 

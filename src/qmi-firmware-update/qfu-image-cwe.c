@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "qfu-image-cwe.h"
+#include "qfu-utils.h"
 
 static GInitableIface *iface_initable_parent;
 static void            initable_iface_init (GInitableIface *iface);
@@ -58,6 +59,11 @@ typedef struct {
 
 struct _QfuImageCwePrivate {
     GArray *images;
+
+    /* Parsed */
+    gchar *firmware_version;
+    gchar *config_version;
+    gchar *carrier;
 };
 
 /******************************************************************************/
@@ -185,6 +191,128 @@ guint32
 qfu_image_cwe_header_get_image_size (QfuImageCwe *self)
 {
     return qfu_image_cwe_embedded_header_get_image_size (self, 0);
+}
+
+/******************************************************************************/
+
+static void
+parse_firmware_config_carrier (QfuImageCwe *self)
+{
+    GError *inner_error = NULL;
+    guint   i;
+
+    g_assert (!self->priv->firmware_version);
+    g_assert (!self->priv->config_version);
+    g_assert (!self->priv->carrier);
+
+    /* Try using the internal version first */
+    if (!qfu_utils_parse_cwe_version_string (
+            qfu_image_cwe_header_get_version (self),
+            &self->priv->firmware_version,
+            &self->priv->config_version,
+            &self->priv->carrier,
+            &inner_error)) {
+        /* Just log the error message */
+        g_debug ("[qfu-image-cwe] couldn't parse internal version string '%s': %s",
+                 qfu_image_cwe_header_get_version (self),
+                 inner_error->message);
+        g_clear_error (&inner_error);
+    }
+
+    /* If all retrieved with the internal version string, we're done */
+    if (self->priv->firmware_version && self->priv->config_version && self->priv->carrier)
+        goto done;
+
+    /* Try using the filename to gather more info */
+    if (!qfu_utils_parse_cwe_version_string (
+            qfu_image_get_display_name (QFU_IMAGE (self)),
+            self->priv->firmware_version ? NULL : &self->priv->firmware_version,
+            self->priv->config_version   ? NULL : &self->priv->config_version,
+            self->priv->carrier          ? NULL : &self->priv->carrier,
+            &inner_error)) {
+        /* Just log the error message */
+        g_debug ("[qfu-image-cwe] couldn't parse filename '%s': %s",
+                 qfu_image_get_display_name (QFU_IMAGE (self)),
+                 inner_error->message);
+        g_clear_error (&inner_error);
+    }
+
+    /* If all retrieved with the filename, we're done */
+    if (self->priv->firmware_version && self->priv->config_version && self->priv->carrier)
+        goto done;
+
+    /* Try with embedded images of type BOOT or NVU */
+    for (i = 0; i < self->priv->images->len; i++) {
+        ImageInfo *info;
+
+        info = &g_array_index (self->priv->images, ImageInfo, i);
+
+        /* BOOT partition in system images won't likely contain anything else
+         * than firmware version */
+        if (!g_strcmp0 (info->type, "BOOT") && !self->priv->firmware_version) {
+            if (!qfu_utils_parse_cwe_version_string (
+                    info->hdr.version,
+                    &self->priv->firmware_version,
+                    NULL,
+                    NULL,
+                    &inner_error)) {
+                /* Just log the error message */
+                g_debug ("[qfu-image-cwe] couldn't parse BOOT version '%s': %s",
+                         qfu_image_get_display_name (QFU_IMAGE (self)),
+                         inner_error->message);
+                g_clear_error (&inner_error);
+            }
+        }
+
+        /* NVUP partition in nvu images are usually carrier-specific */
+        if (!g_strcmp0 (info->type, "NVUP")) {
+            if (!qfu_utils_parse_cwe_version_string (
+                    info->hdr.version,
+                    self->priv->firmware_version ? NULL : &self->priv->firmware_version,
+                    self->priv->config_version   ? NULL : &self->priv->config_version,
+                    self->priv->carrier          ? NULL : &self->priv->carrier,
+                    &inner_error)) {
+                /* Just log the error message */
+                g_debug ("[qfu-image-cwe] couldn't parse NVUP version '%s': %s",
+                         qfu_image_get_display_name (QFU_IMAGE (self)),
+                         inner_error->message);
+                g_clear_error (&inner_error);
+            }
+        }
+
+        /* As soon as all retrieved, we're done */
+        if (self->priv->firmware_version && self->priv->config_version && self->priv->carrier)
+            goto done;
+    }
+
+done:
+    g_debug ("[qfu-image-cwe]   firmware version: %s", self->priv->firmware_version ? self->priv->firmware_version : "unknown");
+    g_debug ("[qfu-image-cwe]   config version:   %s", self->priv->config_version   ? self->priv->config_version   : "unknown");
+    g_debug ("[qfu-image-cwe]   carrier:          %s", self->priv->carrier          ? self->priv->carrier          : "unknown");
+}
+
+const gchar *
+qfu_image_cwe_get_parsed_firmware_version (QfuImageCwe *self)
+{
+    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
+
+    return self->priv->firmware_version;
+}
+
+const gchar *
+qfu_image_cwe_get_parsed_config_version (QfuImageCwe *self)
+{
+    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
+
+    return self->priv->config_version;
+}
+
+const gchar *
+qfu_image_cwe_get_parsed_carrier (QfuImageCwe *self)
+{
+    g_return_val_if_fail (QFU_IS_IMAGE_CWE (self), NULL);
+
+    return self->priv->carrier;
 }
 
 /******************************************************************************/
@@ -382,6 +510,9 @@ initable_init (GInitable     *initable,
         goto out;
     }
 
+    g_debug ("[qfu-image-cwe] preloading firmware/config/carrier...");
+    parse_firmware_config_carrier (self);
+
     /* Success! */
     result = TRUE;
 
@@ -421,6 +552,9 @@ finalize (GObject *object)
 {
     QfuImageCwe *self = QFU_IMAGE_CWE (object);
 
+    g_free (self->priv->firmware_version);
+    g_free (self->priv->config_version);
+    g_free (self->priv->carrier);
     g_array_unref (self->priv->images);
 
     G_OBJECT_CLASS (qfu_image_cwe_parent_class)->finalize (object);
