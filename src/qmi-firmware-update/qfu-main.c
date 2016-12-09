@@ -176,7 +176,7 @@ static GOptionEntry context_selection_entries[] = {
     },
     { "vid-pid", 'd', 0, G_OPTION_ARG_CALLBACK, &parse_vid_pid,
       "Select device by device vendor and product id (in hexadecimal).",
-      "VID:[PID]"
+      "VID[:PID]"
     },
     { NULL }
 };
