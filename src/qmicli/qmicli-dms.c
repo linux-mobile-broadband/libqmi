@@ -83,6 +83,8 @@ static gchar *select_stored_image_str;
 static gchar *delete_stored_image_str;
 static gboolean get_firmware_preference_flag;
 static gchar *set_firmware_preference_str;
+static gboolean get_boot_image_download_mode_flag;
+static gchar *set_boot_image_download_mode_str;
 static gboolean set_fcc_authentication_flag;
 static gboolean get_supported_messages_flag;
 static gchar *change_device_download_mode_str;
@@ -254,6 +256,14 @@ static GOptionEntry entries[] = {
       "Set firmware preference",
       "[(fwver),(config),(carrier)]"
     },
+    { "dms-get-boot-image-download-mode", 0, 0, G_OPTION_ARG_NONE, &get_boot_image_download_mode_flag,
+      "Get boot image download mode",
+      NULL
+    },
+    { "dms-set-boot-image-download-mode", 0, 0, G_OPTION_ARG_STRING, &set_boot_image_download_mode_str,
+      "Set boot image download mode",
+      "[normal|boot-and-recovery]"
+    },
     { "dms-set-fcc-authentication", 0, 0, G_OPTION_ARG_NONE, &set_fcc_authentication_flag,
       "Set FCC authentication",
       NULL
@@ -342,6 +352,8 @@ qmicli_dms_options_enabled (void)
                  !!delete_stored_image_str +
                  get_firmware_preference_flag +
                  !!set_firmware_preference_str +
+                 get_boot_image_download_mode_flag +
+                 !!set_boot_image_download_mode_str +
                  set_fcc_authentication_flag +
                  get_supported_messages_flag +
                  !!change_device_download_mode_str +
@@ -3128,6 +3140,95 @@ set_firmware_preference_input_create (const gchar                  *str,
 }
 
 static void
+get_boot_image_download_mode_ready (QmiClientDms *client,
+                                    GAsyncResult *res)
+{
+    QmiMessageDmsGetBootImageDownloadModeOutput *output;
+    GError *error = NULL;
+    QmiDmsBootImageDownloadMode mode;
+
+    output = qmi_client_dms_get_boot_image_download_mode_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_boot_image_download_mode_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get boot image download mode: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_boot_image_download_mode_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_boot_image_download_mode_output_get_mode (output, &mode, NULL);
+
+    g_print ("[%s] Boot image download mode: %s\n",
+             qmi_device_get_path_display (ctx->device),
+             qmi_dms_boot_image_download_mode_get_string (mode));
+
+    qmi_message_dms_get_boot_image_download_mode_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static QmiMessageDmsSetBootImageDownloadModeInput *
+set_boot_image_download_mode_input_create (const gchar *str)
+{
+    QmiMessageDmsSetBootImageDownloadModeInput *input = NULL;
+    QmiDmsBootImageDownloadMode mode;
+    GError *error = NULL;
+
+    /* Prepare inputs.
+     * Format of the string is:
+     *    [normal|boot-and-recovery]
+     */
+    if (!qmicli_read_boot_image_download_mode_from_string (str, &mode))
+        return NULL;
+
+    input = qmi_message_dms_set_boot_image_download_mode_input_new ();
+    if (!qmi_message_dms_set_boot_image_download_mode_input_set_mode (input, mode, &error)) {
+        g_printerr ("error: couldn't create input bundle: '%s'\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_set_boot_image_download_mode_input_unref (input);
+        return NULL;
+    }
+
+    return input;
+}
+
+static void
+set_boot_image_download_mode_ready (QmiClientDms *client,
+                                    GAsyncResult *res)
+{
+    QmiMessageDmsSetBootImageDownloadModeOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_set_boot_image_download_mode_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_set_boot_image_download_mode_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set boot image download mode: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_set_boot_image_download_mode_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Boot image download mode successfully set\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_set_boot_image_download_mode_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
 set_fcc_authentication_ready (QmiClientDms *client,
                               GAsyncResult *res)
 {
@@ -3914,6 +4015,38 @@ qmicli_dms_run (QmiDevice *device,
             NULL);
         set_firmware_preference_context_clear (&firmware_preference_ctx);
         qmi_message_dms_set_firmware_preference_input_unref (input);
+        return;
+    }
+
+    /* Get boot image download mode */
+    if (get_boot_image_download_mode_flag) {
+        g_debug ("Asynchronously getting boot image download mode...");
+        qmi_client_dms_get_boot_image_download_mode (ctx->client,
+                                                     NULL,
+                                                     10,
+                                                     ctx->cancellable,
+                                                     (GAsyncReadyCallback)get_boot_image_download_mode_ready,
+                                                     NULL);
+        return;
+    }
+
+    /* Set boot image download mode */
+    if (set_boot_image_download_mode_str) {
+        QmiMessageDmsSetBootImageDownloadModeInput *input;
+
+        g_debug ("Asynchronously setting boot image download mode...");
+        input = set_boot_image_download_mode_input_create (set_boot_image_download_mode_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+        qmi_client_dms_set_boot_image_download_mode (ctx->client,
+                                                     input,
+                                                     10,
+                                                     ctx->cancellable,
+                                                     (GAsyncReadyCallback)set_boot_image_download_mode_ready,
+                                                     NULL);
+        qmi_message_dms_set_boot_image_download_mode_input_unref (input);
         return;
     }
 

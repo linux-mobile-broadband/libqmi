@@ -603,6 +603,27 @@ qmicli_read_authentication_from_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_boot_image_download_mode_from_string (const gchar *str,
+                                                  QmiDmsBootImageDownloadMode *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_dms_boot_image_download_mode_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiDmsBootImageDownloadMode)enum_value->value;
+    else
+        g_printerr ("error: invalid boot image download mode value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
 qmicli_read_uint_from_string (const gchar *str,
                               guint *out)
 {
