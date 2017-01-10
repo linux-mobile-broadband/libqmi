@@ -339,4 +339,19 @@ typedef enum {
     QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI   = 1
 } QmiDmsFirmwareImageType;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Get Boot Image Download Mode' message */
+
+/**
+ * QmiDmsBootImageDownloadMode:
+ * @QMI_DMS_BOOT_IMAGE_DOWNLOAD_MODE_NORMAL: Normal operation.
+ * @QMI_DMS_BOOT_IMAGE_DOWNLOAD_MODE_BOOT_AND_RECOVERY: Boot and recovery image download mode.
+ *
+ * Specifies the mode for the next boot.
+ */
+typedef enum {
+    QMI_DMS_BOOT_IMAGE_DOWNLOAD_MODE_NORMAL            = 0,
+    QMI_DMS_BOOT_IMAGE_DOWNLOAD_MODE_BOOT_AND_RECOVERY = 1,
+} QmiDmsBootImageDownloadMode;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */

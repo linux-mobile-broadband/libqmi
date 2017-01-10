@@ -1138,6 +1138,35 @@
      "output"  : [  { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
+  {  "name"    : "Get Boot Image Download Mode",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x004F",
+     "version" : "1.0",
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"          : "Mode",
+                     "id"            : "0x10",
+                     "mandatory"     : "no",
+                     "type"          : "TLV",
+                     "format"        : "guint8",
+                     "public-format" : "QmiDmsBootImageDownloadMode",
+                     "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Set Boot Image Download Mode",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x0050",
+     "version" : "1.0",
+     "input"   : [ { "name"          : "Mode",
+                     "id"            : "0x01",
+                     "mandatory"     : "yes",
+                     "type"          : "TLV",
+                     "format"        : "guint8",
+                     "public-format" : "QmiDmsBootImageDownloadMode" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get Software Version",
      "type"    : "Message",
      "service" : "DMS",

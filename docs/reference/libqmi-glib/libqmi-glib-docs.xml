@@ -109,6 +109,8 @@
       <xi:include href="xml/qmi-message-dms-get-stored-image-info.xml"/>
       <xi:include href="xml/qmi-message-dms-get-alt-net-config.xml"/>
       <xi:include href="xml/qmi-message-dms-set-alt-net-config.xml"/>
+      <xi:include href="xml/qmi-message-dms-get-boot-image-download-mode.xml"/>
+      <xi:include href="xml/qmi-message-dms-set-boot-image-download-mode.xml"/>
       <xi:include href="xml/qmi-message-dms-get-software-version.xml"/>
       <xi:include href="xml/qmi-message-dms-set-service-programming-code.xml"/>
       <xi:include href="xml/qmi-message-dms-change-device-download-mode.xml"/>
