@@ -85,6 +85,7 @@ static gboolean get_firmware_preference_flag;
 static gchar *set_firmware_preference_str;
 static gboolean get_boot_image_download_mode_flag;
 static gchar *set_boot_image_download_mode_str;
+static gboolean get_software_version_flag;
 static gboolean set_fcc_authentication_flag;
 static gboolean get_supported_messages_flag;
 static gchar *change_device_download_mode_str;
@@ -264,6 +265,10 @@ static GOptionEntry entries[] = {
       "Set boot image download mode",
       "[normal|boot-and-recovery]"
     },
+    { "dms-get-software-version", 0, 0, G_OPTION_ARG_NONE, &get_software_version_flag,
+      "Get software version",
+      NULL
+    },
     { "dms-set-fcc-authentication", 0, 0, G_OPTION_ARG_NONE, &set_fcc_authentication_flag,
       "Set FCC authentication",
       NULL
@@ -354,6 +359,7 @@ qmicli_dms_options_enabled (void)
                  !!set_firmware_preference_str +
                  get_boot_image_download_mode_flag +
                  !!set_boot_image_download_mode_str +
+                 get_software_version_flag +
                  set_fcc_authentication_flag +
                  get_supported_messages_flag +
                  !!change_device_download_mode_str +
@@ -3229,6 +3235,40 @@ set_boot_image_download_mode_ready (QmiClientDms *client,
 }
 
 static void
+get_software_version_ready (QmiClientDms *client,
+                            GAsyncResult *res)
+{
+    QmiMessageDmsGetSoftwareVersionOutput *output;
+    GError *error = NULL;
+    const gchar *version;
+
+    output = qmi_client_dms_get_software_version_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_software_version_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get boot image download mode: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_software_version_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_software_version_output_get_version (output, &version, NULL);
+
+    g_print ("[%s] Software version: %s\n",
+             qmi_device_get_path_display (ctx->device),
+             version);
+
+    qmi_message_dms_get_software_version_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
 set_fcc_authentication_ready (QmiClientDms *client,
                               GAsyncResult *res)
 {
@@ -4047,6 +4087,18 @@ qmicli_dms_run (QmiDevice *device,
                                                      (GAsyncReadyCallback)set_boot_image_download_mode_ready,
                                                      NULL);
         qmi_message_dms_set_boot_image_download_mode_input_unref (input);
+        return;
+    }
+
+    /* Get software version */
+    if (get_software_version_flag) {
+        g_debug ("Asynchronously getting software version...");
+        qmi_client_dms_get_software_version (ctx->client,
+                                             NULL,
+                                             10,
+                                             ctx->cancellable,
+                                             (GAsyncReadyCallback)get_software_version_ready,
+                                             NULL);
         return;
     }
 
