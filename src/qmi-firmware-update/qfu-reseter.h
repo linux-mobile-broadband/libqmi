@@ -24,6 +24,7 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <libqmi-glib.h>
 
 #include "qfu-device-selection.h"
 
@@ -50,7 +51,10 @@ struct _QfuReseterClass {
 };
 
 GType        qfu_reseter_get_type   (void);
-QfuReseter  *qfu_reseter_new        (QfuDeviceSelection   *device_selection);
+QfuReseter  *qfu_reseter_new        (QfuDeviceSelection   *device_selection,
+                                     QmiClientDms         *qmi_client,
+                                     gboolean              device_open_proxy,
+                                     gboolean              device_open_mbim);
 void         qfu_reseter_run        (QfuReseter           *self,
                                      GCancellable         *cancellable,
                                      GAsyncReadyCallback   callback,

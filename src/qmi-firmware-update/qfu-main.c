@@ -379,11 +379,8 @@ print_help_examples (void)
              " The MC7700 is a 9200 device which doesn't require the explicit firmware, config\n"
              " and carrier strings. Unlike the MC7354, which would reboot itself into QDL\n"
              " download mode once these previous strings were configured, the MC7700 requires\n"
-             " an AT command to be sent in a TTY port to request the reset in QDL download\n"
-             " mode.\n"
-             "\n"
-             " The user doesn't need to explicitly specify the path to the TTY, though, it will\n"
-             " be automatically detected and processed during the firmware update process.\n"
+             " a specific \"boot and hold\" command to be sent (either via QMI or AT) to request\n"
+             " the reset in QDL download mode.\n"
              "\n"
              " 2a) An update operation specifying the vid:pid of the device (fails if multiple\n"
              "     devices with the same vid:pid are found):\n"
@@ -562,7 +559,9 @@ int main (int argc, char **argv)
 
     if (action_reset_flag) {
         g_assert (QFU_IS_DEVICE_SELECTION (device_selection));
-        result = qfu_operation_reset_run (device_selection);
+        result = qfu_operation_reset_run (device_selection,
+                                          device_open_proxy_flag,
+                                          device_open_mbim_flag);
         goto out;
     }
 

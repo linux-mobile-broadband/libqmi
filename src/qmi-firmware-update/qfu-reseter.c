@@ -29,11 +29,15 @@
 
 #include "qfu-reseter.h"
 #include "qfu-at-device.h"
+#include "qfu-utils.h"
 
 G_DEFINE_TYPE (QfuReseter, qfu_reseter, G_TYPE_OBJECT)
 
 struct _QfuReseterPrivate {
     QfuDeviceSelection *device_selection;
+    QmiClientDms       *qmi_client;
+    gboolean            device_open_proxy;
+    gboolean            device_open_mbim;
 };
 
 /******************************************************************************/
@@ -42,6 +46,12 @@ struct _QfuReseterPrivate {
 #define MAX_RETRIES 2
 
 typedef struct {
+    /* Files to use */
+    GList      *ttys;
+    GFile      *cdc_wdm;
+    /* QMI client amd device */
+    QmiDevice    *qmi_device;
+    QmiClientDms *qmi_client;
     /* List of AT devices */
     GList *at_devices;
     GList *current;
@@ -52,6 +62,21 @@ typedef struct {
 static void
 run_context_free (RunContext *ctx)
 {
+    if (ctx->cdc_wdm)
+        g_object_unref (ctx->cdc_wdm);
+    if (ctx->qmi_client) {
+        g_assert (ctx->qmi_device);
+        qmi_device_release_client (ctx->qmi_device,
+                                   QMI_CLIENT (ctx->qmi_client),
+                                   QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
+                                   10, NULL, NULL, NULL);
+        g_object_unref (ctx->qmi_client);
+    }
+    if (ctx->qmi_device) {
+        qmi_device_close (ctx->qmi_device, NULL);
+        g_object_unref (ctx->qmi_device);
+    }
+    g_list_free_full (ctx->ttys, (GDestroyNotify) g_object_unref);
     g_list_free_full (ctx->at_devices, (GDestroyNotify) g_object_unref);
     g_slice_free (RunContext, ctx);
 }
@@ -64,17 +89,17 @@ qfu_reseter_run_finish (QfuReseter    *self,
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-static void run_context_step (GTask *task);
+static void run_context_step_at (GTask *task);
 
 static gboolean
-run_context_step_cb (GTask *task)
+run_context_step_at_cb (GTask *task)
 {
-    run_context_step (task);
+    run_context_step_at (task);
     return FALSE;
 }
 
 static void
-run_context_step_next (GTask *task)
+run_context_step_at_next (GTask *task)
 {
     RunContext *ctx;
 
@@ -84,7 +109,7 @@ run_context_step_next (GTask *task)
     if (!ctx->current) {
         if (!ctx->retries) {
             g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
-                                     "couldn't run reseter operation");
+                                     "couldn't run reset operation");
             g_object_unref (task);
             return;
         }
@@ -95,36 +120,136 @@ run_context_step_next (GTask *task)
     }
 
     /* Schedule next step in an idle */
-    g_idle_add ((GSourceFunc) run_context_step_cb, task);
-}
-
-static void
-run_context_step (GTask *task)
-{
-    RunContext  *ctx;
-    QfuAtDevice *at_device;
-    GError      *error = NULL;
-
-    ctx = (RunContext *) g_task_get_task_data (task);
-    g_assert (ctx->current);
-
-    at_device = QFU_AT_DEVICE (ctx->current->data);
-    if (!qfu_at_device_boothold (at_device, g_task_get_cancellable (task), &error)) {
-        g_debug ("error: %s", error->message);
-        g_error_free (error);
-        run_context_step_next (task);
-        return;
-    }
-
-    /* Success! */
-    g_task_return_boolean (task, TRUE);
-    g_object_unref (task);
+    g_idle_add ((GSourceFunc) run_context_step_at_cb, task);
 }
 
 static gint
 device_sort_by_name_reversed (QfuAtDevice *a, QfuAtDevice *b)
 {
     return strcmp (qfu_at_device_get_name (b), qfu_at_device_get_name (a));
+}
+
+static void
+run_context_step_at (GTask *task)
+{
+    RunContext  *ctx;
+    QfuAtDevice *at_device;
+    GError      *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    /* If we get to AT reset after trying QMI, and we didn't find any port to
+     * use, return error */
+    if (!ctx->ttys) {
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                                 "No devices found to run reset operation");
+        g_object_unref (task);
+        return;
+    }
+
+    /* Initialize AT devices the first time we get here */
+    if (!ctx->at_devices) {
+        GList *l;
+
+        for (l = ctx->ttys; l; l = g_list_next (l)) {
+            at_device = qfu_at_device_new (G_FILE (l->data), g_task_get_cancellable (task), &error);
+            if (!at_device) {
+                g_task_return_error (task, error);
+                g_object_unref (task);
+                return;
+            }
+            ctx->at_devices = g_list_append (ctx->at_devices, at_device);
+        }
+
+        /* Sort by filename reversed; usually the TTY with biggest number is a
+         * good AT port */
+        ctx->at_devices = g_list_sort (ctx->at_devices, (GCompareFunc) device_sort_by_name_reversed);
+        /* Select first TTY to start */
+        ctx->current = ctx->at_devices;
+    } else
+        g_assert (ctx->current);
+
+    at_device = QFU_AT_DEVICE (ctx->current->data);
+    if (!qfu_at_device_boothold (at_device, g_task_get_cancellable (task), &error)) {
+        g_debug ("[qfu-reseter] error: %s", error->message);
+        g_error_free (error);
+        run_context_step_at_next (task);
+        return;
+    }
+
+    /* Success! */
+    g_debug ("[qfu-reseter] successfully run 'at boothold' operation");
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+set_firmware_id_ready (QmiClientDms *client,
+                       GAsyncResult *res,
+                       GTask        *task)
+{
+    QmiMessageDmsSetFirmwareIdOutput *output;
+    GError                           *error = NULL;
+
+    output = qmi_client_dms_set_firmware_id_finish (client, res, &error);
+    if (!output || !qmi_message_dms_set_firmware_id_output_get_result (output, &error)) {
+        g_debug ("[qfu-reseter] error: couldn't run 'set firmware id' operation: %s", error->message);
+        g_error_free (error);
+        if (output)
+            qmi_message_dms_set_firmware_id_output_unref (output);
+        g_debug ("[qfu-reseter] skipping QMI-based boothold");
+        run_context_step_at (task);
+        return;
+    }
+
+    g_debug ("[qfu-reseter] successfully run 'set firmware id' operation");
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+run_context_step_qmi (GTask *task)
+{
+    RunContext *ctx;
+    QfuReseter *self;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+
+    g_assert (ctx->qmi_client || self->priv->qmi_client);
+
+    /* Run DMS 0x003e to power cycle in boot & hold mode */
+    qmi_client_dms_set_firmware_id (self->priv->qmi_client ? self->priv->qmi_client : ctx->qmi_client,
+                                    NULL,
+                                    10,
+                                    g_task_get_cancellable (task),
+                                    (GAsyncReadyCallback) set_firmware_id_ready,
+                                    task);
+}
+
+static void
+new_client_dms_ready (gpointer      unused,
+                      GAsyncResult *res,
+                      GTask        *task)
+{
+    RunContext *ctx;
+    GError     *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    if (!qfu_utils_new_client_dms_finish (res,
+                                          &ctx->qmi_device,
+                                          &ctx->qmi_client,
+                                          &error)) {
+        /* Jump to AT-based boothold */
+        g_debug ("[qfu-reseter] error: couldn't allocate QMI client: %s", error->message);
+        g_error_free (error);
+        g_debug ("[qfu-reseter] skipping QMI-based boothold");
+        run_context_step_at (task);
+        return;
+    }
+
+    run_context_step_qmi (task);
 }
 
 void
@@ -135,7 +260,6 @@ qfu_reseter_run (QfuReseter          *self,
 {
     RunContext *ctx;
     GTask      *task;
-    GList      *l, *ttys;
 
     ctx = g_slice_new0 (RunContext);
     ctx->retries = MAX_RETRIES;
@@ -143,48 +267,55 @@ qfu_reseter_run (QfuReseter          *self,
     task = g_task_new (self, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify) run_context_free);
 
-    /* List TTYs we may use for the reset operation */
-    ttys = qfu_device_selection_get_multiple_ttys (self->priv->device_selection);
-    if (!ttys) {
+    /* List devices to use */
+    if (!self->priv->qmi_client)
+        ctx->cdc_wdm = qfu_device_selection_get_single_cdc_wdm (self->priv->device_selection);
+    ctx->ttys = qfu_device_selection_get_multiple_ttys  (self->priv->device_selection);
+
+    if (!ctx->ttys && !ctx->cdc_wdm && !self->priv->qmi_client) {
         g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
-                                 "No TTYs found to run reset operation");
+                                 "No devices found to run reset operation");
         g_object_unref (task);
         return;
     }
 
-    /* Build QfuAtDevice objects for each TTY given */
-    for (l = ttys; l; l = g_list_next (l)) {
-        GError      *error = NULL;
-        QfuAtDevice *at_device;
-
-        at_device = qfu_at_device_new (G_FILE (l->data), cancellable, &error);
-        if (!at_device) {
-            g_task_return_error (task, error);
-            g_object_unref (task);
-            return;
-        }
-        ctx->at_devices = g_list_append (ctx->at_devices, at_device);
+    /* If no cdc-wdm file available, try AT directly */
+    if (!ctx->cdc_wdm && !self->priv->qmi_client) {
+        run_context_step_at (task);
+        return;
     }
-    g_list_free_full (ttys, (GDestroyNotify) g_object_unref);
 
-    /* Sort by filename reversed; usually the TTY with biggest number is a
-     * good AT port */
-    ctx->at_devices = g_list_sort (ctx->at_devices, (GCompareFunc) device_sort_by_name_reversed);
+    /* If we already got a QMI client as input, try QMI directly */
+    if (self->priv->qmi_client) {
+        run_context_step_qmi (task);
+        return;
+    }
 
-    /* Select first TTY and start */
-    ctx->current = ctx->at_devices;
-    run_context_step (task);
+    /* Otherwise, try to allocate a QMI client */
+    g_assert (ctx->cdc_wdm);
+    qfu_utils_new_client_dms (ctx->cdc_wdm,
+                              self->priv->device_open_proxy,
+                              self->priv->device_open_mbim,
+                              cancellable,
+                              (GAsyncReadyCallback) new_client_dms_ready,
+                              task);
 }
 
 /******************************************************************************/
 
 QfuReseter *
-qfu_reseter_new (QfuDeviceSelection *device_selection)
+qfu_reseter_new (QfuDeviceSelection *device_selection,
+                 QmiClientDms       *qmi_client,
+                 gboolean            device_open_proxy,
+                 gboolean            device_open_mbim)
 {
     QfuReseter *self;
 
     self = g_object_new (QFU_TYPE_RESETER, NULL);
     self->priv->device_selection = g_object_ref (device_selection);
+    self->priv->qmi_client = qmi_client ? g_object_ref (qmi_client) : NULL;
+    self->priv->device_open_proxy = device_open_proxy;
+    self->priv->device_open_mbim = device_open_mbim;
 
     return self;
 }
@@ -201,6 +332,7 @@ dispose (GObject *object)
     QfuReseter *self = QFU_RESETER (object);
 
     g_clear_object (&self->priv->device_selection);
+    g_clear_object (&self->priv->qmi_client);
 
     G_OBJECT_CLASS (qfu_reseter_parent_class)->dispose (object);
 }

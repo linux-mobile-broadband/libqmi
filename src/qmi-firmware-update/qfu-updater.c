@@ -571,7 +571,7 @@ run_context_step_reset (GTask *task)
     }
 
     /* Boothold reset */
-    reseter = qfu_reseter_new (self->priv->device_selection, ctx->qmi_client);
+    reseter = qfu_reseter_new (self->priv->device_selection, ctx->qmi_client, FALSE, FALSE);
     qfu_reseter_run (reseter,
                      g_task_get_cancellable (task),
                      (GAsyncReadyCallback) reseter_run_ready,
