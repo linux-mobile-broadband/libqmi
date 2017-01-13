@@ -33,7 +33,7 @@
 G_DEFINE_TYPE (QfuReseter, qfu_reseter, G_TYPE_OBJECT)
 
 struct _QfuReseterPrivate {
-    GList *ttys;
+    QfuDeviceSelection *device_selection;
 };
 
 /******************************************************************************/
@@ -128,14 +128,14 @@ device_sort_by_name_reversed (QfuAtDevice *a, QfuAtDevice *b)
 }
 
 void
-qfu_reseter_run (QfuReseter        *self,
+qfu_reseter_run (QfuReseter          *self,
                  GCancellable        *cancellable,
                  GAsyncReadyCallback  callback,
                  gpointer             user_data)
 {
     RunContext *ctx;
     GTask      *task;
-    GList      *l;
+    GList      *l, *ttys;
 
     ctx = g_slice_new0 (RunContext);
     ctx->retries = MAX_RETRIES;
@@ -143,8 +143,17 @@ qfu_reseter_run (QfuReseter        *self,
     task = g_task_new (self, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify) run_context_free);
 
+    /* List TTYs we may use for the reset operation */
+    ttys = qfu_device_selection_get_multiple_ttys (self->priv->device_selection);
+    if (!ttys) {
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                                 "No TTYs found to run reset operation");
+        g_object_unref (task);
+        return;
+    }
+
     /* Build QfuAtDevice objects for each TTY given */
-    for (l = self->priv->ttys; l; l = g_list_next (l)) {
+    for (l = ttys; l; l = g_list_next (l)) {
         GError      *error = NULL;
         QfuAtDevice *at_device;
 
@@ -156,6 +165,7 @@ qfu_reseter_run (QfuReseter        *self,
         }
         ctx->at_devices = g_list_append (ctx->at_devices, at_device);
     }
+    g_list_free_full (ttys, (GDestroyNotify) g_object_unref);
 
     /* Sort by filename reversed; usually the TTY with biggest number is a
      * good AT port */
@@ -169,12 +179,12 @@ qfu_reseter_run (QfuReseter        *self,
 /******************************************************************************/
 
 QfuReseter *
-qfu_reseter_new (GList *ttys)
+qfu_reseter_new (QfuDeviceSelection *device_selection)
 {
     QfuReseter *self;
 
     self = g_object_new (QFU_TYPE_RESETER, NULL);
-    self->priv->ttys = g_list_copy_deep (ttys, (GCopyFunc) g_object_ref, NULL);
+    self->priv->device_selection = g_object_ref (device_selection);
 
     return self;
 }
@@ -190,10 +200,7 @@ dispose (GObject *object)
 {
     QfuReseter *self = QFU_RESETER (object);
 
-    if (self->priv->ttys) {
-        g_list_free_full (self->priv->ttys, (GDestroyNotify) g_object_unref);
-        self->priv->ttys = NULL;
-    }
+    g_clear_object (&self->priv->device_selection);
 
     G_OBJECT_CLASS (qfu_reseter_parent_class)->dispose (object);
 }

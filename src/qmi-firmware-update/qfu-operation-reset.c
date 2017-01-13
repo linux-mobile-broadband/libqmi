@@ -56,7 +56,7 @@ signal_handler (ReseterOperation *operation)
 
 static void
 run_ready (QfuReseter       *reseter,
-           GAsyncResult      *res,
+           GAsyncResult     *res,
            ReseterOperation *operation)
 {
     GError *error = NULL;
@@ -105,26 +105,13 @@ operation_reseter_run (QfuReseter *reseter)
 }
 
 gboolean
-qfu_operation_reset_run (const gchar **ttys)
+qfu_operation_reset_run (QfuDeviceSelection *device_selection)
 {
     QfuReseter *reseter = NULL;
     gboolean    result;
-    GList      *tty_files = NULL;
-    guint       i;
 
-    /* No tty path given? */
-    if (!ttys) {
-        g_printerr ("error: no ttys specified\n");
-        return FALSE;
-    }
-
-    for (i = 0; ttys[i]; i++)
-        tty_files = g_list_prepend (tty_files, g_file_new_for_path (ttys[i]));
-
-    /* Create reseter */
-    reseter = qfu_reseter_new (tty_files);
+    reseter = qfu_reseter_new (device_selection);
     result = operation_reseter_run (reseter);
-    g_list_free_full (tty_files, (GDestroyNotify) g_object_unref);
     g_object_unref (reseter);
     return result;
 }

@@ -57,6 +57,7 @@ nodist_qmi_firmware_update_SOURCES = \
 
 qmi_firmware_update_SOURCES = \
 	qfu-main.c \
+	qfu-device-selection.h qfu-device-selection.c \
 	qfu-operation.h \
 	qfu-operation-update.c \
 	qfu-operation-verify.c \

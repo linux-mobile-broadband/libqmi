@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "qfu-device-selection.h"
+
 G_BEGIN_DECLS
 
 #define QFU_TYPE_RESETER            (qfu_reseter_get_type ())
@@ -48,7 +50,7 @@ struct _QfuReseterClass {
 };
 
 GType        qfu_reseter_get_type   (void);
-QfuReseter  *qfu_reseter_new        (GList                *ttys);
+QfuReseter  *qfu_reseter_new        (QfuDeviceSelection   *device_selection);
 void         qfu_reseter_run        (QfuReseter           *self,
                                      GCancellable         *cancellable,
                                      GAsyncReadyCallback   callback,

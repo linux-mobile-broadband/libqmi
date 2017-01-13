@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "qfu-device-selection.h"
+
 G_BEGIN_DECLS
 
 #define QFU_TYPE_UPDATER            (qfu_updater_get_type ())
@@ -48,14 +50,14 @@ struct _QfuUpdaterClass {
 };
 
 GType       qfu_updater_get_type   (void);
-QfuUpdater *qfu_updater_new        (GFile                *cdc_wdm_file,
+QfuUpdater *qfu_updater_new        (QfuDeviceSelection   *device_selection,
                                     const gchar          *firmware_version,
                                     const gchar          *config_version,
                                     const gchar          *carrier,
                                     gboolean              device_open_proxy,
                                     gboolean              device_open_mbim,
                                     gboolean              force);
-QfuUpdater *qfu_updater_new_qdl    (GFile                *serial_file);
+QfuUpdater *qfu_updater_new_qdl    (QfuDeviceSelection   *device_selection);
 void        qfu_updater_run        (QfuUpdater           *self,
                                     GList                *image_file_list,
                                     GCancellable         *cancellable,

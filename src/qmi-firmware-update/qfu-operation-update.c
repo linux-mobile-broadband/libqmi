@@ -116,69 +116,43 @@ operation_update_run (QfuUpdater   *updater,
 }
 
 gboolean
-qfu_operation_update_run (const gchar **images,
-                          const gchar  *device,
-                          const gchar  *firmware_version,
-                          const gchar  *config_version,
-                          const gchar  *carrier,
-                          gboolean      device_open_proxy,
-                          gboolean      device_open_mbim,
-                          gboolean      force)
+qfu_operation_update_run (const gchar        **images,
+                          QfuDeviceSelection  *device_selection,
+                          const gchar         *firmware_version,
+                          const gchar         *config_version,
+                          const gchar         *carrier,
+                          gboolean             device_open_proxy,
+                          gboolean             device_open_mbim,
+                          gboolean             force)
 {
     QfuUpdater *updater = NULL;
-    GFile      *device_file = NULL;
     gboolean    result;
 
     g_assert (images);
 
-    /* No device path given? */
-    if (!device) {
-        g_printerr ("error: no device path specified\n");
-        return FALSE;
-    }
-
-    /* Create updater */
-    device_file = g_file_new_for_commandline_arg (device);
-    updater = qfu_updater_new (device_file,
+    updater = qfu_updater_new (device_selection,
                                firmware_version,
                                config_version,
                                carrier,
                                device_open_proxy,
                                device_open_mbim,
                                force);
-    g_object_unref (device_file);
-
-    /* Run! */
     result = operation_update_run (updater, images);
-
     g_object_unref (updater);
     return result;
 }
 
 gboolean
-qfu_operation_update_qdl_run (const gchar **images,
-                              const gchar  *serial)
+qfu_operation_update_qdl_run (const gchar        **images,
+                              QfuDeviceSelection  *device_selection)
 {
     QfuUpdater *updater = NULL;
-    GFile      *serial_file = NULL;
     gboolean    result;
 
     g_assert (images);
 
-    /* No device path given? */
-    if (!serial) {
-        g_printerr ("error: no serial path specified\n");
-        return FALSE;
-    }
-
-    /* Create updater */
-    serial_file = g_file_new_for_commandline_arg (serial);
-    updater = qfu_updater_new_qdl (serial_file);
-    g_object_unref (serial_file);
-
-    /* Run! */
+    updater = qfu_updater_new_qdl (device_selection);
     result = operation_update_run (updater, images);
-
     g_object_unref (updater);
     return result;
 }

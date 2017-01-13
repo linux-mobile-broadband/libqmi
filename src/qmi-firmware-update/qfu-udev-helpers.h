@@ -27,18 +27,23 @@
 
 G_BEGIN_DECLS
 
-gchar *qfu_udev_helper_find_by_file          (GFile    *file,
-                                              GError  **error);
-gchar *qfu_udev_helper_find_by_device_info   (guint16   vid,
-                                              guint16   pid,
-                                              guint     busnum,
-                                              guint     devnum,
-                                              GError  **error);
+gchar *qfu_udev_helper_find_by_file          (GFile        *file,
+                                              GError      **error);
+gchar *qfu_udev_helper_find_by_file_path     (const gchar  *path,
+                                              GError      **error);
+gchar *qfu_udev_helper_find_by_device_info   (guint16       vid,
+                                              guint16       pid,
+                                              guint         busnum,
+                                              guint         devnum,
+                                              GError      **error);
 
 typedef enum {
     QFU_UDEV_HELPER_DEVICE_TYPE_TTY,
     QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM,
+    QFU_UDEV_HELPER_DEVICE_TYPE_LAST
 } QfuUdevHelperDeviceType;
+
+const gchar *qfu_udev_helper_device_type_to_string (QfuUdevHelperDeviceType type);
 
 GList *qfu_udev_helper_list_devices           (QfuUdevHelperDeviceType   device_type,
                                                const gchar              *sysfs_path);

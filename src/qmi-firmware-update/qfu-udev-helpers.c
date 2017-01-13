@@ -31,6 +31,21 @@ static const gchar *cdc_wdm_subsys_list[] = { "usbmisc", "usb", NULL };
 
 /******************************************************************************/
 
+static const gchar *device_type_str[] = {
+    [QFU_UDEV_HELPER_DEVICE_TYPE_TTY]     = "tty",
+    [QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM] = "cdc-wdm",
+};
+
+G_STATIC_ASSERT (G_N_ELEMENTS (device_type_str) == QFU_UDEV_HELPER_DEVICE_TYPE_LAST);
+
+const gchar *
+qfu_udev_helper_device_type_to_string (QfuUdevHelperDeviceType type)
+{
+    return device_type_str[type];
+}
+
+/******************************************************************************/
+
 static GUdevDevice *
 find_udev_device_for_file (GFile   *file,
                            GError **error)
@@ -200,6 +215,19 @@ qfu_udev_helper_find_by_file (GFile    *file,
                                              error);
         g_object_unref (device);
     }
+    return sysfs_path;
+}
+
+gchar *
+qfu_udev_helper_find_by_file_path (const gchar  *path,
+                                   GError      **error)
+{
+    GFile *file;
+    gchar *sysfs_path;
+
+    file = g_file_new_for_path (path);
+    sysfs_path = qfu_udev_helper_find_by_file (file, error);
+    g_object_unref (file);
     return sysfs_path;
 }
 
