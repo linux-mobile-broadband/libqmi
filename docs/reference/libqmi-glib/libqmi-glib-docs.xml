@@ -94,6 +94,7 @@
       <xi:include href="xml/qmi-message-dms-restore-factory-defaults.xml"/>
       <xi:include href="xml/qmi-message-dms-validate-service-programming-code.xml"/>
       <xi:include href="xml/qmi-message-dms-uim-get-iccid.xml"/>
+      <xi:include href="xml/qmi-message-dms-set-firmware-id.xml"/>
       <xi:include href="xml/qmi-message-dms-uim-get-ck-status.xml"/>
       <xi:include href="xml/qmi-message-dms-uim-set-ck-protection.xml"/>
       <xi:include href="xml/qmi-message-dms-uim-unblock-ck.xml"/>

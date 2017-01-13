@@ -765,6 +765,14 @@
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Set Firmware ID",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x003E",
+     "version" : "1.1",
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "UIM Get CK Status",
      "type"    : "Message",
      "service" : "DMS",

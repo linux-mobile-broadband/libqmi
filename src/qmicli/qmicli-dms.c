@@ -76,6 +76,7 @@ static gchar *write_user_data_str;
 static gboolean read_eri_file_flag;
 static gchar *restore_factory_defaults_str;
 static gchar *validate_service_programming_code_str;
+static gboolean set_firmware_id_flag;
 static gboolean get_band_capabilities_flag;
 static gboolean get_factory_sku_flag;
 static gboolean list_stored_images_flag;
@@ -229,6 +230,10 @@ static GOptionEntry entries[] = {
       "Validate the Service Programming Code",
       "[(Service Programming Code)]",
     },
+    { "dms-set-firmware-id", 0, 0, G_OPTION_ARG_NONE, &set_firmware_id_flag,
+      "Set firmware id",
+      NULL
+    },
     { "dms-get-band-capabilities", 0, 0, G_OPTION_ARG_NONE, &get_band_capabilities_flag,
       "Get band capabilities",
       NULL
@@ -350,6 +355,7 @@ qmicli_dms_options_enabled (void)
                  read_eri_file_flag +
                  !!restore_factory_defaults_str +
                  !!validate_service_programming_code_str +
+                 set_firmware_id_flag +
                  get_band_capabilities_flag +
                  get_factory_sku_flag +
                  list_stored_images_flag +
@@ -2316,6 +2322,36 @@ validate_service_programming_code_ready (QmiClientDms *client,
 }
 
 static void
+set_firmware_id_ready (QmiClientDms *client,
+                       GAsyncResult *res)
+{
+    QmiMessageDmsSetFirmwareIdOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_set_firmware_id_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_set_firmware_id_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set firmware id: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_set_firmware_id_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Firmware id set\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_set_firmware_id_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
 get_band_capabilities_ready (QmiClientDms *client,
                              GAsyncResult *res)
 {
@@ -3901,6 +3937,18 @@ qmicli_dms_run (QmiDevice *device,
                                                           (GAsyncReadyCallback)validate_service_programming_code_ready,
                                                           NULL);
         qmi_message_dms_validate_service_programming_code_input_unref (input);
+        return;
+    }
+
+    /* Set firmware id? */
+    if (set_firmware_id_flag) {
+        g_debug ("Asynchronously setting firmware id...");
+        qmi_client_dms_set_firmware_id (ctx->client,
+                                        NULL,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)set_firmware_id_ready,
+                                        NULL);
         return;
     }
 
