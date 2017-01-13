@@ -224,6 +224,14 @@ typedef struct {
     gboolean      device_open_mbim;
     gint          qmi_client_retries;
     QmiClientDms *qmi_client;
+
+    gboolean      load_capabilities;
+    gchar        *revision;
+    gboolean      revision_done;
+    gboolean      supports_stored_image_management;
+    gboolean      supports_stored_image_management_done;
+    gboolean      supports_firmware_preference_management;
+    gboolean      supports_firmware_preference_management_done;
 } NewClientDmsContext;
 
 static void
@@ -233,6 +241,7 @@ new_client_dms_context_free (NewClientDmsContext *ctx)
         g_object_unref (ctx->qmi_client);
     if (ctx->qmi_device)
         g_object_unref (ctx->qmi_device);
+    g_free (ctx->revision);
     g_slice_free (NewClientDmsContext, ctx);
 }
 
@@ -240,6 +249,9 @@ gboolean
 qfu_utils_new_client_dms_finish (GAsyncResult  *res,
                                  QmiDevice    **qmi_device,
                                  QmiClientDms **qmi_client,
+                                 gchar        **revision,
+                                 gboolean      *supports_stored_image_management,
+                                 gboolean      *supports_firmware_preference_management,
                                  GError       **error)
 {
     NewClientDmsContext *ctx;
@@ -247,12 +259,130 @@ qfu_utils_new_client_dms_finish (GAsyncResult  *res,
     if (!g_task_propagate_boolean (G_TASK (res), error))
         return FALSE;
 
-    ctx = (NewClientDmsContext *) g_task_get_task_data (G_TASK (res));
+    ctx = g_task_get_task_data (G_TASK (res));
     if (qmi_device)
         *qmi_device = g_object_ref (ctx->qmi_device);
     if (qmi_client)
         *qmi_client = g_object_ref (ctx->qmi_client);
+    if (revision)
+        *revision = (ctx->revision ? g_strdup (ctx->revision) : NULL);
+    if (supports_stored_image_management)
+        *supports_stored_image_management = ctx->supports_stored_image_management;
+    if (supports_firmware_preference_management)
+        *supports_firmware_preference_management = ctx->supports_firmware_preference_management;
     return TRUE;
+}
+
+static void
+check_capabilities_done (GTask *task)
+{
+    NewClientDmsContext *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!ctx->revision_done ||
+        !ctx->supports_stored_image_management_done ||
+        !ctx->supports_firmware_preference_management_done)
+        return;
+
+    /* All done! */
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+dms_get_revision_ready (QmiClientDms *client,
+                        GAsyncResult *res,
+                        GTask        *task)
+{
+    QmiMessageDmsGetRevisionOutput *output;
+    const gchar                    *str = NULL;
+    NewClientDmsContext            *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    output = qmi_client_dms_get_revision_finish (client, res, NULL);
+    if (output && qmi_message_dms_get_revision_output_get_result (output, NULL))
+        qmi_message_dms_get_revision_output_get_revision (output, &str, NULL);
+
+    if (str) {
+        g_debug ("[qfu,utils] current revision loaded: %s", str);
+        ctx->revision = g_strdup (str);
+    }
+
+    if (output)
+        qmi_message_dms_get_revision_output_unref (output);
+
+    ctx->revision_done = TRUE;
+    check_capabilities_done (task);
+}
+
+static void
+dms_list_stored_images_ready (QmiClientDms *client,
+                              GAsyncResult *res,
+                              GTask        *task)
+{
+    QmiMessageDmsListStoredImagesOutput *output;
+    NewClientDmsContext                 *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    output = qmi_client_dms_list_stored_images_finish (client, res, NULL);
+    ctx->supports_stored_image_management = (output && qmi_message_dms_list_stored_images_output_get_result (output, NULL));
+
+    if (output)
+        qmi_message_dms_list_stored_images_output_unref (output);
+
+    ctx->supports_stored_image_management_done = TRUE;
+    check_capabilities_done (task);
+}
+
+static void
+dms_get_firmware_preference_ready (QmiClientDms *client,
+                                   GAsyncResult *res,
+                                   GTask        *task)
+{
+    QmiMessageDmsGetFirmwarePreferenceOutput *output;
+    NewClientDmsContext                      *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    output = qmi_client_dms_get_firmware_preference_finish (client, res, NULL);
+    ctx->supports_firmware_preference_management = (output && qmi_message_dms_get_firmware_preference_output_get_result (output, NULL));
+
+    /* Log the current firmware preference */
+    if (ctx->supports_firmware_preference_management) {
+        GArray *array;
+        guint   i;
+
+        g_debug ("[qfu,utils] current firmware preference loaded:");
+
+        qmi_message_dms_get_firmware_preference_output_get_list (output, &array, NULL);
+
+        if (array->len > 0) {
+            for (i = 0; i < array->len; i++) {
+                QmiMessageDmsGetFirmwarePreferenceOutputListImage *image;
+                gchar                                             *unique_id_str;
+
+                image = &g_array_index (array, QmiMessageDmsGetFirmwarePreferenceOutputListImage, i);
+                unique_id_str = qfu_utils_get_firmware_image_unique_id_printable (image->unique_id);
+
+                g_debug ("[qfu,utils] [image %u]",         i);
+                g_debug ("[qfu,utils] \tImage type: '%s'", qmi_dms_firmware_image_type_get_string (image->type));
+                g_debug ("[qfu,utils] \tUnique ID:  '%s'", unique_id_str);
+                g_debug ("[qfu,utils] \tBuild ID:   '%s'", image->build_id);
+
+                g_free (unique_id_str);
+            }
+        } else
+            g_debug ("[qfu,utils] no images specified");
+    }
+
+    if (output)
+        qmi_message_dms_get_firmware_preference_output_unref (output);
+
+    ctx->supports_firmware_preference_management_done = TRUE;
+    check_capabilities_done (task);
 }
 
 static void retry_allocate_qmi_client (GTask *task);
@@ -287,8 +417,24 @@ qmi_client_ready (QmiDevice    *device,
     }
 
     g_debug ("[qfu,utils] DMS QMI client allocated");
-    g_task_return_boolean (task, TRUE);
-    g_object_unref (task);
+
+    /* If loading capabilities not required, we're done */
+    if (!ctx->load_capabilities) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    /* Query capabilities */
+    qmi_client_dms_get_revision (ctx->qmi_client,
+                                 NULL, 10, g_task_get_cancellable (task),
+                                 (GAsyncReadyCallback) dms_get_revision_ready, task);
+    qmi_client_dms_list_stored_images (ctx->qmi_client,
+                                       NULL, 10, g_task_get_cancellable (task),
+                                       (GAsyncReadyCallback) dms_list_stored_images_ready, task);
+    qmi_client_dms_get_firmware_preference (ctx->qmi_client,
+                                            NULL, 10, g_task_get_cancellable (task),
+                                            (GAsyncReadyCallback) dms_get_firmware_preference_ready, task);
 }
 
 static void
@@ -371,6 +517,7 @@ void
 qfu_utils_new_client_dms (GFile               *cdc_wdm_file,
                           gboolean             device_open_proxy,
                           gboolean             device_open_mbim,
+                          gboolean             load_capabilities,
                           GCancellable        *cancellable,
                           GAsyncReadyCallback  callback,
                           gpointer             user_data)
@@ -381,6 +528,7 @@ qfu_utils_new_client_dms (GFile               *cdc_wdm_file,
     ctx = g_slice_new0 (NewClientDmsContext);
     ctx->device_open_proxy  = device_open_proxy;
     ctx->device_open_mbim   = device_open_mbim;
+    ctx->load_capabilities  = load_capabilities;
     ctx->qmi_client_retries = QMI_CLIENT_RETRIES;
 
     task = g_task_new (NULL, cancellable, callback, user_data);

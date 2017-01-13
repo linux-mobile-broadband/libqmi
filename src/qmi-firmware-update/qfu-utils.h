@@ -47,12 +47,16 @@ gboolean qfu_utils_parse_cwe_version_string (const gchar  *version,
 void     qfu_utils_new_client_dms        (GFile                *cdc_wdm_file,
                                           gboolean              device_open_proxy,
                                           gboolean              device_open_mbim,
+                                          gboolean              load_capabilities,
                                           GCancellable         *cancellable,
                                           GAsyncReadyCallback   callback,
                                           gpointer              user_data);
 gboolean qfu_utils_new_client_dms_finish (GAsyncResult         *res,
                                           QmiDevice           **qmi_device,
                                           QmiClientDms        **qmi_client,
+                                          gchar               **revision,
+                                          gboolean             *supports_stored_image_management,
+                                          gboolean             *supports_firmware_preference_management,
                                           GError              **error);
 
 G_END_DECLS

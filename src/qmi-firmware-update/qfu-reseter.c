@@ -248,6 +248,7 @@ new_client_dms_ready (gpointer      unused,
     if (!qfu_utils_new_client_dms_finish (res,
                                           &ctx->qmi_device,
                                           &ctx->qmi_client,
+                                          NULL, NULL, NULL,
                                           &error)) {
         /* Jump to AT-based boothold */
         g_debug ("[qfu-reseter] error: couldn't allocate QMI client: %s", error->message);
@@ -304,6 +305,7 @@ qfu_reseter_run (QfuReseter          *self,
     qfu_utils_new_client_dms (ctx->cdc_wdm,
                               self->priv->device_open_proxy,
                               self->priv->device_open_mbim,
+                              FALSE,
                               cancellable,
                               (GAsyncReadyCallback) new_client_dms_ready,
                               task);
