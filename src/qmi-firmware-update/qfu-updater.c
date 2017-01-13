@@ -316,7 +316,7 @@ run_context_step_download_image (GTask *task)
                          progress[sequence % G_N_ELEMENTS (progress)],
                          100.0 * ((gdouble) sequence / (gdouble) (n_chunks - 1)));
             else if (sequence == (n_chunks - 1))
-                g_print (CLEAR_LINE "finalizing download...\n");
+                g_print (CLEAR_LINE "finalizing download... (may take more than one minute, be patient)\n");
         }
         if (!qfu_qdl_device_ufwrite (ctx->qdl_device, ctx->current_image, sequence, cancellable, &error)) {
             g_prefix_error (&error, "couldn't write in session: ");
@@ -325,6 +325,9 @@ run_context_step_download_image (GTask *task)
     }
 
     g_debug ("[qfu-updater] all chunks ack-ed");
+
+    if (!qfu_log_get_verbose ())
+        g_print (CLEAR_LINE);
 
     if (!qfu_qdl_device_ufclose (ctx->qdl_device, cancellable, &error)) {
         g_prefix_error (&error, "couldn't close session: ");
