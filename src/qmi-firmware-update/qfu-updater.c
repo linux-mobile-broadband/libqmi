@@ -116,6 +116,8 @@ run_context_free (RunContext *ctx)
         g_object_unref (&ctx->qdl_device);
     if (ctx->qmi_client) {
         g_assert (ctx->qmi_device);
+        /* This release only happens when cleaning up from an error,
+         * therefore always release CID */
         qmi_device_release_client (ctx->qmi_device,
                                    QMI_CLIENT (ctx->qmi_client),
                                    QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
@@ -436,28 +438,24 @@ run_context_step_wait_for_tty (GTask *task)
 }
 
 static void
-qmi_client_release_ready (QmiDevice    *device,
-                          GAsyncResult *res,
-                          GTask        *task)
+run_context_step_cleanup_qmi_device (GTask *task)
 {
     RunContext *ctx;
-    GError     *error = NULL;
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
-    if (!qmi_device_release_client_finish (device, res, &error)) {
-        g_debug ("[qfu-updater] error (ignored): couldn't release DMS QMI client: %s", error->message);
-        g_clear_error (&error);
-    } else
-        g_debug ("[qfu-updater] DMS QMI client released");
+    g_debug ("[qfu-updater] cleaning up QMI device...");
 
-    if (!qmi_device_close (ctx->qmi_device, &error)) {
-        g_debug ("[qfu-updater] error (ignored): couldn't close QMI device: %s", error->message);
-        g_clear_error (&error);
-    } else
-        g_debug ("[qfu-updater] QMI device closed");
+    /* We don't release CID as we're going to reset anyway */
+    qmi_device_release_client (ctx->qmi_device,
+                               QMI_CLIENT (ctx->qmi_client),
+                               QMI_DEVICE_RELEASE_CLIENT_FLAGS_NONE,
+                               10, NULL, NULL, NULL);
+    g_clear_object (&ctx->qmi_client);
 
+    qmi_device_close (ctx->qmi_device, NULL);
     g_clear_object (&ctx->qmi_device);
+
     g_clear_object (&ctx->cdc_wdm_file);
 
     /* If nothing to download, we're done */
@@ -468,25 +466,6 @@ qmi_client_release_ready (QmiDevice    *device,
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
-}
-
-static void
-run_context_step_cleanup_qmi_device (GTask *task)
-{
-    RunContext *ctx;
-
-    ctx = (RunContext *) g_task_get_task_data (task);
-
-    g_debug ("[qfu-updater] releasing DMS QMI client...");
-    qmi_device_release_client (ctx->qmi_device,
-                               QMI_CLIENT (ctx->qmi_client),
-                               QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
-                               10,
-                               g_task_get_cancellable (task),
-                               (GAsyncReadyCallback) qmi_client_release_ready,
-                               task);
-
-    g_clear_object (&ctx->qmi_client);
 }
 
 static void

@@ -52,6 +52,7 @@ typedef struct {
     /* QMI client amd device */
     QmiDevice    *qmi_device;
     QmiClientDms *qmi_client;
+    gboolean      ignore_release_cid;
     /* List of AT devices */
     GList *at_devices;
     GList *current;
@@ -68,7 +69,9 @@ run_context_free (RunContext *ctx)
         g_assert (ctx->qmi_device);
         qmi_device_release_client (ctx->qmi_device,
                                    QMI_CLIENT (ctx->qmi_client),
-                                   QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
+                                   (ctx->ignore_release_cid ?
+                                    QMI_DEVICE_RELEASE_CLIENT_FLAGS_NONE :
+                                    QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID),
                                    10, NULL, NULL, NULL);
         g_object_unref (ctx->qmi_client);
     }
@@ -179,6 +182,7 @@ run_context_step_at (GTask *task)
 
     /* Success! */
     g_debug ("[qfu-reseter] successfully run 'at boothold' operation");
+    ctx->ignore_release_cid = TRUE;
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
@@ -190,6 +194,9 @@ set_firmware_id_ready (QmiClientDms *client,
 {
     QmiMessageDmsSetFirmwareIdOutput *output;
     GError                           *error = NULL;
+    RunContext                       *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
 
     output = qmi_client_dms_set_firmware_id_finish (client, res, &error);
     if (!output || !qmi_message_dms_set_firmware_id_output_get_result (output, &error)) {
@@ -203,6 +210,7 @@ set_firmware_id_ready (QmiClientDms *client,
     }
 
     g_debug ("[qfu-reseter] successfully run 'set firmware id' operation");
+    ctx->ignore_release_cid = TRUE;
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
