@@ -25,6 +25,7 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#include <libqmi-glib.h>
 
 G_BEGIN_DECLS
 
@@ -42,6 +43,17 @@ gboolean qfu_utils_parse_cwe_version_string (const gchar  *version,
                                              gchar       **config_version,
                                              gchar       **carrier,
                                              GError      **error);
+
+void     qfu_utils_new_client_dms        (GFile                *cdc_wdm_file,
+                                          gboolean              device_open_proxy,
+                                          gboolean              device_open_mbim,
+                                          GCancellable         *cancellable,
+                                          GAsyncReadyCallback   callback,
+                                          gpointer              user_data);
+gboolean qfu_utils_new_client_dms_finish (GAsyncResult         *res,
+                                          QmiDevice           **qmi_device,
+                                          QmiClientDms        **qmi_client,
+                                          GError              **error);
 
 G_END_DECLS
 

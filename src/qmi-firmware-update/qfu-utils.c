@@ -213,3 +213,182 @@ out:
 
     return result;
 }
+
+/******************************************************************************/
+
+#define QMI_CLIENT_RETRIES 3
+
+typedef struct {
+    QmiDevice    *qmi_device;
+    gboolean      device_open_proxy;
+    gboolean      device_open_mbim;
+    gint          qmi_client_retries;
+    QmiClientDms *qmi_client;
+} NewClientDmsContext;
+
+static void
+new_client_dms_context_free (NewClientDmsContext *ctx)
+{
+    if (ctx->qmi_client)
+        g_object_unref (ctx->qmi_client);
+    if (ctx->qmi_device)
+        g_object_unref (ctx->qmi_device);
+    g_slice_free (NewClientDmsContext, ctx);
+}
+
+gboolean
+qfu_utils_new_client_dms_finish (GAsyncResult  *res,
+                                 QmiDevice    **qmi_device,
+                                 QmiClientDms **qmi_client,
+                                 GError       **error)
+{
+    NewClientDmsContext *ctx;
+
+    if (!g_task_propagate_boolean (G_TASK (res), error))
+        return FALSE;
+
+    ctx = (NewClientDmsContext *) g_task_get_task_data (G_TASK (res));
+    if (qmi_device)
+        *qmi_device = g_object_ref (ctx->qmi_device);
+    if (qmi_client)
+        *qmi_client = g_object_ref (ctx->qmi_client);
+    return TRUE;
+}
+
+static void retry_allocate_qmi_client (GTask *task);
+
+static void
+qmi_client_ready (QmiDevice    *device,
+                  GAsyncResult *res,
+                  GTask        *task)
+{
+    NewClientDmsContext *ctx;
+    GError              *error = NULL;
+
+    ctx = (NewClientDmsContext *) g_task_get_task_data (task);
+
+    ctx->qmi_client = QMI_CLIENT_DMS (qmi_device_allocate_client_finish (device, res, &error));
+    if (!ctx->qmi_client) {
+        /* If this was the last attempt, error out */
+        if (!ctx->qmi_client_retries) {
+            g_prefix_error (&error, "couldn't allocate DMS QMI client: ");
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+        }
+
+        /* Retry allocation */
+        g_debug ("[qfu,utils] DMS QMI client allocation failed: %s", error->message);
+        g_error_free (error);
+
+        g_debug ("[qfu,utils] retrying...");
+        retry_allocate_qmi_client (task);
+        return;
+    }
+
+    g_debug ("[qfu,utils] DMS QMI client allocated");
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+retry_allocate_qmi_client (GTask *task)
+{
+    NewClientDmsContext *ctx;
+
+    ctx = (NewClientDmsContext *) g_task_get_task_data (task);
+
+    /* Consume one retry attempt */
+    ctx->qmi_client_retries--;
+    g_assert (ctx->qmi_client_retries >= 0);
+
+    g_debug ("[qfu,utils] allocating new DMS QMI client...");
+    qmi_device_allocate_client (ctx->qmi_device,
+                                QMI_SERVICE_DMS,
+                                QMI_CID_NONE,
+                                10,
+                                g_task_get_cancellable (task),
+                                (GAsyncReadyCallback) qmi_client_ready,
+                                task);
+}
+
+static void
+qmi_device_open_ready (QmiDevice    *device,
+                       GAsyncResult *res,
+                       GTask        *task)
+{
+    GError *error = NULL;
+
+    if (!qmi_device_open_finish (device, res, &error)) {
+        g_prefix_error (&error, "couldn't open QMI device: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[qfu,utils] QMI device open");
+    retry_allocate_qmi_client (task);
+}
+
+static void
+qmi_device_ready (GObject      *source,
+                  GAsyncResult *res,
+                  GTask        *task)
+{
+    NewClientDmsContext *ctx;
+    GError              *error = NULL;
+    QmiDeviceOpenFlags   flags = QMI_DEVICE_OPEN_FLAGS_NONE;
+
+    ctx = (NewClientDmsContext *) g_task_get_task_data (task);
+
+    ctx->qmi_device = qmi_device_new_finish (res, &error);
+    if (!ctx->qmi_device) {
+        g_prefix_error (&error, "couldn't create QMI device: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[qfu,utils] QMI device created");
+
+    if (ctx->device_open_proxy)
+        flags |= QMI_DEVICE_OPEN_FLAGS_PROXY;
+    if (ctx->device_open_mbim)
+        flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
+
+    g_debug ("[qfu,utils] opening QMI device (%s proxy, %s mode)...",
+             ctx->device_open_proxy ? "with" : "without",
+             ctx->device_open_mbim ? "mbim" : "qmi");
+    qmi_device_open (ctx->qmi_device,
+                     flags,
+                     20,
+                     g_task_get_cancellable (task),
+                     (GAsyncReadyCallback) qmi_device_open_ready,
+                     task);
+}
+
+void
+qfu_utils_new_client_dms (GFile               *cdc_wdm_file,
+                          gboolean             device_open_proxy,
+                          gboolean             device_open_mbim,
+                          GCancellable        *cancellable,
+                          GAsyncReadyCallback  callback,
+                          gpointer             user_data)
+{
+    GTask               *task;
+    NewClientDmsContext *ctx;
+
+    ctx = g_slice_new0 (NewClientDmsContext);
+    ctx->device_open_proxy  = device_open_proxy;
+    ctx->device_open_mbim   = device_open_mbim;
+    ctx->qmi_client_retries = QMI_CLIENT_RETRIES;
+
+    task = g_task_new (NULL, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify) new_client_dms_context_free);
+
+    g_debug ("[qfu,utils] creating QMI device...");
+    qmi_device_new (cdc_wdm_file,
+                    g_task_get_cancellable (task),
+                    (GAsyncReadyCallback) qmi_device_ready,
+                    task);
+}

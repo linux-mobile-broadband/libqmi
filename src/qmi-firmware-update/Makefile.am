@@ -9,10 +9,15 @@ libutils_la_SOURCES = \
 
 libutils_la_CPPFLAGS = \
 	$(GLIB_CFLAGS) \
+	-I$(top_srcdir)/src/libqmi-glib \
+	-I$(top_srcdir)/src/libqmi-glib/generated \
+	-I$(top_builddir)/src/libqmi-glib \
+	-I$(top_builddir)/src/libqmi-glib/generated \
 	$(NULL)
 
 libutils_la_LIBADD = \
-	$(GLIB_CFLAGS) \
+	$(top_builddir)/src/libqmi-glib/libqmi-glib.la \
+	$(GLIB_LDFLAGS) \
 	$(NULL)
 
 bin_PROGRAMS = qmi-firmware-update
@@ -73,7 +78,6 @@ qmi_firmware_update_SOURCES = \
 	qfu-qdl-device.h qfu-qdl-device.c \
 	qfu-reseter.h qfu-reseter.c \
 	qfu-at-device.h qfu-at-device.c \
-	qfu-utils.h qfu-utils.c \
 	$(NULL)
 
 qmi_firmware_update_LDADD = \
@@ -81,7 +85,6 @@ qmi_firmware_update_LDADD = \
 	$(GUDEV_LIBS) \
 	$(GLIB_LIBS) \
 	$(builddir)/libutils.la \
-	$(top_builddir)/src/libqmi-glib/libqmi-glib.la \
 	$(NULL)
 
 # Request to build enum types before anything else
