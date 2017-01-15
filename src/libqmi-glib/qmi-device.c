@@ -284,10 +284,6 @@ device_store_transaction (QmiDevice *self,
     gpointer     key;
     Transaction *existing;
 
-    if (G_UNLIKELY (!self->priv->transactions))
-        self->priv->transactions = g_hash_table_new (g_direct_hash,
-                                                     g_direct_equal);
-
     key = build_transaction_key (tr->message);
 
     /* Setup the timeout and cancellation */
@@ -3202,6 +3198,9 @@ qmi_device_init (QmiDevice *self)
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE ((self),
                                               QMI_TYPE_DEVICE,
                                               QmiDevicePrivate);
+
+    self->priv->transactions = g_hash_table_new (g_direct_hash,
+                                                 g_direct_equal);
 
     self->priv->registered_clients = g_hash_table_new_full (g_direct_hash,
                                                             g_direct_equal,
