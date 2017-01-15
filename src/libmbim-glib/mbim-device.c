@@ -309,6 +309,12 @@ transaction_cancelled (GCancellable           *cancellable,
                                      ctx->type,
                                      MBIM_MESSAGE_TYPE_INVALID,
                                      ctx->transaction_id);
+
+    /* The transaction may have already been cancelled before we stored it in
+     * the tracking table */
+    if (!tr)
+        return;
+
     tr->cancellable_id = 0;
 
     /* Complete transaction with an abort error */
@@ -346,6 +352,8 @@ device_store_transaction (MbimDevice       *self,
     }
 
     if (tr->cancellable && !tr->cancellable_id) {
+        /* Note: transaction_cancelled() will also be called directly if the
+         * cancellable is already cancelled */
         tr->cancellable_id = g_cancellable_connect (tr->cancellable,
                                                     (GCallback)transaction_cancelled,
                                                     tr->wait_ctx,
