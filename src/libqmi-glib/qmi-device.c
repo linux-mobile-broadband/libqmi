@@ -264,6 +264,12 @@ transaction_cancelled (GCancellable *cancellable,
     GError *error = NULL;
 
     tr = device_release_transaction (ctx->self, ctx->key);
+
+    /* The transaction may have already been cancelled before we stored it in
+     * the tracking table */
+    if (!tr)
+        return;
+
     tr->cancellable_id = 0;
 
     /* Complete transaction with an abort error */
@@ -304,6 +310,8 @@ device_store_transaction (QmiDevice *self,
     }
 
     if (tr->cancellable) {
+        /* Note: transaction_cancelled() will also be called directly if the
+         * cancellable is already cancelled */
         tr->cancellable_id = g_cancellable_connect (tr->cancellable,
                                                     (GCallback)transaction_cancelled,
                                                     tr->wait_ctx,
