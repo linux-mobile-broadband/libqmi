@@ -58,6 +58,21 @@ struct _QfuUpdaterPrivate {
 };
 
 /******************************************************************************/
+
+static const gchar *progress[] = {
+    "(*-----)",
+    "(-*----)",
+    "(--*---)",
+    "(---*--)",
+    "(----*-)",
+    "(-----*)",
+    "(----*-)",
+    "(---*--)",
+    "(--*---)",
+    "(-*----)"
+};
+
+/******************************************************************************/
 /* Run */
 
 /* Wait time after the upgrade has been done, before using the cdc-wdm port */
@@ -117,6 +132,9 @@ typedef struct {
     gchar *firmware_version;
     gchar *config_version;
     gchar *carrier;
+
+    /* Waiting for boot */
+    guint wait_for_boot_seconds_elapsed;
 } RunContext;
 
 static void
@@ -220,6 +238,8 @@ run_context_step_qmi_client_after (GTask *task)
     ctx = (RunContext *) g_task_get_task_data (task);
     self = g_task_get_source_object (task);
 
+    g_print ("loading device information after the update...\n");
+
     g_debug ("[qfu-updater] creating QMI DMS client after upgrade...");
     g_assert (ctx->cdc_wdm_file);
     qfu_utils_new_client_dms (ctx->cdc_wdm_file,
@@ -237,6 +257,18 @@ wait_for_boot_ready (GTask *task)
     RunContext *ctx;
 
     ctx = (RunContext *) g_task_get_task_data (task);
+    ctx->wait_for_boot_seconds_elapsed++;
+
+    if (ctx->wait_for_boot_seconds_elapsed < WAIT_FOR_BOOT_TIMEOUT_SECS) {
+        if (!qfu_log_get_verbose_stdout ())
+            g_print (CLEAR_LINE "%s %u",
+                     progress[ctx->wait_for_boot_seconds_elapsed % G_N_ELEMENTS (progress)],
+                     WAIT_FOR_BOOT_TIMEOUT_SECS - ctx->wait_for_boot_seconds_elapsed);
+        return G_SOURCE_CONTINUE;
+    }
+
+    if (!qfu_log_get_verbose_stdout ())
+        g_print (CLEAR_LINE);
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -246,8 +278,15 @@ wait_for_boot_ready (GTask *task)
 static void
 run_context_step_wait_for_boot (GTask *task)
 {
-    g_debug ("[qfu-updater] waiting some time before accessing the cdc-wdm device...");
-    g_timeout_add_seconds (WAIT_FOR_BOOT_TIMEOUT_SECS, (GSourceFunc) wait_for_boot_ready, task);
+    g_debug ("[qfu-updater] waiting some time (%us) before accessing the cdc-wdm device...",
+             WAIT_FOR_BOOT_TIMEOUT_SECS);
+
+    if (!qfu_log_get_verbose_stdout ()) {
+        g_print ("waiting some time for the device to boot...\n");
+        g_print ("%s %u", progress[0], WAIT_FOR_BOOT_TIMEOUT_SECS);
+    }
+
+    g_timeout_add_seconds (1, (GSourceFunc) wait_for_boot_ready, task);
 }
 
 static void
@@ -273,6 +312,8 @@ wait_for_cdc_wdm_ready (QfuDeviceSelection *device_selection,
     path = g_file_get_path (ctx->cdc_wdm_file);
     g_debug ("[qfu-updater] cdc-wdm device found: %s", path);
     g_free (path);
+
+    g_print ("normal mode detected\n");
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -341,19 +382,6 @@ run_context_step_cleanup_image (GTask *task)
     g_debug ("[qfu-updater] no more files to download");
     run_context_step_next (task, ctx->step + 1);
 }
-
-static const gchar *progress[] = {
-    "(*-----)",
-    "(-*----)",
-    "(--*---)",
-    "(---*--)",
-    "(----*-)",
-    "(-----*)",
-    "(----*-)",
-    "(---*--)",
-    "(--*---)",
-    "(-*----)"
-};
 
 static void
 run_context_step_download_image (GTask *task)
@@ -502,6 +530,8 @@ wait_for_tty_ready (QfuDeviceSelection *device_selection,
     path = g_file_get_path (ctx->serial_file);
     g_debug ("[qfu-updater] TTY device found: %s", path);
     g_free (path);
+
+    g_print ("download mode detected\n");
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -1017,6 +1047,8 @@ run_context_step_qmi_client (GTask *task)
 
     ctx = (RunContext *) g_task_get_task_data (task);
     self = g_task_get_source_object (task);
+
+    g_print ("loading device information before the update...\n");
 
     g_debug ("[qfu-updater] creating QMI DMS client...");
     g_assert (ctx->cdc_wdm_file);
