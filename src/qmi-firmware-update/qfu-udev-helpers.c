@@ -454,7 +454,7 @@ qfu_udev_helper_list_devices (QfuUdevHelperDeviceType  device_type,
 
 /******************************************************************************/
 
-#define WAIT_FOR_DEVICE_TIMEOUT_SECS 60
+#define WAIT_FOR_DEVICE_TIMEOUT_SECS 120
 
 typedef struct {
     QfuUdevHelperDeviceType  device_type;
