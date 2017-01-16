@@ -76,7 +76,8 @@ static const gchar *progress[] = {
 /* Run */
 
 /* Wait time after the upgrade has been done, before using the cdc-wdm port */
-#define WAIT_FOR_BOOT_TIMEOUT_SECS 10
+#define WAIT_FOR_BOOT_TIMEOUT_SECS 5
+#define WAIT_FOR_BOOT_RETRIES      6
 
 typedef enum {
     RUN_CONTEXT_STEP_QMI_CLIENT,
@@ -135,6 +136,7 @@ typedef struct {
 
     /* Waiting for boot */
     guint wait_for_boot_seconds_elapsed;
+    guint wait_for_boot_retries;
 } RunContext;
 
 static void
@@ -221,9 +223,16 @@ new_client_dms_after_ready (gpointer      unused,
                                           &ctx->new_supports_stored_image_management,
                                           &ctx->new_supports_firmware_preference_management,
                                           &error)) {
-        g_warning ("couldn't create DMS client after upgrade: %s", error->message);
+        if (ctx->wait_for_boot_retries == WAIT_FOR_BOOT_RETRIES) {
+            g_warning ("couldn't create DMS client after upgrade: %s", error->message);
+            run_context_step_next (task, ctx->step + 1);
+        } else {
+            g_debug ("couldn't create DMS client after upgrade: %s (will retry)", error->message);
+            run_context_step_next (task, RUN_CONTEXT_STEP_WAIT_FOR_BOOT);
+        }
         g_error_free (error);
-   }
+        return;
+    }
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -238,7 +247,9 @@ run_context_step_qmi_client_after (GTask *task)
     ctx = (RunContext *) g_task_get_task_data (task);
     self = g_task_get_source_object (task);
 
-    g_print ("loading device information after the update...\n");
+    ctx->wait_for_boot_retries++;
+    g_print ("loading device information after the update (%u/%u)...\n",
+             ctx->wait_for_boot_retries, WAIT_FOR_BOOT_RETRIES);
 
     g_debug ("[qfu-updater] creating QMI DMS client after upgrade...");
     g_assert (ctx->cdc_wdm_file);
@@ -278,6 +289,11 @@ wait_for_boot_ready (GTask *task)
 static void
 run_context_step_wait_for_boot (GTask *task)
 {
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+    ctx->wait_for_boot_seconds_elapsed = 0;
+
     g_debug ("[qfu-updater] waiting some time (%us) before accessing the cdc-wdm device...",
              WAIT_FOR_BOOT_TIMEOUT_SECS);
 
