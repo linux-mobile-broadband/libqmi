@@ -45,6 +45,7 @@ gboolean qfu_utils_parse_cwe_version_string (const gchar  *version,
                                              GError      **error);
 
 void     qfu_utils_new_client_dms        (GFile                *cdc_wdm_file,
+                                          guint                 retries,
                                           gboolean              device_open_proxy,
                                           gboolean              device_open_mbim,
                                           gboolean              load_capabilities,

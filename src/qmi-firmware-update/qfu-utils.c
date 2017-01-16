@@ -216,8 +216,6 @@ out:
 
 /******************************************************************************/
 
-#define QMI_CLIENT_RETRIES 3
-
 typedef struct {
     QmiDevice    *qmi_device;
     gboolean      device_open_proxy;
@@ -515,6 +513,7 @@ qmi_device_ready (GObject      *source,
 
 void
 qfu_utils_new_client_dms (GFile               *cdc_wdm_file,
+                          guint                retries,
                           gboolean             device_open_proxy,
                           gboolean             device_open_mbim,
                           gboolean             load_capabilities,
@@ -526,10 +525,10 @@ qfu_utils_new_client_dms (GFile               *cdc_wdm_file,
     NewClientDmsContext *ctx;
 
     ctx = g_slice_new0 (NewClientDmsContext);
+    ctx->qmi_client_retries = retries;
     ctx->device_open_proxy  = device_open_proxy;
     ctx->device_open_mbim   = device_open_mbim;
     ctx->load_capabilities  = load_capabilities;
-    ctx->qmi_client_retries = QMI_CLIENT_RETRIES;
 
     task = g_task_new (NULL, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify) new_client_dms_context_free);

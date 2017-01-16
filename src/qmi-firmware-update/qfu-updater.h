@@ -56,7 +56,8 @@ QfuUpdater *qfu_updater_new        (QfuDeviceSelection   *device_selection,
                                     const gchar          *carrier,
                                     gboolean              device_open_proxy,
                                     gboolean              device_open_mbim,
-                                    gboolean              force);
+                                    gboolean              force,
+                                    gboolean              skip_validation);
 QfuUpdater *qfu_updater_new_qdl    (QfuDeviceSelection   *device_selection);
 void        qfu_updater_run        (QfuUpdater           *self,
                                     GList                *image_file_list,

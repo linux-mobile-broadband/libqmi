@@ -55,6 +55,7 @@ struct _QfuUpdaterPrivate {
     gboolean            device_open_proxy;
     gboolean            device_open_mbim;
     gboolean            force;
+    gboolean            skip_validation;
 };
 
 /******************************************************************************/
@@ -77,7 +78,7 @@ static const gchar *progress[] = {
 
 /* Wait time after the upgrade has been done, before using the cdc-wdm port */
 #define WAIT_FOR_BOOT_TIMEOUT_SECS 5
-#define WAIT_FOR_BOOT_RETRIES      6
+#define WAIT_FOR_BOOT_RETRIES      12
 
 typedef enum {
     RUN_CONTEXT_STEP_QMI_CLIENT,
@@ -253,6 +254,7 @@ run_context_step_qmi_client_after (GTask *task)
     g_debug ("[qfu-updater] creating QMI DMS client after upgrade...");
     g_assert (ctx->cdc_wdm_file);
     qfu_utils_new_client_dms (ctx->cdc_wdm_file,
+                              1, /* single try to allocate DMS client */
                               self->priv->device_open_proxy,
                               self->priv->device_open_mbim,
                               TRUE,
@@ -311,9 +313,11 @@ wait_for_cdc_wdm_ready (QfuDeviceSelection *device_selection,
 {
     GError     *error = NULL;
     RunContext *ctx;
+    QfuUpdater *self;
     gchar      *path;
 
     ctx = (RunContext *) g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
 
     g_assert (!ctx->cdc_wdm_file);
     ctx->cdc_wdm_file = qfu_device_selection_wait_for_cdc_wdm_finish (device_selection, res, &error);
@@ -329,6 +333,22 @@ wait_for_cdc_wdm_ready (QfuDeviceSelection *device_selection,
     g_free (path);
 
     g_print ("normal mode detected\n");
+
+    /* If no need to validate, we're done */
+    if (self->priv->skip_validation) {
+        run_context_step_next (task, RUN_CONTEXT_STEP_LAST);
+        return;
+    }
+
+    g_print ("\n"
+             "--------------------------------------------------\n"
+             "    Note:\n"
+             "    In order to validate which is the firmware running in the module,\n"
+             "    the program will wait for a complete boot.\n"
+             "\n"
+             "    This process may take some time and several retries.\n"
+             "--------------------------------------------------\n"
+             "\n");
 
     /* Go on */
     run_context_step_next (task, ctx->step + 1);
@@ -1031,6 +1051,7 @@ run_context_step_qmi_client (GTask *task)
     g_debug ("[qfu-updater] creating QMI DMS client...");
     g_assert (ctx->cdc_wdm_file);
     qfu_utils_new_client_dms (ctx->cdc_wdm_file,
+                              3, /* initially, up to 3 tries to allocate DMS client */
                               self->priv->device_open_proxy,
                               self->priv->device_open_mbim,
                               TRUE,
@@ -1207,7 +1228,8 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
                  const gchar        *carrier,
                  gboolean            device_open_proxy,
                  gboolean            device_open_mbim,
-                 gboolean            force)
+                 gboolean            force,
+                 gboolean            skip_validation)
 {
     QfuUpdater *self;
 
@@ -1222,6 +1244,7 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
     self->priv->config_version = (config_version ? g_strdup (config_version) : NULL);
     self->priv->carrier = (carrier ? g_strdup (carrier) : NULL);
     self->priv->force = force;
+    self->priv->skip_validation = skip_validation;
 
     return self;
 }

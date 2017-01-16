@@ -123,7 +123,8 @@ qfu_operation_update_run (const gchar        **images,
                           const gchar         *carrier,
                           gboolean             device_open_proxy,
                           gboolean             device_open_mbim,
-                          gboolean             force)
+                          gboolean             force,
+                          gboolean             skip_validation)
 {
     QfuUpdater *updater = NULL;
     gboolean    result;
@@ -136,7 +137,8 @@ qfu_operation_update_run (const gchar        **images,
                                carrier,
                                device_open_proxy,
                                device_open_mbim,
-                               force);
+                               force,
+                               skip_validation);
     result = operation_update_run (updater, images);
     g_object_unref (updater);
     return result;

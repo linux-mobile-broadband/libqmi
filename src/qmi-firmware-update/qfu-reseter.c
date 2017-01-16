@@ -386,6 +386,7 @@ qfu_reseter_run (QfuReseter          *self,
     /* Otherwise, try to allocate a QMI client */
     g_assert (ctx->cdc_wdm);
     qfu_utils_new_client_dms (ctx->cdc_wdm,
+                              3,
                               self->priv->device_open_proxy,
                               self->priv->device_open_mbim,
                               FALSE,

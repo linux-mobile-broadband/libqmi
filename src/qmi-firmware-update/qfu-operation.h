@@ -34,7 +34,8 @@ gboolean qfu_operation_update_run     (const gchar        **images,
                                        const gchar         *carrier,
                                        gboolean             device_open_proxy,
                                        gboolean             device_open_mbim,
-                                       gboolean             force);
+                                       gboolean             force,
+                                       gboolean             skip_validation);
 gboolean qfu_operation_update_qdl_run (const gchar        **images,
                                        QfuDeviceSelection  *device_selection);
 gboolean qfu_operation_verify_run     (const gchar        **images);

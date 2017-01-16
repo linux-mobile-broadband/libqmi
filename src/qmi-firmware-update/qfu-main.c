@@ -56,6 +56,7 @@ static gchar     *carrier_str;
 static gboolean   device_open_proxy_flag;
 static gboolean   device_open_mbim_flag;
 static gboolean   force_flag;
+static gboolean   skip_validation_flag;
 
 /* Reset */
 static gboolean   action_reset_flag;
@@ -217,6 +218,10 @@ static GOptionEntry context_update_entries[] = {
     },
     { "force", 0, 0, G_OPTION_ARG_NONE, &force_flag,
       "Force update operation even with version string errors.",
+      NULL
+    },
+    { "skip-validation", 0, 0, G_OPTION_ARG_NONE, &skip_validation_flag,
+      "Don't wait to validate the running firmware after update.",
       NULL
     },
     { NULL }
@@ -551,7 +556,8 @@ int main (int argc, char **argv)
                                            carrier_str,
                                            device_open_proxy_flag,
                                            device_open_mbim_flag,
-                                           force_flag);
+                                           force_flag,
+                                           skip_validation_flag);
         goto out;
     }
 
