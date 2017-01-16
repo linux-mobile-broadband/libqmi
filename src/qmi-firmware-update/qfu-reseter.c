@@ -188,6 +188,87 @@ run_context_step_at (GTask *task)
 }
 
 static void
+power_cycle_ready (QmiClientDms *qmi_client,
+                   GAsyncResult *res,
+                   GTask        *task)
+{
+    GError     *error = NULL;
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    if (!qfu_utils_power_cycle_finish (qmi_client, res, &error)) {
+        g_debug ("[qfu-reseter] error: couldn't power cycle: %s", error->message);
+        g_error_free (error);
+        g_debug ("[qfu-reseter] skipping QMI-based boothold");
+        run_context_step_at (task);
+        return;
+    }
+
+    g_debug ("[qfu-reseter] reset requested successfully...");
+
+    ctx->ignore_release_cid = TRUE;
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+set_boot_image_download_mode_ready (QmiClientDms *client,
+                                    GAsyncResult *res,
+                                    GTask        *task)
+{
+    QmiMessageDmsSetBootImageDownloadModeOutput *output;
+    GError                                      *error = NULL;
+    RunContext                                  *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    output = qmi_client_dms_set_boot_image_download_mode_finish (client, res, &error);
+    if (!output || !qmi_message_dms_set_boot_image_download_mode_output_get_result (output, &error)) {
+        g_debug ("[qfu-reseter] error: couldn't run 'set boot image download mode' operation: %s", error->message);
+        g_error_free (error);
+        if (output)
+            qmi_message_dms_set_boot_image_download_mode_output_unref (output);
+        g_debug ("[qfu-reseter] skipping QMI-based boothold");
+        run_context_step_at (task);
+        return;
+    }
+
+    qmi_message_dms_set_boot_image_download_mode_output_unref (output);
+
+    g_debug ("[qfu-reseter] successfully run 'set boot image download mode' operation");
+
+    qfu_utils_power_cycle (ctx->qmi_client,
+                           g_task_get_cancellable (task),
+                           (GAsyncReadyCallback) power_cycle_ready,
+                           task);
+}
+
+static void
+run_context_step_qmi_boot_image_download_mode (GTask *task)
+{
+    RunContext                                 *ctx;
+    QfuReseter                                 *self;
+    QmiMessageDmsSetBootImageDownloadModeInput *input;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+
+    g_assert (ctx->qmi_client || self->priv->qmi_client);
+
+    /* Try DMS 0x0050 */
+    input = qmi_message_dms_set_boot_image_download_mode_input_new ();
+    qmi_message_dms_set_boot_image_download_mode_input_set_mode (input, QMI_DMS_BOOT_IMAGE_DOWNLOAD_MODE_BOOT_AND_RECOVERY, NULL);
+    qmi_client_dms_set_boot_image_download_mode (self->priv->qmi_client ? self->priv->qmi_client : ctx->qmi_client,
+                                                 input,
+                                                 10,
+                                                 g_task_get_cancellable (task),
+                                                 (GAsyncReadyCallback) set_boot_image_download_mode_ready,
+                                                 task);
+    qmi_message_dms_set_boot_image_download_mode_input_unref (input);
+}
+
+static void
 set_firmware_id_ready (QmiClientDms *client,
                        GAsyncResult *res,
                        GTask        *task)
@@ -204,10 +285,12 @@ set_firmware_id_ready (QmiClientDms *client,
         g_error_free (error);
         if (output)
             qmi_message_dms_set_firmware_id_output_unref (output);
-        g_debug ("[qfu-reseter] skipping QMI-based boothold");
-        run_context_step_at (task);
+        g_debug ("[qfu-reseter] trying boot image download mode...");
+        run_context_step_qmi_boot_image_download_mode (task);
         return;
     }
+
+    qmi_message_dms_set_firmware_id_output_unref (output);
 
     g_debug ("[qfu-reseter] successfully run 'set firmware id' operation");
     ctx->ignore_release_cid = TRUE;
@@ -216,7 +299,7 @@ set_firmware_id_ready (QmiClientDms *client,
 }
 
 static void
-run_context_step_qmi (GTask *task)
+run_context_step_qmi_firmware_id (GTask *task)
 {
     RunContext *ctx;
     QfuReseter *self;
@@ -258,7 +341,7 @@ new_client_dms_ready (gpointer      unused,
         return;
     }
 
-    run_context_step_qmi (task);
+    run_context_step_qmi_firmware_id (task);
 }
 
 void
@@ -296,7 +379,7 @@ qfu_reseter_run (QfuReseter          *self,
 
     /* If we already got a QMI client as input, try QMI directly */
     if (self->priv->qmi_client) {
-        run_context_step_qmi (task);
+        run_context_step_qmi_firmware_id (task);
         return;
     }
 
