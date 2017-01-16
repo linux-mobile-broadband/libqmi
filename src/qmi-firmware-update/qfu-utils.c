@@ -228,6 +228,7 @@ typedef struct {
     gboolean                                  revision_done;
     gboolean                                  supports_stored_image_management;
     gboolean                                  supports_stored_image_management_done;
+    guint8                                    max_storage_index;
     gboolean                                  supports_firmware_preference_management;
     QmiMessageDmsGetFirmwarePreferenceOutput *firmware_preference;
     gboolean                                  supports_firmware_preference_management_done;
@@ -252,6 +253,7 @@ qfu_utils_new_client_dms_finish (GAsyncResult  *res,
                                  QmiClientDms **qmi_client,
                                  gchar        **revision,
                                  gboolean      *supports_stored_image_management,
+                                 guint8        *max_storage_index,
                                  gboolean      *supports_firmware_preference_management,
                                  QmiMessageDmsGetFirmwarePreferenceOutput **firmware_preference,
                                  GError       **error)
@@ -270,6 +272,8 @@ qfu_utils_new_client_dms_finish (GAsyncResult  *res,
         *revision = (ctx->revision ? g_strdup (ctx->revision) : NULL);
     if (supports_stored_image_management)
         *supports_stored_image_management = ctx->supports_stored_image_management;
+    if (max_storage_index)
+        *max_storage_index = ctx->max_storage_index;
     if (supports_firmware_preference_management)
         *supports_firmware_preference_management = ctx->supports_firmware_preference_management;
     if (firmware_preference)
@@ -333,6 +337,23 @@ dms_list_stored_images_ready (QmiClientDms *client,
 
     output = qmi_client_dms_list_stored_images_finish (client, res, NULL);
     ctx->supports_stored_image_management = (output && qmi_message_dms_list_stored_images_output_get_result (output, NULL));
+
+    if (ctx->supports_stored_image_management) {
+        GArray *array;
+        guint i;
+
+        qmi_message_dms_list_stored_images_output_get_list (output, &array, NULL);
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageDmsListStoredImagesOutputListImage *image;
+
+            image = &g_array_index (array, QmiMessageDmsListStoredImagesOutputListImage, i);
+            if (image->type == QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM) {
+                ctx->max_storage_index = image->maximum_images;
+                break;
+            }
+        }
+    }
 
     if (output)
         qmi_message_dms_list_stored_images_output_unref (output);

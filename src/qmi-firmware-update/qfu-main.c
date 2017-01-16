@@ -57,6 +57,7 @@ static gboolean   device_open_proxy_flag;
 static gboolean   device_open_mbim_flag;
 static gboolean   ignore_version_errors_flag;
 static gboolean   override_download_flag;
+static gint       modem_storage_index_int;
 static gboolean   skip_validation_flag;
 
 /* Reset */
@@ -216,6 +217,10 @@ static GOptionEntry context_update_entries[] = {
     { "override-download", 0, 0, G_OPTION_ARG_NONE, &override_download_flag,
       "Download images even if module says it already has them.",
       NULL
+    },
+    { "modem-storage-index", 0, 0, G_OPTION_ARG_INT, &modem_storage_index_int,
+      "Index storage for the modem image.",
+      "[INDEX]"
     },
     { "skip-validation", 0, 0, G_OPTION_ARG_NONE, &skip_validation_flag,
       "Don't wait to validate the running firmware after update.",
@@ -554,6 +559,14 @@ int main (int argc, char **argv)
 
     if (action_update_flag) {
         g_assert (QFU_IS_DEVICE_SELECTION (device_selection));
+
+        /* Validate storage index, just (0,G_MAXUINT8] for now. The value 0 is also not
+         * valid, but we use it to flag when no specific index has been requested. */
+        if (modem_storage_index_int < 0 || modem_storage_index_int > G_MAXUINT8) {
+            g_printerr ("error: invalid modem storage index\n");
+            goto out;
+        }
+
         result = qfu_operation_update_run ((const gchar **) image_strv,
                                            device_selection,
                                            firmware_version_str,
@@ -563,6 +576,7 @@ int main (int argc, char **argv)
                                            device_open_mbim_flag,
                                            ignore_version_errors_flag,
                                            override_download_flag,
+                                           (guint8) modem_storage_index_int,
                                            skip_validation_flag);
         goto out;
     }

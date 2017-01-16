@@ -58,6 +58,7 @@ QfuUpdater *qfu_updater_new        (QfuDeviceSelection   *device_selection,
                                     gboolean              device_open_mbim,
                                     gboolean              ignore_version_errors,
                                     gboolean              override_download,
+                                    guint8                modem_storage_index,
                                     gboolean              skip_validation);
 QfuUpdater *qfu_updater_new_qdl    (QfuDeviceSelection   *device_selection);
 void        qfu_updater_run        (QfuUpdater           *self,

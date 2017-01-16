@@ -36,6 +36,7 @@ gboolean qfu_operation_update_run     (const gchar        **images,
                                        gboolean             device_open_mbim,
                                        gboolean             ignore_version_errors,
                                        gboolean             override_download,
+                                       guint8               modem_storage_index,
                                        gboolean             skip_validation);
 gboolean qfu_operation_update_qdl_run (const gchar        **images,
                                        QfuDeviceSelection  *device_selection);

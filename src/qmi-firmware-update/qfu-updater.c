@@ -56,6 +56,7 @@ struct _QfuUpdaterPrivate {
     gboolean            device_open_mbim;
     gboolean            ignore_version_errors;
     gboolean            override_download;
+    guint8              modem_storage_index;
     gboolean            skip_validation;
 };
 
@@ -110,6 +111,7 @@ typedef struct {
     /* Old/New info and capabilities */
     gchar                                    *revision;
     gboolean                                  supports_stored_image_management;
+    guint8                                    max_modem_storage_index;
     gboolean                                  supports_firmware_preference_management;
     QmiMessageDmsGetFirmwarePreferenceOutput *firmware_preference;
     gchar                                    *new_revision;
@@ -301,6 +303,7 @@ new_client_dms_after_ready (gpointer      unused,
                                           &ctx->qmi_client,
                                           &ctx->new_revision,
                                           &ctx->new_supports_stored_image_management,
+                                          NULL, /* we don't care about the max number of images */
                                           &ctx->new_supports_firmware_preference_management,
                                           &ctx->new_firmware_preference,
                                           &error)) {
@@ -896,6 +899,9 @@ run_context_step_set_firmware_preference (GTask *task)
     if (self->priv->override_download)
         qmi_message_dms_set_firmware_preference_input_set_download_override (input, TRUE, NULL);
 
+    if (self->priv->modem_storage_index > 0)
+        qmi_message_dms_set_firmware_preference_input_set_modem_storage_index (input, (guint8) self->priv->modem_storage_index, NULL);
+
     g_debug ("[qfu-updater] setting firmware preference...");
     g_debug ("[qfu-updater]   modem image: unique id '%.16s', build id '%s'",
              (gchar *) (modem_image_id.unique_id->data), modem_image_id.build_id);
@@ -1105,9 +1111,11 @@ new_client_dms_ready (gpointer      unused,
                       GTask        *task)
 {
     RunContext *ctx;
+    QfuUpdater *self;
     GError     *error = NULL;
 
     ctx = (RunContext *) g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
 
     g_assert (!ctx->qmi_device);
     g_assert (!ctx->qmi_client);
@@ -1117,10 +1125,21 @@ new_client_dms_ready (gpointer      unused,
                                           &ctx->qmi_client,
                                           &ctx->revision,
                                           &ctx->supports_stored_image_management,
+                                          &ctx->max_modem_storage_index,
                                           &ctx->supports_firmware_preference_management,
                                           &ctx->firmware_preference,
                                           &error)) {
         g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* Validate modem storage index, if one specified */
+    if (self->priv->modem_storage_index > ctx->max_modem_storage_index) {
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+                                 "modem storage index out of bounds (%u > %u)",
+                                 self->priv->modem_storage_index,
+                                 ctx->max_modem_storage_index);
         g_object_unref (task);
         return;
     }
@@ -1289,6 +1308,7 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
                  gboolean            device_open_mbim,
                  gboolean            ignore_version_errors,
                  gboolean            override_download,
+                 guint8              modem_storage_index,
                  gboolean            skip_validation)
 {
     QfuUpdater *self;
@@ -1305,6 +1325,7 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
     self->priv->carrier = (carrier ? g_strdup (carrier) : NULL);
     self->priv->ignore_version_errors = ignore_version_errors;
     self->priv->override_download = override_download;
+    self->priv->modem_storage_index = modem_storage_index;
     self->priv->skip_validation = skip_validation;
 
     return self;
