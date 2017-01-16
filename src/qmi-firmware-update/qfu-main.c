@@ -208,14 +208,6 @@ static GOptionEntry context_update_entries[] = {
       "Carrier name (e.g. 'Generic').",
       "[CARRIER]",
     },
-    { "device-open-proxy", 'p', 0, G_OPTION_ARG_NONE, &device_open_proxy_flag,
-      "Request to use the 'qmi-proxy' proxy.",
-      NULL
-    },
-    { "device-open-mbim", 0, 0, G_OPTION_ARG_NONE, &device_open_mbim_flag,
-      "Open an MBIM device with EXT_QMUX support.",
-      NULL
-    },
     { "force", 0, 0, G_OPTION_ARG_NONE, &force_flag,
       "Force update operation even with version string errors.",
       NULL
@@ -254,6 +246,14 @@ static GOptionEntry context_verify_entries[] = {
 static GOptionEntry context_main_entries[] = {
     { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &image_strv, "",
       "FILE1 FILE2..."
+    },
+    { "device-open-proxy", 'p', 0, G_OPTION_ARG_NONE, &device_open_proxy_flag,
+      "Request to use the 'qmi-proxy' proxy.",
+      NULL
+    },
+    { "device-open-mbim", 0, 0, G_OPTION_ARG_NONE, &device_open_mbim_flag,
+      "Open an MBIM device with EXT_QMUX support.",
+      NULL
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &stdout_verbose_flag,
       "Run action with verbose messages in standard output, including the debug ones.",
