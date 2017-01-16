@@ -223,18 +223,21 @@ typedef struct {
     gint          qmi_client_retries;
     QmiClientDms *qmi_client;
 
-    gboolean      load_capabilities;
-    gchar        *revision;
-    gboolean      revision_done;
-    gboolean      supports_stored_image_management;
-    gboolean      supports_stored_image_management_done;
-    gboolean      supports_firmware_preference_management;
-    gboolean      supports_firmware_preference_management_done;
+    gboolean                                  load_capabilities;
+    gchar                                    *revision;
+    gboolean                                  revision_done;
+    gboolean                                  supports_stored_image_management;
+    gboolean                                  supports_stored_image_management_done;
+    gboolean                                  supports_firmware_preference_management;
+    QmiMessageDmsGetFirmwarePreferenceOutput *firmware_preference;
+    gboolean                                  supports_firmware_preference_management_done;
 } NewClientDmsContext;
 
 static void
 new_client_dms_context_free (NewClientDmsContext *ctx)
 {
+    if (ctx->firmware_preference)
+        qmi_message_dms_get_firmware_preference_output_unref (ctx->firmware_preference);
     if (ctx->qmi_client)
         g_object_unref (ctx->qmi_client);
     if (ctx->qmi_device)
@@ -250,6 +253,7 @@ qfu_utils_new_client_dms_finish (GAsyncResult  *res,
                                  gchar        **revision,
                                  gboolean      *supports_stored_image_management,
                                  gboolean      *supports_firmware_preference_management,
+                                 QmiMessageDmsGetFirmwarePreferenceOutput **firmware_preference,
                                  GError       **error)
 {
     NewClientDmsContext *ctx;
@@ -268,6 +272,8 @@ qfu_utils_new_client_dms_finish (GAsyncResult  *res,
         *supports_stored_image_management = ctx->supports_stored_image_management;
     if (supports_firmware_preference_management)
         *supports_firmware_preference_management = ctx->supports_firmware_preference_management;
+    if (firmware_preference)
+        *firmware_preference = (ctx->firmware_preference ? qmi_message_dms_get_firmware_preference_output_ref (ctx->firmware_preference) : NULL);
     return TRUE;
 }
 
@@ -354,6 +360,9 @@ dms_get_firmware_preference_ready (QmiClientDms *client,
         guint   i;
 
         g_debug ("[qfu,utils] current firmware preference loaded:");
+
+        /* Store */
+        ctx->firmware_preference = qmi_message_dms_get_firmware_preference_output_ref (output);
 
         qmi_message_dms_get_firmware_preference_output_get_list (output, &array, NULL);
 

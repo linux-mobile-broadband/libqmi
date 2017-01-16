@@ -107,12 +107,14 @@ typedef struct {
     RunContextStep step;
 
     /* Old/New info and capabilities */
-    gchar        *revision;
-    gboolean      supports_stored_image_management;
-    gboolean      supports_firmware_preference_management;
-    gchar        *new_revision;
-    gboolean      new_supports_stored_image_management;
-    gboolean      new_supports_firmware_preference_management;
+    gchar                                    *revision;
+    gboolean                                  supports_stored_image_management;
+    gboolean                                  supports_firmware_preference_management;
+    QmiMessageDmsGetFirmwarePreferenceOutput *firmware_preference;
+    gchar                                    *new_revision;
+    gboolean                                  new_supports_stored_image_management;
+    gboolean                                  new_supports_firmware_preference_management;
+    QmiMessageDmsGetFirmwarePreferenceOutput *new_firmware_preference;
 
     /* List of pending QfuImages to download, and the current one being
      * processed. */
@@ -130,9 +132,9 @@ typedef struct {
     gboolean boothold_reset;
 
     /* Information gathered from the firmware images themselves */
-    gchar *firmware_version;
-    gchar *config_version;
-    gchar *carrier;
+    gchar                                    *firmware_version;
+    gchar                                    *config_version;
+    gchar                                    *carrier;
 
     /* Waiting for boot */
     guint wait_for_boot_seconds_elapsed;
@@ -142,6 +144,10 @@ typedef struct {
 static void
 run_context_free (RunContext *ctx)
 {
+    if (ctx->firmware_preference)
+        qmi_message_dms_get_firmware_preference_output_unref (ctx->firmware_preference);
+    if (ctx->new_firmware_preference)
+        qmi_message_dms_get_firmware_preference_output_unref (ctx->new_firmware_preference);
     g_free (ctx->new_revision);
     g_free (ctx->revision);
     g_free (ctx->firmware_version);
@@ -179,6 +185,79 @@ qfu_updater_run_finish (QfuUpdater    *self,
                         GError       **error)
 {
     return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+print_firmware_preference (QmiMessageDmsGetFirmwarePreferenceOutput *firmware_preference,
+                           const gchar                              *prefix)
+{
+    GArray *array;
+    guint   i;
+
+    qmi_message_dms_get_firmware_preference_output_get_list (firmware_preference, &array, NULL);
+
+    if (array->len > 0) {
+        for (i = 0; i < array->len; i++) {
+            QmiMessageDmsGetFirmwarePreferenceOutputListImage *image;
+            gchar                                             *unique_id_str;
+
+            image = &g_array_index (array, QmiMessageDmsGetFirmwarePreferenceOutputListImage, i);
+            unique_id_str = qfu_utils_get_firmware_image_unique_id_printable (image->unique_id);
+            g_print ("%simage '%s': unique id '%s', build id '%s'\n",
+                     prefix,
+                     qmi_dms_firmware_image_type_get_string (image->type),
+                     unique_id_str,
+                     image->build_id);
+            g_free (unique_id_str);
+        }
+    } else
+        g_debug ("%sno preference specified\n", prefix);
+}
+
+static void
+run_context_step_last (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    /* Dump output report */
+    g_print ("\n"
+             "------------------------------------------------------------------------\n");
+
+    g_print ("\n"
+             "   original firmware revision was:\n"
+             "   %s\n", ctx->revision ? ctx->revision : "unknown");
+    if (ctx->firmware_preference)
+        print_firmware_preference (ctx->firmware_preference, "      ");
+
+    g_print ("\n"
+             "   new firmware revision is:\n"
+             "   %s\n", ctx->new_revision ? ctx->new_revision : "unknown");
+    if (ctx->new_firmware_preference)
+        print_firmware_preference (ctx->new_firmware_preference, "      ");
+
+    if (ctx->new_supports_stored_image_management)
+        g_print ("\n"
+                 "   NOTE: this device supports stored image management\n"
+                 "   with qmicli operations:\n"
+                 "      --dms-list-stored-images\n"
+                 "      --dms-select-stored-image\n"
+                 "      --dms-delete-stored-image\n");
+
+    if (ctx->new_supports_firmware_preference_management)
+        g_print ("\n"
+                 "   NOTE: this device supports firmware preference management\n"
+                 "   with qmicli operations:\n"
+                 "      --dms-get-firmware-preference\n"
+                 "      --dms-set-firmware-preference\n");
+
+    g_print ("\n"
+             "------------------------------------------------------------------------\n"
+             "\n");
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void run_context_step (GTask *task);
@@ -222,6 +301,7 @@ new_client_dms_after_ready (gpointer      unused,
                                           &ctx->new_revision,
                                           &ctx->new_supports_stored_image_management,
                                           &ctx->new_supports_firmware_preference_management,
+                                          &ctx->new_firmware_preference,
                                           &error)) {
         if (ctx->wait_for_boot_retries == WAIT_FOR_BOOT_RETRIES) {
             g_warning ("couldn't create DMS client after upgrade: %s", error->message);
@@ -341,13 +421,11 @@ wait_for_cdc_wdm_ready (QfuDeviceSelection *device_selection,
     }
 
     g_print ("\n"
-             "--------------------------------------------------\n"
-             "    Note:\n"
-             "    In order to validate which is the firmware running in the module,\n"
-             "    the program will wait for a complete boot.\n"
-             "\n"
-             "    This process may take some time and several retries.\n"
-             "--------------------------------------------------\n"
+             "------------------------------------------------------------------------\n"
+             "    NOTE: in order to validate which is the firmware running in the\n"
+             "    module, the program will wait for a complete boot; this process\n"
+             "    may take some time and several retries.\n"
+             "------------------------------------------------------------------------\n"
              "\n");
 
     /* Go on */
@@ -1033,6 +1111,7 @@ new_client_dms_ready (gpointer      unused,
                                           &ctx->revision,
                                           &ctx->supports_stored_image_management,
                                           &ctx->supports_firmware_preference_management,
+                                          &ctx->firmware_preference,
                                           &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
@@ -1105,40 +1184,7 @@ run_context_step (GTask *task)
     }
 
     g_debug ("[qfu-updater] operation finished");
-
-    /* Dump output report */
-    g_print ("\n"
-             "--------------------------------------------------\n");
-
-    g_print ("\n"
-             "   original firmware revision was:\n"
-             "   %s\n", ctx->revision ? ctx->revision : "unknown");
-
-    g_print ("\n"
-             "   new firmware revision is:\n"
-             "   %s\n", ctx->new_revision ? ctx->new_revision : "unknown");
-
-    if (ctx->new_supports_stored_image_management)
-        g_print ("\n"
-                 "   NOTE: this device supports stored image management\n"
-                 "   with qmicli operations:\n"
-                 "      --dms-list-stored-images\n"
-                 "      --dms-select-stored-image\n"
-                 "      --dms-delete-stored-image\n");
-
-    if (ctx->new_supports_firmware_preference_management)
-        g_print ("\n"
-                 "   NOTE: this device supports firmware preference management\n"
-                 "   with qmicli operations:\n"
-                 "      --dms-get-firmware-preference\n"
-                 "      --dms-set-firmware-preference\n");
-
-    g_print ("\n"
-             "--------------------------------------------------\n"
-             "\n");
-
-    g_task_return_boolean (task, TRUE);
-    g_object_unref (task);
+    run_context_step_last (task);
 }
 
 static gint

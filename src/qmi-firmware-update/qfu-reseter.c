@@ -331,7 +331,7 @@ new_client_dms_ready (gpointer      unused,
     if (!qfu_utils_new_client_dms_finish (res,
                                           &ctx->qmi_device,
                                           &ctx->qmi_client,
-                                          NULL, NULL, NULL,
+                                          NULL, NULL, NULL, NULL,
                                           &error)) {
         /* Jump to AT-based boothold */
         g_debug ("[qfu-reseter] error: couldn't allocate QMI client: %s", error->message);

@@ -58,6 +58,7 @@ gboolean qfu_utils_new_client_dms_finish (GAsyncResult         *res,
                                           gchar               **revision,
                                           gboolean             *supports_stored_image_management,
                                           gboolean             *supports_firmware_preference_management,
+                                          QmiMessageDmsGetFirmwarePreferenceOutput **firmware_preference,
                                           GError              **error);
 
 void     qfu_utils_power_cycle        (QmiClientDms         *qmi_client,
