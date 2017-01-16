@@ -34,9 +34,9 @@ qmi_firmware_update_CPPFLAGS = \
 	$(NULL)
 
 ENUMS = \
-	qfu-image.h \
-	qfu-qdl-message.h \
-	qfu-dload-message.h \
+	$(top_srcdir)/src/qmi-firmware-update/qfu-image.h \
+	$(top_srcdir)/src/qmi-firmware-update/qfu-qdl-message.h \
+	$(top_srcdir)/src/qmi-firmware-update/qfu-dload-message.h \
 	$(NULL)
 
 ENUMS_GENERATED = \
