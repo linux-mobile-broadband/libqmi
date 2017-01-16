@@ -609,9 +609,9 @@ run_context_step_cleanup_qmi_device (GTask *task)
 
     g_clear_object (&ctx->cdc_wdm_file);
 
-    /* If nothing to download, we're done */
+    /* If nothing to download we don't need to wait for QDL download mode */
     if (!ctx->pending_images) {
-        run_context_step_next (task, RUN_CONTEXT_STEP_LAST);
+        run_context_step_next (task, RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM);
         return;
     }
 
@@ -684,6 +684,12 @@ run_context_step_power_cycle (GTask *task)
         return;
     }
 
+    /* Boothold is required when firmware preference isn't supported; and if so,
+     * there must always be images to download. The only case in which we don't
+     * have images listed for download is when we're told that there is nothing
+     * to download via firmware preference. */
+    g_assert (ctx->pending_images != NULL);
+
     /* Boothold reset */
     reseter = qfu_reseter_new (self->priv->device_selection, ctx->qmi_client, FALSE, FALSE);
     qfu_reseter_run (reseter,
@@ -728,10 +734,10 @@ set_firmware_preference_ready (QmiClientDms *client,
     /* list images we need to download? */
     if (qmi_message_dms_set_firmware_preference_output_get_image_download_list (output, &array, &error)) {
         if (!array->len) {
-            g_print ("device already contains the given firmware/config version: nothing to do\n");
+            g_print ("device already contains the given firmware/config version: no download needed\n");
+            g_print ("will power cycle to apply the new firmware preference...\n");
             g_list_free_full (ctx->pending_images, (GDestroyNotify) g_object_unref);
             ctx->pending_images = NULL;
-            next_step = RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE;
         } else {
             GString                 *images = NULL;
             QmiDmsFirmwareImageType  type;
