@@ -55,6 +55,7 @@ struct _QfuUpdaterPrivate {
     gboolean            device_open_proxy;
     gboolean            device_open_mbim;
     gboolean            ignore_version_errors;
+    gboolean            override_download;
     gboolean            skip_validation;
 };
 
@@ -813,7 +814,8 @@ set_firmware_preference_ready (QmiClientDms *client,
     if (qmi_message_dms_set_firmware_preference_output_get_image_download_list (output, &array, &error)) {
         if (!array->len) {
             g_print ("device already contains the given firmware/config version: no download needed\n");
-            g_print ("will power cycle to apply the new firmware preference...\n");
+            g_print ("forcing the download may be requested with the --override-download option\n");
+            g_print ("now power cycling to apply the new firmware preference...\n");
             g_list_free_full (ctx->pending_images, (GDestroyNotify) g_object_unref);
             ctx->pending_images = NULL;
         } else {
@@ -891,11 +893,16 @@ run_context_step_set_firmware_preference (GTask *task)
     qmi_message_dms_set_firmware_preference_input_set_list (input, array, NULL);
     g_array_unref (array);
 
+    if (self->priv->override_download)
+        qmi_message_dms_set_firmware_preference_input_set_download_override (input, TRUE, NULL);
+
     g_debug ("[qfu-updater] setting firmware preference...");
     g_debug ("[qfu-updater]   modem image: unique id '%.16s', build id '%s'",
              (gchar *) (modem_image_id.unique_id->data), modem_image_id.build_id);
     g_debug ("[qfu-updater]   pri image:   unique id '%.16s', build id '%s'",
              (gchar *) (pri_image_id.unique_id->data), pri_image_id.build_id);
+    g_debug ("[qfu-updater]   override download: %s",
+             self->priv->override_download ? "yes" : "no");
 
     qmi_client_dms_set_firmware_preference (ctx->qmi_client,
                                             input,
@@ -1281,6 +1288,7 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
                  gboolean            device_open_proxy,
                  gboolean            device_open_mbim,
                  gboolean            ignore_version_errors,
+                 gboolean            override_download,
                  gboolean            skip_validation)
 {
     QfuUpdater *self;
@@ -1296,6 +1304,7 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
     self->priv->config_version = (config_version ? g_strdup (config_version) : NULL);
     self->priv->carrier = (carrier ? g_strdup (carrier) : NULL);
     self->priv->ignore_version_errors = ignore_version_errors;
+    self->priv->override_download = override_download;
     self->priv->skip_validation = skip_validation;
 
     return self;

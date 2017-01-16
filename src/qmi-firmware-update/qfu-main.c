@@ -56,6 +56,7 @@ static gchar     *carrier_str;
 static gboolean   device_open_proxy_flag;
 static gboolean   device_open_mbim_flag;
 static gboolean   ignore_version_errors_flag;
+static gboolean   override_download_flag;
 static gboolean   skip_validation_flag;
 
 /* Reset */
@@ -210,6 +211,10 @@ static GOptionEntry context_update_entries[] = {
     },
     { "ignore-version-errors", 0, 0, G_OPTION_ARG_NONE, &ignore_version_errors_flag,
       "Run update operation even with version string errors.",
+      NULL
+    },
+    { "override-download", 0, 0, G_OPTION_ARG_NONE, &override_download_flag,
+      "Download images even if module says it already has them.",
       NULL
     },
     { "skip-validation", 0, 0, G_OPTION_ARG_NONE, &skip_validation_flag,
@@ -557,6 +562,7 @@ int main (int argc, char **argv)
                                            device_open_proxy_flag,
                                            device_open_mbim_flag,
                                            ignore_version_errors_flag,
+                                           override_download_flag,
                                            skip_validation_flag);
         goto out;
     }
