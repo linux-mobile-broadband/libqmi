@@ -59,6 +59,14 @@ gboolean qfu_utils_new_client_dms_finish (GAsyncResult         *res,
                                           gboolean             *supports_firmware_preference_management,
                                           GError              **error);
 
+void     qfu_utils_power_cycle        (QmiClientDms         *qmi_client,
+                                       GCancellable         *cancellable,
+                                       GAsyncReadyCallback   callback,
+                                       gpointer              user_data);
+gboolean qfu_utils_power_cycle_finish (QmiClientDms         *qmi_client,
+                                       GAsyncResult         *res,
+                                       GError              **error);
+
 G_END_DECLS
 
 #endif /* QFU_UTILS_H */

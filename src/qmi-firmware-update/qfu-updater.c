@@ -83,8 +83,7 @@ typedef enum {
     RUN_CONTEXT_STEP_QMI_CLIENT,
     RUN_CONTEXT_STEP_GET_FIRMWARE_PREFERENCE,
     RUN_CONTEXT_STEP_SET_FIRMWARE_PREFERENCE,
-    RUN_CONTEXT_STEP_OFFLINE,
-    RUN_CONTEXT_STEP_RESET,
+    RUN_CONTEXT_STEP_POWER_CYCLE,
     RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE,
     RUN_CONTEXT_STEP_WAIT_FOR_TTY,
     RUN_CONTEXT_STEP_QDL_DEVICE,
@@ -600,38 +599,6 @@ run_context_step_cleanup_qmi_device (GTask *task)
     run_context_step_next (task, ctx->step + 1);
 }
 
-static void
-reset_or_offline_ready (QmiClientDms *client,
-                        GAsyncResult *res,
-                        GTask        *task)
-{
-    QmiMessageDmsSetOperatingModeOutput *output;
-    GError                              *error = NULL;
-    RunContext                          *ctx;
-
-    ctx = (RunContext *) g_task_get_task_data (task);
-
-    output = qmi_client_dms_set_operating_mode_finish (client, res, &error);
-    if (!output) {
-        g_prefix_error (&error, "QMI operation failed: couldn't set operating mode: ");
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    if (!qmi_message_dms_set_operating_mode_output_get_result (output, &error)) {
-        g_prefix_error (&error, "couldn't set operating mode: ");
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        qmi_message_dms_set_operating_mode_output_unref (output);
-        return;
-    }
-
-    g_debug ("[qfu-updater] operating mode set successfully...");
-
-    /* Go on */
-    run_context_step_next (task, ctx->step + 1);
-}
 
 static void
 reseter_run_ready (QfuReseter   *reseter,
@@ -657,27 +624,43 @@ reseter_run_ready (QfuReseter   *reseter,
 }
 
 static void
-run_context_step_reset (GTask *task)
+power_cycle_ready (QmiClientDms *qmi_client,
+                   GAsyncResult *res,
+                   GTask        *task)
 {
-    QfuUpdater                         *self;
-    RunContext                         *ctx;
-    QmiMessageDmsSetOperatingModeInput *input;
-    QfuReseter                         *reseter;
+    GError     *error = NULL;
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    if (!qfu_utils_power_cycle_finish (qmi_client, res, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[qfu-updater] reset requested successfully...");
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_power_cycle (GTask *task)
+{
+    RunContext *ctx;
+    QfuUpdater *self;
+    QfuReseter *reseter;
 
     ctx = (RunContext *) g_task_get_task_data (task);
     self = g_task_get_source_object (task);
 
+    g_debug ("[qfu-updater] power cycling...");
     if (!ctx->boothold_reset) {
-        g_debug ("[qfu-updater] setting operating mode 'reset'...");
-        input = qmi_message_dms_set_operating_mode_input_new ();
-        qmi_message_dms_set_operating_mode_input_set_mode (input, QMI_DMS_OPERATING_MODE_RESET, NULL);
-        qmi_client_dms_set_operating_mode (ctx->qmi_client,
-                                           input,
-                                           10,
-                                           g_task_get_cancellable (task),
-                                           (GAsyncReadyCallback) reset_or_offline_ready,
-                                           task);
-        qmi_message_dms_set_operating_mode_input_unref (input);
+        qfu_utils_power_cycle (ctx->qmi_client,
+                               g_task_get_cancellable (task),
+                               (GAsyncReadyCallback) power_cycle_ready,
+                               task);
         return;
     }
 
@@ -688,27 +671,6 @@ run_context_step_reset (GTask *task)
                      (GAsyncReadyCallback) reseter_run_ready,
                      task);
     g_object_unref (reseter);
-}
-
-
-static void
-run_context_step_offline (GTask *task)
-{
-    RunContext                         *ctx;
-    QmiMessageDmsSetOperatingModeInput *input;
-
-    ctx = (RunContext *) g_task_get_task_data (task);
-
-    g_debug ("[qfu-updater] setting operating mode 'offline'...");
-    input = qmi_message_dms_set_operating_mode_input_new ();
-    qmi_message_dms_set_operating_mode_input_set_mode (input, QMI_DMS_OPERATING_MODE_OFFLINE, NULL);
-    qmi_client_dms_set_operating_mode (ctx->qmi_client,
-                                       input,
-                                       10,
-                                       g_task_get_cancellable (task),
-                                       (GAsyncReadyCallback) reset_or_offline_ready,
-                                       task);
-    qmi_message_dms_set_operating_mode_input_unref (input);
 }
 
 static void
@@ -1011,7 +973,7 @@ run_context_step_get_firmware_preference (GTask *task)
 
         /* Jump to the reset step and run boothold there */
         ctx->boothold_reset = TRUE;
-        run_context_step_next (task, RUN_CONTEXT_STEP_RESET);
+        run_context_step_next (task, RUN_CONTEXT_STEP_POWER_CYCLE);
         return;
     }
 
@@ -1082,8 +1044,7 @@ static const RunContextStepFunc run_context_step_func[] = {
     [RUN_CONTEXT_STEP_QMI_CLIENT]              = run_context_step_qmi_client,
     [RUN_CONTEXT_STEP_GET_FIRMWARE_PREFERENCE] = run_context_step_get_firmware_preference,
     [RUN_CONTEXT_STEP_SET_FIRMWARE_PREFERENCE] = run_context_step_set_firmware_preference,
-    [RUN_CONTEXT_STEP_OFFLINE]                 = run_context_step_offline,
-    [RUN_CONTEXT_STEP_RESET]                   = run_context_step_reset,
+    [RUN_CONTEXT_STEP_POWER_CYCLE]             = run_context_step_power_cycle,
     [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE]      = run_context_step_cleanup_qmi_device,
     [RUN_CONTEXT_STEP_WAIT_FOR_TTY]            = run_context_step_wait_for_tty,
     [RUN_CONTEXT_STEP_QDL_DEVICE]              = run_context_step_qdl_device,

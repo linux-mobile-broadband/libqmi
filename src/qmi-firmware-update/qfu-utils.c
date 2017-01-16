@@ -540,3 +540,122 @@ qfu_utils_new_client_dms (GFile               *cdc_wdm_file,
                     (GAsyncReadyCallback) qmi_device_ready,
                     task);
 }
+
+/******************************************************************************/
+
+typedef enum {
+    POWER_CYCLE_STEP_OFFLINE,
+    POWER_CYCLE_STEP_RESET,
+    POWER_CYCLE_STEP_DONE,
+} PowerCycleStep;
+
+typedef struct {
+    QmiClientDms   *qmi_client;
+    PowerCycleStep  step;
+} PowerCycleContext;
+
+static void
+power_cycle_context_free (PowerCycleContext *ctx)
+{
+    g_object_unref (ctx->qmi_client);
+    g_slice_free (PowerCycleContext, ctx);
+}
+
+gboolean
+qfu_utils_power_cycle_finish (QmiClientDms  *qmi_client,
+                              GAsyncResult  *res,
+                              GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void power_cycle_step (GTask *task);
+
+static void
+power_cycle_step_ready (QmiClientDms *qmi_client,
+                        GAsyncResult *res,
+                        GTask        *task)
+{
+    QmiMessageDmsSetOperatingModeOutput *output;
+    GError                              *error = NULL;
+    PowerCycleContext                   *ctx;
+
+    ctx = (PowerCycleContext *) g_task_get_task_data (task);
+
+    output = qmi_client_dms_set_operating_mode_finish (qmi_client, res, &error);
+    if (!output) {
+        g_prefix_error (&error, "QMI operation failed: couldn't set operating mode: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    if (!qmi_message_dms_set_operating_mode_output_get_result (output, &error)) {
+        g_prefix_error (&error, "couldn't set operating mode: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        qmi_message_dms_set_operating_mode_output_unref (output);
+        return;
+    }
+
+    g_debug ("[qfu,utils] operating mode set successfully...");
+
+    /* Go on */
+    ctx->step++;
+    power_cycle_step (task);
+}
+
+static void
+power_cycle_step (GTask *task)
+{
+    QmiMessageDmsSetOperatingModeInput *input;
+    QmiDmsOperatingMode                 mode;
+    PowerCycleContext                  *ctx;
+
+    ctx = (PowerCycleContext *) g_task_get_task_data (task);
+
+    switch (ctx->step) {
+    case POWER_CYCLE_STEP_OFFLINE:
+        mode = QMI_DMS_OPERATING_MODE_OFFLINE;
+        break;
+    case POWER_CYCLE_STEP_RESET:
+        mode = QMI_DMS_OPERATING_MODE_RESET;
+        break;
+    case POWER_CYCLE_STEP_DONE:
+        /* Finished! */
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    default:
+        g_assert_not_reached ();
+    }
+
+    input = qmi_message_dms_set_operating_mode_input_new ();
+    qmi_message_dms_set_operating_mode_input_set_mode (input, mode, NULL);
+    qmi_client_dms_set_operating_mode (ctx->qmi_client,
+                                       input,
+                                       10,
+                                       g_task_get_cancellable (task),
+                                       (GAsyncReadyCallback) power_cycle_step_ready,
+                                       task);
+    qmi_message_dms_set_operating_mode_input_unref (input);
+}
+
+void
+qfu_utils_power_cycle (QmiClientDms         *qmi_client,
+                       GCancellable         *cancellable,
+                       GAsyncReadyCallback   callback,
+                       gpointer              user_data)
+{
+    GTask             *task;
+    PowerCycleContext *ctx;
+
+    ctx = g_slice_new0 (PowerCycleContext);
+    ctx->step = POWER_CYCLE_STEP_OFFLINE;
+    ctx->qmi_client = g_object_ref (qmi_client);
+
+    task = g_task_new (NULL, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify) power_cycle_context_free);
+
+    power_cycle_step (task);
+}
