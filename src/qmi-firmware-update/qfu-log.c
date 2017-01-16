@@ -15,11 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2016 Zodiac Inflight Innovations
- * Copyright (C) 2016 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2017 Zodiac Inflight Innovations
+ * Copyright (C) 2016-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <config.h>
+#include <errno.h>
 
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -32,8 +33,9 @@
 
 #include "qfu-log.h"
 
-static gboolean silent_flag;
-static gboolean verbose_flag;
+static gboolean  stdout_silent_flag;
+static gboolean  stdout_verbose_flag;
+static FILE     *verbose_log_file;
 
 static void
 log_handler (const gchar    *log_domain,
@@ -48,7 +50,7 @@ log_handler (const gchar    *log_domain,
     gboolean     err;
 
     /* Nothing to do if we're silent */
-    if (silent_flag)
+    if (stdout_silent_flag && !verbose_log_file)
         return;
 
     now = time ((time_t *) NULL);
@@ -78,49 +80,79 @@ log_handler (const gchar    *log_domain,
         break;
     }
 
-    if (!verbose_flag && !err)
-        return;
+    if (verbose_log_file) {
+        g_fprintf (verbose_log_file,
+                   "[%s] %s %s\n",
+                   time_str,
+                   log_level_str,
+                   message);
+        fflush (verbose_log_file);
+    }
 
-    g_fprintf (err ? stderr : stdout,
-               "[%s] %s %s\n",
-               time_str,
-               log_level_str,
-               message);
+    if (stdout_verbose_flag || err)
+        g_fprintf (err ? stderr : stdout,
+                   "[%s] %s %s\n",
+                   time_str,
+                   log_level_str,
+                   message);
 }
 
 gboolean
 qfu_log_get_verbose (void)
 {
-    return verbose_flag;
+    return (stdout_verbose_flag || verbose_log_file);
 }
 
 gboolean
-qfu_log_init (gboolean verbose,
-              gboolean silent)
+qfu_log_get_verbose_stdout (void)
 {
-    if (verbose && silent) {
+    return (stdout_verbose_flag);
+}
+
+gboolean
+qfu_log_init (gboolean     stdout_verbose,
+              gboolean     stdout_silent,
+              const gchar *verbose_log_path)
+{
+    if (stdout_verbose && stdout_silent) {
         g_printerr ("error: cannot specify --verbose and --silent at the same time\n");
         return FALSE;
     }
 
     /* Store flags */
-    verbose_flag = verbose;
-    silent_flag  = silent;
+    stdout_verbose_flag = stdout_verbose;
+    stdout_silent_flag  = stdout_silent;
+
+    /* Open verbose log if required */
+    if (verbose_log_path) {
+        verbose_log_file = fopen (verbose_log_path, "w");
+        if (!verbose_log_file) {
+            g_printerr ("error: cannot open verbose log file for writing: %s\n", g_strerror (errno));
+            return FALSE;
+        }
+    }
 
     /* Default application logging */
     g_log_set_handler (NULL,  G_LOG_LEVEL_MASK, log_handler, NULL);
 
     /* libqmi logging */
     g_log_set_handler ("Qmi", G_LOG_LEVEL_MASK, log_handler, NULL);
-    if (verbose_flag)
+    if (stdout_verbose_flag || verbose_log_file)
         qmi_utils_set_traces_enabled (TRUE);
 
 #if defined MBIM_QMUX_ENABLED
     /* libmbim logging */
     g_log_set_handler ("Mbim", G_LOG_LEVEL_MASK, log_handler, NULL);
-    if (verbose_flag)
+    if (stdout_verbose_flag || verbose_log_file)
         mbim_utils_set_traces_enabled (TRUE);
 #endif
 
     return TRUE;
+}
+
+void
+qfu_log_shutdown (void)
+{
+    if (verbose_log_file)
+        fclose (verbose_log_file);
 }

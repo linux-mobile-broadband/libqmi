@@ -391,7 +391,7 @@ run_context_step_download_image (GTask *task)
 
     n_chunks = qfu_image_get_n_data_chunks (ctx->current_image);
     for (sequence = 0; sequence < n_chunks; sequence++) {
-        if (!qfu_log_get_verbose ()) {
+        if (!qfu_log_get_verbose_stdout ()) {
             /* Use n-1 chunks for progress reporting; because the last one will take
              * a lot longer. */
             if (n_chunks > 1 && sequence < (n_chunks - 1))
@@ -409,7 +409,7 @@ run_context_step_download_image (GTask *task)
 
     g_debug ("[qfu-updater] all chunks ack-ed");
 
-    if (!qfu_log_get_verbose ())
+    if (!qfu_log_get_verbose_stdout ())
         g_print (CLEAR_LINE);
 
     if (!qfu_qdl_device_ufclose (ctx->qdl_device, cancellable, &error)) {

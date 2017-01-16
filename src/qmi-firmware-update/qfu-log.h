@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2016 Zodiac Inflight Innovations
- * Copyright (C) 2016 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2017 Zodiac Inflight Innovations
+ * Copyright (C) 2016-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef QFU_LOG_H
@@ -26,9 +26,12 @@
 
 G_BEGIN_DECLS
 
-gboolean qfu_log_init        (gboolean verbose,
-                              gboolean silent);
-gboolean qfu_log_get_verbose (void);
+gboolean qfu_log_init               (gboolean     stdout_verbose,
+                                     gboolean     stdout_silent,
+                                     const gchar *verbose_log_path);
+void     qfu_log_shutdown           (void);
+gboolean qfu_log_get_verbose        (void);
+gboolean qfu_log_get_verbose_stdout (void);
 
 G_END_DECLS
 

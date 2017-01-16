@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2016 Zodiac Inflight Innovation
- * Copyright (C) 2016 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2017 Zodiac Inflight Innovation
+ * Copyright (C) 2016-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include "config.h"
@@ -68,8 +68,9 @@ static gboolean   action_verify_flag;
 
 /* Main */
 static gchar    **image_strv;
-static gboolean   verbose_flag;
-static gboolean   silent_flag;
+static gboolean   stdout_verbose_flag;
+static gboolean   stdout_silent_flag;
+static gchar     *verbose_log_str;
 static gboolean   version_flag;
 static gboolean   help_flag;
 static gboolean   help_examples_flag;
@@ -249,13 +250,17 @@ static GOptionEntry context_main_entries[] = {
     { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &image_strv, "",
       "FILE1 FILE2..."
     },
-    { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
-      "Run action with verbose logs, including the debug ones.",
+    { "verbose", 'v', 0, G_OPTION_ARG_NONE, &stdout_verbose_flag,
+      "Run action with verbose messages in standard output, including the debug ones.",
       NULL
     },
-    { "silent", 'S', 0, G_OPTION_ARG_NONE, &silent_flag,
-      "Run action with no logs; not even the error/warning ones.",
+    { "silent", 'S', 0, G_OPTION_ARG_NONE, &stdout_silent_flag,
+      "Run action with no messages in standard output; not even the error/warning ones.",
       NULL
+    },
+    { "verbose-log", 'L', 0, G_OPTION_ARG_FILENAME, &verbose_log_str,
+      "Write verbose messages to an output file.",
+      "[PATH]"
     },
     { "version", 'V', 0, G_OPTION_ARG_NONE, &version_flag,
       "Print version.",
@@ -503,7 +508,7 @@ int main (int argc, char **argv)
     }
 
     /* Initialize logging */
-    qfu_log_init (verbose_flag, silent_flag);
+    qfu_log_init (stdout_verbose_flag, stdout_silent_flag, verbose_log_str);
 
     /* We don't allow multiple actions at the same time */
     n_actions = (action_verify_flag +
@@ -573,6 +578,9 @@ int main (int argc, char **argv)
     g_assert_not_reached ();
 
 out:
+
+    qfu_log_shutdown ();
+
     /* Clean exit for a clean memleak report */
     if (context)
         g_option_context_free (context);
