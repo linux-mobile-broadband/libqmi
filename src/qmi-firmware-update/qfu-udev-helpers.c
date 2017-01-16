@@ -375,6 +375,8 @@ device_matches_sysfs_and_type (GUdevDevice             *device,
     if (!udev_helper_get_udev_device_details (device,
                                               &device_sysfs_path, NULL, NULL, NULL, NULL,
                                               NULL))
+        goto out;
+
     if (!device_sysfs_path)
         goto out;
 
