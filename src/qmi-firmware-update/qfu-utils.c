@@ -483,7 +483,7 @@ qmi_device_ready (GObject      *source,
 {
     NewClientDmsContext *ctx;
     GError              *error = NULL;
-    QmiDeviceOpenFlags   flags = QMI_DEVICE_OPEN_FLAGS_NONE;
+    QmiDeviceOpenFlags   flags = QMI_DEVICE_OPEN_FLAGS_SYNC;
 
     ctx = (NewClientDmsContext *) g_task_get_task_data (task);
 
