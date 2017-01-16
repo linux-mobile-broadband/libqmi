@@ -60,6 +60,9 @@ struct _QfuUpdaterPrivate {
 /******************************************************************************/
 /* Run */
 
+/* Wait time after the upgrade has been done, before using the cdc-wdm port */
+#define WAIT_FOR_BOOT_TIMEOUT_SECS 10
+
 typedef enum {
     RUN_CONTEXT_STEP_QMI_CLIENT,
     RUN_CONTEXT_STEP_GET_FIRMWARE_PREFERENCE,
@@ -74,6 +77,8 @@ typedef enum {
     RUN_CONTEXT_STEP_CLEANUP_IMAGE,
     RUN_CONTEXT_STEP_CLEANUP_QDL_DEVICE,
     RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM,
+    RUN_CONTEXT_STEP_WAIT_FOR_BOOT,
+    RUN_CONTEXT_STEP_QMI_CLIENT_AFTER,
     RUN_CONTEXT_STEP_LAST
 } RunContextStep;
 
@@ -85,10 +90,13 @@ typedef struct {
     /* Context step */
     RunContextStep step;
 
-    /* Before/after info and capabilities */
+    /* Old/New info and capabilities */
     gchar        *revision;
     gboolean      supports_stored_image_management;
     gboolean      supports_firmware_preference_management;
+    gchar        *new_revision;
+    gboolean      new_supports_stored_image_management;
+    gboolean      new_supports_firmware_preference_management;
 
     /* List of pending QfuImages to download, and the current one being
      * processed. */
@@ -114,6 +122,7 @@ typedef struct {
 static void
 run_context_free (RunContext *ctx)
 {
+    g_free (ctx->new_revision);
     g_free (ctx->revision);
     g_free (ctx->firmware_version);
     g_free (ctx->config_version);
@@ -171,6 +180,74 @@ run_context_step_next (GTask *task, RunContextStep next)
 
     /* Schedule next step in an idle */
     g_idle_add ((GSourceFunc) run_context_step_cb, task);
+}
+
+static void
+new_client_dms_after_ready (gpointer      unused,
+                            GAsyncResult *res,
+                            GTask        *task)
+{
+    RunContext *ctx;
+    GError     *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    g_assert (!ctx->qmi_device);
+    g_assert (!ctx->qmi_client);
+
+    /* After the upgrade, non-fatal error if DMS client couldn't be created */
+    if (!qfu_utils_new_client_dms_finish (res,
+                                          &ctx->qmi_device,
+                                          &ctx->qmi_client,
+                                          &ctx->new_revision,
+                                          &ctx->new_supports_stored_image_management,
+                                          &ctx->new_supports_firmware_preference_management,
+                                          &error)) {
+        g_warning ("couldn't create DMS client after upgrade: %s", error->message);
+        g_error_free (error);
+   }
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+run_context_step_qmi_client_after (GTask *task)
+{
+    RunContext *ctx;
+    QfuUpdater *self;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+
+    g_debug ("[qfu-updater] creating QMI DMS client after upgrade...");
+    g_assert (ctx->cdc_wdm_file);
+    qfu_utils_new_client_dms (ctx->cdc_wdm_file,
+                              self->priv->device_open_proxy,
+                              self->priv->device_open_mbim,
+                              TRUE,
+                              g_task_get_cancellable (task),
+                              (GAsyncReadyCallback) new_client_dms_after_ready,
+                              task);
+}
+
+static gboolean
+wait_for_boot_ready (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+run_context_step_wait_for_boot (GTask *task)
+{
+    g_debug ("[qfu-updater] waiting some time before accessing the cdc-wdm device...");
+    g_timeout_add_seconds (WAIT_FOR_BOOT_TIMEOUT_SECS, (GSourceFunc) wait_for_boot_ready, task);
 }
 
 static void
@@ -967,6 +1044,8 @@ static const RunContextStepFunc run_context_step_func[] = {
     [RUN_CONTEXT_STEP_CLEANUP_IMAGE]           = run_context_step_cleanup_image,
     [RUN_CONTEXT_STEP_CLEANUP_QDL_DEVICE]      = run_context_step_cleanup_qdl_device,
     [RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM]        = run_context_step_wait_for_cdc_wdm,
+    [RUN_CONTEXT_STEP_QMI_CLIENT_AFTER]        = run_context_step_qmi_client_after,
+    [RUN_CONTEXT_STEP_WAIT_FOR_BOOT]           = run_context_step_wait_for_boot,
 };
 
 G_STATIC_ASSERT (G_N_ELEMENTS (run_context_step_func) == RUN_CONTEXT_STEP_LAST);
@@ -996,10 +1075,14 @@ run_context_step (GTask *task)
              "--------------------------------------------------\n");
 
     g_print ("\n"
-             "   original revision was:\n"
-             "   %s\n", ctx->revision);
+             "   original firmware revision was:\n"
+             "   %s\n", ctx->revision ? ctx->revision : "unknown");
 
-    if (ctx->supports_stored_image_management)
+    g_print ("\n"
+             "   new firmware revision is:\n"
+             "   %s\n", ctx->new_revision ? ctx->new_revision : "unknown");
+
+    if (ctx->new_supports_stored_image_management)
         g_print ("\n"
                  "   NOTE: this device supports stored image management\n"
                  "   with qmicli operations:\n"
@@ -1007,7 +1090,7 @@ run_context_step (GTask *task)
                  "      --dms-select-stored-image\n"
                  "      --dms-delete-stored-image\n");
 
-    if (ctx->supports_firmware_preference_management)
+    if (ctx->new_supports_firmware_preference_management)
         g_print ("\n"
                  "   NOTE: this device supports firmware preference management\n"
                  "   with qmicli operations:\n"
