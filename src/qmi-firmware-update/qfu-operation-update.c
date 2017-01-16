@@ -64,7 +64,7 @@ run_ready (QfuUpdater        *updater,
     if (!qfu_updater_run_finish (updater, res, &error)) {
         g_printerr ("error: %s\n", error->message);
         if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED))
-            g_printerr ("note: you can ignore this error using --force\n");
+            g_printerr ("note: you can ignore this error using --ignore-version-errors\n");
         g_error_free (error);
     } else {
         g_print ("firmware update operation finished successfully\n");
@@ -123,7 +123,7 @@ qfu_operation_update_run (const gchar        **images,
                           const gchar         *carrier,
                           gboolean             device_open_proxy,
                           gboolean             device_open_mbim,
-                          gboolean             force,
+                          gboolean             ignore_version_errors,
                           gboolean             skip_validation)
 {
     QfuUpdater *updater = NULL;
@@ -137,7 +137,7 @@ qfu_operation_update_run (const gchar        **images,
                                carrier,
                                device_open_proxy,
                                device_open_mbim,
-                               force,
+                               ignore_version_errors,
                                skip_validation);
     result = operation_update_run (updater, images);
     g_object_unref (updater);

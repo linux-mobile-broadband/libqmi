@@ -55,7 +55,7 @@ static gchar     *config_version_str;
 static gchar     *carrier_str;
 static gboolean   device_open_proxy_flag;
 static gboolean   device_open_mbim_flag;
-static gboolean   force_flag;
+static gboolean   ignore_version_errors_flag;
 static gboolean   skip_validation_flag;
 
 /* Reset */
@@ -208,8 +208,8 @@ static GOptionEntry context_update_entries[] = {
       "Carrier name (e.g. 'Generic').",
       "[CARRIER]",
     },
-    { "force", 0, 0, G_OPTION_ARG_NONE, &force_flag,
-      "Force update operation even with version string errors.",
+    { "ignore-version-errors", 0, 0, G_OPTION_ARG_NONE, &ignore_version_errors_flag,
+      "Run update operation even with version string errors.",
       NULL
     },
     { "skip-validation", 0, 0, G_OPTION_ARG_NONE, &skip_validation_flag,
@@ -556,7 +556,7 @@ int main (int argc, char **argv)
                                            carrier_str,
                                            device_open_proxy_flag,
                                            device_open_mbim_flag,
-                                           force_flag,
+                                           ignore_version_errors_flag,
                                            skip_validation_flag);
         goto out;
     }

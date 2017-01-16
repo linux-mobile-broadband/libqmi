@@ -54,7 +54,7 @@ struct _QfuUpdaterPrivate {
     gchar              *carrier;
     gboolean            device_open_proxy;
     gboolean            device_open_mbim;
-    gboolean            force;
+    gboolean            ignore_version_errors;
     gboolean            skip_validation;
 };
 
@@ -936,7 +936,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
             if (!ctx->firmware_version)
                 ctx->firmware_version = g_strdup (firmware_version);
             else if (!g_str_equal (firmware_version, ctx->firmware_version)) {
-                if (!self->priv->force) {
+                if (!self->priv->ignore_version_errors) {
                     g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                                  "couldn't detect firmware version: "
                                  "firmware version strings don't match on specified images: "
@@ -945,7 +945,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
                     return FALSE;
                 }
                 g_warning ("firmware version strings don't match on specified images: "
-                           "'%s' != '%s' (IGNORED with --force)",
+                           "'%s' != '%s' (IGNORED with --ignore-version-errors)",
                            firmware_version, ctx->firmware_version);
             }
         }
@@ -954,7 +954,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
             if (!ctx->config_version)
                 ctx->config_version = g_strdup (config_version);
             else if (!g_str_equal (config_version, ctx->config_version)) {
-                if (!self->priv->force) {
+                if (!self->priv->ignore_version_errors) {
                     g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                                  "couldn't detect config version: "
                                  "config version strings don't match on specified images: "
@@ -963,7 +963,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
                     return FALSE;
                 }
                 g_warning ("[qfu-updater] config version strings don't match on specified images: "
-                           "'%s' != '%s' (IGNORED with --force)",
+                           "'%s' != '%s' (IGNORED with --ignore-version-errors)",
                            config_version, ctx->config_version);
             }
         }
@@ -972,7 +972,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
             if (!ctx->carrier)
                 ctx->carrier = g_strdup (carrier);
             else if (!g_str_equal (carrier, ctx->carrier)) {
-                if (!self->priv->force) {
+                if (!self->priv->ignore_version_errors) {
                     g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                                  "couldn't detect carrier: "
                                  "carrier strings don't match on specified images: "
@@ -981,7 +981,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
                     return FALSE;
                 }
                 g_warning ("[qfu-updater] carrier strings don't match on specified images: "
-                           "'%s' != '%s' (IGNORED with --force)",
+                           "'%s' != '%s' (IGNORED with --ignore-version-errors)",
                            carrier, ctx->carrier);
             }
         }
@@ -989,7 +989,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
 
     /* If given firmware version doesn't match the one in the image, error out */
     if (self->priv->firmware_version && (g_strcmp0 (self->priv->firmware_version, ctx->firmware_version) != 0)) {
-        if (!self->priv->force) {
+        if (!self->priv->ignore_version_errors) {
             g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                          "error validating firmware version: "
                          "user provided firmware version doesn't match the one in the specified images: "
@@ -998,13 +998,13 @@ validate_firmware_config_carrier (QfuUpdater  *self,
             return FALSE;
         }
         g_warning ("[qfu-updater] user provided firmware version doesn't match the one in the specified images: "
-                   "'%s' != '%s' (IGNORED with --force)",
+                   "'%s' != '%s' (IGNORED with --ignore-version-errors)",
                    self->priv->firmware_version, ctx->firmware_version);
     }
 
     /* If given config version doesn't match the one in the image, error out */
     if (self->priv->config_version && (g_strcmp0 (self->priv->config_version, ctx->config_version) != 0)) {
-        if (!self->priv->force) {
+        if (!self->priv->ignore_version_errors) {
             g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                          "error validating firmware version: "
                          "user provided firmware version doesn't match the one in the specified images: "
@@ -1013,13 +1013,13 @@ validate_firmware_config_carrier (QfuUpdater  *self,
             return FALSE;
         }
         g_warning ("[qfu-updater] user provided config version doesn't match the one in the specified images: "
-                   "'%s' != '%s' (IGNORED with --force)",
+                   "'%s' != '%s' (IGNORED with --ignore-version-errors)",
                    self->priv->firmware_version, ctx->firmware_version);
     }
 
     /* If given carrier doesn't match the one in the image, error out */
     if (self->priv->carrier && (g_strcmp0 (self->priv->carrier, ctx->carrier) != 0)) {
-        if (!self->priv->force) {
+        if (!self->priv->ignore_version_errors) {
             g_set_error (error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
                          "error validating carrier: "
                          "user provided carrier doesn't match the one in the specified images: "
@@ -1027,7 +1027,7 @@ validate_firmware_config_carrier (QfuUpdater  *self,
                          self->priv->carrier, ctx->carrier);
         }
         g_warning ("[qfu-updater] user provided carrier doesn't match the one in the specified images: "
-                   "'%s' != '%s' (IGNORED with --force)",
+                   "'%s' != '%s' (IGNORED with --ignore-version-errors)",
                    self->priv->carrier, ctx->carrier);
         return FALSE;
     }
@@ -1280,7 +1280,7 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
                  const gchar        *carrier,
                  gboolean            device_open_proxy,
                  gboolean            device_open_mbim,
-                 gboolean            force,
+                 gboolean            ignore_version_errors,
                  gboolean            skip_validation)
 {
     QfuUpdater *self;
@@ -1295,7 +1295,7 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
     self->priv->firmware_version = (firmware_version ? g_strdup (firmware_version) : NULL);
     self->priv->config_version = (config_version ? g_strdup (config_version) : NULL);
     self->priv->carrier = (carrier ? g_strdup (carrier) : NULL);
-    self->priv->force = force;
+    self->priv->ignore_version_errors = ignore_version_errors;
     self->priv->skip_validation = skip_validation;
 
     return self;
