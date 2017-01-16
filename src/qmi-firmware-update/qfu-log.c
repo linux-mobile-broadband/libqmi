@@ -61,7 +61,6 @@ log_handler (const gchar    *log_domain,
     switch (log_level) {
     case G_LOG_LEVEL_WARNING:
         log_level_str = "-Warning **";
-        err = TRUE;
         break;
 
     case G_LOG_LEVEL_CRITICAL:

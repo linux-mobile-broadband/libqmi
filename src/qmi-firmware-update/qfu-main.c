@@ -255,7 +255,7 @@ static GOptionEntry context_main_entries[] = {
       NULL
     },
     { "silent", 'S', 0, G_OPTION_ARG_NONE, &stdout_silent_flag,
-      "Run action with no messages in standard output; not even the error/warning ones.",
+      "Run action with no messages in standard output; not even the error ones.",
       NULL
     },
     { "verbose-log", 'L', 0, G_OPTION_ARG_FILENAME, &verbose_log_str,
