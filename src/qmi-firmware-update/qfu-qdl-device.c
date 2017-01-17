@@ -191,7 +191,7 @@ hdlc_unframe (const guint8 *in,
     j -= 2; /* remove the crc */
 
     /* verify the crc */
-    crc = qfu_utils_crc16 (in, j);
+    crc = qfu_utils_crc16 (out, j);
     if (crc != (out[j] | out[j + 1] << 8)) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "crc check failed: 0x%04x != 0x%04x\n", crc, out[j] | out[j + 1] << 8);
