@@ -413,7 +413,7 @@ receive_response (QfuQdlDevice  *self,
     unframed_size = hdlc_unframe (self->priv->buffer->data, frame_size, self->priv->secondary_buffer->data, self->priv->secondary_buffer->len, error);
     if (unframed_size == 0) {
         g_prefix_error (error, "error unframing message: ");
-        return FALSE;
+        return -1;
     }
 
     /* Debug output */
