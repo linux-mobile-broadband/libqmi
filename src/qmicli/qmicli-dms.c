@@ -2822,14 +2822,14 @@ get_stored_image (QmiClientDms *client,
 
         if (type == QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM) {
             if (modem_index >= 0) {
-                g_printerr ("Couldn't two 'modem' type firwmare indexes: '%s'\n", str);
+                g_printerr ("Cannot handle two 'modem' type firmware indices: '%s'\n", str);
                 operation_shutdown (FALSE);
                 return;
             }
             modem_index = (gint)image_index;
         } else if (type == QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI) {
             if (pri_index >= 0) {
-                g_printerr ("Couldn't two 'pri' type firwmare indexes: '%s'\n", str);
+                g_printerr ("Cannot handle two 'pri' type firmware indices: '%s'\n", str);
                 operation_shutdown (FALSE);
                 return;
             }
