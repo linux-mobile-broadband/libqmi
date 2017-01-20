@@ -354,4 +354,27 @@ typedef enum {
     QMI_DMS_BOOT_IMAGE_DOWNLOAD_MODE_BOOT_AND_RECOVERY = 1,
 } QmiDmsBootImageDownloadMode;
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS HP Change Device Mode' message */
+
+/**
+ * QmiDmsHpDeviceMode:
+ * @QMI_DMS_HP_DEVICE_MODE_QMI: AT+QMI capable mode.
+ * @QMI_DMS_HP_DEVICE_MODE_NCM: AT+NCM capable mode.
+ * @QMI_DMS_HP_DEVICE_MODE_MBIM: AT+MBIM capable mode.
+ * @QMI_DMS_HP_DEVICE_MODE_FASTBOOT: Fastboot download mode.
+ * @QMI_DMS_HP_DEVICE_MODE_SOFT_RESET: Soft reset.
+ * @QMI_DMS_HP_DEVICE_MODE_HARD_RESET: Hard reset.
+ *
+ * HP specific device modes.
+ */
+typedef enum {
+    QMI_DMS_HP_DEVICE_MODE_QMI        = 2,
+    QMI_DMS_HP_DEVICE_MODE_NCM        = 3,
+    QMI_DMS_HP_DEVICE_MODE_MBIM       = 4,
+    QMI_DMS_HP_DEVICE_MODE_FASTBOOT   = 5,
+    QMI_DMS_HP_DEVICE_MODE_SOFT_RESET = 7,
+    QMI_DMS_HP_DEVICE_MODE_HARD_RESET = 8,
+} QmiDmsHpDeviceMode;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */

@@ -67,6 +67,8 @@ gboolean qmicli_read_authentication_from_string              (const gchar *str,
                                                               QmiWdsAuthentication *out);
 gboolean qmicli_read_boot_image_download_mode_from_string    (const gchar *str,
                                                               QmiDmsBootImageDownloadMode *out);
+gboolean qmicli_read_hp_device_mode_from_string              (const gchar *str,
+                                                              QmiDmsHpDeviceMode *out);
 
 gboolean qmicli_read_non_empty_string           (const gchar *str,
                                                  const gchar *description,
