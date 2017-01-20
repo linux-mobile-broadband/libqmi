@@ -421,6 +421,12 @@ load_image_info (QfuImageCwe   *self,
         return FALSE;
     }
 
+    /* No image size reported */
+    if (!info.hdr.imgsize) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "invalid image size");
+        return FALSE;
+    }
+
     /* Check limits of the current image */
     image_end_offset = image_start_offset + GUINT32_FROM_BE (info.hdr.imgsize) + sizeof (QfuCweFileHeader);
     if (parent_image_end_offset > 0 && parent_image_end_offset < image_end_offset) {
