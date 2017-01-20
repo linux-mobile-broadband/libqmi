@@ -495,8 +495,6 @@ handle_uevent (GUdevClient *client,
 
     ctx = (WaitForDeviceContext *) g_task_get_task_data (task);
 
-    g_debug ("[qfu-udev] event: %s %s", action, g_udev_device_get_name (device));
-
     if (!g_str_equal (action, "add") && !g_str_equal (action, "move") && !g_str_equal (action, "change"))
         return;
 
@@ -504,7 +502,9 @@ handle_uevent (GUdevClient *client,
     if (!file)
         return;
 
-    g_debug ("[qfu-udev]   waiting device matched");
+    g_debug ("[qfu-udev] waiting device (%s) matched: %s",
+             qfu_udev_helper_device_type_to_string (ctx->device_type),
+             g_udev_device_get_name (device));
 
     /* Disconnect this handler */
     g_signal_handler_disconnect (ctx->udev, ctx->uevent_id);
@@ -608,4 +608,45 @@ qfu_udev_helper_wait_for_device (QfuUdevHelperDeviceType  device_type,
                                              task);
 
     /* Note: task ownership is shared between the signals and the timeout */
+}
+
+/******************************************************************************/
+
+struct _QfuUdevHelperGenericMonitor {
+    GUdevClient *udev;
+};
+
+void
+qfu_udev_helper_generic_monitor_free (QfuUdevHelperGenericMonitor *self)
+{
+    g_object_unref (self->udev);
+    g_slice_free (QfuUdevHelperGenericMonitor, self);
+}
+
+static void
+handle_uevent_generic (GUdevClient *client,
+                       const char  *action,
+                       GUdevDevice *device,
+                       GTask       *task)
+{
+    g_debug ("[qfu-udev] event: %s %s", action, g_udev_device_get_name (device));
+}
+
+QfuUdevHelperGenericMonitor *
+qfu_udev_helper_generic_monitor_new (const gchar *sysfs_path)
+{
+    static const gchar *all_list[] = {
+        "usbmisc", "usb",
+        "tty",
+        "net",
+        NULL };
+
+    QfuUdevHelperGenericMonitor *self;
+
+    self = g_slice_new0 (QfuUdevHelperGenericMonitor);
+    self->udev = g_udev_client_new (all_list);
+
+    /* Monitor for device events. */
+    g_signal_connect (self->udev, "uevent", G_CALLBACK (handle_uevent_generic), NULL);
+    return self;
 }

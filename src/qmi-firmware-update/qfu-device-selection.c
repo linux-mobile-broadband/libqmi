@@ -41,6 +41,8 @@ struct _QfuDeviceSelectionPrivate {
     guint    preferred_devnum;
     /* sysfs path */
     gchar   *sysfs_path;
+    /* generic udev monitor */
+    QfuUdevHelperGenericMonitor *monitor;
 };
 
 /******************************************************************************/
@@ -270,6 +272,9 @@ qfu_device_selection_new (const gchar  *preferred_cdc_wdm,
         return NULL;
     }
 
+    /* Initialize right away the generic udev monitor for this sysfs path */
+    self->priv->monitor = qfu_udev_helper_generic_monitor_new (self->priv->sysfs_path);
+
     return self;
 }
 
@@ -284,6 +289,9 @@ finalize (GObject *object)
 {
     QfuDeviceSelection *self = QFU_DEVICE_SELECTION (object);
     guint               i;
+
+    if (self->priv->monitor)
+        qfu_udev_helper_generic_monitor_free (self->priv->monitor);
 
     for (i = 0; i < QFU_UDEV_HELPER_DEVICE_TYPE_LAST; i++)
         g_free (self->priv->preferred_devices[i]);

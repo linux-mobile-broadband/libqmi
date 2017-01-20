@@ -56,6 +56,10 @@ void   qfu_udev_helper_wait_for_device        (QfuUdevHelperDeviceType   device_
 GFile *qfu_udev_helper_wait_for_device_finish (GAsyncResult             *res,
                                                GError                  **error);
 
+typedef struct _QfuUdevHelperGenericMonitor QfuUdevHelperGenericMonitor;
+QfuUdevHelperGenericMonitor *qfu_udev_helper_generic_monitor_new  (const gchar *sysfs_path);
+void                         qfu_udev_helper_generic_monitor_free (QfuUdevHelperGenericMonitor *self);
+
 G_END_DECLS
 
 #endif /* QFU_UDEV_HELPERS_H */
