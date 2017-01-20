@@ -454,14 +454,10 @@ load_image_info (QfuImageCwe   *self,
     while (walker < image_end_offset) {
         goffset tested_offset;
         /* Read embedded image */
-
         tested_offset = g_seekable_tell (G_SEEKABLE (input_stream));
-        g_debug ("[qfu-image-cwe] %schecking image at offset %" G_GOFFSET_FORMAT "...", parent_prefix, tested_offset);
-        if (!load_image_info (self, input_stream, image_prefix, image_index, image_end_offset, cancellable, NULL)) {
-            g_debug ("[qfu-image-cwe] %simage at offset %" G_GOFFSET_FORMAT " was NOT valid", parent_prefix, tested_offset);
+        if (!load_image_info (self, input_stream, image_prefix, image_index, image_end_offset, cancellable, NULL))
             break;
-        }
-        g_debug ("[qfu-image-cwe] %simage at offset %" G_GOFFSET_FORMAT " was valid", parent_prefix, tested_offset);
+        g_debug ("[qfu-image-cwe] %simage at offset %" G_GOFFSET_FORMAT " is valid", parent_prefix, tested_offset);
         walker = g_seekable_tell (G_SEEKABLE (input_stream));
     }
 
