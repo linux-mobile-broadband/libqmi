@@ -145,7 +145,7 @@ class MessageList:
                 template += string.Template(inner_template).substitute(translations)
 
         template += (
-            '         default:\n'
+            '        default:\n'
             '             return NULL;\n'
             '        }\n'
             '    } else {\n'
@@ -162,7 +162,7 @@ class MessageList:
                 template += string.Template(inner_template).substitute(translations)
 
         template += (
-            '         default:\n'
+            '        default:\n'
             '             return NULL;\n'
             '        }\n'
             '    }\n'
