@@ -701,8 +701,10 @@ static int write_hdlc(int fd, const char *in, size_t inlen)
 
 	wlen = hdlc_frame(in, inlen, wbuf, sizeof(wbuf));
 	if (wlen > 0) {
-		write(fd,  wbuf, wlen);
-		print_packet("write", wbuf, wlen);
+		if (write(fd, wbuf, wlen) < 0)
+            fprintf(stderr, "error writing HDLC");
+        else
+            print_packet("write", wbuf, wlen);
 	} else {
 		debug("hdlc_frame() returned %d\n", wlen);
 	}
@@ -843,7 +845,10 @@ static int download_image(int serfd, char *buf, const char *image)
 		FD_SET(serfd, &wr);
 		if (select(serfd + 1, NULL, &wr, NULL, &tv) <= 0)
 			goto out;
-		write(serfd,  buf, rlen);
+		if (write(serfd,  buf, rlen) < 0) {
+            fprintf(stderr, "error writing data");
+            goto out;
+        }
 		ret = read_and_parse(serfd, false);
 		if (ret < 0)
 			goto out;
