@@ -93,6 +93,7 @@ static gboolean get_software_version_flag;
 static gboolean set_fcc_authentication_flag;
 static gboolean get_supported_messages_flag;
 static gchar *hp_change_device_mode_str;
+static gboolean swi_get_current_firmware_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -286,8 +287,12 @@ static GOptionEntry entries[] = {
       NULL
     },
     { "dms-hp-change-device-mode", 0, 0, G_OPTION_ARG_STRING, &hp_change_device_mode_str,
-      "Change HP device mode",
+      "Change device mode (HP specific)",
       "[qmi|ncm|mbim|fastboot|soft-reset|hard-reset]"
+    },
+    { "dms-swi-get-current-firmware", 0, 0, G_OPTION_ARG_NONE, &swi_get_current_firmware_flag,
+      "Get Current Firmware (Sierra Wireless specific)",
+      NULL
     },
     { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
@@ -372,6 +377,7 @@ qmicli_dms_options_enabled (void)
                  set_fcc_authentication_flag +
                  get_supported_messages_flag +
                  !!hp_change_device_mode_str +
+                 swi_get_current_firmware_flag +
                  reset_flag +
                  noop_flag);
 
@@ -3414,6 +3420,78 @@ hp_change_device_mode_ready (QmiClientDms *client,
 }
 
 static void
+swi_get_current_firmware_ready (QmiClientDms *client,
+                                GAsyncResult *res)
+{
+    QmiMessageDmsSwiGetCurrentFirmwareOutput *output;
+    GError *error = NULL;
+    const gchar *model = NULL;
+    const gchar *boot_version = NULL;
+    const gchar *amss_version = NULL;
+    const gchar *sku_id = NULL;
+    const gchar *package_id = NULL;
+    const gchar *carrier_id = NULL;
+    const gchar *pri_version = NULL;
+    const gchar *carrier = NULL;
+    const gchar *config_version = NULL;
+
+    output = qmi_client_dms_swi_get_current_firmware_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_swi_get_current_firmware_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get current firmware: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_swi_get_current_firmware_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_swi_get_current_firmware_output_get_model          (output, &model,          NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_boot_version   (output, &boot_version,   NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_amss_version   (output, &amss_version,   NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_sku_id         (output, &sku_id,         NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_package_id     (output, &package_id,     NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_carrier_id     (output, &carrier_id,     NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_pri_version    (output, &pri_version,    NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_carrier        (output, &carrier,        NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_config_version (output, &config_version, NULL);
+
+    /* We'll consider it a success if we got at least one of the expected strings */
+    if (!model          &&
+        !boot_version   &&
+        !amss_version   &&
+        !sku_id         &&
+        !package_id     &&
+        !carrier_id     &&
+        !pri_version    &&
+        !carrier        &&
+        !config_version) {
+        g_printerr ("error: couldn't get any of the current firmware fields\n");
+        qmi_message_dms_swi_get_current_firmware_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully retrieved current firmware:\n",
+             qmi_device_get_path_display (ctx->device));
+    g_print ("\tModel: %s\n",          VALIDATE_UNKNOWN (model));
+    g_print ("\tBoot version: %s\n",   VALIDATE_UNKNOWN (boot_version));
+    g_print ("\tAMSS version: %s\n",   VALIDATE_UNKNOWN (amss_version));
+    g_print ("\tSKU ID: %s\n",         VALIDATE_UNKNOWN (sku_id));
+    g_print ("\tPackage ID: %s\n",     VALIDATE_UNKNOWN (package_id));
+    g_print ("\tCarrier ID: %s\n",     VALIDATE_UNKNOWN (carrier_id));
+    g_print ("\tConfig version: %s\n", VALIDATE_UNKNOWN (config_version));
+
+    qmi_message_dms_swi_get_current_firmware_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
 reset_ready (QmiClientDms *client,
              GAsyncResult *res)
 {
@@ -4168,7 +4246,7 @@ qmicli_dms_run (QmiDevice *device,
     if (hp_change_device_mode_str) {
         QmiMessageDmsHpChangeDeviceModeInput *input;
 
-        g_debug ("Asynchronously changing HP device mode...");
+        g_debug ("Asynchronously changing device mode (HP specific)...");
 
         input = hp_change_device_mode_input_create (hp_change_device_mode_str);
         if (!input) {
@@ -4183,6 +4261,18 @@ qmicli_dms_run (QmiDevice *device,
                                               (GAsyncReadyCallback)hp_change_device_mode_ready,
                                               NULL);
         qmi_message_dms_hp_change_device_mode_input_unref (input);
+        return;
+    }
+
+    /* Request to get current firmware */
+    if (swi_get_current_firmware_flag) {
+        g_debug ("Asynchronously getting current firmware (Sierra Wireless specific)...");
+        qmi_client_dms_swi_get_current_firmware (ctx->client,
+                                                 NULL,
+                                                 10,
+                                                 ctx->cancellable,
+                                                 (GAsyncReadyCallback)swi_get_current_firmware_ready,
+                                                 NULL);
         return;
     }
 
