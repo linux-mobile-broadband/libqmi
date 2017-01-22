@@ -203,7 +203,7 @@ operation_shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
     context_free (ctx);
-    qmicli_async_operation_done (operation_status);
+    qmicli_async_operation_done (operation_status, FALSE);
 }
 
 static gboolean

@@ -266,7 +266,8 @@ release_client_ready (QmiDevice *dev,
 }
 
 void
-qmicli_async_operation_done (gboolean reported_operation_status)
+qmicli_async_operation_done (gboolean reported_operation_status,
+                             gboolean skip_cid_release)
 {
     QmiDeviceReleaseClientFlags flags = QMI_DEVICE_RELEASE_CLIENT_FLAGS_NONE;
 
@@ -282,7 +283,9 @@ qmicli_async_operation_done (gboolean reported_operation_status)
         return;
     }
 
-    if (!client_no_release_cid_flag)
+    if (skip_cid_release)
+        g_debug ("Skipped CID release");
+    else if (!client_no_release_cid_flag)
         flags |= QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID;
     else
         g_print ("[%s] Client ID not released:\n"
@@ -398,7 +401,7 @@ set_instance_id_ready (QmiDevice *dev,
              link_id);
 
     /* We're done now */
-    qmicli_async_operation_done (TRUE);
+    qmicli_async_operation_done (TRUE, FALSE);
 }
 
 static void
@@ -467,7 +470,7 @@ get_service_version_info_ready (QmiDevice *dev,
     g_array_unref (services);
 
     /* We're done now */
-    qmicli_async_operation_done (TRUE);
+    qmicli_async_operation_done (TRUE, FALSE);
 }
 
 static void
@@ -499,7 +502,7 @@ device_set_expected_data_format_cb (QmiDevice *dev)
                  qmi_device_expected_data_format_get_string (expected));
 
     /* We're done now */
-    qmicli_async_operation_done (!error);
+    qmicli_async_operation_done (!error, FALSE);
 
     g_object_unref (dev);
     return FALSE;
@@ -526,7 +529,7 @@ device_get_expected_data_format_cb (QmiDevice *dev)
         g_print ("%s\n", qmi_device_expected_data_format_get_string (expected));
 
     /* We're done now */
-    qmicli_async_operation_done (!error);
+    qmicli_async_operation_done (!error, FALSE);
 
     g_object_unref (dev);
     return FALSE;
@@ -551,7 +554,7 @@ device_get_wwan_iface_cb (QmiDevice *dev)
         g_print ("%s\n", wwan_iface);
 
     /* We're done now */
-    qmicli_async_operation_done (!!wwan_iface);
+    qmicli_async_operation_done (!!wwan_iface, FALSE);
 
     g_object_unref (dev);
     return FALSE;

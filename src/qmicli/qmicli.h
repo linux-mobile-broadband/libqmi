@@ -24,7 +24,8 @@
 #define __QMICLI_H__
 
 /* Common */
-void          qmicli_async_operation_done  (gboolean operation_status);
+void          qmicli_async_operation_done (gboolean reported_operation_status,
+                                           gboolean skip_cid_release);
 
 /* DMS group */
 GOptionGroup *qmicli_dms_get_option_group (void);

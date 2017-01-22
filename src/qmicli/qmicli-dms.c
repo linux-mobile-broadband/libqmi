@@ -404,7 +404,17 @@ operation_shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
     context_free (ctx);
-    qmicli_async_operation_done (operation_status);
+    qmicli_async_operation_done (operation_status, FALSE);
+}
+
+static void
+operation_shutdown_skip_cid_release (gboolean operation_status)
+{
+    /* Cleanup context and finish async operation. Explicitly ask not to release
+     * the client CID. This is so that the qmicli operation doesn't fail after
+     * this step, e.g. if the device just reboots after the action. */
+    context_free (ctx);
+    qmicli_async_operation_done (operation_status, TRUE);
 }
 
 static void
@@ -3392,8 +3402,15 @@ hp_change_device_mode_ready (QmiClientDms *client,
         return;
     }
 
+    g_print ("[%s] Successfully changed HP device mode\n",
+             qmi_device_get_path_display (ctx->device));
+
     qmi_message_dms_hp_change_device_mode_output_unref (output);
-    operation_shutdown (TRUE);
+
+    /* Changing the mode will end up power cycling the device right away, so
+     * just ignore any error from now on and don't even try to release the
+     * client CID */
+    operation_shutdown_skip_cid_release (TRUE);
 }
 
 static void
