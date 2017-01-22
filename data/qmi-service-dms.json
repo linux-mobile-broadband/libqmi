@@ -1229,6 +1229,7 @@
      "type"    : "Message",
      "service" : "DMS",
      "id"      : "0x5556",
+     "vendor"  : "0x03f0",
      "version" : "1.0",
      "input"   : [ { "name"          : "Mode",
                      "id"            : "0x01",
