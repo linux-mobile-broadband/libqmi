@@ -73,6 +73,8 @@ qmi_device_set_instance_id
 qmi_device_set_instance_id_finish
 qmi_device_command
 qmi_device_command_finish
+qmi_device_command_full
+qmi_device_command_full_finish
 qmi_device_get_service_version_info
 qmi_device_get_service_version_info_finish
 qmi_device_open_flags_build_string_from_mask
@@ -1060,6 +1062,7 @@ qmi_message_get_message_id
 qmi_message_get_length
 qmi_message_get_raw
 qmi_message_get_version_introduced
+qmi_message_get_version_introduced_full
 <SUBSECTION TLV writer>
 qmi_message_tlv_write_init
 qmi_message_tlv_write_reset
@@ -1097,7 +1100,22 @@ qmi_message_add_raw_tlv
 qmi_message_set_transaction_id
 <SUBSECTION Printable>
 qmi_message_get_printable
+qmi_message_get_printable_full
 qmi_message_get_tlv_printable
+</SECTION>
+
+<SECTION>
+<FILE>qmi-message-context</FILE>
+QMI_MESSAGE_VENDOR_GENERIC
+QmiMessageContext
+qmi_message_context_new
+qmi_message_context_ref
+qmi_message_context_unref
+<SUBSECTION Vendor>
+qmi_message_context_set_vendor_id
+qmi_message_context_get_vendor_id
+<SUBSECTION Standard>
+qmi_message_context_get_type
 </SECTION>
 
 <SECTION>

@@ -33,6 +33,7 @@
 #include "qmi-client.h"
 #include "qmi-proxy.h"
 #include "qmi-message.h"
+#include "qmi-message-context.h"
 #include "qmi-enums.h"
 #include "qmi-utils.h"
 

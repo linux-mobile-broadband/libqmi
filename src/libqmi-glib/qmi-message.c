@@ -24,7 +24,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <glib.h>
@@ -2077,20 +2077,27 @@ get_generic_printable (QmiMessage *self,
 }
 
 /**
- * qmi_message_get_printable:
+ * qmi_message_get_printable_full:
  * @self: a #QmiMessage.
+ * @context: a #QmiMessageContext.
  * @line_prefix: prefix string to use in each new generated line.
  *
  * Gets a printable string with the contents of the whole QMI message.
  *
- * If known, the printable string will contain translated TLV values as well as the raw
- * data buffer contents.
+ * If known, the printable string will contain translated TLV values as well as
+ * the raw data buffer contents.
+ *
+ * The translation of the contents may be specific to the @context provided,
+ * e.g. for vendor-specific messages.
+ *
+ * If no @context given, the behavior is the same as qmi_message_get_printable().
  *
  * Returns: (transfer full): a newly allocated string, which should be freed with g_free().
  */
 gchar *
-qmi_message_get_printable (QmiMessage *self,
-                           const gchar *line_prefix)
+qmi_message_get_printable_full (QmiMessage        *self,
+                                QmiMessageContext *context,
+                                const gchar       *line_prefix)
 {
     GString *printable;
     gchar *qmi_flags_str;
@@ -2134,40 +2141,40 @@ qmi_message_get_printable (QmiMessage *self,
     contents = NULL;
     switch (qmi_message_get_service (self)) {
     case QMI_SERVICE_CTL:
-        contents = __qmi_message_ctl_get_printable (self, line_prefix);
+        contents = __qmi_message_ctl_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_DMS:
-        contents = __qmi_message_dms_get_printable (self, line_prefix);
+        contents = __qmi_message_dms_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_WDS:
-        contents = __qmi_message_wds_get_printable (self, line_prefix);
+        contents = __qmi_message_wds_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_NAS:
-        contents = __qmi_message_nas_get_printable (self, line_prefix);
+        contents = __qmi_message_nas_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_WMS:
-        contents = __qmi_message_wms_get_printable (self, line_prefix);
+        contents = __qmi_message_wms_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_PDC:
-        contents = __qmi_message_pdc_get_printable (self, line_prefix);
+        contents = __qmi_message_pdc_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_PDS:
-        contents = __qmi_message_pds_get_printable (self, line_prefix);
+        contents = __qmi_message_pds_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_PBM:
-        contents = __qmi_message_pbm_get_printable (self, line_prefix);
+        contents = __qmi_message_pbm_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_UIM:
-        contents = __qmi_message_uim_get_printable (self, line_prefix);
+        contents = __qmi_message_uim_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_OMA:
-        contents = __qmi_message_oma_get_printable (self, line_prefix);
+        contents = __qmi_message_oma_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_WDA:
-        contents = __qmi_message_wda_get_printable (self, line_prefix);
+        contents = __qmi_message_wda_get_printable (self, context, line_prefix);
         break;
     case QMI_SERVICE_VOICE:
-        contents = __qmi_message_voice_get_printable (self, line_prefix);
+        contents = __qmi_message_voice_get_printable (self, context, line_prefix);
         break;
     default:
         break;
@@ -2182,19 +2189,48 @@ qmi_message_get_printable (QmiMessage *self,
 }
 
 /**
- * qmi_message_get_version_introduced:
+ * qmi_message_get_printable:
  * @self: a #QmiMessage.
+ * @line_prefix: prefix string to use in each new generated line.
+ *
+ * Gets a printable string with the contents of the whole QMI message.
+ *
+ * If known, the printable string will contain translated TLV values as well as the raw
+ * data buffer contents.
+ *
+ * Returns: (transfer full): a newly allocated string, which should be freed with g_free().
+ *
+ * Deprecated: 1.18: Use qmi_message_get_printable_full() instead.
+ */
+gchar *
+qmi_message_get_printable (QmiMessage  *self,
+                           const gchar *line_prefix)
+{
+    return qmi_message_get_printable_full (self, NULL, line_prefix);
+}
+
+/**
+ * qmi_message_get_version_introduced_full:
+ * @self: a #QmiMessage.
+ * @context: a #QmiMessageContext.
  * @major: (out) return location for the major version.
  * @minor: (out) return location for the minor version.
  *
- * Gets, if known, the service version in which the given message was first introduced.
+ * Gets, if known, the service version in which the given message was first
+ * introduced.
+ *
+ * The lookup of the version may be specific to the @context provided, e.g. for
+ * vendor-specific messages.
+ *
+ * If no @context given, the behavior is the same as qmi_message_get_version_introduced().
  *
  * Returns: %TRUE if @major and @minor are set, %FALSE otherwise.
  */
 gboolean
-qmi_message_get_version_introduced (QmiMessage *self,
-                                    guint *major,
-                                    guint *minor)
+qmi_message_get_version_introduced_full (QmiMessage        *self,
+                                         QmiMessageContext *context,
+                                         guint             *major,
+                                         guint             *minor)
 {
     switch (qmi_message_get_service (self)) {
     case QMI_SERVICE_CTL:
@@ -2204,34 +2240,55 @@ qmi_message_get_version_introduced (QmiMessage *self,
         return TRUE;
 
     case QMI_SERVICE_DMS:
-        return __qmi_message_dms_get_version_introduced (self, major, minor);
+        return __qmi_message_dms_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_WDS:
-        return __qmi_message_wds_get_version_introduced (self, major, minor);
+        return __qmi_message_wds_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_NAS:
-        return __qmi_message_nas_get_version_introduced (self, major, minor);
+        return __qmi_message_nas_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_WMS:
-        return __qmi_message_wms_get_version_introduced (self, major, minor);
+        return __qmi_message_wms_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_PDS:
-        return __qmi_message_pds_get_version_introduced (self, major, minor);
+        return __qmi_message_pds_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_PBM:
-        return __qmi_message_pbm_get_version_introduced (self, major, minor);
+        return __qmi_message_pbm_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_UIM:
-        return __qmi_message_uim_get_version_introduced (self, major, minor);
+        return __qmi_message_uim_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_OMA:
-        return __qmi_message_oma_get_version_introduced (self, major, minor);
+        return __qmi_message_oma_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_WDA:
-        return __qmi_message_wda_get_version_introduced (self, major, minor);
+        return __qmi_message_wda_get_version_introduced (self, context, major, minor);
 
     default:
         /* For the still unsupported services, cannot do anything */
         return FALSE;
     }
+}
+
+/**
+ * qmi_message_get_version_introduced:
+ * @self: a #QmiMessage.
+ * @major: (out) return location for the major version.
+ * @minor: (out) return location for the minor version.
+ *
+ * Gets, if known, the service version in which the given message was first
+ * introduced.
+ *
+ * Returns: %TRUE if @major and @minor are set, %FALSE otherwise.
+ *
+ * Deprecated: 1.18: Use qmi_message_get_version_introduced_full() instead.
+ */
+gboolean
+qmi_message_get_version_introduced (QmiMessage *self,
+                                    guint      *major,
+                                    guint      *minor)
+{
+    return qmi_message_get_version_introduced_full (self, NULL, major, minor);
 }

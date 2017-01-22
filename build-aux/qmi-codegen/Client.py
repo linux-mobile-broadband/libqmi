@@ -278,6 +278,7 @@ class Client:
                 continue
 
             translations['message_name'] = message.name
+            translations['message_vendor_id'] = message.vendor
             translations['message_underscore'] = utils.build_underscore_name(message.name)
             translations['message_fullname_underscore'] = utils.build_underscore_name(message.fullname)
             translations['input_camelcase'] = utils.build_camelcase_name(message.input.fullname)
@@ -370,7 +371,7 @@ class Client:
                 '    QmiMessage *reply;\n'
                 '    ${output_camelcase} *output;\n'
                 '\n'
-                '    reply = qmi_device_command_finish (device, res, &error);\n'
+                '    reply = qmi_device_command_full_finish (device, res, &error);\n'
                 '    if (!reply) {\n')
 
             if message.abort:
@@ -461,7 +462,13 @@ class Client:
                 '    GSimpleAsyncResult *result;\n'
                 '    QmiMessage *request;\n'
                 '    GError *error = NULL;\n'
-                '    guint16 transaction_id;\n'
+                '    guint16 transaction_id;\n')
+
+            if message.vendor is not None:
+                template += (
+                    '    QmiMessageContext *context;\n')
+
+            template += (
                 '\n'
                 '    result = g_simple_async_result_new (G_OBJECT (self),\n'
                 '                                        callback,\n'
@@ -490,15 +497,36 @@ class Client:
                     '                       "transaction-id",\n'
                     '                       GUINT_TO_POINTER (transaction_id));\n')
 
+            if message.vendor is not None:
+                template += (
+                    '\n'
+                    '    context = qmi_message_context_new ();\n'
+                    '    qmi_message_context_set_vendor_id (context, ${message_vendor_id});\n')
+
             template += (
                 '\n'
-                '    qmi_device_command (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),\n'
-                '                        request,\n'
-                '                        timeout,\n'
-                '                        cancellable,\n'
-                '                        (GAsyncReadyCallback)${message_underscore}_ready,\n'
-                '                        result);\n'
-                '    qmi_message_unref (request);\n'
+                '    qmi_device_command_full (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),\n'
+                '                             request,\n')
+
+            if message.vendor is not None:
+                template += (
+                    '                             context,\n')
+            else:
+                template += (
+                    '                             NULL,\n')
+
+            template += (
+                '                             timeout,\n'
+                '                             cancellable,\n'
+                '                             (GAsyncReadyCallback)${message_underscore}_ready,\n'
+                '                             result);\n'
+                '    qmi_message_unref (request);\n')
+
+            if message.vendor is not None:
+                template += (
+                    '    qmi_message_context_unref (context);\n')
+
+            template += (
                 '}\n'
                 '\n')
             cfile.write(string.Template(template).substitute(translations))

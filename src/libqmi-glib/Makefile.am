@@ -35,6 +35,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-utils.h qmi-utils.c \
 	qmi-compat.h qmi-compat.c \
 	qmi-message.h qmi-message.c \
+	qmi-message-context.h qmi-message-context.c \
 	qmi-device.h qmi-device.c \
 	qmi-client.h qmi-client.c \
 	qmi-proxy.h qmi-proxy.c
@@ -68,6 +69,7 @@ include_HEADERS = \
 	qmi-enums-voice.h \
 	qmi-utils.h \
 	qmi-message.h \
+	qmi-message-context.h \
 	qmi-device.h \
 	qmi-client.h \
 	qmi-proxy.h

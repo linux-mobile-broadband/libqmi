@@ -24,7 +24,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_MESSAGE_H_
@@ -39,6 +39,7 @@
 #include "qmi-utils.h"
 #include "qmi-enums.h"
 #include "qmi-errors.h"
+#include "qmi-message-context.h"
 
 G_BEGIN_DECLS
 
@@ -50,6 +51,13 @@ G_BEGIN_DECLS
  * An opaque type representing a QMI message.
  */
 typedef GByteArray QmiMessage;
+
+/**
+ * QMI_MESSAGE_VENDOR_GENERIC:
+ *
+ * Generic vendor id (0x0000).
+ */
+#define QMI_MESSAGE_VENDOR_GENERIC 0x0000
 
 /*****************************************************************************/
 /* QMI Message life cycle */
@@ -79,10 +87,19 @@ gsize         qmi_message_get_length            (QmiMessage *self);
 const guint8 *qmi_message_get_raw               (QmiMessage *self,
                                                  gsize *length,
                                                  GError **error);
-gboolean     qmi_message_get_version_introduced (QmiMessage *self,
-                                                 guint *major,
-                                                 guint *minor);
 
+/*****************************************************************************/
+/* Version support from the database */
+
+G_DEPRECATED
+gboolean qmi_message_get_version_introduced (QmiMessage *self,
+                                             guint      *major,
+                                             guint      *minor);
+
+gboolean qmi_message_get_version_introduced_full (QmiMessage        *self,
+                                                  QmiMessageContext *context,
+                                                  guint             *major,
+                                                  guint             *minor);
 
 /*****************************************************************************/
 /* TLV builder & writer */
@@ -250,8 +267,13 @@ void qmi_message_set_transaction_id (QmiMessage *self,
 /*****************************************************************************/
 /* Printable helpers */
 
+G_DEPRECATED
 gchar *qmi_message_get_printable (QmiMessage *self,
                                   const gchar *line_prefix);
+
+gchar *qmi_message_get_printable_full (QmiMessage        *self,
+                                       QmiMessageContext *context,
+                                       const gchar       *line_prefix);
 
 gchar *qmi_message_get_tlv_printable (QmiMessage *self,
                                       const gchar *line_prefix,

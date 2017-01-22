@@ -17,7 +17,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_DEVICE_H_
@@ -32,6 +32,7 @@
 
 #include "qmi-enums.h"
 #include "qmi-message.h"
+#include "qmi-message-context.h"
 #include "qmi-client.h"
 
 G_BEGIN_DECLS
@@ -171,15 +172,28 @@ gboolean      qmi_device_set_instance_id_finish (QmiDevice *self,
                                                  guint16 *link_id,
                                                  GError **error);
 
-void         qmi_device_command        (QmiDevice *self,
-                                        QmiMessage *message,
-                                        guint timeout,
-                                        GCancellable *cancellable,
-                                        GAsyncReadyCallback callback,
-                                        gpointer user_data);
-QmiMessage  *qmi_device_command_finish (QmiDevice *self,
-                                        GAsyncResult *res,
-                                        GError **error);
+G_DEPRECATED
+void         qmi_device_command        (QmiDevice             *self,
+                                        QmiMessage            *message,
+                                        guint                  timeout,
+                                        GCancellable          *cancellable,
+                                        GAsyncReadyCallback    callback,
+                                        gpointer               user_data);
+G_DEPRECATED
+QmiMessage  *qmi_device_command_finish (QmiDevice             *self,
+                                        GAsyncResult          *res,
+                                        GError               **error);
+
+void         qmi_device_command_full        (QmiDevice            *self,
+                                             QmiMessage           *message,
+                                             QmiMessageContext    *message_context,
+                                             guint                 timeout,
+                                             GCancellable         *cancellable,
+                                             GAsyncReadyCallback   callback,
+                                             gpointer              user_data);
+QmiMessage  *qmi_device_command_full_finish (QmiDevice            *self,
+                                             GAsyncResult         *res,
+                                             GError              **error);
 
 /**
  * QmiDeviceServiceVersionInfo:

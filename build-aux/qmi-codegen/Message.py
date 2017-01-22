@@ -45,6 +45,11 @@ class Message:
         self.static = True if 'scope' in dictionary and dictionary['scope'] == 'library-only' else False
         self.abort = True if 'abort' in dictionary and dictionary['abort'] == 'yes' else False
 
+        # The vendor id if this command is vendor specific
+        self.vendor = dictionary['vendor'] if 'vendor' in dictionary else None
+        if self.type == 'Indication' and self.vendor is not None:
+            raise ValueError('Vendor-specific indications unsupported')
+
         # The message prefix
         self.prefix = 'Qmi ' + self.type
 

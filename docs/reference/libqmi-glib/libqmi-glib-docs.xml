@@ -45,6 +45,7 @@
     <title>Core</title>
     <xi:include href="xml/qmi-version.xml"/>
     <xi:include href="xml/qmi-message.xml"/>
+    <xi:include href="xml/qmi-message-context.xml"/>
     <xi:include href="xml/qmi-device.xml"/>
     <xi:include href="xml/qmi-client.xml"/>
     <xi:include href="xml/qmi-proxy.xml"/>

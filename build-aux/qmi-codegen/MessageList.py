@@ -73,8 +73,13 @@ class MessageList:
             if message.type == 'Message':
                 translations['enum_name'] = message.id_enum_name
                 translations['enum_value'] = message.id
-                enum_template = (
-                    '    ${enum_name} = ${enum_value},\n')
+                if message.vendor is None:
+                    enum_template = (
+                        '    ${enum_name} = ${enum_value},\n')
+                else:
+                    translations['vendor'] = message.vendor
+                    enum_template = (
+                        '    ${enum_name} = ${enum_value}, /* vendor ${vendor} */\n')
                 template += string.Template(enum_template).substitute(translations)
 
         template += (
@@ -118,6 +123,7 @@ class MessageList:
             'G_GNUC_INTERNAL\n'
             'gchar *__qmi_message_${service}_get_printable (\n'
             '    QmiMessage *self,\n'
+            '    QmiMessageContext *context,\n'
             '    const gchar *line_prefix);\n'
             '\n'
             '#endif\n'
@@ -129,6 +135,7 @@ class MessageList:
             'gchar *\n'
             '__qmi_message_${service}_get_printable (\n'
             '    QmiMessage *self,\n'
+            '    QmiMessageContext *context,\n'
             '    const gchar *line_prefix)\n'
             '{\n'
             '    if (qmi_message_is_indication (self)) {\n'
@@ -138,7 +145,6 @@ class MessageList:
             if message.type == 'Indication':
                 translations['enum_name'] = message.id_enum_name
                 translations['message_underscore'] = utils.build_underscore_name (message.name)
-                translations['enum_value'] = message.id
                 inner_template = (
                     '        case ${enum_name}:\n'
                     '            return indication_${message_underscore}_get_printable (self, line_prefix);\n')
@@ -149,21 +155,39 @@ class MessageList:
             '             return NULL;\n'
             '        }\n'
             '    } else {\n'
-            '        switch (qmi_message_get_message_id (self)) {\n')
+            '        guint16 vendor_id;\n'
+            '\n'
+            '        vendor_id = (context ? qmi_message_context_get_vendor_id (context) : QMI_MESSAGE_VENDOR_GENERIC);\n'
+            '        if (vendor_id == QMI_MESSAGE_VENDOR_GENERIC) {\n'
+            '            switch (qmi_message_get_message_id (self)) {\n')
 
         for message in self.list:
-            if message.type == 'Message':
+            if message.type == 'Message' and message.vendor is None:
                 translations['enum_name'] = message.id_enum_name
                 translations['message_underscore'] = utils.build_underscore_name (message.name)
-                translations['enum_value'] = message.id
                 inner_template = (
-                    '        case ${enum_name}:\n'
-                    '            return message_${message_underscore}_get_printable (self, line_prefix);\n')
+                    '            case ${enum_name}:\n'
+                    '                return message_${message_underscore}_get_printable (self, line_prefix);\n')
                 template += string.Template(inner_template).substitute(translations)
 
         template += (
-            '        default:\n'
-            '             return NULL;\n'
+            '             default:\n'
+            '                 return NULL;\n'
+            '            }\n'
+            '        } else {\n')
+
+        for message in self.list:
+            if message.type == 'Message' and message.vendor is not None:
+                translations['enum_name'] = message.id_enum_name
+                translations['message_underscore'] = utils.build_underscore_name (message.name)
+                translations['message_vendor'] = message.vendor
+                inner_template = (
+                    '            if (vendor_id == ${message_vendor} && (qmi_message_get_message_id (self) == ${enum_name}))\n'
+                    '                return message_${message_underscore}_get_printable (self, line_prefix);\n')
+                template += string.Template(inner_template).substitute(translations)
+
+        template += (
+            '            return NULL;\n'
             '        }\n'
             '    }\n'
             '}\n')
@@ -184,6 +208,7 @@ class MessageList:
             'G_GNUC_INTERNAL\n'
             'gboolean __qmi_message_${service}_get_version_introduced (\n'
             '    QmiMessage *self,\n'
+            '    QmiMessageContext *context,\n'
             '    guint *major,\n'
             '    guint *minor);\n'
             '\n'
@@ -196,27 +221,53 @@ class MessageList:
             'gboolean\n'
             '__qmi_message_${service}_get_version_introduced (\n'
             '    QmiMessage *self,\n'
+            '    QmiMessageContext *context,\n'
             '    guint *major,\n'
             '    guint *minor)\n'
             '{\n'
-            '    switch (qmi_message_get_message_id (self)) {\n')
+            '    guint16 vendor_id;\n'
+            '\n'
+            '    vendor_id = (context ? qmi_message_context_get_vendor_id (context) : QMI_MESSAGE_VENDOR_GENERIC);\n'
+            '    if (vendor_id == QMI_MESSAGE_VENDOR_GENERIC) {\n'
+            '        switch (qmi_message_get_message_id (self)) {\n')
 
         for message in self.list:
-            if message.type == 'Message':
+            if message.type == 'Message' and message.vendor is None:
                 # Only add if we know the version info
                 if message.version_info != []:
                     translations['enum_name'] = message.id_enum_name
                     translations['message_major'] = message.version_info[0]
                     translations['message_minor'] = message.version_info[1]
                     inner_template = (
-                        '    case ${enum_name}:\n'
-                        '        *major = ${message_major};\n'
-                        '        *minor = ${message_minor};\n'
-                        '        return TRUE;\n')
+                        '        case ${enum_name}:\n'
+                        '            *major = ${message_major};\n'
+                        '            *minor = ${message_minor};\n'
+                        '            return TRUE;\n')
                     template += string.Template(inner_template).substitute(translations)
 
         template += (
-            '    default:\n'
+            '        default:\n'
+            '            return FALSE;\n'
+            '        }\n'
+            '    } else {\n')
+
+        for message in self.list:
+            if message.type == 'Message' and message.vendor is not None:
+                # Only add if we know the version info
+                if message.version_info != []:
+                    translations['enum_name'] = message.id_enum_name
+                    translations['message_major'] = message.version_info[0]
+                    translations['message_minor'] = message.version_info[1]
+                    translations['message_vendor'] = message.vendor
+                    inner_template = (
+                        '        if (vendor_id == ${message_vendor} && (qmi_message_get_message_id (self) == ${enum_name})) {\n'
+                        '            *major = ${message_major};\n'
+                        '            *minor = ${message_minor};\n'
+                        '            return TRUE;\n'
+                        '        }\n')
+                    template += string.Template(inner_template).substitute(translations)
+
+        template += (
             '        return FALSE;\n'
             '    }\n'
             '}\n')

@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2012 Lanedo GmbH
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <config.h>
@@ -143,25 +143,28 @@ typedef struct {
 } TransactionWaitContext;
 
 typedef struct {
-    QmiMessage *message;
-    GSimpleAsyncResult *result;
-    GSource *timeout_source;
-    GCancellable *cancellable;
-    gulong cancellable_id;
+    QmiMessage             *message;
+    QmiMessageContext      *message_context;
+    GSimpleAsyncResult     *result;
+    GSource                *timeout_source;
+    GCancellable           *cancellable;
+    gulong                  cancellable_id;
     TransactionWaitContext *wait_ctx;
 } Transaction;
 
 static Transaction *
-transaction_new (QmiDevice *self,
-                 QmiMessage *message,
-                 GCancellable *cancellable,
-                 GAsyncReadyCallback callback,
-                 gpointer user_data)
+transaction_new (QmiDevice           *self,
+                 QmiMessage          *message,
+                 QmiMessageContext   *message_context,
+                 GCancellable        *cancellable,
+                 GAsyncReadyCallback  callback,
+                 gpointer             user_data)
 {
     Transaction *tr;
 
     tr = g_slice_new0 (Transaction);
     tr->message = qmi_message_ref (message);
+    tr->message_context = (message_context ? qmi_message_context_ref (message_context) : NULL);
     tr->result = g_simple_async_result_new (G_OBJECT (self),
                                             callback,
                                             user_data,
@@ -200,6 +203,8 @@ transaction_complete_and_free (Transaction *tr,
 
     g_simple_async_result_complete_in_idle (tr->result);
     g_object_unref (tr->result);
+    if (tr->message_context)
+        qmi_message_context_unref (tr->message_context);
     qmi_message_unref (tr->message);
     g_slice_free (Transaction, tr);
 }
@@ -1590,32 +1595,69 @@ report_indication (QmiClient *client,
 }
 
 static void
+trace_message (QmiDevice         *self,
+               QmiMessage        *message,
+               gboolean           sent_or_received,
+               const gchar       *message_str,
+               QmiMessageContext *message_context)
+{
+    gchar       *printable;
+    const gchar *prefix_str;
+    const gchar *action_str;
+    gchar       *vendor_str = NULL;
+
+    if (!qmi_utils_get_traces_enabled ())
+        return;
+
+    if (sent_or_received) {
+        prefix_str = "<<<<<< ";
+        action_str = "sent";
+    } else {
+        prefix_str = "<<<<<< ";
+        action_str = "received";
+    }
+
+    printable = __qmi_utils_str_hex (((GByteArray *)message)->data,
+                                     ((GByteArray *)message)->len,
+                                     ':');
+    g_debug ("[%s] %s message...\n"
+             "%sRAW:\n"
+             "%s  length = %u\n"
+             "%s  data   = %s\n",
+             self->priv->path_display, action_str,
+             prefix_str,
+             prefix_str, ((GByteArray *)message)->len,
+             prefix_str, printable);
+    g_free (printable);
+
+    if (message_context) {
+        guint16 vendor_id;
+
+        vendor_id = qmi_message_context_get_vendor_id (message_context);
+        if (vendor_id != QMI_MESSAGE_VENDOR_GENERIC)
+            vendor_str = g_strdup_printf ("vendor-specific (0x%04x)", vendor_id);
+    }
+
+    printable = qmi_message_get_printable_full (message, message_context, prefix_str);
+    g_debug ("[%s] %s %s %s (translated)...\n%s",
+             self->priv->path_display,
+             action_str,
+             vendor_str ? vendor_str : "generic",
+             message_str,
+             printable);
+    g_free (printable);
+
+    g_free (vendor_str);
+}
+
+static void
 process_message (QmiDevice *self,
                  QmiMessage *message)
 {
-    if (qmi_utils_get_traces_enabled ()) {
-        gchar *printable;
-
-        printable = __qmi_utils_str_hex (((GByteArray *)message)->data,
-                                         ((GByteArray *)message)->len,
-                                         ':');
-        g_debug ("[%s] Received message...\n"
-                 ">>>>>> RAW:\n"
-                 ">>>>>>   length = %u\n"
-                 ">>>>>>   data   = %s\n",
-                 self->priv->path_display,
-                 ((GByteArray *)message)->len,
-                 printable);
-        g_free (printable);
-
-        printable = qmi_message_get_printable (message, ">>>>>> ");
-        g_debug ("[%s] Received message (translated)...\n%s",
-                 self->priv->path_display,
-                 printable);
-        g_free (printable);
-    }
-
     if (qmi_message_is_indication (message)) {
+        /* Indication traces translated without an explicit vendor */
+        trace_message (self, message, FALSE, "indication", NULL);
+
         /* Generic emission of the indication */
         g_signal_emit (self, signals[SIGNAL_INDICATION], 0, message);
 
@@ -1647,16 +1689,23 @@ process_message (QmiDevice *self,
         Transaction *tr;
 
         tr = device_match_transaction (self, message);
-        if (!tr)
+        if (!tr) {
+            /* Unmatched transactions translated without an explicit context */
+            trace_message (self, message, FALSE, "response", NULL);
             g_debug ("[%s] No transaction matched in received message",
                      self->priv->path_display);
-        else
+        } else {
+            /* Matched transactions translated with the same context as the request */
+            trace_message (self, message, FALSE, "response", tr->message_context);
             /* Report the reply message */
             transaction_complete_and_free (tr, message, NULL);
+        }
 
         return;
     }
 
+    /* Unexpected message types translated without an explicit context */
+    trace_message (self, message, FALSE, "unexpected message", NULL);
     g_debug ("[%s] Message received but it is neither an indication nor a response. Skipping it.",
              self->priv->path_display);
 }
@@ -2755,19 +2804,19 @@ mbim_command (QmiDevice      *self,
 /* Command */
 
 /**
- * qmi_device_command_finish:
+ * qmi_device_command_full_finish:
  * @self: a #QmiDevice.
  * @res: a #GAsyncResult.
  * @error: Return location for error or %NULL.
  *
- * Finishes an operation started with qmi_device_command().
+ * Finishes an operation started with qmi_device_command_full().
  *
  * Returns: a #QmiMessage response, or #NULL if @error is set. The returned value should be freed with qmi_message_unref().
  */
 QmiMessage *
-qmi_device_command_finish (QmiDevice *self,
-                           GAsyncResult *res,
-                           GError **error)
+qmi_device_command_full_finish (QmiDevice     *self,
+                                GAsyncResult  *res,
+                                GError       **error)
 {
     if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
         return NULL;
@@ -2794,9 +2843,10 @@ transaction_early_error (QmiDevice   *self,
 }
 
 /**
- * qmi_device_command:
+ * qmi_device_command_full:
  * @self: a #QmiDevice.
  * @message: the message to send.
+ * @message_context: the context of the message.
  * @timeout: maximum time, in seconds, to wait for the response.
  * @cancellable: a #GCancellable, or %NULL.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
@@ -2804,16 +2854,22 @@ transaction_early_error (QmiDevice   *self,
  *
  * Asynchronously sends a #QmiMessage to the device.
  *
+ * The message will be processed according to the specific @message_context
+ * given.
+ *
  * When the operation is finished @callback will be called. You can then call
- * qmi_device_command_finish() to get the result of the operation.
+ * qmi_device_command_full_finish() to get the result of the operation.
+ *
+ * If no @context given, the behavior is the same as qmi_device_command().
  */
 void
-qmi_device_command (QmiDevice *self,
-                    QmiMessage *message,
-                    guint timeout,
-                    GCancellable *cancellable,
-                    GAsyncReadyCallback callback,
-                    gpointer user_data)
+qmi_device_command_full (QmiDevice           *self,
+                         QmiMessage          *message,
+                         QmiMessageContext   *message_context,
+                         guint                timeout,
+                         GCancellable        *cancellable,
+                         GAsyncReadyCallback  callback,
+                         gpointer             user_data)
 {
     GError *error = NULL;
     Transaction *tr;
@@ -2835,7 +2891,7 @@ qmi_device_command (QmiDevice *self,
                     self->priv->client_ctl)));
     }
 
-    tr = transaction_new (self, message, cancellable, callback, user_data);
+    tr = transaction_new (self, message, message_context, cancellable, callback, user_data);
 
     /* Device must be open */
     if (!self->priv->istream || !self->priv->ostream) {
@@ -2896,27 +2952,7 @@ qmi_device_command (QmiDevice *self,
     /* From now on, if we want to complete the transaction with an early error,
      *  it needs to be removed from the tracking table as well. */
 
-    if (qmi_utils_get_traces_enabled ()) {
-        gchar *printable;
-
-        printable = __qmi_utils_str_hex (((GByteArray *)message)->data,
-                                         ((GByteArray *)message)->len,
-                                         ':');
-        g_debug ("[%s] Sent message...\n"
-                 "<<<<<< RAW:\n"
-                 "<<<<<<   length = %u\n"
-                 "<<<<<<   data   = %s\n",
-                 self->priv->path_display,
-                 ((GByteArray *)message)->len,
-                 printable);
-        g_free (printable);
-
-        printable = qmi_message_get_printable (message, "<<<<<< ");
-        g_debug ("[%s] Sent message (translated)...\n%s",
-                 self->priv->path_display,
-                 printable);
-        g_free (printable);
-    }
+    trace_message (self, message, TRUE, "request", message_context);
 
 #if defined MBIM_QMUX_ENABLED
     if (self->priv->mbimdev) {
@@ -2947,6 +2983,56 @@ qmi_device_command (QmiDevice *self,
 
     /* Flush explicitly if correctly written */
     g_output_stream_flush (self->priv->ostream, NULL, NULL);
+}
+
+/*****************************************************************************/
+/* Generic command */
+
+/**
+ * qmi_device_command_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qmi_device_command().
+ *
+ * Returns: a #QmiMessage response, or #NULL if @error is set. The returned value should be freed with qmi_message_unref().
+ *
+ * Deprecated: 1.18.
+ */
+QmiMessage *
+qmi_device_command_finish (QmiDevice     *self,
+                           GAsyncResult  *res,
+                           GError       **error)
+{
+    return qmi_device_command_full_finish (self, res, error);
+}
+
+/**
+ * qmi_device_command:
+ * @self: a #QmiDevice.
+ * @message: the message to send.
+ * @timeout: maximum time, in seconds, to wait for the response.
+ * @cancellable: a #GCancellable, or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously sends a generic #QmiMessage to the device with no context.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qmi_device_command_finish() to get the result of the operation.
+ *
+ * Deprecated: 1.18: Use qmi_device_command_full() instead.
+ */
+void
+qmi_device_command (QmiDevice           *self,
+                    QmiMessage          *message,
+                    guint                timeout,
+                    GCancellable        *cancellable,
+                    GAsyncReadyCallback  callback,
+                    gpointer             user_data)
+{
+    qmi_device_command_full (self, message, NULL, timeout, cancellable, callback, user_data);
 }
 
 /*****************************************************************************/

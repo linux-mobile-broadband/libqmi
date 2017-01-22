@@ -608,6 +608,9 @@ process_message (QmiProxy   *self,
      * complete, otherwise the remote clients will lose the reply if they
      * configured a timeout bigger than this internal one. We should likely
      * make this value configurable per-client, instead of a hardcoded value.
+     *
+     * Note: the proxy will not translate vendor-specific messages in its
+     * logs (as it doesn't have the orignal message context with the vendor id).
      */
     qmi_device_command (client->device,
                         message,
