@@ -253,7 +253,7 @@ release_client_ready (QmiDevice *dev,
     GError *error = NULL;
 
     if (!qmi_device_release_client_finish (dev, res, &error)) {
-        g_printerr ("error: couldn't release client: %s", error->message);
+        g_printerr ("error: couldn't release client: %s\n", error->message);
         g_error_free (error);
     } else
         g_debug ("Client released");
