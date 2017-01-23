@@ -232,11 +232,15 @@ typedef struct {
     gboolean                                  supports_firmware_preference_management;
     QmiMessageDmsGetFirmwarePreferenceOutput *firmware_preference;
     gboolean                                  supports_firmware_preference_management_done;
+    QmiMessageDmsSwiGetCurrentFirmwareOutput *current_firmware;
+    gboolean                                  supports_current_firmware_done;
 } NewClientDmsContext;
 
 static void
 new_client_dms_context_free (NewClientDmsContext *ctx)
 {
+    if (ctx->current_firmware)
+        qmi_message_dms_swi_get_current_firmware_output_unref (ctx->current_firmware);
     if (ctx->firmware_preference)
         qmi_message_dms_get_firmware_preference_output_unref (ctx->firmware_preference);
     if (ctx->qmi_client)
@@ -256,6 +260,7 @@ qfu_utils_new_client_dms_finish (GAsyncResult  *res,
                                  guint8        *max_storage_index,
                                  gboolean      *supports_firmware_preference_management,
                                  QmiMessageDmsGetFirmwarePreferenceOutput **firmware_preference,
+                                 QmiMessageDmsSwiGetCurrentFirmwareOutput **current_firmware,
                                  GError       **error)
 {
     NewClientDmsContext *ctx;
@@ -278,6 +283,8 @@ qfu_utils_new_client_dms_finish (GAsyncResult  *res,
         *supports_firmware_preference_management = ctx->supports_firmware_preference_management;
     if (firmware_preference)
         *firmware_preference = (ctx->firmware_preference ? qmi_message_dms_get_firmware_preference_output_ref (ctx->firmware_preference) : NULL);
+    if (current_firmware)
+        *current_firmware = (ctx->current_firmware ? qmi_message_dms_swi_get_current_firmware_output_ref (ctx->current_firmware) : NULL);
     return TRUE;
 }
 
@@ -290,7 +297,8 @@ check_capabilities_done (GTask *task)
 
     if (!ctx->revision_done ||
         !ctx->supports_stored_image_management_done ||
-        !ctx->supports_firmware_preference_management_done)
+        !ctx->supports_firmware_preference_management_done ||
+        !ctx->supports_current_firmware_done)
         return;
 
     /* All done! */
@@ -413,6 +421,28 @@ dms_get_firmware_preference_ready (QmiClientDms *client,
     check_capabilities_done (task);
 }
 
+static void
+swi_get_current_firmware_ready (QmiClientDms *client,
+                                GAsyncResult *res,
+                                GTask        *task)
+{
+    QmiMessageDmsSwiGetCurrentFirmwareOutput *output;
+    NewClientDmsContext                      *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    output = qmi_client_dms_swi_get_current_firmware_finish (client, res, NULL);
+    if (output) {
+        if (qmi_message_dms_swi_get_current_firmware_output_get_result (output, NULL))
+            ctx->current_firmware = output;
+        else
+            qmi_message_dms_swi_get_current_firmware_output_unref (output);
+    }
+
+    ctx->supports_current_firmware_done = TRUE;
+    check_capabilities_done (task);
+}
+
 static void retry_allocate_qmi_client (GTask *task);
 
 static void
@@ -463,6 +493,9 @@ qmi_client_ready (QmiDevice    *device,
     qmi_client_dms_get_firmware_preference (ctx->qmi_client,
                                             NULL, 10, g_task_get_cancellable (task),
                                             (GAsyncReadyCallback) dms_get_firmware_preference_ready, task);
+    qmi_client_dms_swi_get_current_firmware (ctx->qmi_client,
+                                             NULL, 10, g_task_get_cancellable (task),
+                                             (GAsyncReadyCallback) swi_get_current_firmware_ready, task);
 }
 
 static void

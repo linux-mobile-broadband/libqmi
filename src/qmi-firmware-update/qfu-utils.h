@@ -60,6 +60,7 @@ gboolean qfu_utils_new_client_dms_finish (GAsyncResult         *res,
                                           guint8               *max_storage_index,
                                           gboolean             *supports_firmware_preference_management,
                                           QmiMessageDmsGetFirmwarePreferenceOutput **firmware_preference,
+                                          QmiMessageDmsSwiGetCurrentFirmwareOutput **current_firmware,
                                           GError              **error);
 
 void     qfu_utils_power_cycle        (QmiClientDms         *qmi_client,

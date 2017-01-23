@@ -114,10 +114,12 @@ typedef struct {
     guint8                                    max_modem_storage_index;
     gboolean                                  supports_firmware_preference_management;
     QmiMessageDmsGetFirmwarePreferenceOutput *firmware_preference;
+    QmiMessageDmsSwiGetCurrentFirmwareOutput *current_firmware;
     gchar                                    *new_revision;
     gboolean                                  new_supports_stored_image_management;
     gboolean                                  new_supports_firmware_preference_management;
     QmiMessageDmsGetFirmwarePreferenceOutput *new_firmware_preference;
+    QmiMessageDmsSwiGetCurrentFirmwareOutput *new_current_firmware;
 
     /* List of pending QfuImages to download, and the current one being
      * processed. */
@@ -147,6 +149,10 @@ typedef struct {
 static void
 run_context_free (RunContext *ctx)
 {
+    if (ctx->current_firmware)
+        qmi_message_dms_swi_get_current_firmware_output_unref (ctx->current_firmware);
+    if (ctx->new_current_firmware)
+        qmi_message_dms_swi_get_current_firmware_output_unref (ctx->new_current_firmware);
     if (ctx->firmware_preference)
         qmi_message_dms_get_firmware_preference_output_unref (ctx->firmware_preference);
     if (ctx->new_firmware_preference)
@@ -218,6 +224,46 @@ print_firmware_preference (QmiMessageDmsGetFirmwarePreferenceOutput *firmware_pr
 }
 
 static void
+print_current_firmware (QmiMessageDmsSwiGetCurrentFirmwareOutput *current_firmware,
+                        const gchar                              *prefix)
+{
+    const gchar *model = NULL;
+    const gchar *boot_version = NULL;
+    const gchar *amss_version = NULL;
+    const gchar *sku_id = NULL;
+    const gchar *package_id = NULL;
+    const gchar *carrier_id = NULL;
+    const gchar *pri_version = NULL;
+    const gchar *carrier = NULL;
+    const gchar *config_version = NULL;
+
+    qmi_message_dms_swi_get_current_firmware_output_get_model          (current_firmware, &model,          NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_boot_version   (current_firmware, &boot_version,   NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_amss_version   (current_firmware, &amss_version,   NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_sku_id         (current_firmware, &sku_id,         NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_package_id     (current_firmware, &package_id,     NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_carrier_id     (current_firmware, &carrier_id,     NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_pri_version    (current_firmware, &pri_version,    NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_carrier        (current_firmware, &carrier,        NULL);
+    qmi_message_dms_swi_get_current_firmware_output_get_config_version (current_firmware, &config_version, NULL);
+
+    if (model)
+        g_print ("%sModel: %s\n", prefix, model);
+    if (boot_version)
+        g_print ("%sBoot version: %s\n", prefix, boot_version);
+    if (amss_version)
+        g_print ("%sAMSS version: %s\n", prefix, amss_version);
+    if (sku_id)
+        g_print ("%sSKU ID: %s\n", prefix, sku_id);
+    if (package_id)
+        g_print ("%sPackage ID: %s\n", prefix, package_id);
+    if (carrier_id)
+        g_print ("%sCarrier ID: %s\n", prefix, carrier_id);
+    if (config_version)
+        g_print ("%sConfig version: %s\n", prefix, config_version);
+}
+
+static void
 run_context_step_last (GTask *task)
 {
     RunContext *ctx;
@@ -230,15 +276,27 @@ run_context_step_last (GTask *task)
 
     g_print ("\n"
              "   original firmware revision was:\n"
-             "   %s\n", ctx->revision ? ctx->revision : "unknown");
-    if (ctx->firmware_preference)
+             "      %s\n", ctx->revision ? ctx->revision : "unknown");
+    if (ctx->current_firmware) {
+        g_print ("   original running firmware details:\n");
+        print_current_firmware (ctx->current_firmware, "      ");
+    }
+    if (ctx->firmware_preference) {
+        g_print ("   original firmware preference details:\n");
         print_firmware_preference (ctx->firmware_preference, "      ");
+    }
 
     g_print ("\n"
              "   new firmware revision is:\n"
-             "   %s\n", ctx->new_revision ? ctx->new_revision : "unknown");
-    if (ctx->new_firmware_preference)
+             "      %s\n", ctx->new_revision ? ctx->new_revision : "unknown");
+    if (ctx->new_current_firmware) {
+        g_print ("   new running firmware details:\n");
+        print_current_firmware (ctx->new_current_firmware, "      ");
+    }
+    if (ctx->new_firmware_preference) {
+        g_print ("   new firmware preference details:\n");
         print_firmware_preference (ctx->new_firmware_preference, "      ");
+    }
 
     if (ctx->new_supports_stored_image_management)
         g_print ("\n"
@@ -306,6 +364,7 @@ new_client_dms_after_ready (gpointer      unused,
                                           NULL, /* we don't care about the max number of images */
                                           &ctx->new_supports_firmware_preference_management,
                                           &ctx->new_firmware_preference,
+                                          &ctx->new_current_firmware,
                                           &error)) {
         if (ctx->wait_for_boot_retries == WAIT_FOR_BOOT_RETRIES) {
             g_warning ("couldn't create DMS client after upgrade: %s", error->message);
@@ -1128,6 +1187,7 @@ new_client_dms_ready (gpointer      unused,
                                           &ctx->max_modem_storage_index,
                                           &ctx->supports_firmware_preference_management,
                                           &ctx->firmware_preference,
+                                          &ctx->current_firmware,
                                           &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
