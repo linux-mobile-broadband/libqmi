@@ -33,6 +33,9 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#undef VALIDATE_UNKNOWN
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -430,9 +433,6 @@ get_ids_ready (QmiClientDms *client,
         return;
     }
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     qmi_message_dms_get_ids_output_get_esn  (output, &esn, NULL);
     qmi_message_dms_get_ids_output_get_imei (output, &imei, NULL);
     qmi_message_dms_get_ids_output_get_meid (output, &meid, NULL);
@@ -541,9 +541,6 @@ get_manufacturer_ready (QmiClientDms *client,
         return;
     }
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     qmi_message_dms_get_manufacturer_output_get_manufacturer (output, &str, NULL);
 
     g_print ("[%s] Device manufacturer retrieved:\n"
@@ -578,9 +575,6 @@ get_model_ready (QmiClientDms *client,
         operation_shutdown (FALSE);
         return;
     }
-
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     qmi_message_dms_get_model_output_get_model (output, &str, NULL);
 
@@ -617,9 +611,6 @@ get_revision_ready (QmiClientDms *client,
         return;
     }
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     qmi_message_dms_get_revision_output_get_revision (output, &str, NULL);
 
     g_print ("[%s] Device revision retrieved:\n"
@@ -654,9 +645,6 @@ get_msisdn_ready (QmiClientDms *client,
         operation_shutdown (FALSE);
         return;
     }
-
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     qmi_message_dms_get_msisdn_output_get_msisdn (output, &str, NULL);
 
@@ -1139,9 +1127,6 @@ uim_get_iccid_ready (QmiClientDms *client,
         return;
     }
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     qmi_message_dms_uim_get_iccid_output_get_iccid (output, &str, NULL);
 
     g_print ("[%s] UIM ICCID retrieved:\n"
@@ -1176,9 +1161,6 @@ uim_get_imsi_ready (QmiClientDms *client,
         operation_shutdown (FALSE);
         return;
     }
-
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     qmi_message_dms_uim_get_imsi_output_get_imsi (output, &str, NULL);
 
@@ -1498,9 +1480,6 @@ get_hardware_revision_ready (QmiClientDms *client,
         return;
     }
 
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
-
     qmi_message_dms_get_hardware_revision_output_get_revision (output, &str, NULL);
 
     g_print ("[%s] Hardware revision retrieved:\n"
@@ -1536,9 +1515,6 @@ get_operating_mode_ready (QmiClientDms *client,
         operation_shutdown (FALSE);
         return;
     }
-
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     qmi_message_dms_get_operating_mode_output_get_mode (output, &mode, NULL);
 
@@ -2425,9 +2401,6 @@ get_factory_sku_ready (QmiClientDms *client,
         operation_shutdown (FALSE);
         return;
     }
-
-#undef VALIDATE_UNKNOWN
-#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
     qmi_message_dms_get_factory_sku_output_get_sku (output, &str, NULL);
 
