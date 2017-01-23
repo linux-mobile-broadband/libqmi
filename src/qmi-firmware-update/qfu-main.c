@@ -54,7 +54,9 @@ static gchar     *firmware_version_str;
 static gchar     *config_version_str;
 static gchar     *carrier_str;
 static gboolean   device_open_proxy_flag;
+static gboolean   device_open_qmi_flag;
 static gboolean   device_open_mbim_flag;
+static gboolean   device_open_auto_flag;
 static gboolean   ignore_version_errors_flag;
 static gboolean   override_download_flag;
 static gint       modem_storage_index_int;
@@ -261,8 +263,16 @@ static GOptionEntry context_main_entries[] = {
       "Request to use the 'qmi-proxy' proxy.",
       NULL
     },
+    { "device-open-qmi", 0, 0, G_OPTION_ARG_NONE, &device_open_qmi_flag,
+      "Open a cdc-wdm device explicitly in QMI mode",
+      NULL
+    },
     { "device-open-mbim", 0, 0, G_OPTION_ARG_NONE, &device_open_mbim_flag,
-      "Open an MBIM device with EXT_QMUX support.",
+      "Open a cdc-wdm device explicitly in MBIM mode",
+      NULL
+    },
+    { "device-open-auto", 0, 0, G_OPTION_ARG_NONE, &device_open_auto_flag,
+      "Open a cdc-wdm device in either QMI or MBIM mode (default)",
       NULL
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &stdout_verbose_flag,
@@ -466,6 +476,7 @@ int main (int argc, char **argv)
     guint               n_actions;
     gboolean            result = FALSE;
     QfuDeviceSelection *device_selection = NULL;
+    QmiDeviceOpenFlags  device_open_flags = QMI_DEVICE_OPEN_FLAGS_NONE;
 
     setlocale (LC_ALL, "");
 
@@ -553,6 +564,20 @@ int main (int argc, char **argv)
         }
     }
 
+    /* Validate device open flags */
+    if (action_update_flag || action_reset_flag) {
+        if (device_open_mbim_flag + device_open_qmi_flag + device_open_auto_flag > 1) {
+            g_printerr ("error: cannot specify multiple mode flags to open device\n");
+            goto out;
+        }
+        if (device_open_proxy_flag)
+            device_open_flags |= QMI_DEVICE_OPEN_FLAGS_PROXY;
+        if (device_open_mbim_flag)
+            device_open_flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
+        if (device_open_auto_flag || (!device_open_qmi_flag && !device_open_mbim_flag))
+            device_open_flags |= QMI_DEVICE_OPEN_FLAGS_AUTO;
+    }
+
     /* Run */
 
     if (action_update_flag) {
@@ -570,8 +595,7 @@ int main (int argc, char **argv)
                                            firmware_version_str,
                                            config_version_str,
                                            carrier_str,
-                                           device_open_proxy_flag,
-                                           device_open_mbim_flag,
+                                           device_open_flags,
                                            ignore_version_errors_flag,
                                            override_download_flag,
                                            (guint8) modem_storage_index_int,
@@ -588,9 +612,7 @@ int main (int argc, char **argv)
 
     if (action_reset_flag) {
         g_assert (QFU_IS_DEVICE_SELECTION (device_selection));
-        result = qfu_operation_reset_run (device_selection,
-                                          device_open_proxy_flag,
-                                          device_open_mbim_flag);
+        result = qfu_operation_reset_run (device_selection, device_open_flags);
         goto out;
     }
 

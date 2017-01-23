@@ -52,8 +52,7 @@ struct _QfuUpdaterPrivate {
     gchar              *firmware_version;
     gchar              *config_version;
     gchar              *carrier;
-    gboolean            device_open_proxy;
-    gboolean            device_open_mbim;
+    QmiDeviceOpenFlags  device_open_flags;
     gboolean            ignore_version_errors;
     gboolean            override_download;
     guint8              modem_storage_index;
@@ -410,8 +409,7 @@ run_context_step_qmi_client_after (GTask *task)
     g_assert (ctx->cdc_wdm_file);
     qfu_utils_new_client_dms (ctx->cdc_wdm_file,
                               1, /* single try to allocate DMS client */
-                              self->priv->device_open_proxy,
-                              self->priv->device_open_mbim,
+                              self->priv->device_open_flags,
                               TRUE,
                               g_task_get_cancellable (task),
                               (GAsyncReadyCallback) new_client_dms_after_ready,
@@ -852,7 +850,7 @@ run_context_step_power_cycle (GTask *task)
     g_assert (ctx->pending_images != NULL);
 
     /* Boothold reset */
-    reseter = qfu_reseter_new (self->priv->device_selection, ctx->qmi_client, FALSE, FALSE);
+    reseter = qfu_reseter_new (self->priv->device_selection, ctx->qmi_client, self->priv->device_open_flags);
     qfu_reseter_run (reseter,
                      g_task_get_cancellable (task),
                      (GAsyncReadyCallback) reseter_run_ready,
@@ -1245,8 +1243,7 @@ run_context_step_qmi_client (GTask *task)
     g_assert (ctx->cdc_wdm_file);
     qfu_utils_new_client_dms (ctx->cdc_wdm_file,
                               3, /* initially, up to 3 tries to allocate DMS client */
-                              self->priv->device_open_proxy,
-                              self->priv->device_open_mbim,
+                              self->priv->device_open_flags,
                               TRUE,
                               g_task_get_cancellable (task),
                               (GAsyncReadyCallback) new_client_dms_ready,
@@ -1386,8 +1383,7 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
                  const gchar        *firmware_version,
                  const gchar        *config_version,
                  const gchar        *carrier,
-                 gboolean            device_open_proxy,
-                 gboolean            device_open_mbim,
+                 QmiDeviceOpenFlags  device_open_flags,
                  gboolean            ignore_version_errors,
                  gboolean            override_download,
                  guint8              modem_storage_index,
@@ -1400,8 +1396,7 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
     self = g_object_new (QFU_TYPE_UPDATER, NULL);
     self->priv->type = UPDATER_TYPE_GENERIC;
     self->priv->device_selection = g_object_ref (device_selection);
-    self->priv->device_open_proxy = device_open_proxy;
-    self->priv->device_open_mbim = device_open_mbim;
+    self->priv->device_open_flags = device_open_flags;
     self->priv->firmware_version = (firmware_version ? g_strdup (firmware_version) : NULL);
     self->priv->config_version = (config_version ? g_strdup (config_version) : NULL);
     self->priv->carrier = (carrier ? g_strdup (carrier) : NULL);

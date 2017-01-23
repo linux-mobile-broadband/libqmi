@@ -23,6 +23,7 @@
 #define QFU_OPERATION_H
 
 #include <glib.h>
+#include <libqmi-glib.h>
 #include "qfu-device-selection.h"
 
 G_BEGIN_DECLS
@@ -32,8 +33,7 @@ gboolean qfu_operation_update_run     (const gchar        **images,
                                        const gchar         *firmware_version,
                                        const gchar         *config_version,
                                        const gchar         *carrier,
-                                       gboolean             device_open_proxy,
-                                       gboolean             device_open_mbim,
+                                       QmiDeviceOpenFlags   device_open_flags,
                                        gboolean             ignore_version_errors,
                                        gboolean             override_download,
                                        guint8               modem_storage_index,
@@ -42,8 +42,7 @@ gboolean qfu_operation_update_qdl_run (const gchar        **images,
                                        QfuDeviceSelection  *device_selection);
 gboolean qfu_operation_verify_run     (const gchar        **images);
 gboolean qfu_operation_reset_run      (QfuDeviceSelection  *device_selection,
-                                       gboolean             device_open_proxy,
-                                       gboolean             device_open_mbim);
+                                       QmiDeviceOpenFlags   device_open_flags);
 
 G_END_DECLS
 

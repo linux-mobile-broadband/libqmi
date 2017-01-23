@@ -217,11 +217,10 @@ out:
 /******************************************************************************/
 
 typedef struct {
-    QmiDevice    *qmi_device;
-    gboolean      device_open_proxy;
-    gboolean      device_open_mbim;
-    gint          qmi_client_retries;
-    QmiClientDms *qmi_client;
+    QmiDevice          *qmi_device;
+    QmiDeviceOpenFlags  device_open_flags;
+    gint                qmi_client_retries;
+    QmiClientDms       *qmi_client;
 
     gboolean                                  load_capabilities;
     gchar                                    *revision;
@@ -544,7 +543,6 @@ qmi_device_ready (GObject      *source,
 {
     NewClientDmsContext *ctx;
     GError              *error = NULL;
-    QmiDeviceOpenFlags   flags = QMI_DEVICE_OPEN_FLAGS_SYNC;
 
     ctx = (NewClientDmsContext *) g_task_get_task_data (task);
 
@@ -558,16 +556,12 @@ qmi_device_ready (GObject      *source,
 
     g_debug ("[qfu,utils] QMI device created");
 
-    if (ctx->device_open_proxy)
-        flags |= QMI_DEVICE_OPEN_FLAGS_PROXY;
-    if (ctx->device_open_mbim)
-        flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
-
     g_debug ("[qfu,utils] opening QMI device (%s proxy, %s mode)...",
-             ctx->device_open_proxy ? "with" : "without",
-             ctx->device_open_mbim ? "mbim" : "qmi");
+             (ctx->device_open_flags & QMI_DEVICE_OPEN_FLAGS_PROXY) ? "with" : "without",
+             (ctx->device_open_flags & QMI_DEVICE_OPEN_FLAGS_MBIM) ? "mbim" : "qmi");
+
     qmi_device_open (ctx->qmi_device,
-                     flags,
+                     ctx->device_open_flags | QMI_DEVICE_OPEN_FLAGS_SYNC,
                      20,
                      g_task_get_cancellable (task),
                      (GAsyncReadyCallback) qmi_device_open_ready,
@@ -577,8 +571,7 @@ qmi_device_ready (GObject      *source,
 void
 qfu_utils_new_client_dms (GFile               *cdc_wdm_file,
                           guint                retries,
-                          gboolean             device_open_proxy,
-                          gboolean             device_open_mbim,
+                          QmiDeviceOpenFlags   device_open_flags,
                           gboolean             load_capabilities,
                           GCancellable        *cancellable,
                           GAsyncReadyCallback  callback,
@@ -589,8 +582,7 @@ qfu_utils_new_client_dms (GFile               *cdc_wdm_file,
 
     ctx = g_slice_new0 (NewClientDmsContext);
     ctx->qmi_client_retries = retries;
-    ctx->device_open_proxy  = device_open_proxy;
-    ctx->device_open_mbim   = device_open_mbim;
+    ctx->device_open_flags  = device_open_flags;
     ctx->load_capabilities  = load_capabilities;
 
     task = g_task_new (NULL, cancellable, callback, user_data);
