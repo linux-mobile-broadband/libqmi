@@ -288,7 +288,7 @@ static GOptionEntry entries[] = {
     },
     { "dms-hp-change-device-mode", 0, 0, G_OPTION_ARG_STRING, &hp_change_device_mode_str,
       "Change device mode (HP specific)",
-      "[qmi|ncm|mbim|fastboot|soft-reset|hard-reset]"
+      "[fastboot]"
     },
     { "dms-swi-get-current-firmware", 0, 0, G_OPTION_ARG_NONE, &swi_get_current_firmware_flag,
       "Get Current Firmware (Sierra Wireless specific)",
