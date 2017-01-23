@@ -18,11 +18,14 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
  * Copyright (C) 2012-2015 Dan Williams <dcbw@redhat.com>
+ * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <config.h>
+
+#define _GNU_SOURCE
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -1074,6 +1077,41 @@ qmi_utils_write_fixed_size_string_to_buffer (guint8      **buffer,
     memcpy (*buffer, in, fixed_size);
     *buffer = &((*buffer)[fixed_size]);
     *buffer_size = (*buffer_size) - fixed_size;
+}
+
+/*****************************************************************************/
+
+gchar *
+__qmi_utils_get_driver (const gchar *cdc_wdm_path)
+{
+    static const gchar *subsystems[] = { "usbmisc", "usb" };
+    guint i;
+    gchar *device_basename;
+    gchar *driver = NULL;
+
+    device_basename = g_path_get_basename (cdc_wdm_path);
+
+    for (i = 0; !driver && i < G_N_ELEMENTS (subsystems); i++) {
+        gchar *tmp;
+        gchar *path;
+
+        /* driver sysfs can be built directly using subsystem and name; e.g. for subsystem
+         * usbmisc and name cdc-wdm0:
+         *    $ realpath /sys/class/usbmisc/cdc-wdm0/device/driver
+         *    /sys/bus/usb/drivers/qmi_wwan
+         */
+        tmp = g_strdup_printf ("/sys/class/%s/%s/device/driver", subsystems[i], device_basename);
+        path = canonicalize_file_name (tmp);
+        g_free (tmp);
+
+        if (g_file_test (path, G_FILE_TEST_EXISTS))
+            driver = g_path_get_basename (path);
+        g_free (path);
+    }
+
+    g_free (device_basename);
+
+    return driver;
 }
 
 /*****************************************************************************/

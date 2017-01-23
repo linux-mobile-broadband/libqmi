@@ -18,8 +18,8 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
  * Copyright (C) 2012-2015 Dan Williams <dcbw@redhat.com>
+ * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_UTILS_H_
@@ -199,6 +199,8 @@ gchar *__qmi_utils_str_hex (gconstpointer mem,
 G_GNUC_INTERNAL
 gboolean __qmi_user_allowed (uid_t uid,
                              GError **error);
+G_GNUC_INTERNAL
+gchar *__qmi_utils_get_driver (const gchar *cdc_wdm_path);
 #endif
 
 G_END_DECLS
