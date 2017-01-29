@@ -5,6 +5,7 @@ bin_PROGRAMS = qmicli
 
 qmicli_CPPFLAGS = \
 	$(GLIB_CFLAGS) \
+	$(MBIM_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/libqmi-glib \
 	-I$(top_srcdir)/src/libqmi-glib/generated \
@@ -27,6 +28,7 @@ qmicli_SOURCES = \
 	qmicli-voice.c
 
 qmicli_LDADD = \
+	$(MBIM_LIBS) \
 	$(GLIB_LIBS) \
 	$(top_builddir)/src/libqmi-glib/libqmi-glib.la
 

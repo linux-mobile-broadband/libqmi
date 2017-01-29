@@ -32,6 +32,10 @@
 
 #include <libqmi-glib.h>
 
+#if defined MBIM_QMUX_ENABLED
+#include <libmbim-glib.h>
+#endif
+
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
@@ -752,6 +756,13 @@ int main (int argc, char **argv)
     g_log_set_handler ("Qmi", G_LOG_LEVEL_MASK, log_handler, NULL);
     if (verbose_flag)
         qmi_utils_set_traces_enabled (TRUE);
+
+#if defined MBIM_QMUX_ENABLED
+    /* libmbim logging */
+    g_log_set_handler ("Mbim", G_LOG_LEVEL_MASK, log_handler, NULL);
+    if (verbose_flag)
+        mbim_utils_set_traces_enabled (TRUE);
+#endif
 
     /* No device path given? */
     if (!device_str) {
