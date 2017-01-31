@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/select.h>
 #include <termios.h>
 #include <unistd.h>
 
