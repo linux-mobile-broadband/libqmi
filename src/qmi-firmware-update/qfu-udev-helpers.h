@@ -23,7 +23,6 @@
 #define QFU_UDEV_HELPERS_H
 
 #include <gio/gio.h>
-#include <gudev/gudev.h>
 
 G_BEGIN_DECLS
 
