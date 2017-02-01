@@ -466,6 +466,7 @@ load_image_info (QfuImageCwe   *self,
         g_debug ("[qfu-image-cwe] %simage at offset %" G_GOFFSET_FORMAT " is valid", parent_prefix, tested_offset);
         walker = g_seekable_tell (G_SEEKABLE (input_stream));
     }
+    g_free (image_prefix);
 
     /* Finally, seek to just after this image */
     if (!g_seekable_seek (G_SEEKABLE (input_stream), image_end_offset, G_SEEK_SET, cancellable, error)) {

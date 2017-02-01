@@ -980,6 +980,8 @@ run_context_step_set_firmware_preference (GTask *task)
     g_free        (modem_image_id.build_id);
     g_array_unref (pri_image_id.unique_id);
     g_free        (pri_image_id.build_id);
+
+    qmi_message_dms_set_firmware_preference_input_unref (input);
 }
 
 static gboolean

@@ -661,6 +661,7 @@ power_cycle_step_ready (QmiClientDms *qmi_client,
     }
 
     g_debug ("[qfu,utils] operating mode set successfully...");
+    qmi_message_dms_set_operating_mode_output_unref (output);
 
     /* Go on */
     ctx->step++;
