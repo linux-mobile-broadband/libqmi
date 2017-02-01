@@ -343,6 +343,18 @@ run_context_step_next (GTask *task, RunContextStep next)
 }
 
 static void
+run_context_step_next_no_idle (GTask *task, RunContextStep next)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+    ctx->step = next;
+
+    /* Run right away */
+    run_context_step (task);
+}
+
+static void
 new_client_dms_after_ready (gpointer      unused,
                             GAsyncResult *res,
                             GTask        *task)
@@ -733,6 +745,7 @@ static void
 run_context_step_cleanup_qmi_device (GTask *task)
 {
     RunContext *ctx;
+    QmiDevice  *tmp;
 
     ctx = (RunContext *) g_task_get_task_data (task);
 
@@ -745,19 +758,26 @@ run_context_step_cleanup_qmi_device (GTask *task)
                                10, NULL, NULL, NULL);
     g_clear_object (&ctx->qmi_client);
 
-    qmi_device_close (ctx->qmi_device, NULL);
-    g_clear_object (&ctx->qmi_device);
+    /* We want to close and unref the QmiDevice only AFTER having set the wait
+     * tasks for cdc-wdm or tty devices. This is because the close operation may
+     * take a long time if doing QMI over MBIM (as the MBIM close async
+     * operation is run internally). If we don't do this in this sequence, we
+     * may end up getting udev events reported before the wait have started. */
+    tmp = g_object_ref (ctx->qmi_device);
 
+    g_clear_object (&ctx->qmi_device);
     g_clear_object (&ctx->cdc_wdm_file);
 
     /* If nothing to download we don't need to wait for QDL download mode */
-    if (!ctx->pending_images) {
-        run_context_step_next (task, RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM);
-        return;
-    }
+    if (!ctx->pending_images)
+        run_context_step_next_no_idle (task, RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM);
+    else
+        /* Go on */
+        run_context_step_next_no_idle (task, ctx->step + 1);
 
-    /* Go on */
-    run_context_step_next (task, ctx->step + 1);
+    /* After the wait operation has been started, we do run the close */
+    qmi_device_close (tmp, NULL);
+    g_object_unref (tmp);
 }
 
 
