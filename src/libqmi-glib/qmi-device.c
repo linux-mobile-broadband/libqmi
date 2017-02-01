@@ -2566,7 +2566,7 @@ destroy_mbim_device (QmiDevice  *self,
     g_main_context_unref (main_ctx);
 
     /* Report error, if any found */
-    if (error) {
+    if (ctx.error) {
         g_propagate_error (error, ctx.error);
         return FALSE;
     }
