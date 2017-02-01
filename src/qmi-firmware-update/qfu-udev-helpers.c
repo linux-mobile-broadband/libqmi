@@ -46,49 +46,6 @@ qfu_udev_helper_device_type_to_string (QfuUdevHelperDeviceType type)
 
 /******************************************************************************/
 
-static GUdevDevice *
-find_udev_device_for_file (GFile   *file,
-                           GError **error)
-{
-    GUdevClient  *client = NULL;
-    GUdevDevice  *device = NULL;
-    gchar        *basename = NULL;
-    const gchar **subsys_list = NULL;
-    guint         i;
-
-    basename = g_file_get_basename (file);
-    if (!basename) {
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "couldn't get filename");
-        goto out;
-    }
-
-    client = g_udev_client_new (NULL);
-
-    if (g_str_has_prefix (basename, "tty"))
-        subsys_list = tty_subsys_list;
-    else if  (g_str_has_prefix (basename, "cdc-wdm"))
-        subsys_list = cdc_wdm_subsys_list;
-    else {
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "unknown device file type");
-        goto out;
-    }
-
-    for (i = 0; !device && subsys_list[i]; i++)
-        device = g_udev_client_query_by_subsystem_and_name (client, subsys_list[i], basename);
-
-    if (!device) {
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "device not found");
-        goto out;
-    }
-
-out:
-    g_free (basename);
-    if (client)
-        g_object_unref (client);
-
-    return device;
-}
-
 static gboolean
 udev_helper_get_udev_device_details (GUdevDevice  *device,
                                      gchar       **out_sysfs_path,
@@ -202,19 +159,52 @@ udev_helper_get_udev_interface_details (GUdevDevice  *device,
 /******************************************************************************/
 
 gchar *
-qfu_udev_helper_find_by_file (GFile    *file,
-                              GError  **error)
+qfu_udev_helper_find_by_file (GFile   *file,
+                              GError **error)
 {
-    GUdevDevice *device;
-    gchar       *sysfs_path = NULL;
+    GUdevClient  *client = NULL;
+    GUdevDevice  *device = NULL;
+    gchar        *basename = NULL;
+    const gchar **subsys_list = NULL;
+    gchar        *sysfs_path = NULL;
+    guint         i;
 
-    device = find_udev_device_for_file (file, error);
-    if (device) {
-        udev_helper_get_udev_device_details (device,
-                                             &sysfs_path, NULL, NULL, NULL, NULL,
-                                             error);
-        g_object_unref (device);
+    basename = g_file_get_basename (file);
+    if (!basename) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "couldn't get filename");
+        goto out;
     }
+
+    client = g_udev_client_new (NULL);
+
+    if (g_str_has_prefix (basename, "tty"))
+        subsys_list = tty_subsys_list;
+    else if  (g_str_has_prefix (basename, "cdc-wdm"))
+        subsys_list = cdc_wdm_subsys_list;
+    else {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "unknown device file type");
+        goto out;
+    }
+
+    for (i = 0; !device && subsys_list[i]; i++)
+        device = g_udev_client_query_by_subsystem_and_name (client, subsys_list[i], basename);
+
+    if (!device) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "device not found");
+        goto out;
+    }
+
+    if (!udev_helper_get_udev_device_details (device,
+                                              &sysfs_path, NULL, NULL, NULL, NULL,
+                                              error))
+        goto out;
+
+    g_debug ("[qfu-udev] sysfs path for '%s' found: %s", basename, sysfs_path);
+
+out:
+    g_free (basename);
+    g_clear_object (&device);
+    g_clear_object (&client);
     return sysfs_path;
 }
 
