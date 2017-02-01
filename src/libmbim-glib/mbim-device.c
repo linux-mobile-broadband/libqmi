@@ -1289,6 +1289,7 @@ open_message_ready (MbimDevice        *self,
 
             /* No more seconds left in the timeout... return error */
         }
+        g_error_free (error);
 
         g_debug ("open operation timed out: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
