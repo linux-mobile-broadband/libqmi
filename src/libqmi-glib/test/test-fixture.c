@@ -13,7 +13,10 @@
  * Copyright (C) 2014 Aleksander Morgado <aleksander@aleksander.es>
  */
 
+#include <sys/types.h>
+#include <unistd.h>
 #include <string.h>
+
 #include "test-fixture.h"
 
 #define VIRTUAL_SOCKET_PATH "virtual-socket-path"
@@ -83,7 +86,9 @@ test_fixture_setup (TestFixture *fixture)
 
     qmi_utils_set_traces_enabled (TRUE);
 
-    fixture->path = g_strdup_printf ("/dev/virtual/qmi%04u", num++);
+    /* Create port name, and add process ID so that multiple runs of this test
+     * in the same system don't clash with each other */
+    fixture->path = g_strdup_printf ("/dev/qmi%08lu%04u", (gulong) getpid (), num++);
     fixture->service_info[QMI_SERVICE_CTL].transaction_id = 0x0001;
     fixture->ctx = test_port_context_new (fixture->path);
     test_port_context_start (fixture->ctx);
