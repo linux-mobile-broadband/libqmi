@@ -636,7 +636,7 @@ qmicli_read_hp_device_mode_from_string (const gchar *str,
     enum_value = g_enum_get_value_by_nick (enum_class, str);
 
     if (enum_value)
-        *out = (QmiDmsBootImageDownloadMode)enum_value->value;
+        *out = (QmiDmsHpDeviceMode)enum_value->value;
     else
         g_printerr ("error: invalid HP device mode value given: '%s'\n", str);
 
