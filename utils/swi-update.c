@@ -802,8 +802,7 @@ static int download_image(int serfd, char *buf, const char *image)
         goto out;
     }
     fstat(imgfd, &img_data);
-    filelen = imglen(type, img_data.st_size) - hdrlen(type);
-    if (filelen < 0) {
+    if (imglen(type, img_data.st_size) < hdrlen(type)) {
         fprintf(stderr, "%s is too short\n", image);
         ret = -1;
         goto out;
@@ -828,6 +827,7 @@ static int download_image(int serfd, char *buf, const char *image)
     if (read_and_parse(serfd, false) < 0)
         goto out;
 
+    filelen = imglen(type, img_data.st_size) - hdrlen(type);
     /* remaining data to send */
     while (filelen > 0) {
         fd_set wr;
