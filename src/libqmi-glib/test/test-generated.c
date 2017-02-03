@@ -648,7 +648,10 @@ test_generated_nas_get_cell_location_info (TestFixture *fixture)
 
 int main (int argc, char **argv)
 {
+#if !GLIB_CHECK_VERSION (2, 36, 0)
     g_type_init ();
+#endif
+
     g_test_init (&argc, &argv, NULL);
 
     /* Test the setup/teardown test methods */
