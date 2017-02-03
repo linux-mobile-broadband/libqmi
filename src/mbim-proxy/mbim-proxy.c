@@ -196,7 +196,9 @@ int main (int argc, char **argv)
 
     setlocale (LC_ALL, "");
 
+#if !GLIB_CHECK_VERSION (2, 36, 0)
     g_type_init ();
+#endif
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Proxy for MBIM devices");
