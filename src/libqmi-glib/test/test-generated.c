@@ -648,7 +648,6 @@ test_generated_nas_get_cell_location_info (TestFixture *fixture)
 
 int main (int argc, char **argv)
 {
-    g_type_init ();
     g_test_init (&argc, &argv, NULL);
 
     /* Test the setup/teardown test methods */

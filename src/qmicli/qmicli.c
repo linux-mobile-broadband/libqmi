@@ -722,8 +722,6 @@ int main (int argc, char **argv)
 
     setlocale (LC_ALL, "");
 
-    g_type_init ();
-
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Control QMI devices");
     g_option_context_add_group (context,

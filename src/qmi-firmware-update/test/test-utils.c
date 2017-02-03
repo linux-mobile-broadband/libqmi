@@ -92,7 +92,6 @@ test_cwe_version_parser_mc7354b_spk (void)
 
 int main (int argc, char **argv)
 {
-    g_type_init ();
     g_test_init (&argc, &argv, NULL);
 
     g_test_add_func ("/qmi-firmware-update/cwe-version-parser/mc7700",      test_cwe_version_parser_mc7700);

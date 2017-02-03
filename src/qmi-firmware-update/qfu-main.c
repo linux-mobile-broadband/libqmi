@@ -469,8 +469,6 @@ int main (int argc, char **argv)
 
     setlocale (LC_ALL, "");
 
-    g_type_init ();
-
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Update firmware in QMI devices");
     g_option_context_set_description (context, context_description);

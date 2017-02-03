@@ -1211,7 +1211,6 @@ test_utils_uint_sized_8_unaligned_be (void)
 
 int main (int argc, char **argv)
 {
-    g_type_init ();
     g_test_init (&argc, &argv, NULL);
 
     g_test_add_func ("/libqmi-glib/utils/uint8",  test_utils_uint8);
