@@ -1743,7 +1743,7 @@ parse_response (QmiDevice *self)
 
             if (qmi_utils_get_traces_enabled ()) {
                 gchar *printable;
-                guint len = CLAMP (self->priv->buffer->len, 0, 2048);
+                guint len = MIN (self->priv->buffer->len, 2048);
 
                 printable = __qmi_utils_str_hex (self->priv->buffer->data, len, ':');
                 g_debug ("<<<<<< RAW INVALID MESSAGE:\n"
