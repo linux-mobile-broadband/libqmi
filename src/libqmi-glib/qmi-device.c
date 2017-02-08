@@ -1851,6 +1851,8 @@ setup_iostream (CreateIostreamContext *ctx)
                            ctx->self,
                            NULL);
     g_source_attach (ctx->self->priv->input_source, g_main_context_get_thread_default ());
+    g_source_unref (ctx->self->priv->input_source);
+
     g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
     create_iostream_context_complete_and_free (ctx);
 }
@@ -2604,39 +2606,15 @@ qmi_device_open (QmiDevice *self,
 /*****************************************************************************/
 /* Close stream */
 
-static gboolean
-destroy_iostream (QmiDevice *self,
-                  GError **error)
+static void
+destroy_iostream (QmiDevice *self)
 {
-    GError *inner_error = NULL;
-
-    /* Already closed? */
-    if (!self->priv->istream && !self->priv->ostream)
-        return TRUE;
-
-    if (self->priv->input_source) {
-        g_source_destroy (self->priv->input_source);
-        g_source_unref (self->priv->input_source);
-        self->priv->input_source = NULL;
-    }
-
-    if (self->priv->buffer) {
-        g_byte_array_unref (self->priv->buffer);
-        self->priv->buffer = NULL;
-    }
-
-    /* Failures when closing still make the device to get closed */
+    g_clear_pointer (&self->priv->input_source, g_source_destroy);
+    g_clear_pointer (&self->priv->buffer, g_byte_array_unref);
     g_clear_object (&self->priv->istream);
     g_clear_object (&self->priv->ostream);
     g_clear_object (&self->priv->socket_connection);
     g_clear_object (&self->priv->socket_client);
-
-    if (inner_error) {
-        g_propagate_error (error, inner_error);
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 #if defined MBIM_QMUX_ENABLED
@@ -2718,11 +2696,7 @@ qmi_device_close (QmiDevice *self,
         return destroy_mbim_device (self, error);
 #endif
 
-    if (!destroy_iostream (self, error)) {
-        g_prefix_error (error, "Cannot close QMI device: ");
-        return FALSE;
-    }
-
+    destroy_iostream (self);
     return TRUE;
 }
 
@@ -3419,22 +3393,7 @@ finalize (GObject *object)
     g_free (self->priv->proxy_path);
     g_free (self->priv->wwan_iface);
 
-    if (self->priv->input_source) {
-        g_source_destroy (self->priv->input_source);
-        g_source_unref (self->priv->input_source);
-    }
-
-    if (self->priv->buffer)
-        g_byte_array_unref (self->priv->buffer);
-
-    if (self->priv->istream)
-        g_object_unref (self->priv->istream);
-    if (self->priv->ostream)
-        g_object_unref (self->priv->ostream);
-    if (self->priv->socket_connection)
-        g_object_unref (self->priv->socket_connection);
-    if (self->priv->socket_client)
-        g_object_unref (self->priv->socket_client);
+    destroy_iostream (self);
 
     G_OBJECT_CLASS (qmi_device_parent_class)->finalize (object);
 }
