@@ -338,6 +338,6 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_qmi_get_string (cid);
     default:
         g_assert_not_reached ();
-        return FALSE;
+        return NULL;
     }
 }
