@@ -75,7 +75,7 @@ run_context_free (RunContext *ctx)
         g_object_unref (ctx->qmi_client);
     }
     if (ctx->qmi_device) {
-        qmi_device_close (ctx->qmi_device, NULL);
+        qmi_device_close_async (ctx->qmi_device, 10, NULL, NULL, NULL);
         g_object_unref (ctx->qmi_device);
     }
     g_list_free_full (ctx->ttys, (GDestroyNotify) g_object_unref);

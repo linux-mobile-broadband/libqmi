@@ -174,7 +174,7 @@ run_context_free (RunContext *ctx)
         g_object_unref (ctx->qmi_client);
     }
     if (ctx->qmi_device) {
-        qmi_device_close (ctx->qmi_device, NULL);
+        qmi_device_close_async (ctx->qmi_device, 10, NULL, NULL, NULL);
         g_object_unref (ctx->qmi_device);
     }
     if (ctx->current_image)
@@ -774,7 +774,7 @@ run_context_step_cleanup_qmi_device (GTask *task)
         run_context_step_next_no_idle (task, ctx->step + 1);
 
     /* After the wait operation has been started, we do run the close */
-    qmi_device_close (tmp, NULL);
+    qmi_device_close_async (tmp, 10, NULL, NULL, NULL);
     g_object_unref (tmp);
 }
 
