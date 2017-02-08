@@ -261,6 +261,21 @@ generic_options_enabled (void)
 /* Running asynchronously */
 
 static void
+close_ready (QmiDevice    *dev,
+             GAsyncResult *res)
+{
+    GError *error = NULL;
+
+    if (!qmi_device_close_finish (dev, res, &error)) {
+        g_printerr ("error: couldn't close: %s\n", error->message);
+        g_error_free (error);
+    } else
+        g_debug ("Closed");
+
+    g_main_loop_quit (loop);
+}
+
+static void
 release_client_ready (QmiDevice *dev,
                       GAsyncResult *res)
 {
@@ -272,7 +287,7 @@ release_client_ready (QmiDevice *dev,
     } else
         g_debug ("Client released");
 
-    g_main_loop_quit (loop);
+    qmi_device_close_async (dev, 10, NULL, (GAsyncReadyCallback) close_ready, NULL);
 }
 
 void
