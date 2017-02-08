@@ -1546,6 +1546,8 @@ destroy_iochannel (MbimDevice  *self,
     if (!self->priv->iochannel && !self->priv->socket_connection && !self->priv->socket_client)
         return TRUE;
 
+    g_debug ("[%s] channel destroyed", self->priv->path_display);
+
     if (self->priv->iochannel) {
         g_io_channel_shutdown (self->priv->iochannel, TRUE, &inner_error);
         g_io_channel_unref (self->priv->iochannel);
@@ -1641,6 +1643,8 @@ close_message_ready (MbimDevice         *self,
     if (!response)
         g_simple_async_result_take_error (ctx->result, error);
     else if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_CLOSE_DONE, &error))
+        g_simple_async_result_take_error (ctx->result, error);
+    else if (!destroy_iochannel (self, &error))
         g_simple_async_result_take_error (ctx->result, error);
     else
         g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
