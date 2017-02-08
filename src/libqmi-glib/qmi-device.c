@@ -2370,6 +2370,8 @@ device_open_context_step (DeviceOpenContext *ctx)
         ctx->driver = __qmi_utils_get_driver (ctx->self->priv->path);
         if (ctx->driver)
             g_debug ("[%s] loaded driver of cdc-wdm port: %s", ctx->self->priv->path_display, ctx->driver);
+        else if (!ctx->self->priv->no_file_check)
+            g_warning ("[%s] couldn't load driver of cdc-wdm port", ctx->self->priv->path_display);
 
 #if defined MBIM_QMUX_ENABLED
 
@@ -2394,7 +2396,7 @@ device_open_context_step (DeviceOpenContext *ctx)
 
         /* MBIM mode requested? */
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
-            if (!g_str_equal (ctx->driver, "cdc_mbim"))
+            if (g_strcmp0 (ctx->driver, "cdc_mbim"))
                 g_warning ("[%s] requested MBIM mode but unexpected driver found: %s", ctx->self->priv->path_display, ctx->driver);
             goto next_step;
         }
@@ -2408,8 +2410,9 @@ device_open_context_step (DeviceOpenContext *ctx)
 #endif /* MBIM_QMUX_ENABLED */
 
         /* QMI mode requested? */
-        if (!g_str_equal (ctx->driver, "qmi_wwan"))
-            g_warning ("[%s] requested QMI mode but unexpected driver found: %s", ctx->self->priv->path_display, ctx->driver);
+        if (g_strcmp0 (ctx->driver, "qmi_wwan") && !ctx->self->priv->no_file_check)
+            g_warning ("[%s] requested QMI mode but unexpected driver found: %s",
+                       ctx->self->priv->path_display, ctx->driver ? ctx->driver : "unknown");
 
     next_step:
         ctx->step++;
