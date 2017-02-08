@@ -126,8 +126,18 @@ gboolean     qmi_device_open_finish (QmiDevice *self,
                                      GAsyncResult *res,
                                      GError **error);
 
+G_DEPRECATED
 gboolean     qmi_device_close (QmiDevice *self,
                                GError **error);
+
+void         qmi_device_close_async  (QmiDevice            *self,
+                                      guint                 timeout,
+                                      GCancellable         *cancellable,
+                                      GAsyncReadyCallback   callback,
+                                      gpointer              user_data);
+gboolean     qmi_device_close_finish (QmiDevice            *self,
+                                      GAsyncResult         *res,
+                                      GError              **error);
 
 void          qmi_device_allocate_client        (QmiDevice *self,
                                                  QmiService service,

@@ -65,6 +65,8 @@ qmi_device_is_open
 qmi_device_open
 qmi_device_open_finish
 qmi_device_close
+qmi_device_close_async
+qmi_device_close_finish
 qmi_device_allocate_client
 qmi_device_allocate_client_finish
 qmi_device_release_client

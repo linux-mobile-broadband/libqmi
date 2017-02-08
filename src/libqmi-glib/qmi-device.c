@@ -2622,60 +2622,94 @@ destroy_iostream (QmiDevice *self)
 
 #if defined MBIM_QMUX_ENABLED
 
-typedef struct {
-    GError    *error;
-    GMainLoop *loop;
-} SyncMbimClose;
-
 static void
-mbim_device_close_ready (MbimDevice    *dev,
-                         GAsyncResult  *res,
-                         SyncMbimClose *ctx)
+mbim_device_close_ready (MbimDevice   *dev,
+                         GAsyncResult *res,
+                         GTask        *task)
 {
-    mbim_device_close_finish (dev, res, &ctx->error);
-    g_main_loop_quit (ctx->loop);
-}
+    GError *error = NULL;
 
-static gboolean
-destroy_mbim_device (QmiDevice  *self,
-                     GError    **error)
-{
-    GMainContext  *main_ctx;
-    SyncMbimClose  ctx;
-
-    main_ctx = g_main_context_new ();
-    g_main_context_push_thread_default (main_ctx);
-
-    ctx.loop = g_main_loop_new (main_ctx, FALSE);
-    ctx.error = NULL;
-
-    /* Schedule in new main context */
-    mbim_device_close (self->priv->mbimdev,
-                       15,
-                       NULL,
-                       (GAsyncReadyCallback) mbim_device_close_ready,
-                       &ctx);
-
-    /* Cleanup right away, we don't want multiple close attempts on the
-     * device */
-    g_clear_object (&self->priv->mbimdev);
-
-    /* Run */
-    g_main_loop_run (ctx.loop);
-    g_main_loop_unref (ctx.loop);
-    g_main_context_pop_thread_default (main_ctx);
-    g_main_context_unref (main_ctx);
-
-    /* Report error, if any found */
-    if (ctx.error) {
-        g_propagate_error (error, ctx.error);
-        return FALSE;
-    }
-
-    return TRUE;
+    if (!mbim_device_close_finish (dev, res, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 #endif
+
+/**
+ * qmi_device_close_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qmi_device_close_async().
+ *
+ * Returns: %TRUE if successful, %FALSE if @error is set.
+ *
+ * Since: 1.18
+ */
+gboolean
+qmi_device_close_finish (QmiDevice     *self,
+                         GAsyncResult  *res,
+                         GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+/**
+ * qmi_device_close_async:
+ * @self: a #QmiDevice.
+ * @timeout: maximum time, in seconds, to wait for the device to be closed.
+ * @cancellable: a #GCancellable, or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously closes a #QmiDevice, preventing any further I/O.
+ *
+ * If this device was opened with @QMI_DEVICE_OPEN_FLAGS_MBIM, this
+ * operation will wait for the response of the underlying MBIM close
+ * sequence.
+ *
+ * Closing a #QmiDevice multiple times will not return an error.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qmi_device_close_finish() to get the result of the operation.
+ *
+ * Since: 1.18
+ */
+void
+qmi_device_close_async (QmiDevice           *self,
+                        guint                timeout,
+                        GCancellable        *cancellable,
+                        GAsyncReadyCallback  callback,
+                        gpointer             user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+#if defined MBIM_QMUX_ENABLED
+    if (self->priv->mbimdev) {
+        /* Schedule in new main context */
+        mbim_device_close (self->priv->mbimdev,
+                           timeout,
+                           NULL,
+                           (GAsyncReadyCallback) mbim_device_close_ready,
+                           task);
+        /* Cleanup right away, we don't want multiple close attempts on the
+         * device */
+        g_clear_object (&self->priv->mbimdev);
+        return;
+    }
+#endif
+
+    destroy_iostream (self);
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
 
 /**
  * qmi_device_close:
@@ -2684,22 +2718,22 @@ destroy_mbim_device (QmiDevice  *self,
  *
  * Synchronously closes a #QmiDevice, preventing any further I/O.
  *
+ * If this device was opened with @QMI_DEVICE_OPEN_FLAGS_MBIM, this
+ * operation will not wait for the response of the underlying MBIM
+ * close sequence.
+ *
  * Closing a #QmiDevice multiple times will not return an error.
  *
  * Returns: %TRUE if successful, %FALSE if @error is set.
+ *
+ * Deprecated: 1.18: Use qmi_device_close_async() instead.
  */
 gboolean
 qmi_device_close (QmiDevice *self,
                   GError **error)
 {
     g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
-
-#if defined MBIM_QMUX_ENABLED
-    if (self->priv->mbimdev)
-        return destroy_mbim_device (self, error);
-#endif
-
-    destroy_iostream (self);
+    qmi_device_close_async (self, 0, NULL, NULL, NULL);
     return TRUE;
 }
 
