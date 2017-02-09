@@ -33,6 +33,8 @@
  *
  * Evaluates to the major version number of libqmi-glib which this source
  * is compiled against.
+ *
+ * Since: 1.6
  */
 #define QMI_MAJOR_VERSION (@QMI_MAJOR_VERSION@)
 
@@ -41,6 +43,8 @@
  *
  * Evaluates to the minor version number of libqmi-glib which this source
  * is compiled against.
+ *
+ * Since: 1.6
  */
 #define QMI_MINOR_VERSION (@QMI_MINOR_VERSION@)
 
@@ -49,6 +53,8 @@
  *
  * Evaluates to the micro version number of libqmi-glib which this source
  * compiled against.
+ *
+ * Since: 1.6
  */
 #define QMI_MICRO_VERSION (@QMI_MICRO_VERSION@)
 
@@ -60,6 +66,8 @@
  *
  * Returns: %TRUE if the version of the libqmi-glib header files
  * is the same as or newer than the passed-in version.
+ *
+ * Since: 1.6
  */
 #define QMI_CHECK_VERSION(major,minor,micro)                         \
     (QMI_MAJOR_VERSION > (major) ||                                  \
