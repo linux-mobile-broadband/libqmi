@@ -38,12 +38,18 @@ class Message:
         self.name = dictionary['name']
         # The specific message ID
         self.id = dictionary['id']
+
         # The type, which must always be 'Message' or 'Indication'
         self.type = dictionary['type']
         # The version info, optional
         self.version_info = dictionary['version'].split('.') if 'version' in dictionary else []
         self.static = True if 'scope' in dictionary and dictionary['scope'] == 'library-only' else False
         self.abort = True if 'abort' in dictionary and dictionary['abort'] == 'yes' else False
+
+        # libqmi version where the message was introduced
+        self.since = dictionary['since'] if 'since' in dictionary else None
+        if self.since is None:
+            raise ValueError('Message ' + self.name + ' requires a "since" tag specifying the major version where it was introduced')
 
         # The vendor id if this command is vendor specific
         self.vendor = dictionary['vendor'] if 'vendor' in dictionary else None
@@ -69,7 +75,8 @@ class Message:
                                 'Output',
                                 dictionary['output'] if 'output' in dictionary else None,
                                 common_objects_dictionary,
-                                self.static)
+                                self.static,
+                                self.since)
 
         self.input = None
         if self.type == 'Message':
@@ -81,7 +88,8 @@ class Message:
                                    'Input',
                                    dictionary['input'] if 'input' in dictionary else None,
                                    common_objects_dictionary,
-                                   self.static)
+                                   self.static,
+                                   self.since)
 
 
     """

@@ -48,17 +48,10 @@ class FieldResult(Field):
     def emit_getter(self, hfile, cfile):
         translations = { 'variable_name'     : self.variable_name,
                          'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
-                         'prefix_underscore' : utils.build_underscore_name(self.prefix) }
+                         'prefix_underscore' : utils.build_underscore_name(self.prefix),
+                         'since'             : self.since }
 
         # Emit the getter header
-        template = (
-            '\n'
-            'gboolean ${prefix_underscore}_get_result (\n'
-            '    ${prefix_camelcase} *self,\n'
-            '    GError **error);\n')
-        hfile.write(string.Template(template).substitute(translations))
-
-        # Emit the getter source
         template = (
             '\n'
             '/**\n'
@@ -69,7 +62,17 @@ class FieldResult(Field):
             ' * Get the result of the QMI operation.\n'
             ' *\n'
             ' * Returns: %TRUE if the QMI operation succeeded, %FALSE if @error is set.\n'
+            ' *\n'
+            ' * Since: ${since}\n'
             ' */\n'
+            'gboolean ${prefix_underscore}_get_result (\n'
+            '    ${prefix_camelcase} *self,\n'
+            '    GError **error);\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        # Emit the getter source
+        template = (
+            '\n'
             'gboolean\n'
             '${prefix_underscore}_get_result (\n'
             '    ${prefix_camelcase} *self,\n'

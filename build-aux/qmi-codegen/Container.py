@@ -33,7 +33,7 @@ class Container:
     """
     Constructor
     """
-    def __init__(self, prefix, container_type, dictionary, common_objects_dictionary, static):
+    def __init__(self, prefix, container_type, dictionary, common_objects_dictionary, static, since):
         # The field container prefix usually contains the name of the Message,
         # e.g. "Qmi Message Ctl Something"
         self.prefix = prefix
@@ -49,6 +49,7 @@ class Container:
         self.name = container_type
 
         self.static = static
+        self.since = since
 
         # Create the composed full name (prefix + name),
         #  e.g. "Qmi Message Ctl Something Output"
@@ -70,6 +71,11 @@ class Container:
                            copy = dict(common)
                            if 'prerequisites' in field_dictionary:
                                copy['prerequisites'] = field_dictionary['prerequisites']
+                           # Fix 'since' in the copy
+                           if 'since' in field_dictionary:
+                               copy['since'] = field_dictionary['since']
+                           else:
+                               copy['since'] = self.since
                            new_dict.append(copy)
                            break
                     else:
@@ -126,6 +132,8 @@ class Container:
             ' *\n'
             ' * The #${camelcase} structure contains private data and should only be accessed\n'
             ' * using the provided API.\n'
+            ' *\n'
+            ' * Since: ${since}\n'
             ' */\n'
             'typedef struct _${camelcase} ${camelcase};\n'
             '${static}GType ${underscore}_get_type (void) G_GNUC_CONST;\n'
@@ -163,10 +171,40 @@ class Container:
         # Emit container core header
         template = (
             '\n'
+            '/**\n'
+            ' * ${underscore}_ref:\n'
+            ' * @self: a #${camelcase}.\n'
+            ' *\n'
+            ' * Atomically increments the reference count of @self by one.\n'
+            ' *\n'
+            ' * Returns: the new reference to @self.\n'
+            ' *\n'
+            ' * Since: ${since}\n'
+            ' */\n'
             '${static}${camelcase} *${underscore}_ref (${camelcase} *self);\n'
+            '\n'
+            '/**\n'
+            ' * ${underscore}_unref:\n'
+            ' * @self: a #${camelcase}.\n'
+            ' *\n'
+            ' * Atomically decrements the reference count of @self by one.\n'
+            ' * If the reference count drops to 0, @self is completely disposed.\n'
+            ' *\n'
+            ' * Since: ${since}\n'
+            ' */\n'
             '${static}void ${underscore}_unref (${camelcase} *self);\n')
         if self.readonly == False:
             template += (
+                '\n'
+                '/**\n'
+                ' * ${underscore}_new:\n'
+                ' *\n'
+                ' * Allocates a new #${camelcase}.\n'
+                ' *\n'
+                ' * Returns: the newly created #${camelcase}. The returned value should be freed with ${underscore}_unref().\n'
+                ' *\n'
+                ' * Since: ${since}\n'
+                ' */\n'
                 '${static}${camelcase} *${underscore}_new (void);\n')
 
         if self.static:
@@ -194,14 +232,6 @@ class Container:
             '    return g_define_type_id__volatile;\n'
             '}\n'
             '\n'
-            '/**\n'
-            ' * ${underscore}_ref:\n'
-            ' * @self: a #${camelcase}.\n'
-            ' *\n'
-            ' * Atomically increments the reference count of @self by one.\n'
-            ' *\n'
-            ' * Returns: the new reference to @self.\n'
-            ' */\n'
             '${static}${camelcase} *\n'
             '${underscore}_ref (${camelcase} *self)\n'
             '{\n'
@@ -211,13 +241,6 @@ class Container:
             '    return self;\n'
             '}\n'
             '\n'
-            '/**\n'
-            ' * ${underscore}_unref:\n'
-            ' * @self: a #${camelcase}.\n'
-            ' *\n'
-            ' * Atomically decrements the reference count of @self by one.\n'
-            ' * If the reference count drops to 0, @self is completely disposed.\n'
-            ' */\n'
             '${static}void\n'
             '${underscore}_unref (${camelcase} *self)\n'
             '{\n'
@@ -242,13 +265,6 @@ class Container:
 
         template = (
             '\n'
-            '/**\n'
-            ' * ${underscore}_new:\n'
-            ' *\n'
-            ' * Allocates a new #${camelcase}.\n'
-            ' *\n'
-            ' * Returns: the newly created #${camelcase}. The returned value should be freed with ${underscore}_unref().\n'
-            ' */\n'
             '${static}${camelcase} *\n'
             '${underscore}_new (void)\n'
             '{\n'
@@ -268,6 +284,7 @@ class Container:
         translations = { 'name'       : self.name,
                          'camelcase'  : utils.build_camelcase_name (self.fullname),
                          'underscore' : utils.build_underscore_name (self.fullname),
+                         'since'      : self.since,
                          'static'     : 'static ' if self.static else '' }
 
         auxfile = cfile if self.static else hfile

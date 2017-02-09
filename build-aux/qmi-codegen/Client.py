@@ -40,6 +40,7 @@ class Client:
         for object_dictionary in objects_dictionary:
             if object_dictionary['type'] == 'Client':
                 self.name = object_dictionary['name']
+                self.since = object_dictionary['since'] if 'since' in object_dictionary else ''
             elif object_dictionary['type'] == 'Service':
                 self.service = object_dictionary['name']
 
@@ -48,7 +49,6 @@ class Client:
             raise ValueError('Missing Client field')
         if self.service is None:
             raise ValueError('Missing Service field')
-
 
     """
     Emits the generic GObject class implementation
@@ -66,6 +66,7 @@ class Client:
                          'no_prefix_underscore_upper' : utils.build_underscore_name(self.name[4:]).upper(),
                          'camelcase'                  : utils.build_camelcase_name(self.name),
                          'hyphened'                   : utils.build_dashed_name(self.name),
+                         'since'                      : self.since,
                          'service'                    : self.service.upper() }
 
         # Emit class header
@@ -85,6 +86,8 @@ class Client:
             ' *\n'
             ' * The #${camelcase} structure contains private data and should only be accessed\n'
             ' * using the provided API.\n'
+            ' *\n'
+            ' * Since: ${since}\n'
             ' */\n'
             'struct _${camelcase} {\n'
             '    /*< private >*/\n'
@@ -204,6 +207,7 @@ class Client:
                 translations['signal_name'] = utils.build_dashed_name(message.name)
                 translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
                 translations['message_name'] = message.name
+                translations['since'] = message.since
                 inner_template = ''
                 if message.output is not None and message.output.fields is not None:
                     # At least one field in the indication
@@ -219,6 +223,8 @@ class Client:
                         '     * @output: A #${output_camelcase}.\n'
                         '     *\n'
                         '     * The ::${signal_name} signal gets emitted when a \'<link linkend=\"libqmi-glib-${service}-${message_name_dashed}.top_of_page\">${message_name}</link>\' indication is received.\n'
+                        '     *\n'
+                        '     * Since: ${since}\n'
                         '     */\n'
                         '    signals[SIGNAL_${signal_id}] =\n'
                         '        g_signal_new ("${signal_name}",\n'
@@ -240,6 +246,8 @@ class Client:
                         '     * @object: A #${camelcase}.\n'
                         '     *\n'
                         '     * The ::${signal_name} signal gets emitted when a \'${message_name}\' indication is received.\n'
+                        '     *\n'
+                        '     * Since: ${since}\n'
                         '     */\n'
                         '    signals[SIGNAL_${signal_id}] =\n'
                         '        g_signal_new ("${signal_name}",\n'
@@ -285,31 +293,42 @@ class Client:
             translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
             translations['input_underscore'] = utils.build_underscore_name(message.input.fullname)
             translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
+            translations['message_since'] = message.since
 
             if message.input.fields is None:
-                input_arg_template = 'gpointer unused'
+                translations['input_arg'] = 'gpointer unused'
                 translations['input_var'] = 'NULL'
                 translations['input_doc'] = 'unused: %NULL. This message doesn\'t have any input bundle.'
             else:
-                input_arg_template = '${input_camelcase} *input'
+                translations['input_arg'] = translations['input_camelcase'] + ' *input'
                 translations['input_var'] = 'input'
                 translations['input_doc'] = 'input: a #' + translations['input_camelcase'] + '.'
             template = (
                 '\n'
+                '/**\n'
+                ' * ${underscore}_${message_underscore}:\n'
+                ' * @self: a #${camelcase}.\n'
+                ' * @${input_doc}\n'
+                ' * @timeout: maximum time to wait for the method to complete, in seconds.\n'
+                ' * @cancellable: a #GCancellable or %NULL.\n'
+                ' * @callback: a #GAsyncReadyCallback to call when the request is satisfied.\n'
+                ' * @user_data: user data to pass to @callback.\n'
+                ' *\n'
+                ' * Asynchronously sends a ${message_name} request to the device.\n'
+                ' *\n'
+                ' * When the operation is finished, @callback will be invoked in the thread-default main loop of the thread you are calling this method from.\n'
+                ' *\n'
+                ' * You can then call ${underscore}_${message_underscore}_finish() to get the result of the operation.\n'
+                ' *\n'
+                ' * Since: ${message_since}\n'
+                ' */\n'
                 'void ${underscore}_${message_underscore} (\n'
                 '    ${camelcase} *self,\n'
-                '    %s,\n'
+                '    ${input_arg},\n'
                 '    guint timeout,\n'
                 '    GCancellable *cancellable,\n'
                 '    GAsyncReadyCallback callback,\n'
                 '    gpointer user_data);\n'
-                '${output_camelcase} *${underscore}_${message_underscore}_finish (\n'
-                '    ${camelcase} *self,\n'
-                '    GAsyncResult *res,\n'
-                '    GError **error);\n' % input_arg_template)
-            hfile.write(string.Template(template).substitute(translations))
-
-            template = (
                 '\n'
                 '/**\n'
                 ' * ${underscore}_${message_underscore}_finish:\n'
@@ -320,7 +339,17 @@ class Client:
                 ' * Finishes an async operation started with ${underscore}_${message_underscore}().\n'
                 ' *\n'
                 ' * Returns: a #${output_camelcase}, or %NULL if @error is set. The returned value should be freed with ${output_underscore}_unref().\n'
+                ' *\n'
+                ' * Since: ${message_since}\n'
                 ' */\n'
+                '${output_camelcase} *${underscore}_${message_underscore}_finish (\n'
+                '    ${camelcase} *self,\n'
+                '    GAsyncResult *res,\n'
+                '    GError **error);\n')
+            hfile.write(string.Template(template).substitute(translations))
+
+            template = (
+                '\n'
                 '${output_camelcase} *\n'
                 '${underscore}_${message_underscore}_finish (\n'
                 '    ${camelcase} *self,\n'
@@ -433,27 +462,10 @@ class Client:
                 '    qmi_message_unref (reply);\n'
                 '}\n'
                 '\n'
-                '/**\n'
-                ' * ${underscore}_${message_underscore}:\n'
-                ' * @self: a #${camelcase}.\n'
-                ' * @${input_doc}\n'
-                ' * @timeout: maximum time to wait for the method to complete, in seconds.\n'
-                ' * @cancellable: a #GCancellable or %NULL.\n'
-                ' * @callback: a #GAsyncReadyCallback to call when the request is satisfied.\n'
-                ' * @user_data: user data to pass to @callback.\n'
-                ' *\n'
-                ' * Asynchronously sends a ${message_name} request to the device.\n'
-                ' *\n'
-                ' * When the operation is finished, @callback will be invoked in the thread-default main loop of the thread you are calling this method from.\n'
-                ' *\n'
-                ' * You can then call ${underscore}_${message_underscore}_finish() to get the result of the operation.\n'
-                ' */\n'
                 'void\n'
                 '${underscore}_${message_underscore} (\n'
-                '    ${camelcase} *self,\n')
-            template += (
-                '    %s,\n'  % input_arg_template)
-            template += (
+                '    ${camelcase} *self,\n'
+                '    ${input_arg},\n'
                 '    guint timeout,\n'
                 '    GCancellable *cancellable,\n'
                 '    GAsyncReadyCallback callback,\n'

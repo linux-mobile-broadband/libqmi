@@ -53,6 +53,11 @@ class Field:
         #  e.g. "Qmi Message Ctl Something Output Result"
         self.fullname = dictionary['fullname'] if 'fullname' in dictionary else self.prefix + ' ' + self.name
 
+        # libqmi version where the message was introduced
+        self.since = dictionary['since'] if 'since' in dictionary else None
+        if self.since is None:
+            raise ValueError('TLV ' + self.fullname + ' requires a "since" tag specifying the major version where it was introduced')
+
         # Create our variable object
         self.variable = VariableFactory.create_variable(dictionary, self.fullname, self.container_type)
 
@@ -108,18 +113,10 @@ class Field:
                          'underscore'          : utils.build_underscore_name(self.name),
                          'prefix_camelcase'    : utils.build_camelcase_name(self.prefix),
                          'prefix_underscore'   : utils.build_underscore_name(self.prefix),
+                         'since'               : self.since,
                          'static'              : 'static ' if self.static else '' }
 
         # Emit the getter header
-        template = (
-            '\n'
-            '${static}gboolean ${prefix_underscore}_get_${underscore} (\n'
-            '    ${prefix_camelcase} *self,\n'
-            '${variable_getter_dec}'
-            '    GError **error);\n')
-        hfile.write(string.Template(template).substitute(translations))
-
-        # Emit the getter source
         template = (
             '\n'
             '/**\n'
@@ -131,7 +128,18 @@ class Field:
             ' * Get the \'${name}\' field from @self.\n'
             ' *\n'
             ' * Returns: %TRUE if the field is found, %FALSE otherwise.\n'
+            ' *\n'
+            ' * Since: ${since}\n'
             ' */\n'
+            '${static}gboolean ${prefix_underscore}_get_${underscore} (\n'
+            '    ${prefix_camelcase} *self,\n'
+            '${variable_getter_dec}'
+            '    GError **error);\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        # Emit the getter source
+        template = (
+            '\n'
             '${static}gboolean\n'
             '${prefix_underscore}_get_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
@@ -172,18 +180,10 @@ class Field:
                          'underscore'          : utils.build_underscore_name(self.name),
                          'prefix_camelcase'    : utils.build_camelcase_name(self.prefix),
                          'prefix_underscore'   : utils.build_underscore_name(self.prefix),
+                         'since'               : self.since,
                          'static'              : 'static ' if self.static else '' }
 
         # Emit the setter header
-        template = (
-            '\n'
-            '${static}gboolean ${prefix_underscore}_set_${underscore} (\n'
-            '    ${prefix_camelcase} *self,\n'
-            '${variable_setter_dec}'
-            '    GError **error);\n')
-        hfile.write(string.Template(template).substitute(translations))
-
-        # Emit the setter source
         template = (
             '\n'
             '/**\n'
@@ -195,7 +195,18 @@ class Field:
             ' * Set the \'${name}\' field in the message.\n'
             ' *\n'
             ' * Returns: %TRUE if @value was successfully set, %FALSE otherwise.\n'
+            ' *\n'
+            ' * Since: ${since}\n'
             ' */\n'
+            '${static}gboolean ${prefix_underscore}_set_${underscore} (\n'
+            '    ${prefix_camelcase} *self,\n'
+            '${variable_setter_dec}'
+            '    GError **error);\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        # Emit the setter source
+        template = (
+            '\n'
             '${static}gboolean\n'
             '${prefix_underscore}_set_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
