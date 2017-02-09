@@ -56,10 +56,10 @@ class VariableSequence(Variable):
     """
     Emit all types for the members of the sequence
     """
-    def emit_types(self, f):
+    def emit_types(self, f, since):
         # Emit types for each member
         for member in self.members:
-            member['object'].emit_types(f)
+            member['object'].emit_types(f, since)
 
 
     """

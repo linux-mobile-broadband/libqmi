@@ -92,7 +92,7 @@ class Field:
     def emit_types(self, hfile, cfile):
         if TypeFactory.is_type_emitted(self.fullname) is False:
             TypeFactory.set_type_emitted(self.fullname)
-            self.variable.emit_types(hfile)
+            self.variable.emit_types(hfile, self.since)
             self.variable.emit_helper_methods(hfile, cfile)
 
 

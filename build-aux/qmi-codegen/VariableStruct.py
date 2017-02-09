@@ -62,12 +62,13 @@ class VariableStruct(Variable):
     """
     Emit all types for the members of the struct plus the new struct type itself
     """
-    def emit_types(self, f):
+    def emit_types(self, f, since):
         # Emit types for each member
         for member in self.members:
-            member['object'].emit_types(f)
+            member['object'].emit_types(f, since)
 
-        translations = { 'format' : self.public_format }
+        translations = { 'format' : self.public_format,
+                         'since'  : since }
         template = (
             '\n'
             '/**\n'
@@ -79,6 +80,8 @@ class VariableStruct(Variable):
         template = (
             ' *\n'
             ' * A ${format} struct.\n'
+            ' *\n'
+            ' * Since: ${since}\n'
             ' */\n'
             'typedef struct _${format} {\n')
         f.write(string.Template(template).substitute(translations))

@@ -83,8 +83,8 @@ class VariableArray(Variable):
     """
     Emit the type for the array element
     """
-    def emit_types(self, f):
-        self.array_element.emit_types(f)
+    def emit_types(self, f, since):
+        self.array_element.emit_types(f, since)
 
 
     """
