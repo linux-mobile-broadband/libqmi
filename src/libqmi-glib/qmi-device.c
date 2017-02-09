@@ -2875,6 +2875,8 @@ mbim_command (QmiDevice      *self,
  * Finishes an operation started with qmi_device_command_full().
  *
  * Returns: a #QmiMessage response, or #NULL if @error is set. The returned value should be freed with qmi_message_unref().
+ *
+ * Since: 1.18
  */
 QmiMessage *
 qmi_device_command_full_finish (QmiDevice     *self,
@@ -2924,6 +2926,8 @@ transaction_early_error (QmiDevice   *self,
  * qmi_device_command_full_finish() to get the result of the operation.
  *
  * If no @context given, the behavior is the same as qmi_device_command().
+ *
+ * Since: 1.18
  */
 void
 qmi_device_command_full (QmiDevice           *self,
