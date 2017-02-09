@@ -34,7 +34,35 @@
 
 G_BEGIN_DECLS
 
-#define QMI_CID_NONE      0x00
+/**
+ * SECTION:qmi-client
+ * @title: QmiClient
+ * @short_description: Generic QMI client handling routines
+ *
+ * #QmiClient is a generic type representing a QMI client for any kind of
+ * #QmiService.
+ *
+ * These objects are created by a #QmiDevice with qmi_device_allocate_client(),
+ * and before completely disposing them qmi_device_release_client() needs to be
+ * called in order to release the unique client ID reserved.
+ */
+
+/**
+ * QMI_CID_NONE:
+ *
+ * A symbol specifying a special CID value that references no CID.
+ *
+ * Since: 1.0
+ */
+#define QMI_CID_NONE 0x00
+
+/**
+ * QMI_CID_BROADCAST:
+ *
+ * A symbol specifying the broadcast CID.
+ *
+ * Since: 1.0
+ */
 #define QMI_CID_BROADCAST 0xFF
 
 #define QMI_TYPE_CLIENT            (qmi_client_get_type ())
@@ -48,10 +76,49 @@ typedef struct _QmiClient QmiClient;
 typedef struct _QmiClientClass QmiClientClass;
 typedef struct _QmiClientPrivate QmiClientPrivate;
 
-#define QMI_CLIENT_DEVICE        "client-device"
-#define QMI_CLIENT_SERVICE       "client-service"
-#define QMI_CLIENT_CID           "client-cid"
+/**
+ * QMI_CLIENT_DEVICE:
+ *
+ * Symbol defining the #QmiClient:client-device property.
+ *
+ * Since: 1.0
+ */
+#define QMI_CLIENT_DEVICE "client-device"
+
+/**
+ * QMI_CLIENT_SERVICE:
+ *
+ * Symbol defining the #QmiClient:client-service property.
+ *
+ * Since: 1.0
+ */
+#define QMI_CLIENT_SERVICE "client-service"
+
+/**
+ * QMI_CLIENT_CID:
+ *
+ * Symbol defining the #QmiClient:client-cid property.
+ *
+ * Since: 1.0
+ */
+#define QMI_CLIENT_CID "client-cid"
+
+/**
+ * QMI_CLIENT_VERSION_MAJOR:
+ *
+ * Symbol defining the #QmiClient:client-version-major property.
+ *
+ * Since: 1.0
+ */
 #define QMI_CLIENT_VERSION_MAJOR "client-version-major"
+
+/**
+ * QMI_CLIENT_VERSION_MINOR:
+ *
+ * Symbol defining the #QmiClient:client-version-minor property.
+ *
+ * Since: 1.0
+ */
 #define QMI_CLIENT_VERSION_MINOR "client-version-minor"
 
 /**
@@ -59,6 +126,8 @@ typedef struct _QmiClientPrivate QmiClientPrivate;
  *
  * The #QmiClient structure contains private data and should only be accessed
  * using the provided API.
+ *
+ * Since: 1.0
  */
 struct _QmiClient {
     /*< private >*/
@@ -77,24 +146,106 @@ struct _QmiClientClass {
 
 GType qmi_client_get_type (void);
 
-GObject    *qmi_client_get_device  (QmiClient *self);
-GObject    *qmi_client_peek_device (QmiClient *self);
-QmiService  qmi_client_get_service (QmiClient *self);
-guint8      qmi_client_get_cid     (QmiClient *self);
-gboolean    qmi_client_get_version (QmiClient *self,
-                                    guint *major,
-                                    guint *minor);
-gboolean    qmi_client_check_version (QmiClient *self,
-                                      guint major,
-                                      guint minor);
+/**
+ * qmi_client_get_device:
+ * @self: a #QmiClient
+ *
+ * Get the #QmiDevice associated with this #QmiClient.
+ *
+ * Returns: a #GObject that must be freed with g_object_unref().
+ *
+ * Since: 1.0
+ */
+GObject *qmi_client_get_device (QmiClient *self);
 
-guint16     qmi_client_get_next_transaction_id (QmiClient *self);
+/**
+ * qmi_client_peek_device:
+ * @self: a #QmiClient.
+ *
+ * Get the #QmiDevice associated with this #QmiClient, without increasing the reference count
+ * on the returned object.
+ *
+ * Returns: a #GObject. Do not free the returned object, it is owned by @self.
+ *
+ * Since: 1.0
+ */
+GObject *qmi_client_peek_device (QmiClient *self);
+
+/**
+ * qmi_client_get_service:
+ * @self: A #QmiClient
+ *
+ * Get the service being used by this #QmiClient.
+ *
+ * Returns: a #QmiService.
+ *
+ * Since: 1.0
+ */
+QmiService qmi_client_get_service (QmiClient *self);
+
+/**
+ * qmi_client_get_cid:
+ * @self: A #QmiClient
+ *
+ * Get the client ID of this #QmiClient.
+ *
+ * Returns: the client ID.
+ *
+ * Since: 1.0
+ */
+guint8 qmi_client_get_cid (QmiClient *self);
+
+/**
+ * qmi_client_get_version:
+ * @self: A #QmiClient
+ * @major: placeholder for the output major version.
+ * @minor: placeholder for the output minor version.
+ *
+ * Get the version of the service handled by this #QmiClient.
+ *
+ * Returns: %TRUE if the version was properly reported, %FALSE otherwise.
+ *
+ * Since: 1.0
+ */
+gboolean qmi_client_get_version (QmiClient *self,
+                                 guint     *major,
+                                 guint     *minor);
+
+/**
+ * qmi_client_check_version:
+ * @self: A #QmiClient
+ * @major: a major version.
+ * @minor: a minor version.
+ *
+ * Checks if the version of the service handled by this #QmiClient is greater
+ * or equal than the given version.
+ *
+ * Returns: %TRUE if the version of the service is greater or equal than the one given, %FALSE otherwise.
+ *
+ * Since: 1.0
+ */
+gboolean qmi_client_check_version (QmiClient *self,
+                                   guint      major,
+                                   guint      minor);
+
+/**
+ * qmi_client_get_next_transaction_id:
+ * @self: A #QmiClient
+ *
+ * Acquire the next transaction ID of this #QmiClient.
+ * The internal transaction ID gets incremented.
+ *
+ * Returns: the next transaction ID.
+ *
+ * Since: 1.0
+ */
+guint16 qmi_client_get_next_transaction_id (QmiClient *self);
 
 /* not part of the public API */
 
 #if defined (LIBQMI_GLIB_COMPILATION)
 G_GNUC_INTERNAL
-void __qmi_client_process_indication (QmiClient *self,
+void __qmi_client_process_indication (QmiClient  *self,
                                       QmiMessage *message);
 #endif
 

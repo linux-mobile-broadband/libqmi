@@ -28,20 +28,7 @@
 #include "qmi-client.h"
 #include "qmi-ctl.h"
 
-/**
- * SECTION:qmi-client
- * @title: QmiClient
- * @short_description: Generic QMI client handling routines
- *
- * #QmiClient is a generic type representing a QMI client for any kind of
- * #QmiService.
- *
- * These objects are created by a #QmiDevice with qmi_device_allocate_client(),
- * and before completely disposing them qmi_device_release_client() needs to be
- * called in order to release the unique client ID reserved.
- */
-
-G_DEFINE_ABSTRACT_TYPE (QmiClient, qmi_client, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (QmiClient, qmi_client, G_TYPE_OBJECT)
 
 enum {
     PROP_0,
@@ -67,14 +54,6 @@ struct _QmiClientPrivate {
 
 /*****************************************************************************/
 
-/**
- * qmi_client_get_device:
- * @self: a #QmiClient
- *
- * Get the #QmiDevice associated with this #QmiClient.
- *
- * Returns: a #GObject that must be freed with g_object_unref().
- */
 GObject *
 qmi_client_get_device (QmiClient *self)
 {
@@ -89,15 +68,6 @@ qmi_client_get_device (QmiClient *self)
     return device;
 }
 
-/**
- * qmi_client_peek_device:
- * @self: a #QmiClient.
- *
- * Get the #QmiDevice associated with this #QmiClient, without increasing the reference count
- * on the returned object.
- *
- * Returns: a #GObject. Do not free the returned object, it is owned by @self.
- */
 GObject *
 qmi_client_peek_device (QmiClient *self)
 {
@@ -106,14 +76,6 @@ qmi_client_peek_device (QmiClient *self)
     return G_OBJECT (self->priv->device);
 }
 
-/**
- * qmi_client_get_service:
- * @self: A #QmiClient
- *
- * Get the service being used by this #QmiClient.
- *
- * Returns: a #QmiService.
- */
 QmiService
 qmi_client_get_service (QmiClient *self)
 {
@@ -122,14 +84,6 @@ qmi_client_get_service (QmiClient *self)
     return self->priv->service;
 }
 
-/**
- * qmi_client_get_cid:
- * @self: A #QmiClient
- *
- * Get the client ID of this #QmiClient.
- *
- * Returns: the client ID.
- */
 guint8
 qmi_client_get_cid (QmiClient *self)
 {
@@ -138,16 +92,6 @@ qmi_client_get_cid (QmiClient *self)
     return self->priv->cid;
 }
 
-/**
- * qmi_client_get_version:
- * @self: A #QmiClient
- * @major: placeholder for the output major version.
- * @minor: placeholder for the output minor version.
- *
- * Get the version of the service handled by this #QmiClient.
- *
- * Returns: %TRUE if the version was properly reported, %FALSE otherwise.
- */
 gboolean
 qmi_client_get_version (QmiClient *self,
                         guint *major,
@@ -165,17 +109,6 @@ qmi_client_get_version (QmiClient *self,
     return TRUE;
 }
 
-/**
- * qmi_client_check_version:
- * @self: A #QmiClient
- * @major: a major version.
- * @minor: a minor version.
- *
- * Checks if the version of the service handled by this #QmiClient is greater
- * or equal than the given version.
- *
- * Returns: %TRUE if the version of the service is greater or equal than the one given, %FALSE otherwise.
- */
 gboolean
 qmi_client_check_version (QmiClient *self,
                           guint major,
@@ -196,15 +129,6 @@ qmi_client_check_version (QmiClient *self,
     return FALSE;
 }
 
-/**
- * qmi_client_get_next_transaction_id:
- * @self: A #QmiClient
- *
- * Acquire the next transaction ID of this #QmiClient.
- * The internal transaction ID gets incremented.
- *
- * Returns: the next transaction ID.
- */
 guint16
 qmi_client_get_next_transaction_id (QmiClient *self)
 {
@@ -325,6 +249,11 @@ qmi_client_class_init (QmiClientClass *klass)
     object_class->get_property = get_property;
     object_class->set_property = set_property;
 
+    /**
+     * QmiClient:client-device:
+     *
+     * Since: 1.0
+     */
     properties[PROP_DEVICE] =
         g_param_spec_object (QMI_CLIENT_DEVICE,
                              "Device",
@@ -333,6 +262,11 @@ qmi_client_class_init (QmiClientClass *klass)
                              G_PARAM_READWRITE);
     g_object_class_install_property (object_class, PROP_DEVICE, properties[PROP_DEVICE]);
 
+    /**
+     * QmiClient:client-service:
+     *
+     * Since: 1.0
+     */
     properties[PROP_SERVICE] =
         g_param_spec_enum (QMI_CLIENT_SERVICE,
                            "Service",
@@ -342,6 +276,11 @@ qmi_client_class_init (QmiClientClass *klass)
                            G_PARAM_READWRITE);
     g_object_class_install_property (object_class, PROP_SERVICE, properties[PROP_SERVICE]);
 
+    /**
+     * QmiClient:client-cid:
+     *
+     * Since: 1.0
+     */
     properties[PROP_CID] =
         g_param_spec_uint (QMI_CLIENT_CID,
                            "Client ID",
@@ -352,6 +291,11 @@ qmi_client_class_init (QmiClientClass *klass)
                            G_PARAM_READWRITE);
     g_object_class_install_property (object_class, PROP_CID, properties[PROP_CID]);
 
+    /**
+     * QmiClient:client-version-major:
+     *
+     * Since: 1.0
+     */
     properties[PROP_VERSION_MAJOR] =
         g_param_spec_uint (QMI_CLIENT_VERSION_MAJOR,
                            "Version major",
@@ -362,6 +306,11 @@ qmi_client_class_init (QmiClientClass *klass)
                            G_PARAM_READWRITE);
     g_object_class_install_property (object_class, PROP_VERSION_MAJOR, properties[PROP_VERSION_MAJOR]);
 
+    /**
+     * QmiClient:client-version-minor:
+     *
+     * Since: 1.0
+     */
     properties[PROP_VERSION_MINOR] =
         g_param_spec_uint (QMI_CLIENT_VERSION_MINOR,
                            "Version minor",
