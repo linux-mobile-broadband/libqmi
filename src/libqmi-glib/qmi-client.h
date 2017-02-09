@@ -91,8 +91,12 @@ gboolean    qmi_client_check_version (QmiClient *self,
 guint16     qmi_client_get_next_transaction_id (QmiClient *self);
 
 /* not part of the public API */
-void qmi_client_process_indication (QmiClient *self,
-                                    QmiMessage *message);
+
+#if defined (LIBQMI_GLIB_COMPILATION)
+G_GNUC_INTERNAL
+void __qmi_client_process_indication (QmiClient *self,
+                                      QmiMessage *message);
+#endif
 
 G_END_DECLS
 

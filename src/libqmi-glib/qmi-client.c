@@ -229,8 +229,8 @@ qmi_client_get_next_transaction_id (QmiClient *self)
 /*****************************************************************************/
 
 void
-qmi_client_process_indication (QmiClient *self,
-                               QmiMessage *message)
+__qmi_client_process_indication (QmiClient *self,
+                                 QmiMessage *message)
 {
     if (QMI_CLIENT_GET_CLASS (self)->process_indication)
         QMI_CLIENT_GET_CLASS (self)->process_indication (self, message);

@@ -26,6 +26,7 @@ qmi_client_get_cid
 qmi_client_get_version
 qmi_client_check_version
 qmi_client_get_next_transaction_id
+<SUBSECTION Private>
 qmi_client_process_indication
 <SUBSECTION Standard>
 QmiClientClass

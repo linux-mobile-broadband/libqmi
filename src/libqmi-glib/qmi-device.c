@@ -1568,7 +1568,7 @@ process_indication_idle (IdleIndicationContext *ctx)
     g_assert (ctx->client != NULL);
     g_assert (ctx->message != NULL);
 
-    qmi_client_process_indication (ctx->client, ctx->message);
+    __qmi_client_process_indication (ctx->client, ctx->message);
 
     g_object_unref (ctx->client);
     qmi_message_unref (ctx->message);
