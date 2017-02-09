@@ -35,13 +35,6 @@ struct _QmiMessageContext {
     guint16 vendor_id;
 };
 
-/**
- * qmi_message_context_new:
- *
- * Create a new empty #QmiMessageContext.
- *
- * Returns: (transfer full): a newly created #QmiMessageContext. The returned value should be freed with qmi_message_context_unref().
- */
 QmiMessageContext *
 qmi_message_context_new (void)
 {
@@ -69,14 +62,6 @@ qmi_message_context_get_type (void)
     return g_define_type_id__volatile;
 }
 
-/**
- * qmi_message_context_ref:
- * @self: a #QmiMessageContext.
- *
- * Atomically increments the reference count of @self by one.
- *
- * Returns: (transfer full) the new reference to @self.
- */
 QmiMessageContext *
 qmi_message_context_ref (QmiMessageContext *self)
 {
@@ -86,13 +71,6 @@ qmi_message_context_ref (QmiMessageContext *self)
     return self;
 }
 
-/**
- * qmi_message_context_unref:
- * @self: a #QmiMessageContext.
- *
- * Atomically decrements the reference count of @self by one.
- * If the reference count drops to 0, @self is completely disposed.
- */
 void
 qmi_message_context_unref (QmiMessageContext *self)
 {
