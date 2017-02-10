@@ -23,6 +23,21 @@
 #ifndef QMI_PROXY_H
 #define QMI_PROXY_H
 
+/**
+ * SECTION:qmi-proxy
+ * @title: QmiProxy
+ * @short_description: QMI proxy handling routines
+ *
+ * The #QmiProxy will setup an abstract socket listening on a predefined
+ * address, and will take care of synchronizing the access to a set of shared
+ * QMI ports.
+ *
+ * Multiple #QmiDevices may be connected to the #QmiProxy at any given time. The
+ * #QmiProxy acts as a stateless proxy for non-CTL services (messages are
+ * transferred unmodified), and as a stateful proxy for the CTL service (all
+ * remote #QmiDevices will need to share the same CTL message sequence ID).
+ */
+
 #include <glib-object.h>
 #include <gio/gio.h>
 
@@ -37,10 +52,32 @@ typedef struct _QmiProxy QmiProxy;
 typedef struct _QmiProxyClass QmiProxyClass;
 typedef struct _QmiProxyPrivate QmiProxyPrivate;
 
+/**
+ * QMI_PROXY_SOCKET_PATH:
+ *
+ * Symbol defining the default abstract socket name where the #QmiProxy will listen.
+ *
+ * Since: 1.8
+ */
 #define QMI_PROXY_SOCKET_PATH "qmi-proxy"
 
+/**
+ * QMI_PROXY_N_ClIENTS:
+ *
+ * Symbol defining the #QmiProxy:qmi-proxy-n-clients property.
+ *
+ * Since: 1.8
+ */
 #define QMI_PROXY_N_CLIENTS   "qmi-proxy-n-clients"
 
+/**
+ * QmiProxy:
+ *
+ * The #QmiProxy structure contains private data and should only be accessed
+ * using the provided API.
+ *
+ * Since: 1.8
+ */
 struct _QmiProxy {
     GObject parent;
     QmiProxyPrivate *priv;
@@ -52,7 +89,28 @@ struct _QmiProxyClass {
 
 GType qmi_proxy_get_type (void);
 
-QmiProxy *qmi_proxy_new           (GError **error);
-guint     qmi_proxy_get_n_clients (QmiProxy *self);
+/**
+ * qmi_proxy_new:
+ * @error: Return location for error or %NULL.
+ *
+ * Creates a #QmiProxy listening in the default proxy addess.
+ *
+ * Returns: A newly created #QmiProxy, or #NULL if @error is set.
+ *
+ * Since: 1.8
+ */
+QmiProxy *qmi_proxy_new (GError **error);
+
+/**
+ * qmi_proxy_get_n_clients:
+ * @self: a #QmiProxy.
+ *
+ * Get the number of clients currently connected to the proxy.
+ *
+ * Returns: a #guint.
+ *
+ * Since: 1.8
+ */
+guint qmi_proxy_get_n_clients (QmiProxy *self);
 
 #endif /* QMI_PROXY_H */
