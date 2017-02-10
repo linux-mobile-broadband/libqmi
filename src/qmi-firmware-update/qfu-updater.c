@@ -96,6 +96,7 @@ typedef enum {
     RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM,
     RUN_CONTEXT_STEP_WAIT_FOR_BOOT,
     RUN_CONTEXT_STEP_QMI_CLIENT_AFTER,
+    RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE_FULL,
     RUN_CONTEXT_STEP_LAST
 } RunContextStep;
 
@@ -351,6 +352,67 @@ run_context_step_next_no_idle (GTask *task, RunContextStep next)
 
     /* Run right away */
     run_context_step (task);
+}
+
+static void
+close_ready (QmiDevice    *dev,
+             GAsyncResult *res,
+             GTask        *task)
+{
+    RunContext *ctx;
+    GError     *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    if (!qmi_device_close_finish (dev, res, &error)) {
+        g_warning ("[qfu-updater] couldn't close device: %s", error->message);
+        g_error_free (error);
+    } else
+        g_debug ("[qfu-updater] closed");
+
+    /* Go on */
+    run_context_step_next (task, ctx->step + 1);
+}
+
+static void
+release_client_ready (QmiDevice    *dev,
+                      GAsyncResult *res,
+                      GTask        *task)
+{
+    RunContext *ctx;
+    GError     *error = NULL;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    if (!qmi_device_release_client_finish (dev, res, &error)) {
+        g_warning ("[qfu-updater] couldn't release client: %s", error->message);
+        g_error_free (error);
+    } else
+        g_debug ("[qfu-updater] client released");
+
+    qmi_device_close_async (ctx->qmi_device,
+                            10,
+                            g_task_get_cancellable (task),
+                            (GAsyncReadyCallback) close_ready,
+                            task);
+    g_clear_object (&ctx->qmi_device);
+}
+
+static void
+run_context_step_cleanup_qmi_device_full (GTask *task)
+{
+    RunContext *ctx;
+
+    ctx = (RunContext *) g_task_get_task_data (task);
+
+    qmi_device_release_client (ctx->qmi_device,
+                               QMI_CLIENT (ctx->qmi_client),
+                               QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID,
+                               10,
+                               g_task_get_cancellable (task),
+                               (GAsyncReadyCallback) release_client_ready,
+                               task);
+    g_clear_object (&ctx->qmi_client);
 }
 
 static void
@@ -777,7 +839,6 @@ run_context_step_cleanup_qmi_device (GTask *task)
     qmi_device_close_async (tmp, 10, NULL, NULL, NULL);
     g_object_unref (tmp);
 }
-
 
 static void
 reseter_run_ready (QfuReseter   *reseter,
@@ -1264,8 +1325,9 @@ static const RunContextStepFunc run_context_step_func[] = {
     [RUN_CONTEXT_STEP_CLEANUP_IMAGE]           = run_context_step_cleanup_image,
     [RUN_CONTEXT_STEP_CLEANUP_QDL_DEVICE]      = run_context_step_cleanup_qdl_device,
     [RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM]        = run_context_step_wait_for_cdc_wdm,
-    [RUN_CONTEXT_STEP_QMI_CLIENT_AFTER]        = run_context_step_qmi_client_after,
     [RUN_CONTEXT_STEP_WAIT_FOR_BOOT]           = run_context_step_wait_for_boot,
+    [RUN_CONTEXT_STEP_QMI_CLIENT_AFTER]        = run_context_step_qmi_client_after,
+    [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE_FULL] = run_context_step_cleanup_qmi_device_full,
 };
 
 G_STATIC_ASSERT (G_N_ELEMENTS (run_context_step_func) == RUN_CONTEXT_STEP_LAST);
