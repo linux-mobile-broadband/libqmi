@@ -2201,7 +2201,9 @@ device_open_context_step (DeviceOpenContext *ctx)
             g_warning ("[%s] requested QMI mode but unexpected driver found: %s",
                        ctx->self->priv->path_display, ctx->driver ? ctx->driver : "unknown");
 
+#if defined MBIM_QMUX_ENABLED
     next_step:
+#endif
         ctx->step++;
         /* Fall down */
 
