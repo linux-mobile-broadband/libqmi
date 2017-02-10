@@ -75,6 +75,8 @@
  * @QMI_NAS_BAND_PREFERENCE_WCDMA_1700_JAPAN: WCDMA 1700 (Japan).
  *
  * Flags to specify frequency band preferences.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_NAS_BAND_PREFERENCE_BC_0_A_SYSTEM    = 1 << 0,
@@ -122,6 +124,12 @@ typedef enum {
 } QmiNasBandPreference;
 
 /**
+ * qmi_nas_band_preference_build_string_from_mask:
+ *
+ * Since: 1.0
+ */
+
+/**
  * QmiNasLteBandPreference:
  * @QMI_NAS_LTE_BAND_PREFERENCE_EUTRAN_1: LTE EUTRAN Band 1
  * @QMI_NAS_LTE_BAND_PREFERENCE_EUTRAN_2: LTE EUTRAN Band 2.
@@ -157,6 +165,8 @@ typedef enum {
  * @QMI_NAS_LTE_BAND_PREFERENCE_EUTRAN_43: LTE EUTRAN Band 43.
  *
  * Flags to specify LTE-specific frequency band preferences.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_NAS_LTE_BAND_PREFERENCE_EUTRAN_1  = 1 << 0,
@@ -196,5 +206,11 @@ typedef enum {
     QMI_NAS_LTE_BAND_PREFERENCE_EUTRAN_43 = ((guint64) 1) << 42
     /* Bit 43-64 reserved */
 } QmiNasLteBandPreference;
+
+/**
+ * qmi_nas_lte_band_preference_build_string_from_mask:
+ *
+ * Since: 1.0
+ */
 
 #endif /* _LIBQMI_GLIB_QMI_FLAGS64_NAS_H_ */

@@ -127,6 +127,12 @@ typedef enum {
 } QmiDmsBandCapability;
 
 /**
+ * qmi_dms_band_capability_build_string_from_mask:
+ *
+ * Since: 1.0
+ */
+
+/**
  * QmiDmsLteBandCapability:
  * @QMI_DMS_LTE_BAND_CAPABILITY_EUTRAN_1: LTE EUTRAN Band 1
  * @QMI_DMS_LTE_BAND_CAPABILITY_EUTRAN_2: LTE EUTRAN Band 2.
@@ -201,5 +207,11 @@ typedef enum {
     QMI_DMS_LTE_BAND_CAPABILITY_EUTRAN_43 = ((guint64) 1) << 42
     /* Bit 43-64 reserved */
 } QmiDmsLteBandCapability;
+
+/**
+ * qmi_dms_lte_band_capability_build_string_from_mask:
+ *
+ * Since: 1.0
+ */
 
 #endif /* _LIBQMI_GLIB_QMI_FLAGS64_DMS_H_ */

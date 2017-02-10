@@ -48,6 +48,8 @@
  * @QMI_PBM_EVENT_REGISTRATION_FLAG_GAS_UPDATE: Request indications when Grouping information Alpha String records are added/edited/deleted.
  *
  * Flags to use to register to phonebook indications.
+ *
+ * Since: 1.6
  */
 typedef enum {
     QMI_PBM_EVENT_REGISTRATION_FLAG_RECORD_UPDATE         = 1 << 0,
@@ -57,6 +59,12 @@ typedef enum {
     QMI_PBM_EVENT_REGISTRATION_FLAG_AAS_UPDATE            = 1 << 4,
     QMI_PBM_EVENT_REGISTRATION_FLAG_GAS_UPDATE            = 1 << 5,
 } QmiPbmEventRegistrationFlag;
+
+/**
+ * qmi_pbm_event_registration_flag_build_string_from_mask:
+ *
+ * Since: 1.6
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'Get Capabilities' request */
@@ -73,6 +81,8 @@ typedef enum {
  * @QMI_PBM_PHONEBOOK_TYPE_MBN: Mail Box Number.
  *
  * Phonebook type.
+ *
+ * Since: 1.6
  */
 typedef enum {
     QMI_PBM_PHONEBOOK_TYPE_ADN    = 1 << 0,
@@ -86,6 +96,12 @@ typedef enum {
 } QmiPbmPhonebookType;
 
 /**
+ * qmi_pbm_phonebook_type_build_string_from_mask:
+ *
+ * Since: 1.6
+ */
+
+/**
  * QmiPbmSessionType:
  * @QMI_PBM_SESSION_TYPE_GW_PRIMARY: Access phonebooks under GSM DF (ICC) or USIM application (UICC).
  * @QMI_PBM_SESSION_TYPE_1X_PRIMARY: Access phonebooks under CDMA DF (ICC) or CSIM application (UICC).
@@ -97,6 +113,8 @@ typedef enum {
  * @QMI_PBM_SESSION_TYPE_GLOBAL_PHONEBOOK_SLOT_2: Access phonebooks that are not in any application of the card in slot 2.
  *
  * Type of phonebook management session.
+ *
+ * Since: 1.6
  */
 typedef enum {
     QMI_PBM_SESSION_TYPE_GW_PRIMARY              = 0,
@@ -108,5 +126,11 @@ typedef enum {
     QMI_PBM_SESSION_TYPE_GLOBAL_PHONEBOOK_SLOT_1 = 6,
     QMI_PBM_SESSION_TYPE_GLOBAL_PHONEBOOK_SLOT_2 = 7,
 } QmiPbmSessionType;
+
+/**
+ * qmi_pbm_session_type_get_string:
+ *
+ * Since: 1.6
+ */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_PBM_H_ */

@@ -15,6 +15,15 @@ GQuark @enum_name@_quark    (void);
 GType  @enum_name@_get_type (void) G_GNUC_CONST;
 #define @ENUMNAME@ (@enum_name@_quark ())
 #define @ENUMPREFIX@_TYPE_@ENUMSHORT@ (@enum_name@_get_type ())
+
+/**
+ * @enum_name@_get_string:
+ * @val: a @EnumName@.
+ *
+ * Gets the nickname string for the #@EnumName@ specified at @val.
+ *
+ * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ */
 const gchar *@enum_name@_get_string (@EnumName@ val);
 /*** END value-header ***/
 

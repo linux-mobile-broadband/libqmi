@@ -34,9 +34,31 @@
  * This section defines common error types used in the interface.
  */
 
-/* Prefixes for errors registered in DBus */
-#define QMI_DBUS_ERROR_PREFIX          "org.freedesktop.libqmi.Error"
-#define QMI_CORE_ERROR_DBUS_PREFIX     QMI_DBUS_ERROR_PREFIX ".Core"
+/**
+ * QMI_DBUS_ERROR_PREFIX:
+ *
+ * Symbol defining the common string prefix used for all libqmi errors in DBus.
+ *
+ * Since: 1.0
+ */
+#define QMI_DBUS_ERROR_PREFIX "org.freedesktop.libqmi.Error"
+
+/**
+ * QMI_CORE_ERROR_DBUS_PREFIX:
+ *
+ * Symbol defining the common string prefix used for all #QmiCoreError errors in DBus.
+ *
+ * Since: 1.0
+ */
+#define QMI_CORE_ERROR_DBUS_PREFIX QMI_DBUS_ERROR_PREFIX ".Core"
+
+/**
+ * QMI_PROTOCOL_ERROR_DBUS_PREFIX:
+ *
+ * Symbol defining the common string prefix used for all #QmiProtocolError errors in DBus.
+ *
+ * Since: 1.0
+ */
 #define QMI_PROTOCOL_ERROR_DBUS_PREFIX QMI_DBUS_ERROR_PREFIX ".Protocol"
 
 /**
@@ -49,10 +71,12 @@
  * @QMI_CORE_ERROR_TLV_NOT_FOUND: TLV not found.
  * @QMI_CORE_ERROR_TLV_TOO_LONG: TLV is too long.
  * @QMI_CORE_ERROR_UNSUPPORTED: Not supported.
- * @QMI_CORE_ERROR_TLV_EMPTY: TLV has no value.
- * @QMI_CORE_ERROR_UNEXPECTED_MESSAGE: QMI message is unexpected.
+ * @QMI_CORE_ERROR_TLV_EMPTY: TLV has no value. Since: 1.12.
+ * @QMI_CORE_ERROR_UNEXPECTED_MESSAGE: QMI message is unexpected. Since: 1.16.
  *
  * Common errors that may be reported by libqmi-glib.
+ *
+ * Since: 1.0
  */
 typedef enum { /*< underscore_name=qmi_core_error >*/
     QMI_CORE_ERROR_FAILED             = 0, /*< nick=Failed >*/
@@ -66,6 +90,12 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
     QMI_CORE_ERROR_TLV_EMPTY          = 8, /*< nick=TlvEmpty >*/
     QMI_CORE_ERROR_UNEXPECTED_MESSAGE = 9, /*< nick=UnexpectedMessage >*/
 } QmiCoreError;
+
+/**
+ * qmi_core_error_get_string:
+ *
+ * Since: 1.0
+ */
 
 /**
  * QmiProtocolError:
@@ -138,34 +168,34 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
   * @QMI_PROTOCOL_ERROR_SEGMENT_TOO_LONG: Segment too long.
   * @QMI_PROTOCOL_ERROR_SEGMENT_ORDER: Segment order.
   * @QMI_PROTOCOL_ERROR_BUNDLING_NOT_SUPPORTED: Bundling not supported.
-  * @QMI_PROTOCOL_ERROR_POLICY_MISMATCH: Policy mismatch.
+  * @QMI_PROTOCOL_ERROR_POLICY_MISMATCH: Policy mismatch. Since: 1.6.
   * @QMI_PROTOCOL_ERROR_SIM_FILE_NOT_FOUND: SIM file not found.
-  * @QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL: Extended internal error.
+  * @QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL: Extended internal error. Since: 1.6.
   * @QMI_PROTOCOL_ERROR_ACCESS_DENIED: Access denied.
   * @QMI_PROTOCOL_ERROR_HARDWARE_RESTRICTED: Hardware restricted.
-  * @QMI_PROTOCOL_ERROR_ACK_NOT_SENT: ACK not sent.
-  * @QMI_PROTOCOL_ERROR_INJECT_TIMEOUT: Inject timeout.
-  * @QMI_PROTOCOL_ERROR_INCOMPATIBLE_STATE: Incompatible state.
-  * @QMI_PROTOCOL_ERROR_FDN_RESTRICT: FDN restrict.
-  * @QMI_PROTOCOL_ERROR_SUPS_FAILURE_CASE: SUPS failure case.
-  * @QMI_PROTOCOL_ERROR_NO_RADIO: No radio.
-  * @QMI_PROTOCOL_ERROR_NOT_SUPPORTED: Not supported.
-  * @QMI_PROTOCOL_ERROR_NO_SUBSCRIPTION: No subscription.
-  * @QMI_PROTOCOL_ERROR_CARD_CALL_CONTROL_FAILED: Card call control failed.
-  * @QMI_PROTOCOL_ERROR_NETWORK_ABORTED: Network aborted.
-  * @QMI_PROTOCOL_ERROR_MSG_BLOCKED: Message blocked.
-  * @QMI_PROTOCOL_ERROR_INVALID_SESSION_TYPE: Invalid session type.
-  * @QMI_PROTOCOL_ERROR_INVALID_PB_TYPE: Invalid PB type.
-  * @QMI_PROTOCOL_ERROR_NO_SIM: No SIM.
-  * @QMI_PROTOCOL_ERROR_PB_NOT_READY: PB not ready.
-  * @QMI_PROTOCOL_ERROR_PIN_RESTRICTION: PIN restriction.
-  * @QMI_PROTOCOL_ERROR_PIN2_RESTRICTION: PIN2 restriction.
-  * @QMI_PROTOCOL_ERROR_PUK_RESTRICTION: PUK restriction.
-  * @QMI_PROTOCOL_ERROR_PUK2_RESTRICTION: PUK2 restriction.
-  * @QMI_PROTOCOL_ERROR_PB_ACCESS_RESTRICTED: PB access restricted.
-  * @QMI_PROTOCOL_ERROR_PB_TEXT_TOO_LONG: PB text too long.
-  * @QMI_PROTOCOL_ERROR_PB_NUMBER_TOO_LONG: PB number too long.
-  * @QMI_PROTOCOL_ERROR_PB_HIDDEN_KEY_RESTRICTION: PB hidden key restriction.
+  * @QMI_PROTOCOL_ERROR_ACK_NOT_SENT: ACK not sent. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_INJECT_TIMEOUT: Inject timeout. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_INCOMPATIBLE_STATE: Incompatible state. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_FDN_RESTRICT: FDN restrict. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_SUPS_FAILURE_CASE: SUPS failure case. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_NO_RADIO: No radio. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_NOT_SUPPORTED: Not supported. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_NO_SUBSCRIPTION: No subscription. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_CARD_CALL_CONTROL_FAILED: Card call control failed. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_NETWORK_ABORTED: Network aborted. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_MSG_BLOCKED: Message blocked. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_INVALID_SESSION_TYPE: Invalid session type. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_INVALID_PB_TYPE: Invalid PB type. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_NO_SIM: No SIM. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_NOT_READY: PB not ready. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PIN_RESTRICTION: PIN restriction. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PIN2_RESTRICTION: PIN2 restriction. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PUK_RESTRICTION: PUK restriction. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PUK2_RESTRICTION: PUK2 restriction. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_ACCESS_RESTRICTED: PB access restricted. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_TEXT_TOO_LONG: PB text too long. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_NUMBER_TOO_LONG: PB number too long. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_HIDDEN_KEY_RESTRICTION: PB hidden key restriction. Since: 1.6.
   * @QMI_PROTOCOL_ERROR_CAT_EVENT_REGISTRATION_FAILED: Event registration failed.
   * @QMI_PROTOCOL_ERROR_CAT_INVALID_TERMINAL_RESPONSE: Invalid terminal response.
   * @QMI_PROTOCOL_ERROR_CAT_INVALID_ENVELOPE_COMMAND: Invalid envelope command.
@@ -173,6 +203,8 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
   * @QMI_PROTOCOL_ERROR_CAT_ENVELOPE_COMMAND_FAILED: Envelope command failed.
   *
   * QMI protocol errors.
+  *
+  * Since: 1.0
   */
 typedef enum { /*< underscore_name=qmi_protocol_error >*/
   QMI_PROTOCOL_ERROR_NONE                             = 0,  /*< nick=None >*/
@@ -279,5 +311,11 @@ typedef enum { /*< underscore_name=qmi_protocol_error >*/
   QMI_PROTOCOL_ERROR_CAT_ENVELOPE_COMMAND_BUSY        = 61444, /*< nick=Cat.EnvelopCommandBusy >*/
   QMI_PROTOCOL_ERROR_CAT_ENVELOPE_COMMAND_FAILED      = 61445  /*< nick=Cat.EnvelopeCommandFailed >*/
 } QmiProtocolError;
+
+/**
+ * qmi_protocol_error_get_string:
+ *
+ * Since: 1.0
+ */
 
 #endif /* _LIBQMI_GLIB_QMI_ERRORS_H_ */

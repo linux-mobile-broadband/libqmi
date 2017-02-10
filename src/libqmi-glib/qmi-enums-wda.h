@@ -42,12 +42,20 @@
  * @QMI_WDA_LINK_LAYER_PROTOCOL_RAW_IP: Raw IP mode.
  *
  * Link layer protocol.
+ *
+ * Since: 1.10
  */
 typedef enum {
     QMI_WDA_LINK_LAYER_PROTOCOL_UNKNOWN = 0x00,
     QMI_WDA_LINK_LAYER_PROTOCOL_802_3   = 0x01,
     QMI_WDA_LINK_LAYER_PROTOCOL_RAW_IP  = 0x02,
 } QmiWdaLinkLayerProtocol;
+
+/**
+ * qmi_wda_link_layer_protocol_get_string:
+ *
+ * Since: 1.10
+ */
 
 /**
  * QmiWdaDataAggregationProtocol:
@@ -59,6 +67,8 @@ typedef enum {
  * @QMI_WDA_DATA_AGGREGATION_PROTOCOL_QMAP: QMAP enabled.
  *
  * Data aggregation protocol in uplink or downlink.
+ *
+ * Since: 1.10
  */
 typedef enum {
     QMI_WDA_DATA_AGGREGATION_PROTOCOL_DISABLED = 0x00,
@@ -68,5 +78,11 @@ typedef enum {
     QMI_WDA_DATA_AGGREGATION_PROTOCOL_RNDIS    = 0x04,
     QMI_WDA_DATA_AGGREGATION_PROTOCOL_QMAP     = 0x05,
 } QmiWdaDataAggregationProtocol;
+
+/**
+ * qmi_wda_data_aggregation_protocol_get_string:
+ *
+ * Since: 1.10
+ */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDA_H_ */

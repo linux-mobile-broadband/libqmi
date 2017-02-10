@@ -53,6 +53,8 @@
  * @QMI_VOICE_CALL_STATE_SETUP: MT call is in setup state (3GPP).
  *
  * State of a call.
+ *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_CALL_STATE_UNKNOWN        = 0x00,
@@ -69,6 +71,12 @@ typedef enum {
 } QmiVoiceCallState;
 
 /**
+ * qmi_voice_call_state_get_string:
+ *
+ * Since: 1.14
+ */
+
+/**
  * QmiVoiceCallType:
  * @QMI_VOICE_CALL_TYPE_VOICE: Voice call.
  * @QMI_VOICE_CALL_TYPE_VOICE_IP: VoIP call.
@@ -78,6 +86,8 @@ typedef enum {
  * @QMI_VOICE_CALL_TYPE_SUPS: Supplementary service.
  *
  * Type of a voice call.
+ *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_CALL_TYPE_VOICE         = 0x00,
@@ -89,18 +99,32 @@ typedef enum {
 } QmiVoiceCallType;
 
 /**
+ * qmi_voice_call_type_get_string:
+ *
+ * Since: 1.14
+ */
+
+/**
  * QmiVoiceCallDirection:
  * @QMI_VOICE_CALL_DIRECTION_UNKNOWN: Unknown.
  * @QMI_VOICE_CALL_DIRECTION_MO: Mobile-originated.
  * @QMI_VOICE_CALL_DIRECTION_MT: Mobile-terminated.
  *
  * Call direction.
+ *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_CALL_DIRECTION_UNKNOWN = 0x00,
     QMI_VOICE_CALL_DIRECTION_MO      = 0x01,
     QMI_VOICE_CALL_DIRECTION_MT      = 0x02,
 } QmiVoiceCallDirection;
+
+/**
+ * qmi_voice_call_direction_get_string:
+ *
+ * Since: 1.14
+ */
 
 /**
  * QmiVoiceCallMode:
@@ -111,6 +135,8 @@ typedef enum {
  * @QMI_VOICE_CALL_MODE_LTE: LTE.
  *
  * Call mode.
+ *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_CALL_MODE_UNKNOWN = 0x00,
@@ -121,16 +147,30 @@ typedef enum {
 } QmiVoiceCallMode;
 
 /**
+ * qmi_voice_call_mode_get_string:
+ *
+ * Since: 1.14
+ */
+
+/**
  * QmiVoiceAls:
  * @QMI_VOICE_ALS_LINE_1: Line 1 (default).
  * @QMI_VOICE_ALS_LINE_2: Line 2.
  *
  * ALS line indicator.
+ *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_ALS_LINE_1 = 0x00,
     QMI_VOICE_ALS_LINE_2 = 0x01,
 } QmiVoiceAls;
+
+/**
+ * qmi_voice_als_get_string:
+ *
+ * Since: 1.14
+ */
 
 /**
  * QmiVoicePresentation:
@@ -140,6 +180,8 @@ typedef enum {
  * @QMI_VOICE_PRESENTATION_PAYPHONE: Payphone presentation (3GPP only).
  *
  * Remote party number presentation indicator.
+ *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_PRESENTATION_ALLOWED     = 0x00,
@@ -147,6 +189,12 @@ typedef enum {
     QMI_VOICE_PRESENTATION_UNAVAILABLE = 0x02,
     QMI_VOICE_PRESENTATION_PAYPHONE    = 0x04,
 } QmiVoicePresentation;
+
+/**
+ * qmi_voice_presentation_get_string:
+ *
+ * Since: 1.14
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI Voice Get Config' request/response */
@@ -160,6 +208,7 @@ typedef enum {
  *
  * TTY mode.
  *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_TTY_MODE_FULL = 0x00,
@@ -167,6 +216,12 @@ typedef enum {
     QMI_VOICE_TTY_MODE_HCO  = 0x02,
     QMI_VOICE_TTY_MODE_OFF  = 0x03,
 } QmiVoiceTtyMode;
+
+/**
+ * qmi_voice_tty_mode_get_string:
+ *
+ * Since: 1.14
+ */
 
 /**
  * QmiVoiceServiceOption:
@@ -182,6 +237,8 @@ typedef enum {
  * @QMI_VOICE_SERVICE_OPTION_WVRC: WVRC.
  *
  * Service option.
+ *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_SERVICE_OPTION_WILD                    = 0x0000,
@@ -197,6 +254,12 @@ typedef enum {
 } QmiVoiceServiceOption;
 
 /**
+ * qmi_voice_service_option_get_string:
+ *
+ * Since: 1.14
+ */
+
+/**
  * QmiVoiceWcdmaAmrStatus:
  * @QMI_VOICE_WCDMA_AMR_STATUS_NOT_SUPPORTED: Not supported.
  * @QMI_VOICE_WCDMA_AMR_STATUS_WCDMA_AMR_WB: WCDMA AMR wideband.
@@ -205,6 +268,8 @@ typedef enum {
  * @QMI_VOICE_WCDMA_AMR_STATUS_GSM_AMR_NB: GSM AMR narrowband.
  *
  * WCDMA AMR status.
+ *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_WCDMA_AMR_STATUS_NOT_SUPPORTED = 1 << 0,
@@ -215,16 +280,30 @@ typedef enum {
 } QmiVoiceWcdmaAmrStatus;
 
 /**
+ * qmi_voice_wcdma_amr_status_build_string_from_mask:
+ *
+ * Since: 1.14
+ */
+
+/**
  * QmiVoicePrivacy:
  * @QMI_VOICE_PRIVACY_STANDARD: Standard.
  * @QMI_VOICE_PRIVACY_ENHANCED: Enhanced.
  *
  * Voice privacy.
+ *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_PRIVACY_STANDARD = 0x00,
     QMI_VOICE_PRIVACY_ENHANCED = 0x01,
 } QmiVoicePrivacy;
+
+/**
+ * qmi_voice_privacy_get_string:
+ *
+ * Since: 1.14
+ */
 
 /**
  * QmiVoiceDomain:
@@ -234,6 +313,8 @@ typedef enum {
  * @QMI_VOICE_DOMAIN_PS_PREFERRED: PS preferred, CS secondary.
  *
  * Voice domain preference.
+ *
+ * Since: 1.14
  */
 typedef enum {
     QMI_VOICE_DOMAIN_CS_ONLY      = 0x00,
@@ -241,5 +322,11 @@ typedef enum {
     QMI_VOICE_DOMAIN_CS_PREFERRED = 0x02,
     QMI_VOICE_DOMAIN_PS_PREFERRED = 0x03,
 } QmiVoiceDomain;
+
+/**
+ * qmi_voice_domain_get_string:
+ *
+ * Since: 1.14
+ */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_VOICE_H_ */

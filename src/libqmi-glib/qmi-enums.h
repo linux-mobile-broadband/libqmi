@@ -50,40 +50,42 @@
  * @QMI_SERVICE_CAT2: Card Application Toolkit service (v2).
  * @QMI_SERVICE_UIM: User Identity Module service.
  * @QMI_SERVICE_PBM: Phonebook Management service.
- * @QMI_SERVICE_QCHAT: QCHAT service.
+ * @QMI_SERVICE_QCHAT: QCHAT service. Since: 1.8.
  * @QMI_SERVICE_RMTFS: Remote file system service.
- * @QMI_SERVICE_TEST: Test service.
+ * @QMI_SERVICE_TEST: Test service. Since: 1.8.
  * @QMI_SERVICE_LOC: Location service (~ PDS v2).
  * @QMI_SERVICE_SAR: Service access proxy service.
- * @QMI_SERVICE_IMS: IMS settings service.
- * @QMI_SERVICE_ADC: Analog to digital converter driver service.
- * @QMI_SERVICE_CSD: Core sound driver service.
- * @QMI_SERVICE_MFS: Modem embedded file system service.
- * @QMI_SERVICE_TIME: Time service.
- * @QMI_SERVICE_TS: Thermal sensors service.
- * @QMI_SERVICE_TMD: Thermal mitigation device service.
- * @QMI_SERVICE_SAP: Service access proxy service.
- * @QMI_SERVICE_WDA: Wireless data administrative service.
- * @QMI_SERVICE_TSYNC: TSYNC control service.
- * @QMI_SERVICE_RFSA: Remote file system access service.
- * @QMI_SERVICE_CSVT: Circuit switched videotelephony service.
- * @QMI_SERVICE_QCMAP: Qualcomm mobile access point service.
- * @QMI_SERVICE_IMSP: IMS presence service.
- * @QMI_SERVICE_IMSVT: IMS videotelephony service.
- * @QMI_SERVICE_IMSA: IMS application service.
- * @QMI_SERVICE_COEX: Coexistence service.
- * @QMI_SERVICE_PDC: Persistent device configuration service.
- * @QMI_SERVICE_STX: Simultaneous transmit service.
- * @QMI_SERVICE_BIT: Bearer independent transport service.
- * @QMI_SERVICE_IMSRTP: IMS RTP service.
- * @QMI_SERVICE_RFRPE: RF radiated performance enhancement service.
- * @QMI_SERVICE_DSD: Data system determination service.
- * @QMI_SERVICE_SSCTL: Subsystem control service.
+ * @QMI_SERVICE_IMS: IMS settings service. Since: 1.8.
+ * @QMI_SERVICE_ADC: Analog to digital converter driver service. Since: 1.8.
+ * @QMI_SERVICE_CSD: Core sound driver service. Since: 1.8.
+ * @QMI_SERVICE_MFS: Modem embedded file system service. Since: 1.8.
+ * @QMI_SERVICE_TIME: Time service. Since: 1.8.
+ * @QMI_SERVICE_TS: Thermal sensors service. Since: 1.8.
+ * @QMI_SERVICE_TMD: Thermal mitigation device service. Since: 1.8.
+ * @QMI_SERVICE_SAP: Service access proxy service. Since: 1.8.
+ * @QMI_SERVICE_WDA: Wireless data administrative service. Since: 1.8.
+ * @QMI_SERVICE_TSYNC: TSYNC control service. Since: 1.8.
+ * @QMI_SERVICE_RFSA: Remote file system access service. Since: 1.8.
+ * @QMI_SERVICE_CSVT: Circuit switched videotelephony service. Since: 1.8.
+ * @QMI_SERVICE_QCMAP: Qualcomm mobile access point service. Since: 1.8.
+ * @QMI_SERVICE_IMSP: IMS presence service. Since: 1.8.
+ * @QMI_SERVICE_IMSVT: IMS videotelephony service. Since: 1.8.
+ * @QMI_SERVICE_IMSA: IMS application service. Since: 1.8.
+ * @QMI_SERVICE_COEX: Coexistence service. Since: 1.8.
+ * @QMI_SERVICE_PDC: Persistent device configuration service. Since: 1.8.
+ * @QMI_SERVICE_STX: Simultaneous transmit service. Since: 1.8.
+ * @QMI_SERVICE_BIT: Bearer independent transport service. Since: 1.8.
+ * @QMI_SERVICE_IMSRTP: IMS RTP service. Since: 1.8.
+ * @QMI_SERVICE_RFRPE: RF radiated performance enhancement service. Since: 1.8.
+ * @QMI_SERVICE_DSD: Data system determination service. Since: 1.8.
+ * @QMI_SERVICE_SSCTL: Subsystem control service. Since: 1.8.
  * @QMI_SERVICE_CAT: Card Application Toolkit service (v1).
  * @QMI_SERVICE_RMS: Remote Management Service.
  * @QMI_SERVICE_OMA: Open Mobile Alliance device management service.
  *
  * QMI services.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_SERVICE_UNKNOWN = -1,
@@ -135,5 +137,11 @@ typedef enum {
     QMI_SERVICE_RMS = 225,
     QMI_SERVICE_OMA = 226
 } QmiService;
+
+/**
+ * qmi_service_get_string:
+ *
+ * Since: 1.0
+ */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_H_ */

@@ -48,6 +48,8 @@
  * @QMI_DMS_DATA_SERVICE_CAPABILITY_NON_SIMULTANEOUS_CS_PS: Non simultaneous CS and PS supported.
  *
  * Data service capability.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_DATA_SERVICE_CAPABILITY_NONE                   = 0,
@@ -58,16 +60,30 @@ typedef enum {
 } QmiDmsDataServiceCapability;
 
 /**
+ * qmi_dms_data_service_capability_get_string:
+ *
+ * Since: 1.0
+ */
+
+/**
  * QmiDmsSimCapability:
  * @QMI_DMS_SIM_CAPABILITY_NOT_SUPPORTED: SIM not supported.
  * @QMI_DMS_SIM_CAPABILITY_SUPPORTED: SIM is supported.
  *
  * SIM capability.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_SIM_CAPABILITY_NOT_SUPPORTED = 1,
     QMI_DMS_SIM_CAPABILITY_SUPPORTED     = 2
 } QmiDmsSimCapability;
+
+/**
+ * qmi_dms_sim_capability_get_string:
+ *
+ * Since: 1.0
+ */
 
 /**
  * QmiDmsRadioInterface:
@@ -78,6 +94,8 @@ typedef enum {
  * @QMI_DMS_RADIO_INTERFACE_LTE: LTE.
  *
  * Radio interface type.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_RADIO_INTERFACE_CDMA20001X = 1,
@@ -87,6 +105,11 @@ typedef enum {
     QMI_DMS_RADIO_INTERFACE_LTE        = 8
 } QmiDmsRadioInterface;
 
+/**
+ * qmi_dms_radio_interface_get_string:
+ *
+ * Since: 1.0
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS Get Power State' message */
@@ -110,6 +133,8 @@ typedef enum {
  * otherwise the battery is not being charged.
  *
  * If @QMI_DMS_POWER_STATE_FAULT is set, a power fault has been detected.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_POWER_STATE_EXTERNAL_SOURCE   = 1 << 0,
@@ -118,6 +143,11 @@ typedef enum {
     QMI_DMS_POWER_STATE_FAULT             = 1 << 3,
 } QmiDmsPowerState;
 
+/**
+ * qmi_dms_power_state_get_string:
+ *
+ * Since: 1.0
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS UIM Set PIN Protection' message */
@@ -128,12 +158,19 @@ typedef enum {
  * @QMI_DMS_UIM_PIN_ID_PIN2: PIN2.
  *
  * The PIN identifier.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_UIM_PIN_ID_PIN  = 1,
     QMI_DMS_UIM_PIN_ID_PIN2 = 2
 } QmiDmsUimPinId;
 
+/**
+ * qmi_dms_uim_pin_id_get_string:
+ *
+ * Since: 1.0
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS UIM Get PIN Status' message */
@@ -150,6 +187,8 @@ typedef enum {
  * @QMI_DMS_UIM_PIN_STATUS_CHANGED: Changed.
  *
  * The PIN status.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_UIM_PIN_STATUS_NOT_INITIALIZED      = 0,
@@ -161,6 +200,12 @@ typedef enum {
     QMI_DMS_UIM_PIN_STATUS_UNBLOCKED            = 6,
     QMI_DMS_UIM_PIN_STATUS_CHANGED              = 7,
 } QmiDmsUimPinStatus;
+
+/**
+ * qmi_dms_uim_pin_status_get_string:
+ *
+ * Since: 1.0
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS Get Operating Mode' message */
@@ -178,6 +223,8 @@ typedef enum {
  * @QMI_DMS_OPERATING_MODE_UNKNOWN: Unknown.
  *
  * Operating mode of the device.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_OPERATING_MODE_ONLINE                = 0,
@@ -192,6 +239,12 @@ typedef enum {
 } QmiDmsOperatingMode;
 
 /**
+ * qmi_dms_operating_mode_get_string:
+ *
+ * Since: 1.0
+ */
+
+/**
  * QmiDmsOfflineReason:
  * @QMI_DMS_OFFLINE_REASON_HOST_IMAGE_MISCONFIGURATION: Host image misconfiguration.
  * @QMI_DMS_OFFLINE_REASON_PRI_IMAGE_MISCONFIGURATION: PRI image misconfiguration.
@@ -199,6 +252,8 @@ typedef enum {
  * @QMI_DMS_OFFLINE_REASON_DEVICE_MEMORY_FULL: Memory full, cannot copy PRI information.
  *
  * Reasons for being in Offline (@QMI_DMS_OPERATING_MODE_OFFLINE) state.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_OFFLINE_REASON_HOST_IMAGE_MISCONFIGURATION = 1 << 0,
@@ -206,6 +261,12 @@ typedef enum {
     QMI_DMS_OFFLINE_REASON_PRI_VERSION_INCOMPATIBLE    = 1 << 2,
     QMI_DMS_OFFLINE_REASON_DEVICE_MEMORY_FULL          = 1 << 3
 } QmiDmsOfflineReason;
+
+/**
+ * qmi_dms_offline_reason_build_string_from_mask:
+ *
+ * Since: 1.0
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS Get Time' message */
@@ -217,12 +278,20 @@ typedef enum {
  * @QMI_DMS_TIME_SOURCE_HDR_NETWORK: HDR network.
  *
  * Source of the timestamp.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_TIME_SOURCE_DEVICE        = 0,
     QMI_DMS_TIME_SOURCE_CDMA_NETWORK  = 1,
     QMI_DMS_TIME_SOURCE_HDR_NETWORK   = 2,
 } QmiDmsTimeSource;
+
+/**
+ * qmi_dms_time_source_get_string:
+ *
+ * Since: 1.0
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS Get Activation State' message */
@@ -242,6 +311,8 @@ typedef enum {
  * @QMI_DMS_ACTIVATION_STATE_OTASP_COMMITED: OTASP settings committed.
  *
  * State of the service activation.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_ACTIVATION_STATE_NOT_ACTIVATED       = 0x00,
@@ -257,6 +328,12 @@ typedef enum {
     QMI_DMS_ACTIVATION_STATE_OTASP_COMMITED      = 0x0A
 } QmiDmsActivationState;
 
+/**
+ * qmi_dms_activation_state_get_string:
+ *
+ * Since: 1.0
+ */
+
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS UIM Get CK Status' message */
 
@@ -269,6 +346,8 @@ typedef enum {
  * @QMI_DMS_UIM_FACILITY_PF: UIM personalization facility.
  *
  * UIM personalization facilities.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_UIM_FACILITY_PN = 0,
@@ -279,16 +358,32 @@ typedef enum {
 } QmiDmsUimFacility;
 
 /**
+ * qmi_dms_uim_facility_get_string:
+ *
+ * Since: 1.0
+ */
+
+/**
  * QmiDmsUimFacilityState:
  * @QMI_DMS_UIM_FACILITY_STATE_DEACTIVATED: Facility is deactivated.
  * @QMI_DMS_UIM_FACILITY_STATE_ACTIVATED: Facility is activated.
  * @QMI_DMS_UIM_FACILITY_STATE_BLOCKED: Facility is blocked.
+ *
+ * State of the UIM facility.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_UIM_FACILITY_STATE_DEACTIVATED = 0,
     QMI_DMS_UIM_FACILITY_STATE_ACTIVATED   = 1,
     QMI_DMS_UIM_FACILITY_STATE_BLOCKED     = 2
 } QmiDmsUimFacilityState;
+
+/**
+ * qmi_dms_uim_facility_state_get_string:
+ *
+ * Since: 1.0
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS UIM Get State' message */
@@ -302,6 +397,8 @@ typedef enum {
  * @QMI_DMS_UIM_STATE_UNKNOWN: UIM state currently unavailable.
  *
  * State of the UIM.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_UIM_STATE_INITIALIZATION_COMPLETED = 0x00,
@@ -311,6 +408,12 @@ typedef enum {
     QMI_DMS_UIM_STATE_UNKNOWN                  = 0xFF
 } QmiDmsUimState;
 
+/**
+ * qmi_dms_uim_state_get_string:
+ *
+ * Since: 1.0
+ */
+
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS Set Time' message */
 
@@ -319,10 +422,18 @@ typedef enum {
  * @QMI_DMS_TIME_REFERENCE_TYPE_USER: User time.
  *
  * Time reference type.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_TIME_REFERENCE_TYPE_USER = 0
 } QmiDmsTimeReferenceType;
+
+/**
+ * qmi_dms_time_reference_type_get_string:
+ *
+ * Since: 1.0
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS Get Firmware Preference' message */
@@ -333,11 +444,19 @@ typedef enum {
  * @QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI: PRI image.
  *
  * Type of firmware image.
+ *
+ * Since: 1.0
  */
 typedef enum {
     QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM = 0,
     QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI   = 1
 } QmiDmsFirmwareImageType;
+
+/**
+ * qmi_dms_firmware_image_type_get_string:
+ *
+ * Since: 1.0
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS Get Boot Image Download Mode' message */
@@ -348,11 +467,19 @@ typedef enum {
  * @QMI_DMS_BOOT_IMAGE_DOWNLOAD_MODE_BOOT_AND_RECOVERY: Boot and recovery image download mode.
  *
  * Specifies the mode for the next boot.
+ *
+ * Since: 1.18
  */
 typedef enum {
     QMI_DMS_BOOT_IMAGE_DOWNLOAD_MODE_NORMAL            = 0,
     QMI_DMS_BOOT_IMAGE_DOWNLOAD_MODE_BOOT_AND_RECOVERY = 1,
 } QmiDmsBootImageDownloadMode;
+
+/**
+ * qmi_dms_boot_image_download_mode_get_string:
+ *
+ * Since: 1.18
+ */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS HP Change Device Mode' message */
@@ -362,9 +489,17 @@ typedef enum {
  * @QMI_DMS_HP_DEVICE_MODE_FASTBOOT: Fastboot download mode.
  *
  * HP specific device modes.
+ *
+ * Since: 1.18
  */
 typedef enum {
     QMI_DMS_HP_DEVICE_MODE_FASTBOOT = 5,
 } QmiDmsHpDeviceMode;
+
+/**
+ * qmi_dms_hp_device_mode_get_string:
+ *
+ * Since: 1.18
+ */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */
