@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Copyright (C) 2016 Zodiac Inflight Innovations
- * Copyright (C) 2016 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef QFU_UPDATER_H

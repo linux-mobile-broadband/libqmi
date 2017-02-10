@@ -17,7 +17,7 @@
  *
  * Copyright (C) 2016 Bjørn Mork <bjorn@mork.no>
  * Copyright (C) 2016 Zodiac Inflight Innovations
- * Copyright (C) 2016 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include "qfu-image-factory.h"

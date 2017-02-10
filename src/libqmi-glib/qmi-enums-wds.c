@@ -18,7 +18,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <string.h>

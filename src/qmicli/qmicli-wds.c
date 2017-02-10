@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Copyright (C) 2015 Velocloud Inc.
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include "config.h"

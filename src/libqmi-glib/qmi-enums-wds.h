@@ -19,7 +19,7 @@
  *
  * Copyright (C) 2012 Lanedo GmbH
  * Copyright (C) 2015 Velocloud Inc.
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_ENUMS_WDS_H_

@@ -16,7 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2016 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include "qmi-compat.h"

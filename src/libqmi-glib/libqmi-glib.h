@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2012 Google, Inc.
- * Copyright (C) 2012-2015 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _LIBQMI_GLIB_H_

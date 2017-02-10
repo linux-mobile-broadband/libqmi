@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright (C) 2015 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2015-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include "config.h"
