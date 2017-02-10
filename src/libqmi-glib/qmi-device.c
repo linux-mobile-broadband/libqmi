@@ -2183,7 +2183,7 @@ device_open_context_step (DeviceOpenContext *ctx)
 
         /* MBIM mode requested? */
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
-            if (g_strcmp0 (ctx->driver, "cdc_mbim"))
+            if (g_strcmp0 (ctx->driver, "cdc_mbim") && !ctx->self->priv->no_file_check)
                 g_warning ("[%s] requested MBIM mode but unexpected driver found: %s", ctx->self->priv->path_display, ctx->driver);
             goto next_step;
         }
