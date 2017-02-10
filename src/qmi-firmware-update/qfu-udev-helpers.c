@@ -507,6 +507,7 @@ handle_uevent (GUdevClient *client,
     ctx->timeout_id = 0;
 
     g_task_return_pointer (task, file, g_object_unref);
+    g_object_unref (task);
 }
 
 static gboolean
