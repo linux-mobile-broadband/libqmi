@@ -32,6 +32,7 @@
 
 #include "qmicli.h"
 #include "qmicli-helpers.h"
+#include "qmicli-charsets.h"
 
 /* Context */
 typedef struct {
@@ -54,6 +55,7 @@ static gchar *set_system_selection_preference_str;
 static gboolean network_scan_flag;
 static gboolean get_cell_location_info_flag;
 static gboolean force_network_search_flag;
+static gboolean get_operator_name_flag;
 static gboolean get_lte_cphy_ca_info_flag;
 static gboolean get_rf_band_info_flag;
 static gboolean get_supported_messages_flag;
@@ -107,6 +109,10 @@ static GOptionEntry entries[] = {
     },
     { "nas-force-network-search", 0, 0, G_OPTION_ARG_NONE, &force_network_search_flag,
       "Force network search",
+      NULL
+    },
+    { "nas-get-operator-name", 0, 0, G_OPTION_ARG_NONE, &get_operator_name_flag,
+      "Get operator name data",
       NULL
     },
     { "nas-get-lte-cphy-ca-info", 0, 0, G_OPTION_ARG_NONE, &get_lte_cphy_ca_info_flag,
@@ -168,6 +174,7 @@ qmicli_nas_options_enabled (void)
                  network_scan_flag +
                  get_cell_location_info_flag +
                  force_network_search_flag +
+                 get_operator_name_flag +
                  get_lte_cphy_ca_info_flag +
                  get_rf_band_info_flag +
                  get_supported_messages_flag +
@@ -2837,6 +2844,142 @@ force_network_search_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+static gchar *
+garray_of_uint8_to_string (GArray *array,
+                           QmiNasPlmnEncodingScheme scheme)
+{
+    gchar *decoded = NULL;
+
+    if (array->len == 0)
+        return NULL;
+
+    if (scheme == QMI_NAS_PLMN_ENCODING_SCHEME_GSM) {
+        guint8 *unpacked;
+        guint32 unpacked_len = 0;
+
+        /* Unpack the GSM and decode it */
+        unpacked = qmicli_charset_gsm_unpack ((const guint8 *) array->data, (array->len * 8) / 7, &unpacked_len);
+        if (unpacked) {
+            decoded = (gchar *) qmicli_charset_gsm_unpacked_to_utf8 (unpacked, unpacked_len);
+            g_free (unpacked);
+        }
+    } else if (scheme == QMI_NAS_PLMN_ENCODING_SCHEME_UCS2LE) {
+        decoded = g_convert (
+                        array->data,
+                        array->len,
+                        "UTF-8",
+                        "UCS-2LE",
+                        NULL,
+                        NULL,
+                        NULL);
+    }
+
+    return decoded;
+}
+
+static void
+get_operator_name_ready (QmiClientNas *client,
+                         GAsyncResult *res)
+{
+    QmiMessageNasGetOperatorNameOutput *output;
+    GError *error = NULL;
+    QmiNasNetworkNameDisplayCondition spn_display_condition;
+    const gchar *spn;
+    const gchar *operator_name;
+    GArray *array;
+
+    output = qmi_client_nas_get_operator_name_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_operator_name_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get operator name data: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_get_operator_name_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got operator name data\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_nas_get_operator_name_output_get_service_provider_name (
+        output,
+        &spn_display_condition,
+        &spn,
+        NULL)) {
+        gchar *dc_string = qmi_nas_network_name_display_condition_build_string_from_mask (spn_display_condition);
+
+        g_print ("Service Provider Name\n");
+        g_print ("\tDisplay Condition: '%s'\n"
+                 "\tName             : '%s'\n",
+                 dc_string,
+                 spn);
+        g_free (dc_string);
+    }
+
+    if (qmi_message_nas_get_operator_name_output_get_operator_string_name (
+        output,
+        &operator_name,
+        NULL)) {
+        g_print ("Operator Name: '%s'\n",
+                 operator_name);
+    }
+
+    if (qmi_message_nas_get_operator_name_output_get_operator_plmn_list (output, &array, NULL)) {
+        guint i;
+
+        g_print ("PLMN List:\n");
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetOperatorNameOutputOperatorPlmnListElement *element;
+            gchar *mnc;
+
+            element = &g_array_index (array, QmiMessageNasGetOperatorNameOutputOperatorPlmnListElement, i);
+            mnc = g_strdup (element->mnc);
+            if (strlen (mnc) >= 3 && (mnc[2] == 'F' || mnc[2] == 'f'))
+                mnc[2] = '\0';
+            g_print ("\tMCC/MNC: '%s-%s'%s LAC Range: %u->%u\tPNN Record: %u\n",
+                     element->mcc,
+                     mnc,
+                     mnc[2] == '\0' ? " " : "",
+                     element->lac1,
+                     element->lac2,
+                     element->plmn_name_record_identifier);
+        }
+    }
+
+    if (qmi_message_nas_get_operator_name_output_get_operator_plmn_name (output, &array, NULL)) {
+        guint i;
+
+        g_print ("PLMN Names:\n");
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetOperatorNameOutputOperatorPlmnNameElement *element;
+            gchar *long_name;
+            gchar *short_name;
+
+            element = &g_array_index (array, QmiMessageNasGetOperatorNameOutputOperatorPlmnNameElement, i);
+            long_name = garray_of_uint8_to_string (element->long_name, element->name_encoding);
+            short_name = garray_of_uint8_to_string (element->short_name, element->name_encoding);
+            g_print ("\t%d: '%s'%s%s%s\t\tCountry: '%s'\n",
+                     i,
+                     long_name ?: "",
+                     short_name ? " ('" : "",
+                     short_name ?: "",
+                     short_name ? "')" : "",
+                     qmi_nas_plmn_name_country_initials_get_string (element->short_country_initials));
+            g_free (long_name);
+            g_free (short_name);
+        }
+    }
+
+    qmi_message_nas_get_operator_name_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
 static void
 get_lte_cphy_ca_info_ready (QmiClientNas *client,
                             GAsyncResult *res)
@@ -3233,6 +3376,18 @@ qmicli_nas_run (QmiDevice *device,
                                              ctx->cancellable,
                                              (GAsyncReadyCallback)force_network_search_ready,
                                              NULL);
+        return;
+    }
+
+    /* Request to get operator name data */
+    if (get_operator_name_flag) {
+        g_debug ("Asynchronously getting operator name data...");
+        qmi_client_nas_get_operator_name (ctx->client,
+                                          NULL,
+                                          10,
+                                          ctx->cancellable,
+                                          (GAsyncReadyCallback)get_operator_name_ready,
+                                          NULL);
         return;
     }
 

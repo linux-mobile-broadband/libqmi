@@ -25,7 +25,9 @@ qmicli_SOURCES = \
 	qmicli-uim.c \
 	qmicli-wms.c \
 	qmicli-wda.c \
-	qmicli-voice.c
+	qmicli-voice.c \
+	qmicli-charsets.c \
+	qmicli-charsets.h
 
 qmicli_LDADD = \
 	$(MBIM_LIBS) \
