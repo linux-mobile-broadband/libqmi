@@ -1250,4 +1250,86 @@ typedef enum {
  * Since: 1.16
  */
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI NAS Get Operator Name' request/response */
+/**
+ * QmiNasPlmnEncodingScheme:
+ * @QMI_NAS_PLMN_ENCODING_SCHEME_GSM: GSM default alphabet packed encoding (ETSI GSM 03.38)
+ * @QMI_NAS_PLMN_ENCODING_SCHEME_UCS2LE: UCS-2 little-endian
+ *
+ * PLMN name encoding schemes.  See 3GPP TS 24.008 section "Network Name
+ * information element".
+ *
+ * Since: 1.18
+ */
+typedef enum {
+    QMI_NAS_PLMN_ENCODING_SCHEME_GSM    = 0,
+    QMI_NAS_PLMN_ENCODING_SCHEME_UCS2LE = 1,
+} QmiNasPlmnEncodingScheme;
+
+/**
+ * QmiNasNetworkNameDisplayCondition:
+ * @QMI_NAS_NETWORK_NAME_DISPLAY_CONDITION_DISPLAY_REGISTERED_PLMN_IF_KNOWN_NETWORK: if
+ * set, display of the registered PLMN is required when the registered PLMN is either
+ * the HPLMN or a PLMN in the Service Provider PLMN List (see EFspdi). Otherwise
+ * display of the registered PLMN is not required in this case.
+ * @QMI_NAS_NETWORK_NAME_DISPLAY_CONDITION_DISPLAY_SPN_NOT_REQUIRED_IF_UNKNOWN_NETWORK: if
+ * set, display of the Service Provider Name is not required when registered PLMN is
+ * neither HPLMN nor a PLMN in the service provider PLMN list (see EFspdi). If not set,
+ * SPN display is required in this case.
+ *
+ * Flags used to control display of the PLMN name and Service Provider Name. See
+ * 3GPP TS 51.011 descripton of the EFspn SIM file for more details.
+ *
+ * Since: 1.18
+ */
+typedef enum {
+    QMI_NAS_NETWORK_NAME_DISPLAY_CONDITION_DISPLAY_REGISTERED_PLMN_IF_KNOWN_NETWORK    = 1 << 0,
+    QMI_NAS_NETWORK_NAME_DISPLAY_CONDITION_DISPLAY_SPN_NOT_REQUIRED_IF_UNKNOWN_NETWORK = 1 << 1,
+} QmiNasNetworkNameDisplayCondition;
+
+/**
+ * QmiNasPlmnNameCountryInitials:
+ * @QMI_NAS_PLMN_NAME_COUNTRY_INITIALS_DO_NOT_ADD: don't add country initials
+ * @QMI_NAS_PLMN_NAME_COUNTRY_INIITALS_ADD: add country initials
+ * @QMI_NAS_PLMN_NAME_COUNTRY_INIITALS_UNSPECIFIED: unspecified
+ *
+ * PLMN name country initials options. See 3GPP TS 24.008
+ * section "Network Name information element".
+ *
+ * Since: 1.18
+ */
+typedef enum {
+    QMI_NAS_PLMN_NAME_COUNTRY_INITIALS_DO_NOT_ADD  = 0,
+    QMI_NAS_PLMN_NAME_COUNTRY_INIITALS_ADD         = 1,
+    QMI_NAS_PLMN_NAME_COUNTRY_INIITALS_UNSPECIFIED = 0xFF,
+} QmiNasPlmnNameCountryInitials;
+
+/**
+ * QmiNasPlmnNameSpareBits:
+ * @QMI_NAS_PLMN_NAME_SPARE_BITS_UNKNOWN: unknown
+ * @QMI_NAS_PLMN_NAME_SPARE_BITS_BIT_8: bit 8 is spare
+ * @QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_78: bits 7 - 8 are spare
+ * @QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_68: bits 6 - 8 are spare
+ * @QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_58: bits 5 - 8 are spare
+ * @QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_48: bits 4 - 8 are spare
+ * @QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_38: bits 3 - 8 are spare
+ * @QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_28: bits 2 - 8 are spare
+ *
+ * PLMN name spare bits in last octet of a network name.  See 3GPP TS 24.008
+ * section "Network Name information element".
+ *
+ * Since: 1.18
+ */
+typedef enum {
+    QMI_NAS_PLMN_NAME_SPARE_BITS_UNKNOWN = 0,
+    QMI_NAS_PLMN_NAME_SPARE_BITS_BIT_8   = 1,
+    QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_78 = 2,
+    QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_68 = 3,
+    QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_58 = 4,
+    QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_48 = 5,
+    QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_38 = 6,
+    QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_28 = 7,
+} QmiNasPlmnNameSpareBits;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
