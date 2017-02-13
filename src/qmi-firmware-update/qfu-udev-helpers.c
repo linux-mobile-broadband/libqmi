@@ -19,6 +19,8 @@
  * Copyright (C) 2016-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
+#include "config.h"
+
 #include <stdlib.h>
 
 #include <gio/gio.h>
