@@ -48,6 +48,7 @@ static gchar *verify_pin_str;
 static gchar *unblock_pin_str;
 static gchar *change_pin_str;
 static gchar *get_file_attributes_str;
+static gchar *sim_power_str;
 static gboolean get_card_status_flag;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
@@ -85,6 +86,10 @@ static GOptionEntry entries[] = {
     { "uim-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
       NULL
+    },
+    { "uim-sim-power", 0, 0, G_OPTION_ARG_STRING, &sim_power_str,
+      "Power on/off SIM card",
+      "[(on|off),(slot number)]"
     },
     { "uim-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
@@ -127,6 +132,7 @@ qmicli_uim_options_enabled (void)
                  !!change_pin_str +
                  !!read_transparent_str +
                  !!get_file_attributes_str +
+                 !!sim_power_str +
                  get_card_status_flag +
                  get_supported_messages_flag +
                  reset_flag +
@@ -554,6 +560,100 @@ get_supported_messages_ready (QmiClientUim *client,
     g_free (str);
 
     qmi_message_uim_get_supported_messages_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static QmiMessageUimPowerOnSimInput *
+power_on_sim_input_create (guint8 slot)
+{
+    QmiMessageUimPowerOnSimInput *input;
+    GError *error = NULL;
+
+    input = qmi_message_uim_power_on_sim_input_new ();
+
+    if (!qmi_message_uim_power_on_sim_input_set_slot (input, slot, &error)) {
+        g_printerr ("error: could not create SIM power on input: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_uim_power_on_sim_input_unref (input);
+        input = NULL;
+    }
+
+    return input;
+}
+
+static void power_on_sim_ready (QmiClientUim *client,
+                               GAsyncResult *res)
+{
+    QmiMessageUimPowerOnSimOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_uim_power_on_sim_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_power_on_sim_output_get_result (output, &error)) {
+        g_printerr ("error: could not power on SIM: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_uim_power_on_sim_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully performed SIM power on\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_uim_power_on_sim_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static QmiMessageUimPowerOffSimInput *
+power_off_sim_input_create (guint8 slot)
+{
+    QmiMessageUimPowerOffSimInput *input;
+    GError *error = NULL;
+
+    input = qmi_message_uim_power_off_sim_input_new ();
+
+    if (!qmi_message_uim_power_off_sim_input_set_slot (input, slot, &error)) {
+        g_printerr ("error: could not create SIM power off input: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_uim_power_off_sim_input_unref (input);
+        input = NULL;
+    }
+
+    return input;
+}
+
+static void power_off_sim_ready (QmiClientUim *client,
+                               GAsyncResult *res)
+{
+    QmiMessageUimPowerOffSimOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_uim_power_off_sim_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_power_off_sim_output_get_result (output, &error)) {
+        g_printerr ("error: could not power off SIM: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_uim_power_off_sim_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully performed SIM power off\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_uim_power_off_sim_output_unref (output);
     operation_shutdown (TRUE);
 }
 
@@ -1217,6 +1317,59 @@ qmicli_uim_run (QmiDevice *device,
                                                (GAsyncReadyCallback)get_supported_messages_ready,
                                                NULL);
         return;
+    }
+
+    /* Request to power on/off SIM card? */
+    if (sim_power_str) {
+        gchar **split;
+        gchar *power;
+        guint slot;
+
+        split = g_strsplit (sim_power_str, ",", -1);
+        qmicli_read_non_empty_string (split[0], "power state", &power);
+
+        qmicli_read_uint_from_string(split[1], &slot);
+
+        if (slot > G_MAXUINT8) {
+            g_printerr ("error: invalid slot number\n");
+            g_free (power);
+            return;
+        }
+
+
+
+        if (!g_ascii_strcasecmp (power, "on")) {
+            QmiMessageUimPowerOnSimInput *input;
+            g_debug ("Asynchronously power on SIM card");
+
+            input = power_on_sim_input_create (slot);
+            qmi_client_uim_power_on_sim (ctx->client,
+                                         input,
+                                         10,
+                                         ctx->cancellable,
+                                         (GAsyncReadyCallback)power_on_sim_ready,
+                                         NULL);
+            g_free (power);
+            return;
+        } else if (!g_ascii_strcasecmp (power, "off")) {
+            QmiMessageUimPowerOffSimInput *input;
+            g_debug ("Asynchronously power off SIM card");
+            input = power_off_sim_input_create (slot);
+            qmi_client_uim_power_off_sim (ctx->client,
+                                          input,
+                                          10,
+                                          ctx->cancellable,
+                                          (GAsyncReadyCallback)power_off_sim_ready,
+                                          NULL);
+            g_free (power);
+            return;
+        } else {
+            g_printerr ("error: expected 'on' or 'off ', got: %s\n", power);
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_strfreev (split);
     }
 
     /* Request to reset UIM service? */
