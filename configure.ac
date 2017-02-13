@@ -65,12 +65,12 @@ AC_SUBST(QMI_GLIB_LT_REVISION)
 AC_SUBST(QMI_GLIB_LT_AGE)
 
 dnl Required dependency versions
-GLIB_REQUIRED=2.36
-GUDEV_REQUIRED=147
+GLIB_VERSION=2.36
+GUDEV_VERSION=147
 
 dnl GLib, GIO...
 PKG_CHECK_MODULES(GLIB,
-                  glib-2.0 >= $GLIB_REQUIRED
+                  glib-2.0 >= $GLIB_VERSION
                   gobject-2.0
                   gio-2.0
                   gio-unix-2.0)
@@ -80,12 +80,23 @@ AC_SUBST(GLIB_LIBS)
 GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
 
-dnl GUdev
-PKG_CHECK_MODULES(GUDEV,
-                  [gudev-1.0 >= $GUDEV_REQUIRED],
-                  [have_gudev=yes],[have_gudev=no])
-AC_SUBST(GUDEV_CFLAGS)
-AC_SUBST(GUDEV_LIBS)
+dnl udev support is optional, enabled by default
+AC_ARG_WITH(udev, AS_HELP_STRING([--without-udev], [Build without udev support]), [], [with_udev=yes])
+case $with_udev in
+    yes)
+        PKG_CHECK_MODULES(GUDEV, [gudev-1.0 >= $GUDEV_VERSION], [have_gudev=yes],[have_gudev=no])
+        if test "x$have_gudev" = "xno"; then
+            AC_MSG_ERROR([Couldn't find gudev >= $GUDEV_VERSION. Install it, or otherwise configure using --without-udev to disable udev support.])
+        else
+            AC_DEFINE(WITH_UDEV, 1, [Define if you want udev support])
+            AC_SUBST(GUDEV_CFLAGS)
+            AC_SUBST(GUDEV_LIBS)
+        fi
+        ;;
+    *)
+        with_udev=no
+        ;;
+esac
 
 dnl qmi-firmware-update is optional, enabled by default
 AC_ARG_ENABLE([firmware-update],
@@ -93,11 +104,6 @@ AC_ARG_ENABLE([firmware-update],
                              [enable compilation of `qmi-firmware-update' [default=yes]]),
               [build_firmware_update=$enableval],
               [build_firmware_update=yes])
-if test "x$build_firmware_update" = "xyes"; then
-   if test "x$have_gudev" = "xno"; then
-      AC_MSG_ERROR([Cannot build `qmi-firmware-update' if GUDev >= GUDEV_REQUIRED is not available. Install it, or otherwise configure using --disable-firmware-update to disable building `qmi-firmware-update'.])
-   fi
-fi
 AM_CONDITIONAL([BUILD_FIRMWARE_UPDATE], [test "x$build_firmware_update" = "xyes"])
 
 dnl Documentation
@@ -202,5 +208,5 @@ echo "
     Built items:
       libqmi-glib:         yes
       qmicli:              yes
-      qmi-firmware-update: ${build_firmware_update}
+      qmi-firmware-update: ${build_firmware_update} (with udev: ${with_udev})
 "

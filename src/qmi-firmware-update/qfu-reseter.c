@@ -23,7 +23,6 @@
 #include <string.h>
 
 #include <gio/gio.h>
-#include <gudev/gudev.h>
 
 #include <libqmi-glib.h>
 

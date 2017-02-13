@@ -57,6 +57,7 @@ QfuDeviceSelection *qfu_device_selection_new      (const gchar  *preferred_cdc_w
                                                    GError      **error);
 
 GFile *qfu_device_selection_get_single_cdc_wdm      (QfuDeviceSelection   *self);
+#if defined WITH_UDEV
 void   qfu_device_selection_wait_for_cdc_wdm        (QfuDeviceSelection   *self,
                                                      GCancellable         *cancellable,
                                                      GAsyncReadyCallback   callback,
@@ -64,9 +65,11 @@ void   qfu_device_selection_wait_for_cdc_wdm        (QfuDeviceSelection   *self,
 GFile *qfu_device_selection_wait_for_cdc_wdm_finish (QfuDeviceSelection   *self,
                                                      GAsyncResult         *res,
                                                      GError              **error);
+#endif /* WITH_UDEV */
 
 GFile *qfu_device_selection_get_single_tty      (QfuDeviceSelection   *self);
 GList *qfu_device_selection_get_multiple_ttys   (QfuDeviceSelection   *self);
+#if defined WITH_UDEV
 void   qfu_device_selection_wait_for_tty        (QfuDeviceSelection   *self,
                                                  GCancellable         *cancellable,
                                                  GAsyncReadyCallback   callback,
@@ -74,6 +77,7 @@ void   qfu_device_selection_wait_for_tty        (QfuDeviceSelection   *self,
 GFile *qfu_device_selection_wait_for_tty_finish (QfuDeviceSelection   *self,
                                                  GAsyncResult         *res,
                                                  GError              **error);
+#endif /* WITH_UDEV */
 
 G_END_DECLS
 

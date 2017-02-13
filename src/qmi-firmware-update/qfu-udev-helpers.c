@@ -22,12 +22,12 @@
 #include <stdlib.h>
 
 #include <gio/gio.h>
-#include <gudev/gudev.h>
+
+#if defined WITH_UDEV
+# include <gudev/gudev.h>
+#endif
 
 #include "qfu-udev-helpers.h"
-
-static const gchar *tty_subsys_list[]     = { "tty", NULL };
-static const gchar *cdc_wdm_subsys_list[] = { "usbmisc", "usb", NULL };
 
 /******************************************************************************/
 
@@ -45,6 +45,11 @@ qfu_udev_helper_device_type_to_string (QfuUdevHelperDeviceType type)
 }
 
 /******************************************************************************/
+
+#if defined WITH_UDEV
+
+static const gchar *tty_subsys_list[]     = { "tty", NULL };
+static const gchar *cdc_wdm_subsys_list[] = { "usbmisc", "usb", NULL };
 
 static gboolean
 udev_helper_get_udev_device_details (GUdevDevice  *device,
@@ -641,3 +646,5 @@ qfu_udev_helper_generic_monitor_new (const gchar *sysfs_path)
     g_signal_connect (self->udev, "uevent", G_CALLBACK (handle_uevent_generic), NULL);
     return self;
 }
+
+#endif /* WITH_UDEV */

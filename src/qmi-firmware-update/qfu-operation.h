@@ -22,12 +22,15 @@
 #ifndef QFU_OPERATION_H
 #define QFU_OPERATION_H
 
+#include "config.h"
+
 #include <glib.h>
 #include <libqmi-glib.h>
 #include "qfu-device-selection.h"
 
 G_BEGIN_DECLS
 
+#if defined WITH_UDEV
 gboolean qfu_operation_update_run     (const gchar        **images,
                                        QfuDeviceSelection  *device_selection,
                                        const gchar         *firmware_version,
@@ -38,6 +41,8 @@ gboolean qfu_operation_update_run     (const gchar        **images,
                                        gboolean             override_download,
                                        guint8               modem_storage_index,
                                        gboolean             skip_validation);
+#endif
+
 gboolean qfu_operation_update_qdl_run (const gchar        **images,
                                        QfuDeviceSelection  *device_selection);
 gboolean qfu_operation_verify_run     (const gchar        **images);

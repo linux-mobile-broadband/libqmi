@@ -41,26 +41,26 @@
 /* Options */
 
 /* Generic device selections */
-static guint      busnum;
-static guint      devnum;
-static guint16    vid;
-static guint16    pid;
-static gchar     *cdc_wdm_str;
-static gchar     *tty_str;
+#if defined WITH_UDEV
+static guint   busnum;
+static guint   devnum;
+static guint16 vid;
+static guint16 pid;
+#endif
+static gchar *cdc_wdm_str;
+static gchar *tty_str;
 
+#if defined WITH_UDEV
 /* Update */
 static gboolean   action_update_flag;
 static gchar     *firmware_version_str;
 static gchar     *config_version_str;
 static gchar     *carrier_str;
-static gboolean   device_open_proxy_flag;
-static gboolean   device_open_qmi_flag;
-static gboolean   device_open_mbim_flag;
-static gboolean   device_open_auto_flag;
 static gboolean   ignore_version_errors_flag;
 static gboolean   override_download_flag;
 static gint       modem_storage_index_int;
 static gboolean   skip_validation_flag;
+#endif
 
 /* Reset */
 static gboolean   action_reset_flag;
@@ -73,12 +73,18 @@ static gboolean   action_verify_flag;
 
 /* Main */
 static gchar    **image_strv;
+static gboolean   device_open_proxy_flag;
+static gboolean   device_open_qmi_flag;
+static gboolean   device_open_mbim_flag;
+static gboolean   device_open_auto_flag;
 static gboolean   stdout_verbose_flag;
 static gboolean   stdout_silent_flag;
 static gchar     *verbose_log_str;
 static gboolean   version_flag;
 static gboolean   help_flag;
 static gboolean   help_examples_flag;
+
+#if defined WITH_UDEV
 
 static gboolean
 parse_busnum_devnum (const gchar  *option_name,
@@ -175,7 +181,10 @@ out:
     return result;
 }
 
+#endif /* WITH_UDEV */
+
 static GOptionEntry context_selection_entries[] = {
+#if defined WITH_UDEV
     { "busnum-devnum", 's', 0, G_OPTION_ARG_CALLBACK, &parse_busnum_devnum,
       "Select device by bus and device number (in decimal).",
       "[BUS:]DEV"
@@ -184,6 +193,7 @@ static GOptionEntry context_selection_entries[] = {
       "Select device by device vendor and product id (in hexadecimal).",
       "VID[:PID]"
     },
+#endif /* WITH_UDEV */
     { "cdc-wdm", 'w', 0, G_OPTION_ARG_FILENAME, &cdc_wdm_str,
       "Select device by QMI/MBIM cdc-wdm device path (e.g. /dev/cdc-wdm0).",
       "[PATH]"
@@ -195,6 +205,7 @@ static GOptionEntry context_selection_entries[] = {
     { NULL }
 };
 
+#if defined WITH_UDEV
 static GOptionEntry context_update_entries[] = {
     { "update", 'u', 0, G_OPTION_ARG_NONE, &action_update_flag,
       "Launch firmware update process.",
@@ -230,6 +241,7 @@ static GOptionEntry context_update_entries[] = {
     },
     { NULL }
 };
+#endif /* WITH_UDEV */
 
 static GOptionEntry context_reset_entries[] = {
     { "reset", 'b', 0, G_OPTION_ARG_NONE, &action_reset_flag,
@@ -345,6 +357,7 @@ print_help (GOptionContext *context)
 static void
 print_help_examples (void)
 {
+#if defined WITH_UDEV
     g_print ("\n"
              "********************************************************************************\n"
              "\n"
@@ -427,6 +440,8 @@ print_help_examples (void)
              "          --cdc-wdm /dev/cdc-wdm0 \\\n"
              "          9999999_9999999_9200_03.05.14.00_00_generic_000.000_001_SPKG_MC.cwe\n");
 
+#endif /* WITH_UDEV */
+
     g_print ("\n"
              "********************************************************************************\n"
              "\n"
@@ -442,7 +457,7 @@ print_help_examples (void)
              "          -d /dev/cdc-wdm0 \\\n"
              "          --dms-set-firmware-preference=\"05.05.58.00,005.025_002,Generic\" \\\n"
              "\n"
-             " b) Request power cycle \\\n"
+             " b) Request power cycle:\n"
              "    $ sudo qmicli \\\n"
              "          -d /dev/cdc-wdm0 \\\n"
              "          --dms-set-operating-mode=offline \\\n"
@@ -450,7 +465,9 @@ print_help_examples (void)
              "          -d /dev/cdc-wdm0 \\\n"
              "          --dms-set-operating-mode=reset \\\n"
              "\n"
-             " c) Run updater operation while in QDL download mode:\n"
+             " c) Wait for the /dev/ttyUSB device to appear.\n"
+             "\n"
+             " d) Run updater operation while in QDL download mode:\n"
              "    $ sudo " PROGRAM_NAME " \\\n"
              "          -t /dev/ttyUSB0 \\\n"
              "          --update-qdl \\\n"
@@ -473,13 +490,15 @@ print_help_examples (void)
              "          -d 1199:68a2 \\\n"
              "          --reset\n"
              "\n"
-             " b) Run updater operation while in QDL download mode:\n"
+             " b) Wait for the /dev/ttyUSB device to appear.\n"
+             "\n"
+             " c) Run updater operation while in QDL download mode:\n"
              "    $ sudo " PROGRAM_NAME " \\\n"
              "          -d 1199:68a2 \\\n"
              "          --update-qdl \\\n"
              "          9999999_9999999_9200_03.05.14.00_00_generic_000.000_001_SPKG_MC.cwe\n"
              "\n"
-             " c) Now wait for the device to fully reboot, may take up to several minutes.\n");
+             " d) Now wait for the device to fully reboot, may take up to several minutes.\n");
 
 
     g_print ("\n"
@@ -511,6 +530,9 @@ int main (int argc, char **argv)
     GOptionContext     *context;
     GOptionGroup       *group;
     guint               n_actions;
+    guint               n_actions_images_needed;
+    guint               n_actions_device_needed;
+    guint               n_actions_cdc_wdm_needed;
     gboolean            result = FALSE;
     QfuDeviceSelection *device_selection = NULL;
     QmiDeviceOpenFlags  device_open_flags = QMI_DEVICE_OPEN_FLAGS_NONE;
@@ -525,9 +547,11 @@ int main (int argc, char **argv)
     g_option_group_add_entries (group, context_selection_entries);
     g_option_context_add_group (context, group);
 
+#if defined WITH_UDEV
     group = g_option_group_new ("update", "Update options (normal mode)", "", NULL, NULL);
     g_option_group_add_entries (group, context_update_entries);
     g_option_context_add_group (context, group);
+#endif
 
     group = g_option_group_new ("reset", "Reset options (normal mode)", "", NULL, NULL);
     g_option_group_add_entries (group, context_reset_entries);
@@ -571,11 +595,24 @@ int main (int argc, char **argv)
     /* Initialize logging */
     qfu_log_init (stdout_verbose_flag, stdout_silent_flag, verbose_log_str);
 
+
+    /* Total actions */
+    n_actions = (action_verify_flag + action_update_qdl_flag + action_reset_flag);
+    /* Actions that require images specified */
+    n_actions_images_needed = (action_verify_flag + action_update_qdl_flag);
+    /* Actions that require a device specified */
+    n_actions_device_needed = (action_update_qdl_flag + action_reset_flag);
+    /* Actions that allow using a cdc-wdm device */
+    n_actions_cdc_wdm_needed = (action_reset_flag);
+
+#if defined WITH_UDEV
+    n_actions                += action_update_flag;
+    n_actions_cdc_wdm_needed += action_update_flag;
+    n_actions_images_needed  += action_update_flag;
+    n_actions_device_needed  += action_update_flag;
+#endif
+
     /* We don't allow multiple actions at the same time */
-    n_actions = (action_verify_flag +
-                 action_update_flag +
-                 action_update_qdl_flag +
-                 action_reset_flag);
     if (n_actions == 0) {
         g_printerr ("error: no actions specified\n");
         goto out;
@@ -586,14 +623,18 @@ int main (int argc, char **argv)
     }
 
     /* A list of images must be provided for update and verify operations */
-    if ((action_verify_flag || action_update_flag || action_update_qdl_flag) && !image_strv) {
+    if (n_actions_images_needed && !image_strv) {
         g_printerr ("error: no firmware images specified\n");
         goto out;
     }
 
     /* device selection must be performed for update and reset operations */
-    if (action_update_flag || action_update_qdl_flag || action_reset_flag) {
+    if (n_actions_device_needed) {
+#if defined WITH_UDEV
         device_selection = qfu_device_selection_new (cdc_wdm_str, tty_str, vid, pid, busnum, devnum, &error);
+#else
+        device_selection = qfu_device_selection_new (cdc_wdm_str, tty_str, 0, 0, 0, 0, &error);
+#endif
         if (!device_selection) {
             g_printerr ("error: couldn't select device:: %s\n", error->message);
             g_error_free (error);
@@ -602,7 +643,7 @@ int main (int argc, char **argv)
     }
 
     /* Validate device open flags */
-    if (action_update_flag || action_reset_flag) {
+    if (n_actions_cdc_wdm_needed) {
         if (device_open_mbim_flag + device_open_qmi_flag + device_open_auto_flag > 1) {
             g_printerr ("error: cannot specify multiple mode flags to open device\n");
             goto out;
@@ -617,6 +658,7 @@ int main (int argc, char **argv)
 
     /* Run */
 
+#if defined WITH_UDEV
     if (action_update_flag) {
         g_assert (QFU_IS_DEVICE_SELECTION (device_selection));
 
@@ -639,6 +681,7 @@ int main (int argc, char **argv)
                                            skip_validation_flag);
         goto out;
     }
+#endif /* WITH_UDEV */
 
     if (action_update_qdl_flag) {
         g_assert (QFU_IS_DEVICE_SELECTION (device_selection));

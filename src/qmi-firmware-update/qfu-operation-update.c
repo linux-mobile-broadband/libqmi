@@ -115,6 +115,8 @@ operation_update_run (QfuUpdater   *updater,
     return operation.result;
 }
 
+#if defined WITH_UDEV
+
 gboolean
 qfu_operation_update_run (const gchar        **images,
                           QfuDeviceSelection  *device_selection,
@@ -145,6 +147,8 @@ qfu_operation_update_run (const gchar        **images,
     g_object_unref (updater);
     return result;
 }
+
+#endif
 
 gboolean
 qfu_operation_update_qdl_run (const gchar        **images,

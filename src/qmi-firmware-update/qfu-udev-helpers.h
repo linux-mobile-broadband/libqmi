@@ -22,9 +22,21 @@
 #ifndef QFU_UDEV_HELPERS_H
 #define QFU_UDEV_HELPERS_H
 
+#include "config.h"
+
 #include <gio/gio.h>
 
 G_BEGIN_DECLS
+
+typedef enum {
+    QFU_UDEV_HELPER_DEVICE_TYPE_TTY,
+    QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM,
+    QFU_UDEV_HELPER_DEVICE_TYPE_LAST
+} QfuUdevHelperDeviceType;
+
+const gchar *qfu_udev_helper_device_type_to_string (QfuUdevHelperDeviceType type);
+
+#if defined WITH_UDEV
 
 gchar *qfu_udev_helper_find_by_file          (GFile        *file,
                                               GError      **error);
@@ -35,14 +47,6 @@ gchar *qfu_udev_helper_find_by_device_info   (guint16       vid,
                                               guint         busnum,
                                               guint         devnum,
                                               GError      **error);
-
-typedef enum {
-    QFU_UDEV_HELPER_DEVICE_TYPE_TTY,
-    QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM,
-    QFU_UDEV_HELPER_DEVICE_TYPE_LAST
-} QfuUdevHelperDeviceType;
-
-const gchar *qfu_udev_helper_device_type_to_string (QfuUdevHelperDeviceType type);
 
 GList *qfu_udev_helper_list_devices           (QfuUdevHelperDeviceType   device_type,
                                                const gchar              *sysfs_path);
@@ -58,6 +62,8 @@ GFile *qfu_udev_helper_wait_for_device_finish (GAsyncResult             *res,
 typedef struct _QfuUdevHelperGenericMonitor QfuUdevHelperGenericMonitor;
 QfuUdevHelperGenericMonitor *qfu_udev_helper_generic_monitor_new  (const gchar *sysfs_path);
 void                         qfu_udev_helper_generic_monitor_free (QfuUdevHelperGenericMonitor *self);
+
+#endif
 
 G_END_DECLS
 
