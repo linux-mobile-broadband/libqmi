@@ -336,6 +336,8 @@ typedef enum {
  *
  * Get verbose call end reason based on the reason type.
  *
+ * Returns: (transfer none): a string with the reason, or %NULL if not found. Do not free the returned value.
+ *
  * Since: 1.0
  */
 const gchar *qmi_wds_verbose_call_end_reason_get_string (QmiWdsVerboseCallEndReasonType type,
