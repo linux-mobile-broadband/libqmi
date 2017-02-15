@@ -188,6 +188,8 @@ qmicli_read_rat_mode_pref_from_string (const gchar *str,
     type = qmi_nas_rat_mode_preference_get_type ();
     flags_class = G_FLAGS_CLASS (g_type_class_ref (type));
 
+    *out = 0;
+
     items = g_strsplit_set (str, "|", 0);
     for (iter = items; iter && *iter && success; iter++) {
         if (!*iter[0])
@@ -347,6 +349,8 @@ qmicli_read_net_open_flags_from_string (const gchar *str,
 
     type = qmi_device_open_flags_get_type ();
     flags_class = G_FLAGS_CLASS (g_type_class_ref (type));
+
+    *out = 0;
 
     items = g_strsplit_set (str, "|", 0);
     for (iter = items; iter && *iter && success; iter++) {
