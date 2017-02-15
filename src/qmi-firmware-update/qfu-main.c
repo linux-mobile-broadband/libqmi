@@ -33,6 +33,7 @@
 #include "qfu-operation.h"
 #include "qfu-device-selection.h"
 #include "qfu-udev-helpers.h"
+#include "qfu-utils.h"
 
 #define PROGRAM_NAME    "qmi-firmware-update"
 #define PROGRAM_VERSION PACKAGE_VERSION
@@ -49,6 +50,10 @@ static guint16 pid;
 #endif
 static gchar *cdc_wdm_str;
 static gchar *tty_str;
+
+#if defined WITH_MM_RUNTIME_CHECK
+static gboolean ignore_mm_runtime_check_flag;
+#endif
 
 #if defined WITH_UDEV
 /* Update */
@@ -287,6 +292,12 @@ static GOptionEntry context_main_entries[] = {
       "Open a cdc-wdm device in either QMI or MBIM mode (default)",
       NULL
     },
+#if defined WITH_MM_RUNTIME_CHECK
+    { "ignore-mm-runtime-check", 0, 0, G_OPTION_ARG_NONE, &ignore_mm_runtime_check_flag,
+      "Ignore ModemManager runtime check",
+      NULL
+    },
+#endif
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &stdout_verbose_flag,
       "Run action with verbose messages in standard output, including the debug ones.",
       NULL
@@ -595,7 +606,6 @@ int main (int argc, char **argv)
     /* Initialize logging */
     qfu_log_init (stdout_verbose_flag, stdout_silent_flag, verbose_log_str);
 
-
     /* Total actions */
     n_actions = (action_verify_flag + action_update_qdl_flag + action_reset_flag);
     /* Actions that require images specified */
@@ -640,6 +650,34 @@ int main (int argc, char **argv)
             g_error_free (error);
             goto out;
         }
+
+#if defined WITH_MM_RUNTIME_CHECK
+        /* For all those actions that require a device, we will be doing MM runtime checks */
+        if (!ignore_mm_runtime_check_flag) {
+            gboolean mm_running;
+            gboolean abort_needed = FALSE;
+
+            if (!qfu_utils_modemmanager_running (&mm_running, &error)) {
+                g_printerr ("error: couldn't check if ModemManager running: %s\n", error->message);
+                g_error_free (error);
+                abort_needed = TRUE;
+            } else if (mm_running) {
+                g_printerr ("error: ModemManager is running: cannot perform firmware upgrade operation at the same time\n");
+                abort_needed = TRUE;
+            }
+
+            if (abort_needed) {
+                g_printerr ("\n"
+                            "Note: in order to do a clean firmware upgrade, ModemManager must NOT be running;\n"
+                            "please stop it and retry. On a 'systemd' based system this may be done as follows:\n"
+                            " # systemctl stop ModemManager\n"
+                            "\n"
+                            "You can also ignore this runtime check (at your own risk) using --ignore-mm-runtime-check.\n"
+                            "\n");
+                goto out;
+            }
+        }
+#endif
     }
 
     /* Validate device open flags */

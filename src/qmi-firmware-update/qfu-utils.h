@@ -23,6 +23,8 @@
 #ifndef QFU_UTILS_H
 #define QFU_UTILS_H
 
+#include "config.h"
+
 #include <glib.h>
 #include <gio/gio.h>
 #include <libqmi-glib.h>
@@ -69,6 +71,13 @@ void     qfu_utils_power_cycle        (QmiClientDms         *qmi_client,
 gboolean qfu_utils_power_cycle_finish (QmiClientDms         *qmi_client,
                                        GAsyncResult         *res,
                                        GError              **error);
+
+#if defined WITH_MM_RUNTIME_CHECK
+
+gboolean qfu_utils_modemmanager_running (gboolean  *mm_running,
+                                         GError   **error);
+
+#endif
 
 G_END_DECLS
 

@@ -714,3 +714,49 @@ qfu_utils_power_cycle (QmiClientDms         *qmi_client,
 
     power_cycle_step (task);
 }
+
+/******************************************************************************/
+
+#if defined WITH_MM_RUNTIME_CHECK
+
+gboolean
+qfu_utils_modemmanager_running (gboolean  *mm_running,
+                                GError   **error)
+{
+    GDBusConnection *connection;
+    GVariant        *response;
+    GError          *inner_error = NULL;
+
+    g_assert (mm_running);
+
+    connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
+    if (!connection) {
+        g_prefix_error (error, "Couldn't get system bus: ");
+        return FALSE;
+    }
+
+    response = g_dbus_connection_call_sync (connection,
+                                            "org.freedesktop.ModemManager1",
+                                            "/org/freedesktop/ModemManager1",
+                                            "org.freedesktop.DBus.Peer",
+                                            "Ping",
+                                            NULL,
+                                            NULL,
+                                            G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                                            -1,
+                                            NULL,
+                                            &inner_error);
+    if (!response) {
+        g_debug ("[qfu-utils] couldn't ping ModemManager: %s", inner_error->message);
+        g_error_free (inner_error);
+        *mm_running = FALSE;
+    } else {
+        *mm_running = TRUE;
+        g_variant_unref (response);
+    }
+
+    g_object_unref (connection);
+    return TRUE;
+}
+
+#endif

@@ -80,24 +80,6 @@ AC_SUBST(GLIB_LIBS)
 GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
 
-dnl udev support is optional, enabled by default
-AC_ARG_WITH(udev, AS_HELP_STRING([--without-udev], [Build without udev support]), [], [with_udev=yes])
-case $with_udev in
-    yes)
-        PKG_CHECK_MODULES(GUDEV, [gudev-1.0 >= $GUDEV_VERSION], [have_gudev=yes],[have_gudev=no])
-        if test "x$have_gudev" = "xno"; then
-            AC_MSG_ERROR([Couldn't find gudev >= $GUDEV_VERSION. Install it, or otherwise configure using --without-udev to disable udev support.])
-        else
-            AC_DEFINE(WITH_UDEV, 1, [Define if you want udev support])
-            AC_SUBST(GUDEV_CFLAGS)
-            AC_SUBST(GUDEV_LIBS)
-        fi
-        ;;
-    *)
-        with_udev=no
-        ;;
-esac
-
 dnl qmi-firmware-update is optional, enabled by default
 AC_ARG_ENABLE([firmware-update],
               AS_HELP_STRING([--enable-firmware-update],
@@ -105,6 +87,43 @@ AC_ARG_ENABLE([firmware-update],
               [build_firmware_update=$enableval],
               [build_firmware_update=yes])
 AM_CONDITIONAL([BUILD_FIRMWARE_UPDATE], [test "x$build_firmware_update" = "xyes"])
+
+dnl udev support is optional, enabled by default
+AC_ARG_WITH(udev, AS_HELP_STRING([--without-udev], [Build without udev support]), [], [with_udev=yes])
+case $with_udev in
+    yes)
+        if test "x$build_firmware_update" = "xyes"; then
+            PKG_CHECK_MODULES(GUDEV, [gudev-1.0 >= $GUDEV_VERSION], [have_gudev=yes],[have_gudev=no])
+            if test "x$have_gudev" = "xno"; then
+                AC_MSG_ERROR([Couldn't find gudev >= $GUDEV_VERSION. Install it, or otherwise configure using --without-udev to disable udev support.])
+            else
+                AC_DEFINE(WITH_UDEV, 1, [Define if you want udev support])
+                AC_SUBST(GUDEV_CFLAGS)
+                AC_SUBST(GUDEV_LIBS)
+            fi
+        else
+            with_udev="n/a"
+        fi
+        ;;
+    *)
+        with_udev=no
+        ;;
+esac
+
+dnl runtime MM check is optional, enabled by default
+AC_ARG_WITH(mm-runtime-check, AS_HELP_STRING([--without-mm-runtime-check], [Build without ModemManager runtime check]), [], [with_mm_runtime_check=yes])
+case $with_mm_runtime_check in
+    yes)
+        if test "x$build_firmware_update" = "xyes"; then
+            AC_DEFINE(WITH_MM_RUNTIME_CHECK, 1, [Define if you want ModemManager runtime check])
+        else
+            with_mm_runtime_check="n/a"
+        fi
+        ;;
+    *)
+        with_mm_runtime_check=no
+        ;;
+esac
 
 dnl Documentation
 GTK_DOC_CHECK(1.0)
@@ -208,5 +227,7 @@ echo "
     Built items:
       libqmi-glib:         yes
       qmicli:              yes
-      qmi-firmware-update: ${build_firmware_update} (with udev: ${with_udev})
+      qmi-firmware-update: ${build_firmware_update}
+          with udev:             ${with_udev}
+          with MM runtime check: ${with_mm_runtime_check}
 "
