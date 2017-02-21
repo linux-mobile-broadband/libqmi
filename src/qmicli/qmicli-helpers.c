@@ -547,6 +547,48 @@ qmicli_read_link_layer_protocol_from_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_data_aggregation_protocol_from_string (const gchar *str,
+                                                   QmiWdaDataAggregationProtocol *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_wda_data_aggregation_protocol_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiWdaDataAggregationProtocol)enum_value->value;
+    else
+        g_printerr ("error: invalid data aggregation protocol value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
+qmicli_read_data_endpoint_type_from_string (const gchar *str,
+                                            QmiDataEndpointType *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_data_endpoint_type_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiDataEndpointType)enum_value->value;
+    else
+        g_printerr ("error: invalid data aggregation protocol value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
 qmicli_read_autoconnect_setting_from_string (const gchar *str,
                                              QmiWdsAutoconnectSetting *out)
 {

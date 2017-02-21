@@ -59,6 +59,10 @@ gboolean qmicli_read_expected_data_format_from_string        (const gchar *str,
                                                               QmiDeviceExpectedDataFormat *out);
 gboolean qmicli_read_link_layer_protocol_from_string         (const gchar *str,
                                                               QmiWdaLinkLayerProtocol *out);
+gboolean qmicli_read_data_aggregation_protocol_from_string   (const gchar *str,
+                                                              QmiWdaDataAggregationProtocol *out);
+gboolean qmicli_read_data_endpoint_type_from_string          (const gchar *str,
+                                                              QmiDataEndpointType *out);
 gboolean qmicli_read_autoconnect_setting_from_string         (const gchar *str,
                                                               QmiWdsAutoconnectSetting *out);
 gboolean qmicli_read_autoconnect_setting_roaming_from_string (const gchar *str,

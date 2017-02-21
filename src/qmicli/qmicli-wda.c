@@ -33,6 +33,10 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#define QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED 0xFFFFFFFF
+#define QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED 0xFFFFFFFF
+#define QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED -1
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -49,8 +53,8 @@ static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "wda-set-data-format", 0, 0, G_OPTION_ARG_STRING, &set_data_format_str,
-      "Set data format",
-      "[raw-ip|802-3]"
+      "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip), ul-protocol (tlp|qc-ncm|mbim|rndis|qmap), dl-protocol (tlp|qc-ncm|mbim|rndis|qmap), dl-datagrams-max-size, dl-max-datagrams, ep-type (undefined|hsusb), ep-iface-number)",
+      "[\"key=value,...\"]"
     },
     { "wda-get-data-format", 0, 0, G_OPTION_ARG_NONE, &get_data_format_flag,
       "Get data format",
@@ -294,29 +298,239 @@ set_data_format_ready (QmiClientWda *client,
     operation_shutdown (TRUE);
 }
 
+
+typedef struct {
+    QmiWdaLinkLayerProtocol link_layer_protocol;
+    QmiWdaDataAggregationProtocol ul_protocol;
+    QmiWdaDataAggregationProtocol dl_protocol;
+    guint32 dl_datagram_max_size;
+    guint32 dl_max_datagrams;
+    QmiDataEndpointType endpoint_type;
+    guint32 endpoint_iface_number;
+} SetDataFormatProperties;
+
+
+static gboolean
+set_data_format_properties_handle (const gchar  *key,
+                                   const gchar  *value,
+                                   GError      **error,
+                                   gpointer      user_data)
+{
+    SetDataFormatProperties *props = (SetDataFormatProperties *)user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "key '%s' requires a value",
+                     key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "link-layer-protocol") == 0) {
+        if (!qmicli_read_link_layer_protocol_from_string (value, &(props->link_layer_protocol))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "Unrecognized Link Layer Protocol '%s'",
+                         value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ul-protocol") == 0) {
+        if (!qmicli_read_data_aggregation_protocol_from_string (value, &(props->ul_protocol))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "Unrecognized Data Aggregation Protocol '%s'",
+                         value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "dl-protocol") == 0) {
+        if (!qmicli_read_data_aggregation_protocol_from_string (value, &(props->dl_protocol))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "Unrecognized Data Aggregation Protocol '%s'",
+                         value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "dl-datagram-max-size") == 0) {
+        props->dl_datagram_max_size = atoi(value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "dl-max-datagrams") == 0) {
+        props->dl_max_datagrams = atoi(value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ep-type") == 0) {
+        if (!qmicli_read_data_endpoint_type_from_string (value, &(props->endpoint_type))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "Unrecognized Endpoint Type '%s'",
+                         value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ep-iface-number") == 0) {
+        props->endpoint_iface_number = atoi(value);
+        return TRUE;
+    }
+
+    g_set_error (error,
+                 QMI_CORE_ERROR,
+                 QMI_CORE_ERROR_FAILED,
+                 "Unrecognized option '%s'",
+                 key);
+    return FALSE;
+}
+
 static QmiMessageWdaSetDataFormatInput *
 set_data_format_input_create (const gchar *str)
 {
     QmiMessageWdaSetDataFormatInput *input = NULL;
-    QmiWdaLinkLayerProtocol link_layer_protocol;
+    GError *error = NULL;
+    SetDataFormatProperties props = {
+        .link_layer_protocol   = QMI_WDA_LINK_LAYER_PROTOCOL_UNKNOWN,
+        .ul_protocol           = QMI_WDA_DATA_AGGREGATION_PROTOCOL_DISABLED,
+        .dl_protocol           = QMI_WDA_DATA_AGGREGATION_PROTOCOL_DISABLED,
+        .dl_datagram_max_size  = QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED,
+        .dl_max_datagrams      = QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED,
+        .endpoint_type         = QMI_DATA_ENDPOINT_TYPE_UNDEFINED,
+        .endpoint_iface_number = QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED,
+    };
 
-    if (qmicli_read_link_layer_protocol_from_string (str, &link_layer_protocol)) {
-        GError *error = NULL;
+    input = qmi_message_wda_set_data_format_input_new ();
 
-        input = qmi_message_wda_set_data_format_input_new ();
-        if (!qmi_message_wda_set_data_format_input_set_link_layer_protocol (
-                input,
-                link_layer_protocol,
-                &error)) {
-            g_printerr ("error: couldn't create input data bundle: '%s'\n",
-                        error->message);
+    /* New key=value format */
+    if (strchr (str, '=')) {
+        if (!qmicli_parse_key_value_string (str,
+                                            &error,
+                                            set_data_format_properties_handle,
+                                            &props)) {
+            g_printerr ("error: could not parse input string '%s'\n", error->message);
             g_error_free (error);
-            qmi_message_wda_set_data_format_input_unref (input);
-            input = NULL;
+            goto error_out;
+        }
+
+        if (!qmi_message_wda_set_data_format_input_set_uplink_data_aggregation_protocol (
+                input,
+                props.ul_protocol,
+                &error)) {
+            g_printerr ("error: could not set Upload data aggregation protocol '%d': %s\n",
+                        props.ul_protocol, error->message);
+            g_error_free (error);
+            goto error_out;
+        }
+
+        if (!qmi_message_wda_set_data_format_input_set_downlink_data_aggregation_protocol (
+                input,
+                props.dl_protocol,
+                &error)) {
+            g_printerr ("error: could not set Download data aggregation protocol '%d': %s\n",
+                        props.dl_protocol, error->message);
+            g_error_free (error);
+            goto error_out;
+
+        }
+
+        if (props.dl_datagram_max_size != QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED &&
+            !qmi_message_wda_set_data_format_input_set_downlink_data_aggregation_max_size (
+                input,
+                props.dl_datagram_max_size,
+                &error)) {
+            g_printerr ("error: could not set Download data aggregation max size %d: %s\n",
+                        props.dl_datagram_max_size, error->message);
+            g_error_free (error);
+            goto error_out;
+
+        }
+
+        if (props.dl_max_datagrams != QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED &&
+            !qmi_message_wda_set_data_format_input_set_downlink_data_aggregation_max_datagrams (
+                input,
+                props.dl_max_datagrams,
+                &error)) {
+            g_printerr ("error: could not set Download data aggregation max datagrams %d: %s\n",
+                        props.dl_max_datagrams, error->message);
+            g_error_free (error);
+            goto error_out;
+
+        }
+
+        if ((props.endpoint_type == QMI_DATA_ENDPOINT_TYPE_UNDEFINED) ^
+            (props.endpoint_iface_number == QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED)) {
+            g_printerr ("error: endpoint type and interface number must be both set or both unset\n");
+            goto error_out;
+        }
+
+        if (props.endpoint_type != QMI_DATA_ENDPOINT_TYPE_UNDEFINED &&
+            !qmi_message_wda_set_data_format_input_set_endpoint_info (
+                input,
+                props.endpoint_type,
+                props.endpoint_iface_number,
+                &error)) {
+            g_printerr ("error: could not set peripheral endpoint id: %s\n", error->message);
+            g_error_free (error);
+            goto error_out;
+
+        }
+
+        if (props.endpoint_iface_number != QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED &&
+            !qmi_message_wda_set_data_format_input_set_endpoint_info (
+                input,
+                QMI_DATA_ENDPOINT_TYPE_HSUSB,
+                props.endpoint_iface_number,
+                &error)) {
+            g_printerr ("error: could not set peripheral endpoint id: %s\n", error->message);
+            g_error_free (error);
+            goto error_out;
+
+        }
+    }
+    /* Old non key=value format, like this:
+     *    "[(raw-ip|802-3)]"
+     */
+    else {
+        if (!qmicli_read_link_layer_protocol_from_string (str, &(props.link_layer_protocol))) {
+            g_printerr ("Unrecognized Link Layer Protocol '%s'\n", str);
+            goto error_out;
         }
     }
 
+    if (props.link_layer_protocol == QMI_WDA_LINK_LAYER_PROTOCOL_UNKNOWN) {
+        g_printerr ("error: Link Layer Protocol value is missing\n");
+        goto error_out;
+    }
+
+    if (!qmi_message_wda_set_data_format_input_set_link_layer_protocol (
+            input,
+            props.link_layer_protocol,
+            &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        goto error_out;
+    }
+
     return input;
+
+error_out:
+    qmi_message_wda_set_data_format_input_unref (input);
+    return NULL;
 }
 
 static void
