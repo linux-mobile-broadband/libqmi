@@ -114,6 +114,10 @@ _qmicli()
             COMPREPLY=( $(compgen -W "[3gpp|3gpp2]" -- $cur) )
             return 0
             ;;
+        '--wds-bind-mux-data-port')
+            COMPREPLY=( $(compgen -W "[(MuxId),(Ep-Iface-Number)]" -- $cur) )
+            return 0
+            ;;
         '--uim-read-transparent')
             COMPREPLY=( $(compgen -W "[0xNNNN,0xNNNN,...]" -- $cur) )
             return 0

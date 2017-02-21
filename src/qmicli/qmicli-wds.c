@@ -35,6 +35,9 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#define QMI_WDS_MUX_ID_UNDEFINED 0xFF
+#define QMI_WDS_ENDPOINT_INTERFACE_NUMBER_UNDEFINED -1
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -68,6 +71,7 @@ static gchar *set_autoconnect_settings_str;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
+static gchar *bind_mux_str;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
@@ -138,6 +142,10 @@ static GOptionEntry entries[] = {
       "Reset the service state",
       NULL
     },
+    { "wds-bind-mux-data-port", 0, 0, G_OPTION_ARG_STRING, &bind_mux_str,
+      "Bind qmux data port to controller device (allowed keys: mux-id, ep-iface-number) to be used with `--client-no-release-cid'",
+      "[\"key=value,...\"]"
+    },
     { "wds-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a WDS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -171,6 +179,7 @@ qmicli_wds_options_enabled (void)
 
     n_actions = (!!start_network_str +
                  !!stop_network_str +
+                 !!bind_mux_str +
                  get_current_settings_flag +
                  get_packet_service_status_flag +
                  get_packet_statistics_flag +
@@ -1552,6 +1561,137 @@ noop_cb (gpointer unused)
     return FALSE;
 }
 
+typedef struct {
+    guint32 mux_id;
+    guint8 ep_type;
+    guint32 ep_iface_number;
+    guint32 client_type;
+} BindMuxDataPortProperties;
+
+static gboolean
+bind_mux_data_port_properties_handle (const gchar *key,
+                                      const gchar *value,
+                                      GError     **error,
+                                      gpointer     user_data)
+{
+    BindMuxDataPortProperties *props = user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "key '%s' requires a value",
+                     key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "mux-id") == 0) {
+        props->mux_id = atoi(value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ep-iface-number") == 0) {
+        props->ep_iface_number = atoi(value);
+        return TRUE;
+    }
+
+    g_set_error (error,
+                 QMI_CORE_ERROR,
+                 QMI_CORE_ERROR_FAILED,
+                 "Unrecognized option '%s'",
+                 key);
+
+    return FALSE;
+}
+
+static QmiMessageWdsBindMuxDataPortInput *
+bind_mux_data_port_input_create (const gchar *str)
+{
+    QmiMessageWdsBindMuxDataPortInput *input = NULL;
+    GError *error = NULL;
+    BindMuxDataPortProperties props = {
+        .mux_id = QMI_WDS_MUX_ID_UNDEFINED,
+        .ep_type = QMI_DATA_ENDPOINT_TYPE_HSUSB,
+        .ep_iface_number = QMI_WDS_ENDPOINT_INTERFACE_NUMBER_UNDEFINED,
+        .client_type = QMI_WDS_CLIENT_TYPE_TETHERED,
+    };
+
+    if (!str[0])
+        return NULL;
+
+    if (strchr (str, '=')) {
+        if (!qmicli_parse_key_value_string (str,
+                                            &error,
+                                            bind_mux_data_port_properties_handle,
+                                            &props)) {
+            g_printerr ("error: could not parse input string '%s'\n", error->message);
+            g_error_free (error);
+            return NULL;
+        }
+    } else {
+        g_printerr ("error: malformed input string, key=value format expected.\n");
+        goto error_out;
+    }
+
+
+    if ((props.mux_id == QMI_WDS_MUX_ID_UNDEFINED) ||
+        (props.ep_iface_number == QMI_WDS_ENDPOINT_INTERFACE_NUMBER_UNDEFINED)) {
+        g_printerr ("error: Mux ID and Endpoint Iface Number are both needed\n");
+        return NULL;
+    }
+
+    input = qmi_message_wds_bind_mux_data_port_input_new ();
+
+    if (!qmi_message_wds_bind_mux_data_port_input_set_endpoint_info (input, props.ep_type, props.ep_iface_number, &error)) {
+        g_printerr ("error: couldn't set endpoint info: '%s'\n", error->message);
+        goto error_out;
+    }
+
+    if (!qmi_message_wds_bind_mux_data_port_input_set_mux_id (input, props.mux_id, &error)) {
+        g_printerr ("error: couldn't set mux ID %d: '%s'\n", props.mux_id, error->message);
+        goto error_out;
+    }
+
+    if (!qmi_message_wds_bind_mux_data_port_input_set_client_type (input, props.client_type , &error)) {
+        g_printerr ("error: couldn't set client type: '%s'\n", error->message);
+        goto error_out;
+    }
+
+    return input;
+
+error_out:
+    if (error)
+        g_error_free (error);
+    qmi_message_wds_bind_mux_data_port_input_unref (input);
+    return NULL;
+}
+
+static void
+bind_mux_data_port_ready (QmiClientWds *client,
+                          GAsyncResult *res) {
+    QmiMessageWdsBindMuxDataPortOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_wds_bind_mux_data_port_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_bind_mux_data_port_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't bind mux data port: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wds_bind_mux_data_port_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_wds_bind_mux_data_port_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
 void
 qmicli_wds_run (QmiDevice *device,
                 QmiClientWds *client,
@@ -1607,6 +1747,23 @@ qmicli_wds_run (QmiDevice *device,
 
         g_debug ("Asynchronously stopping network (%lu)...", packet_data_handle);
         internal_stop_network (ctx->cancellable, (guint32)packet_data_handle, disable_autoconnect);
+        return;
+    }
+
+    /* Request to bind mux port? */
+    if (bind_mux_str) {
+        QmiMessageWdsBindMuxDataPortInput *input;
+        g_print ("Bind mux data port");
+
+        input = bind_mux_data_port_input_create (bind_mux_str);
+
+        qmi_client_wds_bind_mux_data_port (client,
+                                           input,
+                                           10,
+                                           ctx->cancellable,
+                                           (GAsyncReadyCallback) bind_mux_data_port_ready,
+                                           NULL);
+        qmi_message_wds_bind_mux_data_port_input_unref (input);
         return;
     }
 

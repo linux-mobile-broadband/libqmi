@@ -1904,4 +1904,23 @@ typedef enum { /*< underscore_name=qmi_wds_qos_class_identifier >*/
  * Since: 1.18
  */
 
+/**
+ * QmiWdsClientType:
+ * @QMI_WDS_CLIENT_TYPE_TETHERED: client type tethered
+ * @QMI_WDS_CLIENT_TYPE_UNDEFINED: no client type defined
+ *
+ * Client Type
+ *
+ * Since: 1.18
+ */
+typedef enum { /*< underscore_name=qmi_wds_client_type > */
+    QMI_WDS_CLIENT_TYPE_TETHERED = 0x01,
+    QMI_WDS_CLIENT_TYPE_UNDEFINED = 0xFF,
+} QmiWdsClientType;
+
+/**
+ * qmi_wds_client_type_get_string:
+ *
+ * Since: 1.18
+ */
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDS_H_ */
