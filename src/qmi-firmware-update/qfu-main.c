@@ -51,7 +51,7 @@ static guint16 pid;
 static gchar *cdc_wdm_str;
 static gchar *tty_str;
 
-#if defined WITH_MM_RUNTIME_CHECK
+#if defined MM_RUNTIME_CHECK_ENABLED
 static gboolean ignore_mm_runtime_check_flag;
 #endif
 
@@ -292,7 +292,7 @@ static GOptionEntry context_main_entries[] = {
       "Open a cdc-wdm device in either QMI or MBIM mode (default)",
       NULL
     },
-#if defined WITH_MM_RUNTIME_CHECK
+#if defined MM_RUNTIME_CHECK_ENABLED
     { "ignore-mm-runtime-check", 0, 0, G_OPTION_ARG_NONE, &ignore_mm_runtime_check_flag,
       "Ignore ModemManager runtime check",
       NULL
@@ -651,7 +651,7 @@ int main (int argc, char **argv)
             goto out;
         }
 
-#if defined WITH_MM_RUNTIME_CHECK
+#if defined MM_RUNTIME_CHECK_ENABLED
         /* For all those actions that require a device, we will be doing MM runtime checks */
         if (!ignore_mm_runtime_check_flag) {
             gboolean mm_running;

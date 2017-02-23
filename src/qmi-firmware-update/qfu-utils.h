@@ -72,7 +72,7 @@ gboolean qfu_utils_power_cycle_finish (QmiClientDms         *qmi_client,
                                        GAsyncResult         *res,
                                        GError              **error);
 
-#if defined WITH_MM_RUNTIME_CHECK
+#if defined MM_RUNTIME_CHECK_ENABLED
 
 gboolean qfu_utils_modemmanager_running (gboolean  *mm_running,
                                          GError   **error);

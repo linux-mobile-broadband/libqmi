@@ -111,17 +111,17 @@ case $with_udev in
 esac
 
 dnl runtime MM check is optional, enabled by default
-AC_ARG_WITH(mm-runtime-check, AS_HELP_STRING([--without-mm-runtime-check], [Build without ModemManager runtime check]), [], [with_mm_runtime_check=yes])
-case $with_mm_runtime_check in
+AC_ARG_ENABLE(mm-runtime-check, AS_HELP_STRING([--disable-mm-runtime-check], [Build without ModemManager runtime check]), [], [enable_mm_runtime_check=yes])
+case $enable_mm_runtime_check in
     yes)
         if test "x$build_firmware_update" = "xyes"; then
-            AC_DEFINE(WITH_MM_RUNTIME_CHECK, 1, [Define if you want ModemManager runtime check])
+            AC_DEFINE(MM_RUNTIME_CHECK_ENABLED, 1, [Define if you want ModemManager runtime check])
         else
-            with_mm_runtime_check="n/a"
+            enable_mm_runtime_check="n/a"
         fi
         ;;
     *)
-        with_mm_runtime_check=no
+        enable_mm_runtime_check=no
         ;;
 esac
 
@@ -229,5 +229,5 @@ echo "
       qmicli:              yes
       qmi-firmware-update: ${build_firmware_update}
           with udev:             ${with_udev}
-          with MM runtime check: ${with_mm_runtime_check}
+          with MM runtime check: ${enable_mm_runtime_check}
 "

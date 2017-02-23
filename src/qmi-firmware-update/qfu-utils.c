@@ -717,7 +717,7 @@ qfu_utils_power_cycle (QmiClientDms         *qmi_client,
 
 /******************************************************************************/
 
-#if defined WITH_MM_RUNTIME_CHECK
+#if defined MM_RUNTIME_CHECK_ENABLED
 
 gboolean
 qfu_utils_modemmanager_running (gboolean  *mm_running,
