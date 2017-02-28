@@ -1749,7 +1749,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< underscore_name=qmi_wds_extended_data_bearer_technology_3gpp >*/
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP_UNKNOWN             = 0,
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP_WCDMA               = 1 << 0,
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP_HSDPA               = 1 << 1,
@@ -1794,7 +1794,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< underscore_name=qmi_wds_extended_data_bearer_technology_3gpp2 >*/
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP2_UNKNOWN             = 0,
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP2_RESERVED            = 1 << 0,
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP2_CDMA1X_IS95         = 1 << 1,
