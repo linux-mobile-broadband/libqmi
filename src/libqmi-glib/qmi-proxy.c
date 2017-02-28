@@ -860,7 +860,7 @@ qmi_proxy_class_init (QmiProxyClass *proxy_class)
     object_class->dispose = dispose;
 
     /**
-     * QmiProxy::qmi-proxy-n-clients
+     * QmiProxy:qmi-proxy-n-clients
      *
      * Since: 1.8
      */
