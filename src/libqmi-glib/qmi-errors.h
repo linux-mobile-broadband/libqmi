@@ -262,7 +262,7 @@ typedef enum { /*< underscore_name=qmi_protocol_error >*/
   QMI_PROTOCOL_ERROR_WMS_INVALID_MESSAGE_ID           = 57, /*< nick=Wms.InvalidMessageId >*/
   QMI_PROTOCOL_ERROR_WMS_ENCODING                     = 58, /*< nick=Wms.Encoding >*/
   QMI_PROTOCOL_ERROR_AUTHENTICATION_LOCK              = 59, /*< nick=AuthenticationLock >*/
-  QMI_PROTOCOL_ERROR_INVALID_TRANSITION               = 60, /*< nick=InvalidTransaction >*/
+  QMI_PROTOCOL_ERROR_INVALID_TRANSITION               = 60, /*< nick=InvalidTransition >*/
   QMI_PROTOCOL_ERROR_SESSION_INACTIVE                 = 65, /*< nick=SessionInactive >*/
   QMI_PROTOCOL_ERROR_SESSION_INVALID                  = 66, /*< nick=SessionInvalid >*/
   QMI_PROTOCOL_ERROR_SESSION_OWNERSHIP                = 67, /*< nick=SessionOwnership >*/
