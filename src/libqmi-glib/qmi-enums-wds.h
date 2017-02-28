@@ -966,7 +966,7 @@ typedef enum {
 } QmiWdsDataSystem;
 
 /**
- * qmi_wds_data_system_type_get_string:
+ * qmi_wds_data_system_get_string:
  *
  * Since: 1.18
  */
