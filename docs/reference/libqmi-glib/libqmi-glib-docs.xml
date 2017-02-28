@@ -198,6 +198,7 @@
       <xi:include href="xml/qmi-message-wds-set-ip-family.xml"/>
       <xi:include href="xml/qmi-message-wds-get-supported-messages.xml"/>
       <xi:include href="xml/qmi-message-wds-get-pdn-throttle-info.xml"/>
+      <xi:include href="xml/qmi-message-wds-bind-mux-data-port.xml"/>
     </section>
   </chapter>
 
