@@ -62,7 +62,7 @@ typedef struct _QmiProxyPrivate QmiProxyPrivate;
 #define QMI_PROXY_SOCKET_PATH "qmi-proxy"
 
 /**
- * QMI_PROXY_N_ClIENTS:
+ * QMI_PROXY_N_CLIENTS:
  *
  * Symbol defining the #QmiProxy:qmi-proxy-n-clients property.
  *
