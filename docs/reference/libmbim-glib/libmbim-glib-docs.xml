@@ -11,7 +11,11 @@
     <releaseinfo>for libmbim-glib &version;</releaseinfo>
 
     <copyright>
-      <year>2013-2014</year>
+      <year>2013</year>
+      <year>2014</year>
+      <year>2015</year>
+      <year>2016</year>
+      <year>2017</year>
       <holder>The libmbim-glib authors</holder>
     </copyright>
 
