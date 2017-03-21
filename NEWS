@@ -1,4 +1,18 @@
 
+Overview of changes in libqmi 1.14.6
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fix segfault in QmiDevice when cancellable already cancelled.
+
+ * qmicli:
+   ** Fix options receiving a list of flags.
+   ** Fix second ctrl+c handling.
+   ** Avoid converting to dB invalid SINR values.
+
+ * build: guard invocations of g_type_init().
+
+
 Overview of changes in libqmi 1.14.4
 ----------------------------------------
 
