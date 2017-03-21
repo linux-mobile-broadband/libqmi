@@ -439,7 +439,7 @@ start_network_properties_handle (const gchar  *key,
         return TRUE;
     }
 
-    if (g_ascii_strcasecmp (key, "ip-type") == 0 && props->ip_type == 0) {
+    if (g_ascii_strcasecmp (key, "ip-type") == 0 && props->ip_type == QMI_WDS_IP_FAMILY_UNSPECIFIED) {
         switch (atoi (value)) {
         case 4:
             props->ip_type = QMI_WDS_IP_FAMILY_IPV4;
@@ -474,13 +474,8 @@ start_network_input_create (const gchar *str)
     gchar **split = NULL;
     QmiMessageWdsStartNetworkInput *input = NULL;
     StartNetworkProperties props = {
-        .apn                 = NULL,
-        .profile_index_3gpp  = 0,
-        .profile_index_3gpp2 = 0,
-        .auth                = QMI_WDS_AUTHENTICATION_NONE,
-        .auth_set            = FALSE,
-        .username            = NULL,
-        .password            = NULL,
+        .auth    = QMI_WDS_AUTHENTICATION_NONE,
+        .ip_type = QMI_WDS_IP_FAMILY_UNSPECIFIED,
     };
 
     /* An empty string is totally valid (i.e. no TLVs) */
