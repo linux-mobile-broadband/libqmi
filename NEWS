@@ -1,4 +1,146 @@
 
+Overview of changes in libqmi 1.18.0
+----------------------------------------
+
+The full list of new features include:
+
+ * libqmi:
+   ** Implemented support for vendor-specific commands through a new
+      qmi_device_command_full() operation and a new QmiMessageContext type. The
+      original qmi_device_command() is flagged as deprecated.
+   ** New 'QMI_DEVICE_OPEN_FLAGS_AUTO' flag in qmi_device_open() which allows
+      automatic detection of the underlying protocol in a cdc-wdm device (either
+      QMI or MBIM) and transparently uses it based on that.
+   ** New qmi_device_close_async() operation, which allows closing a QmiDevice
+      asynchronously (especially important when closing devices running QMI over
+      MBIM, as this operation requires MBIM protocol cleanups). The original
+      qmi_device_close() is flagged as deprecated.
+   ** Fixed QmiWmsCdmaCauseCode enum names, and provided a compatibility layer
+      keeping the old names (flagged as deprecated) to avoid breaking API.
+
+ * New services:
+   ** pdc: new "PDC" (persistent device configuration) service, which among
+      other things, allows configuring the HP lt4120.
+
+ * New request/responses:
+   ** dms: new sierra-specific "SWI Get Current Firmware" request/response.
+   ** dms: new hp-specific "HP Change Device Mode" request/response.
+   ** dms: new "Set Firmware ID" request/response.
+   ** dms: new "Get Boot Image Download Mode" request/response.
+   ** dms: new "Set Boot Image Download Mode" request/response.
+   ** wds: new "Create Profile" request/response.
+   ** wds: new "Modify Profile" request/response.
+   ** wds: new "Delete Profile" request/response.
+   ** wds: new "Set Event Report" request/response.
+   ** wds: new "Go Dormant" request/response.
+   ** wds: new "Go Active" request/response.
+   ** wds: new "Get Dormancy Status" request/response.
+   ** pdc: new "Reset" request/response.
+   ** pdc: new "Register" request/response.
+   ** pdc: new "Config Change" request/response.
+   ** pdc: new "Get Selected Config" request/response.
+   ** pdc: new "Set Selected Config" request/response.
+   ** pdc: new "List Configs" request/response.
+   ** pdc: new "Delete Config" request/response.
+   ** pdc: new "Load Config" request/response.
+   ** pdc: new "Activate Config" request/response.
+   ** pdc: new "Get Config Info" request/response.
+   ** pdc: new "Get Config Limits" request/response.
+   ** pdc: new "Get Default Config Info" request/response.
+   ** pdc: new "Deactivate Config" request/response.
+   ** uim: new "Power Off SIM" request/response.
+   ** uim: new "Power On SIM" request/response.
+   ** nas: new "Get Operator Name" request/response.
+   ** wds: new "Bind Mux Data Port" request/response.
+
+* New indications:
+   ** wds: new "Event report" indication.
+   ** pdc: new "Get Selected Config" indication.
+   ** pdc: new "Set Selected Config" indication.
+   ** pdc: new "List Configs" indication.
+   ** pdc: new "Load Config" indication.
+   ** pdc: new "Activate Config" indication.
+   ** pdc: new "Get Config Info" indication.
+   ** pdc: new "Deactivate Config" indication.
+   ** nas: new "Operator Name" indication.
+
+ * New TLVs supported in existing messages:
+   ** wda: updated "Set Data Format" request to allow specifying endpoint type
+      and interface number.
+
+ * qmi-firmware-update:
+   ** This is a completely new tool that allows upgrading firmware in (at least)
+      Sierra Wireless devices with MDM9200, MDM9x15 or MDM9x30 chipsets. Run the
+      tool with --help and --help-examples to get more information on how to use
+      it.
+
+ * qmicli:
+   ** The CLI no longer requires the '--device-open-mbim' explicit option when
+      opening QMI capable MBIM devices, the automatic detection of QMI over MBIM
+      is enabled by default.
+   ** New '--device-open-qmi' option to disable the automatic detection of
+      protocol and force using QMI.
+   ** New '--dms-set-firmware-id' operation.
+   ** New '--dms-get-software-version' operation.
+   ** New '--dms-set-boot-image-download-mode' and
+      '--dms-get-boot-image-download-mode' operations to configure the default
+      download mode.
+   ** New '--dms-set-firmware-preference' and '--dms-get-firmware-preference'
+      operations to manage the current firmware preference.
+   ** New '--wds-go-dormant', '--wds-go-active' and '--wds-get-dormancy-status'
+      operations to manage dormancy related operations.
+   ** New '--nas-get-rf-band-info' operation.
+   ** New '--uim-sim-power-on' and '--uim-sim-power-off' operations.
+   ** New '--nas-get-operator-name' operation.
+   ** New '--wds-bind-mux-data-port' operation.
+   ** Updated '--wda-set-data-format' to allow specifying endpoint type and
+      interface number.
+   ** If running in MBIM mode, enable MBIM logs and traces.
+   ** By default the QmiDevice will be closed before exiting, e.g. so that the
+      MBIM session is also closed.
+
+ * docs:
+   ** Updated the documentation so that each QMI message and each TLV specifies
+      in which libqmi version it was introduced, using "since:" tags in the QMI
+      message databases.
+   ** Added indices for new symbols introduced in the major libqmi releases, as
+      well as for symbols flagged as deprecated.
+
+ * build:
+   ** Bump GLib requirement to 2.36.
+   ** Added GUdev requirement for qmi-firmware-update, that may be explicitly
+      disabled using the new '--without-udev' configure switch.
+   ** The new '--disable-firmware-update' configure switch allows completely
+      disabling the qmi-firmware-update tool build.
+   ** The new '--disable-mm-runtime-check' configure switch allows disabling
+      the runtime check for ModemManager done by the qmi-firmware-update tool.
+
+The following features which were backported to 1.16.x releases are also present
+in libqmi 1.18.0:
+
+ * dms: flagged several methods as available since DMS 1.1.
+ * nas: Fix RX/TX mixup in 'Get LTE Cphy CA Info'.
+
+ * libqmi-glib:
+   ** Fix segfault in QmiDevice when cancellable already cancelled.
+   ** Fix releasing transaction on MBIM error.
+
+ * qmicli:
+   ** Added support for IP type in --wds-start-network.
+   ** Fix options receiving a list of flags.
+   ** Fix second ctrl+c handling.
+   ** Avoid converting to dB invalid SINR values.
+
+ * qmi-proxy:
+   ** Fix segfault when trying to use already disposed clients.
+   ** Fix segfault when trying to use already disposed transactions.
+   ** Plug several memleaks in error conditions.
+
+ * build:
+   ** Guard invocations of g_type_init().
+   ** Fix checking for libmbim.
+
+
 Overview of changes in libqmi 1.16.0
 ----------------------------------------
 
