@@ -74,6 +74,7 @@ Makefile.in
 
 /docs/man/qmicli.1
 /docs/man/qmi-network.1
+/docs/man/qmi-firmware-update.1
 
 /utils/qmi-network
 /utils/swi-update
