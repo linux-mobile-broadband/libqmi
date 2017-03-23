@@ -219,12 +219,12 @@ transaction_complete_and_free (Transaction  *tr,
         g_slice_free (TransactionWaitContext, tr->wait_ctx);
 
     if (error) {
-        trace_transaction (tr, "complete: response");
+        trace_transaction (tr, "complete: error");
         g_simple_async_result_set_from_error (tr->result, error);
         if (tr->fragments)
             mbim_message_unref (tr->fragments);
     } else {
-        trace_transaction (tr, "complete: error");
+        trace_transaction (tr, "complete: response");
         g_assert (tr->fragments != NULL);
         g_simple_async_result_set_op_res_gpointer (tr->result,
                                                    tr->fragments,
