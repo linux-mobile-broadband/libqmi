@@ -950,7 +950,7 @@ build_client_object (AllocateClientContext *ctx)
     /* Client created and registered, complete successfully */
     g_simple_async_result_set_op_res_gpointer (ctx->result,
                                                client,
-                                               (GDestroyNotify)g_object_unref);
+                                               g_object_unref);
     allocate_client_context_complete_and_free (ctx);
 }
 
