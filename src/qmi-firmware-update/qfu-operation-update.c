@@ -104,7 +104,7 @@ operation_update_run (QfuUpdater   *updater,
 
     /* Run! */
     qfu_updater_run (updater, image_file_list, operation.cancellable, (GAsyncReadyCallback) run_ready, &operation);
-    g_list_free_full (image_file_list, (GDestroyNotify) g_object_unref);
+    g_list_free_full (image_file_list, g_object_unref);
     g_main_loop_run (operation.loop);
 
     if (operation.cancellable)

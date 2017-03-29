@@ -303,7 +303,7 @@ qfu_udev_helper_find_by_device_info (guint16   vid,
     GString     *match_str;
     gchar       *sysfs_path = NULL;
 
-    sysfs_paths = g_ptr_array_new_with_free_func ((GDestroyNotify) g_free);
+    sysfs_paths = g_ptr_array_new_with_free_func (g_free);
     udev        = g_udev_client_new (NULL);
     match_str   = g_string_new ("");
 

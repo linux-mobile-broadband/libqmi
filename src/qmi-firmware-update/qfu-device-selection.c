@@ -74,7 +74,7 @@ device_selection_get_single (QfuDeviceSelection      *self,
             preferred_selection = g_object_ref (l->data);
         g_free (path);
     }
-    g_list_free_full (list, (GDestroyNotify) g_object_unref);
+    g_list_free_full (list, g_object_unref);
 
     if (preferred_selection) {
         path = g_file_get_path (preferred_selection);
@@ -154,7 +154,7 @@ device_selection_get_multiple (QfuDeviceSelection      *self,
         path = g_file_get_path (preferred_selection);
         g_debug ("[qfu,device-selection]   using only preferred device: %s", path);
         g_free (path);
-        g_list_free_full (list, (GDestroyNotify) g_object_unref);
+        g_list_free_full (list, g_object_unref);
         return g_list_append (NULL, preferred_selection);
     }
 
@@ -212,7 +212,7 @@ wait_for_device_ready (gpointer      unused,
     if (!file)
         g_task_return_error (task, error);
     else
-        g_task_return_pointer (task, file, (GDestroyNotify) g_object_unref);
+        g_task_return_pointer (task, file, g_object_unref);
     g_object_unref (task);
 }
 

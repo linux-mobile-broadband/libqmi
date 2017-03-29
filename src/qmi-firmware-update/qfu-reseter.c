@@ -77,8 +77,8 @@ run_context_free (RunContext *ctx)
         qmi_device_close_async (ctx->qmi_device, 10, NULL, NULL, NULL);
         g_object_unref (ctx->qmi_device);
     }
-    g_list_free_full (ctx->ttys, (GDestroyNotify) g_object_unref);
-    g_list_free_full (ctx->at_devices, (GDestroyNotify) g_object_unref);
+    g_list_free_full (ctx->ttys, g_object_unref);
+    g_list_free_full (ctx->at_devices, g_object_unref);
     g_slice_free (RunContext, ctx);
 }
 

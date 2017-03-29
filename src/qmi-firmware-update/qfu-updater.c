@@ -202,7 +202,7 @@ run_context_free (RunContext *ctx)
 
     if (ctx->current_image)
         g_object_unref (ctx->current_image);
-    g_list_free_full (ctx->pending_images, (GDestroyNotify) g_object_unref);
+    g_list_free_full (ctx->pending_images, g_object_unref);
 
     g_slice_free (RunContext, ctx);
 }
@@ -1002,7 +1002,7 @@ set_firmware_preference_ready (QmiClientDms *client,
             g_print ("device already contains the given firmware/config version: no download needed\n");
             g_print ("forcing the download may be requested with the --override-download option\n");
             g_print ("now power cycling to apply the new firmware preference...\n");
-            g_list_free_full (ctx->pending_images, (GDestroyNotify) g_object_unref);
+            g_list_free_full (ctx->pending_images, g_object_unref);
             ctx->pending_images = NULL;
         } else {
             GString                 *images = NULL;
