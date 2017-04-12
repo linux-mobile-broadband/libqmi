@@ -1279,19 +1279,22 @@ qmi_device_set_instance_id_finish (QmiDevice *self,
                                    guint16 *link_id,
                                    GError **error)
 {
+    gssize value;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
+    value = g_task_propagate_int (G_TASK (res), error);
+    if (value == -1)
         return FALSE;
 
     if (link_id)
-        *link_id = ((guint16) GPOINTER_TO_UINT (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res))));
+        *link_id = (guint16)value;
+
     return TRUE;
 }
 
 static void
 set_instance_id_ready (QmiClientCtl *client_ctl,
                        GAsyncResult *res,
-                       GSimpleAsyncResult *simple)
+                       GTask *task)
 {
     QmiMessageCtlSetInstanceIdOutput *output;
     GError *error = NULL;
@@ -1299,21 +1302,21 @@ set_instance_id_ready (QmiClientCtl *client_ctl,
     /* Check result of the async operation */
     output = qmi_client_ctl_set_instance_id_finish (client_ctl, res, &error);
     if (!output)
-        g_simple_async_result_take_error (simple, error);
+        g_task_return_error (task, error);
     else {
         /* Check result of the QMI operation */
         if (!qmi_message_ctl_set_instance_id_output_get_result (output, &error))
-            g_simple_async_result_take_error (simple, error);
+            g_task_return_error (task, error);
         else {
             guint16 link_id;
 
             qmi_message_ctl_set_instance_id_output_get_link_id (output, &link_id, NULL);
-            g_simple_async_result_set_op_res_gpointer (simple, GUINT_TO_POINTER ((guint)link_id), NULL);
+            g_task_return_int (task, link_id);
         }
         qmi_message_ctl_set_instance_id_output_unref (output);
     }
 
-    g_simple_async_result_complete (simple);
+    g_object_unref (task);
 }
 
 void
@@ -1324,14 +1327,10 @@ qmi_device_set_instance_id (QmiDevice *self,
                             GAsyncReadyCallback callback,
                             gpointer user_data)
 {
-    GSimpleAsyncResult *result;
+    GTask *task;
     QmiMessageCtlSetInstanceIdInput *input;
 
-
-    result = g_simple_async_result_new (G_OBJECT (self),
-                                        callback,
-                                        user_data,
-                                        qmi_device_set_instance_id);
+    task = g_task_new (self, cancellable, callback, user_data);
 
     input = qmi_message_ctl_set_instance_id_input_new ();
     qmi_message_ctl_set_instance_id_input_set_id (
@@ -1343,7 +1342,7 @@ qmi_device_set_instance_id (QmiDevice *self,
                                     timeout,
                                     cancellable,
                                     (GAsyncReadyCallback)set_instance_id_ready,
-                                    result);
+                                    task);
     qmi_message_ctl_set_instance_id_input_unref (input);
 }
 
