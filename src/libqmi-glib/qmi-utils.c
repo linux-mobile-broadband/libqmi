@@ -743,8 +743,10 @@ __qmi_utils_get_driver (const gchar *cdc_wdm_path)
         path = realpath (tmp, NULL);
         g_free (tmp);
 
-        if (g_file_test (path, G_FILE_TEST_EXISTS))
-            driver = g_path_get_basename (path);
+        if (!path)
+            continue;
+
+        driver = g_path_get_basename (path);
         g_free (path);
     }
 
