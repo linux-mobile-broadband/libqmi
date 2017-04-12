@@ -859,19 +859,14 @@ unregister_client (QmiDevice *self,
 /* Allocate new client */
 
 typedef struct {
-    QmiDevice *self;
-    GSimpleAsyncResult *result;
     QmiService service;
     GType client_type;
     guint8 cid;
 } AllocateClientContext;
 
 static void
-allocate_client_context_complete_and_free (AllocateClientContext *ctx)
+allocate_client_context_free (AllocateClientContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
     g_slice_free (AllocateClientContext, ctx);
 }
 
@@ -880,30 +875,32 @@ qmi_device_allocate_client_finish (QmiDevice *self,
                                    GAsyncResult *res,
                                    GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    return QMI_CLIENT (g_object_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res))));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
-build_client_object (AllocateClientContext *ctx)
+build_client_object (GTask *task)
 {
+    QmiDevice *self;
+    AllocateClientContext *ctx;
     gchar *version_string = NULL;
     QmiClient *client;
     GError *error = NULL;
     const QmiMessageCtlGetVersionInfoOutputServiceListService *version_info;
 
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     /* We now have a proper CID for the client, we should be able to create it
      * right away */
     client = g_object_new (ctx->client_type,
-                           QMI_CLIENT_DEVICE,  ctx->self,
+                           QMI_CLIENT_DEVICE,  self,
                            QMI_CLIENT_SERVICE, ctx->service,
                            QMI_CLIENT_CID,     ctx->cid,
                            NULL);
 
     /* Add version info to the client if it was retrieved */
-    version_info = find_service_version_info (ctx->self, ctx->service);
+    version_info = find_service_version_info (self, ctx->service);
     if (version_info)
         g_object_set (client,
                       QMI_CLIENT_VERSION_MAJOR, version_info->major_version,
@@ -911,28 +908,28 @@ build_client_object (AllocateClientContext *ctx)
                       NULL);
 
     /* Register the client to get indications */
-    if (!register_client (ctx->self, client, &error)) {
+    if (!register_client (self, client, &error)) {
         g_prefix_error (&error,
                         "Cannot register new client with CID '%u' and service '%s'",
                         ctx->cid,
                         qmi_service_get_string (ctx->service));
-        g_simple_async_result_take_error (ctx->result, error);
-        allocate_client_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         g_object_unref (client);
         return;
     }
 
     /* Build version string for the logging */
-    if (ctx->self->priv->supported_services) {
+    if (self->priv->supported_services) {
         const QmiMessageCtlGetVersionInfoOutputServiceListService *info;
 
-        info = find_service_version_info (ctx->self, ctx->service);
+        info = find_service_version_info (self, ctx->service);
         if (info)
             version_string = g_strdup_printf ("%u.%u", info->major_version, info->minor_version);
     }
 
     g_debug ("[%s] Registered '%s' (version %s) client with ID '%u'",
-             ctx->self->priv->path_display,
+             self->priv->path_display,
              qmi_service_get_string (ctx->service),
              version_string ? version_string : "unknown",
              ctx->cid);
@@ -940,35 +937,34 @@ build_client_object (AllocateClientContext *ctx)
     g_free (version_string);
 
     /* Client created and registered, complete successfully */
-    g_simple_async_result_set_op_res_gpointer (ctx->result,
-                                               client,
-                                               g_object_unref);
-    allocate_client_context_complete_and_free (ctx);
+    g_task_return_pointer (task, client, g_object_unref);
+    g_object_unref (task);
 }
 
 static void
 allocate_cid_ready (QmiClientCtl *client_ctl,
                     GAsyncResult *res,
-                    AllocateClientContext *ctx)
+                    GTask *task)
 {
     QmiMessageCtlAllocateCidOutput *output;
     QmiService service;
     guint8 cid;
     GError *error = NULL;
+    AllocateClientContext *ctx;
 
     /* Check result of the async operation */
     output = qmi_client_ctl_allocate_cid_finish (client_ctl, res, &error);
     if (!output) {
         g_prefix_error (&error, "CID allocation failed in the CTL client: ");
-        g_simple_async_result_take_error (ctx->result, error);
-        allocate_client_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Check result of the QMI operation */
     if (!qmi_message_ctl_allocate_cid_output_get_result (output, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        allocate_client_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         qmi_message_ctl_allocate_cid_output_unref (output);
         return;
     }
@@ -976,22 +972,24 @@ allocate_cid_ready (QmiClientCtl *client_ctl,
     /* Allocation info is mandatory when result is success */
     g_assert (qmi_message_ctl_allocate_cid_output_get_allocation_info (output, &service, &cid, NULL));
 
+    ctx = g_task_get_task_data (task);
+
     if (service != ctx->service) {
-        g_simple_async_result_set_error (
-            ctx->result,
+        g_task_return_new_error (
+            task,
             QMI_CORE_ERROR,
             QMI_CORE_ERROR_FAILED,
             "CID allocation failed in the CTL client: "
             "Service mismatch (requested '%s', got '%s')",
             qmi_service_get_string (ctx->service),
             qmi_service_get_string (service));
-        allocate_client_context_complete_and_free (ctx);
+        g_object_unref (task);
         qmi_message_ctl_allocate_cid_output_unref (output);
         return;
     }
 
     ctx->cid = cid;
-    build_client_object (ctx);
+    build_client_object (task);
     qmi_message_ctl_allocate_cid_output_unref (output);
 }
 
@@ -1005,36 +1003,37 @@ qmi_device_allocate_client (QmiDevice *self,
                             gpointer user_data)
 {
     AllocateClientContext *ctx;
+    GTask *task;
 
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (service != QMI_SERVICE_UNKNOWN);
 
     ctx = g_slice_new0 (AllocateClientContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             qmi_device_allocate_client);
     ctx->service = service;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task,
+                          ctx,
+                          (GDestroyNotify)allocate_client_context_free);
 
     /* Check if the requested service is supported by the device */
     if (!check_service_supported (self, service)) {
-        g_simple_async_result_set_error (ctx->result,
-                                         QMI_CORE_ERROR,
-                                         QMI_CORE_ERROR_UNSUPPORTED,
-                                         "Service '%s' not supported by the device",
-                                         qmi_service_get_string (service));
-        allocate_client_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 QMI_CORE_ERROR,
+                                 QMI_CORE_ERROR_UNSUPPORTED,
+                                 "Service '%s' not supported by the device",
+                                 qmi_service_get_string (service));
+        g_object_unref (task);
         return;
     }
 
     switch (service) {
     case QMI_SERVICE_CTL:
-        g_simple_async_result_set_error (ctx->result,
-                                         QMI_CORE_ERROR,
-                                         QMI_CORE_ERROR_INVALID_ARGS,
-                                         "Cannot create additional clients for the CTL service");
-        allocate_client_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 QMI_CORE_ERROR,
+                                 QMI_CORE_ERROR_INVALID_ARGS,
+                                 "Cannot create additional clients for the CTL service");
+        g_object_unref (task);
         return;
 
     case QMI_SERVICE_DMS:
@@ -1086,12 +1085,12 @@ qmi_device_allocate_client (QmiDevice *self,
         break;
 
     default:
-        g_simple_async_result_set_error (ctx->result,
-                                         QMI_CORE_ERROR,
-                                         QMI_CORE_ERROR_INVALID_ARGS,
-                                         "Clients for service '%s' not yet supported",
-                                         qmi_service_get_string (service));
-        allocate_client_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 QMI_CORE_ERROR,
+                                 QMI_CORE_ERROR_INVALID_ARGS,
+                                 "Clients for service '%s' not yet supported",
+                                 qmi_service_get_string (service));
+        g_object_unref (task);
         return;
     }
 
@@ -1103,13 +1102,13 @@ qmi_device_allocate_client (QmiDevice *self,
         qmi_message_ctl_allocate_cid_input_set_service (input, ctx->service, NULL);
 
         g_debug ("[%s] Allocating new client ID...",
-                 ctx->self->priv->path_display);
+                 self->priv->path_display);
         qmi_client_ctl_allocate_cid (self->priv->client_ctl,
                                      input,
                                      timeout,
                                      cancellable,
                                      (GAsyncReadyCallback)allocate_cid_ready,
-                                     ctx);
+                                     task);
 
         qmi_message_ctl_allocate_cid_input_unref (input);
         return;
@@ -1117,10 +1116,10 @@ qmi_device_allocate_client (QmiDevice *self,
 
     /* Reuse the given CID */
     g_debug ("[%s] Reusing client CID '%u'...",
-             ctx->self->priv->path_display,
+             self->priv->path_display,
              cid);
     ctx->cid = cid;
-    build_client_object (ctx);
+    build_client_object (task);
 }
 
 /*****************************************************************************/
