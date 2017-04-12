@@ -355,16 +355,13 @@ qmi_device_get_service_version_info_finish (QmiDevice *self,
                                             GAsyncResult *res,
                                             GError **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    return g_array_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 static void
 version_info_ready (QmiClientCtl *client_ctl,
                     GAsyncResult *res,
-                    GSimpleAsyncResult *simple)
+                    GTask *task)
 {
     GArray *service_list = NULL;
     GArray *out;
@@ -375,18 +372,16 @@ version_info_ready (QmiClientCtl *client_ctl,
     /* Check result of the async operation */
     output = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
     if (!output) {
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Check result of the QMI operation */
     if (!qmi_message_ctl_get_version_info_output_get_result (output, &error)) {
         qmi_message_ctl_get_version_info_output_unref (output);
-        g_simple_async_result_take_error (simple, error);
-        g_simple_async_result_complete (simple);
-        g_object_unref (simple);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -407,9 +402,8 @@ version_info_ready (QmiClientCtl *client_ctl,
     }
 
     qmi_message_ctl_get_version_info_output_unref (output);
-    g_simple_async_result_set_op_res_gpointer (simple, out, (GDestroyNotify)g_array_unref);
-    g_simple_async_result_complete (simple);
-    g_object_unref (simple);
+    g_task_return_pointer (task, out, (GDestroyNotify)g_array_unref);
+    g_object_unref (task);
 }
 
 void
@@ -425,10 +419,7 @@ qmi_device_get_service_version_info (QmiDevice *self,
         timeout,
         cancellable,
         (GAsyncReadyCallback)version_info_ready,
-        g_simple_async_result_new (G_OBJECT (self),
-                                   callback,
-                                   user_data,
-                                   qmi_device_get_service_version_info));
+        g_task_new (self, cancellable, callback, user_data));
 }
 
 /*****************************************************************************/
