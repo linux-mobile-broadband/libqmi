@@ -1815,9 +1815,6 @@ typedef enum {
 } DeviceOpenContextStep;
 
 typedef struct {
-    QmiDevice *self;
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
     DeviceOpenContextStep step;
     QmiDeviceOpenFlags flags;
     guint timeout;
@@ -1826,14 +1823,9 @@ typedef struct {
 } DeviceOpenContext;
 
 static void
-device_open_context_complete_and_free (DeviceOpenContext *ctx)
+device_open_context_free (DeviceOpenContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
     g_free (ctx->driver);
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
-    g_object_unref (ctx->self);
     g_slice_free (DeviceOpenContext, ctx);
 }
 
@@ -1842,88 +1834,102 @@ qmi_device_open_finish (QmiDevice *self,
                         GAsyncResult *res,
                         GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-static void device_open_context_step (DeviceOpenContext *ctx);
+static void device_open_step (GTask *task);
 
 static void
 ctl_set_data_format_ready (QmiClientCtl *client,
                            GAsyncResult *res,
-                           DeviceOpenContext *ctx)
+                           GTask *task)
 {
+    QmiDevice *self;
+    DeviceOpenContext *ctx;
     QmiMessageCtlSetDataFormatOutput *output = NULL;
     GError *error = NULL;
 
     output = qmi_client_ctl_set_data_format_finish (client, res, &error);
     /* Check result of the async operation */
     if (!output) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Check result of the QMI operation */
     if (!qmi_message_ctl_set_data_format_output_get_result (output, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         qmi_message_ctl_set_data_format_output_unref (output);
         return;
     }
 
+    self = g_task_get_source_object (task);
+
     g_debug ("[%s] Network port data format operation finished",
-             ctx->self->priv->path_display);
+             self->priv->path_display);
 
     qmi_message_ctl_set_data_format_output_unref (output);
 
     /* Go on */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    device_open_context_step (ctx);
+    device_open_step (task);
 }
 
 static void
 sync_ready (QmiClientCtl *client_ctl,
             GAsyncResult *res,
-            DeviceOpenContext *ctx)
+            GTask *task)
 {
+    QmiDevice *self;
+    DeviceOpenContext *ctx;
     GError *error = NULL;
     QmiMessageCtlSyncOutput *output;
 
     /* Check result of the async operation */
     output = qmi_client_ctl_sync_finish (client_ctl, res, &error);
     if(!output) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Check result of the QMI operation */
     if (!qmi_message_ctl_sync_output_get_result (output, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         qmi_message_ctl_sync_output_unref (output);
         return;
     }
 
+    self = g_task_get_source_object (task);
     g_debug ("[%s] Sync operation finished",
-             ctx->self->priv->path_display);
+             self->priv->path_display);
 
     qmi_message_ctl_sync_output_unref (output);
 
     /* Go on */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    device_open_context_step (ctx);
+    device_open_step (task);
 }
 
 static void
 open_version_info_ready (QmiClientCtl *client_ctl,
                          GAsyncResult *res,
-                         DeviceOpenContext *ctx)
+                         GTask *task)
 {
+    QmiDevice *self;
+    DeviceOpenContext *ctx;
     GArray *service_list;
     QmiMessageCtlGetVersionInfoOutput *output;
     GError *error = NULL;
     guint i;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     /* Check result of the async operation */
     output = qmi_client_ctl_get_version_info_finish (client_ctl, res, &error);
@@ -1934,27 +1940,27 @@ open_version_info_ready (QmiClientCtl *client_ctl,
             /* If retries left, retry */
             if (ctx->version_check_retries > 0) {
                 g_error_free (error);
-                qmi_client_ctl_get_version_info (ctx->self->priv->client_ctl,
+                qmi_client_ctl_get_version_info (self->priv->client_ctl,
                                                  NULL,
                                                  1,
-                                                 ctx->cancellable,
+                                                 g_task_get_cancellable (task),
                                                  (GAsyncReadyCallback)open_version_info_ready,
-                                                 ctx);
+                                                 task);
                 return;
             }
 
             /* Otherwise, propagate the error */
         }
 
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Check result of the QMI operation */
     if (!qmi_message_ctl_get_version_info_output_get_result (output, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         qmi_message_ctl_get_version_info_output_unref (output);
         return;
     }
@@ -1964,28 +1970,28 @@ open_version_info_ready (QmiClientCtl *client_ctl,
     qmi_message_ctl_get_version_info_output_get_service_list (output,
                                                               &service_list,
                                                               NULL);
-    ctx->self->priv->supported_services = g_array_ref (service_list);
+    self->priv->supported_services = g_array_ref (service_list);
 
     g_debug ("[%s] QMI Device supports %u services:",
-             ctx->self->priv->path_display,
-             ctx->self->priv->supported_services->len);
-    for (i = 0; i < ctx->self->priv->supported_services->len; i++) {
+             self->priv->path_display,
+             self->priv->supported_services->len);
+    for (i = 0; i < self->priv->supported_services->len; i++) {
         QmiMessageCtlGetVersionInfoOutputServiceListService *info;
         const gchar *service_str;
 
-        info = &g_array_index (ctx->self->priv->supported_services,
+        info = &g_array_index (self->priv->supported_services,
                                QmiMessageCtlGetVersionInfoOutputServiceListService,
                                i);
         service_str = qmi_service_get_string (info->service);
         if (service_str)
             g_debug ("[%s]    %s (%u.%u)",
-                     ctx->self->priv->path_display,
+                     self->priv->path_display,
                      service_str,
                      info->major_version,
                      info->minor_version);
         else
             g_debug ("[%s]    unknown [0x%02x] (%u.%u)",
-                     ctx->self->priv->path_display,
+                     self->priv->path_display,
                      info->service,
                      info->major_version,
                      info->minor_version);
@@ -1995,29 +2001,30 @@ open_version_info_ready (QmiClientCtl *client_ctl,
 
     /* Go on */
     ctx->step++;
-    device_open_context_step (ctx);
+    device_open_step (task);
 }
 
 static void
 internal_proxy_open_ready (QmiClientCtl *client_ctl,
                            GAsyncResult *res,
-                           DeviceOpenContext *ctx)
+                           GTask *task)
 {
+    DeviceOpenContext *ctx;
     QmiMessageCtlInternalProxyOpenOutput *output;
     GError *error = NULL;
 
     /* Check result of the async operation */
     output = qmi_client_ctl_internal_proxy_open_finish (client_ctl, res, &error);
     if (!output) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Check result of the QMI operation */
     if (!qmi_message_ctl_internal_proxy_open_output_get_result (output, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         qmi_message_ctl_internal_proxy_open_output_unref (output);
         return;
     }
@@ -2025,26 +2032,29 @@ internal_proxy_open_ready (QmiClientCtl *client_ctl,
     qmi_message_ctl_internal_proxy_open_output_unref (output);
 
     /* Go on */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    device_open_context_step (ctx);
+    device_open_step (task);
 }
 
 static void
 create_iostream_ready (QmiDevice *self,
                        GAsyncResult *res,
-                       DeviceOpenContext *ctx)
+                       GTask *task)
 {
+    DeviceOpenContext *ctx;
     GError *error = NULL;
 
     if (!create_iostream_finish (self, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Go on */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    device_open_context_step (ctx);
+    device_open_step (task);
 }
 
 #if defined MBIM_QMUX_ENABLED
@@ -2052,83 +2062,98 @@ create_iostream_ready (QmiDevice *self,
 static void
 mbim_device_open_ready (MbimDevice *dev,
                         GAsyncResult *res,
-                        DeviceOpenContext *ctx)
+                        GTask *task)
 {
+    QmiDevice *self;
+    DeviceOpenContext *ctx;
     GError *error = NULL;
 
     if (!mbim_device_open_finish (dev, res, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
-    g_debug ("[%s] MBIM device open", ctx->self->priv->path_display);
+    self = g_task_get_source_object (task);
+    g_debug ("[%s] MBIM device open", self->priv->path_display);
 
     /* Go on */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    device_open_context_step (ctx);
+    device_open_step (task);
 }
 
 static void
-open_mbim_device (DeviceOpenContext *ctx)
+open_mbim_device (GTask *task)
 {
+    QmiDevice *self;
+    DeviceOpenContext *ctx;
     MbimDeviceOpenFlags open_flags = MBIM_DEVICE_OPEN_FLAGS_NONE;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
 
     /* If QMI proxy was requested, use MBIM proxy instead */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY)
         open_flags |= MBIM_DEVICE_OPEN_FLAGS_PROXY;
 
     /* We pass the original timeout of the request to the open operation */
-    g_debug ("[%s] opening MBIM device...", ctx->self->priv->path_display);
-    mbim_device_open_full (ctx->self->priv->mbimdev,
+    g_debug ("[%s] opening MBIM device...", self->priv->path_display);
+    mbim_device_open_full (self->priv->mbimdev,
                            open_flags,
                            ctx->timeout,
-                           ctx->cancellable,
+                           g_task_get_cancellable (task),
                            (GAsyncReadyCallback) mbim_device_open_ready,
-                           ctx);
+                           task);
 }
 
 static void
 mbim_device_new_ready (GObject *source,
                        GAsyncResult *res,
-                       DeviceOpenContext *ctx)
+                       GTask *task)
 {
+    QmiDevice *self;
+    DeviceOpenContext *ctx;
     GError *error = NULL;
 
-    ctx->self->priv->mbimdev = mbim_device_new_finish (res, &error);
-    if (!ctx->self->priv->mbimdev) {
-        g_simple_async_result_take_error (ctx->result, error);
-        device_open_context_complete_and_free (ctx);
+    self = g_task_get_source_object (task);
+    self->priv->mbimdev = mbim_device_new_finish (res, &error);
+    if (!self->priv->mbimdev) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
-    g_debug ("[%s] MBIM device created", ctx->self->priv->path_display);
+    g_debug ("[%s] MBIM device created", self->priv->path_display);
 
     /* Go on */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    device_open_context_step (ctx);
+    device_open_step (task);
 }
 
 static void
-create_mbim_device (DeviceOpenContext *ctx)
+create_mbim_device (GTask *task)
 {
+    QmiDevice *self;
     GFile *file;
 
-    if (ctx->self->priv->mbimdev) {
-        g_simple_async_result_set_error (ctx->result,
-                                         QMI_CORE_ERROR,
-                                         QMI_CORE_ERROR_WRONG_STATE,
-                                         "Already open");
-        device_open_context_complete_and_free (ctx);
+    self = g_task_get_source_object (task);
+    if (self->priv->mbimdev) {
+        g_task_return_new_error (task,
+                                 QMI_CORE_ERROR,
+                                 QMI_CORE_ERROR_WRONG_STATE,
+                                 "Already open");
+        g_object_unref (task);
         return;
     }
 
-    g_debug ("[%s] creating MBIM device...", ctx->self->priv->path_display);
-    file = g_file_new_for_path (ctx->self->priv->path);
+    g_debug ("[%s] creating MBIM device...", self->priv->path_display);
+    file = g_file_new_for_path (self->priv->path);
     mbim_device_new (file,
-                     ctx->cancellable,
+                     g_task_get_cancellable (task),
                      (GAsyncReadyCallback) mbim_device_new_ready,
-                     ctx);
+                     task);
     g_object_unref (file);
 }
 
@@ -2140,60 +2165,68 @@ create_mbim_device (DeviceOpenContext *ctx)
                        QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER)
 
 static void
-device_open_context_step (DeviceOpenContext *ctx)
+device_open_step (GTask *task)
 {
+    QmiDevice *self;
+    DeviceOpenContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     switch (ctx->step) {
     case DEVICE_OPEN_CONTEXT_STEP_FIRST:
         ctx->step++;
         /* Fall down */
 
     case DEVICE_OPEN_CONTEXT_STEP_DRIVER:
-        ctx->driver = __qmi_utils_get_driver (ctx->self->priv->path);
+        ctx->driver = __qmi_utils_get_driver (self->priv->path);
         if (ctx->driver)
-            g_debug ("[%s] loaded driver of cdc-wdm port: %s", ctx->self->priv->path_display, ctx->driver);
-        else if (!ctx->self->priv->no_file_check)
-            g_warning ("[%s] couldn't load driver of cdc-wdm port", ctx->self->priv->path_display);
+            g_debug ("[%s] loaded driver of cdc-wdm port: %s", self->priv->path_display, ctx->driver);
+        else if (!self->priv->no_file_check)
+            g_warning ("[%s] couldn't load driver of cdc-wdm port", self->priv->path_display);
 
 #if defined MBIM_QMUX_ENABLED
 
         /* Auto mode requested? */
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_AUTO) {
             if (!g_strcmp0 (ctx->driver, "cdc_mbim")) {
-                g_debug ("[%s] automatically selecting MBIM mode", ctx->self->priv->path_display);
+                g_debug ("[%s] automatically selecting MBIM mode", self->priv->path_display);
                 ctx->flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
                 goto next_step;
             }
             if (!g_strcmp0 (ctx->driver, "qmi_wwan")) {
-                g_debug ("[%s] automatically selecting QMI mode", ctx->self->priv->path_display);
+                g_debug ("[%s] automatically selecting QMI mode", self->priv->path_display);
                 ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_MBIM;
                 goto next_step;
             }
-            g_simple_async_result_set_error (ctx->result, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
-                                             "Cannot automatically select QMI/MBIM mode: driver %s",
-                                             ctx->driver ? ctx->driver : "unknown");
-            device_open_context_complete_and_free (ctx);
+            g_task_return_new_error (task,
+                                     QMI_CORE_ERROR,
+                                     QMI_CORE_ERROR_FAILED,
+                                     "Cannot automatically select QMI/MBIM mode: driver %s",
+                                     ctx->driver ? ctx->driver : "unknown");
+            g_object_unref (task);
             return;
         }
 
         /* MBIM mode requested? */
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
-            if (g_strcmp0 (ctx->driver, "cdc_mbim") && !ctx->self->priv->no_file_check)
-                g_warning ("[%s] requested MBIM mode but unexpected driver found: %s", ctx->self->priv->path_display, ctx->driver);
+            if (g_strcmp0 (ctx->driver, "cdc_mbim") && !self->priv->no_file_check)
+                g_warning ("[%s] requested MBIM mode but unexpected driver found: %s", self->priv->path_display, ctx->driver);
             goto next_step;
         }
 
 #else
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_AUTO)
-            g_warning ("[%s] requested auto mode but no MBIM QMUX support available", ctx->self->priv->path_display);
+            g_warning ("[%s] requested auto mode but no MBIM QMUX support available", self->priv->path_display);
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM)
-            g_warning ("[%s] requested MBIM mode but no MBIM QMUX support available", ctx->self->priv->path_display);
+            g_warning ("[%s] requested MBIM mode but no MBIM QMUX support available", self->priv->path_display);
 
 #endif /* MBIM_QMUX_ENABLED */
 
         /* QMI mode requested? */
-        if (g_strcmp0 (ctx->driver, "qmi_wwan") && !ctx->self->priv->no_file_check)
+        if (g_strcmp0 (ctx->driver, "qmi_wwan") && !self->priv->no_file_check)
             g_warning ("[%s] requested QMI mode but unexpected driver found: %s",
-                       ctx->self->priv->path_display, ctx->driver ? ctx->driver : "unknown");
+                       self->priv->path_display, ctx->driver ? ctx->driver : "unknown");
 
 #if defined MBIM_QMUX_ENABLED
     next_step:
@@ -2204,7 +2237,7 @@ device_open_context_step (DeviceOpenContext *ctx)
 #if defined MBIM_QMUX_ENABLED
     case DEVICE_OPEN_CONTEXT_STEP_DEVICE_MBIM:
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
-            create_mbim_device (ctx);
+            create_mbim_device (task);
             return;
         }
         ctx->step++;
@@ -2212,7 +2245,7 @@ device_open_context_step (DeviceOpenContext *ctx)
 
     case DEVICE_OPEN_CONTEXT_STEP_OPEN_DEVICE_MBIM:
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
-            open_mbim_device (ctx);
+            open_mbim_device (task);
             return;
         }
         ctx->step++;
@@ -2221,10 +2254,10 @@ device_open_context_step (DeviceOpenContext *ctx)
 
     case DEVICE_OPEN_CONTEXT_STEP_CREATE_IOSTREAM:
         if (!(ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM)) {
-            create_iostream (ctx->self,
+            create_iostream (self,
                              !!(ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY),
                              (GAsyncReadyCallback)create_iostream_ready,
-                             ctx);
+                             task);
             return;
         }
         ctx->step++;
@@ -2236,13 +2269,13 @@ device_open_context_step (DeviceOpenContext *ctx)
             QmiMessageCtlInternalProxyOpenInput *input;
 
             input = qmi_message_ctl_internal_proxy_open_input_new ();
-            qmi_message_ctl_internal_proxy_open_input_set_device_path (input, ctx->self->priv->path, NULL);
-            qmi_client_ctl_internal_proxy_open (ctx->self->priv->client_ctl,
+            qmi_message_ctl_internal_proxy_open_input_set_device_path (input, self->priv->path, NULL);
+            qmi_client_ctl_internal_proxy_open (self->priv->client_ctl,
                                                 input,
                                                 5,
-                                                ctx->cancellable,
+                                                g_task_get_cancellable (task),
                                                 (GAsyncReadyCallback)internal_proxy_open_ready,
-                                                ctx);
+                                                task);
             qmi_message_ctl_internal_proxy_open_input_unref (input);
             return;
         }
@@ -2255,14 +2288,14 @@ device_open_context_step (DeviceOpenContext *ctx)
             /* Setup how many times to retry... We'll retry once per second */
             ctx->version_check_retries = ctx->timeout > 0 ? ctx->timeout : 1;
             g_debug ("[%s] Checking version info (%u retries)...",
-                     ctx->self->priv->path_display,
+                     self->priv->path_display,
                      ctx->version_check_retries);
-            qmi_client_ctl_get_version_info (ctx->self->priv->client_ctl,
+            qmi_client_ctl_get_version_info (self->priv->client_ctl,
                                              NULL,
                                              1,
-                                             ctx->cancellable,
+                                             g_task_get_cancellable (task),
                                              (GAsyncReadyCallback)open_version_info_ready,
-                                             ctx);
+                                             task);
             return;
         }
         ctx->step++;
@@ -2272,13 +2305,13 @@ device_open_context_step (DeviceOpenContext *ctx)
         /* Sync? */
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_SYNC) {
             g_debug ("[%s] Running sync...",
-                     ctx->self->priv->path_display);
-            qmi_client_ctl_sync (ctx->self->priv->client_ctl,
+                     self->priv->path_display);
+            qmi_client_ctl_sync (self->priv->client_ctl,
                                  NULL,
                                  ctx->timeout,
-                                 ctx->cancellable,
+                                 g_task_get_cancellable (task),
                                  (GAsyncReadyCallback)sync_ready,
-                                 ctx);
+                                 task);
             return;
         }
         ctx->step++;
@@ -2292,7 +2325,7 @@ device_open_context_step (DeviceOpenContext *ctx)
             QmiCtlDataLinkProtocol link_protocol = QMI_CTL_DATA_LINK_PROTOCOL_802_3;
 
             g_debug ("[%s] Setting network port data format...",
-                     ctx->self->priv->path_display);
+                     self->priv->path_display);
 
             input = qmi_message_ctl_set_data_format_input_new ();
 
@@ -2304,12 +2337,12 @@ device_open_context_step (DeviceOpenContext *ctx)
                 link_protocol = QMI_CTL_DATA_LINK_PROTOCOL_RAW_IP;
             qmi_message_ctl_set_data_format_input_set_protocol (input, link_protocol, NULL);
 
-            qmi_client_ctl_set_data_format (ctx->self->priv->client_ctl,
+            qmi_client_ctl_set_data_format (self->priv->client_ctl,
                                             input,
                                             5,
                                             NULL,
                                             (GAsyncReadyCallback)ctl_set_data_format_ready,
-                                            ctx);
+                                            task);
             qmi_message_ctl_set_data_format_input_unref (input);
             return;
         }
@@ -2318,8 +2351,8 @@ device_open_context_step (DeviceOpenContext *ctx)
 
     case DEVICE_OPEN_CONTEXT_STEP_LAST:
         /* Nothing else to process, done we are */
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        device_open_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
 
     default:
@@ -2339,6 +2372,7 @@ qmi_device_open (QmiDevice *self,
 {
     DeviceOpenContext *ctx;
     gchar *flags_str;
+    GTask *task;
 
     /* Raw IP and 802.3 are mutually exclusive */
     g_return_if_fail (!((flags & QMI_DEVICE_OPEN_FLAGS_NET_802_3) &&
@@ -2361,18 +2395,15 @@ qmi_device_open (QmiDevice *self,
     g_free (flags_str);
 
     ctx = g_slice_new (DeviceOpenContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             qmi_device_open);
     ctx->step = DEVICE_OPEN_CONTEXT_STEP_FIRST;
     ctx->flags = flags;
     ctx->timeout = timeout;
-    ctx->cancellable = (cancellable ? g_object_ref (cancellable) : NULL);
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)device_open_context_free);
 
     /* Start processing */
-    device_open_context_step (ctx);
+    device_open_step (task);
 }
 
 /*****************************************************************************/
