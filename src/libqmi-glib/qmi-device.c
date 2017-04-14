@@ -1575,17 +1575,12 @@ input_ready_cb (GInputStream *istream,
 }
 
 typedef struct {
-    QmiDevice *self;
-    GSimpleAsyncResult *result;
     guint spawn_retries;
 } CreateIostreamContext;
 
 static void
-create_iostream_context_complete_and_free (CreateIostreamContext *ctx)
+create_iostream_context_free (CreateIostreamContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
     g_slice_free (CreateIostreamContext, ctx);
 }
 
@@ -1594,118 +1589,127 @@ create_iostream_finish (QmiDevice *self,
                         GAsyncResult *res,
                         GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
-setup_iostream (CreateIostreamContext *ctx)
+setup_iostream (GTask *task)
 {
+    QmiDevice *self;
+
+    self = g_task_get_source_object (task);
+
     /* Check in/out streams */
-    if (!ctx->self->priv->istream || !ctx->self->priv->ostream) {
-        g_simple_async_result_set_error (
-            ctx->result,
-            QMI_CORE_ERROR,
-            QMI_CORE_ERROR_FAILED,
-            "Cannot get input/output streams");
-        g_clear_object (&ctx->self->priv->istream);
-        g_clear_object (&ctx->self->priv->ostream);
-        g_clear_object (&ctx->self->priv->socket_connection);
-        g_clear_object (&ctx->self->priv->socket_client);
-        create_iostream_context_complete_and_free (ctx);
+    if (!self->priv->istream || !self->priv->ostream) {
+        g_clear_object (&self->priv->istream);
+        g_clear_object (&self->priv->ostream);
+        g_clear_object (&self->priv->socket_connection);
+        g_clear_object (&self->priv->socket_client);
+        g_task_return_new_error (task,
+                                 QMI_CORE_ERROR,
+                                 QMI_CORE_ERROR_FAILED,
+                                 "Cannot get input/output streams");
+        g_object_unref (task);
         return;
     }
 
     /* Setup input events */
-    ctx->self->priv->input_source = (g_pollable_input_stream_create_source (
-                                         G_POLLABLE_INPUT_STREAM (
-                                             ctx->self->priv->istream),
-                                         NULL));
-    g_source_set_callback (ctx->self->priv->input_source,
+    self->priv->input_source = (g_pollable_input_stream_create_source (
+                                    G_POLLABLE_INPUT_STREAM (
+                                        self->priv->istream),
+                                    NULL));
+    g_source_set_callback (self->priv->input_source,
                            (GSourceFunc)input_ready_cb,
-                           ctx->self,
+                           self,
                            NULL);
-    g_source_attach (ctx->self->priv->input_source, g_main_context_get_thread_default ());
-    g_source_unref (ctx->self->priv->input_source);
+    g_source_attach (self->priv->input_source, g_main_context_get_thread_default ());
+    g_source_unref (self->priv->input_source);
 
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    create_iostream_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
-create_iostream_with_fd (CreateIostreamContext *ctx)
+create_iostream_with_fd (GTask *task)
 {
+    QmiDevice *self;
     gint fd;
 
-    fd = open (ctx->self->priv->path, O_RDWR | O_EXCL | O_NONBLOCK | O_NOCTTY);
+    self = g_task_get_source_object (task);
+    fd = open (self->priv->path, O_RDWR | O_EXCL | O_NONBLOCK | O_NOCTTY);
     if (fd < 0) {
-        g_simple_async_result_set_error (
-            ctx->result,
-            QMI_CORE_ERROR,
-            QMI_CORE_ERROR_FAILED,
-            "Cannot open device file '%s': %s",
-            ctx->self->priv->path_display,
-            strerror (errno));
-        create_iostream_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 QMI_CORE_ERROR,
+                                 QMI_CORE_ERROR_FAILED,
+                                 "Cannot open device file '%s': %s",
+                                 self->priv->path_display,
+                                 strerror (errno));
+        g_object_unref (task);
         return;
     }
 
-    ctx->self->priv->istream = g_unix_input_stream_new  (fd, TRUE);
-    ctx->self->priv->ostream = g_unix_output_stream_new (fd, TRUE);
+    self->priv->istream = g_unix_input_stream_new  (fd, TRUE);
+    self->priv->ostream = g_unix_output_stream_new (fd, TRUE);
 
-    setup_iostream (ctx);
+    setup_iostream (task);
 }
 
-static void create_iostream_with_socket (CreateIostreamContext *ctx);
+static void create_iostream_with_socket (GTask *task);
 
 static gboolean
-wait_for_proxy_cb (CreateIostreamContext *ctx)
+wait_for_proxy_cb (GTask *task)
 {
-    create_iostream_with_socket (ctx);
+    create_iostream_with_socket (task);
     return FALSE;
 }
 
 static void
-create_iostream_with_socket (CreateIostreamContext *ctx)
+create_iostream_with_socket (GTask *task)
 {
+    QmiDevice *self;
+    CreateIostreamContext *ctx;
     GSocketAddress *socket_address;
     GError *error = NULL;
 
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     /* Create socket client */
-    ctx->self->priv->socket_client = g_socket_client_new ();
-    g_socket_client_set_family (ctx->self->priv->socket_client, G_SOCKET_FAMILY_UNIX);
-    g_socket_client_set_socket_type (ctx->self->priv->socket_client, G_SOCKET_TYPE_STREAM);
-    g_socket_client_set_protocol (ctx->self->priv->socket_client, G_SOCKET_PROTOCOL_DEFAULT);
+    self->priv->socket_client = g_socket_client_new ();
+    g_socket_client_set_family (self->priv->socket_client, G_SOCKET_FAMILY_UNIX);
+    g_socket_client_set_socket_type (self->priv->socket_client, G_SOCKET_TYPE_STREAM);
+    g_socket_client_set_protocol (self->priv->socket_client, G_SOCKET_PROTOCOL_DEFAULT);
 
     /* Setup socket address */
     socket_address = (g_unix_socket_address_new_with_type (
-                          ctx->self->priv->proxy_path,
+                          self->priv->proxy_path,
                           -1,
                           G_UNIX_SOCKET_ADDRESS_ABSTRACT));
 
     /* Connect to address */
-    ctx->self->priv->socket_connection = (g_socket_client_connect (
-                                              ctx->self->priv->socket_client,
-                                              G_SOCKET_CONNECTABLE (socket_address),
-                                              NULL,
-                                              &error));
+    self->priv->socket_connection = (g_socket_client_connect (
+                                         self->priv->socket_client,
+                                         G_SOCKET_CONNECTABLE (socket_address),
+                                         NULL,
+                                         &error));
     g_object_unref (socket_address);
 
-    if (!ctx->self->priv->socket_connection) {
+    if (!self->priv->socket_connection) {
         gchar **argc;
         GSource *source;
 
         g_debug ("cannot connect to proxy: %s", error->message);
         g_clear_error (&error);
-        g_clear_object (&ctx->self->priv->socket_client);
+        g_clear_object (&self->priv->socket_client);
 
         /* Don't retry forever */
         ctx->spawn_retries++;
         if (ctx->spawn_retries > MAX_SPAWN_RETRIES) {
-            g_simple_async_result_set_error (ctx->result,
-                                             QMI_CORE_ERROR,
-                                             QMI_CORE_ERROR_FAILED,
-                                             "Couldn't spawn the qmi-proxy");
-            create_iostream_context_complete_and_free (ctx);
+            g_task_return_new_error (task,
+                                     QMI_CORE_ERROR,
+                                     QMI_CORE_ERROR_FAILED,
+                                     "Couldn't spawn the qmi-proxy");
+            g_object_unref (task);
             return;
         }
 
@@ -1728,21 +1732,21 @@ create_iostream_with_socket (CreateIostreamContext *ctx)
 
         /* Wait some ms and retry */
         source = g_timeout_source_new (100);
-        g_source_set_callback (source, (GSourceFunc)wait_for_proxy_cb, ctx, NULL);
+        g_source_set_callback (source, (GSourceFunc)wait_for_proxy_cb, task, NULL);
         g_source_attach (source, g_main_context_get_thread_default ());
         g_source_unref (source);
         return;
     }
 
-    ctx->self->priv->istream = g_io_stream_get_input_stream (G_IO_STREAM (ctx->self->priv->socket_connection));
-    if (ctx->self->priv->istream)
-        g_object_ref (ctx->self->priv->istream);
+    self->priv->istream = g_io_stream_get_input_stream (G_IO_STREAM (self->priv->socket_connection));
+    if (self->priv->istream)
+        g_object_ref (self->priv->istream);
 
-    ctx->self->priv->ostream = g_io_stream_get_output_stream (G_IO_STREAM (ctx->self->priv->socket_connection));
-    if (ctx->self->priv->ostream)
-        g_object_ref (ctx->self->priv->ostream);
+    self->priv->ostream = g_io_stream_get_output_stream (G_IO_STREAM (self->priv->socket_connection));
+    if (self->priv->ostream)
+        g_object_ref (self->priv->ostream);
 
-    setup_iostream (ctx);
+    setup_iostream (task);
 }
 
 static void
@@ -1752,21 +1756,22 @@ create_iostream (QmiDevice *self,
                  gpointer user_data)
 {
     CreateIostreamContext *ctx;
+    GTask *task;
 
     ctx = g_slice_new (CreateIostreamContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             create_iostream);
     ctx->spawn_retries = 0;
 
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task,
+                          ctx,
+                          (GDestroyNotify)create_iostream_context_free);
+
     if (self->priv->istream || self->priv->ostream) {
-        g_simple_async_result_set_error (ctx->result,
-                                         QMI_CORE_ERROR,
-                                         QMI_CORE_ERROR_WRONG_STATE,
-                                         "Already open");
-        create_iostream_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 QMI_CORE_ERROR,
+                                 QMI_CORE_ERROR_WRONG_STATE,
+                                 "Already open");
+        g_object_unref (task);
         return;
     }
 
@@ -1774,9 +1779,9 @@ create_iostream (QmiDevice *self,
     g_assert (self->priv->path);
 
     if (proxy)
-        create_iostream_with_socket (ctx);
+        create_iostream_with_socket (task);
     else
-        create_iostream_with_fd (ctx);
+        create_iostream_with_fd (task);
 }
 
 /*****************************************************************************/
