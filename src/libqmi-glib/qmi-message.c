@@ -52,6 +52,7 @@
 #include "qmi-oma.h"
 #include "qmi-wda.h"
 #include "qmi-voice.h"
+#include "qmi-loc.h"
 
 #define PACKED __attribute__((packed))
 
@@ -1539,6 +1540,9 @@ qmi_message_get_printable_full (QmiMessage        *self,
     case QMI_SERVICE_VOICE:
         contents = __qmi_message_voice_get_printable (self, context, line_prefix);
         break;
+    case QMI_SERVICE_LOC:
+        contents = __qmi_message_loc_get_printable (self, context, line_prefix);
+        break;
     default:
         break;
     }
@@ -1597,6 +1601,9 @@ qmi_message_get_version_introduced_full (QmiMessage        *self,
 
     case QMI_SERVICE_WDA:
         return __qmi_message_wda_get_version_introduced (self, context, major, minor);
+
+    case QMI_SERVICE_LOC:
+        return __qmi_message_loc_get_version_introduced (self, context, major, minor);
 
     default:
         /* For the still unsupported services, cannot do anything */

@@ -369,6 +369,21 @@
   </chapter>
 
   <chapter>
+    <title>Location Service (LOC)</title>
+    <xi:include href="xml/qmi-client-loc.xml"/>
+    <xi:include href="xml/qmi-enums-loc.xml"/>
+    <section>
+      <title>LOC Indications</title>
+      <xi:include href="xml/qmi-indication-loc-position-report.xml"/>
+    </section>
+    <section>
+      <title>LOC Requests</title>
+      <xi:include href="xml/qmi-message-loc-start.xml"/>
+      <xi:include href="xml/qmi-message-loc-stop.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>

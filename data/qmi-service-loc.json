@@ -1,0 +1,71 @@
+
+[
+  // *********************************************************************************
+  {  "name"    : "LOC",
+     "type"    : "Service" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Client LOC",
+     "type"    : "Client",
+     "since"   : "1.0" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Message LOC",
+     "type"    : "Message-ID-Enum" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Indication LOC",
+     "type"    : "Indication-ID-Enum" },
+
+  // *********************************************************************************
+  {  "name"    : "Start",
+     "type"    : "Message",
+     "service" : "LOC",
+     "id"      : "0x0022",
+     "version" : "1.0",
+     "since"   : "1.19",
+     "input"   : [ { "name"          : "Session ID",
+                     "id"            : "0x01",
+                     "mandatory"     : "no",
+                     "type"          : "TLV",
+                     "since"         : "1.19",
+                     "format"        : "guint8" },
+                   { "name"          : "Intermediate Report State",
+                     "id"            : "0x12",
+                     "mandatory"     : "no",
+                     "type"          : "TLV",
+                     "since"         : "1.0",
+                     "format"        : "guint32",
+                     "public-format" : "QmiLocIntermediateReportState" } ],
+    "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Stop",
+     "type"    : "Message",
+     "service" : "LOC",
+     "id"      : "0x0023",
+     "version" : "1.0",
+     "since"   : "1.19",
+     "input"   : [ { "name"          : "Session ID",
+                     "id"            : "0x01",
+                     "mandatory"     : "no",
+                     "type"          : "TLV",
+                     "since"         : "1.19",
+                     "format"        : "guint8" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+
+  {  "name"    : "Position Report",
+     "type"    : "Indication",
+     "service" : "LOC",
+     "id"      : "0x0024",
+     "since"   : "1.0",
+     "output"  : [ { "name"      : "Session ID",
+                     "id"        : "0x02",
+                     "mandatory" : "no",
+                     "type"      : "TLV",
+                     "since"     : "1.0",
+                     "format"    : "guint8" } ] }
+
+]

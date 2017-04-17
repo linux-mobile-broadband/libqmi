@@ -74,6 +74,9 @@
 #include "qmi-enums-voice.h"
 #include "qmi-voice.h"
 
+#include "qmi-enums-loc.h"
+#include "qmi-loc.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

@@ -52,6 +52,7 @@
 #include "qmi-oma.h"
 #include "qmi-wda.h"
 #include "qmi-voice.h"
+#include "qmi-loc.h"
 #include "qmi-utils.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
@@ -1087,6 +1088,10 @@ qmi_device_allocate_client (QmiDevice *self,
 
     case QMI_SERVICE_VOICE:
         ctx->client_type = QMI_TYPE_CLIENT_VOICE;
+        break;
+
+    case QMI_SERVICE_LOC:
+        ctx->client_type = QMI_TYPE_CLIENT_LOC;
         break;
 
     default:
