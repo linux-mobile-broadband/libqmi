@@ -1483,6 +1483,7 @@ set_instance_id_ready (QmiClientCtl *client_ctl,
     }
 
     g_simple_async_result_complete (simple);
+    g_object_unref (simple);
 }
 
 /**
