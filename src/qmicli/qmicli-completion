@@ -118,6 +118,10 @@ _qmicli()
             COMPREPLY=( $(compgen -W "[(MuxId),(Ep-Iface-Number)]" -- $cur) )
             return 0
             ;;
+        '--wds-set-ip-family')
+            COMPREPLY=( $(compgen -W "[4|6]" -- $cur) )
+            return 0
+            ;;
         '--uim-read-transparent')
             COMPREPLY=( $(compgen -W "[0xNNNN,0xNNNN,...]" -- $cur) )
             return 0
