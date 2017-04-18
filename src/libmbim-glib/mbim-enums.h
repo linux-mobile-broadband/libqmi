@@ -964,6 +964,42 @@ typedef enum {
     MBIM_DSS_LINK_STATE_ACTIVATE   = 1
 } MbimDssLinkState;
 
+/*****************************************************************************/
+/* 'ATDS RAT' enums */
+
+/**
+ * MbimAtdsRatMode:
+ * @MBIM_ATDS_RAT_MODE_AUTOMATIC: Automatic.
+ * @MBIM_ATDS_RAT_MODE_2G_ONLY: 2G only.
+ * @MBIM_ATDS_RAT_MODE_3G_ONLY: 3G only.
+ * @MBIM_ATDS_RAT_MODE_4G_ONLY: 4G only.
+ *
+ * RAT mode preferences.
+ */
+typedef enum {
+    MBIM_ATDS_RAT_MODE_AUTOMATIC = 0,
+    MBIM_ATDS_RAT_MODE_2G_ONLY   = 1,
+    MBIM_ATDS_RAT_MODE_3G_ONLY   = 2,
+    MBIM_ATDS_RAT_MODE_4G_ONLY   = 3,
+} MbimAtdsRatMode;
+
+/*****************************************************************************/
+/* 'ATDS Operators' enums */
+
+/**
+ * MbimAtdsProviderPlmnMode:
+ * @MBIM_ATDS_PROVIDER_PLMN_MODE_GSM: GSM.
+ * @MBIM_ATDS_PROVIDER_PLMN_MODE_UTRAN: UTRAN (UMTS).
+ * @MBIM_ATDS_PROVIDER_PLMN_MODE_LTE: LTE.
+ *
+ * Provider PLMN mode.
+ */
+typedef enum {
+    MBIM_ATDS_PROVIDER_PLMN_MODE_GSM = 0,
+    MBIM_ATDS_PROVIDER_PLMN_MODE_UTRAN = 6,
+    MBIM_ATDS_PROVIDER_PLMN_MODE_LTE = 7,
+} MbimAtdsProviderPlmnMode;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

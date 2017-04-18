@@ -231,6 +231,26 @@ typedef enum {
     MBIM_CID_QMI_MSG     = 1
 } MbimCidQmi;
 
+/**
+ * MbimCidAtds:
+ * @MBIM_CID_ATDS_UNKNOWN: Unknown command.
+ * @MBIM_CID_ATDS_SIGNAL: Radio signal information.
+ * @MBIM_CID_ATDS_LOCATION: Cell location information.
+ * @MBIM_CID_ATDS_OPERATORS: Operator selection.
+ * @MBIM_CID_ATDS_RAT: Radio Access Technology selection.
+ * @MBIM_CID_ATDS_REGISTER_STATE: Registration state.
+ *
+ * MBIM commands in the %MBIM_SERVICE_ATDS service.
+ */
+typedef enum {
+    MBIM_CID_ATDS_UNKNOWN        = 0,
+    MBIM_CID_ATDS_SIGNAL         = 1,
+    MBIM_CID_ATDS_LOCATION       = 2,
+    MBIM_CID_ATDS_OPERATORS      = 3,
+    MBIM_CID_ATDS_RAT            = 4,
+    MBIM_CID_ATDS_REGISTER_STATE = 9,
+} MbimCidAtds;
+
 /* Command helpers */
 
 gboolean     mbim_cid_can_set       (MbimService service,

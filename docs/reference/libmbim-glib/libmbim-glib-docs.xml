@@ -70,6 +70,7 @@
     <xi:include href="xml/mbim-ms-firmware-id.xml"/>
     <xi:include href="xml/mbim-ms-host-shutdown.xml"/>
     <xi:include href="xml/mbim-qmi.xml"/>
+    <xi:include href="xml/mbim-att-device-service.xml"/>
   </chapter>
 
   <chapter>

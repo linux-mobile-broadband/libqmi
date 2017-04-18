@@ -13,6 +13,7 @@ MbimService
 MbimContextType
 MbimUuid
 MBIM_UUID_INVALID
+MBIM_UUID_ATDS
 MBIM_UUID_BASIC_CONNECT
 MBIM_UUID_SMS
 MBIM_UUID_USSD
@@ -46,6 +47,7 @@ mbim_context_type_build_string_from_mask
 
 <SECTION>
 <FILE>mbim-cid</FILE>
+MbimCidAtds
 MbimCidBasicConnect
 MbimCidSms
 MbimCidUssd
@@ -62,6 +64,7 @@ mbim_cid_can_set
 mbim_cid_can_query
 mbim_cid_can_notify
 mbim_cid_get_printable
+mbim_cid_atds_get_string
 mbim_cid_basic_connect_get_string
 mbim_cid_sms_get_string
 mbim_cid_ussd_get_string
@@ -74,6 +77,7 @@ mbim_cid_ms_host_shutdown_get_string
 mbim_cid_proxy_control_get_string
 mbim_cid_qmi_get_string
 <SUBSECTION Private>
+mbim_cid_atds_build_string_from_mask
 mbim_cid_basic_connect_build_string_from_mask
 mbim_cid_sms_build_string_from_mask
 mbim_cid_ussd_build_string_from_mask
@@ -86,6 +90,7 @@ mbim_cid_ms_host_shutdown_build_string_from_mask
 mbim_cid_proxy_control_build_string_from_mask
 mbim_cid_qmi_build_string_from_mask
 <SUBSECTION Standard>
+MBIM_TYPE_CID_ATDS
 MBIM_TYPE_CID_AUTH
 MBIM_TYPE_CID_BASIC_CONNECT
 MBIM_TYPE_CID_DSS
@@ -97,6 +102,7 @@ MBIM_TYPE_CID_MS_FIRMWARE_ID
 MBIM_TYPE_CID_MS_HOST_SHUTDOWN
 MBIM_TYPE_CID_PROXY_CONTROL
 MBIM_TYPE_CID_QMI
+mbim_cid_atds_get_type
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
 mbim_cid_dss_get_type
@@ -245,6 +251,9 @@ mbim_proxy_get_type
 
 <SECTION>
 <FILE>mbim-enums</FILE>
+MbimAtdsProvider
+MbimAtdsProviderPlmnMode
+MbimAtdsRatMode
 MbimDeviceType
 MbimCellularClass
 MbimVoiceClass
@@ -343,6 +352,8 @@ mbim_stk_pac_type_get_string
 mbim_network_idle_hint_state_get_string
 mbim_emergency_mode_state_get_string
 mbim_dss_link_state_get_string
+mbim_atds_provider_plmn_mode_get_string
+mbim_atds_rat_mode_get_string
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -394,9 +405,13 @@ mbim_stk_pac_type_build_string_from_mask
 mbim_network_idle_hint_state_build_string_from_mask
 mbim_emergency_mode_state_build_string_from_mask
 mbim_dss_link_state_build_string_from_mask
+mbim_atds_provider_plmn_mode_build_string_from_mask
+mbim_atds_rat_mode_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
+MBIM_TYPE_ATDS_PROVIDER_PLMN_MODE
+MBIM_TYPE_ATDS_RAT_MODE
 MBIM_TYPE_AUTH_PROTOCOL
 MBIM_TYPE_CELLULAR_CLASS
 MBIM_TYPE_COMPRESSION
@@ -501,6 +516,8 @@ mbim_stk_pac_type_get_type
 mbim_network_idle_hint_state_get_type
 mbim_emergency_mode_state_get_type
 mbim_dss_link_state_get_type
+mbim_atds_provider_plmn_mode_get_type
+mbim_atds_rat_mode_get_type
 </SECTION>
 
 <SECTION>

@@ -13,7 +13,8 @@ GENERATED_H = \
 	mbim-ms-firmware-id.h \
 	mbim-ms-host-shutdown.h \
 	mbim-proxy-control.h \
-	mbim-qmi.h
+	mbim-qmi.h \
+	mbim-atds.h
 
 GENERATED_C = \
 	mbim-error-types.c \
@@ -29,7 +30,8 @@ GENERATED_C = \
 	mbim-ms-firmware-id.c \
 	mbim-ms-host-shutdown.c \
 	mbim-proxy-control.c \
-	mbim-qmi.c
+	mbim-qmi.c \
+	mbim-atds.c
 
 GENERATED_SECTIONS = \
 	mbim-basic-connect.sections \
@@ -42,7 +44,8 @@ GENERATED_SECTIONS = \
 	mbim-ms-firmware-id.sections \
 	mbim-ms-host-shutdown.sections \
 	mbim-proxy-control.sections \
-	mbim-qmi.sections
+	mbim-qmi.sections \
+	mbim-atds.sections
 
 # Error types
 mbim-error-types.h: $(top_srcdir)/src/libmbim-glib/mbim-errors.h $(top_srcdir)/build-aux/templates/mbim-error-types-template.h
@@ -181,6 +184,15 @@ mbim-qmi.h mbim-qmi.c mbim-qmi.sections: $(top_srcdir)/data/mbim-service-qmi.jso
 		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-qmi.json \
 			--output mbim-qmi
+
+# ATT Device service
+mbim-atds.h mbim-atds.c mbim-atds.sections: $(top_srcdir)/data/mbim-service-atds.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-atds.h && \
+		rm -f mbim-atds.c && \
+		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-atds.json \
+			--output mbim-atds
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 

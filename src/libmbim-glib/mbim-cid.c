@@ -147,6 +147,16 @@ static const CidConfig cid_qmi_config [MBIM_CID_QMI_LAST] = {
     { SET, NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QMI_MSG */
 };
 
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_ATDS_LAST MBIM_CID_ATDS_REGISTER_STATE
+static const CidConfig cid_atds_config [MBIM_CID_ATDS_LAST] = {
+    { NO_SET, QUERY, NO_NOTIFY }, /* MBIM_CID_ATDS_SIGNAL */
+    { NO_SET, QUERY, NO_NOTIFY }, /* MBIM_CID_ATDS_LOCATION */
+    { SET,    QUERY, NO_NOTIFY }, /* MBIM_CID_ATDS_OPERATORS */
+    { SET,    QUERY, NO_NOTIFY }, /* MBIM_CID_ATDS_RAT */
+    { NO_SET, QUERY, NO_NOTIFY }, /* MBIM_CID_ATDS_REGISTER_STATE */
+};
+
 /**
  * mbim_cid_can_set:
  * @service: a #MbimService.
@@ -189,6 +199,8 @@ mbim_cid_can_set (MbimService service,
         return cid_proxy_control_config[cid - 1].set;
     case MBIM_SERVICE_QMI:
         return cid_qmi_config[cid - 1].set;
+    case MBIM_SERVICE_ATDS:
+        return cid_atds_config[cid - 1].set;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -237,6 +249,8 @@ mbim_cid_can_query (MbimService service,
         return cid_proxy_control_config[cid - 1].query;
     case MBIM_SERVICE_QMI:
         return cid_qmi_config[cid - 1].query;
+    case MBIM_SERVICE_ATDS:
+        return cid_atds_config[cid - 1].query;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -285,6 +299,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_proxy_control_config[cid - 1].notify;
     case MBIM_SERVICE_QMI:
         return cid_qmi_config[cid - 1].notify;
+    case MBIM_SERVICE_ATDS:
+        return cid_atds_config[cid - 1].notify;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -336,6 +352,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_proxy_control_get_string (cid);
     case MBIM_SERVICE_QMI:
         return mbim_cid_qmi_get_string (cid);
+    case MBIM_SERVICE_ATDS:
+        return mbim_cid_atds_get_string (cid);
     default:
         g_assert_not_reached ();
         return NULL;

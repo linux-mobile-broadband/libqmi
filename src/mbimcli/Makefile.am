@@ -16,7 +16,8 @@ mbimcli_SOURCES = \
 	mbimcli-phonebook.c \
 	mbimcli-dss.c \
 	mbimcli-ms-firmware-id.c \
-	mbimcli-ms-host-shutdown.c
+	mbimcli-ms-host-shutdown.c \
+	mbimcli-atds.c
 
 mbimcli_LDADD = \
 	$(MBIMCLI_LIBS) \
