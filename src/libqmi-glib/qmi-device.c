@@ -1125,32 +1125,18 @@ qmi_device_allocate_client (QmiDevice *self,
 /*****************************************************************************/
 /* Release client */
 
-typedef struct {
-    QmiClient *client;
-    GSimpleAsyncResult *result;
-} ReleaseClientContext;
-
-static void
-release_client_context_complete_and_free (ReleaseClientContext *ctx)
-{
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->client);
-    g_slice_free (ReleaseClientContext, ctx);
-}
-
 gboolean
 qmi_device_release_client_finish (QmiDevice *self,
                                   GAsyncResult *res,
                                   GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
 client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
                               GAsyncResult *res,
-                              ReleaseClientContext *ctx)
+                              GTask *task)
 {
     GError *error = NULL;
     QmiMessageCtlReleaseCidOutput *output;
@@ -1161,21 +1147,21 @@ client_ctl_release_cid_ready (QmiClientCtl *client_ctl,
     /* Check result of the async operation */
     output = qmi_client_ctl_release_cid_finish (client_ctl, res, &error);
     if (!output) {
-        g_simple_async_result_take_error (ctx->result, error);
-        release_client_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Check result of the QMI operation */
     if (!qmi_message_ctl_release_cid_output_get_result (output, &error)) {
-        g_simple_async_result_take_error (ctx->result, error);
-        release_client_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         qmi_message_ctl_release_cid_output_unref (output);
         return;
     }
 
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    release_client_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
     qmi_message_ctl_release_cid_output_unref (output);
 }
 
@@ -1188,7 +1174,7 @@ qmi_device_release_client (QmiDevice *self,
                            GAsyncReadyCallback callback,
                            gpointer user_data)
 {
-    ReleaseClientContext *ctx;
+    GTask *task;
     QmiService service;
     guint8 cid;
     gchar *flags_str;
@@ -1209,25 +1195,20 @@ qmi_device_release_client (QmiDevice *self,
              flags_str);
     g_free (flags_str);
 
-    /* NOTE! The operation must not take a reference to self, or we won't be
-     * able to use it implicitly from our dispose() */
-
-    ctx = g_slice_new0 (ReleaseClientContext);
-    ctx->client = g_object_ref (client);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             qmi_device_release_client);
+    task = g_task_new (self, cancellable, callback, user_data);
 
     /* Do not try to release an already released client */
     if (cid == QMI_CID_NONE) {
-        g_simple_async_result_set_error (ctx->result,
-                                         QMI_CORE_ERROR,
-                                         QMI_CORE_ERROR_INVALID_ARGS,
-                                         "Client is already released");
-        release_client_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 QMI_CORE_ERROR,
+                                 QMI_CORE_ERROR_INVALID_ARGS,
+                                 "Client is already released");
+        g_object_unref (task);
         return;
     }
+
+    /* Keep the client object valid until after we reset its contents below */
+    g_object_ref (client);
 
     /* Unregister from device */
     unregister_client (self, client);
@@ -1244,6 +1225,8 @@ qmi_device_release_client (QmiDevice *self,
                   QMI_CLIENT_DEVICE,  NULL,
                   NULL);
 
+    g_object_unref (client);
+
     if (flags & QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID) {
         QmiMessageCtlReleaseCidInput *input;
 
@@ -1257,15 +1240,15 @@ qmi_device_release_client (QmiDevice *self,
                                     timeout,
                                     cancellable,
                                     (GAsyncReadyCallback)client_ctl_release_cid_ready,
-                                    ctx);
+                                    task);
 
         qmi_message_ctl_release_cid_input_unref (input);
         return;
     }
 
     /* No need to release the CID, so just done */
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    release_client_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
     return;
 }
 
