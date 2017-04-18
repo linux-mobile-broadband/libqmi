@@ -357,10 +357,7 @@ class Client:
                 '    GAsyncResult *res,\n'
                 '    GError **error)\n'
                 '{\n'
-                '   if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))\n'
-                '       return NULL;\n'
-                '\n'
-                '   return ${output_underscore}_ref (g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res)));\n'
+                '   return g_task_propagate_pointer (G_TASK (res), error);\n'
                 '}\n')
 
             if message.abort:
@@ -395,7 +392,7 @@ class Client:
                 '${message_underscore}_ready (\n'
                 '    QmiDevice *device,\n'
                 '    GAsyncResult *res,\n'
-                '    GSimpleAsyncResult *simple)\n'
+                '    GTask *task)\n'
                 '{\n'
                 '    GError *error = NULL;\n'
                 '    QmiMessage *reply;\n'
@@ -413,11 +410,10 @@ class Client:
                     '                guint16 transaction_id;\n'
                     '                QmiMessage${service_camelcase}AbortInput *input;\n'
                     '\n'
-                    '                self = g_async_result_get_source_object (G_ASYNC_RESULT (simple));\n'
+                    '                self = g_task_get_source_object (task);\n'
                     '                g_assert (self != NULL);\n'
                     '\n'
-                    '                transaction_id = (guint16) GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (simple),\n'
-                    '                                                                                "transaction-id"));\n'
+                    '                transaction_id = (guint16) GPOINTER_TO_UINT (g_task_get_task_data (task));\n'
                     '                g_assert (transaction_id != 0);\n'
                     '\n'
                     '                input = qmi_message_${service_lowercase}_abort_input_new ();\n'
@@ -439,27 +435,24 @@ class Client:
                     '                                    NULL);\n'
                     '                qmi_message_${service_lowercase}_abort_input_unref (input);\n'
                     '                qmi_message_unref (abort);\n'
-                    '                g_object_unref (self);\n'
                     '            }\n'
                     '\n')
 
             template += (
-                '        g_simple_async_result_take_error (simple, error);\n'
-                '        g_simple_async_result_complete (simple);\n'
-                '        g_object_unref (simple);\n'
+                '        g_task_return_error (task, error);\n'
+                '        g_object_unref (task);\n'
                 '        return;\n'
                 '    }\n'
                 '\n'
                 '    /* Parse reply */\n'
                 '    output = __${message_fullname_underscore}_response_parse (reply, &error);\n'
                 '    if (!output)\n'
-                '        g_simple_async_result_take_error (simple, error);\n'
+                '        g_task_return_error (task, error);\n'
                 '    else\n'
-                '        g_simple_async_result_set_op_res_gpointer (simple,\n'
-                '                                                   output,\n'
-                '                                                   (GDestroyNotify)${output_underscore}_unref);\n'
-                '    g_simple_async_result_complete (simple);\n'
-                '    g_object_unref (simple);\n'
+                '        g_task_return_pointer (task,\n'
+                '                               output,\n'
+                '                               (GDestroyNotify)${output_underscore}_unref);\n'
+                '    g_object_unref (task);\n'
                 '    qmi_message_unref (reply);\n'
                 '}\n'
                 '\n'
@@ -472,7 +465,7 @@ class Client:
                 '    GAsyncReadyCallback callback,\n'
                 '    gpointer user_data)\n'
                 '{\n'
-                '    GSimpleAsyncResult *result;\n'
+                '    GTask *task;\n'
                 '    QmiMessage *request;\n'
                 '    GError *error = NULL;\n'
                 '    guint16 transaction_id;\n')
@@ -483,10 +476,7 @@ class Client:
 
             template += (
                 '\n'
-                '    result = g_simple_async_result_new (G_OBJECT (self),\n'
-                '                                        callback,\n'
-                '                                        user_data,\n'
-                '                                        ${underscore}_${message_underscore});\n'
+                '    task = g_task_new (self, cancellable, callback, user_data);\n'
                 '\n'
                 '    transaction_id = qmi_client_get_next_transaction_id (QMI_CLIENT (self));\n'
                 '\n'
@@ -497,18 +487,15 @@ class Client:
                 '                  &error);\n'
                 '    if (!request) {\n'
                 '        g_prefix_error (&error, "Couldn\'t create request message: ");\n'
-                '        g_simple_async_result_take_error (result, error);\n'
-                '        g_simple_async_result_complete_in_idle (result);\n'
-                '        g_object_unref (result);\n'
+                '        g_task_return_error (task, error);\n'
+                '        g_object_unref (task);\n'
                 '        return;\n'
                 '    }\n')
 
             if message.abort:
                 template += (
                     '\n'
-                    '    g_object_set_data (G_OBJECT (result),\n'
-                    '                       "transaction-id",\n'
-                    '                       GUINT_TO_POINTER (transaction_id));\n')
+                    '    g_task_set_task_data (task, GUINT_TO_POINTER (transaction_id), NULL);\n')
 
             if message.vendor is not None:
                 template += (
@@ -532,7 +519,7 @@ class Client:
                 '                             timeout,\n'
                 '                             cancellable,\n'
                 '                             (GAsyncReadyCallback)${message_underscore}_ready,\n'
-                '                             result);\n'
+                '                             task);\n'
                 '    qmi_message_unref (request);\n')
 
             if message.vendor is not None:
