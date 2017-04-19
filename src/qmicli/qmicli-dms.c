@@ -2741,6 +2741,9 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
 
     operation_ctx = g_task_get_task_data (task);
 
+    /* A single result struct is used for all iterations */
+    result = g_slice_new0 (GetStoredImageResult);
+
     for (i = 0; i < array->len; i++) {
         QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement *subimage;
         QmiMessageDmsListStoredImagesOutputListImage *image;
@@ -2784,8 +2787,6 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
                  subimage->build_id);
         g_free (unique_id_str);
 
-        /* Build result */
-        result = g_slice_new0 (GetStoredImageResult);
         if (image->type == QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM) {
             result->modem_unique_id = subimage->unique_id ? g_array_ref (subimage->unique_id) : NULL;
             result->modem_build_id = g_strdup (subimage->build_id);
