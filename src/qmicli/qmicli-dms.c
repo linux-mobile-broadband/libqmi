@@ -2649,8 +2649,6 @@ list_stored_images_ready (QmiClientDms *client,
 }
 
 typedef struct {
-    QmiClientDms *client;
-    GSimpleAsyncResult *result;
     gint modem_index;
     gint pri_index;
 } GetStoredImageContext;
@@ -2663,12 +2661,21 @@ typedef struct {
 } GetStoredImageResult;
 
 static void
-get_stored_image_context_complete_and_free (GetStoredImageContext *operation_ctx)
+get_stored_image_context_free (GetStoredImageContext *operation_ctx)
 {
-    g_simple_async_result_complete (operation_ctx->result);
-    g_object_unref (operation_ctx->result);
-    g_object_unref (operation_ctx->client);
     g_slice_free (GetStoredImageContext, operation_ctx);
+}
+
+static void
+get_stored_image_result_free (GetStoredImageResult *result)
+{
+    if (result) {
+        g_clear_pointer (&result->modem_unique_id, (GDestroyNotify)g_array_unref);
+        g_free (result->modem_build_id);
+        g_clear_pointer (&result->pri_unique_id, (GDestroyNotify)g_array_unref);
+        g_free (result->pri_build_id);
+        g_slice_free (GetStoredImageResult, result);
+    }
 }
 
 static void
@@ -2680,21 +2687,30 @@ get_stored_image_finish (QmiClientDms *client,
                          gchar **pri_build_id)
 {
     GetStoredImageResult *result;
+    GError *error = NULL;
 
-    result = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
+    result = g_task_propagate_pointer (G_TASK (res), &error);
 
-    *modem_unique_id = result->modem_unique_id ? g_array_ref (result->modem_unique_id) : NULL;
-    *modem_build_id = g_strdup (result->modem_build_id);
-    *pri_unique_id = result->pri_unique_id ? g_array_ref (result->pri_unique_id) : NULL;
-    *pri_build_id = g_strdup (result->pri_build_id);
+    /* The operation always returns a result */
+    g_assert (result);
+    g_assert_no_error (error);
+
+    /* Simply pass ownership to caller */
+    *modem_unique_id = result->modem_unique_id;
+    *modem_build_id = result->modem_build_id;
+    *pri_unique_id = result->pri_unique_id;
+    *pri_build_id = result->pri_build_id;
+
+    g_slice_free (GetStoredImageResult, result);
 }
 
 static void
 get_stored_image_list_stored_images_ready (QmiClientDms *client,
                                            GAsyncResult *res,
-                                           GetStoredImageContext *operation_ctx)
+                                           GTask *task)
 {
-    GetStoredImageResult result = { NULL, NULL, NULL, NULL };
+    GetStoredImageContext *operation_ctx;
+    GetStoredImageResult *result;
     GArray *array;
     QmiMessageDmsListStoredImagesOutput *output;
     GError *error = NULL;
@@ -2704,6 +2720,7 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
+        g_object_unref (task);
         operation_shutdown (FALSE);
         return;
     }
@@ -2712,6 +2729,7 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
         g_printerr ("error: couldn't list stored images: %s\n", error->message);
         g_error_free (error);
         qmi_message_dms_list_stored_images_output_unref (output);
+        g_object_unref (task);
         operation_shutdown (FALSE);
         return;
     }
@@ -2720,6 +2738,8 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
         output,
         &array,
         NULL);
+
+    operation_ctx = g_task_get_task_data (task);
 
     for (i = 0; i < array->len; i++) {
         QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement *subimage;
@@ -2747,6 +2767,7 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
                         qmi_dms_firmware_image_type_get_string (image->type),
                         image_index);
             qmi_message_dms_list_stored_images_output_unref (output);
+            g_object_unref (task);
             operation_shutdown (FALSE);
             return;
         }
@@ -2764,19 +2785,20 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
         g_free (unique_id_str);
 
         /* Build result */
+        result = g_slice_new0 (GetStoredImageResult);
         if (image->type == QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM) {
-            result.modem_unique_id = subimage->unique_id;
-            result.modem_build_id = subimage->build_id;
+            result->modem_unique_id = subimage->unique_id ? g_array_ref (subimage->unique_id) : NULL;
+            result->modem_build_id = g_strdup (subimage->build_id);
         } else if (image->type == QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI) {
-            result.pri_unique_id = subimage->unique_id;
-            result.pri_build_id = subimage->build_id;
+            result->pri_unique_id = subimage->unique_id ? g_array_ref (subimage->unique_id) : NULL;
+            result->pri_build_id = g_strdup (subimage->build_id);
         } else
             g_assert_not_reached ();
     }
 
     /* Complete */
-    g_simple_async_result_set_op_res_gpointer (operation_ctx->result, &result, NULL);
-    get_stored_image_context_complete_and_free (operation_ctx);
+    g_task_return_pointer (task, result, (GDestroyNotify)get_stored_image_result_free);
+    g_object_unref (task);
     qmi_message_dms_list_stored_images_output_unref (output);
 }
 
@@ -2787,6 +2809,7 @@ get_stored_image (QmiClientDms *client,
                   gpointer user_data)
 {
     GetStoredImageContext *operation_ctx;
+    GTask *task;
     gchar **split;
     guint i = 0;
     gint modem_index = -1;
@@ -2829,13 +2852,11 @@ get_stored_image (QmiClientDms *client,
     }
 
     operation_ctx = g_slice_new (GetStoredImageContext);
-    operation_ctx->client = g_object_ref (client);
-    operation_ctx->result = g_simple_async_result_new (G_OBJECT (client),
-                                                       callback,
-                                                       user_data,
-                                                       get_stored_image);
     operation_ctx->modem_index = modem_index;
     operation_ctx->pri_index = pri_index;
+
+    task = g_task_new (client, NULL, callback, user_data);
+    g_task_set_task_data (task, operation_ctx, (GDestroyNotify)get_stored_image_context_free);
 
     qmi_client_dms_list_stored_images (
         ctx->client,
@@ -2843,7 +2864,7 @@ get_stored_image (QmiClientDms *client,
         10,
         ctx->cancellable,
         (GAsyncReadyCallback)get_stored_image_list_stored_images_ready,
-        operation_ctx);
+        task);
 }
 
 /* Note:
