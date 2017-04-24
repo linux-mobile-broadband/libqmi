@@ -64,9 +64,12 @@ AC_SUBST(MBIM_GLIB_LT_CURRENT)
 AC_SUBST(MBIM_GLIB_LT_REVISION)
 AC_SUBST(MBIM_GLIB_LT_AGE)
 
+dnl Required dependency versions
+GLIB_MIN_VERSION=2.36
+
 dnl General dependencies for libmbim-glib
 PKG_CHECK_MODULES(LIBMBIM_GLIB,
-                  glib-2.0 >= 2.32
+                  glib-2.0 >= $GLIB_MIN_VERSION
                   gobject-2.0
                   gio-2.0
                   gio-unix-2.0)
@@ -75,7 +78,7 @@ AC_SUBST(LIBMBIM_GLIB_LIBS)
 
 dnl General dependencies for mbimcli
 PKG_CHECK_MODULES(MBIMCLI,
-                  glib-2.0 >= 2.32
+                  glib-2.0 >= $GLIB_MIN_VERSION
                   gobject-2.0
                   gio-2.0)
 AC_SUBST(MBIMCLI_CFLAGS)
@@ -83,7 +86,7 @@ AC_SUBST(MBIMCLI_LIBS)
 
 dnl General dependencies for mbim-proxy
 PKG_CHECK_MODULES(MBIMPROXY,
-                  glib-2.0 >= 2.32
+                  glib-2.0 >= $GLIB_MIN_VERSION
                   gobject-2.0
                   gio-2.0)
 AC_SUBST(MBIMPROXY_CFLAGS)
