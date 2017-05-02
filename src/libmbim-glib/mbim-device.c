@@ -1202,32 +1202,18 @@ typedef enum {
 } DeviceOpenContextStep;
 
 typedef struct {
-    MbimDevice *self;
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
     DeviceOpenContextStep step;
     MbimDeviceOpenFlags flags;
     gint timeout;
 } DeviceOpenContext;
 
 static void
-device_open_context_complete_and_free (DeviceOpenContext *ctx,
-                                       GError            *error)
+device_open_context_free (DeviceOpenContext *ctx)
 {
-    if (error)
-        g_simple_async_result_take_error (ctx->result, error);
-    else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
-    g_object_unref (ctx->self);
     g_slice_free (DeviceOpenContext, ctx);
 }
 
-static void device_open_context_step (DeviceOpenContext *ctx);
+static void device_open_context_step (GTask *task);
 
 /**
  * mbim_device_open_full_finish:
@@ -1244,7 +1230,7 @@ mbim_device_open_full_finish (MbimDevice    *self,
                               GAsyncResult  *res,
                               GError       **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 /**
@@ -1265,15 +1251,18 @@ mbim_device_open_finish (MbimDevice   *self,
     return mbim_device_open_full_finish (self, res, error);
 }
 
-static void open_message (DeviceOpenContext *ctx);
+static void open_message (GTask *task);
 
 static void
-open_message_ready (MbimDevice        *self,
-                    GAsyncResult      *res,
-                    DeviceOpenContext *ctx)
+open_message_ready (MbimDevice   *self,
+                    GAsyncResult *res,
+                    GTask        *task)
 {
+    DeviceOpenContext *ctx;
     MbimMessage *response;
     GError *error = NULL;
+
+    ctx = g_task_get_task_data (task);
 
     response = mbim_device_command_finish (self, res, &error);
     if (!response) {
@@ -1283,7 +1272,7 @@ open_message_ready (MbimDevice        *self,
             ctx->timeout -= RETRY_TIMEOUT_SECS;
             if (ctx->timeout > 0) {
                 g_error_free (error);
-                open_message (ctx);
+                open_message (task);
                 return;
             }
 
@@ -1292,15 +1281,17 @@ open_message_ready (MbimDevice        *self,
 
         g_debug ("open operation timed out: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
-        device_open_context_complete_and_free (ctx, error);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_OPEN_DONE, &error)) {
         g_debug ("getting open done result failed: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
-        device_open_context_complete_and_free (ctx, error);
         mbim_message_unref (response);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
@@ -1308,129 +1299,148 @@ open_message_ready (MbimDevice        *self,
 
     /* go on */
     ctx->step++;
-    device_open_context_step (ctx);
+    device_open_context_step (task);
 }
 
 static void
-open_message (DeviceOpenContext *ctx)
+open_message (GTask *task)
 {
+    MbimDevice *self;
     MbimMessage *request;
 
+    self = g_task_get_source_object (task);
+
     /* Launch 'Open' command */
-    request = mbim_message_open_new (mbim_device_get_next_transaction_id (ctx->self),
-                                     ctx->self->priv->max_control_transfer);
-    mbim_device_command (ctx->self,
+    request = mbim_message_open_new (mbim_device_get_next_transaction_id (self),
+                                     self->priv->max_control_transfer);
+    mbim_device_command (self,
                          request,
                          RETRY_TIMEOUT_SECS,
-                         ctx->cancellable,
+                         g_task_get_cancellable (task),
                          (GAsyncReadyCallback)open_message_ready,
-                         ctx);
+                         task);
     mbim_message_unref (request);
 }
 
 static void
-proxy_cfg_message_ready (MbimDevice        *self,
-                         GAsyncResult      *res,
-                         DeviceOpenContext *ctx)
+proxy_cfg_message_ready (MbimDevice   *self,
+                         GAsyncResult *res,
+                         GTask        *task)
 {
+    DeviceOpenContext *ctx;
     MbimMessage *response;
     GError *error = NULL;
+
+    ctx = g_task_get_task_data (task);
 
     response = mbim_device_command_finish (self, res, &error);
     if (!response) {
         /* Hard error if proxy cfg command fails */
         g_debug ("proxy configuration failed: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
-        device_open_context_complete_and_free (ctx, error);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     mbim_message_unref (response);
 
     ctx->step++;
-    device_open_context_step (ctx);
+    device_open_context_step (task);
 }
 
 static void
-proxy_cfg_message (DeviceOpenContext *ctx)
+proxy_cfg_message (GTask *task)
 {
+    MbimDevice *self;
+    DeviceOpenContext *ctx;
     GError *error = NULL;
     MbimMessage *request;
 
-    request = mbim_message_proxy_control_configuration_set_new (ctx->self->priv->path, ctx->timeout, &error);
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
+    request = mbim_message_proxy_control_configuration_set_new (self->priv->path, ctx->timeout, &error);
 
     /* This message is no longer a direct reply; as the proxy will also try to open the device
      * directly. If it cannot open the device, it will return an error. */
-    mbim_device_command (ctx->self,
+    mbim_device_command (self,
                          request,
                          ctx->timeout,
-                         ctx->cancellable,
+                         g_task_get_cancellable (task),
                          (GAsyncReadyCallback)proxy_cfg_message_ready,
-                         ctx);
+                         task);
     mbim_message_unref (request);
 }
 
 static void
 create_iochannel_ready (MbimDevice *self,
                         GAsyncResult *res,
-                        DeviceOpenContext *ctx)
+                        GTask *task)
 {
+    DeviceOpenContext *ctx;
     GError *error = NULL;
 
     if (!create_iochannel_finish (self, res, &error)) {
         g_debug ("creating iochannel failed: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
-        device_open_context_complete_and_free (ctx, error);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Go on */
+    ctx = g_task_get_task_data (task);
     ctx->step++;
-    device_open_context_step (ctx);
+    device_open_context_step (task);
 }
 
 static void
-device_open_context_step (DeviceOpenContext *ctx)
+device_open_context_step (GTask *task)
 {
+    MbimDevice *self;
+    DeviceOpenContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     switch (ctx->step) {
     case DEVICE_OPEN_CONTEXT_STEP_FIRST:
-        if (ctx->self->priv->open_status == OPEN_STATUS_OPEN) {
-            GError *error;
-
-            error = g_error_new (MBIM_CORE_ERROR,
-                                 MBIM_CORE_ERROR_WRONG_STATE,
-                                 "Already open");
-            device_open_context_complete_and_free (ctx, error);
+        if (self->priv->open_status == OPEN_STATUS_OPEN) {
+            g_task_return_new_error (task,
+                                     MBIM_CORE_ERROR,
+                                     MBIM_CORE_ERROR_WRONG_STATE,
+                                     "Already open");
+            g_object_unref (task);
             return;
         }
 
-        if (ctx->self->priv->open_status == OPEN_STATUS_OPENING) {
-            GError *error;
-
-            error = g_error_new (MBIM_CORE_ERROR,
-                                 MBIM_CORE_ERROR_WRONG_STATE,
-                                 "Already opening");
-            device_open_context_complete_and_free (ctx, error);
+        if (self->priv->open_status == OPEN_STATUS_OPENING) {
+            g_task_return_new_error (task,
+                                     MBIM_CORE_ERROR,
+                                     MBIM_CORE_ERROR_WRONG_STATE,
+                                     "Already opening");
+            g_object_unref (task);
             return;
         }
 
         g_debug ("opening device...");
-        g_assert (ctx->self->priv->open_status == OPEN_STATUS_CLOSED);
-        ctx->self->priv->open_status = OPEN_STATUS_OPENING;
+        g_assert (self->priv->open_status == OPEN_STATUS_CLOSED);
+        self->priv->open_status = OPEN_STATUS_OPENING;
 
         ctx->step++;
         /* Fall down */
 
     case DEVICE_OPEN_CONTEXT_STEP_CREATE_IOCHANNEL:
-        create_iochannel (ctx->self,
+        create_iochannel (self,
                           !!(ctx->flags & MBIM_DEVICE_OPEN_FLAGS_PROXY),
                           (GAsyncReadyCallback)create_iochannel_ready,
-                          ctx);
+                          task);
         return;
 
     case DEVICE_OPEN_CONTEXT_STEP_FLAGS_PROXY:
         if (ctx->flags & MBIM_DEVICE_OPEN_FLAGS_PROXY) {
-            proxy_cfg_message (ctx);
+            proxy_cfg_message (task);
             return;
         }
         ctx->step++;
@@ -1438,8 +1448,8 @@ device_open_context_step (DeviceOpenContext *ctx)
 
     case DEVICE_OPEN_CONTEXT_STEP_OPEN_MESSAGE:
         /* If the device is already in-session, avoid the open message */
-        if (!ctx->self->priv->in_session) {
-            open_message (ctx);
+        if (!self->priv->in_session) {
+            open_message (task);
             return;
         }
         ctx->step++;
@@ -1447,8 +1457,9 @@ device_open_context_step (DeviceOpenContext *ctx)
 
     case DEVICE_OPEN_CONTEXT_STEP_LAST:
         /* Nothing else to process, complete without error */
-        ctx->self->priv->open_status = OPEN_STATUS_OPEN;
-        device_open_context_complete_and_free (ctx, NULL);
+        self->priv->open_status = OPEN_STATUS_OPEN;
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
 
     default:
@@ -1484,23 +1495,21 @@ mbim_device_open_full (MbimDevice          *self,
                        gpointer             user_data)
 {
     DeviceOpenContext *ctx;
+    GTask *task;
 
     g_return_if_fail (MBIM_IS_DEVICE (self));
     g_return_if_fail (timeout > 0);
 
     ctx = g_slice_new (DeviceOpenContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mbim_device_open_full);
     ctx->step = DEVICE_OPEN_CONTEXT_STEP_FIRST;
     ctx->flags = flags;
     ctx->timeout = timeout;
-    ctx->cancellable = (cancellable ? g_object_ref (cancellable) : NULL);
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)device_open_context_free);
 
     /* Start processing */
-    device_open_context_step (ctx);
+    device_open_context_step (task);
 }
 
 /**
