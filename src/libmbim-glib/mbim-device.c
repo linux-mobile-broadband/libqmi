@@ -2109,35 +2109,18 @@ mbim_device_new (GFile               *file,
 /*****************************************************************************/
 /* Async init */
 
-typedef struct {
-    MbimDevice *self;
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
-} InitContext;
-
-static void
-init_context_complete_and_free (InitContext *ctx)
-{
-    g_simple_async_result_complete_in_idle (ctx->result);
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
-    g_slice_free (InitContext, ctx);
-}
-
 static gboolean
 initable_init_finish (GAsyncInitable  *initable,
                       GAsyncResult    *result,
                       GError         **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (result), error);
+    return g_task_propagate_boolean (G_TASK (result), error);
 }
 
 static void
 query_info_async_ready (GFile *file,
                         GAsyncResult *res,
-                        InitContext *ctx)
+                        GTask *task)
 {
     GError *error = NULL;
     GFileInfo *info;
@@ -2146,25 +2129,25 @@ query_info_async_ready (GFile *file,
     if (!info) {
         g_prefix_error (&error,
                         "Couldn't query file info: ");
-        g_simple_async_result_take_error (ctx->result, error);
-        init_context_complete_and_free (ctx);
+        g_task_return_error (task, error);
+        g_object_unref (task);
         return;
     }
 
     /* Our MBIM device must be of SPECIAL type */
     if (g_file_info_get_file_type (info) != G_FILE_TYPE_SPECIAL) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MBIM_CORE_ERROR,
-                                         MBIM_CORE_ERROR_FAILED,
-                                         "Wrong file type");
-        init_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MBIM_CORE_ERROR,
+                                 MBIM_CORE_ERROR_FAILED,
+                                 "Wrong file type");
+        g_object_unref (task);
         return;
     }
     g_object_unref (info);
 
     /* Done we are */
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    init_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
@@ -2174,37 +2157,32 @@ initable_init_async (GAsyncInitable      *initable,
                      GAsyncReadyCallback  callback,
                      gpointer             user_data)
 {
-    InitContext *ctx;
+    MbimDevice *self;
+    GTask *task;
 
-    ctx = g_slice_new0 (InitContext);
-    ctx->self = g_object_ref (initable);
-    if (cancellable)
-        ctx->cancellable = g_object_ref (cancellable);
-    ctx->result = g_simple_async_result_new (G_OBJECT (initable),
-                                             callback,
-                                             user_data,
-                                             initable_init_async);
+    self = MBIM_DEVICE (initable);
+    task = g_task_new (self, cancellable, callback, user_data);
 
     /* We need a proper file to initialize */
-    if (!ctx->self->priv->file) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MBIM_CORE_ERROR,
-                                         MBIM_CORE_ERROR_INVALID_ARGS,
-                                         "Cannot initialize MBIM device: No file given");
-        init_context_complete_and_free (ctx);
+    if (!self->priv->file) {
+        g_task_return_new_error (task,
+                                 MBIM_CORE_ERROR,
+                                 MBIM_CORE_ERROR_INVALID_ARGS,
+                                 "Cannot initialize MBIM device: No file given");
+        g_object_unref (task);
         return;
     }
 
     /* Check the file type. Note that this is just a quick check to avoid
      * creating MbimDevices pointing to a location already known not to be a MBIM
      * device. */
-    g_file_query_info_async (ctx->self->priv->file,
+    g_file_query_info_async (self->priv->file,
                              G_FILE_ATTRIBUTE_STANDARD_TYPE,
                              G_FILE_QUERY_INFO_NONE,
                              G_PRIORITY_DEFAULT,
-                             ctx->cancellable,
+                             cancellable,
                              (GAsyncReadyCallback)query_info_async_ready,
-                             ctx);
+                             task);
 }
 
 /*****************************************************************************/
