@@ -963,17 +963,12 @@ out:
 }
 
 typedef struct {
-    MbimDevice *self;
-    GSimpleAsyncResult *result;
     guint spawn_retries;
 } CreateIoChannelContext;
 
 static void
-create_iochannel_context_complete_and_free (CreateIoChannelContext *ctx)
+create_iochannel_context_free (CreateIoChannelContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
-    g_object_unref (ctx->self);
     g_slice_free (CreateIoChannelContext, ctx);
 }
 
@@ -982,66 +977,70 @@ create_iochannel_finish (MbimDevice *self,
                          GAsyncResult *res,
                          GError **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
-setup_iochannel (CreateIoChannelContext *ctx)
+setup_iochannel (GTask *task)
 {
+    MbimDevice *self;
     GError *inner_error = NULL;
 
+    self = g_task_get_source_object (task);
+
     /* We don't want UTF-8 encoding, we're playing with raw binary data */
-    g_io_channel_set_encoding (ctx->self->priv->iochannel, NULL, NULL);
+    g_io_channel_set_encoding (self->priv->iochannel, NULL, NULL);
 
     /* We don't want to get the channel buffered */
-    g_io_channel_set_buffered (ctx->self->priv->iochannel, FALSE);
+    g_io_channel_set_buffered (self->priv->iochannel, FALSE);
 
     /* Let the GIOChannel own the FD */
-    g_io_channel_set_close_on_unref (ctx->self->priv->iochannel, TRUE);
+    g_io_channel_set_close_on_unref (self->priv->iochannel, TRUE);
 
     /* We don't want to get blocked while writing stuff */
-    if (!g_io_channel_set_flags (ctx->self->priv->iochannel,
+    if (!g_io_channel_set_flags (self->priv->iochannel,
                                  G_IO_FLAG_NONBLOCK,
                                  &inner_error)) {
-        g_simple_async_result_take_error (ctx->result, inner_error);
-        g_io_channel_shutdown (ctx->self->priv->iochannel, FALSE, NULL);
-        g_io_channel_unref (ctx->self->priv->iochannel);
-        ctx->self->priv->iochannel = NULL;
-        g_clear_object (&ctx->self->priv->socket_connection);
-        g_clear_object (&ctx->self->priv->socket_client);
-        create_iochannel_context_complete_and_free (ctx);
+        g_io_channel_shutdown (self->priv->iochannel, FALSE, NULL);
+        g_io_channel_unref (self->priv->iochannel);
+        self->priv->iochannel = NULL;
+        g_clear_object (&self->priv->socket_connection);
+        g_clear_object (&self->priv->socket_client);
+        g_task_return_error (task, inner_error);
+        g_object_unref (task);
         return;
     }
 
-    ctx->self->priv->iochannel_source = g_io_create_watch (ctx->self->priv->iochannel,
-                                                           G_IO_IN | G_IO_ERR | G_IO_HUP);
-    g_source_set_callback (ctx->self->priv->iochannel_source,
+    self->priv->iochannel_source = g_io_create_watch (self->priv->iochannel,
+                                                      G_IO_IN | G_IO_ERR | G_IO_HUP);
+    g_source_set_callback (self->priv->iochannel_source,
                            (GSourceFunc)data_available,
-                           ctx->self,
+                           self,
                            NULL);
-    g_source_attach (ctx->self->priv->iochannel_source, g_main_context_get_thread_default ());
+    g_source_attach (self->priv->iochannel_source, g_main_context_get_thread_default ());
 
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    create_iochannel_context_complete_and_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
-create_iochannel_with_fd (CreateIoChannelContext *ctx)
+create_iochannel_with_fd (GTask *task)
 {
+    MbimDevice *self;
     gint fd;
     guint16 max;
 
+    self = g_task_get_source_object (task);
     errno = 0;
-    fd = open (ctx->self->priv->path, O_RDWR | O_EXCL | O_NONBLOCK | O_NOCTTY);
+    fd = open (self->priv->path, O_RDWR | O_EXCL | O_NONBLOCK | O_NOCTTY);
     if (fd < 0) {
-        g_simple_async_result_set_error (
-            ctx->result,
-            MBIM_CORE_ERROR,
-            MBIM_CORE_ERROR_FAILED,
-            "Cannot open device file '%s': %s",
-            ctx->self->priv->path_display,
-            strerror (errno));
-        create_iochannel_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MBIM_CORE_ERROR,
+                                 MBIM_CORE_ERROR_FAILED,
+                                 "Cannot open device file '%s': %s",
+                                 self->priv->path_display,
+                                 strerror (errno));
+        g_object_unref (task);
         return;
     }
 
@@ -1049,45 +1048,50 @@ create_iochannel_with_fd (CreateIoChannelContext *ctx)
     if (ioctl (fd, IOCTL_WDM_MAX_COMMAND, &max) < 0) {
         g_debug ("[%s] Couldn't query maximum message size: "
                  "IOCTL_WDM_MAX_COMMAND failed: %s",
-                 ctx->self->priv->path_display,
+                 self->priv->path_display,
                  strerror (errno));
         /* Fallback, try to read the descriptor file */
-        max = read_max_control_transfer (ctx->self);
+        max = read_max_control_transfer (self);
     } else {
         g_debug ("[%s] Queried max control message size: %" G_GUINT16_FORMAT,
-                 ctx->self->priv->path_display,
+                 self->priv->path_display,
                  max);
     }
-    ctx->self->priv->max_control_transfer = max;
+    self->priv->max_control_transfer = max;
 
     /* Create new GIOChannel */
-    ctx->self->priv->iochannel = g_io_channel_unix_new (fd);
+    self->priv->iochannel = g_io_channel_unix_new (fd);
 
-    setup_iochannel (ctx);
+    setup_iochannel (task);
 }
 
-static void create_iochannel_with_socket (CreateIoChannelContext *ctx);
+static void create_iochannel_with_socket (GTask *task);
 
 static gboolean
-wait_for_proxy_cb (CreateIoChannelContext *ctx)
+wait_for_proxy_cb (GTask *task)
 {
-    create_iochannel_with_socket (ctx);
+    create_iochannel_with_socket (task);
     return FALSE;
 }
 
 static void
-create_iochannel_with_socket (CreateIoChannelContext *ctx)
+create_iochannel_with_socket (GTask *task)
 {
+    MbimDevice *self;
+    CreateIoChannelContext *ctx;
     GSocketAddress *socket_address;
     GError *error = NULL;
 
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
     /* Create socket client */
-    if (ctx->self->priv->socket_client)
-        g_object_unref (ctx->self->priv->socket_client);
-    ctx->self->priv->socket_client = g_socket_client_new ();
-    g_socket_client_set_family (ctx->self->priv->socket_client, G_SOCKET_FAMILY_UNIX);
-    g_socket_client_set_socket_type (ctx->self->priv->socket_client, G_SOCKET_TYPE_STREAM);
-    g_socket_client_set_protocol (ctx->self->priv->socket_client, G_SOCKET_PROTOCOL_DEFAULT);
+    if (self->priv->socket_client)
+        g_object_unref (self->priv->socket_client);
+    self->priv->socket_client = g_socket_client_new ();
+    g_socket_client_set_family (self->priv->socket_client, G_SOCKET_FAMILY_UNIX);
+    g_socket_client_set_socket_type (self->priv->socket_client, G_SOCKET_TYPE_STREAM);
+    g_socket_client_set_protocol (self->priv->socket_client, G_SOCKET_PROTOCOL_DEFAULT);
 
     /* Setup socket address */
     socket_address = (g_unix_socket_address_new_with_type (
@@ -1096,31 +1100,31 @@ create_iochannel_with_socket (CreateIoChannelContext *ctx)
                           G_UNIX_SOCKET_ADDRESS_ABSTRACT));
 
     /* Connect to address */
-    if (ctx->self->priv->socket_connection)
-        g_object_unref (ctx->self->priv->socket_connection);
-    ctx->self->priv->socket_connection = (g_socket_client_connect (
-                                              ctx->self->priv->socket_client,
+    if (self->priv->socket_connection)
+        g_object_unref (self->priv->socket_connection);
+    self->priv->socket_connection = (g_socket_client_connect (
+                                              self->priv->socket_client,
                                               G_SOCKET_CONNECTABLE (socket_address),
                                               NULL,
                                               &error));
     g_object_unref (socket_address);
 
-    if (!ctx->self->priv->socket_connection) {
+    if (!self->priv->socket_connection) {
         gchar **argc;
         GSource *source;
 
         g_debug ("cannot connect to proxy: %s", error->message);
         g_clear_error (&error);
-        g_clear_object (&ctx->self->priv->socket_client);
+        g_clear_object (&self->priv->socket_client);
 
         /* Don't retry forever */
         ctx->spawn_retries++;
         if (ctx->spawn_retries > MAX_SPAWN_RETRIES) {
-            g_simple_async_result_set_error (ctx->result,
-                                             MBIM_CORE_ERROR,
-                                             MBIM_CORE_ERROR_FAILED,
-                                             "Couldn't spawn the mbim-proxy");
-            create_iochannel_context_complete_and_free (ctx);
+            g_task_return_new_error (task,
+                                     MBIM_CORE_ERROR,
+                                     MBIM_CORE_ERROR_FAILED,
+                                     "Couldn't spawn the mbim-proxy");
+            g_object_unref (task);
             return;
         }
 
@@ -1143,20 +1147,20 @@ create_iochannel_with_socket (CreateIoChannelContext *ctx)
 
         /* Wait some ms and retry */
         source = g_timeout_source_new (100);
-        g_source_set_callback (source, (GSourceFunc)wait_for_proxy_cb, ctx, NULL);
+        g_source_set_callback (source, (GSourceFunc)wait_for_proxy_cb, task, NULL);
         g_source_attach (source, g_main_context_get_thread_default ());
         g_source_unref (source);
         return;
     }
 
-    ctx->self->priv->iochannel = g_io_channel_unix_new (
+    self->priv->iochannel = g_io_channel_unix_new (
                                      g_socket_get_fd (
-                                         g_socket_connection_get_socket (ctx->self->priv->socket_connection)));
+                                         g_socket_connection_get_socket (self->priv->socket_connection)));
 
     /* try to read the descriptor file */
-    ctx->self->priv->max_control_transfer = read_max_control_transfer (ctx->self);
+    self->priv->max_control_transfer = read_max_control_transfer (self);
 
-    setup_iochannel (ctx);
+    setup_iochannel (task);
 }
 
 static void
@@ -1166,21 +1170,20 @@ create_iochannel (MbimDevice           *self,
                   gpointer              user_data)
 {
     CreateIoChannelContext *ctx;
+    GTask *task;
 
     ctx = g_slice_new (CreateIoChannelContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             create_iochannel);
     ctx->spawn_retries = 0;
 
+    task = g_task_new (self, NULL, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)create_iochannel_context_free);
+
     if (self->priv->iochannel) {
-        g_simple_async_result_set_error (ctx->result,
-                                         MBIM_CORE_ERROR,
-                                         MBIM_CORE_ERROR_WRONG_STATE,
-                                         "Already open");
-        create_iochannel_context_complete_and_free (ctx);
+        g_task_return_new_error (task,
+                                 MBIM_CORE_ERROR,
+                                 MBIM_CORE_ERROR_WRONG_STATE,
+                                 "Already open");
+        g_object_unref (task);
         return;
     }
 
@@ -1188,9 +1191,9 @@ create_iochannel (MbimDevice           *self,
     g_assert (self->priv->path);
 
     if (proxy)
-        create_iochannel_with_socket (ctx);
+        create_iochannel_with_socket (task);
     else
-        create_iochannel_with_fd (ctx);
+        create_iochannel_with_fd (task);
 }
 
 typedef enum {
