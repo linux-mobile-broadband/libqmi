@@ -1605,20 +1605,12 @@ mbim_device_close_force (MbimDevice *self,
 }
 
 typedef struct {
-    MbimDevice *self;
-    GSimpleAsyncResult *result;
-    GCancellable *cancellable;
     guint timeout;
 } DeviceCloseContext;
 
 static void
-device_close_context_complete_and_free (DeviceCloseContext *ctx)
+device_close_context_free (DeviceCloseContext *ctx)
 {
-    g_simple_async_result_complete_in_idle (ctx->result);
-    g_object_unref (ctx->result);
-    if (ctx->cancellable)
-        g_object_unref (ctx->cancellable);
-    g_object_unref (ctx->self);
     g_slice_free (DeviceCloseContext, ctx);
 }
 
@@ -1637,30 +1629,31 @@ mbim_device_close_finish (MbimDevice    *self,
                           GAsyncResult  *res,
                           GError       **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 static void
-close_message_ready (MbimDevice         *self,
-                     GAsyncResult       *res,
-                     DeviceCloseContext *ctx)
+close_message_ready (MbimDevice   *self,
+                     GAsyncResult *res,
+                     GTask        *task)
 {
     MbimMessage *response;
     GError *error = NULL;
 
     response = mbim_device_command_finish (self, res, &error);
     if (!response)
-        g_simple_async_result_take_error (ctx->result, error);
+        g_task_return_error (task, error);
     else if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_CLOSE_DONE, &error))
-        g_simple_async_result_take_error (ctx->result, error);
+        g_task_return_error (task, error);
     else if (!destroy_iochannel (self, &error))
-        g_simple_async_result_take_error (ctx->result, error);
+        g_task_return_error (task, error);
     else
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
+        g_task_return_boolean (task, TRUE);
 
     if (response)
         mbim_message_unref (response);
-    device_close_context_complete_and_free (ctx);
+
+    g_object_unref (task);
 }
 
 /**
@@ -1685,22 +1678,20 @@ mbim_device_close (MbimDevice          *self,
 {
     MbimMessage *request;
     DeviceCloseContext *ctx;
+    GTask *task;
 
     g_return_if_fail (MBIM_IS_DEVICE (self));
 
     ctx = g_slice_new (DeviceCloseContext);
-    ctx->self = g_object_ref (self);
-    ctx->result = g_simple_async_result_new (G_OBJECT (self),
-                                             callback,
-                                             user_data,
-                                             mbim_device_close);
     ctx->timeout = timeout;
-    ctx->cancellable = (cancellable ? g_object_ref (cancellable) : NULL);
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)device_close_context_free);
 
     /* Already closed? */
     if (!self->priv->iochannel) {
-        g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        device_close_context_complete_and_free (ctx);
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -1709,10 +1700,10 @@ mbim_device_close (MbimDevice          *self,
         GError *error = NULL;
 
         if (!destroy_iochannel (self, &error))
-            g_simple_async_result_take_error (ctx->result, error);
+            g_task_return_error (task, error);
         else
-            g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-        device_close_context_complete_and_free (ctx);
+            g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
         return;
     }
 
@@ -1721,9 +1712,9 @@ mbim_device_close (MbimDevice          *self,
     mbim_device_command (self,
                          request,
                          10,
-                         ctx->cancellable,
+                         cancellable,
                          (GAsyncReadyCallback) close_message_ready,
-                         ctx);
+                         task);
     mbim_message_unref (request);
 }
 
