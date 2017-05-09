@@ -47,7 +47,7 @@
  *
  * Whether to enable or disable intermediate state reporting.
  *
- * Since: 1.19
+ * Since: 1.20
  */
 typedef enum {
     QMI_LOC_INTERMEDIATE_REPORT_STATE_UNKNOWN = 0,
@@ -58,7 +58,7 @@ typedef enum {
 /**
  * qmi_loc_intermediate_report_state_get_string:
  *
- * Since: 1.19
+ * Since: 1.20
  */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_LOC_H_ */
