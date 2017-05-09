@@ -425,6 +425,29 @@ typedef enum {
  */
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI NAS Attach Detach' request/response */
+
+/**
+ * QmiNasPsAttachAction:
+ * @QMI_NAS_PS_ATTACH_ACTION_ATTACH: Attach the PS domain.
+ * @QMI_NAS_PS_ATTACH_ACTION_DETACH: Detach the PS domain.
+ *
+ * Packet Switched domain attach/detach action.
+ *
+ * Since: 1.20
+ */
+typedef enum {
+    QMI_NAS_PS_ATTACH_ACTION_ATTACH = 0x01,
+    QMI_NAS_PS_ATTACH_ACTION_DETACH = 0x02
+} QmiNasPsAttachAction;
+
+/**
+ * qmi_nas_ps_attach_action_get_string:
+ *
+ * Since: 1.20
+ */
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get Serving System' request/response */
 
 /**
