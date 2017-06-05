@@ -37,8 +37,8 @@ help ()
     echo
     echo "Options:"
     echo "  --profile=[PATH]  Use the profile in the specified path"
-    echo "  --help          Show help options"
-    echo "  --version       Show version"
+    echo "  --help, -h        Show help options"
+    echo "  --version         Show version"
     echo
     echo "Notes:"
     echo
@@ -88,7 +88,7 @@ version ()
 
 # Basic options
 if [ $# -lt 2 ]; then
-    if [ "$1" = "--help" ]; then
+    if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
         help
         exit 0
     elif [ "$1" = "--version" ]; then
