@@ -39,7 +39,7 @@
 #define IOCTL_WDM_MAX_COMMAND _IOR('H', 0xA0, guint16)
 #define RETRY_TIMEOUT_SECS 5
 
-#if WITH_UDEV
+#if defined WITH_UDEV
 # include <gudev/gudev.h>
 #endif
 
@@ -778,7 +778,7 @@ struct usb_cdc_mbim_desc {
     guint8  bmNetworkCapabilities;
 } __attribute__ ((packed));
 
-#if WITH_UDEV
+#if defined WITH_UDEV
 
 static gchar *
 get_descriptors_filepath (MbimDevice *self)

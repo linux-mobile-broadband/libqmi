@@ -141,7 +141,6 @@ case $with_udev in
         fi
         ;;
     *)
-        AC_DEFINE(WITH_UDEV, 0, [Define if you want udev support])
         with_udev=no
         ;;
 esac
