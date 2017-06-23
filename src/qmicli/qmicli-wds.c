@@ -73,6 +73,7 @@ static gboolean reset_flag;
 static gboolean noop_flag;
 static gchar *bind_mux_str;
 static gchar *set_ip_family_str;
+static gboolean get_channel_rates_flag;
 
 static GOptionEntry entries[] = {
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
@@ -151,6 +152,10 @@ static GOptionEntry entries[] = {
       "Set IP family",
       "[4|6]"
     },
+    { "wds-get-channel-rates", 0, 0, G_OPTION_ARG_NONE, &get_channel_rates_flag,
+      "Get channel data rates",
+      NULL
+    },
     { "wds-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a WDS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -200,6 +205,7 @@ qmicli_wds_options_enabled (void)
                  !!set_autoconnect_settings_str +
                  get_supported_messages_flag +
                  reset_flag +
+                 !!get_channel_rates_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -1720,6 +1726,52 @@ set_ip_family_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+static void
+get_channel_rates_ready (QmiClientWds *client,
+                         GAsyncResult *res)
+{
+    QmiMessageWdsGetChannelRatesOutput *output;
+    guint32 txrate = 0, rxrate = 0, maxtxrate = 0, maxrxrate = 0;
+    GError *error = NULL;
+
+    output = qmi_client_wds_get_channel_rates_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_get_channel_rates_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get channel rates: %s\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_wds_get_channel_rates_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Channel data rates:\n");
+
+    qmi_message_wds_get_channel_rates_output_get_channel_rates (output,
+                                                                &txrate,
+                                                                &rxrate,
+                                                                &maxtxrate,
+                                                                &maxrxrate,
+                                                                NULL);
+    g_print ("\tCurrent TX rate: %ubps\n"
+             "\tCurrent RX rate: %ubps\n"
+             "\tMax TX rate:     %ubps\n"
+             "\tMax RX rate:     %ubps\n",
+             txrate,
+             rxrate,
+             maxtxrate,
+             maxrxrate);
+
+    qmi_message_wds_get_channel_rates_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
 void
 qmicli_wds_run (QmiDevice *device,
                 QmiClientWds *client,
@@ -2061,6 +2113,18 @@ qmicli_wds_run (QmiDevice *device,
                               ctx->cancellable,
                               (GAsyncReadyCallback)reset_ready,
                               NULL);
+        return;
+    }
+
+    /* Request to get channel data rates? */
+    if (get_channel_rates_flag) {
+        g_debug ("Asynchronously getting channel data rates...");
+        qmi_client_wds_get_channel_rates (client,
+                                          NULL,
+                                          10,
+                                          ctx->cancellable,
+                                          (GAsyncReadyCallback)get_channel_rates_ready,
+                                          NULL);
         return;
     }
 
