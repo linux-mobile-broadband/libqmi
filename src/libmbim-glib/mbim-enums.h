@@ -196,9 +196,11 @@ typedef enum {
 
 /**
  * MbimReadyInfoFlag:
+ * @MBIM_READY_INFO_FLAG_NONE: Device in normal mode.
  * @MBIM_READY_INFO_FLAG_PROTECT_UNIQUE_ID: Request to avoid displaying subscriber ID.
  */
 typedef enum {
+    MBIM_READY_INFO_FLAG_NONE              = 0,
     MBIM_READY_INFO_FLAG_PROTECT_UNIQUE_ID = 1 << 0
 } MbimReadyInfoFlag;
 
