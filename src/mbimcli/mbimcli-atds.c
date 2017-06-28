@@ -44,11 +44,11 @@ static gboolean query_signal_flag;
 static gboolean query_location_flag;
 
 static GOptionEntry entries[] = {
-    { "atds-signal", 0, 0, G_OPTION_ARG_NONE, &query_signal_flag,
+    { "atds-query-signal", 0, 0, G_OPTION_ARG_NONE, &query_signal_flag,
       "Query signal info",
       NULL
     },
-    { "atds-location", 0, 0, G_OPTION_ARG_NONE, &query_location_flag,
+    { "atds-query-location", 0, 0, G_OPTION_ARG_NONE, &query_location_flag,
       "Query cell location",
       NULL
     },
