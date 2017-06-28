@@ -64,6 +64,7 @@ gboolean qmi_message_dms_set_service_programming_code_input_set_current (
  * Deprecated: 1.14.0: Use the correct #QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE name instead.
  */
 G_DEPRECATED_FOR (QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE)
-#define QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE
+static const int QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE =
+    QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE;
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */
