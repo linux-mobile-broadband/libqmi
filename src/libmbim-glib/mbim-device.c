@@ -911,7 +911,7 @@ read_max_control_transfer (MbimDevice *self)
 {
     static const guint8 mbim_signature[4] = { 0x0c, 0x24, 0x1b, 0x00 };
     guint16 max = MAX_CONTROL_TRANSFER;
-    gchar *descriptors_path;
+    gchar *descriptors_path = NULL;
     GError *error = NULL;
     gchar *contents = NULL;
     gsize length = 0;
@@ -958,6 +958,7 @@ read_max_control_transfer (MbimDevice *self)
 
 out:
     g_free (contents);
+    g_free (descriptors_path);
 
     return max;
 }
