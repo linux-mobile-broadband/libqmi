@@ -736,6 +736,7 @@ ip_configuration_query_ready (MbimDevice *device,
 
 static void
 ip_configuration_query (MbimDevice *device,
+                        GCancellable *cancellable,
                         guint session_id)
 {
     MbimMessage *message;
@@ -768,7 +769,7 @@ ip_configuration_query (MbimDevice *device,
     mbim_device_command (device,
                          message,
                          60,
-                         NULL,
+                         cancellable,
                          (GAsyncReadyCallback)ip_configuration_query_ready,
                          NULL);
     mbim_message_unref (message);
@@ -843,7 +844,7 @@ connect_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)));
 
     if (GPOINTER_TO_UINT (user_data) == CONNECT) {
-        ip_configuration_query (device, session_id);
+        ip_configuration_query (device, NULL, session_id);
         return;
     }
 
@@ -1985,7 +1986,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
             return;
         }
 
-        ip_configuration_query (ctx->device, session_id);
+        ip_configuration_query (ctx->device, ctx->cancellable, session_id);
         return;
     }
 
