@@ -259,8 +259,7 @@ mbimcli_dss_run (MbimDevice   *device,
     /* Initialize context */
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
-    if (cancellable)
-        ctx->cancellable = g_object_ref (cancellable);
+    ctx->cancellable = cancellable ? g_object_ref (cancellable) : NULL;
 
     /* Connect? */
     if (connect_str) {

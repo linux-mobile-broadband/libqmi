@@ -137,8 +137,7 @@ mbimcli_ms_host_shutdown_run (MbimDevice   *device,
     /* Initialize context */
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
-    if (cancellable)
-        ctx->cancellable = g_object_ref (cancellable);
+    ctx->cancellable = cancellable ? g_object_ref (cancellable) : NULL;
 
     /* Request to notify that host is shutting down */
     if (notify_host_shutdown_flag) {
