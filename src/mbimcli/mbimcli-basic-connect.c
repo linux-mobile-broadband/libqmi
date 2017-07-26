@@ -761,7 +761,6 @@ ip_configuration_query (MbimDevice *device,
     if (!message) {
         g_printerr ("error: couldn't create IP config request: %s\n", error->message);
         g_error_free (error);
-        mbim_message_unref (message);
         shutdown (FALSE);
         return;
     }
