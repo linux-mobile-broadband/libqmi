@@ -208,6 +208,7 @@ set_phonebook_write_ready (MbimDevice   *device,
     if (!mbim_message_phonebook_write_response_parse (response, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         g_error_free (error);
+        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -275,6 +276,7 @@ query_phonebook_read_ready (MbimDevice   *device,
                                                      &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         g_error_free (error);
+        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -326,6 +328,7 @@ query_phonebook_configuration_ready (MbimDevice   *device,
                                                               &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         g_error_free (error);
+        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
