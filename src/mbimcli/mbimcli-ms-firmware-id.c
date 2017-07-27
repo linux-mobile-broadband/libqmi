@@ -131,6 +131,7 @@ query_firmware_id_ready (MbimDevice   *device,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         g_error_free (error);
+        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
