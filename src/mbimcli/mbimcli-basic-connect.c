@@ -742,7 +742,7 @@ ip_configuration_query_ready (MbimDevice *device,
 static void
 ip_configuration_query (MbimDevice *device,
                         GCancellable *cancellable,
-                        guint session_id)
+                        guint32 session_id)
 {
     MbimMessage *message;
     GError *error = NULL;
@@ -878,7 +878,7 @@ mbim_auth_protocol_from_string (const gchar      *str,
 static gboolean
 connect_session_id_parse (const gchar  *str,
                           gboolean      allow_empty,
-                          guint        *session_id,
+                          guint32      *session_id,
                           GError      **error)
 {
     gchar *endptr = NULL;
@@ -909,13 +909,13 @@ connect_session_id_parse (const gchar  *str,
                      str);
         return FALSE;
     }
-    *session_id = (guint) n;
+    *session_id = (guint32) n;
 
     return TRUE;
 }
 
 typedef struct {
-    guint             session_id;
+    guint32           session_id;
     gchar            *apn;
     MbimAuthProtocol  auth_protocol;
     gchar            *username;
@@ -971,7 +971,7 @@ static gboolean connect_activate_properties_handle (const gchar  *key,
 
 static gboolean
 set_connect_activate_parse (const gchar       *str,
-                            guint             *session_id,
+                            guint32           *session_id,
                             gchar            **apn,
                             MbimAuthProtocol  *auth_protocol,
                             gchar            **username,
@@ -1902,7 +1902,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     if (query_connect_str) {
         MbimMessage *request;
         GError *error = NULL;
-        guint session_id = 0;
+        guint32 session_id = 0;
 
         if (!connect_session_id_parse (query_connect_str, TRUE, &session_id, &error)) {
             g_printerr ("error: couldn't parse session ID: %s\n", error->message);
@@ -1939,7 +1939,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     if (set_connect_activate_str) {
         MbimMessage *request;
         GError *error = NULL;
-        guint session_id = 0;
+        guint32 session_id = 0;
         gchar *apn;
         MbimAuthProtocol auth_protocol;
         gchar *username = NULL;
@@ -1989,7 +1989,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     /* Query IP configuration? */
     if (query_ip_configuration_str) {
         GError *error = NULL;
-        guint session_id = 0;
+        guint32 session_id = 0;
 
         if (!connect_session_id_parse (query_ip_configuration_str, TRUE, &session_id, &error)) {
             g_printerr ("error: couldn't parse session ID: %s\n", error->message);
@@ -2006,7 +2006,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     if (set_connect_deactivate_str) {
         MbimMessage *request;
         GError *error = NULL;
-        guint session_id = 0;
+        guint32 session_id = 0;
 
         if (!connect_session_id_parse (set_connect_deactivate_str, TRUE, &session_id, &error)) {
             g_printerr ("error: couldn't parse session ID: %s\n", error->message);
