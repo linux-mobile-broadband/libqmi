@@ -238,7 +238,9 @@ set_phonebook_delete_ready (MbimDevice   *device,
     if (!mbim_message_phonebook_delete_response_parse (response, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         g_error_free (error);
+        mbim_message_unref (response);
         shutdown (FALSE);
+        return;
     }
 
     g_print ("Phonebook entry/entries successfully deleted");
