@@ -31,6 +31,7 @@
 
 #include <libmbim-glib.h>
 
+#include "mbim-common.h"
 #include "mbimcli.h"
 #include "mbimcli-helpers.h"
 
@@ -67,6 +68,7 @@ static gchar    *set_connect_activate_str;
 static gchar    *query_ip_configuration_str;
 static gchar    *set_connect_deactivate_str;
 static gboolean  query_packet_statistics_flag;
+static gchar    *query_ip_packet_filters_str;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
                                                   const char *value,
@@ -82,6 +84,11 @@ static gboolean disconnect_arg_parse (const char *option_name,
                                       const char *value,
                                       gpointer user_data,
                                       GError **error);
+
+static gboolean query_ip_packet_filters_arg_parse (const char *option_name,
+                                                   const char *value,
+                                                   gpointer user_data,
+                                                   GError **error);
 
 static GOptionEntry entries[] = {
     { "query-device-caps", 0, 0, G_OPTION_ARG_NONE, &query_device_caps_flag,
@@ -184,6 +191,10 @@ static GOptionEntry entries[] = {
       "Query packet statistics",
       NULL
     },
+    { "query-ip-packet-filters", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_ip_packet_filters_arg_parse),
+      "Query IP packet filters (SessionID is optional, defaults to 0)",
+      "[SessionID]"
+    },
     { NULL }
 };
 
@@ -232,6 +243,16 @@ disconnect_arg_parse (const char *option_name,
     return TRUE;
 }
 
+static gboolean
+query_ip_packet_filters_arg_parse (const char *option_name,
+                                   const char *value,
+                                   gpointer user_data,
+                                   GError **error)
+{
+    query_ip_packet_filters_str = g_strdup (value ? value : "0");
+    return TRUE;
+}
+
 gboolean
 mbimcli_basic_connect_options_enabled (void)
 {
@@ -265,7 +286,8 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_connect_activate_str +
                  !!query_ip_configuration_str +
                  !!set_connect_deactivate_str +
-                 query_packet_statistics_flag);
+                 query_packet_statistics_flag +
+                 !!query_ip_packet_filters_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -854,6 +876,63 @@ connect_ready (MbimDevice   *device,
         return;
     }
 
+    shutdown (TRUE);
+}
+
+static void
+ip_packet_filters_ready (MbimDevice *device,
+                         GAsyncResult *res,
+                         gpointer unused)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    MbimPacketFilter **filters;
+    guint32 filters_count, i;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response ||
+        !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ip_packet_filters_response_parse (
+            response,
+            NULL, /* sessionid */
+            &filters_count,
+            &filters,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        mbim_message_unref (response);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("\n[%s] IP packet filters: (%u)\n", mbim_device_get_path_display (device), filters_count);
+
+    for (i = 0; i < filters_count; i++) {
+        gchar *bytes;
+
+        g_print ("\n");
+        g_print ("\tFilter size: %u\n", filters[i]->filter_size);
+
+        bytes = mbim_common_str_hex (filters[i]->packet_filter, filters[i]->filter_size, ' ');
+        g_print ("\tPacket filter: %s\n", VALIDATE_UNKNOWN (bytes));
+        g_free (bytes);
+
+        bytes = mbim_common_str_hex (filters[i]->packet_mask, filters[i]->filter_size, ' ');
+        g_print ("\tPacket mask: %s\n", VALIDATE_UNKNOWN (bytes));
+        g_free (bytes);
+    }
+
+    mbim_packet_filter_array_free (filters);
+
+    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -2052,6 +2131,41 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)packet_statistics_ready,
+                             NULL);
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Query IP packet filters? */
+    if (query_ip_packet_filters_str) {
+        MbimMessage *request;
+        GError *error = NULL;
+        guint32 session_id = 0;
+
+        if (!connect_session_id_parse (query_ip_packet_filters_str, TRUE, &session_id, &error)) {
+            g_printerr ("error: couldn't parse session ID: %s\n", error->message);
+            g_error_free (error);
+            shutdown (FALSE);
+            return;
+        }
+
+        request = (mbim_message_ip_packet_filters_query_new (
+                       session_id,
+                       0, /* packet_filters_count */
+                       NULL, /* packet_filters */
+                       &error));
+        if (!request) {
+            g_printerr ("error: couldn't create IP packet filters request: %s\n", error->message);
+            g_error_free (error);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)ip_packet_filters_ready,
                              NULL);
         mbim_message_unref (request);
         return;
