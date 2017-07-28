@@ -43,6 +43,7 @@
 # include <gudev/gudev.h>
 #endif
 
+#include "mbim-common.h"
 #include "mbim-utils.h"
 #include "mbim-device.h"
 #include "mbim-message.h"
@@ -495,9 +496,9 @@ process_message (MbimDevice  *self,
     if (mbim_utils_get_traces_enabled ()) {
         gchar *printable;
 
-        printable = __mbim_utils_str_hex (((GByteArray *)message)->data,
-                                          ((GByteArray *)message)->len,
-                                          ':');
+        printable = mbim_common_str_hex (((GByteArray *)message)->data,
+                                         ((GByteArray *)message)->len,
+                                         ':');
         g_debug ("[%s] Received message...%s\n"
                  ">>>>>> RAW:\n"
                  ">>>>>>   length = %u\n"
@@ -1812,7 +1813,7 @@ device_send (MbimDevice   *self,
     if (mbim_utils_get_traces_enabled ()) {
         gchar *printable;
 
-        printable = __mbim_utils_str_hex (raw_message, raw_message_len, ':');
+        printable = mbim_common_str_hex (raw_message, raw_message_len, ':');
         g_debug ("[%s] Sent message...\n"
                  "<<<<<< RAW:\n"
                  "<<<<<<   length = %u\n"
@@ -1847,9 +1848,9 @@ device_send (MbimDevice   *self,
             gchar *printable_fh;
             gchar *printable_d;
 
-            printable_h  = __mbim_utils_str_hex (&fragments[i].header, sizeof (fragments[i].header), ':');
-            printable_fh = __mbim_utils_str_hex (&fragments[i].fragment_header, sizeof (fragments[i].fragment_header), ':');
-            printable_d  = __mbim_utils_str_hex (fragments[i].data, fragments[i].data_length, ':');
+            printable_h  = mbim_common_str_hex (&fragments[i].header, sizeof (fragments[i].header), ':');
+            printable_fh = mbim_common_str_hex (&fragments[i].fragment_header, sizeof (fragments[i].fragment_header), ':');
+            printable_d  = mbim_common_str_hex (fragments[i].data, fragments[i].data_length, ':');
             g_debug ("[%s] Sent fragment (%u)...\n"
                      "<<<<<< RAW:\n"
                      "<<<<<<   length = %u\n"

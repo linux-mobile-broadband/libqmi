@@ -24,7 +24,7 @@
 #include "mbim-ms-firmware-id.h"
 #include "mbim-message.h"
 #include "mbim-cid.h"
-#include "mbim-utils.h"
+#include "mbim-common.h"
 
 #if defined ENABLE_TEST_MESSAGE_TRACES
 static void
@@ -36,8 +36,8 @@ test_message_trace (const guint8 *computed,
     gchar *message_str;
     gchar *expected_str;
 
-    message_str = __mbim_utils_str_hex (computed, computed_size, ':');
-    expected_str = __mbim_utils_str_hex (expected, expected_size, ':');
+    message_str = mbim_common_str_hex (computed, computed_size, ':');
+    expected_str = mbim_common_str_hex (expected, expected_size, ':');
 
     /* Dump all message contents */
     g_print ("\n"

@@ -67,6 +67,12 @@ AC_SUBST(MBIM_GLIB_LT_AGE)
 dnl Required dependency versions
 GLIB_MIN_VERSION=2.36
 
+dnl General dependencies for common
+PKG_CHECK_MODULES(MBIM_COMMON,
+                  glib-2.0 >= $GLIB_MIN_VERSION)
+AC_SUBST(MBIM_COMMON_CFLAGS)
+AC_SUBST(MBIM_COMMON_LIBS)
+
 dnl General dependencies for libmbim-glib
 PKG_CHECK_MODULES(LIBMBIM_GLIB,
                   glib-2.0 >= $GLIB_MIN_VERSION
@@ -166,6 +172,7 @@ AC_CONFIG_FILES([Makefile
                  data/pkg-config/Makefile
                  data/pkg-config/mbim-glib.pc
                  src/Makefile
+                 src/common/Makefile
                  src/libmbim-glib/Makefile
                  src/libmbim-glib/mbim-version.h
                  src/libmbim-glib/generated/Makefile

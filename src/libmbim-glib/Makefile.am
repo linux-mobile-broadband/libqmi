@@ -8,6 +8,7 @@ libmbim_glib_core_la_CPPFLAGS = \
 	$(GUDEV_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
+	-I$(top_srcdir)/src/common \
 	-I$(top_srcdir)/src/libmbim-glib \
 	-I$(top_srcdir)/src/libmbim-glib/generated \
 	-I$(top_builddir)/src/libmbim-glib \
@@ -36,6 +37,7 @@ libmbim_glib_la_SOURCES = \
 
 libmbim_glib_la_LIBADD = \
 	libmbim-glib-core.la \
+	${top_builddir}/src/common/libmbim-common.la \
 	${top_builddir}/src/libmbim-glib/generated/libmbim-glib-generated.la \
 	$(LIBMBIM_GLIB_LIBS) \
 	$(GUDEV_LIBS)
