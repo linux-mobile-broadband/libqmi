@@ -173,6 +173,7 @@ AC_CONFIG_FILES([Makefile
                  data/pkg-config/mbim-glib.pc
                  src/Makefile
                  src/common/Makefile
+                 src/common/test/Makefile
                  src/libmbim-glib/Makefile
                  src/libmbim-glib/mbim-version.h
                  src/libmbim-glib/generated/Makefile

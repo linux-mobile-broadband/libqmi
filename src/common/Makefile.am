@@ -1,4 +1,4 @@
-SUBDIRS = .
+SUBDIRS = . test
 
 # common library, built as a noinst
 noinst_LTLIBRARIES = libmbim-common.la
