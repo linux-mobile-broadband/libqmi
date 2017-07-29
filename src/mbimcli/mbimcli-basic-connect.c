@@ -603,7 +603,7 @@ query_device_services_ready (MbimDevice   *device,
                 } else {
                     g_string_append_printf (cids, "%s%s (%u)",
                                             j == 0 ? "" : "\t\t                   ",
-                                            mbim_cid_get_printable (service, device_services[i]->cids[j]),
+                                            VALIDATE_UNKNOWN (mbim_cid_get_printable (service, device_services[i]->cids[j])),
                                             device_services[i]->cids[j]);
                     if (j < device_services[i]->cids_count - 1)
                         g_string_append (cids, ",\n");
