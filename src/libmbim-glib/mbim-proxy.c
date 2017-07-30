@@ -461,6 +461,21 @@ peek_opening_device_info (MbimProxy  *self,
 }
 
 static void
+complete_opening_device (MbimProxy    *self,
+                         MbimDevice   *device,
+                         const GError *error)
+{
+    OpeningDevice *info;
+
+    info = peek_opening_device_info (self, device);
+    if (!info)
+        return;
+
+    self->priv->opening_devices = g_list_remove (self->priv->opening_devices, info);
+    opening_device_complete_and_free (info, error);
+}
+
+static void
 cancel_opening_device (MbimProxy  *self,
                        MbimDevice *device)
 {
@@ -472,7 +487,7 @@ cancel_opening_device (MbimProxy  *self,
         return;
 
     error = g_error_new (MBIM_CORE_ERROR, MBIM_CORE_ERROR_ABORTED, "Device is gone");
-    opening_device_complete_and_free (info, error);
+    complete_opening_device (self, device, error);
     g_error_free (error);
 }
 
@@ -482,18 +497,11 @@ device_open_ready (MbimDevice   *device,
                    MbimProxy    *self)
 {
     GError *error = NULL;
-    OpeningDevice *info;
 
     mbim_device_open_finish (device, res, &error);
 
-    info = peek_opening_device_info (self, device);
-    g_assert (info != NULL);
-
-    /* Remove opening device info */
-    self->priv->opening_devices = g_list_remove (self->priv->opening_devices, info);
-
     /* Complete all pending open actions */
-    opening_device_complete_and_free (info, error);
+    complete_opening_device (self, device, error);
 
     if (error) {
         /* Fully untrack the device as it wasn't correctly open */
