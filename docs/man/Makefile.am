@@ -5,7 +5,12 @@ dist_man_MANS = \
 
 # List of all source files which affect the output of --help-all
 MBIMCLI_SOURCES_WITH_HELP = \
+	$(top_srcdir)/src/mbimcli/mbimcli-atds.c \
 	$(top_srcdir)/src/mbimcli/mbimcli-basic-connect.c \
+	$(top_srcdir)/src/mbimcli/mbimcli-dss.c \
+	$(top_srcdir)/src/mbimcli/mbimcli-ms-firmware-id.c \
+	$(top_srcdir)/src/mbimcli/mbimcli-ms-host-shutdown.c \
+	$(top_srcdir)/src/mbimcli/mbimcli-phonebook.c \
 	$(top_srcdir)/src/mbimcli/mbimcli.c
 
 # Depend only in the source files, not in the actual program, so that the
