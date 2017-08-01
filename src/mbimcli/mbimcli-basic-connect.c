@@ -389,7 +389,7 @@ query_device_caps_ready (MbimDevice   *device,
              "\t      Device type: '%s'\n"
              "\t   Cellular class: '%s'\n"
              "\t      Voice class: '%s'\n"
-             "\t        Sim class: '%s'\n"
+             "\t        SIM class: '%s'\n"
              "\t       Data class: '%s'\n"
              "\t         SMS caps: '%s'\n"
              "\t        Ctrl caps: '%s'\n"
@@ -532,8 +532,8 @@ query_radio_state_ready (MbimDevice   *device,
     software_radio_state_str = mbim_radio_switch_state_get_string (software_radio_state);
 
     g_print ("[%s] Radio state retrieved:\n"
-             "\t     Hardware Radio State: '%s'\n"
-             "\t     Software Radio State: '%s'\n",
+             "\t     Hardware radio state: '%s'\n"
+             "\t     Software radio state: '%s'\n",
              mbim_device_get_path_display (device),
              VALIDATE_UNKNOWN (hardware_radio_state_str),
              VALIDATE_UNKNOWN (software_radio_state_str));
@@ -674,15 +674,15 @@ pin_ready (MbimDevice   *device,
 
     pin_state_str = mbim_pin_state_get_string (pin_state);
 
-    g_print ("[%s] Pin Info:\n"
-             "\t         Pin State: '%s'\n",
+    g_print ("[%s] PIN info:\n"
+             "\t         PIN state: '%s'\n",
              mbim_device_get_path_display (device),
              VALIDATE_UNKNOWN (pin_state_str));
     if (pin_type != MBIM_PIN_TYPE_UNKNOWN) {
         const gchar *pin_type_str;
 
         pin_type_str = mbim_pin_type_get_string (pin_type);
-        g_print ("\t           PinType: '%s'\n"
+        g_print ("\t          PIN type: '%s'\n"
                  "\tRemaining attempts: '%u'\n",
                  VALIDATE_UNKNOWN (pin_type_str),
                  remaining_attempts);
@@ -1182,7 +1182,7 @@ home_provider_ready (MbimDevice   *device,
 
     g_print ("[%s] Home provider:\n"
              "\t   Provider ID: '%s'\n"
-             "\t Provider Name: '%s'\n"
+             "\t Provider name: '%s'\n"
              "\t         State: '%s'\n"
              "\tCellular class: '%s'\n"
              "\t          RSSI: '%u'\n"
@@ -1252,7 +1252,7 @@ preferred_providers_ready (MbimDevice   *device,
 
         g_print ("\tProvider [%u]:\n"
                  "\t\t    Provider ID: '%s'\n"
-                 "\t\t  Provider Name: '%s'\n"
+                 "\t\t  Provider name: '%s'\n"
                  "\t\t          State: '%s'\n"
                  "\t\t Cellular class: '%s'\n"
                  "\t\t           RSSI: '%u'\n"
@@ -1323,7 +1323,7 @@ visible_providers_ready (MbimDevice   *device,
 
         g_print ("\tProvider [%u]:\n"
                  "\t\t    Provider ID: '%s'\n"
-                 "\t\t  Provider Name: '%s'\n"
+                 "\t\t  Provider name: '%s'\n"
                  "\t\t          State: '%s'\n"
                  "\t\t Cellular class: '%s'\n"
                  "\t\t           RSSI: '%u'\n"
