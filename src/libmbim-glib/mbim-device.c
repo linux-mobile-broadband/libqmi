@@ -1214,14 +1214,16 @@ typedef enum {
 } DeviceOpenContextStep;
 
 typedef struct {
-    DeviceOpenContextStep step;
-    MbimDeviceOpenFlags flags;
-    gint timeout;
+    DeviceOpenContextStep  step;
+    MbimDeviceOpenFlags    flags;
+    guint                  timeout;
+    GTimer                *timer;
 } DeviceOpenContext;
 
 static void
 device_open_context_free (DeviceOpenContext *ctx)
 {
+    g_timer_destroy (ctx->timer);
     g_slice_free (DeviceOpenContext, ctx);
 }
 
@@ -1278,20 +1280,14 @@ open_message_ready (MbimDevice   *self,
 
     response = mbim_device_command_finish (self, res, &error);
     if (!response) {
-        /* Check if we should be retrying */
+        /* Check if we should be retrying after a timeout */
         if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_TIMEOUT)) {
-            /* The timeout will tell us how many retries we should do */
-            ctx->timeout -= RETRY_TIMEOUT_SECS;
-            if (ctx->timeout > 0) {
-                g_error_free (error);
-                open_message (task);
-                return;
-            }
-
-            /* No more seconds left in the timeout... return error */
+            /* Retry same step */
+            device_open_context_step (task);
+            return;
         }
 
-        g_debug ("open operation timed out: closed");
+        g_debug ("error reported in open operation: closed");
         self->priv->open_status = OPEN_STATUS_CLOSED;
         g_task_return_error (task, error);
         g_object_unref (task);
@@ -1416,6 +1412,18 @@ device_open_context_step (GTask *task)
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
+    /* Timed out? */
+    if (g_timer_elapsed (ctx->timer, NULL) > ctx->timeout) {
+        g_debug ("open operation timed out: closed");
+        self->priv->open_status = OPEN_STATUS_CLOSED;
+        g_task_return_new_error (task,
+                                 MBIM_CORE_ERROR,
+                                 MBIM_CORE_ERROR_TIMEOUT,
+                                 "Operation timed out: device is closed");
+        g_object_unref (task);
+        return;
+    }
+
     switch (ctx->step) {
     case DEVICE_OPEN_CONTEXT_STEP_FIRST:
         if (self->priv->open_status == OPEN_STATUS_OPEN) {
@@ -1512,10 +1520,11 @@ mbim_device_open_full (MbimDevice          *self,
     g_return_if_fail (MBIM_IS_DEVICE (self));
     g_return_if_fail (timeout > 0);
 
-    ctx = g_slice_new (DeviceOpenContext);
+    ctx = g_slice_new0 (DeviceOpenContext);
     ctx->step = DEVICE_OPEN_CONTEXT_STEP_FIRST;
     ctx->flags = flags;
     ctx->timeout = timeout;
+    ctx->timer = g_timer_new ();
 
     task = g_task_new (self, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify)device_open_context_free);
