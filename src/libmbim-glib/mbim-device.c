@@ -1077,6 +1077,13 @@ wait_for_proxy_cb (GTask *task)
 }
 
 static void
+spawn_child_setup (void)
+{
+    if (setpgid (0, 0) < 0)
+        g_warning ("couldn't setup proxy specific process group");
+}
+
+static void
 create_iochannel_with_socket (GTask *task)
 {
     MbimDevice *self;
@@ -1138,7 +1145,7 @@ create_iochannel_with_socket (GTask *task)
                             argc,
                             NULL, /* envp */
                             G_SPAWN_STDOUT_TO_DEV_NULL | G_SPAWN_STDERR_TO_DEV_NULL,
-                            NULL, /* child_setup */
+                            (GSpawnChildSetupFunc) spawn_child_setup,
                             NULL, /* child_setup_user_data */
                             NULL,
                             &error)) {
