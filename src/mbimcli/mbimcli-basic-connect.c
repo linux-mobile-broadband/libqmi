@@ -54,6 +54,7 @@ static gchar    *set_pin_change_str;
 static gchar    *set_pin_enable_str;
 static gchar    *set_pin_disable_str;
 static gchar    *set_pin_enter_puk_str;
+static gboolean  query_pin_list_flag;
 static gboolean  query_home_provider_flag;
 static gboolean  query_preferred_providers_flag;
 static gboolean  query_visible_providers_flag;
@@ -134,6 +135,10 @@ static GOptionEntry entries[] = {
     { "enter-puk", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_puk_str,
       "Enter PUK",
       "[(PUK),(new PIN)]"
+    },
+    { "query-pin-list", 0, 0, G_OPTION_ARG_NONE, &query_pin_list_flag,
+      "Query PIN list",
+      NULL
     },
     { "query-home-provider", 0, 0, G_OPTION_ARG_NONE, &query_home_provider_flag,
       "Query home provider",
@@ -273,6 +278,7 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_pin_enable_str +
                  !!set_pin_disable_str +
                  !!set_pin_enter_puk_str +
+                 query_pin_list_flag +
                  query_register_state_flag +
                  query_home_provider_flag +
                  query_preferred_providers_flag +
@@ -735,6 +741,100 @@ enum {
     CONNECT,
     DISCONNECT
 };
+
+static void
+print_pin_desc (const gchar *pin_name,
+                const MbimPinDesc *pin_desc)
+{
+    g_print ("\t%s:\n"
+             "\t\t      Mode: '%s'\n"
+             "\t\t    Format: '%s'\n"
+             "\t\tMin length: '%d'\n"
+             "\t\tMax length: '%d'\n"
+             "\n",
+             pin_name,
+             VALIDATE_UNKNOWN (mbim_pin_mode_get_string (pin_desc->pin_mode)),
+             VALIDATE_UNKNOWN (mbim_pin_format_get_string (pin_desc->pin_format)),
+             pin_desc->pin_length_min,
+             pin_desc->pin_length_max);
+}
+
+static void
+pin_list_ready (MbimDevice *device,
+                GAsyncResult *res,
+                gpointer user_data)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    MbimPinDesc *pin_desc_pin1;
+    MbimPinDesc *pin_desc_pin2;
+    MbimPinDesc *pin_desc_device_sim_pin;
+    MbimPinDesc *pin_desc_device_first_sim_pin;
+    MbimPinDesc *pin_desc_network_pin;
+    MbimPinDesc *pin_desc_network_subset_pin;
+    MbimPinDesc *pin_desc_service_provider_pin;
+    MbimPinDesc *pin_desc_corporate_pin;
+    MbimPinDesc *pin_desc_subsidy_lock;
+    MbimPinDesc *pin_desc_custom;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_pin_list_response_parse (
+            response,
+            &pin_desc_pin1,
+            &pin_desc_pin2,
+            &pin_desc_device_sim_pin,
+            &pin_desc_device_first_sim_pin,
+            &pin_desc_network_pin,
+            &pin_desc_network_subset_pin,
+            &pin_desc_service_provider_pin,
+            &pin_desc_corporate_pin,
+            &pin_desc_subsidy_lock,
+            &pin_desc_custom,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        mbim_message_unref (response);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] PIN list:\n\n",
+             mbim_device_get_path_display (device));
+
+    print_pin_desc ("PIN1", pin_desc_pin1);
+    print_pin_desc ("PIN2", pin_desc_pin2);
+    print_pin_desc ("Device SIM PIN", pin_desc_device_sim_pin);
+    print_pin_desc ("Device first SIM PIN", pin_desc_device_first_sim_pin);
+    print_pin_desc ("Network PIN", pin_desc_network_pin);
+    print_pin_desc ("Network subset PIN", pin_desc_network_subset_pin);
+    print_pin_desc ("Service provider PIN", pin_desc_service_provider_pin);
+    print_pin_desc ("Corporate PIN", pin_desc_corporate_pin);
+    print_pin_desc ("Subsidy lock", pin_desc_subsidy_lock);
+    print_pin_desc ("Custom", pin_desc_custom);
+
+    mbim_pin_desc_free (pin_desc_pin1);
+    mbim_pin_desc_free (pin_desc_pin2);
+    mbim_pin_desc_free (pin_desc_device_sim_pin);
+    mbim_pin_desc_free (pin_desc_device_first_sim_pin);
+    mbim_pin_desc_free (pin_desc_network_pin);
+    mbim_pin_desc_free (pin_desc_network_subset_pin);
+    mbim_pin_desc_free (pin_desc_service_provider_pin);
+    mbim_pin_desc_free (pin_desc_corporate_pin);
+    mbim_pin_desc_free (pin_desc_subsidy_lock);
+    mbim_pin_desc_free (pin_desc_custom);
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
 
 static void
 ip_configuration_query_ready (MbimDevice *device,
@@ -1823,6 +1923,22 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)pin_ready,
                              GUINT_TO_POINTER (TRUE));
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Query PIN list? */
+    if (query_pin_list_flag) {
+        MbimMessage *request;
+
+        g_debug ("Asynchronously querying PIN list...");
+        request = (mbim_message_pin_list_query_new (NULL));
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)pin_list_ready,
+                             GUINT_TO_POINTER (FALSE));
         mbim_message_unref (request);
         return;
     }
