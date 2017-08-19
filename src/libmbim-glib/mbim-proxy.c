@@ -391,18 +391,14 @@ request_new (MbimProxy   *self,
 /* Internal proxy device opening operation */
 
 typedef struct {
-    MbimProxy          *self;
-    MbimDevice         *device;
-    guint32             timeout_secs;
-    GSimpleAsyncResult *result;
+    MbimDevice *device;
+    guint32     timeout_secs;
 } InternalDeviceOpenContext;
 
 static void
 internal_device_open_context_free (InternalDeviceOpenContext *ctx)
 {
-    g_object_unref (ctx->result);
     g_object_unref (ctx->device);
-    g_object_unref (ctx->self);
     g_slice_free (InternalDeviceOpenContext, ctx);
 }
 
@@ -411,7 +407,7 @@ internal_device_open_finish (MbimProxy     *self,
                              GAsyncResult  *res,
                              GError       **error)
 {
-    return !g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error);
+    return g_task_propagate_boolean (G_TASK (res), error);
 }
 
 typedef struct {
@@ -425,16 +421,15 @@ opening_device_complete_and_free (OpeningDevice *info,
 {
     GList *l;
 
-    /* Complete all pending open actions */
+    /* Complete all pending open tasks */
     for (l = info->pending; l; l = g_list_next (l)) {
-        GSimpleAsyncResult *simple = (GSimpleAsyncResult *)(l->data);
+        GTask *task = (GTask *)(l->data);
 
         if (error)
-            g_simple_async_result_set_from_error (simple, error);
+            g_task_return_error (task, g_error_copy (error));
         else
-            g_simple_async_result_set_op_res_gboolean (simple, TRUE);
-        g_simple_async_result_complete_in_idle (simple);
-        g_object_unref (simple);
+            g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
     }
 
     g_list_free (info->pending);
@@ -511,24 +506,27 @@ device_open_ready (MbimDevice   *device,
 }
 
 static void
-internal_open (InternalDeviceOpenContext *ctx)
+internal_open (GTask *task)
 {
-    OpeningDevice *info;
+    MbimProxy                 *self;
+    InternalDeviceOpenContext *ctx;
+    OpeningDevice             *info;
+
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
     /* If already being opened, queue it up */
-    info = peek_opening_device_info (ctx->self, ctx->device);
+    info = peek_opening_device_info (self, ctx->device);
     if (info) {
-        /* Propagate result object from context */
-        info->pending = g_list_append (info->pending, g_object_ref (ctx->result));
-        internal_device_open_context_free (ctx);
+        info->pending = g_list_append (info->pending, task);
         return;
     }
 
-    /* First time opening, go on */
+    /* First time opening */
     info = g_slice_new0 (OpeningDevice);
     info->device = g_object_ref (ctx->device);
-    info->pending = g_list_append (info->pending, g_object_ref (ctx->result));
-    ctx->self->priv->opening_devices = g_list_prepend (ctx->self->priv->opening_devices, info);
+    info->pending = g_list_append (info->pending, task);
+    self->priv->opening_devices = g_list_prepend (self->priv->opening_devices, info);
 
     /* Note: for now, only the first timeout request is taken into account */
 
@@ -538,22 +536,23 @@ internal_open (InternalDeviceOpenContext *ctx)
                       ctx->timeout_secs,
                       NULL,
                       (GAsyncReadyCallback)device_open_ready,
-                      g_object_ref (ctx->self));
-
-    internal_device_open_context_free (ctx);
+                      g_object_ref (self));
 }
 
 static void
-internal_device_open_caps_query_ready (MbimDevice                *device,
-                                       GAsyncResult              *res,
-                                       InternalDeviceOpenContext *ctx)
+internal_device_open_caps_query_ready (MbimDevice   *device,
+                                       GAsyncResult *res,
+                                       GTask        *task)
 {
-    GError *error = NULL;
+    MbimProxy   *self;
+    GError      *error = NULL;
     MbimMessage *response;
-    GList *l;
+    GList       *l;
+
+    self = g_task_get_source_object (task);
 
     /* Always unblock all signals from all clients */
-    for (l = ctx->self->priv->clients; l; l = g_list_next (l))
+    for (l = self->priv->clients; l; l = g_list_next (l))
         g_signal_handlers_unblock_by_func (device, client_error_cb, l->data);
 
     response = mbim_device_command_finish (device, res, &error);
@@ -562,7 +561,7 @@ internal_device_open_caps_query_ready (MbimDevice                *device,
         if (g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_NOT_OPENED)) {
             g_debug ("device not-opened error reported, reopening");
             mbim_device_close_force (device, NULL);
-            internal_open (ctx);
+            internal_open (task);
             if (response)
                 mbim_message_unref (response);
             g_error_free (error);
@@ -574,9 +573,8 @@ internal_device_open_caps_query_ready (MbimDevice                *device,
         g_error_free (error);
     }
 
-    g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
-    g_simple_async_result_complete (ctx->result);
-    internal_device_open_context_free (ctx);
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 
     if (response)
         mbim_message_unref (response);
@@ -590,15 +588,14 @@ internal_device_open (MbimProxy           *self,
                       gpointer             user_data)
 {
     InternalDeviceOpenContext *ctx;
+    GTask                     *task;
+
+    task = g_task_new (self, NULL, callback, user_data);
 
     ctx = g_slice_new0 (InternalDeviceOpenContext);
-    ctx->self         = g_object_ref (self);
-    ctx->device       = g_object_ref (device);
+    ctx->device = g_object_ref (device);
     ctx->timeout_secs = timeout_secs;
-    ctx->result       = g_simple_async_result_new (G_OBJECT (self),
-                                                   callback,
-                                                   user_data,
-                                                   internal_device_open);
+    g_task_set_task_data (task, ctx, (GDestroyNotify) internal_device_open_context_free);
 
     /* If the device is flagged as already open, we still want to check
      * whether that's totally true, and we do that with a standard command
@@ -620,12 +617,12 @@ internal_device_open (MbimProxy           *self,
                              5,
                              NULL,
                              (GAsyncReadyCallback)internal_device_open_caps_query_ready,
-                             ctx);
+                             task);
         mbim_message_unref (message);
         return;
     }
 
-    internal_open (ctx);
+    internal_open (task);
 }
 
 /*****************************************************************************/
