@@ -740,7 +740,7 @@ __qmi_utils_get_driver (const gchar *cdc_wdm_path)
          *    /sys/bus/usb/drivers/qmi_wwan
          */
         tmp = g_strdup_printf ("/sys/class/%s/%s/device/driver", subsystems[i], device_basename);
-        path = canonicalize_file_name (tmp);
+        path = realpath (tmp, NULL);
         g_free (tmp);
 
         if (!path)
