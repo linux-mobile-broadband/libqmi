@@ -876,7 +876,7 @@ get_descriptors_filepath (MbimDevice *self)
          *    /sys/devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.5/2-1.5:2.0
          */
         tmp = g_strdup_printf ("/sys/class/%s/%s/device", subsystems[i], device_basename);
-        path = canonicalize_file_name (tmp);
+        path = realpath (tmp, NULL);
         g_free (tmp);
 
         if (g_file_test (path, G_FILE_TEST_EXISTS)) {
