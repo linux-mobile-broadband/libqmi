@@ -14,7 +14,6 @@ PKG_NAME=libqmi
 }
 
 (cd $srcdir;
-    touch ChangeLog
     autoreconf --force --install --verbose
 )
 
