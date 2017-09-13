@@ -14,7 +14,6 @@ PKG_NAME=libmbim
 }
 
 (cd $srcdir;
-    touch ChangeLog
     autoreconf --force --install --verbose
 )
 
