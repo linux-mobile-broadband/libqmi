@@ -32,8 +32,14 @@
 
 G_BEGIN_DECLS
 
+#ifndef MBIM_DISABLE_DEPRECATED
+
 /*****************************************************************************/
 /* Registration flags name fixup */
+
+/* The following type exists just so that we can get deprecation warnings */
+G_DEPRECATED
+typedef int MbimDeprecatedRegistrationFlag;
 
 /**
  * MBIM_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH:
@@ -42,13 +48,14 @@ G_BEGIN_DECLS
  *
  * Deprecated:1.8.0: Use MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH instead.
  */
-G_DEPRECATED_FOR (MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH)
-static const int MBIM_DEPRECATED_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH =
-    MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH;
-#define MBIM_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH MBIM_DEPRECATED_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH
+#define MBIM_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH (MbimDeprecatedRegistrationFlag) MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH
 
 /*****************************************************************************/
 /* 'Service Subscriber List' rename to 'Service Subscribe List' */
+
+/* The following type exists just so that we can get deprecation warnings */
+G_DEPRECATED
+typedef int MbimDeprecatedCidBasicConnect;
 
 /**
  * MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST:
@@ -57,10 +64,7 @@ static const int MBIM_DEPRECATED_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMAT
  *
  * Deprecated:1.8.0: Use MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST instead.
  */
-G_DEPRECATED_FOR (MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST)
-static const int MBIM_DEPRECATED_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST =
-    MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST;
-#define MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST MBIM_DEPRECATED_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST
+#define MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST (MbimDeprecatedCidBasicConnect) MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST
 
 G_DEPRECATED_FOR (mbim_message_device_service_subscribe_list_set_new)
 MbimMessage *mbim_message_device_service_subscriber_list_set_new (
@@ -74,6 +78,8 @@ gboolean mbim_message_device_service_subscriber_list_response_parse (
     guint32 *events_count,
     MbimEventEntry ***events,
     GError **error);
+
+#endif /* MBIM_DISABLE_DEPRECATED */
 
 G_END_DECLS
 

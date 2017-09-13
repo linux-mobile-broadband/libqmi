@@ -28,6 +28,8 @@
  * This section defines types and functions that have been deprecated.
  */
 
+#ifndef MBIM_DISABLE_DEPRECATED
+
 /*****************************************************************************/
 /* 'Service Subscriber List' rename to 'Service Subscribe List' */
 
@@ -81,3 +83,5 @@ mbim_message_device_service_subscriber_list_response_parse (
                 events,
                 error));
 }
+
+#endif /* MBIM_DISABLE_DEPRECATED */
