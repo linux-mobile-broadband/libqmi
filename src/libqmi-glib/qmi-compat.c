@@ -21,6 +21,8 @@
 
 #include "qmi-compat.h"
 
+#ifndef QMI_DISABLE_DEPRECATED
+
 gboolean
 qmi_message_dms_set_service_programming_code_input_get_new (
     QmiMessageDmsSetServiceProgrammingCodeInput *self,
@@ -56,3 +58,5 @@ qmi_message_dms_set_service_programming_code_input_set_current (
 {
   return qmi_message_dms_set_service_programming_code_input_set_current_code (self, arg_current, error);
 }
+
+#endif /* QMI_DISABLE_DEPRECATED */

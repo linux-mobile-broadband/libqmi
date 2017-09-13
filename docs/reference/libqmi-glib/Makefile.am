@@ -29,7 +29,7 @@ $(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
 BUILT_SOURCES = $(DOC_MODULE)-sections.mstamp
 
 # Extra options to supply to gtkdoc-scan
-SCAN_OPTIONS = --rebuild-types
+SCAN_OPTIONS = --rebuild-types --deprecated-guards="QMI_DISABLE_DEPRECATED"
 
 # The directory containing the source code.
 DOC_SOURCE_DIR = \
