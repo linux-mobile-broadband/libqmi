@@ -23,7 +23,6 @@ Makefile.in
 /missing
 /stamp-h1
 /depcomp
-/gtk-doc.make
 
 /data/pkg-config/qmi-glib.pc
 
