@@ -14,7 +14,6 @@ PKG_NAME=libmbim
 }
 
 (cd $srcdir;
-    mkdir -p m4
     touch ChangeLog
     autoreconf --force --install --verbose
 )
