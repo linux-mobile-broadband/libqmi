@@ -223,7 +223,7 @@ class Client:
                         '     * @object: A #${camelcase}.\n'
                         '     * @output: A #${output_camelcase}.\n'
                         '     *\n'
-                        '     * The ::${signal_name} signal gets emitted when a \'<link linkend=\"libqmi-glib-${service}-${message_name_dashed}.top_of_page\">${message_name}</link>\' indication is received.\n'
+                        '     * The ::${signal_name} signal gets emitted when a \'<link linkend=\"libqmi-glib-${service}-${message_name_dashed}-indication.top_of_page\">${message_name}</link>\' indication is received.\n'
                         '     *\n'
                         '     * Since: ${since}\n'
                         '     */\n'
