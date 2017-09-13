@@ -73,6 +73,7 @@ gboolean  mbim_uuid_from_printable (const gchar *str,
  * @MBIM_SERVICE_PROXY_CONTROL: Proxy Control service.
  * @MBIM_SERVICE_QMI: QMI-over-MBIM service.
  * @MBIM_SERVICE_ATDS: ATT Device service.
+ * @MBIM_SERVICE_LAST: Internal value.
  *
  * Enumeration of the generic MBIM services.
  */
