@@ -446,6 +446,9 @@ class Message:
                 'qmi_client_${service}_${name_underscore}\n'
                 'qmi_client_${service}_${name_underscore}_finish\n')
             sections['public-methods'] += string.Template(template).substitute(translations)
+            translations['message_type'] = 'request/response'
+        elif self.type == 'Indication':
+            translations['message_type'] = 'indication'
 
         translations['public_types']   = sections['public-types']
         translations['public_methods'] = sections['public-methods']
@@ -455,7 +458,7 @@ class Message:
         template = (
             '<SECTION>\n'
             '<FILE>${hyphened}</FILE>\n'
-            '<TITLE>${fullname}</TITLE>\n'
+            '<TITLE>${fullname} ${message_type}</TITLE>\n'
             '${public_types}'
             '${public_methods}'
             '<SUBSECTION Private>\n'
