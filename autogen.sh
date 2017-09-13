@@ -14,7 +14,6 @@ PKG_NAME=libqmi
 }
 
 (cd $srcdir;
-    mkdir -p m4
     touch ChangeLog
     autoreconf --force --install --verbose
 )
