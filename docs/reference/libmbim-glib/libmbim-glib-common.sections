@@ -251,7 +251,6 @@ mbim_proxy_get_type
 
 <SECTION>
 <FILE>mbim-enums</FILE>
-MbimAtdsProvider
 MbimAtdsProviderPlmnMode
 MbimAtdsRatMode
 MbimDeviceType
