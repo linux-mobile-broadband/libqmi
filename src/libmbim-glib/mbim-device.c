@@ -147,140 +147,156 @@ static void device_report_error (MbimDevice   *self,
 /* Message transactions (private) */
 
 typedef struct {
-    MbimDevice *self;
-    guint32 transaction_id;
-    TransactionType type;
+    MbimDevice      *self;
+    guint32          transaction_id;
+    TransactionType  type;
 } TransactionWaitContext;
 
 typedef struct {
-    MbimDevice *self;
-    MbimMessage *fragments;
-    MbimMessageType type;
-    guint32 transaction_id;
-    GSimpleAsyncResult *result;
-    GSource *timeout_source;
-    GCancellable *cancellable;
-    gulong cancellable_id;
+    MbimMessage            *fragments;
+    MbimMessageType         type;
+    guint32                 transaction_id;
+    GSource                *timeout_source;
+    GCancellable           *cancellable;
+    gulong                  cancellable_id;
     TransactionWaitContext *wait_ctx;
-} Transaction;
+} TransactionContext;
+
+static void
+transaction_context_free (TransactionContext *ctx)
+{
+    if (ctx->fragments)
+        mbim_message_unref (ctx->fragments);
+
+    if (ctx->timeout_source)
+        g_source_destroy (ctx->timeout_source);
+
+    if (ctx->cancellable) {
+        if (ctx->cancellable_id)
+            g_cancellable_disconnect (ctx->cancellable, ctx->cancellable_id);
+        g_object_unref (ctx->cancellable);
+    }
+
+    if (ctx->wait_ctx)
+        g_slice_free (TransactionWaitContext, ctx->wait_ctx);
+
+    g_slice_free (TransactionContext, ctx);
+}
 
 /* #define TRACE_TRANSACTION 1 */
 #ifdef TRACE_TRANSACTION
 static void
-trace_transaction (Transaction *tr,
-                   const gchar *state)
+transaction_task_trace (GTask       *task,
+                        const gchar *state)
 {
+    MbimDevice         *self;
+    TransactionContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data     (task);
+
     g_debug ("[%s,%u] transaction %s: %s",
-             tr->self->priv->path_display,
-             tr->transaction_id,
-             mbim_message_type_get_string (tr->type),
+             self->priv->path_display,
+             ctx->transaction_id,
+             mbim_message_type_get_string (ctx->type),
              state);
 }
 #else
-# define trace_transaction(...)
+# define transaction_task_trace(...)
 #endif
 
-static Transaction *
-transaction_new (MbimDevice          *self,
-                 MbimMessageType      type,
-                 guint32              transaction_id,
-                 GCancellable        *cancellable,
-                 GAsyncReadyCallback  callback,
-                 gpointer             user_data)
+static GTask *
+transaction_task_new (MbimDevice          *self,
+                      MbimMessageType      type,
+                      guint32              transaction_id,
+                      GCancellable        *cancellable,
+                      GAsyncReadyCallback  callback,
+                      gpointer             user_data)
 {
-    Transaction *tr;
+    GTask              *task;
+    TransactionContext *ctx;
 
-    tr = g_slice_new0 (Transaction);
-    tr->type = type;
-    tr->transaction_id = transaction_id;
-    tr->self = g_object_ref (self);
-    tr->result = g_simple_async_result_new (G_OBJECT (self),
-                                            callback,
-                                            user_data,
-                                            transaction_new);
-    if (cancellable)
-        tr->cancellable = g_object_ref (cancellable);
+    task = g_task_new (self, cancellable, callback, user_data);
 
-    trace_transaction (tr, "new");
+    ctx = g_slice_new0 (TransactionContext);
+    ctx->type = type;
+    ctx->transaction_id = transaction_id;
+    ctx->cancellable = (cancellable ? g_object_ref (cancellable) : NULL);
+    g_task_set_task_data (task, ctx, (GDestroyNotify) transaction_context_free);
 
-    return tr;
+    transaction_task_trace (task, "new");
+
+    return task;
 }
 
 static void
-transaction_complete_and_free (Transaction  *tr,
-                               const GError *error)
+transaction_task_complete_and_free (GTask        *task,
+                                    const GError *error)
 {
-    if (tr->timeout_source)
-        g_source_destroy (tr->timeout_source);
+    TransactionContext *ctx;
 
-    if (tr->cancellable) {
-        if (tr->cancellable_id)
-            g_cancellable_disconnect (tr->cancellable, tr->cancellable_id);
-        g_object_unref (tr->cancellable);
-    }
-
-    if (tr->wait_ctx)
-        g_slice_free (TransactionWaitContext, tr->wait_ctx);
+    ctx = g_task_get_task_data (task);
 
     if (error) {
-        trace_transaction (tr, "complete: error");
-        g_simple_async_result_set_from_error (tr->result, error);
-        if (tr->fragments)
-            mbim_message_unref (tr->fragments);
+        transaction_task_trace (task, "complete: error");
+        g_task_return_error (task, g_error_copy (error));
     } else {
-        trace_transaction (tr, "complete: response");
-        g_assert (tr->fragments != NULL);
-        g_simple_async_result_set_op_res_gpointer (tr->result,
-                                                   tr->fragments,
-                                                   (GDestroyNotify) mbim_message_unref);
+        transaction_task_trace (task, "complete: response");
+        g_assert (ctx->fragments != NULL);
+        g_task_return_pointer (task, mbim_message_ref (ctx->fragments), (GDestroyNotify) mbim_message_unref);
     }
 
-    g_simple_async_result_complete_in_idle (tr->result);
-    g_object_unref (tr->result);
-    g_object_unref (tr->self);
-    g_slice_free (Transaction, tr);
+    g_object_unref (task);
 }
 
-static Transaction *
+static GTask *
 device_release_transaction (MbimDevice      *self,
                             TransactionType  type,
                             MbimMessageType  expected_type,
                             guint32          transaction_id)
 {
-    Transaction *tr = NULL;
+    GTask              *task;
+    TransactionContext *ctx;
 
     /* Only return transaction if it was released from the HT */
-    if (self->priv->transactions[type]) {
-        tr = g_hash_table_lookup (self->priv->transactions[type], GUINT_TO_POINTER (transaction_id));
-        if (tr && ((tr->type == expected_type) || (expected_type == MBIM_MESSAGE_TYPE_INVALID))) {
-            /* If found, remove it from the HT */
-            trace_transaction (tr, "release");
-            g_hash_table_remove (self->priv->transactions[type], GUINT_TO_POINTER (transaction_id));
-            return tr;
-        }
+    if (!self->priv->transactions[type])
+        return NULL;
+
+    task = g_hash_table_lookup (self->priv->transactions[type], GUINT_TO_POINTER (transaction_id));
+    if (!task)
+        return NULL;
+
+    ctx = g_task_get_task_data (task);
+    if ((ctx->type == expected_type) || (expected_type == MBIM_MESSAGE_TYPE_INVALID)) {
+        /* If found, remove it from the HT */
+        transaction_task_trace (task, "release");
+        g_hash_table_remove (self->priv->transactions[type], GUINT_TO_POINTER (transaction_id));
+        return task;
     }
 
     return NULL;
 }
 
 static gboolean
-transaction_timed_out (TransactionWaitContext *ctx)
+transaction_timed_out (TransactionWaitContext *wait_ctx)
 {
-    Transaction *tr;
-    GError *error = NULL;
+    GTask              *task;
+    TransactionContext *ctx;
+    GError             *error = NULL;
 
-    tr = device_release_transaction (ctx->self,
-                                     ctx->type,
-                                     MBIM_MESSAGE_TYPE_INVALID,
-                                     ctx->transaction_id);
-    if (!tr)
+    task = device_release_transaction (wait_ctx->self,
+                                       wait_ctx->type,
+                                       MBIM_MESSAGE_TYPE_INVALID,
+                                       wait_ctx->transaction_id);
+    if (!task)
         /* transaction already completed */
         return FALSE;
 
-    tr->timeout_source = NULL;
+    ctx = g_task_get_task_data (task);
+    ctx->timeout_source = NULL;
 
     /* If no fragment was received, complete transaction with a timeout error */
-    if (!tr->fragments)
+    if (!ctx->fragments)
         error = g_error_new (MBIM_CORE_ERROR,
                              MBIM_CORE_ERROR_TIMEOUT,
                              "Transaction timed out");
@@ -291,78 +307,85 @@ transaction_timed_out (TransactionWaitContext *ctx)
                              "Fragment timed out");
 
         /* Also notify to the modem */
-        device_report_error (ctx->self,
-                             tr->transaction_id,
+        device_report_error (wait_ctx->self,
+                             wait_ctx->transaction_id,
                              error);
     }
 
-    transaction_complete_and_free (tr, error);
+    transaction_task_complete_and_free (task, error);
     g_error_free (error);
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void
 transaction_cancelled (GCancellable           *cancellable,
-                       TransactionWaitContext *ctx)
+                       TransactionWaitContext *wait_ctx)
 {
-    Transaction *tr;
-    GError *error = NULL;
+    GTask              *task;
+    TransactionContext *ctx;
+    GError             *error = NULL;
 
-    tr = device_release_transaction (ctx->self,
-                                     ctx->type,
-                                     MBIM_MESSAGE_TYPE_INVALID,
-                                     ctx->transaction_id);
+    task = device_release_transaction (wait_ctx->self,
+                                       wait_ctx->type,
+                                       MBIM_MESSAGE_TYPE_INVALID,
+                                       wait_ctx->transaction_id);
 
     /* The transaction may have already been cancelled before we stored it in
      * the tracking table */
-    if (!tr)
+    if (!task)
         return;
 
-    tr->cancellable_id = 0;
+    ctx = g_task_get_task_data (task);
+    ctx->cancellable_id = 0;
 
     /* Complete transaction with an abort error */
     error = g_error_new (MBIM_CORE_ERROR,
                          MBIM_CORE_ERROR_ABORTED,
                          "Transaction aborted");
-    transaction_complete_and_free (tr, error);
+    transaction_task_complete_and_free (task, error);
     g_error_free (error);
 }
 
 static gboolean
 device_store_transaction (MbimDevice       *self,
                           TransactionType   type,
-                          Transaction      *tr,
+                          GTask            *task,
                           guint             timeout_ms,
                           GError          **error)
 {
-    trace_transaction (tr, "store");
+    TransactionContext *ctx;
+
+    transaction_task_trace (task, "store");
 
     if (G_UNLIKELY (!self->priv->transactions[type]))
         self->priv->transactions[type] = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-    tr->wait_ctx = g_slice_new (TransactionWaitContext);
-    tr->wait_ctx->self = self;
+    ctx = g_task_get_task_data (task);
+
+    ctx->wait_ctx = g_slice_new (TransactionWaitContext);
+    ctx->wait_ctx->self = self;
      /* valid as long as the transaction is in the HT */
-    tr->wait_ctx->transaction_id = tr->transaction_id;
-    tr->wait_ctx->type = type;
+    ctx->wait_ctx->transaction_id = ctx->transaction_id;
+    ctx->wait_ctx->type = type;
 
     /* don't add timeout if one already exists */
-    if (!tr->timeout_source) {
-        tr->timeout_source = g_timeout_source_new (timeout_ms);
-        g_source_set_callback (tr->timeout_source, (GSourceFunc)transaction_timed_out, tr->wait_ctx, NULL);
-        g_source_attach (tr->timeout_source, g_main_context_get_thread_default ());
-        g_source_unref (tr->timeout_source);
+    if (!ctx->timeout_source) {
+        ctx->timeout_source = g_timeout_source_new (timeout_ms);
+        g_source_set_callback (ctx->timeout_source, (GSourceFunc)transaction_timed_out, ctx->wait_ctx, NULL);
+        g_source_attach (ctx->timeout_source, g_main_context_get_thread_default ());
+        g_source_unref (ctx->timeout_source);
     }
 
-    if (tr->cancellable && !tr->cancellable_id) {
+    /* Indication transactions don't have cancellable */
+    if (ctx->cancellable && !ctx->cancellable_id) {
         /* Note: transaction_cancelled() will also be called directly if the
          * cancellable is already cancelled */
-        tr->cancellable_id = g_cancellable_connect (tr->cancellable,
-                                                    (GCallback)transaction_cancelled,
-                                                    tr->wait_ctx,
-                                                    NULL);
-        if (!tr->cancellable_id) {
+        ctx->cancellable_id = g_cancellable_connect (ctx->cancellable,
+                                                     (GCallback)transaction_cancelled,
+                                                     ctx->wait_ctx,
+                                                     NULL);
+        if (!ctx->cancellable_id) {
             g_set_error_literal (error,
                                  MBIM_CORE_ERROR,
                                  MBIM_CORE_ERROR_ABORTED,
@@ -372,7 +395,7 @@ device_store_transaction (MbimDevice       *self,
     }
 
     /* Keep in the HT */
-    g_hash_table_insert (self->priv->transactions[type], GUINT_TO_POINTER (tr->transaction_id), tr);
+    g_hash_table_insert (self->priv->transactions[type], GUINT_TO_POINTER (ctx->transaction_id), task);
 
     return TRUE;
 }
@@ -475,7 +498,7 @@ indication_ready (MbimDevice   *self,
     GError *error = NULL;
     MbimMessage *indication;
 
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), &error)) {
+    if (!(indication = g_task_propagate_pointer (G_TASK (res), &error))) {
         g_debug ("[%s] Error processing indication message: %s",
                  self->priv->path_display,
                  error->message);
@@ -483,39 +506,39 @@ indication_ready (MbimDevice   *self,
         return;
     }
 
-    indication = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
     g_signal_emit (self, signals[SIGNAL_INDICATE_STATUS], 0, indication);
+    mbim_message_unref (indication);
 }
 
 static void
 finalize_pending_open_request (MbimDevice *self)
 {
-    Transaction *tr;
-    GError      *error = NULL;
+    GTask  *task;
+    GError *error = NULL;
 
     if (!self->priv->open_transaction_id)
         return;
 
     /* Grab transaction. This is a _DONE message, so look for the request
      * that generated the _DONE */
-    tr = device_release_transaction (self,
-                                     TRANSACTION_TYPE_HOST,
-                                     MBIM_MESSAGE_TYPE_OPEN,
-                                     self->priv->open_transaction_id);
+    task = device_release_transaction (self,
+                                       TRANSACTION_TYPE_HOST,
+                                       MBIM_MESSAGE_TYPE_OPEN,
+                                       self->priv->open_transaction_id);
 
     /* If there is a valid open_transaction_id, there must be a valid transaction */
-    g_assert (tr);
+    g_assert (task);
 
     /* Clear right away before completing the transaction */
     self->priv->open_transaction_id = 0;
 
     error = g_error_new (MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNKNOWN_STATE, "device state is unknown");
-    transaction_complete_and_free (tr, error);
+    transaction_task_complete_and_free (task, error);
     g_error_free (error);
 }
 
 static void
-process_message (MbimDevice  *self,
+process_message (MbimDevice        *self,
                  const MbimMessage *message)
 {
     gboolean is_partial_fragment;
@@ -553,32 +576,33 @@ process_message (MbimDevice  *self,
     case MBIM_MESSAGE_TYPE_CLOSE_DONE:
     case MBIM_MESSAGE_TYPE_COMMAND_DONE:
     case MBIM_MESSAGE_TYPE_INDICATE_STATUS: {
-        GError *error = NULL;
-        Transaction *tr;
+        GError             *error = NULL;
+        GTask              *task;
+        TransactionContext *ctx;
 
         if (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) == MBIM_MESSAGE_TYPE_INDICATE_STATUS) {
             /* Grab transaction */
-            tr = device_release_transaction (self,
-                                             TRANSACTION_TYPE_MODEM,
-                                             MBIM_MESSAGE_TYPE_INDICATE_STATUS,
-                                             mbim_message_get_transaction_id (message));
+            task = device_release_transaction (self,
+                                               TRANSACTION_TYPE_MODEM,
+                                               MBIM_MESSAGE_TYPE_INDICATE_STATUS,
+                                               mbim_message_get_transaction_id (message));
 
-            if (!tr)
+            if (!task)
                 /* Create new transaction for the indication */
-                tr = transaction_new (self,
-                                      MBIM_MESSAGE_TYPE_INDICATE_STATUS,
-                                      mbim_message_get_transaction_id (message),
-                                      NULL, /* no cancellable */
-                                      (GAsyncReadyCallback)indication_ready,
-                                      NULL);
+                task = transaction_task_new (self,
+                                             MBIM_MESSAGE_TYPE_INDICATE_STATUS,
+                                             mbim_message_get_transaction_id (message),
+                                             NULL, /* no cancellable */
+                                             (GAsyncReadyCallback) indication_ready,
+                                             NULL);
         } else {
             /* Grab transaction. This is a _DONE message, so look for the request
              * that generated the _DONE */
-            tr = device_release_transaction (self,
-                                             TRANSACTION_TYPE_HOST,
-                                             (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) - 0x80000000),
-                                             mbim_message_get_transaction_id (message));
-            if (!tr) {
+            task = device_release_transaction (self,
+                                               TRANSACTION_TYPE_HOST,
+                                               (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) - 0x80000000),
+                                               mbim_message_get_transaction_id (message));
+            if (!task) {
                 gchar *printable;
 
                 g_debug ("[%s] No transaction matched in received message",
@@ -604,65 +628,65 @@ process_message (MbimDevice  *self,
 
             /* If the message doesn't have fragments, we're done */
             if (!_mbim_message_is_fragment (message)) {
-                g_assert (tr->fragments == NULL);
-                tr->fragments = mbim_message_dup (message);
-                transaction_complete_and_free (tr, NULL);
+                ctx = g_task_get_task_data (task);
+                g_assert (ctx->fragments == NULL);
+                ctx->fragments = mbim_message_dup (message);
+                transaction_task_complete_and_free (task, NULL);
                 return;
             }
         }
 
         /* More than one fragment expected; is this the first one? */
-        if (!tr->fragments)
-            tr->fragments = _mbim_message_fragment_collector_init (message, &error);
+        ctx = g_task_get_task_data (task);
+        if (!ctx->fragments)
+            ctx->fragments = _mbim_message_fragment_collector_init (message, &error);
         else
-            _mbim_message_fragment_collector_add (tr->fragments, message, &error);
+            _mbim_message_fragment_collector_add (ctx->fragments, message, &error);
 
         if (error) {
-            device_report_error (self,
-                                 tr->transaction_id,
-                                 error);
-            transaction_complete_and_free (tr, error);
+            device_report_error (self, ctx->transaction_id, error);
+            transaction_task_complete_and_free (task, error);
             g_error_free (error);
             return;
         }
 
         /* Did we get all needed fragments? */
-        if (_mbim_message_fragment_collector_complete (tr->fragments)) {
+        if (_mbim_message_fragment_collector_complete (ctx->fragments)) {
             /* Now, translate the whole message */
             if (mbim_utils_get_traces_enabled ()) {
                 gchar *printable;
 
-                printable = mbim_message_get_printable (tr->fragments, ">>>>>> ", FALSE);
+                printable = mbim_message_get_printable (ctx->fragments, ">>>>>> ", FALSE);
                 g_debug ("[%s] Received message (translated)...\n%s",
                          self->priv->path_display,
                          printable);
                 g_free (printable);
             }
 
-            transaction_complete_and_free (tr, NULL);
+            transaction_task_complete_and_free (task, NULL);
             return;
         }
 
         /* Need more fragments, store transaction */
         g_assert (device_store_transaction (self,
                                             TRANSACTION_TYPE_HOST,
-                                            tr,
+                                            task,
                                             MAX_TIME_BETWEEN_FRAGMENTS_MS,
                                             NULL));
         return;
     }
 
     case MBIM_MESSAGE_TYPE_FUNCTION_ERROR: {
-        Transaction *tr;
         GError *error_indication;
+        GTask  *task;
 
         /* Try to match this transaction just per transaction ID */
-        tr = device_release_transaction (self,
-                                         TRANSACTION_TYPE_HOST,
-                                         MBIM_MESSAGE_TYPE_INVALID,
-                                         mbim_message_get_transaction_id (message));
+        task = device_release_transaction (self,
+                                           TRANSACTION_TYPE_HOST,
+                                           MBIM_MESSAGE_TYPE_INVALID,
+                                           mbim_message_get_transaction_id (message));
 
-        if (!tr)
+        if (!task)
             g_debug ("[%s] No transaction matched in received function error message",
                      self->priv->path_display);
 
@@ -676,11 +700,15 @@ process_message (MbimDevice  *self,
             g_free (printable);
         }
 
-        if (tr) {
-            if (tr->fragments)
-                mbim_message_unref (tr->fragments);
-            tr->fragments = mbim_message_dup (message);
-            transaction_complete_and_free (tr, NULL);
+        if (task) {
+            TransactionContext *ctx;
+
+            ctx = g_task_get_task_data (task);
+
+            if (ctx->fragments)
+                mbim_message_unref (ctx->fragments);
+            ctx->fragments = mbim_message_dup (message);
+            transaction_task_complete_and_free (task, NULL);
         }
 
         /* Signals are emitted regardless of whether the transaction matched or not */
@@ -767,39 +795,47 @@ data_available (GIOChannel *source,
     if (G_UNLIKELY (!self->priv->response))
         self->priv->response = g_byte_array_sized_new (500);
 
-    do {
-        GError *error = NULL;
-
-        status = g_io_channel_read_chars (source,
-                                          buffer,
-                                          self->priv->max_control_transfer,
-                                          &bytes_read,
-                                          &error);
-        if (status == G_IO_STATUS_ERROR) {
-            if (error) {
-                g_warning ("[%s] error reading from the IOChannel: '%s'",
-                           self->priv->path_display,
-                           error->message);
-                g_error_free (error);
-            }
+    /* The parse_response() message may end up triggering a close of the
+     * MbimDevice or even a full unref. We are going to make sure a valid
+     * reference is available for as long as we need it in the while()
+     * loop. */
+    g_object_ref (self);
+    {
+        do {
+            GError *error = NULL;
 
             /* Port is closed; we're done */
             if (!self->priv->iochannel_source)
                 break;
-        }
 
-        /* If no bytes read, just let g_io_channel wait for more data */
-        if (bytes_read == 0)
-            break;
+            status = g_io_channel_read_chars (source,
+                                              buffer,
+                                              self->priv->max_control_transfer,
+                                              &bytes_read,
+                                              &error);
+            if (status == G_IO_STATUS_ERROR) {
+                if (error) {
+                    g_warning ("[%s] error reading from the IOChannel: '%s'",
+                               self->priv->path_display,
+                               error->message);
+                    g_error_free (error);
+                }
+            }
 
-        if (bytes_read > 0)
-            g_byte_array_append (self->priv->response, (const guint8 *)buffer, bytes_read);
+            /* If no bytes read, just let g_io_channel wait for more data */
+            if (bytes_read == 0)
+                break;
 
-        /* Try to parse what we already got */
-        parse_response (self);
+            if (bytes_read > 0)
+                g_byte_array_append (self->priv->response, (const guint8 *)buffer, bytes_read);
 
-        /* And keep on if we were told to keep on */
-    } while (bytes_read == self->priv->max_control_transfer || status == G_IO_STATUS_AGAIN);
+            /* Try to parse what we already got */
+            parse_response (self);
+
+            /* And keep on if we were told to keep on */
+        } while (bytes_read == self->priv->max_control_transfer || status == G_IO_STATUS_AGAIN);
+    }
+    g_object_unref (self);
 
     return TRUE;
 }
@@ -2100,11 +2136,7 @@ mbim_device_command_finish (MbimDevice    *self,
                             GAsyncResult  *res,
                             GError       **error)
 {
-    if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
-        return NULL;
-
-    return mbim_message_ref (g_simple_async_result_get_op_res_gpointer (
-                                 G_SIMPLE_ASYNC_RESULT (res)));
+    return g_task_propagate_pointer (G_TASK (res), error);
 }
 
 /**
@@ -2129,9 +2161,9 @@ mbim_device_command (MbimDevice          *self,
                      GAsyncReadyCallback  callback,
                      gpointer             user_data)
 {
-    GError *error = NULL;
-    Transaction *tr;
-    guint32 transaction_id;
+    GError  *error = NULL;
+    GTask   *task;
+    guint32  transaction_id;
 
     g_return_if_fail (MBIM_IS_DEVICE (self));
     g_return_if_fail (message != NULL);
@@ -2144,38 +2176,38 @@ mbim_device_command (MbimDevice          *self,
         mbim_message_set_transaction_id (message, transaction_id);
     }
 
-    tr = transaction_new (self,
-                          MBIM_MESSAGE_GET_MESSAGE_TYPE (message),
-                          transaction_id,
-                          cancellable,
-                          callback,
-                          user_data);
+    task = transaction_task_new (self,
+                                 MBIM_MESSAGE_GET_MESSAGE_TYPE (message),
+                                 transaction_id,
+                                 cancellable,
+                                 callback,
+                                 user_data);
 
     /* Device must be open */
     if (!self->priv->iochannel) {
         error = g_error_new (MBIM_CORE_ERROR,
                              MBIM_CORE_ERROR_WRONG_STATE,
                              "Device must be open to send commands");
-        transaction_complete_and_free (tr, error);
+        transaction_task_complete_and_free (task, error);
         g_error_free (error);
         return;
     }
 
     /* Setup context to match response */
-    if (!device_store_transaction (self, TRANSACTION_TYPE_HOST, tr, timeout * 1000, &error)) {
+    if (!device_store_transaction (self, TRANSACTION_TYPE_HOST, task, timeout * 1000, &error)) {
         g_prefix_error (&error, "Cannot store transaction: ");
-        transaction_complete_and_free (tr, error);
+        transaction_task_complete_and_free (task, error);
         g_error_free (error);
         return;
     }
 
     if (!device_send (self, message, &error)) {
         /* Match transaction so that we remove it from our tracking table */
-        tr = device_release_transaction (self,
-                                         TRANSACTION_TYPE_HOST,
-                                         MBIM_MESSAGE_GET_MESSAGE_TYPE (message),
-                                         mbim_message_get_transaction_id (message));
-        transaction_complete_and_free (tr, error);
+        task = device_release_transaction (self,
+                                           TRANSACTION_TYPE_HOST,
+                                           MBIM_MESSAGE_GET_MESSAGE_TYPE (message),
+                                           mbim_message_get_transaction_id (message));
+        transaction_task_complete_and_free (task, error);
         g_error_free (error);
         return;
     }
