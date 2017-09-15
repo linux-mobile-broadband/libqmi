@@ -446,7 +446,7 @@ class Message:
                 'qmi_client_${service}_${name_underscore}\n'
                 'qmi_client_${service}_${name_underscore}_finish\n')
             sections['public-methods'] += string.Template(template).substitute(translations)
-            translations['message_type'] = 'request/response'
+            translations['message_type'] = 'request'
         elif self.type == 'Indication':
             translations['message_type'] = 'indication'
 
