@@ -98,6 +98,7 @@ typedef struct {
     QmiMessage *internal_proxy_open_request;
     GArray *qmi_client_info_array;
     guint indication_id;
+    guint device_removed_id;
 } Client;
 
 static gboolean connection_readable_cb (GSocket *socket, GIOCondition condition, Client *client);
@@ -131,6 +132,8 @@ client_unref (Client *client)
         if (client->device) {
             if (g_signal_handler_is_connected (client->device, client->indication_id))
                 g_signal_handler_disconnect (client->device, client->indication_id);
+            if (g_signal_handler_is_connected (client->device, client->device_removed_id))
+                g_signal_handler_disconnect (client->device, client->device_removed_id);
             g_object_unref (client->device);
         }
 
@@ -322,6 +325,13 @@ indication_cb (QmiDevice *device,
 }
 
 static void
+device_removed_cb (QmiDevice *device,
+                   Client *client)
+{
+    untrack_client (client->proxy, client);
+}
+
+static void
 device_open_ready (QmiDevice *device,
                    GAsyncResult *res,
                    Client *client)
@@ -355,6 +365,10 @@ device_open_ready (QmiDevice *device,
                                               "indication",
                                               G_CALLBACK (indication_cb),
                                               client);
+    client->device_removed_id = g_signal_connect (client->device,
+                                                  "device-removed",
+                                                  G_CALLBACK (device_removed_cb),
+                                                  client);
 
     complete_internal_proxy_open (self, client);
 
