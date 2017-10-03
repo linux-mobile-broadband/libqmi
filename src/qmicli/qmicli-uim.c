@@ -43,6 +43,7 @@ static Context *ctx;
 
 /* Options */
 static gchar *read_transparent_str;
+static gchar *read_record_str;
 static gchar *set_pin_protection_str;
 static gchar *verify_pin_str;
 static gchar *unblock_pin_str;
@@ -79,6 +80,10 @@ static GOptionEntry entries[] = {
     { "uim-get-file-attributes", 0, 0, G_OPTION_ARG_STRING, &get_file_attributes_str,
       "Get the attributes of a given file",
       "[0xNNNN,0xNNNN,...]"
+    },
+    { "uim-read-record", 0, 0, G_OPTION_ARG_STRING, &read_record_str,
+      "Read a record from given file (allowed keys: record-number, record-length, file ([0xNNNN-0xNNNN,...])",
+      "[\"key=value,...\"]"
     },
     { "uim-get-card-status", 0, 0, G_OPTION_ARG_NONE, &get_card_status_flag,
       "Get card status",
@@ -136,6 +141,7 @@ qmicli_uim_options_enabled (void)
                  !!unblock_pin_str +
                  !!change_pin_str +
                  !!read_transparent_str +
+                 !!read_record_str +
                  !!get_file_attributes_str +
                  !!sim_power_on_str +
                  !!sim_power_off_str +
@@ -865,14 +871,15 @@ get_card_status_ready (QmiClientUim *client,
 }
 
 static gboolean
-get_sim_file_id_and_path (const gchar *file_path_str,
-                          guint16 *file_id,
-                          GArray **file_path)
+get_sim_file_id_and_path_with_separator (const gchar *file_path_str,
+                                         guint16 *file_id,
+                                         GArray **file_path,
+                                         const gchar *separator)
 {
     guint i;
     gchar **split;
 
-    split = g_strsplit (file_path_str, ",", -1);
+    split = g_strsplit (file_path_str, separator, -1);
     if (!split) {
         g_printerr ("error: invalid file path given: '%s'\n", file_path_str);
         return FALSE;
@@ -912,6 +919,14 @@ get_sim_file_id_and_path (const gchar *file_path_str,
     }
 
     return TRUE;
+}
+
+static gboolean
+get_sim_file_id_and_path (const gchar *file_path_str,
+                          guint16 *file_id,
+                          GArray **file_path)
+{
+    return get_sim_file_id_and_path_with_separator (file_path_str, file_id, file_path, ",");
 }
 
 static void
@@ -1008,6 +1023,175 @@ read_transparent_build_input (const gchar *file_path_str)
         file_path,
         NULL);
     qmi_message_uim_read_transparent_input_set_read_information (input, 0, 0, NULL);
+    g_array_unref (file_path);
+    return input;
+}
+
+static void
+read_record_ready (QmiClientUim *client,
+                   GAsyncResult *res)
+{
+    QmiMessageUimReadRecordOutput *output;
+    GError *error = NULL;
+    guint8 sw1 = 0;
+    guint8 sw2 = 0;
+    GArray *read_result = NULL;
+
+    output = qmi_client_uim_read_record_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_read_record_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't read record file from the UIM: %s\n", error->message);
+        g_error_free (error);
+
+        /* Card result */
+        if (qmi_message_uim_read_record_output_get_card_result (
+                output,
+                &sw1,
+                &sw2,
+                NULL)) {
+            g_print ("Card result:\n"
+                     "\tSW1: '0x%02x'\n"
+                     "\tSW2: '0x%02x'\n",
+                     sw1, sw2);
+        }
+
+        qmi_message_uim_read_record_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully read information from the UIM:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    /* Card result */
+    if (qmi_message_uim_read_record_output_get_card_result (
+            output,
+            &sw1,
+            &sw2,
+            NULL)) {
+        g_print ("Card result:\n"
+                 "\tSW1: '0x%02x'\n"
+                 "\tSW2: '0x%02x'\n",
+                 sw1, sw2);
+    }
+
+    /* Read result */
+    if (qmi_message_uim_read_record_output_get_read_result (
+            output,
+            &read_result,
+            NULL)) {
+        gchar *str;
+
+        str = qmicli_get_raw_data_printable (read_result, 80, "\t");
+        g_print ("Read result:\n"
+                 "%s\n",
+                 str);
+        g_free (str);
+    }
+
+    qmi_message_uim_read_record_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+typedef struct {
+    char *file;
+    guint16 record_number;
+    guint16 record_length;
+} SetReadRecordProperties;
+
+static gboolean
+set_read_record_properties_handle (const gchar *key,
+                                   const gchar *value,
+                                   GError     **error,
+                                   gpointer     user_data)
+{
+    SetReadRecordProperties *props = (SetReadRecordProperties *) user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "key '%s' requires a value",
+                     key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "file") == 0) {
+        props->file = strdup(value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "record-number") == 0) {
+        props->record_number = (guint16) atoi(value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "record-length") == 0) {
+        props->record_length = (guint16) atoi(value);
+        return TRUE;
+    }
+
+    g_set_error (error,
+                 QMI_CORE_ERROR,
+                 QMI_CORE_ERROR_FAILED,
+                 "Unrecognized option '%s'",
+                 key);
+    return FALSE;
+}
+
+static QmiMessageUimReadRecordInput *
+read_record_input_create (const gchar *str)
+{
+    GError *error = NULL;
+    QmiMessageUimReadRecordInput *input = NULL;
+    SetReadRecordProperties props = {
+        .file = NULL,
+        .record_number = 0,
+        .record_length = 0,
+    };
+    guint16 file_id = 0;
+    GArray *file_path = NULL;
+
+    if (!qmicli_parse_key_value_string (str,
+                                        &error,
+                                        set_read_record_properties_handle,
+                                        &props)) {
+        g_printerr ("error: could not parse input string '%s': %s\n",
+                    str,
+                    error->message);
+        g_error_free (error);
+        goto out;
+    }
+
+    if (!get_sim_file_id_and_path_with_separator (props.file, &file_id, &file_path, "-"))
+        goto out;
+
+    input = qmi_message_uim_read_record_input_new ();
+
+    qmi_message_uim_read_record_input_set_session_information (
+        input,
+        QMI_UIM_SESSION_TYPE_PRIMARY_GW_PROVISIONING,
+        "",
+        NULL);
+    qmi_message_uim_read_record_input_set_file (
+        input,
+        file_id,
+        file_path,
+        NULL);
+    qmi_message_uim_read_record_input_set_record (
+        input,
+        props.record_number,
+        props.record_length,
+        NULL);
+
+out:
+    free (props.file);
     g_array_unref (file_path);
     return input;
 }
@@ -1290,6 +1474,28 @@ qmicli_uim_run (QmiDevice *device,
                                          (GAsyncReadyCallback)read_transparent_ready,
                                          NULL);
         qmi_message_uim_read_transparent_input_unref (input);
+        return;
+    }
+
+    /* Request to read a transparent file? */
+    if (read_record_str) {
+        QmiMessageUimReadRecordInput *input;
+
+        input = read_record_input_create (read_record_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously reading record file at '%s'...",
+                 read_record_str);
+        qmi_client_uim_read_record (ctx->client,
+                                    input,
+                                    10,
+                                    ctx->cancellable,
+                                    (GAsyncReadyCallback)read_record_ready,
+                                    NULL);
+        qmi_message_uim_read_record_input_unref (input);
         return;
     }
 
