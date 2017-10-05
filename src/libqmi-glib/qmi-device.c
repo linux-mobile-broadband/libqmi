@@ -1555,13 +1555,13 @@ input_ready_cb (GInputStream *istream,
             g_error_free (error);
         /* Close the device */
         qmi_device_close (self, NULL);
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
 
     if (r == 0) {
         /* HUP! */
         g_warning ("Cannot read from istream: connection broken");
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
 
     /* else, r > 0 */
@@ -1571,7 +1571,7 @@ input_ready_cb (GInputStream *istream,
 
     parse_response (self);
 
-    return TRUE;
+    return G_SOURCE_CONTINUE;
 }
 
 typedef struct {
