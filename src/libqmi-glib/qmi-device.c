@@ -1623,7 +1623,6 @@ setup_iostream (GTask *task)
                            self,
                            NULL);
     g_source_attach (self->priv->input_source, g_main_context_get_thread_default ());
-    g_source_unref (self->priv->input_source);
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
@@ -2407,7 +2406,10 @@ qmi_device_open (QmiDevice *self,
 static void
 destroy_iostream (QmiDevice *self)
 {
-    g_clear_pointer (&self->priv->input_source, g_source_destroy);
+    if (self->priv->input_source) {
+        g_source_destroy (self->priv->input_source);
+        g_clear_pointer (&self->priv->input_source, g_source_unref);
+    }
     g_clear_pointer (&self->priv->buffer, g_byte_array_unref);
     g_clear_object (&self->priv->istream);
     g_clear_object (&self->priv->ostream);
