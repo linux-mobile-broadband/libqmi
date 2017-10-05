@@ -1649,7 +1649,6 @@ setup_iostream (CreateIostreamContext *ctx)
                            ctx->self,
                            NULL);
     g_source_attach (ctx->self->priv->input_source, g_main_context_get_thread_default ());
-    g_source_unref (ctx->self->priv->input_source);
 
     g_simple_async_result_set_op_res_gboolean (ctx->result, TRUE);
     create_iostream_context_complete_and_free (ctx);
@@ -2395,7 +2394,10 @@ qmi_device_open (QmiDevice *self,
 static void
 destroy_iostream (QmiDevice *self)
 {
-    g_clear_pointer (&self->priv->input_source, g_source_destroy);
+    if (self->priv->input_source) {
+        g_source_destroy (self->priv->input_source);
+        g_clear_pointer (&self->priv->input_source, g_source_unref);
+    }
     g_clear_pointer (&self->priv->buffer, g_byte_array_unref);
     g_clear_object (&self->priv->istream);
     g_clear_object (&self->priv->ostream);
