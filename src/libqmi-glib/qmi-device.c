@@ -3185,6 +3185,8 @@ qmi_device_class_init (QmiDeviceClass *klass)
      * @output: none
      *
      * The ::device-removed signal is emitted when an unexpected port hang-up is received.
+     *
+     * Since: 1.20
      */
     signals[SIGNAL_REMOVED] =
         g_signal_new (QMI_DEVICE_SIGNAL_REMOVED,

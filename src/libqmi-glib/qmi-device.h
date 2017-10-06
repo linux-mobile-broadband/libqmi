@@ -109,7 +109,7 @@ typedef struct _QmiDevicePrivate QmiDevicePrivate;
  *
  * Symbol defining the #QmiDevice::device-removed signal.
  *
- * Since: 1.19
+ * Since: 1.20
  */
 #define QMI_DEVICE_SIGNAL_REMOVED "device-removed"
 
