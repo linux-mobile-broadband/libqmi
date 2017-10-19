@@ -94,6 +94,8 @@ static gboolean set_fcc_authentication_flag;
 static gboolean get_supported_messages_flag;
 static gchar *hp_change_device_mode_str;
 static gboolean swi_get_current_firmware_flag;
+static gboolean swi_get_usb_composition_flag;
+static gchar *swi_set_usb_composition_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -294,6 +296,14 @@ static GOptionEntry entries[] = {
       "Get Current Firmware (Sierra Wireless specific)",
       NULL
     },
+    { "dms-swi-get-usb-composition", 0, 0, G_OPTION_ARG_NONE, &swi_get_usb_composition_flag,
+      "Get current and supported USB compositions (Sierra Wireless specific)",
+      NULL
+    },
+    { "dms-swi-set-usb-composition", 0, 0, G_OPTION_ARG_STRING, &swi_set_usb_composition_str,
+      "Set USB composition (Sierra Wireless specific)",
+      "[#]"
+    },
     { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -378,6 +388,8 @@ qmicli_dms_options_enabled (void)
                  get_supported_messages_flag +
                  !!hp_change_device_mode_str +
                  swi_get_current_firmware_flag +
+                 swi_get_usb_composition_flag +
+                 !!swi_set_usb_composition_str +
                  reset_flag +
                  noop_flag);
 
@@ -3514,6 +3526,115 @@ swi_get_current_firmware_ready (QmiClientDms *client,
 }
 
 static void
+swi_get_usb_composition_ready (QmiClientDms *client,
+                               GAsyncResult *res)
+{
+    QmiMessageDmsSwiGetUsbCompositionOutput *output;
+    GError                                  *error = NULL;
+    GArray                                  *supported = NULL;
+    QmiDmsSwiUsbComposition                  current = QMI_DMS_SWI_USB_COMPOSITION_UNKNOWN;
+    guint                                    i;
+
+    output = qmi_client_dms_swi_get_usb_composition_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_swi_get_usb_composition_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get USB composite modes: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_swi_get_usb_composition_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully retrieved USB compositions:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (!qmi_message_dms_swi_get_usb_composition_output_get_current (output, &current, &error)) {
+        g_printerr ("error: couldn't get current USB composition: %s\n", error->message);
+        g_clear_error (&error);
+    }
+
+    if (!qmi_message_dms_swi_get_usb_composition_output_get_supported (output, &supported, &error)) {
+        g_printerr ("error: couldn't get list of USB compositions: %s\n", error->message);
+        g_clear_error (&error);
+    }
+
+    for (i = 0; i < supported->len; i++) {
+        QmiDmsSwiUsbComposition value;
+
+        value = g_array_index (supported, QmiDmsSwiUsbComposition, i);
+        g_print ("\t%sUSB composition %s: %s\n",
+                 (value == current ? "[*] " : "    "),
+                 qmi_dms_swi_usb_composition_get_string (value),
+                 qmi_dms_swi_usb_composition_get_description (value));
+    }
+
+    qmi_message_dms_swi_get_usb_composition_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
+swi_set_usb_composition_ready (QmiClientDms *client,
+                               GAsyncResult *res)
+{
+    QmiMessageDmsSwiSetUsbCompositionOutput *output;
+    GError                                  *error = NULL;
+
+    output = qmi_client_dms_swi_set_usb_composition_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_swi_set_usb_composition_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set USB composite modes: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_swi_set_usb_composition_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully set USB composition\n"
+             "\n"
+             "\tYou may want to power-cycle the modem now, or just set it offline and reset it:\n"
+             "\t\t$> sudo qmicli ... --dms-set-operating-mode=offline\n"
+             "\t\t$> sudo qmicli ... --dms-set-operating-mode=reset\n"
+             "\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_swi_set_usb_composition_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static QmiMessageDmsSwiSetUsbCompositionInput *
+swi_set_usb_composition_input_create (const gchar *str)
+{
+    QmiMessageDmsSwiSetUsbCompositionInput *input = NULL;
+    QmiDmsSwiUsbComposition value;
+    GError *error = NULL;
+
+    if (!qmicli_read_swi_usb_composition_from_string (str, &value))
+        return NULL;
+
+    input = qmi_message_dms_swi_set_usb_composition_input_new ();
+    if (!qmi_message_dms_swi_set_usb_composition_input_set_current (input, value, &error)) {
+        g_printerr ("error: couldn't create input bundle: '%s'\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_swi_set_usb_composition_input_unref (input);
+        return NULL;
+    }
+
+    return input;
+}
+
+static void
 reset_ready (QmiClientDms *client,
              GAsyncResult *res)
 {
@@ -4295,6 +4416,40 @@ qmicli_dms_run (QmiDevice *device,
                                                  ctx->cancellable,
                                                  (GAsyncReadyCallback)swi_get_current_firmware_ready,
                                                  NULL);
+        return;
+    }
+
+    /* Request to get current USB composition */
+    if (swi_get_usb_composition_flag) {
+        g_debug ("Asynchronously getting USB compositionss (Sierra Wireless specific)...");
+        qmi_client_dms_swi_get_usb_composition (ctx->client,
+                                                NULL,
+                                                10,
+                                                ctx->cancellable,
+                                                (GAsyncReadyCallback)swi_get_usb_composition_ready,
+                                                NULL);
+        return;
+    }
+
+    /* Request to set current USB composition */
+    if (swi_set_usb_composition_str) {
+        QmiMessageDmsSwiSetUsbCompositionInput *input;
+
+        g_debug ("Asynchronously setting USB composition (Sierra Wireless specific)...");
+
+        input = swi_set_usb_composition_input_create (swi_set_usb_composition_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        qmi_client_dms_swi_set_usb_composition  (ctx->client,
+                                                 input,
+                                                 10,
+                                                 ctx->cancellable,
+                                                 (GAsyncReadyCallback)swi_set_usb_composition_ready,
+                                              NULL);
+        qmi_message_dms_swi_set_usb_composition_input_unref (input);
         return;
     }
 

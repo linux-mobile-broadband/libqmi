@@ -24,6 +24,8 @@
 #ifndef _LIBQMI_GLIB_QMI_ENUMS_DMS_H_
 #define _LIBQMI_GLIB_QMI_ENUMS_DMS_H_
 
+#include <glib.h>
+
 #if !defined (__LIBQMI_GLIB_H_INSIDE__) && !defined (LIBQMI_GLIB_COMPILATION)
 #error "Only <libqmi-glib.h> can be included directly."
 #endif
@@ -500,6 +502,84 @@ typedef enum {
  * qmi_dms_hp_device_mode_get_string:
  *
  * Since: 1.18
+ */
+
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Swi Get USB Composition' message */
+
+/**
+ * QmiDmsSwiUsbComposition:
+ * @QMI_DMS_SWI_USB_COMPOSITION_UNKNOWN: Unknown.
+ * @QMI_DMS_SWI_USB_COMPOSITION_0: HIP, DM, NMEA, AT, MDM1, MDM2, MDM3, MS.
+ * @QMI_DMS_SWI_USB_COMPOSITION_1: HIP, DM, NMEA, AT, MDM1, MS.
+ * @QMI_DMS_SWI_USB_COMPOSITION_2: HIP, DM, NMEA, AT, NIC1, MS.
+ * @QMI_DMS_SWI_USB_COMPOSITION_3: HIP, DM, NMEA, AT, MDM1, NIC1, MS.
+ * @QMI_DMS_SWI_USB_COMPOSITION_4: HIP, DM, NMEA, AT, NIC1, NIC2, NIC3, MS.
+ * @QMI_DMS_SWI_USB_COMPOSITION_5: HIP, DM, NMEA, AT, ECM1, MS.
+ * @QMI_DMS_SWI_USB_COMPOSITION_6: DM, NMEA, AT, QMI.
+ * @QMI_DMS_SWI_USB_COMPOSITION_7: DM, NMEA, AT, RMNET1, RMNET2, RMNET3.
+ * @QMI_DMS_SWI_USB_COMPOSITION_8: DM, NMEA, AT, MBIM.
+ * @QMI_DMS_SWI_USB_COMPOSITION_9: MBIM.
+ * @QMI_DMS_SWI_USB_COMPOSITION_10: NMEA, MBIM.
+ * @QMI_DMS_SWI_USB_COMPOSITION_11: DM, MBIM.
+ * @QMI_DMS_SWI_USB_COMPOSITION_12: DM, NMEA, MBIM.
+ * @QMI_DMS_SWI_USB_COMPOSITION_13: Dual configuration: USB composition 6 and USB composition 8.
+ * @QMI_DMS_SWI_USB_COMPOSITION_14: Dual configuration: USB composition 6 and USB composition 9.
+ * @QMI_DMS_SWI_USB_COMPOSITION_15: Dual configuration: USB composition 6 and USB composition 10.
+ * @QMI_DMS_SWI_USB_COMPOSITION_16: Dual configuration: USB composition 6 and USB composition 11.
+ * @QMI_DMS_SWI_USB_COMPOSITION_17: Dual configuration: USB composition 6 and USB composition 12.
+ * @QMI_DMS_SWI_USB_COMPOSITION_18: Dual configuration: USB composition 7 and USB composition 8.
+ * @QMI_DMS_SWI_USB_COMPOSITION_19: Dual configuration: USB composition 7 and USB composition 9.
+ * @QMI_DMS_SWI_USB_COMPOSITION_20: Dual configuration: USB composition 7 and USB composition 10.
+ * @QMI_DMS_SWI_USB_COMPOSITION_21: Dual configuration: USB composition 7 and USB composition 11.
+ * @QMI_DMS_SWI_USB_COMPOSITION_22: Dual configuration: USB composition 7 and USB composition 12.
+ *
+ * Sierra Wireless USB composition modes.
+ *
+ * Since: 1.20
+ */
+typedef enum {
+    QMI_DMS_SWI_USB_COMPOSITION_UNKNOWN = -1,
+    QMI_DMS_SWI_USB_COMPOSITION_0  =  0,
+    QMI_DMS_SWI_USB_COMPOSITION_1  =  1,
+    QMI_DMS_SWI_USB_COMPOSITION_2  =  2,
+    QMI_DMS_SWI_USB_COMPOSITION_3  =  3,
+    QMI_DMS_SWI_USB_COMPOSITION_4  =  4,
+    QMI_DMS_SWI_USB_COMPOSITION_5  =  5,
+    QMI_DMS_SWI_USB_COMPOSITION_6  =  6,
+    QMI_DMS_SWI_USB_COMPOSITION_7  =  7,
+    QMI_DMS_SWI_USB_COMPOSITION_8  =  8,
+    QMI_DMS_SWI_USB_COMPOSITION_9  =  9,
+    QMI_DMS_SWI_USB_COMPOSITION_10 = 10,
+    QMI_DMS_SWI_USB_COMPOSITION_11 = 11,
+    QMI_DMS_SWI_USB_COMPOSITION_12 = 12,
+    QMI_DMS_SWI_USB_COMPOSITION_13 = 13,
+    QMI_DMS_SWI_USB_COMPOSITION_14 = 14,
+    QMI_DMS_SWI_USB_COMPOSITION_15 = 15,
+    QMI_DMS_SWI_USB_COMPOSITION_16 = 16,
+    QMI_DMS_SWI_USB_COMPOSITION_17 = 17,
+    QMI_DMS_SWI_USB_COMPOSITION_18 = 18,
+    QMI_DMS_SWI_USB_COMPOSITION_19 = 19,
+    QMI_DMS_SWI_USB_COMPOSITION_20 = 20,
+    QMI_DMS_SWI_USB_COMPOSITION_21 = 21,
+    QMI_DMS_SWI_USB_COMPOSITION_22 = 22,
+} QmiDmsSwiUsbComposition;
+
+/**
+ * qmi_dms_swi_usb_composition_get_description:
+ * @value: a #QmiDmsSwiUsbComposition.
+ *
+ * Gets a text description of the Sierra Wireless USB composition.
+ *
+ * Since: 1.20
+ * Returns: a string.
+ */
+const gchar *qmi_dms_swi_usb_composition_get_description (QmiDmsSwiUsbComposition value);
+
+/**
+ * qmi_dms_swi_usb_composition_get_string:
+ *
+ * Since: 1.20
  */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */

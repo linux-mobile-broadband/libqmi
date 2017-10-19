@@ -691,6 +691,27 @@ qmicli_read_hp_device_mode_from_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_swi_usb_composition_from_string (const gchar *str,
+                                             QmiDmsSwiUsbComposition *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_dms_swi_usb_composition_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiDmsSwiUsbComposition)enum_value->value;
+    else
+        g_printerr ("error: invalid SWI USB Composition value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
 qmicli_read_uint_from_string (const gchar *str,
                               guint *out)
 {
