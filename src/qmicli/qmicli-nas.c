@@ -1953,7 +1953,7 @@ get_technology_preference_ready (QmiClientNas *client,
 
 static void
 get_system_selection_preference_ready (QmiClientNas *client,
-                                 GAsyncResult *res)
+                                       GAsyncResult *res)
 {
     QmiMessageNasGetSystemSelectionPreferenceOutput *output;
     GError *error = NULL;
@@ -1969,6 +1969,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
     QmiNasGsmWcdmaAcquisitionOrderPreference gsm_wcdma_acquisition_order_preference;
     guint16 mcc;
     guint16 mnc;
+    guint64 extended_lte_band_preference[4];
     gboolean has_pcs_digit;
 
     output = qmi_client_nas_get_system_selection_preference_finish (client, res, &error);
@@ -2029,6 +2030,36 @@ get_system_selection_preference_ready (QmiClientNas *client,
         str = qmi_nas_lte_band_preference_build_string_from_mask (lte_band_preference);
         g_print ("\tLTE band preference: '%s'\n", str);
         g_free (str);
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_extended_lte_band_preference (
+            output,
+            &extended_lte_band_preference[0],
+            &extended_lte_band_preference[1],
+            &extended_lte_band_preference[2],
+            &extended_lte_band_preference[3],
+            NULL)) {
+        guint    i;
+        gboolean first = TRUE;
+
+        g_print ("\tLTE band preference (extended): '");
+        for (i = 0; i < G_N_ELEMENTS (extended_lte_band_preference); i++) {
+            guint j;
+
+            for (j = 0; j < 64; j++) {
+                guint band;
+
+                if (!(extended_lte_band_preference[i] & (((guint64) 1) << j)))
+                    continue;
+                band = 1 + j + (i * 64);
+                if (first) {
+                    g_print ("%u", band);
+                    first = FALSE;
+                } else
+                    g_print (", %u", band);
+            }
+        }
+        g_print ("'\n");
     }
 
     if (qmi_message_nas_get_system_selection_preference_output_get_td_scdma_band_preference (
