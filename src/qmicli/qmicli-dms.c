@@ -2362,6 +2362,7 @@ get_band_capabilities_ready (QmiClientDms *client,
     QmiMessageDmsGetBandCapabilitiesOutput *output;
     QmiDmsBandCapability band_capability;
     QmiDmsLteBandCapability lte_band_capability;
+    GArray *extended_lte_band_capability;
     GError *error = NULL;
     gchar *str;
 
@@ -2400,6 +2401,20 @@ get_band_capabilities_ready (QmiClientDms *client,
         str = qmi_dms_lte_band_capability_build_string_from_mask (lte_band_capability);
         g_print ("\tLTE bands: '%s'\n", str);
         g_free (str);
+    }
+
+    if (qmi_message_dms_get_band_capabilities_output_get_extended_lte_band_capability (
+            output,
+            &extended_lte_band_capability,
+            NULL)) {
+        guint i;
+
+        g_print ("\tLTE bands (extended): '");
+        for (i = 0; i < extended_lte_band_capability->len; i++)
+            g_print ("%s%" G_GUINT16_FORMAT,
+                     i == 0 ? "" : ", ",
+                     g_array_index (extended_lte_band_capability, guint16, i));
+        g_print ("'\n");
     }
 
     qmi_message_dms_get_band_capabilities_output_unref (output);
