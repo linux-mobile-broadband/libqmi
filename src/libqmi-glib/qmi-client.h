@@ -245,6 +245,8 @@ guint16 qmi_client_get_next_transaction_id (QmiClient *self);
 
 #if defined (LIBQMI_GLIB_COMPILATION)
 G_GNUC_INTERNAL
+gboolean __qmi_client_is_valid (QmiClient *self);
+G_GNUC_INTERNAL
 void __qmi_client_process_indication (QmiClient  *self,
                                       QmiMessage *message);
 #endif

@@ -93,6 +93,16 @@ qmi_client_get_cid (QmiClient *self)
 }
 
 gboolean
+__qmi_client_is_valid (QmiClient *self)
+{
+    g_return_val_if_fail (QMI_IS_CLIENT (self), FALSE);
+
+    return (self->priv->service != QMI_SERVICE_UNKNOWN &&
+            QMI_IS_DEVICE (self->priv->device) &&
+            ((self->priv->cid != QMI_CID_NONE || self->priv->service == QMI_SERVICE_CTL)));
+}
+
+gboolean
 qmi_client_get_version (QmiClient *self,
                         guint *major,
                         guint *minor)
