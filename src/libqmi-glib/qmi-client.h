@@ -122,6 +122,15 @@ typedef struct _QmiClientPrivate QmiClientPrivate;
 #define QMI_CLIENT_VERSION_MINOR "client-version-minor"
 
 /**
+ * QMI_CLIENT_VALID:
+ *
+ * Symbol defining the #QmiClient:valid property.
+ *
+ * Since: 1.20
+ */
+#define QMI_CLIENT_VALID "client-valid"
+
+/**
  * QmiClient:
  *
  * The #QmiClient structure contains private data and should only be accessed
@@ -194,6 +203,25 @@ QmiService qmi_client_get_service (QmiClient *self);
  * Since: 1.0
  */
 guint8 qmi_client_get_cid (QmiClient *self);
+
+/**
+ * qmi_client_is_valid:
+ * @self: a #QmiClient.
+ *
+ * Checks whether #QmiClient is a valid and usable client.
+ *
+ * The client is marked as invalid as soon as the client id is released or when
+ * the associated #QmiDevice is closed.
+ *
+ * This method may be used if the caller needs to ensure validity before a
+ * command is attempted, e.g. if the lifecycle of the object is managed in some
+ * other place and the caller just has a reference to the #QmiClient.
+ *
+ * Returns: %TRUE if the client is valid, %FALSE otherwise.
+ *
+ * Since: 1.20
+ */
+gboolean qmi_client_is_valid (QmiClient *self);
 
 /**
  * qmi_client_get_version:

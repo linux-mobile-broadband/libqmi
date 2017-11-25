@@ -18,11 +18,13 @@ QMI_CLIENT_SERVICE
 QMI_CLIENT_CID
 QMI_CLIENT_VERSION_MAJOR
 QMI_CLIENT_VERSION_MINOR
+QMI_CLIENT_VALID
 QmiClient
 qmi_client_get_device
 qmi_client_peek_device
 qmi_client_get_service
 qmi_client_get_cid
+qmi_client_is_valid
 qmi_client_get_version
 qmi_client_check_version
 qmi_client_get_next_transaction_id

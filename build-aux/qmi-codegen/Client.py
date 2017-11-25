@@ -477,6 +477,11 @@ class Client:
             template += (
                 '\n'
                 '    task = g_task_new (self, cancellable, callback, user_data);\n'
+                '    if (!qmi_client_is_valid (QMI_CLIENT (self))) {\n'
+                '        g_task_return_new_error (task, QMI_CORE_ERROR, QMI_CORE_ERROR_WRONG_STATE, "client invalid");\n'
+                '        g_object_unref (task);\n'
+                '        return;\n'
+                '    }\n'
                 '\n'
                 '    transaction_id = qmi_client_get_next_transaction_id (QMI_CLIENT (self));\n'
                 '\n'

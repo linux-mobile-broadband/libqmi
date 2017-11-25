@@ -1219,7 +1219,7 @@ qmi_device_release_client (QmiDevice *self,
              qmi_service_get_string (service),
              cid);
 
-    /* Reset the contents of the client object, making it unusable */
+    /* Reset the contents of the client object, making it invalid */
     g_object_set (client,
                   QMI_CLIENT_CID,     QMI_CID_NONE,
                   QMI_CLIENT_SERVICE, QMI_SERVICE_UNKNOWN,

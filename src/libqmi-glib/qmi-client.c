@@ -37,6 +37,7 @@ enum {
     PROP_CID,
     PROP_VERSION_MAJOR,
     PROP_VERSION_MINOR,
+    PROP_VALID,
     PROP_LAST
 };
 
@@ -90,6 +91,16 @@ qmi_client_get_cid (QmiClient *self)
     g_return_val_if_fail (QMI_IS_CLIENT (self), QMI_CID_NONE);
 
     return self->priv->cid;
+}
+
+gboolean
+qmi_client_is_valid (QmiClient *self)
+{
+    g_return_val_if_fail (QMI_IS_CLIENT (self), FALSE);
+
+    return (self->priv->service != QMI_SERVICE_UNKNOWN &&
+            QMI_IS_DEVICE (self->priv->device) &&
+            ((self->priv->cid != QMI_CID_NONE || self->priv->service == QMI_SERVICE_CTL)));
 }
 
 gboolean
@@ -218,6 +229,9 @@ get_property (GObject *object,
     case PROP_VERSION_MINOR:
         g_value_set_uint (value, self->priv->version_minor);
         break;
+    case PROP_VALID:
+        g_value_set_boolean (value, qmi_client_is_valid (self));
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -320,4 +334,17 @@ qmi_client_class_init (QmiClientClass *klass)
                            0,
                            G_PARAM_READWRITE);
     g_object_class_install_property (object_class, PROP_VERSION_MINOR, properties[PROP_VERSION_MINOR]);
+
+    /**
+     * QmiClient:client-valid:
+     *
+     * Since: 1.20
+     */
+    properties[PROP_VALID] =
+        g_param_spec_boolean (QMI_CLIENT_VALID,
+                              "Valid",
+                              "Whether the client is valid and usable",
+                              FALSE,
+                              G_PARAM_READABLE);
+    g_object_class_install_property (object_class, PROP_VALID, properties[PROP_VALID]);
 }
