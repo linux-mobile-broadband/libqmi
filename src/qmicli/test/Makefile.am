@@ -6,9 +6,7 @@ noinst_PROGRAMS = \
 TEST_PROGS += $(noinst_PROGRAMS)
 
 test_helpers_SOURCES = \
-	test-helpers.c \
-	$(top_srcdir)/src/qmicli/qmicli-helpers.h \
-	$(top_srcdir)/src/qmicli/qmicli-helpers.c
+	test-helpers.c
 
 test_helpers_CPPFLAGS = \
 	$(GLIB_CFLAGS) \
@@ -21,4 +19,5 @@ test_helpers_CPPFLAGS = \
 
 test_helpers_LDADD = \
 	$(GLIB_LIBS) \
+	$(top_builddir)/src/qmicli/libhelpers.la \
 	$(top_builddir)/src/libqmi-glib/libqmi-glib.la
