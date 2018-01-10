@@ -97,9 +97,7 @@ test_message_builder_LDADD = \
 	$(LIBMBIM_GLIB_LIBS)
 
 test_proxy_helpers_SOURCES = \
-	test-proxy-helpers.c \
-	$(top_srcdir)/src/libmbim-glib/mbim-proxy-helpers.h \
-	$(top_srcdir)/src/libmbim-glib/mbim-proxy-helpers.c
+	test-proxy-helpers.c
 test_proxy_helpers_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
