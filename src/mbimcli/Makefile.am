@@ -18,7 +18,8 @@ mbimcli_SOURCES = \
 	mbimcli-dss.c \
 	mbimcli-ms-firmware-id.c \
 	mbimcli-ms-host-shutdown.c \
-	mbimcli-atds.c
+	mbimcli-atds.c \
+	mbimcli-intel-firmware-update.c
 
 mbimcli_LDADD = \
 	$(MBIMCLI_LIBS) \
