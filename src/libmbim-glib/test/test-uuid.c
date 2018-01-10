@@ -91,6 +91,13 @@ test_uuid_ms_host_shutdown (void)
                           "883b7c26-985f-43fa-9804-27d7fb80959c");
 }
 
+static void
+test_uuid_intel_firmware_update (void)
+{
+    compare_uuid_strings (MBIM_UUID_INTEL_FIRMWARE_UPDATE,
+                          "0ed374cb-f835-4474-bc11-3b3fd76f5641");
+}
+
 /*****************************************************************************/
 
 static void
@@ -200,6 +207,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/uuid/dss",              test_uuid_dss);
     g_test_add_func ("/libmbim-glib/uuid/ms-firmware-id",   test_uuid_ms_firmware_id);
     g_test_add_func ("/libmbim-glib/uuid/ms-host-shutdown", test_uuid_ms_host_shutdown);
+    g_test_add_func ("/libmbim-glib/uuid/intel-firmware-update", test_uuid_intel_firmware_update);
 
     g_test_add_func ("/libmbim-glib/uuid/valid",           test_uuid_valid);
     g_test_add_func ("/libmbim-glib/uuid/valid/camelcase", test_uuid_valid_camelcase);

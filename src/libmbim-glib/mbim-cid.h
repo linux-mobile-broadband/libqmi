@@ -251,6 +251,18 @@ typedef enum {
     MBIM_CID_ATDS_REGISTER_STATE = 9,
 } MbimCidAtds;
 
+/**
+ * MbimCidIntelFirmwareUpdate:
+ * @MBIM_CID_INTEL_FIRMWARE_UPDATE_UNKNOWN: Unknown command.
+ * @MBIM_CID_INTEL_FIRMWARE_UPDATE_MODEM_REBOOT: Reboot modem for firmware update.
+ *
+ * MBIM commands in the %MBIM_SERVICE_INTEL_FIRMWARE_UPDATE service.
+ */
+typedef enum {
+    MBIM_CID_INTEL_FIRMWARE_UPDATE_UNKNOWN      = 0,
+    MBIM_CID_INTEL_FIRMWARE_UPDATE_MODEM_REBOOT = 1,
+} MbimCidIntelFirmwareUpdate;
+
 /* Command helpers */
 
 gboolean     mbim_cid_can_set       (MbimService service,

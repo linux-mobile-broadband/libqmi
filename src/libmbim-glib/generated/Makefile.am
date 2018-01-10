@@ -14,7 +14,8 @@ GENERATED_H = \
 	mbim-ms-host-shutdown.h \
 	mbim-proxy-control.h \
 	mbim-qmi.h \
-	mbim-atds.h
+	mbim-atds.h \
+	mbim-intel-firmware-update.h
 
 GENERATED_C = \
 	mbim-error-types.c \
@@ -31,7 +32,8 @@ GENERATED_C = \
 	mbim-ms-host-shutdown.c \
 	mbim-proxy-control.c \
 	mbim-qmi.c \
-	mbim-atds.c
+	mbim-atds.c \
+	mbim-intel-firmware-update.c
 
 GENERATED_SECTIONS = \
 	mbim-basic-connect.sections \
@@ -45,7 +47,8 @@ GENERATED_SECTIONS = \
 	mbim-ms-host-shutdown.sections \
 	mbim-proxy-control.sections \
 	mbim-qmi.sections \
-	mbim-atds.sections
+	mbim-atds.sections \
+	mbim-intel-firmware-update.sections
 
 # Error types
 mbim-error-types.h: $(top_srcdir)/src/libmbim-glib/mbim-errors.h $(top_srcdir)/build-aux/templates/mbim-error-types-template.h
@@ -193,6 +196,15 @@ mbim-atds.h mbim-atds.c mbim-atds.sections: $(top_srcdir)/data/mbim-service-atds
 		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-atds.json \
 			--output mbim-atds
+
+# Intel Firmware Update Service
+mbim-intel-firmware-update.h mbim-intel-firmware-update.c mbim-intel-firmware-update.sections: $(top_srcdir)/data/mbim-service-intel-firmware-update.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-intel-firmware-update.h && \
+		rm -f mbim-intel-firmware-update.c && \
+		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-intel-firmware-update.json \
+			--output mbim-intel-firmware-update
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 

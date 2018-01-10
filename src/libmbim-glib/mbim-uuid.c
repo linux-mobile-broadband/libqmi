@@ -244,6 +244,14 @@ static const MbimUuid uuid_atds = {
     .e = { 0xb2, 0xe7, 0x0e, 0x52, 0x7d, 0xb3 }
 };
 
+static const MbimUuid uuid_intel_firmware_update = {
+    .a = { 0x0e, 0xd3, 0x74, 0xcb },
+    .b = { 0xf8, 0x35 },
+    .c = { 0x44, 0x74 },
+    .d = { 0xbc, 0x11 },
+    .e = { 0x3b, 0x3f, 0xd7, 0x6f, 0x56, 0x41 }
+};
+
 static GList *mbim_custom_service_list = NULL;
 
 typedef struct {
@@ -413,6 +421,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_qmi;
     case MBIM_SERVICE_ATDS:
         return &uuid_atds;
+    case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
+        return &uuid_intel_firmware_update;
     default:
         for (l = mbim_custom_service_list; l != NULL; l = l->next) {
             if (service == ((MbimCustomService *)l->data)->service_id)
@@ -470,6 +480,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_atds))
         return MBIM_SERVICE_ATDS;
+
+    if (mbim_uuid_cmp (uuid, &uuid_intel_firmware_update))
+        return MBIM_SERVICE_INTEL_FIRMWARE_UPDATE;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
         if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))

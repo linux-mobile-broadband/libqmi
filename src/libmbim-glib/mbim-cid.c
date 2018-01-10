@@ -157,6 +157,12 @@ static const CidConfig cid_atds_config [MBIM_CID_ATDS_LAST] = {
     { NO_SET, QUERY, NO_NOTIFY }, /* MBIM_CID_ATDS_REGISTER_STATE */
 };
 
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_INTEL_FIRMWARE_UPDATE_LAST MBIM_CID_INTEL_FIRMWARE_UPDATE_MODEM_REBOOT
+static const CidConfig cid_intel_firmware_update_config [MBIM_CID_INTEL_FIRMWARE_UPDATE_LAST] = {
+    { SET, NO_QUERY, NO_NOTIFY }, /* MBIM_CID_INTEL_FIRMWARE_UPDATE_MODEM_REBOOT */
+};
+
 /**
  * mbim_cid_can_set:
  * @service: a #MbimService.
@@ -201,6 +207,8 @@ mbim_cid_can_set (MbimService service,
         return cid_qmi_config[cid - 1].set;
     case MBIM_SERVICE_ATDS:
         return cid_atds_config[cid - 1].set;
+    case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
+        return cid_intel_firmware_update_config[cid - 1].set;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -251,6 +259,8 @@ mbim_cid_can_query (MbimService service,
         return cid_qmi_config[cid - 1].query;
     case MBIM_SERVICE_ATDS:
         return cid_atds_config[cid - 1].query;
+    case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
+        return cid_intel_firmware_update_config[cid - 1].query;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -301,6 +311,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_qmi_config[cid - 1].notify;
     case MBIM_SERVICE_ATDS:
         return cid_atds_config[cid - 1].notify;
+    case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
+        return cid_intel_firmware_update_config[cid - 1].notify;
     default:
         g_assert_not_reached ();
         return FALSE;
