@@ -228,6 +228,22 @@ qfu_udev_helper_find_by_file_path (const gchar  *path,
     return sysfs_path;
 }
 
+gchar *
+qfu_udev_helper_find_peer_port (const gchar  *sysfs_path,
+                                GError      **error)
+{
+    gchar *tmp, *path;
+
+    tmp = g_build_filename (sysfs_path, "port", "peer", NULL);
+    path = realpath (tmp, NULL);
+    g_free (tmp);
+    if (!path)
+        return NULL;
+
+    g_debug ("[qfu-udev] peer port for '%s' found: %s", sysfs_path, path);
+    return path;
+}
+
 /******************************************************************************/
 
 static gboolean
@@ -457,6 +473,7 @@ typedef struct {
     QfuUdevHelperDeviceType  device_type;
     GUdevClient             *udev;
     gchar                   *sysfs_path;
+    gchar                   *peer_port;
     guint                    timeout_id;
     gulong                   uevent_id;
     gulong                   cancellable_id;
@@ -471,6 +488,7 @@ wait_for_device_context_free (WaitForDeviceContext *ctx)
 
     g_object_unref (ctx->udev);
     g_free (ctx->sysfs_path);
+    g_free (ctx->peer_port);
     g_slice_free (WaitForDeviceContext, ctx);
 }
 
@@ -496,6 +514,19 @@ handle_uevent (GUdevClient *client,
         return;
 
     file = device_matches_sysfs_and_type (device, ctx->sysfs_path, ctx->device_type);
+    if (!file && ctx->peer_port) {
+        gchar *tmp, *path;
+
+        tmp = g_build_filename (ctx->peer_port, "device", NULL);
+        path = realpath (tmp, NULL);
+        g_free (tmp);
+        if (!path)
+            return;
+
+        file = device_matches_sysfs_and_type (device, path, ctx->device_type);
+        g_debug ("[qfu-udev] peer lookup for %s: %s => %s",  g_udev_device_get_name (device), ctx->peer_port, path);
+        g_free (path);
+    }
     if (!file)
         return;
 
@@ -567,6 +598,7 @@ wait_for_device_cancelled (GCancellable *cancellable,
 void
 qfu_udev_helper_wait_for_device (QfuUdevHelperDeviceType  device_type,
                                  const gchar             *sysfs_path,
+                                 const gchar             *peer_port,
                                  GCancellable            *cancellable,
                                  GAsyncReadyCallback      callback,
                                  gpointer                 user_data)
@@ -577,6 +609,7 @@ qfu_udev_helper_wait_for_device (QfuUdevHelperDeviceType  device_type,
     ctx = g_slice_new0 (WaitForDeviceContext);
     ctx->device_type = device_type;
     ctx->sysfs_path = g_strdup (sysfs_path);
+    ctx->peer_port = g_strdup (peer_port);
 
     if (ctx->device_type == QFU_UDEV_HELPER_DEVICE_TYPE_TTY)
         ctx->udev = g_udev_client_new (tty_subsys_list);

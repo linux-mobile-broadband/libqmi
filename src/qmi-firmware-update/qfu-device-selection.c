@@ -42,6 +42,8 @@ struct _QfuDeviceSelectionPrivate {
 #if defined WITH_UDEV
     /* sysfs path */
     gchar   *sysfs_path;
+    /* peer port sysfs path */
+    gchar   *peer_port;
     /* generic udev monitor */
     QfuUdevHelperGenericMonitor *monitor;
 #endif
@@ -227,6 +229,7 @@ qfu_device_selection_wait_for_cdc_wdm (QfuDeviceSelection  *self,
     task = g_task_new (self, cancellable, callback, user_data);
     qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM,
                                      self->priv->sysfs_path,
+                                     self->priv->peer_port,
                                      cancellable,
                                      (GAsyncReadyCallback) wait_for_device_ready,
                                      task);
@@ -243,6 +246,7 @@ qfu_device_selection_wait_for_tty (QfuDeviceSelection  *self,
     task = g_task_new (self, cancellable, callback, user_data);
     qfu_udev_helper_wait_for_device (QFU_UDEV_HELPER_DEVICE_TYPE_TTY,
                                      self->priv->sysfs_path,
+                                     self->priv->peer_port,
                                      cancellable,
                                      (GAsyncReadyCallback) wait_for_device_ready,
                                      task);
@@ -309,6 +313,9 @@ qfu_device_selection_new (const gchar  *preferred_cdc_wdm,
             return NULL;
         }
 
+        /* look for a peer port */
+        self->priv->peer_port = qfu_udev_helper_find_peer_port (self->priv->sysfs_path, error);
+
         /* Initialize right away the generic udev monitor for this sysfs path */
         self->priv->monitor = qfu_udev_helper_generic_monitor_new (self->priv->sysfs_path);
     }
@@ -333,6 +340,7 @@ finalize (GObject *object)
     if (self->priv->monitor)
         qfu_udev_helper_generic_monitor_free (self->priv->monitor);
     g_free (self->priv->sysfs_path);
+    g_free (self->priv->peer_port);
 #endif
 
     for (i = 0; i < QFU_UDEV_HELPER_DEVICE_TYPE_LAST; i++)
