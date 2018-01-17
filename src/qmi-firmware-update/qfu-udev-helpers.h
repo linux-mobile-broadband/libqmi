@@ -42,6 +42,8 @@ gchar *qfu_udev_helper_find_by_file          (GFile        *file,
                                               GError      **error);
 gchar *qfu_udev_helper_find_by_file_path     (const gchar  *path,
                                               GError      **error);
+gchar *qfu_udev_helper_find_peer_port        (const gchar  *sysfs_path,
+                                              GError      **error);
 gchar *qfu_udev_helper_find_by_device_info   (guint16       vid,
                                               guint16       pid,
                                               guint         busnum,
@@ -53,6 +55,7 @@ GList *qfu_udev_helper_list_devices           (QfuUdevHelperDeviceType   device_
 
 void   qfu_udev_helper_wait_for_device        (QfuUdevHelperDeviceType   device_type,
                                                const gchar              *sysfs_path,
+                                               const gchar              *peer_port,
                                                GCancellable             *cancellable,
                                                GAsyncReadyCallback       callback,
                                                gpointer                  user_data);
