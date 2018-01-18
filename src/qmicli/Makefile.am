@@ -18,6 +18,9 @@ libhelpers_la_SOURCES = \
 	qmicli-helpers.h \
 	$(NULL)
 
+libhelpers_la_LIBADD = \
+        $(GLIB_LIBS)
+
 bin_PROGRAMS = qmicli
 
 qmicli_CPPFLAGS = \
