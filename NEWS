@@ -1,4 +1,20 @@
 
+Overview of changes in libqmi 1.18.2
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fix G_DEPRECATED_FOR annotations.
+   ** Prefer realpath() to canonicalize_file_name().
+   ** Avoid signals sent to the qmi-proxy process.
+   ** Fixed several invalid memory reads and assertions.
+   ** Plugged memleak in set_instance_id() logic.
+
+ * qmi-firmware-update:
+   ** Support USB3->USB2 mode changes during upgrade.
+
+ * Several other fixes and improvements.
+
+
 Overview of changes in libqmi 1.18.0
 ----------------------------------------
 
