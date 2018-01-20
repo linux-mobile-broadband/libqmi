@@ -3,7 +3,7 @@ AC_PREREQ([2.68])
 
 dnl The libmbim version number
 m4_define([mbim_major_version], [1])
-m4_define([mbim_minor_version], [16])
+m4_define([mbim_minor_version], [17])
 m4_define([mbim_micro_version], [0])
 m4_define([mbim_version],
           [mbim_major_version.mbim_minor_version.mbim_micro_version])
