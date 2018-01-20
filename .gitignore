@@ -58,6 +58,8 @@ test-driver
 /docs/man/mbimcli.1
 /docs/man/mbim-network.1
 
+/src/common/test/test-common
+
 /src/libmbim-glib/.deps
 /src/libmbim-glib/.libs
 /src/libmbim-glib/mbim-version.h
