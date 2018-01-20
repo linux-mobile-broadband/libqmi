@@ -16,9 +16,9 @@ dnl        If the interface has grown (that is, the new library is compatible
 dnl            with old code), increment a.
 dnl        If the interface has changed in an incompatible way (that is,
 dnl            functions have changed or been removed), then zero a.
-m4_define([mbim_glib_lt_current],  [6])
+m4_define([mbim_glib_lt_current],  [7])
 m4_define([mbim_glib_lt_revision], [0])
-m4_define([mbim_glib_lt_age],      [2])
+m4_define([mbim_glib_lt_age],      [3])
 
 
 AC_INIT([libmbim], [mbim_version], [libmbim-devel@lists.freedesktop.org])
