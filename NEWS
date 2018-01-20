@@ -1,4 +1,48 @@
 
+Overview of changes in libqmi 1.20.0
+----------------------------------------
+
+ * New services:
+   ** loc: new "LOC" (location) service, which e.g. allows controlling GPS
+       devices in newer modules that don't implement the PDS service. Just some
+       very basic implementation for now.
+
+ * New request/responses:
+   ** nas: new "Attach/Detach" request/response messages.
+   ** wds: new "Get Channel Rates" request/response messages.
+   ** dms: new 'Swi Get/Set USB Composition' request/response messages.
+
+ * New TLVs supported in existing messages:
+   ** nas: new 'Extended LTE Band Preference' TLV in "Set/Get SSP".
+   ** dms: new 'Extended LTE Band Capability' TLV in "Get Band Capabilities".
+
+ * libqmi:
+   ** New 'QMI_DEVICE_SIGNAL_REMOVED' signal in the QmiDevice object, propagated
+      through the qmi-proxy.
+   ** New 'QMI_CLIENT_VALID' property in the QmiClient that allows detecting
+      whether the underlying QmiDevice is usable or not.
+   ** Defined additional LTE bands.
+
+ * qmicli:
+   ** New '--wds-set-ip-family' command.
+   ** New '--wds-get-channel-rates' command.
+   ** New '--uim-read-record' command.
+   ** New '--dms-swi-get-usb-composition' and '--dms-swi-set-usb-composition'
+      commands.
+
+ * Several other minor improvements and fixes.
+
+The following features which were backported to 1.18.x releases are also present
+in libqmi 1.20.0:
+
+ * libqmi-glib:
+   ** Prefer realpath() to canonicalize_file_name().
+   ** Avoid signals sent to the qmi-proxy process.
+
+ * qmi-firmware-update:
+   ** Support USB3->USB2 mode changes during upgrade.
+
+
 Overview of changes in libqmi 1.18.0
 ----------------------------------------
 
