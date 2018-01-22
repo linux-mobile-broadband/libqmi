@@ -181,7 +181,7 @@ static GOptionEntry entries[] = {
       "[SessionID]"
     },
     { "connect", 0, 0, G_OPTION_ARG_STRING, &set_connect_activate_str,
-      "Connect (allowed keys: session-id, apn, auth (PAP|CHAP|MSCHAPV2), username, password)",
+      "Connect (allowed keys: session-id, apn, ip-type (ipv4|ipv6|ipv4v6), auth (PAP|CHAP|MSCHAPV2), username, password)",
       "[\"key=value,...\"]"
     },
     { "query-ip-configuration", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_ip_configuration_arg_parse),
@@ -1055,6 +1055,24 @@ mbim_auth_protocol_from_string (const gchar      *str,
 }
 
 static gboolean
+mbim_context_ip_type_from_string (const gchar       *str,
+                                  MbimContextIpType *ip_type)
+{
+    if (g_ascii_strcasecmp (str, "ipv4") == 0) {
+        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4;
+        return TRUE;
+    } else if (g_ascii_strcasecmp (str, "ipv6") == 0) {
+        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV6;
+        return TRUE;
+    } else if (g_ascii_strcasecmp (str, "ipv4v6") == 0) {
+        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4V6;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gboolean
 connect_session_id_parse (const gchar  *str,
                           gboolean      allow_empty,
                           guint32      *session_id,
@@ -1094,11 +1112,12 @@ connect_session_id_parse (const gchar  *str,
 }
 
 typedef struct {
-    guint32           session_id;
-    gchar            *apn;
-    MbimAuthProtocol  auth_protocol;
-    gchar            *username;
-    gchar            *password;
+    guint32            session_id;
+    gchar             *apn;
+    MbimAuthProtocol   auth_protocol;
+    gchar             *username;
+    gchar             *password;
+    MbimContextIpType  ip_type;
 } ConnectActivateProperties;
 
 static gboolean connect_activate_properties_handle (const gchar  *key,
@@ -1136,6 +1155,15 @@ static gboolean connect_activate_properties_handle (const gchar  *key,
         props->username = g_strdup (value);
     } else if (g_ascii_strcasecmp (key, "password") == 0 && !props->password) {
         props->password = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "ip-type") == 0) {
+        if (!mbim_context_ip_type_from_string (value, &props->ip_type)) {
+            g_set_error (error,
+                         MBIM_CORE_ERROR,
+                         MBIM_CORE_ERROR_FAILED,
+                         "unknown ip type '%s'",
+                         value);
+            return FALSE;
+        }
     } else {
             g_set_error (error,
                          MBIM_CORE_ERROR,
@@ -1149,19 +1177,21 @@ static gboolean connect_activate_properties_handle (const gchar  *key,
 }
 
 static gboolean
-set_connect_activate_parse (const gchar       *str,
-                            guint32           *session_id,
-                            gchar            **apn,
-                            MbimAuthProtocol  *auth_protocol,
-                            gchar            **username,
-                            gchar            **password)
+set_connect_activate_parse (const gchar        *str,
+                            guint32            *session_id,
+                            gchar             **apn,
+                            MbimAuthProtocol   *auth_protocol,
+                            gchar             **username,
+                            gchar             **password,
+                            MbimContextIpType  *ip_type)
 {
     ConnectActivateProperties props = {
         .session_id    = 0,
         .apn           = NULL,
         .auth_protocol = MBIM_AUTH_PROTOCOL_NONE,
         .username      = NULL,
-        .password      = NULL
+        .password      = NULL,
+        .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT
     };
     gchar **split = NULL;
 
@@ -1170,6 +1200,7 @@ set_connect_activate_parse (const gchar       *str,
     g_assert (auth_protocol != NULL);
     g_assert (username != NULL);
     g_assert (password != NULL);
+    g_assert (ip_type != NULL);
 
     if (strchr (str, '=')) {
         GError *error = NULL;
@@ -1231,6 +1262,7 @@ set_connect_activate_parse (const gchar       *str,
     *auth_protocol = props.auth_protocol;
     *username = props.username;
     *password = props.password;
+    *ip_type = props.ip_type;
 
     if (split)
         g_strfreev (split);
@@ -2139,13 +2171,15 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         MbimAuthProtocol auth_protocol;
         gchar *username = NULL;
         gchar *password = NULL;
+        MbimContextIpType ip_type = MBIM_CONTEXT_IP_TYPE_DEFAULT;
 
         if (!set_connect_activate_parse (set_connect_activate_str,
                                          &session_id,
                                          &apn,
                                          &auth_protocol,
                                          &username,
-                                         &password)) {
+                                         &password,
+                                         &ip_type)) {
             shutdown (FALSE);
             return;
         }
@@ -2157,7 +2191,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                                                 password,
                                                 MBIM_COMPRESSION_NONE,
                                                 auth_protocol,
-                                                MBIM_CONTEXT_IP_TYPE_DEFAULT,
+                                                ip_type,
                                                 mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
                                                 &error);
         g_free (apn);
