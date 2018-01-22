@@ -1223,11 +1223,11 @@ validate_firmware_config_carrier (QfuUpdater  *self,
                          "user provided carrier doesn't match the one in the specified images: "
                          "'%s' != '%s'",
                          self->priv->carrier, ctx->carrier);
+            return FALSE;
         }
         g_warning ("[qfu-updater] user provided carrier doesn't match the one in the specified images: "
                    "'%s' != '%s' (IGNORED with --ignore-version-errors)",
                    self->priv->carrier, ctx->carrier);
-        return FALSE;
     }
 
     /* No firmware version? */
