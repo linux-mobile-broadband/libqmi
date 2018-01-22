@@ -3023,6 +3023,7 @@ get_lte_cphy_ca_info_ready (QmiClientNas *client,
     QmiNasActiveBand band;
     QmiNasScellState state;
     guint8 scell_index;
+    GArray *array;
 
     output = qmi_client_nas_get_lte_cphy_ca_info_finish (client, res, &error);
     if (!output) {
@@ -3051,26 +3052,6 @@ get_lte_cphy_ca_info_ready (QmiClientNas *client,
                  qmi_nas_dl_bandwidth_get_string (dl_bandwidth));
     }
 
-    if (qmi_message_nas_get_lte_cphy_ca_info_output_get_phy_ca_agg_scell_info (
-        output,
-        &pci,
-        &channel,
-        &dl_bandwidth,
-        &band,
-        &state,
-        NULL)) {
-        g_print ("Secondary Cell Info\n");
-        g_print ("\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
-                 "\tRX Channel: '%" G_GUINT16_FORMAT"'\n"
-                 "\tDL Bandwidth: '%s'\n"
-                 "\tLTE Band: '%s'\n"
-                 "\tState: '%s'\n",
-                 pci, channel,
-                 qmi_nas_dl_bandwidth_get_string (dl_bandwidth),
-                 qmi_nas_active_band_get_string (band),
-                 qmi_nas_scell_state_get_string (state));
-    }
-
     if (qmi_message_nas_get_lte_cphy_ca_info_output_get_phy_ca_agg_pcell_info (
         output,
         &pci,
@@ -3088,11 +3069,56 @@ get_lte_cphy_ca_info_ready (QmiClientNas *client,
                  qmi_nas_active_band_get_string (band));
     }
 
-    if (qmi_message_nas_get_lte_cphy_ca_info_output_get_scell_index (
-        output,
-        &scell_index,
-        NULL)) {
-        g_print ("Secondary Cell index: '%u'\n", scell_index);
+    if (qmi_message_nas_get_lte_cphy_ca_info_output_get_phy_ca_agg_secondary_cells (
+        output, &array, NULL)) {
+        guint i;
+
+        if (!array->len)
+            g_print ("No Secondary Cells\n");
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetLteCphyCaInfoOutputPhyCaAggSecondaryCellsSsc *e;
+            e = &g_array_index (array, QmiMessageNasGetLteCphyCaInfoOutputPhyCaAggSecondaryCellsSsc, i);
+            g_print ("Secondary Cell %u Info\n"
+                     "\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
+                     "\tRX Channel: '%" G_GUINT16_FORMAT"'\n"
+                     "\tDL Bandwidth: '%s'\n"
+                     "\tLTE Band: '%s'\n"
+                     "\tState: '%s'\n"
+                     "\tCell index: '%u'\n",
+                     i + 1, e->physical_cell_id, e->rx_channel,
+                     qmi_nas_dl_bandwidth_get_string (e->dl_bandwidth),
+                     qmi_nas_active_band_get_string (e->lte_band),
+                     qmi_nas_scell_state_get_string (e->state),
+                     e->cell_index);
+        }
+
+    } else {
+        if (qmi_message_nas_get_lte_cphy_ca_info_output_get_phy_ca_agg_scell_info (
+            output,
+            &pci,
+            &channel,
+            &dl_bandwidth,
+            &band,
+            &state,
+            NULL)) {
+            g_print ("Secondary Cell Info\n");
+            g_print ("\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
+                     "\tRX Channel: '%" G_GUINT16_FORMAT"'\n"
+                     "\tDL Bandwidth: '%s'\n"
+                     "\tLTE Band: '%s'\n"
+                     "\tState: '%s'\n",
+                     pci, channel,
+                     qmi_nas_dl_bandwidth_get_string (dl_bandwidth),
+                     qmi_nas_active_band_get_string (band),
+                     qmi_nas_scell_state_get_string (state));
+        }
+
+        if (qmi_message_nas_get_lte_cphy_ca_info_output_get_scell_index (
+            output,
+            &scell_index,
+            NULL)) {
+            g_print ("Secondary Cell index: '%u'\n", scell_index);
+        }
     }
 
     qmi_message_nas_get_lte_cphy_ca_info_output_unref (output);
