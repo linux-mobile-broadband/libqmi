@@ -278,7 +278,7 @@ test_message_new_response_ok (void)
     static const guint8 expected_buffer [] = {
         0x01,       /* marker */
         0x13, 0x00, /* qmux length */
-        0x00,       /* qmux flags */
+        0x80,       /* qmux flags */
         0x02,       /* service: DMS */
         0x01,       /* client id */
         0x02,       /* service flags */
@@ -320,7 +320,7 @@ test_message_new_response_error (void)
     static const guint8 expected_buffer [] = {
         0x01,       /* marker */
         0x13, 0x00, /* qmux length */
-        0x00,       /* qmux flags */
+        0x80,       /* qmux flags */
         0x02,       /* service: DMS */
         0x01,       /* client id */
         0x02,       /* service flags */

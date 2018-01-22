@@ -460,6 +460,9 @@ qmi_message_response_new (QmiMessage       *request,
                                 qmi_message_get_transaction_id (request),
                                 qmi_message_get_message_id (request));
 
+    /* Set sender type flag */
+    ((struct full_message *)(((GByteArray *)response)->data))->qmux.flags = 0x80;
+
     /* Set the response flag */
     if (message_is_control (request))
         ((struct full_message *)(((GByteArray *)response)->data))->qmi.control.header.flags |= QMI_CTL_FLAG_RESPONSE;
