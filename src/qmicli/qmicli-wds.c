@@ -478,32 +478,40 @@ start_network_properties_handle (const gchar  *key,
     return FALSE;
 }
 
-static QmiMessageWdsStartNetworkInput *
-start_network_input_create (const gchar *str)
+static gboolean
+start_network_input_create (const gchar                     *str,
+                            QmiMessageWdsStartNetworkInput **input,
+                            GError                         **error)
 {
     gchar *aux_auth_str = NULL;
     gchar *ip_type_str = NULL;
     gchar **split = NULL;
-    QmiMessageWdsStartNetworkInput *input = NULL;
     StartNetworkProperties props = {
         .auth    = QMI_WDS_AUTHENTICATION_NONE,
         .ip_type = QMI_WDS_IP_FAMILY_UNSPECIFIED,
     };
+    gboolean success = FALSE;
+
+    g_assert (input && !*input);
 
     /* An empty string is totally valid (i.e. no TLVs) */
     if (!str[0])
-        return NULL;
+        return TRUE;
 
     /* New key=value format */
     if (strchr (str, '=')) {
-        GError *error = NULL;
+        GError *parse_error = NULL;
 
         if (!qmicli_parse_key_value_string (str,
-                                            &error,
+                                            &parse_error,
                                             start_network_properties_handle,
                                             &props)) {
-            g_printerr ("error: couldn't parse input string: %s\n", error->message);
-            g_error_free (error);
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "couldn't parse input string: %s",
+                         parse_error->message);
+            g_error_free (parse_error);
             goto out;
         }
     }
@@ -518,7 +526,11 @@ start_network_input_create (const gchar *str)
 
         if (props.apn && split[1]) {
             if (!qmicli_read_authentication_from_string (split[1], &(props.auth))) {
-                g_printerr ("error: unknown auth protocol '%s'\n", split[1]);
+                g_set_error (error,
+                             QMI_CORE_ERROR,
+                             QMI_CORE_ERROR_FAILED,
+                             "unknown auth protocol '%s'",
+                             split[1]);
                 goto out;
             }
             props.auth_set = TRUE;
@@ -529,23 +541,23 @@ start_network_input_create (const gchar *str)
     }
 
     /* Create input bundle */
-    input = qmi_message_wds_start_network_input_new ();
+    *input = qmi_message_wds_start_network_input_new ();
 
     /* Set APN */
     if (props.apn)
-        qmi_message_wds_start_network_input_set_apn (input, props.apn, NULL);
+        qmi_message_wds_start_network_input_set_apn (*input, props.apn, NULL);
 
     /* Set 3GPP profile */
     if (props.profile_index_3gpp > 0)
-        qmi_message_wds_start_network_input_set_profile_index_3gpp (input, props.profile_index_3gpp, NULL);
+        qmi_message_wds_start_network_input_set_profile_index_3gpp (*input, props.profile_index_3gpp, NULL);
 
     /* Set 3GPP2 profile */
     if (props.profile_index_3gpp2 > 0)
-        qmi_message_wds_start_network_input_set_profile_index_3gpp2 (input, props.profile_index_3gpp2, NULL);
+        qmi_message_wds_start_network_input_set_profile_index_3gpp2 (*input, props.profile_index_3gpp2, NULL);
 
     /* Set IP Type */
     if (props.ip_type != 0) {
-        qmi_message_wds_start_network_input_set_ip_family_preference (input, props.ip_type, NULL);
+        qmi_message_wds_start_network_input_set_ip_family_preference (*input, props.ip_type, NULL);
         if (props.ip_type == QMI_WDS_IP_FAMILY_IPV4)
             ip_type_str = "4";
         else if (props.ip_type == QMI_WDS_IP_FAMILY_IPV6)
@@ -555,20 +567,22 @@ start_network_input_create (const gchar *str)
     /* Set authentication method */
     if (props.auth_set) {
         aux_auth_str = qmi_wds_authentication_build_string_from_mask (props.auth);
-        qmi_message_wds_start_network_input_set_authentication_preference (input, props.auth, NULL);
+        qmi_message_wds_start_network_input_set_authentication_preference (*input, props.auth, NULL);
     }
 
     /* Set username, avoid empty strings */
     if (props.username && props.username[0])
-        qmi_message_wds_start_network_input_set_username (input, props.username, NULL);
+        qmi_message_wds_start_network_input_set_username (*input, props.username, NULL);
 
     /* Set password, avoid empty strings */
     if (props.password && props.password[0])
-        qmi_message_wds_start_network_input_set_password (input, props.password, NULL);
+        qmi_message_wds_start_network_input_set_password (*input, props.password, NULL);
 
     /* Set autoconnect */
     if (props.autoconnect_set)
-        qmi_message_wds_start_network_input_set_enable_autoconnect (input, props.autoconnect, NULL);
+        qmi_message_wds_start_network_input_set_enable_autoconnect (*input, props.autoconnect, NULL);
+
+    success = TRUE;
 
     g_debug ("Network start parameters set (apn: '%s', 3gpp_profile: '%u', 3gpp2_profile: '%u', auth: '%s', ip-type: '%s', username: '%s', password: '%s', autoconnect: '%s')",
              props.apn                             ? props.apn                          : "unspecified",
@@ -587,7 +601,7 @@ out:
     g_free     (props.password);
     g_free     (aux_auth_str);
 
-    return input;
+    return success;
 }
 
 static void
@@ -1787,9 +1801,14 @@ qmicli_wds_run (QmiDevice *device,
 
     /* Request to start network? */
     if (start_network_str) {
-        QmiMessageWdsStartNetworkInput *input;
+        QmiMessageWdsStartNetworkInput *input = NULL;
+        GError *error = NULL;
 
-        input = start_network_input_create (start_network_str);
+        if (!start_network_input_create (start_network_str, &input, &error)) {
+            g_printerr ("error: %s\n", error->message);
+            g_error_free (error);
+            return;
+        }
 
         g_debug ("Asynchronously starting network...");
         qmi_client_wds_start_network (ctx->client,
