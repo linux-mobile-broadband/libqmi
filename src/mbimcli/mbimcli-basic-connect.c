@@ -2263,7 +2263,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         mbim_device_command (ctx->device,
                              request,
-                             10,
+                             60,
                              ctx->cancellable,
                              (GAsyncReadyCallback)connect_ready,
                              GUINT_TO_POINTER (DISCONNECT));
