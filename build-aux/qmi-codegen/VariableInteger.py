@@ -66,7 +66,7 @@ class VariableInteger(Variable):
                          'private_format' : self.private_format,
                          'len'            : self.guint_sized_size }
 
-        if self.private_format != 'guint8' and self.private_format != 'gint8' and self.private_format != 'gfloat':
+        if self.private_format not in ('guint8', 'gint8'):
             translations['endian'] = ' ' + self.endian + ','
         else:
             translations['endian'] = ''
@@ -193,7 +193,7 @@ class VariableInteger(Variable):
                          'common_format'  : common_format,
                          'common_cast'    : common_cast }
 
-        if self.private_format != 'guint8' and self.private_format != 'gint8' and self.private_format != 'gfloat':
+        if self.private_format not in ('guint8', 'gint8'):
             translations['endian'] = ' ' + self.endian + ','
         else:
             translations['endian'] = ''
