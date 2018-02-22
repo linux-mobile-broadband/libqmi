@@ -856,6 +856,32 @@ gboolean qmi_message_tlv_read_gfloat (QmiMessage  *self,
                                       GError     **error);
 
 /**
+ * qmi_message_tlv_read_gdouble:
+ * @self: a #QmiMessage.
+ * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
+ * @offset: address of a the offset within the TLV value.
+ * @endian: target endianness, swapped from host byte order if necessary.
+ * @out: return location for the read #gdouble.
+ * @error: return location for error or %NULL.
+ *
+ * Reads a 64-bit floating-point number from the TLV.
+ *
+ * @offset needs to point to a valid @gsize specifying the index to start
+ * reading from within the TLV value (0 for the first item). If the variable
+ * is successfully read, @offset will be updated to point past the read item.
+ *
+ * Returns: %TRUE if the variable is successfully read, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.22
+ */
+gboolean qmi_message_tlv_read_gdouble (QmiMessage  *self,
+                                       gsize        tlv_offset,
+                                       gsize       *offset,
+                                       QmiEndian    endian,
+                                       gdouble     *out,
+                                       GError     **error);
+
+/**
  * qmi_message_tlv_read_string:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().

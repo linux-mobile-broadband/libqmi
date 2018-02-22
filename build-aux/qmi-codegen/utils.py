@@ -239,10 +239,7 @@ def format_is_signed_integer(fmt):
 Returns True if the given format corresponds to a basic floating point type
 """
 def format_is_float(fmt):
-    if fmt == 'gfloat':
-        return True
-    else:
-        return False
+    return fmt in ('gfloat', 'gdouble')
 
 
 """

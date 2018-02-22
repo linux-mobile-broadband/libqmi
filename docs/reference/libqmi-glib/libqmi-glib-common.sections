@@ -1148,6 +1148,7 @@ qmi_message_tlv_read_guint64
 qmi_message_tlv_read_gint64
 qmi_message_tlv_read_sized_guint
 qmi_message_tlv_read_gfloat
+qmi_message_tlv_read_gdouble
 qmi_message_tlv_read_string
 qmi_message_tlv_read_fixed_size_string
 <SUBSECTION RAW TLVs>

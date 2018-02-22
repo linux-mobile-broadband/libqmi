@@ -1181,6 +1181,33 @@ qmi_message_tlv_read_gfloat (QmiMessage  *self,
 }
 
 gboolean
+qmi_message_tlv_read_gdouble (QmiMessage  *self,
+                              gsize        tlv_offset,
+                              gsize       *offset,
+                              QmiEndian    endian,
+                              gdouble     *out,
+                              GError     **error)
+{
+    const guint8 *ptr;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+    g_return_val_if_fail (offset != NULL, FALSE);
+    g_return_val_if_fail (out != NULL, FALSE);
+
+    if (!(ptr = tlv_error_if_read_overflow (self, tlv_offset, *offset, 8, error)))
+        return FALSE;
+
+    /* Yeah, do this for now */
+    memcpy (out, ptr, 8);
+    if (endian == QMI_ENDIAN_BIG)
+        *out = __QMI_GDOUBLE_FROM_BE (*out);
+    else
+        *out = __QMI_GDOUBLE_FROM_LE (*out);
+    *offset = *offset + 8;
+    return TRUE;
+}
+
+gboolean
 qmi_message_tlv_read_string (QmiMessage  *self,
                              gsize        tlv_offset,
                              gsize       *offset,
