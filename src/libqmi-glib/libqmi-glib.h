@@ -74,6 +74,7 @@
 #include "qmi-enums-voice.h"
 #include "qmi-voice.h"
 
+#include "qmi-flags64-loc.h"
 #include "qmi-enums-loc.h"
 #include "qmi-loc.h"
 

@@ -31,7 +31,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-enums-oma.h \
 	qmi-enums-wda.h \
 	qmi-enums-voice.h \
-	qmi-enums-loc.h \
+	qmi-enums-loc.h qmi-flags64-loc.h \
 	qmi-enums.h qmi-enums-private.h \
 	qmi-utils.h qmi-utils.c \
 	qmi-compat.h qmi-compat.c \
@@ -68,7 +68,7 @@ include_HEADERS = \
 	qmi-enums-oma.h \
 	qmi-enums-wda.h \
 	qmi-enums-voice.h \
-	qmi-enums-loc.h \
+	qmi-enums-loc.h qmi-flags64-loc.h \
 	qmi-utils.h \
 	qmi-message.h \
 	qmi-message-context.h \

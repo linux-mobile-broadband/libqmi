@@ -121,10 +121,10 @@ qmi-enum-types-private.c: $(PRIVATE_ENUMS) qmi-enum-types-private.h $(top_srcdir
 		$(PRIVATE_ENUMS) > $@
 
 # 64bit flag types
-FLAGS64 = $(top_srcdir)/src/libqmi-glib/qmi-flags64-dms.h $(top_srcdir)/src/libqmi-glib/qmi-flags64-nas.h
+FLAGS64 = $(top_srcdir)/src/libqmi-glib/qmi-flags64-dms.h $(top_srcdir)/src/libqmi-glib/qmi-flags64-nas.h $(top_srcdir)/src/libqmi-glib/qmi-flags64-loc.h
 qmi-flags64-types.h:  $(FLAGS64) $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include \"qmi-flags64-dms.h\"\n#include \"qmi-flags64-nas.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include \"qmi-flags64-dms.h\"\n#include \"qmi-flags64-nas.h\"\n#include \"qmi-flags64-loc.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_FLAGS64_TYPES_H__ */\n" \
 		$(FLAGS64) > $@
