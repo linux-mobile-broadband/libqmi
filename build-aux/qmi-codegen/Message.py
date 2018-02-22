@@ -121,7 +121,7 @@ class Message:
             '                            ${message_id});\n' % input_arg_template)
         cfile.write(string.Template(template).substitute(translations))
 
-        if self.input.fields is not None:
+        if self.input.fields:
             # Count how many mandatory fields we have
             n_mandatory = 0
             for field in self.input.fields:
@@ -179,7 +179,7 @@ class Message:
         cfile.write(
             '\n'
             '    return self;\n')
-        if self.input.fields is not None:
+        if self.input.fields:
             cfile.write(
                 '\n'
                 'error_out:\n'
