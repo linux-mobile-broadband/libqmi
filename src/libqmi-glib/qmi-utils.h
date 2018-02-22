@@ -20,6 +20,10 @@
  *
  * Copyright (C) 2012-2015 Dan Williams <dcbw@redhat.com>
  * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2000 Wim Taymans <wtay@chello.be>
+ * Copyright (C) 2002 Thomas Vander Stichele <thomas@apestaart.org>
+
  */
 
 #ifndef _LIBQMI_GLIB_QMI_UTILS_H_
@@ -651,7 +655,57 @@ gboolean __qmi_user_allowed (uid_t uid,
                              GError **error);
 G_GNUC_INTERNAL
 gchar *__qmi_utils_get_driver (const gchar *cdc_wdm_path);
-#endif
+
+static inline gfloat
+__QMI_GFLOAT_SWAP_LE_BE(gfloat in)
+{
+  union
+  {
+    guint32 i;
+    gfloat f;
+  } u;
+
+  u.f = in;
+  u.i = GUINT32_SWAP_LE_BE (u.i);
+  return u.f;
+}
+
+static inline gdouble
+__QMI_GDOUBLE_SWAP_LE_BE(gdouble in)
+{
+  union
+  {
+    guint64 i;
+    gdouble d;
+  } u;
+
+  u.d = in;
+  u.i = GUINT64_SWAP_LE_BE (u.i);
+  return u.d;
+}
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define __QMI_GFLOAT_TO_LE(val)    ((gfloat) (val))
+#define __QMI_GFLOAT_TO_BE(val)    (__QMI_GFLOAT_SWAP_LE_BE (val))
+#define __QMI_GDOUBLE_TO_LE(val)   ((gdouble) (val))
+#define __QMI_GDOUBLE_TO_BE(val)   (__QMI_GDOUBLE_SWAP_LE_BE (val))
+
+#elif G_BYTE_ORDER == G_BIG_ENDIAN
+#define __QMI_GFLOAT_TO_LE(val)    (__QMI_GFLOAT_SWAP_LE_BE (val))
+#define __QMI_GFLOAT_TO_BE(val)    ((gfloat) (val))
+#define __QMI_GDOUBLE_TO_LE(val)   (__QMI_GDOUBLE_SWAP_LE_BE (val))
+#define __QMI_GDOUBLE_TO_BE(val)   ((gdouble) (val))
+
+#else /* !G_LITTLE_ENDIAN && !G_BIG_ENDIAN */
+#error unknown ENDIAN type
+#endif /* !G_LITTLE_ENDIAN && !G_BIG_ENDIAN */
+
+#define __QMI_GFLOAT_FROM_LE(val)  (__QMI_GFLOAT_TO_LE (val))
+#define __QMI_GFLOAT_FROM_BE(val)  (__QMI_GFLOAT_TO_BE (val))
+#define __QMI_GDOUBLE_FROM_LE(val) (__QMI_GDOUBLE_TO_LE (val))
+#define __QMI_GDOUBLE_FROM_BE(val) (__QMI_GDOUBLE_TO_BE (val))
+
+#endif /* defined (LIBQMI_GLIB_COMPILATION) */
 
 G_END_DECLS
 
