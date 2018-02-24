@@ -41,8 +41,8 @@ class Field:
         self.name = dictionary['name']
         # The specific TLV ID
         self.id = dictionary['id']
-        # Whether the field is to be considered mandatory in the message
-        self.mandatory = True if dictionary['mandatory'] == 'yes' else False
+        # Overridden mandatory field, the default is calculated from id
+        self._mandatory = dictionary.get('mandatory')
         # The type, which must always be "TLV"
         self.type = dictionary['type']
         # The container type, which must be either "Input" or "Output"
@@ -85,6 +85,13 @@ class Field:
                            break
                     else:
                         raise RuntimeError('Common type \'%s\' not found' % prerequisite_dictionary['name'])
+
+
+    @property
+    def mandatory(self):
+        if self._mandatory is None:
+            return int(self.id, 0) < 0x10
+        return self._mandatory == 'yes'
 
 
     """
