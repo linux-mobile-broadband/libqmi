@@ -416,6 +416,16 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  */
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_OTHER (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_OTHER
 
+/**
+ * QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE:
+ *
+ * QoS unavailable.
+ *
+ * Since: 1.0
+ * Deprecated: 1.22.0: Use the #QMI_PROTOCOL_ERROR_REQUESTED_NUMBER_UNSUPPORTED instead.
+ */
+#define QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE (QmiProtocolError) QMI_PROTOCOL_ERROR_REQUESTED_NUMBER_UNSUPPORTED
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */

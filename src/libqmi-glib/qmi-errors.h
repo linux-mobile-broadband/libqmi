@@ -138,8 +138,10 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
   * @QMI_PROTOCOL_ERROR_INCORRECT_FLOW_FILTER: Incorrect flow filter.
   * @QMI_PROTOCOL_ERROR_NETWORK_QOS_UNAWARE: Network QoS unaware.
   * @QMI_PROTOCOL_ERROR_INVALID_QOS_ID: Invalid QoS ID.
-  * @QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE: QoS unavailable.
+  * @QMI_PROTOCOL_ERROR_REQUESTED_NUMBER_UNSUPPORTED: Requested number unsupported. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_INTERFACE_NOT_FOUND: Interface not found. Since: 1.22.
   * @QMI_PROTOCOL_ERROR_FLOW_SUSPENDED: Flow suspended.
+  * @QMI_PROTOCOL_ERROR_INVALID_DATA_FORMAT: Invalid data format. Since: 1.22.
   * @QMI_PROTOCOL_ERROR_GENERAL_ERROR: General error.
   * @QMI_PROTOCOL_ERROR_UNKNOWN_ERROR: Unknown error.
   * @QMI_PROTOCOL_ERROR_INVALID_ARGUMENT: Invalid argument.
@@ -155,6 +157,10 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
   * @QMI_PROTOCOL_ERROR_WMS_ENCODING: WMS encoding.
   * @QMI_PROTOCOL_ERROR_AUTHENTICATION_LOCK: Authentication lock.
   * @QMI_PROTOCOL_ERROR_INVALID_TRANSITION: Invalid transition.
+  * @QMI_PROTOCOL_ERROR_NOT_MCAST_INTERFACE: Not a multicast interface. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_MAXIMUM_MCAST_REQUESTS_IN_USE: Maximum multicast requests in use. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_INVALID_MCAST_HANDLE: Invalid mulitcast handle. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_INVALID_IP_FAMILY_PREFERENCE: Invalid IP family preference. Since: 1.22.
   * @QMI_PROTOCOL_ERROR_SESSION_INACTIVE: Session inactive.
   * @QMI_PROTOCOL_ERROR_SESSION_INVALID: Session invalid.
   * @QMI_PROTOCOL_ERROR_SESSION_OWNERSHIP: Session ownership.
@@ -168,6 +174,7 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
   * @QMI_PROTOCOL_ERROR_SEGMENT_TOO_LONG: Segment too long.
   * @QMI_PROTOCOL_ERROR_SEGMENT_ORDER: Segment order.
   * @QMI_PROTOCOL_ERROR_BUNDLING_NOT_SUPPORTED: Bundling not supported.
+  * @QMI_PROTOCOL_ERROR_OPERATION_PARTIAL_FAILURE: Operation partial failure. Since: 1.22.
   * @QMI_PROTOCOL_ERROR_POLICY_MISMATCH: Policy mismatch. Since: 1.6.
   * @QMI_PROTOCOL_ERROR_SIM_FILE_NOT_FOUND: SIM file not found.
   * @QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL: Extended internal error. Since: 1.6.
@@ -193,9 +200,25 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
   * @QMI_PROTOCOL_ERROR_PUK_RESTRICTION: PUK restriction. Since: 1.6.
   * @QMI_PROTOCOL_ERROR_PUK2_RESTRICTION: PUK2 restriction. Since: 1.6.
   * @QMI_PROTOCOL_ERROR_PB_ACCESS_RESTRICTED: PB access restricted. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_DELETE_IN_PROGRESS: PB delete in progress. Since: 1.22.
   * @QMI_PROTOCOL_ERROR_PB_TEXT_TOO_LONG: PB text too long. Since: 1.6.
   * @QMI_PROTOCOL_ERROR_PB_NUMBER_TOO_LONG: PB number too long. Since: 1.6.
   * @QMI_PROTOCOL_ERROR_PB_HIDDEN_KEY_RESTRICTION: PB hidden key restriction. Since: 1.6.
+  * @QMI_PROTOCOL_ERROR_PB_NOT_AVAILABLE: PB not available. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_DEVICE_MEMORY_ERROR: Device memory error. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_NO_PERMISSION: No permission. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_TOO_SOON: Too soon. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_TIME_NOT_ACQUIRED: Time not acquired. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_OPERATION_IN_PROGRESS: Operation in progress. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_WRITE_FAILED: Firmware write failed. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_INFO_READ_FAILED: Firmware info read failed. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_FILE_NOT_FOUND: Firmware file not found. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_DIR_NOT_FOUND: Firmware dir not found. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_ALREADY_ACTIVATED: Firmware already activated. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_CANNOT_GENERIC_IMAGE: Firmware cannot generic image. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_FILE_OPEN_FAILED: Firmware file open failed. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_UPDATE_DISCONTINUOUS_FRAME: Firmware update discontinuous frame. Since: 1.22.
+  * @QMI_PROTOCOL_ERROR_FW_UPDATE_FAILED: Firmware update failed. Since: 1.22.
   * @QMI_PROTOCOL_ERROR_CAT_EVENT_REGISTRATION_FAILED: Event registration failed.
   * @QMI_PROTOCOL_ERROR_CAT_INVALID_TERMINAL_RESPONSE: Invalid terminal response.
   * @QMI_PROTOCOL_ERROR_CAT_INVALID_ENVELOPE_COMMAND: Invalid envelope command.
@@ -246,8 +269,10 @@ typedef enum { /*< underscore_name=qmi_protocol_error >*/
   QMI_PROTOCOL_ERROR_INCORRECT_FLOW_FILTER            = 39, /*< nick=IncorrectFlowFilter >*/
   QMI_PROTOCOL_ERROR_NETWORK_QOS_UNAWARE              = 40, /*< nick= NetworkQosUnaware >*/
   QMI_PROTOCOL_ERROR_INVALID_QOS_ID                   = 41, /*< nick=InvalidQosId >*/
-  QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE                  = 42, /*< nick=QosUnavailable >*/
-  QMI_PROTOCOL_ERROR_FLOW_SUSPENDED                   = 43, /*< nick=FlowSuspended >*/
+  QMI_PROTOCOL_ERROR_REQUESTED_NUMBER_UNSUPPORTED     = 42, /*< nick=RequestedNumberUnsupported >*/
+  QMI_PROTOCOL_ERROR_INTERFACE_NOT_FOUND              = 43, /*< nick=InterfaceNotFound >*/
+  QMI_PROTOCOL_ERROR_FLOW_SUSPENDED                   = 44, /*< nick=FlowSuspended >*/
+  QMI_PROTOCOL_ERROR_INVALID_DATA_FORMAT              = 45, /*< nick=InvalidDataFormat >*/
   QMI_PROTOCOL_ERROR_GENERAL_ERROR                    = 46, /*< nick=GeneralError >*/
   QMI_PROTOCOL_ERROR_UNKNOWN_ERROR                    = 47, /*< nick=UnknownError >*/
   QMI_PROTOCOL_ERROR_INVALID_ARGUMENT                 = 48, /*< nick=InvalidArgument >*/
@@ -263,6 +288,10 @@ typedef enum { /*< underscore_name=qmi_protocol_error >*/
   QMI_PROTOCOL_ERROR_WMS_ENCODING                     = 58, /*< nick=Wms.Encoding >*/
   QMI_PROTOCOL_ERROR_AUTHENTICATION_LOCK              = 59, /*< nick=AuthenticationLock >*/
   QMI_PROTOCOL_ERROR_INVALID_TRANSITION               = 60, /*< nick=InvalidTransition >*/
+  QMI_PROTOCOL_ERROR_NOT_MCAST_INTERFACE              = 61, /*< nick=NotMcastInterface >*/
+  QMI_PROTOCOL_ERROR_MAXIMUM_MCAST_REQUESTS_IN_USE    = 62, /*< nick=MaximumMcastRequestsInUse >*/
+  QMI_PROTOCOL_ERROR_INVALID_MCAST_HANDLE             = 63, /*< nick=InvalidMcastHandle >*/
+  QMI_PROTOCOL_ERROR_INVALID_IP_FAMILY_PREFERENCE     = 64, /*< nick=InvalidIpFamilyPreference >*/
   QMI_PROTOCOL_ERROR_SESSION_INACTIVE                 = 65, /*< nick=SessionInactive >*/
   QMI_PROTOCOL_ERROR_SESSION_INVALID                  = 66, /*< nick=SessionInvalid >*/
   QMI_PROTOCOL_ERROR_SESSION_OWNERSHIP                = 67, /*< nick=SessionOwnership >*/
@@ -276,7 +305,7 @@ typedef enum { /*< underscore_name=qmi_protocol_error >*/
   QMI_PROTOCOL_ERROR_SEGMENT_TOO_LONG                 = 75, /*< nick=SegmentTooLong >*/
   QMI_PROTOCOL_ERROR_SEGMENT_ORDER                    = 76, /*< nick=SegmentOrder >*/
   QMI_PROTOCOL_ERROR_BUNDLING_NOT_SUPPORTED           = 77, /*< nick=BundlingNotSupported >*/
-  /* 0x004E, 78: unused */
+  QMI_PROTOCOL_ERROR_OPERATION_PARTIAL_FAILURE        = 78, /*< nick=OperationPartialFailure >*/
   QMI_PROTOCOL_ERROR_POLICY_MISMATCH                  = 79, /*< nick=PolicyMismatch >*/
   QMI_PROTOCOL_ERROR_SIM_FILE_NOT_FOUND               = 80, /*< nick=SimFileNotFound >*/
   QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL                = 81, /*< nick=ExtendedInternal >*/
@@ -302,9 +331,25 @@ typedef enum { /*< underscore_name=qmi_protocol_error >*/
   QMI_PROTOCOL_ERROR_PUK_RESTRICTION                  = 106, /*< nick=PukRestriction >*/
   QMI_PROTOCOL_ERROR_PUK2_RESTRICTION                 = 107, /*< nick=Puk2Restriction >*/
   QMI_PROTOCOL_ERROR_PB_ACCESS_RESTRICTED             = 108, /*< nick=PbAccessRestricted >*/
-  QMI_PROTOCOL_ERROR_PB_TEXT_TOO_LONG                 = 109, /*< nick=PbTextTooLong >*/
-  QMI_PROTOCOL_ERROR_PB_NUMBER_TOO_LONG               = 110, /*< nick=PbNumberTooLong >*/
-  QMI_PROTOCOL_ERROR_PB_HIDDEN_KEY_RESTRICTION        = 111, /*< nick=PbHiddenKeyRestriction >*/
+  QMI_PROTOCOL_ERROR_PB_DELETE_IN_PROGRESS            = 109, /*< nick=PbDeleteInProgress >*/
+  QMI_PROTOCOL_ERROR_PB_TEXT_TOO_LONG                 = 110, /*< nick=PbTextTooLong >*/
+  QMI_PROTOCOL_ERROR_PB_NUMBER_TOO_LONG               = 111, /*< nick=PbNumberTooLong >*/
+  QMI_PROTOCOL_ERROR_PB_HIDDEN_KEY_RESTRICTION        = 112, /*< nick=PbHiddenKeyRestriction >*/
+  QMI_PROTOCOL_ERROR_PB_NOT_AVAILABLE                 = 113, /*< nick=PbNotAvailable >*/
+  QMI_PROTOCOL_ERROR_DEVICE_MEMORY_ERROR              = 114, /*< nick=DeviceMemoryError >*/
+  QMI_PROTOCOL_ERROR_NO_PERMISSION                    = 115, /*< nick=NoPermission >*/
+  QMI_PROTOCOL_ERROR_TOO_SOON                         = 116, /*< nick=TooSoon >*/
+  QMI_PROTOCOL_ERROR_TIME_NOT_ACQUIRED                = 117, /*< nick=TimeNotAcquired >*/
+  QMI_PROTOCOL_ERROR_OPERATION_IN_PROGRESS            = 118, /*< nick=OperationInProgress >*/
+  QMI_PROTOCOL_ERROR_FW_WRITE_FAILED                  = 388, /*< nick=FwWriteFailed >*/
+  QMI_PROTOCOL_ERROR_FW_INFO_READ_FAILED              = 389, /*< nick=FwInfoReadFailed >*/
+  QMI_PROTOCOL_ERROR_FW_FILE_NOT_FOUND                = 390, /*< nick=FwFileNotFound >*/
+  QMI_PROTOCOL_ERROR_FW_DIR_NOT_FOUND                 = 391, /*< nick=FwDirNotFound >*/
+  QMI_PROTOCOL_ERROR_FW_ALREADY_ACTIVATED             = 392, /*< nick=FwAlreadyActivated >*/
+  QMI_PROTOCOL_ERROR_FW_CANNOT_GENERIC_IMAGE          = 393, /*< nick=FwCannotGenericImage >*/
+  QMI_PROTOCOL_ERROR_FW_FILE_OPEN_FAILED              = 400, /*< nick=FwFileOpenFailed >*/
+  QMI_PROTOCOL_ERROR_FW_UPDATE_DISCONTINUOUS_FRAME    = 401, /*< nick=FwUpdateDiscontinuousFrame >*/
+  QMI_PROTOCOL_ERROR_FW_UPDATE_FAILED                 = 402, /*< nick=FwUpdateFailed >*/
   QMI_PROTOCOL_ERROR_CAT_EVENT_REGISTRATION_FAILED    = 61441, /*< nick=Cat.EventRegistrationFailed >*/
   QMI_PROTOCOL_ERROR_CAT_INVALID_TERMINAL_RESPONSE    = 61442, /*< nick=Cat.InvalidTerminalResponse >*/
   QMI_PROTOCOL_ERROR_CAT_INVALID_ENVELOPE_COMMAND     = 61443, /*< nick=Cat.InvalidEnvelopeCommand >*/
