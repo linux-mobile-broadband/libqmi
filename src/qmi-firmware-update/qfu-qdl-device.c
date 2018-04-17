@@ -269,7 +269,7 @@ send_request (QfuQdlDevice  *self,
     if (wlen != request_size) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "error writing: only %" G_GSSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes written",
-                     wlen, wlen);
+                     wlen, request_size);
         return FALSE;
     }
 
