@@ -80,6 +80,8 @@ AC_SUBST(GLIB_LIBS)
 GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
 AC_SUBST(GLIB_MKENUMS)
 
+AM_PATH_PYTHON([], [], [PYTHON=python])
+
 dnl qmi-firmware-update is optional, enabled by default
 AC_ARG_ENABLE([firmware-update],
               AS_HELP_STRING([--enable-firmware-update],

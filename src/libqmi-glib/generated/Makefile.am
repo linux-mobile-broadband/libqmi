@@ -140,7 +140,7 @@ qmi-ctl.h qmi-ctl.c qmi-ctl.sections: $(top_srcdir)/data/qmi-service-ctl.json $(
 	$(AM_V_GEN)  \
 		rm -f qmi-ctl.h && \
 		rm -f qmi-ctl.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-ctl.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-ctl
@@ -150,7 +150,7 @@ qmi-dms.h qmi-dms.c qmi-dms.sections: $(top_srcdir)/data/qmi-service-dms.json $(
 	$(AM_V_GEN) \
 		rm -f qmi-dms.h && \
 		rm -f qmi-dms.c && \
-		 $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		 $(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-dms.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-dms
@@ -160,7 +160,7 @@ qmi-wds.h qmi-wds.c qmi-wds.sections: $(top_srcdir)/data/qmi-service-wds.json $(
 	$(AM_V_GEN) \
 		rm -f qmi-wds.h && \
 		rm -f qmi-wds.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-wds.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-wds
@@ -170,7 +170,7 @@ qmi-nas.h qmi-nas.c qmi-nas.sections: $(top_srcdir)/data/qmi-service-nas.json $(
 	$(AM_V_GEN) \
 		rm -f qmi-nas.h && \
 		rm -f qmi-nas.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-nas.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-nas
@@ -180,7 +180,7 @@ qmi-wms.h qmi-wms.c qmi-wms.sections: $(top_srcdir)/data/qmi-service-wms.json $(
 	$(AM_V_GEN) \
 		rm -f qmi-wms.h && \
 		rm -f qmi-wms.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-wms.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-wms
@@ -190,7 +190,7 @@ qmi-pds.h qmi-pds.c qmi-pds.sections: $(top_srcdir)/data/qmi-service-pds.json $(
 	$(AM_V_GEN) \
 		rm -f qmi-pds.h && \
 		rm -f qmi-pds.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-pds.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-pds
@@ -200,7 +200,7 @@ qmi-pdc.h qmi-pdc.c qmi-pdc.sections: $(top_srcdir)/data/qmi-service-pdc.json $(
 	$(AM_V_GEN) \
 		rm -f qmi-pdc.h && \
 		rm -f qmi-pdc.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-pdc.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-pdc
@@ -210,7 +210,7 @@ qmi-pbm.h qmi-pbm.c qmi-pbm.sections: $(top_srcdir)/data/qmi-service-pbm.json $(
 	$(AM_V_GEN) \
 		rm -f qmi-pbm.h && \
 		rm -f qmi-pbm.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-pbm.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-pbm
@@ -220,7 +220,7 @@ qmi-uim.h qmi-uim.c qmi-uim.sections: $(top_srcdir)/data/qmi-service-uim.json $(
 	$(AM_V_GEN)  \
 		rm -f qmi-uim.h && \
 		rm -f qmi-uim.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-uim.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-uim
@@ -230,7 +230,7 @@ qmi-oma.h qmi-oma.c qmi-oma.sections: $(top_srcdir)/data/qmi-service-oma.json $(
 	$(AM_V_GEN) \
 		rm -f qmi-oma.h && \
 		rm -f qmi-oma.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-oma.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-oma
@@ -240,7 +240,7 @@ qmi-wda.h qmi-wda.c qmi-wda.sections: $(top_srcdir)/data/qmi-service-wda.json $(
 	$(AM_V_GEN) \
 		rm -f qmi-wda.h && \
 		rm -f qmi-wda.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-wda.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-wda
@@ -250,7 +250,7 @@ qmi-voice.h qmi-voice.c qmi-voice.sections: $(top_srcdir)/data/qmi-service-voice
 	$(AM_V_GEN) \
 		rm -f qmi-voice.h && \
 		rm -f qmi-voice.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-voice.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-voice
@@ -260,7 +260,7 @@ qmi-loc.h qmi-loc.c qmi-loc.sections: $(top_srcdir)/data/qmi-service-loc.json $(
 	$(AM_V_GEN) \
 		rm -f qmi-loc.h && \
 		rm -f qmi-loc.c && \
-		$(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-loc.json \
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-loc
