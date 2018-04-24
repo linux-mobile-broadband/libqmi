@@ -94,7 +94,7 @@ mbim-basic-connect.h mbim-basic-connect.c mbim-basic-connect.sections: $(top_src
 	$(AM_V_GEN)  \
 		rm -f mbim-basic-connect.h && \
 		rm -f mbim-basic-connect.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-basic-connect.json \
 			--output mbim-basic-connect
 
@@ -103,7 +103,7 @@ mbim-sms.h mbim-sms.c mbim-sms.sections: $(top_srcdir)/data/mbim-service-sms.jso
 	$(AM_V_GEN)  \
 		rm -f mbim-sms.h && \
 		rm -f mbim-sms.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-sms.json \
 			--output mbim-sms
 
@@ -112,7 +112,7 @@ mbim-ussd.h mbim-ussd.c mbim-ussd.sections: $(top_srcdir)/data/mbim-service-ussd
 	$(AM_V_GEN)  \
 		rm -f mbim-ussd.h && \
 		rm -f mbim-ussd.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-ussd.json \
 			--output mbim-ussd
 
@@ -121,7 +121,7 @@ mbim-auth.h mbim-auth.c mbim-auth.sections: $(top_srcdir)/data/mbim-service-auth
 	$(AM_V_GEN)  \
 		rm -f mbim-auth.h && \
 		rm -f mbim-auth.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-auth.json \
 			--output mbim-auth
 
@@ -130,7 +130,7 @@ mbim-phonebook.h mbim-phonebook.c mbim-phonebook.sections: $(top_srcdir)/data/mb
 	$(AM_V_GEN)  \
 		rm -f mbim-phonebook.h && \
 		rm -f mbim-phonebook.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-phonebook.json \
 			--output mbim-phonebook
 
@@ -139,7 +139,7 @@ mbim-stk.h mbim-stk.c mbim-stk.sections: $(top_srcdir)/data/mbim-service-stk.jso
 	$(AM_V_GEN)  \
 		rm -f mbim-stk.h && \
 		rm -f mbim-stk.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-stk.json \
 			--output mbim-stk
 
@@ -148,7 +148,7 @@ mbim-dss.h mbim-dss.c mbim-dss.sections: $(top_srcdir)/data/mbim-service-dss.jso
 	$(AM_V_GEN)  \
 		rm -f mbim-dss.h && \
 		rm -f mbim-dss.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-dss.json \
 			--output mbim-dss
 
@@ -157,7 +157,7 @@ mbim-ms-firmware-id.h mbim-ms-firmware-id.c mbim-ms-firmware-id.sections: $(top_
 	$(AM_V_GEN)  \
 		rm -f mbim-ms-firmware-id.h && \
 		rm -f mbim-ms-firmware-id.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-ms-firmware-id.json \
 			--output mbim-ms-firmware-id
 
@@ -166,7 +166,7 @@ mbim-ms-host-shutdown.h mbim-ms-host-shutdown.c mbim-ms-host-shutdown.sections: 
 	$(AM_V_GEN)  \
 		rm -f mbim-ms-host-shutdown.h && \
 		rm -f mbim-ms-host-shutdown.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-ms-host-shutdown.json \
 			--output mbim-ms-host-shutdown
 
@@ -175,7 +175,7 @@ mbim-proxy-control.h mbim-proxy-control.c mbim-proxy-control.sections: $(top_src
 	$(AM_V_GEN)  \
 		rm -f mbim-proxy-control.h && \
 		rm -f mbim-proxy-control.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-proxy-control.json \
 			--output mbim-proxy-control
 
@@ -184,7 +184,7 @@ mbim-qmi.h mbim-qmi.c mbim-qmi.sections: $(top_srcdir)/data/mbim-service-qmi.jso
 	$(AM_V_GEN)  \
 		rm -f mbim-qmi.h && \
 		rm -f mbim-qmi.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-qmi.json \
 			--output mbim-qmi
 
@@ -193,7 +193,7 @@ mbim-atds.h mbim-atds.c mbim-atds.sections: $(top_srcdir)/data/mbim-service-atds
 	$(AM_V_GEN)  \
 		rm -f mbim-atds.h && \
 		rm -f mbim-atds.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-atds.json \
 			--output mbim-atds
 
@@ -202,7 +202,7 @@ mbim-intel-firmware-update.h mbim-intel-firmware-update.c mbim-intel-firmware-up
 	$(AM_V_GEN)  \
 		rm -f mbim-intel-firmware-update.h && \
 		rm -f mbim-intel-firmware-update.c && \
-		$(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-intel-firmware-update.json \
 			--output mbim-intel-firmware-update
 
