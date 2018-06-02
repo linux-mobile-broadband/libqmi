@@ -390,11 +390,20 @@ typedef enum {
  * @MBIM_NW_ERROR_CONGESTION: Congestion.
  * @MBIM_NW_ERROR_GSM_AUTHENTICATION_UNACCEPTABLE: GSM authentication unacceptable.
  * @MBIM_NW_ERROR_NOT_AUTHORIZED_FOR_CSG: Not authorized for this CSG.
+ * @MBIM_NW_ERROR_INSUFFICIENT_RESOURCES: Insufficient resources.
  * @MBIM_NW_ERROR_MISSING_OR_UNKNOWN_APN: Missing or unknown access point name.
+ * @MBIM_NW_ERROR_UNKNOWN_PDP_ADDRESS_OR_TYPE: Unknown PDP address or PDP type.
+ * @MBIM_NW_ERROR_USER_AUTHENTICATION_FAILED: User authentication failed.
+ * @MBIM_NW_ERROR_ACTIVATION_REJECTED_BY_GGSN_OR_GW: Activation rejected by GGSN, Serving GW or PDN GW.
+ * @MBIM_NW_ERROR_ACTIVATION_REJECTED_UNSPECIFIED: Activation rejected, unspecified.
  * @MBIM_NW_ERROR_SERVICE_OPTION_NOT_SUPPORTED: Service option not supported.
  * @MBIM_NW_ERROR_REQUESTED_SERVICE_OPTION_NOT_SUBSCRIBED: Requested service option not subscribed.
  * @MBIM_NW_ERROR_SERVICE_OPTION_TEMPORARILY_OUT_OF_ORDER: Service option temporarily out of order.
  * @MBIM_NW_ERROR_NO_PDP_CONTEXT_ACTIVATED: No PDP context activated.
+ * @MBIM_NW_ERROR_PDP_TYPE_IPV4_ONLY_ALLOWED: PDP type IPv4 only allowed.
+ * @MBIM_NW_ERROR_PDP_TYPE_IPV6_ONLY_ALLOWED: PDP type IPv6 only allowed.
+ * @MBIM_NW_ERROR_MAXIMUM_NUMBER_OF_PDP_CONTEXTS_REACHED: Maximum number of PDP contexts reached.
+ * @MBIM_NW_ERROR_REQUESTED_APN_NOT_SUPPORTED_IN_CURRENT_RAT_AND_PLMN: Requested APN not supported in current RAT and PLMN combination.
  * @MBIM_NW_ERROR_SEMANTICALLY_INCORRECT_MESSAGE: Semantically incorrect message.
  * @MBIM_NW_ERROR_INVALID_MANDATORY_INFORMATION: Invalid mandatory information.
  * @MBIM_NW_ERROR_MESSAGE_TYPE_NON_EXISTENT_OR_NOT_IMPLEMENTED: Message type non-existent or not implemented.
@@ -403,45 +412,58 @@ typedef enum {
  * @MBIM_NW_ERROR_CONDITIONAL_IE_ERROR: Conditional IE error.
  * @MBIM_NW_ERROR_MESSAGE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE: Message not compatible with protocol state.
  * @MBIM_NW_ERROR_PROTOCOL_ERROR_UNSPECIFIED: Protocol error, unspecified.
+ * @MBIM_NW_ERROR_APN_RESTRICTION_VALUE_INCOMPATIBLE_WITH_ACTIVE_PDP_CONTEXT: APN restriction value incompatible with active PDP context.
+ * @MBIM_NW_ERROR_MULTIPLE_ACCESSES_TO_A_PDN_CONNECTION_NOT_ALLOWED: Multiple accesses to a PDN connection not allowed.
  *
  *  Network errors.
  */
 typedef enum {
-    MBIM_NW_ERROR_UNKNOWN                                             = 0,
-    MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR                                 = 2,
-    MBIM_NW_ERROR_ILLEGAL_MS                                          = 3,
-    MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR                                 = 4,
-    MBIM_NW_ERROR_IMEI_NOT_ACCEPTED                                   = 5,
-    MBIM_NW_ERROR_ILLEGAL_ME                                          = 6,
-    MBIM_NW_ERROR_GPRS_NOT_ALLOWED                                    = 7,
-    MBIM_NW_ERROR_GPRS_AND_NON_GPRS_NOT_ALLOWED                       = 8,
-    MBIM_NW_ERROR_MS_IDENTITY_NOT_DERIVED_BY_NETWORK                  = 9,
-    MBIM_NW_ERROR_IMPLICITLY_DETACHED                                 = 10,
-    MBIM_NW_ERROR_PLMN_NOT_ALLOWED                                    = 11,
-    MBIM_NW_ERROR_LOCATION_AREA_NOT_ALLOWED                           = 12,
-    MBIM_NW_ERROR_ROAMING_NOT_ALLOWED_IN_LOCATION_AREA                = 13,
-    MBIM_NW_ERROR_GPRS_NOT_ALLOWED_IN_PLMN                            = 14,
-    MBIM_NW_ERROR_NO_CELLS_IN_LOCATION_AREA                           = 15,
-    MBIM_NW_ERROR_MSC_TEMPORARILY_NOT_REACHABLE                       = 16,
-    MBIM_NW_ERROR_NETWORK_FAILURE                                     = 17,
-    MBIM_NW_ERROR_MAC_FAILURE                                         = 20,
-    MBIM_NW_ERROR_SYNCH_FAILURE                                       = 21,
-    MBIM_NW_ERROR_CONGESTION                                          = 22,
-    MBIM_NW_ERROR_GSM_AUTHENTICATION_UNACCEPTABLE                     = 23,
-    MBIM_NW_ERROR_NOT_AUTHORIZED_FOR_CSG                              = 25,
-    MBIM_NW_ERROR_MISSING_OR_UNKNOWN_APN                              = 27,
-    MBIM_NW_ERROR_SERVICE_OPTION_NOT_SUPPORTED                        = 32,
-    MBIM_NW_ERROR_REQUESTED_SERVICE_OPTION_NOT_SUBSCRIBED             = 33,
-    MBIM_NW_ERROR_SERVICE_OPTION_TEMPORARILY_OUT_OF_ORDER             = 34,
-    MBIM_NW_ERROR_NO_PDP_CONTEXT_ACTIVATED                            = 40,
-    MBIM_NW_ERROR_SEMANTICALLY_INCORRECT_MESSAGE                      = 95,
-    MBIM_NW_ERROR_INVALID_MANDATORY_INFORMATION                       = 96,
-    MBIM_NW_ERROR_MESSAGE_TYPE_NON_EXISTENT_OR_NOT_IMPLEMENTED        = 97,
-    MBIM_NW_ERROR_MESSAGE_TYPE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE     = 98,
-    MBIM_NW_ERROR_INFORMATION_ELEMENT_NON_EXISTENT_OR_NOT_IMPLEMENTED = 99,
-    MBIM_NW_ERROR_CONDITIONAL_IE_ERROR                                = 100,
-    MBIM_NW_ERROR_MESSAGE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE          = 101,
-    MBIM_NW_ERROR_PROTOCOL_ERROR_UNSPECIFIED                          = 111
+    MBIM_NW_ERROR_UNKNOWN                                                    = 0,
+    MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR                                        = 2,
+    MBIM_NW_ERROR_ILLEGAL_MS                                                 = 3,
+    MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR                                        = 4,
+    MBIM_NW_ERROR_IMEI_NOT_ACCEPTED                                          = 5,
+    MBIM_NW_ERROR_ILLEGAL_ME                                                 = 6,
+    MBIM_NW_ERROR_GPRS_NOT_ALLOWED                                           = 7,
+    MBIM_NW_ERROR_GPRS_AND_NON_GPRS_NOT_ALLOWED                              = 8,
+    MBIM_NW_ERROR_MS_IDENTITY_NOT_DERIVED_BY_NETWORK                         = 9,
+    MBIM_NW_ERROR_IMPLICITLY_DETACHED                                        = 10,
+    MBIM_NW_ERROR_PLMN_NOT_ALLOWED                                           = 11,
+    MBIM_NW_ERROR_LOCATION_AREA_NOT_ALLOWED                                  = 12,
+    MBIM_NW_ERROR_ROAMING_NOT_ALLOWED_IN_LOCATION_AREA                       = 13,
+    MBIM_NW_ERROR_GPRS_NOT_ALLOWED_IN_PLMN                                   = 14,
+    MBIM_NW_ERROR_NO_CELLS_IN_LOCATION_AREA                                  = 15,
+    MBIM_NW_ERROR_MSC_TEMPORARILY_NOT_REACHABLE                              = 16,
+    MBIM_NW_ERROR_NETWORK_FAILURE                                            = 17,
+    MBIM_NW_ERROR_MAC_FAILURE                                                = 20,
+    MBIM_NW_ERROR_SYNCH_FAILURE                                              = 21,
+    MBIM_NW_ERROR_CONGESTION                                                 = 22,
+    MBIM_NW_ERROR_GSM_AUTHENTICATION_UNACCEPTABLE                            = 23,
+    MBIM_NW_ERROR_NOT_AUTHORIZED_FOR_CSG                                     = 25,
+    MBIM_NW_ERROR_INSUFFICIENT_RESOURCES                                     = 26,
+    MBIM_NW_ERROR_MISSING_OR_UNKNOWN_APN                                     = 27,
+    MBIM_NW_ERROR_UNKNOWN_PDP_ADDRESS_OR_TYPE                                = 28,
+    MBIM_NW_ERROR_USER_AUTHENTICATION_FAILED                                 = 29,
+    MBIM_NW_ERROR_ACTIVATION_REJECTED_BY_GGSN_OR_GW                          = 30,
+    MBIM_NW_ERROR_ACTIVATION_REJECTED_UNSPECIFIED                            = 31,
+    MBIM_NW_ERROR_SERVICE_OPTION_NOT_SUPPORTED                               = 32,
+    MBIM_NW_ERROR_REQUESTED_SERVICE_OPTION_NOT_SUBSCRIBED                    = 33,
+    MBIM_NW_ERROR_SERVICE_OPTION_TEMPORARILY_OUT_OF_ORDER                    = 34,
+    MBIM_NW_ERROR_NO_PDP_CONTEXT_ACTIVATED                                   = 40,
+    MBIM_NW_ERROR_PDP_TYPE_IPV4_ONLY_ALLOWED                                 = 50,
+    MBIM_NW_ERROR_PDP_TYPE_IPV6_ONLY_ALLOWED                                 = 51,
+    MBIM_NW_ERROR_MAXIMUM_NUMBER_OF_PDP_CONTEXTS_REACHED                     = 65,
+    MBIM_NW_ERROR_REQUESTED_APN_NOT_SUPPORTED_IN_CURRENT_RAT_AND_PLMN        = 66,
+    MBIM_NW_ERROR_SEMANTICALLY_INCORRECT_MESSAGE                             = 95,
+    MBIM_NW_ERROR_INVALID_MANDATORY_INFORMATION                              = 96,
+    MBIM_NW_ERROR_MESSAGE_TYPE_NON_EXISTENT_OR_NOT_IMPLEMENTED               = 97,
+    MBIM_NW_ERROR_MESSAGE_TYPE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE            = 98,
+    MBIM_NW_ERROR_INFORMATION_ELEMENT_NON_EXISTENT_OR_NOT_IMPLEMENTED        = 99,
+    MBIM_NW_ERROR_CONDITIONAL_IE_ERROR                                       = 100,
+    MBIM_NW_ERROR_MESSAGE_NOT_COMPATIBLE_WITH_PROTOCOL_STATE                 = 101,
+    MBIM_NW_ERROR_PROTOCOL_ERROR_UNSPECIFIED                                 = 111,
+    MBIM_NW_ERROR_APN_RESTRICTION_VALUE_INCOMPATIBLE_WITH_ACTIVE_PDP_CONTEXT = 112,
+    MBIM_NW_ERROR_MULTIPLE_ACCESSES_TO_A_PDN_CONNECTION_NOT_ALLOWED          = 113
 } MbimNwError;
 
 /**
