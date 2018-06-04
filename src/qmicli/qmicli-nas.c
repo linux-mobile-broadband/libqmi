@@ -97,7 +97,7 @@ static GOptionEntry entries[] = {
     },
     { "nas-set-system-selection-preference", 0, 0, G_OPTION_ARG_STRING, &set_system_selection_preference_str,
       "Set system selection preference",
-      "[cdma-1x|cdma-1xevdo|gsm|umts|lte|td-scdma]"
+      "[cdma-1x|cdma-1xevdo|gsm|umts|lte|td-scdma][,[auto|manual=MCCMNC]]"
     },
     { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
       "Scan networks",
@@ -2156,15 +2156,47 @@ static QmiMessageNasSetSystemSelectionPreferenceInput *
 set_system_selection_preference_input_create (const gchar *str)
 {
     QmiMessageNasSetSystemSelectionPreferenceInput *input = NULL;
+    GError                                         *error = NULL;
+    gchar                                          *rat_pref_str = NULL;
+    gchar                                          *net_pref_str = NULL;
     QmiNasRatModePreference                         rat_mode_preference;
     GArray                                         *acquisition_order;
-    GError                                         *error = NULL;
+    QmiNasNetworkSelectionPreference                net_preference = 0;
+    guint16                                         mcc = 0;
+    guint16                                         mnc = 0;
 
-    if (!qmicli_read_ssp_options_from_string (str, &rat_mode_preference, &acquisition_order)) {
-        g_printerr ("error: failed to parse system selection preference options\n");
-        return NULL;
+    if (strchr (str, ',')) {
+        gchar **parts;
+
+        /* Both RAT mode preference and network selection preference were given */
+        parts = g_strsplit_set (str, ",", -1);
+        if (g_strv_length (parts) != 2) {
+            g_printerr ("error: failed to parse selection pref: '%s'\n", str);
+            g_strfreev (parts);
+            return NULL;
+        }
+        rat_pref_str = g_strdup (parts[0]);
+        net_pref_str = g_strdup (parts[1]);
+        g_strfreev (parts);
+    } else if (g_str_has_prefix (str, "auto") || g_str_has_prefix (str, "manual")) {
+        /* Only network selection preference was given */
+        net_pref_str = g_strdup (str);
+    } else {
+        /* Only RAT mode preference was given */
+        rat_pref_str = g_strdup (str);
     }
 
+    if (net_pref_str && !qmicli_read_ssp_net_options_from_string (net_pref_str, &net_preference, &mcc, &mnc)) {
+        g_printerr ("error: failed to parse network preference options: '%s'\n", net_pref_str);
+        goto out;
+    }
+
+    if (rat_pref_str && !qmicli_read_ssp_rat_options_from_string (rat_pref_str, &rat_mode_preference, &acquisition_order)) {
+        g_printerr ("error: failed to parse system selection preference options: '%s'\n", rat_pref_str);
+        goto out;
+    }
+
+    /* from now on, if an error happens, the GError must be set */
     input = qmi_message_nas_set_system_selection_preference_input_new ();
 
     if (!qmi_message_nas_set_system_selection_preference_input_set_change_duration (input, QMI_NAS_CHANGE_DURATION_PERMANENT, &error))
@@ -2183,7 +2215,12 @@ set_system_selection_preference_input_create (const gchar *str)
     if (acquisition_order && !qmi_message_nas_set_system_selection_preference_input_set_acquisition_order_preference (input, acquisition_order, &error))
         goto out;
 
+    if (net_pref_str && !qmi_message_nas_set_system_selection_preference_input_set_network_selection_preference (input, net_preference, mcc, mnc, &error))
+        goto out;
+
 out:
+    g_free (rat_pref_str);
+    g_free (net_pref_str);
 
     if (acquisition_order)
         g_array_unref (acquisition_order);

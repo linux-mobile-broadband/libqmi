@@ -228,9 +228,9 @@ qmicli_read_uim_pin_id_from_string (const gchar *str,
 }
 
 gboolean
-qmicli_read_ssp_options_from_string (const gchar              *str,
-                                     QmiNasRatModePreference  *out_mode_preference,
-                                     GArray                  **out_acquisition_order)
+qmicli_read_ssp_rat_options_from_string (const gchar              *str,
+                                         QmiNasRatModePreference  *out_mode_preference,
+                                         GArray                  **out_acquisition_order)
 {
     GType        rat_mode_preference_type;
     GFlagsClass *rat_mode_preference_flags_class;
@@ -291,6 +291,80 @@ qmicli_read_ssp_options_from_string (const gchar              *str,
     g_type_class_unref (rat_mode_preference_flags_class);
     g_type_class_unref (radio_interface_enum_class);
     return success && (mode_preference_set || acquisition_order_set);;
+}
+
+static gboolean
+parse_3gpp_mcc_mnc (const gchar *str,
+                    guint16 *out_mcc,
+                    guint16 *out_mnc)
+{
+    guint len;
+    guint i;
+    gchar aux[4];
+    guint16 tmp;
+
+    len = strlen (str);
+    if (len != 5 && len != 6)
+        return FALSE;
+    for (i = 0; i < len; i++) {
+        if (!g_ascii_isdigit (str[i]))
+            return FALSE;
+    }
+
+    memcpy (&aux[0], str, 3);
+    aux[3] = '\0';
+    tmp = atoi (aux);
+    if (tmp == 0)
+        return FALSE;
+    *out_mcc = tmp;
+
+    if (len == 5) {
+        memcpy (&aux[0], &str[3], 2);
+        aux[2] = '\0';
+    } else
+        memcpy (&aux[0], &str[3], 3);
+    *out_mnc = atoi (aux);
+
+    return TRUE;
+}
+
+gboolean
+qmicli_read_ssp_net_options_from_string (const gchar                      *str,
+                                         QmiNasNetworkSelectionPreference *out,
+                                         guint16                          *out_mcc,
+                                         guint16                          *out_mnc)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+    gchar *copy, *equals;
+    guint16 mcc = 0, mnc = 0;
+
+    copy = g_strdup (str);
+    equals = strchr (copy, '=');
+    if (equals) {
+        /* Parse MCC/MNC */
+        *equals++ = '\0';
+        if (!parse_3gpp_mcc_mnc (equals, &mcc, &mnc)) {
+            g_free (copy);
+            g_printerr ("error: invalid net selection MCC/MNC: '%s'\n", equals);
+            return FALSE;
+        }
+    }
+
+    type = qmi_nas_network_selection_preference_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, copy);
+    if (enum_value) {
+        *out = (QmiNasNetworkSelectionPreference)enum_value->value;
+        *out_mcc = mcc;
+        *out_mnc = mnc;
+    } else
+        g_printerr ("error: invalid net selection preference value given: '%s'\n", copy);
+
+    g_free (copy);
+    g_type_class_unref (enum_class);
+    return !!enum_value;
 }
 
 gboolean
