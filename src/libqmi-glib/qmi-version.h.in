@@ -94,4 +94,21 @@
  */
 #define QMI_MBIM_QMUX_SUPPORTED @QMI_MBIM_QMUX_SUPPORTED@
 
+/**
+ * QMI_QRTR_SUPPORTED:
+ *
+ * Symbol to expose wether QMI over QRTR is supported. The symbol is always
+ * defined and set to either or 1 or 0.
+ *
+ * E.g.:
+ * |[
+ *  #if QMI_QRTR_SUPPORTED
+ *      // do something
+ *  #endif
+ * ]|
+ *
+ * Since: 1.24
+ */
+#define QMI_QRTR_SUPPORTED @QMI_QRTR_SUPPORTED@
+
 #endif /* _QMI_VERSION_H_ */

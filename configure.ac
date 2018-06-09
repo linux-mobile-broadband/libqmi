@@ -199,6 +199,29 @@ fi
 AC_SUBST(QMI_MBIM_QMUX_SUPPORTED)
 AM_CONDITIONAL([QMI_MBIM_QMUX_SUPPORTED], [test "x$QMI_MBIM_QMUX_SUPPORTED" = "x1"])
 
+# QRTR support
+AC_CHECK_HEADER(linux/qrtr.h, [have_qrtr=yes], [have_qrtr=no], [])
+AC_ARG_ENABLE(qrtr,
+              AS_HELP_STRING([--enable-qrtr], [Enable support for QRTR protocol [default=auto]]),
+              [enable_qrtr=$enableval],
+              [enable_qrtr=auto])
+
+if test "x$enable_qrtr" = "xauto"; then
+    enable_qrtr=$have_qrtr
+fi
+
+if test "x$enable_qrtr" = "xyes"; then
+    if test "x$have_qrtr" = "xno"; then
+        AC_MSG_ERROR([Couldn't find linux/qrtr.h. Install it, or otherwise configure using --disable-qrtr to disable QRTR support.])
+    fi
+    AC_DEFINE(QRTR_ENABLED, 1, [Define if QRTR support enabled])
+    QMI_QRTR_SUPPORTED=1
+else
+    QMI_QRTR_SUPPORTED=0
+fi
+AC_SUBST(QMI_QRTR_SUPPORTED)
+AM_CONDITIONAL([QMI_QRTR_SUPPORTED], [test "x$QMI_QRTR_SUPPORTED" = "x1"])
+
 # udev base directory
 AC_ARG_WITH(udev-base-dir, AS_HELP_STRING([--with-udev-base-dir=DIR], [where udev base directory is]))
 if test -n "$with_udev_base_dir" ; then
@@ -262,6 +285,7 @@ echo "
     Features:
       QMUX over MBIM:      ${enable_mbim_qmux}
       QMI username:        ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
+      QRTR:                ${enable_qrtr}
 
     Built items:
       libqmi-glib:         yes

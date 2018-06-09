@@ -77,6 +77,12 @@ libqmi_glib_la_SOURCES += \
 	qmi-endpoint-mbim.h qmi-endpoint-mbim.c
 endif
 
+if QMI_QRTR_SUPPORTED
+libqmi_glib_la_SOURCES += \
+	qmi-qrtr-control-socket.h qmi-qrtr-control-socket.c \
+	qmi-qrtr-node.h qmi-qrtr-node.c
+endif
+
 libqmi_glib_la_LIBADD = \
 	${top_builddir}/src/libqmi-glib/generated/libqmi-glib-generated.la \
 	libqmi-glib-compat.la \
@@ -118,6 +124,12 @@ include_HEADERS = \
 	qmi-device.h \
 	qmi-client.h \
 	qmi-proxy.h
+
+if QMI_QRTR_SUPPORTED
+include_HEADERS += \
+	qmi-qrtr-control-socket.h \
+	qmi-qrtr-node.h
+endif
 
 EXTRA_DIST = \
 	qmi-version.h.in

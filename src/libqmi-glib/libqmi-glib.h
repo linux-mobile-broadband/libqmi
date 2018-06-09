@@ -37,6 +37,11 @@
 #include "qmi-enums.h"
 #include "qmi-utils.h"
 
+#if QMI_QRTR_SUPPORTED
+#include "qmi-qrtr-control-socket.h"
+#include "qmi-qrtr-node.h"
+#endif
+
 #include "qmi-compat.h"
 
 #include "qmi-enums-dms.h"
