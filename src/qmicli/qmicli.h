@@ -90,4 +90,11 @@ void          qmicli_voice_run              (QmiDevice *device,
                                              QmiClientVoice *client,
                                              GCancellable *cancellable);
 
+/* Location group */
+GOptionGroup *qmicli_loc_get_option_group (void);
+gboolean      qmicli_loc_options_enabled  (void);
+void          qmicli_loc_run              (QmiDevice *device,
+                                           QmiClientLoc *client,
+                                           GCancellable *cancellable);
+
 #endif /* __QMICLI_H__ */

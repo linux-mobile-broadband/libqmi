@@ -44,6 +44,7 @@ qmicli_SOURCES = \
 	qmicli-wms.c \
 	qmicli-wda.c \
 	qmicli-voice.c \
+	qmicli-loc.c \
 	qmicli-charsets.c \
 	qmicli-charsets.h
 
