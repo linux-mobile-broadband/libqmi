@@ -204,18 +204,22 @@ typedef enum {
 /**
  * QmiLocTimeSource:
  * @QMI_LOC_TIME_SOURCE_INVALID: Invalid.
- * @QMI_LOC_TIME_SOURCE_NETWORK_TIME_TRANSFER: Network time transfer.
- * @QMI_LOC_TIME_SOURCE_NETWORK_TIME_TAGGING: Network time tagging.
- * @QMI_LOC_TIME_SOURCE_EXTERNAL_INPUT: External input.
- * @QMI_LOC_TIME_SOURCE_TOW_DECODE: TOW decode
- * @QMI_LOC_TIME_SOURCE_TOW_CONFIRMED: TOW confirmed
- * @QMI_LOC_TIME_SOURCE_TOW_AND_WEEK_CONFIRMED: TOW and week confirmed.
- * @QMI_LOC_TIME_SOURCE_NAVIGATION_SOLUTION: Navigation solution.
- * @QMI_LOC_TIME_SOURCE_SOLVE_FOR_TIME: Solve for time.
- * @QMI_LOC_TIME_SOURCE_GLTOW_DECODE: GLTOW decode.
- * @QMI_LOC_TIME_SOURCE_TRANSFORM: Transform.
- * @QMI_LOC_TIME_SOURCE_WCDMA_SLEEP_TIME_TAG: WCDMA sleep time tag.
- * @QMI_LOC_TIME_SOURCE_GSM_SLEEP_TIME_TAG: GSM sleep time tag.
+ * @QMI_LOC_TIME_SOURCE_NETWORK_TIME_TRANSFER: Time is set by the 1X system.
+ * @QMI_LOC_TIME_SOURCE_NETWORK_TIME_TAGGING: Time is set by WCDMA/GSM time tagging.
+ * @QMI_LOC_TIME_SOURCE_EXTERNAL_INPUT: Time set by external injection.
+ * @QMI_LOC_TIME_SOURCE_TOW_DECODE: Time is set after decoding over-the-air GPS navigation data from one GPS satellite.
+ * @QMI_LOC_TIME_SOURCE_TOW_CONFIRMED: Time is set after decoding over-the-air GPS navigation data from multiple satellites.
+ * @QMI_LOC_TIME_SOURCE_TOW_AND_WEEK_CONFIRMED: Both time of the week and GPS week number are known.
+ * @QMI_LOC_TIME_SOURCE_NAVIGATION_SOLUTION: Time is set by the position engine after the fix is obtained.
+ * @QMI_LOC_TIME_SOURCE_SOLVE_FOR_TIME: Time is set by the position engine after performing SFT.
+ * @QMI_LOC_TIME_SOURCE_GLO_TOW_DECODE: Time is set after decoding QZSS satellites.
+ * @QMI_LOC_TIME_SOURCE_TIME_TRANSFORM: Time is set after transforming the GPS to GLO time.
+ * @QMI_LOC_TIME_SOURCE_WCDMA_SLEEP_TIME_TAG: Time is set by the sleep time tag provided by the WCDMA network.
+ * @QMI_LOC_TIME_SOURCE_GSM_SLEEP_TIME_TAG: Time is set by the sleep time tag provided by the GSM network.
+ * @QMI_LOC_TIME_SOURCE_UNKNOWN: Unknown.
+ * @QMI_LOC_TIME_SOURCE_SYSTEM_TIMETICK: Time is derived from the system clock.
+ * @QMI_LOC_TIME_SOURCE_QZSS_TOW_DECODE: Time set after decoding QZSS satellites.
+ * @QMI_LOC_TIME_SOURCE_BDS_TOW_DECODE: Time set after decoding BDS satellites.
  *
  * Source of the used time.
  *
@@ -231,10 +235,14 @@ typedef enum {
     QMI_LOC_TIME_SOURCE_TOW_AND_WEEK_CONFIRMED =  6,
     QMI_LOC_TIME_SOURCE_NAVIGATION_SOLUTION    =  7,
     QMI_LOC_TIME_SOURCE_SOLVE_FOR_TIME         =  8,
-    QMI_LOC_TIME_SOURCE_GLTOW_DECODE           =  9,
-    QMI_LOC_TIME_SOURCE_TRANSFORM              = 10,
+    QMI_LOC_TIME_SOURCE_GLO_TOW_DECODE         =  9,
+    QMI_LOC_TIME_SOURCE_TIME_TRANSFORM         = 10,
     QMI_LOC_TIME_SOURCE_WCDMA_SLEEP_TIME_TAG   = 11,
     QMI_LOC_TIME_SOURCE_GSM_SLEEP_TIME_TAG     = 12,
+    QMI_LOC_TIME_SOURCE_UNKNOWN                = 13,
+    QMI_LOC_TIME_SOURCE_SYSTEM_TIMETICK        = 14,
+    QMI_LOC_TIME_SOURCE_QZSS_TOW_DECODE        = 15,
+    QMI_LOC_TIME_SOURCE_BDS_TOW_DECODE         = 16,
 } QmiLocTimeSource;
 
 /**
