@@ -3056,6 +3056,14 @@ dispose (GObject *object)
                                  (GHRFunc)foreach_warning,
                                  self);
 
+#if defined MBIM_QMUX_ENABLED
+    if (self->priv->mbimdev) {
+        g_warning ("[%s] MBIM device wasn't explicitly closed",
+                   self->priv->path_display);
+        g_clear_object (&self->priv->mbimdev);
+    }
+#endif
+
     if (self->priv->sync_indication_id &&
         self->priv->client_ctl) {
         g_signal_handler_disconnect (self->priv->client_ctl,
