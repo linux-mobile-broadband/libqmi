@@ -65,6 +65,7 @@ static gint     timeout;
 static gboolean follow_position_report_flag;
 static gboolean follow_gnss_sv_info_flag;
 static gboolean follow_nmea_flag;
+static gboolean noop_flag;
 
 #define DEFAULT_LOC_TIMEOUT_SECS 30
 
@@ -114,6 +115,10 @@ static GOptionEntry entries[] = {
         "Follow all NMEA trace updates reported by the location module indefinitely",
         NULL,
     },
+    { "loc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
+      "Just allocate or release a LOC client. Use with `--client-no-release-cid' and/or `--client-cid'",
+      NULL
+    },
     { NULL }
 };
 
@@ -152,7 +157,8 @@ qmicli_loc_options_enabled (void)
                  stop_flag +
                  get_position_report_flag +
                  get_gnss_sv_info_flag +
-                 follow_action);
+                 follow_action +
+                 noop_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many LOC actions requested\n");
@@ -726,6 +732,13 @@ start_ready (QmiClientLoc *client,
     operation_shutdown (TRUE);
 }
 
+static gboolean
+noop_cb (gpointer unused)
+{
+    operation_shutdown (TRUE);
+    return G_SOURCE_REMOVE;
+}
+
 void
 qmicli_loc_run (QmiDevice    *device,
                 QmiClientLoc *client,
@@ -777,6 +790,12 @@ qmicli_loc_run (QmiDevice    *device,
     if (get_position_report_flag || get_gnss_sv_info_flag || follow_position_report_flag || follow_gnss_sv_info_flag || follow_nmea_flag) {
         ctx->monitoring_step = MONITORING_STEP_FIRST;
         monitoring_step_run ();
+        return;
+    }
+
+    /* Just client allocate/release? */
+    if (noop_flag) {
+        g_idle_add (noop_cb, NULL);
         return;
     }
 
