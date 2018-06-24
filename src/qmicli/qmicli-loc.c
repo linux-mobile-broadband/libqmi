@@ -59,10 +59,10 @@ static Context *ctx;
 static gint     session_id;
 static gboolean start_flag;
 static gboolean stop_flag;
-static gboolean get_position_flag;
+static gboolean get_position_report_flag;
 static gboolean get_satellite_info_flag;
 static gint     timeout;
-static gboolean follow_position_flag;
+static gboolean follow_position_report_flag;
 static gboolean follow_satellite_info_flag;
 static gboolean follow_nmea_flag;
 
@@ -85,7 +85,7 @@ static GOptionEntry entries[] = {
         NULL,
     },
     {
-        "loc-get-position", 0, 0, G_OPTION_ARG_NONE, &get_position_flag,
+        "loc-get-position-report", 0, 0, G_OPTION_ARG_NONE, &get_position_report_flag,
         "Get position reported by the location module",
         NULL,
     },
@@ -96,11 +96,11 @@ static GOptionEntry entries[] = {
     },
     {
         "loc-timeout", 0, 0, G_OPTION_ARG_INT, &timeout,
-        "Maximum time to wait for information in `--loc-get-position' and `--loc-get-satellite-info' (default 30s)",
+        "Maximum time to wait for information in `--loc-get-position-report' and `--loc-get-satellite-info' (default 30s)",
         "[SECS]",
     },
     {
-        "loc-follow-position", 0, 0, G_OPTION_ARG_NONE, &follow_position_flag,
+        "loc-follow-position-report", 0, 0, G_OPTION_ARG_NONE, &follow_position_report_flag,
         "Follow all position updates reported by the location module indefinitely",
         NULL,
     },
@@ -147,10 +147,10 @@ qmicli_loc_options_enabled (void)
      *  - Show current satellite info (oneshot).
      *  - Follow updates indefinitely, including either position, satellite info or NMEA traces.
      */
-    follow_action = !!(follow_position_flag + follow_satellite_info_flag + follow_nmea_flag);
+    follow_action = !!(follow_position_report_flag + follow_satellite_info_flag + follow_nmea_flag);
     n_actions = (start_flag +
                  stop_flag +
-                 get_position_flag +
+                 get_position_report_flag +
                  get_satellite_info_flag +
                  follow_action);
 
@@ -169,14 +169,14 @@ qmicli_loc_options_enabled (void)
         exit (EXIT_FAILURE);
     }
 
-    if (timeout > 0 && !(get_position_flag || get_satellite_info_flag)) {
+    if (timeout > 0 && !(get_position_report_flag || get_satellite_info_flag)) {
         g_printerr ("error: `--loc-timeout' is only applicable with `--loc-get-position' or `--loc-get-satellite-info'\n");
         exit (EXIT_FAILURE);
     }
 
     /* Actions that require receiving QMI indication messages must specify that
      * indications are expected. */
-    if (get_position_flag || get_satellite_info_flag || follow_action)
+    if (get_position_report_flag || get_satellite_info_flag || follow_action)
         qmicli_expect_indications();
 
     checked = TRUE;
@@ -229,14 +229,14 @@ static void
 monitoring_cancelled (GCancellable *cancellable)
 {
     /* For GET operations, this is a failure */
-    if (get_position_flag || get_satellite_info_flag) {
+    if (get_position_report_flag || get_satellite_info_flag) {
         g_printerr ("error: operation failed: cancelled\n");
         operation_shutdown (FALSE);
         return;
     }
 
     /* For FOLLOW operations, silently exit */
-    if (follow_position_flag || follow_satellite_info_flag || follow_nmea_flag) {
+    if (follow_position_report_flag || follow_satellite_info_flag || follow_nmea_flag) {
         operation_shutdown (TRUE);
         return;
     }
@@ -499,7 +499,7 @@ position_report_received (QmiClientLoc                         *client,
             g_print ("   Altitude assumed: n/a\n");
 
         /* Terminate GET request */
-        if (get_position_flag)
+        if (get_position_report_flag)
             operation_shutdown (TRUE);
 
         return;
@@ -507,14 +507,14 @@ position_report_received (QmiClientLoc                         *client,
 
     /* Otherwise, treat as error */
     g_printerr ("[position report] error: %s\n", qmi_loc_session_status_get_string (status));
-    if (get_position_flag)
+    if (get_position_report_flag)
         operation_shutdown (FALSE);
 }
 
 static void
 monitoring_step_ongoing (void)
 {
-    if (get_position_flag || follow_position_flag)
+    if (get_position_report_flag || follow_position_report_flag)
         ctx->position_report_indication_id = g_signal_connect (ctx->client,
                                                                "position-report",
                                                                G_CALLBACK (position_report_received),
@@ -547,7 +547,7 @@ monitoring_step_setup_timeout (void)
                            NULL);
 
     /* For non-follow requests, we also setup a timeout */
-    if (get_position_flag || get_satellite_info_flag)
+    if (get_position_report_flag || get_satellite_info_flag)
         ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
                                                  (GSourceFunc) monitoring_timed_out,
                                                  NULL);
@@ -597,7 +597,7 @@ monitoring_step_register_events (void)
 
     /* Configure events to enable */
 
-    if (get_position_flag || follow_position_flag) {
+    if (get_position_report_flag || follow_position_report_flag) {
         indication_mask |= QMI_LOC_EVENT_REGISTRATION_FLAG_POSITION_REPORT;
         ctx->position_report_indication_id = g_signal_connect (ctx->client,
                                                                "position-report",
@@ -768,7 +768,7 @@ qmicli_loc_run (QmiDevice    *device,
     }
 
     /* All the remaining actions require monitoring */
-    if (get_position_flag || get_satellite_info_flag || follow_position_flag || follow_satellite_info_flag || follow_nmea_flag) {
+    if (get_position_report_flag || get_satellite_info_flag || follow_position_report_flag || follow_satellite_info_flag || follow_nmea_flag) {
         ctx->monitoring_step = MONITORING_STEP_FIRST;
         monitoring_step_run ();
         return;
