@@ -252,22 +252,24 @@ gboolean qmi_device_is_open (QmiDevice *self);
  * @QMI_DEVICE_OPEN_FLAGS_PROXY: Try to open the port through the 'qmi-proxy'. Since: 1.8.
  * @QMI_DEVICE_OPEN_FLAGS_MBIM: open an MBIM port with QMUX tunneling service. Since: 1.16.
  * @QMI_DEVICE_OPEN_FLAGS_AUTO: open a port either in QMI or MBIM mode, depending on device driver. Since: 1.18.
+ * @QMI_DEVICE_OPEN_FLAGS_EXPECT_INDICATIONS: Explicitly state that indications are wanted (implicit in QMI mode, optional when in MBIM mode).
  *
  * Flags to specify which actions to be performed when the device is open.
  *
  * Since: 1.0
  */
 typedef enum {
-    QMI_DEVICE_OPEN_FLAGS_NONE              = 0,
-    QMI_DEVICE_OPEN_FLAGS_VERSION_INFO      = 1 << 0,
-    QMI_DEVICE_OPEN_FLAGS_SYNC              = 1 << 1,
-    QMI_DEVICE_OPEN_FLAGS_NET_802_3         = 1 << 2,
-    QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP        = 1 << 3,
-    QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER    = 1 << 4,
-    QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER = 1 << 5,
-    QMI_DEVICE_OPEN_FLAGS_PROXY             = 1 << 6,
-    QMI_DEVICE_OPEN_FLAGS_MBIM              = 1 << 7,
-    QMI_DEVICE_OPEN_FLAGS_AUTO              = 1 << 8,
+    QMI_DEVICE_OPEN_FLAGS_NONE               = 0,
+    QMI_DEVICE_OPEN_FLAGS_VERSION_INFO       = 1 << 0,
+    QMI_DEVICE_OPEN_FLAGS_SYNC               = 1 << 1,
+    QMI_DEVICE_OPEN_FLAGS_NET_802_3          = 1 << 2,
+    QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP         = 1 << 3,
+    QMI_DEVICE_OPEN_FLAGS_NET_QOS_HEADER     = 1 << 4,
+    QMI_DEVICE_OPEN_FLAGS_NET_NO_QOS_HEADER  = 1 << 5,
+    QMI_DEVICE_OPEN_FLAGS_PROXY              = 1 << 6,
+    QMI_DEVICE_OPEN_FLAGS_MBIM               = 1 << 7,
+    QMI_DEVICE_OPEN_FLAGS_AUTO               = 1 << 8,
+    QMI_DEVICE_OPEN_FLAGS_EXPECT_INDICATIONS = 1 << 9,
 } QmiDeviceOpenFlags;
 
 /**

@@ -93,6 +93,7 @@ struct _QmiDevicePrivate {
 
 #if defined MBIM_QMUX_ENABLED
     MbimDevice *mbimdev;
+    guint mbim_notification_id;
 #endif
 
     /* WWAN interface */
@@ -2058,13 +2059,99 @@ create_iostream_ready (QmiDevice *self,
 #if defined MBIM_QMUX_ENABLED
 
 static void
-mbim_device_open_ready (MbimDevice *dev,
-                        GAsyncResult *res,
-                        GTask *task)
+mbim_qmi_notification_cb (MbimDevice  *device,
+                          MbimMessage *notification,
+                          QmiDevice   *self)
 {
-    QmiDevice *self;
+    GByteArray   *bytearray;
+    QmiMessage   *message;
+    MbimService   service;
+    const guint8 *buf;
+    guint32       len;
+    GError       *error = NULL;
+
+    service = mbim_message_indicate_status_get_service (notification);
+    if (service != MBIM_SERVICE_QMI)
+        return;
+
+    buf = mbim_message_indicate_status_get_raw_information_buffer (notification, &len);
+    bytearray = g_byte_array_append (g_byte_array_sized_new (len), buf, len);
+
+    message = qmi_message_new_from_raw (bytearray, &error);
+    if (!message) {
+        if (error) {
+            g_warning ("[%s] couldn't create QMI message: %s",
+                       self->priv->path_display, error->message);
+            g_free (error);
+        } else
+            g_warning ("[%s] couldn't create QMI message: missing data",
+                       self->priv->path_display);
+
+        if (qmi_utils_get_traces_enabled ()) {
+            gchar *printable;
+
+            printable = __qmi_utils_str_hex (buf, len, ':');
+            g_debug ("<<<<<< RAW INVALID MESSAGE:\n"
+                     "<<<<<<   length = %u\n"
+                     "<<<<<<   data   = %s\n",
+                     len,
+                     printable);
+            g_free (printable);
+        }
+
+        goto out;
+    }
+
+    process_message (self, message);
+    qmi_message_unref (message);
+out:
+    g_byte_array_unref (bytearray);
+}
+
+static void
+mbim_subscribe_list_set_ready_cb (MbimDevice   *device,
+                                  GAsyncResult *res,
+                                  GTask        *task)
+{
+    QmiDevice         *self;
     DeviceOpenContext *ctx;
-    GError *error = NULL;
+    MbimMessage       *response;
+    GError            *error = NULL;
+
+    self = g_task_get_source_object (task);
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (response) {
+        mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error);
+        mbim_message_unref (response);
+    }
+
+    if (error) {
+        g_warning ("[%s] couldn't enable QMI indications via MBIM: %s",
+                   self->priv->path_display, error->message);
+        g_error_free (error);
+    } else {
+        g_debug ("[%s] enabled QMI indications via MBIM", self->priv->path_display);
+        self->priv->mbim_notification_id = g_signal_connect (device,
+                                                             MBIM_DEVICE_SIGNAL_INDICATE_STATUS,
+                                                             G_CALLBACK (mbim_qmi_notification_cb),
+                                                             self);
+    }
+
+    /* Go on */
+    ctx = g_task_get_task_data (task);
+    ctx->step++;
+    device_open_step (task);
+}
+
+static void
+mbim_device_open_ready (MbimDevice   *dev,
+                        GAsyncResult *res,
+                        GTask        *task)
+{
+    QmiDevice         *self;
+    DeviceOpenContext *ctx;
+    GError            *error = NULL;
 
     if (!mbim_device_open_finish (dev, res, &error)) {
         g_task_return_error (task, error);
@@ -2074,6 +2161,38 @@ mbim_device_open_ready (MbimDevice *dev,
 
     self = g_task_get_source_object (task);
     g_debug ("[%s] MBIM device open", self->priv->path_display);
+
+    ctx = g_task_get_task_data (task);
+
+    /* Are indications expected */
+    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_EXPECT_INDICATIONS) {
+        MbimEventEntry **entries;
+        guint            n_entries = 0;
+        MbimMessage     *request;
+
+        g_debug ("[%s] Enabling QMI indications via MBIM...", self->priv->path_display);
+        entries = g_new0 (MbimEventEntry *, 2);
+        entries[n_entries] = g_new (MbimEventEntry, 1);
+        memcpy (&(entries[n_entries]->device_service_id), MBIM_UUID_QMI, sizeof (MbimUuid));
+        entries[n_entries]->cids_count = 1;
+        entries[n_entries]->cids = g_new0 (guint32, 1);
+        entries[n_entries]->cids[0] = MBIM_CID_QMI_MSG;
+        n_entries++;
+
+        request = (mbim_message_device_service_subscribe_list_set_new (
+                       n_entries,
+                       (const MbimEventEntry *const *)entries,
+                       NULL));
+        mbim_device_command (dev,
+                             request,
+                             10,
+                             NULL,
+                             (GAsyncReadyCallback)mbim_subscribe_list_set_ready_cb,
+                             task);
+        mbim_message_unref (request);
+        mbim_event_entry_array_free (entries);
+        return;
+    }
 
     /* Go on */
     ctx = g_task_get_task_data (task);
@@ -2472,6 +2591,10 @@ qmi_device_close_async (QmiDevice           *self,
                            task);
         /* Cleanup right away, we don't want multiple close attempts on the
          * device */
+        if (self->priv->mbim_notification_id) {
+            g_signal_handler_disconnect (self->priv->mbimdev, self->priv->mbim_notification_id);
+            self->priv->mbim_notification_id = 0;
+        }
         g_clear_object (&self->priv->mbimdev);
         return;
     }
@@ -3060,6 +3183,10 @@ dispose (GObject *object)
     if (self->priv->mbimdev) {
         g_warning ("[%s] MBIM device wasn't explicitly closed",
                    self->priv->path_display);
+        if (self->priv->mbim_notification_id) {
+            g_signal_handler_disconnect (self->priv->mbimdev, self->priv->mbim_notification_id);
+            self->priv->mbim_notification_id = 0;
+        }
         g_clear_object (&self->priv->mbimdev);
     }
 #endif
