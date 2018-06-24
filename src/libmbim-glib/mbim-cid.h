@@ -222,7 +222,7 @@ typedef enum {
 /**
  * MbimCidQmi:
  * @MBIM_CID_QMI_UNKNOWN: Unknown command.
- * @MBIM_CID_QMI_MSG: Configuration.
+ * @MBIM_CID_QMI_MSG: Send QMI request and receive QMI response.
  *
  * MBIM commands in the %MBIM_SERVICE_QMI service.
  */
