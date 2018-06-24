@@ -246,20 +246,6 @@ typedef enum {
 } QmiLocTimeSource;
 
 /**
- * QmiLocAltitudeAssumed:
- * @QMI_LOC_ALTITUDE_ASSUMED_ALTITUDE_IS_CALCULATED: Altitude is calculated.
- * @QMI_LOC_ALTITUDE_ASSUMED_ALTITUDE_IS_ASSUMED: Altitude is assumed.
- *
- * Whether the altitude has been calculated or assumed.
- *
- * Since 1.22
- */
-typedef enum {
-    QMI_LOC_ALTITUDE_ASSUMED_ALTITUDE_IS_CALCULATED = 0,
-    QMI_LOC_ALTITUDE_ASSUMED_ALTITUDE_IS_ASSUMED    = 1,
-} QmiLocAltitudeAssumed;
-
-/**
  * QmiLocSatelliteValidInformation:
  * @QMI_LOC_SATELLITE_VALID_INFORMATION_SYSTEM: System,
  * @QMI_LOC_SATELLITE_VALID_INFORMATION_GNSS_SATELLITE_ID: GNSS Satellite ID.

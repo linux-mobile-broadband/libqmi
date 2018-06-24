@@ -259,8 +259,14 @@ static void
 gnss_sv_info_received (QmiClientLoc                     *client,
                        QmiIndicationLocGnssSvInfoOutput *output)
 {
-    GArray *satellite_infos = NULL;
-    guint   i;
+    GArray   *satellite_infos = NULL;
+    guint     i;
+    gboolean  altitude_assumed;
+
+    if (qmi_indication_loc_gnss_sv_info_output_get_altitude_assumed (output, &altitude_assumed, NULL))
+        g_print ("[gnss sv info] Altitude assumed: %s\n", altitude_assumed ? "yes" : "no");
+    else
+        g_print ("[gnss sv info] Altitude assumed: n/a\n");
 
     qmi_indication_loc_gnss_sv_info_output_get_list (output, &satellite_infos, NULL);
 
