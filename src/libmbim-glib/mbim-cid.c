@@ -144,7 +144,7 @@ static const CidConfig cid_proxy_control_config [MBIM_CID_PROXY_CONTROL_LAST] = 
 /* Note: index of the array is CID-1 */
 #define MBIM_CID_QMI_LAST MBIM_CID_QMI_MSG
 static const CidConfig cid_qmi_config [MBIM_CID_QMI_LAST] = {
-    { SET, NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QMI_MSG */
+    { SET, NO_QUERY, NOTIFY }, /* MBIM_CID_QMI_MSG */
 };
 
 /* Note: index of the array is CID-1 */
