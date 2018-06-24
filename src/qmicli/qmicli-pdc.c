@@ -158,6 +158,11 @@ qmicli_pdc_options_enabled (void)
         exit (EXIT_FAILURE);
     }
 
+    /* Actions that require receiving QMI indication messages must specify that
+     * indications are expected. */
+    if (list_configs_str || activate_config_str || deactivate_config_str || load_config_str)
+        qmicli_expect_indications();
+
     checked = TRUE;
     return !!n_actions;
 }

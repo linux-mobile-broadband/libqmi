@@ -49,6 +49,7 @@ static QmiDevice *device;
 static QmiClient *client;
 static QmiService service;
 static gboolean operation_status;
+static gboolean expect_indications;
 
 /* Main options */
 static gchar *device_str;
@@ -255,6 +256,15 @@ generic_options_enabled (void)
 
     checked = TRUE;
     return !!n_actions;
+}
+
+/*****************************************************************************/
+/* Report that indications are expected */
+
+void
+qmicli_expect_indications (void)
+{
+    expect_indications = TRUE;
 }
 
 /*****************************************************************************/
@@ -654,6 +664,8 @@ device_new_ready (GObject *unused,
         open_flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
     if (device_open_auto_flag || (!device_open_qmi_flag && !device_open_mbim_flag))
         open_flags |= QMI_DEVICE_OPEN_FLAGS_AUTO;
+    if (expect_indications)
+        open_flags |= QMI_DEVICE_OPEN_FLAGS_EXPECT_INDICATIONS;
     if (device_open_net_str)
         if (!qmicli_read_net_open_flags_from_string (device_open_net_str, &open_flags))
             exit (EXIT_FAILURE);

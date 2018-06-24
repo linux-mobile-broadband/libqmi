@@ -135,6 +135,7 @@ qmicli_loc_options_enabled (void)
 {
     static guint n_actions = 0;
     static gboolean checked = FALSE;
+    gboolean follow_action;
 
     if (checked)
         return !!n_actions;
@@ -146,11 +147,12 @@ qmicli_loc_options_enabled (void)
      *  - Show current satellite info (oneshot).
      *  - Follow updates indefinitely, including either position, satellite info or NMEA traces.
      */
+    follow_action = !!(follow_position_flag + follow_satellite_info_flag + follow_nmea_flag);
     n_actions = (start_flag +
                  stop_flag +
                  get_position_flag +
                  get_satellite_info_flag +
-                 !!(follow_position_flag + follow_satellite_info_flag + follow_nmea_flag));
+                 follow_action);
 
     if (n_actions > 1) {
         g_printerr ("error: too many LOC actions requested\n");
@@ -171,6 +173,11 @@ qmicli_loc_options_enabled (void)
         g_printerr ("error: `--loc-timeout' is only applicable with `--loc-get-position' or `--loc-get-satellite-info'\n");
         exit (EXIT_FAILURE);
     }
+
+    /* Actions that require receiving QMI indication messages must specify that
+     * indications are expected. */
+    if (get_position_flag || get_satellite_info_flag || follow_action)
+        qmicli_expect_indications();
 
     checked = TRUE;
     return !!n_actions;

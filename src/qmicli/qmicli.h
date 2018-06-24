@@ -26,6 +26,7 @@
 /* Common */
 void          qmicli_async_operation_done (gboolean reported_operation_status,
                                            gboolean skip_cid_release);
+void          qmicli_expect_indications   (void);
 
 /* DMS group */
 GOptionGroup *qmicli_dms_get_option_group (void);
