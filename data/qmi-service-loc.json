@@ -13,9 +13,31 @@
   {  "name"    : "QMI Message LOC",
      "type"    : "Message-ID-Enum" },
 
-  // *********************************************************************************
   {  "name"    : "QMI Indication LOC",
      "type"    : "Indication-ID-Enum" },
+
+  // *********************************************************************************
+
+  { "common-ref"    : "LOC Indication Status",
+    "name"          : "Indication Status",
+    "fullname"      : "Qmi LOC Message Status",
+    "id"            : "0x01",
+    "mandatory"     : "yes",
+    "type"          : "TLV",
+    "since"         : "1.22",
+    "format"        : "guint32",
+    "public-format" : "QmiLocIndicationStatus" },
+
+  { "common-ref"    : "LOC Fix Recurrence Type",
+    "name"          : "Fix Recurrence Type",
+    "id"            : "0x10",
+    "mandatory"     : "no",
+    "type"          : "TLV",
+    "since"         : "1.22",
+    "format"        : "guint32",
+    "public-format" : "QmiLocFixRecurrenceType" },
+
+  // *********************************************************************************
 
   {  "name"    : "Register Events",
      "type"    : "Message",
