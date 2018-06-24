@@ -51,7 +51,7 @@ typedef struct {
     MonitoringStep  monitoring_step;
     guint           position_report_indication_id;
     guint           nmea_indication_id;
-    guint           satellite_info_indication_id;
+    guint           gnss_sv_info_indication_id;
 } Context;
 static Context *ctx;
 
@@ -60,10 +60,10 @@ static gint     session_id;
 static gboolean start_flag;
 static gboolean stop_flag;
 static gboolean get_position_report_flag;
-static gboolean get_satellite_info_flag;
+static gboolean get_gnss_sv_info_flag;
 static gint     timeout;
 static gboolean follow_position_report_flag;
-static gboolean follow_satellite_info_flag;
+static gboolean follow_gnss_sv_info_flag;
 static gboolean follow_nmea_flag;
 
 #define DEFAULT_LOC_TIMEOUT_SECS 30
@@ -90,7 +90,7 @@ static GOptionEntry entries[] = {
         NULL,
     },
     {
-        "loc-get-satellite-info", 0, 0, G_OPTION_ARG_NONE, &get_satellite_info_flag,
+        "loc-get-gnss-sv-info", 0, 0, G_OPTION_ARG_NONE, &get_gnss_sv_info_flag,
         "Show satellite report",
         NULL,
     },
@@ -105,7 +105,7 @@ static GOptionEntry entries[] = {
         NULL,
     },
     {
-        "loc-follow-satellite-info", 0, 0, G_OPTION_ARG_NONE, &follow_satellite_info_flag,
+        "loc-follow-gnss-sv-info", 0, 0, G_OPTION_ARG_NONE, &follow_gnss_sv_info_flag,
         "Follow all satellite info updates reported by the location module indefinitely",
         NULL,
     },
@@ -147,11 +147,11 @@ qmicli_loc_options_enabled (void)
      *  - Show current satellite info (oneshot).
      *  - Follow updates indefinitely, including either position, satellite info or NMEA traces.
      */
-    follow_action = !!(follow_position_report_flag + follow_satellite_info_flag + follow_nmea_flag);
+    follow_action = !!(follow_position_report_flag + follow_gnss_sv_info_flag + follow_nmea_flag);
     n_actions = (start_flag +
                  stop_flag +
                  get_position_report_flag +
-                 get_satellite_info_flag +
+                 get_gnss_sv_info_flag +
                  follow_action);
 
     if (n_actions > 1) {
@@ -169,14 +169,14 @@ qmicli_loc_options_enabled (void)
         exit (EXIT_FAILURE);
     }
 
-    if (timeout > 0 && !(get_position_report_flag || get_satellite_info_flag)) {
+    if (timeout > 0 && !(get_position_report_flag || get_gnss_sv_info_flag)) {
         g_printerr ("error: `--loc-timeout' is only applicable with `--loc-get-position' or `--loc-get-satellite-info'\n");
         exit (EXIT_FAILURE);
     }
 
     /* Actions that require receiving QMI indication messages must specify that
      * indications are expected. */
-    if (get_position_report_flag || get_satellite_info_flag || follow_action)
+    if (get_position_report_flag || get_gnss_sv_info_flag || follow_action)
         qmicli_expect_indications();
 
     checked = TRUE;
@@ -195,8 +195,8 @@ context_free (Context *context)
     if (context->position_report_indication_id)
         g_signal_handler_disconnect (context->client, context->position_report_indication_id);
 
-    if (context->satellite_info_indication_id)
-        g_signal_handler_disconnect (context->client, context->satellite_info_indication_id);
+    if (context->gnss_sv_info_indication_id)
+        g_signal_handler_disconnect (context->client, context->gnss_sv_info_indication_id);
 
     if (context->nmea_indication_id)
         g_signal_handler_disconnect (context->client, context->nmea_indication_id);
@@ -229,14 +229,14 @@ static void
 monitoring_cancelled (GCancellable *cancellable)
 {
     /* For GET operations, this is a failure */
-    if (get_position_report_flag || get_satellite_info_flag) {
+    if (get_position_report_flag || get_gnss_sv_info_flag) {
         g_printerr ("error: operation failed: cancelled\n");
         operation_shutdown (FALSE);
         return;
     }
 
     /* For FOLLOW operations, silently exit */
-    if (follow_position_report_flag || follow_satellite_info_flag || follow_nmea_flag) {
+    if (follow_position_report_flag || follow_gnss_sv_info_flag || follow_nmea_flag) {
         operation_shutdown (TRUE);
         return;
     }
@@ -256,19 +256,19 @@ nmea_received (QmiClientLoc               *client,
 }
 
 static void
-satellite_info_received (QmiClientLoc                            *client,
-                         QmiIndicationLocGnssSatelliteInfoOutput *output)
+gnss_sv_info_received (QmiClientLoc                     *client,
+                       QmiIndicationLocGnssSvInfoOutput *output)
 {
     GArray *satellite_infos = NULL;
     guint   i;
 
-    qmi_indication_loc_gnss_satellite_info_output_get_satellite_info (output, &satellite_infos, NULL);
+    qmi_indication_loc_gnss_sv_info_output_get_list (output, &satellite_infos, NULL);
 
-    g_print ("[satellite info] %d satellites detected:\n", satellite_infos ? satellite_infos->len : 0);
+    g_print ("[gnss sv info] %d satellites detected:\n", satellite_infos ? satellite_infos->len : 0);
     for (i = 0; i < satellite_infos->len; i++) {
-        QmiIndicationLocGnssSatelliteInfoOutputSatelliteInfoElement *element;
+        QmiIndicationLocGnssSvInfoOutputListElement *element;
 
-        element = &g_array_index (satellite_infos, QmiIndicationLocGnssSatelliteInfoOutputSatelliteInfoElement, i);
+        element = &g_array_index (satellite_infos, QmiIndicationLocGnssSvInfoOutputListElement, i);
         g_print ("   [satellite #%u]\n", i);
         g_print ("      system:           %s\n", (element->valid_information & QMI_LOC_SATELLITE_VALID_INFORMATION_SYSTEM) ? qmi_loc_system_get_string (element->system) : "n/a");
         if (element->valid_information & QMI_LOC_SATELLITE_VALID_INFORMATION_GNSS_SATELLITE_ID)
@@ -296,7 +296,7 @@ satellite_info_received (QmiClientLoc                            *client,
     }
 
     /* Terminate GET request */
-    if (get_satellite_info_flag)
+    if (get_gnss_sv_info_flag)
         operation_shutdown (TRUE);
 }
 
@@ -520,11 +520,11 @@ monitoring_step_ongoing (void)
                                                                G_CALLBACK (position_report_received),
                                                                NULL);
 
-    if (get_satellite_info_flag || follow_satellite_info_flag)
-        ctx->satellite_info_indication_id = g_signal_connect (ctx->client,
-                                                              "gnss-satellite-info",
-                                                              G_CALLBACK (satellite_info_received),
-                                                              NULL);
+    if (get_gnss_sv_info_flag || follow_gnss_sv_info_flag)
+        ctx->gnss_sv_info_indication_id = g_signal_connect (ctx->client,
+                                                            "gnss-sv-info",
+                                                            G_CALLBACK (gnss_sv_info_received),
+                                                            NULL);
 
     if (follow_nmea_flag)
         ctx->nmea_indication_id = g_signal_connect (ctx->client,
@@ -533,7 +533,7 @@ monitoring_step_ongoing (void)
                                                     NULL);
 
     g_assert (ctx->position_report_indication_id ||
-              ctx->satellite_info_indication_id ||
+              ctx->gnss_sv_info_indication_id ||
               ctx->nmea_indication_id);
 }
 
@@ -547,7 +547,7 @@ monitoring_step_setup_timeout (void)
                            NULL);
 
     /* For non-follow requests, we also setup a timeout */
-    if (get_position_report_flag || get_satellite_info_flag)
+    if (get_position_report_flag || get_gnss_sv_info_flag)
         ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
                                                  (GSourceFunc) monitoring_timed_out,
                                                  NULL);
@@ -605,11 +605,11 @@ monitoring_step_register_events (void)
                                                                NULL);
     }
 
-    if (get_satellite_info_flag || follow_satellite_info_flag) {
+    if (get_gnss_sv_info_flag || follow_gnss_sv_info_flag) {
         indication_mask |= QMI_LOC_EVENT_REGISTRATION_FLAG_GNSS_SATELLITE_INFO;
-        ctx->satellite_info_indication_id = g_signal_connect (ctx->client,
-                                                              "gnss-satellite-info",
-                                                              G_CALLBACK (satellite_info_received),
+        ctx->gnss_sv_info_indication_id = g_signal_connect (ctx->client,
+                                                              "gnss-sv-info",
+                                                              G_CALLBACK (gnss_sv_info_received),
                                                               NULL);
     }
 
@@ -768,7 +768,7 @@ qmicli_loc_run (QmiDevice    *device,
     }
 
     /* All the remaining actions require monitoring */
-    if (get_position_report_flag || get_satellite_info_flag || follow_position_report_flag || follow_satellite_info_flag || follow_nmea_flag) {
+    if (get_position_report_flag || get_gnss_sv_info_flag || follow_position_report_flag || follow_gnss_sv_info_flag || follow_nmea_flag) {
         ctx->monitoring_step = MONITORING_STEP_FIRST;
         monitoring_step_run ();
         return;

@@ -381,7 +381,7 @@
       <title>LOC Indications</title>
       <xi:include href="xml/qmi-indication-loc-position-report.xml"/>
       <xi:include href="xml/qmi-indication-loc-nmea.xml"/>
-      <xi:include href="xml/qmi-indication-loc-gnss-satellite-info.xml"/>
+      <xi:include href="xml/qmi-indication-loc-gnss-sv-info.xml"/>
       <xi:include href="xml/qmi-indication-loc-engine-state.xml"/>
       <xi:include href="xml/qmi-indication-loc-fix-recurrence-type.xml"/>
       <xi:include href="xml/qmi-indication-loc-get-operation-mode.xml"/>
