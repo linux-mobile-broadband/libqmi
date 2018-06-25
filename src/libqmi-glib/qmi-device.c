@@ -1617,10 +1617,9 @@ setup_iostream (GTask *task)
     }
 
     /* Setup input events */
-    self->priv->input_source = (g_pollable_input_stream_create_source (
-                                    G_POLLABLE_INPUT_STREAM (
-                                        self->priv->istream),
-                                    NULL));
+    self->priv->input_source = g_pollable_input_stream_create_source (
+                                   G_POLLABLE_INPUT_STREAM (self->priv->istream),
+                                   NULL);
     g_source_set_callback (self->priv->input_source,
                            (GSourceFunc)input_ready_cb,
                            self,
@@ -1692,17 +1691,17 @@ create_iostream_with_socket (GTask *task)
     g_socket_client_set_protocol (self->priv->socket_client, G_SOCKET_PROTOCOL_DEFAULT);
 
     /* Setup socket address */
-    socket_address = (g_unix_socket_address_new_with_type (
-                          self->priv->proxy_path,
-                          -1,
-                          G_UNIX_SOCKET_ADDRESS_ABSTRACT));
+    socket_address = g_unix_socket_address_new_with_type (
+                         self->priv->proxy_path,
+                         -1,
+                         G_UNIX_SOCKET_ADDRESS_ABSTRACT);
 
     /* Connect to address */
-    self->priv->socket_connection = (g_socket_client_connect (
-                                         self->priv->socket_client,
-                                         G_SOCKET_CONNECTABLE (socket_address),
-                                         NULL,
-                                         &error));
+    self->priv->socket_connection = g_socket_client_connect (
+                                        self->priv->socket_client,
+                                        G_SOCKET_CONNECTABLE (socket_address),
+                                        NULL,
+                                        &error);
     g_object_unref (socket_address);
 
     if (!self->priv->socket_connection) {
@@ -2179,10 +2178,10 @@ mbim_device_open_ready (MbimDevice   *dev,
         entries[n_entries]->cids[0] = MBIM_CID_QMI_MSG;
         n_entries++;
 
-        request = (mbim_message_device_service_subscribe_list_set_new (
-                       n_entries,
-                       (const MbimEventEntry *const *)entries,
-                       NULL));
+        request = mbim_message_device_service_subscribe_list_set_new (
+                      n_entries,
+                      (const MbimEventEntry *const *)entries,
+                      NULL);
         mbim_device_command (dev,
                              request,
                              10,
@@ -2717,7 +2716,7 @@ mbim_command (QmiDevice      *self,
 
     g_debug ("[%s] sending message as MBIM...", self->priv->path_display);
 
-    mbim_message = (mbim_message_qmi_msg_set_new (raw_message_len, raw_message, error));
+    mbim_message = mbim_message_qmi_msg_set_new (raw_message_len, raw_message, error);
     if (!mbim_message)
         return FALSE;
 
