@@ -92,12 +92,12 @@ static GOptionEntry entries[] = {
     },
     {
         "loc-get-gnss-sv-info", 0, 0, G_OPTION_ARG_NONE, &get_gnss_sv_info_flag,
-        "Show satellite report",
+        "Show GNSS space vehicle info",
         NULL,
     },
     {
         "loc-timeout", 0, 0, G_OPTION_ARG_INT, &timeout,
-        "Maximum time to wait for information in `--loc-get-position-report' and `--loc-get-satellite-info' (default 30s)",
+        "Maximum time to wait for information in `--loc-get-position-report' and `--loc-get-gnss-sv-info' (default 30s)",
         "[SECS]",
     },
     {
@@ -107,7 +107,7 @@ static GOptionEntry entries[] = {
     },
     {
         "loc-follow-gnss-sv-info", 0, 0, G_OPTION_ARG_NONE, &follow_gnss_sv_info_flag,
-        "Follow all satellite info updates reported by the location module indefinitely",
+        "Follow all GNSS space vehicle info updates reported by the location module indefinitely",
         NULL,
     },
     {
