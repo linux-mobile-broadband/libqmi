@@ -609,29 +609,14 @@ monitoring_step_register_events (void)
 
     /* Configure events to enable */
 
-    if (get_position_report_flag || follow_position_report_flag) {
+    if (get_position_report_flag || follow_position_report_flag)
         indication_mask |= QMI_LOC_EVENT_REGISTRATION_FLAG_POSITION_REPORT;
-        ctx->position_report_indication_id = g_signal_connect (ctx->client,
-                                                               "position-report",
-                                                               G_CALLBACK (position_report_received),
-                                                               NULL);
-    }
 
-    if (get_gnss_sv_info_flag || follow_gnss_sv_info_flag) {
+    if (get_gnss_sv_info_flag || follow_gnss_sv_info_flag)
         indication_mask |= QMI_LOC_EVENT_REGISTRATION_FLAG_GNSS_SATELLITE_INFO;
-        ctx->gnss_sv_info_indication_id = g_signal_connect (ctx->client,
-                                                              "gnss-sv-info",
-                                                              G_CALLBACK (gnss_sv_info_received),
-                                                              NULL);
-    }
 
-    if (follow_nmea_flag) {
+    if (follow_nmea_flag)
         indication_mask |= QMI_LOC_EVENT_REGISTRATION_FLAG_NMEA;
-        ctx->nmea_indication_id = g_signal_connect (ctx->client,
-                                                    "nmea",
-                                                    G_CALLBACK (nmea_received),
-                                                    NULL);
-    }
 
     g_assert (indication_mask);
 
