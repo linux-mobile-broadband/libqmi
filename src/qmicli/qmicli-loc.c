@@ -258,7 +258,8 @@ nmea_received (QmiClientLoc               *client,
 
     qmi_indication_loc_nmea_output_get_nmea_string (output, &nmea, NULL);
     if (nmea)
-        g_print ("[nmea] %s\n", nmea);
+        /* Note: NMEA traces already have an EOL */
+        g_print ("%s", nmea);
 }
 
 static void
