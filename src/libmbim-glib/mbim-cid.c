@@ -366,6 +366,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_qmi_get_string (cid);
     case MBIM_SERVICE_ATDS:
         return mbim_cid_atds_get_string (cid);
+    case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
+        return mbim_cid_intel_firmware_update_get_string (cid);
     default:
         g_assert_not_reached ();
         return NULL;
