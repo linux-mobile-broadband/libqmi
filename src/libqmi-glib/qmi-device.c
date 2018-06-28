@@ -107,6 +107,7 @@ struct _QmiDevicePrivate {
     GArray *supported_services;
 
     /* I/O stream, set when the file is open */
+    gint fd;
     GInputStream *istream;
     GOutputStream *ostream;
     GSource *input_source;
@@ -124,6 +125,8 @@ struct _QmiDevicePrivate {
 };
 
 #define BUFFER_SIZE 2048
+
+static void destroy_iostream (QmiDevice *self);
 
 /*****************************************************************************/
 /* Message transactions (private) */
@@ -1603,10 +1606,7 @@ setup_iostream (GTask *task)
 
     /* Check in/out streams */
     if (!self->priv->istream || !self->priv->ostream) {
-        g_clear_object (&self->priv->istream);
-        g_clear_object (&self->priv->ostream);
-        g_clear_object (&self->priv->socket_connection);
-        g_clear_object (&self->priv->socket_client);
+        destroy_iostream (self);
         g_task_return_new_error (task,
                                  QMI_CORE_ERROR,
                                  QMI_CORE_ERROR_FAILED,
@@ -1649,8 +1649,10 @@ create_iostream_with_fd (GTask *task)
         return;
     }
 
-    self->priv->istream = g_unix_input_stream_new  (fd, TRUE);
-    self->priv->ostream = g_unix_output_stream_new (fd, TRUE);
+    g_assert (self->priv->fd < 0);
+    self->priv->fd = fd;
+    self->priv->istream = g_unix_input_stream_new  (fd, FALSE);
+    self->priv->ostream = g_unix_output_stream_new (fd, FALSE);
 
     setup_iostream (task);
 }
@@ -2417,6 +2419,10 @@ destroy_iostream (QmiDevice *self)
     g_clear_object (&self->priv->ostream);
     g_clear_object (&self->priv->socket_connection);
     g_clear_object (&self->priv->socket_client);
+    if (self->priv->fd >= 0) {
+        close (self->priv->fd);
+        self->priv->fd = -1;
+    }
 }
 
 #if defined MBIM_QMUX_ENABLED
@@ -3016,6 +3022,7 @@ qmi_device_init (QmiDevice *self)
                                                             NULL,
                                                             g_object_unref);
     self->priv->proxy_path = g_strdup (QMI_PROXY_SOCKET_PATH);
+    self->priv->fd = -1;
 }
 
 static gboolean
