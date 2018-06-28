@@ -56,6 +56,12 @@ typedef enum {
 } QmiLocIntermediateReportState;
 
 /**
+ * qmi_loc_intermediate_report_state_get_string:
+ *
+ * Since: 1.20
+ */
+
+/**
  * QmiLocIndicationStatus:
  * @QMI_LOC_INDICATION_STATUS_SUCCESS: Success.
  * @QMI_LOC_INDICATION_STATUS_GENERAL_FAILURE: General Failure.
@@ -78,6 +84,12 @@ typedef enum {
     QMI_LOC_INDICATION_STATUS_PHONE_OFFLINE      = 5,
     QMI_LOC_INDICATION_STATUS_TIMEOUT            = 6,
 } QmiLocIndicationStatus;
+
+/**
+ * qmi_loc_indication_status_get_string
+ *
+ * Since: 1.22
+ */
 
 /**
  * QmiLocSessionStatus:
@@ -106,6 +118,12 @@ typedef enum {
 } QmiLocSessionStatus;
 
 /**
+ * qmi_loc_session_status_get_string
+ *
+ * Since: 1.22
+ */
+
+/**
  * QmiLocFixRecurrenceType:
  * @QMI_LOC_FIX_RECURRENCE_TYPE_REQUEST_PERIODIC_FIXES: Periodic fixes.
  * @QMI_LOC_FIX_RECURRENCE_TYPE_REQUEST_SINGLE_FIX: Single fix.
@@ -116,8 +134,14 @@ typedef enum {
  */
 typedef enum {
     QMI_LOC_FIX_RECURRENCE_TYPE_REQUEST_PERIODIC_FIXES = 1,
-    QMI_LOC_FIX_RECURRENCE_TYPE_REQUEST_SINGLE_FIX = 2,
+    QMI_LOC_FIX_RECURRENCE_TYPE_REQUEST_SINGLE_FIX     = 2,
 } QmiLocFixRecurrenceType;
+
+/**
+ * qmi_loc_fix_recurrence_type_get_string
+ *
+ * Since: 1.22
+ */
 
 /**
  * QmiLocOperationMode:
@@ -142,6 +166,12 @@ typedef enum {
 } QmiLocOperationMode;
 
 /**
+ * qmi_loc_operation_mode_get_string
+ *
+ * Since: 1.22
+ */
+
+/**
  * QmiLocEngineState:
  * @QMI_LOC_ENGINE_STATE_ON: On.
  * @QMI_LOC_ENGINE_STATE_OFF: Off.
@@ -154,6 +184,12 @@ typedef enum {
     QMI_LOC_ENGINE_STATE_ON  = 1,
     QMI_LOC_ENGINE_STATE_OFF = 2,
 } QmiLocEngineState;
+
+/**
+ * qmi_loc_engine_state_get_string
+ *
+ * Since: 1.22
+ */
 
 /**
  * QmiLocTechnologyUsed:
@@ -182,6 +218,12 @@ typedef enum {
 } QmiLocTechnologyUsed;
 
 /**
+ * qmi_loc_technology_used_build_string_from_mask
+ *
+ * Since: 1.22
+ */
+
+/**
  * QmiLocReliability:
  * @QMI_LOC_RELIABILITY_NOT_SET: Not set.
  * @QMI_LOC_RELIABILITY_VERY_LOW: Very low.
@@ -200,6 +242,12 @@ typedef enum {
     QMI_LOC_RELIABILITY_MEDIUM   = 3,
     QMI_LOC_RELIABILITY_HIGH     = 4,
 } QmiLocReliability;
+
+/**
+ * qmi_loc_reliability_get_string
+ *
+ * Since: 1.22
+ */
 
 /**
  * QmiLocTimeSource:
@@ -246,6 +294,12 @@ typedef enum {
 } QmiLocTimeSource;
 
 /**
+ * qmi_loc_time_source_get_string
+ *
+ * Since: 1.22
+ */
+
+/**
  * QmiLocSatelliteValidInformation:
  * @QMI_LOC_SATELLITE_VALID_INFORMATION_SYSTEM: System,
  * @QMI_LOC_SATELLITE_VALID_INFORMATION_GNSS_SATELLITE_ID: GNSS Satellite ID.
@@ -272,6 +326,12 @@ typedef enum {
 } QmiLocSatelliteValidInformation;
 
 /**
+ * qmi_loc_satellite_valid_information_build_string_from_mask
+ *
+ * Since: 1.22
+ */
+
+/**
  * QmiLocSystem:
  * @QMI_LOC_SYSTEM_GPS: GPS.
  * @QMI_LOC_SYSTEM_GALILEO: Galileo.
@@ -292,6 +352,12 @@ typedef enum {
 } QmiLocSystem;
 
 /**
+ * qmi_loc_system_get_string
+ *
+ * Since: 1.22
+ */
+
+/**
  * QmiLocHealthStatus:
  * @QMI_LOC_HEALTH_STATUS_UNHEALTHY: Unhealthy.
  * @QMI_LOC_HEALTH_STATUS_HEALTHY: Healthy.
@@ -306,6 +372,12 @@ typedef enum {
 } QmiLocHealthStatus;
 
 /**
+ * qmi_loc_health_status_get_string
+ *
+ * Since: 1.22
+ */
+
+/**
  * QmiLocNavigationData:
  * @QMI_LOC_NAVIGATION_DATA_HAS_EPHEMERIS: Has ephemeris.
  * @QMI_LOC_NAVIGATION_DATA_HAS_ALMANAC: Has almanac.
@@ -318,6 +390,12 @@ typedef enum {
     QMI_LOC_NAVIGATION_DATA_HAS_EPHEMERIS = 0,
     QMI_LOC_NAVIGATION_DATA_HAS_ALMANAC   = 1,
 } QmiLocNavigationData;
+
+/**
+ * qmi_loc_navigation_data_get_string
+ *
+ * Since: 1.22
+ */
 
 /**
  * QmiLocSatelliteStatus:
@@ -336,97 +414,7 @@ typedef enum {
 } QmiLocSatelliteStatus;
 
 /**
- * qmi_loc_intermediate_report_state_get_string:
- *
- * Since: 1.20
- */
-
-/**
- * qmi_loc_intermediate_report_state_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_fix_recurrence_type_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_operation_mode_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_altitude_assumed_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_engine_state_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_health_status_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_indication_status_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_navigation_data_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_reliability_get_string
- *
- * Since: 1.22
- */
-
-/**
  * qmi_loc_satellite_status_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_satellite_valid_information_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_session_status_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_system_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_technology_used_get_string
- *
- * Since: 1.22
- */
-
-/**
- * qmi_loc_time_source_get_string
  *
  * Since: 1.22
  */
