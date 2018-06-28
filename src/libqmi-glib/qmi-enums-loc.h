@@ -419,4 +419,52 @@ typedef enum {
  * Since: 1.22
  */
 
+/**
+ * QmiLocServerType:
+ * @QMI_LOC_SERVER_TYPE_UNKNOWN: Unknown.
+ * @QMI_LOC_SERVER_TYPE_CDMA_PDE: CDMA Position Determining System.
+ * @QMI_LOC_SERVER_TYPE_CDMA_MPC: CDMA Mobile Positioning Center.
+ * @QMI_LOC_SERVER_TYPE_UMTS_SLP: SUPL Location Platform.
+ * @QMI_LOC_SERVER_TYPE_CUSTOM_PDE: Custom position determining system.
+ *
+ * Server type for Assisted-GPS.
+ *
+ * Since: 1.22
+ */
+typedef enum {
+    QMI_LOC_SERVER_TYPE_UNKNOWN    = 0,
+    QMI_LOC_SERVER_TYPE_CDMA_PDE   = 1,
+    QMI_LOC_SERVER_TYPE_CDMA_MPC   = 2,
+    QMI_LOC_SERVER_TYPE_UMTS_SLP   = 3,
+    QMI_LOC_SERVER_TYPE_CUSTOM_PDE = 4,
+} QmiLocServerType;
+
+/**
+ * qmi_loc_server_type_get_string
+ *
+ * Since: 1.22
+ */
+
+/**
+ * QmiLocServerAddressType:
+ * @QMI_LOC_SERVER_ADDRESS_TYPE_NONE: None.
+ * @QMI_LOC_SERVER_ADDRESS_TYPE_IPV4: IPv4 server address.
+ * @QMI_LOC_SERVER_ADDRESS_TYPE_IPV6: IPv6 server address.
+ * @QMI_LOC_SERVER_ADDRESS_TYPE_URL: URL server address.
+ *
+ * Type of server address for Assisted-GPS.
+ */
+typedef enum {
+    QMI_LOC_SERVER_ADDRESS_TYPE_NONE = 0,
+    QMI_LOC_SERVER_ADDRESS_TYPE_IPV4 = 1 << 0,
+    QMI_LOC_SERVER_ADDRESS_TYPE_IPV6 = 1 << 1,
+    QMI_LOC_SERVER_ADDRESS_TYPE_URL  = 1 << 2,
+} QmiLocServerAddressType;
+
+/**
+ * qmi_loc_server_address_type_build_string_from_mask
+ *
+ * Since: 1.22
+ */
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_LOC_H_ */
