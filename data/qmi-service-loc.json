@@ -470,6 +470,13 @@
                      "public-format" : "QmiLocOperationMode" } ],
      "output"  : [ { "common-ref" : "Operation Result" } ] },
 
+  {  "name"    : "Set Operation Mode",
+     "type"    : "Indication",
+     "service" : "LOC",
+     "id"      : "0x004A",
+     "since"   : "1.22",
+     "output"  : [ { "common-ref" : "LOC Indication Status" } ] },
+
   // *********************************************************************************
 
   {  "name"    : "Get Operation Mode",
