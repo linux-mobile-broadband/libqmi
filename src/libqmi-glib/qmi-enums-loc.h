@@ -467,4 +467,20 @@ typedef enum {
  * Since: 1.22
  */
 
+/**
+ * QmiLocPredictedOrbitsDataFormat:
+ * @QMI_LOC_PREDICTED_ORBITS_DATA_FORMAT_XTRA: Qualcomm XTRA database.
+ *
+ * Type of predicted orbits data.
+ */
+typedef enum {
+    QMI_LOC_PREDICTED_ORBITS_DATA_FORMAT_XTRA = 0
+} QmiLocPredictedOrbitsDataFormat;
+
+/**
+ * qmi_loc_predicted_orbits_data_format_get_string
+ *
+ * Since: 1.22
+ */
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_LOC_H_ */

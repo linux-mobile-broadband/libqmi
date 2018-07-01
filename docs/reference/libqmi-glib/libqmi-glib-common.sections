@@ -1087,6 +1087,7 @@ QmiLocReliability
 QmiLocSessionStatus
 QmiLocServerType
 QmiLocServerAddressType
+QmiLocPredictedOrbitsDataFormat
 <SUBSECTION Methods>
 qmi_loc_intermediate_report_state_get_string
 qmi_loc_fix_recurrence_type_get_string
@@ -1104,6 +1105,7 @@ qmi_loc_technology_used_build_string_from_mask
 qmi_loc_time_source_get_string
 qmi_loc_server_type_get_string
 qmi_loc_server_address_type_build_string_from_mask
+qmi_loc_predicted_orbits_data_format_get_string
 <SUBSECTION Private>
 qmi_loc_intermediate_report_state_build_string_from_mask
 qmi_loc_operation_mode_build_string_from_mask
@@ -1123,6 +1125,7 @@ qmi_loc_technology_used_get_string
 qmi_loc_time_source_build_string_from_mask
 qmi_loc_server_type_build_string_from_mask
 qmi_loc_server_address_type_get_string
+qmi_loc_predicted_orbits_data_format_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_LOC_INTERMEDIATE_REPORT_STATE
 QMI_TYPE_LOC_FIX_RECURRENCE_TYPE
@@ -1140,6 +1143,7 @@ QMI_TYPE_LOC_TECHNOLOGY_USED
 QMI_TYPE_LOC_TIME_SOURCE
 QMI_TYPE_LOC_SERVER_TYPE
 QMI_TYPE_LOC_SERVER_ADDRESS_TYPE
+QMI_TYPE_LOC_PREDICTED_ORBITS_DATA_FORMAT
 qmi_loc_intermediate_report_state_get_type
 qmi_loc_fix_recurrence_type_get_type
 qmi_loc_operation_mode_get_type
@@ -1156,6 +1160,7 @@ qmi_loc_technology_used_get_type
 qmi_loc_time_source_get_type
 qmi_loc_server_type_get_type
 qmi_loc_server_address_type_get_type
+qmi_loc_predicted_orbits_data_format_get_type
 </SECTION>
 
 <SECTION>
