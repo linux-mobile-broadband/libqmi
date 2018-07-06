@@ -969,7 +969,7 @@ get_data_bearer_technology_ready (QmiClientWds *client,
         return;
     }
 
-    qmi_message_wds_get_data_bearer_technology_output_get_last (
+    qmi_message_wds_get_data_bearer_technology_output_get_current (
         output,
         &current,
         NULL);
