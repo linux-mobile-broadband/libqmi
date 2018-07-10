@@ -480,7 +480,7 @@ position_report_received (QmiClientLoc                         *client,
             g_print ("   time uncertainty: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_time_source (output, &time_source, NULL))
-            g_print ("   time source: %s\n", qmi_loc_reliability_get_string (time_source));
+            g_print ("   time source: %s\n", qmi_loc_time_source_get_string (time_source));
         else
             g_print ("   time source: n/a\n");
 
