@@ -52,6 +52,7 @@ typedef struct {
     guint           position_report_indication_id;
     guint           nmea_indication_id;
     guint           gnss_sv_info_indication_id;
+    guint           delete_assistance_data_indication_id;
 } Context;
 static Context *ctx;
 
@@ -65,6 +66,7 @@ static gint     timeout;
 static gboolean follow_position_report_flag;
 static gboolean follow_gnss_sv_info_flag;
 static gboolean follow_nmea_flag;
+static gboolean delete_assistance_data_flag;
 static gboolean noop_flag;
 
 #define DEFAULT_LOC_TIMEOUT_SECS 30
@@ -115,6 +117,11 @@ static GOptionEntry entries[] = {
         "Follow all NMEA trace updates reported by the location module indefinitely",
         NULL,
     },
+    {
+        "loc-delete-assistance-data", 0, 0, G_OPTION_ARG_NONE, &delete_assistance_data_flag,
+        "Delete positioning assistance data",
+        NULL,
+    },
     { "loc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a LOC client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -151,6 +158,7 @@ qmicli_loc_options_enabled (void)
      *  - Show current position (oneshot).
      *  - Show current satellite info (oneshot).
      *  - Follow updates indefinitely, including either position, satellite info or NMEA traces.
+     *  - Delete assistance data.
      */
     follow_action = !!(follow_position_report_flag + follow_gnss_sv_info_flag + follow_nmea_flag);
     n_actions = (start_flag +
@@ -158,6 +166,7 @@ qmicli_loc_options_enabled (void)
                  get_position_report_flag +
                  get_gnss_sv_info_flag +
                  follow_action +
+                 delete_assistance_data_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -182,7 +191,7 @@ qmicli_loc_options_enabled (void)
 
     /* Actions that require receiving QMI indication messages must specify that
      * indications are expected. */
-    if (get_position_report_flag || get_gnss_sv_info_flag || follow_action)
+    if (get_position_report_flag || get_gnss_sv_info_flag || follow_action || delete_assistance_data_flag)
         qmicli_expect_indications();
 
     checked = TRUE;
@@ -658,6 +667,69 @@ monitoring_step_run (void)
     }
 }
 
+static gboolean
+delete_assistance_data_timed_out (void)
+{
+    ctx->timeout_id = 0;
+    g_printerr ("error: operation failed: timeout\n");
+    operation_shutdown (FALSE);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+delete_assistance_data_received (QmiClientLoc                               *client,
+                                 QmiIndicationLocDeleteAssistanceDataOutput *output)
+{
+    QmiLocIndicationStatus  status;
+    GError                 *error = NULL;
+
+    if (!qmi_indication_loc_delete_assistance_data_output_get_indication_status (output, &status, &error)) {
+        g_printerr ("Couldn't delete assistance data: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_printerr ("Successfully deleted assistance data\n");
+    operation_shutdown (TRUE);
+}
+
+static void
+delete_assistance_data_ready (QmiClientLoc *client,
+                              GAsyncResult *res)
+{
+    QmiMessageLocDeleteAssistanceDataOutput *output;
+    GError                                  *error = NULL;
+
+    output = qmi_client_loc_delete_assistance_data_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_loc_delete_assistance_data_output_get_result (output, &error)) {
+        g_printerr ("error: could not delete assistance data: %s\n", error->message);
+        qmi_message_loc_delete_assistance_data_output_unref (output);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    /* Wait for response asynchronously */
+    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                             (GSourceFunc) delete_assistance_data_timed_out,
+                                             NULL);
+
+    ctx->delete_assistance_data_indication_id = g_signal_connect (ctx->client,
+                                                                  "delete-assistance-data",
+                                                                  G_CALLBACK (delete_assistance_data_received),
+                                                                  NULL);
+
+    qmi_message_loc_delete_assistance_data_output_unref (output);
+}
+
 static void
 stop_ready (QmiClientLoc *client,
             GAsyncResult *res)
@@ -769,6 +841,22 @@ qmicli_loc_run (QmiDevice    *device,
                              (GAsyncReadyCallback) stop_ready,
                              NULL);
         qmi_message_loc_stop_input_unref (input);
+        return;
+    }
+
+    /* Delete assistance data */
+    if (delete_assistance_data_flag) {
+        QmiMessageLocDeleteAssistanceDataInput *input;
+
+        input = qmi_message_loc_delete_assistance_data_input_new ();
+        qmi_message_loc_delete_assistance_data_input_set_delete_all (input, TRUE, NULL);
+        qmi_client_loc_delete_assistance_data (ctx->client,
+                                               input,
+                                               10,
+                                               ctx->cancellable,
+                                               (GAsyncReadyCallback) delete_assistance_data_ready,
+                                               NULL);
+        qmi_message_loc_delete_assistance_data_input_unref (input);
         return;
     }
 

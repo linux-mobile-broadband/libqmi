@@ -483,4 +483,92 @@ typedef enum {
  * Since: 1.22
  */
 
+/**
+ * QmiLocDeleteSvInfo:
+ * @QMI_LOC_DELETE_SV_INFO_EPHEMERIS: Ephemeris.
+ * @QMI_LOC_DELETE_SV_INFO_ALMANAC: Almanac.
+ *
+ * Type of data to delete for a given satellite.
+ */
+typedef enum {
+    QMI_LOC_DELETE_SV_INFO_EPHEMERIS = 1 << 0,
+    QMI_LOC_DELETE_SV_INFO_ALMANAC   = 1 << 1,
+} QmiLocDeleteSvInfo;
+
+/**
+ * qmi_loc_delete_sv_info_build_string_from_mask
+ *
+ * Since: 1.22
+ */
+
+/**
+ * QmiLocDeleteCellDatabase:
+ * @QMI_LOC_DELETE_CELL_DATABASE_POS: Position.
+ * @QMI_LOC_DELETE_CELL_DATABASE_LATEST_GPS_POS: Latest GPS position.
+ * @QMI_LOC_DELETE_CELL_DATABASE_OTA_POS: OTA position.
+ * @QMI_LOC_DELETE_CELL_DATABASE_EXT_REF_POS: External reference position.
+ * @QMI_LOC_DELETE_CELL_DATABASE_TIMETAG: Timetag.
+ * @QMI_LOC_DELETE_CELL_DATABASE_CELLID: Cell ID.
+ * @QMI_LOC_DELETE_CELL_DATABASE_CACHED_CELLID: Cached cell ID.
+ * @QMI_LOC_DELETE_CELL_DATABASE_LAST_SRV_CELL: Last serving cell.
+ * @QMI_LOC_DELETE_CELL_DATABASE_CUR_SRV_CELL: Current servince cell.
+ * @QMI_LOC_DELETE_CELL_DATABASE_NEIGHBOR_INFO: Neighboring cell info.
+ *
+ * Type of data to delete from the cell database.
+ */
+typedef enum {
+    QMI_LOC_DELETE_CELL_DATABASE_POS            = 1 << 0,
+    QMI_LOC_DELETE_CELL_DATABASE_LATEST_GPS_POS = 1 << 1,
+    QMI_LOC_DELETE_CELL_DATABASE_OTA_POS        = 1 << 2,
+    QMI_LOC_DELETE_CELL_DATABASE_EXT_REF_POS    = 1 << 3,
+    QMI_LOC_DELETE_CELL_DATABASE_TIMETAG        = 1 << 4,
+    QMI_LOC_DELETE_CELL_DATABASE_CELLID         = 1 << 5,
+    QMI_LOC_DELETE_CELL_DATABASE_CACHED_CELLID  = 1 << 6,
+    QMI_LOC_DELETE_CELL_DATABASE_LAST_SRV_CELL  = 1 << 7,
+    QMI_LOC_DELETE_CELL_DATABASE_CUR_SRV_CELL   = 1 << 8,
+    QMI_LOC_DELETE_CELL_DATABASE_NEIGHBOR_INFO  = 1 << 9,
+} QmiLocDeleteCellDatabase;
+
+/**
+ * qmi_loc_delete_cell_database_build_string_from_mask
+ *
+ * Since: 1.22
+ */
+
+/**
+ * QmiLocDeleteClockInfo:
+ * @QMI_LOC_DELETE_CLOCK_INFO_TIME_EST: Time estimation.
+ * @QMI_LOC_DELETE_CLOCK_INFO_FREQ_EST: Frequency estimation.
+ * @QMI_LOC_DELETE_CLOCK_INFO_WEEK_NUMBER: Week number.
+ * @QMI_LOC_DELETE_CLOCK_INFO_RTC_TIME: RTC time.
+ * @QMI_LOC_DELETE_CLOCK_INFO_TIME_TRANSFER: Time transfer.
+ * @QMI_LOC_DELETE_CLOCK_INFO_GPS_TIME_EST: GPS time estimation.
+ * @QMI_LOC_DELETE_CLOCK_INFO_GLO_TIME_EST: GLONASS time estimation.
+ * @QMI_LOC_DELETE_CLOCK_INFO_GLO_DAY_NUMBER: GLONASS day number.
+ * @QMI_LOC_DELETE_CLOCK_INFO_GLO_YEAR_NUMBER: GLONASS year number.
+ * @QMI_LOC_DELETE_CLOCK_INFO_GLO_RF_GRP_DELAY: GLONASS RF group delay.
+ * @QMI_LOC_DELETE_CLOCK_INFO_DISABLE_TT: Disable TT.
+ *
+ * Type of data to delete from the clock information.
+ */
+typedef enum {
+    QMI_LOC_DELETE_CLOCK_INFO_TIME_EST         = 1 << 0,
+    QMI_LOC_DELETE_CLOCK_INFO_FREQ_EST         = 1 << 1,
+    QMI_LOC_DELETE_CLOCK_INFO_WEEK_NUMBER      = 1 << 2,
+    QMI_LOC_DELETE_CLOCK_INFO_RTC_TIME         = 1 << 3,
+    QMI_LOC_DELETE_CLOCK_INFO_TIME_TRANSFER    = 1 << 4,
+    QMI_LOC_DELETE_CLOCK_INFO_GPS_TIME_EST     = 1 << 5,
+    QMI_LOC_DELETE_CLOCK_INFO_GLO_TIME_EST     = 1 << 6,
+    QMI_LOC_DELETE_CLOCK_INFO_GLO_DAY_NUMBER   = 1 << 7,
+    QMI_LOC_DELETE_CLOCK_INFO_GLO_YEAR_NUMBER  = 1 << 8,
+    QMI_LOC_DELETE_CLOCK_INFO_GLO_RF_GRP_DELAY = 1 << 9,
+    QMI_LOC_DELETE_CLOCK_INFO_DISABLE_TT       = 1 << 10,
+} QmiLocDeleteClockInfo;
+
+/**
+ * qmi_loc_delete_clock_info_build_string_from_mask
+ *
+ * Since: 1.22
+ */
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_LOC_H_ */
