@@ -860,7 +860,7 @@ gboolean qmi_message_tlv_read_gfloat (QmiMessage  *self,
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
  * @offset: address of a the offset within the TLV value.
- * @endian: target endianness, swapped from host byte order if necessary.
+ * @endian: source endianness, which will be swapped to host byte order if necessary.
  * @out: return location for the read #gdouble.
  * @error: return location for error or %NULL.
  *
