@@ -3695,8 +3695,7 @@ qmicli_dms_run (QmiDevice *device,
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
     ctx->client = g_object_ref (client);
-    if (cancellable)
-        ctx->cancellable = g_object_ref (cancellable);
+    ctx->cancellable = g_object_ref (cancellable);
 
     /* Request to get IDs? */
     if (get_ids_flag) {

@@ -3264,8 +3264,7 @@ qmicli_nas_run (QmiDevice *device,
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
     ctx->client = g_object_ref (client);
-    if (cancellable)
-        ctx->cancellable = g_object_ref (cancellable);
+    ctx->cancellable = g_object_ref (cancellable);
 
     /* Request to get signal strength? */
     if (get_signal_strength_flag) {
