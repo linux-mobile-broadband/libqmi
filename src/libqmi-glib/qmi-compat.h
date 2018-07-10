@@ -426,6 +426,36 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  */
 #define QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE (QmiProtocolError) QMI_PROTOCOL_ERROR_REQUESTED_NUMBER_UNSUPPORTED
 
+/**
+ * qmi_message_tlv_read_gfloat:
+ * @self: a #QmiMessage.
+ * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
+ * @offset: address of a the offset within the TLV value.
+ * @out: return location for the read #gfloat.
+ * @error: return location for error or %NULL.
+ *
+ * Reads a 32-bit floating-point number from the TLV.
+ *
+ * @offset needs to point to a valid @gsize specifying the index to start
+ * reading from within the TLV value (0 for the first item). If the variable
+ * is successfully read, @offset will be updated to point past the read item.
+ *
+ * The implementation assumes the float is encoded with the same endianness as
+ * the host, which may not be true. The use of this method is discouraged, and
+ * new code should use qmi_message_tlv_read_gfloat_endian() instead.
+ *
+ * Returns: %TRUE if the variable is successfully read, otherwise %FALSE is returned and @error is set.
+ *
+ * Since: 1.12
+ * Deprecated: 1.22: Use qmi_message_tlv_read_gfloat_endian() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_tlv_read_gfloat_endian)
+gboolean qmi_message_tlv_read_gfloat (QmiMessage  *self,
+                                      gsize        tlv_offset,
+                                      gsize       *offset,
+                                      gfloat      *out,
+                                      GError     **error);
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */

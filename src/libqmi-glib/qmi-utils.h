@@ -685,12 +685,14 @@ __QMI_GDOUBLE_SWAP_LE_BE(gdouble in)
 }
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define __QMI_ENDIAN_HOST          QMI_ENDIAN_LITTLE
 #define __QMI_GFLOAT_TO_LE(val)    ((gfloat) (val))
 #define __QMI_GFLOAT_TO_BE(val)    (__QMI_GFLOAT_SWAP_LE_BE (val))
 #define __QMI_GDOUBLE_TO_LE(val)   ((gdouble) (val))
 #define __QMI_GDOUBLE_TO_BE(val)   (__QMI_GDOUBLE_SWAP_LE_BE (val))
 
 #elif G_BYTE_ORDER == G_BIG_ENDIAN
+#define __QMI_ENDIAN_HOST          QMI_ENDIAN_BIG
 #define __QMI_GFLOAT_TO_LE(val)    (__QMI_GFLOAT_SWAP_LE_BE (val))
 #define __QMI_GFLOAT_TO_BE(val)    ((gfloat) (val))
 #define __QMI_GDOUBLE_TO_LE(val)   (__QMI_GDOUBLE_SWAP_LE_BE (val))

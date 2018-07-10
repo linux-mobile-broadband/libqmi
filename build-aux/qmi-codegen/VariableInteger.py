@@ -74,6 +74,10 @@ class VariableInteger(Variable):
             template = (
                 '${lp}if (!qmi_message_tlv_read_sized_guint (message, init_offset, &offset, ${len},${endian} &(${variable_name}), ${error}))\n'
                 '${lp}    goto ${tlv_out};\n')
+        elif self.format == 'gfloat':
+            template = (
+                '${lp}if (!qmi_message_tlv_read_gfloat_endian (message, init_offset, &offset,${endian} &(${variable_name}), ${error}))\n'
+                '${lp}    goto ${tlv_out};\n')
         elif self.private_format == self.public_format:
             template = (
                 '${lp}if (!qmi_message_tlv_read_${private_format} (message, init_offset, &offset,${endian} &(${variable_name}), ${error}))\n'
@@ -206,6 +210,10 @@ class VariableInteger(Variable):
         if self.format == 'guint-sized':
             template += (
                 '${lp}    if (!qmi_message_tlv_read_sized_guint (message, init_offset, &offset, ${len},${endian} &tmp, &error))\n'
+                '${lp}        goto out;\n')
+        elif self.format == 'gfloat':
+            template += (
+                '${lp}    if (!qmi_message_tlv_read_gfloat_endian (message, init_offset, &offset,${endian} &tmp, &error))\n'
                 '${lp}        goto out;\n')
         else:
             template += (

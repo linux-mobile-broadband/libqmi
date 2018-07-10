@@ -16,10 +16,11 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2016-2017 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2018 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include "qmi-compat.h"
+#include "qmi-utils.h"
 
 #ifndef QMI_DISABLE_DEPRECATED
 
@@ -57,6 +58,16 @@ qmi_message_dms_set_service_programming_code_input_set_current (
     GError **error)
 {
   return qmi_message_dms_set_service_programming_code_input_set_current_code (self, arg_current, error);
+}
+
+gboolean
+qmi_message_tlv_read_gfloat (QmiMessage  *self,
+                             gsize        tlv_offset,
+                             gsize       *offset,
+                             gfloat      *out,
+                             GError     **error)
+{
+    return qmi_message_tlv_read_gfloat_endian (self, tlv_offset, offset, __QMI_ENDIAN_HOST, out, error);
 }
 
 #endif /* QMI_DISABLE_DEPRECATED */

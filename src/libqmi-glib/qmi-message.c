@@ -1155,12 +1155,12 @@ qmi_message_tlv_read_sized_guint (QmiMessage  *self,
 }
 
 gboolean
-qmi_message_tlv_read_gfloat (QmiMessage  *self,
-                             gsize        tlv_offset,
-                             gsize       *offset,
-                             QmiEndian    endian,
-                             gfloat      *out,
-                             GError     **error)
+qmi_message_tlv_read_gfloat_endian (QmiMessage  *self,
+                                    gsize        tlv_offset,
+                                    gsize       *offset,
+                                    QmiEndian    endian,
+                                    gfloat      *out,
+                                    GError     **error)
 {
     const guint8 *ptr;
 
