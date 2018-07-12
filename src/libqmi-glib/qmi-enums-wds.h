@@ -1303,6 +1303,26 @@ typedef enum { /*< underscore_name=qmi_wds_profile_type >*/
  * Since: 1.0
  */
 
+ /**
+  * QmiWdsProfileFamily:
+  * @QMI_WDS_PROFILE_FAMILY_EMBEDDED: Embedded profile family.
+  * @QMI_WDS_PROFILE_FAMILY_TETHERED: Tethered profile family.
+  *
+  * Profile family.
+  *
+  * Since: 1.22
+  */
+ typedef enum { /*< underscore_name=qmi_wds_profile_family >*/
+     QMI_WDS_PROFILE_FAMILY_EMBEDDED = 0,
+     QMI_WDS_PROFILE_FAMILY_TETHERED = 1
+ } QmiWdsProfileFamily;
+
+ /**
+  * qmi_wds_profile_family_get_string:
+  *
+  * Since: 1.22
+  */
+
 /**
  * QmiWdsDeliveryOrder:
  * @QMI_WDS_QOS_DELIVERY_ORDER_SUBSCRIBE: Subscribe.
