@@ -2697,9 +2697,9 @@ static void
 get_stored_image_result_free (GetStoredImageResult *result)
 {
     if (result) {
-        g_clear_pointer (&result->modem_unique_id, (GDestroyNotify)g_array_unref);
+        g_clear_pointer (&result->modem_unique_id, g_array_unref);
         g_free (result->modem_build_id);
-        g_clear_pointer (&result->pri_unique_id, (GDestroyNotify)g_array_unref);
+        g_clear_pointer (&result->pri_unique_id, g_array_unref);
         g_free (result->pri_build_id);
         g_slice_free (GetStoredImageResult, result);
     }
@@ -3161,10 +3161,10 @@ typedef struct {
 static void
 set_firmware_preference_context_clear (SetFirmwarePreferenceContext *firmware_preference_ctx)
 {
-    g_clear_pointer (&firmware_preference_ctx->modem_image_id.unique_id, (GDestroyNotify) g_array_unref);
+    g_clear_pointer (&firmware_preference_ctx->modem_image_id.unique_id, g_array_unref);
     g_free (firmware_preference_ctx->modem_image_id.build_id);
 
-    g_clear_pointer (&firmware_preference_ctx->pri_image_id.unique_id, (GDestroyNotify) g_array_unref);
+    g_clear_pointer (&firmware_preference_ctx->pri_image_id.unique_id, g_array_unref);
     g_free (firmware_preference_ctx->pri_image_id.build_id);
 }
 
