@@ -225,42 +225,69 @@ qmicli_read_operating_mode_from_string (const gchar *str,
 }
 
 gboolean
-qmicli_read_rat_mode_pref_from_string (const gchar *str,
-                                       QmiNasRatModePreference *out)
+qmicli_read_ssp_options_from_string (const gchar              *str,
+                                     QmiNasRatModePreference  *out_mode_preference,
+                                     GArray                  **out_acquisition_order)
 {
-    GType type;
-    GFlagsClass *flags_class;
-    GFlagsValue *flags_value;
-    gboolean success = TRUE, set = FALSE;
-    char **items, **iter;
+    GType        rat_mode_preference_type;
+    GFlagsClass *rat_mode_preference_flags_class;
+    GFlagsValue *rat_mode_preference_flags_value;
+    gboolean     mode_preference_set = FALSE;
+    GType        radio_interface_type;
+    GEnumClass  *radio_interface_enum_class;
+    GEnumValue  *radio_interface_enum_value;
+    gboolean     acquisition_order_set = FALSE;
+    gboolean     success = TRUE;
+    char       **items, **iter;
 
-    type = qmi_nas_rat_mode_preference_get_type ();
-    flags_class = G_FLAGS_CLASS (g_type_class_ref (type));
+    rat_mode_preference_type = qmi_nas_rat_mode_preference_get_type ();
+    rat_mode_preference_flags_class = G_FLAGS_CLASS (g_type_class_ref (rat_mode_preference_type));
+    radio_interface_type = qmi_nas_radio_interface_get_type ();
+    radio_interface_enum_class = G_ENUM_CLASS (g_type_class_ref (radio_interface_type));
 
-    *out = 0;
+    *out_mode_preference   = 0;
+    *out_acquisition_order = g_array_new (FALSE, FALSE, sizeof (QmiNasRadioInterface));
 
     items = g_strsplit_set (str, "|", 0);
     for (iter = items; iter && *iter && success; iter++) {
         if (!*iter[0])
             continue;
 
-        flags_value = g_flags_get_value_by_nick (flags_class, *iter);
-        if (flags_value) {
-            *out |= (QmiNasRatModePreference)flags_value->value;
-            set = TRUE;
+        /* Note: we can use the same nick names both for mode preference flags
+         * and acquistion order enums, which is very fortunate */
+
+        rat_mode_preference_flags_value = g_flags_get_value_by_nick (rat_mode_preference_flags_class, *iter);
+        if (rat_mode_preference_flags_value) {
+            *out_mode_preference |= (QmiNasRatModePreference)rat_mode_preference_flags_value->value;
+            mode_preference_set = TRUE;
         } else {
             g_printerr ("error: invalid rat mode pref value given: '%s'\n", *iter);
             success = FALSE;
         }
+
+        radio_interface_enum_value = g_enum_get_value_by_nick (radio_interface_enum_class, *iter);
+        if (radio_interface_enum_value) {
+            QmiNasRadioInterface value;
+
+            value = (QmiNasRadioInterface)(radio_interface_enum_value->value);
+            g_array_append_val (*out_acquisition_order, value);
+            acquisition_order_set = TRUE;
+        } else {
+            g_printerr ("error: invalid radio interface value given: '%s'\n", *iter);
+            success = FALSE;
+        }
     }
 
-    if (!set)
+    if (!mode_preference_set)
+        g_printerr ("error: invalid rat mode pref input given: '%s'\n", str);
+    if (!acquisition_order_set)
         g_printerr ("error: invalid rat mode pref input given: '%s'\n", str);
 
     if (items)
         g_strfreev (items);
-    g_type_class_unref (flags_class);
-    return success && set;
+    g_type_class_unref (rat_mode_preference_flags_class);
+    g_type_class_unref (radio_interface_enum_class);
+    return success && (mode_preference_set || acquisition_order_set);;
 }
 
 gboolean

@@ -1971,6 +1971,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
     guint16 mnc;
     guint64 extended_lte_band_preference[4];
     gboolean has_pcs_digit;
+    GArray *acquisition_order_preference;
 
     output = qmi_client_nas_get_system_selection_preference_finish (client, res, &error);
     if (!output) {
@@ -2110,7 +2111,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
             output,
             &gsm_wcdma_acquisition_order_preference,
             NULL)) {
-        g_print ("\tService selection preference: '%s'\n",
+        g_print ("\tGSM/WCDMA acquisition order preference: '%s'\n",
                  qmi_nas_gsm_wcdma_acquisition_order_preference_get_string (gsm_wcdma_acquisition_order_preference));
     }
 
@@ -2129,6 +2130,24 @@ get_system_selection_preference_ready (QmiClientNas *client,
                  has_pcs_digit ? "yes" : "no");
     }
 
+    if (qmi_message_nas_get_system_selection_preference_output_get_acquisition_order_preference (
+            output,
+            &acquisition_order_preference,
+            NULL)) {
+        guint i;
+
+        g_print ("\tAcquisition order preference: ");
+        for (i = 0; i < acquisition_order_preference->len; i++) {
+            QmiNasRadioInterface radio_interface;
+
+            radio_interface = g_array_index (acquisition_order_preference, QmiNasRadioInterface, i);
+            g_print ("%s%s",
+                     i > 0 ? ", " : "",
+                     qmi_nas_radio_interface_get_string (radio_interface));
+        }
+        g_print ("\n");
+    }
+
     qmi_message_nas_get_system_selection_preference_output_unref (output);
     operation_shutdown (TRUE);
 }
@@ -2137,50 +2156,43 @@ static QmiMessageNasSetSystemSelectionPreferenceInput *
 set_system_selection_preference_input_create (const gchar *str)
 {
     QmiMessageNasSetSystemSelectionPreferenceInput *input = NULL;
-    QmiNasRatModePreference pref;
-    GError *error = NULL;
+    QmiNasRatModePreference                         rat_mode_preference;
+    GArray                                         *acquisition_order;
+    GError                                         *error = NULL;
 
-    if (!qmicli_read_rat_mode_pref_from_string (str, &pref)) {
-        g_printerr ("error: failed to parse mode pref\n");
+    if (!qmicli_read_ssp_options_from_string (str, &rat_mode_preference, &acquisition_order)) {
+        g_printerr ("error: failed to parse system selection preference options\n");
         return NULL;
     }
 
     input = qmi_message_nas_set_system_selection_preference_input_new ();
-    if (!qmi_message_nas_set_system_selection_preference_input_set_mode_preference (
+
+    if (!qmi_message_nas_set_system_selection_preference_input_set_change_duration (input, QMI_NAS_CHANGE_DURATION_PERMANENT, &error))
+        goto out;
+
+    if (rat_mode_preference && !qmi_message_nas_set_system_selection_preference_input_set_mode_preference (input, rat_mode_preference, &error))
+        goto out;
+
+    if ((rat_mode_preference & (QMI_NAS_RAT_MODE_PREFERENCE_GSM | QMI_NAS_RAT_MODE_PREFERENCE_UMTS | QMI_NAS_RAT_MODE_PREFERENCE_LTE)) &&
+        (!qmi_message_nas_set_system_selection_preference_input_set_gsm_wcdma_acquisition_order_preference (
             input,
-            pref,
-            &error)) {
-        g_printerr ("error: couldn't create input data bundle: '%s'\n",
-                    error->message);
+            QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_AUTOMATIC,
+            &error)))
+        goto out;
+
+    if (acquisition_order && !qmi_message_nas_set_system_selection_preference_input_set_acquisition_order_preference (input, acquisition_order, &error))
+        goto out;
+
+out:
+
+    if (acquisition_order)
+        g_array_unref (acquisition_order);
+
+    if (error) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n", error->message);
         g_error_free (error);
         qmi_message_nas_set_system_selection_preference_input_unref (input);
         return NULL;
-    }
-
-    if (!qmi_message_nas_set_system_selection_preference_input_set_change_duration (
-            input,
-            QMI_NAS_CHANGE_DURATION_PERMANENT,
-            &error)) {
-        g_printerr ("error: couldn't create input data bundle: '%s'\n",
-                    error->message);
-        g_error_free (error);
-        qmi_message_nas_set_system_selection_preference_input_unref (input);
-        return NULL;
-    }
-
-    if (pref & (QMI_NAS_RAT_MODE_PREFERENCE_GSM |
-                QMI_NAS_RAT_MODE_PREFERENCE_UMTS |
-                QMI_NAS_RAT_MODE_PREFERENCE_LTE)) {
-        if (!qmi_message_nas_set_system_selection_preference_input_set_gsm_wcdma_acquisition_order_preference (
-                input,
-                QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_AUTOMATIC,
-                &error)) {
-            g_printerr ("error: couldn't create input data bundle: '%s'\n",
-                        error->message);
-            g_error_free (error);
-            qmi_message_nas_set_system_selection_preference_input_unref (input);
-            return NULL;
-        }
     }
 
     return input;

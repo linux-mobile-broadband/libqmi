@@ -38,8 +38,9 @@ gboolean qmicli_read_uim_pin_id_from_string                  (const gchar *str,
                                                               QmiUimPinId *out);
 gboolean qmicli_read_operating_mode_from_string              (const gchar *str,
                                                               QmiDmsOperatingMode *out);
-gboolean qmicli_read_rat_mode_pref_from_string               (const gchar *str,
-                                                              QmiNasRatModePreference *out);
+gboolean qmicli_read_ssp_options_from_string                 (const gchar              *str,
+                                                              QmiNasRatModePreference  *out_mode_preference,
+                                                              GArray                  **out_acquisition_order);
 gboolean qmicli_read_facility_from_string                    (const gchar *str,
                                                               QmiDmsUimFacility *out);
 gboolean qmicli_read_enable_disable_from_string              (const gchar *str,
