@@ -381,6 +381,21 @@
                       { "name"          : "Max Uplink Bitrate",
                         "format"        : "guint32" } ] },
 
+    { "common-ref"    : "WDS APN Disabled Flag",
+      "name"          : "APN Disabled Flag",
+      "id"            : "0x2F",
+      "type"          : "TLV",
+      "format"        : "guint8",
+      "public-format" : "gboolean" },
+
+    { "common-ref"    : "WDS Roaming Disallowed Flag",
+      "name"          : "Roaming Disallowed Flag",
+      "id"            : "0x3E",
+      "type"          : "TLV",
+      "format"        : "guint8",
+      "public-format" : "gboolean" },
+
+
     // *********************************************************************************
     // NAS common TLVs
 

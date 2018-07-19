@@ -767,10 +767,13 @@
                      "since"         : "1.18" },
                    // 0x2D, DHCP/NAS Preference
                    { "common-ref"    : "WDS LTE QoS Parameters",
-                     "since"         : "1.18" } ],
-                   // 0x2F, APN disabled flag
+                     "since"         : "1.18" },
+                   { "common-ref"    : "WDS APN Disabled Flag",
+                     "since"         : "1.22" },
                    // 0x30, PDN inactivity timeout
                    // 0x31, APN class
+                   { "common-ref"    : "WDS Roaming Disallowed Flag",
+                     "since"         : "1.22" } ],
                    // 0x90, Negotiate DNS server preference
                    // 0x91, PPP session close timer for DO
                    // 0x92, PPP session close timer for 1X
@@ -872,10 +875,13 @@
                      "since"         : "1.18" },
                    // 0x2D, DHCP/NAS Preference
                    { "common-ref"    : "WDS LTE QoS Parameters",
-                     "since"         : "1.18" } ],
-                   // 0x2F, APN disabled flag
+                     "since"         : "1.18" },
+                   { "common-ref"    : "WDS APN Disabled Flag",
+                     "since"         : "1.22" },
                    // 0x30, PDN inactivity timeout
                    // 0x31, APN class
+                   { "common-ref"    : "WDS Roaming Disallowed Flag",
+                     "since"         : "1.22" } ],
                    // 0x90, Negotiate DNS server preference
                    // 0x91, PPP session close timer for DO
                    // 0x92, PPP session close timer for 1X
@@ -1056,9 +1062,14 @@
                     { "common-ref"    : "WDS LTE QoS Parameters",
                       "since"         : "1.18",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
-                    // 0x2F, APN disabled flag
+                    { "common-ref"    : "WDS APN Disabled Flag",
+                      "since"         : "1.22",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x30, PDN inactivity timeout
                     // 0x31, APN class
+                    { "common-ref"    : "WDS Roaming Disallowed Flag",
+                      "since"         : "1.22",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     // 0x90, Negotiate DNS server preference
                     // 0x91, PPP session close timer for DO
                     // 0x92, PPP session close timer for 1X
