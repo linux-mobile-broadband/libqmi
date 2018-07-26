@@ -74,6 +74,8 @@
  * @QMI_NAS_BAND_PREFERENCE_WCDMA_2600: WCDMA 2600.
  * @QMI_NAS_BAND_PREFERENCE_WCDMA_900: WCDMA 900.
  * @QMI_NAS_BAND_PREFERENCE_WCDMA_1700_JAPAN: WCDMA 1700 (Japan).
+ * @QMI_NAS_BAND_PREFERENCE_WCDMA_850_JAPAN: WCDMA 850 (Japan). Since: 1.22.
+ * @QMI_NAS_BAND_PREFERENCE_WCDMA_1500: WCDMA 1500. Since: 1.22.
  *
  * Flags to specify frequency band preferences.
  *
@@ -120,8 +122,10 @@ typedef enum {
     QMI_NAS_BAND_PREFERENCE_BC_16            = ((guint64) 1) << 56,
     QMI_NAS_BAND_PREFERENCE_BC_17            = ((guint64) 1) << 57,
     QMI_NAS_BAND_PREFERENCE_BC_18            = ((guint64) 1) << 58,
-    QMI_NAS_BAND_PREFERENCE_BC_19            = ((guint64) 1) << 59
-    /* Bits 60-63 reserved */
+    QMI_NAS_BAND_PREFERENCE_BC_19            = ((guint64) 1) << 59,
+    QMI_NAS_BAND_PREFERENCE_WCDMA_850_JAPAN  = ((guint64) 1) << 60,
+    QMI_NAS_BAND_PREFERENCE_WCDMA_1500       = ((guint64) 1) << 61
+    /* Bits 62-63 reserved */
 } QmiNasBandPreference;
 
 /**
