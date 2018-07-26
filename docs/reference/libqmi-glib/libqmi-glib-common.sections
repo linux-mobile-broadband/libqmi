@@ -481,6 +481,7 @@ qmi_nas_plmn_name_spare_bits_get_type
 <SECTION>
 <FILE>qmi-enums-wds</FILE>
 QmiWdsIpFamily
+QmiWdsProfileFamily
 QmiWdsTechnologyPreference
 QmiWdsExtendedTechnologyPreference
 QmiWdsCallType
@@ -531,6 +532,7 @@ QmiWdsTetheredCallType
 QmiWdsClientType
 <SUBSECTION Methods>
 qmi_wds_ip_family_get_string
+qmi_wds_profile_family_get_string
 qmi_wds_technology_preference_build_string_from_mask
 qmi_wds_extended_technology_preference_get_string
 qmi_wds_call_type_get_string
@@ -582,6 +584,7 @@ qmi_wds_tethered_call_type_get_string
 qmi_wds_client_type_get_string
 <SUBSECTION Private>
 qmi_wds_ip_family_build_string_from_mask
+qmi_wds_profile_family_build_string_from_mask
 qmi_wds_technology_preference_get_string
 qmi_wds_extended_technology_preference_build_string_from_mask
 qmi_wds_call_type_build_string_from_mask
@@ -641,6 +644,7 @@ QMI_TYPE_WDS_DATA_BEARER_TECHNOLOGY
 QMI_TYPE_WDS_EXTENDED_TECHNOLOGY_PREFERENCE
 QMI_TYPE_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS
 QMI_TYPE_WDS_IP_FAMILY
+QMI_TYPE_WDS_PROFILE_FAMILY
 QMI_TYPE_WDS_NETWORK_TYPE
 QMI_TYPE_WDS_DATA_SYSTEM_NETWORK_TYPE
 QMI_TYPE_WDS_PDP_TYPE
@@ -690,6 +694,7 @@ qmi_wds_data_bearer_technology_get_type
 qmi_wds_extended_technology_preference_get_type
 qmi_wds_get_current_settings_requested_settings_get_type
 qmi_wds_ip_family_get_type
+qmi_wds_profile_family_get_type
 qmi_wds_network_type_get_type
 qmi_wds_data_system_network_type_get_type
 qmi_wds_pdp_type_get_type
