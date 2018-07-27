@@ -278,6 +278,9 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
         mbimcli_intel_firmware_update_run (dev, cancellable);
         return;
+    case MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS:
+        mbimcli_basic_connect_extensions_run (dev, cancellable);
+        return;
     default:
         g_assert_not_reached ();
     }
@@ -355,6 +358,9 @@ parse_actions (void)
     } else if (mbimcli_intel_firmware_update_options_enabled ()) {
         service = MBIM_SERVICE_INTEL_FIRMWARE_UPDATE;
         actions_enabled++;
+    } else if (mbimcli_basic_connect_extensions_options_enabled ()) {
+        service = MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS;
+        actions_enabled++;
     }
 
     /* Noop */
@@ -400,6 +406,8 @@ int main (int argc, char **argv)
                                 mbimcli_atds_get_option_group ());
     g_option_context_add_group (context,
                                 mbimcli_intel_firmware_update_get_option_group ());
+    g_option_context_add_group (context,
+                                mbimcli_basic_connect_extensions_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",

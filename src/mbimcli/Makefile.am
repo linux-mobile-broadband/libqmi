@@ -14,6 +14,7 @@ mbimcli_SOURCES = \
 	mbimcli.h mbimcli.c \
 	mbimcli-helpers.h mbimcli-helpers.c \
 	mbimcli-basic-connect.c \
+	mbimcli-basic-connect-extensions.c \
 	mbimcli-phonebook.c \
 	mbimcli-dss.c \
 	mbimcli-ms-firmware-id.c \
