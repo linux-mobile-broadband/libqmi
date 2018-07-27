@@ -163,6 +163,21 @@ static const CidConfig cid_intel_firmware_update_config [MBIM_CID_INTEL_FIRMWARE
     { SET, NO_QUERY, NO_NOTIFY }, /* MBIM_CID_INTEL_FIRMWARE_UPDATE_MODEM_REBOOT */
 };
 
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_BASIC_CONNECT_EXTENSIONS_LAST MBIM_CID_BASIC_CONNECT_EXTENSIONS_MS_DEVICE_RESET
+static const CidConfig cid_basic_connect_extensions_config [MBIM_CID_BASIC_CONNECT_EXTENSIONS_LAST] = {
+    { SET,    QUERY,    NOTIFY    }, /* MBIM_CID_BASIC_CONNECT_EXTENSIONS_MS_PROVISIONED_CONTEXT_V2 */
+    { SET,    QUERY,    NOTIFY    }, /* MBIM_CID_BASIC_CONNECT_EXTENSIONS_MS_NETWORK_BLACKLIST */
+    { SET,    QUERY,    NOTIFY    }, /* MBIM_CID_BASIC_CONNECT_EXTENSIONS_MS_LTE_ATTACH_CONFIG */
+    { SET,    QUERY,    NOTIFY    }, /* MBIM_CID_BASIC_CONNECT_EXTENSIONS_MS_LTE_ATTACH_STATUS */
+    { NO_SET, QUERY,    NO_NOTIFY }, /* MBIM_CID_BASIC_CONNECT_EXTENSIONS_MS_SYS_CAPS */
+    { NO_SET, QUERY,    NO_NOTIFY }, /* MBIM_CID_BASIC_CONNECT_EXTENSIONS_MS_DEVICE_CAPS_V2 */
+    { SET,    QUERY,    NO_NOTIFY }, /* MBIM_CID_BASIC_CONNECT_EXTENSIONS_MS_DEVICE_SLOT_MAPPINGS */
+    { NO_SET, QUERY,    NOTIFY    }, /* MBIM_CID_BASIC_CONNECT_EXTENSIONS_MS_SLOT_INFO_STATUS */
+    { NO_SET, QUERY,    NOTIFY    }, /* MBIM_CID_BASIC_CONNECT_EXTENSIONS_PCO */
+    { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_BASIC_CONNECT_EXTENSIONS_MS_DEVICE_RESET */
+};
+
 /**
  * mbim_cid_can_set:
  * @service: a #MbimService.
@@ -209,6 +224,8 @@ mbim_cid_can_set (MbimService service,
         return cid_atds_config[cid - 1].set;
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
         return cid_intel_firmware_update_config[cid - 1].set;
+    case MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS:
+        return cid_basic_connect_extensions_config[cid - 1].set;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -261,6 +278,8 @@ mbim_cid_can_query (MbimService service,
         return cid_atds_config[cid - 1].query;
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
         return cid_intel_firmware_update_config[cid - 1].query;
+    case MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS:
+        return cid_basic_connect_extensions_config[cid - 1].query;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -313,6 +332,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_atds_config[cid - 1].notify;
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
         return cid_intel_firmware_update_config[cid - 1].notify;
+    case MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS:
+        return cid_basic_connect_extensions_config[cid - 1].notify;
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -368,6 +389,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_atds_get_string (cid);
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
         return mbim_cid_intel_firmware_update_get_string (cid);
+    case MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS:
+        return mbim_cid_basic_connect_extensions_get_string (cid);
     default:
         g_assert_not_reached ();
         return NULL;

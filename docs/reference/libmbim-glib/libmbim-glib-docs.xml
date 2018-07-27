@@ -68,6 +68,7 @@
 
   <chapter>
     <title>Other Services</title>
+    <xi:include href="xml/mbim-basic-connect-extensions.xml"/>
     <xi:include href="xml/mbim-ms-firmware-id.xml"/>
     <xi:include href="xml/mbim-ms-host-shutdown.xml"/>
     <xi:include href="xml/mbim-qmi.xml"/>

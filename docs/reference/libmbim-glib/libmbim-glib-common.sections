@@ -15,6 +15,7 @@ MbimUuid
 MBIM_UUID_INVALID
 MBIM_UUID_ATDS
 MBIM_UUID_BASIC_CONNECT
+MBIM_UUID_BASIC_CONNECT_EXTENSIONS
 MBIM_UUID_SMS
 MBIM_UUID_USSD
 MBIM_UUID_PHONEBOOK
@@ -50,6 +51,7 @@ mbim_context_type_build_string_from_mask
 <FILE>mbim-cid</FILE>
 MbimCidAtds
 MbimCidBasicConnect
+MbimCidBasicConnectExtensions
 MbimCidSms
 MbimCidUssd
 MbimCidPhonebook
@@ -68,6 +70,7 @@ mbim_cid_can_notify
 mbim_cid_get_printable
 mbim_cid_atds_get_string
 mbim_cid_basic_connect_get_string
+mbim_cid_basic_connect_extensions_get_string
 mbim_cid_sms_get_string
 mbim_cid_ussd_get_string
 mbim_cid_phonebook_get_string
@@ -82,6 +85,7 @@ mbim_cid_intel_firmware_update_get_string
 <SUBSECTION Private>
 mbim_cid_atds_build_string_from_mask
 mbim_cid_basic_connect_build_string_from_mask
+mbim_cid_basic_connect_extensions_build_string_from_mask
 mbim_cid_sms_build_string_from_mask
 mbim_cid_ussd_build_string_from_mask
 mbim_cid_phonebook_build_string_from_mask
@@ -97,6 +101,7 @@ mbim_cid_intel_firmware_update_build_string_from_mask
 MBIM_TYPE_CID_ATDS
 MBIM_TYPE_CID_AUTH
 MBIM_TYPE_CID_BASIC_CONNECT
+MBIM_TYPE_CID_BASIC_CONNECT_EXTENSIONS
 MBIM_TYPE_CID_DSS
 MBIM_TYPE_CID_PHONEBOOK
 MBIM_TYPE_CID_SMS
@@ -110,6 +115,7 @@ MBIM_TYPE_CID_INTEL_FIRMWARE_UPDATE
 mbim_cid_atds_get_type
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
+mbim_cid_basic_connect_extensions_get_type
 mbim_cid_dss_get_type
 mbim_cid_phonebook_get_type
 mbim_cid_sms_get_type
@@ -308,6 +314,7 @@ MbimStkPacType
 MbimNetworkIdleHintState
 MbimEmergencyModeState
 MbimDssLinkState
+MbimPcoType
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -468,6 +475,7 @@ MBIM_TYPE_STK_PAC_TYPE
 MBIM_TYPE_NETWORK_IDLE_HINT_STATE
 MBIM_TYPE_EMERGENCY_MODE_STATE
 MBIM_TYPE_DSS_LINK_STATE
+MBIM_TYPE_PCO_TYPE
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type

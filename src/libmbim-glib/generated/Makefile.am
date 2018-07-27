@@ -4,6 +4,7 @@ GENERATED_H = \
 	mbim-error-types.h \
 	mbim-enum-types.h \
 	mbim-basic-connect.h \
+	mbim-basic-connect-extensions.h \
 	mbim-sms.h \
 	mbim-ussd.h \
 	mbim-auth.h \
@@ -22,6 +23,7 @@ GENERATED_C = \
 	mbim-error-quarks.c \
 	mbim-enum-types.c \
 	mbim-basic-connect.c \
+	mbim-basic-connect-extensions.c \
 	mbim-sms.c \
 	mbim-ussd.c \
 	mbim-auth.c \
@@ -37,6 +39,7 @@ GENERATED_C = \
 
 GENERATED_SECTIONS = \
 	mbim-basic-connect.sections \
+	mbim-basic-connect-extensions.sections \
 	mbim-sms.sections \
 	mbim-ussd.sections \
 	mbim-auth.sections \
@@ -97,6 +100,15 @@ mbim-basic-connect.h mbim-basic-connect.c mbim-basic-connect.sections: $(top_src
 		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-basic-connect.json \
 			--output mbim-basic-connect
+
+# Basic Connect Extensions service
+mbim-basic-connect-extensions.h mbim-basic-connect-extensions.c mbim-basic-connect-extensions.sections: $(top_srcdir)/data/mbim-service-basic-connect-extensions.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-basic-connect-extensions.h && \
+		rm -f mbim-basic-connect-extensions.c && \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-basic-connect-extensions.json \
+			--output mbim-basic-connect-extensions
 
 # SMS service
 mbim-sms.h mbim-sms.c mbim-sms.sections: $(top_srcdir)/data/mbim-service-sms.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen

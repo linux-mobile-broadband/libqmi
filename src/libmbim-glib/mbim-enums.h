@@ -1022,6 +1022,21 @@ typedef enum {
     MBIM_ATDS_PROVIDER_PLMN_MODE_LTE = 7,
 } MbimAtdsProviderPlmnMode;
 
+/*****************************************************************************/
+/* 'PCO' enums */
+
+/**
+ * MbimPcoType:
+ * @MBIM_PCO_TYPE_COMPLETE: The PCO structure is complete.
+ * @MBIM_PCO_TYPE_PARTIAL: The PCO structure is a subset of what was received from the network.
+ *
+ * Type of PCO structure.
+ */
+typedef enum {
+    MBIM_PCO_TYPE_COMPLETE = 0,
+    MBIM_PCO_TYPE_PARTIAL  = 1
+} MbimPcoType;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

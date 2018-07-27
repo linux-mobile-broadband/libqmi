@@ -40,6 +40,7 @@
 #include "mbim-enum-types.h"
 #include "mbim-error-types.h"
 #include "mbim-basic-connect.h"
+#include "mbim-basic-connect-extensions.h"
 #include "mbim-sms.h"
 #include "mbim-ussd.h"
 #include "mbim-auth.h"
