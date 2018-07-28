@@ -393,6 +393,7 @@
       <xi:include href="xml/qmi-indication-loc-inject-predicted-orbits-data.xml"/>
       <xi:include href="xml/qmi-indication-loc-get-predicted-orbits-data-source.xml"/>
       <xi:include href="xml/qmi-indication-loc-delete-assistance-data.xml"/>
+      <xi:include href="xml/qmi-indication-loc-inject-xtra-data.xml"/>
     </section>
     <section>
       <title>LOC Requests</title>
@@ -406,6 +407,7 @@
       <xi:include href="xml/qmi-message-loc-inject-predicted-orbits-data.xml"/>
       <xi:include href="xml/qmi-message-loc-get-predicted-orbits-data-source.xml"/>
       <xi:include href="xml/qmi-message-loc-delete-assistance-data.xml"/>
+      <xi:include href="xml/qmi-message-loc-inject-xtra-data.xml"/>
     </section>
   </chapter>
 
