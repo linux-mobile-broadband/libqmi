@@ -216,7 +216,7 @@ query_signal_ready (MbimDevice   *device,
         rssnr_str = g_strdup_printf ("< -5 dB");
     else if (rssnr < 97)
         rssnr_str = g_strdup_printf ("%d dB", -5 + rssnr);
-    else if (rsrp == 97)
+    else if (rssnr == 97)
         rssnr_str = g_strdup_printf (">= 30 dB");
 
     g_print ("[%s] Signal info retrieved:\n"
