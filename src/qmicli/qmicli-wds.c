@@ -64,6 +64,10 @@ static gboolean get_current_data_bearer_technology_flag;
 static gboolean go_dormant_flag;
 static gboolean go_active_flag;
 static gboolean get_dormancy_status_flag;
+static gchar *create_profile_str;
+static gchar *swi_create_profile_indexed_str;
+static gchar *modify_profile_str;
+static gchar *delete_profile_str;
 static gchar *get_profile_list_str;
 static gchar *get_default_profile_num_str;
 static gchar *set_default_profile_num_str;
@@ -121,6 +125,22 @@ static GOptionEntry entries[] = {
     { "wds-get-dormancy-status", 0, 0, G_OPTION_ARG_NONE, &get_dormancy_status_flag,
       "Get the dormancy status of the active data connection",
       NULL
+    },
+    { "wds-create-profile", 0, 0, G_OPTION_ARG_STRING, &create_profile_str,
+      "Create new profile using first available profile index (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes)",
+      "[\"(3gpp|3gpp2)[,key=value,...]\"]"
+    },
+    { "wds-swi-create-profile-indexed", 0, 0, G_OPTION_ARG_STRING, &swi_create_profile_indexed_str,
+      "Create new profile at specified profile index [Sierra Wireless specific] (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes)",
+      "[\"(3gpp|3gpp2),#[,key=value,...]\"]"
+    },
+    { "wds-modify-profile", 0, 0, G_OPTION_ARG_STRING, &modify_profile_str,
+      "Modify existing profile (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes)",
+      "[\"(3gpp|3gpp2),#,key=value,...\"]"
+    },
+    { "wds-delete-profile", 0, 0, G_OPTION_ARG_STRING, &delete_profile_str,
+      "Delete existing profile",
+      "[(3gpp|3gpp2),#]"
     },
     { "wds-get-profile-list", 0, 0, G_OPTION_ARG_STRING, &get_profile_list_str,
       "Get profile list",
@@ -209,6 +229,10 @@ qmicli_wds_options_enabled (void)
                  go_dormant_flag +
                  go_active_flag +
                  get_dormancy_status_flag +
+                 !!create_profile_str +
+                 !!swi_create_profile_indexed_str +
+                 !!modify_profile_str +
+                 !!delete_profile_str +
                  !!get_profile_list_str +
                  !!get_default_profile_num_str +
                  !!set_default_profile_num_str +
@@ -1180,6 +1204,619 @@ get_dormancy_status_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+
+typedef struct {
+    QmiWdsProfileType     profile_type;
+    guint                 profile_index;
+    guint                 context_number;
+    gchar                *name;
+    QmiWdsPdpType         pdp_type;
+    gboolean              pdp_type_set;
+    gchar                *apn;
+    gchar                *username;
+    gchar                *password;
+    QmiWdsAuthentication  auth;
+    gboolean              auth_set;
+    gboolean              no_roaming;
+    gboolean              no_roaming_set;
+    gboolean              disabled;
+    gboolean              disabled_set;
+} CreateModifyProfileProperties;
+
+static gboolean
+create_modify_profile_properties_handle (const gchar  *key,
+                                         const gchar  *value,
+                                         GError      **error,
+                                         gpointer      user_data)
+{
+    CreateModifyProfileProperties *props = user_data;
+
+    /* Modems seem to allow empty values for string parameters, so we
+       don't complain if value is not set (tested on EM7565). */
+    if (g_ascii_strcasecmp (key, "name") == 0 && !props->name) {
+        props->name = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "apn") == 0 && !props->apn) {
+        props->apn = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "username") == 0 && !props->username) {
+        props->username = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "password") == 0 && !props->password) {
+        props->password = g_strdup (value);
+        return TRUE;
+    }
+
+    /* all other TLVs do require a value... */
+    if (!value || !value[0]) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "key '%s' required a value",
+                     key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "context-num") == 0 && !props->context_number) {
+        props->context_number = atoi (value);
+        if (props->context_number <= 0 || props->context_number > G_MAXUINT8) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "invalid or out of range context number [1,%u]: '%s'",
+                         G_MAXUINT8,
+                         value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "auth") == 0 && !props->auth_set) {
+        if (!qmicli_read_authentication_from_string (value, &(props->auth))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown auth protocol '%s'",
+                         value);
+            return FALSE;
+        }
+        props->auth_set = TRUE;
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "pdp-type") == 0 && !props->pdp_type_set) {
+        if (!qmicli_read_pdp_type_from_string (value, &(props->pdp_type))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown pdp type '%s'",
+                         value);
+            return FALSE;
+        }
+        props->pdp_type_set = TRUE;
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "no-roaming") == 0 && !props->no_roaming_set) {
+        if (!qmicli_read_yes_no_from_string (value, &(props->no_roaming))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown 'no-roaming' value '%s'",
+                         value);
+            return FALSE;
+        }
+        props->no_roaming_set = TRUE;
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "disabled") == 0 && !props->disabled_set) {
+        if (!qmicli_read_yes_no_from_string (value, &(props->disabled))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown 'disabled' value '%s'",
+                         value);
+            return FALSE;
+        }
+        props->disabled_set = TRUE;
+        return TRUE;
+    }
+
+    g_set_error (error,
+                 QMI_CORE_ERROR,
+                 QMI_CORE_ERROR_FAILED,
+                 "unrecognized or duplicate option '%s'",
+                 key);
+    return FALSE;
+}
+
+static gboolean
+create_profile_input_create (const gchar                      *str,
+                             QmiMessageWdsCreateProfileInput **input,
+                             GError                          **error)
+{
+    GError *parse_error = NULL;
+    CreateModifyProfileProperties props = {};
+    gboolean success = FALSE;
+
+    g_assert (input && !*input);
+
+    if (!str) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "expected at least 1 arguments for 'wds create profile' command");
+        goto out;
+    }
+
+    if (g_ascii_strncasecmp (str, "3gpp2", 5) == 0)
+        props.profile_type = QMI_WDS_PROFILE_TYPE_3GPP2;
+    else if (g_ascii_strncasecmp (str, "3gpp", 4) == 0)
+        props.profile_type = QMI_WDS_PROFILE_TYPE_3GPP;
+    else {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "invalid profile type. Expected '3gpp' or '3gpp2'.'");
+        goto out;
+    }
+
+    /* advance to next token, that's where optional key/value pairs start */
+    if (strchr(str, ',')) {
+        str = strchr(str, ',') + 1;
+        if (!qmicli_parse_key_value_string (str,
+                                            &parse_error,
+                                            create_modify_profile_properties_handle,
+                                            &props)) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "couldn't parse input string: %s",
+                         parse_error->message);
+            g_error_free (parse_error);
+            goto out;
+        }
+    }
+
+    /* Create input bundle */
+    *input = qmi_message_wds_create_profile_input_new ();
+
+    /* Profile type is required */
+    qmi_message_wds_create_profile_input_set_profile_type (*input, props.profile_type, NULL);
+
+    if (props.context_number)
+        qmi_message_wds_create_profile_input_set_pdp_context_number (*input, props.context_number, NULL);
+
+    if (props.pdp_type_set)
+        qmi_message_wds_create_profile_input_set_pdp_type (*input, props.pdp_type, NULL);
+
+    if (props.name)
+        qmi_message_wds_create_profile_input_set_profile_name (*input, props.name, NULL);
+
+    if (props.apn)
+        qmi_message_wds_create_profile_input_set_apn_name (*input, props.apn, NULL);
+
+    if (props.auth_set)
+        qmi_message_wds_create_profile_input_set_authentication (*input, props.auth, NULL);
+
+    if (props.username)
+        qmi_message_wds_create_profile_input_set_username (*input, props.username, NULL);
+
+    if (props.password)
+        qmi_message_wds_create_profile_input_set_password (*input, props.password, NULL);
+
+    if (props.no_roaming_set)
+        qmi_message_wds_create_profile_input_set_roaming_disallowed_flag (*input, props.no_roaming, NULL);
+
+    if (props.disabled_set)
+        qmi_message_wds_create_profile_input_set_apn_disabled_flag (*input, props.disabled, NULL);
+
+    success = TRUE;
+
+out:
+    g_free     (props.name);
+    g_free     (props.apn);
+    g_free     (props.username);
+    g_free     (props.password);
+
+    return success;
+}
+
+static void
+create_profile_ready (QmiClientWds *client,
+                      GAsyncResult *res)
+{
+    QmiMessageWdsCreateProfileOutput *output;
+    GError *error = NULL;
+    QmiWdsProfileType profile_type;
+    guint8 profile_index;
+
+    output = qmi_client_wds_create_profile_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_create_profile_output_get_result (output, &error)) {
+        QmiWdsDsProfileError ds_profile_error;
+
+        if (g_error_matches (error,
+                             QMI_PROTOCOL_ERROR,
+                             QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL) &&
+            qmi_message_wds_create_profile_output_get_extended_error_code (
+                output,
+                &ds_profile_error,
+                NULL)) {
+            g_printerr ("error: couldn't create profile: ds profile error: %s\n",
+                        qmi_wds_ds_profile_error_get_string (ds_profile_error));
+        } else {
+            g_printerr ("error: couldn't create profile: %s\n",
+                        error->message);
+        }
+        g_error_free (error);
+        qmi_message_wds_create_profile_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("New profile created:\n");
+    if (qmi_message_wds_create_profile_output_get_profile_identifier (output,
+                                                                      &profile_type,
+                                                                      &profile_index,
+                                                                      NULL)) {
+        g_print ("\tProfile type: '%s'\n", qmi_wds_profile_type_get_string(profile_type));
+        g_print ("\tProfile index: '%d'\n", profile_index);
+    }
+    qmi_message_wds_create_profile_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static gboolean
+swi_create_profile_indexed_input_create (const gchar                                *str,
+                                         QmiMessageWdsSwiCreateProfileIndexedInput **input,
+                                         GError                                    **error)
+{
+    GError *parse_error = NULL;
+    CreateModifyProfileProperties props = {};
+    gchar **split;
+    gboolean success = FALSE;
+
+    g_assert (input && !*input);
+
+    split = g_strsplit (str, ",", -1);
+    if (g_strv_length (split) < 2) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "expected at least 2 arguments for 'wds swi create profile indexed' command");
+        goto out;
+    }
+
+    g_strstrip (split[0]);
+    if (g_str_equal (split[0], "3gpp"))
+        props.profile_type = QMI_WDS_PROFILE_TYPE_3GPP;
+    else if (g_str_equal (split[0], "3gpp2"))
+        props.profile_type = QMI_WDS_PROFILE_TYPE_3GPP2;
+    else {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "invalid profile type '%s'. Expected '3gpp' or '3gpp2'.'",
+                     split[0]);
+        goto out;
+    }
+
+    g_strstrip (split[1]);
+    props.profile_index = atoi (split[1]);
+    if (props.profile_index <= 0 || props.profile_index > G_MAXUINT8) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "invalid or out of range profile index [1,%u]: '%s'\n",
+                     G_MAXUINT8,
+                     split[1]);
+        goto out;
+    }
+
+    if (g_strv_length (split) > 2) {
+        /* advance to third token, that's where key/value pairs start */
+        str = strchr(str, ',') + 1;
+        str = strchr(str, ',') + 1;
+        if (!qmicli_parse_key_value_string (str,
+                                            &parse_error,
+                                            create_modify_profile_properties_handle,
+                                            &props)) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "couldn't parse input string: %s",
+                         parse_error->message);
+            g_error_free (parse_error);
+            goto out;
+        }
+    }
+    g_strfreev (split);
+
+    /* Create input bundle */
+    *input = qmi_message_wds_swi_create_profile_indexed_input_new ();
+
+    /* Profile identifier is required */
+    qmi_message_wds_swi_create_profile_indexed_input_set_profile_identifier (*input, props.profile_type, props.profile_index, NULL);
+
+    if (props.context_number)
+        qmi_message_wds_swi_create_profile_indexed_input_set_pdp_context_number (*input, props.context_number, NULL);
+
+    if (props.pdp_type_set)
+        qmi_message_wds_swi_create_profile_indexed_input_set_pdp_type (*input, props.pdp_type, NULL);
+
+    if (props.name)
+        qmi_message_wds_swi_create_profile_indexed_input_set_profile_name (*input, props.name, NULL);
+
+    if (props.apn)
+        qmi_message_wds_swi_create_profile_indexed_input_set_apn_name (*input, props.apn, NULL);
+
+    if (props.auth_set)
+        qmi_message_wds_swi_create_profile_indexed_input_set_authentication (*input, props.auth, NULL);
+
+    if (props.username)
+        qmi_message_wds_swi_create_profile_indexed_input_set_username (*input, props.username, NULL);
+
+    if (props.password)
+        qmi_message_wds_swi_create_profile_indexed_input_set_password (*input, props.password, NULL);
+
+    if (props.no_roaming_set)
+        qmi_message_wds_swi_create_profile_indexed_input_set_roaming_disallowed_flag (*input, props.no_roaming, NULL);
+
+    if (props.disabled_set)
+        qmi_message_wds_swi_create_profile_indexed_input_set_apn_disabled_flag (*input, props.disabled, NULL);
+
+    success = TRUE;
+
+out:
+    g_free     (props.name);
+    g_free     (props.apn);
+    g_free     (props.username);
+    g_free     (props.password);
+
+    return success;
+}
+
+static void
+swi_create_profile_indexed_ready (QmiClientWds *client,
+                                  GAsyncResult *res)
+{
+    QmiMessageWdsSwiCreateProfileIndexedOutput *output;
+    GError *error = NULL;
+    QmiWdsProfileType profile_type;
+    guint8 profile_index;
+
+    output = qmi_client_wds_swi_create_profile_indexed_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_swi_create_profile_indexed_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't create indexed profile: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_wds_swi_create_profile_indexed_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("New profile created:\n");
+    if (qmi_message_wds_swi_create_profile_indexed_output_get_profile_identifier (output,
+                                                                      &profile_type,
+                                                                      &profile_index,
+                                                                      NULL)) {
+        g_print ("\tProfile type: '%s'\n", qmi_wds_profile_type_get_string(profile_type));
+        g_print ("\tProfile index: '%d'\n", profile_index);
+    }
+    qmi_message_wds_swi_create_profile_indexed_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static gboolean
+modify_profile_input_create (const gchar                      *str,
+                             QmiMessageWdsModifyProfileInput **input,
+                             GError                          **error)
+{
+    GError *parse_error = NULL;
+    CreateModifyProfileProperties props = {};
+    gchar **split;
+    gboolean success = FALSE;
+
+    g_assert (input && !*input);
+
+    split = g_strsplit (str, ",", -1);
+    if (g_strv_length (split) < 3) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "expected at least 3 arguments for 'wds modify profile' command");
+        goto out;
+    }
+
+    g_strstrip (split[0]);
+    if (g_str_equal (split[0], "3gpp"))
+        props.profile_type = QMI_WDS_PROFILE_TYPE_3GPP;
+    else if (g_str_equal (split[0], "3gpp2"))
+        props.profile_type = QMI_WDS_PROFILE_TYPE_3GPP2;
+    else {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "invalid profile type '%s'. Expected '3gpp' or '3gpp2'.'",
+                     split[0]);
+        goto out;
+    }
+
+    g_strstrip (split[1]);
+    props.profile_index = atoi (split[1]);
+    if (props.profile_index <= 0 || props.profile_index > G_MAXUINT8) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "invalid or out of range profile index [1,%u]: '%s'\n",
+                     G_MAXUINT8,
+                     split[1]);
+        goto out;
+    }
+    g_strfreev (split);
+
+    /* advance to third token, that's where key/value pairs start */
+    str = strchr(str, ',') + 1;
+    str = strchr(str, ',') + 1;
+    if (!qmicli_parse_key_value_string (str,
+                                        &parse_error,
+                                        create_modify_profile_properties_handle,
+                                        &props)) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "couldn't parse input string: %s",
+                    parse_error->message);
+        g_error_free (parse_error);
+        goto out;
+    }
+
+    /* Create input bundle */
+    *input = qmi_message_wds_modify_profile_input_new ();
+
+    /* Profile identifier is required */
+    qmi_message_wds_modify_profile_input_set_profile_identifier (*input, props.profile_type, props.profile_index, NULL);
+
+    if (props.context_number)
+        qmi_message_wds_modify_profile_input_set_pdp_context_number (*input, props.context_number, NULL);
+
+    if (props.pdp_type_set)
+        qmi_message_wds_modify_profile_input_set_pdp_type (*input, props.pdp_type, NULL);
+
+    if (props.name)
+        qmi_message_wds_modify_profile_input_set_profile_name (*input, props.name, NULL);
+
+    if (props.apn)
+        qmi_message_wds_modify_profile_input_set_apn_name (*input, props.apn, NULL);
+
+    if (props.auth_set)
+        qmi_message_wds_modify_profile_input_set_authentication (*input, props.auth, NULL);
+
+    if (props.username)
+        qmi_message_wds_modify_profile_input_set_username (*input, props.username, NULL);
+
+    if (props.password)
+        qmi_message_wds_modify_profile_input_set_password (*input, props.password, NULL);
+
+    if (props.no_roaming_set)
+        qmi_message_wds_modify_profile_input_set_roaming_disallowed_flag (*input, props.no_roaming, NULL);
+
+    if (props.disabled_set)
+        qmi_message_wds_modify_profile_input_set_apn_disabled_flag (*input, props.disabled, NULL);
+
+    success = TRUE;
+
+out:
+    g_free     (props.name);
+    g_free     (props.apn);
+    g_free     (props.username);
+    g_free     (props.password);
+
+    return success;
+}
+
+static void
+modify_profile_ready (QmiClientWds *client,
+                      GAsyncResult *res)
+{
+    QmiMessageWdsModifyProfileOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_wds_modify_profile_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_modify_profile_output_get_result (output, &error)) {
+        QmiWdsDsProfileError ds_profile_error;
+
+        if (g_error_matches (error,
+                             QMI_PROTOCOL_ERROR,
+                             QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL) &&
+            qmi_message_wds_modify_profile_output_get_extended_error_code (
+                output,
+                &ds_profile_error,
+                NULL)) {
+            g_printerr ("error: couldn't modify profile: ds profile error: %s\n",
+                        qmi_wds_ds_profile_error_get_string (ds_profile_error));
+        } else {
+            g_printerr ("error: couldn't modify profile: %s\n",
+                        error->message);
+        }
+        g_error_free (error);
+        qmi_message_wds_modify_profile_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+    qmi_message_wds_modify_profile_output_unref (output);
+    g_print ("Profile successfully modified.\n");
+    operation_shutdown (TRUE);
+}
+
+static void
+delete_profile_ready (QmiClientWds *client,
+                      GAsyncResult *res)
+{
+    QmiMessageWdsDeleteProfileOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_wds_delete_profile_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_delete_profile_output_get_result (output, &error)) {
+        QmiWdsDsProfileError ds_profile_error;
+
+        if (g_error_matches (error,
+                             QMI_PROTOCOL_ERROR,
+                             QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL) &&
+            qmi_message_wds_delete_profile_output_get_extended_error_code (
+                output,
+                &ds_profile_error,
+                NULL)) {
+            g_printerr ("error: couldn't delete profile: ds profile error: %s\n",
+                        qmi_wds_ds_profile_error_get_string (ds_profile_error));
+        } else {
+            g_printerr ("error: couldn't delete profile: %s\n",
+                        error->message);
+        }
+        g_error_free (error);
+        qmi_message_wds_delete_profile_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+    qmi_message_wds_delete_profile_output_unref (output);
+    g_print ("Profile successfully deleted.\n");
+    operation_shutdown (TRUE);
+}
+
 typedef struct {
     guint i;
     GArray *profile_list;
@@ -1219,13 +1856,17 @@ get_profile_settings_ready (QmiClientWds *client,
         qmi_message_wds_get_profile_settings_output_unref (output);
     } else {
         const gchar *str;
+        guint8 context_number;
         QmiWdsPdpType pdp_type;
         QmiWdsAuthentication auth;
+        gboolean flag;
 
         if (qmi_message_wds_get_profile_settings_output_get_apn_name (output, &str, NULL))
             g_print ("\t\tAPN: '%s'\n", str);
         if (qmi_message_wds_get_profile_settings_output_get_pdp_type (output, &pdp_type, NULL))
             g_print ("\t\tPDP type: '%s'\n", qmi_wds_pdp_type_get_string (pdp_type));
+        if (qmi_message_wds_get_profile_settings_output_get_pdp_context_number (output, &context_number, NULL))
+            g_print ("\t\tPDP context number: '%d'\n", context_number);
         if (qmi_message_wds_get_profile_settings_output_get_username (output, &str, NULL))
             g_print ("\t\tUsername: '%s'\n", str);
         if (qmi_message_wds_get_profile_settings_output_get_password (output, &str, NULL))
@@ -1237,6 +1878,10 @@ get_profile_settings_ready (QmiClientWds *client,
             g_print ("\t\tAuth: '%s'\n", aux);
             g_free (aux);
         }
+        if (qmi_message_wds_get_profile_settings_output_get_roaming_disallowed_flag (output, &flag, NULL))
+            g_print ("\t\tNo roaming: '%s'\n", flag ? "yes" : "no");
+        if (qmi_message_wds_get_profile_settings_output_get_apn_disabled_flag (output, &flag, NULL))
+            g_print ("\t\tAPN disabled: '%s'\n", flag ? "yes" : "no");
         qmi_message_wds_get_profile_settings_output_unref (output);
     }
 
@@ -2182,6 +2827,128 @@ qmicli_wds_run (QmiDevice *device,
                                             (GAsyncReadyCallback)get_dormancy_status_ready,
                                             NULL);
         return;
+    }
+
+    /* Create a new profile using first available profile index */
+    if (create_profile_str) {
+        QmiMessageWdsCreateProfileInput *input = NULL;
+        GError *error = NULL;
+
+        if (!create_profile_input_create (create_profile_str, &input, &error)) {
+            g_printerr ("error: %s\n", error->message);
+            g_error_free (error);
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously creating new profile...");
+        qmi_client_wds_create_profile (ctx->client,
+                                       input,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback)create_profile_ready,
+                                       NULL);
+       qmi_message_wds_create_profile_input_unref (input);
+       return;
+    }
+
+    /* Create a new profile at spedified profile index (Sierra Wireless only)*/
+    if (swi_create_profile_indexed_str) {
+        QmiMessageWdsSwiCreateProfileIndexedInput *input = NULL;
+        GError *error = NULL;
+
+        if (!swi_create_profile_indexed_input_create (swi_create_profile_indexed_str, &input, &error)) {
+            g_printerr ("error: %s\n", error->message);
+            g_error_free (error);
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously creating new indexed profile...");
+        qmi_client_wds_swi_create_profile_indexed (ctx->client,
+                                                   input,
+                                                   10,
+                                                   ctx->cancellable,
+                                                   (GAsyncReadyCallback)swi_create_profile_indexed_ready,
+                                                   NULL);
+       qmi_message_wds_swi_create_profile_indexed_input_unref (input);
+       return;
+    }
+
+    /* Modify an existing profile */
+    if (modify_profile_str) {
+        QmiMessageWdsModifyProfileInput *input = NULL;
+        GError *error = NULL;
+
+        if (!modify_profile_input_create (modify_profile_str, &input, &error)) {
+            g_printerr ("error: %s\n", error->message);
+            g_error_free (error);
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously modifying profile...");
+        qmi_client_wds_modify_profile (ctx->client,
+                                       input,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback)modify_profile_ready,
+                                       NULL);
+        qmi_message_wds_modify_profile_input_unref (input);
+        return;
+    }
+
+    /* Delete an existing profile */
+    if (delete_profile_str) {
+        QmiMessageWdsDeleteProfileInput *input;
+        gchar **split;
+        QmiWdsProfileType profile_type;
+        guint profile_index;
+
+        split = g_strsplit (delete_profile_str, ",", -1);
+        input = qmi_message_wds_delete_profile_input_new ();
+
+        if (g_strv_length (split) != 2) {
+            g_printerr ("error: expected 2 arguments for delete profile command\n");
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_strstrip (split[0]);
+        if (g_str_equal (split[0], "3gpp"))
+            profile_type = QMI_WDS_PROFILE_TYPE_3GPP;
+        else if (g_str_equal (split[0], "3gpp2"))
+            profile_type = QMI_WDS_PROFILE_TYPE_3GPP2;
+        else {
+            g_printerr ("error: invalid profile type '%s'. Expected '3gpp' or '3gpp2'.'\n",
+                        split[0]);
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_strstrip (split[1]);
+        profile_index = atoi (split[1]);
+        if (profile_index <= 0 || profile_index > G_MAXUINT8) {
+            g_printerr ("error: invalid or out of range profile number [1,%u]: '%s'\n",
+                        G_MAXUINT8,
+                        split[1]);
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        qmi_message_wds_delete_profile_input_set_profile_identifier (input, profile_type, (guint8)profile_index, NULL);
+
+        g_strfreev (split);
+
+        g_debug ("Asynchronously deleting new profile...");
+        qmi_client_wds_delete_profile (ctx->client,
+                                       input,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback)delete_profile_ready,
+                                       NULL);
+       qmi_message_wds_delete_profile_input_unref (input);
+       return;
     }
 
     /* Request to list profiles? */

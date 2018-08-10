@@ -676,6 +676,24 @@ qmicli_read_authentication_from_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_pdp_type_from_string (const gchar *str,
+                                  QmiWdsPdpType *out)
+{
+    if (g_ascii_strcasecmp (str, "IP") == 0 || g_ascii_strcasecmp (str, "IPV4") == 0)
+        *out = QMI_WDS_PDP_TYPE_IPV4;
+    else if (g_ascii_strcasecmp (str, "PPP") == 0)
+        *out = QMI_WDS_PDP_TYPE_PPP;
+    else if (g_ascii_strcasecmp (str, "IPV6") == 0)
+        *out = (QMI_WDS_PDP_TYPE_IPV6);
+    else if (!str[0] || g_ascii_strcasecmp (str, "BOTH") == 0 || g_ascii_strcasecmp (str, "IPV4V6") == 0)
+        *out = QMI_WDS_PDP_TYPE_IPV4_OR_IPV6;
+    else
+        return FALSE;
+
+    return TRUE;
+}
+
+gboolean
 qmicli_read_boot_image_download_mode_from_string (const gchar *str,
                                                   QmiDmsBootImageDownloadMode *out)
 {
