@@ -1,4 +1,21 @@
 
+Overview of changes in libqmi 1.20.2
+----------------------------------------
+
+ * qmicli:
+   ** Exit on --wds-start-network parse errors.
+   ** Fix reading current technology in --wds-get-data-bearer-technology.
+   ** Remove implicity casts to GDestroyNotify in g_clear_pointer().
+
+ * qmi-firmware-update:
+   ** Fix --ignore-version-errors.
+   ** Fix byte counts in error message.
+
+ * libqmi-glib:
+   ** dms: factory settings related operations since 1.0
+   ** Avoid closing same file descriptor twice.
+   ** Don't leak the inner MbimDevice if MBIM_QMUX_ENABLED.
+
 Overview of changes in libqmi 1.20.0
 ----------------------------------------
 
