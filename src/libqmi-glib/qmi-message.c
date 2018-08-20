@@ -585,15 +585,9 @@ qmi_message_tlv_write_complete (QmiMessage  *self,
     g_return_val_if_fail (self != NULL, FALSE);
     g_return_val_if_fail (self->len >= (tlv_offset + sizeof (struct tlv)), FALSE);
 
+    /* A TLV without content is actually not an error, e.g. TLV strings with no
+     * data are totally valid. */
     tlv_length = self->len - tlv_offset;
-    if (tlv_length == sizeof (struct tlv)) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_TLV_EMPTY,
-                     "Empty TLV, no value set");
-        g_byte_array_set_size (self, tlv_offset);
-        return FALSE;
-    }
 
     /* Update length fields. */
     tlv = tlv_get_header (self, tlv_offset);
@@ -873,11 +867,6 @@ qmi_message_tlv_read_init (QmiMessage  *self,
     }
 
     tlv_length = GUINT16_FROM_LE (tlv->length);
-    if (!tlv_length) {
-        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_EMPTY,
-                     "TLV 0x%02X is empty", type);
-        return 0;
-    }
 
     if (((guint8 *) tlv_next (tlv)) > ((guint8 *) qmi_end (self))) {
         g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG,

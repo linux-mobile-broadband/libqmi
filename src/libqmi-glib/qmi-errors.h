@@ -71,7 +71,7 @@
  * @QMI_CORE_ERROR_TLV_NOT_FOUND: TLV not found.
  * @QMI_CORE_ERROR_TLV_TOO_LONG: TLV is too long.
  * @QMI_CORE_ERROR_UNSUPPORTED: Not supported.
- * @QMI_CORE_ERROR_TLV_EMPTY: TLV has no value. Since: 1.12.
+ * @QMI_CORE_ERROR_TLV_EMPTY: TLV has no value. Empty TLVs are not a real error, so this error type is never generated. Since: 1.12. Deprecated: 1.22.
  * @QMI_CORE_ERROR_UNEXPECTED_MESSAGE: QMI message is unexpected. Since: 1.16.
  *
  * Common errors that may be reported by libqmi-glib.

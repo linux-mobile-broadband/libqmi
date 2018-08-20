@@ -373,8 +373,8 @@ test_message_tlv_write_empty (void)
     g_assert (init_offset > 0);
 
     ret = qmi_message_tlv_write_complete (self, init_offset, &error);
-    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_EMPTY);
-    g_assert (!ret);
+    g_assert_no_error (error);
+    g_assert (ret);
 
     qmi_message_unref (self);
 }
