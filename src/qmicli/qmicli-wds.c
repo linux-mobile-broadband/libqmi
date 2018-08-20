@@ -1231,8 +1231,8 @@ create_modify_profile_properties_handle (const gchar  *key,
 {
     CreateModifyProfileProperties *props = user_data;
 
-    /* Modems seem to allow empty values for string parameters, so we
-       don't complain if value is not set (tested on EM7565). */
+    /* Allow empty values for string parameters */
+
     if (g_ascii_strcasecmp (key, "name") == 0 && !props->name) {
         props->name = g_strdup (value);
         return TRUE;
@@ -1421,10 +1421,10 @@ create_profile_input_create (const gchar                      *str,
     success = TRUE;
 
 out:
-    g_free     (props.name);
-    g_free     (props.apn);
-    g_free     (props.username);
-    g_free     (props.password);
+    g_free (props.name);
+    g_free (props.apn);
+    g_free (props.username);
+    g_free (props.password);
 
     return success;
 }
@@ -1582,10 +1582,10 @@ swi_create_profile_indexed_input_create (const gchar                            
     success = TRUE;
 
 out:
-    g_free     (props.name);
-    g_free     (props.apn);
-    g_free     (props.username);
-    g_free     (props.password);
+    g_free (props.name);
+    g_free (props.apn);
+    g_free (props.username);
+    g_free (props.password);
 
     return success;
 }
