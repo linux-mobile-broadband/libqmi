@@ -1544,7 +1544,6 @@ swi_create_profile_indexed_input_create (const gchar                            
             goto out;
         }
     }
-    g_strfreev (split);
 
     /* Create input bundle */
     *input = qmi_message_wds_swi_create_profile_indexed_input_new ();
@@ -1582,10 +1581,11 @@ swi_create_profile_indexed_input_create (const gchar                            
     success = TRUE;
 
 out:
-    g_free (props.name);
-    g_free (props.apn);
-    g_free (props.username);
-    g_free (props.password);
+    g_strfreev (split);
+    g_free     (props.name);
+    g_free     (props.apn);
+    g_free     (props.username);
+    g_free     (props.password);
 
     return success;
 }
@@ -1673,7 +1673,6 @@ modify_profile_input_create (const gchar                      *str,
                      split[1]);
         goto out;
     }
-    g_strfreev (split);
 
     /* advance to third token, that's where key/value pairs start */
     str = strchr(str, ',') + 1;
@@ -1727,6 +1726,7 @@ modify_profile_input_create (const gchar                      *str,
     success = TRUE;
 
 out:
+    g_strfreev (split);
     g_free     (props.name);
     g_free     (props.apn);
     g_free     (props.username);
