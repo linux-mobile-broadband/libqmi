@@ -1345,10 +1345,12 @@ create_profile_input_create (const gchar                      *str,
     GError *parse_error = NULL;
     CreateModifyProfileProperties props = {};
     gboolean success = FALSE;
+    gchar **split;
 
     g_assert (input && !*input);
 
-    if (!str) {
+    split = g_strsplit (str, ",", 2);
+    if (g_strv_length (split) < 1) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_FAILED,
@@ -1356,10 +1358,11 @@ create_profile_input_create (const gchar                      *str,
         goto out;
     }
 
-    if (g_ascii_strncasecmp (str, "3gpp2", 5) == 0)
-        props.profile_type = QMI_WDS_PROFILE_TYPE_3GPP2;
-    else if (g_ascii_strncasecmp (str, "3gpp", 4) == 0)
+    g_strstrip (split[0]);
+    if (g_str_equal (split[0], "3gpp"))
         props.profile_type = QMI_WDS_PROFILE_TYPE_3GPP;
+    else if (g_str_equal (split[0], "3gpp2"))
+        props.profile_type = QMI_WDS_PROFILE_TYPE_3GPP2;
     else {
         g_set_error (error,
                      QMI_CORE_ERROR,
@@ -1368,10 +1371,8 @@ create_profile_input_create (const gchar                      *str,
         goto out;
     }
 
-    /* advance to next token, that's where optional key/value pairs start */
-    if (strchr(str, ',')) {
-        str = strchr(str, ',') + 1;
-        if (!qmicli_parse_key_value_string (str,
+    if (split[1]) {
+        if (!qmicli_parse_key_value_string (split[1],
                                             &parse_error,
                                             create_modify_profile_properties_handle,
                                             &props)) {
@@ -1421,10 +1422,11 @@ create_profile_input_create (const gchar                      *str,
     success = TRUE;
 
 out:
-    g_free (props.name);
-    g_free (props.apn);
-    g_free (props.username);
-    g_free (props.password);
+    g_strfreev (split);
+    g_free     (props.name);
+    g_free     (props.apn);
+    g_free     (props.username);
+    g_free     (props.password);
 
     return success;
 }
@@ -1492,7 +1494,9 @@ swi_create_profile_indexed_input_create (const gchar                            
 
     g_assert (input && !*input);
 
-    split = g_strsplit (str, ",", -1);
+    /* Expect max 3 tokens: the first two give us the mandatory parameters of the command,
+     * the 3rd one will contain the key/value pair list */
+    split = g_strsplit (str, ",", 3);
     if (g_strv_length (split) < 2) {
         g_set_error (error,
                      QMI_CORE_ERROR,
@@ -1527,11 +1531,8 @@ swi_create_profile_indexed_input_create (const gchar                            
         goto out;
     }
 
-    if (g_strv_length (split) > 2) {
-        /* advance to third token, that's where key/value pairs start */
-        str = strchr(str, ',') + 1;
-        str = strchr(str, ',') + 1;
-        if (!qmicli_parse_key_value_string (str,
+    if (split[2]) {
+        if (!qmicli_parse_key_value_string (split[2],
                                             &parse_error,
                                             create_modify_profile_properties_handle,
                                             &props)) {
@@ -1617,9 +1618,9 @@ swi_create_profile_indexed_ready (QmiClientWds *client,
 
     g_print ("New profile created:\n");
     if (qmi_message_wds_swi_create_profile_indexed_output_get_profile_identifier (output,
-                                                                      &profile_type,
-                                                                      &profile_index,
-                                                                      NULL)) {
+                                                                                  &profile_type,
+                                                                                  &profile_index,
+                                                                                  NULL)) {
         g_print ("\tProfile type: '%s'\n", qmi_wds_profile_type_get_string(profile_type));
         g_print ("\tProfile index: '%d'\n", profile_index);
     }
@@ -1639,7 +1640,9 @@ modify_profile_input_create (const gchar                      *str,
 
     g_assert (input && !*input);
 
-    split = g_strsplit (str, ",", -1);
+    /* Expect max 3 tokens: the first two give us the mandatory parameters of the command,
+     * the 3rd one will contain the key/value pair list */
+    split = g_strsplit (str, ",", 3);
     if (g_strv_length (split) < 3) {
         g_set_error (error,
                      QMI_CORE_ERROR,
@@ -1675,9 +1678,7 @@ modify_profile_input_create (const gchar                      *str,
     }
 
     /* advance to third token, that's where key/value pairs start */
-    str = strchr(str, ',') + 1;
-    str = strchr(str, ',') + 1;
-    if (!qmicli_parse_key_value_string (str,
+    if (!qmicli_parse_key_value_string (split[2],
                                         &parse_error,
                                         create_modify_profile_properties_handle,
                                         &props)) {
