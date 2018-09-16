@@ -102,7 +102,7 @@ static void
 test_uuid_basic_connect_extensions (void)
 {
     compare_uuid_strings (MBIM_UUID_BASIC_CONNECT_EXTENSIONS,
-                          "3d01dcc5-fef5-4d05-9d3a-bef7058e9aaf");
+                          "3d01dcc5-fef5-4d05-0d3a-bef7058e9aaf");
 }
 
 /*****************************************************************************/
