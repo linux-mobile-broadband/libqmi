@@ -53,6 +53,7 @@
 #include "qmi-wda.h"
 #include "qmi-voice.h"
 #include "qmi-loc.h"
+#include "qmi-qos.h"
 
 #define PACKED __attribute__((packed))
 
@@ -1565,6 +1566,9 @@ qmi_message_get_printable_full (QmiMessage        *self,
         break;
     case QMI_SERVICE_LOC:
         contents = __qmi_message_loc_get_printable (self, context, line_prefix);
+        break;
+    case QMI_SERVICE_QOS:
+        contents = __qmi_message_qos_get_printable (self, context, line_prefix);
         break;
     default:
         break;

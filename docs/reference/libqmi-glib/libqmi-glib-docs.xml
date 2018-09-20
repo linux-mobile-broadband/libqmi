@@ -413,6 +413,24 @@
   </chapter>
 
   <chapter>
+    <title>QoS Service (QoS)</title>
+    <xi:include href="xml/qmi-client-qos.xml"/>
+    <xi:include href="xml/qmi-enums-qos.xml"/>
+    <section>
+      <title>QoS Indications</title>
+      <xi:include href="xml/qmi-indication-qos-flow-status.xml"/>
+      <xi:include href="xml/qmi-indication-qos-network-status.xml"/>
+    </section>
+    <section>
+      <title>QoS Requests</title>
+      <xi:include href="xml/qmi-message-qos-reset.xml"/>
+      <xi:include href="xml/qmi-message-qos-get-flow-status.xml"/>
+      <xi:include href="xml/qmi-message-qos-get-network-status.xml"/>
+      <xi:include href="xml/qmi-message-qos-swi-read-data-stats.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>
