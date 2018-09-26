@@ -185,7 +185,7 @@ qmicli_loc_options_enabled (void)
     }
 
     if (timeout > 0 && !(get_position_report_flag || get_gnss_sv_info_flag)) {
-        g_printerr ("error: `--loc-timeout' is only applicable with `--loc-get-position' or `--loc-get-satellite-info'\n");
+        g_printerr ("error: `--loc-timeout' is only applicable with `--loc-get-position-report' or `--loc-get-gnss-sv-info'\n");
         exit (EXIT_FAILURE);
     }
 
