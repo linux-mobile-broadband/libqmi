@@ -334,11 +334,13 @@ start_network ()
 
     setup_data_format
 
-    START_NETWORK_ARGS="apn='$APN'"
-    if [ -n "$APN_USER" ]; then
-        START_NETWORK_ARGS="${START_NETWORK_ARGS},username='$APN_USER'"
-        if [ -n "$APN_PASS" ]; then
-            START_NETWORK_ARGS="${START_NETWORK_ARGS},password='$APN_PASS'"
+    if [ -n "$APN" ]; then
+        START_NETWORK_ARGS="apn='$APN'"
+        if [ -n "$APN_USER" ]; then
+            START_NETWORK_ARGS="${START_NETWORK_ARGS},username='$APN_USER'"
+            if [ -n "$APN_PASS" ]; then
+                START_NETWORK_ARGS="${START_NETWORK_ARGS},password='$APN_PASS'"
+            fi
         fi
     fi
 
