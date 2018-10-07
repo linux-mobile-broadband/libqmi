@@ -14,7 +14,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (C) 2013 - 2018 Aleksander Morgado <aleksander@aleksander.es>
 #
 
 import string
@@ -85,6 +85,132 @@ class ObjectList:
         # Emit all commands
         for item in self.command_list:
             item.emit(hfile, cfile)
+
+
+    """
+    Emit support for printing messages in this service
+    """
+    def emit_printable(self, hfile, cfile):
+        translations = { 'service_underscore' : utils.build_underscore_name(self.service),
+                         'service'            : self.service }
+
+
+        template = (
+            '\n'
+            '/*****************************************************************************/\n'
+            '/* Service helper for printable fields */\n'
+            '\n'
+            '#if defined (LIBMBIM_GLIB_COMPILATION)\n'
+            '\n'
+            'G_GNUC_INTERNAL\n'
+            'gchar *\n'
+            '__mbim_message_${service_underscore}_get_printable_fields (\n'
+            '    const MbimMessage *message,\n'
+            '    const gchar *line_prefix,\n'
+            '    GError **error);\n'
+            '\n'
+            '#endif\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        template = (
+            '\n'
+            'typedef struct {\n'
+            '  gchar * (* query_cb)        (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
+            '  gchar * (* set_cb)          (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
+            '  gchar * (* response_cb)     (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
+            '  gchar * (* notification_cb) (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
+            '} GetPrintableCallbacks;\n'
+            '\n'
+            'static const GetPrintableCallbacks get_printable_callbacks[] = {\n')
+
+        for item in self.command_list:
+            translations['message'] = utils.build_underscore_name (item.fullname)
+            translations['cid']     = item.cid_enum_name
+            inner_template = (
+                '    [${cid}] = {\n')
+            if item.has_query:
+                inner_template += (
+                    '        .query_cb = ${message}_query_get_printable,\n')
+            if item.has_set:
+                inner_template += (
+                    '        .set_cb = ${message}_set_get_printable,\n')
+            if item.has_response:
+                inner_template += (
+                    '        .response_cb = ${message}_response_get_printable,\n')
+            if item.has_notification:
+                inner_template += (
+                    '        .notification_cb = ${message}_notification_get_printable,\n')
+            inner_template += (
+                '    },\n')
+            template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '};\n'
+            '\n'
+            'gchar *\n'
+            '__mbim_message_${service_underscore}_get_printable_fields (\n'
+            '    const MbimMessage *message,\n'
+            '    const gchar *line_prefix,\n'
+            '    GError **error)\n'
+            '{\n'
+            '    guint32 cid;\n'
+            '\n'
+            '    switch (mbim_message_get_message_type (message)) {\n'
+            '        case MBIM_MESSAGE_TYPE_COMMAND: {\n'
+            '            cid = mbim_message_command_get_cid (message);\n'
+            '            if (cid < G_N_ELEMENTS (get_printable_callbacks)) {\n'
+            '                switch (mbim_message_command_get_command_type (message)) {\n'
+            '                    case MBIM_MESSAGE_COMMAND_TYPE_QUERY:\n'
+            '                        if (get_printable_callbacks[cid].query_cb)\n'
+            '                            return get_printable_callbacks[cid].query_cb (message, line_prefix, error);\n'
+            '                        break;\n'
+            '                    case MBIM_MESSAGE_COMMAND_TYPE_SET:\n'
+            '                        if (get_printable_callbacks[cid].set_cb)\n'
+            '                            return get_printable_callbacks[cid].set_cb (message, line_prefix, error);\n'
+            '                        break;\n'
+            '                    default:\n'
+            '                        g_set_error (error,\n'
+            '                                     MBIM_CORE_ERROR,\n'
+            '                                     MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
+            '                                     \"Invalid command type\");\n'
+            '                        return NULL;\n'
+            '                }\n'
+            '            }\n'
+            '            break;\n'
+            '        }\n'
+            '\n'
+            '        case MBIM_MESSAGE_TYPE_COMMAND_DONE:\n'
+            '            cid = mbim_message_command_done_get_cid (message);\n'
+            '            if (cid < G_N_ELEMENTS (get_printable_callbacks)) {\n'
+            '                if (get_printable_callbacks[cid].response_cb)\n'
+            '                    return get_printable_callbacks[cid].response_cb (message, line_prefix, error);\n'
+            '            }\n'
+            '            break;\n'
+            '\n'
+            '        case MBIM_MESSAGE_TYPE_INDICATE_STATUS:\n'
+            '            cid = mbim_message_indicate_status_get_cid (message);\n'
+            '            if (cid < G_N_ELEMENTS (get_printable_callbacks)) {\n'
+            '                if (get_printable_callbacks[cid].notification_cb)\n'
+            '                    return get_printable_callbacks[cid].notification_cb (message, line_prefix, error);\n'
+            '            }\n'
+            '            break;\n'
+            '\n'
+            '        default:\n'
+            '            g_set_error (error,\n'
+            '                         MBIM_CORE_ERROR,\n'
+            '                         MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
+            '                         \"No contents expected in this message type\");\n'
+            '            return NULL;\n'
+            '    }\n'
+            '\n'
+            '    g_set_error (error,\n'
+            '                 MBIM_CORE_ERROR,\n'
+            '                 MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
+            '                 \"Unknown contents\");\n'
+            '    return NULL;\n'
+            '}\n')
+
+        cfile.write(string.Template(template).substitute(translations))
 
 
     """

@@ -14,7 +14,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (C) 2013 - 2018 Aleksander Morgado <aleksander@aleksander.es>
 #
 
 import string
@@ -167,21 +167,25 @@ class Message:
             utils.add_separator(hfile, 'Message (Query)', self.fullname);
             utils.add_separator(cfile, 'Message (Query)', self.fullname);
             self._emit_message_creator(hfile, cfile, 'query', self.query)
+            self._emit_message_printable(cfile, 'query', self.query)
 
         if self.has_set:
             utils.add_separator(hfile, 'Message (Set)', self.fullname);
             utils.add_separator(cfile, 'Message (Set)', self.fullname);
             self._emit_message_creator(hfile, cfile, 'set', self.set)
+            self._emit_message_printable(cfile, 'set', self.set)
 
         if self.has_response:
             utils.add_separator(hfile, 'Message (Response)', self.fullname);
             utils.add_separator(cfile, 'Message (Response)', self.fullname);
             self._emit_message_parser(hfile, cfile, 'response', self.response)
+            self._emit_message_printable(cfile, 'response', self.response)
 
         if self.has_notification:
             utils.add_separator(hfile, 'Message (Notification)', self.fullname);
             utils.add_separator(cfile, 'Message (Notification)', self.fullname);
             self._emit_message_parser(hfile, cfile, 'notification', self.notification)
+            self._emit_message_printable(cfile, 'notification', self.notification)
 
 
     """
@@ -804,6 +808,343 @@ class Message:
         template += (
             '\n'
             '    return TRUE;\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+
+    """
+    Emit message printable
+    """
+    def _emit_message_printable(self, cfile, message_type, fields):
+        translations = { 'message'                  : self.name,
+                         'underscore'               : utils.build_underscore_name(self.name),
+                         'service'                  : self.service,
+                         'underscore'               : utils.build_underscore_name (self.fullname),
+                         'message_type'             : message_type,
+                         'message_type_upper'       : message_type.upper(),
+                         'service_underscore_upper' : utils.build_underscore_name (self.service).upper() }
+        template = (
+            '\n'
+            'static gchar *\n'
+            '${underscore}_${message_type}_get_printable (\n'
+            '    const MbimMessage *message,\n'
+            '    const gchar *line_prefix,\n'
+            '    GError **error)\n'
+            '{\n'
+            '    GString *str;\n')
+
+        if fields != []:
+            template += (
+                '    guint32 offset = 0;\n')
+
+        for field in fields:
+            if 'always-read' in field:
+                translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
+                inner_template = ('    guint32 _${field};\n')
+                template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '\n'
+            '    str = g_string_new ("");\n')
+
+        for field in fields:
+            translations['field']                   = utils.build_underscore_name_from_camelcase(field['name'])
+            translations['field_format']            = field['format']
+            translations['field_format_underscore'] = utils.build_underscore_name_from_camelcase(field['format'])
+            translations['public']                  = field['public-format'] if 'public-format' in field else field['format']
+            translations['public_underscore']       = utils.build_underscore_name_from_camelcase(field['public-format']) if 'public-format' in field else ''
+            translations['public_underscore_upper'] = utils.build_underscore_name_from_camelcase(field['public-format']).upper() if 'public-format' in field else ''
+            translations['field_name']              = field['name']
+            translations['array_size_field']        = utils.build_underscore_name_from_camelcase(field['array-size-field']) if 'array-size-field' in field else ''
+            translations['struct_name']             = utils.build_underscore_name_from_camelcase(field['struct-type']) if 'struct-type' in field else ''
+            translations['struct_type']             = field['struct-type'] if 'struct-type' in field else ''
+            translations['array_size']              = field['array-size'] if 'array-size' in field else ''
+
+            inner_template = (
+                '\n'
+                '    g_string_append_printf (str, "%s  ${field_name} = ", line_prefix);\n')
+
+            if 'available-if' in field:
+                condition = field['available-if']
+                translations['condition_field'] = utils.build_underscore_name_from_camelcase(condition['field'])
+                translations['condition_operation'] = condition['operation']
+                translations['condition_value'] = condition['value']
+                inner_template += (
+                    '    if (_${condition_field} ${condition_operation} ${condition_value}) {\n')
+            else:
+                inner_template += (
+                    '    {\n')
+
+            if 'always-read' in field:
+                inner_template += (
+                    '        _${field} = _mbim_message_read_guint32 (message, offset);\n'
+                    '        offset += 4;\n'
+                    '        g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", _${field});\n')
+
+            elif field['format'] == 'byte-array' or \
+                 field['format'] == 'unsized-byte-array' or \
+                 field['format'] == 'ref-byte-array' or \
+                 field['format'] == 'ref-byte-array-no-offset':
+                inner_template += (
+                    '        guint i;\n'
+                    '        const guint8 *tmp;\n'
+                    '        guint32 tmpsize;\n'
+                    '\n')
+                if field['format'] == 'byte-array':
+                    inner_template += (
+                        '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, NULL);\n'
+                        '        tmpsize = ${array_size};\n'
+                        '        offset += ${array_size};\n')
+                elif field['format'] == 'unsized-byte-array':
+                    inner_template += (
+                        '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, &tmpsize);\n'
+                        '        offset += tmpsize;\n')
+
+                elif field['format'] == 'ref-byte-array':
+                    inner_template += (
+                        '        tmp = _mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, &tmpsize);\n'
+                        '        offset += 8;\n')
+
+                elif field['format'] == 'ref-byte-array-no-offset':
+                    inner_template += (
+                        '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, TRUE, &tmpsize);\n'
+                        '        offset += 4;\n')
+
+                inner_template += (
+                    '        g_string_append (str, "\'");\n'
+                    '        for (i = 0; i  < tmpsize; i++)\n'
+                    '            g_string_append_printf (str, "%02x%s", tmp[i], (i == (tmpsize - 1)) ? "" : ":" );\n'
+                    '        g_string_append (str, "\'");\n')
+
+            elif field['format'] == 'uuid':
+                inner_template += (
+                    '        const MbimUuid *tmp;\n'
+                    '        gchar *tmpstr;\n'
+                    '\n'
+                    '        tmp = _mbim_message_read_uuid (message, offset);\n'
+                    '        offset += 16;\n'
+                    '        tmpstr = mbim_uuid_get_printable (tmp);\n'
+                    '        g_string_append_printf (str, "\'%s\'", tmpstr);\n'
+                    '        g_free (tmpstr);\n')
+
+            elif field['format'] == 'guint32' or \
+                 field['format'] == 'guint64':
+                inner_template += (
+                    '        ${public} tmp;\n'
+                    '\n')
+                if field['format'] == 'guint32' :
+                    inner_template += (
+                        '        tmp = (${public}) _mbim_message_read_guint32 (message, offset);\n'
+                        '        offset += 4;\n')
+                elif field['format'] == 'guint64' :
+                    inner_template += (
+                        '        tmp = (${public}) _mbim_message_read_guint64 (message, offset);\n'
+                        '        offset += 8;\n')
+
+                if 'public-format' in field:
+                    inner_template += (
+                        '#if defined __${public_underscore_upper}_IS_ENUM__\n'
+                        '        g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string (tmp));\n'
+                        '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
+                        '        {\n'
+                        '            gchar *tmpstr;\n'
+                        '\n'
+                        '            tmpstr = ${public_underscore}_build_string_from_mask (tmp);\n'
+                        '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
+                        '            g_free (tmpstr);\n'
+                        '        }\n'
+                        '#else\n'
+                        '# error neither enum nor flags\n'
+                        '#endif\n'
+                        '\n')
+                elif field['format'] == 'guint32':
+                    inner_template += (
+                        '        g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", tmp);\n')
+                elif field['format'] == 'guint64':
+                    inner_template += (
+                        '        g_string_append_printf (str, "\'%" G_GUINT64_FORMAT "\'", tmp);\n')
+
+            elif field['format'] == 'string':
+                inner_template += (
+                    '        gchar *tmp;\n'
+                    '\n'
+                    '        tmp = _mbim_message_read_string (message, 0, offset);\n'
+                    '        offset += 8;\n'
+                    '        g_string_append_printf (str, "\'%s\'", tmp);\n'
+                    '        g_free (tmp);\n')
+
+            elif field['format'] == 'string-array':
+                inner_template += (
+                    '        gchar **tmp;\n'
+                    '        guint i;\n'
+                    '\n'
+                    '        tmp = _mbim_message_read_string_array (message, _${array_size_field}, 0, offset);\n'
+                    '        offset += (8 * _${array_size_field});\n'
+                    '\n'
+                    '        g_string_append (str, "\'");\n'
+                    '        for (i = 0; i < _${array_size_field}; i++) {\n'
+                    '            g_string_append (str, tmp[i]);\n'
+                    '            if (i < (_${array_size_field} - 1))\n'
+                    '                g_string_append (str, ", ");\n'
+                    '        }\n'
+                    '        g_string_append (str, "\'");\n'
+                    '        g_strfreev (tmp);\n')
+
+            elif field['format'] == 'struct':
+                inner_template += (
+                    '        ${struct_type} *tmp;\n'
+                    '        guint32 bytes_read = 0;\n'
+                    '        gchar *new_line_prefix;\n'
+                    '        gchar *struct_str;\n'
+                    '\n'
+                    '        tmp = _mbim_message_read_${struct_name}_struct (message, offset, &bytes_read);\n'
+                    '        offset += bytes_read;\n'
+                    '\n'
+                    '        g_string_append (str, "{\\n");\n'
+                    '        new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
+                    '        struct_str = _mbim_message_print_${struct_name}_struct (tmp, new_line_prefix);\n'
+                    '        g_string_append (str, struct_str);\n'
+                    '        g_free (struct_str);\n'
+                    '        g_string_append_printf (str, "%s  }\\n", line_prefix);\n'
+                    '        g_free (new_line_prefix);\n'
+                    '        _${struct_name}_free (tmp);\n')
+
+            elif field['format'] == 'struct-array' or field['format'] == 'ref-struct-array':
+                inner_template += (
+                    '        ${struct_type} **tmp;\n'
+                    '        gchar *new_line_prefix;\n'
+                    '        guint i;\n'
+                    '\n')
+
+                if field['format'] == 'struct-array':
+                    inner_template += (
+                    '        tmp = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE);\n'
+                    '        offset += 4;\n')
+                elif field['format'] == 'ref-struct-array':
+                    inner_template += (
+                    '        tmp = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE);\n'
+                    '        offset += (8 * _${array_size_field});\n')
+
+                inner_template += (
+                    '        new_line_prefix = g_strdup_printf ("%s        ", line_prefix);\n'
+                    '        g_string_append (str, "\'{\\n");\n'
+                    '        for (i = 0; i < _${array_size_field}; i++) {\n'
+                    '            gchar *struct_str;\n'
+                    '\n'
+                    '            g_string_append_printf (str, "%s    [%u] = {\\n", line_prefix, i);\n'
+                    '            struct_str = _mbim_message_print_${struct_name}_struct (tmp[i], new_line_prefix);\n'
+                    '            g_string_append (str, struct_str);\n'
+                    '            g_free (struct_str);\n'
+                    '            g_string_append_printf (str, "%s    },\\n", line_prefix);\n'
+                    '        }\n'
+                    '        g_string_append_printf (str, "%s  }\'", line_prefix);\n'
+                    '        g_free (new_line_prefix);\n'
+                    '        ${struct_name}_array_free (tmp);\n')
+
+            elif field['format'] == 'ipv4' or \
+                 field['format'] == 'ref-ipv4' or \
+                 field['format'] == 'ipv4-array' or \
+                 field['format'] == 'ipv6' or \
+                 field['format'] == 'ref-ipv6' or \
+                 field['format'] == 'ipv6-array':
+                if field['format'] == 'ipv4' or \
+                   field['format'] == 'ref-ipv4':
+                    inner_template += (
+                        '        const MbimIPv4 *tmp;\n')
+                elif field['format'] == 'ipv4-array':
+                    inner_template += (
+                        '        MbimIPv4 *tmp;\n')
+                elif field['format'] == 'ipv6' or \
+                     field['format'] == 'ref-ipv6':
+                    inner_template += (
+                        '        const MbimIPv6 *tmp;\n')
+                elif field['format'] == 'ipv6-array':
+                    inner_template += (
+                        '        MbimIPv6 *tmp;\n')
+
+                inner_template += (
+                    '        guint array_size;\n'
+                    '        guint i;\n'
+                    '\n')
+
+                if field['format'] == 'ipv4':
+                    inner_template += (
+                        '        array_size = 1;\n'
+                        '        tmp = _mbim_message_read_ipv4 (message, offset, FALSE);\n'
+                        '        offset += 4;\n')
+                elif field['format'] == 'ref-ipv4':
+                    inner_template += (
+                        '        array_size = 1;\n'
+                        '        tmp = _mbim_message_read_ipv4 (message, offset, TRUE);\n'
+                        '        offset += 4;\n')
+                elif field['format'] == 'ipv4-array':
+                    inner_template += (
+                        '        array_size = _${array_size_field};\n'
+                        '        tmp = _mbim_message_read_ipv4_array (message, _${array_size_field}, offset);\n'
+                        '        offset += 4;\n')
+                elif field['format'] == 'ipv6':
+                    inner_template += (
+                        '        array_size = 1;\n'
+                        '        tmp = _mbim_message_read_ipv6 (message, offset, FALSE);\n'
+                        '        offset += 16;\n')
+                elif field['format'] == 'ref-ipv6':
+                    inner_template += (
+                        '        array_size = 1;\n'
+                        '        tmp = _mbim_message_read_ipv6 (message, offset, TRUE);\n'
+                        '        offset += 4;\n')
+                elif field['format'] == 'ipv6-array':
+                    inner_template += (
+                        '        array_size = _${array_size_field};\n'
+                        '        tmp = _mbim_message_read_ipv6_array (message, _${array_size_field}, offset);\n'
+                        '        offset += 4;\n')
+
+                inner_template += (
+                    '        g_string_append (str, "\'");\n'
+                    '        if (tmp) {\n'
+                    '            for (i = 0; i < array_size; i++) {\n'
+                    '                GInetAddress *addr;\n'
+                    '                gchar *tmpstr;\n'
+                    '\n')
+
+                if field['format'] == 'ipv4' or \
+                   field['format'] == 'ref-ipv4' or \
+                   field['format'] == 'ipv4-array':
+                    inner_template += (
+                        '                addr = g_inet_address_new_from_bytes ((guint8 *)&(tmp[i].addr), G_SOCKET_FAMILY_IPV4);\n')
+                elif field['format'] == 'ipv6' or \
+                     field['format'] == 'ref-ipv6' or \
+                     field['format'] == 'ipv6-array':
+                    inner_template += (
+                        '                addr = g_inet_address_new_from_bytes ((guint8 *)&(tmp[i].addr), G_SOCKET_FAMILY_IPV6);\n')
+
+                inner_template += (
+                    '                tmpstr = g_inet_address_to_string (addr);\n'
+                    '                g_string_append_printf (str, "%s", tmpstr);\n'
+                    '                g_free (tmpstr);\n'
+                    '                g_object_unref (addr);\n'
+                    '                if (i < (array_size - 1))\n'
+                    '                    g_string_append (str, ", ");\n'
+                    '            }\n'
+                    '        }\n'
+                    '        g_string_append (str, "\'");\n')
+
+                if field['format'] == 'ipv4-array' or \
+                   field['format'] == 'ipv6-array':
+                    inner_template += (
+                        '        g_free (tmp);\n')
+
+            else:
+                raise ValueError('Field format \'%s\' not printable' % field['format'])
+
+            inner_template += (
+                '    }\n'
+                '    g_string_append (str, "\\n");\n')
+
+            template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '\n'
+            '    return g_string_free (str, FALSE);\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
 

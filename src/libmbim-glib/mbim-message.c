@@ -18,7 +18,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2013 - 2018 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <glib.h>
@@ -31,6 +31,21 @@
 #include "mbim-message-private.h"
 #include "mbim-error-types.h"
 #include "mbim-enum-types.h"
+
+#include "mbim-atds.h"
+#include "mbim-auth.h"
+#include "mbim-basic-connect.h"
+#include "mbim-basic-connect-extensions.h"
+#include "mbim-dss.h"
+#include "mbim-intel-firmware-update.h"
+#include "mbim-ms-firmware-id.h"
+#include "mbim-ms-host-shutdown.h"
+#include "mbim-phonebook.h"
+#include "mbim-proxy-control.h"
+#include "mbim-qmi.h"
+#include "mbim-sms.h"
+#include "mbim-stk.h"
+#include "mbim-ussd.h"
 
 /**
  * SECTION:mbim-message
@@ -1125,6 +1140,7 @@ mbim_message_get_printable (const MbimMessage *self,
                             gboolean           headers_only)
 {
     GString *printable;
+    MbimService service_read_fields = MBIM_SERVICE_INVALID;
 
     g_return_val_if_fail (self != NULL, NULL);
     g_return_val_if_fail (line_prefix != NULL, NULL);
@@ -1152,7 +1168,7 @@ mbim_message_get_printable (const MbimMessage *self,
         if (!headers_only)
             g_string_append_printf (printable,
                                     "%sContents:\n"
-                                    "%s  max_control_transfer = %u\n",
+                                    "%s  max control transfer = %u\n",
                                     line_prefix,
                                     line_prefix, mbim_message_open_get_max_control_transfer (self));
         break;
@@ -1212,6 +1228,8 @@ mbim_message_get_printable (const MbimMessage *self,
             gchar *uuid_printable;
             const gchar *cid_printable;
 
+            service_read_fields = mbim_message_command_get_service (self);
+
             uuid_printable = mbim_uuid_get_printable (mbim_message_command_get_service_id (self));
             cid_printable = mbim_cid_get_printable (mbim_message_command_get_service (self),
                                                     mbim_message_command_get_cid (self));
@@ -1240,6 +1258,8 @@ mbim_message_get_printable (const MbimMessage *self,
             gchar *uuid_printable;
             MbimStatusError status;
             const gchar *cid_printable;
+
+            service_read_fields = mbim_message_command_done_get_service (self);
 
             status = mbim_message_command_done_get_status_code (self);
             uuid_printable = mbim_uuid_get_printable (mbim_message_command_done_get_service_id (self));
@@ -1270,6 +1290,8 @@ mbim_message_get_printable (const MbimMessage *self,
             gchar *uuid_printable;
             const gchar *cid_printable;
 
+            service_read_fields = mbim_message_indicate_status_get_service (self);
+
             uuid_printable = mbim_uuid_get_printable (mbim_message_indicate_status_get_service_id (self));
             cid_printable = mbim_cid_get_printable (mbim_message_indicate_status_get_service (self),
                                                     mbim_message_indicate_status_get_cid (self));
@@ -1283,6 +1305,72 @@ mbim_message_get_printable (const MbimMessage *self,
             g_free (uuid_printable);
         }
         break;
+    }
+
+    if (service_read_fields != MBIM_SERVICE_INVALID) {
+        gchar *fields_printable = NULL;
+        GError *error = NULL;
+
+        switch (service_read_fields) {
+        case MBIM_SERVICE_BASIC_CONNECT:
+            fields_printable = __mbim_message_basic_connect_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_SMS:
+            fields_printable = __mbim_message_sms_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_USSD:
+            fields_printable = __mbim_message_ussd_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_PHONEBOOK:
+            fields_printable = __mbim_message_phonebook_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_STK:
+            fields_printable = __mbim_message_stk_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_AUTH:
+            fields_printable = __mbim_message_auth_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_DSS:
+            fields_printable = __mbim_message_dss_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_MS_FIRMWARE_ID:
+            fields_printable = __mbim_message_ms_firmware_id_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_MS_HOST_SHUTDOWN:
+            fields_printable = __mbim_message_ms_host_shutdown_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_PROXY_CONTROL:
+            fields_printable = __mbim_message_proxy_control_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_QMI:
+            fields_printable = __mbim_message_qmi_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_ATDS:
+            fields_printable = __mbim_message_atds_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
+            fields_printable = __mbim_message_intel_firmware_update_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS:
+            fields_printable = __mbim_message_basic_connect_extensions_get_printable_fields (self, line_prefix, &error);
+            break;
+        default:
+            break;
+        }
+
+        if (error) {
+            g_string_append_printf (printable,
+                                    "%sFields: %s\n",
+                                    line_prefix, error->message);
+            g_error_free (error);
+        } else if (fields_printable) {
+            if (fields_printable[0])
+                g_string_append_printf (printable,
+                                        "%sFields:\n"
+                                        "%s",
+                                        line_prefix, fields_printable);
+            g_free (fields_printable);
+        }
     }
 
     return g_string_free (printable, FALSE);

@@ -15,7 +15,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Copyright (C) 2013 Aleksander Morgado <aleksander@gnu.org>
+# Copyright (C) 2013-2018 Aleksander Morgado <aleksander@gnu.org>
 #
 
 import os
@@ -60,6 +60,9 @@ def codegen_main():
 
     # Emit the message creation/parsing code
     object_list.emit(output_file_h, output_file_c)
+
+    # Emit the message printable support
+    object_list.emit_printable(output_file_h, output_file_c)
 
     # Emit sections
     object_list.emit_sections(output_file_sections)

@@ -15,7 +15,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright (C) 2012 Lanedo GmbH
-# Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (C) 2013 - 2018 Aleksander Morgado <aleksander@aleksander.es>
 #
 # Implementation originally developed in 'libqmi'.
 #
@@ -47,7 +47,7 @@ def add_copyright(f):
         " * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,\n"
         " * Boston, MA 02110-1301 USA.\n"
         " *\n"
-        " * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>\n"
+        " * Copyright (C) 2013 - 2018 Aleksander Morgado <aleksander@aleksander.es>\n"
         " */\n"
         "\n");
 
