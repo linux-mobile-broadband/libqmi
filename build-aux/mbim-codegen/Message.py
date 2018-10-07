@@ -818,7 +818,7 @@ class Message:
                 inner_template += (
                     '        if (${field} != NULL)\n'
                     '            *${field} =  _mbim_message_read_ipv6 (message, offset, FALSE);\n'
-                    '        offset += 4;\n')
+                    '        offset += 16;\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template += (
                     '        if (${field} != NULL)\n'

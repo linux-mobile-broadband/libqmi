@@ -412,7 +412,7 @@ class Struct:
                 inner_template += (
                     '\n'
                     '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_ipv6 (self, offset, FALSE), 16);\n'
-                    '    offset += 4;\n')
+                    '    offset += 16;\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template += (
                     '\n'
