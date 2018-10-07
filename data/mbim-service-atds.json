@@ -1,14 +1,14 @@
 [
   // *********************************************************************************
   { "type" : "Service",
-    "name" : "ATT Device Service" },
+    "name" : "ATDS" },
 
   // *********************************************************************************
   { "name"         : "Signal",
     "service"      : "ATDS",
     "type"         : "Command",
     "query"        : [],
-    "response"     : [ 
+    "response"     : [
                        // 0-31: dBm = -113 + (2*rssi)
                        // 99:   unknown/undetectable
                        { "name"   : "Rssi",
