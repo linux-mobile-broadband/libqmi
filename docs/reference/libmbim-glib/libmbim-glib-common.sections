@@ -366,6 +366,7 @@ mbim_emergency_mode_state_get_string
 mbim_dss_link_state_get_string
 mbim_atds_provider_plmn_mode_get_string
 mbim_atds_rat_mode_get_string
+mbim_pco_type_get_string
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -419,6 +420,7 @@ mbim_emergency_mode_state_build_string_from_mask
 mbim_dss_link_state_build_string_from_mask
 mbim_atds_provider_plmn_mode_build_string_from_mask
 mbim_atds_rat_mode_build_string_from_mask
+mbim_pco_type_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -531,6 +533,7 @@ mbim_emergency_mode_state_get_type
 mbim_dss_link_state_get_type
 mbim_atds_provider_plmn_mode_get_type
 mbim_atds_rat_mode_get_type
+mbim_pco_type_get_type
 </SECTION>
 
 <SECTION>
