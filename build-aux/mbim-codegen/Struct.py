@@ -98,18 +98,12 @@ class Struct:
             elif field['format'] == 'ref-ipv4':
                 inner_template = (
                     ' * @${field_name_underscore}: a #MbimIPv4.\n')
-            elif field['format'] == 'ipv4-array':
-                inner_template = (
-                    ' * @${field_name_underscore}: an array of #MbimIPv4 values.\n')
             elif field['format'] == 'ipv6':
                 inner_template = (
                     ' * @${field_name_underscore}: a #MbimIPv6\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = (
                     ' * @${field_name_underscore}: a #MbimIPv6\n')
-            elif field['format'] == 'ipv6-array':
-                inner_template = (
-                    ' * @${field_name_underscore}: an array of #MbimIPv6 values.\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
             template += string.Template(inner_template).substitute(translations)
@@ -154,18 +148,12 @@ class Struct:
             elif field['format'] == 'ref-ipv4':
                 inner_template = (
                     '    MbimIPv4 ${field_name_underscore};\n')
-            elif field['format'] == 'ipv4-array':
-                inner_template = (
-                    '    MbimIPv4 *${field_name_underscore};\n')
             elif field['format'] == 'ipv6':
                 inner_template = (
                     '    MbimIPv6 ${field_name_underscore};\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = (
                     '    MbimIPv6 ${field_name_underscore};\n')
-            elif field['format'] == 'ipv6-array':
-                inner_template = (
-                    '    MbimIPv6 *${field_name_underscore};\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
             template += string.Template(inner_template).substitute(translations)
@@ -223,16 +211,10 @@ class Struct:
                 pass
             elif field['format'] == 'ref-ipv4':
                 pass
-            elif field['format'] == 'ipv4-array':
-                inner_template += (
-                    '    g_free (var->${field_name_underscore});\n')
             elif field['format'] == 'ipv6':
                 pass
             elif field['format'] == 'ref-ipv6':
                 pass
-            elif field['format'] == 'ipv6-array':
-                inner_template += (
-                    '    g_free (var->${field_name_underscore});\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct clear' % field['format'])
             template += string.Template(inner_template).substitute(translations)
@@ -403,11 +385,6 @@ class Struct:
                     '\n'
                     '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_ipv4 (self, offset, TRUE), 4);\n'
                     '    offset += 4;\n')
-            elif field['format'] == 'ipv4-array':
-                inner_template += (
-                    '\n'
-                    '    out->${field_name_underscore} =_mbim_message_read_ipv4_array (self, out->${array_size_field_name_underscore}, offset);\n'
-                    '    offset += 4;\n')
             elif field['format'] == 'ipv6':
                 inner_template += (
                     '\n'
@@ -417,11 +394,6 @@ class Struct:
                 inner_template += (
                     '\n'
                     '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_ipv6 (self, offset, TRUE), 16);\n'
-                    '    offset += 4;\n')
-            elif field['format'] == 'ipv6-array':
-                inner_template += (
-                    '\n'
-                    '    out->${field_name_underscore} =_mbim_message_read_ipv6_array (self, out->${array_size_field_name_underscore}, offset);\n'
                     '    offset += 4;\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
@@ -524,14 +496,10 @@ class Struct:
                 inner_template = ('    _mbim_struct_builder_append_ipv4 (builder, &value->${field}, FALSE);\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template = ('    _mbim_struct_builder_append_ipv4 (builder, &value->${field}, TRUE);\n')
-            elif field['format'] == 'ipv4-array':
-                inner_template = ('    _mbim_struct_builder_append_ipv4_array (builder, value->${field}, value->${array_size_field});\n')
             elif field['format'] == 'ipv6':
                 inner_template = ('    _mbim_struct_builder_append_ipv6 (builder, &value->${field}, FALSE);\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = ('    _mbim_struct_builder_append_ipv6 (builder, &value->${field}, TRUE);\n')
-            elif field['format'] == 'ipv6-array':
-                inner_template = ('    _mbim_struct_builder_append_ipv6_array (builder, value->${field}, value->${array_size_field});\n')
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])
 
