@@ -134,6 +134,9 @@ static void     untrack_client         (MbimProxy *self, Client *client);
 static void
 client_disconnect (Client *client)
 {
+    g_clear_pointer (&client->mbim_event_entry_array, mbim_event_entry_array_free);
+    client->mbim_event_entry_array_size = 0;
+
     if (client->connection_readable_source) {
         g_source_destroy (client->connection_readable_source);
         g_source_unref (client->connection_readable_source);
@@ -361,6 +364,12 @@ request_new (MbimProxy   *self,
 /*****************************************************************************/
 /* Internal proxy device opening operation */
 
+static MbimEventEntry **merge_client_service_subscribe_lists (MbimProxy  *self,
+                                                              MbimDevice *device,
+                                                              gsize      *out_size);
+static void             reset_client_service_subscribe_lists (MbimProxy  *self,
+                                                              MbimDevice *device);
+
 typedef struct {
     MbimDevice *device;
     guint32     timeout_secs;
@@ -533,6 +542,7 @@ internal_device_open_caps_query_ready (MbimDevice   *device,
         /* If we get a not-opened error, well, force closing right away and reopen */
         if (g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_NOT_OPENED)) {
             g_debug ("device not-opened error reported, reopening");
+            reset_client_service_subscribe_lists (self, device);
             mbim_device_close_force (device, NULL);
             internal_open (task);
             if (response)
@@ -882,10 +892,6 @@ device_service_subscribe_list_set_ready (MbimDevice   *device,
     device_service_subscribe_list_set_complete (request, error_status_code);
 }
 
-static MbimEventEntry **merge_client_service_subscribe_lists (MbimProxy  *self,
-                                                              MbimDevice *device,
-                                                              gsize      *out_size);
-
 static gboolean
 process_device_service_subscribe_list (MbimProxy   *self,
                                        Client      *client,
@@ -1213,9 +1219,7 @@ typedef struct {
 static void
 device_context_free (DeviceContext *ctx)
 {
-
-    if (ctx->mbim_event_entry_array)
-        mbim_event_entry_array_free (ctx->mbim_event_entry_array);
+    mbim_event_entry_array_free (ctx->mbim_event_entry_array);
     g_slice_free (DeviceContext, ctx);
 }
 
@@ -1298,13 +1302,42 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
 }
 
 static void
+reset_client_service_subscribe_lists (MbimProxy  *self,
+                                      MbimDevice *device)
+{
+    DeviceContext *ctx;
+    GList         *l;
+
+    ctx = device_context_get (device);
+    g_assert (ctx);
+
+    /* make sure that all clients of this device don't track any event registered */
+    for (l = self->priv->clients; l; l = g_list_next (l)) {
+        Client *client;
+
+        client = l->data;
+        if (!client->mbim_event_entry_array)
+            continue;
+
+        if (g_str_equal (mbim_device_get_path (((Client *)(l->data))->device), mbim_device_get_path (device))) {
+            g_clear_pointer (&client->mbim_event_entry_array, mbim_event_entry_array_free);
+            client->mbim_event_entry_array_size = 0;
+        }
+    }
+
+    /* And reset the device-specific merged list */
+    mbim_event_entry_array_free (ctx->mbim_event_entry_array);
+    ctx->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_standard_list_new (&ctx->mbim_event_entry_array_size);
+}
+
+static void
 proxy_device_error_cb (MbimDevice *device,
                        GError     *error,
                        MbimProxy  *self)
 {
-
     if (g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_NOT_OPENED)) {
-        g_debug ("Device not opened error reported, forcing close");
+        g_debug ("device '%s' reports as being closed...", mbim_device_get_path (device));
+        reset_client_service_subscribe_lists (self, device);
         mbim_device_close_force (device, NULL);
     }
 }
