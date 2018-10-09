@@ -700,6 +700,11 @@ process_message (MbimDevice        *self,
             g_free (printable);
         }
 
+        /* Signals are emitted regardless of whether the transaction matched or not */
+        error_indication = mbim_message_error_get_error (message);
+        g_signal_emit (self, signals[SIGNAL_ERROR], 0, error_indication);
+        g_error_free (error_indication);
+
         if (task) {
             TransactionContext *ctx;
 
@@ -710,11 +715,6 @@ process_message (MbimDevice        *self,
             ctx->fragments = mbim_message_dup (message);
             transaction_task_complete_and_free (task, NULL);
         }
-
-        /* Signals are emitted regardless of whether the transaction matched or not */
-        error_indication = mbim_message_error_get_error (message);
-        g_signal_emit (self, signals[SIGNAL_ERROR], 0, error_indication);
-        g_error_free (error_indication);
         return;
     }
 
