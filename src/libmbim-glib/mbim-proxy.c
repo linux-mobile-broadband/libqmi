@@ -66,10 +66,6 @@ struct _MbimProxyPrivate {
     /* Devices */
     GList *devices;
     GList *opening_devices;
-
-    /* Global events array */
-    MbimEventEntry **mbim_event_entry_array;
-    gsize mbim_event_entry_array_size;
 };
 
 static void        track_device         (MbimProxy *self, MbimDevice *device);
@@ -853,43 +849,6 @@ track_service_subscribe_list (Client      *client,
     }
 }
 
-static MbimEventEntry **
-merge_client_service_subscribe_lists (MbimProxy *self,
-                                      gsize     *out_size)
-{
-    GList *l;
-    MbimEventEntry **updated;
-    gsize updated_size = 0;
-
-    g_assert (out_size != NULL);
-
-    /* Add previous global list */
-    updated = _mbim_proxy_helper_service_subscribe_list_merge (NULL, 0,
-                                                               self->priv->mbim_event_entry_array, self->priv->mbim_event_entry_array_size,
-                                                               &updated_size);
-
-    for (l = self->priv->clients; l; l = g_list_next (l)) {
-        Client *client;
-
-        client = l->data;
-        if (!client->mbim_event_entry_array)
-            continue;
-
-        /* Add per-client list */
-        updated = _mbim_proxy_helper_service_subscribe_list_merge (updated, updated_size,
-                                                                   client->mbim_event_entry_array, client->mbim_event_entry_array_size,
-                                                                   &updated_size);
-    }
-
-    if (mbim_utils_get_traces_enabled ()) {
-        g_debug ("Merged service subscribe list built");
-        _mbim_proxy_helper_service_subscribe_list_debug ((const MbimEventEntry * const *)updated, updated_size);
-    }
-
-    *out_size = updated_size;
-    return updated;
-}
-
 static void
 device_service_subscribe_list_set_complete (Request         *request,
                                             MbimStatusError  status)
@@ -948,14 +907,18 @@ device_service_subscribe_list_set_ready (MbimDevice   *device,
     device_service_subscribe_list_set_complete (request, error_status_code);
 }
 
+static MbimEventEntry **merge_client_service_subscribe_lists (MbimProxy  *self,
+                                                              MbimDevice *device,
+                                                              gsize      *out_size);
+
 static gboolean
 process_device_service_subscribe_list (MbimProxy   *self,
                                        Client      *client,
                                        MbimMessage *message)
 {
     MbimEventEntry **updated;
-    gsize updated_size = 0;
-    Request *request;
+    gsize            updated_size = 0;
+    Request         *request;
 
     /* create request holder */
     request = request_new (self, client, message);
@@ -964,26 +927,14 @@ process_device_service_subscribe_list (MbimProxy   *self,
     track_service_subscribe_list (client, message);
 
     /* merge all service subscribe list for all clients to set on device */
-    updated = merge_client_service_subscribe_lists (self, &updated_size);
-
-    /* If lists are equal, ignore re-setting them up */
-    if (_mbim_proxy_helper_service_subscribe_list_cmp (
-            (const MbimEventEntry *const *)updated, updated_size,
-            (const MbimEventEntry *const *)self->priv->mbim_event_entry_array, self->priv->mbim_event_entry_array_size)) {
-        /* Complete directly without error */
-        mbim_event_entry_array_free (updated);
+    updated = merge_client_service_subscribe_lists (self, client->device, &updated_size);
+    if (!updated) {
         device_service_subscribe_list_set_complete (request, MBIM_STATUS_ERROR_NONE);
         return TRUE;
     }
 
-    /* Lists are different, updated stored one */
-    mbim_event_entry_array_free (self->priv->mbim_event_entry_array);
-    self->priv->mbim_event_entry_array = updated;
-    self->priv->mbim_event_entry_array_size = updated_size;
-
-    message = mbim_message_device_service_subscribe_list_set_new (self->priv->mbim_event_entry_array_size,
-                                                                  (const MbimEventEntry *const *)self->priv->mbim_event_entry_array,
-                                                                  NULL);
+    /* the 'updated' array was given to us as transfer-none */
+    message = mbim_message_device_service_subscribe_list_set_new (updated_size, (const MbimEventEntry *const *)updated, NULL);
     mbim_message_set_transaction_id (message, mbim_device_get_next_transaction_id (client->device));
 
     mbim_device_command (client->device,
@@ -1275,6 +1226,102 @@ setup_socket_service (MbimProxy *self,
 /*****************************************************************************/
 /* Device tracking */
 
+#define DEVICE_CONTEXT_TAG "device-context-tag"
+static GQuark device_context_quark;
+
+typedef struct {
+    /* Combined events array */
+    MbimEventEntry **mbim_event_entry_array;
+    gsize            mbim_event_entry_array_size;
+} DeviceContext;
+
+static void
+device_context_free (DeviceContext *ctx)
+{
+
+    if (ctx->mbim_event_entry_array)
+        mbim_event_entry_array_free (ctx->mbim_event_entry_array);
+    g_slice_free (DeviceContext, ctx);
+}
+
+static DeviceContext *
+device_context_get (MbimDevice *device)
+{
+    DeviceContext *ctx;
+
+    if (G_UNLIKELY (!device_context_quark))
+        device_context_quark = g_quark_from_static_string (DEVICE_CONTEXT_TAG);
+
+    ctx = g_object_get_qdata (G_OBJECT (device), device_context_quark);
+    if (!ctx) {
+        ctx = g_slice_new0 (DeviceContext);
+        /* By default, we assume we have all default services enabled.
+         * This is the default in the MBIM protocol. */
+        ctx->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_standard_list_new (&ctx->mbim_event_entry_array_size);
+        g_object_set_qdata_full (G_OBJECT (device), device_context_quark, ctx, (GDestroyNotify)device_context_free);
+    }
+
+    return ctx;
+}
+
+static MbimEventEntry **
+merge_client_service_subscribe_lists (MbimProxy  *self,
+                                      MbimDevice *device,
+                                      gsize      *out_size)
+{
+    GList           *l;
+    MbimEventEntry **updated;
+    gsize            updated_size = 0;
+    DeviceContext   *ctx;
+
+    ctx = device_context_get (device);
+    g_assert (ctx);
+
+    g_assert (out_size != NULL);
+
+    /* Add previous global list */
+    updated = _mbim_proxy_helper_service_subscribe_list_merge (NULL, 0,
+                                                               ctx->mbim_event_entry_array, ctx->mbim_event_entry_array_size,
+                                                               &updated_size);
+
+    /* Lookup all clients with this device */
+    for (l = self->priv->clients; l; l = g_list_next (l)) {
+        Client *client;
+
+        client = l->data;
+        if (!client->mbim_event_entry_array)
+            continue;
+
+        /* Add per-client list */
+        if (g_str_equal (mbim_device_get_path (((Client *)(l->data))->device), mbim_device_get_path (device)))
+            updated = _mbim_proxy_helper_service_subscribe_list_merge (updated, updated_size,
+                                                                       client->mbim_event_entry_array, client->mbim_event_entry_array_size,
+                                                                       &updated_size);
+    }
+
+    /* If lists are equal, ignore re-setting them up */
+    if (_mbim_proxy_helper_service_subscribe_list_cmp (
+            (const MbimEventEntry *const *)updated, updated_size,
+            (const MbimEventEntry *const *)ctx->mbim_event_entry_array, ctx->mbim_event_entry_array_size)) {
+        g_debug ("Merged service subscribe list not updated for device '%s'", mbim_device_get_path (device));
+        mbim_event_entry_array_free (updated);
+        return NULL;
+    }
+
+    /* Lists are different, updated stored one */
+    mbim_event_entry_array_free (ctx->mbim_event_entry_array);
+    ctx->mbim_event_entry_array = updated;
+    ctx->mbim_event_entry_array_size = updated_size;
+
+    if (mbim_utils_get_traces_enabled ()) {
+        g_debug ("Merged service subscribe list built for device '%s'", mbim_device_get_path (device));
+        _mbim_proxy_helper_service_subscribe_list_debug ((const MbimEventEntry * const *)updated, updated_size);
+    }
+
+    *out_size = updated_size;
+    return updated;
+}
+
 static MbimDevice *
 peek_device_for_path (MbimProxy   *self,
                       const gchar *path)
@@ -1366,9 +1413,6 @@ mbim_proxy_init (MbimProxy *self)
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
                                               MBIM_TYPE_PROXY,
                                               MbimProxyPrivate);
-
-    /* By default, we assume we have all default services enabled */
-    self->priv->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_standard_list_new (&self->priv->mbim_event_entry_array_size);
 }
 
 static void
@@ -1416,12 +1460,6 @@ dispose (GObject *object)
         g_clear_object (&priv->socket_service);
         g_unlink (MBIM_PROXY_SOCKET_PATH);
         g_debug ("UNIX socket service at '%s' stopped", MBIM_PROXY_SOCKET_PATH);
-    }
-
-    if (priv->mbim_event_entry_array) {
-        mbim_event_entry_array_free (priv->mbim_event_entry_array);
-        priv->mbim_event_entry_array = NULL;
-        priv->mbim_event_entry_array_size = 0;
     }
 
     G_OBJECT_CLASS (mbim_proxy_parent_class)->dispose (object);
