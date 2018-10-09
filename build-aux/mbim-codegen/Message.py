@@ -61,8 +61,6 @@ def validate_fields(fields):
             flag_always_read_field(fields, field['array-size-field'])
         elif field['format'] == 'guint64':
             pass
-        elif field['format'] == 'guint64-array':
-            flag_always_read_field(fields, field['array-size-field'])
         elif field['format'] == 'string':
             pass
         elif field['format'] == 'string-array':
@@ -221,8 +219,6 @@ class Message:
                 inner_template = ('    const ${public} *${field},\n')
             elif field['format'] == 'guint64':
                 inner_template = ('    ${public} ${field},\n')
-            elif field['format'] == 'guint64-array':
-                inner_template = ('    const ${public} *${field},\n')
             elif field['format'] == 'string':
                 inner_template = ('    const gchar *${field},\n')
             elif field['format'] == 'string-array':
@@ -279,8 +275,6 @@ class Message:
                 inner_template = (' * @${field}: the \'${name}\' field, given as an array of #${public}.\n')
             elif field['format'] == 'guint64':
                 inner_template = (' * @${field}: the \'${name}\' field, given as a #${public}.\n')
-            elif field['format'] == 'guint64-array':
-                inner_template = (' * @${field}: the \'${name}\' field, given as an array of #${public}.\n')
             elif field['format'] == 'string':
                 inner_template = (' * @${field}: the \'${name}\' field, given as a string.\n')
             elif field['format'] == 'string-array':
@@ -337,8 +331,6 @@ class Message:
                 inner_template = ('    const ${public} *${field},\n')
             elif field['format'] == 'guint64':
                 inner_template = ('    ${public} ${field},\n')
-            elif field['format'] == 'guint64-array':
-                inner_template = ('    const ${public} *${field},\n')
             elif field['format'] == 'string':
                 inner_template = ('    const gchar *${field},\n')
             elif field['format'] == 'string-array':
@@ -478,8 +470,6 @@ class Message:
                 inner_template = ('    ${public} **${field},\n')
             elif field['format'] == 'guint64':
                 inner_template = ('    ${public} *${field},\n')
-            elif field['format'] == 'guint64-array':
-                inner_template = ('    ${public} **${field},\n')
             elif field['format'] == 'string':
                 inner_template = ('    gchar **${field},\n')
             elif field['format'] == 'string-array':
@@ -538,8 +528,6 @@ class Message:
                 inner_template = (' * @${field}: return location for a newly allocated array of #${public}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
             elif field['format'] == 'guint64':
                 inner_template = (' * @${field}: return location for a #guint64, or %NULL if the \'${name}\' field is not needed.\n')
-            elif field['format'] == 'guint64-array':
-                inner_template = (' * @${field}: return location for a newly allocated array of #guint64s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
             elif field['format'] == 'string':
                 inner_template = (' * @${field}: return location for a newly allocated string, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
             elif field['format'] == 'string-array':
@@ -594,8 +582,6 @@ class Message:
                 inner_template = ('    ${public} **${field},\n')
             elif field['format'] == 'guint64':
                 inner_template = ('    ${public} *${field},\n')
-            elif field['format'] == 'guint64-array':
-                inner_template = ('    ${public} **${field},\n')
             elif field['format'] == 'string':
                 inner_template = ('    gchar **${field},\n')
             elif field['format'] == 'string-array':

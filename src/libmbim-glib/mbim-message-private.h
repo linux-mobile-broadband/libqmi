@@ -189,9 +189,6 @@ void               _mbim_struct_builder_append_guint32_array (MbimStructBuilder 
                                                               guint32            n_values);
 void               _mbim_struct_builder_append_guint64       (MbimStructBuilder *builder,
                                                               guint64            value);
-void               _mbim_struct_builder_append_guint64_array (MbimStructBuilder *builder,
-                                                              const guint64     *values,
-                                                              guint32            n_values);
 void               _mbim_struct_builder_append_string        (MbimStructBuilder *builder,
                                                               const gchar       *value);
 void               _mbim_struct_builder_append_string_array  (MbimStructBuilder  *builder,
@@ -238,9 +235,6 @@ void                       _mbim_message_command_builder_append_guint32_array (M
                                                                                guint32                    n_values);
 void                       _mbim_message_command_builder_append_guint64       (MbimMessageCommandBuilder *builder,
                                                                                guint64                    value);
-void                       _mbim_message_command_builder_append_guint64_array (MbimMessageCommandBuilder *builder,
-                                                                               const guint64             *values,
-                                                                               guint32                    n_values);
 void                       _mbim_message_command_builder_append_string        (MbimMessageCommandBuilder *builder,
                                                                                const gchar               *value);
 void                       _mbim_message_command_builder_append_string_array  (MbimMessageCommandBuilder *builder,

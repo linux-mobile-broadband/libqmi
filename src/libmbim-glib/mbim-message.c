@@ -655,18 +655,6 @@ _mbim_struct_builder_append_guint64 (MbimStructBuilder *builder,
 }
 
 void
-_mbim_struct_builder_append_guint64_array (MbimStructBuilder *builder,
-                                           const guint64     *values,
-                                           guint32            n_values)
-{
-    guint i;
-
-    /* guint64 array added directly in the static buffer */
-    for (i = 0; i < n_values; i++)
-        _mbim_struct_builder_append_guint64 (builder, values[i]);
-}
-
-void
 _mbim_struct_builder_append_string (MbimStructBuilder *builder,
                                     const gchar       *value)
 {
@@ -905,14 +893,6 @@ _mbim_message_command_builder_append_guint64 (MbimMessageCommandBuilder *builder
                                               guint64                    value)
 {
     _mbim_struct_builder_append_guint64 (builder->contents_builder, value);
-}
-
-void
-_mbim_message_command_builder_append_guint64_array (MbimMessageCommandBuilder *builder,
-                                                    const guint64             *values,
-                                                    guint32                    n_values)
-{
-    _mbim_struct_builder_append_guint64_array (builder->contents_builder, values, n_values);
 }
 
 void

@@ -486,8 +486,6 @@ class Struct:
                 inner_template = ('    _mbim_struct_builder_append_guint32_array (builder, value->${field}, value->${array_size_field});\n')
             elif field['format'] == 'guint64':
                 inner_template = ('    _mbim_struct_builder_append_guint64 (builder, value->${field});\n')
-            elif field['format'] == 'guint64-array':
-                inner_template = ('    _mbim_struct_builder_append_guint64_array (builder, value->${field}, value->${array_size_field});\n')
             elif field['format'] == 'string':
                 inner_template = ('    _mbim_struct_builder_append_string (builder, value->${field});\n')
             elif field['format'] == 'string-array':
