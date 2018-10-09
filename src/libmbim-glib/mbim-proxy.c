@@ -122,7 +122,6 @@ typedef struct {
 
     MbimDevice *device;
     guint indication_id;
-    guint function_error_id;
     gboolean service_subscriber_list_enabled;
     MbimEventEntry **mbim_event_entry_array;
     gsize mbim_event_entry_array_size;
@@ -152,9 +151,6 @@ client_disconnect (Client *client)
 static void client_indication_cb (MbimDevice *device,
                                   MbimMessage *message,
                                   Client *client);
-static void client_error_cb      (MbimDevice *device,
-                                  GError     *error,
-                                  Client     *client);
 
 static void
 client_set_device (Client *client,
@@ -163,8 +159,6 @@ client_set_device (Client *client,
     if (client->device) {
         if (g_signal_handler_is_connected (client->device, client->indication_id))
             g_signal_handler_disconnect (client->device, client->indication_id);
-        if (g_signal_handler_is_connected (client->device, client->function_error_id))
-            g_signal_handler_disconnect (client->device, client->function_error_id);
         g_object_unref (client->device);
     }
 
@@ -174,14 +168,9 @@ client_set_device (Client *client,
                                                   MBIM_DEVICE_SIGNAL_INDICATE_STATUS,
                                                   G_CALLBACK (client_indication_cb),
                                                   client);
-        client->function_error_id = g_signal_connect (client->device,
-                                                      MBIM_DEVICE_SIGNAL_ERROR,
-                                                      G_CALLBACK (client_error_cb),
-                                                      client);
     } else {
         client->device = NULL;
         client->indication_id = 0;
-        client->function_error_id = 0;
     }
 }
 
@@ -312,20 +301,6 @@ client_indication_cb (MbimDevice *device,
             g_warning ("couldn't forward indication to client");
             g_error_free (error);
         }
-    }
-}
-
-/*****************************************************************************/
-/* Handling generic function errors */
-
-static void
-client_error_cb (MbimDevice *device,
-                 GError     *error,
-                 Client     *client)
-{
-    if (g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_NOT_OPENED)) {
-        g_debug ("Device not opened error reported, forcing close");
-        mbim_device_close_force (device, NULL);
     }
 }
 
@@ -535,6 +510,10 @@ internal_open (GTask *task)
                       g_object_ref (self));
 }
 
+static void proxy_device_error_cb (MbimDevice *device,
+                                   GError     *error,
+                                   MbimProxy  *self);
+
 static void
 internal_device_open_caps_query_ready (MbimDevice   *device,
                                        GAsyncResult *res,
@@ -543,13 +522,11 @@ internal_device_open_caps_query_ready (MbimDevice   *device,
     MbimProxy   *self;
     GError      *error = NULL;
     MbimMessage *response;
-    GList       *l;
 
     self = g_task_get_source_object (task);
 
-    /* Always unblock all signals from all clients */
-    for (l = self->priv->clients; l; l = g_list_next (l))
-        g_signal_handlers_unblock_by_func (device, client_error_cb, l->data);
+    /* Always unblock error signals */
+    g_signal_handlers_unblock_by_func (device, proxy_device_error_cb, self);
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -598,13 +575,11 @@ internal_device_open (MbimProxy           *self,
      * (loading caps in this case). */
     if (mbim_device_is_open (device)) {
         MbimMessage *message;
-        GList *l;
 
         /* Avoid getting notified of errors in this internal check, as we're
          * already going to check for the NotOpened error ourselves in the
          * ready callback, and we'll reopen silently if we find this. */
-        for (l = self->priv->clients; l; l = g_list_next (l))
-            g_signal_handlers_block_by_func (device, client_error_cb, l->data);
+        g_signal_handlers_block_by_func (device, proxy_device_error_cb, self);
 
         g_debug ("checking device caps during client device open...");
         message = mbim_message_device_caps_query_new (NULL);
@@ -1322,6 +1297,18 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
     return updated;
 }
 
+static void
+proxy_device_error_cb (MbimDevice *device,
+                       GError     *error,
+                       MbimProxy  *self)
+{
+
+    if (g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_NOT_OPENED)) {
+        g_debug ("Device not opened error reported, forcing close");
+        mbim_device_close_force (device, NULL);
+    }
+}
+
 static MbimDevice *
 peek_device_for_path (MbimProxy   *self,
                       const gchar *path)
@@ -1350,11 +1337,16 @@ untrack_device (MbimProxy  *self,
 {
     GList *l;
     GList *to_remove = NULL;
+    DeviceContext *ctx;
+
+    ctx = device_context_get (device);
+    g_assert (ctx);
 
     if (!g_list_find (self->priv->devices, device))
         return;
 
     /* Disconnect right away */
+    g_signal_handlers_disconnect_by_func (device, proxy_device_error_cb, self);
     g_signal_handlers_disconnect_by_func (device, proxy_device_removed_cb, self);
 
     /* If pending openings ongoing, complete them with error */
@@ -1381,11 +1373,17 @@ static void
 track_device (MbimProxy *self,
               MbimDevice *device)
 {
-    self->priv->devices = g_list_append (self->priv->devices, g_object_ref (device));
     g_signal_connect (device,
                       MBIM_DEVICE_SIGNAL_REMOVED,
                       G_CALLBACK (proxy_device_removed_cb),
                       self);
+
+    g_signal_connect (device,
+                      MBIM_DEVICE_SIGNAL_ERROR,
+                      G_CALLBACK (proxy_device_error_cb),
+                      self);
+
+    self->priv->devices = g_list_append (self->priv->devices, g_object_ref (device));
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_DEVICES]);
 }
 
