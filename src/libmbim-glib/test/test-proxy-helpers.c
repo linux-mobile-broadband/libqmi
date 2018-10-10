@@ -121,83 +121,28 @@ test_parse_single_service_5_cids (void)
 
 /*****************************************************************************/
 
-static MbimEventEntry *
-find_service_in_list (MbimEventEntry **list,
-                      gsize            list_size,
-                      MbimService      service)
-{
-    gsize i;
-
-    for (i = 0; i < list_size; i++) {
-        if (mbim_uuid_cmp (&(list[i]->device_service_id), mbim_uuid_from_service (service)))
-            return list[i];
-    }
-
-    return NULL;
-}
-
 static void
-check_standard_list (MbimEventEntry **list,
-                     gsize            list_size)
+test_merge_none (void)
 {
-    MbimEventEntry *tmp;
-    MbimService s;
-    gsize i;
-
-    for (i = 0; list[i]; i++);
-    g_assert_cmpuint (i, ==, list_size);
-    g_assert_cmpuint (i, ==, (MBIM_SERVICE_DSS - MBIM_SERVICE_BASIC_CONNECT + 1));
-
-    for (s = MBIM_SERVICE_BASIC_CONNECT; s <= MBIM_SERVICE_DSS; s++) {
-        tmp = find_service_in_list (list, list_size, s);
-        g_assert (tmp != NULL);
-        g_assert_cmpuint (tmp->cids_count, ==, 0);
-        g_assert (tmp->cids == NULL);
-    }
-}
-
-static void
-test_standard_list (void)
-{
-    MbimEventEntry **out;
-    gsize out_size = 0;
-
-    out = _mbim_proxy_helper_service_subscribe_standard_list_new (&out_size);
-    check_standard_list (out, out_size);
-    mbim_event_entry_array_free (out);
-}
-
-/*****************************************************************************/
-
-static void
-test_merge_standard_list_full_none (void)
-{
-    MbimEventEntry **list;
+    MbimEventEntry **list = NULL;
     gsize list_size = 0;
     gsize out_size = 0;
-
-    /* list with all standard services */
-    list = _mbim_proxy_helper_service_subscribe_standard_list_new (&list_size);
 
     /* merge */
     list = _mbim_proxy_helper_service_subscribe_list_merge (list, list_size, NULL, 0, &out_size);
 
-    check_standard_list (list, out_size);
-
-    mbim_event_entry_array_free (list);
+    g_assert (list == NULL);
+    g_assert_cmpuint (out_size, ==, 0);
 }
 
 static void
-test_merge_standard_list_full_subset (void)
+test_merge_standard_services (void)
 {
-    MbimEventEntry **list;
+    MbimEventEntry **list = NULL;
     gsize list_size = 0;
     MbimEventEntry **addition;
     gsize addition_size;
     gsize out_size = 0;
-
-    /* list with all standard services */
-    list = _mbim_proxy_helper_service_subscribe_standard_list_new (&list_size);
 
     /* setup a new list with a subset of standard services */
     addition_size = 2;
@@ -221,100 +166,49 @@ test_merge_standard_list_full_subset (void)
     /* merge */
     list = _mbim_proxy_helper_service_subscribe_list_merge (list, list_size, addition, addition_size, &out_size);
 
-    /* Now, as we added a subset of the elements of the standard list to the
-     * full standard list, we should still get as output the full standard list
-     */
-    check_standard_list (list, out_size);
+    /* The new list should be empty, as standard services are ignored */
+    g_assert (list == NULL);
+    g_assert_cmpuint (out_size, ==, 0);
 
-    mbim_event_entry_array_free (list);
     mbim_event_entry_array_free (addition);
 }
 
 static void
-test_merge_standard_list_full_full (void)
+test_merge_other_services (void)
 {
-    MbimEventEntry **list;
+    MbimEventEntry **list = NULL;
     gsize list_size = 0;
     MbimEventEntry **addition;
-    gsize addition_size = 0;
+    gsize addition_size;
     gsize out_size = 0;
 
-    /* list with all standard services */
-    list = _mbim_proxy_helper_service_subscribe_standard_list_new (&list_size);
-    /* again, list with all standard services */
-    addition = _mbim_proxy_helper_service_subscribe_standard_list_new (&addition_size);
+    /* setup a new list with a subset of other services */
+    addition_size = 2;
+    addition = g_new0 (MbimEventEntry *, addition_size + 1);
+    addition[0] = g_new0 (MbimEventEntry, 1);
+    memcpy (&addition[0]->device_service_id, MBIM_UUID_ATDS, sizeof (MbimUuid));
+    addition[0]->cids_count = 5;
+    addition[0]->cids = g_new0 (guint32, addition[0]->cids_count);
+    addition[0]->cids[0] = MBIM_CID_ATDS_SIGNAL;
+    addition[0]->cids[1] = MBIM_CID_ATDS_LOCATION;
+    addition[0]->cids[2] = MBIM_CID_ATDS_OPERATORS;
+    addition[0]->cids[3] = MBIM_CID_ATDS_RAT;
+    addition[0]->cids[4] = MBIM_CID_ATDS_REGISTER_STATE;
+    addition[1] = g_new0 (MbimEventEntry, 1);
+    memcpy (&addition[1]->device_service_id, MBIM_UUID_QMI, sizeof (MbimUuid));
+    addition[1]->cids_count = 1;
+    addition[1]->cids = g_new0 (guint32, addition[1]->cids_count);
+    addition[1]->cids[0] = MBIM_CID_QMI_MSG;
 
     /* merge */
     list = _mbim_proxy_helper_service_subscribe_list_merge (list, list_size, addition, addition_size, &out_size);
 
-    /* Now, as we added a subset of the elements of the standard list to the
-     * full standard list, we should still get as output the full standard list
-     */
-    check_standard_list (list, out_size);
+    /* The new list should be totally equal to the addition, as the original list was empty. */
+    g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)list, out_size,
+                                                             (const MbimEventEntry * const *)addition, addition_size));
 
     mbim_event_entry_array_free (list);
     mbim_event_entry_array_free (addition);
-}
-
-static void
-test_merge_standard_list_subset_full (void)
-{
-    MbimEventEntry **list;
-    gsize list_size;
-    MbimEventEntry **addition;
-    gsize addition_size = 0;
-    gsize out_size = 0;
-
-    /* setup a new list with a subset of standard services */
-    list_size = 2;
-    list = g_new0 (MbimEventEntry *, list_size + 1);
-    list[0] = g_new0 (MbimEventEntry, 1);
-    memcpy (&list[0]->device_service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
-    list[0]->cids_count = 5;
-    list[0]->cids = g_new0 (guint32, list[0]->cids_count);
-    list[0]->cids[0] = MBIM_CID_BASIC_CONNECT_SUBSCRIBER_READY_STATUS;
-    list[0]->cids[1] = MBIM_CID_BASIC_CONNECT_RADIO_STATE;
-    list[0]->cids[2] = MBIM_CID_BASIC_CONNECT_SIGNAL_STATE;
-    list[0]->cids[3] = MBIM_CID_BASIC_CONNECT_IP_CONFIGURATION;
-    list[0]->cids[4] = MBIM_CID_BASIC_CONNECT_NETWORK_IDLE_HINT;
-    list[1] = g_new0 (MbimEventEntry, 1);
-    memcpy (&list[1]->device_service_id, MBIM_UUID_SMS, sizeof (MbimUuid));
-    list[1]->cids_count = 2;
-    list[1]->cids = g_new0 (guint32, list[1]->cids_count);
-    list[1]->cids[0] = MBIM_CID_SMS_READ;
-    list[1]->cids[1] = MBIM_CID_SMS_SEND;
-
-    /* list with all standard services */
-    addition = _mbim_proxy_helper_service_subscribe_standard_list_new (&addition_size);
-
-    /* merge */
-    list = _mbim_proxy_helper_service_subscribe_list_merge (list, list_size, addition, addition_size, &out_size);
-
-    /* Now, as we added the full standard list to a subset, we should still get
-     * as output the full standard list */
-    check_standard_list (list, out_size);
-
-    mbim_event_entry_array_free (list);
-    mbim_event_entry_array_free (addition);
-}
-
-static void
-test_merge_standard_list_none_full (void)
-{
-    MbimEventEntry **list, **merged_list;
-    gsize addition_size = 0;
-    gsize out_size = 0;
-
-    /* list with all standard services */
-    list = _mbim_proxy_helper_service_subscribe_standard_list_new (&addition_size);
-
-    /* merge */
-    merged_list = _mbim_proxy_helper_service_subscribe_list_merge (NULL, 0, list, addition_size, &out_size);
-
-    check_standard_list (merged_list, out_size);
-
-    mbim_event_entry_array_free (list);
-    mbim_event_entry_array_free (merged_list);
 }
 
 static void
@@ -328,26 +222,26 @@ test_merge_list_same_service (void)
     gsize expected_size;
     gsize out_size = 0;
 
-    /* setup a new list with a subset of standard services */
+    /* setup a new list with a subset of non-standard services */
     list_size = 1;
     list = g_new0 (MbimEventEntry *, list_size + 1);
     list[0] = g_new0 (MbimEventEntry, 1);
-    memcpy (&list[0]->device_service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
+    memcpy (&list[0]->device_service_id, MBIM_UUID_ATDS, sizeof (MbimUuid));
     list[0]->cids_count = 2;
     list[0]->cids = g_new0 (guint32, list[0]->cids_count);
-    list[0]->cids[0] = MBIM_CID_BASIC_CONNECT_IP_CONFIGURATION;
-    list[0]->cids[1] = MBIM_CID_BASIC_CONNECT_NETWORK_IDLE_HINT;
+    list[0]->cids[0] = MBIM_CID_ATDS_SIGNAL;
+    list[0]->cids[1] = MBIM_CID_ATDS_LOCATION;
 
-    /* setup a new list with a subset of standard services */
+    /* setup a new list with a subset of non-standard services */
     addition_size = 1;
     addition = g_new0 (MbimEventEntry *, addition_size + 1);
     addition[0] = g_new0 (MbimEventEntry, 1);
-    memcpy (&addition[0]->device_service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
+    memcpy (&addition[0]->device_service_id, MBIM_UUID_ATDS, sizeof (MbimUuid));
     addition[0]->cids_count = 3;
     addition[0]->cids = g_new0 (guint32, addition[0]->cids_count);
-    addition[0]->cids[0] = MBIM_CID_BASIC_CONNECT_SUBSCRIBER_READY_STATUS;
-    addition[0]->cids[1] = MBIM_CID_BASIC_CONNECT_RADIO_STATE;
-    addition[0]->cids[2] = MBIM_CID_BASIC_CONNECT_SIGNAL_STATE;
+    addition[0]->cids[0] = MBIM_CID_ATDS_OPERATORS;
+    addition[0]->cids[1] = MBIM_CID_ATDS_RAT;
+    addition[0]->cids[2] = MBIM_CID_ATDS_REGISTER_STATE;
 
     /* merge */
     list = _mbim_proxy_helper_service_subscribe_list_merge (list, list_size, addition, addition_size, &out_size);
@@ -356,14 +250,14 @@ test_merge_list_same_service (void)
     expected_size = 1;
     expected = g_new0 (MbimEventEntry *, expected_size + 1);
     expected[0] = g_new0 (MbimEventEntry, 1);
-    memcpy (&expected[0]->device_service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
+    memcpy (&expected[0]->device_service_id, MBIM_UUID_ATDS, sizeof (MbimUuid));
     expected[0]->cids_count = 5;
     expected[0]->cids = g_new0 (guint32, expected[0]->cids_count);
-    expected[0]->cids[0] = MBIM_CID_BASIC_CONNECT_SUBSCRIBER_READY_STATUS;
-    expected[0]->cids[1] = MBIM_CID_BASIC_CONNECT_RADIO_STATE;
-    expected[0]->cids[2] = MBIM_CID_BASIC_CONNECT_SIGNAL_STATE;
-    expected[0]->cids[3] = MBIM_CID_BASIC_CONNECT_IP_CONFIGURATION;
-    expected[0]->cids[4] = MBIM_CID_BASIC_CONNECT_NETWORK_IDLE_HINT;
+    expected[0]->cids[0] = MBIM_CID_ATDS_SIGNAL;
+    expected[0]->cids[1] = MBIM_CID_ATDS_LOCATION;
+    expected[0]->cids[2] = MBIM_CID_ATDS_OPERATORS;
+    expected[0]->cids[3] = MBIM_CID_ATDS_RAT;
+    expected[0]->cids[4] = MBIM_CID_ATDS_REGISTER_STATE;
 
     /* Compare */
     g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)list, out_size,
@@ -385,28 +279,24 @@ test_merge_list_different_services (void)
     gsize expected_size;
     gsize out_size = 0;
 
-    /* setup a new list with a subset of standard services */
+    /* setup a new list with a subset of non-standard services */
     list_size = 1;
     list = g_new0 (MbimEventEntry *, list_size + 1);
     list[0] = g_new0 (MbimEventEntry, 1);
-    memcpy (&list[0]->device_service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
-    list[0]->cids_count = 5;
+    memcpy (&list[0]->device_service_id, MBIM_UUID_ATDS, sizeof (MbimUuid));
+    list[0]->cids_count = 2;
     list[0]->cids = g_new0 (guint32, list[0]->cids_count);
-    list[0]->cids[0] = MBIM_CID_BASIC_CONNECT_IP_CONFIGURATION;
-    list[0]->cids[1] = MBIM_CID_BASIC_CONNECT_NETWORK_IDLE_HINT;
-    list[0]->cids[2] = MBIM_CID_BASIC_CONNECT_SUBSCRIBER_READY_STATUS;
-    list[0]->cids[3] = MBIM_CID_BASIC_CONNECT_RADIO_STATE;
-    list[0]->cids[4] = MBIM_CID_BASIC_CONNECT_SIGNAL_STATE;
+    list[0]->cids[0] = MBIM_CID_ATDS_SIGNAL;
+    list[0]->cids[1] = MBIM_CID_ATDS_LOCATION;
 
-    /* setup a new list with a subset of standard services */
+    /* setup a new list with a subset of non-standard services */
     addition_size = 1;
     addition = g_new0 (MbimEventEntry *, addition_size + 1);
     addition[0] = g_new0 (MbimEventEntry, 1);
-    memcpy (&addition[0]->device_service_id, MBIM_UUID_SMS, sizeof (MbimUuid));
-    addition[0]->cids_count = 2;
+    memcpy (&addition[0]->device_service_id, MBIM_UUID_QMI, sizeof (MbimUuid));
+    addition[0]->cids_count = 1;
     addition[0]->cids = g_new0 (guint32, addition[0]->cids_count);
-    addition[0]->cids[0] = MBIM_CID_SMS_READ;
-    addition[0]->cids[1] = MBIM_CID_SMS_SEND;
+    addition[0]->cids[0] = MBIM_CID_QMI_MSG;
 
     /* merge */
     list = _mbim_proxy_helper_service_subscribe_list_merge (list, list_size, addition, addition_size, &out_size);
@@ -415,20 +305,16 @@ test_merge_list_different_services (void)
     expected_size = 2;
     expected = g_new0 (MbimEventEntry *, expected_size + 1);
     expected[0] = g_new0 (MbimEventEntry, 1);
-    memcpy (&expected[0]->device_service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
-    expected[0]->cids_count = 5;
+    memcpy (&expected[0]->device_service_id, MBIM_UUID_ATDS, sizeof (MbimUuid));
+    expected[0]->cids_count = 2;
     expected[0]->cids = g_new0 (guint32, expected[0]->cids_count);
-    expected[0]->cids[0] = MBIM_CID_BASIC_CONNECT_SUBSCRIBER_READY_STATUS;
-    expected[0]->cids[1] = MBIM_CID_BASIC_CONNECT_RADIO_STATE;
-    expected[0]->cids[2] = MBIM_CID_BASIC_CONNECT_SIGNAL_STATE;
-    expected[0]->cids[3] = MBIM_CID_BASIC_CONNECT_IP_CONFIGURATION;
-    expected[0]->cids[4] = MBIM_CID_BASIC_CONNECT_NETWORK_IDLE_HINT;
+    expected[0]->cids[0] = MBIM_CID_ATDS_SIGNAL;
+    expected[0]->cids[1] = MBIM_CID_ATDS_LOCATION;
     expected[1] = g_new0 (MbimEventEntry, 1);
-    memcpy (&expected[1]->device_service_id, MBIM_UUID_SMS, sizeof (MbimUuid));
-    expected[1]->cids_count = 2;
+    memcpy (&expected[1]->device_service_id, MBIM_UUID_QMI, sizeof (MbimUuid));
+    expected[1]->cids_count = 1;
     expected[1]->cids = g_new0 (guint32, expected[1]->cids_count);
-    expected[1]->cids[0] = MBIM_CID_SMS_READ;
-    expected[1]->cids[1] = MBIM_CID_SMS_SEND;
+    expected[1]->cids[0] = MBIM_CID_QMI_MSG;
 
     /* Compare */
     g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)list, out_size,
@@ -450,58 +336,60 @@ test_merge_list_merged_services (void)
     gsize expected_size;
     gsize out_size = 0;
 
-    /* setup a new list with a subset of standard services */
+    /* setup a new list with a subset of non-standard services */
     list_size = 2;
     list = g_new0 (MbimEventEntry *, list_size + 1);
     list[0] = g_new0 (MbimEventEntry, 1);
-    memcpy (&list[0]->device_service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
+    memcpy (&list[0]->device_service_id, MBIM_UUID_ATDS, sizeof (MbimUuid));
     list[0]->cids_count = 3;
     list[0]->cids = g_new0 (guint32, list[0]->cids_count);
-    list[0]->cids[0] = MBIM_CID_BASIC_CONNECT_SUBSCRIBER_READY_STATUS;
-    list[0]->cids[1] = MBIM_CID_BASIC_CONNECT_RADIO_STATE;
-    list[0]->cids[2] = MBIM_CID_BASIC_CONNECT_SIGNAL_STATE;
+    list[0]->cids[0] = MBIM_CID_ATDS_SIGNAL;
+    list[0]->cids[1] = MBIM_CID_ATDS_LOCATION;
+    list[0]->cids[2] = MBIM_CID_ATDS_OPERATORS;
     list[1] = g_new0 (MbimEventEntry, 1);
-    memcpy (&list[1]->device_service_id, MBIM_UUID_SMS, sizeof (MbimUuid));
+    memcpy (&list[1]->device_service_id, MBIM_UUID_QMI, sizeof (MbimUuid));
     list[1]->cids_count = 1;
     list[1]->cids = g_new0 (guint32, list[1]->cids_count);
-    list[1]->cids[0] = MBIM_CID_SMS_READ;
+    list[1]->cids[0] = MBIM_CID_QMI_MSG;
 
-    /* setup a new list with a subset of standard services */
+    /* setup a new list with a subset of standard and non-standard services */
     addition_size = 2;
     addition = g_new0 (MbimEventEntry *, addition_size + 1);
     addition[0] = g_new0 (MbimEventEntry, 1);
-    memcpy (&addition[0]->device_service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
-    addition[0]->cids_count = 2;
+    memcpy (&addition[0]->device_service_id, MBIM_UUID_ATDS, sizeof (MbimUuid));
+    addition[0]->cids_count = 1;
     addition[0]->cids = g_new0 (guint32, addition[0]->cids_count);
-    addition[0]->cids[0] = MBIM_CID_BASIC_CONNECT_IP_CONFIGURATION;
-    addition[0]->cids[1] = MBIM_CID_BASIC_CONNECT_NETWORK_IDLE_HINT;
+    addition[0]->cids[0] = MBIM_CID_ATDS_RAT;
     addition[1] = g_new0 (MbimEventEntry, 1);
-    memcpy (&addition[1]->device_service_id, MBIM_UUID_SMS, sizeof (MbimUuid));
+    memcpy (&addition[1]->device_service_id, MBIM_UUID_MS_HOST_SHUTDOWN, sizeof (MbimUuid));
     addition[1]->cids_count = 1;
     addition[1]->cids = g_new0 (guint32, addition[1]->cids_count);
-    addition[1]->cids[0] = MBIM_CID_SMS_SEND;
+    addition[1]->cids[0] = MBIM_CID_MS_HOST_SHUTDOWN_NOTIFY;
 
     /* merge */
     list = _mbim_proxy_helper_service_subscribe_list_merge (list, list_size, addition, addition_size, &out_size);
 
     /* setup the expected list */
-    expected_size = 2;
+    expected_size = 3;
     expected = g_new0 (MbimEventEntry *, expected_size + 1);
     expected[0] = g_new0 (MbimEventEntry, 1);
-    memcpy (&expected[0]->device_service_id, MBIM_UUID_BASIC_CONNECT, sizeof (MbimUuid));
-    expected[0]->cids_count = 5;
+    memcpy (&expected[0]->device_service_id, MBIM_UUID_ATDS, sizeof (MbimUuid));
+    expected[0]->cids_count = 4;
     expected[0]->cids = g_new0 (guint32, expected[0]->cids_count);
-    expected[0]->cids[0] = MBIM_CID_BASIC_CONNECT_SUBSCRIBER_READY_STATUS;
-    expected[0]->cids[1] = MBIM_CID_BASIC_CONNECT_RADIO_STATE;
-    expected[0]->cids[2] = MBIM_CID_BASIC_CONNECT_SIGNAL_STATE;
-    expected[0]->cids[3] = MBIM_CID_BASIC_CONNECT_IP_CONFIGURATION;
-    expected[0]->cids[4] = MBIM_CID_BASIC_CONNECT_NETWORK_IDLE_HINT;
+    expected[0]->cids[0] = MBIM_CID_ATDS_SIGNAL;
+    expected[0]->cids[1] = MBIM_CID_ATDS_LOCATION;
+    expected[0]->cids[2] = MBIM_CID_ATDS_OPERATORS;
+    expected[0]->cids[3] = MBIM_CID_ATDS_RAT;
     expected[1] = g_new0 (MbimEventEntry, 1);
-    memcpy (&expected[1]->device_service_id, MBIM_UUID_SMS, sizeof (MbimUuid));
-    expected[1]->cids_count = 2;
+    memcpy (&expected[1]->device_service_id, MBIM_UUID_QMI, sizeof (MbimUuid));
+    expected[1]->cids_count = 1;
     expected[1]->cids = g_new0 (guint32, expected[1]->cids_count);
-    expected[1]->cids[0] = MBIM_CID_SMS_READ;
-    expected[1]->cids[1] = MBIM_CID_SMS_SEND;
+    expected[1]->cids[0] = MBIM_CID_QMI_MSG;
+    expected[2] = g_new0 (MbimEventEntry, 1);
+    memcpy (&expected[2]->device_service_id, MBIM_UUID_MS_HOST_SHUTDOWN, sizeof (MbimUuid));
+    expected[2]->cids_count = 1;
+    expected[2]->cids = g_new0 (guint32, expected[2]->cids_count);
+    expected[2]->cids[0] = MBIM_CID_MS_HOST_SHUTDOWN_NOTIFY;
 
     /* Compare */
     g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)list, out_size,
@@ -518,15 +406,12 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libmbim-glib/proxy/standard-list",              test_standard_list);
     g_test_add_func ("/libmbim-glib/proxy/parse/single-service/0",     test_parse_single_service_0_cids);
     g_test_add_func ("/libmbim-glib/proxy/parse/single-service/1",     test_parse_single_service_1_cids);
     g_test_add_func ("/libmbim-glib/proxy/parse/single-service/5",     test_parse_single_service_5_cids);
-    g_test_add_func ("/libmbim-glib/proxy/merge/standard/full_none",   test_merge_standard_list_full_none);
-    g_test_add_func ("/libmbim-glib/proxy/merge/standard/full_subset", test_merge_standard_list_full_subset);
-    g_test_add_func ("/libmbim-glib/proxy/merge/standard/full_full",   test_merge_standard_list_full_full);
-    g_test_add_func ("/libmbim-glib/proxy/merge/standard/subset_full", test_merge_standard_list_subset_full);
-    g_test_add_func ("/libmbim-glib/proxy/merge/standard/none_full",   test_merge_standard_list_none_full);
+    g_test_add_func ("/libmbim-glib/proxy/merge/none",                 test_merge_none);
+    g_test_add_func ("/libmbim-glib/proxy/merge/standard",             test_merge_standard_services);
+    g_test_add_func ("/libmbim-glib/proxy/merge/other",                test_merge_other_services);
     g_test_add_func ("/libmbim-glib/proxy/merge/same-service",         test_merge_list_same_service);
     g_test_add_func ("/libmbim-glib/proxy/merge/different-services",   test_merge_list_different_services);
     g_test_add_func ("/libmbim-glib/proxy/merge/merged-services",      test_merge_list_merged_services);

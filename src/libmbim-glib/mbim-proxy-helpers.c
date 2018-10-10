@@ -130,30 +130,6 @@ _mbim_proxy_helper_service_subscribe_list_debug (const MbimEventEntry * const *l
 /*****************************************************************************/
 
 MbimEventEntry **
-_mbim_proxy_helper_service_subscribe_standard_list_new (gsize *out_size)
-{
-    gsize i;
-    MbimService service;
-    MbimEventEntry **out;
-
-    g_assert (out_size != NULL);
-
-    out = g_new0 (MbimEventEntry *, 1 + (MBIM_SERVICE_DSS - MBIM_SERVICE_BASIC_CONNECT + 1));
-
-    for (service = MBIM_SERVICE_BASIC_CONNECT, i = 0;
-         service <= MBIM_SERVICE_DSS;
-         service++, i++) {
-         out[i] = g_new0 (MbimEventEntry, 1);
-         memcpy (&out[i]->device_service_id, mbim_uuid_from_service (service), sizeof (MbimUuid));
-    }
-
-    *out_size = i;
-    return out;
-}
-
-/*****************************************************************************/
-
-MbimEventEntry **
 _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message,
                                                     gsize       *out_size)
 {
@@ -219,6 +195,12 @@ _mbim_proxy_helper_service_subscribe_list_merge (MbimEventEntry **in,
 
     for (m = 0; m < merge_size; m++) {
         MbimEventEntry *entry = NULL;
+        MbimService id;
+
+        /* ignore all merge additions for standard services */
+        id = mbim_uuid_to_service (&merge[m]->device_service_id);
+        if (id >= MBIM_SERVICE_BASIC_CONNECT && id <= MBIM_SERVICE_DSS)
+            continue;
 
         /* look for matching uuid */
         if (in && in_size) {
