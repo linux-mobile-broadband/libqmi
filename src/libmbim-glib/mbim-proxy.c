@@ -1406,7 +1406,7 @@ dispose (GObject *object)
     }
 
     if (priv->devices) {
-        g_list_free_full (priv->devices, (GDestroyNotify) g_object_unref);
+        g_list_free_full (priv->devices, g_object_unref);
         priv->devices = NULL;
     }
 
