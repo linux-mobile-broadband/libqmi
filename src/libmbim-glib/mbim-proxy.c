@@ -434,7 +434,7 @@ peek_opening_device_info (MbimProxy  *self,
         OpeningDevice *info;
 
         info = (OpeningDevice *)(l->data);
-        if (g_str_equal (mbim_device_get_path (device), mbim_device_get_path (info->device)))
+        if (device == info->device)
             return info;
     }
 
@@ -1285,7 +1285,7 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
             continue;
 
         /* Add per-client list */
-        if (g_str_equal (mbim_device_get_path (((Client *)(l->data))->device), mbim_device_get_path (device)))
+        if (client->device == device)
             updated = _mbim_proxy_helper_service_subscribe_list_merge (updated, updated_size,
                                                                        client->mbim_event_entry_array, client->mbim_event_entry_array_size,
                                                                        &updated_size);
@@ -1332,7 +1332,7 @@ reset_client_service_subscribe_lists (MbimProxy  *self,
         if (!client->mbim_event_entry_array)
             continue;
 
-        if (g_str_equal (mbim_device_get_path (((Client *)(l->data))->device), mbim_device_get_path (device))) {
+        if (client->device == device) {
             g_clear_pointer (&client->mbim_event_entry_array, mbim_event_entry_array_free);
             client->mbim_event_entry_array_size = 0;
         }
@@ -1400,7 +1400,7 @@ untrack_device (MbimProxy  *self,
 
     /* Lookup all clients with this device */
     for (l = self->priv->clients; l; l = g_list_next (l)) {
-        if (g_str_equal (mbim_device_get_path (((Client *)(l->data))->device), mbim_device_get_path (device)))
+        if (((Client *)(l->data))->device == device)
             to_remove = g_list_append (to_remove, l->data);
     }
 
