@@ -207,8 +207,7 @@ qfu_utils_parse_cwe_version_string (const gchar  *version,
     result = TRUE;
 
 out:
-    if (match_info)
-        g_match_info_free (match_info);
+    g_match_info_free (match_info);
     g_regex_unref (regex);
 
     return result;
