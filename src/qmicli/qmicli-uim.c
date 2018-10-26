@@ -785,29 +785,29 @@ get_card_status_ready (QmiClientUim *client,
         g_print ("\tPrimary GW:   session doesn't exist\n");
     else
         g_print ("\tPrimary GW:   slot '%u', application '%u'\n",
-                 ((index_gw_primary & 0xFF00) >> 8),
-                 ((index_gw_primary & 0x00FF)));
+                 ((index_gw_primary & 0xFF00) >> 8) + 1,
+                 ((index_gw_primary & 0x00FF)) + 1);
 
     if (index_1x_primary == 0xFFFF)
         g_print ("\tPrimary 1X:   session doesn't exist\n");
     else
         g_print ("\tPrimary 1X:   slot '%u', application '%u'\n",
-                 ((index_1x_primary & 0xFF00) >> 8),
-                 ((index_1x_primary & 0x00FF)));
+                 ((index_1x_primary & 0xFF00) >> 8) + 1,
+                 ((index_1x_primary & 0x00FF)) + 1);
 
     if (index_gw_secondary == 0xFFFF)
         g_print ("\tSecondary GW: session doesn't exist\n");
     else
         g_print ("\tSecondary GW: slot '%u', application '%u'\n",
-                 ((index_gw_secondary & 0xFF00) >> 8),
-                 ((index_gw_secondary & 0x00FF)));
+                 ((index_gw_secondary & 0xFF00) >> 8) + 1,
+                 ((index_gw_secondary & 0x00FF)) + 1);
 
     if (index_1x_secondary == 0xFFFF)
         g_print ("\tSecondary 1X: session doesn't exist\n");
     else
         g_print ("\tSecondary 1X: slot '%u', application '%u'\n",
-                 ((index_1x_secondary & 0xFF00) >> 8),
-                 ((index_1x_secondary & 0x00FF)));
+                 ((index_1x_secondary & 0xFF00) >> 8) + 1,
+                 ((index_1x_secondary & 0x00FF)) + 1);
 
     for (i = 0; i < cards->len; i++) {
         QmiMessageUimGetCardStatusOutputCardStatusCardsElement *card;
@@ -815,7 +815,7 @@ get_card_status_ready (QmiClientUim *client,
 
         card = &g_array_index (cards, QmiMessageUimGetCardStatusOutputCardStatusCardsElement, i);
 
-        g_print ("Card [%u]:\n", i);
+        g_print ("Slot [%u]:\n", i + 1);
 
         if (card->card_state != QMI_UIM_CARD_STATE_ERROR)
             g_print ("\tCard state: '%s'\n",
@@ -845,7 +845,7 @@ get_card_status_ready (QmiClientUim *client,
                      "\t\tApplication state: '%s'\n"
                      "\t\tApplication ID:\n"
                      "\t\t\t%s",
-                     j,
+                     j + 1,
                      VALIDATE_UNKNOWN (qmi_uim_card_application_type_get_string (app->type)), app->type,
                      qmi_uim_card_application_state_get_string (app->state),
                      str);
