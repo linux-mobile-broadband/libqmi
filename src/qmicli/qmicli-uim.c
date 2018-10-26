@@ -1562,6 +1562,7 @@ qmicli_uim_run (QmiDevice *device,
                                      ctx->cancellable,
                                      (GAsyncReadyCallback)power_on_sim_ready,
                                      NULL);
+        qmi_message_uim_power_on_sim_input_unref (input);
         return;
     }
 
@@ -1582,6 +1583,7 @@ qmicli_uim_run (QmiDevice *device,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback)power_off_sim_ready,
                                       NULL);
+        qmi_message_uim_power_off_sim_input_unref (input);
         return;
     }
 
