@@ -624,10 +624,7 @@
                      "id"        : "0x01",
                      "type"      : "TLV",
                      "since"     : "1.18",
-                     "format"    : "sequence",
-                     "contents"  : [ { "name"   : "Slot",
-                                       "format" : "guint8" } ] }
-                  ],
+                     "format"    : "guint8" } ],
      "output"  : [ { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
@@ -642,10 +639,7 @@
                      "id"        : "0x01",
                      "type"      : "TLV",
                      "since"     : "1.18",
-                     "format"    : "sequence",
-                     "contents"  : [ { "name"   : "Slot",
-                                       "format" : "guint8" } ] }
-                  ],
+                     "format"    : "guint8" } ],
      "output"  : [ { "common-ref" : "Operation Result" } ] }
 
 ]
