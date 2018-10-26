@@ -70,4 +70,47 @@ qmi_message_tlv_read_gfloat (QmiMessage  *self,
     return qmi_message_tlv_read_gfloat_endian (self, tlv_offset, offset, __QMI_ENDIAN_HOST, out, error);
 }
 
+#define SESSION_INFORMATION_DEPRECATED_METHOD(BUNDLE_SUBSTR,METHOD_SUBSTR)                                 \
+    gboolean                                                                                               \
+    qmi_message_uim_##METHOD_SUBSTR##_input_get_session_information (                                      \
+        QmiMessageUim##BUNDLE_SUBSTR##Input *self,                                                         \
+        QmiUimSessionType *value_session_session_type,                                                     \
+        const gchar **value_session_information_application_identifier,                                    \
+        GError **error)                                                                                    \
+    {                                                                                                      \
+        /* just ignore the output string */                                                                \
+        return qmi_message_uim_##METHOD_SUBSTR##_input_get_session (self,                                  \
+                                                                    value_session_session_type,            \
+                                                                    NULL,                                  \
+                                                                    error);                                \
+    }                                                                                                      \
+    gboolean                                                                                               \
+    qmi_message_uim_##METHOD_SUBSTR##_input_set_session_information (                                      \
+        QmiMessageUim##BUNDLE_SUBSTR##Input *self,                                                         \
+        QmiUimSessionType value_session_information_session_type,                                          \
+        const gchar *value_session_information_application_identifier,                                     \
+        GError **error)                                                                                    \
+    {                                                                                                      \
+        GArray   *array;                                                                                   \
+        gboolean  ret;                                                                                     \
+                                                                                                           \
+        array = g_array_append_vals (g_array_new (FALSE, FALSE, sizeof (guint8)),                          \
+                                     value_session_information_application_identifier,                     \
+                                     strlen (value_session_information_application_identifier));           \
+        ret = qmi_message_uim_##METHOD_SUBSTR##_input_set_session (self,                                   \
+                                                                   value_session_information_session_type, \
+                                                                   array,                                  \
+                                                                   error);                                 \
+        g_array_unref (array);                                                                             \
+        return ret;                                                                                        \
+    }
+
+SESSION_INFORMATION_DEPRECATED_METHOD (ReadTransparent,   read_transparent)
+SESSION_INFORMATION_DEPRECATED_METHOD (ReadRecord,        read_record)
+SESSION_INFORMATION_DEPRECATED_METHOD (GetFileAttributes, get_file_attributes)
+SESSION_INFORMATION_DEPRECATED_METHOD (SetPinProtection,  set_pin_protection)
+SESSION_INFORMATION_DEPRECATED_METHOD (VerifyPin,         verify_pin)
+SESSION_INFORMATION_DEPRECATED_METHOD (UnblockPin,        unblock_pin)
+SESSION_INFORMATION_DEPRECATED_METHOD (ChangePin,         change_pin)
+
 #endif /* QMI_DISABLE_DEPRECATED */

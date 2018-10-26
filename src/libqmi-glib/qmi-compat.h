@@ -27,6 +27,7 @@
 #endif
 
 #include "qmi-dms.h"
+#include "qmi-uim.h"
 #include "qmi-enums-nas.h"
 #include "qmi-enums-wms.h"
 
@@ -455,6 +456,300 @@ gboolean qmi_message_tlv_read_gfloat (QmiMessage  *self,
                                       gsize       *offset,
                                       gfloat      *out,
                                       GError     **error);
+
+/**
+ * qmi_message_uim_read_transparent_input_get_session_information:
+ * @self: a #QmiMessageUimReadTransparentInput.
+ * @value_session_information_session_type: a placeholder for the output #QmiUimSessionType, or %NULL if not required.
+ * @value_session_information_application_identifier: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Session Information' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.6
+ * Deprecated: 1.22: Use qmi_message_uim_read_transparent_input_get_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_read_transparent_input_get_session)
+gboolean qmi_message_uim_read_transparent_input_get_session_information (
+    QmiMessageUimReadTransparentInput *self,
+    QmiUimSessionType *value_session_information_session_type,
+    const gchar **value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_read_transparent_input_set_session_information:
+ * @self: a #QmiMessageUimReadTransparentInput.
+ * @value_session_information_session_type: a #QmiUimSessionType.
+ * @value_session_information_application_identifier: a constant string.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Session Information' field in the message.
+ *
+ * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.6
+ * Deprecated: 1.22: Use qmi_message_uim_read_transparent_input_set_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_read_transparent_input_set_session)
+gboolean qmi_message_uim_read_transparent_input_set_session_information (
+    QmiMessageUimReadTransparentInput *self,
+    QmiUimSessionType value_session_information_session_type,
+    const gchar *value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_read_record_input_get_session_information:
+ * @self: a #QmiMessageUimReadRecordInput.
+ * @value_session_information_session_type: a placeholder for the output #QmiUimSessionType, or %NULL if not required.
+ * @value_session_information_application_identifier: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Session Information' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.6
+ * Deprecated: 1.22: Use qmi_message_uim_read_record_input_get_session_information() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_read_record_input_get_session_information)
+gboolean qmi_message_uim_read_record_input_get_session_information (
+    QmiMessageUimReadRecordInput *self,
+    QmiUimSessionType *value_session_information_session_type,
+    const gchar **value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_read_record_input_set_session_information:
+ * @self: a #QmiMessageUimReadRecordInput.
+ * @value_session_information_session_type: a #QmiUimSessionType.
+ * @value_session_information_application_identifier: a constant string.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Session Information' field in the message.
+ *
+ * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.6
+ * Deprecated: 1.22: Use qmi_message_uim_read_record_input_set_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_read_record_input_set_session)
+gboolean qmi_message_uim_read_record_input_set_session_information (
+    QmiMessageUimReadRecordInput *self,
+    QmiUimSessionType value_session_information_session_type,
+    const gchar *value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_get_file_attributes_input_get_session_information:
+ * @self: a #QmiMessageUimGetFileAttributesInput.
+ * @value_session_information_session_type: a placeholder for the output #QmiUimSessionType, or %NULL if not required.
+ * @value_session_information_application_identifier: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Session Information' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.6
+ * Deprecated: 1.22: Use qmi_message_uim_get_file_attributes_input_get_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_get_file_attributes_input_get_session)
+gboolean qmi_message_uim_get_file_attributes_input_get_session_information (
+    QmiMessageUimGetFileAttributesInput *self,
+    QmiUimSessionType *value_session_information_session_type,
+    const gchar **value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_get_file_attributes_input_set_session_information:
+ * @self: a #QmiMessageUimGetFileAttributesInput.
+ * @value_session_information_session_type: a #QmiUimSessionType.
+ * @value_session_information_application_identifier: a constant string.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Session Information' field in the message.
+ *
+ * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.6
+ * Deprecated: 1.22: Use qmi_message_uim_get_file_attributes_input_set_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_get_file_attributes_input_set_session)
+gboolean qmi_message_uim_get_file_attributes_input_set_session_information (
+    QmiMessageUimGetFileAttributesInput *self,
+    QmiUimSessionType value_session_information_session_type,
+    const gchar *value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_set_pin_protection_input_get_session_information:
+ * @self: a #QmiMessageUimSetPinProtectionInput.
+ * @value_session_information_session_type: a placeholder for the output #QmiUimSessionType, or %NULL if not required.
+ * @value_session_information_application_identifier: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Session Information' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.14
+ * Deprecated: 1.22: Use qmi_message_uim_set_pin_protection_input_get_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_set_pin_protection_input_get_session)
+gboolean qmi_message_uim_set_pin_protection_input_get_session_information (
+    QmiMessageUimSetPinProtectionInput *self,
+    QmiUimSessionType *value_session_information_session_type,
+    const gchar **value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_set_pin_protection_input_set_session_information:
+ * @self: a #QmiMessageUimSetPinProtectionInput.
+ * @value_session_information_session_type: a #QmiUimSessionType.
+ * @value_session_information_application_identifier: a constant string.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Session Information' field in the message.
+ *
+ * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.14
+ * Deprecated: 1.22: Use qmi_message_uim_set_pin_protection_input_set_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_set_pin_protection_input_set_session)
+gboolean qmi_message_uim_set_pin_protection_input_set_session_information (
+    QmiMessageUimSetPinProtectionInput *self,
+    QmiUimSessionType value_session_information_session_type,
+    const gchar *value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_verify_pin_input_get_session_information:
+ * @self: a #QmiMessageUimVerifyPinInput.
+ * @value_session_information_session_type: a placeholder for the output #QmiUimSessionType, or %NULL if not required.
+ * @value_session_information_application_identifier: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Session Information' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.14
+ * Deprecated: 1.22: Use qmi_message_uim_verify_pin_input_get_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_verify_pin_input_get_session)
+gboolean qmi_message_uim_verify_pin_input_get_session_information (
+    QmiMessageUimVerifyPinInput *self,
+    QmiUimSessionType *value_session_information_session_type,
+    const gchar **value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_verify_pin_input_set_session_information:
+ * @self: a #QmiMessageUimVerifyPinInput.
+ * @value_session_information_session_type: a #QmiUimSessionType.
+ * @value_session_information_application_identifier: a constant string.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Session Information' field in the message.
+ *
+ * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.14
+ * Deprecated: 1.22: Use qmi_message_uim_verify_pin_input_set_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_verify_pin_input_set_session)
+gboolean qmi_message_uim_verify_pin_input_set_session_information (
+    QmiMessageUimVerifyPinInput *self,
+    QmiUimSessionType value_session_information_session_type,
+    const gchar *value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_unblock_pin_input_get_session_information:
+ * @self: a #QmiMessageUimUnblockPinInput.
+ * @value_session_information_session_type: a placeholder for the output #QmiUimSessionType, or %NULL if not required.
+ * @value_session_information_application_identifier: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Session Information' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.14
+ * Deprecated: 1.22: Use qmi_message_uim_unblock_pin_input_get_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_unblock_pin_input_get_session)
+gboolean qmi_message_uim_unblock_pin_input_get_session_information (
+    QmiMessageUimUnblockPinInput *self,
+    QmiUimSessionType *value_session_information_session_type,
+    const gchar **value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_unblock_pin_input_set_session_information:
+ * @self: a #QmiMessageUimUnblockPinInput.
+ * @value_session_information_session_type: a #QmiUimSessionType.
+ * @value_session_information_application_identifier: a constant string.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Session Information' field in the message.
+ *
+ * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.14
+ * Deprecated: 1.22: Use qmi_message_uim_unblock_pin_input_set_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_unblock_pin_input_set_session)
+gboolean qmi_message_uim_unblock_pin_input_set_session_information (
+    QmiMessageUimUnblockPinInput *self,
+    QmiUimSessionType value_session_information_session_type,
+    const gchar *value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_change_pin_input_get_session_information:
+ * @self: a #QmiMessageUimChangePinInput.
+ * @value_session_information_session_type: a placeholder for the output #QmiUimSessionType, or %NULL if not required.
+ * @value_session_information_application_identifier: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Session Information' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.14
+ * Deprecated: 1.22: Use qmi_message_uim_change_pin_input_get_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_change_pin_input_get_session)
+gboolean qmi_message_uim_change_pin_input_get_session_information (
+    QmiMessageUimChangePinInput *self,
+    QmiUimSessionType *value_session_information_session_type,
+    const gchar **value_session_information_application_identifier,
+    GError **error);
+
+/**
+ * qmi_message_uim_change_pin_input_set_session_information:
+ * @self: a #QmiMessageUimChangePinInput.
+ * @value_session_information_session_type: a #QmiUimSessionType.
+ * @value_session_information_application_identifier: a constant string.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Session Information' field in the message.
+ *
+ * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.14
+ * Deprecated: 1.22: Use qmi_message_uim_change_pin_input_set_session() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_change_pin_input_set_session)
+gboolean qmi_message_uim_change_pin_input_set_session_information (
+    QmiMessageUimChangePinInput *self,
+    QmiUimSessionType value_session_information_session_type,
+    const gchar *value_session_information_application_identifier,
+    GError **error);
 
 #endif /* QMI_DISABLE_DEPRECATED */
 
