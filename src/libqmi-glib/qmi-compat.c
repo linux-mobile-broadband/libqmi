@@ -19,6 +19,8 @@
  * Copyright (C) 2016-2018 Aleksander Morgado <aleksander@aleksander.es>
  */
 
+#include <string.h>
+
 #include "qmi-compat.h"
 #include "qmi-utils.h"
 
