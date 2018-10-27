@@ -2173,11 +2173,11 @@ set_default_profile_num_input_create (const gchar *str)
     }
 
     if (!qmi_message_wds_set_default_profile_num_input_set_profile_identifier (
-			            input,
-			            profile_type,
-			            QMI_WDS_PROFILE_FAMILY_TETHERED,
-			            (guint8)profile_num,
-			            &error)) {
+            input,
+            profile_type,
+            QMI_WDS_PROFILE_FAMILY_TETHERED,
+            (guint8)profile_num,
+            &error)) {
         g_printerr ("error: couldn't create input bundle: '%s'\n", error->message);
         goto error_out;
     }
