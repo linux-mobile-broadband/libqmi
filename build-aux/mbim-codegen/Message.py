@@ -843,6 +843,12 @@ class Message:
                 inner_template = ('    guint32 _${field};\n')
                 template += (string.Template(inner_template).substitute(translations))
 
+        if message_type == 'response':
+            template += (
+                '\n'
+                '    if (!mbim_message_response_get_result (message, MBIM_MESSAGE_TYPE_COMMAND_DONE, NULL))\n'
+                '        return NULL;\n')
+
         template += (
             '\n'
             '    str = g_string_new ("");\n')
