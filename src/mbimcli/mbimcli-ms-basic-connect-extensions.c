@@ -50,7 +50,7 @@ static gboolean query_pco_arg_parse (const char *option_name,
                                      GError **error);
 
 static GOptionEntry entries[] = {
-    { "query-pco", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_pco_arg_parse),
+    { "ms-query-pco", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_pco_arg_parse),
       "Query PCO value (SessionID is optional, defaults to 0)",
       "[SessionID]"
     },
@@ -68,13 +68,13 @@ query_pco_arg_parse (const char *option_name,
 }
 
 GOptionGroup *
-mbimcli_basic_connect_extensions_get_option_group (void)
+mbimcli_ms_basic_connect_extensions_get_option_group (void)
 {
    GOptionGroup *group;
 
-   group = g_option_group_new ("basic-connect-extensions",
-                               "Basic Connect Extensions options",
-                               "Show Basic Connect Extensions Service options",
+   group = g_option_group_new ("ms-basic-connect-extensions",
+                               "Microsoft Basic Connect Extensions options",
+                               "Show Microsoft Basic Connect Extensions Service options",
                                NULL,
                                NULL);
    g_option_group_add_entries (group, entries);
@@ -114,7 +114,7 @@ session_id_parse (const gchar  *str,
 }
 
 gboolean
-mbimcli_basic_connect_extensions_options_enabled (void)
+mbimcli_ms_basic_connect_extensions_options_enabled (void)
 {
     static guint n_actions = 0;
     static gboolean checked = FALSE;
@@ -125,7 +125,7 @@ mbimcli_basic_connect_extensions_options_enabled (void)
     n_actions = !!query_pco_str;
 
     if (n_actions > 1) {
-        g_printerr ("error: too many Basic Connect Extensions Service actions requested\n");
+        g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
         exit (EXIT_FAILURE);
     }
 
@@ -175,7 +175,7 @@ query_pco_ready (MbimDevice   *device,
 
     g_print ("[%s] Successfully queried PCO\n\n",
              mbim_device_get_path_display (device));
-    if (!mbim_message_basic_connect_extensions_pco_response_parse (
+    if (!mbim_message_ms_basic_connect_extensions_pco_response_parse (
             response,
             &pco_value,
             &error)) {
@@ -205,8 +205,8 @@ query_pco_ready (MbimDevice   *device,
 }
 
 void
-mbimcli_basic_connect_extensions_run (MbimDevice   *device,
-                                      GCancellable *cancellable)
+mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
+                                         GCancellable *cancellable)
 {
     /* Initialize context */
     ctx = g_slice_new (Context);
@@ -231,7 +231,7 @@ mbimcli_basic_connect_extensions_run (MbimDevice   *device,
         pco_value.pco_data_buffer = NULL;
 
         g_debug ("Asynchronously querying PCO...");
-        request = mbim_message_basic_connect_extensions_pco_query_new (&pco_value, NULL);
+        request = mbim_message_ms_basic_connect_extensions_pco_query_new (&pco_value, NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,

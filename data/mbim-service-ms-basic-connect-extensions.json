@@ -1,7 +1,7 @@
 [
   // *********************************************************************************
   { "type" : "Service",
-    "name" : "Basic Connect Extensions" },
+    "name" : "Ms Basic Connect Extensions" },
 
   // *********************************************************************************
   { "name"     : "MbimPcoValue",
@@ -18,7 +18,7 @@
                      "array-size-field" : "PcoDataSize" } ] },
 
   { "name"         : "PCO",
-    "service"      : "Basic Connect Extensions",
+    "service"      : "Ms Basic Connect Extensions",
     "type"         : "Command",
     "query"        : [ { "name"        : "PcoValue",
                          "format"      : "struct",

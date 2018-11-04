@@ -74,27 +74,27 @@ gboolean  mbim_uuid_from_printable (const gchar *str,
  * @MBIM_SERVICE_QMI: QMI-over-MBIM service.
  * @MBIM_SERVICE_ATDS: ATT Device service.
  * @MBIM_SERVICE_INTEL_FIRMWARE_UPDATE: Intel firmware update service.
- * @MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS: Basic connectivity extensions service.
+ * @MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS: Microsoft basic connectivity extensions service.
  * @MBIM_SERVICE_LAST: Internal value.
  *
  * Enumeration of the generic MBIM services.
  */
 typedef enum {
-    MBIM_SERVICE_INVALID          = 0,
-    MBIM_SERVICE_BASIC_CONNECT    = 1,
-    MBIM_SERVICE_SMS              = 2,
-    MBIM_SERVICE_USSD             = 3,
-    MBIM_SERVICE_PHONEBOOK        = 4,
-    MBIM_SERVICE_STK              = 5,
-    MBIM_SERVICE_AUTH             = 6,
-    MBIM_SERVICE_DSS              = 7,
-    MBIM_SERVICE_MS_FIRMWARE_ID   = 8,
-    MBIM_SERVICE_MS_HOST_SHUTDOWN = 9,
-    MBIM_SERVICE_PROXY_CONTROL    = 10,
-    MBIM_SERVICE_QMI              = 11,
-    MBIM_SERVICE_ATDS             = 12,
-    MBIM_SERVICE_INTEL_FIRMWARE_UPDATE = 13,
-    MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS = 14,
+    MBIM_SERVICE_INVALID                     = 0,
+    MBIM_SERVICE_BASIC_CONNECT               = 1,
+    MBIM_SERVICE_SMS                         = 2,
+    MBIM_SERVICE_USSD                        = 3,
+    MBIM_SERVICE_PHONEBOOK                   = 4,
+    MBIM_SERVICE_STK                         = 5,
+    MBIM_SERVICE_AUTH                        = 6,
+    MBIM_SERVICE_DSS                         = 7,
+    MBIM_SERVICE_MS_FIRMWARE_ID              = 8,
+    MBIM_SERVICE_MS_HOST_SHUTDOWN            = 9,
+    MBIM_SERVICE_PROXY_CONTROL               = 10,
+    MBIM_SERVICE_QMI                         = 11,
+    MBIM_SERVICE_ATDS                        = 12,
+    MBIM_SERVICE_INTEL_FIRMWARE_UPDATE       = 13,
+    MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS = 14,
 #if defined LIBMBIM_GLIB_COMPILATION
     MBIM_SERVICE_LAST /*< skip >*/
 #endif
@@ -227,13 +227,13 @@ typedef enum {
 #define MBIM_UUID_INTEL_FIRMWARE_UPDATE mbim_uuid_from_service (MBIM_SERVICE_INTEL_FIRMWARE_UPDATE)
 
 /**
- * MBIM_UUID_BASIC_CONNECT_EXTENSIONS:
+ * MBIM_UUID_MS_BASIC_CONNECT_EXTENSIONS:
  *
- * Get the UUID of the %MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS service.
+ * Get the UUID of the %MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS service.
  *
  * Returns: (transfer none): a #MbimUuid.
  */
-#define MBIM_UUID_BASIC_CONNECT_EXTENSIONS mbim_uuid_from_service (MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS)
+#define MBIM_UUID_MS_BASIC_CONNECT_EXTENSIONS mbim_uuid_from_service (MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS)
 
 const gchar *mbim_service_lookup_name (guint service);
 

@@ -15,7 +15,6 @@ MbimUuid
 MBIM_UUID_INVALID
 MBIM_UUID_ATDS
 MBIM_UUID_BASIC_CONNECT
-MBIM_UUID_BASIC_CONNECT_EXTENSIONS
 MBIM_UUID_SMS
 MBIM_UUID_USSD
 MBIM_UUID_PHONEBOOK
@@ -27,6 +26,7 @@ MBIM_UUID_MS_HOST_SHUTDOWN
 MBIM_UUID_PROXY_CONTROL
 MBIM_UUID_QMI
 MBIM_UUID_INTEL_FIRMWARE_UPDATE
+MBIM_UUID_MS_BASIC_CONNECT_EXTENSIONS
 <SUBSECTION Methods>
 mbim_service_get_string
 mbim_service_lookup_name
@@ -51,7 +51,6 @@ mbim_context_type_build_string_from_mask
 <FILE>mbim-cid</FILE>
 MbimCidAtds
 MbimCidBasicConnect
-MbimCidBasicConnectExtensions
 MbimCidSms
 MbimCidUssd
 MbimCidPhonebook
@@ -63,6 +62,7 @@ MbimCidMsHostShutdown
 MbimCidProxyControl
 MbimCidQmi
 MbimCidIntelFirmwareUpdate
+MbimCidMsBasicConnectExtensions
 <SUBSECTION Methods>
 mbim_cid_can_set
 mbim_cid_can_query
@@ -70,7 +70,6 @@ mbim_cid_can_notify
 mbim_cid_get_printable
 mbim_cid_atds_get_string
 mbim_cid_basic_connect_get_string
-mbim_cid_basic_connect_extensions_get_string
 mbim_cid_sms_get_string
 mbim_cid_ussd_get_string
 mbim_cid_phonebook_get_string
@@ -82,10 +81,10 @@ mbim_cid_ms_host_shutdown_get_string
 mbim_cid_proxy_control_get_string
 mbim_cid_qmi_get_string
 mbim_cid_intel_firmware_update_get_string
+mbim_cid_ms_basic_connect_extensions_get_string
 <SUBSECTION Private>
 mbim_cid_atds_build_string_from_mask
 mbim_cid_basic_connect_build_string_from_mask
-mbim_cid_basic_connect_extensions_build_string_from_mask
 mbim_cid_sms_build_string_from_mask
 mbim_cid_ussd_build_string_from_mask
 mbim_cid_phonebook_build_string_from_mask
@@ -97,11 +96,11 @@ mbim_cid_ms_host_shutdown_build_string_from_mask
 mbim_cid_proxy_control_build_string_from_mask
 mbim_cid_qmi_build_string_from_mask
 mbim_cid_intel_firmware_update_build_string_from_mask
+mbim_cid_ms_basic_connect_extensions_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_CID_ATDS
 MBIM_TYPE_CID_AUTH
 MBIM_TYPE_CID_BASIC_CONNECT
-MBIM_TYPE_CID_BASIC_CONNECT_EXTENSIONS
 MBIM_TYPE_CID_DSS
 MBIM_TYPE_CID_PHONEBOOK
 MBIM_TYPE_CID_SMS
@@ -112,10 +111,10 @@ MBIM_TYPE_CID_MS_HOST_SHUTDOWN
 MBIM_TYPE_CID_PROXY_CONTROL
 MBIM_TYPE_CID_QMI
 MBIM_TYPE_CID_INTEL_FIRMWARE_UPDATE
+MBIM_TYPE_CID_MS_BASIC_CONNECT_EXTENSIONS
 mbim_cid_atds_get_type
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
-mbim_cid_basic_connect_extensions_get_type
 mbim_cid_dss_get_type
 mbim_cid_phonebook_get_type
 mbim_cid_sms_get_type
@@ -126,6 +125,7 @@ mbim_cid_ms_host_shutdown_get_type
 mbim_cid_proxy_control_get_type
 mbim_cid_qmi_get_type
 mbim_cid_intel_firmware_update_get_type
+mbim_cid_ms_basic_connect_extensions_get_type
 </SECTION>
 
 <SECTION>

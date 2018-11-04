@@ -14,13 +14,13 @@ mbimcli_SOURCES = \
 	mbimcli.h mbimcli.c \
 	mbimcli-helpers.h mbimcli-helpers.c \
 	mbimcli-basic-connect.c \
-	mbimcli-basic-connect-extensions.c \
 	mbimcli-phonebook.c \
 	mbimcli-dss.c \
 	mbimcli-ms-firmware-id.c \
 	mbimcli-ms-host-shutdown.c \
 	mbimcli-atds.c \
-	mbimcli-intel-firmware-update.c
+	mbimcli-intel-firmware-update.c \
+	mbimcli-ms-basic-connect-extensions.c
 
 mbimcli_LDADD = \
 	$(MBIMCLI_LIBS) \

@@ -4,7 +4,6 @@ GENERATED_H = \
 	mbim-error-types.h \
 	mbim-enum-types.h \
 	mbim-basic-connect.h \
-	mbim-basic-connect-extensions.h \
 	mbim-sms.h \
 	mbim-ussd.h \
 	mbim-auth.h \
@@ -16,14 +15,14 @@ GENERATED_H = \
 	mbim-proxy-control.h \
 	mbim-qmi.h \
 	mbim-atds.h \
-	mbim-intel-firmware-update.h
+	mbim-intel-firmware-update.h \
+	mbim-ms-basic-connect-extensions.h
 
 GENERATED_C = \
 	mbim-error-types.c \
 	mbim-error-quarks.c \
 	mbim-enum-types.c \
 	mbim-basic-connect.c \
-	mbim-basic-connect-extensions.c \
 	mbim-sms.c \
 	mbim-ussd.c \
 	mbim-auth.c \
@@ -35,11 +34,11 @@ GENERATED_C = \
 	mbim-proxy-control.c \
 	mbim-qmi.c \
 	mbim-atds.c \
-	mbim-intel-firmware-update.c
+	mbim-intel-firmware-update.c \
+	mbim-ms-basic-connect-extensions.c
 
 GENERATED_SECTIONS = \
 	mbim-basic-connect.sections \
-	mbim-basic-connect-extensions.sections \
 	mbim-sms.sections \
 	mbim-ussd.sections \
 	mbim-auth.sections \
@@ -51,7 +50,8 @@ GENERATED_SECTIONS = \
 	mbim-proxy-control.sections \
 	mbim-qmi.sections \
 	mbim-atds.sections \
-	mbim-intel-firmware-update.sections
+	mbim-intel-firmware-update.sections \
+	mbim-ms-basic-connect-extensions.sections
 
 # Error types
 mbim-error-types.h: $(top_srcdir)/src/libmbim-glib/mbim-errors.h $(top_srcdir)/build-aux/templates/mbim-error-types-template.h
@@ -100,15 +100,6 @@ mbim-basic-connect.h mbim-basic-connect.c mbim-basic-connect.sections: $(top_src
 		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-basic-connect.json \
 			--output mbim-basic-connect
-
-# Basic Connect Extensions service
-mbim-basic-connect-extensions.h mbim-basic-connect-extensions.c mbim-basic-connect-extensions.sections: $(top_srcdir)/data/mbim-service-basic-connect-extensions.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
-	$(AM_V_GEN)  \
-		rm -f mbim-basic-connect-extensions.h && \
-		rm -f mbim-basic-connect-extensions.c && \
-		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
-			--input $(top_srcdir)/data/mbim-service-basic-connect-extensions.json \
-			--output mbim-basic-connect-extensions
 
 # SMS service
 mbim-sms.h mbim-sms.c mbim-sms.sections: $(top_srcdir)/data/mbim-service-sms.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
@@ -217,6 +208,15 @@ mbim-intel-firmware-update.h mbim-intel-firmware-update.c mbim-intel-firmware-up
 		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-intel-firmware-update.json \
 			--output mbim-intel-firmware-update
+
+# Microsoft Basic Connect Extensions service
+mbim-ms-basic-connect-extensions.h mbim-ms-basic-connect-extensions.c mbim-ms-basic-connect-extensions.sections: $(top_srcdir)/data/mbim-service-ms-basic-connect-extensions.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-ms-basic-connect-extensions.h && \
+		rm -f mbim-ms-basic-connect-extensions.c && \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-ms-basic-connect-extensions.json \
+			--output mbim-ms-basic-connect-extensions
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 

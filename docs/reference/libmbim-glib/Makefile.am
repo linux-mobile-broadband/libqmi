@@ -9,7 +9,6 @@ DOC_MAIN_SGML_FILE = $(DOC_MODULE)-docs.xml
 ALL_SECTIONS = \
 	$(srcdir)/libmbim-glib-common.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-basic-connect.sections \
-	$(top_builddir)/src/libmbim-glib/generated/mbim-basic-connect-extensions.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-sms.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-ussd.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-auth.sections \
@@ -20,7 +19,8 @@ ALL_SECTIONS = \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-ms-host-shutdown.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-qmi.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-atds.sections \
-	$(top_builddir)/src/libmbim-glib/generated/mbim-intel-firmware-update.sections
+	$(top_builddir)/src/libmbim-glib/generated/mbim-intel-firmware-update.sections \
+	$(top_builddir)/src/libmbim-glib/generated/mbim-ms-basic-connect-extensions.sections
 
 $(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)
 	$(AM_V_GEN) \

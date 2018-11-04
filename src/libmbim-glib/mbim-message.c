@@ -32,20 +32,20 @@
 #include "mbim-error-types.h"
 #include "mbim-enum-types.h"
 
-#include "mbim-atds.h"
-#include "mbim-auth.h"
 #include "mbim-basic-connect.h"
-#include "mbim-basic-connect-extensions.h"
+#include "mbim-auth.h"
 #include "mbim-dss.h"
-#include "mbim-intel-firmware-update.h"
-#include "mbim-ms-firmware-id.h"
-#include "mbim-ms-host-shutdown.h"
 #include "mbim-phonebook.h"
-#include "mbim-proxy-control.h"
-#include "mbim-qmi.h"
 #include "mbim-sms.h"
 #include "mbim-stk.h"
 #include "mbim-ussd.h"
+#include "mbim-proxy-control.h"
+#include "mbim-qmi.h"
+#include "mbim-ms-firmware-id.h"
+#include "mbim-ms-host-shutdown.h"
+#include "mbim-atds.h"
+#include "mbim-intel-firmware-update.h"
+#include "mbim-ms-basic-connect-extensions.h"
 
 /**
  * SECTION:mbim-message
@@ -1351,8 +1351,8 @@ mbim_message_get_printable (const MbimMessage *self,
         case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
             fields_printable = __mbim_message_intel_firmware_update_get_printable_fields (self, line_prefix, &error);
             break;
-        case MBIM_SERVICE_BASIC_CONNECT_EXTENSIONS:
-            fields_printable = __mbim_message_basic_connect_extensions_get_printable_fields (self, line_prefix, &error);
+        case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
+            fields_printable = __mbim_message_ms_basic_connect_extensions_get_printable_fields (self, line_prefix, &error);
             break;
         default:
             break;

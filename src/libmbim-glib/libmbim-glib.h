@@ -40,7 +40,6 @@
 #include "mbim-enum-types.h"
 #include "mbim-error-types.h"
 #include "mbim-basic-connect.h"
-#include "mbim-basic-connect-extensions.h"
 #include "mbim-sms.h"
 #include "mbim-ussd.h"
 #include "mbim-auth.h"
@@ -52,6 +51,7 @@
 #include "mbim-qmi.h"
 #include "mbim-atds.h"
 #include "mbim-intel-firmware-update.h"
+#include "mbim-ms-basic-connect-extensions.h"
 
 /* backwards compatibility */
 #include "mbim-compat.h"

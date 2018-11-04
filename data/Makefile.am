@@ -2,7 +2,6 @@ SUBDIRS = . pkg-config
 
 EXTRA_DIST = \
 	mbim-service-basic-connect.json \
-	mbim-service-basic-connect-extensions.json \
 	mbim-service-sms.json \
 	mbim-service-ussd.json \
 	mbim-service-auth.json \
@@ -14,4 +13,5 @@ EXTRA_DIST = \
 	mbim-service-proxy-control.json \
 	mbim-service-qmi.json \
 	mbim-service-atds.json \
-	mbim-service-intel-firmware-update.json
+	mbim-service-intel-firmware-update.json \
+	mbim-service-ms-basic-connect-extensions.json

@@ -67,12 +67,24 @@
   </chapter>
 
   <chapter>
-    <title>Other Services</title>
-    <xi:include href="xml/mbim-basic-connect-extensions.xml"/>
+    <title>Microsoft-defined services</title>
+    <xi:include href="xml/mbim-ms-basic-connect-extensions.xml"/>
     <xi:include href="xml/mbim-ms-firmware-id.xml"/>
     <xi:include href="xml/mbim-ms-host-shutdown.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Qualcomm-defined services</title>
     <xi:include href="xml/mbim-qmi.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>AT&amp;T-defined services</title>
     <xi:include href="xml/mbim-atds.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Intel-defined Services</title>
     <xi:include href="xml/mbim-intel-firmware-update.xml"/>
   </chapter>
 

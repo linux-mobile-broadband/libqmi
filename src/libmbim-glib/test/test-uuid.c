@@ -99,9 +99,9 @@ test_uuid_intel_firmware_update (void)
 }
 
 static void
-test_uuid_basic_connect_extensions (void)
+test_uuid_ms_basic_connect_extensions (void)
 {
-    compare_uuid_strings (MBIM_UUID_BASIC_CONNECT_EXTENSIONS,
+    compare_uuid_strings (MBIM_UUID_MS_BASIC_CONNECT_EXTENSIONS,
                           "3d01dcc5-fef5-4d05-0d3a-bef7058e9aaf");
 }
 
@@ -205,17 +205,17 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libmbim-glib/uuid/basic-connect",    test_uuid_basic_connect);
-    g_test_add_func ("/libmbim-glib/uuid/sms",              test_uuid_sms);
-    g_test_add_func ("/libmbim-glib/uuid/ussd",             test_uuid_ussd);
-    g_test_add_func ("/libmbim-glib/uuid/phonebook",        test_uuid_phonebook);
-    g_test_add_func ("/libmbim-glib/uuid/stk",              test_uuid_stk);
-    g_test_add_func ("/libmbim-glib/uuid/auth",             test_uuid_auth);
-    g_test_add_func ("/libmbim-glib/uuid/dss",              test_uuid_dss);
-    g_test_add_func ("/libmbim-glib/uuid/ms-firmware-id",   test_uuid_ms_firmware_id);
-    g_test_add_func ("/libmbim-glib/uuid/ms-host-shutdown", test_uuid_ms_host_shutdown);
-    g_test_add_func ("/libmbim-glib/uuid/intel-firmware-update", test_uuid_intel_firmware_update);
-    g_test_add_func ("/libmbim-glib/uuid/basic-connect-extensions", test_uuid_basic_connect_extensions);
+    g_test_add_func ("/libmbim-glib/uuid/basic-connect",               test_uuid_basic_connect);
+    g_test_add_func ("/libmbim-glib/uuid/sms",                         test_uuid_sms);
+    g_test_add_func ("/libmbim-glib/uuid/ussd",                        test_uuid_ussd);
+    g_test_add_func ("/libmbim-glib/uuid/phonebook",                   test_uuid_phonebook);
+    g_test_add_func ("/libmbim-glib/uuid/stk",                         test_uuid_stk);
+    g_test_add_func ("/libmbim-glib/uuid/auth",                        test_uuid_auth);
+    g_test_add_func ("/libmbim-glib/uuid/dss",                         test_uuid_dss);
+    g_test_add_func ("/libmbim-glib/uuid/ms-firmware-id",              test_uuid_ms_firmware_id);
+    g_test_add_func ("/libmbim-glib/uuid/ms-host-shutdown",            test_uuid_ms_host_shutdown);
+    g_test_add_func ("/libmbim-glib/uuid/intel-firmware-update",       test_uuid_intel_firmware_update);
+    g_test_add_func ("/libmbim-glib/uuid/ms-basic-connect-extensions", test_uuid_ms_basic_connect_extensions);
 
     g_test_add_func ("/libmbim-glib/uuid/valid",           test_uuid_valid);
     g_test_add_func ("/libmbim-glib/uuid/valid/camelcase", test_uuid_valid_camelcase);
