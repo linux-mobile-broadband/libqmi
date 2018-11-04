@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Copyright 2018 Google LLC
+ * Copyright (C) 2018 Google LLC
+ * Copyright (C) 2018 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include "config.h"
@@ -42,7 +43,8 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
-static gchar *query_pco_str;
+static gchar    *query_pco_str;
+static gboolean  query_lte_attach_configuration_flag;
 
 static gboolean query_pco_arg_parse (const char *option_name,
                                      const char *value,
@@ -53,6 +55,10 @@ static GOptionEntry entries[] = {
     { "ms-query-pco", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_pco_arg_parse),
       "Query PCO value (SessionID is optional, defaults to 0)",
       "[SessionID]"
+    },
+    { "ms-query-lte-attach-configuration", 0, 0, G_OPTION_ARG_NONE, &query_lte_attach_configuration_flag,
+      "Query LTE attach configuration",
+      NULL
     },
     { NULL }
 };
@@ -122,7 +128,8 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = !!query_pco_str;
+    n_actions = (!!query_pco_str +
+                 query_lte_attach_configuration_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -204,6 +211,60 @@ query_pco_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+query_lte_attach_configuration_ready (MbimDevice   *device,
+                                      GAsyncResult *res)
+{
+    MbimMessage                 *response;
+    GError                      *error = NULL;
+    guint32                      configuration_count = 0;
+    MbimLteAttachConfiguration **configurations = NULL;
+    guint                        i;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully queried LTE attach configuration\n",
+             mbim_device_get_path_display (device));
+
+    if (!mbim_message_ms_basic_connect_extensions_lte_attach_configuration_response_parse (
+               response,
+               &configuration_count,
+               &configurations,
+               &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        mbim_message_unref (response);
+        shutdown (FALSE);
+        return;
+    }
+
+#define VALIDATE_NA(str) (str ? str : "n/a")
+    for (i = 0; i < configuration_count; i++) {
+        g_print ("Configuration %u:\n", i);
+        g_print ("  IP type:       %s\n", mbim_context_ip_type_get_string (configurations[i]->ip_type));
+        g_print ("  Roaming:       %s\n", mbim_lte_attach_context_roaming_control_get_string (configurations[i]->roaming));
+        g_print ("  Source:        %s\n", mbim_context_source_get_string (configurations[i]->source));
+        g_print ("  Access string: %s\n", VALIDATE_NA (configurations[i]->access_string));
+        g_print ("  Username:      %s\n", VALIDATE_NA (configurations[i]->user_name));
+        g_print ("  Password:      %s\n", VALIDATE_NA (configurations[i]->password));
+        g_print ("  Compression:   %s\n", mbim_compression_get_string (configurations[i]->compression));
+        g_print ("  Auth protocol: %s\n", mbim_auth_protocol_get_string (configurations[i]->auth_protocol));
+    }
+#undef VALIDATE_NA
+
+    mbim_lte_attach_configuration_array_free (configurations);
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -237,6 +298,22 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_pco_ready,
+                             NULL);
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Request to query LTE attach configuration? */
+    if (query_lte_attach_configuration_flag) {
+        MbimMessage *request;
+
+        g_debug ("Asynchronously querying LTE attach configuration...");
+        request = mbim_message_ms_basic_connect_extensions_lte_attach_configuration_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_lte_attach_configuration_ready,
                              NULL);
         mbim_message_unref (request);
         return;

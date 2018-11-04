@@ -1037,6 +1037,51 @@ typedef enum {
     MBIM_PCO_TYPE_PARTIAL  = 1
 } MbimPcoType;
 
+/*****************************************************************************/
+/* 'LTE Attach Configuration' enums */
+
+/**
+ * MbimLteAttachContextOperation:
+ * @MBIM_LTE_ATTACH_CONTEXT_OPERATION_DEFAULT: Overwrite existing contexts.
+ * @MBIM_LTE_ATTACH_CONTEXT_OPERATION_RESTORE_FACTORY: Restore factory preconfigured contexts.
+ *
+ * Command to run when updating LTE attach configuration.
+ */
+typedef enum {
+    MBIM_LTE_ATTACH_CONTEXT_OPERATION_DEFAULT         = 0,
+    MBIM_LTE_ATTACH_CONTEXT_OPERATION_RESTORE_FACTORY = 1
+} MbimLteAttachContextOperation;
+
+/**
+ * MbimLteAttachContextRoamingControl:
+ * @MBIM_LTE_ATTACH_CONTEXT_ROAMING_CONTROL_HOME: Context allowed to be used on home network.
+ * @MBIM_LTE_ATTACH_CONTEXT_ROAMING_CONTROL_PARTNER: Context allowed to be used on partner network.
+ * @MBIM_LTE_ATTACH_CONTEXT_ROAMING_CONTROL_NON_PARTNER: Context allowed to be used on non-partner network.
+*/
+typedef enum {
+    MBIM_LTE_ATTACH_CONTEXT_ROAMING_CONTROL_HOME        = 0,
+    MBIM_LTE_ATTACH_CONTEXT_ROAMING_CONTROL_PARTNER     = 1,
+    MBIM_LTE_ATTACH_CONTEXT_ROAMING_CONTROL_NON_PARTNER = 2
+} MbimLteAttachContextRoamingControl;
+
+/**
+ * MbimContextSource:
+ * @MBIM_CONTEXT_SOURCE_ADMIN: Context created by enterprise IT.
+ * @MBIM_CONTEXT_SOURCE_USER: Context created by user.
+ * @MBIM_CONTEXT_SOURCE_OPERATOR: Context created by operator.
+ * @MBIM_CONTEXT_SOURCE_MODEM: Context created by modem manufacturer.
+ * @MBIM_CONTEXT_SOURCE_DEVICE: Context created by OS APN database.
+ *
+ * Source of context creation.
+ */
+typedef enum {
+    MBIM_CONTEXT_SOURCE_ADMIN    = 0,
+    MBIM_CONTEXT_SOURCE_USER     = 1,
+    MBIM_CONTEXT_SOURCE_OPERATOR = 2,
+    MBIM_CONTEXT_SOURCE_MODEM    = 3,
+    MBIM_CONTEXT_SOURCE_DEVICE   = 4
+} MbimContextSource;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */
