@@ -1082,6 +1082,18 @@ typedef enum {
     MBIM_CONTEXT_SOURCE_DEVICE   = 4
 } MbimContextSource;
 
+/**
+ * MbimLteAttachState:
+ * @MBIM_LTE_ATTACH_STATE_DETACHED: Detached.
+ * @MBIM_LTE_ATTACH_STATE_ATTACHED: Attached.
+ *
+ * LTE attach state.
+ */
+typedef enum {
+    MBIM_LTE_ATTACH_STATE_DETACHED = 0,
+    MBIM_LTE_ATTACH_STATE_ATTACHED = 1
+} MbimLteAttachState;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

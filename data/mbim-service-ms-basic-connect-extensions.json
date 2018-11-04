@@ -80,5 +80,39 @@
                        { "name"             : "Configurations",
                          "format"           : "ref-struct-array" ,
                          "struct-type"      : "MbimLteAttachConfiguration",
-                         "array-size-field" : "ConfigurationCount" } ] }
+                         "array-size-field" : "ConfigurationCount" } ] },
+
+  // *********************************************************************************
+
+  { "name"     : "MbimLteAttachStatus",
+    "type"     : "Struct",
+    "contents" : [ { "name"          : "LteAttachState",
+                     "format"        : "guint32",
+                     "public-format" : "MbimLteAttachState" },
+		   { "name"          : "IpType",
+                     "format"        : "guint32",
+                     "public-format" : "MbimContextIpType" },
+                   { "name"   : "AccessString",
+                     "format" : "string" },
+                   { "name"   : "UserName",
+                     "format" : "string" },
+                   { "name"   : "Password",
+                     "format" : "string" },
+                   { "name"          : "Compression",
+                     "format"        : "guint32",
+                     "public-format" : "MbimCompression" },
+                   { "name"          : "AuthProtocol",
+                     "format"        : "guint32",
+                     "public-format" : "MbimAuthProtocol" } ] },
+
+  { "name"         : "Lte Attach Status",
+    "service"      : "Ms Basic Connect Extensions",
+    "type"         : "Command",
+    "query"        : [],
+    "response"     : [ { "name"        : "LteAttachStatus",
+                         "format"      : "struct",
+			 "struct-type" : "MbimLteAttachStatus" } ],
+    "notification" : [ { "name"        : "LteAttachStatus",
+                         "format"      : "struct",
+			 "struct-type" : "MbimLteAttachStatus" } ] }
 ]

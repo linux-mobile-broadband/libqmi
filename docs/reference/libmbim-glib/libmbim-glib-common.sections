@@ -318,6 +318,7 @@ MbimPcoType
 MbimContextSource
 MbimLteAttachContextOperation
 MbimLteAttachContextRoamingControl
+MbimLteAttachState
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -373,6 +374,7 @@ mbim_pco_type_get_string
 mbim_context_source_get_string
 mbim_lte_attach_context_operation_get_string
 mbim_lte_attach_context_roaming_control_get_string
+mbim_lte_attach_state_get_string
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -430,6 +432,7 @@ mbim_pco_type_build_string_from_mask
 mbim_context_source_build_string_from_mask
 mbim_lte_attach_context_operation_build_string_from_mask
 mbim_lte_attach_context_roaming_control_build_string_from_mask
+mbim_lte_attach_state_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -490,6 +493,7 @@ MBIM_TYPE_PCO_TYPE
 MBIM_TYPE_CONTEXT_SOURCE
 MBIM_TYPE_LTE_ATTACH_CONTEXT_OPERATION
 MBIM_TYPE_LTE_ATTACH_CONTEXT_ROAMING_CONTROL
+MBIM_TYPE_LTE_ATTACH_STATE
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type
@@ -549,6 +553,7 @@ mbim_pco_type_get_type
 mbim_context_source_get_type
 mbim_lte_attach_context_operation_get_type
 mbim_lte_attach_context_roaming_control_get_type
+mbim_lte_attach_state_get_type
 </SECTION>
 
 <SECTION>
