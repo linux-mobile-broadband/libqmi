@@ -4,20 +4,6 @@
     "name" : "Basic Connect Extensions" },
 
   // *********************************************************************************
-  { "name"         : "PCO",
-    "service"      : "Basic Connect Extensions",
-    "type"         : "Command",
-    "query"        : [ { "name"        : "PcoValue",
-                         "format"      : "struct",
-                         "struct-type" : "MbimPcoValue" } ],
-    "response"     : [ { "name"        : "PcoValue",
-                         "format"      : "struct",
-                         "struct-type" : "MbimPcoValue" } ],
-    "notification" : [ { "name"        : "PcoValue",
-                         "format"      : "struct",
-                         "struct-type" : "MbimPcoValue" } ] },
-
-  // *********************************************************************************
   { "name"     : "MbimPcoValue",
     "type"     : "Struct",
     "contents" : [ { "name"             : "SessionId",
@@ -29,6 +15,19 @@
                      "public-format"    : "MbimPcoType" },
                    { "name"             : "PcoDataBuffer",
                      "format"           : "ref-byte-array-no-offset",
-                     "array-size-field" : "PcoDataSize" } ] }
+                     "array-size-field" : "PcoDataSize" } ] },
+
+  { "name"         : "PCO",
+    "service"      : "Basic Connect Extensions",
+    "type"         : "Command",
+    "query"        : [ { "name"        : "PcoValue",
+                         "format"      : "struct",
+                         "struct-type" : "MbimPcoValue" } ],
+    "response"     : [ { "name"        : "PcoValue",
+                         "format"      : "struct",
+                         "struct-type" : "MbimPcoValue" } ],
+    "notification" : [ { "name"        : "PcoValue",
+                         "format"      : "struct",
+                         "struct-type" : "MbimPcoValue" } ] }
 
 ]
