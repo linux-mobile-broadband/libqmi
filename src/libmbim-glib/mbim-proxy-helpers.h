@@ -50,6 +50,10 @@ MbimEventEntry **_mbim_proxy_helper_service_subscribe_list_merge        (MbimEve
                                                                          MbimEventEntry **merge,
                                                                          gsize            merge_size,
                                                                          gsize           *out_size);
+MbimEventEntry **_mbim_proxy_helper_service_subscribe_list_dup          (MbimEventEntry **original,
+                                                                         gsize            original_size,
+                                                                         gsize           *out_size);
+MbimEventEntry **_mbim_proxy_helper_service_subscribe_list_new_standard (gsize           *out_size);
 
 G_END_DECLS
 

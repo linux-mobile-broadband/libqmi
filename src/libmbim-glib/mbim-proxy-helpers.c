@@ -111,11 +111,11 @@ _mbim_proxy_helper_service_subscribe_list_debug (const MbimEventEntry * const *l
         g_free (str);
 
         if (entry->cids_count == 0)
-            g_debug ("[service %u] all CIDs enabled", (guint)i);
+            g_debug ("[service %u] No CIDs explicitly enabled", (guint)i);
         else {
             guint j;
 
-            g_debug ("[service %u] %u CIDs enabled", (guint)i, entry->cids_count);;
+            g_debug ("[service %u] %u CIDs enabled", (guint)i, entry->cids_count);
             for (j = 0; j < entry->cids_count; j++) {
                 const gchar *cid_str;
 
@@ -262,4 +262,130 @@ _mbim_proxy_helper_service_subscribe_list_merge (MbimEventEntry **in,
     }
 
     return in;
+}
+
+/*****************************************************************************/
+
+MbimEventEntry **
+_mbim_proxy_helper_service_subscribe_list_dup (MbimEventEntry **in,
+                                               gsize            in_size,
+                                               gsize           *out_size)
+{
+    MbimEventEntry **out;
+    guint            i;
+
+    g_assert (out_size != NULL);
+
+    out = g_new0 (MbimEventEntry *, in_size + 1);
+    for (i = 0; i < in_size; i++) {
+        MbimEventEntry *entry_in;
+        MbimEventEntry *entry_out;
+
+        entry_in  = in[i];
+        entry_out = g_new (MbimEventEntry, 1);
+        memcpy (&entry_out->device_service_id, &entry_in->device_service_id, sizeof (MbimUuid));
+        entry_out->cids_count = entry_in->cids_count;
+        entry_out->cids = g_new (guint32, entry_out->cids_count);
+        memcpy (entry_out->cids, entry_in->cids, sizeof (guint32) * entry_out->cids_count);
+        out[i] = entry_out;
+    }
+
+    *out_size = in_size;
+    return out;
+}
+
+/*****************************************************************************/
+
+MbimEventEntry **
+_mbim_proxy_helper_service_subscribe_list_new_standard (gsize *out_size)
+{
+    MbimEventEntry **out;
+    guint            i = 0;
+    MbimEventEntry  *entry;
+
+    g_assert (out_size != NULL);
+
+#define STANDARD_SERVICES_LIST_SIZE 5
+    out = g_new0 (MbimEventEntry *, STANDARD_SERVICES_LIST_SIZE + 1);
+
+    /* Basic connect service */
+    {
+        static const guint32 notify_cids[] = {
+            MBIM_CID_BASIC_CONNECT_SUBSCRIBER_READY_STATUS,
+            MBIM_CID_BASIC_CONNECT_RADIO_STATE,
+            MBIM_CID_BASIC_CONNECT_PREFERRED_PROVIDERS,
+            MBIM_CID_BASIC_CONNECT_REGISTER_STATE,
+            MBIM_CID_BASIC_CONNECT_PACKET_SERVICE,
+            MBIM_CID_BASIC_CONNECT_SIGNAL_STATE,
+            MBIM_CID_BASIC_CONNECT_CONNECT,
+            MBIM_CID_BASIC_CONNECT_PROVISIONED_CONTEXTS,
+            MBIM_CID_BASIC_CONNECT_IP_CONFIGURATION,
+            MBIM_CID_BASIC_CONNECT_EMERGENCY_MODE,
+            MBIM_CID_BASIC_CONNECT_MULTICARRIER_PROVIDERS,
+        };
+
+        entry = g_new (MbimEventEntry, 1);
+        memcpy (&entry->device_service_id, mbim_uuid_from_service (MBIM_SERVICE_BASIC_CONNECT), sizeof (MbimUuid));
+        entry->cids_count = G_N_ELEMENTS (notify_cids);
+        entry->cids = g_memdup (notify_cids, sizeof (guint32) * entry->cids_count);
+        out[i++] = entry;
+    }
+
+    /* SMS service */
+    {
+        static const guint32 notify_cids[] = {
+            MBIM_CID_SMS_CONFIGURATION,
+            MBIM_CID_SMS_READ,
+            MBIM_CID_SMS_MESSAGE_STORE_STATUS,
+        };
+
+        entry = g_new (MbimEventEntry, 1);
+        memcpy (&entry->device_service_id, mbim_uuid_from_service (MBIM_SERVICE_SMS), sizeof (MbimUuid));
+        entry->cids_count = G_N_ELEMENTS (notify_cids);
+        entry->cids = g_memdup (notify_cids, sizeof (guint32) * entry->cids_count);
+        out[i++] = entry;
+    }
+
+    /* USSD service */
+    {
+        static const guint32 notify_cids[] = {
+            MBIM_CID_USSD,
+        };
+
+        entry = g_new (MbimEventEntry, 1);
+        memcpy (&entry->device_service_id, mbim_uuid_from_service (MBIM_SERVICE_USSD), sizeof (MbimUuid));
+        entry->cids_count = G_N_ELEMENTS (notify_cids);
+        entry->cids = g_memdup (notify_cids, sizeof (guint32) * entry->cids_count);
+        out[i++] = entry;
+    }
+
+    /* Phonebook service */
+    {
+        static const guint32 notify_cids[] = {
+            MBIM_CID_PHONEBOOK_CONFIGURATION,
+        };
+
+        entry = g_new (MbimEventEntry, 1);
+        memcpy (&entry->device_service_id, mbim_uuid_from_service (MBIM_SERVICE_PHONEBOOK), sizeof (MbimUuid));
+        entry->cids_count = G_N_ELEMENTS (notify_cids);
+        entry->cids = g_memdup (notify_cids, sizeof (guint32) * entry->cids_count);
+        out[i++] = entry;
+    }
+
+    /* STK service */
+    {
+        static const guint32 notify_cids[] = {
+            MBIM_CID_STK_PAC,
+        };
+
+        entry = g_new (MbimEventEntry, 1);
+        memcpy (&entry->device_service_id, mbim_uuid_from_service (MBIM_SERVICE_STK), sizeof (MbimUuid));
+        entry->cids_count = G_N_ELEMENTS (notify_cids);
+        entry->cids = g_memdup (notify_cids, sizeof (guint32) * entry->cids_count);
+        out[i++] = entry;
+    }
+
+    g_assert_cmpuint (i, ==, STANDARD_SERVICES_LIST_SIZE);
+    *out_size = i;
+    return out;
 }

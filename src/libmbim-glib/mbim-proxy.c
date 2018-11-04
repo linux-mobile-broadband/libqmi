@@ -274,18 +274,10 @@ client_indication_cb (MbimDevice *device,
                       MbimMessage *message,
                       Client *client)
 {
-    MbimService     service;
     MbimEventEntry *entry;
     guint           i;
 
-    /* standard service indications are always forwarded to clients */
-    service = mbim_message_indicate_status_get_service (message);
-    if (service >= MBIM_SERVICE_BASIC_CONNECT && service <= MBIM_SERVICE_DSS) {
-        forward_indication (client, message);
-        return;
-    }
-
-    /* if client didn't provide a custom subscribe list for non-standard services, we're done. */
+    /* if client doesn't have a subscribe list, we're done. */
     if (!client->mbim_event_entry_array)
         return;
 
@@ -827,8 +819,8 @@ track_service_subscribe_list (Client      *client,
                               MbimMessage *message)
 {
     /* On each new request from the client, it should provide the FULL list of
-     * non-standard events it's subscribed to, so we can safely recreate the
-     * whole array each time. */
+     * events it's subscribed to, so we can safely recreate the whole array each
+     * time. */
     g_clear_pointer (&client->mbim_event_entry_array, mbim_event_entry_array_free);
     client->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_request_parse (message, &client->mbim_event_entry_array_size);
 
@@ -1136,12 +1128,15 @@ incoming_cb (GSocketService *service,
         return;
     }
 
-
     /* Create client */
     client = g_slice_new0 (Client);
     client->self = self;
     client->ref_count = 1;
     client->connection = g_object_ref (connection);
+
+    /* By default, a new client has all the standard services enabled for indications */
+    client->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_list_new_standard (&client->mbim_event_entry_array_size);
+
     client->connection_readable_source = g_socket_create_source (g_socket_connection_get_socket (client->connection),
                                                                  G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP,
                                                                  NULL);
@@ -1239,12 +1234,11 @@ device_context_get (MbimDevice *device)
     ctx = g_object_get_qdata (G_OBJECT (device), device_context_quark);
     if (!ctx) {
         ctx = g_slice_new0 (DeviceContext);
-        /* By default, we assume we have all default services enabled
-         * (the default in the MBIM protocol). We also assume we cannot
-         * disable the default services in any way, as the protocol does
-         * not support that. We don't track the default services in the
-         * merged list, because those are implicit. */
-        ctx->mbim_event_entry_array = NULL;
+        ctx->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_list_new_standard (&ctx->mbim_event_entry_array_size);
+
+        g_debug ("Initial device subscribe list...");
+        _mbim_proxy_helper_service_subscribe_list_debug ((const MbimEventEntry * const *)ctx->mbim_event_entry_array, ctx->mbim_event_entry_array_size);
+
         g_object_set_qdata_full (G_OBJECT (device), device_context_quark, ctx, (GDestroyNotify)device_context_free);
     }
 
@@ -1266,15 +1260,8 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
 
     g_assert (out_size != NULL);
 
-    /* NOTE! the list_merge() command will IGNORE all basic services when building
-     * the merged list. If any client tries to subscribe to any of those, we'll track
-     * them in the client-specific lists, but NOT in the device-merged list, as
-     * there is no point in doing so. */
-
     /* Add previous global list */
-    updated = _mbim_proxy_helper_service_subscribe_list_merge (NULL, 0,
-                                                               ctx->mbim_event_entry_array, ctx->mbim_event_entry_array_size,
-                                                               &updated_size);
+    updated = _mbim_proxy_helper_service_subscribe_list_dup (ctx->mbim_event_entry_array, ctx->mbim_event_entry_array_size, &updated_size);
 
     /* Lookup all clients with this device */
     for (l = self->priv->clients; l; l = g_list_next (l)) {
@@ -1300,7 +1287,7 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
         return NULL;
     }
 
-    /* Lists are different, updated stored one */
+    /* Lists are different, update stored one */
     g_clear_pointer (&ctx->mbim_event_entry_array, mbim_event_entry_array_free);
     ctx->mbim_event_entry_array = updated;
     ctx->mbim_event_entry_array_size = updated_size;
@@ -1334,13 +1321,13 @@ reset_client_service_subscribe_lists (MbimProxy  *self,
 
         if (client->device == device) {
             g_clear_pointer (&client->mbim_event_entry_array, mbim_event_entry_array_free);
-            client->mbim_event_entry_array_size = 0;
+            client->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_list_new_standard (&client->mbim_event_entry_array_size);
         }
     }
 
     /* And reset the device-specific merged list */
     g_clear_pointer (&ctx->mbim_event_entry_array, mbim_event_entry_array_free);
-    ctx->mbim_event_entry_array_size = 0;
+    ctx->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_list_new_standard (&ctx->mbim_event_entry_array_size);
 }
 
 static void
