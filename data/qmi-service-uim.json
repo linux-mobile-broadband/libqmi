@@ -501,7 +501,7 @@
                                            "format" : "guint16" },
                                          { "name"   : "Index 1x Primary",
                                            "format" : "guint16" },
-                                         { "name"   : "Index GW Secondary ",
+                                         { "name"   : "Index GW Secondary",
                                            "format" : "guint16" },
                                          { "name"   : "Index 1x Secondary",
                                            "format" : "guint16" },
