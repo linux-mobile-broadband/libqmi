@@ -309,6 +309,10 @@
     <xi:include href="xml/qmi-client-uim.xml"/>
     <xi:include href="xml/qmi-enums-uim.xml"/>
     <section>
+      <title>UIM Indications</title>
+      <xi:include href="xml/qmi-indication-uim-card-status.xml"/>
+    </section>
+    <section>
       <title>UIM Requests</title>
       <xi:include href="xml/qmi-message-uim-reset.xml"/>
       <xi:include href="xml/qmi-message-uim-set-pin-protection.xml"/>
