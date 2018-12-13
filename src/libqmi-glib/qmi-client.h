@@ -124,7 +124,7 @@ typedef struct _QmiClientPrivate QmiClientPrivate;
 /**
  * QMI_CLIENT_VALID:
  *
- * Symbol defining the #QmiClient:valid property.
+ * Symbol defining the #QmiClient:client-valid property.
  *
  * Since: 1.20
  */
