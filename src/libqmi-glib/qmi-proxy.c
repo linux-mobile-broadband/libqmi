@@ -412,19 +412,27 @@ process_internal_proxy_open (QmiProxy   *self,
                              Client     *client,
                              QmiMessage *message)
 {
-    const guint8 *buffer;
-    guint16 buffer_len;
-    gchar *device_file_path;
+    gsize   offset = 0;
+    gsize   init_offset;
+    gchar  *device_file_path;
+    GError *error = NULL;
 
-    buffer = qmi_message_get_raw_tlv (message,
-                                      QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN_INPUT_TLV_DEVICE_PATH,
-                                      &buffer_len);
-    if (!buffer) {
-        g_debug ("ignoring message from client: invalid proxy open request");
+    if ((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN_INPUT_TLV_DEVICE_PATH, NULL, &error)) == 0) {
+        g_debug ("ignoring message from client: invalid proxy open request: %s", error->message);
+        g_error_free (error);
         return FALSE;
     }
 
-    qmi_utils_read_string_from_buffer (&buffer, &buffer_len, 0, 0, &device_file_path);
+    if (!qmi_message_tlv_read_string (message, init_offset, &offset, 0, 0, &device_file_path, &error)) {
+        g_debug ("ignoring message from client: invalid device file path: %s", error->message);
+        g_error_free (error);
+        return FALSE;
+    }
+
+    /* The remaining size of the buffer needs to be 0 if we successfully read the TLV */
+    if ((offset = __qmi_message_tlv_read_remaining_size (message, init_offset, offset)) > 0)
+        g_warning ("Left '%" G_GSIZE_FORMAT "' bytes unread when getting the 'Device Path' TLV", offset);
+
     g_debug ("valid request to open connection to QMI device file: %s", device_file_path);
 
     /* Keep it */
@@ -460,39 +468,35 @@ track_cid (Client *client,
            gboolean track,
            QmiMessage *message)
 {
-    const guint8 *buffer;
-    guint16 buffer_len;
-    guint16 error_status;
-    guint16 error_code;
-    guint8 tmp;
-    QmiClientInfo info;
-    guint i;
-    gboolean exists;
+    gsize          offset = 0;
+    gsize          init_offset;
+    guint16        error_status;
+    guint16        error_code;
+    GError        *error = NULL;
+    guint8         service_tmp;
+    QmiClientInfo  info;
+    gboolean       exists;
+    guint          i;
 
-    buffer = qmi_message_get_raw_tlv (message, QMI_MESSAGE_OUTPUT_TLV_RESULT, &buffer_len);
-    if (!buffer || buffer_len != 4) {
-        g_warning ("invalid 'CTL allocate CID' response: missing or invalid result TLV");
+    if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_OUTPUT_TLV_RESULT, NULL, &error)) == 0) ||
+        !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &error_status, &error) ||
+        !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &error_code, &error)) {
+        g_warning ("invalid 'CTL allocate CID' response: missing or invalid result TLV: %s", error->message);
+        g_error_free (error);
         return;
     }
-
-    qmi_utils_read_guint16_from_buffer (&buffer, &buffer_len, QMI_ENDIAN_LITTLE, &error_status);
-    if (error_status != 0x00)
+    g_warn_if_fail (__qmi_message_tlv_read_remaining_size (message, init_offset, offset) == 0);
+    if ((error_status != 0x00) || (error_code != QMI_PROTOCOL_ERROR_NONE))
         return;
 
-    qmi_utils_read_guint16_from_buffer (&buffer, &buffer_len, QMI_ENDIAN_LITTLE, &error_code);
-    if (error_code != QMI_PROTOCOL_ERROR_NONE)
-        return;
-
-    buffer = qmi_message_get_raw_tlv (message, QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO, &buffer_len);
-    if (!buffer || buffer_len != 2) {
-        g_warning ("invalid 'CTL allocate CID' response: missing or invalid allocation info TLV");
+    if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO, NULL, &error)) == 0) ||
+        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service_tmp, &error) ||
+        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &(info.cid), &error)) {
+        g_warning ("invalid 'CTL allocate CID' response: missing or invalid allocation info TLV: %s", error->message);
+        g_error_free (error);
         return;
     }
-
-    qmi_utils_read_guint8_from_buffer (&buffer, &buffer_len, &tmp);
-    info.service = (QmiService)tmp;
-    qmi_utils_read_guint8_from_buffer (&buffer, &buffer_len, &(info.cid));
-
+    info.service = (QmiService)service_tmp;
 
     /* Check if it already exists */
     for (i = 0; i < client->qmi_client_info_array->len; i++) {
