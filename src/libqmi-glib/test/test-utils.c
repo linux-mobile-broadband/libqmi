@@ -16,6 +16,9 @@
 #include <glib-object.h>
 #include <string.h>
 #include "qmi-utils.h"
+#include "qmi-compat.h"
+
+#ifndef QMI_DISABLE_DEPRECATED
 
 static void
 test_utils_uint8 (void)
@@ -1262,3 +1265,5 @@ int main (int argc, char **argv)
 
     return g_test_run ();
 }
+
+#endif /* QMI_DISABLE_DEPRECATED */

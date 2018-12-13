@@ -1307,7 +1307,11 @@ QmiEndian
 <SUBSECTION Traces>
 qmi_utils_get_traces_enabled
 qmi_utils_set_traces_enabled
-<SUBSECTION Readers>
+</SECTION>
+
+<SECTION>
+<FILE>qmi-compat</FILE>
+<SUBSECTION Utils>
 qmi_utils_read_guint8_from_buffer
 qmi_utils_read_gint8_from_buffer
 qmi_utils_read_guint16_from_buffer
@@ -1320,7 +1324,6 @@ qmi_utils_read_sized_guint_from_buffer
 qmi_utils_read_gfloat_from_buffer
 qmi_utils_read_string_from_buffer
 qmi_utils_read_fixed_size_string_from_buffer
-<SUBSECTION Writers>
 qmi_utils_write_guint8_to_buffer
 qmi_utils_write_gint8_to_buffer
 qmi_utils_write_guint16_to_buffer
@@ -1332,11 +1335,7 @@ qmi_utils_write_gint64_to_buffer
 qmi_utils_write_sized_guint_to_buffer
 qmi_utils_write_string_to_buffer
 qmi_utils_write_fixed_size_string_to_buffer
-</SECTION>
-
-<SECTION>
-<FILE>qmi-compat</FILE>
-<SUBSECTION Methods>
+<SUBSECTION Message>
 qmi_message_dms_set_service_programming_code_input_get_new
 qmi_message_dms_set_service_programming_code_input_set_new
 qmi_message_dms_set_service_programming_code_input_get_current
