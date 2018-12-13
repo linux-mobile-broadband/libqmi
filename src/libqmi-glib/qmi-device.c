@@ -1563,7 +1563,7 @@ input_ready_cb (GInputStream *istream,
         if (error)
             g_error_free (error);
         /* Close the device */
-        qmi_device_close (self, NULL);
+        qmi_device_close_async (self, 0, NULL, NULL, NULL);
         return G_SOURCE_REMOVE;
     }
 
