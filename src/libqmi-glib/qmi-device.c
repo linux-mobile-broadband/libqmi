@@ -490,7 +490,7 @@ check_message_supported (QmiDevice *self,
 
     /* If we cannot get in which version this message was introduced, we'll just
      * assume it's supported */
-    if (!qmi_message_get_version_introduced (message, &message_major, &message_minor))
+    if (!qmi_message_get_version_introduced_full (message, NULL, &message_major, &message_minor))
         return TRUE;
 
     /* Get version info. It MUST exist because we allowed creating a client
