@@ -33,11 +33,11 @@
 
 /**
  * SECTION:qmi-compat
- * @title: API break replacements
+ * @title: Deprecated interface
  *
- * These compatibility types and methods are flagged as deprecated and therefore
+ * These types and methods are flagged as deprecated and therefore
  * shouldn't be used in newly written code. They are provided to avoid
- * innecessary API/ABI breaks.
+ * innecessary API/ABI breaks, for compatibility purposes only.
  */
 
 #ifndef QMI_DISABLE_DEPRECATED
