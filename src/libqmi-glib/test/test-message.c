@@ -103,7 +103,7 @@ test_message_parse_common (const guint8 *buffer,
             break;
         }
 
-        printable = qmi_message_get_printable (message, "");
+        printable = qmi_message_get_printable_full (message, NULL, "");
 #ifdef TEST_PRINT_MESSAGE
         g_print ("\n%s\n", printable);
 #endif
@@ -189,7 +189,7 @@ test_message_overflow_common (const guint8 *buffer,
     g_assert_no_error (error);
     g_assert (message);
 
-    printable = qmi_message_get_printable (message, "");
+    printable = qmi_message_get_printable_full (message, NULL, "");
     g_print ("\n%s\n", printable);
     g_assert (strstr (printable, "ERROR: Reading TLV would overflow"));
     g_free (printable);
