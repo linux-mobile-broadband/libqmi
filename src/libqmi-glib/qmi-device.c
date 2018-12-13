@@ -2620,15 +2620,6 @@ qmi_device_close_async (QmiDevice           *self,
     g_object_unref (task);
 }
 
-gboolean
-qmi_device_close (QmiDevice *self,
-                  GError **error)
-{
-    g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
-    qmi_device_close_async (self, 0, NULL, NULL, NULL);
-    return TRUE;
-}
-
 #if defined MBIM_QMUX_ENABLED
 
 typedef struct {

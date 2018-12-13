@@ -318,28 +318,6 @@ gboolean qmi_device_open_finish (QmiDevice     *self,
                                  GError       **error);
 
 /**
- * qmi_device_close:
- * @self: a #QmiDevice
- * @error: Return location for error or %NULL.
- *
- * Synchronously closes a #QmiDevice, preventing any further I/O.
- *
- * If this device was opened with @QMI_DEVICE_OPEN_FLAGS_MBIM, this
- * operation will not wait for the response of the underlying MBIM
- * close sequence.
- *
- * Closing a #QmiDevice multiple times will not return an error.
- *
- * Returns: %TRUE if successful, %FALSE if @error is set.
- *
- * Since: 1.0
- * Deprecated: 1.18: Use qmi_device_close_async() instead.
- */
-G_DEPRECATED
-gboolean qmi_device_close (QmiDevice  *self,
-                           GError    **error);
-
-/**
  * qmi_device_close_async:
  * @self: a #QmiDevice.
  * @timeout: maximum time, in seconds, to wait for the device to be closed.

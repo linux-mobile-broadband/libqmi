@@ -26,6 +26,7 @@
 #error "Only <libqmi-glib.h> can be included directly."
 #endif
 
+#include "qmi-device.h"
 #include "qmi-dms.h"
 #include "qmi-uim.h"
 #include "qmi-enums-nas.h"
@@ -735,6 +736,28 @@ G_DEPRECATED_FOR (qmi_message_get_version_introduced_full)
 gboolean qmi_message_get_version_introduced (QmiMessage *self,
                                              guint      *major,
                                              guint      *minor);
+
+/**
+ * qmi_device_close:
+ * @self: a #QmiDevice
+ * @error: Return location for error or %NULL.
+ *
+ * Synchronously closes a #QmiDevice, preventing any further I/O.
+ *
+ * If this device was opened with @QMI_DEVICE_OPEN_FLAGS_MBIM, this
+ * operation will not wait for the response of the underlying MBIM
+ * close sequence.
+ *
+ * Closing a #QmiDevice multiple times will not return an error.
+ *
+ * Returns: %TRUE if successful, %FALSE if @error is set.
+ *
+ * Since: 1.0
+ * Deprecated: 1.18: Use qmi_device_close_async() instead.
+ */
+G_DEPRECATED_FOR (qmi_device_close_async)
+gboolean qmi_device_close (QmiDevice  *self,
+                           GError    **error);
 
 /* The following type exists just so that we can get deprecation warnings */
 G_DEPRECATED

@@ -729,4 +729,13 @@ SESSION_INFORMATION_DEPRECATED_METHOD (VerifyPin,         verify_pin)
 SESSION_INFORMATION_DEPRECATED_METHOD (UnblockPin,        unblock_pin)
 SESSION_INFORMATION_DEPRECATED_METHOD (ChangePin,         change_pin)
 
+gboolean
+qmi_device_close (QmiDevice *self,
+                  GError **error)
+{
+    g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
+    qmi_device_close_async (self, 0, NULL, NULL, NULL);
+    return TRUE;
+}
+
 #endif /* QMI_DISABLE_DEPRECATED */

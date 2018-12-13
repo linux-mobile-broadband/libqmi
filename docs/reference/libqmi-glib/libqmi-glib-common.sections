@@ -68,7 +68,6 @@ qmi_device_set_expected_data_format
 qmi_device_is_open
 qmi_device_open
 qmi_device_open_finish
-qmi_device_close
 qmi_device_close_async
 qmi_device_close_finish
 qmi_device_allocate_client
@@ -1309,6 +1308,8 @@ qmi_utils_set_traces_enabled
 
 <SECTION>
 <FILE>qmi-compat</FILE>
+<SUBSECTION Device>
+qmi_device_close
 <SUBSECTION Utils>
 qmi_utils_read_guint8_from_buffer
 qmi_utils_read_gint8_from_buffer
