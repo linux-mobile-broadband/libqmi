@@ -242,7 +242,7 @@ untrack_client (QmiProxy *self,
             if (device_in_list && (device == device_in_list ||
                 g_str_equal (qmi_device_get_path (device), qmi_device_get_path (device_in_list)))) {
                 g_debug ("closing device '%s': no longer used", qmi_device_get_path_display (device));
-                qmi_device_close (device_in_list, NULL);
+                qmi_device_close_async (device_in_list, 0, NULL, NULL, NULL);
                 g_object_unref (device_in_list);
                 self->priv->devices = g_list_remove (self->priv->devices, device_in_list);
                 break;
