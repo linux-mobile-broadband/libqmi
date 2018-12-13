@@ -1582,13 +1582,6 @@ qmi_message_get_printable_full (QmiMessage        *self,
     return g_string_free (printable, FALSE);
 }
 
-gchar *
-qmi_message_get_printable (QmiMessage  *self,
-                           const gchar *line_prefix)
-{
-    return qmi_message_get_printable_full (self, NULL, line_prefix);
-}
-
 gboolean
 qmi_message_get_version_introduced_full (QmiMessage        *self,
                                          QmiMessageContext *context,
@@ -1636,12 +1629,4 @@ qmi_message_get_version_introduced_full (QmiMessage        *self,
         /* For the still unsupported services, cannot do anything */
         return FALSE;
     }
-}
-
-gboolean
-qmi_message_get_version_introduced (QmiMessage *self,
-                                    guint      *major,
-                                    guint      *minor)
-{
-    return qmi_message_get_version_introduced_full (self, NULL, major, minor);
 }

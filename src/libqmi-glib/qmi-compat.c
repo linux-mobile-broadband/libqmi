@@ -661,6 +661,21 @@ qmi_message_dms_set_service_programming_code_input_set_current (
   return qmi_message_dms_set_service_programming_code_input_set_current_code (self, arg_current, error);
 }
 
+gchar *
+qmi_message_get_printable (QmiMessage  *self,
+                           const gchar *line_prefix)
+{
+    return qmi_message_get_printable_full (self, NULL, line_prefix);
+}
+
+gboolean
+qmi_message_get_version_introduced (QmiMessage *self,
+                                    guint      *major,
+                                    guint      *minor)
+{
+    return qmi_message_get_version_introduced_full (self, NULL, major, minor);
+}
+
 gboolean
 qmi_message_tlv_read_gfloat (QmiMessage  *self,
                              gsize        tlv_offset,

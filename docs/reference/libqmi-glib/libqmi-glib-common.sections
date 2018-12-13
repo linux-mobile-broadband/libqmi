@@ -1243,7 +1243,6 @@ qmi_message_get_transaction_id
 qmi_message_get_message_id
 qmi_message_get_length
 qmi_message_get_raw
-qmi_message_get_version_introduced
 qmi_message_get_version_introduced_full
 <SUBSECTION TLV writer>
 qmi_message_tlv_write_init
@@ -1282,7 +1281,6 @@ qmi_message_add_raw_tlv
 <SUBSECTION Setters>
 qmi_message_set_transaction_id
 <SUBSECTION Printable>
-qmi_message_get_printable
 qmi_message_get_printable_full
 qmi_message_get_tlv_printable
 </SECTION>
@@ -1336,6 +1334,8 @@ qmi_utils_write_sized_guint_to_buffer
 qmi_utils_write_string_to_buffer
 qmi_utils_write_fixed_size_string_to_buffer
 <SUBSECTION Message>
+qmi_message_get_version_introduced
+qmi_message_get_printable
 qmi_message_dms_set_service_programming_code_input_get_new
 qmi_message_dms_set_service_programming_code_input_set_new
 qmi_message_dms_set_service_programming_code_input_get_current

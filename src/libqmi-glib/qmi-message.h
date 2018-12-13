@@ -276,26 +276,6 @@ const guint8 *qmi_message_get_raw (QmiMessage  *self,
 
 /*****************************************************************************/
 /* Version support from the database */
-
-/**
- * qmi_message_get_version_introduced:
- * @self: a #QmiMessage.
- * @major: (out) return location for the major version.
- * @minor: (out) return location for the minor version.
- *
- * Gets, if known, the service version in which the given message was first
- * introduced.
- *
- * Returns: %TRUE if @major and @minor are set, %FALSE otherwise.
- *
- * Since: 1.0
- * Deprecated: 1.18: Use qmi_message_get_version_introduced_full() instead.
- */
-G_DEPRECATED_FOR (qmi_message_get_version_introduced_full)
-gboolean qmi_message_get_version_introduced (QmiMessage *self,
-                                             guint      *major,
-                                             guint      *minor);
-
 /**
  * qmi_message_get_version_introduced_full:
  * @self: a #QmiMessage.
@@ -1031,25 +1011,6 @@ void qmi_message_set_transaction_id (QmiMessage *self,
 
 /*****************************************************************************/
 /* Printable helpers */
-
-/**
- * qmi_message_get_printable:
- * @self: a #QmiMessage.
- * @line_prefix: prefix string to use in each new generated line.
- *
- * Gets a printable string with the contents of the whole QMI message.
- *
- * If known, the printable string will contain translated TLV values as well as the raw
- * data buffer contents.
- *
- * Returns: (transfer full): a newly allocated string, which should be freed with g_free().
- *
- * Since: 1.0
- * Deprecated: 1.18: Use qmi_message_get_printable_full() instead.
- */
-G_DEPRECATED_FOR (qmi_message_get_printable_full)
-gchar *qmi_message_get_printable (QmiMessage  *self,
-                                  const gchar *line_prefix);
 
 /**
  * qmi_message_get_printable_full:
