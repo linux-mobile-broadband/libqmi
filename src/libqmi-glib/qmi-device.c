@@ -1985,7 +1985,7 @@ sync_ready (QmiClientCtl *client_ctl,
 
     /* Check result of the async operation */
     output = qmi_client_ctl_sync_finish (client_ctl, res, &error);
-    if(!output) {
+    if (!output) {
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
