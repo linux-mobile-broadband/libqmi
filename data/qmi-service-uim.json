@@ -22,7 +22,6 @@
     "name"          : "Card Status",
     "id"            : "0x10",
     "type"          : "TLV",
-    "since"         : "1.22",
     "format"        : "sequence",
     "contents"      : [ { "name"   : "Index GW Primary",
                           "format" : "guint16" },
@@ -572,7 +571,8 @@
      "version" : "1.0",
      "since"   : "1.10",
      "output"  : [ { "common-ref" : "Operation Result" },
-                   { "common-ref" : "UIM Card Status" } ] },
+                   { "common-ref" : "UIM Card Status",
+                     "since"      : "1.10" } ] },
 
   // *********************************************************************************
   {  "name"    : "Power Off SIM",
@@ -610,6 +610,7 @@
      "id"      : "0x0032",
      "version" : "1.0",
      "since"   : "1.22",
-     "output"  : [ { "common-ref"    : "UIM Card Status" } ] }
+     "output"  : [ { "common-ref" : "UIM Card Status",
+                     "since"      : "1.22" } ] }
 
 ]
