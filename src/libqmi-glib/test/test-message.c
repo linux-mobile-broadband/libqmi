@@ -273,6 +273,57 @@ test_message_new_request (void)
 }
 
 static void
+test_message_new_request_from_data (void)
+{
+    static const guint8 expected_buffer [] = {
+        0x00,       /* service flags */
+        0x02, 0x00, /* transaction */
+        0xFF, 0xFF, /* message id */
+        0x00, 0x00, /* all tlvs length */
+    };
+
+    GByteArray *qmi;
+    QmiMessage *self;
+    GError *error = NULL;
+    const guint8 *buffer;
+    gsize buffer_length = 0;
+
+    /* set up service header */
+    qmi = g_byte_array_new ();
+    g_byte_array_append (qmi, expected_buffer, sizeof (expected_buffer));
+
+    self = qmi_message_new_from_data (QMI_SERVICE_DMS, 0x01, qmi, NULL);
+    g_assert (self);
+
+    /* check that the QMUX header contains the right values*/
+    g_assert_cmpuint (qmi_message_get_service (self), ==, QMI_SERVICE_DMS);
+    g_assert_cmpuint (qmi_message_get_client_id (self), ==, 0x01);
+
+    /* length (13) = qmux marker (1) + qmux header length (5) + qmi header length (7) */
+    g_assert_cmpuint (qmi_message_get_length (self), ==, 13);
+
+    /* check that transaction and message IDs line up */
+    g_assert_cmpuint (qmi_message_get_transaction_id (self), ==, 0x02);
+    g_assert_cmpuint (qmi_message_get_message_id (self), ==, 0xFFFF);
+
+    buffer = qmi_message_get_raw (self, &buffer_length, &error);
+    g_assert_no_error (error);
+    g_assert (buffer != NULL);
+    g_assert_cmpuint (buffer_length, >, 0);
+    /* check that we have a qmux marker so we don't break framing */
+    g_assert_cmpuint (buffer[0], ==, 0x01);
+
+    /* make sure the qmi portion of the message is what we expect */
+    buffer = qmi_message_get_data (self, &buffer_length, &error);
+    g_assert_no_error (error);
+    g_assert (buffer != NULL);
+    g_assert_cmpuint (buffer_length, >, 0);
+    _g_assert_cmpmem (buffer, buffer_length, expected_buffer, sizeof (expected_buffer));
+
+    qmi_message_unref (self);
+}
+
+static void
 test_message_new_response_ok (void)
 {
     static const guint8 expected_buffer [] = {
@@ -1514,9 +1565,10 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/parse/wrong-tlv",             test_message_parse_wrong_tlv);
     g_test_add_func ("/libqmi-glib/message/parse/missing-size",          test_message_parse_missing_size);
 
-    g_test_add_func ("/libqmi-glib/message/new/request",        test_message_new_request);
-    g_test_add_func ("/libqmi-glib/message/new/response/ok",    test_message_new_response_ok);
-    g_test_add_func ("/libqmi-glib/message/new/response/error", test_message_new_response_error);
+    g_test_add_func ("/libqmi-glib/message/new/request",           test_message_new_request);
+    g_test_add_func ("/libqmi-glib/message/new/request-from-data", test_message_new_request_from_data);
+    g_test_add_func ("/libqmi-glib/message/new/response/ok",       test_message_new_response_ok);
+    g_test_add_func ("/libqmi-glib/message/new/response/error",    test_message_new_response_error);
 
     g_test_add_func ("/libqmi-glib/message/tlv-write/empty",           test_message_tlv_write_empty);
     g_test_add_func ("/libqmi-glib/message/tlv-write/reset",           test_message_tlv_write_reset);

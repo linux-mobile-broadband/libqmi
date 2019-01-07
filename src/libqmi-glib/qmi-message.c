@@ -450,6 +450,53 @@ qmi_message_new (QmiService service,
 }
 
 QmiMessage *
+qmi_message_new_from_data (QmiService   service,
+                           guint8       client_id,
+                           GByteArray  *raw,
+                           GError     **error)
+{
+    GByteArray *self;
+    struct full_message *buffer;
+    gsize buffer_len;
+    gsize message_len;
+
+    /* Create array with enough size for the QMUX marker and QMUX header, and
+     * with enough room to copy the rest of the message into */
+    if (service == QMI_SERVICE_CTL) {
+        message_len = sizeof (struct control_header) +
+            ((struct control_message *)(raw->data))->header.tlv_length;
+    } else {
+        message_len = sizeof (struct service_header) +
+            ((struct service_message *)(raw->data))->header.tlv_length;
+    }
+    buffer_len = (1 + sizeof (struct qmux) + message_len);
+    /* Create the GByteArray with buffer_len bytes preallocated */
+    self = g_byte_array_sized_new (buffer_len);
+    g_byte_array_set_size (self, buffer_len);
+
+    /* Set up fake QMUX header */
+    buffer = (struct full_message *)(self->data);
+    buffer->marker = QMI_MESSAGE_QMUX_MARKER;
+    buffer->qmux.length = buffer_len - 1;
+    buffer->qmux.flags = 0;
+    buffer->qmux.service = service;
+    buffer->qmux.client = client_id;
+
+    /* Move bytes from the raw array to the newly created message */
+    memcpy (&buffer->qmi, raw->data, message_len);
+    g_byte_array_remove_range (raw, 0, message_len);
+
+    /* Check input message validity as soon as we create the QmiMessage */
+    if (!message_check (self, error)) {
+        /* Yes, we lose the whole message here */
+        qmi_message_unref (self);
+        return NULL;
+    }
+
+    return (QmiMessage *)self;
+}
+
+QmiMessage *
 qmi_message_response_new (QmiMessage       *request,
                           QmiProtocolError  error)
 {
@@ -508,6 +555,22 @@ qmi_message_get_raw (QmiMessage *self,
 
     *length = self->len;
     return self->data;
+}
+
+const guint8 *
+qmi_message_get_data (QmiMessage *self,
+                      gsize *length,
+                      GError **error)
+{
+    g_return_val_if_fail (self != NULL, NULL);
+    g_return_val_if_fail (length != NULL, NULL);
+
+    if (message_is_control (self))
+        *length = sizeof (struct control_header);
+    else
+        *length = sizeof (struct service_header);
+    *length += get_all_tlvs_length (self);
+    return (guint8 *)(&((struct full_message *)(self->data))->qmi);
 }
 
 /*****************************************************************************/

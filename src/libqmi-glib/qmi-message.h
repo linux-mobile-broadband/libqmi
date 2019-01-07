@@ -123,6 +123,26 @@ QmiMessage *qmi_message_new_from_raw (GByteArray  *raw,
                                       GError     **error);
 
 /**
+ * qmi_message_new_from_data:
+ * @service: a #QmiService
+ * @client_id: client ID of the originating control point.
+ * @raw: (inout): raw data buffer containing only the QMI part of the message.
+ * @error: return location for error or %NULL.
+ *
+ * Create a new #QmiMessage from the given raw data buffer.
+ *
+ * Whenever a complete QMI message is read, its raw data gets removed from the @raw buffer.
+ *
+ * Returns: (transfer full): a newly created #QmiMessage, which should be freed with qmi_message_unref(). If @raw doesn't contain a complete QMI message #NULL is returned. If there is a complete QMI message but it appears not to be valid, #NULL is returned and @error is set.
+ *
+ * Since: 1.24
+ */
+QmiMessage *qmi_message_new_from_data (QmiService   service,
+                                       guint8       client_id,
+                                       GByteArray  *raw,
+                                       GError     **error);
+
+/**
  * qmi_message_response_new:
  * @request: a request #QmiMessage.
  * @error: a #QmiProtocolError to set in the result TLV.
@@ -273,6 +293,23 @@ gsize qmi_message_get_length (QmiMessage *self);
 const guint8 *qmi_message_get_raw (QmiMessage  *self,
                                    gsize       *length,
                                    GError     **error);
+
+
+/**
+ * qmi_message_get_data:
+ * @self: a #QmiMessage.
+ * @length: (out): return location for the size of the output buffer.
+ * @error: return location for error or %NULL.
+ *
+ * Gets the raw data buffer of the #QmiMessage without the QMUX header.
+ *
+ * Returns: (transfer none): The raw QMI buffer, or #NULL if @error is set.
+ *
+ * Since: 1.24
+ */
+const guint8 *qmi_message_get_data (QmiMessage  *self,
+                                    gsize       *length,
+                                    GError     **error);
 
 /*****************************************************************************/
 /* Version support from the database */
