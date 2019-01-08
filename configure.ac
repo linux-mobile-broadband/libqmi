@@ -147,7 +147,7 @@ fi
 AM_CONDITIONAL([QMI_USERNAME_ENABLED], [test "x$QMI_USERNAME_ENABLED" = "xyes"])
 
 # MBIM QMUX service support
-MBIM_GLIB_VERSION=1.17.2
+MBIM_GLIB_VERSION=1.18.0
 PKG_CHECK_MODULES([MBIM], [mbim-glib >= ${MBIM_GLIB_VERSION}], [have_mbim=yes], [have_mbim=no])
 AC_ARG_ENABLE(mbim-qmux,
               AS_HELP_STRING([--enable-mbim-qmux], [Enable support for QMI over MBIM QMUX service [default=auto]]),
