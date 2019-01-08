@@ -1,4 +1,45 @@
 
+Overview of changes in libmbim 1.18
+----------------------------------------
+
+ * Build now looks for the correct python provider in the system during
+   configure.
+
+ * New Microsoft Basic Connect Extensions service, that includes new commands to
+   manage Protocol Configuration Operations (PCO) as well as LTE attach status
+   and settings.
+
+ * libmbim-glib:
+   ** Added support to fully print all message contents, including all fields,
+      when traces are enabled.
+   ** Added support for QMI indications over MBIM.
+   ** Added additional cause codes to MbimNwError.
+   ** Fixed signal emission in device, so that it's done before completing
+      transaction task.
+
+ * mbim-proxy:
+   ** Fixed the management of subscribed events, so that the lists are
+      maintained per-device.
+
+ * mbimcli:
+   ** New '--ms-query-pco' action.
+   ** New '--ms-query-lte-attach-configuration' action.
+   ** New '--ms-query-lte-attach-status' action.
+
+ * Several other minor improvements and fixes.
+
+The following features which were backported to 1.16.x releases are also present
+in libmbim 1.18.0:
+
+ * mbimcli:
+   ** Fix SNR reporting in --atds-query-signal output.
+   ** Longer timeout (60s) in --disconnect.
+   ** Add "ip-type" property to --connect
+
+ * libmbim-glib:
+   ** Fix printing message in Intel Firmware Update service.
+   ** Fix error reporting when unknown status.
+
 Overview of changes in libmbim 1.16
 ----------------------------------------
 
