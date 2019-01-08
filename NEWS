@@ -1,4 +1,107 @@
 
+Overview of changes in libqmi 1.22.0
+----------------------------------------
+
+ * Build now looks for the correct python provider in the system during
+   configure.
+
+ * New services:
+   ** New 'QoS' (Quality of Service) service, with some minimal initial
+      implementation to support flow/network status querying. Additionally,
+      some Sierra-specific commands are also implemented that allow querying
+      per-bearer statistics (e.g. if multiple dedicated and default LTE bearers
+      are used).
+
+ * New request/responses/indications:
+   ** loc: new "Register Events" request/response.
+   ** loc: new "NMEA" indication.
+   ** loc: new "Engine State" indication.
+   ** loc: new "Fix Recurrence Type" indication.
+   ** loc: new "GNSS Sv Info" indication.
+   ** loc: new "Inject Predicted Orbits Data" request/response/indication.
+   ** loc: new "Get Predicted Orbits Data Source" request/response/indication.
+   ** loc: new "Set Server" request/response/indication.
+   ** loc: new "Get Server" request/response/indication.
+   ** loc: new "Delete Assistance Data" request/response/indication.
+   ** loc: new "Set Operation Mode" request/response/indication.
+   ** loc: new "Get Operation Mode" request/response/indication.
+   ** loc: new "Inject XTRA Data" request/response/indication.
+   ** uim: new "Card Status" indication.
+   ** wds: new "Get Default Profile Num" request/response.
+   ** wds: new "Set Default Profile Num" request/response.
+   ** wds: new Sierra-specific "Swi Create Profile Indexed" request/response.
+
+ * New TLVs supported in existing messages:
+   ** loc: added multiple new TLVs in the "Position Report" indication, which
+      was a minimal skeleton in previous releases.
+   ** loc: added 'Fix Recurrence Type' TLV in "Start".
+   ** loc: added 'Minimum Interval between Position Reports' TLV in "Start".
+   ** nas: added 'Acquisition Order Preference' TLV in "Set System Selection
+      Preference" and "Get System Selection Preference".
+   ** nas: added 'Phy CA Agg Secondary Cells' TLV in "Get LTE Cphy CA Info".
+   ** wds: added 'WDS APN Disabled Flag' TLV in "Create Profile", "Modify
+      Profile" and "Get Profile Settings".
+   ** wds: added 'WDS Roaming Disallowed Flag' TLV in "Create Profile",
+      "Modify Profile" and "Get Profile Settings".
+
+ * libqmi:
+   ** Assume TLVs < 0x10 are mandatory by default.
+   ** Fixed some missing QmiProtocolErrors and updated some existing ones.
+   ** Implemented support to allow enabling QMI indications when in MBIM mode.
+   ** Addded missing QmiNasBandPreference and QmiDmsLteBandCapability flags.
+   ** Deprecate QMI_CORE_ERROR_TLV_EMPTY, as empty TLVs are allowed by the
+      protocol and totally valid e.g. in 0-sized string-type TLVs.
+   ** Moved all deprecated APIs to 'qmi-compat.h' header.
+
+ * qmicli:
+   ** New '--loc-get-position-report' command.
+   ** New '--loc-get-gnss-sv-info' command.
+   ** New '--loc-follow-position-report' command.
+   ** New '--loc-follow-gnss-sv-info' command.
+   ** New '--loc-follow-nmea' command.
+   ** New '--loc-delete-assistance-data' command.
+   ** New '--qos-get-flow-status' command.
+   ** New '--qos-get-network-status' command.
+   ** New '--qos-swi-read-data-stats' command.
+   ** New '--qos-reset' command.
+   ** New '--wds-create-profile' command.
+   ** New '--wds-modify-profile' command.
+   ** New '--wds-delete-profile' command.
+   ** New '--wds-get-default-profile-num' command.
+   ** New '--wds-set-default-profile-num' command.
+   ** New '--wds-swi-create-profile-indexed' command.
+   ** Added support to request acquisition order preference updates when using
+      '--nas-set-system-selection-preference'.
+   ** Fixed slot indices in '--uim-get-card-status'.
+   ** Fixed '--uim-set-pin-protection', '--uim-verify-pin", "--uim-unblock-pin",
+      and '--uim-change-pin', so that a dummy application identifier is always
+      used.
+   ** Updated so that all commands work even through QMI over MBIM, even if
+      indications are required to complete the command (e.g. most PDC and LOC
+      commands).
+
+ * qmi-network:
+   ** Avoid creating invalid --wds-start-network when APN is not set.
+
+ * Several other minor improvements and fixes.
+
+The following features which were backported to 1.20.x releases are also present
+in libqmi 1.22.0:
+
+ * qmicli:
+   ** Exit on --wds-start-network parse errors.
+   ** Fix reading current technology in --wds-get-data-bearer-technology.
+
+ * qmi-firmware-update:
+   ** Fix --ignore-version-errors.
+   ** Fix byte counts in error message.
+
+ * libqmi-glib:
+   ** dms: factory settings related operations since 1.0
+   ** Avoid closing same file descriptor twice.
+   ** Don't leak the inner MbimDevice if MBIM_QMUX_ENABLED.
+
+
 Overview of changes in libqmi 1.20.0
 ----------------------------------------
 
