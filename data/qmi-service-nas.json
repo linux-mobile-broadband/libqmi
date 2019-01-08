@@ -3377,7 +3377,7 @@
                    { "name"               : "Phy CA Agg Secondary Cells",
                      "id"                 : "0x15",
                      "type"               : "TLV",
-                     "since"              : "1.16",
+                     "since"              : "1.22",
 		     "format"             : "array",
                      "size-prefix-format" : "guint8",
                      "array-element"      : { "name"     : "SSC",
