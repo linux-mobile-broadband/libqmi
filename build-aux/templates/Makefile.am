@@ -1,9 +1,9 @@
 
 EXTRA_DIST = \
-	qmi-error-types-template.h \
-	qmi-error-types-template.c \
-	qmi-error-quarks-template.c \
-	qmi-enum-types-template.h \
-	qmi-enum-types-template.c \
-	qmi-flags64-types-template.h \
-	qmi-flags64-types-template.c
+	qmi-error-types.h.template \
+	qmi-error-types.c.template \
+	qmi-error-quarks.c.template \
+	qmi-enum-types.h.template \
+	qmi-enum-types.c.template \
+	qmi-flags64-types.h.template \
+	qmi-flags64-types.c.template
