@@ -96,6 +96,7 @@ static gchar *hp_change_device_mode_str;
 static gboolean swi_get_current_firmware_flag;
 static gboolean swi_get_usb_composition_flag;
 static gchar *swi_set_usb_composition_str;
+static gchar *dell_change_device_mode_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -304,6 +305,10 @@ static GOptionEntry entries[] = {
       "Set USB composition (Sierra Wireless specific)",
       "[#]"
     },
+    { "dms-dell-change-device-mode", 0, 0, G_OPTION_ARG_STRING, &dell_change_device_mode_str,
+      "Change device mode (DELL specific)",
+      "[fastboot-ota|fastboot-online]"
+    },
     { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -390,6 +395,7 @@ qmicli_dms_options_enabled (void)
                  swi_get_current_firmware_flag +
                  swi_get_usb_composition_flag +
                  !!swi_set_usb_composition_str +
+                 !!dell_change_device_mode_str +
                  reset_flag +
                  noop_flag);
 
@@ -3649,6 +3655,64 @@ swi_set_usb_composition_input_create (const gchar *str)
     return input;
 }
 
+static QmiMessageDmsDellChangeDeviceModeInput *
+dell_change_device_mode_input_create (const gchar *str)
+{
+    QmiMessageDmsDellChangeDeviceModeInput *input = NULL;
+    QmiDmsDellDeviceMode mode;
+    GError *error = NULL;
+
+    if (!qmicli_read_dell_device_mode_from_string (str, &mode)) {
+        g_printerr ("error: couldn't parse input dell device mode : '%s'\n", str);
+        return NULL;
+    }
+
+    input = qmi_message_dms_dell_change_device_mode_input_new ();
+    if (!qmi_message_dms_dell_change_device_mode_input_set_mode (input, mode, &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_dms_dell_change_device_mode_input_unref (input);
+        return NULL;
+    }
+
+    return input;
+}
+
+static void
+dell_change_device_mode_ready (QmiClientDms *client,
+                               GAsyncResult *res)
+{
+    QmiMessageDmsDellChangeDeviceModeOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_dell_change_device_mode_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_dell_change_device_mode_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't change Dell device mode: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_dell_change_device_mode_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully changed Dell device mode\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_dms_dell_change_device_mode_output_unref (output);
+
+    /* Changing the mode will end up power cycling the device right away, so
+     * just ignore any error from now on and don't even try to release the
+     * client CID */
+    operation_shutdown_skip_cid_release (TRUE);
+}
+
 static void
 reset_ready (QmiClientDms *client,
              GAsyncResult *res)
@@ -4464,6 +4528,28 @@ qmicli_dms_run (QmiDevice *device,
                                                  (GAsyncReadyCallback)swi_set_usb_composition_ready,
                                               NULL);
         qmi_message_dms_swi_set_usb_composition_input_unref (input);
+        return;
+    }
+
+    /* Request to change device download mode */
+    if (dell_change_device_mode_str) {
+        QmiMessageDmsDellChangeDeviceModeInput *input;
+
+        g_debug ("Asynchronously changing device mode (Dell specific)...");
+
+        input = dell_change_device_mode_input_create (dell_change_device_mode_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        qmi_client_dms_dell_change_device_mode (ctx->client,
+                                                input,
+                                                10,
+                                                ctx->cancellable,
+                                                (GAsyncReadyCallback)dell_change_device_mode_ready,
+                                                NULL);
+        qmi_message_dms_dell_change_device_mode_input_unref (input);
         return;
     }
 

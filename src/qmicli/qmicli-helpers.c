@@ -757,6 +757,27 @@ qmicli_read_swi_usb_composition_from_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_dell_device_mode_from_string (const gchar *str,
+                                          QmiDmsDellDeviceMode *out)
+{
+    GType type;
+    GEnumClass *enum_class;
+    GEnumValue *enum_value;
+
+    type = qmi_dms_dell_device_mode_get_type ();
+    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
+    enum_value = g_enum_get_value_by_nick (enum_class, str);
+
+    if (enum_value)
+        *out = (QmiDmsDellDeviceMode)enum_value->value;
+    else
+        g_printerr ("error: invalid Dell device mode value given: '%s'\n", str);
+
+    g_type_class_unref (enum_class);
+    return !!enum_value;
+}
+
+gboolean
 qmicli_read_uint_from_string (const gchar *str,
                               guint *out)
 {
