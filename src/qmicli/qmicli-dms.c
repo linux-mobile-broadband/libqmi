@@ -97,6 +97,7 @@ static gboolean swi_get_current_firmware_flag;
 static gboolean swi_get_usb_composition_flag;
 static gchar *swi_set_usb_composition_str;
 static gchar *dell_change_device_mode_str;
+static gchar *dell_get_firmware_version_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -309,6 +310,10 @@ static GOptionEntry entries[] = {
       "Change device mode (DELL specific)",
       "[fastboot-ota|fastboot-online]"
     },
+    { "dms-dell-get-firmware-version", 0, 0, G_OPTION_ARG_STRING, &dell_get_firmware_version_str,
+      "Get firmware version (DELL specific)",
+      "[firmware-mcfg-apps|firmware-mcfg|apps]"
+    },
     { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -396,6 +401,7 @@ qmicli_dms_options_enabled (void)
                  swi_get_usb_composition_flag +
                  !!swi_set_usb_composition_str +
                  !!dell_change_device_mode_str +
+                 !!dell_get_firmware_version_str +
                  reset_flag +
                  noop_flag);
 
@@ -3713,6 +3719,65 @@ dell_change_device_mode_ready (QmiClientDms *client,
     operation_shutdown_skip_cid_release (TRUE);
 }
 
+static QmiMessageDmsDellGetFirmwareVersionInput *
+dell_get_firmware_version_input_create (const gchar *str)
+{
+    QmiMessageDmsDellGetFirmwareVersionInput *input = NULL;
+    QmiDmsDellFirmwareVersionType type;
+    GError *error = NULL;
+
+    if (!qmicli_read_dell_firmware_version_type_from_string (str, &type)) {
+        g_printerr ("error: couldn't parse input dell firmware version type : '%s'\n", str);
+        return NULL;
+    }
+
+    input = qmi_message_dms_dell_get_firmware_version_input_new ();
+    if (!qmi_message_dms_dell_get_firmware_version_input_set_version_type (input, type, &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                    error->message);
+        g_error_free (error);
+        qmi_message_dms_dell_get_firmware_version_input_unref (input);
+        return NULL;
+    }
+
+    return input;
+}
+
+static void
+dell_get_firmware_version_ready (QmiClientDms *client,
+                                 GAsyncResult *res)
+{
+    const gchar *str = NULL;
+    QmiMessageDmsDellGetFirmwareVersionOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_dms_dell_get_firmware_version_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_dell_get_firmware_version_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get dell firmware version: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_dell_get_firmware_version_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_dell_get_firmware_version_output_get_version (output, &str, NULL);
+
+    g_print ("[%s] Firmware version retrieved:\n"
+             "\tVersion: '%s'\n",
+             qmi_device_get_path_display (ctx->device),
+             VALIDATE_UNKNOWN (str));
+
+    qmi_message_dms_dell_get_firmware_version_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
 static void
 reset_ready (QmiClientDms *client,
              GAsyncResult *res)
@@ -4550,6 +4615,28 @@ qmicli_dms_run (QmiDevice *device,
                                                 (GAsyncReadyCallback)dell_change_device_mode_ready,
                                                 NULL);
         qmi_message_dms_dell_change_device_mode_input_unref (input);
+        return;
+    }
+
+    /* Request to get firmware version? */
+    if (dell_get_firmware_version_str) {
+        QmiMessageDmsDellGetFirmwareVersionInput *input;
+
+        g_debug ("Asynchronously getting firmware version (Dell specific)...");
+
+        input = dell_get_firmware_version_input_create (dell_get_firmware_version_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        qmi_client_dms_dell_get_firmware_version (ctx->client,
+                                                  input,
+                                                  10,
+                                                  ctx->cancellable,
+                                                  (GAsyncReadyCallback)dell_get_firmware_version_ready,
+                                                  NULL);
+        qmi_message_dms_dell_get_firmware_version_input_unref (input);
         return;
     }
 
