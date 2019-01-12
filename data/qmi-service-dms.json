@@ -1415,6 +1415,22 @@
      "id"      : "0x555F",
      "version" : "1.0",
      "since"   : "1.14",
-     "output"  : [  { "common-ref" : "Operation Result" } ] }
+     "output"  : [  { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Dell Change Device Mode",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x5562",
+     "vendor"  : "0x413c",
+     "version" : "1.0",
+     "since"   : "1.24",
+     "input"   : [ { "name"          : "Mode",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.24",
+                     "format"        : "guint8",
+                     "public-format" : "QmiDmsDellDeviceMode" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] }
 
 ]

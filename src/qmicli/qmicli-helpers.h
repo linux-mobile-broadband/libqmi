@@ -78,6 +78,8 @@ gboolean qmicli_read_hp_device_mode_from_string              (const gchar *str,
                                                               QmiDmsHpDeviceMode *out);
 gboolean qmicli_read_swi_usb_composition_from_string         (const gchar *str,
                                                               QmiDmsSwiUsbComposition *out);
+gboolean qmicli_read_dell_device_mode_from_string            (const gchar *str,
+                                                              QmiDmsDellDeviceMode *out);
 
 gboolean qmicli_read_non_empty_string           (const gchar *str,
                                                  const gchar *description,

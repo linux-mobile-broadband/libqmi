@@ -166,6 +166,7 @@ QmiDmsFirmwareImageType
 QmiDmsBootImageDownloadMode
 QmiDmsHpDeviceMode
 QmiDmsSwiUsbComposition
+QmiDmsDellDeviceMode
 <SUBSECTION Methods>
 qmi_dms_data_service_capability_get_string
 qmi_dms_sim_capability_get_string
@@ -188,6 +189,7 @@ qmi_dms_boot_image_download_mode_get_string
 qmi_dms_hp_device_mode_get_string
 qmi_dms_swi_usb_composition_get_string
 qmi_dms_swi_usb_composition_get_description
+qmi_dms_dell_device_mode_get_string
 <SUBSECTION Private>
 qmi_dms_data_service_capability_build_string_from_mask
 qmi_dms_sim_capability_build_string_from_mask
@@ -207,6 +209,7 @@ qmi_dms_firmware_image_type_build_string_from_mask
 qmi_dms_boot_image_download_mode_build_string_from_mask
 qmi_dms_hp_device_mode_build_string_from_mask
 qmi_dms_swi_usb_composition_build_string_from_mask
+qmi_dms_dell_device_mode_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_DMS_ACTIVATION_STATE
 QMI_TYPE_DMS_BOOT_IMAGE_DOWNLOAD_MODE
@@ -226,6 +229,7 @@ QMI_TYPE_DMS_UIM_PIN_STATUS
 QMI_TYPE_DMS_UIM_STATE
 QMI_TYPE_DMS_HP_DEVICE_MODE
 QMI_TYPE_DMS_SWI_USB_COMPOSITION
+QMI_TYPE_DMS_DELL_DEVICE_MODE
 qmi_dms_activation_state_get_type
 qmi_dms_boot_image_download_mode_get_type
 qmi_dms_data_service_capability_get_type
@@ -244,6 +248,7 @@ qmi_dms_uim_pin_status_get_type
 qmi_dms_uim_state_get_type
 qmi_dms_hp_device_mode_get_type
 qmi_dms_swi_usb_composition_get_type
+qmi_dms_dell_device_mode_get_type
 </SECTION>
 
 <SECTION>
