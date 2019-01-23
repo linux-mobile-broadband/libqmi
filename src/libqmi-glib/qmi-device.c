@@ -2678,8 +2678,6 @@ mbim_device_command_ready (MbimDevice             *dev,
         return;
     }
 
-    g_debug ("[%s] Received MBIM message", ctx->self->priv->path_display);
-
     /* Store the raw information buffer in the internal reception buffer,
      * as if we had read from a iochannel. */
     buf = mbim_message_command_done_get_raw_information_buffer (response, &len);
@@ -2719,8 +2717,6 @@ mbim_command (QmiDevice      *self,
               GError        **error)
 {
     MbimMessage *mbim_message;
-
-    g_debug ("[%s] sending message as MBIM...", self->priv->path_display);
 
     mbim_message = mbim_message_qmi_msg_set_new (raw_message_len, raw_message, error);
     if (!mbim_message)
