@@ -570,6 +570,28 @@
                                        "format" : "guint8" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Register Events",
+     "type"    : "Message",
+     "service" : "UIM",
+     "id"      : "0x002E",
+     "version" : "1.0",
+     "since"   : "1.23",
+     "input"   : [ { "name"          : "Event Registration Mask",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.23",
+                     "format"        : "guint32",
+                     "public-format" : "QmiUimEventRegistrationFlag" } ],
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"          : "Event Registration Mask",
+                     "id"            : "0x10",
+                     "type"          : "TLV",
+                     "since"         : "1.23",
+                     "format"        : "guint32",
+                     "public-format" : "QmiUimEventRegistrationFlag",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get Card Status",
      "type"    : "Message",
      "service" : "UIM",

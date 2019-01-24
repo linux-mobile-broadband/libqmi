@@ -37,6 +37,31 @@
  */
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI UIM Indication Register' indication */
+
+/**
+ * QmiUimEventRegistrationFlag:
+ *
+ * Flags to use to register to UIM indications.
+ * @QMI_UIM_EVENT_REGISTRATION_FLAG_CARD_STATUS: Card status.
+ * @QMI_UIM_EVENT_REGISTRATION_FLAG_SAP_CONNECTION: SAP connection.
+ * @QMI_UIM_EVENT_REGISTRATION_FLAG_EXTENDED_CARD_STATUS: Extended card status.
+ *
+ * Since: 1.23
+ */
+typedef enum {
+    QMI_UIM_EVENT_REGISTRATION_FLAG_CARD_STATUS          = 1 << 0,
+    QMI_UIM_EVENT_REGISTRATION_FLAG_SAP_CONNECTION       = 1 << 1,
+    QMI_UIM_EVENT_REGISTRATION_FLAG_EXTENDED_CARD_STATUS = 1 << 2,
+} QmiUimEventRegistrationFlag;
+
+/**
+ * qmi_uim_event_registration_flag_build_string_from_mask:
+ *
+ * Since: 1.23
+ */
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI UIM Read Record' request/response */
 
 /**
