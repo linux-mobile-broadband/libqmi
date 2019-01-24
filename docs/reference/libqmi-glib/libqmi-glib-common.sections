@@ -900,6 +900,7 @@ qmi_pbm_session_type_get_type
 
 <SECTION>
 <FILE>qmi-enums-uim</FILE>
+QmiUimEventRegistrationFlag
 QmiUimSessionType
 QmiUimFileType
 QmiUimSecurityAttributeLogic
