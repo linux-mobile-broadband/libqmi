@@ -98,7 +98,7 @@ typedef struct _QmiDevicePrivate QmiDevicePrivate;
 /**
  * QMI_DEVICE_SIGNAL_INDICATION:
  *
-* Symbol defining the #QmiDevice::indication signal.
+ * Symbol defining the #QmiDevice::indication signal.
  *
  * Since: 1.8
  */
