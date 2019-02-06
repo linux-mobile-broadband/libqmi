@@ -51,6 +51,13 @@ typedef struct _QmiEndpoint QmiEndpoint;
 typedef struct _QmiEndpointClass QmiEndpointClass;
 typedef struct _QmiEndpointPrivate QmiEndpointPrivate;
 
+/**
+ * QMI_ENDPOINT_SIGNAL_HANGUP:
+ *
+ * Symbol defining the #QmiEndpoint::hangup signal.
+ */
+#define QMI_ENDPOINT_SIGNAL_HANGUP "hangup"
+
 struct _QmiEndpoint {
     /*< private >*/
     GObject parent;
@@ -84,5 +91,13 @@ gboolean qmi_endpoint_parse_buffer (QmiEndpoint *self,
 void qmi_endpoint_add_message (QmiEndpoint *self,
                                const guint8 *buf,
                                guint len);
+
+/**
+ * Signals that the endpoint has hung up.
+ *
+ * Transitional function until the transport is fully controlled by the
+ * #QmiEndpoint class.
+ */
+void __qmi_endpoint_hangup (QmiEndpoint *self);
 
 #endif /* _LIBQMI_GLIB_QMI_ENDPOINT_H_ */

@@ -94,6 +94,7 @@ struct _QmiDevicePrivate {
 #if defined MBIM_QMUX_ENABLED
     MbimDevice *mbimdev;
     guint mbim_notification_id;
+    guint mbim_removed_id;
 #endif
 
     /* WWAN interface */
@@ -113,6 +114,7 @@ struct _QmiDevicePrivate {
     GOutputStream *ostream;
     GSource *input_source;
     QmiEndpoint *endpoint;
+    guint endpoint_hangup_id;
 
     /* Support for qmi-proxy */
     gchar *proxy_path;
@@ -1346,6 +1348,13 @@ qmi_device_set_instance_id (QmiDevice *self,
 /*****************************************************************************/
 /* Input channel processing */
 
+static void
+endpoint_hangup_cb (QmiEndpoint *endpoint,
+                    QmiDevice   *self)
+{
+    g_signal_emit (self, signals[SIGNAL_REMOVED], 0);
+}
+
 typedef struct {
     QmiClient *client;
     QmiMessage *message;
@@ -1524,7 +1533,7 @@ input_ready_cb (GInputStream *istream,
     if (r == 0) {
         /* HUP! */
         g_warning ("Cannot read from istream: connection broken");
-        g_signal_emit (self, signals[SIGNAL_REMOVED], 0);
+        __qmi_endpoint_hangup (self->priv->endpoint);
         return G_SOURCE_REMOVE;
     }
 
@@ -2159,6 +2168,13 @@ open_mbim_device (GTask *task)
 }
 
 static void
+mbim_device_removed_cb (MbimDevice *device,
+                        QmiDevice *self)
+{
+    __qmi_endpoint_hangup (self->priv->endpoint);
+}
+
+static void
 mbim_device_new_ready (GObject *source,
                        GAsyncResult *res,
                        GTask *task)
@@ -2176,6 +2192,12 @@ mbim_device_new_ready (GObject *source,
     }
 
     g_debug ("[%s] MBIM device created", qmi_file_get_path_display (self->priv->file));
+
+    self->priv->mbim_removed_id =
+        g_signal_connect (self->priv->mbimdev,
+                          MBIM_DEVICE_SIGNAL_REMOVED,
+                          G_CALLBACK (mbim_device_removed_cb),
+                          self);
 
     /* Go on */
     ctx = g_task_get_task_data (task);
@@ -2578,6 +2600,10 @@ qmi_device_close_async (QmiDevice           *self,
         if (self->priv->mbim_notification_id) {
             g_signal_handler_disconnect (self->priv->mbimdev, self->priv->mbim_notification_id);
             self->priv->mbim_notification_id = 0;
+        }
+        if (self->priv->mbim_removed_id) {
+            g_signal_handler_disconnect (self->priv->mbimdev, self->priv->mbim_removed_id);
+            self->priv->mbim_removed_id = 0;
         }
         g_clear_object (&self->priv->mbimdev);
         return;
@@ -3040,6 +3066,10 @@ qmi_device_init (QmiDevice *self)
     self->priv->proxy_path = g_strdup (QMI_PROXY_SOCKET_PATH);
     self->priv->fd = -1;
     self->priv->endpoint = qmi_endpoint_new ();
+    self->priv->endpoint_hangup_id = g_signal_connect (self->priv->endpoint,
+                                                       QMI_ENDPOINT_SIGNAL_HANGUP,
+                                                       G_CALLBACK (endpoint_hangup_cb),
+                                                       self);
 }
 
 static gboolean
@@ -3081,6 +3111,10 @@ dispose (GObject *object)
             g_signal_handler_disconnect (self->priv->mbimdev, self->priv->mbim_notification_id);
             self->priv->mbim_notification_id = 0;
         }
+        if (self->priv->mbim_removed_id) {
+            g_signal_handler_disconnect (self->priv->mbimdev, self->priv->mbim_removed_id);
+            self->priv->mbim_removed_id = 0;
+        }
         g_clear_object (&self->priv->mbimdev);
     }
 #endif
@@ -3093,6 +3127,10 @@ dispose (GObject *object)
     }
     g_clear_object (&self->priv->client_ctl);
 
+    if (self->priv->endpoint_hangup_id) {
+        g_signal_handler_disconnect (self->priv->endpoint, self->priv->endpoint_hangup_id);
+        self->priv->endpoint_hangup_id = 0;
+    }
     g_clear_object (&self->priv->endpoint);
 
     G_OBJECT_CLASS (qmi_device_parent_class)->dispose (object);

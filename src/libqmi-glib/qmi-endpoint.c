@@ -33,6 +33,13 @@ struct _QmiEndpointPrivate {
     GByteArray *buffer;
 };
 
+enum {
+    SIGNAL_HANGUP,
+    SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0 };
+
 /*****************************************************************************/
 
 gboolean
@@ -55,6 +62,7 @@ qmi_endpoint_parse_buffer (QmiEndpoint *self,
                          QMI_PROTOCOL_ERROR,
                          QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE,
                          "QMI framing error detected");
+            __qmi_endpoint_hangup (self);
             return FALSE;
         }
 
@@ -100,6 +108,11 @@ void qmi_endpoint_add_message (QmiEndpoint *self,
     self->priv->buffer = g_byte_array_append (self->priv->buffer, data, len);
 }
 
+void __qmi_endpoint_hangup (QmiEndpoint *self)
+{
+    g_signal_emit (self, signals[SIGNAL_HANGUP], 0);
+}
+
 /*****************************************************************************/
 
 QmiEndpoint *
@@ -138,4 +151,22 @@ qmi_endpoint_class_init (QmiEndpointClass *klass)
     g_type_class_add_private (object_class, sizeof (QmiEndpointPrivate));
 
     object_class->dispose = dispose;
+
+    /**
+     * QmiEndpoint::hangup:
+     * @object: A #QmiEndpoint.
+     * @output: none
+     *
+     * The ::endpoint signal is emitted when an unexpected port hang-up is received.
+     */
+    signals[SIGNAL_HANGUP] =
+        g_signal_new (QMI_ENDPOINT_SIGNAL_HANGUP,
+                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
+                      G_SIGNAL_RUN_LAST,
+                      0,
+                      NULL,
+                      NULL,
+                      NULL,
+                      G_TYPE_NONE,
+                      0);
 }
