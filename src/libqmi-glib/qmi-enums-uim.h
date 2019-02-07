@@ -47,7 +47,7 @@
  * @QMI_UIM_EVENT_REGISTRATION_FLAG_SAP_CONNECTION: SAP connection.
  * @QMI_UIM_EVENT_REGISTRATION_FLAG_EXTENDED_CARD_STATUS: Extended card status.
  *
- * Since: 1.23
+ * Since: 1.24
  */
 typedef enum {
     QMI_UIM_EVENT_REGISTRATION_FLAG_CARD_STATUS          = 1 << 0,
@@ -58,7 +58,7 @@ typedef enum {
 /**
  * qmi_uim_event_registration_flag_build_string_from_mask:
  *
- * Since: 1.23
+ * Since: 1.24
  */
 
 /*****************************************************************************/
