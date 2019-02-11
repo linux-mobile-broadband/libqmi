@@ -1,0 +1,15 @@
+image: gcc
+
+stages:
+  - test
+
+before_script:
+  - apt update && apt -y install autoconf automake libtool libgudev-1.0-dev
+
+test:
+  stage: test
+  script:
+    - ./autogen.sh
+    - make
+    - make check
+    - make install
