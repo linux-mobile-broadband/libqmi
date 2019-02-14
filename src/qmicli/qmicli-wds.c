@@ -1037,13 +1037,16 @@ print_current_data_bearer_technology_results (const gchar *which,
 
     g_print ("[%s] Data bearer technology (%s):\n"
              "              Network type: '%s'\n"
-             "   Radio Access Technology: '%s'\n"
-             "            Service Option: '%s'\n",
+             "   Radio Access Technology: '%s'\n",
              qmi_device_get_path_display (ctx->device),
              which,
              qmi_wds_network_type_get_string (network_type),
-             VALIDATE_UNKNOWN (rat_string),
-             VALIDATE_UNKNOWN (so_string));
+             VALIDATE_UNKNOWN (rat_string));
+
+    if (network_type == QMI_WDS_NETWORK_TYPE_3GPP2)
+        g_print ("            Service Option: '%s'\n",
+                 VALIDATE_UNKNOWN (so_string));
+
     g_free (rat_string);
     g_free (so_string);
 }
