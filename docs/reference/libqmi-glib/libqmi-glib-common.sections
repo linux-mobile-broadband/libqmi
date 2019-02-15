@@ -539,6 +539,7 @@ QmiWdsSoEvdoRev0
 QmiWdsSoEvdoRevB
 QmiWdsTetheredCallType
 QmiWdsClientType
+QMI_WDS_RATE_UNAVAILABLE
 <SUBSECTION Methods>
 qmi_wds_ip_family_get_string
 qmi_wds_profile_family_get_string

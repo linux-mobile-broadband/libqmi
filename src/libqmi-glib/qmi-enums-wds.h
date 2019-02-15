@@ -1943,4 +1943,14 @@ typedef enum { /*< underscore_name=qmi_wds_client_type > */
  *
  * Since: 1.18
  */
+
+/**
+ * QMI_WDS_RATE_UNAVAILABLE:
+ *
+ * The TX/RX rate information is unavailable or cannot be measured.
+ *
+ * Since: 1.24
+ */
+#define QMI_WDS_RATE_UNAVAILABLE 0xFFFFFFFF
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDS_H_ */
