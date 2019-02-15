@@ -2582,12 +2582,23 @@ get_channel_rates_ready (QmiClientWds *client,
                                                                 &maxtxrate,
                                                                 &maxrxrate,
                                                                 NULL);
-    g_print ("\tCurrent TX rate: %ubps\n"
-             "\tCurrent RX rate: %ubps\n"
-             "\tMax TX rate:     %ubps\n"
+
+    /* Current TX/RX rates may not be available if device is disconnected */
+
+    g_print ("\tCurrent TX rate: ");
+    if (txrate != QMI_WDS_RATE_UNAVAILABLE)
+        g_print ("%ubps\n", txrate);
+    else
+        g_print ("n/a\n");
+
+    g_print ("\tCurrent RX rate: ");
+    if (rxrate != QMI_WDS_RATE_UNAVAILABLE)
+        g_print ("%ubps\n", rxrate);
+    else
+        g_print ("n/a\n");
+
+    g_print ("\tMax TX rate:     %ubps\n"
              "\tMax RX rate:     %ubps\n",
-             txrate,
-             rxrate,
              maxtxrate,
              maxrxrate);
 
