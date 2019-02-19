@@ -328,7 +328,7 @@ set_data_format_properties_handle (const gchar  *key,
     }
 
     if (g_ascii_strcasecmp (key, "link-layer-protocol") == 0) {
-        if (!qmicli_read_link_layer_protocol_from_string (value, &(props->link_layer_protocol))) {
+        if (!qmicli_read_wda_link_layer_protocol_from_string (value, &(props->link_layer_protocol))) {
             g_set_error (error,
                          QMI_CORE_ERROR,
                          QMI_CORE_ERROR_FAILED,
@@ -340,7 +340,7 @@ set_data_format_properties_handle (const gchar  *key,
     }
 
     if (g_ascii_strcasecmp (key, "ul-protocol") == 0) {
-        if (!qmicli_read_data_aggregation_protocol_from_string (value, &(props->ul_protocol))) {
+        if (!qmicli_read_wda_data_aggregation_protocol_from_string (value, &(props->ul_protocol))) {
             g_set_error (error,
                          QMI_CORE_ERROR,
                          QMI_CORE_ERROR_FAILED,
@@ -352,7 +352,7 @@ set_data_format_properties_handle (const gchar  *key,
     }
 
     if (g_ascii_strcasecmp (key, "dl-protocol") == 0) {
-        if (!qmicli_read_data_aggregation_protocol_from_string (value, &(props->dl_protocol))) {
+        if (!qmicli_read_wda_data_aggregation_protocol_from_string (value, &(props->dl_protocol))) {
             g_set_error (error,
                          QMI_CORE_ERROR,
                          QMI_CORE_ERROR_FAILED,
@@ -505,7 +505,7 @@ set_data_format_input_create (const gchar *str)
      *    "[(raw-ip|802-3)]"
      */
     else {
-        if (!qmicli_read_link_layer_protocol_from_string (str, &(props.link_layer_protocol))) {
+        if (!qmicli_read_wda_link_layer_protocol_from_string (str, &(props.link_layer_protocol))) {
             g_printerr ("Unrecognized Link Layer Protocol '%s'\n", str);
             goto error_out;
         }

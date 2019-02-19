@@ -673,7 +673,7 @@ get_tx_rx_info_input_create (const gchar *str,
 
     g_assert (interface != NULL);
 
-    if (qmicli_read_radio_interface_from_string (str, interface)) {
+    if (qmicli_read_nas_radio_interface_from_string (str, interface)) {
         GError *error = NULL;
 
         input = qmi_message_nas_get_tx_rx_info_input_new ();

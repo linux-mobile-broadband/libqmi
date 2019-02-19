@@ -1254,7 +1254,7 @@ uim_get_ck_status_input_create (const gchar *str)
     QmiMessageDmsUimGetCkStatusInput *input = NULL;
     QmiDmsUimFacility facility;
 
-    if (qmicli_read_facility_from_string (str, &facility)) {
+    if (qmicli_read_dms_uim_facility_from_string (str, &facility)) {
         GError *error = NULL;
 
         input = qmi_message_dms_uim_get_ck_status_input_new ();
@@ -1345,7 +1345,7 @@ uim_set_ck_protection_input_create (const gchar *str)
      *    "[(facility),disable,(key)]"
      */
     split = g_strsplit (str, ",", -1);
-    if (qmicli_read_facility_from_string (split[0], &facility) &&
+    if (qmicli_read_dms_uim_facility_from_string (split[0], &facility) &&
         qmicli_read_enable_disable_from_string (split[1], &enable_disable) &&
         qmicli_read_non_empty_string (split[2], "control key", &key)) {
 
@@ -1431,7 +1431,7 @@ uim_unblock_ck_input_create (const gchar *str)
      *    "[(facility),(key)]"
      */
     split = g_strsplit (str, ",", -1);
-    if (qmicli_read_facility_from_string (split[0], &facility) &&
+    if (qmicli_read_dms_uim_facility_from_string (split[0], &facility) &&
         qmicli_read_non_empty_string (split[1], "control key", &key)) {
         GError *error = NULL;
 
@@ -1588,7 +1588,7 @@ set_operating_mode_input_create (const gchar *str)
     QmiMessageDmsSetOperatingModeInput *input = NULL;
     QmiDmsOperatingMode mode;
 
-    if (qmicli_read_operating_mode_from_string (str, &mode)) {
+    if (qmicli_read_dms_operating_mode_from_string (str, &mode)) {
         GError *error = NULL;
 
         input = qmi_message_dms_set_operating_mode_input_new ();
@@ -3276,7 +3276,7 @@ set_boot_image_download_mode_input_create (const gchar *str)
      * Format of the string is:
      *    [normal|boot-and-recovery]
      */
-    if (!qmicli_read_boot_image_download_mode_from_string (str, &mode))
+    if (!qmicli_read_dms_boot_image_download_mode_from_string (str, &mode))
         return NULL;
 
     input = qmi_message_dms_set_boot_image_download_mode_input_new ();
@@ -3429,7 +3429,7 @@ hp_change_device_mode_input_create (const gchar *str)
     QmiDmsHpDeviceMode mode;
     GError *error = NULL;
 
-    if (!qmicli_read_hp_device_mode_from_string (str, &mode)) {
+    if (!qmicli_read_dms_hp_device_mode_from_string (str, &mode)) {
         g_printerr ("error: couldn't parse input HP device mode : '%s'\n", str);
         return NULL;
     }
@@ -3647,7 +3647,7 @@ swi_set_usb_composition_input_create (const gchar *str)
     QmiDmsSwiUsbComposition value;
     GError *error = NULL;
 
-    if (!qmicli_read_swi_usb_composition_from_string (str, &value))
+    if (!qmicli_read_dms_swi_usb_composition_from_string (str, &value))
         return NULL;
 
     input = qmi_message_dms_swi_set_usb_composition_input_new ();
@@ -3668,7 +3668,7 @@ dell_change_device_mode_input_create (const gchar *str)
     QmiDmsDellDeviceMode mode;
     GError *error = NULL;
 
-    if (!qmicli_read_dell_device_mode_from_string (str, &mode)) {
+    if (!qmicli_read_dms_dell_device_mode_from_string (str, &mode)) {
         g_printerr ("error: couldn't parse input dell device mode : '%s'\n", str);
         return NULL;
     }
@@ -3726,7 +3726,7 @@ dell_get_firmware_version_input_create (const gchar *str)
     QmiDmsDellFirmwareVersionType type;
     GError *error = NULL;
 
-    if (!qmicli_read_dell_firmware_version_type_from_string (str, &type)) {
+    if (!qmicli_read_dms_dell_firmware_version_type_from_string (str, &type)) {
         g_printerr ("error: couldn't parse input dell firmware version type : '%s'\n", str);
         return NULL;
     }

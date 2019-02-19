@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Copyright (C) 2015 Velocloud Inc.
- * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2019 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <stdio.h>
@@ -25,6 +25,30 @@
 #include <errno.h>
 
 #include "qmicli-helpers.h"
+
+#define QMICLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)                     \
+    gboolean                                                                  \
+    qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str,          \
+                                                   TYPE *out)                 \
+    {                                                                         \
+        GType type;                                                           \
+        GEnumClass *enum_class;                                               \
+        GEnumValue *enum_value;                                               \
+                                                                              \
+        type = qmi_## TYPE_UNDERSCORE ##_get_type ();                         \
+        enum_class = G_ENUM_CLASS (g_type_class_ref (type));                  \
+        enum_value = g_enum_get_value_by_nick (enum_class, str);              \
+                                                                              \
+        if (enum_value)                                                       \
+            *out = (TYPE)enum_value->value;                                   \
+        else                                                                  \
+            g_printerr ("error: invalid " DESCR " value given: '%s'\n", str); \
+                                                                              \
+        g_type_class_unref (enum_class);                                      \
+        return !!enum_value;                                                  \
+    }
+QMICLI_ENUM_LIST
+#undef QMICLI_ENUM_LIST_ITEM
 
 gchar *
 qmicli_get_raw_data_printable (const GArray *data,
@@ -204,27 +228,6 @@ qmicli_read_uim_pin_id_from_string (const gchar *str,
 }
 
 gboolean
-qmicli_read_operating_mode_from_string (const gchar *str,
-                                        QmiDmsOperatingMode *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_dms_operating_mode_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiDmsOperatingMode)enum_value->value;
-    else
-        g_printerr ("error: invalid operating mode value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
 qmicli_read_ssp_options_from_string (const gchar              *str,
                                      QmiNasRatModePreference  *out_mode_preference,
                                      GArray                  **out_acquisition_order)
@@ -288,27 +291,6 @@ qmicli_read_ssp_options_from_string (const gchar              *str,
     g_type_class_unref (rat_mode_preference_flags_class);
     g_type_class_unref (radio_interface_enum_class);
     return success && (mode_preference_set || acquisition_order_set);;
-}
-
-gboolean
-qmicli_read_facility_from_string (const gchar *str,
-                                  QmiDmsUimFacility *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_dms_uim_facility_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiDmsUimFacility)enum_value->value;
-    else
-        g_printerr ("error: invalid facility value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
 }
 
 gboolean
@@ -426,48 +408,6 @@ qmicli_read_binary_array_from_string (const gchar *str,
 }
 
 gboolean
-qmicli_read_pdc_configuration_type_from_string (const gchar *str,
-                                                QmiPdcConfigurationType *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_pdc_configuration_type_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiPdcConfigurationType)enum_value->value;
-    else
-        g_printerr ("error: invalid configuration type value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
-qmicli_read_radio_interface_from_string (const gchar *str,
-                                         QmiNasRadioInterface *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_nas_radio_interface_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiNasRadioInterface)enum_value->value;
-    else
-        g_printerr ("error: invalid radio interface value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
 qmicli_read_net_open_flags_from_string (const gchar *str,
                                         QmiDeviceOpenFlags *out)
 {
@@ -532,132 +472,6 @@ qmicli_read_net_open_flags_from_string (const gchar *str,
 }
 
 gboolean
-qmicli_read_expected_data_format_from_string (const gchar *str,
-                                              QmiDeviceExpectedDataFormat *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_device_expected_data_format_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiDeviceExpectedDataFormat)enum_value->value;
-    else
-        g_printerr ("error: invalid expected data format value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
-qmicli_read_link_layer_protocol_from_string (const gchar *str,
-                                             QmiWdaLinkLayerProtocol *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_wda_link_layer_protocol_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiWdaLinkLayerProtocol)enum_value->value;
-    else
-        g_printerr ("error: invalid link layer protocol value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
-qmicli_read_data_aggregation_protocol_from_string (const gchar *str,
-                                                   QmiWdaDataAggregationProtocol *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_wda_data_aggregation_protocol_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiWdaDataAggregationProtocol)enum_value->value;
-    else
-        g_printerr ("error: invalid data aggregation protocol value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
-qmicli_read_data_endpoint_type_from_string (const gchar *str,
-                                            QmiDataEndpointType *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_data_endpoint_type_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiDataEndpointType)enum_value->value;
-    else
-        g_printerr ("error: invalid data aggregation protocol value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
-qmicli_read_autoconnect_setting_from_string (const gchar *str,
-                                             QmiWdsAutoconnectSetting *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_wds_autoconnect_setting_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiWdsAutoconnectSetting)enum_value->value;
-    else
-        g_printerr ("error: invalid autoconnect setting value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
-qmicli_read_autoconnect_setting_roaming_from_string (const gchar *str,
-                                                     QmiWdsAutoconnectSettingRoaming *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_wds_autoconnect_setting_roaming_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiWdsAutoconnectSettingRoaming)enum_value->value;
-    else
-        g_printerr ("error: invalid autoconnect setting roaming value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
 qmicli_read_authentication_from_string (const gchar *str,
                                         QmiWdsAuthentication *out)
 {
@@ -691,111 +505,6 @@ qmicli_read_pdp_type_from_string (const gchar *str,
         return FALSE;
 
     return TRUE;
-}
-
-gboolean
-qmicli_read_boot_image_download_mode_from_string (const gchar *str,
-                                                  QmiDmsBootImageDownloadMode *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_dms_boot_image_download_mode_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiDmsBootImageDownloadMode)enum_value->value;
-    else
-        g_printerr ("error: invalid boot image download mode value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
-qmicli_read_hp_device_mode_from_string (const gchar *str,
-                                        QmiDmsHpDeviceMode *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_dms_hp_device_mode_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiDmsHpDeviceMode)enum_value->value;
-    else
-        g_printerr ("error: invalid HP device mode value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
-qmicli_read_swi_usb_composition_from_string (const gchar *str,
-                                             QmiDmsSwiUsbComposition *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_dms_swi_usb_composition_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiDmsSwiUsbComposition)enum_value->value;
-    else
-        g_printerr ("error: invalid SWI USB Composition value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
-qmicli_read_dell_device_mode_from_string (const gchar *str,
-                                          QmiDmsDellDeviceMode *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_dms_dell_device_mode_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiDmsDellDeviceMode)enum_value->value;
-    else
-        g_printerr ("error: invalid Dell device mode value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
-}
-
-gboolean
-qmicli_read_dell_firmware_version_type_from_string  (const gchar *str,
-                                                     QmiDmsDellFirmwareVersionType *out)
-{
-    GType type;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    type = qmi_dms_dell_firmware_version_type_get_type ();
-    enum_class = G_ENUM_CLASS (g_type_class_ref (type));
-    enum_value = g_enum_get_value_by_nick (enum_class, str);
-
-    if (enum_value)
-        *out = (QmiDmsDellFirmwareVersionType)enum_value->value;
-    else
-        g_printerr ("error: invalid Dell firmware version type value given: '%s'\n", str);
-
-    g_type_class_unref (enum_class);
-    return !!enum_value;
 }
 
 gboolean

@@ -2253,7 +2253,7 @@ set_autoconnect_settings_input_create (const gchar *str)
     }
 
     g_strstrip (split[0]);
-    if (!qmicli_read_autoconnect_setting_from_string (split[0], &status)) {
+    if (!qmicli_read_wds_autoconnect_setting_from_string (split[0], &status)) {
         g_printerr ("error: failed to parse autoconnect setting\n");
         goto error_out;
     }
@@ -2265,7 +2265,7 @@ set_autoconnect_settings_input_create (const gchar *str)
 
     if (g_strv_length (split) == 2) {
         g_strstrip (split[1]);
-        if (!qmicli_read_autoconnect_setting_roaming_from_string (g_str_equal (split[1], "roaming-allowed") ? "allowed" : split[1], &roaming)) {
+        if (!qmicli_read_wds_autoconnect_setting_roaming_from_string (g_str_equal (split[1], "roaming-allowed") ? "allowed" : split[1], &roaming)) {
             g_printerr ("error: failed to parse autoconnect roaming setting\n");
             goto error_out;
         }
