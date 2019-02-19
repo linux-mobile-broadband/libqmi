@@ -41,11 +41,11 @@
 
 /**
  * QmiUimEventRegistrationFlag:
- *
- * Flags to use to register to UIM indications.
  * @QMI_UIM_EVENT_REGISTRATION_FLAG_CARD_STATUS: Card status.
  * @QMI_UIM_EVENT_REGISTRATION_FLAG_SAP_CONNECTION: SAP connection.
  * @QMI_UIM_EVENT_REGISTRATION_FLAG_EXTENDED_CARD_STATUS: Extended card status.
+ *
+ * Flags to use to register to UIM indications.
  *
  * Since: 1.24
  */
