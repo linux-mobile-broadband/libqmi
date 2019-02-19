@@ -452,7 +452,7 @@ qmi_message_new (QmiService service,
 QmiMessage *
 qmi_message_new_from_data (QmiService   service,
                            guint8       client_id,
-                           GByteArray  *raw,
+                           GByteArray  *qmi_data,
                            GError     **error)
 {
     GByteArray *self;
@@ -464,10 +464,10 @@ qmi_message_new_from_data (QmiService   service,
      * with enough room to copy the rest of the message into */
     if (service == QMI_SERVICE_CTL) {
         message_len = sizeof (struct control_header) +
-            ((struct control_message *)(raw->data))->header.tlv_length;
+            ((struct control_message *)(qmi_data->data))->header.tlv_length;
     } else {
         message_len = sizeof (struct service_header) +
-            ((struct service_message *)(raw->data))->header.tlv_length;
+            ((struct service_message *)(qmi_data->data))->header.tlv_length;
     }
     buffer_len = (1 + sizeof (struct qmux) + message_len);
     /* Create the GByteArray with buffer_len bytes preallocated */
@@ -482,9 +482,9 @@ qmi_message_new_from_data (QmiService   service,
     buffer->qmux.service = service;
     buffer->qmux.client = client_id;
 
-    /* Move bytes from the raw array to the newly created message */
-    memcpy (&buffer->qmi, raw->data, message_len);
-    g_byte_array_remove_range (raw, 0, message_len);
+    /* Move bytes from the qmi_data array to the newly created message */
+    memcpy (&buffer->qmi, qmi_data->data, message_len);
+    g_byte_array_remove_range (qmi_data, 0, message_len);
 
     /* Check input message validity as soon as we create the QmiMessage */
     if (!message_check (self, error)) {
