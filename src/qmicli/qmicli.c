@@ -531,7 +531,7 @@ device_set_expected_data_format_cb (QmiDevice *dev)
     QmiDeviceExpectedDataFormat expected;
     GError *error = NULL;
 
-    if (!qmicli_read_expected_data_format_from_string (set_expected_data_format_str, &expected) ||
+    if (!qmicli_read_device_expected_data_format_from_string (set_expected_data_format_str, &expected) ||
         expected == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN)
         g_printerr ("error: invalid requested data format: %s", set_expected_data_format_str);
     else if (!qmi_device_set_expected_data_format (dev, expected, &error)) {
