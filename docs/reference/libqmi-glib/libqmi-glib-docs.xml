@@ -316,6 +316,7 @@
     <section>
       <title>UIM Requests</title>
       <xi:include href="xml/qmi-message-uim-reset.xml"/>
+      <xi:include href="xml/qmi-message-uim-register-events.xml"/>
       <xi:include href="xml/qmi-message-uim-set-pin-protection.xml"/>
       <xi:include href="xml/qmi-message-uim-verify-pin.xml"/>
       <xi:include href="xml/qmi-message-uim-unblock-pin.xml"/>
