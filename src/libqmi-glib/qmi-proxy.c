@@ -489,6 +489,7 @@ track_cid (Client *client,
     if ((error_status != 0x00) || (error_code != QMI_PROTOCOL_ERROR_NONE))
         return;
 
+    offset = 0;
     if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO, NULL, &error)) == 0) ||
         !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service_tmp, &error) ||
         !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &(info.cid), &error)) {
