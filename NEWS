@@ -1,4 +1,10 @@
 
+Overview of changes in libqmi 1.22.2
+----------------------------------------
+
+ * Fixed CID tracking logic in the qmi-proxy.
+   https://gitlab.freedesktop.org/mobile-broadband/libqmi/issues/9
+
 Overview of changes in libqmi 1.22.0
 ----------------------------------------
 
