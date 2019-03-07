@@ -36,7 +36,7 @@
 #define PROGRAM_NAME    "mbim-proxy"
 #define PROGRAM_VERSION PACKAGE_VERSION
 
-#define EMPTY_PROXY_LIFETIME_SECS 300
+#define EMPTY_TIMEOUT_DEFAULT 300
 
 /* Globals */
 static GMainLoop *loop;
@@ -48,11 +48,16 @@ static guint client_connected_once = FALSE;
 static gboolean verbose_flag;
 static gboolean version_flag;
 static gboolean no_exit_flag;
+static gint     empty_timeout = -1;
 
 static GOptionEntry main_entries[] = {
     { "no-exit", 0, 0, G_OPTION_ARG_NONE, &no_exit_flag,
       "Don't exit after being idle without clients/devices",
       NULL
+    },
+    { "empty-timeout", 0, 0, G_OPTION_ARG_INT, &empty_timeout,
+      "If no clients/devices, exit after this timeout. If set to 0, equivalent to --no-exit.",
+      "[SECS]"
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
       "Run action with verbose logs, including the debug ones",
@@ -159,7 +164,8 @@ proxy_n_clients_changed (MbimProxy *_proxy)
 
     if (mbim_proxy_get_n_clients (proxy) == 0) {
         g_assert (timeout_id == 0);
-        timeout_id = g_timeout_add_seconds (EMPTY_PROXY_LIFETIME_SECS,
+        g_assert (empty_timeout > 0);
+        timeout_id = g_timeout_add_seconds (empty_timeout,
                                             (GSourceFunc)stop_loop_cb,
                                             NULL);
         return;
@@ -179,7 +185,8 @@ proxy_n_devices_changed (MbimProxy *_proxy)
 {
     if (mbim_proxy_get_n_devices (proxy) == 0) {
         g_assert (timeout_id == 0);
-        timeout_id = g_timeout_add_seconds (EMPTY_PROXY_LIFETIME_SECS,
+        g_assert (empty_timeout > 0);
+        timeout_id = g_timeout_add_seconds (empty_timeout,
                                             (GSourceFunc)stop_loop_cb,
                                             NULL);
         return;
@@ -224,6 +231,10 @@ int main (int argc, char **argv)
     g_unix_signal_add (SIGHUP,  quit_cb, NULL);
     g_unix_signal_add (SIGTERM, quit_cb, NULL);
 
+    /* Setup empty timeout */
+    if (empty_timeout < 0)
+        empty_timeout = EMPTY_TIMEOUT_DEFAULT;
+
     /* Setup proxy */
     proxy = mbim_proxy_new (&error);
     if (!proxy) {
@@ -232,7 +243,8 @@ int main (int argc, char **argv)
     }
 
     /* Don't exit the proxy when no clients/devices are found */
-    if (!no_exit_flag) {
+    if (!no_exit_flag && empty_timeout != 0) {
+        g_debug ("proxy will exit after %d secs if unused", empty_timeout);
         proxy_n_clients_changed (proxy);
         g_signal_connect (proxy,
                           "notify::" MBIM_PROXY_N_CLIENTS,
@@ -242,7 +254,8 @@ int main (int argc, char **argv)
                           "notify::" MBIM_PROXY_N_DEVICES,
                           G_CALLBACK (proxy_n_devices_changed),
                           NULL);
-    }
+    } else
+        g_debug ("proxy will remain running if unused");
 
     /* Loop */
     loop = g_main_loop_new (NULL, FALSE);
