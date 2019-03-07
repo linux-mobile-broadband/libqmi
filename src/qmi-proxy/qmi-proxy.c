@@ -35,7 +35,7 @@
 #define PROGRAM_NAME    "qmi-proxy"
 #define PROGRAM_VERSION PACKAGE_VERSION
 
-#define EMPTY_PROXY_LIFETIME_SECS 30
+#define EMPTY_PROXY_LIFETIME_SECS 300
 
 /* Globals */
 static GMainLoop *loop;
