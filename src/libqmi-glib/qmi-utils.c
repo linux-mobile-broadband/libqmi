@@ -121,14 +121,17 @@ __qmi_user_allowed (uid_t uid,
 /*****************************************************************************/
 
 gchar *
-__qmi_utils_get_driver (const gchar *cdc_wdm_path)
+__qmi_utils_get_driver (const gchar *cdc_wdm_path,
+                        GError **error)
 {
     static const gchar *subsystems[] = { "usbmisc", "usb" };
     guint i;
     gchar *device_basename;
     gchar *driver = NULL;
 
-    device_basename = g_path_get_basename (cdc_wdm_path);
+    device_basename = __qmi_utils_get_devname (cdc_wdm_path, error);
+    if (!device_basename)
+        return NULL;
 
     for (i = 0; !driver && i < G_N_ELEMENTS (subsystems); i++) {
         gchar *tmp;
@@ -153,6 +156,24 @@ __qmi_utils_get_driver (const gchar *cdc_wdm_path)
     g_free (device_basename);
 
     return driver;
+}
+
+gchar *
+__qmi_utils_get_devname (const gchar *cdc_wdm_path, GError **error)
+{
+    gchar *devname;
+
+    if (g_file_test (cdc_wdm_path, G_FILE_TEST_IS_SYMLINK)) {
+        gchar *link_target;
+
+        link_target = g_file_read_link (cdc_wdm_path, error);
+        if (!link_target)
+           return NULL;
+        devname = g_path_get_basename (link_target);
+        g_free (link_target);
+    } else
+        devname = g_path_get_basename (cdc_wdm_path);
+    return devname;
 }
 
 /*****************************************************************************/

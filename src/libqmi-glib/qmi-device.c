@@ -589,26 +589,28 @@ qmi_device_is_open (QmiDevice *self)
 static void
 reload_wwan_iface_name (QmiDevice *self)
 {
-    const gchar *cdc_wdm_device_name;
+    gchar *cdc_wdm_device_name;
     static const gchar *driver_names[] = { "usbmisc", "usb" };
+    GError *error = NULL;
     guint i;
 
     /* Early cleanup */
     g_free (self->priv->wwan_iface);
     self->priv->wwan_iface = NULL;
 
-    cdc_wdm_device_name = strrchr (self->priv->path, '/');
+    cdc_wdm_device_name = __qmi_utils_get_devname (self->priv->path, &error);
     if (!cdc_wdm_device_name) {
-        g_warning ("[%s] invalid path for cdc-wdm control port", self->priv->path_display);
+        g_warning ("[%s] invalid path for cdc-wdm control port: %s",
+                   self->priv->path_display,
+                   error->message);
+        g_error_free (error);
         return;
     }
-    cdc_wdm_device_name++;
 
     for (i = 0; i < G_N_ELEMENTS (driver_names) && !self->priv->wwan_iface; i++) {
         gchar *sysfs_path;
         GFile *sysfs_file;
         GFileEnumerator *enumerator;
-        GError *error = NULL;
 
         sysfs_path = g_strdup_printf ("/sys/class/%s/%s/device/net/", driver_names[i], cdc_wdm_device_name);
         sysfs_file = g_file_new_for_path (sysfs_path);
@@ -649,7 +651,7 @@ reload_wwan_iface_name (QmiDevice *self)
         g_free (sysfs_path);
         g_object_unref (sysfs_file);
     }
-
+    g_free (cdc_wdm_device_name);
     if (!self->priv->wwan_iface)
         g_warning ("[%s] wwan iface not found", self->priv->path_display);
 }
@@ -2264,6 +2266,7 @@ device_open_step (GTask *task)
 {
     QmiDevice *self;
     DeviceOpenContext *ctx;
+    GError *error = NULL;
 
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
@@ -2274,11 +2277,13 @@ device_open_step (GTask *task)
         /* Fall down */
 
     case DEVICE_OPEN_CONTEXT_STEP_DRIVER:
-        ctx->driver = __qmi_utils_get_driver (self->priv->path);
+        ctx->driver = __qmi_utils_get_driver (self->priv->path, &error);
         if (ctx->driver)
             g_debug ("[%s] loaded driver of cdc-wdm port: %s", self->priv->path_display, ctx->driver);
-        else if (!self->priv->no_file_check)
-            g_warning ("[%s] couldn't load driver of cdc-wdm port", self->priv->path_display);
+        else if (!self->priv->no_file_check) {
+            g_warning ("[%s] couldn't load driver of cdc-wdm port: %s", self->priv->path_display, error->message);
+            g_error_free(error);
+        }
 
 #if defined MBIM_QMUX_ENABLED
 

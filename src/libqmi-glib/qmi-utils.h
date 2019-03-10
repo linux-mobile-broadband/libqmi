@@ -85,7 +85,12 @@ G_GNUC_INTERNAL
 gboolean __qmi_user_allowed (uid_t uid,
                              GError **error);
 G_GNUC_INTERNAL
-gchar *__qmi_utils_get_driver (const gchar *cdc_wdm_path);
+gchar *__qmi_utils_get_driver (const gchar *cdc_wdm_path,
+                               GError **error);
+
+G_GNUC_INTERNAL
+gchar *__qmi_utils_get_devname (const gchar *cdc_wdm_path,
+                                GError **error);
 
 static inline gfloat
 __QMI_GFLOAT_SWAP_LE_BE(gfloat in)
