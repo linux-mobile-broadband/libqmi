@@ -43,8 +43,8 @@
  * QmiPdsOperationMode:
  * @QMI_PDS_OPERATION_MODE_UNKNOWN: Unknown (position not fixed yet).
  * @QMI_PDS_OPERATION_MODE_STANDALONE: Standalone.
- * @QMI_PDS_OPERATION_MODE_MS_BASED: MS based.
- * @QMI_PDS_OPERATION_MODE_MS_ASSISTED: MS assisted.
+ * @QMI_PDS_OPERATION_MODE_MS_BASED: Mobile Station Based (MSB) A-GPS.
+ * @QMI_PDS_OPERATION_MODE_MS_ASSISTED: Mobile Station Assisted (MSA) A-GPS.
  *
  * Operation mode used to compute the position.
  *
@@ -190,8 +190,8 @@ typedef enum {
 /**
  * QmiPdsOperatingMode:
  * @QMI_PDS_OPERATING_MODE_STANDALONE: Standalone (GPS only).
- * @QMI_PDS_OPERATING_MODE_MS_BASED: MS-based.
- * @QMI_PDS_OPERATING_MODE_MS_ASSISTED: MS-assisted (A-GPS).
+ * @QMI_PDS_OPERATING_MODE_MS_BASED: Mobile Station Based (MSB) A-GPS
+ * @QMI_PDS_OPERATING_MODE_MS_ASSISTED: Mobile Station Assisted (MSA) A-GPS.
  *
  * GPS operating mode.
  *
