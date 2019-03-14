@@ -146,8 +146,8 @@ typedef enum {
 /**
  * QmiLocOperationMode:
  * @QMI_LOC_OPERATION_MODE_DEFAULT: Default.
- * @QMI_LOC_OPERATION_MODE_MSB: MSB (Mobile Station Based).
- * @QMI_LOC_OPERATION_MODE_MSA: MSA (Mobile Station Assisted).
+ * @QMI_LOC_OPERATION_MODE_MSB: Mobile Station Based (MSB) A-GPS.
+ * @QMI_LOC_OPERATION_MODE_MSA: Mobile Station Assisted (MSA) A-GPS.
  * @QMI_LOC_OPERATION_MODE_STANDALONE: Standalone.
  * @QMI_LOC_OPERATION_MODE_CELLID: Cell ID.
  * @QMI_LOC_OPERATION_MODE_WWAN: WWAN.
