@@ -34,6 +34,7 @@ struct _QmiEndpointPrivate {
 };
 
 enum {
+    SIGNAL_NEW_DATA,
     SIGNAL_HANGUP,
     SIGNAL_LAST
 };
@@ -106,6 +107,7 @@ void qmi_endpoint_add_message (QmiEndpoint *self,
                                guint len)
 {
     self->priv->buffer = g_byte_array_append (self->priv->buffer, data, len);
+    g_signal_emit (self, signals[SIGNAL_NEW_DATA], 0);
 }
 
 void __qmi_endpoint_hangup (QmiEndpoint *self)
@@ -151,6 +153,24 @@ qmi_endpoint_class_init (QmiEndpointClass *klass)
     g_type_class_add_private (object_class, sizeof (QmiEndpointPrivate));
 
     object_class->dispose = dispose;
+
+    /**
+     * QmiEndpoint::new-data:
+     * @object: A #QmiEndpoint.
+     * @output: none
+     *
+     * The ::new-data signal is emitted when the endpoint receives data.
+     */
+    signals[SIGNAL_NEW_DATA] =
+        g_signal_new (QMI_ENDPOINT_SIGNAL_NEW_DATA,
+                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
+                      G_SIGNAL_RUN_LAST,
+                      0,
+                      NULL,
+                      NULL,
+                      NULL,
+                      G_TYPE_NONE,
+                      0);
 
     /**
      * QmiEndpoint::hangup:

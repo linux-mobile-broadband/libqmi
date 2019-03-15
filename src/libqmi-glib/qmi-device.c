@@ -114,6 +114,7 @@ struct _QmiDevicePrivate {
     GOutputStream *ostream;
     GSource *input_source;
     QmiEndpoint *endpoint;
+    guint endpoint_new_data_id;
     guint endpoint_hangup_id;
 
     /* Support for qmi-proxy */
@@ -1348,6 +1349,24 @@ qmi_device_set_instance_id (QmiDevice *self,
 /*****************************************************************************/
 /* Input channel processing */
 
+static void process_message (QmiMessage *message, QmiDevice *self);
+
+static void
+endpoint_new_data_cb (QmiEndpoint *endpoint,
+                      QmiDevice   *self)
+{
+    GError *error = NULL;
+
+    if (!qmi_endpoint_parse_buffer (endpoint,
+                                    (QmiMessageHandler)process_message,
+                                    self,
+                                    &error)) {
+        g_warning ("[%s] QMI parsing error: %s",
+                   qmi_file_get_path_display (self->priv->file), error->message);
+        g_error_free (error);
+    }
+}
+
 static void
 endpoint_hangup_cb (QmiEndpoint *endpoint,
                     QmiDevice   *self)
@@ -1539,16 +1558,6 @@ input_ready_cb (GInputStream *istream,
 
     /* else, r > 0 */
     qmi_endpoint_add_message (self->priv->endpoint, buffer, r);
-
-    if (!qmi_endpoint_parse_buffer (self->priv->endpoint,
-                                    (QmiMessageHandler)process_message,
-                                    self,
-                                    &error)) {
-        g_warning ("[%s] QMI parsing error: %s", qmi_file_get_path_display (self->priv->file), error->message);
-        g_error_free (error);
-        return G_SOURCE_REMOVE;
-    }
-
     return G_SOURCE_CONTINUE;
 }
 
@@ -2644,17 +2653,6 @@ mbim_device_command_ready (MbimDevice   *dev,
     buf = mbim_message_command_done_get_raw_information_buffer (response, &len);
     qmi_endpoint_add_message (self->priv->endpoint, buf, len);
     mbim_message_unref (response);
-
-    /* And parse it as QMI; it should remove and cleanup the transaction */
-    if (!qmi_endpoint_parse_buffer (self->priv->endpoint,
-                                    (QmiMessageHandler)process_message,
-                                    self,
-                                    &error)) {
-        g_warning ("[%s] QMI parsing error: %s", qmi_file_get_path_display (self->priv->file), error->message);
-        g_error_free (error);
-        return;
-    }
-
     g_object_unref (self);
 }
 
@@ -3066,6 +3064,10 @@ qmi_device_init (QmiDevice *self)
     self->priv->proxy_path = g_strdup (QMI_PROXY_SOCKET_PATH);
     self->priv->fd = -1;
     self->priv->endpoint = qmi_endpoint_new ();
+    self->priv->endpoint_new_data_id = g_signal_connect (self->priv->endpoint,
+                                                         QMI_ENDPOINT_SIGNAL_NEW_DATA,
+                                                         G_CALLBACK (endpoint_new_data_cb),
+                                                         self);
     self->priv->endpoint_hangup_id = g_signal_connect (self->priv->endpoint,
                                                        QMI_ENDPOINT_SIGNAL_HANGUP,
                                                        G_CALLBACK (endpoint_hangup_cb),
@@ -3130,6 +3132,10 @@ dispose (GObject *object)
     if (self->priv->endpoint_hangup_id) {
         g_signal_handler_disconnect (self->priv->endpoint, self->priv->endpoint_hangup_id);
         self->priv->endpoint_hangup_id = 0;
+    }
+    if (self->priv->endpoint_new_data_id) {
+        g_signal_handler_disconnect (self->priv->endpoint, self->priv->endpoint_new_data_id);
+        self->priv->endpoint_new_data_id = 0;
     }
     g_clear_object (&self->priv->endpoint);
 

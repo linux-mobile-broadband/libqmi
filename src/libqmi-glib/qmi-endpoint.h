@@ -52,6 +52,13 @@ typedef struct _QmiEndpointClass QmiEndpointClass;
 typedef struct _QmiEndpointPrivate QmiEndpointPrivate;
 
 /**
+ * QMI_ENDPOINT_SIGNAL_NEW_DATA:
+ *
+ * Symbol defining the #QmiEndpoint::new_data signal.
+ */
+#define QMI_ENDPOINT_SIGNAL_NEW_DATA "new-data"
+
+/**
  * QMI_ENDPOINT_SIGNAL_HANGUP:
  *
  * Symbol defining the #QmiEndpoint::hangup signal.
