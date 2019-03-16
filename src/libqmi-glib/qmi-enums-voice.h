@@ -18,6 +18,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2014-2017 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2019 Alexander Couzens <lynxis@fe80.eu>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_ENUMS_VOICE_H_
@@ -328,5 +329,17 @@ typedef enum {
  *
  * Since: 1.14
  */
+
+/**
+ * QmiVoiceUserActionRequired:
+ * @QMI_VOICE_USER_ACTION_NOT_REQUIRED: User is not required to respond to the USSD code.
+ * @QMI_VOICE_USER_ACTION_REQUIRED: User is required to respond to the USSD code.
+ *
+ * Voice domain preference.
+ */
+typedef enum {
+    QMI_VOICE_USER_ACTION_NOT_REQUIRED  = 0x01,
+    QMI_VOICE_USER_ACTION_REQUIRED      = 0x02,
+} QmiVoiceUserActionRequired;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_VOICE_H_ */
