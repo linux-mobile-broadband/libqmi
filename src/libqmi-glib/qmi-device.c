@@ -90,7 +90,6 @@ struct _QmiDevicePrivate {
     gchar *path;
     gchar *path_display;
     gboolean no_file_check;
-    gchar *proxy_path;
 
 #if defined MBIM_QMUX_ENABLED
     MbimDevice *mbimdev;
@@ -116,6 +115,7 @@ struct _QmiDevicePrivate {
     GByteArray *buffer;
 
     /* Support for qmi-proxy */
+    gchar *proxy_path;
     GSocketClient *socket_client;
     GSocketConnection *socket_connection;
 
