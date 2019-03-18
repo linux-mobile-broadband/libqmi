@@ -40,6 +40,7 @@
 
 #include "qmi-device.h"
 #include "qmi-message.h"
+#include "qmi-file.h"
 #include "qmi-ctl.h"
 #include "qmi-dms.h"
 #include "qmi-wds.h"
@@ -86,9 +87,7 @@ static guint       signals   [SIGNAL_LAST] = { 0 };
 
 struct _QmiDevicePrivate {
     /* File */
-    GFile *file;
-    gchar *path;
-    gchar *path_display;
+    QmiFile *file;
     gboolean no_file_check;
 
 #if defined MBIM_QMUX_ENABLED
@@ -470,7 +469,7 @@ check_service_supported (QmiDevice *self,
     /* If we didn't check supported services, just assume it is supported */
     if (!self->priv->supported_services) {
         g_debug ("[%s] Assuming service '%s' is supported...",
-                 self->priv->path_display,
+                 qmi_file_get_path_display (self->priv->file),
                  qmi_service_get_string (service));
         return TRUE;
     }
@@ -549,14 +548,9 @@ check_message_supported (QmiDevice *self,
 GFile *
 qmi_device_get_file (QmiDevice *self)
 {
-    GFile *file = NULL;
-
     g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
 
-    g_object_get (G_OBJECT (self),
-                  QMI_DEVICE_FILE, &file,
-                  NULL);
-    return file;
+    return qmi_file_get_file (self->priv->file);
 }
 
 GFile *
@@ -564,7 +558,7 @@ qmi_device_peek_file (QmiDevice *self)
 {
     g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
 
-    return self->priv->file;
+    return qmi_file_peek_file (self->priv->file);
 }
 
 const gchar *
@@ -572,7 +566,7 @@ qmi_device_get_path (QmiDevice *self)
 {
     g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
 
-    return self->priv->path;
+    return qmi_file_get_path (self->priv->file);
 }
 
 const gchar *
@@ -580,7 +574,7 @@ qmi_device_get_path_display (QmiDevice *self)
 {
     g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
 
-    return self->priv->path_display;
+    return qmi_file_get_path_display (self->priv->file);
 }
 
 gboolean
@@ -607,10 +601,10 @@ reload_wwan_iface_name (QmiDevice *self)
     g_free (self->priv->wwan_iface);
     self->priv->wwan_iface = NULL;
 
-    cdc_wdm_device_name = __qmi_utils_get_devname (self->priv->path, &error);
+    cdc_wdm_device_name = __qmi_utils_get_devname (qmi_file_get_path (self->priv->file), &error);
     if (!cdc_wdm_device_name) {
         g_warning ("[%s] invalid path for cdc-wdm control port: %s",
-                   self->priv->path_display,
+                   qmi_file_get_path_display (self->priv->file),
                    error->message);
         g_error_free (error);
         return;
@@ -630,7 +624,7 @@ reload_wwan_iface_name (QmiDevice *self)
                                                 &error);
         if (!enumerator) {
             g_debug ("[%s] cannot enumerate files at path '%s': %s",
-                     self->priv->path_display,
+                     qmi_file_get_path_display (self->priv->file),
                      sysfs_path,
                      error->message);
             g_error_free (error);
@@ -647,7 +641,7 @@ reload_wwan_iface_name (QmiDevice *self)
                      * to this control port, if more found for any reason, warn about it */
                     if (self->priv->wwan_iface)
                         g_warning ("[%s] invalid additional wwan iface found: %s",
-                               self->priv->path_display, name);
+                               qmi_file_get_path_display (self->priv->file), name);
                     else
                         self->priv->wwan_iface = g_strdup (name);
                 }
@@ -662,7 +656,7 @@ reload_wwan_iface_name (QmiDevice *self)
     }
     g_free (cdc_wdm_device_name);
     if (!self->priv->wwan_iface)
-        g_warning ("[%s] wwan iface not found", self->priv->path_display);
+        g_warning ("[%s] wwan iface not found", qmi_file_get_path_display (self->priv->file));
 }
 
 const gchar *
@@ -687,7 +681,7 @@ get_expected_data_format (QmiDevice *self,
     FILE *f;
 
     g_debug ("[%s] Reading expected data format from: %s",
-             self->priv->path_display,
+             qmi_file_get_path_display (self->priv->file),
              sysfs_path);
 
     if (!(f = fopen (sysfs_path, "r"))) {
@@ -730,7 +724,7 @@ set_expected_data_format (QmiDevice *self,
     FILE *f;
 
     g_debug ("[%s] Writing expected data format to: %s",
-             self->priv->path_display,
+             qmi_file_get_path_display (self->priv->file),
              sysfs_path);
 
     if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP)
@@ -946,7 +940,7 @@ build_client_object (GTask *task)
     }
 
     g_debug ("[%s] Registered '%s' (version %s) client with ID '%u'",
-             self->priv->path_display,
+             qmi_file_get_path_display (self->priv->file),
              qmi_service_get_string (ctx->service),
              version_string ? version_string : "unknown",
              ctx->cid);
@@ -1123,7 +1117,7 @@ qmi_device_allocate_client (QmiDevice *self,
         qmi_message_ctl_allocate_cid_input_set_service (input, ctx->service, NULL);
 
         g_debug ("[%s] Allocating new client ID...",
-                 self->priv->path_display);
+                 qmi_file_get_path_display (self->priv->file));
         qmi_client_ctl_allocate_cid (self->priv->client_ctl,
                                      input,
                                      timeout,
@@ -1137,7 +1131,7 @@ qmi_device_allocate_client (QmiDevice *self,
 
     /* Reuse the given CID */
     g_debug ("[%s] Reusing client CID '%u'...",
-             self->priv->path_display,
+             qmi_file_get_path_display (self->priv->file),
              cid);
     ctx->cid = cid;
     build_client_object (task);
@@ -1211,7 +1205,7 @@ qmi_device_release_client (QmiDevice *self,
 
     flags_str = qmi_device_release_client_flags_build_string_from_mask (flags);
     g_debug ("[%s] Releasing '%s' client with flags '%s'...",
-             self->priv->path_display,
+             qmi_file_get_path_display (self->priv->file),
              qmi_service_get_string (service),
              flags_str);
     g_free (flags_str);
@@ -1235,7 +1229,7 @@ qmi_device_release_client (QmiDevice *self,
     unregister_client (self, client);
 
     g_debug ("[%s] Unregistered '%s' client with ID '%u'",
-             self->priv->path_display,
+             qmi_file_get_path_display (self->priv->file),
              qmi_service_get_string (service),
              cid);
 
@@ -1418,7 +1412,7 @@ trace_message (QmiDevice         *self,
              "%sRAW:\n"
              "%s  length = %u\n"
              "%s  data   = %s\n",
-             self->priv->path_display, action_str,
+             qmi_file_get_path_display (self->priv->file), action_str,
              prefix_str,
              prefix_str, ((GByteArray *)message)->len,
              prefix_str, printable);
@@ -1434,7 +1428,7 @@ trace_message (QmiDevice         *self,
 
     printable = qmi_message_get_printable_full (message, message_context, prefix_str);
     g_debug ("[%s] %s %s %s (translated)...\n%s",
-             self->priv->path_display,
+             qmi_file_get_path_display (self->priv->file),
              action_str,
              vendor_str ? vendor_str : "generic",
              message_str,
@@ -1487,7 +1481,7 @@ process_message (QmiDevice *self,
             /* Unmatched transactions translated without an explicit context */
             trace_message (self, message, FALSE, "response", NULL);
             g_debug ("[%s] No transaction matched in received message",
-                     self->priv->path_display);
+                     qmi_file_get_path_display (self->priv->file));
         } else {
             /* Matched transactions translated with the same context as the request */
             trace_message (self, message, FALSE, "response", tr->message_context);
@@ -1501,7 +1495,7 @@ process_message (QmiDevice *self,
     /* Unexpected message types translated without an explicit context */
     trace_message (self, message, FALSE, "unexpected message", NULL);
     g_debug ("[%s] Message received but it is neither an indication nor a response. Skipping it.",
-             self->priv->path_display);
+             qmi_file_get_path_display (self->priv->file));
 }
 
 static void
@@ -1519,7 +1513,7 @@ parse_response (QmiDevice *self)
             self->priv->buffer->data[0] != QMI_MESSAGE_QMUX_MARKER) {
             /* TODO: Report fatal error */
             g_warning ("[%s] QMI framing error detected",
-                       self->priv->path_display);
+                       qmi_file_get_path_display (self->priv->file));
             return;
         }
 
@@ -1531,7 +1525,7 @@ parse_response (QmiDevice *self)
 
             /* Warn about the issue */
             g_warning ("[%s] Invalid QMI message received: '%s'",
-                       self->priv->path_display,
+                       qmi_file_get_path_display (self->priv->file),
                        error->message);
             g_error_free (error);
 
@@ -1652,13 +1646,13 @@ create_iostream_with_fd (GTask *task)
     gint fd;
 
     self = g_task_get_source_object (task);
-    fd = open (self->priv->path, O_RDWR | O_EXCL | O_NONBLOCK | O_NOCTTY);
+    fd = open (qmi_file_get_path (self->priv->file), O_RDWR | O_EXCL | O_NONBLOCK | O_NOCTTY);
     if (fd < 0) {
         g_task_return_new_error (task,
                                  QMI_CORE_ERROR,
                                  QMI_CORE_ERROR_FAILED,
                                  "Cannot open device file '%s': %s",
-                                 self->priv->path_display,
+                                 qmi_file_get_path_display (self->priv->file),
                                  strerror (errno));
         g_object_unref (task);
         return;
@@ -1801,7 +1795,6 @@ create_iostream (QmiDevice *self,
     }
 
     g_assert (self->priv->file);
-    g_assert (self->priv->path);
 
     if (proxy)
         create_iostream_with_socket (task);
@@ -1878,11 +1871,11 @@ mbim_qmi_notification_cb (MbimDevice  *device,
     if (!message) {
         if (error) {
             g_warning ("[%s] couldn't create QMI message: %s",
-                       self->priv->path_display, error->message);
+                       qmi_file_get_path_display (self->priv->file), error->message);
             g_free (error);
         } else
             g_warning ("[%s] couldn't create QMI message: missing data",
-                       self->priv->path_display);
+                       qmi_file_get_path_display (self->priv->file));
 
         if (qmi_utils_get_traces_enabled ()) {
             gchar *printable;
@@ -1925,10 +1918,10 @@ mbim_subscribe_list_set_ready_cb (MbimDevice   *device,
 
     if (error) {
         g_warning ("[%s] couldn't enable QMI indications via MBIM: %s",
-                   self->priv->path_display, error->message);
+                   qmi_file_get_path_display (self->priv->file), error->message);
         g_error_free (error);
     } else {
-        g_debug ("[%s] enabled QMI indications via MBIM", self->priv->path_display);
+        g_debug ("[%s] enabled QMI indications via MBIM", qmi_file_get_path_display (self->priv->file));
         self->priv->mbim_notification_id = g_signal_connect (device,
                                                              MBIM_DEVICE_SIGNAL_INDICATE_STATUS,
                                                              G_CALLBACK (mbim_qmi_notification_cb),
@@ -1972,7 +1965,7 @@ ctl_set_data_format_ready (QmiClientCtl *client,
     self = g_task_get_source_object (task);
 
     g_debug ("[%s] Network port data format operation finished",
-             self->priv->path_display);
+             qmi_file_get_path_display (self->priv->file));
 
     qmi_message_ctl_set_data_format_output_unref (output);
 
@@ -2010,7 +2003,7 @@ sync_ready (QmiClientCtl *client_ctl,
 
     self = g_task_get_source_object (task);
     g_debug ("[%s] Sync operation finished",
-             self->priv->path_display);
+             qmi_file_get_path_display (self->priv->file));
 
     qmi_message_ctl_sync_output_unref (output);
 
@@ -2077,7 +2070,7 @@ open_version_info_ready (QmiClientCtl *client_ctl,
     self->priv->supported_services = g_array_ref (service_list);
 
     g_debug ("[%s] QMI Device supports %u services:",
-             self->priv->path_display,
+             qmi_file_get_path_display (self->priv->file),
              self->priv->supported_services->len);
     for (i = 0; i < self->priv->supported_services->len; i++) {
         QmiMessageCtlGetVersionInfoOutputServiceListService *info;
@@ -2089,13 +2082,13 @@ open_version_info_ready (QmiClientCtl *client_ctl,
         service_str = qmi_service_get_string (info->service);
         if (service_str)
             g_debug ("[%s]    %s (%u.%u)",
-                     self->priv->path_display,
+                     qmi_file_get_path_display (self->priv->file),
                      service_str,
                      info->major_version,
                      info->minor_version);
         else
             g_debug ("[%s]    unknown [0x%02x] (%u.%u)",
-                     self->priv->path_display,
+                     qmi_file_get_path_display (self->priv->file),
                      info->service,
                      info->major_version,
                      info->minor_version);
@@ -2179,7 +2172,7 @@ mbim_device_open_ready (MbimDevice   *dev,
     }
 
     self = g_task_get_source_object (task);
-    g_debug ("[%s] MBIM device open", self->priv->path_display);
+    g_debug ("[%s] MBIM device open", qmi_file_get_path_display (self->priv->file));
 
     /* Go on */
     ctx = g_task_get_task_data (task);
@@ -2202,7 +2195,7 @@ open_mbim_device (GTask *task)
         open_flags |= MBIM_DEVICE_OPEN_FLAGS_PROXY;
 
     /* We pass the original timeout of the request to the open operation */
-    g_debug ("[%s] opening MBIM device...", self->priv->path_display);
+    g_debug ("[%s] opening MBIM device...", qmi_file_get_path_display (self->priv->file));
     mbim_device_open_full (self->priv->mbimdev,
                            open_flags,
                            ctx->timeout,
@@ -2228,7 +2221,7 @@ mbim_device_new_ready (GObject *source,
         return;
     }
 
-    g_debug ("[%s] MBIM device created", self->priv->path_display);
+    g_debug ("[%s] MBIM device created", qmi_file_get_path_display (self->priv->file));
 
     /* Go on */
     ctx = g_task_get_task_data (task);
@@ -2252,8 +2245,8 @@ create_mbim_device (GTask *task)
         return;
     }
 
-    g_debug ("[%s] creating MBIM device...", self->priv->path_display);
-    file = g_file_new_for_path (self->priv->path);
+    g_debug ("[%s] creating MBIM device...", qmi_file_get_path_display (self->priv->file));
+    file = g_file_new_for_path (qmi_file_get_path (self->priv->file));
     mbim_device_new (file,
                      g_task_get_cancellable (task),
                      (GAsyncReadyCallback) mbim_device_new_ready,
@@ -2276,11 +2269,11 @@ device_setup_open_flags_by_driver (QmiDevice *self,
     gchar *driver;
     GError *driver_error = NULL;
 
-    driver = __qmi_utils_get_driver (self->priv->path, &driver_error);
+    driver = __qmi_utils_get_driver (qmi_file_get_path (self->priv->file), &driver_error);
     if (driver)
-        g_debug ("[%s] loaded driver of cdc-wdm port: %s", self->priv->path_display, driver);
+        g_debug ("[%s] loaded driver of cdc-wdm port: %s", qmi_file_get_path_display (self->priv->file), driver);
     else if (!self->priv->no_file_check)
-        g_warning ("[%s] couldn't load driver of cdc-wdm port: %s", self->priv->path_display, driver_error->message);
+        g_warning ("[%s] couldn't load driver of cdc-wdm port: %s", qmi_file_get_path_display (self->priv->file), driver_error->message);
     g_clear_error (&driver_error);
 
 #if defined MBIM_QMUX_ENABLED
@@ -2288,12 +2281,12 @@ device_setup_open_flags_by_driver (QmiDevice *self,
     /* Auto mode requested? */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_AUTO) {
         if (!g_strcmp0 (driver, "cdc_mbim")) {
-            g_debug ("[%s] automatically selecting MBIM mode", self->priv->path_display);
+            g_debug ("[%s] automatically selecting MBIM mode", qmi_file_get_path_display (self->priv->file));
             ctx->flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
             return TRUE;
         }
         if (!g_strcmp0 (driver, "qmi_wwan")) {
-            g_debug ("[%s] automatically selecting QMI mode", self->priv->path_display);
+            g_debug ("[%s] automatically selecting QMI mode", qmi_file_get_path_display (self->priv->file));
             ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_MBIM;
             return TRUE;
         }
@@ -2308,23 +2301,23 @@ device_setup_open_flags_by_driver (QmiDevice *self,
     /* MBIM mode requested? */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
         if (g_strcmp0 (driver, "cdc_mbim") && !self->priv->no_file_check)
-            g_warning ("[%s] requested MBIM mode but unexpected driver found: %s", self->priv->path_display, driver);
+            g_warning ("[%s] requested MBIM mode but unexpected driver found: %s", qmi_file_get_path_display (self->priv->file), driver);
         return TRUE;
     }
 
 #else
 
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_AUTO)
-        g_warning ("[%s] requested auto mode but no MBIM QMUX support available", self->priv->path_display);
+        g_warning ("[%s] requested auto mode but no MBIM QMUX support available", qmi_file_get_path_display (self->priv->file));
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM)
-        g_warning ("[%s] requested MBIM mode but no MBIM QMUX support available", self->priv->path_display);
+        g_warning ("[%s] requested MBIM mode but no MBIM QMUX support available", qmi_file_get_path_display (self->priv->file));
 
 #endif /* MBIM_QMUX_ENABLED */
 
     /* QMI mode requested? */
     if (g_strcmp0 (driver, "qmi_wwan") && !self->priv->no_file_check)
         g_warning ("[%s] requested QMI mode but unexpected driver found: %s",
-                   self->priv->path_display, driver ? driver : "unknown");
+                   qmi_file_get_path_display (self->priv->file), driver ? driver : "unknown");
 
     return TRUE;
 }
@@ -2388,7 +2381,7 @@ device_open_step (GTask *task)
             QmiMessageCtlInternalProxyOpenInput *input;
 
             input = qmi_message_ctl_internal_proxy_open_input_new ();
-            qmi_message_ctl_internal_proxy_open_input_set_device_path (input, self->priv->path, NULL);
+            qmi_message_ctl_internal_proxy_open_input_set_device_path (input, qmi_file_get_path (self->priv->file), NULL);
             qmi_client_ctl_internal_proxy_open (self->priv->client_ctl,
                                                 input,
                                                 5,
@@ -2407,7 +2400,7 @@ device_open_step (GTask *task)
             /* Setup how many times to retry... We'll retry once per second */
             ctx->version_check_retries = ctx->timeout > 0 ? ctx->timeout : 1;
             g_debug ("[%s] Checking version info (%u retries)...",
-                     self->priv->path_display,
+                     qmi_file_get_path_display (self->priv->file),
                      ctx->version_check_retries);
             qmi_client_ctl_get_version_info (self->priv->client_ctl,
                                              NULL,
@@ -2424,7 +2417,7 @@ device_open_step (GTask *task)
         /* Sync? */
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_SYNC) {
             g_debug ("[%s] Running sync...",
-                     self->priv->path_display);
+                     qmi_file_get_path_display (self->priv->file));
             qmi_client_ctl_sync (self->priv->client_ctl,
                                  NULL,
                                  ctx->timeout,
@@ -2444,7 +2437,7 @@ device_open_step (GTask *task)
             QmiCtlDataLinkProtocol link_protocol = QMI_CTL_DATA_LINK_PROTOCOL_802_3;
 
             g_debug ("[%s] Setting network port data format...",
-                     self->priv->path_display);
+                     qmi_file_get_path_display (self->priv->file));
 
             input = qmi_message_ctl_set_data_format_input_new ();
 
@@ -2477,7 +2470,7 @@ device_open_step (GTask *task)
             guint            n_entries = 0;
             MbimMessage     *request;
 
-            g_debug ("[%s] Enabling QMI indications via MBIM...", self->priv->path_display);
+            g_debug ("[%s] Enabling QMI indications via MBIM...", qmi_file_get_path_display (self->priv->file));
             entries = g_new0 (MbimEventEntry *, 2);
             entries[n_entries] = g_new (MbimEventEntry, 1);
             memcpy (&(entries[n_entries]->device_service_id), MBIM_UUID_QMI, sizeof (MbimUuid));
@@ -2545,7 +2538,7 @@ qmi_device_open (QmiDevice *self,
 
     flags_str = qmi_device_open_flags_build_string_from_mask (flags);
     g_debug ("[%s] Opening device with flags '%s'...",
-             self->priv->path_display,
+             qmi_file_get_path_display (self->priv->file),
              flags_str);
     g_free (flags_str);
 
@@ -2658,7 +2651,7 @@ mbim_device_command_ready (MbimDevice   *dev,
 
     response = mbim_device_command_finish (dev, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
-        g_warning ("[%s] MBIM error: %s", self->priv->path_display, error->message);
+        g_warning ("[%s] MBIM error: %s", qmi_file_get_path_display (self->priv->file), error->message);
         g_error_free (error);
         if (response)
             mbim_message_unref (response);
@@ -2929,7 +2922,7 @@ sync_indication_cb (QmiClientCtl *client_ctl,
 {
     /* Just log about it */
     g_debug ("[%s] Sync indication received",
-             self->priv->path_display);
+             qmi_file_get_path_display (self->priv->file));
 }
 
 static void
@@ -2966,32 +2959,17 @@ client_ctl_setup (GTask *task)
 }
 
 static void
-query_info_async_ready (GFile *file,
+check_type_async_ready (QmiFile *file,
                         GAsyncResult *res,
                         GTask *task)
 {
     GError *error = NULL;
-    GFileInfo *info;
 
-    info = g_file_query_info_finish (file, res, &error);
-    if (!info) {
-        g_prefix_error (&error,
-                        "Couldn't query file info: ");
+    if (!qmi_file_check_type_finish (file, res, &error)) {
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
-
-    /* Our QMI device must be of SPECIAL type */
-    if (g_file_info_get_file_type (info) != G_FILE_TYPE_SPECIAL) {
-        g_task_return_new_error (task,
-                                 QMI_CORE_ERROR,
-                                 QMI_CORE_ERROR_FAILED,
-                                 "Wrong file type");
-        g_object_unref (task);
-        return;
-    }
-    g_object_unref (info);
 
     /* Go on with client CTL setup */
     client_ctl_setup (task);
@@ -3029,13 +3007,10 @@ initable_init_async (GAsyncInitable *initable,
     /* Check the file type. Note that this is just a quick check to avoid
      * creating QmiDevices pointing to a location already known not to be a QMI
      * device. */
-    g_file_query_info_async (self->priv->file,
-                             G_FILE_ATTRIBUTE_STANDARD_TYPE,
-                             G_FILE_QUERY_INFO_NONE,
-                             G_PRIORITY_DEFAULT,
-                             cancellable,
-                             (GAsyncReadyCallback)query_info_async_ready,
-                             task);
+    qmi_file_check_type_async (self->priv->file,
+                               cancellable,
+                               (GAsyncReadyCallback)check_type_async_ready,
+                               task);
 }
 
 /*****************************************************************************/
@@ -3051,11 +3026,7 @@ set_property (GObject *object,
     switch (prop_id) {
     case PROP_FILE:
         g_assert (self->priv->file == NULL);
-        self->priv->file = g_value_dup_object (value);
-        if (self->priv->file) {
-            self->priv->path = g_file_get_path (self->priv->file);
-            self->priv->path_display = g_filename_display_name (self->priv->path);
-        }
+        self->priv->file = qmi_file_new (g_value_get_object (value));
         break;
     case PROP_NO_FILE_CHECK:
         self->priv->no_file_check = g_value_get_boolean (value);
@@ -3080,7 +3051,7 @@ get_property (GObject *object,
 
     switch (prop_id) {
     case PROP_FILE:
-        g_value_set_object (value, self->priv->file);
+        g_value_set_object (value, qmi_file_get_file (self->priv->file));
         break;
     case PROP_WWAN_IFACE:
         reload_wwan_iface_name (self);
@@ -3116,7 +3087,7 @@ foreach_warning (gpointer key,
                  QmiDevice *self)
 {
     g_warning ("[%s] QMI client for service '%s' with CID '%u' wasn't released",
-               self->priv->path_display,
+               qmi_file_get_path_display (self->priv->file),
                qmi_service_get_string (qmi_client_get_service (client)),
                qmi_client_get_cid (client));
 
@@ -3144,7 +3115,7 @@ dispose (GObject *object)
 #if defined MBIM_QMUX_ENABLED
     if (self->priv->mbimdev) {
         g_warning ("[%s] MBIM device wasn't explicitly closed",
-                   self->priv->path_display);
+                   qmi_file_get_path_display (self->priv->file));
         if (self->priv->mbim_notification_id) {
             g_signal_handler_disconnect (self->priv->mbimdev, self->priv->mbim_notification_id);
             self->priv->mbim_notification_id = 0;
@@ -3181,8 +3152,6 @@ finalize (GObject *object)
     if (self->priv->supported_services)
         g_array_unref (self->priv->supported_services);
 
-    g_free (self->priv->path);
-    g_free (self->priv->path_display);
     g_free (self->priv->proxy_path);
     g_free (self->priv->wwan_iface);
 

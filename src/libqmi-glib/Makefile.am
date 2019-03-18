@@ -40,7 +40,8 @@ libqmi_glib_la_SOURCES = \
 	qmi-message-context.h qmi-message-context.c \
 	qmi-device.h qmi-device.c \
 	qmi-client.h qmi-client.c \
-	qmi-proxy.h qmi-proxy.c
+	qmi-proxy.h qmi-proxy.c \
+	qmi-file.h qmi-file.c
 
 libqmi_glib_la_LIBADD = \
 	${top_builddir}/src/libqmi-glib/generated/libqmi-glib-generated.la \
