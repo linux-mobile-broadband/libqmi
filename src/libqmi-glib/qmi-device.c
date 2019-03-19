@@ -2672,7 +2672,6 @@ static gboolean
 mbim_command (QmiDevice      *self,
               gconstpointer   raw_message,
               gsize           raw_message_len,
-              gconstpointer   transaction_key,
               guint           timeout,
               GCancellable   *cancellable,
               GError        **error)
@@ -2823,7 +2822,6 @@ qmi_device_command_full (QmiDevice           *self,
         if (!mbim_command (self,
                            raw_message,
                            raw_message_len,
-                           build_transaction_key (message),
                            timeout + MBIM_TIMEOUT_DELAY_SECS,
                            NULL, /* cancellable */
                            &error)) {
