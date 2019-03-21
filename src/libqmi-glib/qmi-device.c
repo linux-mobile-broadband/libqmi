@@ -2658,7 +2658,8 @@ mbim_device_command_ready (MbimDevice   *dev,
 
     response = mbim_device_command_finish (dev, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
-        g_prefix_error (&error, "MBIM error: ");
+        g_warning ("[%s] MBIM error: %s", self->priv->path_display, error->message);
+        g_error_free (error);
         if (response)
             mbim_message_unref (response);
         g_object_unref (self);
