@@ -428,6 +428,54 @@ qmicli_read_non_empty_string (const gchar *str,
 }
 
 gboolean
+qmicli_read_raw_data_from_string (const gchar  *str,
+                                  GArray      **out)
+{
+    GArray *array;
+    gsize   i;
+    gsize   str_len;
+
+    array = g_array_new (FALSE, FALSE, sizeof (guint8));
+
+    str_len = str ? strlen (str) : 0;
+
+    for (i = 0; i < str_len; i += 2) {
+        gint   high, low;
+        guint8 value;
+
+        /* For easy processing, we just ignore the ':' chars, if any available */
+        if (str[i] == ':')
+            i++;
+
+        high = g_ascii_xdigit_value (str[i]);
+        if (high < 0 || high > 0xF) {
+            g_printerr ("error: invalid hex char found: '%c'\n", str[i]);
+            g_clear_pointer (&array, g_array_unref);
+            return FALSE;
+        }
+
+        if (!((i + 1) < str_len)) {
+            g_printerr ("unterminated byte found: '%c?'\n", str[i]);
+            g_clear_pointer (&array, g_array_unref);
+            return FALSE;
+        }
+
+        low = g_ascii_xdigit_value (str[i + 1]);
+        if (low < 0 || low > 0xF) {
+            g_printerr ("invalid hex char found: '%c'\n", str[i + 1]);
+            g_clear_pointer (&array, g_array_unref);
+            return FALSE;
+        }
+
+        value = (high << 4) | low;
+        g_array_append_val (array, value);
+    }
+
+    *out = array;
+    return TRUE;
+}
+
+gboolean
 qmicli_read_firmware_id_from_string (const gchar *str,
                                      QmiDmsFirmwareImageType *out_type,
                                      guint *out_index)

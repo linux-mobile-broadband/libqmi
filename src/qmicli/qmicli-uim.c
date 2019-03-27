@@ -51,6 +51,7 @@ static gchar *change_pin_str;
 static gchar *get_file_attributes_str;
 static gchar *sim_power_on_str;
 static gchar *sim_power_off_str;
+static gchar *change_provisioning_session_str;
 static gboolean get_card_status_flag;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
@@ -101,6 +102,10 @@ static GOptionEntry entries[] = {
       "Power off SIM card",
       "[(slot number)]"
     },
+    { "uim-change-provisioning-session", 0, 0, G_OPTION_ARG_STRING, &change_provisioning_session_str,
+      "Change provisioning session (allowed keys: session-type, activate, slot, aid)",
+      "[\"key=value,...\"]"
+    },
     { "uim-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -145,6 +150,7 @@ qmicli_uim_options_enabled (void)
                  !!get_file_attributes_str +
                  !!sim_power_on_str +
                  !!sim_power_off_str +
+                 !!change_provisioning_session_str +
                  get_card_status_flag +
                  get_supported_messages_flag +
                  reset_flag +
@@ -696,6 +702,154 @@ power_off_sim_ready (QmiClientUim *client,
              qmi_device_get_path_display (ctx->device));
 
     qmi_message_uim_power_off_sim_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+typedef struct {
+    QmiUimSessionType  session_type;
+    gboolean           session_type_set;
+    gboolean           activate;
+    gboolean           activate_set;
+    guint              slot;
+    GArray            *aid;
+} SetChangeProvisioningSessionProperties;
+
+static gboolean
+set_change_provisioning_session_properties_handle (const gchar *key,
+                                                   const gchar *value,
+                                                   GError     **error,
+                                                   gpointer     user_data)
+{
+    SetChangeProvisioningSessionProperties *props = (SetChangeProvisioningSessionProperties *) user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "key '%s' requires a value", key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "session-type") == 0) {
+        if (!qmicli_read_uim_session_type_from_string (value, &props->session_type)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid session type value: %s (not a valid enum)", value);
+            return FALSE;
+        }
+        props->session_type_set = TRUE;
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "activate") == 0) {
+        if (!qmicli_read_yes_no_from_string (value, &props->activate)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid activate value: %s (not a boolean)", value);
+            return FALSE;
+        }
+        props->activate_set = TRUE;
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "slot") == 0) {
+        if (!qmicli_read_uint_from_string (value, &props->slot)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid slot value: %s (not a number)", value);
+            return FALSE;
+        }
+        if (props->slot > G_MAXUINT8) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid slot value: %s (out of range)", value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "aid") == 0) {
+        if (!qmicli_read_raw_data_from_string (value, &props->aid)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid aid value: %s (not an hex string)", value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                 "Unrecognized option '%s'", key);
+    return FALSE;
+}
+
+static QmiMessageUimChangeProvisioningSessionInput *
+change_provisioning_session_input_create (const gchar *str)
+{
+    QmiMessageUimChangeProvisioningSessionInput *input;
+    GError                                      *error = NULL;
+    SetChangeProvisioningSessionProperties       props = { 0 };
+
+    input = qmi_message_uim_change_provisioning_session_input_new ();
+
+    if (!qmicli_parse_key_value_string (str,
+                                        &error,
+                                        set_change_provisioning_session_properties_handle,
+                                        &props)) {
+        g_printerr ("error: could not parse input string '%s': %s\n", str, error->message);
+        g_error_free (error);
+        g_clear_pointer (&input, qmi_message_uim_change_provisioning_session_input_unref);
+        goto out;
+    }
+
+    if (!props.session_type_set || !props.activate_set) {
+        g_printerr ("error: mandatory fields 'session-type' and 'activate' not given\n");
+        g_clear_pointer (&input, qmi_message_uim_change_provisioning_session_input_unref);
+        goto out;
+    }
+
+    qmi_message_uim_change_provisioning_session_input_set_session_change (
+        input,
+        props.session_type,
+        props.activate,
+        NULL);
+
+    if (props.slot || props.aid) {
+        GArray *aid = NULL;
+
+        aid = props.aid ? g_array_ref (props.aid) : g_array_new (FALSE, FALSE, sizeof (guint8));
+        qmi_message_uim_change_provisioning_session_input_set_application_information (
+            input,
+            props.slot,
+            aid,
+            NULL);
+        g_array_unref (aid);
+    }
+
+out:
+    return input;
+}
+
+static void
+change_provisioning_session_ready (QmiClientUim *client,
+                                   GAsyncResult *res)
+{
+    QmiMessageUimChangeProvisioningSessionOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_uim_change_provisioning_session_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_change_provisioning_session_output_get_result (output, &error)) {
+        g_printerr ("error: could not power off SIM: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_uim_change_provisioning_session_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully changed provisioning session\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_uim_change_provisioning_session_output_unref (output);
     operation_shutdown (TRUE);
 }
 
@@ -1613,6 +1767,27 @@ qmicli_uim_run (QmiDevice *device,
                                       (GAsyncReadyCallback)power_off_sim_ready,
                                       NULL);
         qmi_message_uim_power_off_sim_input_unref (input);
+        return;
+    }
+
+    /* Request to change provisioning session? */
+    if (change_provisioning_session_str) {
+        QmiMessageUimChangeProvisioningSessionInput *input;
+
+        g_debug ("Asynchronously changing provisioning session");
+        input = change_provisioning_session_input_create (change_provisioning_session_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        qmi_client_uim_change_provisioning_session (ctx->client,
+                                                    input,
+                                                    10,
+                                                    ctx->cancellable,
+                                                    (GAsyncReadyCallback)change_provisioning_session_ready,
+                                                    NULL);
+        qmi_message_uim_change_provisioning_session_input_unref (input);
         return;
     }
 

@@ -330,6 +330,7 @@
       <xi:include href="xml/qmi-message-uim-get-supported-messages.xml"/>
       <xi:include href="xml/qmi-message-uim-power-off-sim.xml"/>
       <xi:include href="xml/qmi-message-uim-power-on-sim.xml"/>
+      <xi:include href="xml/qmi-message-uim-change-provisioning-session.xml"/>
     </section>
   </chapter>
 
