@@ -129,7 +129,7 @@ struct _QmiDevicePrivate {
 #define BUFFER_SIZE 2048
 
 #if defined MBIM_QMUX_ENABLED
-/**
+/*
  * Number of extra seconds to give the MBIM timeout delay.
  * Needed so the QMI timeout triggers first and we can be sure
  * that timeouts on the QMI side are not because of libmbim timeouts.
