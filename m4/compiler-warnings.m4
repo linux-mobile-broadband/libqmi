@@ -11,7 +11,7 @@ if test "$GCC" = "yes" -a "$set_more_warnings" != "no"; then
 		      -Wdeclaration-after-statement -Wstrict-prototypes \
 		      -fno-strict-aliasing -Wno-deprecated-declarations \
 		      -Wint-to-pointer-cast -Wfloat-equal -Wno-unused-parameter \
-		      -Wno-sign-compare -Wunused-but-set-variable \
+		      -Wno-sign-compare -Wunused-variable -Wno-unused-function \
 		      -Wundef -Wimplicit-function-declaration \
 		      -Wpointer-arith -Winit-self -Wshadow \
 		      -Wmissing-include-dirs -Waggregate-return \
