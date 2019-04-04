@@ -170,6 +170,7 @@ else
     QMI_MBIM_QMUX_SUPPORTED=0
 fi
 AC_SUBST(QMI_MBIM_QMUX_SUPPORTED)
+AM_CONDITIONAL([QMI_MBIM_QMUX_SUPPORTED], [test "x$QMI_MBIM_QMUX_SUPPORTED" = "x1"])
 
 # udev base directory
 AC_ARG_WITH(udev-base-dir, AS_HELP_STRING([--with-udev-base-dir=DIR], [where udev base directory is]))

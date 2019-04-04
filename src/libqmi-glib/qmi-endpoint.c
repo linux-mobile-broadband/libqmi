@@ -31,6 +31,13 @@ G_DEFINE_TYPE (QmiEndpoint, qmi_endpoint, G_TYPE_OBJECT)
 
 struct _QmiEndpointPrivate {
     GByteArray *buffer;
+    QmiFile *file;
+};
+
+enum {
+    PROP_0,
+    PROP_FILE,
+    PROP_LAST
 };
 
 enum {
@@ -39,6 +46,7 @@ enum {
     SIGNAL_LAST
 };
 
+static GParamSpec *properties[PROP_LAST];
 static guint signals[SIGNAL_LAST] = { 0 };
 
 /*****************************************************************************/
@@ -63,7 +71,7 @@ qmi_endpoint_parse_buffer (QmiEndpoint *self,
                          QMI_PROTOCOL_ERROR,
                          QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE,
                          "QMI framing error detected");
-            __qmi_endpoint_hangup (self);
+            g_signal_emit (self, signals[SIGNAL_HANGUP], 0);
             return FALSE;
         }
 
@@ -74,7 +82,8 @@ qmi_endpoint_parse_buffer (QmiEndpoint *self,
                 return TRUE;
 
             /* Warn about the issue */
-            g_warning ("Invalid QMI message received: '%s'",
+            g_warning ("[%s] Invalid QMI message received: '%s'",
+                       qmi_file_get_path_display (self->priv->file),
                        inner_error->message);
             g_error_free (inner_error);
 
@@ -110,17 +119,167 @@ void qmi_endpoint_add_message (QmiEndpoint *self,
     g_signal_emit (self, signals[SIGNAL_NEW_DATA], 0);
 }
 
-void __qmi_endpoint_hangup (QmiEndpoint *self)
+/*****************************************************************************/
+
+static gboolean
+endpoint_setup_indications_finish (QmiEndpoint   *self,
+                                   GAsyncResult  *res,
+                                   GError       **error)
 {
-    g_signal_emit (self, signals[SIGNAL_HANGUP], 0);
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+endpoint_setup_indications (QmiEndpoint         *self,
+                            guint                timeout,
+                            GCancellable        *cancellable,
+                            GAsyncReadyCallback  callback,
+                            gpointer             user_data)
+{
+    GTask *task;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 /*****************************************************************************/
 
-QmiEndpoint *
-qmi_endpoint_new (void)
+gboolean
+qmi_endpoint_open_finish (QmiEndpoint   *self,
+                          GAsyncResult  *res,
+                          GError       **error)
 {
-    return g_object_new (QMI_TYPE_ENDPOINT, NULL);
+    return QMI_ENDPOINT_GET_CLASS (self)->open_finish (self, res, error);
+}
+
+void
+qmi_endpoint_open (QmiEndpoint         *self,
+                   gboolean             use_proxy,
+                   guint                timeout,
+                   GCancellable        *cancellable,
+                   GAsyncReadyCallback  callback,
+                   gpointer             user_data)
+{
+    g_assert (QMI_ENDPOINT_GET_CLASS (self)->open &&
+              QMI_ENDPOINT_GET_CLASS (self)->open_finish);
+
+    return QMI_ENDPOINT_GET_CLASS (self)->open (self,
+                                                use_proxy,
+                                                timeout,
+                                                cancellable,
+                                                callback,
+                                                user_data);
+}
+
+gboolean
+qmi_endpoint_is_open (QmiEndpoint *self)
+{
+    g_assert (QMI_ENDPOINT_GET_CLASS (self)->is_open);
+
+    return QMI_ENDPOINT_GET_CLASS (self)->is_open (self);
+}
+
+gboolean
+qmi_endpoint_setup_indications_finish (QmiEndpoint   *self,
+                                       GAsyncResult  *res,
+                                       GError       **error)
+{
+    return QMI_ENDPOINT_GET_CLASS (self)->setup_indications_finish (self, res, error);
+}
+
+void
+qmi_endpoint_setup_indications (QmiEndpoint         *self,
+                                guint                timeout,
+                                GCancellable        *cancellable,
+                                GAsyncReadyCallback  callback,
+                                gpointer             user_data)
+{
+    g_assert (QMI_ENDPOINT_GET_CLASS (self)->setup_indications &&
+              QMI_ENDPOINT_GET_CLASS (self)->setup_indications_finish);
+
+    return QMI_ENDPOINT_GET_CLASS (self)->setup_indications (self,
+                                                             timeout,
+                                                             cancellable,
+                                                             callback,
+                                                             user_data);
+}
+
+gboolean
+qmi_endpoint_send (QmiEndpoint   *self,
+                   QmiMessage    *message,
+                   guint          timeout,
+                   GCancellable  *cancellable,
+                   GError       **error)
+{
+    g_assert (QMI_ENDPOINT_GET_CLASS (self)->send);
+
+    return QMI_ENDPOINT_GET_CLASS (self)->send (self, message, timeout, cancellable, error);
+}
+
+gboolean
+qmi_endpoint_close_finish (QmiEndpoint   *self,
+                           GAsyncResult  *res,
+                           GError       **error)
+{
+    return QMI_ENDPOINT_GET_CLASS (self)->close_finish (self, res, error);
+}
+
+void
+qmi_endpoint_close (QmiEndpoint         *self,
+                    guint                timeout,
+                    GCancellable        *cancellable,
+                    GAsyncReadyCallback  callback,
+                    gpointer             user_data)
+{
+    g_assert (QMI_ENDPOINT_GET_CLASS (self)->close &&
+              QMI_ENDPOINT_GET_CLASS (self)->close_finish);
+
+    return QMI_ENDPOINT_GET_CLASS (self)->close (self,
+                                                 timeout,
+                                                 cancellable,
+                                                 callback,
+                                                 user_data);
+}
+
+/*****************************************************************************/
+
+static void
+set_property (GObject *object,
+              guint prop_id,
+              const GValue *value,
+              GParamSpec *pspec)
+{
+    QmiEndpoint *self = QMI_ENDPOINT (object);
+
+    switch (prop_id) {
+    case PROP_FILE:
+        g_assert (self->priv->file == NULL);
+        self->priv->file = g_value_dup_object (value);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+get_property (GObject *object,
+              guint prop_id,
+              GValue *value,
+              GParamSpec *pspec)
+{
+    QmiEndpoint *self = QMI_ENDPOINT (object);
+
+    switch (prop_id) {
+    case PROP_FILE:
+        g_value_set_object (value, self->priv->file);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
 }
 
 /*****************************************************************************/
@@ -141,6 +300,7 @@ dispose (GObject *object)
     QmiEndpoint *self = QMI_ENDPOINT (object);
 
     g_clear_pointer (&self->priv->buffer, g_byte_array_unref);
+    g_clear_object (&self->priv->file);
 
     G_OBJECT_CLASS (qmi_endpoint_parent_class)->dispose (object);
 }
@@ -152,7 +312,23 @@ qmi_endpoint_class_init (QmiEndpointClass *klass)
 
     g_type_class_add_private (object_class, sizeof (QmiEndpointPrivate));
 
+    object_class->get_property = get_property;
+    object_class->set_property = set_property;
     object_class->dispose = dispose;
+
+    klass->setup_indications = endpoint_setup_indications;
+    klass->setup_indications_finish = endpoint_setup_indications_finish;
+
+    /**
+     * QmiDevice:device-file:
+     */
+    properties[PROP_FILE] =
+        g_param_spec_object (QMI_ENDPOINT_FILE,
+                             "Device file",
+                             "File to the underlying QMI device",
+                             QMI_TYPE_FILE,
+                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+    g_object_class_install_property (object_class, PROP_FILE, properties[PROP_FILE]);
 
     /**
      * QmiEndpoint::new-data:

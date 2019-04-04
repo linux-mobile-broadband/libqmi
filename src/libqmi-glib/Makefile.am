@@ -42,7 +42,13 @@ libqmi_glib_la_SOURCES = \
 	qmi-client.h qmi-client.c \
 	qmi-proxy.h qmi-proxy.c \
 	qmi-file.h qmi-file.c \
-	qmi-endpoint.h qmi-endpoint.c
+	qmi-endpoint.h qmi-endpoint.c \
+	qmi-endpoint-qmux.h qmi-endpoint-qmux.c
+
+if QMI_MBIM_QMUX_SUPPORTED
+libqmi_glib_la_SOURCES += \
+	qmi-endpoint-mbim.h qmi-endpoint-mbim.c
+endif
 
 libqmi_glib_la_LIBADD = \
 	${top_builddir}/src/libqmi-glib/generated/libqmi-glib-generated.la \

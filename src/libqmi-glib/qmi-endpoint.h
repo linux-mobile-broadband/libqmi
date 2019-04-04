@@ -24,8 +24,11 @@
 #ifndef _LIBQMI_GLIB_QMI_ENDPOINT_H_
 #define _LIBQMI_GLIB_QMI_ENDPOINT_H_
 
-#include <glib.h>
+#include <glib-object.h>
+#include <gio/gio.h>
 
+#include "qmi-ctl.h"
+#include "qmi-file.h"
 #include "qmi-message.h"
 
 typedef void (*QmiMessageHandler) (QmiMessage *message,
@@ -52,6 +55,13 @@ typedef struct _QmiEndpointClass QmiEndpointClass;
 typedef struct _QmiEndpointPrivate QmiEndpointPrivate;
 
 /**
+ * QMI_ENDPOINT_FILE:
+ *
+ * Symbol defining the #QmiEndpoint:device-file property.
+ */
+#define QMI_ENDPOINT_FILE "device-file"
+
+/**
  * QMI_ENDPOINT_SIGNAL_NEW_DATA:
  *
  * Symbol defining the #QmiEndpoint::new_data signal.
@@ -74,11 +84,82 @@ struct _QmiEndpoint {
 struct _QmiEndpointClass {
     /*< private >*/
     GObjectClass parent;
+
+    /* low level I/O primitives */
+    void (* open)            (QmiEndpoint         *self,
+                              gboolean             use_proxy,
+                              guint                timeout,
+                              GCancellable        *cancellable,
+                              GAsyncReadyCallback  callback,
+                              gpointer             user_data);
+    gboolean (* open_finish) (QmiEndpoint   *self,
+                              GAsyncResult  *res,
+                              GError       **error);
+
+    gboolean (* is_open) (QmiEndpoint *self);
+
+    void (* setup_indications)            (QmiEndpoint         *self,
+                                           guint                timeout,
+                                           GCancellable        *cancellable,
+                                           GAsyncReadyCallback  callback,
+                                           gpointer             user_data);
+    gboolean (* setup_indications_finish) (QmiEndpoint   *self,
+                                           GAsyncResult  *res,
+                                           GError       **error);
+
+    gboolean (* send) (QmiEndpoint   *self,
+                       QmiMessage    *message,
+                       guint          timeout,
+                       GCancellable  *cancellable,
+                       GError       **error);
+
+    void (* close)            (QmiEndpoint         *self,
+                               guint                timeout,
+                               GCancellable        *cancellable,
+                               GAsyncReadyCallback  callback,
+                               gpointer             user_data);
+    gboolean (* close_finish) (QmiEndpoint   *self,
+                               GAsyncResult  *res,
+                               GError       **error);
 };
 
 GType qmi_endpoint_get_type (void);
 
-QmiEndpoint *qmi_endpoint_new (void);
+void qmi_endpoint_open (QmiEndpoint         *self,
+                        gboolean             use_proxy,
+                        guint                timeout,
+                        GCancellable        *cancellable,
+                        GAsyncReadyCallback  callback,
+                        gpointer             user_data);
+gboolean qmi_endpoint_open_finish (QmiEndpoint   *self,
+                                   GAsyncResult  *res,
+                                   GError       **error);
+
+gboolean qmi_endpoint_is_open (QmiEndpoint *self);
+
+void qmi_endpoint_setup_indications (QmiEndpoint         *self,
+                                     guint                timeout,
+                                     GCancellable        *cancellable,
+                                     GAsyncReadyCallback  callback,
+                                     gpointer             user_data);
+gboolean qmi_endpoint_setup_indications_finish (QmiEndpoint   *self,
+                                                GAsyncResult  *res,
+                                                GError       **error);
+
+gboolean qmi_endpoint_send (QmiEndpoint   *self,
+                            QmiMessage    *message,
+                            guint          timeout,
+                            GCancellable  *cancellable,
+                            GError       **error);
+
+void qmi_endpoint_close (QmiEndpoint         *self,
+                         guint                timeout,
+                         GCancellable        *cancellable,
+                         GAsyncReadyCallback  callback,
+                         gpointer             user_data);
+gboolean qmi_endpoint_close_finish (QmiEndpoint   *self,
+                                    GAsyncResult  *res,
+                                    GError       **error);
 
 /**
  * Parse all messages, calling @handler on each one while also passing
@@ -94,17 +175,12 @@ gboolean qmi_endpoint_parse_buffer (QmiEndpoint *self,
 
 /**
  * Adds the message in @buf to the buffer.
+ *
+ * This function should only be called by subclasses when they receive
+ * something on the underlying transport.
  */
 void qmi_endpoint_add_message (QmiEndpoint *self,
                                const guint8 *buf,
                                guint len);
-
-/**
- * Signals that the endpoint has hung up.
- *
- * Transitional function until the transport is fully controlled by the
- * #QmiEndpoint class.
- */
-void __qmi_endpoint_hangup (QmiEndpoint *self);
 
 #endif /* _LIBQMI_GLIB_QMI_ENDPOINT_H_ */

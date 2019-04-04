@@ -40,24 +40,36 @@ struct _QmiFilePrivate {
 GFile *
 qmi_file_get_file (QmiFile *self)
 {
+    if (!self)
+        return NULL;
+
     return g_object_ref (self->priv->file);
 }
 
 GFile *
 qmi_file_peek_file (QmiFile *self)
 {
+    if (!self)
+        return NULL;
+
     return self->priv->file;
 }
 
 const gchar *
 qmi_file_get_path (QmiFile *self)
 {
+    if (!self)
+        return NULL;
+
     return self->priv->path;
 }
 
 const gchar *
 qmi_file_get_path_display (QmiFile *self)
 {
+    if (!self)
+        return NULL;
+
     return self->priv->path_display;
 }
 
