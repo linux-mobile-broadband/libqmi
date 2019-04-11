@@ -593,7 +593,7 @@ const gchar *qmi_dms_swi_usb_composition_get_description (QmiDmsSwiUsbCompositio
  *
  * Dell specific device modes.
  *
- * Since: 1.24
+ * Since: 1.22.4
  */
 typedef enum {
     QMI_DMS_DELL_DEVICE_MODE_UNKNOWN         = 0,
@@ -604,7 +604,7 @@ typedef enum {
 /**
  * qmi_dms_dell_device_mode_get_string:
  *
- * Since: 1.24
+ * Since: 1.22.4
  */
 
 /*****************************************************************************/
@@ -618,7 +618,7 @@ typedef enum {
  *
  * Dell specific firmware version types.
  *
- * Since: 1.24
+ * Since: 1.22.4
  */
 typedef enum {
     QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG      = 0x00,
@@ -629,7 +629,7 @@ typedef enum {
 /**
  * qmi_dms_dell_firmware_version_type:
  *
- * Since: 1.24
+ * Since: 1.22.4
  */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */
