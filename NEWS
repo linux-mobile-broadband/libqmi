@@ -1,4 +1,26 @@
 
+Overview of changes in libqmi 1.22.4
+----------------------------------------
+
+ * New request/responses/indications:
+   ** uim: new "Register Events" request/response.
+   ** dms: new "Dell Change Device Mode" request/response.
+   ** dms: new "Dell Get Firmware Version" request/response.
+
+ * libqmi-glib:
+   ** wds: fixed reporting unknown current rates.
+      https://gitlab.freedesktop.org/mobile-broadband/libqmi/issues/8
+
+ * qmi-proxy:
+   ** Increased empty lifetime to 300s.
+
+ * qmicli:
+   ** Avoid priting service option in 3GPP devices.
+      https://gitlab.freedesktop.org/mobile-broadband/libqmi/issues/7
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.22.2
 ----------------------------------------
 
