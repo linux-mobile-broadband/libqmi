@@ -47,7 +47,7 @@
  *
  * Flags to use to register to UIM indications.
  *
- * Since: 1.24
+ * Since: 1.22.4
  */
 typedef enum {
     QMI_UIM_EVENT_REGISTRATION_FLAG_CARD_STATUS          = 1 << 0,
@@ -58,7 +58,7 @@ typedef enum {
 /**
  * qmi_uim_event_registration_flag_build_string_from_mask:
  *
- * Since: 1.24
+ * Since: 1.22.4
  */
 
 /*****************************************************************************/
