@@ -16,9 +16,9 @@ dnl        If the interface has grown (that is, the new library is compatible
 dnl            with old code), increment a.
 dnl        If the interface has changed in an incompatible way (that is,
 dnl            functions have changed or been removed), then zero a.
-m4_define([qmi_glib_lt_current],  [9])
+m4_define([qmi_glib_lt_current],  [10])
 m4_define([qmi_glib_lt_revision], [0])
-m4_define([qmi_glib_lt_age],      [4])
+m4_define([qmi_glib_lt_age],      [5])
 
 
 AC_INIT([libqmi], [qmi_version], [libqmi-devel@lists.freedesktop.org])
