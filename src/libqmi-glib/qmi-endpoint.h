@@ -34,15 +34,6 @@
 typedef void (*QmiMessageHandler) (QmiMessage *message,
                                    gpointer user_data);
 
-/**
- * SECTION:qmi-endpoint
- * @title: QmiEndpoint
- * @short_description: Transport-level abstraction for QMI
- *
- * #QmiEndpoint handles the low-level details of sending and receiving QMI
- * messages to the modem.
- */
-
 #define QMI_TYPE_ENDPOINT            (qmi_endpoint_get_type ())
 #define QMI_ENDPOINT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), QMI_TYPE_ENDPOINT, QmiEndpoint))
 #define QMI_ENDPOINT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  QMI_TYPE_ENDPOINT, QmiEndpointClass))
@@ -54,26 +45,9 @@ typedef struct _QmiEndpoint QmiEndpoint;
 typedef struct _QmiEndpointClass QmiEndpointClass;
 typedef struct _QmiEndpointPrivate QmiEndpointPrivate;
 
-/**
- * QMI_ENDPOINT_FILE:
- *
- * Symbol defining the #QmiEndpoint:device-file property.
- */
-#define QMI_ENDPOINT_FILE "device-file"
-
-/**
- * QMI_ENDPOINT_SIGNAL_NEW_DATA:
- *
- * Symbol defining the #QmiEndpoint::new_data signal.
- */
+#define QMI_ENDPOINT_FILE            "device-file"
 #define QMI_ENDPOINT_SIGNAL_NEW_DATA "new-data"
-
-/**
- * QMI_ENDPOINT_SIGNAL_HANGUP:
- *
- * Symbol defining the #QmiEndpoint::hangup signal.
- */
-#define QMI_ENDPOINT_SIGNAL_HANGUP "hangup"
+#define QMI_ENDPOINT_SIGNAL_HANGUP   "hangup"
 
 struct _QmiEndpoint {
     /*< private >*/
@@ -161,7 +135,7 @@ gboolean qmi_endpoint_close_finish (QmiEndpoint   *self,
                                     GAsyncResult  *res,
                                     GError       **error);
 
-/**
+/*
  * Parse all messages, calling @handler on each one while also passing
  * along @user_data.
  *
@@ -173,7 +147,7 @@ gboolean qmi_endpoint_parse_buffer (QmiEndpoint *self,
                                     gpointer user_data,
                                     GError **error);
 
-/**
+/*
  * Adds the message in @buf to the buffer.
  *
  * This function should only be called by subclasses when they receive

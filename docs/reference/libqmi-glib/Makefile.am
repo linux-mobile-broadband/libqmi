@@ -52,6 +52,10 @@ CFILE_GLOB = \
 IGNORE_HFILES = \
 	qmi-enums-private.h \
 	qmi-enum-types-private.h \
+	qmi-endpoint.h \
+	qmi-endpoint-qmux.h \
+	qmi-endpoint-mbim.h \
+	qmi-file.h \
 	qmi-ctl.h \
 	test-port-context.h \
 	test-fixture.h

@@ -26,14 +26,6 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-/**
- * SECTION:qmi-file
- * @title: QmiFile
- * @short_description: Generic QMI USB file handling routines
- *
- * #QmiFile is a generic type representing a device node for a QMI-based modem.
- */
-
 #define QMI_TYPE_FILE            (qmi_file_get_type ())
 #define QMI_FILE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), QMI_TYPE_FILE, QmiFile))
 #define QMI_FILE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  QMI_TYPE_FILE, QmiFileClass))
@@ -58,48 +50,17 @@ struct _QmiFileClass {
 
 GType qmi_file_get_type (void);
 
-QmiFile *qmi_file_new (GFile *file);
-
-/**
- * qmi_file_get_file:
- *
- * Get the #GFile associated with this #QmiFile.
- */
-GFile *qmi_file_get_file (QmiFile *self);
-
-/**
- * qmi_file_peek_file:
- *
- * Get the #GFile associated with this #QmiFile, without increasing the reference count
- * on the returned object.
- */
-GFile *qmi_file_peek_file (QmiFile *self);
-
-/**
- * qmi_file_get_path:
- *
- * Get the system path of the underlying QMI file.
- */
-const gchar *qmi_file_get_path (QmiFile *self);
-
-/**
- * qmi_file_get_path_display:
- *
- * Get the system path of the underlying QMI file in UTF-8.
- */
-const gchar *qmi_file_get_path_display (QmiFile *self);
-
-/**
- * qmi_file_check_type_async:
- *
- * Checks that the #GFile associated with this #QmiFile is a special file.
- */
-void qmi_file_check_type_async (QmiFile             *self,
-                                GCancellable        *cancellable,
-                                GAsyncReadyCallback  callback,
-                                gpointer             user_data);
-gboolean qmi_file_check_type_finish (QmiFile       *self,
-                                     GAsyncResult  *res,
-                                     GError       **error);
+QmiFile     *qmi_file_new               (GFile *file);
+GFile       *qmi_file_get_file          (QmiFile              *self);
+GFile       *qmi_file_peek_file         (QmiFile              *self);
+const gchar *qmi_file_get_path          (QmiFile              *self);
+const gchar *qmi_file_get_path_display  (QmiFile              *self);
+void         qmi_file_check_type_async  (QmiFile              *self,
+                                         GCancellable         *cancellable,
+                                         GAsyncReadyCallback   callback,
+                                         gpointer              user_data);
+gboolean     qmi_file_check_type_finish (QmiFile              *self,
+                                         GAsyncResult         *res,
+                                         GError              **error);
 
 #endif /* _LIBQMI_GLIB_QMI_FILE_H_ */

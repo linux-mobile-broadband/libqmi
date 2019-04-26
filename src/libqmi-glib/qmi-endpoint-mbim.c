@@ -39,7 +39,7 @@ struct _QmiEndpointMbimPrivate {
     guint mbim_removed_id;
 };
 
-/**
+/*
  * Number of extra seconds to give the MBIM timeout delay.
  * Needed so the QMI timeout triggers first and we can be sure
  * that timeouts on the QMI side are not because of libmbim timeouts.
