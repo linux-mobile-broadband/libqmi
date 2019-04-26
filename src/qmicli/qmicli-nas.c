@@ -2160,7 +2160,7 @@ set_system_selection_preference_input_create (const gchar *str)
     gchar                                          *rat_pref_str = NULL;
     gchar                                          *net_pref_str = NULL;
     QmiNasRatModePreference                         rat_mode_preference;
-    GArray                                         *acquisition_order;
+    GArray                                         *acquisition_order = NULL;
     QmiNasNetworkSelectionPreference                net_preference = 0;
     guint16                                         mcc = 0;
     guint16                                         mnc = 0;
