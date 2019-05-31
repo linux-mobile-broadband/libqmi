@@ -250,7 +250,10 @@ endpoint_open (QmiEndpoint         *endpoint,
 
     self = QMI_ENDPOINT_MBIM (endpoint);
     task = g_task_new (self, cancellable, callback, user_data);
-    ctx = g_slice_new (MbimDeviceOpenContext);
+
+    ctx = g_slice_new0 (MbimDeviceOpenContext);
+    ctx->use_proxy = use_proxy;
+    ctx->timeout = timeout;
     g_task_set_task_data (task, ctx, (GDestroyNotify)mbim_device_open_context_free);
 
     if (self->priv->mbimdev) {
