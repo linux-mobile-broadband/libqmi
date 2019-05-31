@@ -2043,22 +2043,19 @@ endpoint_close_ready (QmiEndpoint  *endpoint,
                       GTask        *task)
 {
     QmiDevice *self;
-    gboolean closed;
-    GError *error = NULL;
+    GError    *error = NULL;
 
     self = g_task_get_source_object (task);
 
-    closed = qmi_endpoint_close_finish (endpoint, res, &error);
+    qmi_endpoint_close_finish (endpoint, res, &error);
+
     /* Success or failure, we want to get rid of this endpoint. */
     endpoint_cleanup (self);
 
-    if (!closed) {
+    if (error)
         g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
-
-    g_task_return_boolean (task, TRUE);
+    else
+        g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
 
