@@ -100,6 +100,8 @@ struct _QmiEndpointClass {
 GType qmi_endpoint_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiEndpoint, g_object_unref)
 
+const gchar *qmi_endpoint_get_name (QmiEndpoint *self);
+
 void qmi_endpoint_open (QmiEndpoint         *self,
                         gboolean             use_proxy,
                         guint                timeout,

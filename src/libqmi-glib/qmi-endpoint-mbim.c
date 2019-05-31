@@ -69,10 +69,7 @@ mbim_device_command_ready (MbimDevice      *dev,
 
     response = mbim_device_command_finish (dev, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
-        QmiFile *file;
-        g_object_get (self, QMI_ENDPOINT_FILE, &file, NULL);
-        g_warning ("[%s] MBIM error: %s", qmi_file_get_path_display (file), error->message);
-        g_object_unref (file);
+        g_warning ("[%s] MBIM error: %s", qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
 
         if (response)
             mbim_message_unref (response);
@@ -113,7 +110,6 @@ mbim_subscribe_list_set_ready_cb (MbimDevice   *device,
 {
     QmiEndpointMbim   *self;
     MbimMessage       *response;
-    QmiFile           *file;
     GError            *error = NULL;
 
     self = g_task_get_source_object (task);
@@ -124,19 +120,15 @@ mbim_subscribe_list_set_ready_cb (MbimDevice   *device,
         mbim_message_unref (response);
     }
 
-    g_object_get (self, QMI_ENDPOINT_FILE, &file, NULL);
-
     if (error) {
         g_warning ("[%s] couldn't enable QMI indications via MBIM: %s",
-                   qmi_file_get_path_display (file), error->message);
-        g_object_unref (file);
+                   qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
 
-    g_debug ("[%s] enabled QMI indications via MBIM", qmi_file_get_path_display (file));
-    g_object_unref (file);
+    g_debug ("[%s] enabled QMI indications via MBIM", qmi_endpoint_get_name (QMI_ENDPOINT (self)));
     self->priv->mbim_notification_id = g_signal_connect (device,
                                                          MBIM_DEVICE_SIGNAL_INDICATE_STATUS,
                                                          G_CALLBACK (mbim_qmi_notification_cb),
@@ -172,7 +164,6 @@ mbim_device_open_ready (MbimDevice   *dev,
                         GTask        *task)
 {
     QmiEndpointMbim *self;
-    QmiFile *file;
     GError *error = NULL;
 
     if (!mbim_device_open_finish (dev, res, &error)) {
@@ -182,9 +173,7 @@ mbim_device_open_ready (MbimDevice   *dev,
     }
 
     self = g_task_get_source_object (task);
-    g_object_get (self, QMI_ENDPOINT_FILE, &file, NULL);
-    g_debug ("[%s] MBIM device open", qmi_file_get_path_display (file));
-    g_object_unref (file);
+    g_debug ("[%s] MBIM device open", qmi_endpoint_get_name (QMI_ENDPOINT (self)));
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
@@ -195,7 +184,6 @@ mbim_device_new_ready (GObject *source,
                        GTask *task)
 {
     QmiEndpointMbim *self;
-    QmiFile* file;
     MbimDeviceOpenContext *ctx;
     MbimDeviceOpenFlags open_flags = MBIM_DEVICE_OPEN_FLAGS_NONE;
     GError *error = NULL;
@@ -210,8 +198,7 @@ mbim_device_new_ready (GObject *source,
         return;
     }
 
-    g_object_get (self, QMI_ENDPOINT_FILE, &file, NULL);
-    g_debug ("[%s] MBIM device created", qmi_file_get_path_display (file));
+    g_debug ("[%s] MBIM device created", qmi_endpoint_get_name (QMI_ENDPOINT (self)));
 
     self->priv->mbim_removed_id =
         g_signal_connect (self->priv->mbimdev,
@@ -224,14 +211,13 @@ mbim_device_new_ready (GObject *source,
         open_flags |= MBIM_DEVICE_OPEN_FLAGS_PROXY;
 
     /* We pass the original timeout of the request to the open operation */
-    g_debug ("[%s] opening MBIM device...", qmi_file_get_path_display (file));
+    g_debug ("[%s] opening MBIM device...", qmi_endpoint_get_name (QMI_ENDPOINT (self)));
     mbim_device_open_full (self->priv->mbimdev,
                            open_flags,
                            ctx->timeout,
                            g_task_get_cancellable (task),
                            (GAsyncReadyCallback) mbim_device_open_ready,
                            task);
-    g_object_unref (file);
 }
 
 static void
@@ -266,7 +252,7 @@ endpoint_open (QmiEndpoint         *endpoint,
     }
 
     g_object_get (self, QMI_ENDPOINT_FILE, &qfile, NULL);
-    g_debug ("[%s] creating MBIM device...", qmi_file_get_path_display (qfile));
+    g_debug ("[%s] creating MBIM device...", qmi_endpoint_get_name (QMI_ENDPOINT (self)));
     file = g_file_new_for_path (qmi_file_get_path (qfile));
     g_object_unref (qfile);
 
@@ -299,16 +285,13 @@ endpoint_setup_indications (QmiEndpoint         *self,
                             gpointer             user_data)
 {
     GTask *task;
-    QmiFile *file;
     MbimEventEntry **entries;
     guint n_entries = 0;
     MbimMessage *request;
 
     task = g_task_new (self, cancellable, callback, user_data);
 
-    g_object_get (self, QMI_ENDPOINT_FILE, &file, NULL);
-    g_debug ("[%s] Enabling QMI indications via MBIM...", qmi_file_get_path_display (file));
-    g_object_unref (file);
+    g_debug ("[%s] Enabling QMI indications via MBIM...", qmi_endpoint_get_name (QMI_ENDPOINT (self)));
 
     entries = g_new0 (MbimEventEntry *, 2);
     entries[n_entries] = g_new (MbimEventEntry, 1);
@@ -465,11 +448,8 @@ dispose (GObject *object)
     QmiEndpointMbim *self = QMI_ENDPOINT_MBIM (object);
 
     if (self->priv->mbimdev) {
-        QmiFile *file;
-        g_object_get (self, QMI_ENDPOINT_FILE, &file, NULL);
         g_warning ("[%s] MBIM device wasn't explicitly closed",
-                   qmi_file_get_path_display (file));
-        g_object_unref (file);
+                   qmi_endpoint_get_name (QMI_ENDPOINT (self)));
 
         if (self->priv->mbim_notification_id) {
             g_signal_handler_disconnect (self->priv->mbimdev, self->priv->mbim_notification_id);

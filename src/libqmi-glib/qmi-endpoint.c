@@ -147,6 +147,12 @@ endpoint_setup_indications (QmiEndpoint         *self,
 
 /*****************************************************************************/
 
+const gchar *
+qmi_endpoint_get_name (QmiEndpoint *self)
+{
+    return qmi_file_get_path_display (self->priv->file);
+}
+
 gboolean
 qmi_endpoint_open_finish (QmiEndpoint   *self,
                           GAsyncResult  *res,
