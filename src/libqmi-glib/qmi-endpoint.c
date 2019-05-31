@@ -52,10 +52,10 @@ static guint signals[SIGNAL_LAST] = { 0 };
 /*****************************************************************************/
 
 gboolean
-qmi_endpoint_parse_buffer (QmiEndpoint *self,
-                           QmiMessageHandler handler,
-                           gpointer user_data,
-                           GError **error)
+qmi_endpoint_parse_buffer (QmiEndpoint        *self,
+                           QmiMessageHandler   handler,
+                           gpointer            user_data,
+                           GError            **error)
 {
     do {
         GError *inner_error = NULL;
@@ -111,9 +111,10 @@ qmi_endpoint_parse_buffer (QmiEndpoint *self,
     return TRUE;
 }
 
-void qmi_endpoint_add_message (QmiEndpoint *self,
-                               const guint8 *data,
-                               guint len)
+void
+qmi_endpoint_add_message (QmiEndpoint  *self,
+                          const guint8 *data,
+                          guint         len)
 {
     self->priv->buffer = g_byte_array_append (self->priv->buffer, data, len);
     g_signal_emit (self, signals[SIGNAL_NEW_DATA], 0);
