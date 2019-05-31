@@ -2070,6 +2070,13 @@ qmi_device_close_async (QmiDevice           *self,
 
     task = g_task_new (self, cancellable, callback, user_data);
 
+    /* if already closed, we're done */
+    if (!self->priv->endpoint) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
     qmi_endpoint_close (self->priv->endpoint,
                         timeout,
                         cancellable,
