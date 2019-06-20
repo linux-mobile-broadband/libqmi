@@ -151,15 +151,15 @@ qfu_operation_update_run (const gchar        **images,
 #endif
 
 gboolean
-qfu_operation_update_qdl_run (const gchar        **images,
-                              QfuDeviceSelection  *device_selection)
+qfu_operation_update_download_run (const gchar        **images,
+                                   QfuDeviceSelection  *device_selection)
 {
     QfuUpdater *updater = NULL;
     gboolean    result;
 
     g_assert (images);
 
-    updater = qfu_updater_new_qdl (device_selection);
+    updater = qfu_updater_new_download (device_selection);
     result = operation_update_run (updater, images);
     g_object_unref (updater);
     return result;

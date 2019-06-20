@@ -31,23 +31,23 @@
 G_BEGIN_DECLS
 
 #if defined WITH_UDEV
-gboolean qfu_operation_update_run     (const gchar        **images,
-                                       QfuDeviceSelection  *device_selection,
-                                       const gchar         *firmware_version,
-                                       const gchar         *config_version,
-                                       const gchar         *carrier,
-                                       QmiDeviceOpenFlags   device_open_flags,
-                                       gboolean             ignore_version_errors,
-                                       gboolean             override_download,
-                                       guint8               modem_storage_index,
-                                       gboolean             skip_validation);
+gboolean qfu_operation_update_run          (const gchar        **images,
+                                            QfuDeviceSelection  *device_selection,
+                                            const gchar         *firmware_version,
+                                            const gchar         *config_version,
+                                            const gchar         *carrier,
+                                            QmiDeviceOpenFlags   device_open_flags,
+                                            gboolean             ignore_version_errors,
+                                            gboolean             override_download,
+                                            guint8               modem_storage_index,
+                                            gboolean             skip_validation);
 #endif
 
-gboolean qfu_operation_update_qdl_run (const gchar        **images,
-                                       QfuDeviceSelection  *device_selection);
-gboolean qfu_operation_verify_run     (const gchar        **images);
-gboolean qfu_operation_reset_run      (QfuDeviceSelection  *device_selection,
-                                       QmiDeviceOpenFlags   device_open_flags);
+gboolean qfu_operation_update_download_run (const gchar        **images,
+                                            QfuDeviceSelection  *device_selection);
+gboolean qfu_operation_verify_run          (const gchar        **images);
+gboolean qfu_operation_reset_run           (QfuDeviceSelection  *device_selection,
+                                            QmiDeviceOpenFlags   device_open_flags);
 
 G_END_DECLS
 

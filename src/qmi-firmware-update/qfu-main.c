@@ -70,8 +70,8 @@ static gboolean   skip_validation_flag;
 /* Reset */
 static gboolean   action_reset_flag;
 
-/* Update (QDL mode) */
-static gboolean   action_update_qdl_flag;
+/* Update (in download mode) */
+static gboolean   action_update_download_flag;
 
 /* Verify */
 static gboolean   action_verify_flag;
@@ -250,15 +250,15 @@ static GOptionEntry context_update_entries[] = {
 
 static GOptionEntry context_reset_entries[] = {
     { "reset", 'b', 0, G_OPTION_ARG_NONE, &action_reset_flag,
-      "Reset device into QDL download mode.",
+      "Reset device into download mode.",
       NULL
     },
     { NULL }
 };
 
-static GOptionEntry context_update_qdl_entries[] = {
-    { "update-qdl", 'U', 0, G_OPTION_ARG_NONE, &action_update_qdl_flag,
-      "Launch firmware update process in QDL mode.",
+static GOptionEntry context_update_download_entries[] = {
+    { "update-download", 'U', 0, G_OPTION_ARG_NONE, &action_update_download_flag,
+      "Launch firmware update process while in download (boot & hold) mode.",
       NULL
     },
     { NULL }
@@ -481,7 +481,7 @@ print_help_examples (void)
              " d) Run updater operation while in QDL download mode:\n"
              "    $ sudo " PROGRAM_NAME " \\\n"
              "          -t /dev/ttyUSB0 \\\n"
-             "          --update-qdl \\\n"
+             "          --update-download \\\n"
              "          SWI9X15C_05.05.58.00.cwe \\\n"
              "          SWI9X15C_05.05.58.00_Generic_005.025_002.nvu\n"
              "\n"
@@ -506,7 +506,7 @@ print_help_examples (void)
              " c) Run updater operation while in QDL download mode:\n"
              "    $ sudo " PROGRAM_NAME " \\\n"
              "          -d 1199:68a2 \\\n"
-             "          --update-qdl \\\n"
+             "          --update-download \\\n"
              "          9999999_9999999_9200_03.05.14.00_00_generic_000.000_001_SPKG_MC.cwe\n"
              "\n"
              " d) Now wait for the device to fully reboot, may take up to several minutes.\n");
@@ -568,8 +568,8 @@ int main (int argc, char **argv)
     g_option_group_add_entries (group, context_reset_entries);
     g_option_context_add_group (context, group);
 
-    group = g_option_group_new ("update-qdl", "Update options (QDL mode)", "", NULL, NULL);
-    g_option_group_add_entries (group, context_update_qdl_entries);
+    group = g_option_group_new ("update-download", "Update options (download mode)", "", NULL, NULL);
+    g_option_group_add_entries (group, context_update_download_entries);
     g_option_context_add_group (context, group);
 
     group = g_option_group_new ("verify", "Verify options", "", NULL, NULL);
@@ -607,11 +607,11 @@ int main (int argc, char **argv)
     qfu_log_init (stdout_verbose_flag, stdout_silent_flag, verbose_log_str);
 
     /* Total actions */
-    n_actions = (action_verify_flag + action_update_qdl_flag + action_reset_flag);
+    n_actions = (action_verify_flag + action_update_download_flag + action_reset_flag);
     /* Actions that require images specified */
-    n_actions_images_needed = (action_verify_flag + action_update_qdl_flag);
+    n_actions_images_needed = (action_verify_flag + action_update_download_flag);
     /* Actions that require a device specified */
-    n_actions_device_needed = (action_update_qdl_flag + action_reset_flag);
+    n_actions_device_needed = (action_update_download_flag + action_reset_flag);
     /* Actions that allow using a cdc-wdm device */
     n_actions_cdc_wdm_needed = (action_reset_flag);
 
@@ -721,10 +721,10 @@ int main (int argc, char **argv)
     }
 #endif /* WITH_UDEV */
 
-    if (action_update_qdl_flag) {
+    if (action_update_download_flag) {
         g_assert (QFU_IS_DEVICE_SELECTION (device_selection));
-        result = qfu_operation_update_qdl_run ((const gchar **) image_strv,
-                                               device_selection);
+        result = qfu_operation_update_download_run ((const gchar **) image_strv,
+                                                    device_selection);
         goto out;
     }
 

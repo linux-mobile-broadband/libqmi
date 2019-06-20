@@ -44,7 +44,7 @@ typedef enum {
 #if defined WITH_UDEV
     UPDATER_TYPE_GENERIC,
 #endif
-    UPDATER_TYPE_QDL,
+    UPDATER_TYPE_DOWNLOAD,
 } UpdaterType;
 
 struct _QfuUpdaterPrivate {
@@ -93,11 +93,11 @@ typedef enum {
     RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE,
     RUN_CONTEXT_STEP_WAIT_FOR_TTY,
 #endif
-    RUN_CONTEXT_STEP_QDL_DEVICE,
+    RUN_CONTEXT_STEP_SELECT_DEVICE,
     RUN_CONTEXT_STEP_SELECT_IMAGE,
     RUN_CONTEXT_STEP_DOWNLOAD_IMAGE,
     RUN_CONTEXT_STEP_CLEANUP_IMAGE,
-    RUN_CONTEXT_STEP_CLEANUP_QDL_DEVICE,
+    RUN_CONTEXT_STEP_CLEANUP_DEVICE,
 #if defined WITH_UDEV
     RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM,
     RUN_CONTEXT_STEP_WAIT_FOR_BOOT,
@@ -297,7 +297,7 @@ run_context_step_last (GTask *task)
 
     self = g_task_get_source_object (task);
 
-    if (self->priv->type == UPDATER_TYPE_QDL) {
+    if (self->priv->type == UPDATER_TYPE_DOWNLOAD) {
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
@@ -626,7 +626,7 @@ run_context_step_wait_for_cdc_wdm (GTask *task)
 #endif /* WITH_UDEV */
 
 static void
-run_context_step_cleanup_qdl_device (GTask *task)
+run_context_step_cleanup_device (GTask *task)
 {
     RunContext *ctx;
     QfuUpdater *self;
@@ -644,8 +644,8 @@ run_context_step_cleanup_qdl_device (GTask *task)
 
     g_print ("rebooting in normal mode...\n");
 
-    /* If we were running in QDL mode, we don't even wait for the reboot to finish */
-    if (self->priv->type == UPDATER_TYPE_QDL) {
+    /* If we were running in download mode, we don't even wait for the reboot to finish */
+    if (self->priv->type == UPDATER_TYPE_DOWNLOAD) {
         run_context_step_next (task, RUN_CONTEXT_STEP_LAST);
         return;
     }
@@ -778,7 +778,7 @@ run_context_step_select_image (GTask *task)
 }
 
 static void
-run_context_step_qdl_device (GTask *task)
+run_context_step_select_device (GTask *task)
 {
     RunContext *ctx;
     GError     *error = NULL;
@@ -1368,11 +1368,11 @@ static const RunContextStepFunc run_context_step_func[] = {
     [RUN_CONTEXT_STEP_CLEANUP_QMI_DEVICE]      = run_context_step_cleanup_qmi_device,
     [RUN_CONTEXT_STEP_WAIT_FOR_TTY]            = run_context_step_wait_for_tty,
 #endif
-    [RUN_CONTEXT_STEP_QDL_DEVICE]              = run_context_step_qdl_device,
+    [RUN_CONTEXT_STEP_SELECT_DEVICE]           = run_context_step_select_device,
     [RUN_CONTEXT_STEP_SELECT_IMAGE]            = run_context_step_select_image,
     [RUN_CONTEXT_STEP_DOWNLOAD_IMAGE]          = run_context_step_download_image,
     [RUN_CONTEXT_STEP_CLEANUP_IMAGE]           = run_context_step_cleanup_image,
-    [RUN_CONTEXT_STEP_CLEANUP_QDL_DEVICE]      = run_context_step_cleanup_qdl_device,
+    [RUN_CONTEXT_STEP_CLEANUP_DEVICE]          = run_context_step_cleanup_device,
 #if defined WITH_UDEV
     [RUN_CONTEXT_STEP_WAIT_FOR_CDC_WDM]        = run_context_step_wait_for_cdc_wdm,
     [RUN_CONTEXT_STEP_WAIT_FOR_BOOT]           = run_context_step_wait_for_boot,
@@ -1474,8 +1474,8 @@ qfu_updater_run (QfuUpdater          *self,
         }
         break;
 #endif
-    case UPDATER_TYPE_QDL:
-        ctx->step = RUN_CONTEXT_STEP_QDL_DEVICE;
+    case UPDATER_TYPE_DOWNLOAD:
+        ctx->step = RUN_CONTEXT_STEP_SELECT_DEVICE;
         ctx->serial_file = qfu_device_selection_get_single_tty (self->priv->device_selection);
         if (!ctx->serial_file) {
             g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
@@ -1528,14 +1528,14 @@ qfu_updater_new (QfuDeviceSelection *device_selection,
 #endif
 
 QfuUpdater *
-qfu_updater_new_qdl (QfuDeviceSelection *device_selection)
+qfu_updater_new_download (QfuDeviceSelection *device_selection)
 {
     QfuUpdater *self;
 
     g_assert (QFU_IS_DEVICE_SELECTION (device_selection));
 
     self = g_object_new (QFU_TYPE_UPDATER, NULL);
-    self->priv->type = UPDATER_TYPE_QDL;
+    self->priv->type = UPDATER_TYPE_DOWNLOAD;
     self->priv->device_selection = g_object_ref (device_selection);
 
     return self;
