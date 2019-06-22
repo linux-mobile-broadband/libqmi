@@ -1497,6 +1497,8 @@ process_message (QmiMessage *message,
 /*****************************************************************************/
 /* Open device */
 
+#define SYNC_TIMEOUT_SECS 2
+
 typedef enum {
     DEVICE_OPEN_CONTEXT_STEP_FIRST = 0,
     DEVICE_OPEN_CONTEXT_STEP_DRIVER,
@@ -1514,6 +1516,7 @@ typedef struct {
     QmiDeviceOpenFlags flags;
     guint timeout;
     guint version_check_retries;
+    guint sync_retries;
 } DeviceOpenContext;
 
 static void
@@ -1601,9 +1604,29 @@ sync_ready (QmiClientCtl *client_ctl,
     GError *error = NULL;
     QmiMessageCtlSyncOutput *output;
 
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
+
     /* Check result of the async operation */
     output = qmi_client_ctl_sync_finish (client_ctl, res, &error);
     if (!output) {
+        if (g_error_matches (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TIMEOUT)) {
+            /* Update retries... */
+            ctx->sync_retries--;
+            /* If retries left, retry */
+            if (ctx->sync_retries > 0) {
+                g_error_free (error);
+                qmi_client_ctl_sync (self->priv->client_ctl,
+                                     NULL,
+                                     SYNC_TIMEOUT_SECS,
+                                     g_task_get_cancellable (task),
+                                     (GAsyncReadyCallback)sync_ready,
+                                     task);
+                return;
+            }
+
+            /* Otherwise, propagate the error */
+        }
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
@@ -1617,14 +1640,12 @@ sync_ready (QmiClientCtl *client_ctl,
         return;
     }
 
-    self = g_task_get_source_object (task);
     g_debug ("[%s] Sync operation finished",
              qmi_file_get_path_display (self->priv->file));
 
     qmi_message_ctl_sync_output_unref (output);
 
     /* Go on */
-    ctx = g_task_get_task_data (task);
     ctx->step++;
     device_open_step (task);
 }
@@ -1898,11 +1919,14 @@ device_open_step (GTask *task)
     case DEVICE_OPEN_CONTEXT_STEP_FLAGS_SYNC:
         /* Sync? */
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_SYNC) {
-            g_debug ("[%s] Running sync...",
-                     qmi_file_get_path_display (self->priv->file));
+            /* Setup how many times to retry... We'll retry once per second */
+            ctx->sync_retries = ctx->timeout > SYNC_TIMEOUT_SECS ? (ctx->timeout / SYNC_TIMEOUT_SECS) : 1;
+            g_debug ("[%s] Running sync (%u retries)...",
+                     qmi_file_get_path_display (self->priv->file),
+                     ctx->sync_retries);
             qmi_client_ctl_sync (self->priv->client_ctl,
                                  NULL,
-                                 ctx->timeout,
+                                 SYNC_TIMEOUT_SECS,
                                  g_task_get_cancellable (task),
                                  (GAsyncReadyCallback)sync_ready,
                                  task);
