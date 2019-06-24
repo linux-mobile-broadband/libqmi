@@ -81,3 +81,4 @@ Makefile.in
 /src/qmi-firmware-update/qfu-enum-types.*
 
 /src/qmi-firmware-update/test/test-utils
+/src/qmi-firmware-update/test/test-firehose

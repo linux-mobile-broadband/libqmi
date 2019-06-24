@@ -2,6 +2,7 @@ include $(top_srcdir)/gtester.make
 
 noinst_PROGRAMS = \
 	test-utils \
+	test-firehose \
 	$(NULL)
 
 TEST_PROGS += $(noinst_PROGRAMS)
@@ -24,5 +25,22 @@ test_utils_CPPFLAGS = \
 
 test_utils_LDADD = \
 	$(top_builddir)/src/qmi-firmware-update/libutils.la \
+	$(GLIB_LIBS) \
+	$(NULL)
+
+test_firehose_SOURCES = \
+	test-firehose.c \
+	$(NULL)
+
+test_firehose_CPPFLAGS = \
+	$(GLIB_CFLAGS) \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/src/qmi-firmware-update \
+	-I$(top_builddir)/src/qmi-firmware-update \
+	-DLIBQMI_GLIB_COMPILATION \
+	$(NULL)
+
+test_firehose_LDADD = \
+	$(top_builddir)/src/qmi-firmware-update/libfirehose.la \
 	$(GLIB_LIBS) \
 	$(NULL)

@@ -33,6 +33,7 @@
 #include "qfu-utils.h"
 #include "qfu-udev-helpers.h"
 #include "qfu-qdl-device.h"
+#include "qfu-sahara-device.h"
 #include "qfu-enum-types.h"
 
 G_DEFINE_TYPE (QfuUpdater, qfu_updater, G_TYPE_OBJECT)
@@ -155,8 +156,9 @@ typedef struct {
     guint wait_for_boot_retries;
 #endif
 
-    /* QDL device */
-    QfuQdlDevice *qdl_device;
+    /* Device to use while already in download mode */
+    QfuQdlDevice    *qdl_device;
+    QfuSaharaDevice *sahara_device;
 } RunContext;
 
 static void
@@ -195,15 +197,11 @@ run_context_free (RunContext *ctx)
         g_object_unref (ctx->cdc_wdm_file);
 #endif
 
-    if (ctx->qdl_device)
-        g_object_unref (&ctx->qdl_device);
-    if (ctx->serial_file)
-        g_object_unref (ctx->serial_file);
-
-    if (ctx->current_image)
-        g_object_unref (ctx->current_image);
+    g_clear_object (&ctx->qdl_device);
+    g_clear_object (&ctx->sahara_device);
+    g_clear_object (&ctx->serial_file);
+    g_clear_object (&ctx->current_image);
     g_list_free_full (ctx->pending_images, g_object_unref);
-
     g_slice_free (RunContext, ctx);
 }
 
@@ -634,12 +632,19 @@ run_context_step_cleanup_device (GTask *task)
     ctx = (RunContext *) g_task_get_task_data (task);
     self = g_task_get_source_object (task);
 
-    g_assert (ctx->qdl_device);
     g_assert (ctx->serial_file);
 
-    g_debug ("[qfu-updater] QDL reset");
-    qfu_qdl_device_reset (ctx->qdl_device, g_task_get_cancellable (task), NULL);
-    g_clear_object (&ctx->qdl_device);
+    if (ctx->qdl_device) {
+        g_debug ("[qfu-updater] QDL reset");
+        qfu_qdl_device_reset (ctx->qdl_device, g_task_get_cancellable (task), NULL);
+        g_clear_object (&ctx->qdl_device);
+    } else if (ctx->sahara_device) {
+        g_debug ("[qfu-updater] firehose reset");
+        qfu_sahara_device_firehose_reset (ctx->sahara_device, g_task_get_cancellable (task), NULL);
+        g_clear_object (&ctx->sahara_device);
+    } else
+        g_assert_not_reached ();
+
     g_clear_object (&ctx->serial_file);
 
     g_print ("rebooting in normal mode...\n");
@@ -674,12 +679,106 @@ run_context_step_cleanup_image (GTask *task)
     run_context_step_next (task, ctx->step + 1);
 }
 
+static gboolean
+download_image_firehose (QfuSaharaDevice  *device,
+                         QfuImage         *image,
+                         GCancellable     *cancellable,
+                         GError          **error)
+{
+    guint sequence;
+    guint n_blocks;
+
+    if (!qfu_sahara_device_firehose_setup_download (device, image, &n_blocks, cancellable, error)) {
+        g_prefix_error (error, "couldn't prepare download: ");
+        return FALSE;
+    }
+
+    for (sequence = 0; sequence < n_blocks; sequence++) {
+        if (!qfu_log_get_verbose_stdout ()) {
+            if (n_blocks > 1) {
+                g_print (CLEAR_LINE "%s %04.1lf%%",
+                         progress[sequence % G_N_ELEMENTS (progress)],
+                         100.0 * ((gdouble) sequence / (gdouble) (n_blocks - 1)));
+            }
+        }
+        if (!qfu_sahara_device_firehose_write_block (device, image, sequence, cancellable, error)) {
+            g_prefix_error (error, "couldn't write in session: ");
+            return FALSE;
+        }
+    }
+
+    g_debug ("[qfu-updater] all blocks downloaded");
+
+    if (!qfu_log_get_verbose_stdout ())
+        g_print (CLEAR_LINE "finalizing download... (may take several minutes, be patient)\n");
+
+    if (!qfu_sahara_device_firehose_teardown_download (device, image, cancellable, error)) {
+        g_prefix_error (error, "couldn't teardown download: ");
+        return FALSE;
+    }
+
+    if (!qfu_log_get_verbose_stdout ())
+        g_print (CLEAR_LINE);
+
+    g_debug ("[qfu-updater] sahara/firehose download finished");
+    return TRUE;
+}
+
+static gboolean
+download_image_qdl (QfuQdlDevice  *device,
+                    QfuImage      *image,
+                    GCancellable  *cancellable,
+                    GError       **error)
+{
+    guint16 sequence;
+    guint16 n_chunks;
+
+    if (!qfu_qdl_device_hello (device, cancellable, error)) {
+        g_prefix_error (error, "couldn't send greetings to device: ");
+        return FALSE;
+    }
+
+    if (!qfu_qdl_device_ufopen (device, image, cancellable, error)) {
+        g_prefix_error (error, "couldn't open session: ");
+        return FALSE;
+    }
+
+    n_chunks = qfu_image_get_n_data_chunks (image);
+    for (sequence = 0; sequence < n_chunks; sequence++) {
+        if (!qfu_log_get_verbose_stdout ()) {
+            /* Use n-1 chunks for progress reporting; because the last one will take
+             * a lot longer. */
+            if (n_chunks > 1 && sequence < (n_chunks - 1))
+                g_print (CLEAR_LINE "%s %04.1lf%%",
+                         progress[sequence % G_N_ELEMENTS (progress)],
+                         100.0 * ((gdouble) sequence / (gdouble) (n_chunks - 1)));
+            else if (sequence == (n_chunks - 1))
+                g_print (CLEAR_LINE "finalizing download... (may take more than one minute, be patient)\n");
+        }
+        if (!qfu_qdl_device_ufwrite (device, image, sequence, cancellable, error)) {
+            g_prefix_error (error, "couldn't write in session: ");
+            return FALSE;
+        }
+    }
+
+    g_debug ("[qfu-updater] all chunks ack-ed");
+
+    if (!qfu_log_get_verbose_stdout ())
+        g_print (CLEAR_LINE);
+
+    if (!qfu_qdl_device_ufclose (device, cancellable, error)) {
+        g_prefix_error (error, "couldn't close session: ");
+        return FALSE;
+    }
+
+    g_debug ("[qfu-updater] qdl/sdp download finished");
+    return TRUE;
+}
+
 static void
 run_context_step_download_image (GTask *task)
 {
     RunContext   *ctx;
-    guint16       sequence;
-    guint16       n_chunks;
     GError       *error = NULL;
     GCancellable *cancellable;
     GTimer       *timer;
@@ -698,45 +797,21 @@ run_context_step_download_image (GTask *task)
              aux);
     g_free (aux);
 
-    if (!qfu_qdl_device_hello (ctx->qdl_device, cancellable, &error)) {
-        g_prefix_error (&error, "couldn't send greetings to device: ");
-        goto out;
-    }
+    /* QDL/SDP based download */
+    if (ctx->qdl_device)
+        download_image_qdl (ctx->qdl_device,
+                            ctx->current_image,
+                            cancellable,
+                            &error);
+    /* Sahara based download */
+    else if (ctx->sahara_device)
+        download_image_firehose (ctx->sahara_device,
+                                 ctx->current_image,
+                                 cancellable,
+                                 &error);
+    else
+        g_assert_not_reached ();
 
-    if (!qfu_qdl_device_ufopen (ctx->qdl_device, ctx->current_image, cancellable, &error)) {
-        g_prefix_error (&error, "couldn't open session: ");
-        goto out;
-    }
-
-    n_chunks = qfu_image_get_n_data_chunks (ctx->current_image);
-    for (sequence = 0; sequence < n_chunks; sequence++) {
-        if (!qfu_log_get_verbose_stdout ()) {
-            /* Use n-1 chunks for progress reporting; because the last one will take
-             * a lot longer. */
-            if (n_chunks > 1 && sequence < (n_chunks - 1))
-                g_print (CLEAR_LINE "%s %04.1lf%%",
-                         progress[sequence % G_N_ELEMENTS (progress)],
-                         100.0 * ((gdouble) sequence / (gdouble) (n_chunks - 1)));
-            else if (sequence == (n_chunks - 1))
-                g_print (CLEAR_LINE "finalizing download... (may take more than one minute, be patient)\n");
-        }
-        if (!qfu_qdl_device_ufwrite (ctx->qdl_device, ctx->current_image, sequence, cancellable, &error)) {
-            g_prefix_error (&error, "couldn't write in session: ");
-            goto out;
-        }
-    }
-
-    g_debug ("[qfu-updater] all chunks ack-ed");
-
-    if (!qfu_log_get_verbose_stdout ())
-        g_print (CLEAR_LINE);
-
-    if (!qfu_qdl_device_ufclose (ctx->qdl_device, cancellable, &error)) {
-        g_prefix_error (&error, "couldn't close session: ");
-        goto out;
-    }
-
-out:
     elapsed = g_timer_elapsed (timer, NULL);
 
     g_timer_destroy (timer);
@@ -787,10 +862,25 @@ run_context_step_select_device (GTask *task)
 
     g_assert (ctx->serial_file);
     g_assert (!ctx->qdl_device);
-    ctx->qdl_device = qfu_qdl_device_new (ctx->serial_file, g_task_get_cancellable (task), &error);
-    if (!ctx->qdl_device) {
-        g_prefix_error (&error, "error creating device: ");
-        g_task_return_error (task, error);
+    g_assert (!ctx->sahara_device);
+
+    /* Check if we can setup a Sahara device. Always check this first, because
+     * the sahara stack is very sensitive to any kind of data sent to the port. */
+    ctx->sahara_device = qfu_sahara_device_new (ctx->serial_file, g_task_get_cancellable (task), &error);
+    if (!ctx->sahara_device) {
+        g_debug ("[qfu-updater] sahara device creation failed: %s", error->message);
+        g_clear_error (&error);
+
+        /* Check if we can setup a QDL device */
+        ctx->qdl_device = qfu_qdl_device_new (ctx->serial_file, g_task_get_cancellable (task), &error);
+        if (!ctx->qdl_device) {
+            g_debug ("[qfu-updater] qdl device creation failed: %s", error->message);
+            g_clear_error (&error);
+        }
+    }
+
+    if (!ctx->qdl_device && !ctx->sahara_device) {
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED, "unsupported download protocol");
         g_object_unref (task);
         return;
     }

@@ -1,7 +1,7 @@
 
 SUBDIRS = . test
 
-noinst_LTLIBRARIES = libutils.la
+noinst_LTLIBRARIES = libutils.la libfirehose.la
 
 libutils_la_SOURCES = \
 	qfu-utils.h qfu-utils.c \
@@ -17,6 +17,18 @@ libutils_la_CPPFLAGS = \
 
 libutils_la_LIBADD = \
 	$(top_builddir)/src/libqmi-glib/libqmi-glib.la \
+	$(GLIB_LDFLAGS) \
+	$(NULL)
+
+libfirehose_la_SOURCES = \
+	qfu-firehose-message.h qfu-firehose-message.c \
+	$(NULL)
+
+libfirehose_la_CPPFLAGS = \
+	$(GLIB_CFLAGS) \
+	$(NULL)
+
+libfirehose_la_LIBADD = \
 	$(GLIB_LDFLAGS) \
 	$(NULL)
 
@@ -37,6 +49,7 @@ ENUMS = \
 	$(top_srcdir)/src/qmi-firmware-update/qfu-image.h \
 	$(top_srcdir)/src/qmi-firmware-update/qfu-qdl-message.h \
 	$(top_srcdir)/src/qmi-firmware-update/qfu-dload-message.h \
+	$(top_srcdir)/src/qmi-firmware-update/qfu-sahara-message.h \
 	$(NULL)
 
 ENUMS_GENERATED = \
@@ -45,7 +58,7 @@ ENUMS_GENERATED = \
 
 qfu-enum-types.h: Makefile.am $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef QFU_ENUM_TYPES_H\n#define QFU_ENUM_TYPES_H\n#include \"qfu-image.h\"\n#include \"qfu-qdl-message.h\"\n#include \"qfu-dload-message.h\"\n" \
+		--fhead "#ifndef QFU_ENUM_TYPES_H\n#define QFU_ENUM_TYPES_H\n#include \"qfu-image.h\"\n#include \"qfu-qdl-message.h\"\n#include \"qfu-dload-message.h\"\n#include \"qfu-sahara-message.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __QFUENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
@@ -76,6 +89,9 @@ qmi_firmware_update_SOURCES = \
 	qfu-dload-message.h qfu-dload-message.c \
 	qfu-qdl-message.h qfu-qdl-message.c \
 	qfu-qdl-device.h qfu-qdl-device.c \
+	qfu-firehose-message.h qfu-firehose-message.c \
+	qfu-sahara-message.h qfu-sahara-message.c \
+	qfu-sahara-device.h qfu-sahara-device.c \
 	qfu-reseter.h qfu-reseter.c \
 	qfu-at-device.h qfu-at-device.c \
 	$(NULL)
@@ -85,6 +101,7 @@ qmi_firmware_update_LDADD = \
 	$(GUDEV_LIBS) \
 	$(GLIB_LIBS) \
 	$(builddir)/libutils.la \
+	$(builddir)/libfirehose.la \
 	$(NULL)
 
 # Request to build enum types before anything else

@@ -134,6 +134,65 @@ qfu_image_read_data_chunk (QfuImage      *self,
 
 /******************************************************************************/
 
+gssize
+qfu_image_read (QfuImage      *self,
+                goffset        offset,
+                gsize          size,
+                guint8        *out_buffer,
+                gsize          out_buffer_size,
+                GCancellable  *cancellable,
+                GError       **error)
+{
+    gssize  n_read;
+    goffset remaining_size;
+    gsize   read_size;
+
+    g_return_val_if_fail (QFU_IS_IMAGE (self), -1);
+
+    remaining_size = qfu_image_get_size (self) - offset;
+    read_size = (remaining_size > size) ? size : remaining_size;
+
+    g_debug ("[qfu-image] reading [%" G_GOFFSET_FORMAT "-%" G_GOFFSET_FORMAT "]",
+             offset, offset + read_size);
+
+    /* Make sure there's enough room */
+    if (out_buffer_size < read_size) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "buffer too small to fit read size: %" G_GSIZE_FORMAT, read_size);
+        return -1;
+    }
+
+    /* Seek to the correct place: note that this is likely a noop if already in that offset */
+    if (!g_seekable_seek (G_SEEKABLE (self->priv->input_stream), offset, G_SEEK_SET, cancellable, error)) {
+        g_prefix_error (error, "couldn't seek input stream: ");
+        return -1;
+    }
+
+    /* Read full chunk */
+    n_read = g_input_stream_read (self->priv->input_stream,
+                                  out_buffer,
+                                  read_size,
+                                  cancellable,
+                                  error);
+    if (n_read < 0) {
+        g_prefix_error (error, "couldn't read data at offset %" G_GOFFSET_FORMAT, offset);
+        return -1;
+    }
+
+    if (n_read != read_size) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                     "couldn't read expected data size: %" G_GSIZE_FORMAT " (%" G_GSSIZE_FORMAT " bytes read)",
+                     read_size, n_read);
+        return -1;
+    }
+
+    g_debug ("[qfu-image] data at offset %" G_GOFFSET_FORMAT " successfully read", offset);
+
+    return read_size;
+}
+
+/******************************************************************************/
+
 QfuImageType
 qfu_image_get_image_type (QfuImage *self)
 {

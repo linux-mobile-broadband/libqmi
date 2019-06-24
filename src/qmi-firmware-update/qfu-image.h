@@ -104,6 +104,13 @@ gssize        qfu_image_read_data_chunk     (QfuImage      *self,
                                              gsize          out_buffer_size,
                                              GCancellable  *cancellable,
                                              GError       **error);
+gssize        qfu_image_read                (QfuImage      *self,
+                                             goffset        offset,
+                                             gsize          size,
+                                             guint8        *out_buffer,
+                                             gsize          out_buffer_size,
+                                             GCancellable  *cancellable,
+                                             GError       **error);
 
 G_END_DECLS
 
