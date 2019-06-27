@@ -38,6 +38,11 @@
 #include "qmi-ctl.h"
 #include "qmi-utils.h"
 #include "qmi-proxy.h"
+#include "qmi-version.h"
+
+#if QMI_QRTR_SUPPORTED
+#include "qmi-qrtr-utils.h"
+#endif
 
 #define BUFFER_SIZE 512
 
@@ -407,6 +412,37 @@ out:
     client_unref (client);
 }
 
+#if QMI_QRTR_SUPPORTED
+static void
+qrtr_node_ready (GObject *source,
+                 GAsyncResult *res,
+                 Client *client)
+{
+    QmiProxy *self = client->proxy;
+    QrtrNode *node;
+    GError *error = NULL;
+
+    node = qrtr_node_for_id_finish (res, &error);
+    if (!node) {
+        g_debug ("couldn't open QRTR node: %s", error->message);
+        g_error_free (error);
+        untrack_client (self, client);
+        goto out;
+    }
+
+    qmi_device_new_from_node (node,
+                              NULL,
+                              (GAsyncReadyCallback)device_new_ready,
+                              client_ref (client)); /* Full ref */
+
+    g_object_unref (node);
+
+out:
+    /* Balance out the reference we got */
+    client_unref (client);
+}
+#endif
+
 static gboolean
 process_internal_proxy_open (QmiProxy   *self,
                              Client     *client,
@@ -456,13 +492,25 @@ process_internal_proxy_open (QmiProxy   *self,
     /* Need to create a device ourselves */
     if (!client->device) {
         GFile *file;
+#if QMI_QRTR_SUPPORTED
+        guint32 node_id;
 
-        file = g_file_new_for_path (device_file_path);
-        qmi_device_new (file,
-                        NULL,
-                        (GAsyncReadyCallback)device_new_ready,
-                        client_ref (client)); /* Full ref */
-        g_object_unref (file);
+        if (qrtr_get_node_for_uri (device_file_path, &node_id)) {
+            qrtr_node_for_id (node_id,
+                              10, /* timeout in seconds */
+                              NULL,
+                              (GAsyncReadyCallback)qrtr_node_ready,
+                              client_ref (client)); /* Full ref */
+        } else
+#endif
+	{
+            file = g_file_new_for_path (device_file_path);
+            qmi_device_new (file,
+                            NULL,
+                            (GAsyncReadyCallback)device_new_ready,
+                            client_ref (client)); /* Full ref */
+            g_object_unref (file);
+        }
         g_free (device_file_path);
         return TRUE;
     }

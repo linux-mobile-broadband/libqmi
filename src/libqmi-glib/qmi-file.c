@@ -31,6 +31,7 @@ G_DEFINE_TYPE (QmiFile, qmi_file, G_TYPE_OBJECT)
 
 struct _QmiFilePrivate {
     GFile *file;
+    gboolean is_uri;
     gchar *path;
     gchar *path_display;
 };
@@ -127,6 +128,16 @@ qmi_file_check_type_async (QmiFile             *self,
 
     task = g_task_new (self, cancellable, callback, user_data);
 
+    /* If this file only has a URI and no local path, then it refers to some
+     * non-filesystem resource, such as something on a device bus. We can't
+     * figure out if it's the right type in this case, so we just try to see
+     * if it's OK later. */
+    if (self->priv->is_uri) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
     /* Check the file type. Note that this is just a quick check to avoid
      * creating QmiDevices pointing to a location already known not to be a QMI
      * device. */
@@ -150,15 +161,19 @@ qmi_file_new (GFile *file)
     if (!file)
         return NULL;
 
-    /* URI-only files won't have a path. We don't support this yet. */
-    path = g_file_get_path (file);
-    if (!path)
-        return NULL;
-
     self = g_object_new (QMI_TYPE_FILE, NULL);
     self->priv->file = g_object_ref (file);
-    self->priv->path = path;
-    self->priv->path_display = g_filename_display_name (path);
+
+    path = g_file_get_path (self->priv->file);
+    if (path) {
+        self->priv->is_uri = FALSE;
+        self->priv->path = path;
+        self->priv->path_display = g_filename_display_name (self->priv->path);
+    } else {
+        self->priv->is_uri = TRUE;
+        self->priv->path = g_file_get_uri (self->priv->file);
+        self->priv->path_display = g_strdup (self->priv->path);
+    }
 
     return self;
 }

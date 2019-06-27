@@ -31,6 +31,7 @@
 
 #include "qmi-qrtr-control-socket.h"
 #include "qmi-qrtr-node.h"
+#include "qmi-qrtr-utils.h"
 #include "qmi-enums.h"
 
 G_DEFINE_TYPE (QrtrControlSocket, qrtr_control_socket, G_TYPE_OBJECT)

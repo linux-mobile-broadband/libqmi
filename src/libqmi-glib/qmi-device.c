@@ -56,6 +56,12 @@
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
 #include "qmi-proxy.h"
+#include "qmi-version.h"
+
+#if QMI_QRTR_SUPPORTED
+#include "qmi-endpoint-qrtr.h"
+#include "qmi-qrtr-utils.h"
+#endif
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
 
@@ -68,6 +74,9 @@ enum {
     PROP_NO_FILE_CHECK,
     PROP_PROXY_PATH,
     PROP_WWAN_IFACE,
+#if QMI_QRTR_SUPPORTED
+    PROP_NODE,
+#endif
     PROP_LAST
 };
 
@@ -81,8 +90,11 @@ static GParamSpec *properties[PROP_LAST];
 static guint       signals   [SIGNAL_LAST] = { 0 };
 
 struct _QmiDevicePrivate {
-    /* File */
+    /* File or node */
     QmiFile *file;
+#if QMI_QRTR_SUPPORTED
+    QrtrNode *node;
+#endif
     gboolean no_file_check;
 
     /* WWAN interface */
@@ -110,6 +122,10 @@ struct _QmiDevicePrivate {
     /* HT of clients that want to get indications */
     GHashTable *registered_clients;
 };
+
+#if QMI_QRTR_SUPPORTED
+#define DEFAULT_RMNET_DATA_IFACE_NAME "rmnet_data0"
+#endif
 
 /*****************************************************************************/
 /* Message transactions (private) */
@@ -653,6 +669,13 @@ reload_wwan_iface_name (QmiDevice *self)
     /* Early cleanup */
     g_free (self->priv->wwan_iface);
     self->priv->wwan_iface = NULL;
+
+#if QMI_QRTR_SUPPORTED
+    if (self->priv->node) {
+        self->priv->wwan_iface = g_strdup (DEFAULT_RMNET_DATA_IFACE_NAME);
+        return;
+    }
+#endif
 
     cdc_wdm_device_name = __qmi_utils_get_devname (qmi_file_get_path (self->priv->file), &error);
     if (!cdc_wdm_device_name) {
@@ -1898,13 +1921,23 @@ static void
 device_create_endpoint (QmiDevice *self,
                         DeviceOpenContext *ctx)
 {
-    if (!(ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM))
-        self->priv->endpoint = QMI_ENDPOINT (qmi_endpoint_qmux_new (self->priv->file,
-                                                                    self->priv->proxy_path,
-                                                                    self->priv->client_ctl));
+    if (!(ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM)) {
+#if QMI_QRTR_SUPPORTED
+        /* We talk to proxies over QMUX even if they are proxying a QRTR device. */
+        if (self->priv->node && !(ctx->flags & QMI_DEVICE_OPEN_FLAGS_PROXY)) {
+            self->priv->endpoint = QMI_ENDPOINT (qmi_endpoint_qrtr_new (self->priv->node));
+        } else
+#endif
+	{
+            self->priv->endpoint = QMI_ENDPOINT (qmi_endpoint_qmux_new (self->priv->file,
+                                                                        self->priv->proxy_path,
+                                                                        self->priv->client_ctl));
+        }
+    }
 #if defined MBIM_QMUX_ENABLED
-    else
+    else {
         self->priv->endpoint = QMI_ENDPOINT (qmi_endpoint_mbim_new (self->priv->file));
+    }
 #endif /* MBIM_QMUX_ENABLED */
 
     if (!self->priv->endpoint)
@@ -2007,6 +2040,13 @@ device_open_step (GTask *task)
         /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_DRIVER:
+#if QMI_QRTR_SUPPORTED
+        if (self->priv->node) {
+            g_debug ("[%s] selecting QMI mode for QRTR endpoint",
+                     qmi_file_get_path_display (self->priv->file));
+            ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_MBIM;
+        } else
+#endif
         if (!device_setup_open_flags_by_transport (self, ctx, &error)) {
             g_task_return_error (task, error);
             g_object_unref (task);
@@ -2446,6 +2486,23 @@ qmi_device_new_finish (GAsyncResult *res,
     return (ret ? QMI_DEVICE (ret) : NULL);
 }
 
+#if QMI_QRTR_SUPPORTED
+void
+qmi_device_new_from_node (QrtrNode *node,
+                          GCancellable *cancellable,
+                          GAsyncReadyCallback callback,
+                          gpointer user_data)
+{
+    g_async_initable_new_async (QMI_TYPE_DEVICE,
+                                G_PRIORITY_DEFAULT,
+                                cancellable,
+                                callback,
+                                user_data,
+                                QMI_DEVICE_NODE, node,
+                                NULL);
+}
+#endif
+
 void
 qmi_device_new (GFile *file,
                 GCancellable *cancellable,
@@ -2544,6 +2601,14 @@ initable_init_async (GAsyncInitable *initable,
     self = QMI_DEVICE (initable);
     task = g_task_new (self, cancellable, callback, user_data);
 
+#if QMI_QRTR_SUPPORTED
+    /* If we have a node, just skip to setting up the control client */
+    if (self->priv->node) {
+        client_ctl_setup (task);
+        return;
+    }
+#endif
+
     /* We need a proper file to initialize */
     if (!self->priv->file) {
         g_task_return_new_error (task,
@@ -2571,6 +2636,20 @@ initable_init_async (GAsyncInitable *initable,
 
 /*****************************************************************************/
 
+#if QMI_QRTR_SUPPORTED
+static QmiFile *
+get_file_for_node (QrtrNode *node)
+{
+    gchar *uri;
+    QmiFile *file;
+
+    uri = qrtr_get_uri_for_node (qrtr_node_id (node));
+    file = qmi_file_new (g_file_new_for_uri (uri));
+    g_free (uri);
+    return file;
+}
+#endif
+
 static void
 set_property (GObject *object,
               guint prop_id,
@@ -2581,6 +2660,12 @@ set_property (GObject *object,
 
     switch (prop_id) {
     case PROP_FILE:
+#if QMI_QRTR_SUPPORTED
+        /* Ensure that we only set one of FILE or NODE. */
+        if (!g_value_get_object (value))
+            break;
+        g_assert (self->priv->node == NULL);
+#endif
         g_assert (self->priv->file == NULL);
         self->priv->file = qmi_file_new (g_value_get_object (value));
         break;
@@ -2591,6 +2676,17 @@ set_property (GObject *object,
         g_free (self->priv->proxy_path);
         self->priv->proxy_path = g_value_dup_string (value);
         break;
+#if QMI_QRTR_SUPPORTED
+    case PROP_NODE:
+        /* Ensure that we only set one of FILE or NODE. */
+        if (!g_value_get_object (value))
+            break;
+        g_assert (self->priv->file == NULL);
+        g_assert (self->priv->node == NULL);
+        self->priv->node = g_value_dup_object (value);
+        self->priv->file = get_file_for_node (self->priv->node);
+        break;
+#endif
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -2613,6 +2709,11 @@ get_property (GObject *object,
         reload_wwan_iface_name (self);
         g_value_set_string (value, self->priv->wwan_iface);
         break;
+#if QMI_QRTR_SUPPORTED
+    case PROP_NODE:
+        g_value_set_object (value, g_object_ref (self->priv->node));
+        break;
+#endif
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -2685,6 +2786,9 @@ dispose (GObject *object)
         g_clear_object (&self->priv->endpoint);
     }
     g_clear_object (&self->priv->file);
+#if QMI_QRTR_SUPPORTED
+    g_clear_object (&self->priv->node);
+#endif
 
     G_OBJECT_CLASS (qmi_device_parent_class)->dispose (object);
 }
@@ -2782,6 +2886,21 @@ qmi_device_class_init (QmiDeviceClass *klass)
                              NULL,
                              G_PARAM_READABLE);
     g_object_class_install_property (object_class, PROP_WWAN_IFACE, properties[PROP_WWAN_IFACE]);
+
+    /**
+     * QmiDevice:device-node:
+     *
+     * Since: 1.24
+     */
+#if QMI_QRTR_SUPPORTED
+    properties[PROP_NODE] =
+        g_param_spec_object (QMI_DEVICE_NODE,
+                             "QRTR node",
+                             "Remote node on the QRTR bus",
+                             QRTR_TYPE_NODE,
+                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+    g_object_class_install_property (object_class, PROP_NODE, properties[PROP_NODE]);
+#endif
 
     /**
      * QmiDevice::indication:

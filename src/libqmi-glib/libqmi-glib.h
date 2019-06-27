@@ -40,6 +40,7 @@
 #if QMI_QRTR_SUPPORTED
 #include "qmi-qrtr-control-socket.h"
 #include "qmi-qrtr-node.h"
+#include "qmi-qrtr-utils.h"
 #endif
 
 #include "qmi-compat.h"

@@ -80,7 +80,9 @@ endif
 if QMI_QRTR_SUPPORTED
 libqmi_glib_la_SOURCES += \
 	qmi-qrtr-control-socket.h qmi-qrtr-control-socket.c \
-	qmi-qrtr-node.h qmi-qrtr-node.c
+	qmi-qrtr-node.h qmi-qrtr-node.c \
+	qmi-qrtr-utils.h qmi-qrtr-utils.c \
+	qmi-endpoint-qrtr.h qmi-endpoint-qrtr.c
 endif
 
 libqmi_glib_la_LIBADD = \
@@ -128,7 +130,8 @@ include_HEADERS = \
 if QMI_QRTR_SUPPORTED
 include_HEADERS += \
 	qmi-qrtr-control-socket.h \
-	qmi-qrtr-node.h
+	qmi-qrtr-node.h \
+	qmi-qrtr-utils.h
 endif
 
 EXTRA_DIST = \

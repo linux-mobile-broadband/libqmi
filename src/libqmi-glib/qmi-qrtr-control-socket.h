@@ -32,11 +32,6 @@
 
 #include "qmi-qrtr-node.h"
 
-/* Some kernels expose the qrtr header but not the address family macro. */
-#ifndef AF_QIPCRTR
-#define AF_QIPCRTR 42
-#endif
-
 G_BEGIN_DECLS
 
 /**
