@@ -1100,7 +1100,7 @@ sahara_device_run_protocol_step (QfuSaharaDevice    *self,
                                  GError            **error)
 {
     SaharaProtocolStep  next_step = SAHARA_PROTOCOL_STEP_UNKNOWN;
-    gsize               reqlen;
+    gsize               reqlen = 0;
     gssize              rsplen;
     guint8             *rsp = NULL;
 
@@ -1115,7 +1115,6 @@ sahara_device_run_protocol_step (QfuSaharaDevice    *self,
          * reporting that the 0x0000ff00 command to switch to firehose protocol is
          * unsupported.
          */
-        reqlen = 0;
         break;
     case SAHARA_PROTOCOL_STEP_HELLO:
         reqlen = qfu_sahara_response_hello_build (self->priv->buffer->data, self->priv->buffer->len);
