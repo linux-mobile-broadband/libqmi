@@ -717,6 +717,17 @@ firehose_teardown_download_process_response (QfuSaharaDevice                  *s
         return TRUE;
 
     if (firehose_common_process_response_ack_message (rsp, "ACK", "false", &inner_error)) {
+        /* We've seen in a EM7511 how the response to the download operation comes
+         * followed *right away* in the same read() with the "XML not formed correctly"
+         * warning plus an additional response with a NAK. In order to avoid failing
+         * the teardown operation with that second response, we'll ignore it completely
+         * if we have already detected a successful response earlier.
+         */
+        if (ctx->acked) {
+            g_debug ("[qfu-sahara-device] ignoring additional response message detected");
+            g_clear_error (&inner_error);
+            return TRUE;
+        }
         if (inner_error) {
             g_propagate_error (error, inner_error);
             return FALSE;
