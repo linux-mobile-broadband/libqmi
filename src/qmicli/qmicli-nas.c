@@ -97,7 +97,7 @@ static GOptionEntry entries[] = {
     },
     { "nas-set-system-selection-preference", 0, 0, G_OPTION_ARG_STRING, &set_system_selection_preference_str,
       "Set system selection preference",
-      "[cdma-1x|cdma-1xevdo|gsm|umts|lte|td-scdma][,[auto|manual=MCCMNC]]"
+      "[cdma-1x|cdma-1xevdo|gsm|umts|lte|td-scdma][,[automatic|manual=MCCMNC]]"
     },
     { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
       "Scan networks",
@@ -2178,7 +2178,7 @@ set_system_selection_preference_input_create (const gchar *str)
         rat_pref_str = g_strdup (parts[0]);
         net_pref_str = g_strdup (parts[1]);
         g_strfreev (parts);
-    } else if (g_str_has_prefix (str, "auto") || g_str_has_prefix (str, "manual")) {
+    } else if (g_str_has_prefix (str, "automatic") || g_str_has_prefix (str, "manual")) {
         /* Only network selection preference was given */
         net_pref_str = g_strdup (str);
     } else {
