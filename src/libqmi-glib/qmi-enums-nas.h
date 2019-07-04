@@ -1046,6 +1046,26 @@ typedef enum {
  */
 
 /**
+ * QmiNasLteCellAccessStatus:
+ * @QMI_NAS_CELL_ACCESS_STATUS_NORMAL_ONLY: Access is allowed for normal calls only.
+ * @QMI_NAS_CELL_ACCESS_STATUS_EMERGENCY_ONLY: Access is allowed for emergency calls only.
+ * @QMI_NAS_CELL_ACCESS_STATUS_NO_CALLS: Access is not allowed for any call type.
+ * @QMI_NAS_CELL_ACCESS_STATUS_ALL_CALLS: Access is allowed for all call types.
+ * @QMI_NAS_CELL_ACCESS_STATUS_UNKNOWN: Unknown.
+ *
+ * Cell access status for LTE calls.
+ *
+ * Since: 1.24
+ */
+typedef enum {
+    QMI_NAS_CELL_ACCESS_STATUS_NORMAL_ONLY    = 0x00,
+    QMI_NAS_CELL_ACCESS_STATUS_EMERGENCY_ONLY = 0x01,
+    QMI_NAS_CELL_ACCESS_STATUS_NO_CALLS       = 0x02,
+    QMI_NAS_CELL_ACCESS_STATUS_ALL_CALLS      = 0x03,
+    QMI_NAS_CELL_ACCESS_STATUS_UNKNOWN        = 0xFF,
+} QmiNasLteCellAccessStatus;
+
+/**
  * QmiNasHdrProtocolRevision:
  * @QMI_NAS_HDR_PROTOCOL_REVISION_NONE: None.
  * @QMI_NAS_HDR_PROTOCOL_REVISION_REL_0: HDR Rel 0.

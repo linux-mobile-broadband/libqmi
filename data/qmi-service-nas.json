@@ -2507,7 +2507,13 @@
                       "type"          : "TLV",
                       "since"         : "1.0",
                       "format"        : "guint32",
-                      "public-format" : "QmiNasSimRejectState" } ] },
+                      "public-format" : "QmiNasSimRejectState" },
+                    { "name"          : "LTE Cell Access Status",
+                      "id"            : "0x44",
+                      "type"          : "TLV",
+                      "since"         : "1.24",
+                      "format"        : "guint32",
+                      "public-format" : "QmiNasLteCellAccessStatus" } ] },
 
   // *********************************************************************************
   {  "name"    : "System Info",

@@ -306,6 +306,7 @@ QmiNasPlmnEncodingScheme
 QmiNasPlmnNameCountryInitials
 QmiNasPlmnNameSpareBits
 QmiNasUsagePreference
+QmiNasLteCellAccessStatus
 <SUBSECTION Methods>
 qmi_nas_radio_interface_get_string
 qmi_nas_active_band_get_string
@@ -355,6 +356,7 @@ qmi_nas_plmn_encoding_scheme_get_string
 qmi_nas_plmn_name_country_initials_get_string
 qmi_nas_plmn_name_spare_bits_get_string
 qmi_nas_usage_preference_get_string
+qmi_nas_lte_cell_access_status_get_string
 <SUBSECTION Private>
 qmi_nas_radio_interface_build_string_from_mask
 qmi_nas_active_band_build_string_from_mask
@@ -402,6 +404,7 @@ qmi_nas_plmn_name_country_initials_build_string_from_mask
 qmi_nas_plmn_name_spare_bits_build_string_from_mask
 qmi_nas_ps_attach_action_build_string_from_mask
 qmi_nas_usage_preference_build_string_from_mask
+qmi_nas_lte_cell_access_status_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_NAS_ACTIVE_BAND
 QMI_TYPE_NAS_ATTACH_STATE
@@ -449,6 +452,7 @@ QMI_TYPE_NAS_PLMN_ENCODING_SCHEME
 QMI_TYPE_NAS_PLMN_NAME_COUNTRY_INITIALS
 QMI_TYPE_NAS_PLMN_NAME_SPARE_BITS
 QMI_TYPE_NAS_USAGE_PREFERENCE
+QMI_TYPE_NAS_LTE_CELL_ACCESS_STATUS
 qmi_nas_active_band_get_type
 qmi_nas_attach_state_get_type
 qmi_nas_call_barring_status_get_type
@@ -495,6 +499,7 @@ qmi_nas_plmn_encoding_scheme_get_type
 qmi_nas_plmn_name_country_initials_get_type
 qmi_nas_plmn_name_spare_bits_get_type
 qmi_nas_usage_preference_get_type
+qmi_nas_lte_cell_access_status_get_type
 </SECTION>
 
 <SECTION>

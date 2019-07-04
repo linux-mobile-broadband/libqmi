@@ -1714,6 +1714,7 @@ get_system_info_ready (QmiClientNas *client,
         guint16 geo_system_index;
         gboolean voice_support;
         gboolean embms_coverage_info_support;
+        QmiNasLteCellAccessStatus cell_access_status;
 
         if (qmi_message_nas_get_system_info_output_get_lte_service_status (
                 output,
@@ -1788,6 +1789,13 @@ get_system_info_ready (QmiClientNas *client,
                     &embms_coverage_info_support,
                     NULL)) {
                 g_print ("\t\teMBMS coverage info support: '%s'\n", embms_coverage_info_support ? "yes" : "no");
+            }
+
+            if (qmi_message_nas_get_system_info_output_get_lte_cell_access_status (
+                    output,
+                    &cell_access_status,
+                    NULL)) {
+                g_print ("\t\tCell access: '%s'\n", qmi_nas_lte_cell_access_status_get_string (cell_access_status));
             }
         }
     }
