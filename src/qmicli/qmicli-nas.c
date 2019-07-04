@@ -1713,6 +1713,7 @@ get_system_info_ready (QmiClientNas *client,
         guint16 tac;
         guint16 geo_system_index;
         gboolean voice_support;
+        gboolean ims_voice_support;
         gboolean embms_coverage_info_support;
         QmiNasLteCellAccessStatus cell_access_status;
 
@@ -1782,6 +1783,13 @@ get_system_info_ready (QmiClientNas *client,
                     &voice_support,
                     NULL)) {
                 g_print ("\t\tVoice support: '%s'\n", voice_support ? "yes" : "no");
+            }
+
+            if (qmi_message_nas_get_system_info_output_get_ims_voice_support (
+                    output,
+                    &ims_voice_support,
+                    NULL)) {
+                g_print ("\t\tIMS voice support: '%s'\n", ims_voice_support ? "yes" : "no");
             }
 
             if (qmi_message_nas_get_system_info_output_get_lte_embms_coverage_info_support (
