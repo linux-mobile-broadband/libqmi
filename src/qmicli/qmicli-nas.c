@@ -1718,6 +1718,7 @@ get_system_info_ready (QmiClientNas *client,
         guint16 embms_coverage_info_trace_id;
         QmiNasNetworkSelectionRegistrationRestriction registration_restriction;
         QmiNasLteCellAccessStatus cell_access_status;
+        QmiNasLteRegistrationDomain registration_domain;
 
         if (qmi_message_nas_get_system_info_output_get_lte_service_status (
                 output,
@@ -1820,6 +1821,13 @@ get_system_info_ready (QmiClientNas *client,
                     &registration_restriction,
                     NULL)) {
                 g_print ("\t\tRegistration restriction: '%s'\n", qmi_nas_network_selection_registration_restriction_get_string (registration_restriction));
+            }
+
+            if (qmi_message_nas_get_system_info_output_get_lte_registration_domain (
+                    output,
+                    &registration_domain,
+                    NULL)) {
+                g_print ("\t\tRegistration domain: '%s'\n", qmi_nas_lte_registration_domain_get_string (registration_domain));
             }
         }
     }

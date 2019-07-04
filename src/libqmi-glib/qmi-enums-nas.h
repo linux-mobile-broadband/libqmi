@@ -1019,6 +1019,26 @@ typedef enum {
 } QmiNasNetworkSelectionRegistrationRestriction;
 
 /**
+ * QmiNasLteRegistrationDomain:
+ * @QMI_NAS_LTE_REGISTRATION_DOMAIN_NOT_APPLICABLE: Not applicable since the UE is not in "Camp Only" mode.
+ * @QMI_NAS_LTE_REGISTRATION_DOMAIN_CS_ONLY: UE is in "Camp Only" mode and the PLMN can provide CS service only.
+ * @QMI_NAS_LTE_REGISTRATION_DOMAIN_PS_ONLY: UE is in "Camp Only" mode and the PLMN can provide PS service only.
+ * @QMI_NAS_LTE_REGISTRATION_DOMAIN_CS_PS: UE is in "Camp Only" mode and the PLMN can provide CS and PS service.
+ * @QMI_NAS_LTE_REGISTRATION_DOMAIN_LIMITED_SERVICE: UE is in "Camp Only" mode but the PLMN cannot provide any service.
+ *
+ * LTE registration domain.
+ *
+ * Since: 1.24
+ */
+typedef enum {
+    QMI_NAS_LTE_REGISTRATION_DOMAIN_NOT_APPLICABLE  = 0x00,
+    QMI_NAS_LTE_REGISTRATION_DOMAIN_CS_ONLY         = 0x01,
+    QMI_NAS_LTE_REGISTRATION_DOMAIN_PS_ONLY         = 0x02,
+    QMI_NAS_LTE_REGISTRATION_DOMAIN_CS_PS           = 0x03,
+    QMI_NAS_LTE_REGISTRATION_DOMAIN_LIMITED_SERVICE = 0x04,
+} QmiNasLteRegistrationDomain;
+
+/**
  * QmiNasRoamingStatus:
  * @QMI_NAS_ROAMING_STATUS_OFF: Off.
  * @QMI_NAS_ROAMING_STATUS_ON: On.
