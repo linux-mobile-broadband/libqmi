@@ -1003,6 +1003,22 @@ typedef enum {
 /* Helper enums for the 'QMI NAS Get System Info' request/response */
 
 /**
+ * QmiNasNetworkSelectionRegistrationRestriction:
+ * @QMI_NAS_NETWORK_SELECTION_REGISTRATION_RESTRICTION_UNRESTRICTED: Device follows the normal registration process.
+ * @QMI_NAS_NETWORK_SELECTION_REGISTRATION_RESTRICTION_CAMPED_ONLY: Device camps on the network according to its provisioning, but does not register.
+ * @QMI_NAS_NETWORK_SELECTION_REGISTRATION_RESTRICTION_LIMITED: Device selects the network for limited service.
+ *
+ * Registration restriction.
+ *
+ * Since: 1.24
+ */
+typedef enum {
+    QMI_NAS_NETWORK_SELECTION_REGISTRATION_RESTRICTION_UNRESTRICTED = 0x00,
+    QMI_NAS_NETWORK_SELECTION_REGISTRATION_RESTRICTION_CAMPED_ONLY  = 0x01,
+    QMI_NAS_NETWORK_SELECTION_REGISTRATION_RESTRICTION_LIMITED      = 0x02,
+} QmiNasNetworkSelectionRegistrationRestriction;
+
+/**
  * QmiNasRoamingStatus:
  * @QMI_NAS_ROAMING_STATUS_OFF: Off.
  * @QMI_NAS_ROAMING_STATUS_ON: On.

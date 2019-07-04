@@ -1716,6 +1716,7 @@ get_system_info_ready (QmiClientNas *client,
         gboolean ims_voice_support;
         gboolean embms_coverage_info_support;
         guint16 embms_coverage_info_trace_id;
+        QmiNasNetworkSelectionRegistrationRestriction registration_restriction;
         QmiNasLteCellAccessStatus cell_access_status;
 
         if (qmi_message_nas_get_system_info_output_get_lte_service_status (
@@ -1812,6 +1813,13 @@ get_system_info_ready (QmiClientNas *client,
                     &cell_access_status,
                     NULL)) {
                 g_print ("\t\tCell access: '%s'\n", qmi_nas_lte_cell_access_status_get_string (cell_access_status));
+            }
+
+            if (qmi_message_nas_get_system_info_output_get_network_selection_registration_restriction (
+                    output,
+                    &registration_restriction,
+                    NULL)) {
+                g_print ("\t\tRegistration restriction: '%s'\n", qmi_nas_network_selection_registration_restriction_get_string (registration_restriction));
             }
         }
     }
