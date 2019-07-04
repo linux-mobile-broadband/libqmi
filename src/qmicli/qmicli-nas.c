@@ -740,6 +740,17 @@ get_home_network_ready (QmiClientNas *client,
     }
 
     {
+        QmiNasNetworkNameSource network_name_source;
+        if (qmi_message_nas_get_home_network_output_get_network_name_source (
+                output,
+                &network_name_source,
+                NULL)) {
+            g_print ("\tNetwork name source: %s\n",
+                     qmi_nas_network_name_source_get_string (network_name_source));
+        }
+    }
+
+    {
         guint16 sid;
         guint16 nid;
 
@@ -894,6 +905,17 @@ get_serving_system_ready (QmiClientNas *client,
                      current_plmn_mcc,
                      current_plmn_mnc,
                      current_plmn_description);
+        }
+    }
+
+    {
+        QmiNasNetworkNameSource network_name_source;
+        if (qmi_message_nas_get_serving_system_output_get_network_name_source (
+                output,
+                &network_name_source,
+                NULL)) {
+            g_print ("\tNetwork name source: %s\n",
+                     qmi_nas_network_name_source_get_string (network_name_source));
         }
     }
 

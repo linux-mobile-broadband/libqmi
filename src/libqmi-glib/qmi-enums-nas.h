@@ -1363,6 +1363,30 @@ typedef enum {
 } QmiNasPlmnNameCountryInitials;
 
 /**
+ * QmiNasNetworkNameSource:
+ * @QMI_NAS_NETWORK_NAME_SOURCE_UNKNOWN: Unknown.
+ * @QMI_NAS_NETWORK_NAME_SOURCE_OPERATOR_PLMN_LIST_AND_PLMN_NETWORK_NAME: Operator PLMN list and PLMN network name.
+ * @QMI_NAS_NETWORK_NAME_SOURCE_COMMON_PCN_HANDSET_SPECIFICATION_AND_OPERATOR_NAME_STRING: Common PCN handset specification and operator name string.
+ * @QMI_NAS_NETWORK_NAME_SOURCE_NITZ: Network identity and time zone.
+ * @QMI_NAS_NETWORK_NAME_SOURCE_SE13: GSMA SE13 table.
+ * @QMI_NAS_NETWORK_NAME_SOURCE_MCC_MNC: MCC and MNC.
+ * @QMI_NAS_NETWORK_NAME_SOURCE_SERVICE_PROVIDER_NAME: Service provider name.
+ *
+ * Network name source.
+ *
+ * Since: 1.24
+ */
+typedef enum {
+    QMI_NAS_NETWORK_NAME_SOURCE_UNKNOWN                                                   = 0x00,
+    QMI_NAS_NETWORK_NAME_SOURCE_OPERATOR_PLMN_LIST_AND_PLMN_NETWORK_NAME                  = 0x01,
+    QMI_NAS_NETWORK_NAME_SOURCE_COMMON_PCN_HANDSET_SPECIFICATION_AND_OPERATOR_NAME_STRING = 0x02,
+    QMI_NAS_NETWORK_NAME_SOURCE_NITZ                                                      = 0x03,
+    QMI_NAS_NETWORK_NAME_SOURCE_SE13                                                      = 0x04,
+    QMI_NAS_NETWORK_NAME_SOURCE_MCC_MNC                                                   = 0x05,
+    QMI_NAS_NETWORK_NAME_SOURCE_SERVICE_PROVIDER_NAME                                     = 0x06,
+} QmiNasNetworkNameSource;
+
+/**
  * QmiNasPlmnNameSpareBits:
  * @QMI_NAS_PLMN_NAME_SPARE_BITS_UNKNOWN: unknown
  * @QMI_NAS_PLMN_NAME_SPARE_BITS_BIT_8: bit 8 is spare
