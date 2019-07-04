@@ -1715,6 +1715,7 @@ get_system_info_ready (QmiClientNas *client,
         gboolean voice_support;
         gboolean ims_voice_support;
         gboolean embms_coverage_info_support;
+        guint16 embms_coverage_info_trace_id;
         QmiNasLteCellAccessStatus cell_access_status;
 
         if (qmi_message_nas_get_system_info_output_get_lte_service_status (
@@ -1797,6 +1798,13 @@ get_system_info_ready (QmiClientNas *client,
                     &embms_coverage_info_support,
                     NULL)) {
                 g_print ("\t\teMBMS coverage info support: '%s'\n", embms_coverage_info_support ? "yes" : "no");
+            }
+
+            if (qmi_message_nas_get_system_info_output_get_lte_embms_coverage_info_trace_id (
+                    output,
+                    &embms_coverage_info_trace_id,
+                    NULL)) {
+                g_print ("\t\teMBMS coverage info trace ID: '%" G_GUINT16_FORMAT "'\n", embms_coverage_info_trace_id);
             }
 
             if (qmi_message_nas_get_system_info_output_get_lte_cell_access_status (
