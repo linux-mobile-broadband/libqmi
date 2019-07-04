@@ -1966,6 +1966,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
     QmiNasRoamingPreference roaming_preference;
     QmiNasNetworkSelectionPreference network_selection_preference;
     QmiNasServiceDomainPreference service_domain_preference;
+    QmiNasUsagePreference usage_preference;
     QmiNasGsmWcdmaAcquisitionOrderPreference gsm_wcdma_acquisition_order_preference;
     guint16 mcc;
     guint16 mnc;
@@ -2114,6 +2115,15 @@ get_system_selection_preference_ready (QmiClientNas *client,
         g_print ("\tGSM/WCDMA acquisition order preference: '%s'\n",
                  qmi_nas_gsm_wcdma_acquisition_order_preference_get_string (gsm_wcdma_acquisition_order_preference));
     }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_usage_preference (
+            output,
+            &usage_preference,
+            NULL)) {
+        g_print ("\tUsage preference: '%s'\n",
+                 qmi_nas_usage_preference_get_string (usage_preference));
+    }
+
 
     if (qmi_message_nas_get_system_selection_preference_output_get_manual_network_selection (
             output,

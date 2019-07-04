@@ -1389,4 +1389,20 @@ typedef enum {
     QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_28 = 7,
 } QmiNasPlmnNameSpareBits;
 
+/**
+ * QmiNasUsagePreference:
+ * @QMI_NAS_USAGE_PREFERENCE_UNKNOWN: Unknown.
+ * @QMI_NAS_USAGE_PREFERENCE_VOICE_CENTRIC: Voice centric.
+ * @QMI_NAS_USAGE_PREFERENCE_DATA_CENTRIC: Data centric.
+ *
+ * Modem usage preference.
+ *
+ * Since: 1.24
+ */
+typedef enum {
+    QMI_NAS_USAGE_PREFERENCE_UNKNOWN       = 0x00,
+    QMI_NAS_USAGE_PREFERENCE_VOICE_CENTRIC = 0x01,
+    QMI_NAS_USAGE_PREFERENCE_DATA_CENTRIC  = 0x02
+} QmiNasUsagePreference;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
