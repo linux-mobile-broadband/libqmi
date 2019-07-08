@@ -1048,6 +1048,12 @@ gboolean qmi_message_add_raw_tlv (QmiMessage   *self,
 void qmi_message_set_transaction_id (QmiMessage *self,
                                      guint16 transaction_id);
 
+#if defined (LIBQMI_GLIB_COMPILATION)
+G_GNUC_INTERNAL
+gboolean __qmi_message_is_abortable (QmiMessage        *self,
+                                     QmiMessageContext *context);
+#endif
+
 /*****************************************************************************/
 /* Printable helpers */
 

@@ -275,6 +275,81 @@ class MessageList:
 
 
     """
+    Emit the method responsible for checking whether a given message is abortable
+    """
+    def __emit_is_abortable(self, hfile, cfile):
+
+        # do nothing if no abortable messages in service
+        for message in self.list:
+            if message.type == 'Message' and message.abort:
+                break
+        else:
+            return
+
+        translations = { 'service'    : self.service.lower() }
+
+        template = (
+            '\n'
+            '#if defined (LIBQMI_GLIB_COMPILATION)\n'
+            '\n'
+            'G_GNUC_INTERNAL\n'
+            'gboolean __qmi_message_${service}_is_abortable (\n'
+            '    QmiMessage *self,\n'
+            '    QmiMessageContext *context);\n'
+            '\n'
+            '#endif\n'
+            '\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        template = (
+            '\n'
+            'gboolean\n'
+            '__qmi_message_${service}_is_abortable (\n'
+            '    QmiMessage *self,\n'
+            '    QmiMessageContext *context)\n'
+            '{\n'
+            '    guint16 vendor_id;\n'
+            '\n'
+            '    vendor_id = (context ? qmi_message_context_get_vendor_id (context) : QMI_MESSAGE_VENDOR_GENERIC);\n'
+            '    if (vendor_id == QMI_MESSAGE_VENDOR_GENERIC) {\n'
+            '        switch (qmi_message_get_message_id (self)) {\n')
+
+        for message in self.list:
+            if message.type == 'Message' and message.vendor is None:
+                # Only add if it's abortable
+                if message.abort:
+                    translations['enum_name'] = message.id_enum_name
+                    inner_template = (
+                        '        case ${enum_name}:\n'
+                        '            return TRUE;\n')
+                    template += string.Template(inner_template).substitute(translations)
+
+        template += (
+            '        default:\n'
+            '            return FALSE;\n'
+            '        }\n'
+            '    } else {\n')
+
+        for message in self.list:
+            if message.type == 'Message' and message.vendor is not None:
+                # Only add if it's abortable
+                if message.abort:
+                    translations['enum_name'] = message.id_enum_name
+                    translations['message_vendor'] = message.vendor
+                    inner_template = (
+                        '        if (vendor_id == ${message_vendor} && (qmi_message_get_message_id (self) == ${enum_name})) {\n'
+                        '            return TRUE;\n'
+                        '        }\n')
+                    template += string.Template(inner_template).substitute(translations)
+
+        template += (
+            '        return FALSE;\n'
+            '    }\n'
+            '}\n')
+        cfile.write(string.Template(template).substitute(translations))
+
+
+    """
     Emit the message list handling implementation
     """
     def emit(self, hfile, cfile):
@@ -288,10 +363,11 @@ class MessageList:
             message.emit(hfile, cfile)
 
         # First, emit common class code
-        utils.add_separator(hfile, 'Service-specific printable', self.service);
-        utils.add_separator(cfile, 'Service-specific printable', self.service);
+        utils.add_separator(hfile, 'Service-specific utils', self.service);
+        utils.add_separator(cfile, 'Service-specific utils', self.service);
         self.__emit_get_printable(hfile, cfile)
         self.__emit_get_version_introduced(hfile, cfile)
+        self.__emit_is_abortable(hfile, cfile)
 
     """
     Emit the sections

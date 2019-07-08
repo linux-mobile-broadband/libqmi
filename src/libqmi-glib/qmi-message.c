@@ -1700,3 +1700,17 @@ qmi_message_get_version_introduced_full (QmiMessage        *self,
         return FALSE;
     }
 }
+
+gboolean
+__qmi_message_is_abortable (QmiMessage        *self,
+                            QmiMessageContext *context)
+{
+    switch (qmi_message_get_service (self)) {
+    case QMI_SERVICE_WDS:
+        return __qmi_message_wds_is_abortable (self, context);
+    case QMI_SERVICE_NAS:
+        return __qmi_message_nas_is_abortable (self, context);
+    default:
+        return FALSE;
+    }
+}
