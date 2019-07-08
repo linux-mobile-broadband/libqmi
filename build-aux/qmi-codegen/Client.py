@@ -314,7 +314,19 @@ class Client:
                 ' * @callback: a #GAsyncReadyCallback to call when the request is satisfied.\n'
                 ' * @user_data: user data to pass to @callback.\n'
                 ' *\n'
-                ' * Asynchronously sends a ${message_name} request to the device.\n'
+                ' * Asynchronously sends a ${message_name} request to the device.\n')
+
+            if message.abort:
+                template += (
+                    ' *\n'
+                    ' * This message is abortable. If @cancellable is cancelled or if @timeout expires,\n'
+                    ' * an abort request will be sent to the device, and the asynchronous operation will\n'
+                    ' * not return until the abort response is received. It is not an error if a successful\n'
+                    ' * response is returned for the asynchronous operation even after the user has cancelled\n'
+                    ' * the cancellable, because it may happen that the response is received before the\n'
+                    ' * modem had a chance to run the abort.\n')
+
+            template += (
                 ' *\n'
                 ' * When the operation is finished, @callback will be invoked in the thread-default main loop of the thread you are calling this method from.\n'
                 ' *\n'
@@ -361,29 +373,52 @@ class Client:
 
             if message.abort:
                 template += (
-                '\n'
-                'static void\n'
-                '${message_underscore}_abort_ready (\n'
-                '    QmiDevice *device,\n'
-                '    GAsyncResult *res)\n'
-                '{\n'
-                '    GError *error = NULL;\n'
-                '    QmiMessage *reply;\n'
-                '    QmiMessage${service_camelcase}AbortOutput *output;\n'
-                '\n'
-                '    reply = qmi_device_command_finish (device, res, &error);\n'
-                '    if (reply) {\n'
-                '        output = __qmi_message_${service_lowercase}_abort_response_parse (reply, &error);\n'
-                '        if (output)\n'
-                '            qmi_message_${service_lowercase}_abort_output_unref (output);\n'
-                '        qmi_message_unref (reply);\n'
-                '    }\n'
-                '\n'
-                '    if (error) {\n'
-                '        g_debug ("Operation to abort \'${message_name}\' failed: %s", error->message);\n'
-                '        g_error_free (error);\n'
-                '    }\n'
-                '}\n')
+                    '\n'
+                    'static QmiMessage *\n'
+                    '__${message_fullname_underscore}_abortable_build_request (\n'
+                    '    QmiDevice   *self,\n'
+                    '    QmiMessage  *message,\n'
+                    '    QmiClient   *client,\n'
+                    '    GError     **error)\n'
+                    '{\n'
+                    '    QmiMessage *abort_request;\n'
+                    '    guint16 transaction_id;\n'
+                    '    QmiMessage${service_camelcase}AbortInput *input;\n'
+                    '\n'
+                    '    transaction_id = qmi_message_get_transaction_id (message);\n'
+                    '    g_assert (transaction_id != 0);\n'
+                    '\n'
+                    '    input = qmi_message_${service_lowercase}_abort_input_new ();\n'
+                    '    qmi_message_${service_lowercase}_abort_input_set_transaction_id (\n'
+                    '        input,\n'
+                    '        transaction_id,\n'
+                    '        NULL);\n'
+                    '    abort_request = __qmi_message_${service_lowercase}_abort_request_create (\n'
+                    '                        qmi_client_get_next_transaction_id (client),\n'
+                    '                        qmi_client_get_cid (client),\n'
+                    '                        input,\n'
+                    '                        NULL);\n'
+                    '    qmi_message_${service_lowercase}_abort_input_unref (input);\n'
+                    '    return abort_request;\n'
+                    '}\n'
+                    '\n'
+                    'static gboolean\n'
+                    '__${message_fullname_underscore}_abortable_parse_response (\n'
+                    '    QmiDevice   *self,\n'
+                    '    QmiMessage  *abort_response,\n'
+                    '    QmiClient   *client,\n'
+                    '    GError     **error)\n'
+                    '{\n'
+                    '    QmiMessage${service_camelcase}AbortOutput *output;\n'
+                    '\n'
+                    '    output = __qmi_message_${service_lowercase}_abort_response_parse (\n'
+                    '               abort_response,\n'
+                    '               error);\n'
+                    '    if (!output)\n'
+                    '        return FALSE;\n'
+                    '    qmi_message_${service_lowercase}_abort_output_unref (output);\n'
+                    '    return TRUE;\n'
+                    '}\n')
 
             template += (
                 '\n'
@@ -396,46 +431,17 @@ class Client:
                 '    GError *error = NULL;\n'
                 '    QmiMessage *reply;\n'
                 '    ${output_camelcase} *output;\n'
-                '\n'
-                '    reply = qmi_device_command_full_finish (device, res, &error);\n'
-                '    if (!reply) {\n')
+                '\n')
 
             if message.abort:
                 template += (
-                    '        if (g_error_matches (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TIMEOUT) ||\n'
-                    '            g_error_matches (error, QMI_PROTOCOL_ERROR, QMI_PROTOCOL_ERROR_ABORTED)) {\n'
-                    '                QmiMessage *abort;\n'
-                    '                GObject *self;\n'
-                    '                guint16 transaction_id;\n'
-                    '                QmiMessage${service_camelcase}AbortInput *input;\n'
-                    '\n'
-                    '                self = g_task_get_source_object (task);\n'
-                    '                g_assert (self != NULL);\n'
-                    '\n'
-                    '                transaction_id = (guint16) GPOINTER_TO_UINT (g_task_get_task_data (task));\n'
-                    '                g_assert (transaction_id != 0);\n'
-                    '\n'
-                    '                input = qmi_message_${service_lowercase}_abort_input_new ();\n'
-                    '                qmi_message_${service_lowercase}_abort_input_set_transaction_id (\n'
-                    '                    input,\n'
-                    '                    transaction_id,\n'
-                    '                    NULL);\n'
-                    '                abort = __qmi_message_${service_lowercase}_abort_request_create (\n'
-                    '                            qmi_client_get_next_transaction_id (QMI_CLIENT (self)),\n'
-                    '                            qmi_client_get_cid (QMI_CLIENT (self)),\n'
-                    '                            input,\n'
-                    '                            NULL);\n'
-                    '                g_assert (abort != NULL);\n'
-                    '                qmi_device_command (device,\n'
-                    '                                    abort,\n'
-                    '                                    30,\n'
-                    '                                    NULL,\n'
-                    '                                    (GAsyncReadyCallback)${message_underscore}_abort_ready,\n'
-                    '                                    NULL);\n'
-                    '                qmi_message_${service_lowercase}_abort_input_unref (input);\n'
-                    '                qmi_message_unref (abort);\n'
-                    '            }\n'
-                    '\n')
+                    '    reply = qmi_device_command_abortable_finish (device, res, &error);\n')
+            else:
+                template += (
+                    '    reply = qmi_device_command_full_finish (device, res, &error);\n')
+
+            template += (
+                '    if (!reply) {\n')
 
             template += (
                 '        g_task_return_error (task, error);\n'
@@ -496,21 +502,24 @@ class Client:
                 '        return;\n'
                 '    }\n')
 
-            if message.abort:
-                template += (
-                    '\n'
-                    '    g_task_set_task_data (task, GUINT_TO_POINTER (transaction_id), NULL);\n')
-
             if message.vendor is not None:
                 template += (
                     '\n'
                     '    context = qmi_message_context_new ();\n'
+
                     '    qmi_message_context_set_vendor_id (context, ${message_vendor_id});\n')
 
+            if message.abort:
+                template += (
+                    '\n'
+                    '    qmi_device_command_abortable (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),\n')
+            else:
+                template += (
+                    '\n'
+                    '    qmi_device_command_full (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),\n')
+
             template += (
-                '\n'
-                '    qmi_device_command_full (QMI_DEVICE (qmi_client_peek_device (QMI_CLIENT (self))),\n'
-                '                             request,\n')
+                    '                             request,\n')
 
             if message.vendor is not None:
                 template += (
@@ -520,7 +529,16 @@ class Client:
                     '                             NULL,\n')
 
             template += (
-                '                             timeout,\n'
+                '                             timeout,\n')
+
+            if message.abort:
+                template += (
+                    '                             (QmiDeviceCommandAbortableBuildRequestFn)  __${message_fullname_underscore}_abortable_build_request,\n'
+                    '                             (QmiDeviceCommandAbortableParseResponseFn) __${message_fullname_underscore}_abortable_parse_response,\n'
+                    '                             g_object_ref (self),\n'
+                    '                             g_object_unref,\n')
+
+            template += (
                 '                             cancellable,\n'
                 '                             (GAsyncReadyCallback)${message_underscore}_ready,\n'
                 '                             task);\n'
