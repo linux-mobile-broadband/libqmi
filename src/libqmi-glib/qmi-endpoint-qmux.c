@@ -167,14 +167,6 @@ setup_proxy (GTask *task)
     g_object_unref (file);
 }
 
-static gboolean
-create_iostream_finish (QmiEndpointQmux *self,
-                        GAsyncResult *res,
-                        GError **error)
-{
-    return g_task_propagate_boolean (G_TASK (res), error);
-}
-
 static void
 setup_iostream (GTask *task)
 {
