@@ -115,7 +115,7 @@ struct _QmiDevicePrivate {
 
 typedef struct {
     QmiDevice *self;
-    gpointer key;
+    gpointer   key;
 } TransactionWaitContext;
 
 typedef struct {
@@ -126,6 +126,14 @@ typedef struct {
     GCancellable           *cancellable;
     gulong                  cancellable_id;
     TransactionWaitContext *wait_ctx;
+
+    /* abortable support */
+    GError                                   *abort_error;
+    GCancellable                             *abort_cancellable;
+    QmiDeviceCommandAbortableBuildRequestFn   abort_build_request_fn;
+    QmiDeviceCommandAbortableParseResponseFn  abort_parse_response_fn;
+    gpointer                                  abort_user_data;
+    GDestroyNotify                            abort_user_data_free;
 } Transaction;
 
 static Transaction *
@@ -152,11 +160,29 @@ transaction_new (QmiDevice           *self,
 }
 
 static void
-transaction_complete_and_free (Transaction *tr,
-                               QmiMessage *reply,
+transaction_complete_and_free (Transaction  *tr,
+                               QmiMessage   *reply,
                                const GError *error)
 {
     g_assert (reply != NULL || error != NULL);
+
+    /* always set result first, as we may be using one of the GErrors
+     * stored in the Transaction as result itself */
+    if (reply) {
+        /* if we got a valid response, we can cancel any ongoing abort
+         * operation for this request */
+        if (tr->abort_cancellable) {
+            g_debug ("transaction 0x%x completed with a response: cancelling the abort operation",
+                     qmi_message_get_transaction_id (tr->message));
+            g_cancellable_cancel (tr->abort_cancellable);
+        }
+        g_simple_async_result_set_op_res_gpointer (tr->result,
+                                                   qmi_message_ref (reply),
+                                                   (GDestroyNotify)qmi_message_unref);
+    } else if (error)
+        g_simple_async_result_set_from_error (tr->result, error);
+    else
+        g_assert_not_reached ();
 
     if (tr->timeout_source)
         g_source_destroy (tr->timeout_source);
@@ -170,12 +196,14 @@ transaction_complete_and_free (Transaction *tr,
     if (tr->wait_ctx)
         g_slice_free (TransactionWaitContext, tr->wait_ctx);
 
-    if (reply)
-        g_simple_async_result_set_op_res_gpointer (tr->result,
-                                                   qmi_message_ref (reply),
-                                                   (GDestroyNotify)qmi_message_unref);
-    else
-        g_simple_async_result_set_from_error (tr->result, error);
+    if (tr->abort_error)
+        g_error_free (tr->abort_error);
+
+    if (tr->abort_cancellable)
+        g_object_unref (tr->abort_cancellable);
+
+    if (tr->abort_user_data && tr->abort_user_data_free)
+        tr->abort_user_data_free (tr->abort_user_data);
 
     g_simple_async_result_complete_in_idle (tr->result);
     g_object_unref (tr->result);
@@ -204,19 +232,141 @@ build_transaction_key (QmiMessage *message)
 }
 
 static Transaction *
+device_peek_transaction (QmiDevice *self,
+                         gconstpointer key)
+{
+    return g_hash_table_lookup (self->priv->transactions, key);
+}
+
+static Transaction *
 device_release_transaction (QmiDevice *self,
                             gconstpointer key)
 {
     Transaction *tr = NULL;
 
-    if (self->priv->transactions) {
-        tr = g_hash_table_lookup (self->priv->transactions, key);
-        if (tr)
-            /* If found, remove it from the HT */
-            g_hash_table_remove (self->priv->transactions, key);
-    }
+    /* If found, remove it from the HT */
+    tr = device_peek_transaction (self, key);
+    if (tr)
+        g_hash_table_remove (self->priv->transactions, key);
 
     return tr;
+}
+
+static void
+transaction_abort_ready (QmiDevice    *self,
+                         GAsyncResult *res,
+                         gpointer      key)
+{
+    Transaction *tr;
+    GError      *error = NULL;
+    QmiMessage  *abort_response;
+
+    /* Always try to remove from the HT at this point. Note that the transaction
+     * pointer may be NULL already, e.g. if the abort was cancelled. In this case
+     * we totally ignore the result of the abort operation. */
+    tr = device_release_transaction (self, key);
+    if (!tr) {
+        g_debug ("not processing abort response, operation has already been completed");
+        return;
+    }
+
+    g_assert (tr->abort_parse_response_fn);
+
+    abort_response = qmi_device_command_full_finish (self, res, &error);
+    if (!abort_response ||
+        !tr->abort_parse_response_fn (self,
+                                      abort_response,
+                                      tr->abort_user_data,
+                                      &error)) {
+        GError *built_error;
+
+        g_debug ("abort operation failed: %s", error->message);
+
+        /* We don't want to return any kind of error, because what failed here
+         * is the abort operation for the user request, so always return
+         * QMI_CORE_ERROR_FAILED and provide the description on the error
+         * in the message. */
+        built_error = g_error_new (QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                                   "operation failed and couldn't be aborted: %s",
+                                   error->message);
+        g_error_free (error);
+
+        transaction_complete_and_free (tr, NULL, built_error);
+        g_error_free (built_error);
+    } else {
+        /* aborted successfully */
+        g_debug ("operation aborted successfully");
+        g_assert (tr->abort_error);
+        transaction_complete_and_free (tr, NULL, tr->abort_error);
+    }
+
+    if (abort_response)
+        qmi_message_unref (abort_response);
+}
+
+static void
+transaction_abort (QmiDevice   *self,
+                   Transaction *tr,
+                   GError      *abort_error_take)
+{
+    QmiMessage *abort_request;
+    GError     *error = NULL;
+    guint16     transaction_id;
+
+    transaction_id = qmi_message_get_transaction_id (tr->message);
+
+    /* If the command is not abortable, we'll return the error right away
+     * to the user. */
+    if (!__qmi_message_is_abortable (tr->message, tr->message_context)) {
+        g_debug ("transaction 0x%x aborted, but message is not abortable", transaction_id);
+        device_release_transaction (self, tr->wait_ctx->key);
+        transaction_complete_and_free (tr, NULL, abort_error_take);
+        g_error_free (abort_error_take);
+        return;
+    }
+
+    /* if the command is abortable but the user didn't use qmi_device_command_abortable(),
+     * then return the error right away anyway */
+    if (!tr->abort_build_request_fn || !tr->abort_parse_response_fn) {
+        g_debug ("transaction 0x%x aborted, but no way to build abort request", transaction_id);
+        device_release_transaction (self, tr->wait_ctx->key);
+        transaction_complete_and_free (tr, NULL, abort_error_take);
+        g_error_free (abort_error_take);
+        return;
+    }
+
+    g_debug ("transaction 0x%x aborted, building abort request...", transaction_id);
+
+    /* Try to build abort request */
+    abort_request = tr->abort_build_request_fn (self,
+                                                tr->message,
+                                                tr->abort_user_data,
+                                                &error);
+    if (!abort_request) {
+        /* complete the transaction with the error we got while building the
+         * abort request */
+        g_debug ("transaction 0x%x aborted, but building abort request failed", transaction_id);
+        device_release_transaction (self, tr->wait_ctx->key);
+        transaction_complete_and_free (tr, NULL, error);
+        g_error_free (error);
+        return;
+    }
+
+    /* If command is abortable, let's abort the operation in the
+     * device. We'll store the specific abort error to use once the abort
+     * operation has been acknowledged by the device. */
+    tr->abort_error = abort_error_take;
+    tr->abort_cancellable = g_cancellable_new ();
+
+    qmi_device_command_full (self,
+                             abort_request,
+                             NULL,
+                             30,
+                             tr->abort_cancellable,
+                             (GAsyncReadyCallback) transaction_abort_ready,
+                             tr->wait_ctx->key);
+
+    qmi_message_unref (abort_request);
 }
 
 static gboolean
@@ -225,17 +375,16 @@ transaction_timed_out (TransactionWaitContext *ctx)
     Transaction *tr;
     GError *error = NULL;
 
-    tr = device_release_transaction (ctx->self, ctx->key);
+    /* A timed out transaction is always tracked */
+    tr = device_peek_transaction (ctx->self, ctx->key);
+    g_assert (tr);
+
     tr->timeout_source = NULL;
 
-    /* Complete transaction with a timeout error */
-    error = g_error_new (QMI_CORE_ERROR,
-                         QMI_CORE_ERROR_TIMEOUT,
-                         "Transaction timed out");
-    transaction_complete_and_free (tr, NULL, error);
-    g_error_free (error);
+    error = g_error_new (QMI_CORE_ERROR, QMI_CORE_ERROR_TIMEOUT, "Transaction timed out");
+    transaction_abort (ctx->self, tr, error);
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void
@@ -245,21 +394,18 @@ transaction_cancelled (GCancellable *cancellable,
     Transaction *tr;
     GError *error = NULL;
 
-    tr = device_release_transaction (ctx->self, ctx->key);
+    tr = device_peek_transaction (ctx->self, ctx->key);
 
     /* The transaction may have already been cancelled before we stored it in
-     * the tracking table */
+     * the tracking table, which means the command was NOT sent to the device
+     * and we can safely ignore the cancellation request. */
     if (!tr)
         return;
 
     tr->cancellable_id = 0;
 
-    /* Complete transaction with an abort error */
-    error = g_error_new (QMI_PROTOCOL_ERROR,
-                         QMI_PROTOCOL_ERROR_ABORTED,
-                         "Transaction aborted");
-    transaction_complete_and_free (tr, NULL, error);
-    g_error_free (error);
+    error = g_error_new (QMI_PROTOCOL_ERROR, QMI_PROTOCOL_ERROR_ABORTED, "Transaction aborted");
+    transaction_abort (ctx->self, tr, error);
 }
 
 static gboolean
@@ -2128,9 +2274,9 @@ qmi_device_close_async (QmiDevice           *self,
 /* Command */
 
 QmiMessage *
-qmi_device_command_full_finish (QmiDevice     *self,
-                                GAsyncResult  *res,
-                                GError       **error)
+qmi_device_command_abortable_finish (QmiDevice     *self,
+                                     GAsyncResult  *res,
+                                     GError       **error)
 {
     if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (res), error))
         return NULL;
@@ -2157,13 +2303,17 @@ transaction_early_error (QmiDevice   *self,
 }
 
 void
-qmi_device_command_full (QmiDevice           *self,
-                         QmiMessage          *message,
-                         QmiMessageContext   *message_context,
-                         guint                timeout,
-                         GCancellable        *cancellable,
-                         GAsyncReadyCallback  callback,
-                         gpointer             user_data)
+qmi_device_command_abortable (QmiDevice                                *self,
+                              QmiMessage                               *message,
+                              QmiMessageContext                        *message_context,
+                              guint                                     timeout,
+                              QmiDeviceCommandAbortableBuildRequestFn   abort_build_request_fn,
+                              QmiDeviceCommandAbortableParseResponseFn  abort_parse_response_fn,
+                              gpointer                                  abort_user_data,
+                              GDestroyNotify                            abort_user_data_free,
+                              GCancellable                             *cancellable,
+                              GAsyncReadyCallback                       callback,
+                              gpointer                                  user_data)
 {
     GError *error = NULL;
     Transaction *tr;
@@ -2171,6 +2321,10 @@ qmi_device_command_full (QmiDevice           *self,
     g_return_if_fail (QMI_IS_DEVICE (self));
     g_return_if_fail (message != NULL);
     g_return_if_fail (timeout > 0);
+
+    /* either none or both set */
+    g_return_if_fail ((!abort_build_request_fn && !abort_parse_response_fn) ||
+                      (abort_build_request_fn  && abort_parse_response_fn));
 
     /* Use a proper transaction id for CTL messages if they don't have one */
     if (qmi_message_get_service (message) == QMI_SERVICE_CTL &&
@@ -2212,6 +2366,23 @@ qmi_device_command_full (QmiDevice           *self,
         return;
     }
 
+    /* If message is not abortable, we should not allow using the abortable() interface */
+    if (!__qmi_message_is_abortable (message, message_context)) {
+        if (abort_build_request_fn || abort_parse_response_fn) {
+            error = g_error_new (QMI_CORE_ERROR,
+                                 QMI_CORE_ERROR_FAILED,
+                                 "Message is not abortable");
+            transaction_early_error (self, tr, FALSE, error);
+            return;
+        }
+    } else {
+        /* Store abortable info, if any */
+        tr->abort_build_request_fn  = abort_build_request_fn;
+        tr->abort_parse_response_fn = abort_parse_response_fn;
+        tr->abort_user_data         = abort_user_data;
+        tr->abort_user_data_free    = abort_user_data_free;
+    }
+
     /* Setup context to match response */
     if (!device_store_transaction (self, tr, timeout, &error)) {
         g_prefix_error (&error, "Cannot store transaction: ");
@@ -2228,6 +2399,39 @@ qmi_device_command_full (QmiDevice           *self,
         transaction_early_error (self, tr, TRUE, error);
         return;
     }
+}
+
+/*****************************************************************************/
+/* Non-abortable standard command */
+
+QmiMessage *
+qmi_device_command_full_finish (QmiDevice     *self,
+                                GAsyncResult  *res,
+                                GError       **error)
+{
+    return qmi_device_command_abortable_finish (self, res, error);
+}
+
+void
+qmi_device_command_full (QmiDevice           *self,
+                         QmiMessage          *message,
+                         QmiMessageContext   *message_context,
+                         guint                timeout,
+                         GCancellable        *cancellable,
+                         GAsyncReadyCallback  callback,
+                         gpointer             user_data)
+{
+    qmi_device_command_abortable (self,
+                                  message,
+                                  message_context,
+                                  timeout,
+                                  NULL, /* abort_build_request_fn  */
+                                  NULL, /* abort_parse_response_fn */
+                                  NULL, /* abort_user_data         */
+                                  NULL, /* abort_user_data_free    */
+                                  cancellable,
+                                  callback,
+                                  user_data);
 }
 
 /*****************************************************************************/

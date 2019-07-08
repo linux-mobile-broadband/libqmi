@@ -527,6 +527,14 @@ gboolean qmi_device_set_instance_id_finish (QmiDevice     *self,
  *
  * Asynchronously sends a generic #QmiMessage to the device with no context.
  *
+ * If the operation is cancelled via @cancellable, a %QMI_PROTOCOL_ERROR_ABORTED
+ * error will be returned always. If the QMI method may be aborted, there is
+ * no guarantee that the operation is truly aborted before the error is returned
+ * so it may really happen that the operation really succeeded and the method
+ * would still return %QMI_PROTOCOL_ERROR_ABORTED. In order to use abortable
+ * methods and make sure the response is the correct one, use
+ * qmi_device_command_abortable().
+ *
  * When the operation is finished @callback will be called. You can then call
  * qmi_device_command_finish() to get the result of the operation.
  *
@@ -549,7 +557,7 @@ void qmi_device_command (QmiDevice           *self,
  *
  * Finishes an operation started with qmi_device_command().
  *
- * Returns: a #QmiMessage response, or #NULL if @error is set. The returned value should be freed with qmi_message_unref().
+ * Returns: a #QmiMessage response, or %NULL if @error is set. The returned value should be freed with qmi_message_unref().
  *
  * Since: 1.0
  * Deprecated: 1.18. Use qmi_device_command_full_finish() instead.
@@ -572,12 +580,18 @@ QmiMessage  *qmi_device_command_finish (QmiDevice     *self,
  * Asynchronously sends a #QmiMessage to the device.
  *
  * The message will be processed according to the specific @message_context
- * given.
+ * given. If no @context given, the behavior is the same as qmi_device_command().
+ *
+ * If the operation is cancelled via @cancellable, a %QMI_PROTOCOL_ERROR_ABORTED
+ * error will be returned always. If the QMI method may be aborted, there is
+ * no guarantee that the operation is truly aborted before the error is returned
+ * so it may really happen that the operation really succeeded and the method
+ * would still return %QMI_PROTOCOL_ERROR_ABORTED. In order to use abortable
+ * methods and make sure the response is the correct one, use
+ * qmi_device_command_abortable().
  *
  * When the operation is finished @callback will be called. You can then call
  * qmi_device_command_full_finish() to get the result of the operation.
- *
- * If no @context given, the behavior is the same as qmi_device_command().
  *
  * Since: 1.18
  */
@@ -604,6 +618,122 @@ void qmi_device_command_full (QmiDevice           *self,
 QmiMessage *qmi_device_command_full_finish (QmiDevice     *self,
                                             GAsyncResult  *res,
                                             GError       **error);
+
+/**
+ * QmiDeviceCommandAbortableBuildRequestFn:
+ * @self: a #QmiDevice.
+ * @message: the #QmiMessage to abort.
+ * @user_data: the data provided when calling qmi_device_command_abortable().
+ * @error: Return location for error or %NULL.
+ *
+ * Callback to run when processing the command abortion. This callback
+ * should create a service-specific and client-specific abort request to
+ * be passed to the device.
+ *
+ * Returns: the abort request as a #QmiMessage or %NULL if @error is set.
+ *
+ * Since: 1.24
+ */
+typedef QmiMessage * (* QmiDeviceCommandAbortableBuildRequestFn) (QmiDevice   *self,
+                                                                  QmiMessage  *message,
+                                                                  gpointer     user_data,
+                                                                  GError     **error);
+
+/**
+ * QmiDeviceCommandAbortableParseResponseFn:
+ * @self: a #QmiDevice.
+ * @abort_response: the abort response #QmiMessage.
+ * @user_data: the data provided when calling qmi_device_command_abortable().
+ * @error: Return location for error or %NULL.
+ *
+ * Callback to run when processing the command abortion. This callback
+ * should parse the abort response provided by the device, and build an
+ * appropriate output.
+ *
+ * Returns: %TRUE if the abort succeeded, %FALSE if error is set.
+ *
+ * Since: 1.24
+ */
+typedef gboolean (* QmiDeviceCommandAbortableParseResponseFn) (QmiDevice   *self,
+                                                               QmiMessage  *abort_response,
+                                                               gpointer     user_data,
+                                                               GError     **error);
+
+/**
+ * qmi_device_command_abortable:
+ * @self: a #QmiDevice.
+ * @message: the message to send.
+ * @message_context: the context of the message.
+ * @timeout: maximum time, in seconds, to wait for the response.
+ * @abort_build_request_fn: callback to build an abort request.
+ * @abort_parse_response_fn: callback to parse an abort response.
+ * @abort_user_data: user data to pass to @build_request_fn and @parse_response_fn.
+ * @abort_user_data_free: a #GDestroyNotify to free @abort_user_data.
+ * @cancellable: a #GCancellable, or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously sends a #QmiMessage to the device.
+ *
+ * The message will be processed according to the specific @message_context
+ * given.
+ *
+ * If the operation is cancelled via @cancellable, an abort message will
+ * be sent to the device in order to really abort the ongoing operation. The
+ * qmi_device_command_abortable() method will not finish until either a
+ * successful reply is received from the device or otherwise the command
+ * abortion is confirmed.
+ *
+ * If a successful command response arrives before the abort is processed by
+ * the device, the operation will succeed even if @cancellable has been set, so
+ * that upper layers can do whatever they need to do to properly tear down the
+ * operation.
+ *
+ * If an error command reponse arrives before the abort is processed by the
+ * device, the operation will fail with the error returned by the device.
+ *
+ * The %QMI_PROTOCOL_ERROR_ABORTED error will only be returned as a result
+ * of this operation if the command request was truly aborted by the device,
+ * and so, the user of the method should not assume that cancelling the
+ * @cancellable will always make the method return a %QMI_PROTOCOL_ERROR_ABORTED
+ * error.
+ *
+ * The @build_request_fn and @parse_response_fn callbacks are required in order
+ * to build the abort requests and parse the abort responses, because these
+ * are both service and client specific.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qmi_device_command_abortable_finish() to get the result of the operation.
+ *
+ * Since: 1.24
+ */
+void qmi_device_command_abortable (QmiDevice                                *self,
+                                   QmiMessage                               *message,
+                                   QmiMessageContext                        *message_context,
+                                   guint                                     timeout,
+                                   QmiDeviceCommandAbortableBuildRequestFn   abort_build_request_fn,
+                                   QmiDeviceCommandAbortableParseResponseFn  abort_parse_response_fn,
+                                   gpointer                                  abort_user_data,
+                                   GDestroyNotify                            abort_user_data_free,
+                                   GCancellable                             *cancellable,
+                                   GAsyncReadyCallback                       callback,
+                                   gpointer                                  user_data);
+
+/**
+ * qmi_device_command_abortable_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qmi_device_command_abortable().
+ *
+ * Returns: a #QmiMessage response, or %NULL if @error is set. The returned value should be freed with qmi_message_unref().
+ *
+ * Since: 1.24
+ */
+QmiMessage *qmi_device_command_abortable_finish (QmiDevice     *self,
+                                                 GAsyncResult  *res,
+                                                 GError       **error);
 
 /**
  * QmiDeviceServiceVersionInfo:
