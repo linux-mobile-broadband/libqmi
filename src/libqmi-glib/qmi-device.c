@@ -1791,19 +1791,19 @@ device_create_endpoint (QmiDevice *self,
 }
 
 static gboolean
-device_setup_open_flags_by_driver (QmiDevice *self,
-                                   DeviceOpenContext *ctx,
-                                   GError **error)
+device_setup_open_flags_by_driver (QmiDevice          *self,
+                                   DeviceOpenContext  *ctx,
+                                   GError            **error)
 {
-    gchar *driver;
-    GError *driver_error = NULL;
+    gchar  *driver;
+    GError *inner_error = NULL;
 
-    driver = __qmi_utils_get_driver (qmi_file_get_path (self->priv->file), &driver_error);
+    driver = __qmi_utils_get_driver (qmi_file_get_path (self->priv->file), &inner_error);
     if (driver)
         g_debug ("[%s] loaded driver of cdc-wdm port: %s", qmi_file_get_path_display (self->priv->file), driver);
     else if (!self->priv->no_file_check)
-        g_warning ("[%s] couldn't load driver of cdc-wdm port: %s", qmi_file_get_path_display (self->priv->file), driver_error->message);
-    g_clear_error (&driver_error);
+        g_warning ("[%s] couldn't load driver of cdc-wdm port: %s", qmi_file_get_path_display (self->priv->file), inner_error->message);
+    g_clear_error (&inner_error);
 
 #if defined MBIM_QMUX_ENABLED
 
@@ -1812,26 +1812,26 @@ device_setup_open_flags_by_driver (QmiDevice *self,
         if (!g_strcmp0 (driver, "cdc_mbim")) {
             g_debug ("[%s] automatically selecting MBIM mode", qmi_file_get_path_display (self->priv->file));
             ctx->flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
-            return TRUE;
+            goto out;
         }
         if (!g_strcmp0 (driver, "qmi_wwan")) {
             g_debug ("[%s] automatically selecting QMI mode", qmi_file_get_path_display (self->priv->file));
             ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_MBIM;
-            return TRUE;
+            goto out;
         }
-        g_set_error (error,
+        g_set_error (&inner_error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_FAILED,
                      "Cannot automatically select QMI/MBIM mode: driver %s",
                      driver ? driver : "unknown");
-        return FALSE;
+        goto out;
     }
 
     /* MBIM mode requested? */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
         if (g_strcmp0 (driver, "cdc_mbim") && !self->priv->no_file_check)
             g_warning ("[%s] requested MBIM mode but unexpected driver found: %s", qmi_file_get_path_display (self->priv->file), driver);
-        return TRUE;
+        goto out;
     }
 
 #else
@@ -1847,6 +1847,17 @@ device_setup_open_flags_by_driver (QmiDevice *self,
     if (g_strcmp0 (driver, "qmi_wwan") && !self->priv->no_file_check)
         g_warning ("[%s] requested QMI mode but unexpected driver found: %s",
                    qmi_file_get_path_display (self->priv->file), driver ? driver : "unknown");
+
+#if defined MBIM_QMUX_ENABLED
+out:
+#endif
+
+    g_free (driver);
+
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        return FALSE;
+    }
 
     return TRUE;
 }
