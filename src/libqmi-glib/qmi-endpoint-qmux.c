@@ -143,6 +143,7 @@ internal_proxy_open_ready (QmiClientCtl *client_ctl,
 
     qmi_message_ctl_internal_proxy_open_output_unref (output);
     g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
 }
 
 static void
