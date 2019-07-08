@@ -95,7 +95,7 @@ GType qmi_proxy_get_type (void);
  *
  * Creates a #QmiProxy listening in the default proxy addess.
  *
- * Returns: A newly created #QmiProxy, or #NULL if @error is set.
+ * Returns: A newly created #QmiProxy, or %NULL if @error is set.
  *
  * Since: 1.8
  */

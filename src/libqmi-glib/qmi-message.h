@@ -115,7 +115,7 @@ QmiMessage *qmi_message_new (QmiService service,
  *
  * Whenever a complete QMI message is read, its raw data gets removed from the @raw buffer.
  *
- * Returns: (transfer full): a newly created #QmiMessage, which should be freed with qmi_message_unref(). If @raw doesn't contain a complete QMI message #NULL is returned. If there is a complete QMI message but it appears not to be valid, #NULL is returned and @error is set.
+ * Returns: (transfer full): a newly created #QmiMessage, which should be freed with qmi_message_unref(). If @raw doesn't contain a complete QMI message %NULL is returned. If there is a complete QMI message but it appears not to be valid, %NULL is returned and @error is set.
  *
  * Since: 1.0
  */
@@ -135,7 +135,7 @@ QmiMessage *qmi_message_new_from_raw (GByteArray  *raw,
  *
  * This method should be used instead of qmi_message_new_from_raw() if the input data doesn't have QMUX headers.
  *
- * Returns: (transfer full): a newly created #QmiMessage, which should be freed with qmi_message_unref(). If @qmi_data doesn't contain a complete QMI data payload #NULL is returned. If there is a complete QMI data payload but it appears not to be valid, #NULL is returned and @error is set.
+ * Returns: (transfer full): a newly created #QmiMessage, which should be freed with qmi_message_unref(). If @qmi_data doesn't contain a complete QMI data payload %NULL is returned. If there is a complete QMI data payload but it appears not to be valid, %NULL is returned and @error is set.
  *
  * Since: 1.24
  */
@@ -288,7 +288,7 @@ gsize qmi_message_get_length (QmiMessage *self);
  *
  * Gets the raw data buffer of the #QmiMessage.
  *
- * Returns: (transfer none): The raw data buffer, or #NULL if @error is set.
+ * Returns: (transfer none): The raw data buffer, or %NULL if @error is set.
  *
  * Since: 1.0
  */
@@ -305,7 +305,7 @@ const guint8 *qmi_message_get_raw (QmiMessage  *self,
  *
  * Gets the data buffer of the #QmiMessage without the QMUX header.
  *
- * Returns: (transfer none): The raw QMI buffer, or #NULL if @error is set.
+ * Returns: (transfer none): The raw QMI buffer, or %NULL if @error is set.
  *
  * Since: 1.24
  */
@@ -1005,7 +1005,7 @@ void qmi_message_foreach_raw_tlv (QmiMessage                *self,
  *
  * Get the raw data buffer of a specific TLV within the #QmiMessage.
  *
- * Returns: (transfer none): The raw data buffer of the TLV, or #NULL if not found.
+ * Returns: (transfer none): The raw data buffer of the TLV, or %NULL if not found.
  *
  * Since: 1.0
  */

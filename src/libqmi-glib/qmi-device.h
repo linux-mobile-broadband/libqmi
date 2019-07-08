@@ -137,7 +137,7 @@ GType qmi_device_get_type (void);
 /**
  * qmi_device_new:
  * @file: a #GFile.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @cancellable: optional #GCancellable object, %NULL to ignore.
  * @callback: a #GAsyncReadyCallback to call when the initialization is finished.
  * @user_data: the data to pass to callback function.
  *
@@ -159,7 +159,7 @@ void qmi_device_new (GFile               *file,
  *
  * Finishes an operation started with qmi_device_new().
  *
- * Returns: A newly created #QmiDevice, or #NULL if @error is set.
+ * Returns: A newly created #QmiDevice, or %NULL if @error is set.
  *
  * Since: 1.0
  */
@@ -283,7 +283,7 @@ typedef enum {
  * @self: a #QmiDevice.
  * @flags: mask of #QmiDeviceOpenFlags specifying how the device should be opened.
  * @timeout: maximum time, in seconds, to wait for the device to be opened.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @cancellable: optional #GCancellable object, %NULL to ignore.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
  * @user_data: the data to pass to callback function.
  *
@@ -366,7 +366,7 @@ gboolean qmi_device_close_finish (QmiDevice     *self,
  * @service: a valid #QmiService.
  * @cid: a valid client ID, or #QMI_CID_NONE.
  * @timeout: maximum time to wait.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @cancellable: optional #GCancellable object, %NULL to ignore.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
  * @user_data: the data to pass to callback function.
  *
@@ -399,7 +399,7 @@ void qmi_device_allocate_client (QmiDevice           *self,
  *
  * Finishes an operation started with qmi_device_allocate_client().
  *
- * Returns: a newly allocated #QmiClient, or #NULL if @error is set.
+ * Returns: a newly allocated #QmiClient, or %NULL if @error is set.
  *
  * Since: 1.0
  */
@@ -433,7 +433,7 @@ typedef enum {
  * @client: the #QmiClient to release.
  * @flags: mask of #QmiDeviceReleaseClientFlags specifying how the client should be released.
  * @timeout: maximum time to wait.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @cancellable: optional #GCancellable object, %NULL to ignore.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
  * @user_data: the data to pass to callback function.
  *
@@ -467,7 +467,7 @@ void qmi_device_release_client (QmiDevice                   *self,
  * Note that even if the release operation returns an error, the client should
  * anyway be considered released, and shouldn't be used afterwards.
  *
- * Returns: %TRUE if successful, or #NULL if @error is set.
+ * Returns: %TRUE if successful, or %NULL if @error is set.
  *
  * Since: 1.0
  */
@@ -480,7 +480,7 @@ gboolean qmi_device_release_client_finish (QmiDevice     *self,
  * @self: a #QmiDevice.
  * @instance_id: the instance ID.
  * @timeout: maximum time to wait.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @cancellable: optional #GCancellable object, %NULL to ignore.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
  * @user_data: the data to pass to callback function.
  *
@@ -502,7 +502,7 @@ void qmi_device_set_instance_id (QmiDevice           *self,
  * qmi_device_set_instance_id_finish:
  * @self: a #QmiDevice.
  * @res: a #GAsyncResult.
- * @link_id: a placeholder for the output #guint16, or #NULL if not required.
+ * @link_id: a placeholder for the output #guint16, or %NULL if not required.
  * @error: Return location for error or %NULL.
  *
  * Finishes an operation started with qmi_device_set_instance_id().
@@ -597,7 +597,7 @@ void qmi_device_command_full (QmiDevice           *self,
  *
  * Finishes an operation started with qmi_device_command_full().
  *
- * Returns: a #QmiMessage response, or #NULL if @error is set. The returned value should be freed with qmi_message_unref().
+ * Returns: a #QmiMessage response, or %NULL if @error is set. The returned value should be freed with qmi_message_unref().
  *
  * Since: 1.18
  */
@@ -651,7 +651,7 @@ void qmi_device_get_service_version_info (QmiDevice           *self,
  *
  * Finishes an operation started with qmi_device_get_service_version_info().
  *
- * Returns: a #GArray of #QmiDeviceServiceVersionInfo elements, or #NULL if @error is set. The returned value should be freed with g_array_unref().
+ * Returns: a #GArray of #QmiDeviceServiceVersionInfo elements, or %NULL if @error is set. The returned value should be freed with g_array_unref().
  *
  * Since: 1.6
  */
@@ -707,7 +707,7 @@ QmiDeviceExpectedDataFormat qmi_device_get_expected_data_format (QmiDevice  *sel
  * Configures the data format currently expected by the kernel in the network
  * interface.
  *
- * Returns: %TRUE if successful, or #NULL if @error is set.
+ * Returns: %TRUE if successful, or %NULL if @error is set.
  *
  * Since: 1.14
  */
