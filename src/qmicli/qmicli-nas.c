@@ -2032,6 +2032,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
     QmiNasUsagePreference usage_preference;
     QmiNasGsmWcdmaAcquisitionOrderPreference gsm_wcdma_acquisition_order_preference;
     QmiNasNetworkSelectionRegistrationRestriction registration_restriction;
+    QmiNasVoiceDomainPreference voice_domain_preference;
     guint16 mcc;
     guint16 mnc;
     guint64 extended_lte_band_preference[4];
@@ -2199,6 +2200,15 @@ get_system_selection_preference_ready (QmiClientNas *client,
         g_print ("\tUsage preference: '%s'\n",
                  qmi_nas_usage_preference_get_string (usage_preference));
     }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_voice_domain_preference (
+            output,
+            &voice_domain_preference,
+            NULL)) {
+        g_print ("\tVoice domain preference: '%s'\n",
+                 qmi_nas_voice_domain_preference_get_string (voice_domain_preference));
+    }
+
 
     if (qmi_message_nas_get_system_selection_preference_output_get_network_selection_registration_restriction (
             output,

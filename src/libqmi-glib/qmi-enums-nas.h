@@ -999,6 +999,24 @@ typedef enum {
  * Since: 1.0
  */
 
+/**
+ * QmiNasVoiceDomainPreference:
+ * @QMI_NAS_VOICE_DOMAIN_PREFERENCE_CS_ONLY: Circuit-switched voice only
+ * @QMI_NAS_VOICE_DOMAIN_PREFERENCE_PS_ONLY: Packet-switched voice only.
+ * @QMI_NAS_VOICE_DOMAIN_PREFERENCE_CS_PREFERRED: Circuit-switched voice is preferred.
+ * @QMI_NAS_VOICE_DOMAIN_PREFERENCE_PS_PREFERRED: Packet-switched voice is preferred.
+ *
+ * Voice domain preference.
+ *
+ * Since: 1.24
+ */
+typedef enum {
+    QMI_NAS_VOICE_DOMAIN_PREFERENCE_CS_ONLY      = 0x00,
+    QMI_NAS_VOICE_DOMAIN_PREFERENCE_PS_ONLY      = 0x01,
+    QMI_NAS_VOICE_DOMAIN_PREFERENCE_CS_PREFERRED = 0x02,
+    QMI_NAS_VOICE_DOMAIN_PREFERENCE_PS_PREFERRED = 0x03,
+} QmiNasVoiceDomainPreference;
+
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get System Info' request/response */
 
