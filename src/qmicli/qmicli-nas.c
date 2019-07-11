@@ -2021,6 +2021,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
     GError *error = NULL;
     gboolean emergency_mode;
     QmiNasRatModePreference mode_preference;
+    QmiNasRatModePreference disabled_modes;
     QmiNasBandPreference band_preference;
     QmiNasLteBandPreference lte_band_preference;
     QmiNasTdScdmaBandPreference td_scdma_band_preference;
@@ -2073,6 +2074,18 @@ get_system_selection_preference_ready (QmiClientNas *client,
         g_print ("\tMode preference: '%s'\n", str);
         g_free (str);
     }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_disabled_modes (
+            output,
+            &disabled_modes,
+            NULL)) {
+        gchar *str;
+
+        str = qmi_nas_rat_mode_preference_build_string_from_mask (disabled_modes);
+        g_print ("\tDisabled modes: '%s'\n", str);
+        g_free (str);
+    }
+
 
     if (qmi_message_nas_get_system_selection_preference_output_get_band_preference (
             output,
