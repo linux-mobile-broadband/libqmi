@@ -2031,6 +2031,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
     QmiNasServiceDomainPreference service_domain_preference;
     QmiNasUsagePreference usage_preference;
     QmiNasGsmWcdmaAcquisitionOrderPreference gsm_wcdma_acquisition_order_preference;
+    QmiNasNetworkSelectionRegistrationRestriction registration_restriction;
     guint16 mcc;
     guint16 mnc;
     guint64 extended_lte_band_preference[4];
@@ -2199,6 +2200,12 @@ get_system_selection_preference_ready (QmiClientNas *client,
                  qmi_nas_usage_preference_get_string (usage_preference));
     }
 
+    if (qmi_message_nas_get_system_selection_preference_output_get_network_selection_registration_restriction (
+            output,
+            &registration_restriction,
+            NULL)) {
+        g_print ("\tRegistration restriction: '%s'\n", qmi_nas_network_selection_registration_restriction_get_string (registration_restriction));
+    }
 
     if (qmi_message_nas_get_system_selection_preference_output_get_manual_network_selection (
             output,
