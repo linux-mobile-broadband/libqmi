@@ -84,6 +84,7 @@
  * @QMI_SERVICE_RMS: Remote Management Service.
  * @QMI_SERVICE_OMA: Open Mobile Alliance device management service.
  * @QMI_SERVICE_FOTA: Firmware Over The Air service. Since: 1.24.
+ * @QMI_SERVICE_GMS: Telit General Modem Service. Since: 1.24.
  *
  * QMI services.
  *
@@ -139,6 +140,7 @@ typedef enum {
     QMI_SERVICE_RMS     = 0xE1,
     QMI_SERVICE_OMA     = 0xE2,
     QMI_SERVICE_FOTA    = 0xE6,
+    QMI_SERVICE_GMS     = 0xE7,
 } QmiService;
 
 /**
