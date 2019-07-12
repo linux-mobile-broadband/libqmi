@@ -46,6 +46,7 @@ qmicli_SOURCES = \
 	qmicli-voice.c \
 	qmicli-loc.c \
 	qmicli-qos.c \
+	qmicli-gas.c \
 	qmicli-charsets.c \
 	qmicli-charsets.h
 

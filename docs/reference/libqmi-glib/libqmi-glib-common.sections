@@ -1252,6 +1252,18 @@ qmi_qos_event_get_type
 </SECTION>
 
 <SECTION>
+<FILE>qmi-enums-gas</FILE>
+QmiGasFirmwareListingMode
+<SUBSECTION Methods>
+qmi_gas_firmware_listing_mode_get_string
+<SUBSECTION Private>
+qmi_gas_firmware_listing_mode_build_string_from_mask
+<SUBSECTION Standard>
+QMI_TYPE_GAS_FIRMWARE_LISTING_MODE
+qmi_gas_firmware_listing_mode_get_type
+</SECTION>
+
+<SECTION>
 <FILE>qmi-errors</FILE>
 QmiCoreError
 QmiProtocolError

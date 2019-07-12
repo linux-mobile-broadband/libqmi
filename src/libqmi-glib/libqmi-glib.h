@@ -81,6 +81,9 @@
 #include "qmi-enums-qos.h"
 #include "qmi-qos.h"
 
+#include "qmi-enums-gas.h"
+#include "qmi-gas.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

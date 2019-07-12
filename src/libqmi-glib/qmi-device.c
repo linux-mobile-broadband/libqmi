@@ -50,6 +50,7 @@
 #include "qmi-voice.h"
 #include "qmi-loc.h"
 #include "qmi-qos.h"
+#include "qmi-gas.h"
 #include "qmi-utils.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
@@ -1052,6 +1053,10 @@ qmi_device_allocate_client (QmiDevice *self,
 
     case QMI_SERVICE_OMA:
         ctx->client_type = QMI_TYPE_CLIENT_OMA;
+        break;
+
+    case QMI_SERVICE_GAS:
+        ctx->client_type = QMI_TYPE_CLIENT_GAS;
         break;
 
     case QMI_SERVICE_WDA:

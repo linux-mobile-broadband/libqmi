@@ -54,6 +54,7 @@
 #include "qmi-voice.h"
 #include "qmi-loc.h"
 #include "qmi-qos.h"
+#include "qmi-gas.h"
 
 #define PACKED __attribute__((packed))
 
@@ -1621,6 +1622,9 @@ qmi_message_get_printable_full (QmiMessage        *self,
     case QMI_SERVICE_OMA:
         contents = __qmi_message_oma_get_printable (self, context, line_prefix);
         break;
+    case QMI_SERVICE_GAS:
+        contents = __qmi_message_gas_get_printable (self, context, line_prefix);
+        break;
     case QMI_SERVICE_WDA:
         contents = __qmi_message_wda_get_printable (self, context, line_prefix);
         break;
@@ -1680,6 +1684,9 @@ qmi_message_get_version_introduced_full (QmiMessage        *self,
         return __qmi_message_uim_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_OMA:
+        return __qmi_message_oma_get_version_introduced (self, context, major, minor);
+
+    case QMI_SERVICE_GAS:
         return __qmi_message_oma_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_WDA:

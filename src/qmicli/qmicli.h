@@ -105,4 +105,11 @@ void          qmicli_qos_run              (QmiDevice *device,
                                            QmiClientQos *client,
                                            GCancellable *cancellable);
 
+/* GAS group */
+GOptionGroup *qmicli_gas_get_option_group (void);
+gboolean      qmicli_gas_options_enabled  (void);
+void          qmicli_gas_run              (QmiDevice *device,
+                                           QmiClientGas *client,
+                                           GCancellable *cancellable);
+
 #endif /* __QMICLI_H__ */

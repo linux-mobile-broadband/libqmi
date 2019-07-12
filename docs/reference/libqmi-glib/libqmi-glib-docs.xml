@@ -440,6 +440,17 @@
   </chapter>
 
   <chapter>
+    <title>General Application Service (GAS)</title>
+    <xi:include href="xml/qmi-client-gas.xml"/>
+    <xi:include href="xml/qmi-enums-gas.xml"/>
+    <section>
+      <title>GAS Requests</title>
+      <xi:include href="xml/qmi-message-gas-dms-get-firmware-list.xml"/>
+      <xi:include href="xml/qmi-message-gas-dms-set-active-firmware.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>
