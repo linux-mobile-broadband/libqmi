@@ -1880,7 +1880,7 @@ device_open_step (GTask *task)
     switch (ctx->step) {
     case DEVICE_OPEN_CONTEXT_STEP_FIRST:
         ctx->step++;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_DRIVER:
         if (!device_setup_open_flags_by_driver (self, ctx, &error)) {
@@ -1889,7 +1889,7 @@ device_open_step (GTask *task)
             return;
         }
         ctx->step++;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_CREATE_ENDPOINT:
         device_create_endpoint (self, ctx);
@@ -1902,7 +1902,7 @@ device_open_step (GTask *task)
             return;
         }
         ctx->step++;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_OPEN_ENDPOINT:
         qmi_endpoint_open (self->priv->endpoint,
@@ -1930,7 +1930,7 @@ device_open_step (GTask *task)
             return;
         }
         ctx->step++;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_FLAGS_SYNC:
         /* Sync? */
@@ -1949,7 +1949,7 @@ device_open_step (GTask *task)
             return;
         }
         ctx->step++;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_FLAGS_NETPORT:
         /* Network port setup */
@@ -1981,7 +1981,7 @@ device_open_step (GTask *task)
             return;
         }
         ctx->step++;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_FLAGS_EXPECT_INDICATIONS:
         qmi_endpoint_setup_indications (self->priv->endpoint,
@@ -1990,7 +1990,7 @@ device_open_step (GTask *task)
                                         (GAsyncReadyCallback)setup_indications_ready,
                                         task);
         return;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_LAST:
         /* Nothing else to process, done we are */
