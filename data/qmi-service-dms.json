@@ -270,6 +270,12 @@
                       "type"      : "TLV",
                       "since"     : "1.0",
                       "format"    : "string",
+                      "prerequisites": [ { "common-ref" : "Success" } ] },
+                    { "name"      : "Imei Software Version",
+                      "id"        : "0x13",
+                      "type"      : "TLV",
+                      "since"     : "1.0",
+                      "format"    : "string",
                       "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************

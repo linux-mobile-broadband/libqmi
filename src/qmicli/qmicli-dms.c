@@ -454,6 +454,7 @@ get_ids_ready (QmiClientDms *client,
     const gchar *esn = NULL;
     const gchar *imei = NULL;
     const gchar *meid = NULL;
+    const gchar *imei_software_version = NULL;
     QmiMessageDmsGetIdsOutput *output;
     GError *error = NULL;
 
@@ -478,13 +479,19 @@ get_ids_ready (QmiClientDms *client,
     qmi_message_dms_get_ids_output_get_meid (output, &meid, NULL);
 
     g_print ("[%s] Device IDs retrieved:\n"
-             "\t ESN: '%s'\n"
-             "\tIMEI: '%s'\n"
-             "\tMEID: '%s'\n",
+             "\t    ESN: '%s'\n"
+             "\t   IMEI: '%s'\n"
+             "\t   MEID: '%s'\n",
              qmi_device_get_path_display (ctx->device),
              VALIDATE_UNKNOWN (esn),
              VALIDATE_UNKNOWN (imei),
              VALIDATE_UNKNOWN (meid));
+
+    if (qmi_message_dms_get_ids_output_get_imei_software_version (output,
+                                                                  &imei_software_version,
+                                                                  NULL)) {
+        g_print("\tIMEI SV: '%s'\n", imei_software_version);
+    }
 
     qmi_message_dms_get_ids_output_unref (output);
     operation_shutdown (TRUE);
