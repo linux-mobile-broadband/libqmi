@@ -2372,6 +2372,7 @@ network_scan_ready (QmiClientNas *client,
                     GAsyncResult *res)
 {
     QmiMessageNasNetworkScanOutput *output;
+    QmiNasNetworkScanResult network_scan_result;
     GError *error = NULL;
     GArray *array;
 
@@ -2454,6 +2455,13 @@ network_scan_ready (QmiClientNas *client,
                      element->mnc,
                      element->includes_pcs_digit ? "yes" : "no");
         }
+    }
+
+    if (qmi_message_nas_network_scan_output_get_network_scan_result (output,
+                                                                     &network_scan_result,
+                                                                     NULL)) {
+        g_print ("Network scan result: %s\n",
+                 qmi_nas_network_scan_result_get_string (network_scan_result));
     }
 
     qmi_message_nas_network_scan_output_unref (output);

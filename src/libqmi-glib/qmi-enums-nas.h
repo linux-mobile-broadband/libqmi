@@ -404,6 +404,28 @@ typedef enum {
  */
 
 /**
+ * QmiNasNetworkScanResult:
+ * @QMI_NAS_NETWORK_SCAN_RESULT_SUCCESS: Success.
+ * @QMI_NAS_NETWORK_SCAN_RESULT_ABORT: Abort.
+ * @QMI_NAS_NETWORK_SCAN_RESULT_RADIO_LINK_FAILURE: Radio link failure.
+ *
+ * Network scan result.
+ *
+ * Since: 1.24
+ */
+typedef enum {
+    QMI_NAS_NETWORK_SCAN_RESULT_SUCCESS            = 0,
+    QMI_NAS_NETWORK_SCAN_RESULT_ABORT              = 1,
+    QMI_NAS_NETWORK_SCAN_RESULT_RADIO_LINK_FAILURE = 2,
+} QmiNasNetworkScanResult;
+
+/**
+ * qmi_nas_network_scan_result_get_string:
+ *
+ * Since: 1.24
+ */
+
+/**
  * QmiNasNetworkStatus:
  * @QMI_NAS_NETWORK_STATUS_CURRENT_SERVING: Network is in use, current serving.
  * @QMI_NAS_NETWORK_STATUS_AVAILABLE: Network is vailable.
