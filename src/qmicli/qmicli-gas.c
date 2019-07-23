@@ -129,7 +129,7 @@ operation_shutdown (gboolean operation_status)
 }
 
 static void
-print_firmware_listing (guint8 index,
+print_firmware_listing (guint8       idx,
                         const gchar *name,
                         const gchar *version,
                         const gchar *pri_revision)
@@ -139,8 +139,8 @@ print_firmware_listing (guint8 index,
              "\tName:         %s\n"
              "\tVersion:      %s\n"
              "\tPRI revision: %s\n",
-             index,
-             index,
+             idx,
+             idx,
              name,
              version,
              pri_revision);
@@ -152,7 +152,7 @@ get_firmware_list_ready (QmiClientGas *client,
 {
     QmiMessageGasDmsGetFirmwareListOutput *output;
     GError *error = NULL;
-    guint8 index;
+    guint8 idx;
     const gchar *name;
     const gchar *version;
     const gchar *pri_revision;
@@ -173,17 +173,17 @@ get_firmware_list_ready (QmiClientGas *client,
         return;
     }
 
-    if (qmi_message_gas_dms_get_firmware_list_output_get_stored_firmware_1(output, &index, &name, &version, &pri_revision, NULL))
-        print_firmware_listing(index, name, version, pri_revision);
+    if (qmi_message_gas_dms_get_firmware_list_output_get_stored_firmware_1 (output, &idx, &name, &version, &pri_revision, NULL))
+        print_firmware_listing (idx, name, version, pri_revision);
 
-    if (qmi_message_gas_dms_get_firmware_list_output_get_stored_firmware_2(output, &index, &name, &version, &pri_revision, NULL))
-        print_firmware_listing(index, name, version, pri_revision);
+    if (qmi_message_gas_dms_get_firmware_list_output_get_stored_firmware_2 (output, &idx, &name, &version, &pri_revision, NULL))
+        print_firmware_listing (idx, name, version, pri_revision);
 
-    if (qmi_message_gas_dms_get_firmware_list_output_get_stored_firmware_3(output, &index, &name, &version, &pri_revision, NULL))
-        print_firmware_listing(index, name, version, pri_revision);
+    if (qmi_message_gas_dms_get_firmware_list_output_get_stored_firmware_3 (output, &idx, &name, &version, &pri_revision, NULL))
+        print_firmware_listing (idx, name, version, pri_revision);
 
-    if (qmi_message_gas_dms_get_firmware_list_output_get_stored_firmware_4(output, &index, &name, &version, &pri_revision, NULL))
-        print_firmware_listing(index, name, version, pri_revision);
+    if (qmi_message_gas_dms_get_firmware_list_output_get_stored_firmware_4 (output, &idx, &name, &version, &pri_revision, NULL))
+        print_firmware_listing (idx, name, version, pri_revision);
 
     qmi_message_gas_dms_get_firmware_list_output_unref (output);
     operation_shutdown (TRUE);
