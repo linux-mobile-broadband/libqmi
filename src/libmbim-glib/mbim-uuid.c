@@ -397,10 +397,7 @@ mbim_uuid_from_service (MbimService service)
 {
     GList *l;
 
-    g_return_val_if_fail (service >= MBIM_SERVICE_INVALID &&
-                          (service < MBIM_SERVICE_LAST ||
-                           mbim_service_id_is_custom (service)),
-                          &uuid_invalid);
+    g_return_val_if_fail (service < MBIM_SERVICE_LAST || mbim_service_id_is_custom (service), &uuid_invalid);
 
     switch (service) {
     case MBIM_SERVICE_INVALID:
@@ -591,8 +588,7 @@ static const MbimUuid uuid_context_type_local = {
 const MbimUuid *
 mbim_uuid_from_context_type (MbimContextType context_type)
 {
-    g_return_val_if_fail (context_type >= MBIM_CONTEXT_TYPE_INVALID && context_type <= MBIM_CONTEXT_TYPE_LOCAL,
-                          &uuid_invalid);
+    g_return_val_if_fail (context_type <= MBIM_CONTEXT_TYPE_LOCAL, &uuid_invalid);
 
     switch (context_type) {
     case MBIM_CONTEXT_TYPE_INVALID:
