@@ -357,7 +357,6 @@ mbim_cid_get_printable (MbimService service,
     /* CID = 0 is never a valid command */
     g_return_val_if_fail (cid > 0, NULL);
     /* Known service required */
-    g_return_val_if_fail (service >= MBIM_SERVICE_INVALID, NULL);
     g_return_val_if_fail (service < MBIM_SERVICE_LAST, NULL);
 
     switch (service) {
