@@ -145,14 +145,20 @@ QmiFile *
 qmi_file_new (GFile *file)
 {
     QmiFile *self;
+    gchar *path;
 
     if (!file)
         return NULL;
 
+    /* URI-only files won't have a path. We don't support this yet. */
+    path = g_file_get_path (file);
+    if (!path)
+        return NULL;
+
     self = g_object_new (QMI_TYPE_FILE, NULL);
     self->priv->file = g_object_ref (file);
-    self->priv->path = g_file_get_path (self->priv->file);
-    self->priv->path_display = g_filename_display_name (self->priv->path);
+    self->priv->path = path;
+    self->priv->path_display = g_filename_display_name (path);
 
     return self;
 }
