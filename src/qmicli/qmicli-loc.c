@@ -276,7 +276,7 @@ gnss_sv_info_received (QmiClientLoc                     *client,
                        QmiIndicationLocGnssSvInfoOutput *output)
 {
     GArray   *satellite_infos = NULL;
-    guint     i;
+    guint     i, num_satellite_infos;
     gboolean  altitude_assumed;
 
     if (qmi_indication_loc_gnss_sv_info_output_get_altitude_assumed (output, &altitude_assumed, NULL))
@@ -286,8 +286,9 @@ gnss_sv_info_received (QmiClientLoc                     *client,
 
     qmi_indication_loc_gnss_sv_info_output_get_list (output, &satellite_infos, NULL);
 
-    g_print ("[gnss sv info] %d satellites detected:\n", satellite_infos ? satellite_infos->len : 0);
-    for (i = 0; i < satellite_infos->len; i++) {
+    num_satellite_infos = satellite_infos ? satellite_infos->len : 0;
+    g_print ("[gnss sv info] %d satellites detected:\n", num_satellite_infos);
+    for (i = 0; i < num_satellite_infos; i++) {
         QmiIndicationLocGnssSvInfoOutputListElement *element;
 
         element = &g_array_index (satellite_infos, QmiIndicationLocGnssSvInfoOutputListElement, i);
