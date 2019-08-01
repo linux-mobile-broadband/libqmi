@@ -56,7 +56,7 @@ qfu_dload_request_sdp_build (guint8 *buffer,
 
     g_debug ("[qfu,dload-message] sent %s:", qfu_dload_cmd_get_string ((QfuDloadCmd) req->cmd));
 
-	return (sizeof (DloadSdpReq));
+    return (sizeof (DloadSdpReq));
 }
 
 /******************************************************************************/
@@ -76,7 +76,7 @@ qfu_dload_response_ack_parse (const guint8  *buffer,
 {
     DloadAckRsp *rsp;
 
-	if (buffer_len != sizeof (DloadAckRsp)) {
+    if (buffer_len != sizeof (DloadAckRsp)) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
                      buffer_len, sizeof (DloadAckRsp));

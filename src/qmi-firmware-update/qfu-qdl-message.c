@@ -55,7 +55,7 @@ qdl_message_generic_build (guint8    *buffer,
 
     g_debug ("[qfu,qdl-message] sent %s:", qfu_qdl_cmd_get_string ((QfuQdlCmd) req->cmd));
 
-	return (sizeof (QdlMsg));
+    return (sizeof (QdlMsg));
 }
 
 /******************************************************************************/
@@ -106,7 +106,7 @@ qfu_qdl_request_hello_build (guint8 *buffer,
     g_debug ("[qfu,qdl-message]   minimum version: %u",     req->minver);
     g_debug ("[qfu,qdl-message]   features:        0x%02x", req->features);
 
-	return (sizeof (QdlHelloReq));
+    return (sizeof (QdlHelloReq));
 }
 
 typedef struct _QdlHelloRsp QdlHelloRsp;
@@ -132,7 +132,7 @@ qfu_qdl_response_hello_parse (const guint8  *buffer,
 {
     QdlHelloRsp *rsp;
 
-	if (buffer_len != sizeof (QdlHelloRsp)) {
+    if (buffer_len != sizeof (QdlHelloRsp)) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
                      buffer_len, sizeof (QdlHelloRsp));
@@ -252,7 +252,7 @@ qfu_qdl_response_error_parse (const guint8  *buffer,
 {
     QdlErrRsp *rsp;
 
-	if (buffer_len != sizeof (QdlErrRsp)) {
+    if (buffer_len != sizeof (QdlErrRsp)) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
                      buffer_len, sizeof (QdlErrRsp));
@@ -301,11 +301,11 @@ qfu_qdl_request_ufopen_build (guint8        *buffer,
     /* Create request */
     req = (QdlUfopenReq *) buffer;
     memset (req, 0, sizeof (QdlUfopenReq));
-	req->cmd        = QFU_QDL_CMD_OPEN_UNFRAMED_REQ;
-	req->type       = (guint8) qfu_image_get_image_type (image);
-	req->windowsize = 1; /* snooped */
-	req->length     = GUINT32_TO_LE (qfu_image_get_header_size (image) + qfu_image_get_data_size (image));
-	req->chunksize  = GUINT32_TO_LE (qfu_image_get_data_size (image));
+    req->cmd        = QFU_QDL_CMD_OPEN_UNFRAMED_REQ;
+    req->type       = (guint8) qfu_image_get_image_type (image);
+    req->windowsize = 1; /* snooped */
+    req->length     = GUINT32_TO_LE (qfu_image_get_header_size (image) + qfu_image_get_data_size (image));
+    req->chunksize  = GUINT32_TO_LE (qfu_image_get_data_size (image));
 
     /* Append header */
     if (qfu_image_read_header (image, buffer + sizeof (QdlUfopenReq), buffer_len - sizeof (QdlUfopenReq), cancellable, error) < 0) {
@@ -319,7 +319,7 @@ qfu_qdl_request_ufopen_build (guint8        *buffer,
     g_debug ("[qfu,qdl-message]   window size: %u", req->windowsize);
     g_debug ("[qfu,qdl-message]   chunk size:  %" G_GUINT32_FORMAT, GUINT32_FROM_LE (req->chunksize));
 
-	return (sizeof (QdlUfopenReq) + qfu_image_get_header_size (image));
+    return (sizeof (QdlUfopenReq) + qfu_image_get_header_size (image));
 }
 
 typedef struct _QdlUfopenRsp QdlUfopenRsp;
@@ -339,7 +339,7 @@ qfu_qdl_response_ufopen_parse (const guint8  *buffer,
 {
     QdlUfopenRsp *rsp;
 
-	if (buffer_len != sizeof (QdlUfopenRsp)) {
+    if (buffer_len != sizeof (QdlUfopenRsp)) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
                      buffer_len, sizeof (QdlUfopenRsp));
@@ -405,17 +405,17 @@ qfu_qdl_request_ufwrite_build (guint8        *buffer,
     /* Create request after appending, so that we have correct chunksize */
     req = (QdlUfwriteReq *) buffer;
     memset (req, 0, sizeof (QdlUfwriteReq));
-	req->cmd       = QFU_QDL_CMD_WRITE_UNFRAMED_REQ;
-	req->sequence  = GUINT16_TO_LE (sequence);
-	req->reserved  = 0;
-	req->chunksize = GUINT32_TO_LE ((guint32) n_read);
-	req->crc       = GUINT16_TO_LE (qfu_utils_crc16 (buffer, sizeof (QdlUfwriteReq) - 2));
+    req->cmd       = QFU_QDL_CMD_WRITE_UNFRAMED_REQ;
+    req->sequence  = GUINT16_TO_LE (sequence);
+    req->reserved  = 0;
+    req->chunksize = GUINT32_TO_LE ((guint32) n_read);
+    req->crc       = GUINT16_TO_LE (qfu_utils_crc16 (buffer, sizeof (QdlUfwriteReq) - 2));
 
     g_debug ("[qfu,qdl-message] sent %s:", qfu_qdl_cmd_get_string ((QfuQdlCmd) req->cmd));
     g_debug ("[qfu,qdl-message]   sequence:   %" G_GUINT16_FORMAT, GUINT16_FROM_LE (req->sequence));
     g_debug ("[qfu,qdl-message]   chunk size: %" G_GUINT32_FORMAT, GUINT32_FROM_LE (req->chunksize));
 
-	return (sizeof (QdlUfopenReq) + n_read);
+    return (sizeof (QdlUfopenReq) + n_read);
 }
 
 /* The response is HDLC framed, so the crc is part of the framing */
@@ -437,7 +437,7 @@ qfu_qdl_response_ufwrite_parse (const guint8  *buffer,
 {
     QdlUfwriteRsp *rsp;
 
-	if (buffer_len != sizeof (QdlUfwriteRsp)) {
+    if (buffer_len != sizeof (QdlUfwriteRsp)) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
                      buffer_len, sizeof (QdlUfwriteRsp));
@@ -492,7 +492,7 @@ qfu_qdl_response_ufclose_parse (const guint8  *buffer,
 {
     QdlUfcloseRsp *rsp;
 
-	if (buffer_len != sizeof (QdlUfcloseRsp)) {
+    if (buffer_len != sizeof (QdlUfcloseRsp)) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "message size mismatch: %" G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT,
                      buffer_len, sizeof (QdlUfcloseRsp));

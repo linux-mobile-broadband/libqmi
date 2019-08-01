@@ -323,8 +323,8 @@ receive_response (QfuQdlDevice  *self,
                   GCancellable  *cancellable,
                   GError       **error)
 {
-	fd_set         rd;
-	struct timeval tv;
+    fd_set         rd;
+    struct timeval tv;
     gint           aux;
     gssize         rlen;
     guint8        *end;
@@ -336,8 +336,8 @@ receive_response (QfuQdlDevice  *self,
     tv.tv_sec  = timeout_secs;
     tv.tv_usec = 0;
 
-	FD_ZERO (&rd);
-	FD_SET (self->priv->fd, &rd);
+    FD_ZERO (&rd);
+    FD_SET (self->priv->fd, &rd);
     aux = select (self->priv->fd + 1, &rd, NULL, NULL, &tv);
 
     if (g_cancellable_set_error_if_cancelled (cancellable, error))
@@ -357,8 +357,8 @@ receive_response (QfuQdlDevice  *self,
     }
 
     /* Receive in the primary buffer */
-	rlen = read (self->priv->fd, self->priv->buffer->data, self->priv->buffer->len);
-	if (rlen < 0) {
+    rlen = read (self->priv->fd, self->priv->buffer->data, self->priv->buffer->len);
+    if (rlen < 0) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "couldn't read response: %s",
                      g_strerror (errno));
@@ -677,12 +677,12 @@ qdl_device_detect_version (QfuQdlDevice  *self,
 
 #define MAX_VALID_VERSION 6
 
-	/* Attempt to probe supported protocol version
-	 *  Newer modems like Sierra Wireless MC7710 must use '6' for both fields
-	 *  Gobi2000 modems like HP un2420 must use '5' for both fields
-	 *  Gobi1000 modems  must use '4' for both fields
-	 */
-	for (version = 4; version <= MAX_VALID_VERSION; version++) {
+    /* Attempt to probe supported protocol version
+     *  Newer modems like Sierra Wireless MC7710 must use '6' for both fields
+     *  Gobi2000 modems like HP un2420 must use '5' for both fields
+     *  Gobi1000 modems  must use '4' for both fields
+     */
+    for (version = 4; version <= MAX_VALID_VERSION; version++) {
         gsize   reqlen;
         gssize  rsplen;
         guint8 *rsp = NULL;

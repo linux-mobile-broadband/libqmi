@@ -138,8 +138,8 @@ receive_response (QfuAtDevice   *self,
                   GCancellable  *cancellable,
                   GError       **error)
 {
-	fd_set          rd;
-	struct timeval  tv;
+    fd_set          rd;
+    struct timeval  tv;
     gint            aux;
     gssize          rlen;
     gchar          *start;
@@ -148,8 +148,8 @@ receive_response (QfuAtDevice   *self,
     tv.tv_sec  = timeout_secs;
     tv.tv_usec = 0;
 
-	FD_ZERO (&rd);
-	FD_SET (self->priv->fd, &rd);
+    FD_ZERO (&rd);
+    FD_SET (self->priv->fd, &rd);
     aux = select (self->priv->fd + 1, &rd, NULL, NULL, &tv);
 
     if (g_cancellable_set_error_if_cancelled (cancellable, error))
@@ -169,8 +169,8 @@ receive_response (QfuAtDevice   *self,
     }
 
     /* Receive in the primary buffer */
-	rlen = read (self->priv->fd, self->priv->buffer->data, self->priv->buffer->len);
-	if (rlen < 0) {
+    rlen = read (self->priv->fd, self->priv->buffer->data, self->priv->buffer->len);
+    if (rlen < 0) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "couldn't read response: %s",
                      g_strerror (errno));
