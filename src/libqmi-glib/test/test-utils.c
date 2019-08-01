@@ -950,7 +950,6 @@ common_test_utils_uint_sized_le (guint n_bytes)
     in_buffer_walker = &in_buffer[0];
     out_buffer_size = sizeof (out_buffer);
     out_buffer_walker = &out_buffer[0];
-    i = 0;
 
     qmi_utils_read_sized_guint_from_buffer (&in_buffer_walker, &in_buffer_size, n_bytes, QMI_ENDIAN_LITTLE, &tmp);
     g_assert_cmpuint (tmp, ==, value);
@@ -1170,7 +1169,6 @@ common_test_utils_uint_sized_unaligned_be (guint n_bytes)
     in_buffer_walker = &in_buffer_aux[1];
     out_buffer_size = sizeof (out_buffer);
     out_buffer_walker = &out_buffer[0];
-    i = 0;
 
     qmi_utils_read_sized_guint_from_buffer (&in_buffer_walker, &in_buffer_size, n_bytes, QMI_ENDIAN_BIG, &tmp);
     g_assert_cmpuint (tmp, ==, value);
