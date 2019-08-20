@@ -59,6 +59,7 @@ static gboolean get_operator_name_flag;
 static gboolean get_lte_cphy_ca_info_flag;
 static gboolean get_rf_band_info_flag;
 static gboolean get_supported_messages_flag;
+static gboolean swi_get_status_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -127,6 +128,10 @@ static GOptionEntry entries[] = {
       "Get supported messages",
       NULL
     },
+    { "nas-swi-get-status", 0, 0, G_OPTION_ARG_NONE, &swi_get_status_flag,
+      "Get status ((Sierra Wireless specific)",
+      NULL
+    },
     { "nas-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -178,6 +183,7 @@ qmicli_nas_options_enabled (void)
                  get_lte_cphy_ca_info_flag +
                  get_rf_band_info_flag +
                  get_supported_messages_flag +
+                 swi_get_status_flag +
                  reset_flag +
                  noop_flag);
 
@@ -3378,6 +3384,98 @@ get_supported_messages_ready (QmiClientNas *client,
 }
 
 static void
+swi_get_status_ready (QmiClientNas *client,
+                              GAsyncResult *res)
+{
+    QmiMessageNasSwiGetStatusOutput *output;
+    GError *error = NULL;
+
+    guint8 temperature;
+    QmiNasSwiModemMode modem_mode;
+    QmiNasSwiSystemMode system_mode;
+    QmiNasSwiImsRegState ims_reg_state;
+    QmiNasSwiPsState ps_state;
+
+    QmiNasActiveBand band;
+    QmiNasDLBandwidth bandwidth;
+    guint16 rx_channel;
+    guint16 tx_channel;
+    QmiNasSwiEmmState emm_state;
+    guint8 emm_sub_state;
+    QmiNasSwiEmmConnectionState emm_conn_state;
+
+    output = qmi_client_nas_swi_get_status_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_swi_get_status_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get status: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_nas_swi_get_status_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got status:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_nas_swi_get_status_output_get_common_info (
+            output,
+            &temperature,
+            &modem_mode,
+            &system_mode,
+            &ims_reg_state,
+            &ps_state,
+            NULL)) {
+        g_print ("Common Info:\n"
+                "\tTemperature: '%u'\n"
+                "\tModem mode: '%s'\n"
+                "\tSystem mode: '%s'\n"
+                "\tIMS registration state: '%s'\n"
+                "\tPacket service state: '%s'\n",
+                temperature,
+                qmi_nas_swi_modem_mode_get_string (modem_mode),
+                qmi_nas_swi_system_mode_get_string (system_mode),
+                qmi_nas_swi_ims_reg_state_get_string (ims_reg_state),
+                qmi_nas_swi_ps_state_get_string (ps_state));
+    }
+
+    if (qmi_message_nas_swi_get_status_output_get_lte_info (
+            output,
+            &band,
+            &bandwidth,
+            &rx_channel,
+            &tx_channel,
+            &emm_state,
+            &emm_sub_state,
+            &emm_conn_state,
+            NULL)) {
+        g_print ("LTE info:\n"
+                "\tBand: '%s'\n"
+                "\tBandwidth: '%s'\n"
+                "\tRX channel: '%" G_GUINT16_FORMAT"'\n"
+                "\tTX channel: '%" G_GUINT16_FORMAT"'\n"
+                "\tEMM state: '%s'\n"
+                "\tEMM sub state: '%u'\n"
+                "\tEMM connection state: '%s'\n",
+                qmi_nas_active_band_get_string (band),
+                qmi_nas_dl_bandwidth_get_string (bandwidth),
+                rx_channel,
+                tx_channel,
+                qmi_nas_swi_emm_state_get_string (emm_state),
+                emm_sub_state,
+                qmi_nas_swi_emm_connection_state_get_string (emm_conn_state));
+    }
+
+    qmi_message_nas_swi_get_status_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+static void
 reset_ready (QmiClientNas *client,
              GAsyncResult *res)
 {
@@ -3639,6 +3737,18 @@ qmicli_nas_run (QmiDevice *device,
                                                ctx->cancellable,
                                                (GAsyncReadyCallback)get_supported_messages_ready,
                                                NULL);
+        return;
+    }
+
+    /* Request to get status */
+    if (swi_get_status_flag) {
+        g_debug ("Asynchronously getting status (Sierra Wireless specific)...");
+        qmi_client_nas_swi_get_status (ctx->client,
+                                       NULL,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback)swi_get_status_ready,
+                                       NULL);
         return;
     }
 
