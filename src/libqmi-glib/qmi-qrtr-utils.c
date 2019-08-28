@@ -30,6 +30,12 @@
 #include "qmi-qrtr-control-socket.h"
 #include "qmi-qrtr-node.h"
 
+/* Some kernels expose the qrtr header but not the address family macro. */
+#if !defined AF_QIPCRTR
+# define AF_QIPCRTR 42
+#endif
+
+#define QRTR_URI_SCHEME "qrtr"
 #define QRTR_URI_PREFIX QRTR_URI_SCHEME "://"
 
 gchar *
