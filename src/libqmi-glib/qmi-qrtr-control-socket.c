@@ -39,6 +39,13 @@ static void initable_iface_init (GInitableIface *iface);
 G_DEFINE_TYPE_EXTENDED (QrtrControlSocket, qrtr_control_socket, G_TYPE_OBJECT, 0,
                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init))
 
+enum {
+    SIGNAL_NODE_ADDED,
+    SIGNAL_NODE_REMOVED,
+    SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0 };
 
 struct _QrtrControlSocketPrivate {
     /* Underlying QRTR socket */
@@ -49,77 +56,73 @@ struct _QrtrControlSocketPrivate {
     GSource *source;
 };
 
-struct NodeEntry {
+/*****************************************************************************/
+
+typedef struct {
     QrtrNode *node;
     gboolean  published;
     GSource  *publish_source;
-};
-
-enum {
-    SIGNAL_NODE_ADDED,
-    SIGNAL_NODE_REMOVED,
-    SIGNAL_LAST
-};
-
-static guint signals[SIGNAL_LAST] = { 0 };
-
-#define PUBLISH_TIMEOUT_MS 100
-
-/*****************************************************************************/
-
-struct PublishRequest {
-    QrtrControlSocket *socket;
-    guint32            node_id;
-};
+} NodeEntry;
 
 static void
-node_entry_free (struct NodeEntry *entry)
+node_entry_free (NodeEntry *entry)
 {
     g_clear_object (&entry->node);
     if (entry->publish_source) {
         g_source_destroy (entry->publish_source);
         g_source_unref (entry->publish_source);
     }
-    g_slice_free (struct NodeEntry, entry);
+    g_slice_free (NodeEntry, entry);
 }
 
+/*****************************************************************************/
+
+#define PUBLISH_TIMEOUT_MS 100
+
+typedef struct {
+    QrtrControlSocket *self;
+    guint32            node_id;
+} PublishRequest;
+
 static gboolean
-node_entry_publish (struct PublishRequest *request)
+publish_node_entry_timed_out (PublishRequest *request)
 {
-    struct NodeEntry *entry;
+    NodeEntry *entry;
 
     /* Check to make sure the node is actually still around and unpublished. */
-    entry = g_hash_table_lookup (request->socket->priv->node_map,
+    entry = g_hash_table_lookup (request->self->priv->node_map,
                                  GUINT_TO_POINTER (request->node_id));
-    if (!entry || entry->published)
-        return G_SOURCE_REMOVE;
 
-    entry->published = TRUE;
-    g_signal_emit (request->socket, signals[SIGNAL_NODE_ADDED], 0, request->node_id);
+    if (entry && !entry->published) {
+        entry->published = TRUE;
+        g_signal_emit (request->self, signals[SIGNAL_NODE_ADDED], 0, request->node_id);
+    }
+
     return G_SOURCE_REMOVE;
 }
 
 static void
-publish_async (QrtrControlSocket *self,
-               struct NodeEntry  *entry)
+publish_node_entry (QrtrControlSocket *self,
+                    NodeEntry         *entry)
 {
-    struct PublishRequest *request;
+    PublishRequest *request;
 
-    if (entry->published)
-        return;
+    g_assert (!entry->published);
 
+    /* If called multiple times consecutively, we only want one single timeout set,
+     * the last one */
     if (entry->publish_source) {
         g_source_destroy (entry->publish_source);
         g_source_unref (entry->publish_source);
     }
 
-    request = g_new0 (struct PublishRequest, 1);
-    request->socket = self;
+    request = g_new0 (PublishRequest, 1);
+    request->self = self;
     request->node_id = qrtr_node_id (entry->node);
 
     entry->publish_source = g_timeout_source_new (PUBLISH_TIMEOUT_MS);
     g_source_set_callback (entry->publish_source,
-                           (GSourceFunc)node_entry_publish,
+                           (GSourceFunc)publish_node_entry_timed_out,
                            request,
                            (GDestroyNotify)g_free);
     g_source_attach (entry->publish_source, g_main_context_get_thread_default ());
@@ -135,11 +138,11 @@ add_service_info (QrtrControlSocket *self,
                   guint32            version,
                   guint32            instance)
 {
-    struct NodeEntry *entry;
+    NodeEntry *entry;
 
     entry = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
     if (!entry) {
-        entry = g_slice_new0 (struct NodeEntry);
+        entry = g_slice_new0 (NodeEntry);
         entry->node = qrtr_node_new (self, node_id);
         entry->published = FALSE;
 
@@ -149,7 +152,7 @@ add_service_info (QrtrControlSocket *self,
     if (!entry->published) {
         /* Schedule or reschedule the publish callback since we might continue
          * to see more services for this node for a bit. */
-        publish_async (self, entry);
+        publish_node_entry (self, entry);
     }
 
     qrtr_node_add_service_info (entry->node, service, port, version, instance);
@@ -163,7 +166,7 @@ remove_service_info (QrtrControlSocket *self,
                      guint32            version,
                      guint32            instance)
 {
-    struct NodeEntry *entry;
+    NodeEntry *entry;
 
     entry = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
     if (!entry) {
@@ -248,7 +251,7 @@ QrtrNode *
 qrtr_control_socket_get_node (QrtrControlSocket *socket,
                               guint32            node_id)
 {
-    struct NodeEntry *entry;
+    NodeEntry *entry;
 
     entry = g_hash_table_lookup (socket->priv->node_map,
                                  GUINT_TO_POINTER (node_id));
