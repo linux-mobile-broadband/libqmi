@@ -72,9 +72,12 @@ typedef struct {
 static void
 node_open_context_free (NodeOpenContext *ctx)
 {
-    g_source_destroy (ctx->timeout_source);
-    g_source_unref (ctx->timeout_source);
-    g_signal_handler_disconnect (ctx->socket, ctx->node_added_id);
+    if (ctx->timeout_source) {
+        g_source_destroy (ctx->timeout_source);
+        g_source_unref (ctx->timeout_source);
+    }
+    if (ctx->node_added_id)
+        g_signal_handler_disconnect (ctx->socket, ctx->node_added_id);
     g_clear_object (&ctx->socket);
     g_slice_free (NodeOpenContext, ctx);
 }
@@ -92,6 +95,11 @@ timeout_cb (GTask *task)
     NodeOpenContext *ctx;
 
     ctx = g_task_get_task_data (task);
+
+    /* remove signal connection right away, don't wait for the context free */
+    g_signal_handler_disconnect (ctx->socket, ctx->node_added_id);
+    ctx->node_added_id = 0;
+
     g_task_return_new_error (task,
                              QMI_CORE_ERROR,
                              QMI_CORE_ERROR_TIMEOUT,
@@ -110,8 +118,15 @@ node_added_cb (QrtrControlSocket *socket,
     NodeOpenContext *ctx;
 
     ctx = g_task_get_task_data (task);
+
+    /* not the one we want, ignore */
     if (node_id != ctx->node_wanted)
         return;
+
+    /* remove the timeout right away, don't wait for the context free */
+    g_source_destroy (ctx->timeout_source);
+    g_source_unref (ctx->timeout_source);
+    ctx->timeout_source = NULL;
 
     g_task_return_pointer (task,
                            qrtr_control_socket_get_node (ctx->socket, node_id),
@@ -157,5 +172,8 @@ qrtr_node_for_id (guint32              node_id,
     g_source_set_callback (ctx->timeout_source, (GSourceFunc)timeout_cb, task, NULL);
     g_source_attach (ctx->timeout_source, g_main_context_get_thread_default ());
 
+    /* The ownership of the task is shared between the signal handler and the timeout;
+     * we need to make sure that we cancel the other one if we're complting the task
+     * from one of them. */
     g_task_set_task_data (task, ctx, (GDestroyNotify)node_open_context_free);
 }
