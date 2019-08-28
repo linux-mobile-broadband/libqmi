@@ -160,5 +160,5 @@ qrtr_node_for_id (guint32              node_id,
     ctx->node_wanted = node_id;
     g_task_set_task_data (task, ctx, (GDestroyNotify)node_open_context_free);
 
-    g_timeout_add_seconds (timeout, (GSourceFunc)timeout_cb, g_object_ref (task));
+    g_timeout_add_seconds (timeout, (GSourceFunc)timeout_cb, task);
 }
