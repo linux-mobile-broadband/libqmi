@@ -87,12 +87,17 @@ GType qrtr_control_socket_get_type (void);
 
 /**
  * qrtr_control_socket_new:
+ * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @error: Return location for error or %NULL.
  *
  * Creates a #QrtrControlSocket object.
  *
+ * Returns: A newly created #QrtrControlSocket, or %NULL if @error is set.
+ *
  * Since: 1.24
  */
-QrtrControlSocket *qrtr_control_socket_new (GError **error);
+QrtrControlSocket *qrtr_control_socket_new (GCancellable  *cancellable,
+                                            GError       **error);
 
 /**
  * qrtr_control_socket_get_node:

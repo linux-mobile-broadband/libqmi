@@ -351,10 +351,11 @@ initable_init (GInitable     *initable,
 /*****************************************************************************/
 
 QrtrControlSocket *
-qrtr_control_socket_new (GError **error)
+qrtr_control_socket_new (GCancellable  *cancellable,
+                         GError       **error)
 {
     return QRTR_CONTROL_SOCKET (g_initable_new (QRTR_TYPE_CONTROL_SOCKET,
-                                                NULL, /* cancellable */
+                                                cancellable,
                                                 error,
                                                 NULL));
 }

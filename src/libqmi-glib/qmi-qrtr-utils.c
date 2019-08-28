@@ -150,7 +150,7 @@ qrtr_node_for_id (guint32              node_id,
 
     task = g_task_new (NULL, cancellable, callback, user_data);
 
-    socket = qrtr_control_socket_new (&error);
+    socket = qrtr_control_socket_new (cancellable, &error);
     if (!socket) {
         g_task_return_error (task, error);
         g_object_unref (task);
