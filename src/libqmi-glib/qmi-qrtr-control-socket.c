@@ -94,7 +94,7 @@ node_entry_publish (struct PublishRequest *request)
 }
 
 static void
-publish_async (QrtrControlSocket *socket,
+publish_async (QrtrControlSocket *self,
                struct NodeEntry  *entry)
 {
     struct PublishRequest *request;
@@ -106,7 +106,7 @@ publish_async (QrtrControlSocket *socket,
         g_source_remove (entry->publish_source_id);
 
     request = g_new0 (struct PublishRequest, 1);
-    request->socket = socket;
+    request->socket = self;
     request->node_id = qrtr_node_id (entry->node);
 
     entry->publish_source_id = g_timeout_add_full (G_PRIORITY_DEFAULT,
@@ -119,7 +119,7 @@ publish_async (QrtrControlSocket *socket,
 /*****************************************************************************/
 
 static void
-add_service_info (QrtrControlSocket *socket,
+add_service_info (QrtrControlSocket *self,
                   guint32            node_id,
                   guint32            port,
                   QmiService         service,
@@ -128,26 +128,26 @@ add_service_info (QrtrControlSocket *socket,
 {
     struct NodeEntry *entry;
 
-    entry = g_hash_table_lookup (socket->priv->node_map, GUINT_TO_POINTER (node_id));
+    entry = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
     if (!entry) {
         entry = g_slice_new0 (struct NodeEntry);
-        entry->node = qrtr_node_new (socket, node_id);
+        entry->node = qrtr_node_new (self, node_id);
         entry->published = FALSE;
 
-        g_assert (g_hash_table_insert (socket->priv->node_map, GUINT_TO_POINTER (node_id), entry));
+        g_assert (g_hash_table_insert (self->priv->node_map, GUINT_TO_POINTER (node_id), entry));
         g_info ("qrtr: Created new node %u", node_id);
     }
     if (!entry->published) {
         /* Schedule or reschedule the publish callback since we might continue
          * to see more services for this node for a bit. */
-        publish_async (socket, entry);
+        publish_async (self, entry);
     }
 
     qrtr_node_add_service_info (entry->node, service, port, version, instance);
 }
 
 static void
-remove_service_info (QrtrControlSocket *socket,
+remove_service_info (QrtrControlSocket *self,
                      guint32            node_id,
                      guint32            port,
                      QmiService         service,
@@ -156,7 +156,7 @@ remove_service_info (QrtrControlSocket *socket,
 {
     struct NodeEntry *entry;
 
-    entry = g_hash_table_lookup (socket->priv->node_map, GUINT_TO_POINTER (node_id));
+    entry = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
     if (!entry) {
         g_warning ("qrtr: Got DEL_SERVER for nonexistent node %u", node_id);
         return;
@@ -169,9 +169,9 @@ remove_service_info (QrtrControlSocket *socket,
          * announcing that we've removed it. */
         if (entry->published) {
             entry->published = FALSE;
-            g_signal_emit (socket, signals[SIGNAL_NODE_REMOVED], 0, node_id);
+            g_signal_emit (self, signals[SIGNAL_NODE_REMOVED], 0, node_id);
         }
-        g_hash_table_remove (socket->priv->node_map, GUINT_TO_POINTER (node_id));
+        g_hash_table_remove (self->priv->node_map, GUINT_TO_POINTER (node_id));
     }
 }
 
@@ -222,7 +222,7 @@ send_new_lookup_ctrl_packet (GSocket  *gsocket,
 static gboolean
 qrtr_ctrl_message_cb (GSocket           *gsocket,
                       GIOCondition       cond,
-                      QrtrControlSocket *socket)
+                      QrtrControlSocket *self)
 {
     GError               *error = NULL;
     struct qrtr_ctrl_pkt  ctrl_packet;
@@ -264,11 +264,11 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
     if (type == QRTR_TYPE_NEW_SERVER) {
         g_info ("NEW_SERVER on %u:%u -> service %u, version %u, instance %u",
                 node_id, port, service, version, instance);
-        add_service_info (socket, node_id, port, service, version, instance);
+        add_service_info (self, node_id, port, service, version, instance);
     } else if (type == QRTR_TYPE_DEL_SERVER) {
         g_info ("DEL_SERVER on %u:%u -> service %u, version %u, instance %u",
                 node_id, port, service, version, instance);
-        remove_service_info (socket, node_id, port, service, version, instance);
+        remove_service_info (self, node_id, port, service, version, instance);
     } else
         g_assert_not_reached ();
 
@@ -276,18 +276,18 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
 }
 
 static void
-setup_socket_source (QrtrControlSocket *socket)
+setup_socket_source (QrtrControlSocket *self)
 {
     GSocket *gsocket;
     GSource *source;
 
-    gsocket = socket->priv->socket;
+    gsocket = self->priv->socket;
     source = g_socket_create_source (gsocket, G_IO_IN, NULL);
     g_source_set_callback (source, (GSourceFunc) qrtr_ctrl_message_cb,
-                           socket, NULL);
+                           self, NULL);
     g_source_attach (source, NULL);
 
-    socket->priv->source = source;
+    self->priv->source = source;
 }
 
 /*****************************************************************************/
@@ -313,7 +313,7 @@ qrtr_control_socket_new (GError **error)
 {
     GError            *local_error = NULL;
     GSocket           *gsocket = NULL;
-    QrtrControlSocket *qsocket;
+    QrtrControlSocket *self;
     int                socket_fd;
 
     socket_fd = socket (AF_QIPCRTR, SOCK_DGRAM, 0);
@@ -341,13 +341,13 @@ qrtr_control_socket_new (GError **error)
         return NULL;
     }
 
-    qsocket = g_object_new (QRTR_TYPE_CONTROL_SOCKET, NULL);
-    qsocket->priv->socket = gsocket;
-    qsocket->priv->node_map = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-                                                     NULL, (GDestroyNotify)node_entry_free);
+    self = g_object_new (QRTR_TYPE_CONTROL_SOCKET, NULL);
+    self->priv->socket = gsocket;
+    self->priv->node_map = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+                                                  NULL, (GDestroyNotify)node_entry_free);
 
-    setup_socket_source (qsocket);
-    return qsocket;
+    setup_socket_source (self);
+    return self;
 }
 
 static void
