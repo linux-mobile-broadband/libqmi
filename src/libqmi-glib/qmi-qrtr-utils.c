@@ -66,11 +66,14 @@ typedef struct {
     QrtrControlSocket *socket;
     guint              node_added_id;
     guint32            node_wanted;
+    GSource           *timeout_source;
 } NodeOpenContext;
 
 static void
 node_open_context_free (NodeOpenContext *ctx)
 {
+    g_source_destroy (ctx->timeout_source);
+    g_source_unref (ctx->timeout_source);
     g_signal_handler_disconnect (ctx->socket, ctx->node_added_id);
     g_clear_object (&ctx->socket);
     g_slice_free (NodeOpenContext, ctx);
@@ -158,7 +161,11 @@ qrtr_node_for_id (guint32              node_id,
     ctx->socket = socket;
     ctx->node_added_id = node_added_id;
     ctx->node_wanted = node_id;
-    g_task_set_task_data (task, ctx, (GDestroyNotify)node_open_context_free);
 
-    g_timeout_add_seconds (timeout, (GSourceFunc)timeout_cb, task);
+    /* Setup timeout for the operation */
+    ctx->timeout_source = g_timeout_source_new_seconds (timeout);
+    g_source_set_callback (ctx->timeout_source, (GSourceFunc)timeout_cb, task, NULL);
+    g_source_attach (ctx->timeout_source, g_main_context_get_thread_default ());
+
+    g_task_set_task_data (task, ctx, (GDestroyNotify)node_open_context_free);
 }
