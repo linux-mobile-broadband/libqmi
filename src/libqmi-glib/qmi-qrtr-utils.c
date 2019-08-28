@@ -128,7 +128,6 @@ qrtr_node_for_id (guint32              node_id,
 {
     GTask             *task;
     QrtrControlSocket *socket;
-    guint              node_added_id;
     NodeOpenContext   *ctx;
     GError            *error = NULL;
 
@@ -143,24 +142,15 @@ qrtr_node_for_id (guint32              node_id,
         return;
     }
 
-    node_added_id = g_signal_connect (socket,
-                                      QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED,
-                                      G_CALLBACK (node_added_cb),
-                                      task);
-    if (!node_added_id) {
-        g_clear_object (&socket);
-        g_task_return_new_error (task,
-                                 QMI_CORE_ERROR,
-                                 QMI_CORE_ERROR_FAILED,
-                                 "Couldn't listen to QRTR bus");
-        g_object_unref (task);
-        return;
-    }
-
     ctx = g_slice_new (NodeOpenContext);
     ctx->socket = socket;
-    ctx->node_added_id = node_added_id;
     ctx->node_wanted = node_id;
+
+    /* Monitor added nodes */
+    ctx->node_added_id = g_signal_connect (socket,
+                                           QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED,
+                                           G_CALLBACK (node_added_cb),
+                                           task);
 
     /* Setup timeout for the operation */
     ctx->timeout_source = g_timeout_source_new_seconds (timeout);
