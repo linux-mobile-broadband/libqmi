@@ -34,7 +34,11 @@
 #include "qmi-qrtr-utils.h"
 #include "qmi-enums.h"
 
-G_DEFINE_TYPE (QrtrControlSocket, qrtr_control_socket, G_TYPE_OBJECT)
+static void initable_iface_init (GInitableIface *iface);
+
+G_DEFINE_TYPE_EXTENDED (QrtrControlSocket, qrtr_control_socket, G_TYPE_OBJECT, 0,
+                        G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init))
+
 
 struct _QrtrControlSocketPrivate {
     /* Underlying QRTR socket */
@@ -178,48 +182,6 @@ remove_service_info (QrtrControlSocket *self,
 /*****************************************************************************/
 
 static gboolean
-send_new_lookup_ctrl_packet (GSocket  *gsocket,
-                             GError  **error)
-{
-    struct qrtr_ctrl_pkt ctl_packet;
-    struct sockaddr_qrtr addr;
-    int                  sockfd;
-    socklen_t            len;
-    int                  rc;
-
-    sockfd = g_socket_get_fd (gsocket);
-    len = sizeof (addr);
-    rc = getsockname (sockfd, (struct sockaddr *)&addr, &len);
-    if (rc < 0) {
-        g_set_error (error,
-                     G_IO_ERROR,
-                     g_io_error_from_errno (errno),
-                     "Failed to get socket name");
-        return FALSE;
-    }
-
-    g_info ("qrtr: socket lookup from %d:%d", addr.sq_node, addr.sq_port);
-
-    g_assert (len == sizeof (addr) && addr.sq_family == AF_QIPCRTR);
-    addr.sq_port = QRTR_PORT_CTRL;
-
-    memset (&ctl_packet, 0, sizeof (ctl_packet));
-    ctl_packet.cmd = GUINT32_TO_LE (QRTR_TYPE_NEW_LOOKUP);
-
-    rc = sendto (sockfd, (void *)&ctl_packet, sizeof (ctl_packet),
-                 0, (struct sockaddr *)&addr, sizeof (addr));
-    if (rc < 0) {
-        g_set_error (error,
-                     G_IO_ERROR,
-                     g_io_error_from_errno (errno),
-                     "Failed to send lookup control packet");
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-static gboolean
 qrtr_ctrl_message_cb (GSocket           *gsocket,
                       GIOCondition       cond,
                       QrtrControlSocket *self)
@@ -275,21 +237,6 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
     return TRUE;
 }
 
-static void
-setup_socket_source (QrtrControlSocket *self)
-{
-    GSocket *gsocket;
-    GSource *source;
-
-    gsocket = self->priv->socket;
-    source = g_socket_create_source (gsocket, G_IO_IN, NULL);
-    g_source_set_callback (source, (GSourceFunc) qrtr_ctrl_message_cb,
-                           self, NULL);
-    g_source_attach (source, NULL);
-
-    self->priv->source = source;
-}
-
 /*****************************************************************************/
 
 QrtrNode *
@@ -308,46 +255,100 @@ qrtr_control_socket_get_node (QrtrControlSocket *socket,
 
 /*****************************************************************************/
 
-QrtrControlSocket *
-qrtr_control_socket_new (GError **error)
+static gboolean
+send_new_lookup_ctrl_packet (QrtrControlSocket  *self,
+                             GError            **error)
 {
-    GError            *local_error = NULL;
-    GSocket           *gsocket = NULL;
-    QrtrControlSocket *self;
-    int                socket_fd;
+    struct qrtr_ctrl_pkt ctl_packet;
+    struct sockaddr_qrtr addr;
+    int                  sockfd;
+    socklen_t            len;
+    int                  rc;
 
-    socket_fd = socket (AF_QIPCRTR, SOCK_DGRAM, 0);
-    if (socket_fd < 0) {
+    sockfd = g_socket_get_fd (self->priv->socket);
+    len = sizeof (addr);
+    rc = getsockname (sockfd, (struct sockaddr *)&addr, &len);
+    if (rc < 0) {
         g_set_error (error,
                      G_IO_ERROR,
                      g_io_error_from_errno (errno),
-                     "Failed to create socket");
-        return NULL;
+                     "Failed to get socket name");
+        return FALSE;
     }
 
-    gsocket = g_socket_new_from_fd (socket_fd, &local_error);
-    if (!gsocket) {
-        g_propagate_error (error, local_error);
-        close (socket_fd);
-        return NULL;
+    g_info ("qrtr: socket lookup from %d:%d", addr.sq_node, addr.sq_port);
+
+    g_assert (len == sizeof (addr) && addr.sq_family == AF_QIPCRTR);
+    addr.sq_port = QRTR_PORT_CTRL;
+
+    memset (&ctl_packet, 0, sizeof (ctl_packet));
+    ctl_packet.cmd = GUINT32_TO_LE (QRTR_TYPE_NEW_LOOKUP);
+
+    rc = sendto (sockfd, (void *)&ctl_packet, sizeof (ctl_packet),
+                 0, (struct sockaddr *)&addr, sizeof (addr));
+    if (rc < 0) {
+        g_set_error (error,
+                     G_IO_ERROR,
+                     g_io_error_from_errno (errno),
+                     "Failed to send lookup control packet");
+        return FALSE;
     }
 
-    g_socket_set_timeout (gsocket, 0);
+    return TRUE;
+}
 
-    if (!send_new_lookup_ctrl_packet (gsocket, &local_error)) {
-        g_propagate_error (error, local_error);
-        g_socket_close (gsocket, NULL);
-        g_clear_object (&gsocket);
-        return NULL;
+static void
+setup_socket_source (QrtrControlSocket *self)
+{
+    self->priv->source = g_socket_create_source (self->priv->socket, G_IO_IN, NULL);
+    g_source_set_callback (self->priv->source,
+                           (GSourceFunc) qrtr_ctrl_message_cb,
+                           self,
+                           NULL);
+    g_source_attach (self->priv->source, NULL);
+}
+
+static gboolean
+initable_init (GInitable     *initable,
+               GCancellable  *cancellable,
+               GError       **error)
+{
+    QrtrControlSocket *self;
+    int                fd;
+
+    self = QRTR_CONTROL_SOCKET (initable);
+
+    fd = socket (AF_QIPCRTR, SOCK_DGRAM, 0);
+    if (fd < 0) {
+        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                     "Failed to create QRTR socket");
+        return FALSE;
     }
 
-    self = g_object_new (QRTR_TYPE_CONTROL_SOCKET, NULL);
-    self->priv->socket = gsocket;
-    self->priv->node_map = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-                                                  NULL, (GDestroyNotify)node_entry_free);
+    self->priv->socket = g_socket_new_from_fd (fd, error);
+    if (!self->priv->socket) {
+        close (fd);
+        return FALSE;
+    }
+
+    g_socket_set_timeout (self->priv->socket, 0);
+
+    if (!send_new_lookup_ctrl_packet (self, error))
+        return FALSE;
 
     setup_socket_source (self);
-    return self;
+    return TRUE;
+}
+
+/*****************************************************************************/
+
+QrtrControlSocket *
+qrtr_control_socket_new (GError **error)
+{
+    return QRTR_CONTROL_SOCKET (g_initable_new (QRTR_TYPE_CONTROL_SOCKET,
+                                                NULL, /* cancellable */
+                                                error,
+                                                NULL));
 }
 
 static void
@@ -356,6 +357,11 @@ qrtr_control_socket_init (QrtrControlSocket *self)
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
                                               QRTR_TYPE_CONTROL_SOCKET,
                                               QrtrControlSocketPrivate);
+
+    self->priv->node_map = g_hash_table_new_full (g_direct_hash,
+                                                  g_direct_equal,
+                                                  NULL,
+                                                  (GDestroyNotify)node_entry_free);
 }
 
 static void
@@ -363,18 +369,34 @@ dispose (GObject *object)
 {
     QrtrControlSocket *self = QRTR_CONTROL_SOCKET (object);
 
-    g_hash_table_unref (self->priv->node_map);
-
     if (self->priv->source) {
         g_source_destroy (self->priv->source);
         g_source_unref (self->priv->source);
         self->priv->source = NULL;
     }
 
-    g_socket_close (self->priv->socket, NULL);
-    g_clear_object (&self->priv->socket);
+    if (self->priv->socket) {
+        g_socket_close (self->priv->socket, NULL);
+        g_clear_object (&self->priv->socket);
+    }
 
     G_OBJECT_CLASS (qrtr_control_socket_parent_class)->dispose (object);
+}
+
+static void
+finalize (GObject *object)
+{
+    QrtrControlSocket *self = QRTR_CONTROL_SOCKET (object);
+
+    g_hash_table_unref (self->priv->node_map);
+
+    G_OBJECT_CLASS (qrtr_control_socket_parent_class)->finalize (object);
+}
+
+static void
+initable_iface_init (GInitableIface *iface)
+{
+    iface->init = initable_init;
 }
 
 static void
@@ -385,6 +407,7 @@ qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
     g_type_class_add_private (object_class, sizeof (QrtrControlSocketPrivate));
 
     object_class->dispose = dispose;
+    object_class->finalize = finalize;
 
     /**
      * QrtrControlSocket::qrtr-node-added:
