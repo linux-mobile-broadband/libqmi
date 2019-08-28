@@ -145,9 +145,8 @@ add_service_info (QrtrControlSocket *self,
         entry = g_slice_new0 (NodeEntry);
         entry->node = qrtr_node_new (self, node_id);
         entry->published = FALSE;
-
         g_assert (g_hash_table_insert (self->priv->node_map, GUINT_TO_POINTER (node_id), entry));
-        g_info ("qrtr: Created new node %u", node_id);
+        g_debug ("[qrtr] created new node %u", node_id);
     }
     if (!entry->published) {
         /* Schedule or reschedule the publish callback since we might continue
@@ -170,13 +169,13 @@ remove_service_info (QrtrControlSocket *self,
 
     entry = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
     if (!entry) {
-        g_warning ("qrtr: Got DEL_SERVER for nonexistent node %u", node_id);
+        g_warning ("[qrtr] cannot remove service info: nonexistent node %u", node_id);
         return;
     }
 
     qrtr_node_remove_service_info (entry->node, service, port, version, instance);
     if (!qrtr_node_has_services (entry->node)) {
-        g_info ("qrtr: Removing node %u", node_id);
+        g_debug ("[qrtr] removing node %u", node_id);
         /* If we haven't announced that this node is available yet, don't bother
          * announcing that we've removed it. */
         if (entry->published) {
@@ -209,18 +208,19 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
     bytes_received = g_socket_receive (gsocket, (gchar *)&ctrl_packet,
                                        sizeof (ctrl_packet), NULL, &error);
     if (bytes_received < 0) {
-        g_warning ("Socket IO failure: %s", error->message);
+        g_warning ("[qrtr] socket i/o failure: %s", error->message);
+        g_error_free (error);
         return FALSE;
     }
 
     if (bytes_received < sizeof (ctrl_packet)) {
-        g_warning ("Got short QRTR datagram");
+        g_debug ("[qrtr] short packet received: ignoring");
         return TRUE;
     }
 
     type = GUINT32_FROM_LE (ctrl_packet.cmd);
     if (type != QRTR_TYPE_NEW_SERVER && type != QRTR_TYPE_DEL_SERVER) {
-        g_info ("Got packet of unused type %u", type);
+        g_debug ("[qrtr] unknown packet type received: 0x%x", type);
         return TRUE;
     }
 
@@ -232,11 +232,11 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
     instance = GUINT32_FROM_LE (ctrl_packet.server.instance) >> 8;
 
     if (type == QRTR_TYPE_NEW_SERVER) {
-        g_info ("NEW_SERVER on %u:%u -> service %u, version %u, instance %u",
+        g_debug ("[qrtr] added server on %u:%u -> service %u, version %u, instance %u",
                 node_id, port, service, version, instance);
         add_service_info (self, node_id, port, service, version, instance);
     } else if (type == QRTR_TYPE_DEL_SERVER) {
-        g_info ("DEL_SERVER on %u:%u -> service %u, version %u, instance %u",
+        g_debug ("[qrtr] removed server on %u:%u -> service %u, version %u, instance %u",
                 node_id, port, service, version, instance);
         remove_service_info (self, node_id, port, service, version, instance);
     } else
@@ -284,7 +284,7 @@ send_new_lookup_ctrl_packet (QrtrControlSocket  *self,
         return FALSE;
     }
 
-    g_info ("qrtr: socket lookup from %d:%d", addr.sq_node, addr.sq_port);
+    g_debug ("[qrtr] socket lookup from %d:%d", addr.sq_node, addr.sq_port);
 
     g_assert (len == sizeof (addr) && addr.sq_family == AF_QIPCRTR);
     addr.sq_port = QRTR_PORT_CTRL;
