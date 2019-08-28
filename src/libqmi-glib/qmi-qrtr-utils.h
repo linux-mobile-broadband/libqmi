@@ -35,16 +35,16 @@
 
 #define QRTR_URI_SCHEME "qrtr"
 
-gchar *qrtr_get_uri_for_node (guint32 node_id);
-gboolean qrtr_get_node_for_uri (const gchar *uri, guint32 *node_id);
+gchar    *qrtr_get_uri_for_node (guint32      node_id);
+gboolean  qrtr_get_node_for_uri (const gchar *uri,
+                                 guint32     *node_id);
 
-void qrtr_node_for_id (guint32              node_id,
-                       guint                timeout,
-                       GCancellable        *cancellable,
-                       GAsyncReadyCallback  callback,
-                       gpointer             user_data);
-
-QrtrNode* qrtr_node_for_id_finish (GAsyncResult  *res,
-                                   GError       **error);
+void      qrtr_node_for_id        (guint32               node_id,
+                                   guint                 timeout,
+                                   GCancellable         *cancellable,
+                                   GAsyncReadyCallback   callback,
+                                   gpointer              user_data);
+QrtrNode *qrtr_node_for_id_finish (GAsyncResult         *res,
+                                   GError              **error);
 
 #endif /* _LIBQMI_GLIB_QRTR_UTILS_H_ */

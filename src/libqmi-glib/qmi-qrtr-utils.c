@@ -32,16 +32,19 @@
 
 #define QRTR_URI_PREFIX QRTR_URI_SCHEME "://"
 
-gchar *qrtr_get_uri_for_node (guint32 node_id)
+gchar *
+qrtr_get_uri_for_node (guint32 node_id)
 {
     return g_strdup_printf (QRTR_URI_PREFIX "%" G_GUINT32_FORMAT, node_id);
 }
 
-gboolean qrtr_get_node_for_uri (const gchar *name, guint32 *node_id)
+gboolean
+qrtr_get_node_for_uri (const gchar *name,
+                       guint32     *node_id)
 {
     const gchar *start;
-    char *endp = NULL;
-    guint tmp_node_id;
+    gchar       *endp = NULL;
+    guint        tmp_node_id;
 
     if (g_ascii_strncasecmp (name, QRTR_URI_PREFIX, strlen (QRTR_URI_PREFIX)) != 0)
         return FALSE;
@@ -53,26 +56,27 @@ gboolean qrtr_get_node_for_uri (const gchar *name, guint32 *node_id)
 
     if (node_id)
         *node_id = tmp_node_id;
+
     return TRUE;
 }
 
 /*****************************************************************************/
 
-struct NodeOpenContext {
+typedef struct {
     QrtrControlSocket *socket;
-    guint node_added_id;
-    guint32 node_wanted;
-};
+    guint              node_added_id;
+    guint32            node_wanted;
+} NodeOpenContext;
 
 static void
-node_open_context_free (struct NodeOpenContext *ctx)
+node_open_context_free (NodeOpenContext *ctx)
 {
     g_signal_handler_disconnect (ctx->socket, ctx->node_added_id);
     g_clear_object (&ctx->socket);
-    g_slice_free (struct NodeOpenContext, ctx);
+    g_slice_free (NodeOpenContext, ctx);
 }
 
-QrtrNode*
+QrtrNode *
 qrtr_node_for_id_finish (GAsyncResult  *res,
                          GError       **error)
 {
@@ -82,7 +86,7 @@ qrtr_node_for_id_finish (GAsyncResult  *res,
 static gboolean
 timeout_cb (GTask *task)
 {
-    struct NodeOpenContext *ctx;
+    NodeOpenContext *ctx;
 
     ctx = g_task_get_task_data (task);
     g_task_return_new_error (task,
@@ -91,7 +95,8 @@ timeout_cb (GTask *task)
                              "QRTR node %u did not appear on the bus",
                              ctx->node_wanted);
     g_object_unref (task);
-    return FALSE;
+
+    return G_SOURCE_REMOVE;
 }
 
 static void
@@ -99,14 +104,15 @@ node_added_cb (QrtrControlSocket *socket,
                guint              node_id,
                GTask             *task)
 {
-    struct NodeOpenContext *ctx;
+    NodeOpenContext *ctx;
 
     ctx = g_task_get_task_data (task);
     if (node_id != ctx->node_wanted)
         return;
 
-    g_task_return_pointer (task, qrtr_control_socket_get_node (ctx->socket, node_id),
-                           (GDestroyNotify)g_object_unref);
+    g_task_return_pointer (task,
+                           qrtr_control_socket_get_node (ctx->socket, node_id),
+                           g_object_unref);
     g_object_unref (task);
 }
 
@@ -117,11 +123,11 @@ qrtr_node_for_id (guint32              node_id,
                   GAsyncReadyCallback  callback,
                   gpointer             user_data)
 {
-    GTask *task;
+    GTask             *task;
     QrtrControlSocket *socket;
-    guint node_added_id;
-    struct NodeOpenContext *ctx;
-    GError *error = NULL;
+    guint              node_added_id;
+    NodeOpenContext   *ctx;
+    GError            *error = NULL;
 
     task = g_task_new (NULL, cancellable, callback, user_data);
 
@@ -146,7 +152,7 @@ qrtr_node_for_id (guint32              node_id,
         return;
     }
 
-    ctx = g_slice_new (struct NodeOpenContext);
+    ctx = g_slice_new (NodeOpenContext);
     ctx->socket = socket;
     ctx->node_added_id = node_added_id;
     ctx->node_wanted = node_id;
