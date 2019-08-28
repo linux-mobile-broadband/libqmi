@@ -52,7 +52,7 @@ struct _QrtrControlSocketPrivate {
 struct NodeEntry {
     QrtrNode *node;
     gboolean  published;
-    guint     publish_source_id;
+    GSource  *publish_source;
 };
 
 enum {
@@ -76,8 +76,10 @@ static void
 node_entry_free (struct NodeEntry *entry)
 {
     g_clear_object (&entry->node);
-    if (entry->publish_source_id)
-        g_source_remove (entry->publish_source_id);
+    if (entry->publish_source) {
+        g_source_destroy (entry->publish_source);
+        g_source_unref (entry->publish_source);
+    }
     g_slice_free (struct NodeEntry, entry);
 }
 
@@ -90,11 +92,11 @@ node_entry_publish (struct PublishRequest *request)
     entry = g_hash_table_lookup (request->socket->priv->node_map,
                                  GUINT_TO_POINTER (request->node_id));
     if (!entry || entry->published)
-        return FALSE;
+        return G_SOURCE_REMOVE;
 
     entry->published = TRUE;
     g_signal_emit (request->socket, signals[SIGNAL_NODE_ADDED], 0, request->node_id);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void
@@ -106,18 +108,21 @@ publish_async (QrtrControlSocket *self,
     if (entry->published)
         return;
 
-    if (entry->publish_source_id)
-        g_source_remove (entry->publish_source_id);
+    if (entry->publish_source) {
+        g_source_destroy (entry->publish_source);
+        g_source_unref (entry->publish_source);
+    }
 
     request = g_new0 (struct PublishRequest, 1);
     request->socket = self;
     request->node_id = qrtr_node_id (entry->node);
 
-    entry->publish_source_id = g_timeout_add_full (G_PRIORITY_DEFAULT,
-                                                   PUBLISH_TIMEOUT_MS,
-                                                   (GSourceFunc)node_entry_publish,
-                                                   request,
-                                                   (GDestroyNotify)g_free);
+    entry->publish_source = g_timeout_source_new (PUBLISH_TIMEOUT_MS);
+    g_source_set_callback (entry->publish_source,
+                           (GSourceFunc)node_entry_publish,
+                           request,
+                           (GDestroyNotify)g_free);
+    g_source_attach (entry->publish_source, g_main_context_get_thread_default ());
 }
 
 /*****************************************************************************/
@@ -305,7 +310,7 @@ setup_socket_source (QrtrControlSocket *self)
                            (GSourceFunc) qrtr_ctrl_message_cb,
                            self,
                            NULL);
-    g_source_attach (self->priv->source, NULL);
+    g_source_attach (self->priv->source, g_main_context_get_thread_default ());
 }
 
 static gboolean
