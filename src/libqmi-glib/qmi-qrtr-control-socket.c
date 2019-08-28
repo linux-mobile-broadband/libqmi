@@ -367,7 +367,8 @@ dispose (GObject *object)
 
     if (self->priv->source) {
         g_source_destroy (self->priv->source);
-        g_clear_object (&self->priv->source);
+        g_source_unref (self->priv->source);
+        self->priv->source = NULL;
     }
 
     g_socket_close (self->priv->socket, NULL);
