@@ -129,6 +129,8 @@ qrtr_node_for_id (guint32              node_id,
     NodeOpenContext   *ctx;
     GError            *error = NULL;
 
+    g_return_if_fail (timeout > 0);
+
     task = g_task_new (NULL, cancellable, callback, user_data);
 
     socket = qrtr_control_socket_new (&error);
@@ -158,6 +160,5 @@ qrtr_node_for_id (guint32              node_id,
     ctx->node_wanted = node_id;
     g_task_set_task_data (task, ctx, (GDestroyNotify)node_open_context_free);
 
-    if (timeout > 0)
-        g_timeout_add_seconds (timeout, (GSourceFunc)timeout_cb, g_object_ref (task));
+    g_timeout_add_seconds (timeout, (GSourceFunc)timeout_cb, g_object_ref (task));
 }
