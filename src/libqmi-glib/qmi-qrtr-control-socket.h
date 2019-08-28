@@ -52,8 +52,8 @@ G_BEGIN_DECLS
 #define QRTR_IS_CONTROL_SOCKET_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  QRTR_TYPE_CONTROL_SOCKET))
 #define QRTR_CONTROL_SOCKET_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  QRTR_TYPE_CONTROL_SOCKET, QrtrControlSocketClass))
 
-typedef struct _QrtrControlSocket QrtrControlSocket;
-typedef struct _QrtrControlSocketClass QrtrControlSocketClass;
+typedef struct _QrtrControlSocket        QrtrControlSocket;
+typedef struct _QrtrControlSocketClass   QrtrControlSocketClass;
 typedef struct _QrtrControlSocketPrivate QrtrControlSocketPrivate;
 
 struct _QrtrControlSocket {
@@ -104,7 +104,7 @@ QrtrControlSocket *qrtr_control_socket_new (GError **error);
  * Since: 1.24
  */
 QrtrNode *qrtr_control_socket_get_node (QrtrControlSocket *socket,
-                                        guint32 node_id);
+                                        guint32            node_id);
 
 G_END_DECLS
 

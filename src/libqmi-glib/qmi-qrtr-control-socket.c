@@ -47,8 +47,8 @@ struct _QrtrControlSocketPrivate {
 
 struct NodeEntry {
     QrtrNode *node;
-    gboolean published;
-    guint publish_source_id;
+    gboolean  published;
+    guint     publish_source_id;
 };
 
 enum {
@@ -65,7 +65,7 @@ static guint signals[SIGNAL_LAST] = { 0 };
 
 struct PublishRequest {
     QrtrControlSocket *socket;
-    guint32 node_id;
+    guint32            node_id;
 };
 
 static void
@@ -95,7 +95,7 @@ node_entry_publish (struct PublishRequest *request)
 
 static void
 publish_async (QrtrControlSocket *socket,
-               struct NodeEntry *entry)
+               struct NodeEntry  *entry)
 {
     struct PublishRequest *request;
 
@@ -119,8 +119,12 @@ publish_async (QrtrControlSocket *socket,
 /*****************************************************************************/
 
 static void
-add_service_info (QrtrControlSocket *socket, guint32 node_id, guint32 port,
-                  QmiService service, guint32 version, guint32 instance)
+add_service_info (QrtrControlSocket *socket,
+                  guint32            node_id,
+                  guint32            port,
+                  QmiService         service,
+                  guint32            version,
+                  guint32            instance)
 {
     struct NodeEntry *entry;
 
@@ -143,10 +147,16 @@ add_service_info (QrtrControlSocket *socket, guint32 node_id, guint32 port,
 }
 
 static void
-remove_service_info (QrtrControlSocket *socket, guint32 node_id, guint32 port,
-                     QmiService service, guint32 version, guint32 instance)
+remove_service_info (QrtrControlSocket *socket,
+                     guint32            node_id,
+                     guint32            port,
+                     QmiService         service,
+                     guint32            version,
+                     guint32            instance)
 {
-    struct NodeEntry* entry = g_hash_table_lookup (socket->priv->node_map, GUINT_TO_POINTER (node_id));
+    struct NodeEntry *entry;
+
+    entry = g_hash_table_lookup (socket->priv->node_map, GUINT_TO_POINTER (node_id));
     if (!entry) {
         g_warning ("qrtr: Got DEL_SERVER for nonexistent node %u", node_id);
         return;
@@ -168,13 +178,14 @@ remove_service_info (QrtrControlSocket *socket, guint32 node_id, guint32 port,
 /*****************************************************************************/
 
 static gboolean
-send_new_lookup_ctrl_packet (GSocket *gsocket, GError **error)
+send_new_lookup_ctrl_packet (GSocket  *gsocket,
+                             GError  **error)
 {
     struct qrtr_ctrl_pkt ctl_packet;
     struct sockaddr_qrtr addr;
-    int sockfd;
-    socklen_t len;
-    int rc;
+    int                  sockfd;
+    socklen_t            len;
+    int                  rc;
 
     sockfd = g_socket_get_fd (gsocket);
     len = sizeof (addr);
@@ -209,20 +220,21 @@ send_new_lookup_ctrl_packet (GSocket *gsocket, GError **error)
 }
 
 static gboolean
-qrtr_ctrl_message_cb (GSocket *gsocket,
-                      GIOCondition cond,
+qrtr_ctrl_message_cb (GSocket           *gsocket,
+                      GIOCondition       cond,
                       QrtrControlSocket *socket)
 {
+    GError               *error = NULL;
+    struct qrtr_ctrl_pkt  ctrl_packet;
+    gssize                bytes_received;
+    guint32               type;
+    guint32               node_id;
+    guint32               port;
+    QmiService            service;
+    guint32               version;
+    guint32               instance;
+
     /* check for message type and add/remove nodes here */
-    GError *error = NULL;
-    struct qrtr_ctrl_pkt ctrl_packet;
-    gssize bytes_received;
-    guint32 type;
-    guint32 node_id;
-    guint32 port;
-    QmiService service;
-    guint32 version;
-    guint32 instance;
 
     bytes_received = g_socket_receive (gsocket, (gchar *)&ctrl_packet,
                                        sizeof (ctrl_packet), NULL, &error);
@@ -253,11 +265,12 @@ qrtr_ctrl_message_cb (GSocket *gsocket,
         g_info ("NEW_SERVER on %u:%u -> service %u, version %u, instance %u",
                 node_id, port, service, version, instance);
         add_service_info (socket, node_id, port, service, version, instance);
-    } else /* type is DEL_SERVER */ {
+    } else if (type == QRTR_TYPE_DEL_SERVER) {
         g_info ("DEL_SERVER on %u:%u -> service %u, version %u, instance %u",
                 node_id, port, service, version, instance);
         remove_service_info (socket, node_id, port, service, version, instance);
-    }
+    } else
+        g_assert_not_reached ();
 
     return TRUE;
 }
@@ -280,7 +293,8 @@ setup_socket_source (QrtrControlSocket *socket)
 /*****************************************************************************/
 
 QrtrNode *
-qrtr_control_socket_get_node (QrtrControlSocket *socket, guint32 node_id)
+qrtr_control_socket_get_node (QrtrControlSocket *socket,
+                              guint32            node_id)
 {
     struct NodeEntry *entry;
 
@@ -297,10 +311,10 @@ qrtr_control_socket_get_node (QrtrControlSocket *socket, guint32 node_id)
 QrtrControlSocket *
 qrtr_control_socket_new (GError **error)
 {
-    GError *local_error = NULL;
-    GSocket *gsocket = NULL;
+    GError            *local_error = NULL;
+    GSocket           *gsocket = NULL;
     QrtrControlSocket *qsocket;
-    int socket_fd;
+    int                socket_fd;
 
     socket_fd = socket (AF_QIPCRTR, SOCK_DGRAM, 0);
     if (socket_fd < 0) {
