@@ -89,7 +89,7 @@
     "contents" : [ { "name"          : "LteAttachState",
                      "format"        : "guint32",
                      "public-format" : "MbimLteAttachState" },
-		   { "name"          : "IpType",
+                   { "name"          : "IpType",
                      "format"        : "guint32",
                      "public-format" : "MbimContextIpType" },
                    { "name"   : "AccessString",
@@ -111,8 +111,8 @@
     "query"        : [],
     "response"     : [ { "name"        : "LteAttachStatus",
                          "format"      : "struct",
-			 "struct-type" : "MbimLteAttachStatus" } ],
+                         "struct-type" : "MbimLteAttachStatus" } ],
     "notification" : [ { "name"        : "LteAttachStatus",
                          "format"      : "struct",
-			 "struct-type" : "MbimLteAttachStatus" } ] }
+                         "struct-type" : "MbimLteAttachStatus" } ] }
 ]
