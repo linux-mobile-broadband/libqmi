@@ -1266,8 +1266,8 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
 
     g_assert (out_size != NULL);
 
-    /* Add previous global list */
-    updated = _mbim_proxy_helper_service_subscribe_list_dup (ctx->mbim_event_entry_array, ctx->mbim_event_entry_array_size, &updated_size);
+    /* Init default list */
+    updated = _mbim_proxy_helper_service_subscribe_list_new_standard (&updated_size);
 
     /* Lookup all clients with this device */
     for (l = self->priv->clients; l; l = g_list_next (l)) {
