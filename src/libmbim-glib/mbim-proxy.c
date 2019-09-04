@@ -295,6 +295,12 @@ client_indication_cb (MbimDevice *device,
     if (!entry)
         return;
 
+    /* if client subscribed using the wildcard, no need to match specific cid */
+    if (entry->cids_count == 0) {
+        forward_indication (client, message);
+        return;
+    }
+
     /* Look for the specific cid in the event list */
     for (i = 0; i < entry->cids_count; i++) {
         if (mbim_message_indicate_status_get_cid (message) == entry->cids[i]) {
