@@ -1,4 +1,27 @@
 
+Overview of changes in libmbim 1.20
+----------------------------------------
+
+ * Build updated with several fixes:
+   ** Explicitly define max allowed GLib version.
+   ** Fix issues with -Werror=type-limits.
+   ** Made compiler warning options compatible with clang.
+
+ * mbim-proxy:
+   ** Fixed client subscription to service indications using wildcard.
+   ** Fixed client subscription update logic when services/cids are being
+      removed.
+   ** New '--empty-timeout=[SECS}' option to specify the empty lifetime
+      duration.
+   ** New '--no-exit' option to avoid the proxy from exiting.
+
+ * Several other minor improvements and fixes.
+
+The following features which were backported to 1.18.x releases are also present
+in libmbim 1.20.0:
+
+ * mbim-proxy: default empty lifetime set to 300s.
+
 Overview of changes in libmbim 1.18
 ----------------------------------------
 
