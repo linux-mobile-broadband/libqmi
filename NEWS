@@ -1,4 +1,17 @@
 
+Overview of changes in libqmi 1.22.6
+----------------------------------------
+
+ * qmicli:
+   ** Fix potential dereference of null GArray in LOC service.
+
+ * libqmi-glib:
+   ** Fix definitions for QMI_*_LTE_BAND_*_EUTRAN_32 enum values.
+
+ * Build updated with several fixes:
+   ** Explicitly define max allowed GLib version.
+
+
 Overview of changes in libqmi 1.22.4
 ----------------------------------------
 
