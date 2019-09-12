@@ -70,6 +70,7 @@ static gchar    *query_ip_configuration_str;
 static gchar    *set_connect_deactivate_str;
 static gboolean  query_packet_statistics_flag;
 static gchar    *query_ip_packet_filters_str;
+static gboolean  query_provisioned_contexts_flag;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
                                                   const char *value,
@@ -200,6 +201,10 @@ static GOptionEntry entries[] = {
       "Query IP packet filters (SessionID is optional, defaults to 0)",
       "[SessionID]"
     },
+    { "query-provisioned-contexts", 0, 0, G_OPTION_ARG_NONE, &query_provisioned_contexts_flag,
+      "Query provisioned contexts",
+      NULL
+    },
     { NULL }
 };
 
@@ -293,7 +298,8 @@ mbimcli_basic_connect_options_enabled (void)
                  !!query_ip_configuration_str +
                  !!set_connect_deactivate_str +
                  query_packet_statistics_flag +
-                 !!query_ip_packet_filters_str);
+                 !!query_ip_packet_filters_str +
+                 query_provisioned_contexts_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -1765,6 +1771,68 @@ packet_statistics_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+provisioned_contexts_ready (MbimDevice   *device,
+                            GAsyncResult *res)
+{
+    MbimMessage *response;
+    MbimProvisionedContextElement **provisioned_contexts;
+    guint32 provisioned_contexts_count;
+    int i;
+    GError *error = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        if (response)
+            mbim_message_unref (response);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_provisioned_contexts_response_parse (
+            response,
+            &provisioned_contexts_count,
+            &provisioned_contexts,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        g_error_free (error);
+        mbim_message_unref (response);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Provisioned contexts (%u):\n",
+             mbim_device_get_path_display (device),
+             provisioned_contexts_count);
+
+    for (i = 0; i < provisioned_contexts_count; i++) {
+        g_print ("\tContext ID %u:\n"
+                 "\t   Context type: '%s'\n"
+                 "\t  Access string: '%s'\n"
+                 "\t       Username: '%s'\n"
+                 "\t       Password: '%s'\n"
+                 "\t    Compression: '%s'\n"
+                 "\t  Auth protocol: '%s'\n",
+                 provisioned_contexts[i]->context_id,
+                 VALIDATE_UNKNOWN (mbim_context_type_get_string (
+                     mbim_uuid_to_context_type (&provisioned_contexts[i]->context_type))),
+                 VALIDATE_UNKNOWN (provisioned_contexts[i]->access_string),
+                 VALIDATE_UNKNOWN (provisioned_contexts[i]->user_name),
+                 VALIDATE_UNKNOWN (provisioned_contexts[i]->password),
+                 VALIDATE_UNKNOWN (mbim_compression_get_string (
+                     provisioned_contexts[i]->compression)),
+                 VALIDATE_UNKNOWN (mbim_auth_protocol_get_string (
+                     provisioned_contexts[i]->auth_protocol)));
+    }
+
+    mbim_provisioned_context_element_array_free (provisioned_contexts);
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -2316,6 +2384,21 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)ip_packet_filters_ready,
+                             NULL);
+        mbim_message_unref (request);
+        return;
+    }
+
+    /* Provisioned contexts? */
+    if (query_provisioned_contexts_flag) {
+        MbimMessage *request;
+
+        request = mbim_message_provisioned_contexts_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)provisioned_contexts_ready,
                              NULL);
         mbim_message_unref (request);
         return;
