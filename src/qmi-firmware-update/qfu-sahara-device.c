@@ -290,7 +290,7 @@ send_receive (QfuSaharaDevice  *self,
 
     if (self->priv->fd < 0) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "device is closed");
-        return FALSE;
+        return -1;
     }
 
     if (request_size > 0) {
