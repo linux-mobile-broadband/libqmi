@@ -1141,6 +1141,11 @@ sahara_device_run_protocol_step (QfuSaharaDevice    *self,
     if (rsplen < 0)
         return SAHARA_PROTOCOL_STEP_UNKNOWN;
 
+    if (rsplen == 0) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "no sahara response received");
+        return SAHARA_PROTOCOL_STEP_UNKNOWN;
+    }
+
     /* The sahara initialization finishes once the switch to firehose is confirmed.
      * The EM7565 replies "confirmed" explicitly, but we'll just accept any printable
      * ASCII string. */
@@ -1203,6 +1208,7 @@ sahara_device_run_protocol_step (QfuSaharaDevice    *self,
         rsplen -= msglen;
     }
 
+    g_assert (next_step != SAHARA_PROTOCOL_STEP_UNKNOWN);
     return next_step;
 }
 
