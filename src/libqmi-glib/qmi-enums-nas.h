@@ -1541,7 +1541,7 @@ typedef enum {
  * @QMI_NAS_SWI_MODEM_MODE_RESETTING_MODEM: Resetting modem
  * @QMI_NAS_SWI_MODEM_MODE_UNKNOWN: Unknown
  *
- * Since: 1.20
+ * Since: 1.24
  */
 typedef enum {
     QMI_NAS_SWI_MODEM_MODE_POWERING_OFF    = 0x00,
@@ -1572,7 +1572,7 @@ typedef enum {
  * @QMI_NAS_SWI_SYSTEM_MODE_LTE: LTE
  * @QMI_NAS_SWI_SYSTEM_MODE_UNKNOWN: Unknown
  *
- * Since: 1.20
+ * Since: 1.24
  */
 typedef enum {
     QMI_NAS_SWI_SYSTEM_MODE_NO_SERVICE = 0x00,
@@ -1596,7 +1596,7 @@ typedef enum {
  * @QMI_NAS_SWI_IMS_REG_FULL_SRV: Full service
  * @QMI_NAS_SWI_IMS_REG__UNKNOWN: Unknown
  *
- * Since: 1.20
+ * Since: 1.24
  */
 typedef enum {
     QMI_NAS_SWI_IMS_REG_NO_SRV   = 0x00,
@@ -1613,7 +1613,7 @@ typedef enum {
  * @QMI_NAS_SWI_PS_STATE_DETACHED: Detached
  * @QMI_NAS_SWI_PS_STATE_UNKNOWN: Unknown
  *
- * Since: 1.20
+ * Since: 1.24
  */
 typedef enum {
     QMI_NAS_SWI_PS_STATE_ATTACHED = 0x00,
@@ -1632,7 +1632,7 @@ typedef enum {
  * @QMI_NAS_SWI_EMM_STATE_INVALID: Invalid
  * @QMI_NAS_SWI_EMM_STATE_UNKNOWN: Unknown
  *
- * Since: 1.20
+ * Since: 1.24
  */
 typedef enum {
     QMI_NAS_SWI_EMM_STATE_DEREGISTERED    = 0x00,
@@ -1653,7 +1653,7 @@ typedef enum {
  * @QMI_NAS_SWI_EMM_CONN_STATE_RRC_RELEASING: RRC releasing
  * @QMI_NAS_SWI_EMM_CONN_STATE_UNKNOWN: Unknown
  *
- * Since: 1.20
+ * Since: 1.24
  */
 typedef enum {
     QMI_NAS_SWI_EMM_CONN_STATE_RRC_IDLE        = 0x00,
