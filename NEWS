@@ -1,4 +1,92 @@
 
+Overview of changes in libqmi 1.24.0
+----------------------------------------
+
+ * New services:
+   ** New 'GAS' (Telit General Application Service) service, which allows
+      switching between stored firmware images in Telit devices.
+
+ * New request/responses/indications:
+   ** uim: implement 'Change Provisioning Session' request/response.
+   ** nas: implement Sierra-specific 'Swi Get Status' request/response.
+
+ * New TLVs supported in existing messages:
+   * nas: added 'Usage Preference' in "Get/Set System Selection Preference".
+   * nas: added 'Network Name Source' in "Get Serving System" and "Get Home
+     Network".
+   * nas: added 'LTE Cell Access Status' in "Get System Info".
+   * nas: added 'IMS Voice Support' in "Get System Info".
+   * nas: added 'LTE eMBMS Coverage Info Trace ID' in "Get System Info".
+   * nas: added 'Network Selection Registration Restriction' in "Get System
+     Info".
+   * nas: added 'LTE Registration Domain' in "Get System Info".
+   * nas: added 'Disabled Modes' in "Get System Selection Preference".
+   * nas: added 'Network Selection Registration Restriction" in "Get/Set System
+     Selection Preference".
+   * nas: added 'Voice Domain Preference' in "Get/Set System Selection
+     Preference".
+   * nas: added 'Network Scan Result' in "Network Scan".
+   * dms: added 'Imei Software Version" in "Get IDs".
+
+ * libqmi:
+   ** New qmi_device_command_abortable() async method is used with requests that
+      are abortable (both "WDS Start Network" and "NAS Network Scan" so far),
+      so that the method waits for either the request succeed or for the abort
+      operation to finish. This new method solves races when a successful
+      response to the message is received after the abort has been requested
+      (e.g. if receiving a successful response to WDS Start Network after the
+      abort request has been sent, the async operation succeeds and the abort
+      will be ignored). The user must understand that aborting a command
+      initiated with qmi_device_command_abortable() doesn't mean it will fail
+      as aborted, the command may actually succeed. Although this is a new
+      command in the interface, both qmi_client_wds_start_network() and
+      qmi_client_nas_network_scan() will use it internally and transparently for
+      the user.
+   ** New qmi_message_new_from_data() and qmi_message_get_data() methods to work
+      with QMI messages that don't have QMUX headers.
+   ** New support for symlinks in /dev/cdc-wdm ports.
+   ** QMI over MBIM transaction timeout logic was simplified in order to rely on
+      the QMI transaction timeout instead of the MBIM one.
+   ** Reworked internals to have different 'QMI endpoint' implementations, in
+      order to easily integrate new transports like QRTR.
+   ** Added definition of LTE bands 164 through 168 in NAS service.
+   ** Added retry support when opening the QmiDevice with the SYNC flag only
+      (without the VERSION_CHECK).
+
+ * qmi-proxy:
+   ** New '--empty-timeout=[SECS}' option.
+
+ * qmicli:
+   ** New '--uim-change-provisioning-session' command.
+   ** New '--gas-dms-get-firmware-list' command.
+   ** New '--gas-dms-get-active-firmware' command.
+   ** New '--gas-dms-set-active-firmware' command.
+   ** New '--gas-noop' command.
+   ** New '--nas-swi-get-status' command.
+   ** Added support to request auto/manual network attachment when using
+      '--nas-set-system-selection-preference'.
+
+ * qmi-firmware-update:
+   ** Added support for upgrading the Sierra Wireless EM7565 module with the new
+      Sahara/Firehose protocol.
+
+ * Several other minor improvements and fixes.
+
+The following features which were backported to 1.22.x releases are also present
+in libqmi 1.24.0:
+
+ * Build updated to explicitly define max allowed GLib version.
+
+ * New request/responses/indications:
+   ** uim: new "Register Events" request/response.
+   ** dms: new "Dell Change Device Mode" request/response.
+   ** dms: new "Dell Get Firmware Version" request/response.
+
+ * qmicli:
+   ** New '--dms-dell-change-device-mode' command.
+   ** New '--dms-dell-get-firmware-version' command.
+
+
 Overview of changes in libqmi 1.22.0
 ----------------------------------------
 
