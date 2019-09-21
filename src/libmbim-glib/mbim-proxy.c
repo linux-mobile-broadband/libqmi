@@ -744,10 +744,12 @@ process_internal_proxy_config (MbimProxy   *self,
                                Client      *client,
                                MbimMessage *message)
 {
-    Request *request;
+    Request    *request;
     MbimDevice *device;
-    gchar *path;
-    GFile *file;
+    gchar      *incoming_path;
+    gchar      *path;
+    GFile      *file;
+    GError     *error = NULL;
 
     /* create request holder */
     request = request_new (self, client, message);
@@ -767,8 +769,20 @@ process_internal_proxy_config (MbimProxy   *self,
     }
 
     /* Retrieve path from request */
-    path = _mbim_message_read_string (message, 0, 0);
+    incoming_path = _mbim_message_read_string (message, 0, 0);
+    if (!incoming_path) {
+        request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
+        request_complete_and_free (request);
+        return TRUE;
+    }
+
+    /* The incoming path may be a symlink. In the proxy, we always use the real path of the
+     * device, so that clients using different symlinks for the same file don't collide with
+     * each other. */
+    path = __mbim_utils_get_devpath (incoming_path, &error);
     if (!path) {
+        g_warning ("Error looking up real device path: %s", error->message);
+        g_error_free (error);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);
         return TRUE;
