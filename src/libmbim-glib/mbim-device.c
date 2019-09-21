@@ -862,8 +862,9 @@ get_descriptors_filepath (MbimDevice *self)
     GUdevDevice *device = NULL;
     GUdevDevice *parent_device = NULL;
     GUdevDevice *grandparent_device = NULL;
-    gchar *descriptors_path = NULL;
-    gchar *device_basename = NULL;
+    gchar       *descriptors_path = NULL;
+    gchar       *device_basename = NULL;
+    GError      *error = NULL;
 
     client = g_udev_client_new (NULL);
     if (!G_UDEV_IS_CLIENT (client)) {
@@ -884,7 +885,14 @@ get_descriptors_filepath (MbimDevice *self)
      *   Which is the one with the descriptors file.
      */
 
-    device_basename = g_path_get_basename (self->priv->path);
+    device_basename = __mbim_utils_get_devname (self->priv->path, &error);
+    if (!device_basename) {
+        g_warning ("[%s] Invalid path for cdc-wdm control port: %s",
+                   self->priv->path_display, error->message);
+        g_clear_error (&error);
+        goto out;
+    }
+
     device = g_udev_client_query_by_subsystem_and_name (client, "usb", device_basename);
     if (!device) {
         device = g_udev_client_query_by_subsystem_and_name (client, "usbmisc", device_basename);
