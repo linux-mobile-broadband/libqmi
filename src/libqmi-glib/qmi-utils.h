@@ -89,6 +89,10 @@ gchar *__qmi_utils_get_driver (const gchar *cdc_wdm_path,
                                GError **error);
 
 G_GNUC_INTERNAL
+gchar *__qmi_utils_get_devpath (const gchar *cdc_wdm_path,
+                                GError **error);
+
+G_GNUC_INTERNAL
 gchar *__qmi_utils_get_devname (const gchar *cdc_wdm_path,
                                 GError **error);
 
