@@ -785,8 +785,10 @@ process_internal_proxy_config (MbimProxy   *self,
         g_error_free (error);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);
+        g_free (incoming_path);
         return TRUE;
     }
+    g_free (incoming_path);
 
     /* Only allow subsequent requests with the same path */
     if (client->device) {
