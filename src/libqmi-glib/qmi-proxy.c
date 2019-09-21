@@ -414,6 +414,7 @@ process_internal_proxy_open (QmiProxy   *self,
 {
     gsize   offset = 0;
     gsize   init_offset;
+    gchar  *incoming_path;
     gchar  *device_file_path;
     GError *error = NULL;
 
@@ -423,11 +424,23 @@ process_internal_proxy_open (QmiProxy   *self,
         return FALSE;
     }
 
-    if (!qmi_message_tlv_read_string (message, init_offset, &offset, 0, 0, &device_file_path, &error)) {
+    if (!qmi_message_tlv_read_string (message, init_offset, &offset, 0, 0, &incoming_path, &error)) {
         g_debug ("ignoring message from client: invalid device file path: %s", error->message);
         g_error_free (error);
         return FALSE;
     }
+
+    /* The incoming path may be a symlink. In the proxy, we always use the real path of the
+     * device, so that clients using different symlinks for the same file don't collide with
+     * each other. */
+    device_file_path = __qmi_utils_get_devpath (incoming_path, &error);
+    if (!device_file_path) {
+        g_warning ("Error looking up real device path: %s", error->message);
+        g_error_free (error);
+        g_free (incoming_path);
+        return FALSE;
+    }
+    g_free (incoming_path);
 
     /* The remaining size of the buffer needs to be 0 if we successfully read the TLV */
     if ((offset = __qmi_message_tlv_read_remaining_size (message, init_offset, offset)) > 0)
