@@ -292,7 +292,8 @@ test_message_new_request_from_data (void)
     qmi = g_byte_array_new ();
     g_byte_array_append (qmi, expected_buffer, sizeof (expected_buffer));
 
-    self = qmi_message_new_from_data (QMI_SERVICE_DMS, 0x01, qmi, NULL);
+    self = qmi_message_new_from_data (QMI_SERVICE_DMS, 0x01, qmi, &error);
+    g_assert_no_error (error);
     g_assert (self);
 
     /* check that the QMUX header contains the right values*/
