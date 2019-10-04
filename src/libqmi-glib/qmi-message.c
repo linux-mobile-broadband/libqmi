@@ -478,7 +478,7 @@ qmi_message_new_from_data (QmiService   service,
     /* Set up fake QMUX header */
     buffer = (struct full_message *)(self->data);
     buffer->marker = QMI_MESSAGE_QMUX_MARKER;
-    buffer->qmux.length = buffer_len - 1;
+    buffer->qmux.length = GUINT16_TO_LE (buffer_len - 1);
     buffer->qmux.flags = 0;
     buffer->qmux.service = service;
     buffer->qmux.client = client_id;
