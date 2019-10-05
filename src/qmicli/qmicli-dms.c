@@ -98,6 +98,7 @@ static gboolean swi_get_usb_composition_flag;
 static gchar *swi_set_usb_composition_str;
 static gchar *dell_change_device_mode_str;
 static gchar *dell_get_firmware_version_str;
+static gchar *get_mac_address_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -314,6 +315,10 @@ static GOptionEntry entries[] = {
       "Get firmware version (DELL specific)",
       "[firmware-mcfg-apps|firmware-mcfg|apps]"
     },
+    { "dms-get-mac-address", 0, 0, G_OPTION_ARG_STRING, &get_mac_address_str,
+      "Get default MAC address",
+      "[wlan|bt]"
+    },
     { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
@@ -402,6 +407,7 @@ qmicli_dms_options_enabled (void)
                  !!swi_set_usb_composition_str +
                  !!dell_change_device_mode_str +
                  !!dell_get_firmware_version_str +
+                 !!get_mac_address_str +
                  reset_flag +
                  noop_flag);
 
@@ -3785,6 +3791,72 @@ dell_get_firmware_version_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+static QmiMessageDmsGetMacAddressInput *
+get_mac_address_input_create (const gchar *str)
+{
+    QmiMessageDmsGetMacAddressInput *input = NULL;
+    QmiDmsMacType device;
+
+    if (qmicli_read_dms_mac_type_from_string (str, &device)) {
+        GError *error = NULL;
+
+        input = qmi_message_dms_get_mac_address_input_new ();
+        if (!qmi_message_dms_get_mac_address_input_set_device (
+                input,
+                device,
+                &error)) {
+            g_printerr ("error: couldn't create input data bundle: '%s'\n",
+                        error->message);
+            g_error_free (error);
+            qmi_message_dms_get_mac_address_input_unref (input);
+            input = NULL;
+        }
+    }
+
+    return input;
+}
+
+static void
+get_mac_address_ready (QmiClientDms *client,
+                       GAsyncResult *res)
+{
+    QmiMessageDmsGetMacAddressOutput *output;
+    GError *error = NULL;
+    gchar *mac_address_printable;
+    GArray *mac_address = NULL;
+
+    output = qmi_client_dms_get_mac_address_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_get_mac_address_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get mac address: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dms_get_mac_address_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dms_get_mac_address_output_get_mac_address (output, &mac_address, NULL);
+    mac_address_printable = qmicli_get_raw_data_printable (mac_address, 80, "\t\t");
+
+    g_print ("[%s] MAC address read:\n"
+             "\tSize: '%u' bytes\n"
+             "\tContents:\n"
+             "%s",
+             qmi_device_get_path_display (ctx->device),
+             mac_address->len,
+             mac_address_printable);
+    g_free (mac_address_printable);
+
+    qmi_message_dms_get_mac_address_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
 static void
 reset_ready (QmiClientDms *client,
              GAsyncResult *res)
@@ -4644,6 +4716,28 @@ qmicli_dms_run (QmiDevice *device,
                                                   (GAsyncReadyCallback)dell_get_firmware_version_ready,
                                                   NULL);
         qmi_message_dms_dell_get_firmware_version_input_unref (input);
+        return;
+    }
+
+    /* Request to get MAC address? */
+    if (get_mac_address_str) {
+        QmiMessageDmsGetMacAddressInput *input;
+
+        g_debug ("Asynchronously getting MAC address...");
+
+        input = get_mac_address_input_create (get_mac_address_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        qmi_client_dms_get_mac_address (ctx->client,
+                                        input,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)get_mac_address_ready,
+                                        NULL);
+        qmi_message_dms_get_mac_address_input_unref (input);
         return;
     }
 
