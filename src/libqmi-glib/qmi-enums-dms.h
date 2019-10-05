@@ -484,6 +484,29 @@ typedef enum {
  */
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI DMS Get MAC Address' message */
+
+/**
+ * QmiDmsMacType:
+ * @QMI_DMS_MAC_TYPE_WLAN: WLAN MAC address.
+ * @QMI_DMS_MAC_TYPE_BT: Bluetooth MAC address.
+ *
+ * Specifies the device from which the MAC address should be queried.
+ *
+ * Since: 1.26
+ */
+typedef enum {
+    QMI_DMS_MAC_TYPE_WLAN = 0,
+    QMI_DMS_MAC_TYPE_BT = 1,
+} QmiDmsMacType;
+
+/**
+ * qmi_dms_mac_type_get_string:
+ *
+ * Since: 1.26
+ */
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI DMS HP Change Device Mode' message */
 
 /**
