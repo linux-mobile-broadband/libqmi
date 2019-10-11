@@ -148,6 +148,7 @@ get_data_format_ready (QmiClientWda *client,
     QmiWdaDataAggregationProtocol data_aggregation_protocol;
     guint32 ndp_signature;
     guint32 data_aggregation_max_size;
+    guint32 data_aggregation_max_datagrams;
 
     output = qmi_client_wda_get_data_format_finish (client, res, &error);
     if (!output) {
@@ -201,11 +202,11 @@ get_data_format_ready (QmiClientWda *client,
             NULL))
         g_print ("                     NDP signature: '%u'\n", ndp_signature);
 
-    if (qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size (
+    if (qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams (
             output,
-            &data_aggregation_max_size,
+            &data_aggregation_max_datagrams,
             NULL))
-        g_print ("  Uplink data aggregation max size: '%u'\n", data_aggregation_max_size);
+        g_print ("Downlink data aggregation max datagrams: '%u'\n", data_aggregation_max_datagrams);
 
     if (qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_size (
             output,
