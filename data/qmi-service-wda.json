@@ -176,7 +176,7 @@
                      "since"         : "1.10",
                      "format"        : "guint32",
                      "prerequisites" : [ { "common-ref" : "Success" } ] },
-                   { "name"          : "Uplink Data Aggregation Max Size",
+                   { "name"          : "Downlink Data Aggregation Max Datagrams",
                      "id"            : "0x15",
                      "type"          : "TLV",
                      "since"         : "1.10",
