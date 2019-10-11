@@ -53,7 +53,7 @@ static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
     { "wda-set-data-format", 0, 0, G_OPTION_ARG_STRING, &set_data_format_str,
-      "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip), ul-protocol (tlp|qc-ncm|mbim|rndis|qmap), dl-protocol (tlp|qc-ncm|mbim|rndis|qmap), dl-datagrams-max-size, dl-max-datagrams, ep-type (undefined|hsusb), ep-iface-number)",
+      "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip), ul-protocol (tlp|qc-ncm|mbim|rndis|qmap), dl-protocol (tlp|qc-ncm|mbim|rndis|qmap), dl-datagram-max-size, dl-max-datagrams, ep-type (undefined|hsusb), ep-iface-number)",
       "[\"key=value,...\"]"
     },
     { "wda-get-data-format", 0, 0, G_OPTION_ARG_NONE, &get_data_format_flag,
