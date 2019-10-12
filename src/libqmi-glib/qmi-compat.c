@@ -730,6 +730,15 @@ SESSION_INFORMATION_DEPRECATED_METHOD (UnblockPin,        unblock_pin)
 SESSION_INFORMATION_DEPRECATED_METHOD (ChangePin,         change_pin)
 
 gboolean
+qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size (
+    QmiMessageWdaGetDataFormatOutput *self,
+    guint32 *value_uplink_data_aggregation_max_size,
+    GError **error)
+{
+    return qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams (self, value_uplink_data_aggregation_max_size, error);
+}
+
+gboolean
 qmi_device_close (QmiDevice *self,
                   GError **error)
 {
