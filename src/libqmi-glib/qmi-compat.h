@@ -29,6 +29,7 @@
 #include "qmi-device.h"
 #include "qmi-dms.h"
 #include "qmi-uim.h"
+#include "qmi-wda.h"
 #include "qmi-enums-nas.h"
 #include "qmi-enums-wms.h"
 
@@ -1377,6 +1378,25 @@ gboolean qmi_message_uim_change_pin_input_set_session_information (
     QmiUimSessionType value_session_information_session_type,
     const gchar *value_session_information_application_identifier,
     GError **error);
+
+/**
+ * qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size:
+ * @self: a #QmiMessageWdaGetDataFormatOutput.
+ * @value_uplink_data_aggregation_max_size: a placeholder for the output #guint32, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Uplink Data Aggregation Max Size' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.10
+ * Deprecated: 1.26: Use qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams)
+gboolean qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size
+    (QmiMessageWdaGetDataFormatOutput *self,
+     guint32 *value_uplink_data_aggregation_max_size,
+     GError **error);
 
 #endif /* QMI_DISABLE_DEPRECATED */
 
