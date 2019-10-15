@@ -21,6 +21,7 @@ GENERATED_H = \
 	qmi-loc.h \
 	qmi-qos.h \
 	qmi-gas.h \
+	qmi-dsd.h \
 	$(NULL)
 
 GENERATED_C = \
@@ -44,6 +45,7 @@ GENERATED_C = \
 	qmi-loc.c \
 	qmi-qos.c \
 	qmi-gas.c \
+	qmi-dsd.c \
 	$(NULL)
 
 GENERATED_SECTIONS = \
@@ -62,6 +64,7 @@ GENERATED_SECTIONS = \
 	qmi-loc.sections \
 	qmi-qos.sections \
 	qmi-gas.sections \
+	qmi-dsd.sections \
 	$(NULL)
 
 # Error types
@@ -101,10 +104,11 @@ ENUMS = \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-loc.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-qos.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-gas.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-dsd.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-device.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pdc.h\"\n#include \"qmi-enums-pbm.h\"\n#include \"qmi-enums-uim.h\"\n#include \"qmi-enums-oma.h\"\n#include \"qmi-enums-wda.h\"\n#include \"qmi-enums-voice.h\"\n#include \"qmi-enums-loc.h\"\n#include \"qmi-enums-qos.h\"\n#include \"qmi-enums-gas.h\"\n#include \"qmi-device.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pdc.h\"\n#include \"qmi-enums-pbm.h\"\n#include \"qmi-enums-uim.h\"\n#include \"qmi-enums-oma.h\"\n#include \"qmi-enums-wda.h\"\n#include \"qmi-enums-voice.h\"\n#include \"qmi-enums-loc.h\"\n#include \"qmi-enums-qos.h\"\n#include \"qmi-enums-gas.h\"\n#include \"qmi-enums-dsd.h\"\n#include \"qmi-device.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
@@ -132,10 +136,14 @@ qmi-enum-types-private.c: $(PRIVATE_ENUMS) qmi-enum-types-private.h $(top_srcdir
 		$(PRIVATE_ENUMS) > $@
 
 # 64bit flag types
-FLAGS64 = $(top_srcdir)/src/libqmi-glib/qmi-flags64-dms.h $(top_srcdir)/src/libqmi-glib/qmi-flags64-nas.h $(top_srcdir)/src/libqmi-glib/qmi-flags64-loc.h
+FLAGS64 = \
+	$(top_srcdir)/src/libqmi-glib/qmi-flags64-dms.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-flags64-nas.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-flags64-loc.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-flags64-dsd.h
 qmi-flags64-types.h:  $(FLAGS64) $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h
 	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--fhead "#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include \"qmi-flags64-dms.h\"\n#include \"qmi-flags64-nas.h\"\n#include \"qmi-flags64-loc.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include \"qmi-flags64-dms.h\"\n#include \"qmi-flags64-nas.h\"\n#include \"qmi-flags64-loc.h\"\n#include \"qmi-flags64-dsd.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_FLAGS64_TYPES_H__ */\n" \
 		$(FLAGS64) > $@
@@ -296,6 +304,16 @@ qmi-qos.h qmi-qos.c qmi-qos.sections: $(top_srcdir)/data/qmi-service-qos.json $(
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-qos
 
+# DSD service
+qmi-dsd.h qmi-dsd.c qmi-dsd.sections: $(top_srcdir)/data/qmi-service-dsd.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+	$(AM_V_GEN) \
+		rm -f qmi-dsd.h && \
+		rm -f qmi-dsd.c && \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-dsd.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			--output qmi-dsd
+
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 
 nodist_libqmi_glib_generated_la_SOURCES = \
@@ -333,6 +351,7 @@ nodist_include_HEADERS = \
 	qmi-loc.h \
 	qmi-qos.h \
 	qmi-gas.h \
+	qmi-dsd.h \
 	$(NULL)
 
 CLEANFILES = $(GENERATED_H) $(GENERATED_C) $(GENERATED_SECTIONS)

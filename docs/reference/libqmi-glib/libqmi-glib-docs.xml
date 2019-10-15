@@ -452,6 +452,17 @@
   </chapter>
 
   <chapter>
+    <title>Data System Determination (DSD)</title>
+    <xi:include href="xml/qmi-client-dsd.xml"/>
+    <xi:include href="xml/qmi-enums-dsd.xml"/>
+    <section>
+      <title>DSD Requests</title>
+      <xi:include href="xml/qmi-message-dsd-get-apn-info.xml"/>
+      <xi:include href="xml/qmi-message-dsd-set-apn-type.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>

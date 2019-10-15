@@ -1299,6 +1299,23 @@ qmi_gas_firmware_listing_mode_get_type
 </SECTION>
 
 <SECTION>
+<FILE>qmi-enums-dsd</FILE>
+QmiDsdApnType
+QmiDsdApnTypePreference
+<SUBSECTION Methods>
+qmi_dsd_apn_type_get_string
+qmi_dsd_apn_type_preference_build_string_from_mask
+<SUBSECTION Private>
+qmi_dsd_apn_type_build_string_from_mask
+qmi_dsd_apn_type_preference_get_string
+<SUBSECTION Standard>
+QMI_TYPE_DSD_APN_TYPE
+QMI_TYPE_DSD_APN_TYPE_PREFERENCE
+qmi_dsd_apn_type_get_type
+qmi_dsd_apn_type_preference_get_type
+</SECTION>
+
+<SECTION>
 <FILE>qmi-errors</FILE>
 QmiCoreError
 QmiProtocolError

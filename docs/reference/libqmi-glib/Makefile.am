@@ -22,6 +22,7 @@ ALL_SECTIONS = \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-loc.sections \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-qos.sections \
 	$(top_builddir)/src/libqmi-glib/generated/qmi-gas.sections \
+	$(top_builddir)/src/libqmi-glib/generated/qmi-dsd.sections \
 	$(NULL)
 
 $(DOC_MODULE)-sections.mstamp: $(ALL_SECTIONS)

@@ -24,7 +24,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2019 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <glib.h>
@@ -55,6 +55,7 @@
 #include "qmi-loc.h"
 #include "qmi-qos.h"
 #include "qmi-gas.h"
+#include "qmi-dsd.h"
 
 #define PACKED __attribute__((packed))
 
@@ -1636,6 +1637,9 @@ qmi_message_get_printable_full (QmiMessage        *self,
         break;
     case QMI_SERVICE_QOS:
         contents = __qmi_message_qos_get_printable (self, context, line_prefix);
+        break;
+    case QMI_SERVICE_DSD:
+        contents = __qmi_message_dsd_get_printable (self, context, line_prefix);
         break;
     default:
         break;

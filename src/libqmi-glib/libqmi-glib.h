@@ -84,6 +84,10 @@
 #include "qmi-enums-gas.h"
 #include "qmi-gas.h"
 
+#include "qmi-enums-dsd.h"
+#include "qmi-flags64-dsd.h"
+#include "qmi-dsd.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
