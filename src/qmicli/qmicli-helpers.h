@@ -50,6 +50,15 @@
 QMICLI_ENUM_LIST
 #undef QMICLI_ENUM_LIST_ITEM
 
+/* Common helpers to read flags from strings */
+#define QMICLI_FLAGS_LIST                                                              \
+    QMICLI_FLAGS_LIST_ITEM (QmiDeviceOpenFlags, device_open_flags, "device open flags")
+
+#define QMICLI_FLAGS_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
+    gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);
+QMICLI_FLAGS_LIST
+#undef QMICLI_FLAGS_LIST_ITEM
+
 gchar *qmicli_get_raw_data_printable (const GArray *data,
                                       gsize max_line_length,
                                       const gchar *new_line_prefix);
@@ -77,8 +86,6 @@ gboolean qmicli_read_firmware_id_from_string                 (const gchar *str,
                                                               guint *out_index);
 gboolean qmicli_read_binary_array_from_string                (const gchar *str,
                                                               GArray **out);
-gboolean qmicli_read_net_open_flags_from_string              (const gchar *str,
-                                                              QmiDeviceOpenFlags *out);
 gboolean qmicli_read_authentication_from_string              (const gchar *str,
                                                               QmiWdsAuthentication *out);
 gboolean qmicli_read_pdp_type_from_string                    (const gchar *str,
@@ -98,6 +105,8 @@ gchar *qmicli_get_supported_messages_list (const guint8 *data,
                                            gsize len);
 
 const char *qmicli_earfcn_to_eutra_band_string (guint16 earfcn);
+
+gboolean qmicli_validate_device_open_flags (QmiDeviceOpenFlags mask);
 
 typedef gboolean (*QmiParseKeyValueForeachFn) (const gchar *key,
                                                const gchar *value,

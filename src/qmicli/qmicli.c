@@ -672,9 +672,11 @@ device_new_ready (GObject *unused,
         open_flags |= QMI_DEVICE_OPEN_FLAGS_AUTO;
     if (expect_indications)
         open_flags |= QMI_DEVICE_OPEN_FLAGS_EXPECT_INDICATIONS;
-    if (device_open_net_str)
-        if (!qmicli_read_net_open_flags_from_string (device_open_net_str, &open_flags))
+    if (device_open_net_str) {
+        if (!qmicli_read_device_open_flags_from_string (device_open_net_str, &open_flags) ||
+            !qmicli_validate_device_open_flags (open_flags))
             exit (EXIT_FAILURE);
+    }
 
     /* Open the device */
     qmi_device_open (device,
