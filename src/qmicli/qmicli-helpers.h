@@ -62,8 +62,6 @@ gboolean qmicli_read_uim_pin_id_from_string                  (const gchar *str,
                                                               QmiUimPinId *out);
 gboolean qmicli_read_uim_session_type_from_string            (const gchar *str,
                                                               QmiUimSessionType *out);
-gboolean qmicli_read_operating_mode_from_string              (const gchar *str,
-                                                              QmiDmsOperatingMode *out);
 gboolean qmicli_read_ssp_rat_options_from_string             (const gchar              *str,
                                                               QmiNasRatModePreference  *out_mode_preference,
                                                               GArray                  **out_acquisition_order);
@@ -71,8 +69,7 @@ gboolean qmicli_read_ssp_net_options_from_string             (const gchar *str,
                                                               QmiNasNetworkSelectionPreference *out_network_preference,
                                                               guint16 *out_network_mcc,
                                                               guint16 *out_network_mnc);
-gboolean qmicli_read_facility_from_string                    (const gchar *str,
-                                                              QmiDmsUimFacility *out);
+
 gboolean qmicli_read_enable_disable_from_string              (const gchar *str,
                                                               gboolean *out);
 gboolean qmicli_read_firmware_id_from_string                 (const gchar *str,
@@ -80,38 +77,12 @@ gboolean qmicli_read_firmware_id_from_string                 (const gchar *str,
                                                               guint *out_index);
 gboolean qmicli_read_binary_array_from_string                (const gchar *str,
                                                               GArray **out);
-gboolean qmicli_read_pdc_configuration_type_from_string      (const gchar *str,
-                                                              QmiPdcConfigurationType *out);
-gboolean qmicli_read_radio_interface_from_string             (const gchar *str,
-                                                              QmiNasRadioInterface *out);
 gboolean qmicli_read_net_open_flags_from_string              (const gchar *str,
                                                               QmiDeviceOpenFlags *out);
-gboolean qmicli_read_expected_data_format_from_string        (const gchar *str,
-                                                              QmiDeviceExpectedDataFormat *out);
-gboolean qmicli_read_link_layer_protocol_from_string         (const gchar *str,
-                                                              QmiWdaLinkLayerProtocol *out);
-gboolean qmicli_read_data_aggregation_protocol_from_string   (const gchar *str,
-                                                              QmiWdaDataAggregationProtocol *out);
-gboolean qmicli_read_data_endpoint_type_from_string          (const gchar *str,
-                                                              QmiDataEndpointType *out);
-gboolean qmicli_read_autoconnect_setting_from_string         (const gchar *str,
-                                                              QmiWdsAutoconnectSetting *out);
-gboolean qmicli_read_autoconnect_setting_roaming_from_string (const gchar *str,
-                                                              QmiWdsAutoconnectSettingRoaming *out);
 gboolean qmicli_read_authentication_from_string              (const gchar *str,
                                                               QmiWdsAuthentication *out);
 gboolean qmicli_read_pdp_type_from_string                    (const gchar *str,
                                                               QmiWdsPdpType *out);
-gboolean qmicli_read_boot_image_download_mode_from_string    (const gchar *str,
-                                                              QmiDmsBootImageDownloadMode *out);
-gboolean qmicli_read_hp_device_mode_from_string              (const gchar *str,
-                                                              QmiDmsHpDeviceMode *out);
-gboolean qmicli_read_swi_usb_composition_from_string         (const gchar *str,
-                                                              QmiDmsSwiUsbComposition *out);
-gboolean qmicli_read_dell_device_mode_from_string            (const gchar *str,
-                                                              QmiDmsDellDeviceMode *out);
-gboolean qmicli_read_dell_firmware_version_type_from_string  (const gchar *str,
-                                                              QmiDmsDellFirmwareVersionType *out);
 
 gboolean qmicli_read_non_empty_string           (const gchar *str,
                                                  const gchar *description,
