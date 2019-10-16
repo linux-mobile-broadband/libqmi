@@ -43,7 +43,8 @@
     QMICLI_ENUM_LIST_ITEM (QmiDmsSwiUsbComposition,         dms_swi_usb_composition,         "swi usb composition")           \
     QMICLI_ENUM_LIST_ITEM (QmiDmsDellDeviceMode,            dms_dell_device_mode,            "dell device mode")              \
     QMICLI_ENUM_LIST_ITEM (QmiDmsDellFirmwareVersionType,   dms_dell_firmware_version_type,  "dell firmware version type")    \
-    QMICLI_ENUM_LIST_ITEM (QmiUimSessionType,               uim_session_type,                "session type")
+    QMICLI_ENUM_LIST_ITEM (QmiUimSessionType,               uim_session_type,                "session type")                  \
+    QMICLI_ENUM_LIST_ITEM (QmiDsdApnType,                   dsd_apn_type,                    "apn type")
 
 #define QMICLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);
@@ -58,6 +59,15 @@ QMICLI_ENUM_LIST
     gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);
 QMICLI_FLAGS_LIST
 #undef QMICLI_FLAGS_LIST_ITEM
+
+/* Common helpers to read 64bit flags from strings */
+#define QMICLI_FLAGS64_LIST                                                                            \
+    QMICLI_FLAGS64_LIST_ITEM (QmiDsdApnTypePreference, dsd_apn_type_preference, "apn type preference")
+
+#define QMICLI_FLAGS64_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
+    gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);
+QMICLI_FLAGS64_LIST
+#undef QMICLI_FLAGS64_LIST_ITEM
 
 gchar *qmicli_get_raw_data_printable (const GArray *data,
                                       gsize max_line_length,

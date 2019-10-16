@@ -47,6 +47,7 @@ qmicli_SOURCES = \
 	qmicli-loc.c \
 	qmicli-qos.c \
 	qmicli-gas.c \
+	qmicli-dsd.c \
 	qmicli-charsets.c \
 	qmicli-charsets.h
 

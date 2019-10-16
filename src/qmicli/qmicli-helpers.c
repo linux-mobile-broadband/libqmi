@@ -87,6 +87,50 @@ QMICLI_ENUM_LIST
 QMICLI_FLAGS_LIST
 #undef QMICLI_FLAGS_LIST_ITEM
 
+
+/* For 64-bit flags we don't have GFlagsClass as they're aren't registered in the
+ * type system. Instead, we create a temporary array with all known flag names, and
+ * use it to match the input values given */
+#define QMICLI_FLAGS64_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)                        \
+    gboolean                                                                        \
+    qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str,                \
+                                                   TYPE *out)                       \
+    {                                                                               \
+        gchar *flag_names[64];                                                      \
+        gchar **items, **iter;                                                      \
+        guint i;                                                                    \
+        gboolean success = TRUE;                                                    \
+                                                                                    \
+        for (i = 0; i < G_N_ELEMENTS (flag_names); i++)                             \
+            flag_names[i] = qmi_ ## TYPE_UNDERSCORE ## _build_string_from_mask (((guint64)1) << i); \
+                                                                                    \
+        *out = 0;                                                                   \
+        items = g_strsplit_set (str, "|", 0);                                       \
+        for (iter = items; iter && *iter && success; iter++) {                      \
+            g_strstrip (*iter);                                                     \
+            if (!*iter[0])                                                          \
+                continue;                                                           \
+                                                                                    \
+            for (i = 0; i < G_N_ELEMENTS (flag_names); i++) {                       \
+                if (g_strcmp0 (*iter, flag_names[i]) == 0) {                        \
+                    *out |= (TYPE)(((guint64)1) << i);                              \
+                    break;                                                          \
+                }                                                                   \
+            }                                                                       \
+            if (i == G_N_ELEMENTS (flag_names)) {                                   \
+                g_printerr ("error: unknown " DESCR " value given: '%s'\n", *iter); \
+                success = FALSE;                                                    \
+            }                                                                       \
+        }                                                                           \
+                                                                                    \
+        for (i = 0; i < G_N_ELEMENTS (flag_names); i++)                             \
+            g_free (flag_names[i]);                                                 \
+        g_strfreev (items);                                                         \
+        return success;                                                             \
+    }
+QMICLI_FLAGS64_LIST
+#undef QMICLI_FLAGS64_LIST_ITEM
+
 gchar *
 qmicli_get_raw_data_printable (const GArray *data,
                                gsize max_line_length,

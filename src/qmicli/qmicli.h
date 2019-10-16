@@ -112,4 +112,11 @@ void          qmicli_gas_run              (QmiDevice *device,
                                            QmiClientGas *client,
                                            GCancellable *cancellable);
 
+/* DSD group */
+GOptionGroup *qmicli_dsd_get_option_group (void);
+gboolean      qmicli_dsd_options_enabled  (void);
+void          qmicli_dsd_run              (QmiDevice *device,
+                                           QmiClientDsd *client,
+                                           GCancellable *cancellable);
+
 #endif /* __QMICLI_H__ */
