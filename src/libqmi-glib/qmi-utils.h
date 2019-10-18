@@ -84,9 +84,16 @@ gchar *__qmi_utils_str_hex (gconstpointer mem,
 G_GNUC_INTERNAL
 gboolean __qmi_user_allowed (uid_t uid,
                              GError **error);
+
+typedef enum {
+    __QMI_TRANSPORT_TYPE_UNKNOWN,
+    __QMI_TRANSPORT_TYPE_QMUX,
+    __QMI_TRANSPORT_TYPE_MBIM,
+} __QmiTransportType;
+
 G_GNUC_INTERNAL
-gchar *__qmi_utils_get_driver (const gchar *cdc_wdm_path,
-                               GError **error);
+__QmiTransportType __qmi_utils_get_transport_type (const gchar  *path,
+                                                   GError      **error);
 
 G_GNUC_INTERNAL
 gchar *__qmi_utils_get_devpath (const gchar *cdc_wdm_path,
