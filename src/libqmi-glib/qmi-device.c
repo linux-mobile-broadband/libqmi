@@ -1989,17 +1989,13 @@ device_setup_open_flags_by_transport (QmiDevice          *self,
 
 #else
 
-    /* Auto mode requested? */
-    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_AUTO) {
-        g_warning ("[%s] requested auto mode but no MBIM QMUX support available", qmi_file_get_path_display (self->priv->file));
-        goto out;
-    }
-
     /* MBIM mode requested? */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
         g_warning ("[%s] requested MBIM mode but no MBIM QMUX support available", qmi_file_get_path_display (self->priv->file));
         goto out;
     }
+
+    /* Treat AUTO as QMI mode, without warnings */
 
 #endif /* MBIM_QMUX_ENABLED */
 
