@@ -1897,68 +1897,68 @@ device_create_endpoint (QmiDevice *self,
 }
 
 static gboolean
-device_setup_open_flags_by_driver (QmiDevice          *self,
-                                   DeviceOpenContext  *ctx,
-                                   GError            **error)
+device_setup_open_flags_by_transport (QmiDevice          *self,
+                                      DeviceOpenContext  *ctx,
+                                      GError            **error)
 {
-    gchar  *driver;
-    GError *inner_error = NULL;
+    __QmiTransportType  transport;
+    GError             *inner_error = NULL;
 
-    driver = __qmi_utils_get_driver (qmi_file_get_path (self->priv->file), &inner_error);
-    if (driver)
-        g_debug ("[%s] loaded driver of cdc-wdm port: %s", qmi_file_get_path_display (self->priv->file), driver);
-    else if (!self->priv->no_file_check)
-        g_warning ("[%s] couldn't load driver of cdc-wdm port: %s", qmi_file_get_path_display (self->priv->file), inner_error->message);
+    transport = __qmi_utils_get_transport_type (qmi_file_get_path (self->priv->file), &inner_error);
+    if ((transport == __QMI_TRANSPORT_TYPE_UNKNOWN) && !self->priv->no_file_check)
+        g_warning ("[%s] couldn't detect transport type of port: %s", qmi_file_get_path_display (self->priv->file), inner_error->message);
     g_clear_error (&inner_error);
 
 #if defined MBIM_QMUX_ENABLED
 
     /* Auto mode requested? */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_AUTO) {
-        if (!g_strcmp0 (driver, "cdc_mbim")) {
+        switch (transport) {
+        case __QMI_TRANSPORT_TYPE_MBIM:
             g_debug ("[%s] automatically selecting MBIM mode", qmi_file_get_path_display (self->priv->file));
             ctx->flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
-            goto out;
-        }
-        if (!g_strcmp0 (driver, "qmi_wwan")) {
+            break;
+        case __QMI_TRANSPORT_TYPE_QMUX:
             g_debug ("[%s] automatically selecting QMI mode", qmi_file_get_path_display (self->priv->file));
             ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_MBIM;
-            goto out;
+            break;
+        case __QMI_TRANSPORT_TYPE_UNKNOWN:
+            g_set_error (&inner_error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "Cannot automatically select QMI/MBIM mode");
+            break;
         }
-        g_set_error (&inner_error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_FAILED,
-                     "Cannot automatically select QMI/MBIM mode: driver %s",
-                     driver ? driver : "unknown");
         goto out;
     }
 
     /* MBIM mode requested? */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
-        if (g_strcmp0 (driver, "cdc_mbim") && !self->priv->no_file_check)
-            g_warning ("[%s] requested MBIM mode but unexpected driver found: %s", qmi_file_get_path_display (self->priv->file), driver);
+        if ((transport != __QMI_TRANSPORT_TYPE_MBIM) && !self->priv->no_file_check)
+            g_warning ("[%s] requested MBIM mode but unexpected transport type found", qmi_file_get_path_display (self->priv->file));
         goto out;
     }
 
 #else
 
-    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_AUTO)
+    /* Auto mode requested? */
+    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_AUTO) {
         g_warning ("[%s] requested auto mode but no MBIM QMUX support available", qmi_file_get_path_display (self->priv->file));
-    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM)
+        goto out;
+    }
+
+    /* MBIM mode requested? */
+    if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
         g_warning ("[%s] requested MBIM mode but no MBIM QMUX support available", qmi_file_get_path_display (self->priv->file));
+        goto out;
+    }
 
 #endif /* MBIM_QMUX_ENABLED */
 
     /* QMI mode requested? */
-    if (g_strcmp0 (driver, "qmi_wwan") && !self->priv->no_file_check)
-        g_warning ("[%s] requested QMI mode but unexpected driver found: %s",
-                   qmi_file_get_path_display (self->priv->file), driver ? driver : "unknown");
+    if ((transport != __QMI_TRANSPORT_TYPE_QMUX) && !self->priv->no_file_check)
+        g_warning ("[%s] requested QMI mode but unexpected transport type found",
+                   qmi_file_get_path_display (self->priv->file));
 
-#if defined MBIM_QMUX_ENABLED
 out:
-#endif
-
-    g_free (driver);
 
     if (inner_error) {
         g_propagate_error (error, inner_error);
@@ -1984,7 +1984,7 @@ device_open_step (GTask *task)
         /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_DRIVER:
-        if (!device_setup_open_flags_by_driver (self, ctx, &error)) {
+        if (!device_setup_open_flags_by_transport (self, ctx, &error)) {
             g_task_return_error (task, error);
             g_object_unref (task);
             return;

@@ -97,9 +97,15 @@ G_GNUC_INTERNAL
 gchar *__qmi_string_utf8_from_ucs2le (const guint8 *ucs2le,
                                       gsize         ucs2le_len);
 
+typedef enum {
+    __QMI_TRANSPORT_TYPE_UNKNOWN,
+    __QMI_TRANSPORT_TYPE_QMUX,
+    __QMI_TRANSPORT_TYPE_MBIM,
+} __QmiTransportType;
+
 G_GNUC_INTERNAL
-gchar *__qmi_utils_get_driver (const gchar *cdc_wdm_path,
-                               GError **error);
+__QmiTransportType __qmi_utils_get_transport_type (const gchar  *path,
+                                                   GError      **error);
 
 G_GNUC_INTERNAL
 gchar *__qmi_utils_get_devpath (const gchar *cdc_wdm_path,
