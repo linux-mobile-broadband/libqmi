@@ -9,3 +9,4 @@ Version: @VERSION@
 Requires: glib-2.0 gobject-2.0 gio-2.0
 Cflags: -I${includedir}/libqmi-glib
 Libs: -L${libdir} -lqmi-glib
+Libs.Private: @MBIM_LIBS@
