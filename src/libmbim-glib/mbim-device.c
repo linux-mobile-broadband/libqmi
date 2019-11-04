@@ -91,9 +91,10 @@ enum {
 static guint signals[SIGNAL_LAST] = { 0 };
 
 typedef enum {
-    TRANSACTION_TYPE_HOST  = 0,
-    TRANSACTION_TYPE_MODEM = 1,
-    TRANSACTION_TYPE_LAST  = 2
+    TRANSACTION_TYPE_UNKNOWN = -1,
+    TRANSACTION_TYPE_HOST    = 0,
+    TRANSACTION_TYPE_MODEM   = 1,
+    TRANSACTION_TYPE_LAST    = 2
 } TransactionType;
 
 typedef enum {
@@ -258,6 +259,8 @@ device_release_transaction (MbimDevice      *self,
     GTask              *task;
     TransactionContext *ctx;
 
+    g_assert ((type != TRANSACTION_TYPE_UNKNOWN) && (type < TRANSACTION_TYPE_LAST));
+
     /* Only return transaction if it was released from the HT */
     if (!self->priv->transactions[type])
         return NULL;
@@ -355,6 +358,8 @@ device_store_transaction (MbimDevice       *self,
                           GError          **error)
 {
     TransactionContext *ctx;
+
+    g_assert ((type != TRANSACTION_TYPE_UNKNOWN) && (type < TRANSACTION_TYPE_LAST));
 
     transaction_task_trace (task, "store");
 
@@ -579,11 +584,13 @@ process_message (MbimDevice        *self,
         GError             *error = NULL;
         GTask              *task;
         TransactionContext *ctx;
+        TransactionType     transaction_type = TRANSACTION_TYPE_UNKNOWN;
 
         if (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) == MBIM_MESSAGE_TYPE_INDICATE_STATUS) {
             /* Grab transaction */
+            transaction_type = TRANSACTION_TYPE_MODEM;
             task = device_release_transaction (self,
-                                               TRANSACTION_TYPE_MODEM,
+                                               transaction_type,
                                                MBIM_MESSAGE_TYPE_INDICATE_STATUS,
                                                mbim_message_get_transaction_id (message));
 
@@ -598,8 +605,9 @@ process_message (MbimDevice        *self,
         } else {
             /* Grab transaction. This is a _DONE message, so look for the request
              * that generated the _DONE */
+            transaction_type = TRANSACTION_TYPE_HOST;
             task = device_release_transaction (self,
-                                               TRANSACTION_TYPE_HOST,
+                                               transaction_type,
                                                (MBIM_MESSAGE_GET_MESSAGE_TYPE (message) - 0x80000000),
                                                mbim_message_get_transaction_id (message));
             if (!task) {
@@ -669,7 +677,7 @@ process_message (MbimDevice        *self,
 
         /* Need more fragments, store transaction */
         g_assert (device_store_transaction (self,
-                                            TRANSACTION_TYPE_HOST,
+                                            transaction_type,
                                             task,
                                             MAX_TIME_BETWEEN_FRAGMENTS_MS,
                                             NULL));
