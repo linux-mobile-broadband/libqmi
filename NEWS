@@ -1,4 +1,15 @@
 
+Overview of changes in libmbim 1.20.2
+----------------------------------------
+
+ * mbim-proxy:
+   ** Fixed device control port management when using symlinks.
+
+ * libmbim-glib:
+   ** Fixed handling of fragmented indication messages.
+
+ * Several other minor improvements and fixes.
+
 Overview of changes in libmbim 1.20
 ----------------------------------------
 
