@@ -32,10 +32,11 @@
  * address, and will take care of synchronizing the access to a set of shared
  * QMI ports.
  *
- * Multiple #QmiDevices may be connected to the #QmiProxy at any given time. The
- * #QmiProxy acts as a stateless proxy for non-CTL services (messages are
- * transferred unmodified), and as a stateful proxy for the CTL service (all
- * remote #QmiDevices will need to share the same CTL message sequence ID).
+ * Multiple #QmiDevice objects may be connected to the #QmiProxy at any given
+ * time. The #QmiProxy acts as a stateless proxy for non-CTL services (messages
+ * are transferred unmodified), and as a stateful proxy for the CTL service (all
+ * remote #QmiDevice objects will need to share the same CTL message sequence
+ * ID).
  */
 
 #include <glib-object.h>
