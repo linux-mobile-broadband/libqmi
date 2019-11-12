@@ -1433,7 +1433,7 @@
                    { "name"      : "Version",
                      "id"        : "0x01",
                      "type"      : "TLV",
-                     "since"     : "1.0",
+                     "since"     : "1.22.4",
                      "format"    : "string",
                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
