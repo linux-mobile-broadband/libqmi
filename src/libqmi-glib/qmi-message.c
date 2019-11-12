@@ -1556,7 +1556,6 @@ qmi_message_get_printable_full (QmiMessage        *self,
     gchar *contents;
 
     g_return_val_if_fail (self != NULL, NULL);
-    g_return_val_if_fail (line_prefix != NULL, NULL);
 
     if (!line_prefix)
         line_prefix = "";
