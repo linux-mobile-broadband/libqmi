@@ -97,7 +97,8 @@ static gboolean swi_get_current_firmware_flag;
 static gboolean swi_get_usb_composition_flag;
 static gchar *swi_set_usb_composition_str;
 static gchar *dell_change_device_mode_str;
-static gchar *dell_get_firmware_version_str;
+static gchar *dell_get_firmware_version_str; /* deprecated */
+static gchar *foxconn_get_firmware_version_str;
 static gchar *get_mac_address_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -311,8 +312,8 @@ static GOptionEntry entries[] = {
       "Change device mode (DELL specific)",
       "[fastboot-ota|fastboot-online]"
     },
-    { "dms-dell-get-firmware-version", 0, 0, G_OPTION_ARG_STRING, &dell_get_firmware_version_str,
-      "Get firmware version (DELL specific)",
+    { "dms-foxconn-get-firmware-version", 0, 0, G_OPTION_ARG_STRING, &foxconn_get_firmware_version_str,
+      "Get firmware version (Foxconn specific)",
       "[firmware-mcfg-apps|firmware-mcfg|apps]"
     },
     { "dms-get-mac-address", 0, 0, G_OPTION_ARG_STRING, &get_mac_address_str,
@@ -326,6 +327,11 @@ static GOptionEntry entries[] = {
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
+    },
+    /* deprecated entries (hidden in --help) */
+    { "dms-dell-get-firmware-version", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &dell_get_firmware_version_str,
+      "Get firmware version (DELL specific)",
+      "[firmware-mcfg-apps|firmware-mcfg|apps]"
     },
     { NULL }
 };
@@ -407,6 +413,7 @@ qmicli_dms_options_enabled (void)
                  !!swi_set_usb_composition_str +
                  !!dell_change_device_mode_str +
                  !!dell_get_firmware_version_str +
+                 !!foxconn_get_firmware_version_str +
                  !!get_mac_address_str +
                  reset_flag +
                  noop_flag);
@@ -3732,24 +3739,24 @@ dell_change_device_mode_ready (QmiClientDms *client,
     operation_shutdown_skip_cid_release (TRUE);
 }
 
-static QmiMessageDmsDellGetFirmwareVersionInput *
-dell_get_firmware_version_input_create (const gchar *str)
+static QmiMessageDmsFoxconnGetFirmwareVersionInput *
+foxconn_get_firmware_version_input_create (const gchar *str)
 {
-    QmiMessageDmsDellGetFirmwareVersionInput *input = NULL;
-    QmiDmsDellFirmwareVersionType type;
+    QmiMessageDmsFoxconnGetFirmwareVersionInput *input = NULL;
+    QmiDmsFoxconnFirmwareVersionType type;
     GError *error = NULL;
 
-    if (!qmicli_read_dms_dell_firmware_version_type_from_string (str, &type)) {
-        g_printerr ("error: couldn't parse input dell firmware version type : '%s'\n", str);
+    if (!qmicli_read_dms_foxconn_firmware_version_type_from_string (str, &type)) {
+        g_printerr ("error: couldn't parse input foxconn firmware version type : '%s'\n", str);
         return NULL;
     }
 
-    input = qmi_message_dms_dell_get_firmware_version_input_new ();
-    if (!qmi_message_dms_dell_get_firmware_version_input_set_version_type (input, type, &error)) {
+    input = qmi_message_dms_foxconn_get_firmware_version_input_new ();
+    if (!qmi_message_dms_foxconn_get_firmware_version_input_set_version_type (input, type, &error)) {
         g_printerr ("error: couldn't create input data bundle: '%s'\n",
                     error->message);
         g_error_free (error);
-        qmi_message_dms_dell_get_firmware_version_input_unref (input);
+        qmi_message_dms_foxconn_get_firmware_version_input_unref (input);
         return NULL;
     }
 
@@ -3757,14 +3764,14 @@ dell_get_firmware_version_input_create (const gchar *str)
 }
 
 static void
-dell_get_firmware_version_ready (QmiClientDms *client,
-                                 GAsyncResult *res)
+foxconn_get_firmware_version_ready (QmiClientDms *client,
+                                    GAsyncResult *res)
 {
     const gchar *str = NULL;
-    QmiMessageDmsDellGetFirmwareVersionOutput *output;
+    QmiMessageDmsFoxconnGetFirmwareVersionOutput *output;
     GError *error = NULL;
 
-    output = qmi_client_dms_dell_get_firmware_version_finish (client, res, &error);
+    output = qmi_client_dms_foxconn_get_firmware_version_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
@@ -3772,22 +3779,22 @@ dell_get_firmware_version_ready (QmiClientDms *client,
         return;
     }
 
-    if (!qmi_message_dms_dell_get_firmware_version_output_get_result (output, &error)) {
-        g_printerr ("error: couldn't get dell firmware version: %s\n", error->message);
+    if (!qmi_message_dms_foxconn_get_firmware_version_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get foxconn firmware version: %s\n", error->message);
         g_error_free (error);
-        qmi_message_dms_dell_get_firmware_version_output_unref (output);
+        qmi_message_dms_foxconn_get_firmware_version_output_unref (output);
         operation_shutdown (FALSE);
         return;
     }
 
-    qmi_message_dms_dell_get_firmware_version_output_get_version (output, &str, NULL);
+    qmi_message_dms_foxconn_get_firmware_version_output_get_version (output, &str, NULL);
 
     g_print ("[%s] Firmware version retrieved:\n"
              "\tVersion: '%s'\n",
              qmi_device_get_path_display (ctx->device),
              VALIDATE_UNKNOWN (str));
 
-    qmi_message_dms_dell_get_firmware_version_output_unref (output);
+    qmi_message_dms_foxconn_get_firmware_version_output_unref (output);
     operation_shutdown (TRUE);
 }
 
@@ -4698,24 +4705,24 @@ qmicli_dms_run (QmiDevice *device,
     }
 
     /* Request to get firmware version? */
-    if (dell_get_firmware_version_str) {
-        QmiMessageDmsDellGetFirmwareVersionInput *input;
+    if (foxconn_get_firmware_version_str || dell_get_firmware_version_str) {
+        QmiMessageDmsFoxconnGetFirmwareVersionInput *input;
 
-        g_debug ("Asynchronously getting firmware version (Dell specific)...");
+        g_debug ("Asynchronously getting firmware version (Foxconn specific)...");
 
-        input = dell_get_firmware_version_input_create (dell_get_firmware_version_str);
+        input = foxconn_get_firmware_version_input_create (foxconn_get_firmware_version_str ? foxconn_get_firmware_version_str : dell_get_firmware_version_str);
         if (!input) {
             operation_shutdown (FALSE);
             return;
         }
 
-        qmi_client_dms_dell_get_firmware_version (ctx->client,
-                                                  input,
-                                                  10,
-                                                  ctx->cancellable,
-                                                  (GAsyncReadyCallback)dell_get_firmware_version_ready,
-                                                  NULL);
-        qmi_message_dms_dell_get_firmware_version_input_unref (input);
+        qmi_client_dms_foxconn_get_firmware_version (ctx->client,
+                                                     input,
+                                                     10,
+                                                     ctx->cancellable,
+                                                     (GAsyncReadyCallback)foxconn_get_firmware_version_ready,
+                                                     NULL);
+        qmi_message_dms_foxconn_get_firmware_version_input_unref (input);
         return;
     }
 

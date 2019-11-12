@@ -631,28 +631,28 @@ typedef enum {
  */
 
 /*****************************************************************************/
-/* Helper enums for the 'QMI DMS Dell Get Firmware Version' message */
+/* Helper enums for the 'QMI DMS Foxconn Get Firmware Version' message */
 
 /**
- * QmiDmsDellFirmwareVersionType:
- * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG: E.g. T77W968.F0.0.0.2.3.GC.004.
- * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS: E.g. T77W968.F0.0.0.2.3.GC.004.011.
- * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_APPS: E.g. 011.
+ * QmiDmsFoxconnFirmwareVersionType:
+ * @QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG: E.g. T77W968.F0.0.0.2.3.GC.004.
+ * @QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS: E.g. T77W968.F0.0.0.2.3.GC.004.011.
+ * @QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_APPS: E.g. 011.
  *
- * Dell specific firmware version types.
+ * Foxconn specific firmware version types.
  *
- * Since: 1.22.4
+ * Since: 1.26
  */
 typedef enum {
-    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG      = 0x00,
-    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS = 0x01,
-    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_APPS               = 0x02,
-} QmiDmsDellFirmwareVersionType;
+    QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG      = 0x00,
+    QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS = 0x01,
+    QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_APPS               = 0x02,
+} QmiDmsFoxconnFirmwareVersionType;
 
 /**
- * qmi_dms_dell_firmware_version_type:
+ * qmi_dms_foxconn_firmware_version_type_get_string:
  *
- * Since: 1.22.4
+ * Since: 1.26
  */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_DMS_H_ */

@@ -16,13 +16,14 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2016-2018 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2019 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <string.h>
 
 #include "qmi-compat.h"
 #include "qmi-utils.h"
+#include "qmi-enum-types.h"
 
 #ifndef QMI_DISABLE_DEPRECATED
 
@@ -745,6 +746,116 @@ qmi_device_close (QmiDevice *self,
     g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
     qmi_device_close_async (self, 0, NULL, NULL, NULL);
     return TRUE;
+}
+
+GType
+qmi_dms_dell_firmware_version_type_get_type (void)
+{
+    return qmi_dms_foxconn_firmware_version_type_get_type ();
+}
+
+const gchar *
+qmi_dms_dell_firmware_version_type_get_string (QmiDmsDellFirmwareVersionType val)
+{
+    return qmi_dms_foxconn_firmware_version_type_get_string ((QmiDmsFoxconnFirmwareVersionType) val);
+}
+
+GType
+qmi_message_dms_dell_get_firmware_version_output_get_type (void)
+{
+    return qmi_message_dms_foxconn_get_firmware_version_output_get_type ();
+}
+
+gboolean
+qmi_message_dms_dell_get_firmware_version_output_get_version (
+    QmiMessageDmsDellGetFirmwareVersionOutput *self,
+    const gchar **value_version,
+    GError **error)
+{
+    return qmi_message_dms_foxconn_get_firmware_version_output_get_version (self, value_version, error);
+}
+
+gboolean
+qmi_message_dms_dell_get_firmware_version_output_get_result (
+    QmiMessageDmsDellGetFirmwareVersionOutput *self,
+    GError **error)
+{
+    return qmi_message_dms_foxconn_get_firmware_version_output_get_result (self, error);
+}
+
+GType
+qmi_message_dms_dell_get_firmware_version_input_get_type (void)
+{
+    return qmi_message_dms_foxconn_get_firmware_version_input_get_type ();
+}
+
+gboolean
+qmi_message_dms_dell_get_firmware_version_input_get_version_type (
+    QmiMessageDmsDellGetFirmwareVersionInput *self,
+    QmiDmsDellFirmwareVersionType *value_version_type,
+    GError **error)
+{
+    return qmi_message_dms_foxconn_get_firmware_version_input_get_version_type (self, (QmiDmsFoxconnFirmwareVersionType *)value_version_type, error);
+}
+
+gboolean
+qmi_message_dms_dell_get_firmware_version_input_set_version_type (
+    QmiMessageDmsDellGetFirmwareVersionInput *self,
+    QmiDmsDellFirmwareVersionType value_version_type,
+    GError **error)
+{
+    return qmi_message_dms_foxconn_get_firmware_version_input_set_version_type (self, value_version_type, error);
+}
+
+QmiMessageDmsDellGetFirmwareVersionInput *
+qmi_message_dms_dell_get_firmware_version_input_ref (QmiMessageDmsDellGetFirmwareVersionInput *self)
+{
+    return qmi_message_dms_foxconn_get_firmware_version_input_ref (self);
+}
+
+void
+qmi_message_dms_dell_get_firmware_version_input_unref (QmiMessageDmsDellGetFirmwareVersionInput *self)
+{
+    qmi_message_dms_foxconn_get_firmware_version_input_unref (self);
+}
+
+QmiMessageDmsDellGetFirmwareVersionInput *
+qmi_message_dms_dell_get_firmware_version_input_new (void)
+{
+    return qmi_message_dms_foxconn_get_firmware_version_input_new ();
+}
+
+QmiMessageDmsDellGetFirmwareVersionOutput *
+qmi_message_dms_dell_get_firmware_version_output_ref (QmiMessageDmsDellGetFirmwareVersionOutput *self)
+{
+    return qmi_message_dms_foxconn_get_firmware_version_output_ref (self);
+}
+
+void
+qmi_message_dms_dell_get_firmware_version_output_unref (QmiMessageDmsDellGetFirmwareVersionOutput *self)
+{
+    qmi_message_dms_foxconn_get_firmware_version_output_unref (self);
+}
+
+void
+qmi_client_dms_dell_get_firmware_version (
+    QmiClientDms *self,
+    QmiMessageDmsDellGetFirmwareVersionInput *input,
+    guint timeout,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data)
+{
+    qmi_client_dms_foxconn_get_firmware_version (self, input, timeout, cancellable, callback, user_data);
+}
+
+QmiMessageDmsDellGetFirmwareVersionOutput *
+qmi_client_dms_dell_get_firmware_version_finish (
+    QmiClientDms *self,
+    GAsyncResult *res,
+    GError **error)
+{
+    return qmi_client_dms_foxconn_get_firmware_version_finish (self, res, error);
 }
 
 #endif /* QMI_DISABLE_DEPRECATED */

@@ -16,7 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2016-2017 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2019 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_COMPAT_H_
@@ -1397,6 +1397,262 @@ gboolean qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_
     (QmiMessageWdaGetDataFormatOutput *self,
      guint32 *value_uplink_data_aggregation_max_size,
      GError **error);
+
+/**
+ * QmiDmsDellFirmwareVersionType:
+ * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG: E.g. T77W968.F0.0.0.2.3.GC.004.
+ * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS: E.g. T77W968.F0.0.0.2.3.GC.004.011.
+ * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_APPS: E.g. 011.
+ *
+ * Dell specific firmware version types.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use #QmiDmsFoxconnFirmwareVersionType instead.
+ */
+typedef enum {
+    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG      = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG,
+    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS,
+    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_APPS               = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_APPS,
+} QmiDmsDellFirmwareVersionType;
+
+G_DEPRECATED_FOR (qmi_dms_foxconn_firmware_version_type_get_type)
+GType qmi_dms_dell_firmware_version_type_get_type (void) G_GNUC_CONST;
+G_DEPRECATED_FOR (QMI_TYPE_DMS_FOXCONN_FIRMWARE_VERSION_TYPE)
+#define QMI_TYPE_DMS_DELL_FIRMWARE_VERSION_TYPE QMI_TYPE_DMS_FOXCONN_FIRMWARE_VERSION_TYPE
+
+/**
+ * qmi_dms_dell_firmware_version_type_get_string:
+ * @val: a #QmiDmsFoxconnFirmwareVersionType.
+ *
+ * Gets the nickname string for the #QmiDmsFoxconnFirmwareVersionType specified at @val.
+ *
+ * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_dms_foxconn_firmware_version_type_get_string() instead.
+ */
+const gchar *qmi_dms_dell_firmware_version_type_get_string (QmiDmsDellFirmwareVersionType val);
+
+/**
+ * QmiMessageDmsDellGetFirmwareVersionInput:
+ *
+ * The #QmiMessageDmsDellGetFirmwareVersionInput structure contains private data and should only be accessed
+ * using the provided API.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use #QmiMessageDmsFoxconnGetFirmwareVersionInput instead.
+ */
+G_DEPRECATED_FOR (QmiMessageDmsFoxconnGetFirmwareVersionInput)
+#define QmiMessageDmsDellGetFirmwareVersionInput QmiMessageDmsFoxconnGetFirmwareVersionInput
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_get_type)
+GType qmi_message_dms_dell_get_firmware_version_input_get_type (void) G_GNUC_CONST;
+G_DEPRECATED_FOR (QMI_TYPE_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION_INPUT)
+#define QMI_TYPE_MESSAGE_DMS_DELL_GET_FIRMWARE_VERSION_INPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION_INPUT
+
+/**
+ * qmi_message_dms_dell_get_firmware_version_input_get_version_type:
+ * @self: a #QmiMessageDmsDellGetFirmwareVersionInput.
+ * @value_version_type: a placeholder for the output #QmiDmsDellFirmwareVersionType, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Version Type' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_get_firmware_version_input_get_version_type() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_get_version_type)
+gboolean qmi_message_dms_dell_get_firmware_version_input_get_version_type (
+    QmiMessageDmsDellGetFirmwareVersionInput *self,
+    QmiDmsDellFirmwareVersionType *value_version_type,
+    GError **error);
+
+/**
+ * qmi_message_dms_dell_get_firmware_version_input_set_version_type:
+ * @self: a #QmiMessageDmsDellGetFirmwareVersionInput.
+ * @value_version_type: a #QmiDmsDellFirmwareVersionType.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Version Type' field in the message.
+ *
+ * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_get_firmware_version_input_set_version_type() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_set_version_type)
+gboolean qmi_message_dms_dell_get_firmware_version_input_set_version_type (
+    QmiMessageDmsDellGetFirmwareVersionInput *self,
+    QmiDmsDellFirmwareVersionType value_version_type,
+    GError **error);
+
+/**
+ * qmi_message_dms_dell_get_firmware_version_input_ref:
+ * @self: a #QmiMessageDmsDellGetFirmwareVersionInput.
+ *
+ * Atomically increments the reference count of @self by one.
+ *
+ * Returns: the new reference to @self.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_get_firmware_version_input_ref() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_ref)
+QmiMessageDmsDellGetFirmwareVersionInput *qmi_message_dms_dell_get_firmware_version_input_ref (QmiMessageDmsDellGetFirmwareVersionInput *self);
+
+/**
+ * qmi_message_dms_dell_get_firmware_version_input_unref:
+ * @self: a #QmiMessageDmsDellGetFirmwareVersionInput.
+ *
+ * Atomically decrements the reference count of @self by one.
+ * If the reference count drops to 0, @self is completely disposed.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_get_firmware_version_input_unref() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_unref)
+void qmi_message_dms_dell_get_firmware_version_input_unref (QmiMessageDmsDellGetFirmwareVersionInput *self);
+
+/**
+ * qmi_message_dms_dell_get_firmware_version_input_new:
+ *
+ * Allocates a new #QmiMessageDmsDellGetFirmwareVersionInput.
+ *
+ * Returns: the newly created #QmiMessageDmsDellGetFirmwareVersionInput. The returned value should be freed with qmi_message_dms_dell_get_firmware_version_input_unref().
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_get_firmware_version_input_new() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_new)
+QmiMessageDmsDellGetFirmwareVersionInput *qmi_message_dms_dell_get_firmware_version_input_new (void);
+
+/* --- Output -- */
+
+/**
+ * QmiMessageDmsDellGetFirmwareVersionOutput:
+ *
+ * The #QmiMessageDmsDellGetFirmwareVersionOutput structure contains private data and should only be accessed
+ * using the provided API.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use #QmiMessageDmsFoxconnGetFirmwareVersionOutput instead.
+ */
+G_DEPRECATED_FOR (QmiMessageDmsFoxconnGetFirmwareVersionOutput)
+#define QmiMessageDmsDellGetFirmwareVersionOutput QmiMessageDmsFoxconnGetFirmwareVersionOutput
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_output_get_type)
+GType qmi_message_dms_dell_get_firmware_version_output_get_type (void) G_GNUC_CONST;
+G_DEPRECATED_FOR (QMI_TYPE_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION_OUTPUT)
+#define QMI_TYPE_MESSAGE_DMS_DELL_GET_FIRMWARE_VERSION_OUTPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION_OUTPUT
+
+/**
+ * qmi_message_dms_dell_get_firmware_version_output_get_result:
+ * @self: a QmiMessageDmsDellGetFirmwareVersionOutput.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the result of the QMI operation.
+ *
+ * Returns: %TRUE if the QMI operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_get_firmware_version_output_get_result() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_output_get_result)
+gboolean qmi_message_dms_dell_get_firmware_version_output_get_result (
+    QmiMessageDmsDellGetFirmwareVersionOutput *self,
+    GError **error);
+
+/**
+ * qmi_message_dms_dell_get_firmware_version_output_get_version:
+ * @self: a #QmiMessageDmsDellGetFirmwareVersionOutput.
+ * @value_version: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Version' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_get_firmware_version_output_get_version() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_output_get_version)
+gboolean qmi_message_dms_dell_get_firmware_version_output_get_version (
+    QmiMessageDmsDellGetFirmwareVersionOutput *self,
+    const gchar **value_version,
+    GError **error);
+
+/**
+ * qmi_message_dms_dell_get_firmware_version_output_ref:
+ * @self: a #QmiMessageDmsDellGetFirmwareVersionOutput.
+ *
+ * Atomically increments the reference count of @self by one.
+ *
+ * Returns: the new reference to @self.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_get_firmware_version_output_ref() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_output_ref)
+QmiMessageDmsDellGetFirmwareVersionOutput *qmi_message_dms_dell_get_firmware_version_output_ref (QmiMessageDmsDellGetFirmwareVersionOutput *self);
+
+/**
+ * qmi_message_dms_dell_get_firmware_version_output_unref:
+ * @self: a #QmiMessageDmsDellGetFirmwareVersionOutput.
+ *
+ * Atomically decrements the reference count of @self by one.
+ * If the reference count drops to 0, @self is completely disposed.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_get_firmware_version_output_unref() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_output_unref)
+void qmi_message_dms_dell_get_firmware_version_output_unref (QmiMessageDmsDellGetFirmwareVersionOutput *self);
+
+/**
+ * qmi_client_dms_dell_get_firmware_version:
+ * @self: a #QmiClientDms.
+ * @input: a #QmiMessageDmsDellGetFirmwareVersionInput.
+ * @timeout: maximum time to wait for the method to complete, in seconds.
+ * @cancellable: a #GCancellable or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the request is satisfied.
+ * @user_data: user data to pass to @callback.
+ *
+ * Asynchronously sends a Dell Get Firmware Version request to the device.
+ *
+ * When the operation is finished, @callback will be invoked in the thread-default main loop of the thread you are calling this method from.
+ *
+ * You can then call qmi_client_dms_dell_get_firmware_version_finish() to get the result of the operation.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_client_dms_foxconn_get_firmware_version() instead.
+ */
+G_DEPRECATED_FOR (qmi_client_dms_foxconn_get_firmware_version)
+void qmi_client_dms_dell_get_firmware_version (
+    QmiClientDms *self,
+    QmiMessageDmsDellGetFirmwareVersionInput *input,
+    guint timeout,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+/**
+ * qmi_client_dms_dell_get_firmware_version_finish:
+ * @self: a #QmiClientDms.
+ * @res: the #GAsyncResult obtained from the #GAsyncReadyCallback passed to qmi_client_dms_dell_get_firmware_version().
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an async operation started with qmi_client_dms_dell_get_firmware_version().
+ *
+ * Returns: a #QmiMessageDmsDellGetFirmwareVersionOutput, or %NULL if @error is set. The returned value should be freed with qmi_message_dms_dell_get_firmware_version_output_unref().
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_client_dms_foxconn_get_firmware_version_finish() instead.
+ */
+G_DEPRECATED_FOR (qmi_client_dms_foxconn_get_firmware_version_finish)
+QmiMessageDmsDellGetFirmwareVersionOutput *qmi_client_dms_dell_get_firmware_version_finish (
+    QmiClientDms *self,
+    GAsyncResult *res,
+    GError **error);
 
 #endif /* QMI_DISABLE_DEPRECATED */
 
