@@ -41,8 +41,22 @@ G_BEGIN_DECLS
  * The #QmiMessageContext defines non-standard features of the QMI message
  * associated with it, which may be required for a correct processing.
  *
- * When a context is given when sending a request with qmi_device_command_full(),
- * the same context will then be applied for the associated response.
+ * The main purpose of this type is to provide a common context when processing
+ * the request sent and the response received, so that the reception logic
+ * can know in advance the type of response expected. Therefore, when a context
+ * is given when sending a request with qmi_device_command_full(), the same
+ * context will then be applied for the associated response.
+ *
+ * If there are multiple types of messages using the same service and command
+ * id, the context is flagged as vendor-specific automatically, by assigning
+ * a specific vendor id in the #QmiMessageContext. This does not mean that the
+ * command will only be available for that specific vendor id, it is just a way
+ * to make a difference among commands that have the same command id and a
+ * totally different meaning. The actual vendor id value given in the context is
+ * therefore really irrelevant, as long as the vendor id is different to the
+ * other vendor ids specified for other commands reusing the same command id. In
+ * order to simplify the selection of the vendor id, the library will use the
+ * standard vendor-specific USB vendor id.
  */
 
 /**
