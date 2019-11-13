@@ -1654,6 +1654,245 @@ QmiMessageDmsDellGetFirmwareVersionOutput *qmi_client_dms_dell_get_firmware_vers
     GAsyncResult *res,
     GError **error);
 
+/*****************************************************************************/
+/* Helper enums for the 'QMI DMS Dell Change Device Mode' message */
+
+/**
+ * QmiDmsDellDeviceMode:
+ * @QMI_DMS_DELL_DEVICE_MODE_UNKNOWN: Unknown mode.
+ * @QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_ONLINE: Fastboot download mode for full partition files.
+ * @QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_OTA: Fastboot download mode for OTA files.
+ *
+ * Dell specific device modes.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use #QmiDmsFoxconnDeviceMode instead.
+ */
+typedef enum {
+    QMI_DMS_DELL_DEVICE_MODE_UNKNOWN         = QMI_DMS_FOXCONN_DEVICE_MODE_UNKNOWN,
+    QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_ONLINE = QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_ONLINE,
+    QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_OTA    = QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_OTA,
+} QmiDmsDellDeviceMode;
+
+G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_type)
+GType qmi_dms_dell_device_mode_get_type (void) G_GNUC_CONST;
+G_DEPRECATED_FOR (QMI_TYPE_DMS_FOXCONN_DEVICE_MODE)
+#define QMI_TYPE_DMS_DELL_DEVICE_MODE QMI_TYPE_DMS_FOXCONN_DEVICE_MODE
+
+/**
+ * qmi_dms_dell_device_mode_get_string:
+ * @val: a QmiDmsDellDeviceMode.
+ *
+ * Gets the nickname string for the #QmiDmsDellDeviceMode specified at @val.
+ *
+ * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_dms_foxconn_device_mode_get_string() instead.
+ */
+G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_string)
+const gchar *qmi_dms_dell_device_mode_get_string (QmiDmsDellDeviceMode val);
+
+/**
+ * QmiMessageDmsDellChangeDeviceModeInput:
+ *
+ * The #QmiMessageDmsDellChangeDeviceModeInput structure contains private data and should only be accessed
+ * using the provided API.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use #QmiMessageDmsFoxconnChangeDeviceModeInput instead.
+ */
+#define QmiMessageDmsDellChangeDeviceModeInput QmiMessageDmsFoxconnChangeDeviceModeInput
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_get_type)
+GType qmi_message_dms_dell_change_device_mode_input_get_type (void) G_GNUC_CONST;
+G_DEPRECATED_FOR (QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_INPUT)
+#define QMI_TYPE_MESSAGE_DMS_DELL_CHANGE_DEVICE_MODE_INPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_INPUT
+
+/**
+ * qmi_message_dms_dell_change_device_mode_input_get_mode:
+ * @self: a #QmiMessageDmsDellChangeDeviceModeInput.
+ * @value_mode: a placeholder for the output #QmiDmsDellDeviceMode, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Mode' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_change_device_mode_input_get_mode() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_get_mode)
+gboolean qmi_message_dms_dell_change_device_mode_input_get_mode (
+    QmiMessageDmsDellChangeDeviceModeInput *self,
+    QmiDmsDellDeviceMode *value_mode,
+    GError **error);
+
+/**
+ * qmi_message_dms_dell_change_device_mode_input_set_mode:
+ * @self: a #QmiMessageDmsDellChangeDeviceModeInput.
+ * @value_mode: a #QmiDmsDellDeviceMode.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Mode' field in the message.
+ *
+ * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_change_device_mode_input_set_mode() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_set_mode)
+gboolean qmi_message_dms_dell_change_device_mode_input_set_mode (
+    QmiMessageDmsDellChangeDeviceModeInput *self,
+    QmiDmsDellDeviceMode value_mode,
+    GError **error);
+
+/**
+ * qmi_message_dms_dell_change_device_mode_input_ref:
+ * @self: a #QmiMessageDmsDellChangeDeviceModeInput.
+ *
+ * Atomically increments the reference count of @self by one.
+ *
+ * Returns: the new reference to @self.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_change_device_mode_input_ref() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_ref)
+QmiMessageDmsDellChangeDeviceModeInput *qmi_message_dms_dell_change_device_mode_input_ref (QmiMessageDmsDellChangeDeviceModeInput *self);
+
+/**
+ * qmi_message_dms_dell_change_device_mode_input_unref:
+ * @self: a #QmiMessageDmsDellChangeDeviceModeInput.
+ *
+ * Atomically decrements the reference count of @self by one.
+ * If the reference count drops to 0, @self is completely disposed.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_change_device_mode_input_unref() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_unref)
+void qmi_message_dms_dell_change_device_mode_input_unref (QmiMessageDmsDellChangeDeviceModeInput *self);
+
+/**
+ * qmi_message_dms_dell_change_device_mode_input_new:
+ *
+ * Allocates a new #QmiMessageDmsDellChangeDeviceModeInput.
+ *
+ * Returns: the newly created #QmiMessageDmsDellChangeDeviceModeInput. The returned value should be freed with qmi_message_dms_dell_change_device_mode_input_unref().
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_change_device_mode_input_new() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_new)
+QmiMessageDmsDellChangeDeviceModeInput *qmi_message_dms_dell_change_device_mode_input_new (void);
+
+/* --- Output -- */
+
+/**
+ * QmiMessageDmsDellChangeDeviceModeOutput:
+ *
+ * The #QmiMessageDmsDellChangeDeviceModeOutput structure contains private data and should only be accessed
+ * using the provided API.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use  instead.
+ */
+#define QmiMessageDmsDellChangeDeviceModeOutput QmiMessageDmsFoxconnChangeDeviceModeOutput
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_output_get_type)
+GType qmi_message_dms_dell_change_device_mode_output_get_type (void) G_GNUC_CONST;
+G_DEPRECATED_FOR (QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_OUTPUT)
+#define QMI_TYPE_MESSAGE_DMS_DELL_CHANGE_DEVICE_MODE_OUTPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_OUTPUT
+
+/**
+ * qmi_message_dms_dell_change_device_mode_output_get_result:
+ * @self: a QmiMessageDmsDellChangeDeviceModeOutput.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the result of the QMI operation.
+ *
+ * Returns: %TRUE if the QMI operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_change_device_mode_output_get_result() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_output_get_result)
+gboolean qmi_message_dms_dell_change_device_mode_output_get_result (
+    QmiMessageDmsDellChangeDeviceModeOutput *self,
+    GError **error);
+
+/**
+ * qmi_message_dms_dell_change_device_mode_output_ref:
+ * @self: a #QmiMessageDmsDellChangeDeviceModeOutput.
+ *
+ * Atomically increments the reference count of @self by one.
+ *
+ * Returns: the new reference to @self.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_change_device_mode_output_ref() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_output_ref)
+QmiMessageDmsDellChangeDeviceModeOutput *qmi_message_dms_dell_change_device_mode_output_ref (QmiMessageDmsDellChangeDeviceModeOutput *self);
+
+/**
+ * qmi_message_dms_dell_change_device_mode_output_unref:
+ * @self: a #QmiMessageDmsDellChangeDeviceModeOutput.
+ *
+ * Atomically decrements the reference count of @self by one.
+ * If the reference count drops to 0, @self is completely disposed.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_message_dms_foxconn_change_device_mode_output_unref() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_output_unref)
+void qmi_message_dms_dell_change_device_mode_output_unref (QmiMessageDmsDellChangeDeviceModeOutput *self);
+
+/**
+ * qmi_client_dms_dell_change_device_mode:
+ * @self: a #QmiClientDms.
+ * @input: a #QmiMessageDmsDellChangeDeviceModeInput.
+ * @timeout: maximum time to wait for the method to complete, in seconds.
+ * @cancellable: a #GCancellable or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the request is satisfied.
+ * @user_data: user data to pass to @callback.
+ *
+ * Asynchronously sends a Dell Change Device Mode request to the device.
+ *
+ * When the operation is finished, @callback will be invoked in the thread-default main loop of the thread you are calling this method from.
+ *
+ * You can then call qmi_client_dms_dell_change_device_mode_finish() to get the result of the operation.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_client_dms_foxconn_change_device_mode() instead.
+ */
+G_DEPRECATED_FOR (qmi_client_dms_foxconn_change_device_mode)
+void qmi_client_dms_dell_change_device_mode (
+    QmiClientDms *self,
+    QmiMessageDmsDellChangeDeviceModeInput *input,
+    guint timeout,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data);
+
+/**
+ * qmi_client_dms_dell_change_device_mode_finish:
+ * @self: a #QmiClientDms.
+ * @res: the #GAsyncResult obtained from the #GAsyncReadyCallback passed to qmi_client_dms_dell_change_device_mode().
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an async operation started with qmi_client_dms_dell_change_device_mode().
+ *
+ * Returns: a #QmiMessageDmsDellChangeDeviceModeOutput, or %NULL if @error is set. The returned value should be freed with qmi_message_dms_dell_change_device_mode_output_unref().
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_client_dms_foxconn_change_device_mode_finish() instead.
+ */
+G_DEPRECATED_FOR (qmi_client_dms_foxconn_change_device_mode_finish)
+QmiMessageDmsDellChangeDeviceModeOutput *qmi_client_dms_dell_change_device_mode_finish (
+    QmiClientDms *self,
+    GAsyncResult *res,
+    GError **error);
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */

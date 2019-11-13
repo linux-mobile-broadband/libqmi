@@ -606,28 +606,28 @@ const gchar *qmi_dms_swi_usb_composition_get_description (QmiDmsSwiUsbCompositio
  */
 
 /*****************************************************************************/
-/* Helper enums for the 'QMI DMS Dell Change Device Mode' message */
+/* Helper enums for the 'QMI DMS Foxconn Change Device Mode' message */
 
 /**
- * QmiDmsDellDeviceMode:
- * @QMI_DMS_DELL_DEVICE_MODE_UNKNOWN: Unknown mode.
- * @QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_ONLINE: Fastboot download mode for full partition files.
- * @QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_OTA: Fastboot download mode for OTA files.
+ * QmiDmsFoxconnDeviceMode:
+ * @QMI_DMS_FOXCONN_DEVICE_MODE_UNKNOWN: Unknown mode.
+ * @QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_ONLINE: Fastboot download mode for full partition files.
+ * @QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_OTA: Fastboot download mode for OTA files.
  *
- * Dell specific device modes.
+ * Foxconn specific device modes.
  *
- * Since: 1.22.4
+ * Since: 1.26
  */
 typedef enum {
-    QMI_DMS_DELL_DEVICE_MODE_UNKNOWN         = 0,
-    QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_ONLINE = 0x05,
-    QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_OTA    = 0x0A,
-} QmiDmsDellDeviceMode;
+    QMI_DMS_FOXCONN_DEVICE_MODE_UNKNOWN         = 0,
+    QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_ONLINE = 0x05,
+    QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_OTA    = 0x0A,
+} QmiDmsFoxconnDeviceMode;
 
 /**
- * qmi_dms_dell_device_mode_get_string:
+ * qmi_dms_foxconn_device_mode_get_string:
  *
- * Since: 1.22.4
+ * Since: 1.26
  */
 
 /*****************************************************************************/

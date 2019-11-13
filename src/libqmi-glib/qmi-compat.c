@@ -858,4 +858,105 @@ qmi_client_dms_dell_get_firmware_version_finish (
     return qmi_client_dms_foxconn_get_firmware_version_finish (self, res, error);
 }
 
+GType
+qmi_dms_dell_device_mode_get_type (void)
+{
+    return qmi_dms_foxconn_device_mode_get_type ();
+}
+
+const gchar *
+qmi_dms_dell_device_mode_get_string (QmiDmsDellDeviceMode val)
+{
+    return qmi_dms_foxconn_device_mode_get_string ((QmiDmsFoxconnDeviceMode) val);
+}
+
+GType
+qmi_message_dms_dell_change_device_mode_input_get_type (void)
+{
+    return qmi_message_dms_foxconn_change_device_mode_input_get_type ();
+}
+
+gboolean
+qmi_message_dms_dell_change_device_mode_input_get_mode (
+    QmiMessageDmsDellChangeDeviceModeInput *self,
+    QmiDmsDellDeviceMode *value_mode,
+    GError **error)
+{
+    return qmi_message_dms_foxconn_change_device_mode_input_get_mode (self, (QmiDmsFoxconnDeviceMode *) value_mode, error);
+}
+
+gboolean
+qmi_message_dms_dell_change_device_mode_input_set_mode (
+    QmiMessageDmsDellChangeDeviceModeInput *self,
+    QmiDmsDellDeviceMode value_mode,
+    GError **error)
+{
+    return qmi_message_dms_foxconn_change_device_mode_input_set_mode (self, (QmiDmsFoxconnDeviceMode) value_mode, error);
+}
+
+QmiMessageDmsDellChangeDeviceModeInput *
+qmi_message_dms_dell_change_device_mode_input_ref (QmiMessageDmsDellChangeDeviceModeInput *self)
+{
+    return qmi_message_dms_foxconn_change_device_mode_input_ref (self);
+}
+
+void
+qmi_message_dms_dell_change_device_mode_input_unref (QmiMessageDmsDellChangeDeviceModeInput *self)
+{
+    qmi_message_dms_foxconn_change_device_mode_input_unref (self);
+}
+
+QmiMessageDmsDellChangeDeviceModeInput *
+qmi_message_dms_dell_change_device_mode_input_new (void)
+{
+    return qmi_message_dms_foxconn_change_device_mode_input_new ();
+}
+
+GType
+qmi_message_dms_dell_change_device_mode_output_get_type (void)
+{
+    return qmi_message_dms_foxconn_change_device_mode_output_get_type ();
+}
+
+gboolean
+qmi_message_dms_dell_change_device_mode_output_get_result (
+    QmiMessageDmsDellChangeDeviceModeOutput *self,
+    GError **error)
+{
+    return qmi_message_dms_foxconn_change_device_mode_output_get_result (self, error);
+}
+
+QmiMessageDmsDellChangeDeviceModeOutput *
+qmi_message_dms_dell_change_device_mode_output_ref (QmiMessageDmsDellChangeDeviceModeOutput *self)
+{
+    return qmi_message_dms_foxconn_change_device_mode_output_ref (self);
+}
+
+void
+qmi_message_dms_dell_change_device_mode_output_unref (QmiMessageDmsDellChangeDeviceModeOutput *self)
+{
+    qmi_message_dms_foxconn_change_device_mode_output_unref (self);
+}
+
+void
+qmi_client_dms_dell_change_device_mode (
+    QmiClientDms *self,
+    QmiMessageDmsDellChangeDeviceModeInput *input,
+    guint timeout,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data)
+{
+    qmi_client_dms_foxconn_change_device_mode (self, input, timeout, cancellable, callback, user_data);
+}
+
+QmiMessageDmsDellChangeDeviceModeOutput *
+qmi_client_dms_dell_change_device_mode_finish (
+    QmiClientDms *self,
+    GAsyncResult *res,
+    GError **error)
+{
+    return qmi_client_dms_foxconn_change_device_mode_finish (self, res, error);
+}
+
 #endif /* QMI_DISABLE_DEPRECATED */

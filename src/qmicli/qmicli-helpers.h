@@ -41,7 +41,7 @@
     QMICLI_ENUM_LIST_ITEM (QmiDmsBootImageDownloadMode,      dms_boot_image_download_mode,      "boot image download mode")      \
     QMICLI_ENUM_LIST_ITEM (QmiDmsHpDeviceMode,               dms_hp_device_mode,                "hp device mode")                \
     QMICLI_ENUM_LIST_ITEM (QmiDmsSwiUsbComposition,          dms_swi_usb_composition,           "swi usb composition")           \
-    QMICLI_ENUM_LIST_ITEM (QmiDmsDellDeviceMode,             dms_dell_device_mode,              "dell device mode")           \
+    QMICLI_ENUM_LIST_ITEM (QmiDmsFoxconnDeviceMode,          dms_foxconn_device_mode,           "foxconn device mode")           \
     QMICLI_ENUM_LIST_ITEM (QmiDmsFoxconnFirmwareVersionType, dms_foxconn_firmware_version_type, "foxconn firmware version type") \
     QMICLI_ENUM_LIST_ITEM (QmiUimSessionType,                uim_session_type,                  "session type")                  \
     QMICLI_ENUM_LIST_ITEM (QmiDsdApnType,                    dsd_apn_type,                      "apn type")                      \

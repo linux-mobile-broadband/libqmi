@@ -125,7 +125,7 @@
       <xi:include href="xml/qmi-message-dms-swi-set-usb-composition.xml"/>
       <xi:include href="xml/qmi-message-dms-foxconn-get-firmware-version.xml"/>
       <xi:include href="xml/qmi-message-dms-set-fcc-authentication.xml"/>
-      <xi:include href="xml/qmi-message-dms-dell-change-device-mode.xml"/>
+      <xi:include href="xml/qmi-message-dms-foxconn-change-device-mode.xml"/>
       <xi:include href="xml/qmi-message-dms-get-supported-messages.xml"/>
     </section>
   </chapter>

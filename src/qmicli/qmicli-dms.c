@@ -96,7 +96,8 @@ static gchar *hp_change_device_mode_str;
 static gboolean swi_get_current_firmware_flag;
 static gboolean swi_get_usb_composition_flag;
 static gchar *swi_set_usb_composition_str;
-static gchar *dell_change_device_mode_str;
+static gchar *dell_change_device_mode_str; /* deprecated */
+static gchar *foxconn_change_device_mode_str;
 static gchar *dell_get_firmware_version_str; /* deprecated */
 static gchar *foxconn_get_firmware_version_str;
 static gchar *get_mac_address_str;
@@ -308,8 +309,8 @@ static GOptionEntry entries[] = {
       "Set USB composition (Sierra Wireless specific)",
       "[#]"
     },
-    { "dms-dell-change-device-mode", 0, 0, G_OPTION_ARG_STRING, &dell_change_device_mode_str,
-      "Change device mode (DELL specific)",
+    { "dms-foxconn-change-device-mode", 0, 0, G_OPTION_ARG_STRING, &foxconn_change_device_mode_str,
+      "Change device mode (Foxconn specific)",
       "[fastboot-ota|fastboot-online]"
     },
     { "dms-foxconn-get-firmware-version", 0, 0, G_OPTION_ARG_STRING, &foxconn_get_firmware_version_str,
@@ -329,6 +330,10 @@ static GOptionEntry entries[] = {
       NULL
     },
     /* deprecated entries (hidden in --help) */
+    { "dms-dell-change-device-mode", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &dell_change_device_mode_str,
+      "Change device mode (DELL specific)",
+      "[fastboot-ota|fastboot-online]"
+    },
     { "dms-dell-get-firmware-version", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &dell_get_firmware_version_str,
       "Get firmware version (DELL specific)",
       "[firmware-mcfg-apps|firmware-mcfg|apps]"
@@ -412,6 +417,7 @@ qmicli_dms_options_enabled (void)
                  swi_get_usb_composition_flag +
                  !!swi_set_usb_composition_str +
                  !!dell_change_device_mode_str +
+                 !!foxconn_change_device_mode_str +
                  !!dell_get_firmware_version_str +
                  !!foxconn_get_firmware_version_str +
                  !!get_mac_address_str +
@@ -3681,24 +3687,24 @@ swi_set_usb_composition_input_create (const gchar *str)
     return input;
 }
 
-static QmiMessageDmsDellChangeDeviceModeInput *
-dell_change_device_mode_input_create (const gchar *str)
+static QmiMessageDmsFoxconnChangeDeviceModeInput *
+foxconn_change_device_mode_input_create (const gchar *str)
 {
-    QmiMessageDmsDellChangeDeviceModeInput *input = NULL;
-    QmiDmsDellDeviceMode mode;
+    QmiMessageDmsFoxconnChangeDeviceModeInput *input = NULL;
+    QmiDmsFoxconnDeviceMode mode;
     GError *error = NULL;
 
-    if (!qmicli_read_dms_dell_device_mode_from_string (str, &mode)) {
-        g_printerr ("error: couldn't parse input dell device mode : '%s'\n", str);
+    if (!qmicli_read_dms_foxconn_device_mode_from_string (str, &mode)) {
+        g_printerr ("error: couldn't parse input foxconn device mode : '%s'\n", str);
         return NULL;
     }
 
-    input = qmi_message_dms_dell_change_device_mode_input_new ();
-    if (!qmi_message_dms_dell_change_device_mode_input_set_mode (input, mode, &error)) {
+    input = qmi_message_dms_foxconn_change_device_mode_input_new ();
+    if (!qmi_message_dms_foxconn_change_device_mode_input_set_mode (input, mode, &error)) {
         g_printerr ("error: couldn't create input data bundle: '%s'\n",
                     error->message);
         g_error_free (error);
-        qmi_message_dms_dell_change_device_mode_input_unref (input);
+        qmi_message_dms_foxconn_change_device_mode_input_unref (input);
         return NULL;
     }
 
@@ -3706,13 +3712,13 @@ dell_change_device_mode_input_create (const gchar *str)
 }
 
 static void
-dell_change_device_mode_ready (QmiClientDms *client,
-                               GAsyncResult *res)
+foxconn_change_device_mode_ready (QmiClientDms *client,
+                                  GAsyncResult *res)
 {
-    QmiMessageDmsDellChangeDeviceModeOutput *output;
+    QmiMessageDmsFoxconnChangeDeviceModeOutput *output;
     GError *error = NULL;
 
-    output = qmi_client_dms_dell_change_device_mode_finish (client, res, &error);
+    output = qmi_client_dms_foxconn_change_device_mode_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         g_error_free (error);
@@ -3720,18 +3726,18 @@ dell_change_device_mode_ready (QmiClientDms *client,
         return;
     }
 
-    if (!qmi_message_dms_dell_change_device_mode_output_get_result (output, &error)) {
-        g_printerr ("error: couldn't change Dell device mode: %s\n", error->message);
+    if (!qmi_message_dms_foxconn_change_device_mode_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't change foxconn device mode: %s\n", error->message);
         g_error_free (error);
-        qmi_message_dms_dell_change_device_mode_output_unref (output);
+        qmi_message_dms_foxconn_change_device_mode_output_unref (output);
         operation_shutdown (FALSE);
         return;
     }
 
-    g_print ("[%s] Successfully changed Dell device mode\n",
+    g_print ("[%s] Successfully changed foxconn device mode\n",
              qmi_device_get_path_display (ctx->device));
 
-    qmi_message_dms_dell_change_device_mode_output_unref (output);
+    qmi_message_dms_foxconn_change_device_mode_output_unref (output);
 
     /* Changing the mode will end up power cycling the device right away, so
      * just ignore any error from now on and don't even try to release the
@@ -4683,24 +4689,24 @@ qmicli_dms_run (QmiDevice *device,
     }
 
     /* Request to change device download mode */
-    if (dell_change_device_mode_str) {
-        QmiMessageDmsDellChangeDeviceModeInput *input;
+    if (foxconn_change_device_mode_str || dell_change_device_mode_str) {
+        QmiMessageDmsFoxconnChangeDeviceModeInput *input;
 
-        g_debug ("Asynchronously changing device mode (Dell specific)...");
+        g_debug ("Asynchronously changing device mode (Foxconn specific)...");
 
-        input = dell_change_device_mode_input_create (dell_change_device_mode_str);
+        input = foxconn_change_device_mode_input_create (foxconn_change_device_mode_str ? foxconn_change_device_mode_str : dell_change_device_mode_str);
         if (!input) {
             operation_shutdown (FALSE);
             return;
         }
 
-        qmi_client_dms_dell_change_device_mode (ctx->client,
-                                                input,
-                                                10,
-                                                ctx->cancellable,
-                                                (GAsyncReadyCallback)dell_change_device_mode_ready,
-                                                NULL);
-        qmi_message_dms_dell_change_device_mode_input_unref (input);
+        qmi_client_dms_foxconn_change_device_mode (ctx->client,
+                                                   input,
+                                                   10,
+                                                   ctx->cancellable,
+                                                   (GAsyncReadyCallback)foxconn_change_device_mode_ready,
+                                                   NULL);
+        qmi_message_dms_foxconn_change_device_mode_input_unref (input);
         return;
     }
 
