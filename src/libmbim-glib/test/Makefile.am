@@ -1,6 +1,7 @@
 include $(top_srcdir)/gtester.make
 
 AM_CFLAGS = \
+	$(WARN_CFLAGS) \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/common \
@@ -11,6 +12,7 @@ AM_CFLAGS = \
 	$(NULL)
 
 AM_LDFLAGS = \
+	$(WARN_LDFLAGS) \
 	$(LIBMBIM_GLIB_LIBS) \
 	$(NULL)
 

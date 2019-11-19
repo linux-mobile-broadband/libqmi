@@ -2,6 +2,7 @@
 bin_PROGRAMS = mbimcli
 
 mbimcli_CPPFLAGS = \
+	$(WARN_CFLAGS) \
 	$(MBIMCLI_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/common \
@@ -30,6 +31,7 @@ mbimcli_LDADD = \
 	$(NULL)
 
 mbimcli_LDFLAGS = \
+	$(WARN_LDFLAGS) \
 	$(MBIMCLI_LIBS) \
 	$(NULL)
 

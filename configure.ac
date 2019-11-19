@@ -43,8 +43,32 @@ dnl Initialize libtool
 LT_PREREQ([2.2])
 LT_INIT
 
-dnl Specific warnings to always use
-LIBMBIM_COMPILER_WARNINGS
+dnl-----------------------------------------------------------------------------
+dnl Compiler warnings
+dnl
+
+dnl Make sure autoconf-archive is available
+m4_pattern_forbid([^AX_(COMPILER_FLAGS|COMPILER_FLAGS_(CFLAGS|GIR|LDFLAGS))\b],
+  [Unexpanded AX_ macro found. Please install GNU autoconf-archive])
+
+dnl Detect git or release builds
+AX_IS_RELEASE([git-directory])
+
+dnl Function type cast disabled: used throughout the code especially to
+dnl cast GAsyncReadyCallbacks with the real object type instead of GObject
+DISABLED_WARNINGS="${DISABLED_WARNINGS} -Wno-cast-function-type"
+
+dnl All message protocol structs are packed, never complain about it
+DISABLED_WARNINGS="${DISABLED_WARNINGS} -Wno-packed"
+
+dnl Setup compiler checks
+AX_COMPILER_FLAGS()
+AX_COMPILER_FLAGS_CFLAGS(,,,[${DISABLED_WARNINGS}])
+
+dnl Specify gnu89 mode
+if test "$GCC" = "yes"; then
+   CFLAGS="$CFLAGS -std=gnu89"
+fi
 
 dnl Version stuff
 MBIM_MAJOR_VERSION=mbim_major_version
@@ -209,6 +233,8 @@ echo "
       compiler:             ${CC}
       cflags:               ${CFLAGS}
       ldflags:              ${LDFLAGS}
+      warn cflags:          ${WARN_CFLAGS}
+      warn ldflags:         ${WARN_LDFLAGS}
       Maintainer mode:      ${USE_MAINTAINER_MODE}
       Documentation:        ${enable_gtk_doc}
 

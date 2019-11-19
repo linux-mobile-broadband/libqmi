@@ -4,6 +4,7 @@ SUBDIRS = . test
 noinst_LTLIBRARIES = libmbim-common.la
 
 libmbim_common_la_CPPFLAGS = \
+	$(WARN_CFLAGS) \
 	$(MBIM_COMMON_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
@@ -16,5 +17,6 @@ libmbim_common_la_SOURCES = \
 	$(NULL)
 
 libmbim_common_la_LDFLAGS = \
+	$(WARN_LDFLAGS) \
 	$(MBIM_COMMON_LIBS) \
 	$(NULL)

@@ -226,6 +226,7 @@ nodist_libmbim_glib_generated_la_SOURCES = \
 	$(NULL)
 
 libmbim_glib_generated_la_CPPFLAGS = \
+	$(WARN_CFLAGS) \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/libmbim-glib \
@@ -236,6 +237,7 @@ libmbim_glib_generated_la_CPPFLAGS = \
 	$(NULL)
 
 libmbim_glib_generated_la_LDFLAGS = \
+	$(WARN_LDFLAGS) \
 	$(LIBMBIM_GLIB_LIBS) \
 	$(NULL)
 

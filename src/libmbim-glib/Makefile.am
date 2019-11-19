@@ -4,6 +4,7 @@ SUBDIRS = generated . test
 # Core library, built as a noinst
 noinst_LTLIBRARIES = libmbim-glib-core.la
 libmbim_glib_core_la_CPPFLAGS = \
+	$(WARN_CFLAGS) \
 	$(LIBMBIM_GLIB_CFLAGS) \
 	$(GUDEV_CFLAGS) \
 	-I$(top_srcdir) \
@@ -44,6 +45,7 @@ libmbim_glib_la_LIBADD = \
 	$(NULL)
 
 libmbim_glib_la_LDFLAGS = \
+	$(WARN_LDFLAGS) \
 	-version-info $(MBIM_GLIB_LT_CURRENT):$(MBIM_GLIB_LT_REVISION):$(MBIM_GLIB_LT_AGE) \
 	-export-symbols-regex '^mbim_.*' \
 	$(LIBMBIM_GLIB_LIBS) \

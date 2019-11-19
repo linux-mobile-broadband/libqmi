@@ -2,6 +2,7 @@
 libexec_PROGRAMS = mbim-proxy
 
 mbim_proxy_CPPFLAGS = \
+	$(WARN_CFLAGS) \
 	$(MBIMPROXY_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/libmbim-glib \
@@ -17,6 +18,7 @@ mbim_proxy_LDADD = \
 	$(NULL)
 
 mbim_proxy_LDFLAGS = \
+	$(WARN_LDFLAGS) \
 	$(MBIMPROXY_LIBS) \
 	$(NULL)
 

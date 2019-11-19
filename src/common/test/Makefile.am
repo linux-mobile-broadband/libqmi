@@ -9,6 +9,7 @@ test_common_SOURCES = \
 	$(NULL)
 
 test_common_CPPFLAGS = \
+	$(WARN_CFLAGS) \
 	$(MBIM_COMMON_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
@@ -21,6 +22,7 @@ test_common_LDADD = \
 	$(NULL)
 
 test_common_LDFLAGS = \
+	$(WARN_LDFLAGS) \
 	$(MBIM_COMMON_LIBS) \
 	$(NULL)
 
