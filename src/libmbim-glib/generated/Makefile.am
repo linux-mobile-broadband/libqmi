@@ -222,7 +222,8 @@ BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 
 nodist_libmbim_glib_generated_la_SOURCES = \
 	$(GENERATED_H) \
-	$(GENERATED_C)
+	$(GENERATED_C) \
+	$(NULL)
 
 libmbim_glib_generated_la_CPPFLAGS = \
 	$(LIBMBIM_GLIB_CFLAGS) \
@@ -231,10 +232,12 @@ libmbim_glib_generated_la_CPPFLAGS = \
 	-I$(top_builddir)/src/libmbim-glib \
 	-DLIBMBIM_GLIB_COMPILATION \
 	-DG_LOG_DOMAIN=\"Mbim\" \
-	-Wno-unused-function
+	-Wno-unused-function \
+	$(NULL)
 
-libmbim_glib_generated_la_LIBADD = \
-	$(LIBMBIM_GLIB_LIBS)
+libmbim_glib_generated_la_LDFLAGS = \
+	$(LIBMBIM_GLIB_LIBS) \
+	$(NULL)
 
 includedir = @includedir@/libmbim-glib
 nodist_include_HEADERS = $(GENERATED_H)

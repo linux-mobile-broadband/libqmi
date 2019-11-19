@@ -15,7 +15,9 @@ libmbim_glib_core_la_CPPFLAGS = \
 	-I$(top_builddir)/src/libmbim-glib/generated \
 	-DLIBMBIM_GLIB_COMPILATION \
 	-DLIBEXEC_PATH=\""$(libexecdir)"\" \
-	-DG_LOG_DOMAIN=\"Mbim\"
+	-DG_LOG_DOMAIN=\"Mbim\" \
+	$(NULL)
+
 libmbim_glib_core_la_SOURCES = \
 	mbim-version.h \
 	mbim-errors.h \
@@ -27,24 +29,26 @@ libmbim_glib_core_la_SOURCES = \
 	mbim-device.h mbim-device.c \
 	mbim-compat.h mbim-compat.c \
 	mbim-proxy.h mbim-proxy.c \
-	mbim-proxy-helpers.h mbim-proxy-helpers.c
+	mbim-proxy-helpers.h mbim-proxy-helpers.c \
+	$(NULL)
 
 # Final installable library
 lib_LTLIBRARIES = libmbim-glib.la
 
-libmbim_glib_la_SOURCES = \
-	libmbim-glib.h
+libmbim_glib_la_SOURCES = libmbim-glib.h
 
 libmbim_glib_la_LIBADD = \
 	libmbim-glib-core.la \
 	${top_builddir}/src/common/libmbim-common.la \
 	${top_builddir}/src/libmbim-glib/generated/libmbim-glib-generated.la \
-	$(LIBMBIM_GLIB_LIBS) \
-	$(GUDEV_LIBS)
+	$(NULL)
 
 libmbim_glib_la_LDFLAGS = \
 	-version-info $(MBIM_GLIB_LT_CURRENT):$(MBIM_GLIB_LT_REVISION):$(MBIM_GLIB_LT_AGE) \
-	-export-symbols-regex '^mbim_.*'
+	-export-symbols-regex '^mbim_.*' \
+	$(LIBMBIM_GLIB_LIBS) \
+	$(GUDEV_LIBS) \
+	$(NULL)
 
 includedir = @includedir@/libmbim-glib
 include_HEADERS = \
@@ -58,7 +62,7 @@ include_HEADERS = \
 	mbim-message.h \
 	mbim-device.h \
 	mbim-compat.h \
-	mbim-proxy.h
+	mbim-proxy.h \
+	$(NULL)
 
-EXTRA_DIST = \
-	mbim-version.h.in
+EXTRA_DIST = mbim-version.h.in

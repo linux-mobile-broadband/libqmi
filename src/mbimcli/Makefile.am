@@ -8,7 +8,8 @@ mbimcli_CPPFLAGS = \
 	-I$(top_srcdir)/src/libmbim-glib \
 	-I$(top_builddir)/src/libmbim-glib \
 	-I$(top_srcdir)/src/libmbim-glib/generated \
-	-I$(top_builddir)/src/libmbim-glib/generated
+	-I$(top_builddir)/src/libmbim-glib/generated \
+	$(NULL)
 
 mbimcli_SOURCES = \
 	mbimcli.h mbimcli.c \
@@ -20,13 +21,17 @@ mbimcli_SOURCES = \
 	mbimcli-ms-host-shutdown.c \
 	mbimcli-atds.c \
 	mbimcli-intel-firmware-update.c \
-	mbimcli-ms-basic-connect-extensions.c
+	mbimcli-ms-basic-connect-extensions.c \
+	$(NULL)
 
 mbimcli_LDADD = \
-	$(MBIMCLI_LIBS) \
 	$(top_builddir)/src/common/libmbim-common.la \
-	$(top_builddir)/src/libmbim-glib/libmbim-glib.la
+	$(top_builddir)/src/libmbim-glib/libmbim-glib.la \
+	$(NULL)
 
+mbimcli_LDFLAGS = \
+	$(MBIMCLI_LIBS) \
+	$(NULL)
 
 completiondir = $(datadir)/bash-completion/completions
 
