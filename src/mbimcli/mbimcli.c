@@ -287,6 +287,14 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         mbimcli_ms_basic_connect_extensions_run (dev, cancellable);
         return;
+    case MBIM_SERVICE_SMS:
+    case MBIM_SERVICE_USSD:
+    case MBIM_SERVICE_STK:
+    case MBIM_SERVICE_AUTH:
+    case MBIM_SERVICE_PROXY_CONTROL:
+    case MBIM_SERVICE_QMI:
+        /* unsupported actions in the CLI */
+    case MBIM_SERVICE_INVALID:
     default:
         g_assert_not_reached ();
     }
