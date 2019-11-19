@@ -278,8 +278,6 @@ typedef enum {
     MBIM_CONTEXT_TYPE_LOCAL       = 9,
 } MbimContextType;
 
-const gchar *mbim_context_type_get_string (MbimContextType val);
-
 /* To/From context type */
 const MbimUuid  *mbim_uuid_from_context_type (MbimContextType  context_type);
 MbimContextType  mbim_uuid_to_context_type   (const MbimUuid  *uuid);
