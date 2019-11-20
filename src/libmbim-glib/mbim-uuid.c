@@ -430,6 +430,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_intel_firmware_update;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return &uuid_ms_basic_connect_extensions;
+    case MBIM_SERVICE_LAST:
+        g_assert_not_reached ();
     default:
         for (l = mbim_custom_service_list; l != NULL; l = l->next) {
             if (service == ((MbimCustomService *)l->data)->service_id)
