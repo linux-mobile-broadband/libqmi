@@ -158,6 +158,13 @@ _mbim_message_get_information_buffer_offset (const MbimMessage *self)
                 G_STRUCT_OFFSET (struct indicate_status_message, buffer));
         break;
 
+    case MBIM_MESSAGE_TYPE_INVALID:
+    case MBIM_MESSAGE_TYPE_OPEN:
+    case MBIM_MESSAGE_TYPE_CLOSE:
+    case MBIM_MESSAGE_TYPE_HOST_ERROR:
+    case MBIM_MESSAGE_TYPE_OPEN_DONE:
+    case MBIM_MESSAGE_TYPE_CLOSE_DONE:
+    case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
     default:
         g_assert_not_reached ();
         return 0;
