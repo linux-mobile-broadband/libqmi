@@ -226,6 +226,8 @@ mbim_cid_can_set (MbimService service,
         return cid_intel_firmware_update_config[cid - 1].set;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return cid_ms_basic_connect_extensions_config[cid - 1].set;
+    case MBIM_SERVICE_INVALID:
+    case MBIM_SERVICE_LAST:
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -280,6 +282,8 @@ mbim_cid_can_query (MbimService service,
         return cid_intel_firmware_update_config[cid - 1].query;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return cid_ms_basic_connect_extensions_config[cid - 1].query;
+    case MBIM_SERVICE_INVALID:
+    case MBIM_SERVICE_LAST:
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -334,6 +338,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_intel_firmware_update_config[cid - 1].notify;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return cid_ms_basic_connect_extensions_config[cid - 1].notify;
+    case MBIM_SERVICE_INVALID:
+    case MBIM_SERVICE_LAST:
     default:
         g_assert_not_reached ();
         return FALSE;
@@ -390,6 +396,7 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_intel_firmware_update_get_string (cid);
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return mbim_cid_ms_basic_connect_extensions_get_string (cid);
+    case MBIM_SERVICE_LAST:
     default:
         g_assert_not_reached ();
         return NULL;
