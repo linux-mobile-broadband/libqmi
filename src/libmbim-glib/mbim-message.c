@@ -1364,6 +1364,9 @@ mbim_message_get_printable (const MbimMessage *self,
         case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
             fields_printable = __mbim_message_ms_basic_connect_extensions_get_printable_fields (self, line_prefix, &error);
             break;
+        case MBIM_SERVICE_INVALID:
+        case MBIM_SERVICE_LAST:
+            g_assert_not_reached ();
         default:
             break;
         }
@@ -2319,6 +2322,12 @@ mbim_message_response_get_result (const MbimMessage  *self,
             *error = mbim_message_error_get_error (self);
         return FALSE;
 
+    case MBIM_MESSAGE_TYPE_INVALID:
+    case MBIM_MESSAGE_TYPE_OPEN:
+    case MBIM_MESSAGE_TYPE_CLOSE:
+    case MBIM_MESSAGE_TYPE_COMMAND:
+    case MBIM_MESSAGE_TYPE_HOST_ERROR:
+    case MBIM_MESSAGE_TYPE_INDICATE_STATUS:
     default:
         g_assert_not_reached ();
     }
