@@ -731,6 +731,7 @@ process_message (MbimDevice        *self,
     case MBIM_MESSAGE_TYPE_CLOSE:
     case MBIM_MESSAGE_TYPE_COMMAND:
     case MBIM_MESSAGE_TYPE_HOST_ERROR:
+    default:
         /* Shouldn't expect host-generated messages as replies */
         g_message ("[%s] Host-generated message received: ignoring",
                    self->priv->path_display);
@@ -1965,6 +1966,10 @@ device_write (MbimDevice    *self,
         case G_IO_STATUS_AGAIN:
             /* We're in a non-blocking channel and therefore we're up to receive
              * EAGAIN; just retry in this case. TODO: in an idle? */
+            break;
+
+        default:
+            g_assert_not_reached ();
             break;
         }
     }
