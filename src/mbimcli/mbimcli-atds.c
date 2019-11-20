@@ -182,6 +182,9 @@ query_signal_ready (MbimDevice   *device,
     case 7:
         error_rate_str = g_strdup_printf ("> 12.8%%");
         break;
+    default:
+        error_rate_str = g_strdup_printf ("unknown (%u)", error_rate);
+        break;
     }
 
     if (rscp == 0)
