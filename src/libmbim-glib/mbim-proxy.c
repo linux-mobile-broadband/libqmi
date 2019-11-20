@@ -1031,6 +1031,13 @@ process_message (MbimProxy   *self,
             return process_device_service_subscribe_list (self, client, message);
         /* Otherwise, standard command to forward */
         return process_command (self, client, message);
+    case MBIM_MESSAGE_TYPE_INVALID:
+    case MBIM_MESSAGE_TYPE_COMMAND_DONE:
+    case MBIM_MESSAGE_TYPE_INDICATE_STATUS:
+    case MBIM_MESSAGE_TYPE_HOST_ERROR:
+    case MBIM_MESSAGE_TYPE_OPEN_DONE:
+    case MBIM_MESSAGE_TYPE_CLOSE_DONE:
+    case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
     default:
         g_debug ("invalid message from client: not a command message");
         return FALSE;
