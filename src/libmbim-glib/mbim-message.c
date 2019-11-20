@@ -751,7 +751,7 @@ _mbim_struct_builder_append_string_array (MbimStructBuilder  *builder,
                                           guint32             n_values)
 {
     /* TODO */
-    g_assert_not_reached ();
+    g_warn_if_reached ();
 }
 
 void
