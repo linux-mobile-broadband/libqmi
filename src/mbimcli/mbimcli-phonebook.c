@@ -258,7 +258,7 @@ query_phonebook_read_ready (MbimDevice   *device,
     GError *error = NULL;
     guint32 entry_count;
     MbimPhonebookEntry **phonebook_entries;
-    gint i = 0;
+    guint i;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {

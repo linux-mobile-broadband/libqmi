@@ -1778,7 +1778,7 @@ provisioned_contexts_ready (MbimDevice   *device,
     MbimMessage *response;
     MbimProvisionedContextElement **provisioned_contexts;
     guint32 provisioned_contexts_count;
-    int i;
+    guint i;
     GError *error = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
