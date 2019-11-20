@@ -1312,6 +1312,9 @@ mbim_message_get_printable (const MbimMessage *self,
             g_free (uuid_printable);
         }
         break;
+
+    default:
+        g_assert_not_reached ();
     }
 
     if (service_read_fields != MBIM_SERVICE_INVALID) {
