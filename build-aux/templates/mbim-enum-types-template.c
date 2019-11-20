@@ -51,7 +51,7 @@ const gchar *
     guint i;
 
     for (i = 0; @enum_name@_values[i].value_nick; i++) {
-        if (val == @enum_name@_values[i].value)
+        if ((gint)val == @enum_name@_values[i].value)
             return @enum_name@_values[i].value_nick;
     }
 
@@ -82,7 +82,7 @@ gchar *
 
     for (i = 0; @enum_name@_values[i].value_nick; i++) {
         /* We also look for exact matches */
-        if (mask == @enum_name@_values[i].value) {
+        if ((guint)mask == @enum_name@_values[i].value) {
             if (str)
                 g_string_free (str, TRUE);
             return g_strdup (@enum_name@_values[i].value_nick);
