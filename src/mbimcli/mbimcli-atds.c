@@ -197,14 +197,14 @@ query_signal_ready (MbimDevice   *device,
     if (ecno == 0)
         ecno_str = g_strdup_printf ("< -24 dBm");
     else if (ecno < 49)
-        ecno_str = g_strdup_printf ("%.2f dBm", -24.0 + ((float) ecno / 2));
+        ecno_str = g_strdup_printf ("%.2lf dBm", -24.0 + ((gdouble)ecno / 2));
     else if (ecno == 49)
         ecno_str = g_strdup_printf (">= 0.5 dBm");
 
     if (rsrq == 0)
         rsrq_str = g_strdup_printf ("< -19.5 dBm");
     else if (rsrq < 34)
-        rsrq_str = g_strdup_printf ("%.2f dBm", -19.5 + ((float) rsrq / 2));
+        rsrq_str = g_strdup_printf ("%.2lf dBm", -19.5 + ((gdouble)rsrq / 2));
     else if (rsrq == 34)
         rsrq_str = g_strdup_printf (">= -2.5 dBm");
 
