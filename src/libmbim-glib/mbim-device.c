@@ -1599,7 +1599,7 @@ device_open_context_step (GTask *task)
         self->priv->open_status = OPEN_STATUS_OPENING;
 
         ctx->step++;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_CREATE_IOCHANNEL:
         create_iochannel (self,
@@ -1614,7 +1614,7 @@ device_open_context_step (GTask *task)
             return;
         }
         ctx->step++;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_CLOSE_MESSAGE:
         /* Only send an explicit close during open if needed */
@@ -1624,7 +1624,7 @@ device_open_context_step (GTask *task)
             return;
         }
         ctx->step++;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_OPEN_MESSAGE:
         /* If the device is already in-session, avoid the open message */
@@ -1633,7 +1633,7 @@ device_open_context_step (GTask *task)
             return;
         }
         ctx->step++;
-        /* Fall down */
+        /* Fall through */
 
     case DEVICE_OPEN_CONTEXT_STEP_LAST:
         /* Nothing else to process, complete without error */
