@@ -2428,7 +2428,15 @@ bind_mux_data_port_properties_handle (const gchar *key,
     }
 
     if (g_ascii_strcasecmp (key, "ep-iface-number") == 0) {
-        props->ep_iface_number = atoi(value);
+        guint aux;
+
+        if (!qmicli_read_uint_from_string (value, &aux)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "failed reading key 'ep-iface-number' value");
+            return FALSE;
+        }
+
+        props->ep_iface_number = (gint) aux;
         return TRUE;
     }
 
