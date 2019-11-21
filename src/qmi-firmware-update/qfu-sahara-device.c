@@ -960,6 +960,7 @@ firehose_init_prepare_request (QfuSaharaDevice     *self,
     case FIREHOSE_INIT_STEP_WAIT_STORAGE_INFO:
         /* not sending anything, just processing responses */
         return NULL;
+    case FIREHOSE_INIT_STEP_LAST:
     default:
         g_assert_not_reached ();
         return NULL;
