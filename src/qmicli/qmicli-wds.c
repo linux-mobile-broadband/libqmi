@@ -519,7 +519,7 @@ start_network_input_create (const gchar                     *str,
                             GError                         **error)
 {
     gchar *aux_auth_str = NULL;
-    gchar *ip_type_str = NULL;
+    const gchar *ip_type_str = NULL;
     gchar **split = NULL;
     StartNetworkProperties props = {
         .auth    = QMI_WDS_AUTHENTICATION_NONE,
