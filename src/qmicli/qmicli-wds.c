@@ -2394,7 +2394,7 @@ typedef struct {
     guint8 mux_id;
     guint8 ep_type;
     gint ep_iface_number;
-    guint32 client_type;
+    QmiWdsClientType client_type;
 } BindMuxDataPortProperties;
 
 static gboolean
