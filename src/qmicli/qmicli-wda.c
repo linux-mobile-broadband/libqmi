@@ -307,7 +307,7 @@ typedef struct {
     guint32 dl_datagram_max_size;
     guint32 dl_max_datagrams;
     QmiDataEndpointType endpoint_type;
-    guint32 endpoint_iface_number;
+    gint endpoint_iface_number;
 } SetDataFormatProperties;
 
 
