@@ -60,7 +60,6 @@ static gboolean get_packet_service_status_flag;
 static gboolean get_packet_statistics_flag;
 static gboolean get_data_bearer_technology_flag;
 static gboolean get_current_data_bearer_technology_flag;
-static gboolean get_current_data_bearer_technology_flag;
 static gboolean go_dormant_flag;
 static gboolean go_active_flag;
 static gboolean get_dormancy_status_flag;
