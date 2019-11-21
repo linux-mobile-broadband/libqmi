@@ -328,7 +328,7 @@ receive_response (QfuQdlDevice  *self,
     gint           aux;
     gssize         rlen;
     guint8        *end;
-    gsize          frame_size;
+    gssize         frame_size;
     gsize          max_unframed_size;
     gsize          unframed_size;
 
@@ -395,6 +395,7 @@ receive_response (QfuQdlDevice  *self,
     }
 
     frame_size = end - self->priv->buffer->data + 1;
+    g_assert (frame_size >= 0);
     g_assert (frame_size <= rlen);
     if (frame_size < 5) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
@@ -403,14 +404,14 @@ receive_response (QfuQdlDevice  *self,
     }
 
     if (frame_size < rlen)
-        g_debug ("[qfu-qdl-device] received %" G_GSIZE_FORMAT " trailing bytes after HDLC frame (ignored)",
+        g_debug ("[qfu-qdl-device] received %" G_GSSIZE_FORMAT " trailing bytes after HDLC frame (ignored)",
                  rlen - frame_size);
 
     max_unframed_size = hdlc_max_unframed_size (frame_size);
     if (G_UNLIKELY (max_unframed_size > self->priv->secondary_buffer->len))
         g_byte_array_set_size (self->priv->secondary_buffer, max_unframed_size);
 
-    unframed_size = hdlc_unframe (self->priv->buffer->data, frame_size, self->priv->secondary_buffer->data, self->priv->secondary_buffer->len, error);
+    unframed_size = hdlc_unframe (self->priv->buffer->data, (gsize)frame_size, self->priv->secondary_buffer->data, self->priv->secondary_buffer->len, error);
     if (unframed_size == 0) {
         g_prefix_error (error, "error unframing message: ");
         return -1;
