@@ -1640,6 +1640,42 @@ qmi_message_get_printable_full (QmiMessage        *self,
     case QMI_SERVICE_DSD:
         contents = __qmi_message_dsd_get_printable (self, context, line_prefix);
         break;
+
+    case QMI_SERVICE_UNKNOWN:
+        g_assert_not_reached ();
+
+    case QMI_SERVICE_AUTH:
+    case QMI_SERVICE_AT:
+    case QMI_SERVICE_CAT2:
+    case QMI_SERVICE_QCHAT:
+    case QMI_SERVICE_RMTFS:
+    case QMI_SERVICE_TEST:
+    case QMI_SERVICE_SAR:
+    case QMI_SERVICE_IMS:
+    case QMI_SERVICE_ADC:
+    case QMI_SERVICE_CSD:
+    case QMI_SERVICE_MFS:
+    case QMI_SERVICE_TIME:
+    case QMI_SERVICE_TS:
+    case QMI_SERVICE_TMD:
+    case QMI_SERVICE_SAP:
+    case QMI_SERVICE_TSYNC:
+    case QMI_SERVICE_RFSA:
+    case QMI_SERVICE_CSVT:
+    case QMI_SERVICE_QCMAP:
+    case QMI_SERVICE_IMSP:
+    case QMI_SERVICE_IMSVT:
+    case QMI_SERVICE_IMSA:
+    case QMI_SERVICE_COEX:
+    case QMI_SERVICE_STX:
+    case QMI_SERVICE_BIT:
+    case QMI_SERVICE_IMSRTP:
+    case QMI_SERVICE_RFRPE:
+    case QMI_SERVICE_SSCTL:
+    case QMI_SERVICE_CAT:
+    case QMI_SERVICE_RMS:
+    case QMI_SERVICE_FOTA:
+    case QMI_SERVICE_GMS:
     default:
         break;
     }
@@ -1667,36 +1703,62 @@ qmi_message_get_version_introduced_full (QmiMessage        *self,
 
     case QMI_SERVICE_DMS:
         return __qmi_message_dms_get_version_introduced (self, context, major, minor);
-
     case QMI_SERVICE_WDS:
         return __qmi_message_wds_get_version_introduced (self, context, major, minor);
-
     case QMI_SERVICE_NAS:
         return __qmi_message_nas_get_version_introduced (self, context, major, minor);
-
     case QMI_SERVICE_WMS:
         return __qmi_message_wms_get_version_introduced (self, context, major, minor);
-
     case QMI_SERVICE_PDS:
         return __qmi_message_pds_get_version_introduced (self, context, major, minor);
-
     case QMI_SERVICE_PBM:
         return __qmi_message_pbm_get_version_introduced (self, context, major, minor);
-
     case QMI_SERVICE_UIM:
         return __qmi_message_uim_get_version_introduced (self, context, major, minor);
-
     case QMI_SERVICE_OMA:
         return __qmi_message_oma_get_version_introduced (self, context, major, minor);
-
     case QMI_SERVICE_GAS:
         return __qmi_message_oma_get_version_introduced (self, context, major, minor);
-
     case QMI_SERVICE_WDA:
         return __qmi_message_wda_get_version_introduced (self, context, major, minor);
-
     case QMI_SERVICE_LOC:
         return __qmi_message_loc_get_version_introduced (self, context, major, minor);
+
+    case QMI_SERVICE_UNKNOWN:
+        g_assert_not_reached ();
+
+    case QMI_SERVICE_AUTH:
+    case QMI_SERVICE_AT:
+    case QMI_SERVICE_CAT2:
+    case QMI_SERVICE_QCHAT:
+    case QMI_SERVICE_RMTFS:
+    case QMI_SERVICE_TEST:
+    case QMI_SERVICE_SAR:
+    case QMI_SERVICE_IMS:
+    case QMI_SERVICE_ADC:
+    case QMI_SERVICE_CSD:
+    case QMI_SERVICE_MFS:
+    case QMI_SERVICE_TIME:
+    case QMI_SERVICE_TS:
+    case QMI_SERVICE_TMD:
+    case QMI_SERVICE_SAP:
+    case QMI_SERVICE_TSYNC:
+    case QMI_SERVICE_RFSA:
+    case QMI_SERVICE_CSVT:
+    case QMI_SERVICE_QCMAP:
+    case QMI_SERVICE_IMSP:
+    case QMI_SERVICE_IMSVT:
+    case QMI_SERVICE_IMSA:
+    case QMI_SERVICE_COEX:
+    case QMI_SERVICE_STX:
+    case QMI_SERVICE_BIT:
+    case QMI_SERVICE_IMSRTP:
+    case QMI_SERVICE_RFRPE:
+    case QMI_SERVICE_SSCTL:
+    case QMI_SERVICE_CAT:
+    case QMI_SERVICE_RMS:
+    case QMI_SERVICE_FOTA:
+    case QMI_SERVICE_GMS:
 
     default:
         /* For the still unsupported services, cannot do anything */
@@ -1713,6 +1775,56 @@ __qmi_message_is_abortable (QmiMessage        *self,
         return __qmi_message_wds_is_abortable (self, context);
     case QMI_SERVICE_NAS:
         return __qmi_message_nas_is_abortable (self, context);
+
+    case QMI_SERVICE_UNKNOWN:
+        g_assert_not_reached ();
+
+    case QMI_SERVICE_CTL:
+    case QMI_SERVICE_DMS:
+    case QMI_SERVICE_WMS:
+    case QMI_SERVICE_PDS:
+    case QMI_SERVICE_PBM:
+    case QMI_SERVICE_UIM:
+    case QMI_SERVICE_OMA:
+    case QMI_SERVICE_GAS:
+    case QMI_SERVICE_WDA:
+    case QMI_SERVICE_LOC:
+    case QMI_SERVICE_AUTH:
+    case QMI_SERVICE_AT:
+    case QMI_SERVICE_CAT2:
+    case QMI_SERVICE_QCHAT:
+    case QMI_SERVICE_RMTFS:
+    case QMI_SERVICE_TEST:
+    case QMI_SERVICE_SAR:
+    case QMI_SERVICE_IMS:
+    case QMI_SERVICE_ADC:
+    case QMI_SERVICE_CSD:
+    case QMI_SERVICE_MFS:
+    case QMI_SERVICE_TIME:
+    case QMI_SERVICE_TS:
+    case QMI_SERVICE_TMD:
+    case QMI_SERVICE_SAP:
+    case QMI_SERVICE_TSYNC:
+    case QMI_SERVICE_RFSA:
+    case QMI_SERVICE_CSVT:
+    case QMI_SERVICE_QCMAP:
+    case QMI_SERVICE_IMSP:
+    case QMI_SERVICE_IMSVT:
+    case QMI_SERVICE_IMSA:
+    case QMI_SERVICE_COEX:
+    case QMI_SERVICE_STX:
+    case QMI_SERVICE_BIT:
+    case QMI_SERVICE_IMSRTP:
+    case QMI_SERVICE_RFRPE:
+    case QMI_SERVICE_SSCTL:
+    case QMI_SERVICE_CAT:
+    case QMI_SERVICE_RMS:
+    case QMI_SERVICE_FOTA:
+    case QMI_SERVICE_GMS:
+    case QMI_SERVICE_VOICE:
+    case QMI_SERVICE_PDC:
+    case QMI_SERVICE_DSD:
+    case QMI_SERVICE_QOS:
     default:
         return FALSE;
     }
