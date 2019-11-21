@@ -4,6 +4,7 @@ SUBDIRS = generated . test
 lib_LTLIBRARIES = libqmi-glib.la
 
 libqmi_glib_la_CPPFLAGS = \
+	$(WARN_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(MBIM_CFLAGS) \
 	-I$(top_srcdir) \
@@ -14,7 +15,8 @@ libqmi_glib_la_CPPFLAGS = \
 	-I$(top_builddir)/src/libqmi-glib/generated \
 	-DLIBQMI_GLIB_COMPILATION \
 	-DLIBEXEC_PATH=\""$(libexecdir)"\" \
-	-DG_LOG_DOMAIN=\"Qmi\"
+	-DG_LOG_DOMAIN=\"Qmi\" \
+	$(NULL)
 
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
@@ -54,11 +56,14 @@ endif
 
 libqmi_glib_la_LIBADD = \
 	${top_builddir}/src/libqmi-glib/generated/libqmi-glib-generated.la \
-	$(GLIB_LIBS) \
-	$(MBIM_LIBS)
+	$(NULL)
 
 libqmi_glib_la_LDFLAGS = \
-	-version-info $(QMI_GLIB_LT_CURRENT):$(QMI_GLIB_LT_REVISION):$(QMI_GLIB_LT_AGE)
+	-version-info $(QMI_GLIB_LT_CURRENT):$(QMI_GLIB_LT_REVISION):$(QMI_GLIB_LT_AGE) \
+	$(WARN_CFLAGS) \
+	$(GLIB_LIBS) \
+	$(MBIM_LIBS) \
+	$(NULL)
 
 includedir = @includedir@/libqmi-glib
 include_HEADERS = \

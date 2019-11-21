@@ -1,17 +1,7 @@
 include $(top_srcdir)/gtester.make
 
-noinst_PROGRAMS = \
-	test-utils \
-	test-firehose \
-	$(NULL)
-
-TEST_PROGS += $(noinst_PROGRAMS)
-
-test_utils_SOURCES = \
-	test-utils.c \
-	$(NULL)
-
-test_utils_CPPFLAGS = \
+AM_CFLAGS = \
+	$(WARN_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/libqmi-glib \
@@ -19,28 +9,23 @@ test_utils_CPPFLAGS = \
 	-I$(top_builddir)/src/libqmi-glib \
 	-I$(top_builddir)/src/libqmi-glib/generated \
 	-I$(top_srcdir)/src/qmi-firmware-update \
-	-I$(top_builddir)/src/qmi-firmware-update \
 	-DLIBQMI_GLIB_COMPILATION \
 	$(NULL)
 
-test_utils_LDADD = \
-	$(top_builddir)/src/qmi-firmware-update/libutils.la \
+AM_LDFLAGS = \
+	$(WARN_LDFLAGS) \
 	$(GLIB_LIBS) \
 	$(NULL)
 
-test_firehose_SOURCES = \
-	test-firehose.c \
+noinst_PROGRAMS = \
+	test-utils \
+	test-firehose \
 	$(NULL)
 
-test_firehose_CPPFLAGS = \
-	$(GLIB_CFLAGS) \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/src/qmi-firmware-update \
-	-I$(top_builddir)/src/qmi-firmware-update \
-	-DLIBQMI_GLIB_COMPILATION \
-	$(NULL)
+TEST_PROGS += $(noinst_PROGRAMS)
 
-test_firehose_LDADD = \
-	$(top_builddir)/src/qmi-firmware-update/libfirehose.la \
-	$(GLIB_LIBS) \
-	$(NULL)
+test_utils_SOURCES = test-utils.c
+test_utils_LDADD = $(top_builddir)/src/qmi-firmware-update/libutils.la
+
+test_firehose_SOURCES = test-firehose.c
+test_firehose_LDADD = $(top_builddir)/src/qmi-firmware-update/libfirehose.la

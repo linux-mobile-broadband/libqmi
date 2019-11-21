@@ -8,6 +8,7 @@ libutils_la_SOURCES = \
 	$(NULL)
 
 libutils_la_CPPFLAGS = \
+	$(WARN_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	-I$(top_srcdir)/src/libqmi-glib \
 	-I$(top_srcdir)/src/libqmi-glib/generated \
@@ -17,7 +18,11 @@ libutils_la_CPPFLAGS = \
 
 libutils_la_LIBADD = \
 	$(top_builddir)/src/libqmi-glib/libqmi-glib.la \
-	$(GLIB_LDFLAGS) \
+	$(NULL)
+
+libutils_la_LDFLAGS = \
+	$(WARN_LDFLAGS) \
+	$(GLIB_LIBS) \
 	$(NULL)
 
 libfirehose_la_SOURCES = \
@@ -25,16 +30,19 @@ libfirehose_la_SOURCES = \
 	$(NULL)
 
 libfirehose_la_CPPFLAGS = \
+	$(WARN_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(NULL)
 
-libfirehose_la_LIBADD = \
-	$(GLIB_LDFLAGS) \
+libfirehose_la_LDFLAGS = \
+	$(WARN_LDFLAGS) \
+	$(GLIB_LIBS) \
 	$(NULL)
 
 bin_PROGRAMS = qmi-firmware-update
 
 qmi_firmware_update_CPPFLAGS = \
+	$(WARN_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GUDEV_CFLAGS) \
 	$(MBIM_CFLAGS) \
@@ -96,11 +104,15 @@ qmi_firmware_update_SOURCES = \
 	$(NULL)
 
 qmi_firmware_update_LDADD = \
+	$(builddir)/libutils.la \
+	$(builddir)/libfirehose.la \
+	$(NULL)
+
+qmi_firmware_update_LDFLAGS = \
+	$(WARN_LDFLAGS) \
 	$(MBIM_LIBS) \
 	$(GUDEV_LIBS) \
 	$(GLIB_LIBS) \
-	$(builddir)/libutils.la \
-	$(builddir)/libfirehose.la \
 	$(NULL)
 
 # Request to build enum types before anything else

@@ -1,52 +1,38 @@
 include $(top_srcdir)/gtester.make
 
+AM_CFLAGS = \
+	$(WARN_CFLAGS) \
+	$(GLIB_CFLAGS) \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/src/libqmi-glib \
+	-I$(top_srcdir)/src/libqmi-glib/generated \
+	-I$(top_builddir)/src/libqmi-glib \
+	-I$(top_builddir)/src/libqmi-glib/generated \
+	-DLIBQMI_GLIB_COMPILATION \
+	$(NULL)
+
+AM_LDFLAGS = \
+	$(WARN_LDFLAGS) \
+	$(GLIB_LIBS) \
+	$(NULL)
+
 noinst_PROGRAMS = \
 	test-utils \
 	test-message \
-	test-generated
+	test-generated \
+	$(NULL)
 
 TEST_PROGS += $(noinst_PROGRAMS)
 
-test_utils_SOURCES = \
-	test-utils.c
-test_utils_CPPFLAGS = \
-	$(GLIB_CFLAGS) \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/src/libqmi-glib \
-	-I$(top_srcdir)/src/libqmi-glib/generated \
-	-I$(top_builddir)/src/libqmi-glib \
-	-I$(top_builddir)/src/libqmi-glib/generated \
-	-DLIBQMI_GLIB_COMPILATION
-test_utils_LDADD = \
-	$(top_builddir)/src/libqmi-glib/libqmi-glib.la \
-	$(GLIB_LIBS)
+test_utils_SOURCES = test-utils.c
+test_utils_LDADD = $(top_builddir)/src/libqmi-glib/libqmi-glib.la
 
-test_message_SOURCES = \
-	test-message.c
-test_message_CPPFLAGS = \
-	$(GLIB_CFLAGS) \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/src/libqmi-glib \
-	-I$(top_srcdir)/src/libqmi-glib/generated \
-	-I$(top_builddir)/src/libqmi-glib \
-	-I$(top_builddir)/src/libqmi-glib/generated \
-	-DLIBQMI_GLIB_COMPILATION
-test_message_LDADD = \
-	$(top_builddir)/src/libqmi-glib/libqmi-glib.la \
-	$(GLIB_LIBS)
+test_message_SOURCES = test-message.c
+test_message_LDADD = $(top_builddir)/src/libqmi-glib/libqmi-glib.la
 
 test_generated_SOURCES = \
 	test-fixture.h test-fixture.c \
 	test-port-context.h test-port-context.c \
-	test-generated.c
-test_generated_CPPFLAGS = \
-	$(GLIB_CFLAGS) \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/src/libqmi-glib \
-	-I$(top_srcdir)/src/libqmi-glib/generated \
-	-I$(top_builddir)/src/libqmi-glib \
-	-I$(top_builddir)/src/libqmi-glib/generated \
-	-DLIBQMI_GLIB_COMPILATION
-test_generated_LDADD = \
-	$(top_builddir)/src/libqmi-glib/libqmi-glib.la \
-	$(GLIB_LIBS)
+	test-generated.c \
+	$(NULL)
+test_generated_LDADD = $(top_builddir)/src/libqmi-glib/libqmi-glib.la
