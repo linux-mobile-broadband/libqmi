@@ -55,5 +55,7 @@ static const gchar *usb_composition_description[] = {
 const gchar *
 qmi_dms_swi_usb_composition_get_description (QmiDmsSwiUsbComposition value)
 {
-    return ((value > QMI_DMS_SWI_USB_COMPOSITION_UNKNOWN && value < G_N_ELEMENTS (usb_composition_description)) ? usb_composition_description[value] : NULL);
+    return (((value > QMI_DMS_SWI_USB_COMPOSITION_UNKNOWN) &&
+             ((guint)value < G_N_ELEMENTS (usb_composition_description))) ?
+            usb_composition_description[value] : NULL);
 }
