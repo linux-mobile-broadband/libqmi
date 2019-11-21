@@ -2991,13 +2991,13 @@ get_cell_location_info_ready (QmiClientNas *client,
             g_print ("\tFrequency [%u]:\n"
                      "\t\tEUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"' (%s)\n"
                      "\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT "'\n"
-                     "\t\tRSRP: '%f' dBm\n"
-                     "\t\tRSRQ: '%f' dB\n",
+                     "\t\tRSRP: '%lf' dBm\n"
+                     "\t\tRSRQ: '%lf' dB\n",
                      i,
                      element->eutra_absolute_rf_channel_number, qmicli_earfcn_to_eutra_band_string (element->eutra_absolute_rf_channel_number),
                      element->physical_cell_id,
-                     element->rsrp,
-                     element->rsrq);
+                     (gdouble)element->rsrp,
+                     (gdouble)element->rsrq);
             if (rrc_state != QMI_NAS_WCDMA_RRC_STATE_CELL_FACH &&
                 rrc_state != QMI_NAS_WCDMA_RRC_STATE_CELL_DCH)
                 g_print ("\t\tCell Selection RX Level: '%" G_GINT16_FORMAT"'\n",
