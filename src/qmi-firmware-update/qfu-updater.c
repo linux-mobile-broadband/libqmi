@@ -1574,6 +1574,7 @@ qfu_updater_run (QfuUpdater          *self,
             return;
         }
         break;
+    case UPDATER_TYPE_UNKNOWN:
     default:
         g_assert_not_reached ();
     }
