@@ -266,7 +266,7 @@ send_request (QfuQdlDevice  *self,
 
     /* We treat EINTR as an error, so we also treat as an error if not all bytes
      * were wlen */
-    if (wlen != request_size) {
+    if ((gsize)wlen != request_size) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "error writing: only %" G_GSSIZE_FORMAT "/%" G_GSIZE_FORMAT " bytes written",
                      wlen, request_size);
