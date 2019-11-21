@@ -80,8 +80,6 @@ gboolean qmicli_read_dms_uim_pin_id_from_string              (const gchar *str,
                                                               QmiDmsUimPinId *out);
 gboolean qmicli_read_uim_pin_id_from_string                  (const gchar *str,
                                                               QmiUimPinId *out);
-gboolean qmicli_read_uim_session_type_from_string            (const gchar *str,
-                                                              QmiUimSessionType *out);
 gboolean qmicli_read_ssp_rat_options_from_string             (const gchar              *str,
                                                               QmiNasRatModePreference  *out_mode_preference,
                                                               GArray                  **out_acquisition_order);
