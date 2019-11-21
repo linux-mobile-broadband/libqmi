@@ -219,16 +219,23 @@ fi
 AC_OUTPUT
 
 echo "
-    libqmi (libqmi-glib, qmicli) $VERSION
+    libqmi $VERSION
     ==============================================
 
-    compiler:              ${CC}
-    cflags:                ${CFLAGS}
-    Maintainer mode:       ${USE_MAINTAINER_MODE}
-    udev base directory:   ${UDEV_BASE_DIR}
-    Documentation:         ${enable_gtk_doc}
-    QMI username:          ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
-    QMUX over MBIM:        ${enable_mbim_qmux}
+    Build:
+      compiler:            ${CC}
+      cflags:              ${CFLAGS}
+      ldflags:             ${LDFLAGS}
+      Maintainer mode:     ${USE_MAINTAINER_MODE}
+      Documentation:       ${enable_gtk_doc}
+
+    System paths:
+      prefix:              ${prefix}
+      udev base directory: ${UDEV_BASE_DIR}
+
+    Features:
+      QMUX over MBIM:      ${enable_mbim_qmux}
+      QMI username:        ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
 
     Built items:
       libqmi-glib:         yes
