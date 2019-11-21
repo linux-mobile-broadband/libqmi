@@ -222,12 +222,9 @@ G_STATIC_ASSERT (G_N_ELEMENTS (qdl_error_str) == QDL_ERROR_LAST);
 static GIOErrorEnum
 qdl_error_to_gio_error_enum (QdlError err)
 {
-    switch (err) {
-    case QDL_ERROR_CMD_UNSUPPORTED:
+    if (err == QDL_ERROR_CMD_UNSUPPORTED)
         return G_IO_ERROR_NOT_SUPPORTED;
-    default:
-        return G_IO_ERROR_FAILED;
-    }
+    return G_IO_ERROR_FAILED;
 }
 
 static const gchar *
