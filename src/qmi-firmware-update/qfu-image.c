@@ -72,7 +72,7 @@ qfu_image_read_data_chunk (QfuImage      *self,
                            GCancellable  *cancellable,
                            GError       **error)
 {
-    gssize  chunk_size;
+    gsize   chunk_size;
     guint   n_chunks;
     goffset chunk_offset;
     gssize  n_read;
@@ -90,7 +90,7 @@ qfu_image_read_data_chunk (QfuImage      *self,
 
     /* Last chunk may be shorter than the default */
     chunk_size = qfu_image_get_data_chunk_size (self, chunk_i);
-    g_debug ("[qfu-image] chunk #%u size: %" G_GSSIZE_FORMAT " bytes", chunk_i, chunk_size);
+    g_debug ("[qfu-image] chunk #%u size: %" G_GSIZE_FORMAT " bytes", chunk_i, chunk_size);
 
     /* Make sure there's enough room */
     if (out_buffer_size < chunk_size) {
@@ -120,9 +120,9 @@ qfu_image_read_data_chunk (QfuImage      *self,
         return -1;
     }
 
-    if (n_read != chunk_size) {
+    if ((gsize)n_read != chunk_size) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                     "couldn't read expected chunk %u size: %" G_GSSIZE_FORMAT " (%" G_GSSIZE_FORMAT " bytes read)",
+                     "couldn't read expected chunk %u size: %" G_GSIZE_FORMAT " (%" G_GSSIZE_FORMAT " bytes read)",
                      chunk_i, chunk_size, n_read);
         return -1;
     }
@@ -150,7 +150,8 @@ qfu_image_read (QfuImage      *self,
     g_return_val_if_fail (QFU_IS_IMAGE (self), -1);
 
     remaining_size = qfu_image_get_size (self) - offset;
-    read_size = (remaining_size > size) ? size : remaining_size;
+    g_assert (remaining_size >= 0);
+    read_size = ((gsize)remaining_size > size) ? size : (gsize)remaining_size;
 
     g_debug ("[qfu-image] reading [%" G_GOFFSET_FORMAT "-%" G_GOFFSET_FORMAT "]",
              offset, offset + read_size);
@@ -179,7 +180,7 @@ qfu_image_read (QfuImage      *self,
         return -1;
     }
 
-    if (n_read != read_size) {
+    if ((gsize)n_read != read_size) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                      "couldn't read expected data size: %" G_GSIZE_FORMAT " (%" G_GSSIZE_FORMAT " bytes read)",
                      read_size, n_read);
