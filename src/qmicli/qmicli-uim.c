@@ -1297,7 +1297,7 @@ set_read_record_properties_handle (const gchar *key,
     }
 
     if (g_ascii_strcasecmp (key, "file") == 0) {
-        props->file = strdup(value);
+        props->file = g_strdup (value);
         return TRUE;
     }
 
