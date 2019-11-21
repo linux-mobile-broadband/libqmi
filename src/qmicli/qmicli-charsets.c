@@ -165,7 +165,7 @@ qmicli_charset_gsm_unpack (const guint8 *gsm,
                            guint32 *out_unpacked_len)
 {
     GByteArray *unpacked;
-    int i;
+    guint i;
 
     unpacked = g_byte_array_sized_new (num_septets + 1);
 
@@ -197,7 +197,7 @@ qmicli_charset_gsm_unpack (const guint8 *gsm,
 guint8 *
 qmicli_charset_gsm_unpacked_to_utf8 (const guint8 *gsm, guint32 len)
 {
-    int i;
+    guint i;
     GByteArray *utf8;
 
     g_return_val_if_fail (gsm != NULL, NULL);
