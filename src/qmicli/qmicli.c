@@ -400,6 +400,42 @@ allocate_client_ready (QmiDevice *dev,
     case QMI_SERVICE_DSD:
         qmicli_dsd_run (dev, QMI_CLIENT_DSD (client), cancellable);
         return;
+    case QMI_SERVICE_UNKNOWN:
+    case QMI_SERVICE_CTL:
+    case QMI_SERVICE_AUTH:
+    case QMI_SERVICE_AT:
+    case QMI_SERVICE_CAT2:
+    case QMI_SERVICE_QCHAT:
+    case QMI_SERVICE_RMTFS:
+    case QMI_SERVICE_TEST:
+    case QMI_SERVICE_SAR:
+    case QMI_SERVICE_IMS:
+    case QMI_SERVICE_ADC:
+    case QMI_SERVICE_CSD:
+    case QMI_SERVICE_MFS:
+    case QMI_SERVICE_TIME:
+    case QMI_SERVICE_TS:
+    case QMI_SERVICE_TMD:
+    case QMI_SERVICE_SAP:
+    case QMI_SERVICE_TSYNC:
+    case QMI_SERVICE_RFSA:
+    case QMI_SERVICE_CSVT:
+    case QMI_SERVICE_QCMAP:
+    case QMI_SERVICE_IMSP:
+    case QMI_SERVICE_IMSVT:
+    case QMI_SERVICE_IMSA:
+    case QMI_SERVICE_COEX:
+    case QMI_SERVICE_STX:
+    case QMI_SERVICE_BIT:
+    case QMI_SERVICE_IMSRTP:
+    case QMI_SERVICE_RFRPE:
+    case QMI_SERVICE_SSCTL:
+    case QMI_SERVICE_CAT:
+    case QMI_SERVICE_RMS:
+    case QMI_SERVICE_FOTA:
+    case QMI_SERVICE_GMS:
+    case QMI_SERVICE_PDS:
+    case QMI_SERVICE_OMA:
     default:
         g_assert_not_reached ();
     }
