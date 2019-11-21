@@ -1723,6 +1723,14 @@ qmi_message_get_version_introduced_full (QmiMessage        *self,
         return __qmi_message_wda_get_version_introduced (self, context, major, minor);
     case QMI_SERVICE_LOC:
         return __qmi_message_loc_get_version_introduced (self, context, major, minor);
+    case QMI_SERVICE_VOICE:
+        return __qmi_message_voice_get_version_introduced (self, context, major, minor);
+    case QMI_SERVICE_PDC:
+        return __qmi_message_pdc_get_version_introduced (self, context, major, minor);
+    case QMI_SERVICE_DSD:
+        return __qmi_message_dsd_get_version_introduced (self, context, major, minor);
+    case QMI_SERVICE_QOS:
+        return __qmi_message_qos_get_version_introduced (self, context, major, minor);
 
     case QMI_SERVICE_UNKNOWN:
         g_assert_not_reached ();
