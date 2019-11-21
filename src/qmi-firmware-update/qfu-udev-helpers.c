@@ -410,6 +410,7 @@ device_matches_sysfs_and_type (GUdevDevice             *device,
         if (g_strcmp0 (device_driver, "qmi_wwan") != 0 && g_strcmp0 (device_driver, "cdc_mbim") != 0)
             goto out;
         break;
+    case QFU_UDEV_HELPER_DEVICE_TYPE_LAST:
     default:
         g_assert_not_reached ();
     }
@@ -442,6 +443,7 @@ qfu_udev_helper_list_devices (QfuUdevHelperDeviceType  device_type,
     case QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM:
         subsys_list = cdc_wdm_subsys_list;
         break;
+    case QFU_UDEV_HELPER_DEVICE_TYPE_LAST:
     default:
         g_assert_not_reached ();
     }
