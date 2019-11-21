@@ -2393,7 +2393,7 @@ noop_cb (gpointer unused)
 typedef struct {
     guint32 mux_id;
     guint8 ep_type;
-    guint32 ep_iface_number;
+    gint ep_iface_number;
     guint32 client_type;
 } BindMuxDataPortProperties;
 
