@@ -303,17 +303,17 @@ gnss_sv_info_received (QmiClientLoc                     *client,
         g_print ("      navigation data:  %s\n", (element->valid_information & QMI_LOC_SATELLITE_VALID_INFORMATION_SATELLITE_INFO_MASK) ? qmi_loc_navigation_data_get_string (element->navigation_data) : "n/a");
 
         if (element->valid_information & QMI_LOC_SATELLITE_VALID_INFORMATION_ELEVATION)
-            g_print ("      elevation:        %f\n", element->elevation_degrees);
+            g_print ("      elevation:        %lf\n", (gdouble)element->elevation_degrees);
         else
             g_print ("      elevation:        n/a\n");
 
         if (element->valid_information & QMI_LOC_SATELLITE_VALID_INFORMATION_AZIMUTH)
-            g_print ("      azimuth:          %f\n", element->azimuth_degrees);
+            g_print ("      azimuth:          %lf\n", (gdouble)element->azimuth_degrees);
         else
             g_print ("      azimuth:          n/a\n");
 
         if (element->valid_information & QMI_LOC_SATELLITE_VALID_INFORMATION_SIGNAL_TO_NOISE_RATIO)
-            g_print ("      SNR:              %f\n", element->signal_to_noise_ratio_bhz);
+            g_print ("      SNR:              %lf\n", (gdouble)element->signal_to_noise_ratio_bhz);
         else
             g_print ("      SNR:              n/a\n");
     }
@@ -359,22 +359,22 @@ position_report_received (QmiClientLoc                         *client,
             g_print ("   longitude: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_horizontal_uncertainty_circular (output, &auxf, NULL))
-            g_print ("   circular horizontal position uncertainty:            %f meters\n", auxf);
+            g_print ("   circular horizontal position uncertainty:            %lf meters\n", (gdouble)auxf);
         else
             g_print ("   circular horizontal position uncertainty:            n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_horizontal_uncertainty_elliptical_minor (output, &auxf, NULL))
-            g_print ("   horizontal elliptical uncertainty (semi-minor axis): %f meters\n", auxf);
+            g_print ("   horizontal elliptical uncertainty (semi-minor axis): %lf meters\n", (gdouble)auxf);
         else
             g_print ("   horizontal elliptical uncertainty (semi-minor axis): n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_horizontal_uncertainty_elliptical_major (output, &auxf, NULL))
-            g_print ("   horizontal elliptical uncertainty (semi-major axis): %f meters\n", auxf);
+            g_print ("   horizontal elliptical uncertainty (semi-major axis): %lf meters\n", (gdouble)auxf);
         else
             g_print ("   horizontal elliptical uncertainty (semi-major axis): n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_horizontal_uncertainty_elliptical_azimuth (output, &auxf, NULL))
-            g_print ("   horizontal elliptical uncertainty azimuth:           %f meters\n", auxf);
+            g_print ("   horizontal elliptical uncertainty azimuth:           %lf meters\n", (gdouble)auxf);
         else
             g_print ("   horizontal elliptical uncertainty azimuth:           n/a\n");
 
@@ -389,27 +389,27 @@ position_report_received (QmiClientLoc                         *client,
             g_print ("   horizontal reliability: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_horizontal_speed (output, &auxf, NULL))
-            g_print ("   horizontal speed: %f m/s\n", auxf);
+            g_print ("   horizontal speed: %lf m/s\n", (gdouble)auxf);
         else
             g_print ("   horizontal speed: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_speed_uncertainty (output, &auxf, NULL))
-            g_print ("   speed uncertainty: %f m/s\n", auxf);
+            g_print ("   speed uncertainty: %lf m/s\n", (gdouble)auxf);
         else
             g_print ("   speed uncertainty: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_altitude_from_ellipsoid (output, &auxf, NULL))
-            g_print ("   altitude w.r.t. ellipsoid: %f meters\n", auxf);
+            g_print ("   altitude w.r.t. ellipsoid: %lf meters\n", (gdouble)auxf);
         else
             g_print ("   altitude w.r.t. ellipsoid: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_altitude_from_sealevel (output, &auxf, NULL))
-            g_print ("   altitude w.r.t. mean sea level: %f meters\n", auxf);
+            g_print ("   altitude w.r.t. mean sea level: %lf meters\n", (gdouble)auxf);
         else
             g_print ("   altitude w.r.t. mean sea level: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_vertical_uncertainty (output, &auxf, NULL))
-            g_print ("   vertical uncertainty: %f meters\n", auxf);
+            g_print ("   vertical uncertainty: %lf meters\n", (gdouble)auxf);
         else
             g_print ("   vertical uncertainty: n/a\n");
 
@@ -424,22 +424,22 @@ position_report_received (QmiClientLoc                         *client,
             g_print ("   vertical reliability: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_vertical_speed (output, &auxf, NULL))
-            g_print ("   vertical speed: %f m/s\n", auxf);
+            g_print ("   vertical speed: %lf m/s\n", (gdouble)auxf);
         else
             g_print ("   vertical speed: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_heading (output, &auxf, NULL))
-            g_print ("   heading: %f degrees\n", auxf);
+            g_print ("   heading: %lf degrees\n", (gdouble)auxf);
         else
             g_print ("   heading: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_heading_uncertainty (output, &auxf, NULL))
-            g_print ("   heading uncertainty: %f meters\n", auxf);
+            g_print ("   heading uncertainty: %lf meters\n", (gdouble)auxf);
         else
             g_print ("   heading uncertainty: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_magnetic_deviation (output, &auxf, NULL))
-            g_print ("   magnetic deviation: %f degrees\n", auxf);
+            g_print ("   magnetic deviation: %lf degrees\n", (gdouble)auxf);
         else
             g_print ("   magnetic deviation: n/a\n");
 
@@ -451,9 +451,9 @@ position_report_received (QmiClientLoc                         *client,
             g_print ("   technology: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_dilution_of_precision (output, &dop, NULL)) {
-            g_print ("   position DOP:   %f\n", dop.position_dilution_of_precision);
-            g_print ("   horizontal DOP: %f\n", dop.horizontal_dilution_of_precision);
-            g_print ("   vertical DOP:   %f\n", dop.vertical_dilution_of_precision);
+            g_print ("   position DOP:   %lf\n", (gdouble)dop.position_dilution_of_precision);
+            g_print ("   horizontal DOP: %lf\n", (gdouble)dop.horizontal_dilution_of_precision);
+            g_print ("   vertical DOP:   %lf\n", (gdouble)dop.vertical_dilution_of_precision);
         } else {
             g_print ("   position DOP:   n/a\n");
             g_print ("   horizontal DOP: n/a\n");
@@ -476,7 +476,7 @@ position_report_received (QmiClientLoc                         *client,
             g_print ("   GPS time: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_time_uncertainty (output, &auxf, NULL))
-            g_print ("   time uncertainty: %f ms\n", auxf);
+            g_print ("   time uncertainty: %lf ms\n", (gdouble)auxf);
         else
             g_print ("   time uncertainty: n/a\n");
 
