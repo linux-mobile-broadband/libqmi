@@ -1996,6 +1996,8 @@ device_setup_open_flags_by_transport (QmiDevice          *self,
             g_set_error (&inner_error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
                          "Cannot automatically select QMI/MBIM mode");
             break;
+        default:
+            g_assert_not_reached ();
         }
         goto out;
     }
