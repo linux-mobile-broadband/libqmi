@@ -56,7 +56,7 @@ print_image_cwe (QfuImageCwe *image,
         gchar *sub_indent_prefix;
 
         /* As soon as we find one which doesn't have the expected parent index, break */
-        if (qfu_image_cwe_embedded_header_get_parent_index (image, i) != idx)
+        if (qfu_image_cwe_embedded_header_get_parent_index (image, i) != (gint) idx)
             continue;
 
         sub_id_str = g_strdup_printf ("%s.%u", id_str, j++);
