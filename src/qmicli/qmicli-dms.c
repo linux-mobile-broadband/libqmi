@@ -2830,7 +2830,7 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
         if (image_index < 0)
             continue;
 
-        if (image_index >= image->sublist->len) {
+        if ((guint)image_index >= image->sublist->len) {
             g_printerr ("error: couldn't find '%s' image at index '%d'\n",
                         qmi_dms_firmware_image_type_get_string (image->type),
                         image_index);
