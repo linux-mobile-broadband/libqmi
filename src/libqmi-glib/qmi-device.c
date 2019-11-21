@@ -1165,67 +1165,87 @@ qmi_device_allocate_client (QmiDevice *self,
                                  "Cannot create additional clients for the CTL service");
         g_object_unref (task);
         return;
-
     case QMI_SERVICE_DMS:
         ctx->client_type = QMI_TYPE_CLIENT_DMS;
         break;
-
     case QMI_SERVICE_WDS:
         ctx->client_type = QMI_TYPE_CLIENT_WDS;
         break;
-
     case QMI_SERVICE_NAS:
         ctx->client_type = QMI_TYPE_CLIENT_NAS;
         break;
-
     case QMI_SERVICE_WMS:
         ctx->client_type = QMI_TYPE_CLIENT_WMS;
         break;
-
     case QMI_SERVICE_PDS:
         ctx->client_type = QMI_TYPE_CLIENT_PDS;
         break;
-
     case QMI_SERVICE_PDC:
         ctx->client_type = QMI_TYPE_CLIENT_PDC;
         break;
-
     case QMI_SERVICE_PBM:
         ctx->client_type = QMI_TYPE_CLIENT_PBM;
         break;
-
     case QMI_SERVICE_UIM:
         ctx->client_type = QMI_TYPE_CLIENT_UIM;
         break;
-
     case QMI_SERVICE_OMA:
         ctx->client_type = QMI_TYPE_CLIENT_OMA;
         break;
-
     case QMI_SERVICE_GAS:
         ctx->client_type = QMI_TYPE_CLIENT_GAS;
         break;
-
     case QMI_SERVICE_WDA:
         ctx->client_type = QMI_TYPE_CLIENT_WDA;
         break;
-
     case QMI_SERVICE_VOICE:
         ctx->client_type = QMI_TYPE_CLIENT_VOICE;
         break;
-
     case QMI_SERVICE_LOC:
         ctx->client_type = QMI_TYPE_CLIENT_LOC;
         break;
-
     case QMI_SERVICE_QOS:
         ctx->client_type = QMI_TYPE_CLIENT_QOS;
         break;
-
     case QMI_SERVICE_DSD:
         ctx->client_type = QMI_TYPE_CLIENT_DSD;
         break;
 
+    case QMI_SERVICE_UNKNOWN:
+        g_assert_not_reached ();
+
+    case QMI_SERVICE_AUTH:
+    case QMI_SERVICE_AT:
+    case QMI_SERVICE_CAT2:
+    case QMI_SERVICE_QCHAT:
+    case QMI_SERVICE_RMTFS:
+    case QMI_SERVICE_TEST:
+    case QMI_SERVICE_SAR:
+    case QMI_SERVICE_IMS:
+    case QMI_SERVICE_ADC:
+    case QMI_SERVICE_CSD:
+    case QMI_SERVICE_MFS:
+    case QMI_SERVICE_TIME:
+    case QMI_SERVICE_TS:
+    case QMI_SERVICE_TMD:
+    case QMI_SERVICE_SAP:
+    case QMI_SERVICE_TSYNC:
+    case QMI_SERVICE_RFSA:
+    case QMI_SERVICE_CSVT:
+    case QMI_SERVICE_QCMAP:
+    case QMI_SERVICE_IMSP:
+    case QMI_SERVICE_IMSVT:
+    case QMI_SERVICE_IMSA:
+    case QMI_SERVICE_COEX:
+    case QMI_SERVICE_STX:
+    case QMI_SERVICE_BIT:
+    case QMI_SERVICE_IMSRTP:
+    case QMI_SERVICE_RFRPE:
+    case QMI_SERVICE_SSCTL:
+    case QMI_SERVICE_CAT:
+    case QMI_SERVICE_RMS:
+    case QMI_SERVICE_FOTA:
+    case QMI_SERVICE_GMS:
     default:
         g_task_return_new_error (task,
                                  QMI_CORE_ERROR,
