@@ -184,7 +184,7 @@ context_new (QmiDevice *device,
 static void
 context_free (Context *context)
 {
-    int i;
+    guint i;
 
     if (!context)
         return;
@@ -323,7 +323,7 @@ get_config_info_ready_indication (QmiClientPdc *client,
     ConfigInfo *current_config = NULL;
     guint32 token;
     const gchar *description;
-    int i;
+    guint i;
     guint16 error_code = 0;
 
     if (!qmi_indication_pdc_get_config_info_output_get_indication_result (output, &error_code, &error)) {
@@ -418,7 +418,7 @@ list_configs_ready_indication (QmiClientPdc *client,
 {
     GError *error = NULL;
     GArray *configs = NULL;
-    int i;
+    guint i;
     guint16 error_code = 0;
 
     /* Remove timeout as soon as we get the indication */
