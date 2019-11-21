@@ -187,7 +187,8 @@ class VariableInteger(Variable):
         elif self.private_format == 'gint64':
             common_format = '%" G_GINT64_FORMAT "'
         elif self.private_format in ('gfloat', 'gdouble'):
-            common_format = '%f'
+            common_format = '%lf'
+            common_cast = '(gdouble)'
 
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
