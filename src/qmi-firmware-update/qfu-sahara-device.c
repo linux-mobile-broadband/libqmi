@@ -1128,6 +1128,7 @@ sahara_device_run_protocol_step (QfuSaharaDevice    *self,
         break;
     case SAHARA_PROTOCOL_STEP_UNKNOWN:
     case SAHARA_PROTOCOL_STEP_LAST:
+    default:
         g_assert_not_reached ();
         break;
     }
