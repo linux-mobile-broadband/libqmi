@@ -1165,7 +1165,7 @@ sahara_device_run_protocol_step (QfuSaharaDevice    *self,
         gsize            msglen;
         QfuSaharaHeader *msghdr;
 
-        if (rsplen < QFU_SAHARA_MESSAGE_MAX_HEADER_SIZE) {
+        if ((gsize)rsplen < QFU_SAHARA_MESSAGE_MAX_HEADER_SIZE) {
             g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "sahara header not fully received: %" G_GSSIZE_FORMAT " < %" G_GSIZE_FORMAT,
                          rsplen, QFU_SAHARA_MESSAGE_MAX_HEADER_SIZE);
             return SAHARA_PROTOCOL_STEP_UNKNOWN;
@@ -1173,7 +1173,7 @@ sahara_device_run_protocol_step (QfuSaharaDevice    *self,
 
         msghdr = (QfuSaharaHeader *)rsp;
         msglen = GUINT32_FROM_LE (msghdr->size);
-        if (rsplen < msglen) {
+        if ((gsize)rsplen < msglen) {
             g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "sahara message not fully received: %" G_GSSIZE_FORMAT " < %" G_GSIZE_FORMAT,
                          rsplen, msglen);
             return SAHARA_PROTOCOL_STEP_UNKNOWN;
