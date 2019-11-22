@@ -1,6 +1,30 @@
 
 SUBDIRS = generated . test
 
+noinst_LTLIBRARIES = libqmi-glib-compat.la
+
+libqmi_glib_compat_la_SOURCES = \
+	qmi-compat.h qmi-compat.c \
+	$(NULL)
+
+libqmi_glib_compat_la_CPPFLAGS = \
+	$(WARN_CFLAGS) \
+	$(GLIB_CFLAGS) \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/src/libqmi-glib \
+	-I$(top_srcdir)/src/libqmi-glib/generated \
+	-I$(top_builddir)/src/libqmi-glib \
+	-I$(top_builddir)/src/libqmi-glib/generated \
+	-DLIBQMI_GLIB_COMPILATION \
+	-DG_LOG_DOMAIN=\"Qmi\" \
+	-Wno-deprecated-declarations \
+	$(NULL)
+
+libqmi_glib_compat_la_LDFLAGS = \
+	$(WARN_LDFLAGS) \
+	$(GLIB_LIBS) \
+	$(NULL)
+
 lib_LTLIBRARIES = libqmi-glib.la
 
 libqmi_glib_la_CPPFLAGS = \
@@ -39,7 +63,6 @@ libqmi_glib_la_SOURCES = \
 	qmi-enums-dsd.h qmi-flags64-dsd.h\
 	qmi-enums.h qmi-enums-private.h \
 	qmi-utils.h qmi-utils.c \
-	qmi-compat.h qmi-compat.c \
 	qmi-message.h qmi-message.c \
 	qmi-message-context.h qmi-message-context.c \
 	qmi-device.h qmi-device.c \
@@ -56,6 +79,7 @@ endif
 
 libqmi_glib_la_LIBADD = \
 	${top_builddir}/src/libqmi-glib/generated/libqmi-glib-generated.la \
+	libqmi-glib-compat.la \
 	$(NULL)
 
 libqmi_glib_la_LDFLAGS = \
