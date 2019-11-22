@@ -561,7 +561,7 @@ device_command_ready (QmiDevice *device,
     QmiMessage *response;
     GError *error = NULL;
 
-    response = qmi_device_command_finish (device, res, &error);
+    response = qmi_device_command_full_finish (device, res, &error);
     if (!response) {
         g_warning ("sending request to device failed: %s", error->message);
         g_error_free (error);
@@ -619,14 +619,16 @@ process_message (QmiProxy   *self,
      * make this value configurable per-client, instead of a hardcoded value.
      *
      * Note: the proxy will not translate vendor-specific messages in its
-     * logs (as it doesn't have the orignal message context with the vendor id).
+     * logs (as it doesn't have the original message context with the vendor
+     * id).
      */
-    qmi_device_command (client->device,
-                        message,
-                        300,
-                        NULL,
-                        (GAsyncReadyCallback)device_command_ready,
-                        request);
+    qmi_device_command_full (client->device,
+                             message,
+                             NULL,
+                             300,
+                             NULL,
+                             (GAsyncReadyCallback)device_command_ready,
+                             request);
     return TRUE;
 }
 
