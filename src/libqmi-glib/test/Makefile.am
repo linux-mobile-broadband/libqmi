@@ -25,6 +25,7 @@ noinst_PROGRAMS = \
 TEST_PROGS += $(noinst_PROGRAMS)
 
 test_utils_SOURCES = test-utils.c
+test_utils_CPPFLAGS = -Wno-deprecated-declarations
 test_utils_LDADD = $(top_builddir)/src/libqmi-glib/libqmi-glib.la
 
 test_message_SOURCES = test-message.c
