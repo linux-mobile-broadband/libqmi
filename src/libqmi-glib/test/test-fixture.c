@@ -229,6 +229,20 @@ device_release_client_ready (QmiDevice    *device,
     test_fixture_loop_stop (fixture);
 }
 
+static void
+device_close_ready (QmiDevice    *device,
+                    GAsyncResult *res,
+                    TestFixture  *fixture)
+{
+    GError *error = NULL;
+    gboolean st;
+
+    st = qmi_device_close_finish (device, res, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+    test_fixture_loop_stop (fixture);
+}
+
 void
 test_fixture_teardown (TestFixture *fixture)
 {
@@ -295,12 +309,12 @@ test_fixture_teardown (TestFixture *fixture)
     }
 
     if (fixture->device) {
-        GError *error = NULL;
-        gboolean ret;
+        qmi_device_close_async (fixture->device, 10, NULL,
+                                (GAsyncReadyCallback) device_close_ready,
+                                fixture);
 
-        ret = qmi_device_close (fixture->device, &error);
-        g_assert_no_error (error);
-        g_assert (ret);
+        test_fixture_loop_run (fixture);
+
         g_object_unref (fixture->device);
     }
 
