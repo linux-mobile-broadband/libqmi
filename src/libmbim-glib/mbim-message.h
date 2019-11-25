@@ -191,7 +191,7 @@ const MbimUuid         *mbim_message_command_get_service_id             (const M
 guint32                 mbim_message_command_get_cid                    (const MbimMessage *self);
 MbimMessageCommandType  mbim_message_command_get_command_type           (const MbimMessage *self);
 const guint8           *mbim_message_command_get_raw_information_buffer (const MbimMessage *self,
-                                                                         guint32           *length);
+                                                                         guint32           *out_length);
 
 /*****************************************************************************/
 /* 'Command Done' message interface */
@@ -203,7 +203,7 @@ MbimStatusError  mbim_message_command_done_get_status_code            (const Mbi
 gboolean         mbim_message_command_done_get_result                 (const MbimMessage  *self,
                                                                        GError            **error);
 const guint8    *mbim_message_command_done_get_raw_information_buffer (const MbimMessage  *self,
-                                                                       guint32            *length);
+                                                                       guint32            *out_length);
 
 /*****************************************************************************/
 /* 'Indicate Status' message interface */
@@ -212,7 +212,7 @@ MbimService      mbim_message_indicate_status_get_service                (const 
 const MbimUuid  *mbim_message_indicate_status_get_service_id             (const MbimMessage  *self);
 guint32          mbim_message_indicate_status_get_cid                    (const MbimMessage  *self);
 const guint8    *mbim_message_indicate_status_get_raw_information_buffer (const MbimMessage  *self,
-                                                                          guint32            *length);
+                                                                          guint32            *out_length);
 
 /*****************************************************************************/
 /* Other helpers */

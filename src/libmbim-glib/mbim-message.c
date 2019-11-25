@@ -2047,7 +2047,7 @@ mbim_message_command_get_command_type (const MbimMessage *self)
 /**
  * mbim_message_command_get_raw_information_buffer:
  * @self: a #MbimMessage.
- * @length: (out): return location for the size of the output buffer.
+ * @out_length: (out): return location for the size of the output buffer.
  *
  * Gets the information buffer of the %MBIM_MESSAGE_TYPE_COMMAND message.
  *
@@ -2055,15 +2055,18 @@ mbim_message_command_get_command_type (const MbimMessage *self)
  */
 const guint8 *
 mbim_message_command_get_raw_information_buffer (const MbimMessage *self,
-                                                 guint32           *length)
+                                                 guint32           *out_length)
 {
+    guint32 length;
+
     g_return_val_if_fail (self != NULL, NULL);
-    g_return_val_if_fail (length != NULL, NULL);
     g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND, NULL);
 
-    *length = GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command.buffer_length);
+    length = GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command.buffer_length);
+    if (out_length)
+        *out_length = length;
 
-    return (*length > 0 ?
+    return (length > 0 ?
             ((struct full_message *)(self->data))->message.command.buffer :
             NULL);
 }
@@ -2168,7 +2171,7 @@ mbim_message_command_done_get_result (const MbimMessage  *self,
 /**
  * mbim_message_command_done_get_raw_information_buffer:
  * @self: a #MbimMessage.
- * @length: (out): return location for the size of the output buffer.
+ * @out_length: (out): return location for the size of the output buffer.
  *
  * Gets the information buffer of the %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
  *
@@ -2176,15 +2179,18 @@ mbim_message_command_done_get_result (const MbimMessage  *self,
  */
 const guint8 *
 mbim_message_command_done_get_raw_information_buffer (const MbimMessage *self,
-                                                      guint32           *length)
+                                                      guint32           *out_length)
 {
+    guint32 length;
+
     g_return_val_if_fail (self != NULL, NULL);
     g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_COMMAND_DONE, NULL);
-    g_return_val_if_fail (length != NULL, NULL);
 
-    *length = GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command_done.buffer_length);
+    length = GUINT32_FROM_LE (((struct full_message *)(self->data))->message.command_done.buffer_length);
+    if (out_length)
+        *out_length = length;
 
-    return (*length > 0 ?
+    return (length > 0 ?
             ((struct full_message *)(self->data))->message.command_done.buffer :
             NULL);
 }
@@ -2246,7 +2252,7 @@ mbim_message_indicate_status_get_cid (const MbimMessage *self)
 /**
  * mbim_message_indicate_status_get_raw_information_buffer:
  * @self: a #MbimMessage.
- * @length: (out): return location for the size of the output buffer.
+ * @out_length: (out): return location for the size of the output buffer.
  *
  * Gets the information buffer of the %MBIM_MESSAGE_TYPE_INDICATE_STATUS message.
  *
@@ -2254,15 +2260,18 @@ mbim_message_indicate_status_get_cid (const MbimMessage *self)
  */
 const guint8 *
 mbim_message_indicate_status_get_raw_information_buffer (const MbimMessage *self,
-                                                         guint32           *length)
+                                                         guint32           *out_length)
 {
+    guint32 length;
+
     g_return_val_if_fail (self != NULL, NULL);
     g_return_val_if_fail (MBIM_MESSAGE_GET_MESSAGE_TYPE (self) == MBIM_MESSAGE_TYPE_INDICATE_STATUS, NULL);
-    g_return_val_if_fail (length != NULL, NULL);
 
-    *length = GUINT32_FROM_LE (((struct full_message *)(self->data))->message.indicate_status.buffer_length);
+    length = GUINT32_FROM_LE (((struct full_message *)(self->data))->message.indicate_status.buffer_length);
+    if (out_length)
+        *out_length = length;
 
-    return (*length > 0 ?
+    return (length > 0 ?
             ((struct full_message *)(self->data))->message.indicate_status.buffer :
             NULL);
 }
