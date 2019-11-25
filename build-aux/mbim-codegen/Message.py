@@ -454,38 +454,38 @@ class Message:
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
 
             if field['format'] == 'byte-array':
-                inner_template = ('    const guint8 **${field},\n')
+                inner_template = ('    const guint8 **out_${field},\n')
             elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
-                inner_template = ('    guint32 *${field}_size,\n'
-                                  '    const guint8 **${field},\n')
+                inner_template = ('    guint32 *out_${field}_size,\n'
+                                  '    const guint8 **out_${field},\n')
             elif field['format'] == 'uuid':
-                inner_template = ('    const MbimUuid **${field},\n')
+                inner_template = ('    const MbimUuid **out_${field},\n')
             elif field['format'] == 'guint32':
-                inner_template = ('    ${public} *${field},\n')
+                inner_template = ('    ${public} *out_${field},\n')
             elif field['format'] == 'guint64':
-                inner_template = ('    ${public} *${field},\n')
+                inner_template = ('    ${public} *out_${field},\n')
             elif field['format'] == 'string':
-                inner_template = ('    gchar **${field},\n')
+                inner_template = ('    gchar **out_${field},\n')
             elif field['format'] == 'string-array':
-                inner_template = ('    gchar ***${field},\n')
+                inner_template = ('    gchar ***out_${field},\n')
             elif field['format'] == 'struct':
-                inner_template = ('    ${struct} **${field},\n')
+                inner_template = ('    ${struct} **out_${field},\n')
             elif field['format'] == 'struct-array':
-                inner_template = ('    ${struct} ***${field},\n')
+                inner_template = ('    ${struct} ***out_${field},\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template = ('    ${struct} ***${field},\n')
+                inner_template = ('    ${struct} ***out_${field},\n')
             elif field['format'] == 'ipv4':
-                inner_template = ('    const MbimIPv4 **${field},\n')
+                inner_template = ('    const MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ref-ipv4':
-                inner_template = ('    const MbimIPv4 **${field},\n')
+                inner_template = ('    const MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ipv4-array':
-                inner_template = ('    MbimIPv4 **${field},\n')
+                inner_template = ('    MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ipv6':
-                inner_template = ('    const MbimIPv6 **${field},\n')
+                inner_template = ('    const MbimIPv6 **out_${field},\n')
             elif field['format'] == 'ref-ipv6':
-                inner_template = ('    const MbimIPv6 **${field},\n')
+                inner_template = ('    const MbimIPv6 **out_${field},\n')
             elif field['format'] == 'ipv6-array':
-                inner_template = ('    MbimIPv6 **${field},\n')
+                inner_template = ('    MbimIPv6 **out_${field},\n')
             else:
                 raise ValueError('Cannot handle field type \'%s\'' % field['format'])
 
@@ -510,38 +510,38 @@ class Message:
             translations['array_size'] = field['array-size'] if 'array-size' in field else ''
 
             if field['format'] == 'byte-array':
-                inner_template = (' * @${field}: return location for an array of ${array_size} #guint8 values. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: return location for an array of ${array_size} #guint8 values. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
-                inner_template = (' * @${field}_size: return location for the size of the ${field} array.\n'
-                                  ' * @${field}: return location for an array of #guint8 values. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}_size: return location for the size of the ${field} array.\n'
+                                  ' * @out_${field}: return location for an array of #guint8 values. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'uuid':
-                inner_template = (' * @${field}: return location for a #MbimUuid, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: return location for a #MbimUuid, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'guint32':
-                inner_template = (' * @${field}: return location for a #${public}, or %NULL if the \'${name}\' field is not needed.\n')
+                inner_template = (' * @out_${field}: return location for a #${public}, or %NULL if the \'${name}\' field is not needed.\n')
             elif field['format'] == 'guint64':
-                inner_template = (' * @${field}: return location for a #guint64, or %NULL if the \'${name}\' field is not needed.\n')
+                inner_template = (' * @out_${field}: return location for a #guint64, or %NULL if the \'${name}\' field is not needed.\n')
             elif field['format'] == 'string':
-                inner_template = (' * @${field}: return location for a newly allocated string, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+                inner_template = (' * @out_${field}: return location for a newly allocated string, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
             elif field['format'] == 'string-array':
-                inner_template = (' * @${field}: return location for a newly allocated array of strings, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_strfreev().\n')
+                inner_template = (' * @out_${field}: return location for a newly allocated array of strings, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_strfreev().\n')
             elif field['format'] == 'struct':
-                inner_template = (' * @${field}: return location for a newly allocated #${struct}, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_free().\n')
+                inner_template = (' * @out_${field}: return location for a newly allocated #${struct}, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_free().\n')
             elif field['format'] == 'struct-array':
-                inner_template = (' * @${field}: return location for a newly allocated array of #${struct}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
+                inner_template = (' * @out_${field}: return location for a newly allocated array of #${struct}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template = (' * @${field}: return location for a newly allocated array of #${struct}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
+                inner_template = (' * @out_${field}: return location for a newly allocated array of #${struct}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
             elif field['format'] == 'ipv4':
-                inner_template = (' * @${field}: return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ref-ipv4':
-                inner_template = (' * @${field}: return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ipv4-array':
-                inner_template = (' * @${field}: return location for a newly allocated array of #MbimIPv4s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+                inner_template = (' * @out_${field}: return location for a newly allocated array of #MbimIPv4s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
             elif field['format'] == 'ipv6':
-                inner_template = (' * @${field}: return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ref-ipv6':
-                inner_template = (' * @${field}: return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ipv6-array':
-                inner_template = (' * @${field}: return location for a newly allocated array of #MbimIPv6s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+                inner_template = (' * @out_${field}: return location for a newly allocated array of #MbimIPv6s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
@@ -562,38 +562,38 @@ class Message:
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
 
             if field['format'] == 'byte-array':
-                inner_template = ('    const guint8 **${field},\n')
+                inner_template = ('    const guint8 **out_${field},\n')
             elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
-                inner_template = ('    guint32 *${field}_size,\n'
-                                  '    const guint8 **${field},\n')
+                inner_template = ('    guint32 *out_${field}_size,\n'
+                                  '    const guint8 **out_${field},\n')
             elif field['format'] == 'uuid':
-                inner_template = ('    const MbimUuid **${field},\n')
+                inner_template = ('    const MbimUuid **out_${field},\n')
             elif field['format'] == 'guint32':
-                inner_template = ('    ${public} *${field},\n')
+                inner_template = ('    ${public} *out_${field},\n')
             elif field['format'] == 'guint64':
-                inner_template = ('    ${public} *${field},\n')
+                inner_template = ('    ${public} *out_${field},\n')
             elif field['format'] == 'string':
-                inner_template = ('    gchar **${field},\n')
+                inner_template = ('    gchar **out_${field},\n')
             elif field['format'] == 'string-array':
-                inner_template = ('    gchar ***${field},\n')
+                inner_template = ('    gchar ***out_${field},\n')
             elif field['format'] == 'struct':
-                inner_template = ('    ${struct} **${field},\n')
+                inner_template = ('    ${struct} **out_${field},\n')
             elif field['format'] == 'struct-array':
-                inner_template = ('    ${struct} ***${field},\n')
+                inner_template = ('    ${struct} ***out_${field},\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template = ('    ${struct} ***${field},\n')
+                inner_template = ('    ${struct} ***out_${field},\n')
             elif field['format'] == 'ipv4':
-                inner_template = ('    const MbimIPv4 **${field},\n')
+                inner_template = ('    const MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ref-ipv4':
-                inner_template = ('    const MbimIPv4 **${field},\n')
+                inner_template = ('    const MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ipv4-array':
-                inner_template = ('    MbimIPv4 **${field},\n')
+                inner_template = ('    MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ipv6':
-                inner_template = ('    const MbimIPv6 **${field},\n')
+                inner_template = ('    const MbimIPv6 **out_${field},\n')
             elif field['format'] == 'ref-ipv6':
-                inner_template = ('    const MbimIPv6 **${field},\n')
+                inner_template = ('    const MbimIPv6 **out_${field},\n')
             elif field['format'] == 'ipv6-array':
-                inner_template = ('    MbimIPv6 **${field},\n')
+                inner_template = ('    MbimIPv6 **out_${field},\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
@@ -671,15 +671,15 @@ class Message:
                     '    if (!(_${condition_field} ${condition_operation} ${condition_value})) {\n')
                 if field['format'] == 'byte-array':
                     inner_template += (
-                        '        if (${field})\n'
-                        '            *${field} = NULL;\n')
+                        '        if (out_${field})\n'
+                        '            *out_${field} = NULL;\n')
                 elif field['format'] == 'unsized-byte-array' or \
                    field['format'] == 'ref-byte-array':
                     inner_template += (
-                        '        if (${field}_size)\n'
-                        '            *${field}_size = 0;\n'
-                        '        if (${field})\n'
-                        '            *${field} = NULL;\n')
+                        '        if (out_${field}_size)\n'
+                        '            *out_${field}_size = 0;\n'
+                        '        if (out_${field})\n'
+                        '            *out_${field} = NULL;\n')
                 elif field['format'] == 'string' or \
                      field['format'] == 'string-array' or \
                      field['format'] == 'struct' or \
@@ -692,8 +692,8 @@ class Message:
                      field['format'] == 'ref-ipv6' or \
                      field['format'] == 'ipv6-array':
                     inner_template += (
-                        '        if (${field} != NULL)\n'
-                        '            *${field} = NULL;\n')
+                        '        if (out_${field} != NULL)\n'
+                        '            *out_${field} = NULL;\n')
                 else:
                     raise ValueError('Field format \'%s\' unsupported as optional field' % field['format'])
 
@@ -706,16 +706,16 @@ class Message:
             if 'always-read' in field:
                 inner_template += (
                     '        _${field} = _mbim_message_read_guint32 (message, offset);\n'
-                    '        if (${field} != NULL)\n'
-                    '            *${field} = _${field};\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} = _${field};\n'
                     '        offset += 4;\n')
             elif field['format'] == 'byte-array':
                 inner_template += (
                     '        const guint8 *tmp;\n'
                     '\n'
                     '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, NULL);\n'
-                    '        if (${field} != NULL)\n'
-                    '            *${field} = tmp;\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} = tmp;\n'
                     '        offset += ${array_size};\n')
             elif field['format'] == 'unsized-byte-array':
                 inner_template += (
@@ -723,10 +723,10 @@ class Message:
                     '        guint32 tmpsize;\n'
                     '\n'
                     '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, &tmpsize);\n'
-                    '        if (${field} != NULL)\n'
-                    '            *${field} = tmp;\n'
-                    '        if (${field}_size != NULL)\n'
-                    '            *${field}_size = tmpsize;\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} = tmp;\n'
+                    '        if (out_${field}_size != NULL)\n'
+                    '            *out_${field}_size = tmpsize;\n'
                     '        offset += tmpsize;\n')
             elif field['format'] == 'ref-byte-array':
                 inner_template += (
@@ -734,35 +734,35 @@ class Message:
                     '        guint32 tmpsize;\n'
                     '\n'
                     '        tmp = _mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, &tmpsize);\n'
-                    '        if (${field} != NULL)\n'
-                    '            *${field} = tmp;\n'
-                    '        if (${field}_size != NULL)\n'
-                    '            *${field}_size = tmpsize;\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} = tmp;\n'
+                    '        if (out_${field}_size != NULL)\n'
+                    '            *out_${field}_size = tmpsize;\n'
                     '        offset += 8;\n')
             elif field['format'] == 'uuid':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} =  _mbim_message_read_uuid (message, offset);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} =  _mbim_message_read_uuid (message, offset);\n'
                     '        offset += 16;\n')
             elif field['format'] == 'guint32':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} =  _mbim_message_read_guint32 (message, offset);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} =  _mbim_message_read_guint32 (message, offset);\n'
                     '        offset += 4;\n')
             elif field['format'] == 'guint64':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} =  _mbim_message_read_guint64 (message, offset);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} =  _mbim_message_read_guint64 (message, offset);\n'
                     '        offset += 8;\n')
             elif field['format'] == 'string':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} = _mbim_message_read_string (message, 0, offset);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} = _mbim_message_read_string (message, 0, offset);\n'
                     '        offset += 8;\n')
             elif field['format'] == 'string-array':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} = _mbim_message_read_string_array (message, _${array_size_field}, 0, offset);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} = _mbim_message_read_string_array (message, _${array_size_field}, 0, offset);\n'
                     '        offset += (8 * _${array_size_field});\n')
             elif field['format'] == 'struct':
                 inner_template += (
@@ -770,50 +770,50 @@ class Message:
                     '        guint32 bytes_read = 0;\n'
                     '\n'
                     '        tmp = _mbim_message_read_${struct_name}_struct (message, offset, &bytes_read);\n'
-                    '        if (${field} != NULL)\n'
-                    '            *${field} = tmp;\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} = tmp;\n'
                     '        else\n'
                     '             _${struct_name}_free (tmp);\n'
                     '        offset += bytes_read;\n')
             elif field['format'] == 'struct-array':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE);\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ref-struct-array':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE);\n'
                     '        offset += (8 * _${array_size_field});\n')
             elif field['format'] == 'ipv4':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} =  _mbim_message_read_ipv4 (message, offset, FALSE);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} =  _mbim_message_read_ipv4 (message, offset, FALSE);\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} =  _mbim_message_read_ipv4 (message, offset, TRUE);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} =  _mbim_message_read_ipv4 (message, offset, TRUE);\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ipv4-array':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} =  _mbim_message_read_ipv4_array (message, _${array_size_field}, offset);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} =  _mbim_message_read_ipv4_array (message, _${array_size_field}, offset);\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ipv6':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} =  _mbim_message_read_ipv6 (message, offset, FALSE);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} =  _mbim_message_read_ipv6 (message, offset, FALSE);\n'
                     '        offset += 16;\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} =  _mbim_message_read_ipv6 (message, offset, TRUE);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} =  _mbim_message_read_ipv6 (message, offset, TRUE);\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ipv6-array':
                 inner_template += (
-                    '        if (${field} != NULL)\n'
-                    '            *${field} =  _mbim_message_read_ipv6_array (message, _${array_size_field}, offset);\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} =  _mbim_message_read_ipv6_array (message, _${array_size_field}, offset);\n'
                     '        offset += 4;\n')
 
             inner_template += (
