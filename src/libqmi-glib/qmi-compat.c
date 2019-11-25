@@ -804,7 +804,7 @@ qmi_message_dms_dell_get_firmware_version_input_set_version_type (
     QmiDmsDellFirmwareVersionType value_version_type,
     GError **error)
 {
-    return qmi_message_dms_foxconn_get_firmware_version_input_set_version_type (self, value_version_type, error);
+    return qmi_message_dms_foxconn_get_firmware_version_input_set_version_type (self, (QmiDmsFoxconnFirmwareVersionType)value_version_type, error);
 }
 
 QmiMessageDmsDellGetFirmwareVersionInput *
