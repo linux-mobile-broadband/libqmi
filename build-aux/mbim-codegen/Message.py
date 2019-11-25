@@ -620,6 +620,14 @@ class Message:
                 '                     MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
                 '                     \"Message is not a response\");\n'
                 '        return FALSE;\n'
+                '    }\n'
+                '\n'
+                '    if (!mbim_message_command_done_get_raw_information_buffer (message, NULL)) {\n'
+                '        g_set_error (error,\n'
+                '                     MBIM_CORE_ERROR,\n'
+                '                     MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
+                '                     \"Message does not have information buffer\");\n'
+                '        return FALSE;\n'
                 '    }\n')
         elif message_type == 'notification':
             template += (
@@ -629,6 +637,14 @@ class Message:
                 '                     MBIM_CORE_ERROR,\n'
                 '                     MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
                 '                     \"Message is not a notification\");\n'
+                '        return FALSE;\n'
+                '    }\n'
+                '\n'
+                '    if (!mbim_message_indicate_status_get_raw_information_buffer (message, NULL)) {\n'
+                '        g_set_error (error,\n'
+                '                     MBIM_CORE_ERROR,\n'
+                '                     MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
+                '                     \"Message does not have information buffer\");\n'
                 '        return FALSE;\n'
                 '    }\n')
         else:
