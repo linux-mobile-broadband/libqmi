@@ -612,35 +612,57 @@ _mbim_message_read_ipv4 (const MbimMessage  *self,
     return TRUE;
 }
 
-MbimIPv4 *
-_mbim_message_read_ipv4_array (const MbimMessage *self,
-                               guint32            array_size,
-                               guint32            relative_offset_array_start)
+gboolean
+_mbim_message_read_ipv4_array (const MbimMessage  *self,
+                               guint32             array_size,
+                               guint32             relative_offset_array_start,
+                               MbimIPv4          **array,
+                               GError            **error)
 {
-    MbimIPv4 *array;
+    guint32 required_size;
     guint32 offset;
     guint32 i;
     guint32 information_buffer_offset;
 
-    if (!array_size)
-        return NULL;
+    g_assert (array != NULL);
+
+    if (!array_size) {
+        *array = NULL;
+        return TRUE;
+    }
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    array = g_new (MbimIPv4, array_size);
+    required_size = information_buffer_offset + relative_offset_array_start + 4;
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read IPv4 array offset (4 bytes) (%u < %u)",
+                     self->len, required_size);
+        return FALSE;
+    }
+
     offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
                                   guint32,
                                   self->data,
                                   (information_buffer_offset + relative_offset_array_start)));
 
+    required_size = information_buffer_offset + offset + (4 * array_size);
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read IPv4 array data (%u bytes) (%u < %u)",
+                     (4 * array_size), self->len, required_size);
+        return FALSE;
+    }
+
+    *array = g_new (MbimIPv4, array_size);
     for (i = 0; i < array_size; i++, offset += 4) {
-        memcpy (&array[i],
+        memcpy (&((*array)[i]),
                 G_STRUCT_MEMBER_P (self->data,
                                    (information_buffer_offset + offset)),
                 4);
     }
 
-    return array;
+    return TRUE;
 }
 
 const MbimIPv6 *

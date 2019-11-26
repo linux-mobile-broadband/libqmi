@@ -298,10 +298,12 @@ gboolean _mbim_message_read_ipv4          (const MbimMessage  *self,
                                            gboolean            ref,
                                            const MbimIPv4    **ipv4,
                                            GError            **error);
+gboolean _mbim_message_read_ipv4_array    (const MbimMessage  *self,
+                                           guint32             array_size,
+                                           guint32             relative_offset_array_start,
+                                           MbimIPv4          **array,
+                                           GError            **error);
 
-MbimIPv4        *_mbim_message_read_ipv4_array    (const MbimMessage *self,
-                                                   guint32            array_size,
-                                                   guint32            relative_offset_array_start);
 const MbimIPv6  *_mbim_message_read_ipv6          (const MbimMessage *self,
                                                    guint32            relative_offset,
                                                    gboolean           ref);
