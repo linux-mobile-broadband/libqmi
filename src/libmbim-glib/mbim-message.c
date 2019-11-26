@@ -665,27 +665,51 @@ _mbim_message_read_ipv4_array (const MbimMessage  *self,
     return TRUE;
 }
 
-const MbimIPv6 *
-_mbim_message_read_ipv6 (const MbimMessage *self,
-                         guint32            relative_offset,
-                         gboolean           ref)
+gboolean
+_mbim_message_read_ipv6 (const MbimMessage  *self,
+                         guint32             relative_offset,
+                         gboolean            ref,
+                         const MbimIPv6    **ipv6,
+                         GError            **error)
 {
+    guint32 required_size;
     guint32 information_buffer_offset;
     guint32 offset;
+
+    g_assert (ipv6 != NULL);
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
     if (ref) {
+        required_size = information_buffer_offset + relative_offset + 4;
+        if (self->len < required_size) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read IPv6 offset (4 bytes) (%u < %u)",
+                         self->len, required_size);
+            return FALSE;
+        }
+
         offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (guint32,
                                                    self->data,
                                                    (information_buffer_offset + relative_offset)));
-        if (!offset)
-            return NULL;
+        if (!offset) {
+            *ipv6 = NULL;
+            return TRUE;
+        }
     } else
         offset = relative_offset;
 
-    return (const MbimIPv6 *) G_STRUCT_MEMBER_P (self->data,
-                                                 (information_buffer_offset + offset));
+    required_size = information_buffer_offset + offset + 16;
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read IPv6 (16 bytes) (%u < %u)",
+                     self->len, required_size);
+        return FALSE;
+    }
+
+    *ipv6 = (const MbimIPv6 *) G_STRUCT_MEMBER_P (self->data,
+                                                  (information_buffer_offset + offset));
+    return TRUE;
 }
 
 MbimIPv6 *
