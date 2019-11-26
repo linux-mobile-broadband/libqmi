@@ -42,7 +42,8 @@ test_parse_single_service_0_cids (void)
     g_assert_no_error (error);
     g_assert (message != NULL);
 
-    out = _mbim_proxy_helper_service_subscribe_request_parse (message, &out_size);
+    out = _mbim_proxy_helper_service_subscribe_request_parse (message, &out_size, &error);
+    g_assert_no_error (error);
     g_assert (out != NULL);
     g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)in, 1,
                                                              (const MbimEventEntry * const *)out, out_size));
@@ -73,7 +74,8 @@ test_parse_single_service_1_cids (void)
     g_assert_no_error (error);
     g_assert (message != NULL);
 
-    out = _mbim_proxy_helper_service_subscribe_request_parse (message, &out_size);
+    out = _mbim_proxy_helper_service_subscribe_request_parse (message, &out_size, &error);
+    g_assert_no_error (error);
     g_assert (out != NULL);
     g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)in, 1,
                                                              (const MbimEventEntry * const *)out, out_size));
@@ -108,7 +110,8 @@ test_parse_single_service_5_cids (void)
     g_assert_no_error (error);
     g_assert (message != NULL);
 
-    out = _mbim_proxy_helper_service_subscribe_request_parse (message, &out_size);
+    out = _mbim_proxy_helper_service_subscribe_request_parse (message, &out_size, &error);
+    g_assert_no_error (error);
     g_assert (out != NULL);
     g_assert (_mbim_proxy_helper_service_subscribe_list_cmp ((const MbimEventEntry * const *)in, 1,
                                                              (const MbimEventEntry * const *)out, out_size));

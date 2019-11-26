@@ -840,11 +840,23 @@ static void
 track_service_subscribe_list (Client      *client,
                               MbimMessage *message)
 {
+    GError          *error = NULL;
+    MbimEventEntry **mbim_event_entry_array;
+    gsize            mbim_event_entry_array_size;
+
+    mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_request_parse (message, &mbim_event_entry_array_size, &error);
+    if (error) {
+        g_warning ("Invalid subscribe request message: %s", error->message);
+        g_error_free (error);
+        return;
+    }
+
     /* On each new request from the client, it should provide the FULL list of
      * events it's subscribed to, so we can safely recreate the whole array each
      * time. */
     g_clear_pointer (&client->mbim_event_entry_array, mbim_event_entry_array_free);
-    client->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_request_parse (message, &client->mbim_event_entry_array_size);
+    client->mbim_event_entry_array = mbim_event_entry_array;
+    client->mbim_event_entry_array_size = mbim_event_entry_array_size;
 
     if (mbim_utils_get_traces_enabled ()) {
         g_debug ("Client (%d) service subscribe list built", g_socket_get_fd (g_socket_connection_get_socket (client->connection)));

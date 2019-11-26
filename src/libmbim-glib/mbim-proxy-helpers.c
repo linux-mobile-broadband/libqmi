@@ -130,8 +130,9 @@ _mbim_proxy_helper_service_subscribe_list_debug (const MbimEventEntry * const *l
 /*****************************************************************************/
 
 MbimEventEntry **
-_mbim_proxy_helper_service_subscribe_request_parse (MbimMessage *message,
-                                                    gsize       *out_size)
+_mbim_proxy_helper_service_subscribe_request_parse (MbimMessage  *message,
+                                                    gsize        *out_size,
+                                                    GError      **error)
 {
     MbimEventEntry **array = NULL;
     guint32 i;
