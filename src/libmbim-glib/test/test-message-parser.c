@@ -1744,6 +1744,53 @@ test_message_parser_ms_firmware_id_get (void)
     mbim_message_unref (response);
 }
 
+static void
+test_message_parser_basic_connect_connect_short (void)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    guint32 session_id;
+    MbimActivationState activation_state;
+    MbimVoiceCallState voice_call_state;
+    MbimContextIpType ip_type;
+    const MbimUuid *context_type;
+    guint32 nw_error;
+    const guint8 buffer [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x30, 0x00, 0x00, 0x00, /* length */
+        0x1A, 0x0D, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF, /* command id */
+        0x0C, 0x00, 0x00, 0x00, /* status code */
+        0x02, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    /* should fail! */
+    g_assert (!mbim_message_connect_response_parse (
+                  response,
+                  &session_id,
+                  &activation_state,
+                  &voice_call_state,
+                  &ip_type,
+                  &context_type,
+                  &nw_error,
+                  &error));
+
+    g_assert (error != NULL);
+    g_error_free (error);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -1767,6 +1814,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-packet-filters/one", test_message_parser_basic_connect_ip_packet_filters_one);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-packet-filters/two", test_message_parser_basic_connect_ip_packet_filters_two);
     g_test_add_func ("/libmbim-glib/message/parser/ms-firmware-id/get", test_message_parser_ms_firmware_id_get);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/connect/short", test_message_parser_basic_connect_connect_short);
 
     return g_test_run ();
 }
