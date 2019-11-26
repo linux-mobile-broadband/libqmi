@@ -806,9 +806,22 @@ class Message:
                 inner_template += (
                     '        offset += 4;\n')
             elif field['format'] == 'guint64':
+                count_early_outs += 1
+                if 'public-format' in field:
+                    translations['public'] = field['public-format'] if 'public-format' in field else field['format']
+                    inner_template += (
+                        '        if (out_${field} != NULL) {\n'
+                        '            guint64 aux;\n'
+                        '\n'
+                        '            if (!_mbim_message_read_guint64 (message, offset, &aux, error))\n'
+                        '                goto out;\n'
+                        '            *out_${field} = (${public})aux;\n'
+                        '        }\n')
+                else:
+                    inner_template += (
+                        '        if ((out_${field} != NULL) && !_mbim_message_read_guint64 (message, offset, out_${field}, error))\n'
+                        '            goto out;\n')
                 inner_template += (
-                    '        if (out_${field} != NULL)\n'
-                    '            *out_${field} =  _mbim_message_read_guint64 (message, offset);\n'
                     '        offset += 8;\n')
             elif field['format'] == 'string':
                 inner_template += (
@@ -971,6 +984,7 @@ class Message:
         for field in fields:
             if 'always-read' in field or \
                field['format'] == 'guint32' or \
+               field['format'] == 'guint64' or \
                field['format'] == 'uuid' or \
                field['format'] == 'struct-array' or \
                field['format'] == 'ref-struct-array' or \
@@ -1102,7 +1116,8 @@ class Message:
                         '        offset += 4;\n')
                 elif field['format'] == 'guint64' :
                     inner_template += (
-                        '        tmp = (${public}) _mbim_message_read_guint64 (message, offset);\n'
+                        '        if (!_mbim_message_read_guint64 (message, offset, &tmp, &inner_error))\n'
+                        '            goto out;\n'
                         '        offset += 8;\n')
 
                 if 'public-format' in field:

@@ -509,9 +509,11 @@ class Struct:
                     '        goto out;\n'
                     '    offset += (4 * out->${array_size_field_name_underscore});\n')
             elif field['format'] == 'guint64':
+                count_early_outs += 1
                 inner_template += (
                     '\n'
-                    '    out->${field_name_underscore} = _mbim_message_read_guint64 (self, offset);\n'
+                    '    if (!_mbim_message_read_guint64 (self, offset, &out->${field_name_underscore}, error))\n'
+                    '        goto out;\n'
                     '    offset += 8;\n')
             elif field['format'] == 'string':
                 inner_template += (

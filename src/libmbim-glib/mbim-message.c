@@ -240,17 +240,32 @@ _mbim_message_read_guint32_array (const MbimMessage  *self,
     return TRUE;
 }
 
-guint64
-_mbim_message_read_guint64 (const MbimMessage *self,
-                            guint64            relative_offset)
+gboolean
+_mbim_message_read_guint64 (const MbimMessage  *self,
+                            guint64             relative_offset,
+                            guint64            *value,
+                            GError            **error)
 {
+    guint32 required_size;
     guint64 information_buffer_offset;
 
+    g_assert (value != NULL);
+
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
-    return GUINT64_FROM_LE (G_STRUCT_MEMBER (
-                                guint64,
-                                self->data,
-                                (information_buffer_offset + relative_offset)));
+
+    required_size = information_buffer_offset + relative_offset + 8;
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read 64bit unsigned integer (8 bytes) (%u < %u)",
+                     self->len, required_size);
+        return FALSE;
+    }
+
+    *value = GUINT64_FROM_LE (G_STRUCT_MEMBER (
+                                  guint64,
+                                  self->data,
+                                  (information_buffer_offset + relative_offset)));
+    return TRUE;
 }
 
 gchar *
