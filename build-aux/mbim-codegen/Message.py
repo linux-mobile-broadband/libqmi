@@ -830,9 +830,10 @@ class Message:
                     '            goto out;\n'
                     '        offset += 8;\n')
             elif field['format'] == 'string-array':
+                count_early_outs += 1
                 inner_template += (
-                    '        if (out_${field} != NULL)\n'
-                    '            _${field} = _mbim_message_read_string_array (message, _${array_size_field}, 0, offset);\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_string_array (message, _${array_size_field}, 0, offset, &_${field}, error))\n'
+                    '            goto out;\n'
                     '        offset += (8 * _${array_size_field});\n')
             elif field['format'] == 'struct':
                 count_early_outs += 1
@@ -987,6 +988,7 @@ class Message:
                field['format'] == 'guint32' or \
                field['format'] == 'guint64' or \
                field['format'] == 'string' or \
+               field['format'] == 'string-array' or \
                field['format'] == 'uuid' or \
                field['format'] == 'struct-array' or \
                field['format'] == 'ref-struct-array' or \
@@ -1160,7 +1162,8 @@ class Message:
                     '        gchar **tmp;\n'
                     '        guint i;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_string_array (message, _${array_size_field}, 0, offset);\n'
+                    '        if (!_mbim_message_read_string_array (message, _${array_size_field}, 0, offset, &tmp, &inner_error))\n'
+                    '            goto out;\n'
                     '        offset += (8 * _${array_size_field});\n'
                     '\n'
                     '        g_string_append (str, "\'");\n'

@@ -340,29 +340,41 @@ _mbim_message_read_string (const MbimMessage  *self,
     return TRUE;
 }
 
-gchar **
-_mbim_message_read_string_array (const MbimMessage *self,
-                                 guint32            array_size,
-                                 guint32            struct_start_offset,
-                                 guint32            relative_offset_array_start)
+gboolean
+_mbim_message_read_string_array (const MbimMessage   *self,
+                                 guint32              array_size,
+                                 guint32              struct_start_offset,
+                                 guint32              relative_offset_array_start,
+                                 gchar             ***array,
+                                 GError             **error)
 {
-    gchar **array;
-    guint32 offset;
-    guint32 i;
+    guint32  offset;
+    guint32  i;
+    GError  *inner_error = NULL;
 
-    if (!array_size)
-        return NULL;
+    g_assert (array != NULL);
 
-    array = g_new (gchar *, array_size + 1);
+    if (!array_size) {
+        *array = NULL;
+        return TRUE;
+    }
+
+    *array = g_new0 (gchar *, array_size + 1);
     for (i = 0, offset = relative_offset_array_start;
          i < array_size;
          offset += 8, i++) {
         /* Read next string in the OL pair list */
-        _mbim_message_read_string (self, struct_start_offset, offset, &array[i], NULL);
+        if (!_mbim_message_read_string (self, struct_start_offset, offset, &((*array)[i]), &inner_error))
+            break;
     }
-    array[i] = NULL;
 
-    return array;
+    if (inner_error) {
+        g_strfreev (*array);
+        g_propagate_error (error, inner_error);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*

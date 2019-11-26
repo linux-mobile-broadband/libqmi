@@ -523,10 +523,12 @@ class Struct:
                     '        goto out;\n'
                     '    offset += 8;\n')
             elif field['format'] == 'string-array':
+                count_early_outs += 1
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                 inner_template += (
                     '\n'
-                    '    out->${field_name_underscore} = _mbim_message_read_string_array (self, out->${array_size_field_name_underscore}, relative_offset, offset);\n'
+                    '    if (!_mbim_message_read_string_array (self, out->${array_size_field_name_underscore}, relative_offset, offset, &out->${field_name_underscore}, error))\n'
+                    '        goto out;\n'
                     '    offset += (8 * out->${array_size_field_name_underscore});\n')
             elif field['format'] == 'ipv4':
                 inner_template += (
