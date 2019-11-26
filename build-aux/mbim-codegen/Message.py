@@ -683,6 +683,7 @@ class Message:
         else:
             raise ValueError('Unexpected message type \'%s\'' % message_type)
 
+        count_early_outs = 0
         for field in fields:
             translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
             translations['field_format_underscore'] = utils.build_underscore_name_from_camelcase(field['format'])
@@ -798,25 +799,30 @@ class Message:
                     '            _${field} = _mbim_message_read_string_array (message, _${array_size_field}, 0, offset);\n'
                     '        offset += (8 * _${array_size_field});\n')
             elif field['format'] == 'struct':
+                count_early_outs += 1
                 inner_template += (
                     '        ${struct_type} *tmp;\n'
                     '        guint32 bytes_read = 0;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_${struct_name}_struct (message, offset, &bytes_read);\n'
+                    '        tmp = _mbim_message_read_${struct_name}_struct (message, offset, &bytes_read, error);\n'
+                    '        if (!tmp)\n'
+                    '            goto out;\n'
                     '        if (out_${field} != NULL)\n'
                     '            _${field} = tmp;\n'
                     '        else\n'
                     '             _${struct_name}_free (tmp);\n'
                     '        offset += bytes_read;\n')
             elif field['format'] == 'struct-array':
+                count_early_outs += 1
                 inner_template += (
-                    '        if (out_${field} != NULL)\n'
-                    '            _${field} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE);\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE, &_${field}, error))\n'
+                    '            goto out;\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ref-struct-array':
+                count_early_outs += 1
                 inner_template += (
-                    '        if (out_${field} != NULL)\n'
-                    '            _${field} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE);\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE, &_${field}, error))\n'
+                    '            goto out;\n'
                     '        offset += (8 * _${array_size_field});\n')
             elif field['format'] == 'ipv4':
                 inner_template += (
@@ -859,6 +865,11 @@ class Message:
                 '\n'
                 '    /* All variables successfully parsed */\n'
                 '    success = TRUE;\n'
+                '\n')
+
+        if count_early_outs > 0:
+            template += (
+                ' out:\n'
                 '\n')
 
         if count_allocated_variables > 0:
@@ -933,6 +944,14 @@ class Message:
             '    GError **error)\n'
             '{\n'
             '    GString *str;\n')
+
+        needs_early_out = False
+        for field in fields:
+            if field['format'] == 'struct-array' or field['format'] == 'ref-struct-array' or field['format'] == 'struct':
+                template += (
+                    '    GError *inner_error = NULL;\n')
+                needs_early_out = True
+                break
 
         if fields != []:
             template += (
@@ -1104,9 +1123,10 @@ class Message:
                     '        gchar *new_line_prefix;\n'
                     '        gchar *struct_str;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_${struct_name}_struct (message, offset, &bytes_read);\n'
+                    '        tmp = _mbim_message_read_${struct_name}_struct (message, offset, &bytes_read, &inner_error);\n'
+                    '        if (!tmp)\n'
+                    '            goto out;\n'
                     '        offset += bytes_read;\n'
-                    '\n'
                     '        g_string_append (str, "{\\n");\n'
                     '        new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
                     '        struct_str = _mbim_message_print_${struct_name}_struct (tmp, new_line_prefix);\n'
@@ -1125,11 +1145,13 @@ class Message:
 
                 if field['format'] == 'struct-array':
                     inner_template += (
-                    '        tmp = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE);\n'
+                    '        if (!_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE, &tmp, &inner_error))\n'
+                    '            goto out;\n'
                     '        offset += 4;\n')
                 elif field['format'] == 'ref-struct-array':
                     inner_template += (
-                    '        tmp = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE);\n'
+                    '        if (!_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE, &tmp, &inner_error))\n'
+                    '            goto out;\n'
                     '        offset += (8 * _${array_size_field});\n')
 
                 inner_template += (
@@ -1248,6 +1270,15 @@ class Message:
                 '    g_string_append (str, "\\n");\n')
 
             template += (string.Template(inner_template).substitute(translations))
+
+        if needs_early_out:
+            template += (
+                '\n'
+                ' out:\n'
+                '    if (inner_error) {\n'
+                '        g_string_append_printf (str, "n/a: %s", inner_error->message);\n'
+                '        g_clear_error (&inner_error);\n'
+                '    }\n')
 
         template += (
             '\n'
