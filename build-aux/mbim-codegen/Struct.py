@@ -422,6 +422,7 @@ class Struct:
             '\n'
             '    out = g_new0 (${name}, 1);\n')
 
+        count_early_outs = 0
         for field in self.contents:
             translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
 
@@ -433,6 +434,7 @@ class Struct:
                     '    offset += 16;\n')
             elif field['format'] in ['ref-byte-array', 'ref-byte-array-no-offset']:
                 translations['has_offset'] = 'TRUE' if field['format'] == 'ref-byte-array' else 'FALSE'
+                count_early_outs += 1
                 if 'array-size-field' in field:
                     translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                     inner_template += (
@@ -440,7 +442,8 @@ class Struct:
                         '    {\n'
                         '        const guint8 *tmp;\n'
                         '\n'
-                        '        tmp = _mbim_message_read_byte_array (self, relative_offset, offset, ${has_offset}, FALSE, NULL);\n'
+                        '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, ${has_offset}, FALSE, out->${array_size_field_name_underscore}, &tmp, NULL, error))\n'
+                        '            goto out;\n'
                         '        out->${field_name_underscore} = g_malloc (out->${array_size_field_name_underscore});\n'
                         '        memcpy (out->${field_name_underscore}, tmp, out->${array_size_field_name_underscore});\n'
                         '        offset += 4;\n'
@@ -451,30 +454,35 @@ class Struct:
                         '    {\n'
                         '        const guint8 *tmp;\n'
                         '\n'
-                        '        tmp = _mbim_message_read_byte_array (self, relative_offset, offset, ${has_offset}, TRUE, &(out->${field_name_underscore}_size));\n'
+                        '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, ${has_offset}, TRUE, 0, &tmp, &(out->${field_name_underscore}_size), error))\n'
+                        '            goto out;\n'
                         '        out->${field_name_underscore} = g_malloc (out->${field_name_underscore}_size);\n'
                         '        memcpy (out->${field_name_underscore}, tmp, out->${field_name_underscore}_size);\n'
                         '        offset += 8;\n'
                         '    }\n')
             elif field['format'] == 'unsized-byte-array':
+                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    {\n'
                     '        const guint8 *tmp;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, &(out->${field_name_underscore}_size));\n'
+                    '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, 0, &tmp, &(out->${field_name_underscore}_size), error))\n'
+                    '            goto out;\n'
                     '        out->${field_name_underscore} = g_malloc (out->${field_name_underscore}_size);\n'
                     '        memcpy (out->${field_name_underscore}, tmp, out->${field_name_underscore}_size);\n'
                     '        /* no offset update expected, this should be the last field */\n'
                     '    }\n')
             elif field['format'] == 'byte-array':
                 translations['array_size'] = field['array-size']
+                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    {\n'
                     '        const guint8 *tmp;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, NULL));\n'
+                    '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, ${array_size}, &tmp, NULL, error))\n'
+                    '            goto out;\n'
                     '        memcpy (out->${field_name_underscore}, tmp, ${array_size});\n'
                     '        offset += ${array_size};\n'
                     '    }\n')
@@ -533,7 +541,13 @@ class Struct:
         template += (
             '\n'
             '    success = TRUE;\n'
-            '\n'
+            '\n')
+
+        if count_early_outs > 0:
+            template += (
+                ' out:\n')
+
+        template += (
             '    if (success) {\n'
             '        if (bytes_read)\n'
             '            *bytes_read = (offset - relative_offset);\n'

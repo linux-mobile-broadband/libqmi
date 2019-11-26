@@ -744,30 +744,36 @@ class Message:
                     '            *out_${field} = _${field};\n'
                     '        offset += 4;\n')
             elif field['format'] == 'byte-array':
+                count_early_outs += 1
                 inner_template += (
                     '        const guint8 *tmp;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, NULL);\n'
+                    '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, ${array_size}, &tmp, NULL, error))\n'
+                    '            goto out;\n'
                     '        if (out_${field} != NULL)\n'
                     '            *out_${field} = tmp;\n'
                     '        offset += ${array_size};\n')
             elif field['format'] == 'unsized-byte-array':
+                count_early_outs += 1
                 inner_template += (
                     '        const guint8 *tmp;\n'
                     '        guint32 tmpsize;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, &tmpsize);\n'
+                    '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, 0, &tmp, &tmpsize, error))\n'
+                    '            goto out;\n'
                     '        if (out_${field} != NULL)\n'
                     '            *out_${field} = tmp;\n'
                     '        if (out_${field}_size != NULL)\n'
                     '            *out_${field}_size = tmpsize;\n'
                     '        offset += tmpsize;\n')
             elif field['format'] == 'ref-byte-array':
+                count_early_outs += 1
                 inner_template += (
                     '        const guint8 *tmp;\n'
                     '        guint32 tmpsize;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, &tmpsize);\n'
+                    '        if (!_mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, 0, &tmp, &tmpsize, error))\n'
+                    '            goto out;\n'
                     '        if (out_${field} != NULL)\n'
                     '            *out_${field} = tmp;\n'
                     '        if (out_${field}_size != NULL)\n'
@@ -947,7 +953,13 @@ class Message:
 
         needs_early_out = False
         for field in fields:
-            if field['format'] == 'struct-array' or field['format'] == 'ref-struct-array' or field['format'] == 'struct':
+            if field['format'] == 'struct-array' or \
+               field['format'] == 'ref-struct-array' or \
+               field['format'] == 'struct' or \
+               field['format'] == 'byte-array' or \
+               field['format'] == 'unsized-byte-array' or \
+               field['format'] == 'ref-byte-array' or \
+               field['format'] == 'ref-byte-array-no-offset':
                 template += (
                     '    GError *inner_error = NULL;\n')
                 needs_early_out = True
@@ -1018,22 +1030,26 @@ class Message:
                     '\n')
                 if field['format'] == 'byte-array':
                     inner_template += (
-                        '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, NULL);\n'
+                        '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, ${array_size}, &tmp, NULL, &inner_error))\n'
+                        '            goto out;\n'
                         '        tmpsize = ${array_size};\n'
                         '        offset += ${array_size};\n')
                 elif field['format'] == 'unsized-byte-array':
                     inner_template += (
-                        '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, &tmpsize);\n'
+                        '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, 0, &tmp, &tmpsize, &inner_error))\n'
+                        '            goto out;\n'
                         '        offset += tmpsize;\n')
 
                 elif field['format'] == 'ref-byte-array':
                     inner_template += (
-                        '        tmp = _mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, &tmpsize);\n'
+                        '        if (!_mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, 0, &tmp, &tmpsize, &inner_error))\n'
+                        '            goto out;\n'
                         '        offset += 8;\n')
 
                 elif field['format'] == 'ref-byte-array-no-offset':
                     inner_template += (
-                        '        tmp = _mbim_message_read_byte_array (message, 0, offset, FALSE, TRUE, &tmpsize);\n'
+                        '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, TRUE, 0, &tmp, &tmpsize, &inner_error))\n'
+                        '            goto out;\n'
                         '        offset += 4;\n')
 
                 inner_template += (

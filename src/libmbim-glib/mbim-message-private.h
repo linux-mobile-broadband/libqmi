@@ -18,7 +18,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2013 - 2019 Aleksander Morgado <aleksander@aleksander.es>
  *
  * This is a private non-installed header
  */
@@ -256,12 +256,16 @@ void                       _mbim_message_command_builder_append_ipv6_array    (M
 /*****************************************************************************/
 /* Message parser */
 
-const guint8    *_mbim_message_read_byte_array    (const MbimMessage *self,
-                                                   guint32            struct_start_offset,
-                                                   guint32            relative_offset,
-                                                   gboolean           has_offset,
-                                                   gboolean           has_length,
-                                                   guint32           *array_size);
+gboolean _mbim_message_read_byte_array    (const MbimMessage  *self,
+                                           guint32             struct_start_offset,
+                                           guint32             relative_offset,
+                                           gboolean            has_offset,
+                                           gboolean            has_length,
+                                           guint32             explicit_array_size,
+                                           const guint8      **array,
+                                           guint32            *array_size,
+                                           GError            **error);
+
 const MbimUuid  *_mbim_message_read_uuid          (const MbimMessage *self,
                                                    guint32            relative_offset);
 guint32          _mbim_message_read_guint32       (const MbimMessage *self,

@@ -310,13 +310,16 @@ _mbim_message_read_string_array (const MbimMessage *self,
  *  - (d) Fixed-sized array directly in the static buffer.
  *  - (e) Unsized array directly in the variable buffer, length is assumed until end of message.
  */
-const guint8 *
-_mbim_message_read_byte_array (const MbimMessage *self,
-                               guint32            struct_start_offset,
-                               guint32            relative_offset,
-                               gboolean           has_offset,
-                               gboolean           has_length,
-                               guint32           *array_size)
+gboolean
+_mbim_message_read_byte_array (const MbimMessage  *self,
+                               guint32             struct_start_offset,
+                               guint32             relative_offset,
+                               gboolean            has_offset,
+                               gboolean            has_length,
+                               guint32             explicit_array_size,
+                               const guint8      **array,
+                               guint32            *array_size,
+                               GError            **error)
 {
     guint32 information_buffer_offset;
 
@@ -325,8 +328,19 @@ _mbim_message_read_byte_array (const MbimMessage *self,
     /* (a) Offset + Length pair in static buffer, data in variable buffer. */
     if (has_offset && has_length) {
         guint32 offset;
+        guint32 required_size;
 
         g_assert (array_size != NULL);
+        g_assert (explicit_array_size == 0);
+
+        /* requires 8 bytes in relative offset */
+        required_size = information_buffer_offset + relative_offset + 8;
+        if (self->len < required_size) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read byte array offset and size (%u < %u)",
+                         self->len, required_size);
+            return FALSE;
+        }
 
         offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
                                       guint32,
@@ -336,45 +350,115 @@ _mbim_message_read_byte_array (const MbimMessage *self,
                                            guint32,
                                            self->data,
                                            (information_buffer_offset + relative_offset + 4)));
-        return (const guint8 *) G_STRUCT_MEMBER_P (self->data,
-                                                   (information_buffer_offset + struct_start_offset + offset));
+
+        /* requires array_size bytes in offset */
+        required_size = information_buffer_offset + struct_start_offset + offset + *array_size;
+        if (self->len < required_size) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read byte array data (%u bytes) (%u < %u)",
+                         *array_size, self->len, required_size);
+            return FALSE;
+        }
+
+        *array = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+                                                     (information_buffer_offset + struct_start_offset + offset));
+        return TRUE;
     }
 
     /* (b) Just length in static buffer, data just afterwards. */
     if (!has_offset && has_length) {
+        guint32 required_size;
+
         g_assert (array_size != NULL);
+        g_assert (explicit_array_size == 0);
+
+        /* requires 4 bytes in relative offset */
+        required_size = information_buffer_offset + relative_offset + 4;
+        if (self->len < required_size) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read byte array size (%u < %u)",
+                         self->len, required_size);
+            return FALSE;
+        }
 
         *array_size = GUINT32_FROM_LE (G_STRUCT_MEMBER (
                                            guint32,
                                            self->data,
                                            (information_buffer_offset + relative_offset)));
-        return (const guint8 *) G_STRUCT_MEMBER_P (self->data,
-                                                   (information_buffer_offset + relative_offset + 4));
+
+        /* requires array_size bytes in after the array_size variable */
+        required_size += *array_size;
+        if (self->len < required_size) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read byte array data (%u bytes) (%u < %u)",
+                         *array_size, self->len, required_size);
+            return FALSE;
+        }
+
+        *array = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+                                                     (information_buffer_offset + relative_offset + 4));
+        return TRUE;
     }
 
     /* (c) Just offset in static buffer, length given in another variable, data in variable buffer. */
     if (has_offset && !has_length) {
+        guint32 required_size;
         guint32 offset;
 
         g_assert (array_size == NULL);
+
+        /* requires 4 bytes in relative offset */
+        required_size = information_buffer_offset + relative_offset + 4;
+        if (self->len < required_size) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read byte array offset (%u < %u)",
+                         self->len, required_size);
+            return FALSE;
+        }
 
         offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
                                       guint32,
                                       self->data,
                                       (information_buffer_offset + relative_offset)));
-        return (const guint8 *) G_STRUCT_MEMBER_P (self->data,
-                                                   (information_buffer_offset + struct_start_offset + offset));
+
+        /* requires explicit_array_size bytes in offset */
+        required_size = information_buffer_offset + struct_start_offset + offset + explicit_array_size;
+        if (self->len < required_size) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read byte array data (%u bytes) (%u < %u)",
+                         explicit_array_size, self->len, required_size);
+            return FALSE;
+        }
+
+        *array = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+                                                     (information_buffer_offset + struct_start_offset + offset));
+        return TRUE;
     }
 
     /* (d) Fixed-sized array directly in the static buffer.
      * (e) Unsized array directly in the variable buffer, length is assumed until end of message. */
     if (!has_offset && !has_length) {
         /* If array size is requested, it's case (e) */
-        if (array_size)
+        if (array_size) {
+            /* no need to validate required size, as it's implicitly validated based on the message
+             * length */
             *array_size = self->len - (information_buffer_offset + relative_offset);
+        } else {
+            guint32 required_size;
 
-        return (const guint8 *) G_STRUCT_MEMBER_P (self->data,
-                                                   (information_buffer_offset + relative_offset));
+            /* requires explicit_array_size bytes in offset */
+            required_size = information_buffer_offset + relative_offset + explicit_array_size;
+            if (self->len < required_size) {
+                g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                             "cannot read byte array data (%u bytes) (%u < %u)",
+                             explicit_array_size, self->len, required_size);
+                return FALSE;
+            }
+        }
+
+        *array = (const guint8 *) G_STRUCT_MEMBER_P (self->data,
+                                                     (information_buffer_offset + relative_offset));
+        return TRUE;
     }
 
     g_assert_not_reached ();
