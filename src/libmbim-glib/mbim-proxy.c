@@ -769,8 +769,9 @@ process_internal_proxy_config (MbimProxy   *self,
     }
 
     /* Retrieve path from request */
-    incoming_path = _mbim_message_read_string (message, 0, 0);
-    if (!incoming_path) {
+    if (!_mbim_message_read_string (message, 0, 0, &incoming_path, &error)) {
+        g_warning ("Error reading device path from message: %s", error->message);
+        g_error_free (error);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);
         return TRUE;
@@ -803,7 +804,7 @@ process_internal_proxy_config (MbimProxy   *self,
 
     /* Read requested timeout value */
     if (!_mbim_message_read_guint32 (message, 8, &request->timeout_secs, &error)) {
-        g_warning ("Error reading timeout from message: %s", error->message);
+        g_warning ("Error reading requested timeout from message: %s", error->message);
         g_error_free (error);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);

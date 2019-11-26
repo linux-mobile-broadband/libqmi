@@ -268,31 +268,50 @@ _mbim_message_read_guint64 (const MbimMessage  *self,
     return TRUE;
 }
 
-gchar *
-_mbim_message_read_string (const MbimMessage *self,
-                           guint32            struct_start_offset,
-                           guint32            relative_offset)
+gboolean
+_mbim_message_read_string (const MbimMessage  *self,
+                           guint32             struct_start_offset,
+                           guint32             relative_offset,
+                           gchar             **str,
+                           GError            **error)
 {
+    guint32 required_size;
     guint32 offset;
     guint32 size;
-    gchar *str;
-    GError *error = NULL;
     guint32 information_buffer_offset;
     gunichar2 *utf16d = NULL;
     const gunichar2 *utf16 = NULL;
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
+    required_size = information_buffer_offset + relative_offset + 8;
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read string offset and size (%u < %u)",
+                     self->len, required_size);
+        return FALSE;
+    }
+
     offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
                                   guint32,
                                   self->data,
                                   (information_buffer_offset + relative_offset)));
-    size   = GUINT32_FROM_LE (G_STRUCT_MEMBER (
-                                  guint32,
-                                  self->data,
-                                  (information_buffer_offset + relative_offset + 4)));
-    if (!size)
-        return NULL;
+    size = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                guint32,
+                                self->data,
+                                (information_buffer_offset + relative_offset + 4)));
+    if (!size) {
+        *str = NULL;
+        return TRUE;
+    }
+
+    required_size = information_buffer_offset + struct_start_offset + offset + size;
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read string data (%u bytes) (%u < %u)",
+                     size, self->len, required_size);
+        return FALSE;
+    }
 
     utf16 = (const gunichar2 *) G_STRUCT_MEMBER_P (self->data, (information_buffer_offset + struct_start_offset + offset));
 
@@ -305,19 +324,20 @@ _mbim_message_read_string (const MbimMessage *self,
             utf16d[i] = GUINT16_FROM_LE (utf16[i]);
     }
 
-    str = g_utf16_to_utf8 (utf16d ? utf16d : utf16,
-                           size / 2,
-                           NULL,
-                           NULL,
-                           &error);
-    if (error) {
-        g_warning ("Error converting string: %s", error->message);
-        g_error_free (error);
-    }
+    *str = g_utf16_to_utf8 (utf16d ? utf16d : utf16,
+                            size / 2,
+                            NULL,
+                            NULL,
+                            error);
 
     g_free (utf16d);
 
-    return str;
+    if (!(*str)) {
+        g_prefix_error (error, "Error converting string to UTF-8: ");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 gchar **
@@ -338,7 +358,7 @@ _mbim_message_read_string_array (const MbimMessage *self,
          i < array_size;
          offset += 8, i++) {
         /* Read next string in the OL pair list */
-        array[i] = _mbim_message_read_string (self, struct_start_offset, offset);
+        _mbim_message_read_string (self, struct_start_offset, offset, &array[i], NULL);
     }
     array[i] = NULL;
 

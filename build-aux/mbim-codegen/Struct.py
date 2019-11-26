@@ -516,9 +516,11 @@ class Struct:
                     '        goto out;\n'
                     '    offset += 8;\n')
             elif field['format'] == 'string':
+                count_early_outs += 1
                 inner_template += (
                     '\n'
-                    '    out->${field_name_underscore} = _mbim_message_read_string (self, relative_offset, offset);\n'
+                    '    if (!_mbim_message_read_string (self, relative_offset, offset, &out->${field_name_underscore}, error))\n'
+                    '        goto out;\n'
                     '    offset += 8;\n')
             elif field['format'] == 'string-array':
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])

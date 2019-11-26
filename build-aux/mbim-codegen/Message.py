@@ -824,9 +824,10 @@ class Message:
                 inner_template += (
                     '        offset += 8;\n')
             elif field['format'] == 'string':
+                count_early_outs += 1
                 inner_template += (
-                    '        if (out_${field} != NULL)\n'
-                    '            _${field} = _mbim_message_read_string (message, 0, offset);\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_string (message, 0, offset, &_${field}, error))\n'
+                    '            goto out;\n'
                     '        offset += 8;\n')
             elif field['format'] == 'string-array':
                 inner_template += (
@@ -985,6 +986,7 @@ class Message:
             if 'always-read' in field or \
                field['format'] == 'guint32' or \
                field['format'] == 'guint64' or \
+               field['format'] == 'string' or \
                field['format'] == 'uuid' or \
                field['format'] == 'struct-array' or \
                field['format'] == 'ref-struct-array' or \
@@ -1147,7 +1149,8 @@ class Message:
                 inner_template += (
                     '        gchar *tmp;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_string (message, 0, offset);\n'
+                    '        if (!_mbim_message_read_string (message, 0, offset, &tmp, &inner_error))\n'
+                    '            goto out;\n'
                     '        offset += 8;\n'
                     '        g_string_append_printf (str, "\'%s\'", tmp);\n'
                     '        g_free (tmp);\n')
