@@ -738,8 +738,10 @@ class Message:
                     '    {\n')
 
             if 'always-read' in field:
+                count_early_outs += 1
                 inner_template += (
-                    '        _${field} = _mbim_message_read_guint32 (message, offset);\n'
+                    '        if (!_mbim_message_read_guint32 (message, offset, &_${field}, error))\n'
+                    '            goto out;\n'
                     '        if (out_${field} != NULL)\n'
                     '            *out_${field} = _${field};\n'
                     '        offset += 4;\n')
@@ -786,9 +788,22 @@ class Message:
                     '            goto out;\n'
                     '        offset += 16;\n')
             elif field['format'] == 'guint32':
+                count_early_outs += 1
+                if 'public-format' in field:
+                    translations['public'] = field['public-format'] if 'public-format' in field else field['format']
+                    inner_template += (
+                        '        if (out_${field} != NULL) {\n'
+                        '            guint32 aux;\n'
+                        '\n'
+                        '            if (!_mbim_message_read_guint32 (message, offset, &aux, error))\n'
+                        '                goto out;\n'
+                        '            *out_${field} = (${public})aux;\n'
+                        '        }\n')
+                else:
+                    inner_template += (
+                        '        if ((out_${field} != NULL) && !_mbim_message_read_guint32 (message, offset, out_${field}, error))\n'
+                        '            goto out;\n')
                 inner_template += (
-                    '        if (out_${field} != NULL)\n'
-                    '            *out_${field} =  _mbim_message_read_guint32 (message, offset);\n'
                     '        offset += 4;\n')
             elif field['format'] == 'guint64':
                 inner_template += (
@@ -954,7 +969,9 @@ class Message:
 
         needs_early_out = False
         for field in fields:
-            if field['format'] == 'uuid' or \
+            if 'always-read' in field or \
+               field['format'] == 'guint32' or \
+               field['format'] == 'uuid' or \
                field['format'] == 'struct-array' or \
                field['format'] == 'ref-struct-array' or \
                field['format'] == 'struct' or \
@@ -1017,7 +1034,8 @@ class Message:
 
             if 'always-read' in field:
                 inner_template += (
-                    '        _${field} = _mbim_message_read_guint32 (message, offset);\n'
+                    '        if (!_mbim_message_read_guint32 (message, offset, &_${field}, &inner_error))\n'
+                    '            goto out;\n'
                     '        offset += 4;\n'
                     '        g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", _${field});\n')
 
@@ -1075,11 +1093,12 @@ class Message:
             elif field['format'] == 'guint32' or \
                  field['format'] == 'guint64':
                 inner_template += (
-                    '        ${public} tmp;\n'
+                    '        ${field_format} tmp;\n'
                     '\n')
                 if field['format'] == 'guint32' :
                     inner_template += (
-                        '        tmp = (${public}) _mbim_message_read_guint32 (message, offset);\n'
+                        '        if (!_mbim_message_read_guint32 (message, offset, &tmp, &inner_error))\n'
+                        '            goto out;\n'
                         '        offset += 4;\n')
                 elif field['format'] == 'guint64' :
                     inner_template += (
@@ -1089,12 +1108,12 @@ class Message:
                 if 'public-format' in field:
                     inner_template += (
                         '#if defined __${public_underscore_upper}_IS_ENUM__\n'
-                        '        g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string (tmp));\n'
+                        '        g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})tmp));\n'
                         '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
                         '        {\n'
                         '            gchar *tmpstr;\n'
                         '\n'
-                        '            tmpstr = ${public_underscore}_build_string_from_mask (tmp);\n'
+                        '            tmpstr = ${public_underscore}_build_string_from_mask ((${public})tmp);\n'
                         '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
                         '            g_free (tmpstr);\n'
                         '        }\n'

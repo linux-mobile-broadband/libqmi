@@ -494,9 +494,11 @@ class Struct:
                     '        offset += ${array_size};\n'
                     '    }\n')
             elif field['format'] == 'guint32':
+                count_early_outs += 1
                 inner_template += (
                     '\n'
-                    '    out->${field_name_underscore} = _mbim_message_read_guint32 (self, offset);\n'
+                    '    if (!_mbim_message_read_guint32 (self, offset, &out->${field_name_underscore}, error))\n'
+                    '        goto out;\n'
                     '    offset += 4;\n')
             elif field['format'] == 'guint32-array':
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
@@ -602,13 +604,17 @@ class Struct:
                 '    out = g_new0 (${name} *, array_size + 1);\n'
                 '\n'
                 '    if (!refs) {\n'
-                '        offset = _mbim_message_read_guint32 (self, relative_offset_array_start);\n'
+                '        _mbim_message_read_guint32 (self, relative_offset_array_start, &offset, &inner_error);\n'
                 '        for (i = 0; !inner_error && (i < array_size); i++, offset += ${struct_size})\n'
                 '            out[i] = _mbim_message_read_${name_underscore}_struct (self, offset, NULL, &inner_error);\n'
                 '    } else {\n'
                 '        offset = relative_offset_array_start;\n'
-                '        for (i = 0; !inner_error && (i < array_size); i++, offset += 8)\n'
-                '            out[i] = _mbim_message_read_${name_underscore}_struct (self, _mbim_message_read_guint32 (self, offset), NULL, &inner_error);\n'
+                '        for (i = 0; !inner_error && (i < array_size); i++, offset += 8) {\n'
+                '            guint32 tmp_offset;\n'
+                '\n'
+                '            if (_mbim_message_read_guint32 (self, offset, &tmp_offset, &inner_error))\n'
+                '                out[i] = _mbim_message_read_${name_underscore}_struct (self, tmp_offset, NULL, &inner_error);\n'
+                '        }\n'
                 '    }\n'
                 '\n'
                 '    if (!inner_error) {\n'

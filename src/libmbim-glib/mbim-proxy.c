@@ -802,7 +802,13 @@ process_internal_proxy_config (MbimProxy   *self,
     }
 
     /* Read requested timeout value */
-    request->timeout_secs = _mbim_message_read_guint32 (message, 8);
+    if (!_mbim_message_read_guint32 (message, 8, &request->timeout_secs, &error)) {
+        g_warning ("Error reading timeout from message: %s", error->message);
+        g_error_free (error);
+        request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
+        request_complete_and_free (request);
+        return TRUE;
+    }
 
     /* Check if some other client already handled the same device */
     device = peek_device_for_path (self, path);

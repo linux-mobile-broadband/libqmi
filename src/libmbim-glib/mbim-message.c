@@ -171,17 +171,32 @@ _mbim_message_get_information_buffer_offset (const MbimMessage *self)
     }
 }
 
-guint32
-_mbim_message_read_guint32 (const MbimMessage *self,
-                            guint32            relative_offset)
+gboolean
+_mbim_message_read_guint32 (const MbimMessage  *self,
+                            guint32             relative_offset,
+                            guint32            *value,
+                            GError            **error)
 {
+    guint32 required_size;
     guint32 information_buffer_offset;
 
+    g_assert (value);
+
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
-    return GUINT32_FROM_LE (G_STRUCT_MEMBER (
-                                guint32,
-                                self->data,
-                                (information_buffer_offset + relative_offset)));
+
+    required_size = information_buffer_offset + relative_offset + 4;
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read 32bit unsigned integer (4 bytes) (%u < %u)",
+                     self->len, required_size);
+        return FALSE;
+    }
+
+    *value = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                  guint32,
+                                  self->data,
+                                  (information_buffer_offset + relative_offset)));
+    return TRUE;
 }
 
 guint32 *
