@@ -208,6 +208,7 @@ class Message:
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
             translations['public'] = field['public-format'] if 'public-format' in field else field['format']
 
+            inner_template = ''
             if field['format'] == 'byte-array':
                 inner_template = ('    const guint8 *${field},\n')
             elif field['format'] == 'unsized-byte-array' or \
@@ -262,6 +263,7 @@ class Message:
             translations['public'] = field['public-format'] if 'public-format' in field else field['format']
             translations['array_size'] = field['array-size'] if 'array-size' in field else ''
 
+            inner_template = ''
             if field['format'] == 'byte-array':
                 inner_template = (' * @${field}: the \'${name}\' field, given as an array of ${array_size} #guint8 values.\n')
             elif field['format'] == 'unsized-byte-array' or \
@@ -316,6 +318,7 @@ class Message:
             translations['public'] = field['public-format'] if 'public-format' in field else field['format']
             translations['array_size'] = field['array-size'] if 'array-size' in field else ''
 
+            inner_template = ''
             if field['format'] == 'byte-array':
                 inner_template = ('    const guint8 *${field},\n')
             elif field['format'] == 'unsized-byte-array' or \
@@ -453,6 +456,7 @@ class Message:
             translations['public'] = field['public-format'] if 'public-format' in field else field['format']
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
 
+            inner_template = ''
             if field['format'] == 'byte-array':
                 inner_template = ('    const guint8 **out_${field},\n')
             elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
@@ -509,6 +513,7 @@ class Message:
             translations['struct_underscore'] = utils.build_underscore_name_from_camelcase (translations['struct'])
             translations['array_size'] = field['array-size'] if 'array-size' in field else ''
 
+            inner_template = ''
             if field['format'] == 'byte-array':
                 inner_template = (' * @out_${field}: return location for an array of ${array_size} #guint8 values. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
@@ -561,6 +566,7 @@ class Message:
             translations['public'] = field['public-format'] if 'public-format' in field else field['format']
             translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
 
+            inner_template = ''
             if field['format'] == 'byte-array':
                 inner_template = ('    const guint8 **out_${field},\n')
             elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
