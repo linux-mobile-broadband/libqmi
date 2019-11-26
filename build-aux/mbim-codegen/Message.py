@@ -780,9 +780,10 @@ class Message:
                     '            *out_${field}_size = tmpsize;\n'
                     '        offset += 8;\n')
             elif field['format'] == 'uuid':
+                count_early_outs += 1
                 inner_template += (
-                    '        if (out_${field} != NULL)\n'
-                    '            *out_${field} =  _mbim_message_read_uuid (message, offset);\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_uuid (message, offset, out_${field}, error))\n'
+                    '            goto out;\n'
                     '        offset += 16;\n')
             elif field['format'] == 'guint32':
                 inner_template += (
@@ -953,7 +954,8 @@ class Message:
 
         needs_early_out = False
         for field in fields:
-            if field['format'] == 'struct-array' or \
+            if field['format'] == 'uuid' or \
+               field['format'] == 'struct-array' or \
                field['format'] == 'ref-struct-array' or \
                field['format'] == 'struct' or \
                field['format'] == 'byte-array' or \
@@ -1063,7 +1065,8 @@ class Message:
                     '        const MbimUuid *tmp;\n'
                     '        gchar *tmpstr;\n'
                     '\n'
-                    '        tmp = _mbim_message_read_uuid (message, offset);\n'
+                    '        if (!_mbim_message_read_uuid (message, offset, &tmp, &inner_error))\n'
+                    '            goto out;\n'
                     '        offset += 16;\n'
                     '        tmpstr = mbim_uuid_get_printable (tmp);\n'
                     '        g_string_append_printf (str, "\'%s\'", tmpstr);\n'

@@ -464,16 +464,30 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
     g_assert_not_reached ();
 }
 
-const MbimUuid *
-_mbim_message_read_uuid (const MbimMessage *self,
-                         guint32            relative_offset)
+gboolean
+_mbim_message_read_uuid (const MbimMessage  *self,
+                         guint32             relative_offset,
+                         const MbimUuid    **uuid,
+                         GError            **error)
 {
+    guint32 required_size;
     guint32 information_buffer_offset;
+
+    g_assert (uuid);
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    return (const MbimUuid *) G_STRUCT_MEMBER_P (self->data,
-                                                 (information_buffer_offset + relative_offset));
+    required_size = information_buffer_offset + relative_offset + 16;
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read UUID (16 bytes) (%u < %u)",
+                     self->len, required_size);
+        return FALSE;
+    }
+
+    *uuid = (const MbimUuid *) G_STRUCT_MEMBER_P (self->data,
+                                                  (information_buffer_offset + relative_offset));
+    return TRUE;
 }
 
 const MbimIPv4 *

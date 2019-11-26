@@ -428,10 +428,17 @@ class Struct:
 
             inner_template = ''
             if field['format'] == 'uuid':
+                count_early_outs += 1
                 inner_template += (
                     '\n'
-                    '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_uuid (self, offset), 16);\n'
-                    '    offset += 16;\n')
+                    '    {\n'
+                    '        const MbimUuid *tmp;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_uuid (self, offset, &tmp, error))\n'
+                    '            goto out;\n'
+                    '        memcpy (&(out->${field_name_underscore}), tmp, 16);\n'
+                    '        offset += 16;\n'
+                    '    }\n')
             elif field['format'] in ['ref-byte-array', 'ref-byte-array-no-offset']:
                 translations['has_offset'] = 'TRUE' if field['format'] == 'ref-byte-array' else 'FALSE'
                 count_early_outs += 1

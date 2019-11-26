@@ -140,21 +140,26 @@ _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage  *message,
     guint32 offset = 0;
     guint32 array_offset;
     MbimEventEntry *event;
+    GError *inner_error = NULL;
 
     g_assert (message != NULL);
     g_assert (out_size != NULL);
 
     element_count = _mbim_message_read_guint32 (message, offset);
     if (element_count) {
-        array = g_new (MbimEventEntry *, element_count + 1);
+        array = g_new0 (MbimEventEntry *, element_count + 1);
 
         offset += 4;
         for (i = 0; i < element_count; i++) {
+            const MbimUuid *uuid;
+
             array_offset = _mbim_message_read_guint32 (message, offset);
 
-            event = g_new (MbimEventEntry, 1);
+            if (!_mbim_message_read_uuid (message, array_offset, &uuid, &inner_error))
+                break;
 
-            memcpy (&(event->device_service_id), _mbim_message_read_uuid (message, array_offset), 16);
+            event = g_new (MbimEventEntry, 1);
+            memcpy (&(event->device_service_id), uuid, 16);
             array_offset += 16;
 
             event->cids_count = _mbim_message_read_guint32 (message, array_offset);
@@ -168,8 +173,12 @@ _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage  *message,
             array[i] = event;
             offset += 8;
         }
+    }
 
-        array[element_count] = NULL;
+    if (inner_error) {
+        mbim_event_entry_array_free (array);
+        g_propagate_error (error, inner_error);
+        return NULL;
     }
 
     *out_size = element_count;
