@@ -413,12 +413,13 @@ class Struct:
             '    guint32 relative_offset,\n'
             '    guint32 *bytes_read)\n'
             '{\n'
+            '    gboolean success = FALSE;\n'
             '    ${name} *out;\n'
             '    guint32 offset = relative_offset;\n'
             '\n'
             '    g_assert (self != NULL);\n'
             '\n'
-            '    out = g_new (${name}, 1);\n')
+            '    out = g_new0 (${name}, 1);\n')
 
         for field in self.contents:
             translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
@@ -530,10 +531,27 @@ class Struct:
 
         template += (
             '\n'
-            '    if (bytes_read)\n'
-            '        *bytes_read = (offset - relative_offset);\n'
+            '    success = TRUE;\n'
             '\n'
-            '    return out;\n'
+            '    if (success) {\n'
+            '        if (bytes_read)\n'
+            '            *bytes_read = (offset - relative_offset);\n'
+            '        return out;\n'
+            '    }\n'
+            '\n')
+
+        for field in self.contents:
+            translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
+            inner_template = ''
+            if field['format'] in ['ref-byte-array', 'ref-byte-array-no-offset', 'unsized-byte-array', 'byte-array', 'string']:
+                inner_template = ('    g_free (out->${field_name_underscore});\n')
+            elif field['format'] == 'string-array':
+                inner_template = ('    g_strfreev (out->${field_name_underscore});\n')
+            template += string.Template(inner_template).substitute(translations)
+
+        template += (
+            '    g_free (out);\n'
+            '    return NULL;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
 
