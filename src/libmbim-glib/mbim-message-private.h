@@ -308,10 +308,11 @@ gboolean _mbim_message_read_ipv6          (const MbimMessage  *self,
                                            gboolean            ref,
                                            const MbimIPv6    **ipv6,
                                            GError            **error);
-
-MbimIPv6        *_mbim_message_read_ipv6_array    (const MbimMessage *self,
-                                                   guint32            array_size,
-                                                   guint32            relative_offset_array_start);
+gboolean _mbim_message_read_ipv6_array    (const MbimMessage  *self,
+                                           guint32             array_size,
+                                           guint32             relative_offset_array_start,
+                                           MbimIPv6          **array,
+                                           GError            **error);
 
 G_END_DECLS
 

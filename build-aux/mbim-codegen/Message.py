@@ -892,9 +892,10 @@ class Message:
                     '            goto out;\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ipv6-array':
+                count_early_outs += 1
                 inner_template += (
-                    '        if (out_${field} != NULL)\n'
-                    '            _${field} =  _mbim_message_read_ipv6_array (message, _${array_size_field}, offset);\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_ipv6_array (message, _${array_size_field}, offset, &_${field}, error))\n'
+                    '            goto out;\n'
                     '        offset += 4;\n')
 
             inner_template += (
@@ -999,6 +1000,7 @@ class Message:
                field['format'] == 'ipv4-array' or \
                field['format'] == 'ipv6' or \
                field['format'] == 'ref-ipv6' or \
+               field['format'] == 'ipv6-array' or \
                field['format'] == 'uuid' or \
                field['format'] == 'struct-array' or \
                field['format'] == 'ref-struct-array' or \
@@ -1298,7 +1300,8 @@ class Message:
                 elif field['format'] == 'ipv6-array':
                     inner_template += (
                         '        array_size = _${array_size_field};\n'
-                        '        tmp = _mbim_message_read_ipv6_array (message, _${array_size_field}, offset);\n'
+                        '        if (!_mbim_message_read_ipv6_array (message, _${array_size_field}, offset, &tmp, &inner_error))\n'
+                        '            goto out;\n'
                         '        offset += 4;\n')
 
                 inner_template += (
