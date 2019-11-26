@@ -293,10 +293,12 @@ gboolean _mbim_message_read_string_array  (const MbimMessage   *self,
                                            guint32              relative_offset_array_start,
                                            gchar             ***array,
                                            GError             **error);
+gboolean _mbim_message_read_ipv4          (const MbimMessage  *self,
+                                           guint32             relative_offset,
+                                           gboolean            ref,
+                                           const MbimIPv4    **ipv4,
+                                           GError            **error);
 
-const MbimIPv4  *_mbim_message_read_ipv4          (const MbimMessage *self,
-                                                   guint32            relative_offset,
-                                                   gboolean           ref);
 MbimIPv4        *_mbim_message_read_ipv4_array    (const MbimMessage *self,
                                                    guint32            array_size,
                                                    guint32            relative_offset_array_start);

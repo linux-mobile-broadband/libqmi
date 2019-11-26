@@ -531,15 +531,29 @@ class Struct:
                     '        goto out;\n'
                     '    offset += (8 * out->${array_size_field_name_underscore});\n')
             elif field['format'] == 'ipv4':
+                count_early_outs += 1
                 inner_template += (
                     '\n'
-                    '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_ipv4 (self, offset, FALSE), 4);\n'
-                    '    offset += 4;\n')
+                    '    {\n'
+                    '        const MbimIPv4 *tmp;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_ipv4 (self, offset, FALSE, &tmp, error))\n'
+                    '            goto out;\n'
+                    '        memcpy (&(out->${field_name_underscore}), tmp, 4);\n'
+                    '        offset += 4;\n'
+                    '    }\n')
             elif field['format'] == 'ref-ipv4':
+                count_early_outs += 1
                 inner_template += (
                     '\n'
-                    '    memcpy (&(out->${field_name_underscore}), _mbim_message_read_ipv4 (self, offset, TRUE), 4);\n'
-                    '    offset += 4;\n')
+                    '    {\n'
+                    '        const MbimIPv4 *tmp;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_ipv4 (self, offset, TRUE, &tmp, error))\n'
+                    '            goto out;\n'
+                    '        memcpy (&(out->${field_name_underscore}), tmp, 4);\n'
+                    '        offset += 4;\n'
+                    '    }\n')
             elif field['format'] == 'ipv6':
                 inner_template += (
                     '\n'

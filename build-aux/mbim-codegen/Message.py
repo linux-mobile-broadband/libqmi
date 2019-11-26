@@ -862,14 +862,16 @@ class Message:
                     '            goto out;\n'
                     '        offset += (8 * _${array_size_field});\n')
             elif field['format'] == 'ipv4':
+                count_early_outs += 1
                 inner_template += (
-                    '        if (out_${field} != NULL)\n'
-                    '            *out_${field} =  _mbim_message_read_ipv4 (message, offset, FALSE);\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_ipv4 (message, offset, FALSE, out_${field}, error))\n'
+                    '            goto out;\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ref-ipv4':
+                count_early_outs += 1
                 inner_template += (
-                    '        if (out_${field} != NULL)\n'
-                    '            *out_${field} =  _mbim_message_read_ipv4 (message, offset, TRUE);\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_ipv4 (message, offset, TRUE, out_${field}, error))\n'
+                    '            goto out;\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ipv4-array':
                 inner_template += (
@@ -989,6 +991,8 @@ class Message:
                field['format'] == 'guint64' or \
                field['format'] == 'string' or \
                field['format'] == 'string-array' or \
+               field['format'] == 'ipv4' or \
+               field['format'] == 'ref-ipv4' or \
                field['format'] == 'uuid' or \
                field['format'] == 'struct-array' or \
                field['format'] == 'ref-struct-array' or \
@@ -1258,12 +1262,14 @@ class Message:
                 if field['format'] == 'ipv4':
                     inner_template += (
                         '        array_size = 1;\n'
-                        '        tmp = _mbim_message_read_ipv4 (message, offset, FALSE);\n'
+                        '        if (!_mbim_message_read_ipv4 (message, offset, FALSE, &tmp, &inner_error))\n'
+                        '            goto out;\n'
                         '        offset += 4;\n')
                 elif field['format'] == 'ref-ipv4':
                     inner_template += (
                         '        array_size = 1;\n'
-                        '        tmp = _mbim_message_read_ipv4 (message, offset, TRUE);\n'
+                        '        if (!_mbim_message_read_ipv4 (message, offset, TRUE, &tmp, &inner_error))\n'
+                        '            goto out;\n'
                         '        offset += 4;\n')
                 elif field['format'] == 'ipv4-array':
                     inner_template += (
