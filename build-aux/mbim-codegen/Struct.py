@@ -501,10 +501,12 @@ class Struct:
                     '        goto out;\n'
                     '    offset += 4;\n')
             elif field['format'] == 'guint32-array':
+                count_early_outs += 1
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                 inner_template += (
                     '\n'
-                    '    out->${field_name_underscore} = _mbim_message_read_guint32_array (self, out->${array_size_field_name_underscore}, offset);\n'
+                    '    if (!_mbim_message_read_guint32_array (self, out->${array_size_field_name_underscore}, offset, &out->${field_name_underscore}, error))\n'
+                    '        goto out;\n'
                     '    offset += (4 * out->${array_size_field_name_underscore});\n')
             elif field['format'] == 'guint64':
                 inner_template += (

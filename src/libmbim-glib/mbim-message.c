@@ -199,32 +199,45 @@ _mbim_message_read_guint32 (const MbimMessage  *self,
     return TRUE;
 }
 
-guint32 *
-_mbim_message_read_guint32_array (const MbimMessage *self,
-                                  guint32            array_size,
-                                  guint32            relative_offset_array_start)
+gboolean
+_mbim_message_read_guint32_array (const MbimMessage  *self,
+                                  guint32             array_size,
+                                  guint32             relative_offset_array_start,
+                                  guint32           **array,
+                                  GError            **error)
 {
-    guint i;
-    guint32 *out;
+    guint32 required_size;
+    guint   i;
     guint32 information_buffer_offset;
 
-    if (!array_size)
-        return NULL;
+    g_assert (array != NULL);
+
+    if (!array_size) {
+        *array = NULL;
+        return TRUE;
+    }
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    out = g_new (guint32, array_size + 1);
-    for (i = 0; i < array_size; i++) {
-        out[i] = GUINT32_FROM_LE (G_STRUCT_MEMBER (
-                                      guint32,
-                                      self->data,
-                                      (information_buffer_offset +
-                                       relative_offset_array_start +
-                                       (4 * i))));
+    required_size = information_buffer_offset + relative_offset_array_start + (4 * array_size);
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read 32bit unsigned integer array (%u bytes) (%u < %u)",
+                     (4 * array_size), self->len, required_size);
+        return FALSE;
     }
-    out[array_size] = 0;
 
-    return out;
+    *array = g_new (guint32, array_size + 1);
+    for (i = 0; i < array_size; i++) {
+        (*array)[i] = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                           guint32,
+                                           self->data,
+                                           (information_buffer_offset +
+                                            relative_offset_array_start +
+                                            (4 * i))));
+    }
+    (*array)[array_size] = 0;
+    return TRUE;
 }
 
 guint64

@@ -167,8 +167,8 @@ _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage  *message,
                 break;
             array_offset += 4;
 
-            if (array[i]->cids_count)
-                array[i]->cids = _mbim_message_read_guint32_array (message, array[i]->cids_count, array_offset);
+            if (array[i]->cids_count && !_mbim_message_read_guint32_array (message, array[i]->cids_count, array_offset, &array[i]->cids, &inner_error))
+                break;
             offset += 8;
         }
     }
