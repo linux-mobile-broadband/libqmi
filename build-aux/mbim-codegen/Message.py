@@ -611,11 +611,37 @@ class Message:
             template += (
                 '    guint32 offset = 0;\n')
 
+        count_allocated_variables = 0
         for field in fields:
+            translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
+            translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
+            # variables to always read
+            inner_template = ''
             if 'always-read' in field:
-                translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
                 inner_template = ('    guint32 _${field};\n')
-                template += (string.Template(inner_template).substitute(translations))
+            # now variables that require memory allocation
+            elif field['format'] == 'string':
+                count_allocated_variables += 1
+                inner_template = ('    gchar *_${field} = NULL;\n')
+            elif field['format'] == 'string-array':
+                count_allocated_variables += 1
+                inner_template = ('    gchar **_${field} = NULL;\n')
+            elif field['format'] == 'struct':
+                count_allocated_variables += 1
+                inner_template = ('    ${struct} *_${field} = NULL;\n')
+            elif field['format'] == 'struct-array':
+                count_allocated_variables += 1
+                inner_template = ('    ${struct} **_${field} = NULL;\n')
+            elif field['format'] == 'ref-struct-array':
+                count_allocated_variables += 1
+                inner_template = ('    ${struct} **_${field} = NULL;\n')
+            elif field['format'] == 'ipv4-array':
+                count_allocated_variables += 1
+                inner_template = ('    MbimIPv4 *_${field} = NULL;\n')
+            elif field['format'] == 'ipv6-array':
+                count_allocated_variables += 1
+                inner_template = ('    MbimIPv6 *_${field} = NULL;\n')
+            template += (string.Template(inner_template).substitute(translations))
 
         if message_type == 'response':
             template += (
@@ -657,9 +683,9 @@ class Message:
             raise ValueError('Unexpected message type \'%s\'' % message_type)
 
         for field in fields:
-            translations['field']                   = utils.build_underscore_name_from_camelcase(field['name'])
+            translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
             translations['field_format_underscore'] = utils.build_underscore_name_from_camelcase(field['format'])
-            translations['field_name']              = field['name']
+            translations['field_name'] = field['name']
             translations['array_size_field'] = utils.build_underscore_name_from_camelcase(field['array-size-field']) if 'array-size-field' in field else ''
             translations['struct_name'] = utils.build_underscore_name_from_camelcase(field['struct-type']) if 'struct-type' in field else ''
             translations['struct_type'] = field['struct-type'] if 'struct-type' in field else ''
@@ -763,12 +789,12 @@ class Message:
             elif field['format'] == 'string':
                 inner_template += (
                     '        if (out_${field} != NULL)\n'
-                    '            *out_${field} = _mbim_message_read_string (message, 0, offset);\n'
+                    '            _${field} = _mbim_message_read_string (message, 0, offset);\n'
                     '        offset += 8;\n')
             elif field['format'] == 'string-array':
                 inner_template += (
                     '        if (out_${field} != NULL)\n'
-                    '            *out_${field} = _mbim_message_read_string_array (message, _${array_size_field}, 0, offset);\n'
+                    '            _${field} = _mbim_message_read_string_array (message, _${array_size_field}, 0, offset);\n'
                     '        offset += (8 * _${array_size_field});\n')
             elif field['format'] == 'struct':
                 inner_template += (
@@ -777,19 +803,19 @@ class Message:
                     '\n'
                     '        tmp = _mbim_message_read_${struct_name}_struct (message, offset, &bytes_read);\n'
                     '        if (out_${field} != NULL)\n'
-                    '            *out_${field} = tmp;\n'
+                    '            _${field} = tmp;\n'
                     '        else\n'
                     '             _${struct_name}_free (tmp);\n'
                     '        offset += bytes_read;\n')
             elif field['format'] == 'struct-array':
                 inner_template += (
                     '        if (out_${field} != NULL)\n'
-                    '            *out_${field} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE);\n'
+                    '            _${field} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE);\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ref-struct-array':
                 inner_template += (
                     '        if (out_${field} != NULL)\n'
-                    '            *out_${field} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE);\n'
+                    '            _${field} = _mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE);\n'
                     '        offset += (8 * _${array_size_field});\n')
             elif field['format'] == 'ipv4':
                 inner_template += (
@@ -804,7 +830,7 @@ class Message:
             elif field['format'] == 'ipv4-array':
                 inner_template += (
                     '        if (out_${field} != NULL)\n'
-                    '            *out_${field} =  _mbim_message_read_ipv4_array (message, _${array_size_field}, offset);\n'
+                    '            _${field} =  _mbim_message_read_ipv4_array (message, _${array_size_field}, offset);\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ipv6':
                 inner_template += (
@@ -819,13 +845,31 @@ class Message:
             elif field['format'] == 'ipv6-array':
                 inner_template += (
                     '        if (out_${field} != NULL)\n'
-                    '            *out_${field} =  _mbim_message_read_ipv6_array (message, _${array_size_field}, offset);\n'
+                    '            _${field} =  _mbim_message_read_ipv6_array (message, _${array_size_field}, offset);\n'
                     '        offset += 4;\n')
 
             inner_template += (
                 '    }\n')
 
             template += (string.Template(inner_template).substitute(translations))
+
+        if count_allocated_variables > 0:
+            template += (
+                '\n'
+                '    /* Memory allocated variables as output */\n')
+            for field in fields:
+                translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
+                # set as output memory allocated values
+                if field['format'] == 'string' or \
+                   field['format'] == 'string-array' or \
+                   field['format'] == 'struct' or \
+                   field['format'] == 'struct-array' or \
+                   field['format'] == 'ref-struct-array' or \
+                   field['format'] == 'ipv4-array' or \
+                   field['format'] == 'ipv6-array':
+                    inner_template = ('    if (out_${field} != NULL)\n'
+                                      '        *out_${field} = _${field};\n')
+                    template += (string.Template(inner_template).substitute(translations))
 
         template += (
             '\n'
