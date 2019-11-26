@@ -609,6 +609,7 @@ class Message:
 
         if fields != []:
             template += (
+                '    gboolean success = FALSE;\n'
                 '    guint32 offset = 0;\n')
 
         count_allocated_variables = 0
@@ -853,13 +854,21 @@ class Message:
 
             template += (string.Template(inner_template).substitute(translations))
 
-        if count_allocated_variables > 0:
+        if fields != []:
             template += (
                 '\n'
-                '    /* Memory allocated variables as output */\n')
+                '    /* All variables successfully parsed */\n'
+                '    success = TRUE;\n'
+                '\n')
+
+        if count_allocated_variables > 0:
+            template += (
+                '    if (success) {\n'
+                '        /* Memory allocated variables as output */\n')
             for field in fields:
                 translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
                 # set as output memory allocated values
+                inner_template = ''
                 if field['format'] == 'string' or \
                    field['format'] == 'string-array' or \
                    field['format'] == 'struct' or \
@@ -867,14 +876,40 @@ class Message:
                    field['format'] == 'ref-struct-array' or \
                    field['format'] == 'ipv4-array' or \
                    field['format'] == 'ipv6-array':
-                    inner_template = ('    if (out_${field} != NULL)\n'
-                                      '        *out_${field} = _${field};\n')
+                    inner_template = ('        if (out_${field} != NULL)\n'
+                                      '            *out_${field} = _${field};\n')
                     template += (string.Template(inner_template).substitute(translations))
+            template += (
+                '    } else {\n')
+            for field in fields:
+                translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
+                translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
+                translations['struct_underscore'] = utils.build_underscore_name_from_camelcase (translations['struct'])
+                inner_template = ''
+                if field['format'] == 'string' or \
+                   field['format'] == 'ipv4-array' or \
+                   field['format'] == 'ipv6-array':
+                    inner_template = ('        g_free (_${field});\n')
+                elif field['format'] == 'string-array':
+                    inner_template = ('        g_strfreev (_${field});\n')
+                elif field['format'] == 'struct':
+                    inner_template = ('        ${struct_underscore}_free (_${field});\n')
+                elif field['format'] == 'struct-array' or field['format'] == 'ref-struct-array':
+                    inner_template = ('        ${struct_underscore}_array_free (_${field});\n')
+                template += (string.Template(inner_template).substitute(translations))
+            template += (
+                '    }\n')
 
-        template += (
-            '\n'
-            '    return TRUE;\n'
-            '}\n')
+        if fields != []:
+            template += (
+                '\n'
+                '    return success;\n'
+                '}\n')
+        else:
+            template += (
+                '\n'
+                '    return TRUE;\n'
+                '}\n')
         cfile.write(string.Template(template).substitute(translations))
 
 
