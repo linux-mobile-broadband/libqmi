@@ -422,13 +422,11 @@ class Struct:
             '\n'
             '    out = g_new0 (${name}, 1);\n')
 
-        count_early_outs = 0
         for field in self.contents:
             translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
 
             inner_template = ''
             if field['format'] == 'uuid':
-                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -441,7 +439,6 @@ class Struct:
                     '    }\n')
             elif field['format'] in ['ref-byte-array', 'ref-byte-array-no-offset']:
                 translations['has_offset'] = 'TRUE' if field['format'] == 'ref-byte-array' else 'FALSE'
-                count_early_outs += 1
                 if 'array-size-field' in field:
                     translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                     inner_template += (
@@ -468,7 +465,6 @@ class Struct:
                         '        offset += 8;\n'
                         '    }\n')
             elif field['format'] == 'unsized-byte-array':
-                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -482,7 +478,6 @@ class Struct:
                     '    }\n')
             elif field['format'] == 'byte-array':
                 translations['array_size'] = field['array-size']
-                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -494,14 +489,12 @@ class Struct:
                     '        offset += ${array_size};\n'
                     '    }\n')
             elif field['format'] == 'guint32':
-                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    if (!_mbim_message_read_guint32 (self, offset, &out->${field_name_underscore}, error))\n'
                     '        goto out;\n'
                     '    offset += 4;\n')
             elif field['format'] == 'guint32-array':
-                count_early_outs += 1
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                 inner_template += (
                     '\n'
@@ -509,21 +502,18 @@ class Struct:
                     '        goto out;\n'
                     '    offset += (4 * out->${array_size_field_name_underscore});\n')
             elif field['format'] == 'guint64':
-                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    if (!_mbim_message_read_guint64 (self, offset, &out->${field_name_underscore}, error))\n'
                     '        goto out;\n'
                     '    offset += 8;\n')
             elif field['format'] == 'string':
-                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    if (!_mbim_message_read_string (self, relative_offset, offset, &out->${field_name_underscore}, error))\n'
                     '        goto out;\n'
                     '    offset += 8;\n')
             elif field['format'] == 'string-array':
-                count_early_outs += 1
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                 inner_template += (
                     '\n'
@@ -531,7 +521,6 @@ class Struct:
                     '        goto out;\n'
                     '    offset += (8 * out->${array_size_field_name_underscore});\n')
             elif field['format'] == 'ipv4':
-                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -543,7 +532,6 @@ class Struct:
                     '        offset += 4;\n'
                     '    }\n')
             elif field['format'] == 'ref-ipv4':
-                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -555,7 +543,6 @@ class Struct:
                     '        offset += 4;\n'
                     '    }\n')
             elif field['format'] == 'ipv6':
-                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -567,7 +554,6 @@ class Struct:
                     '        offset += 16;\n'
                     '    }\n')
             elif field['format'] == 'ref-ipv6':
-                count_early_outs += 1
                 inner_template += (
                     '\n'
                     '    {\n'
@@ -586,13 +572,8 @@ class Struct:
         template += (
             '\n'
             '    success = TRUE;\n'
-            '\n')
-
-        if count_early_outs > 0:
-            template += (
-                ' out:\n')
-
-        template += (
+            '\n'
+            ' out:\n'
             '    if (success) {\n'
             '        if (bytes_read)\n'
             '            *bytes_read = (offset - relative_offset);\n'
