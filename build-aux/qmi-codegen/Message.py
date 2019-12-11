@@ -212,7 +212,7 @@ class Message:
             '{\n'
             '    ${container} *self;\n'
             '\n'
-            '    g_return_val_if_fail (qmi_message_get_message_id (message) == ${message_id}, NULL);\n'
+            '    g_assert_cmphex (qmi_message_get_message_id (message), ==, ${message_id});\n'
             '\n'
             '    self = g_slice_new0 (${container});\n'
             '    self->ref_count = 1;\n')
