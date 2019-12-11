@@ -1654,13 +1654,34 @@ process_message (QmiMessage *message,
             trace_message (self, message, FALSE, "response", NULL);
             g_debug ("[%s] No transaction matched in received message",
                      qmi_file_get_path_display (self->priv->file));
-        } else {
-            /* Matched transactions translated with the same context as the request */
-            trace_message (self, message, FALSE, "response", tr->message_context);
-            /* Report the reply message */
-            transaction_complete_and_free (tr, message, NULL);
+            return;
         }
 
+        /* Did the transaction sequence get out of sync? e.g. if the module reboots itself
+         * while we're talking to it. If so, fail the transaction right away without setting the
+         * message as response, or otherwise the parsers will complain */
+        if (qmi_message_get_message_id (tr->message) != qmi_message_get_message_id (message)) {
+            /* Translate without an explicit context as this message has nothing to do with the
+             * request. */
+            trace_message (self, message, FALSE, "response", NULL);
+            g_debug ("[%s] Mismatched message id in received message for transaction 0x%04x (expected 0x%04x, received 0x%04x)",
+                     qmi_file_get_path_display (self->priv->file),
+                     qmi_message_get_transaction_id (message),
+                     qmi_message_get_message_id (tr->message),
+                     qmi_message_get_message_id (message));
+            transaction_complete_and_free (tr, NULL,
+                                           g_error_new (QMI_CORE_ERROR,
+                                                        QMI_CORE_ERROR_UNEXPECTED_MESSAGE,
+                                                        "Unexpected response of type 0x%04x received matching transaction for request of type 0x%04x",
+                                                        qmi_message_get_message_id (message),
+                                                        qmi_message_get_message_id (tr->message)));
+            return;
+        }
+
+        /* Matched transactions translated with the same context as the request */
+        trace_message (self, message, FALSE, "response", tr->message_context);
+        /* Report the reply message */
+        transaction_complete_and_free (tr, message, NULL);
         return;
     }
 
