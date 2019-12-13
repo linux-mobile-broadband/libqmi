@@ -596,72 +596,6 @@ check_service_supported (QmiDevice *self,
     return !!find_service_version_info (self, service);
 }
 
-static gboolean
-check_message_supported (QmiDevice *self,
-                         QmiMessage *message,
-                         GError **error)
-{
-    const QmiMessageCtlGetVersionInfoOutputServiceListService *info;
-    guint message_major = 0;
-    guint message_minor = 0;
-    guint device_major = 0;
-    guint device_minor = 0;
-
-    /* If we didn't check supported services, just assume it is supported */
-    if (!self->priv->supported_services)
-        return TRUE;
-
-    /* For CTL, we assume all are supported */
-    if (qmi_message_get_service (message) == QMI_SERVICE_CTL)
-        return TRUE;
-
-    /* If we cannot get in which version this message was introduced, we'll just
-     * assume it's supported */
-    if (!qmi_message_get_version_introduced_full (message, NULL, &message_major, &message_minor))
-        return TRUE;
-
-    /* Get version info. It MUST exist because we allowed creating a client
-     * of this service type */
-    info = find_service_version_info (self, qmi_message_get_service (message));
-    g_assert (info != NULL);
-    g_assert (info->service == qmi_message_get_service (message));
-    device_major = info->major_version;
-    device_minor = info->minor_version;
-
-    /* Some device firmware versions (Quectel EC21) lie about their supported
-     * DMS version, so assume a reasonable DMS version if the WDS version is
-     * high enough */
-    if (info->service == QMI_SERVICE_DMS && device_major == 1 && device_minor == 0) {
-        const QmiMessageCtlGetVersionInfoOutputServiceListService *wds;
-
-        wds = find_service_version_info (self, QMI_SERVICE_WDS);
-        g_assert (wds != NULL);
-        if (wds->major_version >= 1 && wds->minor_version >= 9) {
-            device_major = 1;
-            device_minor = 3;
-        }
-    }
-
-    /* If the version of the message is greater than the version of the service,
-     * report unsupported */
-    if (message_major > device_major ||
-        (message_major == device_major &&
-         message_minor > device_minor)) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_UNSUPPORTED,
-                     "QMI service '%s' version '%u.%u' required, got version '%u.%u'",
-                     qmi_service_get_string (qmi_message_get_service (message)),
-                     message_major, message_minor,
-                     info->major_version,
-                     info->minor_version);
-        return FALSE;
-    }
-
-    /* Supported! */
-    return TRUE;
-}
-
 /*****************************************************************************/
 
 GFile *
@@ -2398,14 +2332,6 @@ qmi_device_command_abortable (QmiDevice                                *self,
                              QMI_CORE_ERROR_FAILED,
                              "Cannot send message in service '%s' without a CID",
                              qmi_service_get_string (qmi_message_get_service (message)));
-        transaction_early_error (self, tr, FALSE, error);
-        return;
-    }
-
-    /* Check if the message to be sent is supported by the device
-     * (only applicable if we did version info check when opening) */
-    if (!check_message_supported (self, message, &error)) {
-        g_prefix_error (&error, "Cannot send message: ");
         transaction_early_error (self, tr, FALSE, error);
         return;
     }
