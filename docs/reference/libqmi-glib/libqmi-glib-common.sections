@@ -1363,7 +1363,6 @@ qmi_message_get_message_id
 qmi_message_get_length
 qmi_message_get_raw
 qmi_message_get_data
-qmi_message_get_version_introduced_full
 <SUBSECTION TLV writer>
 qmi_message_tlv_write_init
 qmi_message_tlv_write_reset
@@ -1459,6 +1458,7 @@ qmi_utils_write_string_to_buffer
 qmi_utils_write_fixed_size_string_to_buffer
 <SUBSECTION Message>
 qmi_message_get_version_introduced
+qmi_message_get_version_introduced_full
 qmi_message_get_printable
 qmi_message_dms_set_service_programming_code_input_get_new
 qmi_message_dms_set_service_programming_code_input_set_new

@@ -22,7 +22,6 @@
      "type"    : "Message",
      "service" : "OMA",
      "id"      : "0x0000",
-     "version" : "1.0",
      "since"   : "1.6",
      "output"  : [ { "common-ref" : "Operation Result" } ] },
 
@@ -31,7 +30,6 @@
      "type"    : "Message",
      "service" : "OMA",
      "id"      : "0x0001",
-     "version" : "1.0",
      "since"   : "1.6",
      "input"   : [ { "name"          : "Network Initiated Alert Reporting",
                      "id"            : "0x10",
@@ -80,7 +78,6 @@
      "type"    : "Message",
      "service" : "OMA",
      "id"      : "0x0020",
-     "version" : "1.0",
      "since"   : "1.6",
      "input"   : [ { "name"          : "Session Type",
                      "id"            : "0x10",
@@ -95,7 +92,6 @@
      "type"    : "Message",
      "service" : "OMA",
      "id"      : "0x0021",
-     "version" : "1.0",
      "since"   : "1.6",
      "output"  : [ { "common-ref" : "Operation Result" } ] },
 

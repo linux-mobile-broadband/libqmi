@@ -678,6 +678,17 @@ qmi_message_get_version_introduced (QmiMessage *self,
 }
 
 gboolean
+qmi_message_get_version_introduced_full (QmiMessage        *self,
+                                         QmiMessageContext *context,
+                                         guint             *major,
+                                         guint             *minor)
+{
+    /* We keep the method just avoid breaking API, but this is really no longer
+     * usable */
+    return FALSE;
+}
+
+gboolean
 qmi_message_tlv_read_gfloat (QmiMessage  *self,
                              gsize        tlv_offset,
                              gsize       *offset,

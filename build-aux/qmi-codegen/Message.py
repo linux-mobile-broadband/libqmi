@@ -38,11 +38,13 @@ class Message:
         self.name = dictionary['name']
         # The specific message ID
         self.id = dictionary['id']
-
         # The type, which must always be 'Message' or 'Indication'
         self.type = dictionary['type']
-        # The version info, optional
-        self.version_info = dictionary['version'].split('.') if 'version' in dictionary else []
+
+        # The message version info is no longer supported
+        if 'version' in dictionary:
+            raise ValueError('The "version" tag is no longer supported')
+
         self.static = True if 'scope' in dictionary and dictionary['scope'] == 'library-only' else False
         self.abort = True if 'abort' in dictionary and dictionary['abort'] == 'yes' else False
 

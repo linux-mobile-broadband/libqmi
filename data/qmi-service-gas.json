@@ -18,7 +18,6 @@
      "type"    : "Message",
      "service" : "GAS",
      "id"      : "0x0206",
-     "version" : "1.0",
      "since"   : "1.24",
      "input"   : [ { "name"          : "Carrier Name",
                      "id"            : "0x10",

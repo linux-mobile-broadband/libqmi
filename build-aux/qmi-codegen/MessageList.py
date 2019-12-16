@@ -195,86 +195,6 @@ class MessageList:
 
 
     """
-    Emit the method responsible for getting in which version the messages were
-    introduced.
-    """
-    def __emit_get_version_introduced(self, hfile, cfile):
-        translations = { 'service'    : self.service.lower() }
-
-        template = (
-            '\n'
-            '#if defined (LIBQMI_GLIB_COMPILATION)\n'
-            '\n'
-            'G_GNUC_INTERNAL\n'
-            'gboolean __qmi_message_${service}_get_version_introduced (\n'
-            '    QmiMessage *self,\n'
-            '    QmiMessageContext *context,\n'
-            '    guint *major,\n'
-            '    guint *minor);\n'
-            '\n'
-            '#endif\n'
-            '\n')
-        hfile.write(string.Template(template).substitute(translations))
-
-        template = (
-            '\n'
-            'gboolean\n'
-            '__qmi_message_${service}_get_version_introduced (\n'
-            '    QmiMessage *self,\n'
-            '    QmiMessageContext *context,\n'
-            '    guint *major,\n'
-            '    guint *minor)\n'
-            '{\n'
-            '    guint16 vendor_id;\n'
-            '\n'
-            '    vendor_id = (context ? qmi_message_context_get_vendor_id (context) : QMI_MESSAGE_VENDOR_GENERIC);\n'
-            '    if (vendor_id == QMI_MESSAGE_VENDOR_GENERIC) {\n'
-            '        switch (qmi_message_get_message_id (self)) {\n')
-
-        for message in self.list:
-            if message.type == 'Message' and message.vendor is None:
-                # Only add if we know the version info
-                if message.version_info != []:
-                    translations['enum_name'] = message.id_enum_name
-                    translations['message_major'] = message.version_info[0]
-                    translations['message_minor'] = message.version_info[1]
-                    inner_template = (
-                        '        case ${enum_name}:\n'
-                        '            *major = ${message_major};\n'
-                        '            *minor = ${message_minor};\n'
-                        '            return TRUE;\n')
-                    template += string.Template(inner_template).substitute(translations)
-
-        template += (
-            '        default:\n'
-            '            return FALSE;\n'
-            '        }\n'
-            '    } else {\n')
-
-        for message in self.list:
-            if message.type == 'Message' and message.vendor is not None:
-                # Only add if we know the version info
-                if message.version_info != []:
-                    translations['enum_name'] = message.id_enum_name
-                    translations['message_major'] = message.version_info[0]
-                    translations['message_minor'] = message.version_info[1]
-                    translations['message_vendor'] = message.vendor
-                    inner_template = (
-                        '        if (vendor_id == ${message_vendor} && (qmi_message_get_message_id (self) == ${enum_name})) {\n'
-                        '            *major = ${message_major};\n'
-                        '            *minor = ${message_minor};\n'
-                        '            return TRUE;\n'
-                        '        }\n')
-                    template += string.Template(inner_template).substitute(translations)
-
-        template += (
-            '        return FALSE;\n'
-            '    }\n'
-            '}\n')
-        cfile.write(string.Template(template).substitute(translations))
-
-
-    """
     Emit the method responsible for checking whether a given message is abortable
     """
     def __emit_is_abortable(self, hfile, cfile):
@@ -366,7 +286,6 @@ class MessageList:
         utils.add_separator(hfile, 'Service-specific utils', self.service);
         utils.add_separator(cfile, 'Service-specific utils', self.service);
         self.__emit_get_printable(hfile, cfile)
-        self.__emit_get_version_introduced(hfile, cfile)
         self.__emit_is_abortable(hfile, cfile)
 
     """

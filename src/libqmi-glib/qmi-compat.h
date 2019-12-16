@@ -739,6 +739,36 @@ gboolean qmi_message_get_version_introduced (QmiMessage *self,
                                              guint      *minor);
 
 /**
+ * qmi_message_get_version_introduced_full:
+ * @self: a #QmiMessage.
+ * @context: a #QmiMessageContext.
+ * @major: (out) return location for the major version.
+ * @minor: (out) return location for the minor version.
+ *
+ * Gets, if known, the service version in which the given message was first
+ * introduced.
+ *
+ * The lookup of the version may be specific to the @context provided, e.g. for
+ * vendor-specific messages.
+ *
+ * If no @context given, the behavior is the same as qmi_message_get_version_introduced().
+ *
+ * Since 1.26, this method will return %FALSE as the library no longer provides
+ * version information for each message, given that this information was never
+ * reliable.
+ *
+ * Returns: %TRUE if @major and @minor are set, %FALSE otherwise.
+ *
+ * Since: 1.18
+ * Deprecated: 1.26: The version information of each message is no longer available.
+ */
+G_DEPRECATED
+gboolean qmi_message_get_version_introduced_full (QmiMessage        *self,
+                                                  QmiMessageContext *context,
+                                                  guint             *major,
+                                                  guint             *minor);
+
+/**
  * qmi_device_close:
  * @self: a #QmiDevice
  * @error: Return location for error or %NULL.
