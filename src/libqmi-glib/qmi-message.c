@@ -595,7 +595,7 @@ tlv_error_if_write_overflow (QmiMessage  *self,
 
 static struct tlv *
 tlv_get_header (QmiMessage *self,
-                gssize      init_offset)
+                gsize       init_offset)
 {
     g_assert (init_offset <= self->len);
     return (struct tlv *)(&self->data[init_offset]);
