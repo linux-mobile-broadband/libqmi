@@ -368,14 +368,18 @@ device_store_transaction (MbimDevice       *self,
 
     ctx = g_task_get_task_data (task);
 
-    ctx->wait_ctx = g_slice_new (TransactionWaitContext);
-    ctx->wait_ctx->self = self;
-     /* valid as long as the transaction is in the HT */
-    ctx->wait_ctx->transaction_id = ctx->transaction_id;
-    ctx->wait_ctx->type = type;
+    /* When storing the transaction in the device, we have two options: either this
+     * is a completely new transaction, or this is a transaction that had already been
+     * previously stored (e.g. when waiting for more fragments). In the latter case,
+     * make sure we don't reset the wait context or the timeout. */
 
-    /* don't add timeout if one already exists */
+    /* don't add timeout and setup wait context if one already exists */
     if (!ctx->timeout_source) {
+        g_assert (!ctx->wait_ctx);
+        ctx->wait_ctx = g_slice_new (TransactionWaitContext);
+        ctx->wait_ctx->self = self;
+        ctx->wait_ctx->transaction_id = ctx->transaction_id;
+        ctx->wait_ctx->type = type;
         ctx->timeout_source = g_timeout_source_new (timeout_ms);
         g_source_set_callback (ctx->timeout_source, (GSourceFunc)transaction_timed_out, ctx->wait_ctx, NULL);
         g_source_attach (ctx->timeout_source, g_main_context_get_thread_default ());
