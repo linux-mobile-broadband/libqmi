@@ -1,4 +1,13 @@
 
+Overview of changes in libmbim 1.20.4
+----------------------------------------
+
+ * libmbim-glib:
+   ** Fixed memleak when processing reponses with multiple fragments.
+   ** Fixed memleak when processing failed Open operations.
+   ** Removed redundant method declaration in UUID header.
+
+
 Overview of changes in libmbim 1.20.2
 ----------------------------------------
 
