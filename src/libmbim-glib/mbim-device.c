@@ -1381,6 +1381,7 @@ open_message_ready (MbimDevice   *self,
     if (!response) {
         /* If we get reported that the state is unknown, try to close before open */
         if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNKNOWN_STATE)) {
+            g_clear_error (&error);
             ctx->close_before_open = TRUE;
             ctx->step = DEVICE_OPEN_CONTEXT_STEP_CLOSE_MESSAGE;
             device_open_context_step (task);
@@ -1389,7 +1390,7 @@ open_message_ready (MbimDevice   *self,
 
         /* Check if we should be retrying after a timeout */
         if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_TIMEOUT)) {
-            /* Retry same step */
+            g_clear_error (&error);
             device_open_context_step (task);
             return;
         }
