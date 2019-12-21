@@ -26,6 +26,7 @@
 #include "mbim-proxy-helpers.h"
 #include "mbim-message-private.h"
 #include "mbim-message.h"
+#include "mbim-error-types.h"
 #include "mbim-cid.h"
 #include "mbim-uuid.h"
 
@@ -143,6 +144,22 @@ _mbim_proxy_helper_service_subscribe_request_parse (MbimMessage  *message,
 
     g_assert (message != NULL);
     g_assert (out_size != NULL);
+
+    if (mbim_message_get_message_type (message) != MBIM_MESSAGE_TYPE_COMMAND) {
+        g_set_error (error,
+                     MBIM_CORE_ERROR,
+                     MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "Message is not a request");
+        return FALSE;
+    }
+
+    if (!mbim_message_command_get_raw_information_buffer (message, NULL)) {
+        g_set_error (error,
+                     MBIM_CORE_ERROR,
+                     MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "Message does not have information buffer");
+        return FALSE;
+    }
 
     if (!_mbim_message_read_guint32 (message, offset, &element_count, error))
         return NULL;
