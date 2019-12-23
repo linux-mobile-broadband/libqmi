@@ -25,6 +25,7 @@
 #include "mbim-message.h"
 #include "mbim-cid.h"
 #include "mbim-common.h"
+#include "mbim-error-types.h"
 
 #if defined ENABLE_TEST_MESSAGE_TRACES
 static void
@@ -659,6 +660,41 @@ test_message_parser_basic_connect_register_state (void)
     g_assert_cmpuint (registration_flag, ==, MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH);
 
     mbim_message_unref (response);
+}
+
+static void
+test_message_parser_provisioned_contexts (void)
+{
+    MbimMessage *response;
+    guint32 provisioned_contexts_count = 0;
+    MbimProvisionedContextElement **provisioned_contexts = NULL;
+    GError *error = NULL;
+    const guint8 buffer [] = {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x30, 0x00, 0x00, 0x00, /* length */
+        0x1C, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* length */
+        /* command_done_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x0D, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x00, 0x00, 0x00, 0x00  /* buffer length */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    g_assert (!mbim_message_provisioned_contexts_response_parse (
+                  response,
+                  &provisioned_contexts_count,
+                  &provisioned_contexts,
+                  &error));
+
+    g_assert_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE);
 }
 
 static void
@@ -1801,6 +1837,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/ip-configuration", test_message_parser_basic_connect_ip_configuration);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/service-activation", test_message_parser_basic_connect_service_activation);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/register-state", test_message_parser_basic_connect_register_state);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect/provisioned-contexts", test_message_parser_provisioned_contexts);
     g_test_add_func ("/libmbim-glib/message/parser/sms/read/zero-pdu", test_message_parser_sms_read_zero_pdu);
     g_test_add_func ("/libmbim-glib/message/parser/sms/read/single-pdu", test_message_parser_sms_read_single_pdu);
     g_test_add_func ("/libmbim-glib/message/parser/sms/read/multiple-pdu", test_message_parser_sms_read_multiple_pdu);
