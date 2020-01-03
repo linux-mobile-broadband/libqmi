@@ -891,6 +891,8 @@ gboolean qmi_message_tlv_read_gdouble (QmiMessage  *self,
  * reading from within the TLV value (0 for the first item). If the variable
  * is successfully read, @offset will be updated to point past the read item.
  *
+ * Since 1.26 the read string is guaranteed to be valid UTF-8.
+ *
  * Returns: %TRUE if the variable is successfully read, otherwise %FALSE is returned and @error is set.
  *
  * Since: 1.12
@@ -919,6 +921,8 @@ gboolean qmi_message_tlv_read_string (QmiMessage  *self,
  * @offset needs to point to a valid @gsize specifying the index to start
  * reading from within the TLV value (0 for the first item). If the variable
  * is successfully read, @offset will be updated to point past the read item.
+ *
+ * Since 1.26 the read string is guaranteed to be valid UTF-8.
  *
  * Returns: %TRUE if the variable is successfully read, otherwise %FALSE is returned and @error is set.
  *

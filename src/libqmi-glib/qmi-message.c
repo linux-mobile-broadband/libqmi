@@ -1321,6 +1321,11 @@ qmi_message_tlv_read_string (QmiMessage  *self,
     if (!(ptr = tlv_error_if_read_overflow (self, tlv_offset, *offset, valid_string_length, error)))
         return FALSE;
 
+    if (!g_utf8_validate ((const gchar *)ptr, valid_string_length, NULL)) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_DATA, "invalid string");
+        return FALSE;
+    }
+
     *out = g_malloc (valid_string_length + 1);
     memcpy (*out, ptr, valid_string_length);
     (*out)[valid_string_length] = '\0';
@@ -1346,6 +1351,11 @@ qmi_message_tlv_read_fixed_size_string (QmiMessage  *self,
 
         if (!(ptr = tlv_error_if_read_overflow (self, tlv_offset, *offset, string_length, error)))
             return FALSE;
+
+        if (!g_utf8_validate ((const gchar *)ptr, string_length, NULL)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_DATA, "invalid string");
+            return FALSE;
+        }
 
         memcpy (out, ptr, string_length);
     }
