@@ -227,6 +227,7 @@ log_handler (const gchar *log_domain,
                message);
 }
 
+G_GNUC_NORETURN
 static void
 print_version_and_exit (void)
 {
