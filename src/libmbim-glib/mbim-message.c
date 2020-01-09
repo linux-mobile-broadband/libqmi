@@ -794,11 +794,12 @@ _mbim_struct_builder_complete (MbimStructBuilder *builder)
      * in LE. */
     for (i = 0; i < builder->offsets->len; i++) {
         guint32 offset_offset;
-        guint32 *offset_value;
+        guint32 offset_value;
 
         offset_offset = g_array_index (builder->offsets, guint32, i);
-        offset_value = (guint32 *) &builder->fixed_buffer->data[offset_offset];
-        *offset_value = GUINT32_TO_LE (*offset_value + builder->fixed_buffer->len);
+        memcpy (&offset_value, &(builder->fixed_buffer->data[offset_offset]), sizeof (guint32));
+        offset_value = GUINT32_TO_LE (offset_value + builder->fixed_buffer->len);
+        memcpy (&(builder->fixed_buffer->data[offset_offset]), &offset_value, sizeof (guint32));
     }
 
     /* Merge both buffers */
