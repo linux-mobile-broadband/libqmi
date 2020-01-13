@@ -3297,6 +3297,8 @@ get_rf_band_info_ready (QmiClientNas *client,
     QmiMessageNasGetRfBandInformationOutput *output;
     GError *error = NULL;
     GArray *band_array = NULL;
+    GArray *extended_band_array = NULL;
+    GArray *bandwidth_array = NULL;
     guint i;
 
     output = qmi_client_nas_get_rf_band_information_finish (client, res, &error);
@@ -3329,6 +3331,7 @@ get_rf_band_info_ready (QmiClientNas *client,
         return;
     }
 
+    g_print ("Band Information:\n");
     for (i = 0; band_array && i < band_array->len; i++) {
         QmiMessageNasGetRfBandInformationOutputListElement *info;
 
@@ -3339,6 +3342,39 @@ get_rf_band_info_ready (QmiClientNas *client,
                  qmi_nas_radio_interface_get_string (info->radio_interface),
                  qmi_nas_active_band_get_string (info->active_band_class),
                  info->active_channel);
+    }
+
+    if (qmi_message_nas_get_rf_band_information_output_get_extended_list (
+        output,
+        &extended_band_array,
+        &error)) {
+        g_print ("Band Information (Extended):\n");
+        for (i = 0; extended_band_array && i < extended_band_array->len; i++) {
+            QmiMessageNasGetRfBandInformationOutputExtendedListElement *info;
+
+            info = &g_array_index (extended_band_array, QmiMessageNasGetRfBandInformationOutputExtendedListElement, i);
+            g_print ("\tRadio Interface:   '%s'\n"
+                     "\tActive Band Class: '%s'\n"
+                     "\tActive Channel:    '%" G_GUINT32_FORMAT"'\n",
+                     qmi_nas_radio_interface_get_string (info->radio_interface),
+                     qmi_nas_active_band_get_string (info->active_band_class),
+                     info->active_channel);
+        }
+    }
+
+    if (qmi_message_nas_get_rf_band_information_output_get_bandwidth_list (
+        output,
+        &bandwidth_array,
+        &error)) {
+        g_print ("Bandwidth:\n");
+        for (i = 0; bandwidth_array && i < bandwidth_array->len; i++) {
+            QmiMessageNasGetRfBandInformationOutputBandwidthListElement *info;
+            info = &g_array_index (bandwidth_array, QmiMessageNasGetRfBandInformationOutputBandwidthListElement, i);
+            g_print ("\tRadio Interface:   '%s'\n"
+                     "\tBandwidth:         '%s'\n",
+                 qmi_nas_radio_interface_get_string (info->radio_interface),
+                 qmi_nas_dl_bandwidth_get_string (info->bandwidth));
+        }
     }
 
     qmi_message_nas_get_rf_band_information_output_unref (output);
