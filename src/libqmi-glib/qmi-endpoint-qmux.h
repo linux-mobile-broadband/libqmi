@@ -50,6 +50,7 @@ struct _QmiEndpointQmuxClass {
 };
 
 GType qmi_endpoint_qmux_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiEndpointQmux, g_object_unref)
 
 QmiEndpointQmux *qmi_endpoint_qmux_new (QmiFile *file,
                                         gchar *proxy_path,

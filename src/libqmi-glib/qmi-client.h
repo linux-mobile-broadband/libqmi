@@ -154,6 +154,7 @@ struct _QmiClientClass {
 };
 
 GType qmi_client_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiClient, g_object_unref)
 
 /**
  * qmi_client_get_device:

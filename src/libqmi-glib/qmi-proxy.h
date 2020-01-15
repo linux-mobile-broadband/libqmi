@@ -89,6 +89,7 @@ struct _QmiProxyClass {
 };
 
 GType qmi_proxy_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiProxy, g_object_unref)
 
 /**
  * qmi_proxy_new:

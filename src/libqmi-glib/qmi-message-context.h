@@ -106,6 +106,7 @@ QmiMessageContext *qmi_message_context_ref (QmiMessageContext *self);
  * Since: 1.18
  */
 void qmi_message_context_unref (QmiMessageContext *self);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiMessageContext, qmi_message_context_unref)
 
 /*****************************************************************************/
 /* Vendor ID */

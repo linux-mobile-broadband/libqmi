@@ -49,6 +49,7 @@ struct _QmiEndpointMbimClass {
 };
 
 GType qmi_endpoint_mbim_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiEndpointMbim, g_object_unref)
 
 QmiEndpointMbim *qmi_endpoint_mbim_new (QmiFile *file);
 

@@ -180,6 +180,7 @@ QmiMessage *qmi_message_ref (QmiMessage *self);
  * Since: 1.0
  */
 void qmi_message_unref (QmiMessage *self);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiMessage, qmi_message_unref)
 
 /*****************************************************************************/
 /* QMI Message content getters */

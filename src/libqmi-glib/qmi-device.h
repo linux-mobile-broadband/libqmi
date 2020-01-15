@@ -133,6 +133,7 @@ struct _QmiDeviceClass {
 };
 
 GType qmi_device_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiDevice, g_object_unref)
 
 /**
  * qmi_device_new:

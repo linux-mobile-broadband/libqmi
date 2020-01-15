@@ -49,6 +49,7 @@ struct _QmiFileClass {
 };
 
 GType qmi_file_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiFile, g_object_unref)
 
 QmiFile     *qmi_file_new               (GFile *file);
 GFile       *qmi_file_get_file          (QmiFile              *self);
