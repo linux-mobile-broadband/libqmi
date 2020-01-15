@@ -118,7 +118,7 @@ class Client:
                 ' */\n'
                 '\n')
         template += (
-            'G_DEFINE_TYPE (${camelcase}, ${underscore}, QMI_TYPE_CLIENT);\n')
+            'G_DEFINE_TYPE (${camelcase}, ${underscore}, QMI_TYPE_CLIENT)\n')
 
         if has_indications:
             template += (
