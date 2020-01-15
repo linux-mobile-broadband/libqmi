@@ -34,8 +34,8 @@ test_message_trace (const guint8 *computed,
                     const guint8 *expected,
                     guint32       expected_size)
 {
-    gchar *message_str;
-    gchar *expected_str;
+    g_autofree gchar *message_str = NULL;
+    g_autofree gchar *expected_str = NULL;
 
     message_str = mbim_common_str_hex (computed, computed_size, ':');
     expected_str = mbim_common_str_hex (expected, expected_size, ':');
@@ -59,9 +59,6 @@ test_message_trace (const guint8 *computed,
                 g_print ("Byte [%u] is different (computed: 0x%02X vs expected: 0x%02x)\n", i, computed[i], expected[i]);
         }
     }
-
-    g_free (message_str);
-    g_free (expected_str);
 }
 #else
 #define test_message_trace(...)
@@ -70,10 +67,11 @@ test_message_trace (const guint8 *computed,
 static void
 test_message_parser_basic_connect_visible_providers (void)
 {
-    MbimProvider **providers;
     guint32 n_providers;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimProviderArray) providers = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -170,22 +168,20 @@ test_message_parser_basic_connect_visible_providers (void)
     g_assert_cmpuint (providers[1]->cellular_class, ==, MBIM_CELLULAR_CLASS_GSM);
     g_assert_cmpuint (providers[1]->rssi, ==, 11);
     g_assert_cmpuint (providers[1]->error_rate, ==, 0);
-
-    mbim_provider_array_free (providers);
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_basic_connect_subscriber_ready_status (void)
 {
     MbimSubscriberReadyState ready_state;
-    gchar *subscriber_id;
-    gchar *sim_iccid;
     MbimReadyInfoFlag ready_info;
     guint32 telephone_numbers_count;
-    gchar **telephone_numbers;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autofree gchar *subscriber_id = NULL;
+    g_autofree gchar *sim_iccid = NULL;
+    g_auto(GStrv) telephone_numbers = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -268,18 +264,11 @@ test_message_parser_basic_connect_subscriber_ready_status (void)
     g_assert_cmpstr (telephone_numbers[0], ==, "11111111111");
     g_assert_cmpstr (telephone_numbers[1], ==, "00000000000");
     g_assert (telephone_numbers[2] == NULL);
-
-    g_free (subscriber_id);
-    g_free (sim_iccid);
-    g_strfreev (telephone_numbers);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_basic_connect_device_caps (void)
 {
-    MbimMessage *response;
     MbimDeviceType device_type;
     MbimCellularClass cellular_class;
     MbimVoiceClass voice_class;
@@ -288,11 +277,13 @@ test_message_parser_basic_connect_device_caps (void)
     MbimSmsCaps sms_caps;
     MbimCtrlCaps ctrl_caps;
     guint32 max_sessions;
-    gchar *custom_data_class;
-    gchar *device_id;
-    gchar *firmware_info;
-    gchar *hardware_info;
-    GError *error = NULL;
+    g_autofree gchar *custom_data_class = NULL;
+    g_autofree gchar *device_id = NULL;
+    g_autofree gchar *firmware_info = NULL;
+    g_autofree gchar *hardware_info = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  { 0x03, 0x00, 0x00, 0x80,
                                 0xD0, 0x00, 0x00, 0x00,
                                 0x02, 0x00, 0x00, 0x00,
@@ -382,35 +373,29 @@ test_message_parser_basic_connect_device_caps (void)
     g_assert_cmpstr (device_id, ==, "353613048804622");
     g_assert_cmpstr (firmware_info, ==, "11.810.09.00.00");
     g_assert_cmpstr (hardware_info, ==, "CP1E367UM");
-
-    g_free (custom_data_class);
-    g_free (device_id);
-    g_free (firmware_info);
-    g_free (hardware_info);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_basic_connect_ip_configuration (void)
 {
-    MbimMessage *response;
     guint32 session_id;
     MbimIPConfigurationAvailableFlag ipv4configurationavailable;
     MbimIPConfigurationAvailableFlag ipv6configurationavailable;
     guint32 ipv4addresscount;
-    MbimIPv4Element **ipv4address;
     guint32 ipv6addresscount;
-    MbimIPv6Element **ipv6address;
     const MbimIPv4 *ipv4gateway;
     const MbimIPv6 *ipv6gateway;
     guint32 ipv4dnsservercount;
-    MbimIPv4 *ipv4dnsserver;
     guint32 ipv6dnsservercount;
-    MbimIPv6 *ipv6dnsserver;
     guint32 ipv4mtu;
     guint32 ipv6mtu;
-    GError *error = NULL;
+    g_autofree MbimIPv4 *ipv4dnsserver = NULL;
+    g_autofree MbimIPv6 *ipv6dnsserver = NULL;
+    g_autoptr(MbimIPv4ElementArray) ipv4address = NULL;
+    g_autoptr(MbimIPv6ElementArray) ipv6address = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -520,23 +505,17 @@ test_message_parser_basic_connect_ip_configuration (void)
     g_assert (ipv6gateway == NULL);
     g_assert_cmpuint (ipv6dnsservercount, ==, 0);
     g_assert (ipv6dnsserver == NULL);
-
-    mbim_ipv4_element_array_free (ipv4address);
-    mbim_ipv6_element_array_free (ipv6address);
-    g_free (ipv4dnsserver);
-    g_free (ipv6dnsserver);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_basic_connect_service_activation (void)
 {
-    MbimMessage *response;
-    GError *error = NULL;
     guint32 nw_error;
     const guint8 *databuffer;
     guint32 databuffer_size;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 expected_databuffer [] =  {
         0x01, 0x02, 0x03, 0x04,
         0x05, 0x06, 0x07, 0x08
@@ -576,24 +555,23 @@ test_message_parser_basic_connect_service_activation (void)
     g_assert_cmpuint (nw_error, ==, MBIM_NW_ERROR_ILLEGAL_ME);
     g_assert_cmpuint (databuffer_size, ==, sizeof (expected_databuffer));
     g_assert (memcmp (databuffer, expected_databuffer, databuffer_size) == 0);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_basic_connect_register_state (void)
 {
-    MbimMessage *response;
     MbimNwError nw_error;
     MbimRegisterState register_state;
     MbimRegisterMode register_mode;
     MbimDataClass available_data_classes;
     MbimCellularClass current_cellular_class;
-    gchar *provider_id;
-    gchar *provider_name;
-    gchar *roaming_text;
     MbimRegistrationFlag registration_flag;
-    GError *error = NULL;
+    g_autofree gchar *provider_id;
+    g_autofree gchar *provider_name;
+    g_autofree gchar *roaming_text;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -630,7 +608,6 @@ test_message_parser_basic_connect_register_state (void)
 
     response = mbim_message_new (buffer, sizeof (buffer));
 
-
     g_assert (mbim_message_register_state_response_parse (
                   response,
                   &nw_error,
@@ -654,21 +631,19 @@ test_message_parser_basic_connect_register_state (void)
                                                    MBIM_DATA_CLASS_HSUPA));
     g_assert_cmpuint (current_cellular_class, ==, MBIM_CELLULAR_CLASS_GSM);
     g_assert_cmpstr (provider_id, ==, "26006");
-    g_free (provider_id);
     g_assert (provider_name == NULL);
     g_assert (roaming_text == NULL);
     g_assert_cmpuint (registration_flag, ==, MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_provisioned_contexts (void)
 {
-    MbimMessage *response;
     guint32 provisioned_contexts_count = 0;
-    MbimProvisionedContextElement **provisioned_contexts = NULL;
-    GError *error = NULL;
+    g_autoptr(MbimProvisionedContextElementArray) provisioned_contexts = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] = {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -702,10 +677,11 @@ test_message_parser_sms_read_zero_pdu (void)
 {
     MbimSmsFormat format;
     guint32 messages_count;
-    MbimSmsPduReadRecord **pdu_messages;
-    MbimSmsCdmaReadRecord **cdma_messages;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimSmsPduReadRecordArray) pdu_messages = NULL;
+    g_autoptr(MbimSmsCdmaReadRecordArray) cdma_messages = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -742,8 +718,6 @@ test_message_parser_sms_read_zero_pdu (void)
     g_assert_cmpuint (messages_count, ==, 0);
     g_assert (pdu_messages == NULL);
     g_assert (cdma_messages == NULL);
-
-    mbim_message_unref (response);
 }
 
 static void
@@ -751,10 +725,11 @@ test_message_parser_sms_read_single_pdu (void)
 {
     MbimSmsFormat format;
     guint32 messages_count;
-    MbimSmsPduReadRecord **pdu_messages;
-    MbimSmsCdmaReadRecord **cdma_messages;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimSmsPduReadRecordArray) pdu_messages = NULL;
+    g_autoptr(MbimSmsCdmaReadRecordArray) cdma_messages = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -819,9 +794,6 @@ test_message_parser_sms_read_single_pdu (void)
                         sizeof (expected_pdu));
     g_assert_cmpuint (pdu_messages[0]->pdu_data_size, ==, sizeof (expected_pdu));
     g_assert (memcmp (pdu_messages[0]->pdu_data, expected_pdu, sizeof (expected_pdu)) == 0);
-
-    mbim_sms_pdu_read_record_array_free (pdu_messages);
-    mbim_message_unref (response);
 }
 
 static void
@@ -830,10 +802,11 @@ test_message_parser_sms_read_multiple_pdu (void)
     guint32 idx;
     MbimSmsFormat format;
     guint32 messages_count;
-    MbimSmsPduReadRecord **pdu_messages;
-    MbimSmsCdmaReadRecord **cdma_messages;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimSmsPduReadRecordArray) pdu_messages = NULL;
+    g_autoptr(MbimSmsCdmaReadRecordArray) cdma_messages = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -940,9 +913,6 @@ test_message_parser_sms_read_multiple_pdu (void)
                         sizeof (expected_pdu_idx7));
     g_assert_cmpuint (pdu_messages[idx]->pdu_data_size, ==, sizeof (expected_pdu_idx7));
     g_assert (memcmp (pdu_messages[idx]->pdu_data, expected_pdu_idx7, sizeof (expected_pdu_idx7)) == 0);
-
-    mbim_sms_pdu_read_record_array_free (pdu_messages);
-    mbim_message_unref (response);
 }
 
 static void
@@ -953,8 +923,9 @@ test_message_parser_ussd (void)
     const guint8 *ussd_payload;
     guint32 ussd_payload_size;
     guint32 ussd_dcs;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -1013,8 +984,6 @@ test_message_parser_ussd (void)
                         sizeof (expected_payload));
     g_assert_cmpuint (ussd_payload_size, ==, sizeof (expected_payload));
     g_assert (memcmp (ussd_payload, expected_payload, sizeof (expected_payload)) == 0);
-
-    mbim_message_unref (response);
 }
 
 static void
@@ -1025,8 +994,9 @@ test_message_parser_auth_akap (void)
     const guint8 *ik;
     const guint8 *ck;
     const guint8 *auts;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -1126,8 +1096,6 @@ test_message_parser_auth_akap (void)
                         expected_auts,
                         sizeof (expected_auts));
     g_assert (memcmp (auts, expected_auts, sizeof (expected_auts)) == 0);
-
-    mbim_message_unref (response);
 }
 
 static void
@@ -1136,8 +1104,9 @@ test_message_parser_stk_pac_notification (void)
     const guint8 *databuffer;
     guint32 databuffer_len;
     guint32 pac_type;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x07, 0x00, 0x00, 0x80, /* type */
@@ -1196,16 +1165,15 @@ test_message_parser_stk_pac_notification (void)
                         sizeof (expected_databuffer));
     g_assert_cmpuint (databuffer_len, ==, sizeof (expected_databuffer));
     g_assert (memcmp (databuffer, expected_databuffer, sizeof (expected_databuffer)) == 0);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_stk_pac_response (void)
 {
     const guint8 *databuffer;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -1369,8 +1337,6 @@ test_message_parser_stk_pac_response (void)
                         expected_databuffer,
                         sizeof (expected_databuffer));
     g_assert (memcmp (databuffer, expected_databuffer, sizeof (expected_databuffer)) == 0);
-
-    mbim_message_unref (response);
 }
 
 static void
@@ -1379,8 +1345,9 @@ test_message_parser_stk_terminal_response (void)
     const guint8 *databuffer;
     guint32 databuffer_len;
     guint32 status_words;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -1431,16 +1398,15 @@ test_message_parser_stk_terminal_response (void)
                         sizeof (expected_databuffer));
     g_assert_cmpuint (databuffer_len, ==, sizeof (expected_databuffer));
     g_assert (memcmp (databuffer, expected_databuffer, sizeof (expected_databuffer)) == 0);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_stk_envelope_response (void)
 {
     const guint8 *databuffer;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -1492,18 +1458,17 @@ test_message_parser_stk_envelope_response (void)
                         expected_databuffer,
                         sizeof (expected_databuffer));
     g_assert (memcmp (databuffer, expected_databuffer, sizeof (expected_databuffer)) == 0);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_basic_connect_ip_packet_filters_none (void)
 {
-    MbimPacketFilter **filters = NULL;
     guint32 n_filters;
     guint32 session_id;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimPacketFilterArray) filters = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -1538,18 +1503,17 @@ test_message_parser_basic_connect_ip_packet_filters_none (void)
     g_assert_cmpuint (session_id, ==, 1);
     g_assert_cmpuint (n_filters, ==, 0);
     g_assert (filters == NULL);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_basic_connect_ip_packet_filters_one (void)
 {
-    MbimPacketFilter **filters = NULL;
     guint32 n_filters;
     guint32 session_id;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimPacketFilterArray) filters = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -1615,20 +1579,17 @@ test_message_parser_basic_connect_ip_packet_filters_one (void)
                         expected_mask,
                         sizeof (expected_mask));
     g_assert (memcmp (filters[0]->packet_mask, expected_mask, sizeof (expected_mask)) == 0);
-
-    mbim_packet_filter_array_free (filters);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_basic_connect_ip_packet_filters_two (void)
 {
-    MbimPacketFilter **filters = NULL;
     guint32 n_filters;
     guint32 session_id;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimPacketFilterArray) filters = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] =  {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -1724,18 +1685,15 @@ test_message_parser_basic_connect_ip_packet_filters_two (void)
                         expected_mask2,
                         sizeof (expected_mask2));
     g_assert (memcmp (filters[1]->packet_mask, expected_mask2, sizeof (expected_mask2)) == 0);
-
-    mbim_packet_filter_array_free (filters);
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_ms_firmware_id_get (void)
 {
     const MbimUuid *firmware_id;
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] = {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -1776,21 +1734,20 @@ test_message_parser_ms_firmware_id_get (void)
     g_assert_no_error (error);
 
     g_assert (mbim_uuid_cmp (firmware_id, &expected_firmware_id));
-
-    mbim_message_unref (response);
 }
 
 static void
 test_message_parser_basic_connect_connect_short (void)
 {
-    MbimMessage *response;
-    GError *error = NULL;
     guint32 session_id;
     MbimActivationState activation_state;
     MbimVoiceCallState voice_call_state;
     MbimContextIpType ip_type;
     const MbimUuid *context_type;
     guint32 nw_error;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
     const guint8 buffer [] = {
         /* header */
         0x03, 0x00, 0x00, 0x80, /* type */
@@ -1824,7 +1781,6 @@ test_message_parser_basic_connect_connect_short (void)
                   &error));
 
     g_assert (error != NULL);
-    g_error_free (error);
 }
 
 int main (int argc, char **argv)
