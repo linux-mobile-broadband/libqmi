@@ -468,13 +468,13 @@ class Client:
                 '    gpointer user_data)\n'
                 '{\n'
                 '    GTask *task;\n'
-                '    QmiMessage *request;\n'
                 '    GError *error = NULL;\n'
-                '    guint16 transaction_id;\n')
+                '    guint16 transaction_id;\n'
+                '    g_autoptr(QmiMessage) request = NULL;\n')
 
             if message.vendor is not None:
                 template += (
-                    '    QmiMessageContext *context;\n')
+                    '    g_autoptr(QmiMessageContext) context = NULL;\n')
 
             template += (
                 '\n'
@@ -538,12 +538,7 @@ class Client:
             template += (
                 '                             cancellable,\n'
                 '                             (GAsyncReadyCallback)${message_underscore}_ready,\n'
-                '                             task);\n'
-                '    qmi_message_unref (request);\n')
-
-            if message.vendor is not None:
-                template += (
-                    '    qmi_message_context_unref (context);\n')
+                '                             task);\n')
 
             template += (
                 '}\n'
