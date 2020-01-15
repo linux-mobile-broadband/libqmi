@@ -173,7 +173,8 @@ class Struct:
         if self.single_member == True:
             template = (
                 '\n'
-                'void ${name_underscore}_free (${name} *var);\n')
+                'void ${name_underscore}_free (${name} *var);\n'
+                'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${name}, ${name_underscore}_free)\n')
             hfile.write(string.Template(template).substitute(translations))
 
 
@@ -243,7 +244,14 @@ class Struct:
         if self.array_member:
             template = (
                 '\n'
-                'void ${name_underscore}_array_free (${name} **array);\n')
+                '/**\n'
+                ' * ${name}Array:\n'
+                ' *\n'
+                ' * A NULL-terminated array of ${name} elements.\n'
+                ' */\n'
+                'typedef ${name} *${name}Array;\n'
+                'void ${name_underscore}_array_free (${name}Array *array);\n'
+                'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${name}Array, ${name_underscore}_array_free)\n')
             hfile.write(string.Template(template).substitute(translations))
 
             template = (
@@ -255,7 +263,7 @@ class Struct:
                 ' * Frees the memory allocated for the array of #${name}s.\n'
                 ' */\n'
                 'void\n'
-                '${name_underscore}_array_free (${name} **array)\n'
+                '${name_underscore}_array_free (${name}Array *array)\n'
                 '{\n'
                 '    guint32 i;\n'
                 '\n'
@@ -605,11 +613,11 @@ class Struct:
                 '    guint32 array_size,\n'
                 '    guint32 relative_offset_array_start,\n'
                 '    gboolean refs,\n'
-                '    ${name} ***out_array,\n'
+                '    ${name}Array **out_array,\n'
                 '    GError **error)\n'
                 '{\n'
                 '    GError *inner_error = NULL;\n'
-                '    ${name} **out;\n'
+                '    ${name}Array *out;\n'
                 '    guint32 i;\n'
                 '    guint32 offset;\n'
                 '\n'
@@ -852,6 +860,9 @@ class Struct:
         template = (
             '<SUBSECTION ${struct_name}>\n'
             '${struct_name}\n')
+        if self.array_member == True:
+            template += (
+                '${struct_name}Array\n')
         if self.single_member == True:
             template += (
                 '${name_underscore}_free\n')

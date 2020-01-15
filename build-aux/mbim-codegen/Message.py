@@ -475,9 +475,9 @@ class Message:
             elif field['format'] == 'struct':
                 inner_template = ('    ${struct} **out_${field},\n')
             elif field['format'] == 'struct-array':
-                inner_template = ('    ${struct} ***out_${field},\n')
+                inner_template = ('    ${struct}Array **out_${field},\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template = ('    ${struct} ***out_${field},\n')
+                inner_template = ('    ${struct}Array **out_${field},\n')
             elif field['format'] == 'ipv4':
                 inner_template = ('    const MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ref-ipv4':
@@ -585,9 +585,9 @@ class Message:
             elif field['format'] == 'struct':
                 inner_template = ('    ${struct} **out_${field},\n')
             elif field['format'] == 'struct-array':
-                inner_template = ('    ${struct} ***out_${field},\n')
+                inner_template = ('    ${struct}Array **out_${field},\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template = ('    ${struct} ***out_${field},\n')
+                inner_template = ('    ${struct}Array **out_${field},\n')
             elif field['format'] == 'ipv4':
                 inner_template = ('    const MbimIPv4 **out_${field},\n')
             elif field['format'] == 'ref-ipv4':

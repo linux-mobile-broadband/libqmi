@@ -53,6 +53,7 @@ struct _MbimProxyClass {
 };
 
 GType mbim_proxy_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimProxy, g_object_unref)
 
 MbimProxy *mbim_proxy_new           (GError **error);
 guint      mbim_proxy_get_n_clients (MbimProxy *self);

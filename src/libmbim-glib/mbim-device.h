@@ -71,6 +71,7 @@ struct _MbimDeviceClass {
 };
 
 GType mbim_device_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimDevice, g_object_unref)
 
 void        mbim_device_new        (GFile                *file,
                                     GCancellable         *cancellable,

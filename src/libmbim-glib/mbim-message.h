@@ -121,6 +121,8 @@ guint32          mbim_message_get_transaction_id   (const MbimMessage  *self);
 void             mbim_message_set_transaction_id   (MbimMessage        *self,
                                                     guint32             transaction_id);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimMessage, mbim_message_unref)
+
 /*****************************************************************************/
 /* 'Open' message interface */
 
