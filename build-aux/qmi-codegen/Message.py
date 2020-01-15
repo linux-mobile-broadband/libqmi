@@ -273,7 +273,7 @@ class Message:
                 '    struct ${type}_${underscore}_context *ctx)\n'
                 '{\n'
                 '    const gchar *tlv_type_str = NULL;\n'
-                '    gchar *translated_value;\n'
+                '    g_autofree gchar *translated_value = NULL;\n'
                 '\n')
 
             if self.type == 'Message':
@@ -325,7 +325,7 @@ class Message:
                 '    }\n'
                 '\n'
                 '    if (!tlv_type_str) {\n'
-                '        gchar *value_str = NULL;\n'
+                '        g_autofree gchar *value_str = NULL;\n'
                 '\n'
                 '        value_str = qmi_message_get_tlv_printable (ctx->self,\n'
                 '                                                   ctx->line_prefix,\n'
@@ -333,9 +333,8 @@ class Message:
                 '                                                   value,\n'
                 '                                                   length);\n'
                 '        g_string_append (ctx->printable, value_str);\n'
-                '        g_free (value_str);\n'
                 '    } else {\n'
-                '        gchar *value_hex;\n'
+                '        g_autofree gchar *value_hex = NULL;\n'
                 '\n'
                 '        value_hex = __qmi_utils_str_hex (value, length, \':\');\n'
                 '        g_string_append_printf (ctx->printable,\n'
@@ -349,8 +348,6 @@ class Message:
                 '                                ctx->line_prefix, length,\n'
                 '                                ctx->line_prefix, value_hex,\n'
                 '                                ctx->line_prefix, translated_value ? translated_value : "");\n'
-                '        g_free (value_hex);\n'
-                '        g_free (translated_value);\n'
                 '    }\n'
                 '}\n')
 
