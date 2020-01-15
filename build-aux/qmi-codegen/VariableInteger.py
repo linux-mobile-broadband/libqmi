@@ -137,14 +137,14 @@ class VariableInteger(Variable):
                 '${lp}/* Write the ${len}-byte long variable to the buffer */\n'
                 '${lp}if (!qmi_message_tlv_write_sized_guint (self, ${len},${endian} ${variable_name}, error)) {\n'
                 '${lp}    g_prefix_error (error, "Cannot write sized integer in TLV \'${tlv_name}\': ");\n'
-                '${lp}    goto error_out;\n'
+                '${lp}    return NULL;\n'
                 '${lp}}\n')
         elif self.private_format == self.public_format:
             template = (
                 '${lp}/* Write the ${private_format} variable to the buffer */\n'
                 '${lp}if (!qmi_message_tlv_write_${private_format} (self,${endian} ${variable_name}, error)) {\n'
                 '${lp}    g_prefix_error (error, "Cannot write integer in TLV \'${tlv_name}\': ");\n'
-                '${lp}    goto error_out;\n'
+                '${lp}    return NULL;\n'
                 '${lp}}\n')
         else:
             template = (
@@ -155,7 +155,7 @@ class VariableInteger(Variable):
                 '${lp}    /* Write the ${private_format} variable to the buffer */\n'
                 '${lp}    if (!qmi_message_tlv_write_${private_format} (self,${endian} tmp, error)) {\n'
                 '${lp}        g_prefix_error (error, "Cannot write enum in TLV \'${tlv_name}\': ");\n'
-                '${lp}        goto error_out;\n'
+                '${lp}        return NULL;\n'
                 '${lp}    }\n'
                 '${lp}}\n')
         f.write(string.Template(template).substitute(translations))

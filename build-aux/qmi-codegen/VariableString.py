@@ -123,7 +123,7 @@ class VariableString(Variable):
         template = (
             '${lp}if (!qmi_message_tlv_write_string (self, ${n_size_prefix_bytes}, ${variable_name}, ${fixed_size}, error)) {\n'
             '${lp}    g_prefix_error (error, "Cannot write string in TLV \'${tlv_name}\': ");\n'
-            '${lp}    goto error_out;\n'
+            '${lp}    return NULL;\n'
             '${lp}}\n')
 
         f.write(string.Template(template).substitute(translations))

@@ -244,7 +244,7 @@ class Field:
             '\n'
             '${lp}if (!(tlv_offset = qmi_message_tlv_write_init (self, (guint8)${tlv_id}, error))) {\n'
             '${lp}    g_prefix_error (error, "Cannot initialize TLV \'${name}\': ");\n'
-            '${lp}    goto error_out;\n'
+            '${lp}    return NULL;\n'
             '${lp}}\n'
             '\n')
         f.write(string.Template(template).substitute(translations))
@@ -256,7 +256,7 @@ class Field:
             '\n'
             '${lp}if (!qmi_message_tlv_write_complete (self, tlv_offset, error)) {\n'
             '${lp}    g_prefix_error (error, "Cannot complete TLV \'${name}\': ");\n'
-            '${lp}    goto error_out;\n'
+            '${lp}    return NULL;\n'
             '${lp}}\n')
         f.write(string.Template(template).substitute(translations))
 
