@@ -1,4 +1,35 @@
 
+Overview of changes in libmbim 1.22
+----------------------------------------
+
+ * Build updated with several improvements:
+   ** The build has been updated to use by default all warnings enabled by
+      AX_COMPILER_FLAGS(), and therefore when building the release from a git
+      checkout, autoconf-archive >= 2017.03.21 is now required. This new build
+      dependency isn't required when building from the release tarball.
+   ** Also when building from a git checkout, beware because by default
+      --enable-compile-warnings=error is enabled, which implies -Werror. If
+      you'd like to build from git and avoid -Werror, you should explicitly use
+      --enable-compile-warnings=yes (to keep the warnings but without being
+      errors), --enable-compile-warnings=no (to disable all the extra warnings
+      enabled by default) or --disable-Werror (to unconditionally make all
+      compiler warnings non-fatal).
+
+ * libmbim-glib:
+   ** Message parsing logic improved to avoid reading fields out of bounds, e.g.
+      if the messages sent by the modem are malformed or not in line with the
+      specs.
+
+ * Several other minor improvements and fixes.
+
+The following features which were backported to 1.20.x releases are also present
+in libmbim 1.22.0:
+
+ * libmbim-glib: fixed handling of fragmented indication messages.
+ * mbimcli: added --query-provisioned-contexts.
+ * mbim-proxy: fix logic when symlinks to cdc-wdm ports are used.
+
+
 Overview of changes in libmbim 1.20
 ----------------------------------------
 
