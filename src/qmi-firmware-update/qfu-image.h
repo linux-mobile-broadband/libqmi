@@ -80,7 +80,9 @@ struct _QfuImageClass {
     goffset (* get_data_size)   (QfuImage      *self);
 };
 
-GType         qfu_image_get_type            (void);
+GType qfu_image_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QfuImage, g_object_unref);
+
 QfuImage     *qfu_image_new                 (GFile         *file,
                                              QfuImageType   image_type,
                                              GCancellable  *cancellable,

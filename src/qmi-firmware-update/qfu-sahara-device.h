@@ -47,7 +47,9 @@ struct _QfuSaharaDeviceClass {
     GObjectClass parent;
 };
 
-GType            qfu_sahara_device_get_type                   (void);
+GType qfu_sahara_device_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QfuSaharaDevice, g_object_unref);
+
 QfuSaharaDevice *qfu_sahara_device_new                        (GFile            *file,
                                                                GCancellable     *cancellable,
                                                                GError          **error);

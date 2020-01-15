@@ -48,7 +48,9 @@ struct _QfuQdlDeviceClass {
     GObjectClass parent;
 };
 
-GType         qfu_qdl_device_get_type  (void);
+GType qfu_qdl_device_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QfuQdlDevice, g_object_unref);
+
 QfuQdlDevice *qfu_qdl_device_new       (GFile         *file,
                                         GCancellable  *cancellable,
                                         GError       **error);

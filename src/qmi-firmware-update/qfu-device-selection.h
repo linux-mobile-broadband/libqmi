@@ -47,7 +47,9 @@ struct _QfuDeviceSelectionClass {
     GObjectClass parent;
 };
 
-GType               qfu_device_selection_get_type (void);
+GType qfu_device_selection_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QfuDeviceSelection, g_object_unref);
+
 QfuDeviceSelection *qfu_device_selection_new      (const gchar  *preferred_cdc_wdm,
                                                    const gchar  *preferred_tty,
                                                    guint16       preferred_vid,

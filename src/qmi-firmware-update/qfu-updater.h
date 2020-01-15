@@ -49,7 +49,8 @@ struct _QfuUpdaterClass {
     GObjectClass parent;
 };
 
-GType       qfu_updater_get_type   (void);
+GType qfu_updater_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QfuUpdater, g_object_unref);
 
 #if defined WITH_UDEV
 QfuUpdater *qfu_updater_new          (QfuDeviceSelection   *device_selection,

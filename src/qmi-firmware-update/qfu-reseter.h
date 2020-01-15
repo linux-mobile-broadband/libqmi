@@ -50,7 +50,9 @@ struct _QfuReseterClass {
     GObjectClass parent;
 };
 
-GType        qfu_reseter_get_type   (void);
+GType qfu_reseter_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QfuReseter, g_object_unref);
+
 QfuReseter  *qfu_reseter_new        (QfuDeviceSelection   *device_selection,
                                      QmiClientDms         *qmi_client,
                                      QmiDeviceOpenFlags    device_open_flags);

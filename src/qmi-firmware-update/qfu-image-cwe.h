@@ -50,7 +50,9 @@ struct _QfuImageCweClass {
     QfuImageClass parent;
 };
 
-GType        qfu_image_cwe_get_type                         (void);
+GType qfu_image_cwe_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QfuImageCwe, g_object_unref);
+
 QfuImage    *qfu_image_cwe_new                              (GFile         *file,
                                                              GCancellable  *cancellable,
                                                              GError       **error);
