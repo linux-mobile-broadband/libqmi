@@ -2176,6 +2176,23 @@ qmi_device_open (QmiDevice *self,
 /*****************************************************************************/
 /* Close stream */
 
+typedef struct {
+    QmiEndpoint *endpoint;
+    guint        endpoint_new_data_id;
+    guint        endpoint_hangup_id;
+} CloseContext;
+
+static void
+close_context_free (CloseContext *ctx)
+{
+    if (ctx->endpoint_hangup_id)
+        g_signal_handler_disconnect (ctx->endpoint, ctx->endpoint_hangup_id);
+    if (ctx->endpoint_new_data_id)
+        g_signal_handler_disconnect (ctx->endpoint, ctx->endpoint_new_data_id);
+    g_object_unref (ctx->endpoint);
+    g_slice_free (CloseContext, ctx);
+}
+
 gboolean
 qmi_device_close_finish (QmiDevice     *self,
                          GAsyncResult  *res,
@@ -2185,38 +2202,13 @@ qmi_device_close_finish (QmiDevice     *self,
 }
 
 static void
-endpoint_cleanup (QmiDevice *self)
-{
-    if (!self->priv->endpoint)
-        return;
-
-    if (self->priv->endpoint_hangup_id) {
-        g_signal_handler_disconnect (self->priv->endpoint, self->priv->endpoint_hangup_id);
-        self->priv->endpoint_hangup_id = 0;
-    }
-    if (self->priv->endpoint_new_data_id) {
-        g_signal_handler_disconnect (self->priv->endpoint, self->priv->endpoint_new_data_id);
-        self->priv->endpoint_new_data_id = 0;
-    }
-    g_clear_object (&self->priv->endpoint);
-}
-
-static void
 endpoint_close_ready (QmiEndpoint  *endpoint,
                       GAsyncResult *res,
                       GTask        *task)
 {
-    QmiDevice *self;
-    GError    *error = NULL;
+    GError *error = NULL;
 
-    self = g_task_get_source_object (task);
-
-    qmi_endpoint_close_finish (endpoint, res, &error);
-
-    /* Success or failure, we want to get rid of this endpoint. */
-    endpoint_cleanup (self);
-
-    if (error)
+    if (!qmi_endpoint_close_finish (endpoint, res, &error))
         g_task_return_error (task, error);
     else
         g_task_return_boolean (task, TRUE);
@@ -2230,7 +2222,8 @@ qmi_device_close_async (QmiDevice           *self,
                         GAsyncReadyCallback  callback,
                         gpointer             user_data)
 {
-    GTask *task;
+    GTask        *task;
+    CloseContext *ctx;
 
     task = g_task_new (self, cancellable, callback, user_data);
 
@@ -2241,7 +2234,17 @@ qmi_device_close_async (QmiDevice           *self,
         return;
     }
 
-    qmi_endpoint_close (self->priv->endpoint,
+    /* Steal endpoint setup from private info, it will be freed once
+     * the task is completed and disposed */
+    ctx = g_slice_new0 (CloseContext);
+    ctx->endpoint = g_steal_pointer (&self->priv->endpoint);
+    ctx->endpoint_new_data_id = self->priv->endpoint_new_data_id;
+    self->priv->endpoint_new_data_id = 0;
+    ctx->endpoint_hangup_id = self->priv->endpoint_hangup_id;
+    self->priv->endpoint_hangup_id = 0;
+    g_task_set_task_data (task, ctx, (GDestroyNotify) close_context_free);
+
+    qmi_endpoint_close (ctx->endpoint,
                         timeout,
                         cancellable,
                         (GAsyncReadyCallback)endpoint_close_ready,
@@ -2670,7 +2673,17 @@ dispose (GObject *object)
     }
     g_clear_object (&self->priv->client_ctl);
 
-    endpoint_cleanup (self);
+    if (self->priv->endpoint) {
+        if (self->priv->endpoint_hangup_id) {
+            g_signal_handler_disconnect (self->priv->endpoint, self->priv->endpoint_hangup_id);
+            self->priv->endpoint_hangup_id = 0;
+        }
+        if (self->priv->endpoint_new_data_id) {
+            g_signal_handler_disconnect (self->priv->endpoint, self->priv->endpoint_new_data_id);
+            self->priv->endpoint_new_data_id = 0;
+        }
+        g_clear_object (&self->priv->endpoint);
+    }
     g_clear_object (&self->priv->file);
 
     G_OBJECT_CLASS (qmi_device_parent_class)->dispose (object);
