@@ -1214,52 +1214,52 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libqmi-glib/utils/uint8",  test_utils_uint8);
-    g_test_add_func ("/libqmi-glib/utils/int8",   test_utils_int8);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint8",  test_utils_uint8);
+    g_test_add_func ("/libqmi-glib/compat/utils/int8",   test_utils_int8);
 
-    g_test_add_func ("/libqmi-glib/utils/uint16-LE",           test_utils_uint16_le);
-    g_test_add_func ("/libqmi-glib/utils/uint16-BE",           test_utils_uint16_be);
-    g_test_add_func ("/libqmi-glib/utils/int16-LE",            test_utils_int16_le);
-    g_test_add_func ("/libqmi-glib/utils/int16-BE",            test_utils_int16_be);
-    g_test_add_func ("/libqmi-glib/utils/uint16-unaligned-LE", test_utils_uint16_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/uint16-unaligned-Be", test_utils_uint16_unaligned_be);
-    g_test_add_func ("/libqmi-glib/utils/int16-unaligned-LE",  test_utils_int16_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/int16-unaligned-BE",  test_utils_int16_unaligned_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint16-LE",           test_utils_uint16_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint16-BE",           test_utils_uint16_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/int16-LE",            test_utils_int16_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/int16-BE",            test_utils_int16_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint16-unaligned-LE", test_utils_uint16_unaligned_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint16-unaligned-Be", test_utils_uint16_unaligned_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/int16-unaligned-LE",  test_utils_int16_unaligned_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/int16-unaligned-BE",  test_utils_int16_unaligned_be);
 
-    g_test_add_func ("/libqmi-glib/utils/uint32-LE",           test_utils_uint32_le);
-    g_test_add_func ("/libqmi-glib/utils/uint32-BE",           test_utils_uint32_be);
-    g_test_add_func ("/libqmi-glib/utils/int32-LE",            test_utils_int32_le);
-    g_test_add_func ("/libqmi-glib/utils/int32-BE",            test_utils_int32_be);
-    g_test_add_func ("/libqmi-glib/utils/uint32/unaligned-LE", test_utils_uint32_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/uint32/unaligned-BE", test_utils_uint32_unaligned_be);
-    g_test_add_func ("/libqmi-glib/utils/int32/unaligned-LE",  test_utils_int32_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/int32/unaligned-BE",  test_utils_int32_unaligned_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint32-LE",           test_utils_uint32_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint32-BE",           test_utils_uint32_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/int32-LE",            test_utils_int32_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/int32-BE",            test_utils_int32_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint32/unaligned-LE", test_utils_uint32_unaligned_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint32/unaligned-BE", test_utils_uint32_unaligned_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/int32/unaligned-LE",  test_utils_int32_unaligned_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/int32/unaligned-BE",  test_utils_int32_unaligned_be);
 
-    g_test_add_func ("/libqmi-glib/utils/uint64-LE",           test_utils_uint64_le);
-    g_test_add_func ("/libqmi-glib/utils/uint64-BE",           test_utils_uint64_be);
-    g_test_add_func ("/libqmi-glib/utils/int64-LE",            test_utils_int64_le);
-    g_test_add_func ("/libqmi-glib/utils/int64-BE",            test_utils_int64_be);
-    g_test_add_func ("/libqmi-glib/utils/uint64/unaligned-LE", test_utils_uint64_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/uint64/unaligned-BE", test_utils_uint64_unaligned_be);
-    g_test_add_func ("/libqmi-glib/utils/int64/unaligned-LE",  test_utils_int64_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/int64/unaligned-BE",  test_utils_int64_unaligned_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint64-LE",           test_utils_uint64_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint64-BE",           test_utils_uint64_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/int64-LE",            test_utils_int64_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/int64-BE",            test_utils_int64_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint64/unaligned-LE", test_utils_uint64_unaligned_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint64/unaligned-BE", test_utils_uint64_unaligned_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/int64/unaligned-LE",  test_utils_int64_unaligned_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/int64/unaligned-BE",  test_utils_int64_unaligned_be);
 
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-1-LE",           test_utils_uint_sized_1_le);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-2-LE",           test_utils_uint_sized_2_le);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-4-LE",           test_utils_uint_sized_4_le);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-8-LE",           test_utils_uint_sized_8_le);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-1-BE",           test_utils_uint_sized_1_be);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-2-BE",           test_utils_uint_sized_2_be);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-4-BE",           test_utils_uint_sized_4_be);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-8-BE",           test_utils_uint_sized_8_be);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-1-unaligned-LE", test_utils_uint_sized_1_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-2-unaligned-LE", test_utils_uint_sized_2_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-4-unaligned-LE", test_utils_uint_sized_4_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-8-unaligned-LE", test_utils_uint_sized_8_unaligned_le);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-1-unaligned-BE", test_utils_uint_sized_1_unaligned_be);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-2-unaligned-BE", test_utils_uint_sized_2_unaligned_be);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-4-unaligned-BE", test_utils_uint_sized_4_unaligned_be);
-    g_test_add_func ("/libqmi-glib/utils/uint-sized-8-unaligned-BE", test_utils_uint_sized_8_unaligned_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-1-LE",           test_utils_uint_sized_1_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-2-LE",           test_utils_uint_sized_2_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-4-LE",           test_utils_uint_sized_4_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-8-LE",           test_utils_uint_sized_8_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-1-BE",           test_utils_uint_sized_1_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-2-BE",           test_utils_uint_sized_2_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-4-BE",           test_utils_uint_sized_4_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-8-BE",           test_utils_uint_sized_8_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-1-unaligned-LE", test_utils_uint_sized_1_unaligned_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-2-unaligned-LE", test_utils_uint_sized_2_unaligned_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-4-unaligned-LE", test_utils_uint_sized_4_unaligned_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-8-unaligned-LE", test_utils_uint_sized_8_unaligned_le);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-1-unaligned-BE", test_utils_uint_sized_1_unaligned_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-2-unaligned-BE", test_utils_uint_sized_2_unaligned_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-4-unaligned-BE", test_utils_uint_sized_4_unaligned_be);
+    g_test_add_func ("/libqmi-glib/compat/utils/uint-sized-8-unaligned-BE", test_utils_uint_sized_8_unaligned_be);
 
     return g_test_run ();
 }
