@@ -3049,6 +3049,12 @@ get_operator_name_ready (QmiClientNas *client,
     const gchar *spn;
     const gchar *operator_name;
     GArray *array;
+    QmiNasPlmnEncodingScheme nitz_information_name_encoding;
+    QmiNasPlmnNameCountryInitials nitz_information_short_country_initials;
+    QmiNasPlmnNameSpareBits nitz_information_long_name_spare_bits;
+    QmiNasPlmnNameSpareBits nitz_information_short_name_spare_bits;
+    GArray *nitz_information_long_name;
+    GArray *nitz_information_short_name;
 
     output = qmi_client_nas_get_operator_name_finish (client, res, &error);
     if (!output) {
@@ -3136,6 +3142,29 @@ get_operator_name_ready (QmiClientNas *client,
             g_free (long_name);
             g_free (short_name);
         }
+    }
+
+    if (qmi_message_nas_get_operator_name_output_get_nitz_information (
+            output,
+            &nitz_information_name_encoding,
+            &nitz_information_short_country_initials,
+            &nitz_information_long_name_spare_bits,
+            &nitz_information_short_name_spare_bits,
+            &nitz_information_long_name,
+            &nitz_information_short_name,
+            NULL)) {
+        g_autofree gchar *long_name = NULL;
+        g_autofree gchar *short_name = NULL;
+
+        long_name = qmi_nas_read_string_from_plmn_encoded_array (nitz_information_name_encoding, nitz_information_long_name);
+        short_name = qmi_nas_read_string_from_plmn_encoded_array (nitz_information_name_encoding, nitz_information_short_name);
+        g_print ("NITZ information:\n"
+                 "\tLong Name:  '%s'\n"
+                 "\tShort Name: '%s'\n"
+                 "\tCountry:    '%s'\n",
+                 long_name ?: "",
+                 short_name ?: "",
+                 qmi_nas_plmn_name_country_initials_get_string (nitz_information_short_country_initials));
     }
 
     qmi_message_nas_get_operator_name_output_unref (output);
