@@ -40,7 +40,7 @@ Makefile.in
 
 /src/libqmi-glib/test/Makefile
 /src/libqmi-glib/test/Makefile.in
-/src/libqmi-glib/test/test-utils
+/src/libqmi-glib/test/test-compat-utils
 /src/libqmi-glib/test/test-message
 /src/libqmi-glib/test/test-generated
 

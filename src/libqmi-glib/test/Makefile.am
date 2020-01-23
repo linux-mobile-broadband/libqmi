@@ -17,16 +17,16 @@ AM_LDFLAGS = \
 	$(NULL)
 
 noinst_PROGRAMS = \
-	test-utils \
+	test-compat-utils \
 	test-message \
 	test-generated \
 	$(NULL)
 
 TEST_PROGS += $(noinst_PROGRAMS)
 
-test_utils_SOURCES = test-utils.c
-test_utils_CPPFLAGS = -Wno-deprecated-declarations
-test_utils_LDADD = $(top_builddir)/src/libqmi-glib/libqmi-glib.la
+test_compat_utils_SOURCES = test-compat-utils.c
+test_compat_utils_CPPFLAGS = -Wno-deprecated-declarations
+test_compat_utils_LDADD = $(top_builddir)/src/libqmi-glib/libqmi-glib.la
 
 test_message_SOURCES = test-message.c
 test_message_LDADD = $(top_builddir)/src/libqmi-glib/libqmi-glib.la
