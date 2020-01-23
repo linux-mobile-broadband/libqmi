@@ -81,8 +81,8 @@
      "type"               : "TLV",
      "format"             : "string" },
 
-   { "common-ref"         : "NAS Operator NITZ Information",
-     "name"               : "Operator NITZ Information",
+   { "common-ref"         : "NAS NITZ Information",
+     "name"               : "NITZ Information",
      "id"                 : "0x14",
      "type"               : "TLV",
      "format"             : "sequence",
@@ -99,9 +99,11 @@
                                 "format"        : "guint8",
                                 "public-format" : "QmiNasPlmnNameSpareBits" },
                               { "name"          : "Long Name",
-                                "format"        : "string" },
+                                "format"        : "array",
+                                "array-element" : { "format" : "guint8" } },
                               { "name"          : "Short Name",
-                                "format"        : "string" } ] },
+                                "format"        : "array",
+                                "array-element" : { "format" : "guint8" } } ] },
 
   // *********************************************************************************
   {  "name"    : "Reset",
@@ -1582,8 +1584,8 @@
                     { "common-ref"    : "NAS Operator String Name",
                       "since"         : "1.18",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
-                    { "common-ref"    : "NAS Operator NITZ Information",
-                      "since"         : "1.18",
+                    { "common-ref"    : "NAS NITZ Information",
+                      "since"         : "1.26",
                       "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
 
   {  "name"    : "Operator Name",
@@ -1600,8 +1602,8 @@
                       "since"         : "1.18" },
                     { "common-ref"    : "NAS Operator String Name",
                       "since"         : "1.18" },
-                    { "common-ref"    : "NAS Operator NITZ Information",
-                      "since"         : "1.18" } ] },
+                    { "common-ref"    : "NAS NITZ Information",
+                      "since"         : "1.26" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get Cell Location Info",

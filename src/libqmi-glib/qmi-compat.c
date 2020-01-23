@@ -747,4 +747,68 @@ qmi_device_close (QmiDevice *self,
     return TRUE;
 }
 
+gboolean
+qmi_message_nas_get_operator_name_output_get_operator_nitz_information (
+    QmiMessageNasGetOperatorNameOutput *self,
+    QmiNasPlmnEncodingScheme *value_operator_nitz_information_name_encoding,
+    QmiNasPlmnNameCountryInitials *value_operator_nitz_information_short_country_initials,
+    QmiNasPlmnNameSpareBits *value_operator_nitz_information_long_name_spare_bits,
+    QmiNasPlmnNameSpareBits *value_operator_nitz_information_short_name_spare_bits,
+    const gchar **value_operator_nitz_information_long_name,
+    const gchar **value_operator_nitz_information_short_name,
+    GError **error)
+{
+    GArray *long_name = NULL;
+    GArray *short_name = NULL;
+
+    if (!qmi_message_nas_get_operator_name_output_get_nitz_information (
+            self,
+            value_operator_nitz_information_name_encoding,
+            value_operator_nitz_information_short_country_initials,
+            value_operator_nitz_information_long_name_spare_bits,
+            value_operator_nitz_information_short_name_spare_bits,
+            &long_name,
+            &short_name,
+            error))
+        return FALSE;
+
+    if (value_operator_nitz_information_long_name)
+        *value_operator_nitz_information_long_name = (const gchar *)long_name->data;
+    if (value_operator_nitz_information_short_name)
+        *value_operator_nitz_information_short_name = (const gchar *)short_name->data;
+    return TRUE;
+}
+
+gboolean
+qmi_indication_nas_operator_name_output_get_operator_nitz_information (
+    QmiIndicationNasOperatorNameOutput *self,
+    QmiNasPlmnEncodingScheme *value_operator_nitz_information_name_encoding,
+    QmiNasPlmnNameCountryInitials *value_operator_nitz_information_short_country_initials,
+    QmiNasPlmnNameSpareBits *value_operator_nitz_information_long_name_spare_bits,
+    QmiNasPlmnNameSpareBits *value_operator_nitz_information_short_name_spare_bits,
+    const gchar **value_operator_nitz_information_long_name,
+    const gchar **value_operator_nitz_information_short_name,
+    GError **error)
+{
+    GArray *long_name = NULL;
+    GArray *short_name = NULL;
+
+    if (!qmi_indication_nas_operator_name_output_get_nitz_information (
+            self,
+            value_operator_nitz_information_name_encoding,
+            value_operator_nitz_information_short_country_initials,
+            value_operator_nitz_information_long_name_spare_bits,
+            value_operator_nitz_information_short_name_spare_bits,
+            &long_name,
+            &short_name,
+            error))
+        return FALSE;
+
+    if (value_operator_nitz_information_long_name)
+        *value_operator_nitz_information_long_name = (const gchar *)long_name->data;
+    if (value_operator_nitz_information_short_name)
+        *value_operator_nitz_information_short_name = (const gchar *)short_name->data;
+    return TRUE;
+}
+
 #endif /* QMI_DISABLE_DEPRECATED */
