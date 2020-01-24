@@ -32,7 +32,6 @@
 
 #include "qmicli.h"
 #include "qmicli-helpers.h"
-#include "qmicli-charsets.h"
 
 /* Context */
 typedef struct {
@@ -3040,39 +3039,6 @@ force_network_search_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
-static gchar *
-garray_of_uint8_to_string (GArray *array,
-                           QmiNasPlmnEncodingScheme scheme)
-{
-    gchar *decoded = NULL;
-
-    if (array->len == 0)
-        return NULL;
-
-    if (scheme == QMI_NAS_PLMN_ENCODING_SCHEME_GSM) {
-        guint8 *unpacked;
-        guint32 unpacked_len = 0;
-
-        /* Unpack the GSM and decode it */
-        unpacked = qmicli_charset_gsm_unpack ((const guint8 *) array->data, (array->len * 8) / 7, &unpacked_len);
-        if (unpacked) {
-            decoded = (gchar *) qmicli_charset_gsm_unpacked_to_utf8 (unpacked, unpacked_len);
-            g_free (unpacked);
-        }
-    } else if (scheme == QMI_NAS_PLMN_ENCODING_SCHEME_UCS2LE) {
-        decoded = g_convert (
-                        array->data,
-                        array->len,
-                        "UTF-8",
-                        "UCS-2LE",
-                        NULL,
-                        NULL,
-                        NULL);
-    }
-
-    return decoded;
-}
-
 static void
 get_operator_name_ready (QmiClientNas *client,
                          GAsyncResult *res)
@@ -3158,8 +3124,8 @@ get_operator_name_ready (QmiClientNas *client,
             gchar *short_name;
 
             element = &g_array_index (array, QmiMessageNasGetOperatorNameOutputOperatorPlmnNameElement, i);
-            long_name = garray_of_uint8_to_string (element->long_name, element->name_encoding);
-            short_name = garray_of_uint8_to_string (element->short_name, element->name_encoding);
+            long_name = qmi_nas_read_string_from_plmn_encoded_array (element->name_encoding, element->long_name);
+            short_name = qmi_nas_read_string_from_plmn_encoded_array (element->name_encoding, element->short_name);
             g_print ("\t%d: '%s'%s%s%s\t\tCountry: '%s'\n",
                      i,
                      long_name ?: "",

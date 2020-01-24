@@ -22,7 +22,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-errors.h \
 	qmi-enums-wds.h qmi-enums-wds.c \
 	qmi-enums-dms.h qmi-flags64-dms.h qmi-enums-dms.c \
-	qmi-enums-nas.h qmi-flags64-nas.h\
+	qmi-enums-nas.h qmi-flags64-nas.h qmi-enums-nas.c \
 	qmi-enums-wms.h \
 	qmi-enums-pds.h \
 	qmi-enums-pdc.h \

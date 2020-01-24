@@ -84,6 +84,15 @@ gchar *__qmi_utils_str_hex (gconstpointer mem,
 G_GNUC_INTERNAL
 gboolean __qmi_user_allowed (uid_t uid,
                              GError **error);
+
+G_GNUC_INTERNAL
+gchar *__qmi_string_utf8_from_gsm7 (const guint8 *gsm,
+                                    gsize         gsm_len);
+
+G_GNUC_INTERNAL
+gchar *__qmi_string_utf8_from_ucs2le (const guint8 *ucs2le,
+                                      gsize         ucs2le_len);
+
 G_GNUC_INTERNAL
 gchar *__qmi_utils_get_driver (const gchar *cdc_wdm_path,
                                GError **error);
