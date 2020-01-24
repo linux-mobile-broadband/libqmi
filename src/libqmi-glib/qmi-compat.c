@@ -1034,4 +1034,32 @@ qmi_indication_nas_operator_name_output_get_operator_nitz_information (
     return TRUE;
 }
 
+gboolean
+qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
+    QmiMessageNasGetHomeNetworkOutput *self,
+    guint16 *value_home_network_3gpp2_mcc,
+    guint16 *value_home_network_3gpp2_mnc,
+    QmiNasNetworkDescriptionDisplay *value_home_network_3gpp2_display_description,
+    QmiNasNetworkDescriptionEncoding *value_home_network_3gpp2_description_encoding,
+    const gchar **value_home_network_3gpp2_description,
+    GError **error)
+{
+    GArray *description = NULL;
+
+    if (!qmi_message_nas_get_home_network_output_get_home_network_3gpp2_ext (
+            self,
+            value_home_network_3gpp2_mcc,
+            value_home_network_3gpp2_mnc,
+            value_home_network_3gpp2_display_description,
+            value_home_network_3gpp2_description_encoding,
+            &description,
+            error))
+        return FALSE;
+
+    if (value_home_network_3gpp2_description)
+        *value_home_network_3gpp2_description = (const gchar *)description->data;
+
+    return TRUE;
+}
+
 #endif /* QMI_DISABLE_DEPRECATED */

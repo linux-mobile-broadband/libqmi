@@ -774,22 +774,27 @@ get_home_network_ready (QmiClientNas *client,
     {
         guint16 mcc;
         guint16 mnc;
+        QmiNasNetworkDescriptionEncoding description_encoding;
+        GArray *description_array;
 
-        if (qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
+        if (qmi_message_nas_get_home_network_output_get_home_network_3gpp2_ext (
                 output,
                 &mcc,
                 &mnc,
                 NULL, /* display_description */
-                NULL, /* description_encoding */
-                NULL, /* description */
+                &description_encoding,
+                &description_array,
                 NULL)) {
+            g_autofree gchar *description = NULL;
+
+            description = qmi_nas_read_string_from_network_description_encoded_array (description_encoding, description_array);
             g_print ("\t3GPP2 Home network (extended):\n"
                      "\t\tMCC: '%" G_GUINT16_FORMAT"'\n"
-                     "\t\tMNC: '%" G_GUINT16_FORMAT"'\n",
+                     "\t\tMNC: '%" G_GUINT16_FORMAT"'\n"
+                     "\t\tDescription: '%s'\n",
                      mcc,
-                     mnc);
-
-            /* TODO: convert description to UTF-8 and display */
+                     mnc,
+                     description ?: "");
         }
     }
 
