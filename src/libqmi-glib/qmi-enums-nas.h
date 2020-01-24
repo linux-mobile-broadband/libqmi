@@ -1421,6 +1421,22 @@ typedef enum {
 } QmiNasPlmnEncodingScheme;
 
 /**
+ * qmi_nas_read_string_from_plmn_encoded_array:
+ * @encoding: a #QmiNasPlmnEncodingScheme.
+ * @array: a #GArray with the encoded data.
+ *
+ * Converts the encoded data in @array to UTF-8 and returns a newly allocated
+ * NUL-terminated string.
+ *
+ * Returns: the UTF-8 encoded string, or %NULL if an error happened during the conversion.
+ * The returned value should be freed with g_free().
+ *
+ * Since: 1.26
+ */
+gchar *qmi_nas_read_string_from_plmn_encoded_array (QmiNasPlmnEncodingScheme  encoding,
+                                                    const GArray             *array);
+
+/**
  * QmiNasNetworkNameDisplayCondition:
  * @QMI_NAS_NETWORK_NAME_DISPLAY_CONDITION_DISPLAY_REGISTERED_PLMN_IF_KNOWN_NETWORK: if
  * set, display of the registered PLMN is required when the registered PLMN is either

@@ -85,6 +85,14 @@ G_GNUC_INTERNAL
 gboolean __qmi_user_allowed (uid_t uid,
                              GError **error);
 
+G_GNUC_INTERNAL
+gchar *__qmi_string_utf8_from_gsm7 (const guint8 *gsm,
+                                    gsize         gsm_len);
+
+G_GNUC_INTERNAL
+gchar *__qmi_string_utf8_from_ucs2le (const guint8 *ucs2le,
+                                      gsize         ucs2le_len);
+
 typedef enum {
     __QMI_TRANSPORT_TYPE_UNKNOWN,
     __QMI_TRANSPORT_TYPE_QMUX,
