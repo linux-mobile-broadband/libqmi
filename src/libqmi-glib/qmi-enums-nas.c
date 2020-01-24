@@ -37,3 +37,22 @@ qmi_nas_read_string_from_plmn_encoded_array (QmiNasPlmnEncodingScheme  encoding,
         return NULL;
     }
 }
+
+gchar *
+qmi_nas_read_string_from_network_description_encoded_array (QmiNasNetworkDescriptionEncoding  encoding,
+                                                            const GArray                     *array)
+{
+    switch (encoding) {
+    case QMI_NAS_NETWORK_DESCRIPTION_ENCODING_UNSPECIFIED:
+    case QMI_NAS_NETWORK_DESCRIPTION_ENCODING_ASCII7:
+        return (g_utf8_validate ((const gchar *)array->data, array->len, NULL) ?
+                g_strndup ((const gchar *)array->data, array->len) :
+                NULL);
+    case QMI_NAS_NETWORK_DESCRIPTION_ENCODING_GSM:
+        return __qmi_string_utf8_from_gsm7 ((const guint8 *)array->data, array->len);
+    case QMI_NAS_NETWORK_DESCRIPTION_ENCODING_UNICODE:
+        return __qmi_string_utf8_from_ucs2le ((const guint8 *)array->data, array->len);
+    default:
+        return NULL;
+    }
+}
