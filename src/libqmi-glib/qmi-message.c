@@ -1320,9 +1320,27 @@ qmi_message_tlv_read_string (QmiMessage  *self,
     if (!(ptr = tlv_error_if_read_overflow (self, tlv_offset, *offset, valid_string_length, error)))
         return FALSE;
 
-    if (!g_utf8_validate ((const gchar *)ptr, valid_string_length, NULL)) {
-        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_DATA, "invalid string");
-        return FALSE;
+    /* Perform a quick UTF-8 validation check first. This check isn't perfect,
+     * because there may be GSM-7 encoded strings that are valid UTF-8 as well,
+     * but hey, the strings read using this method should all really be ASCII-7
+     * and we're trying to do our best to overcome modem firmware problems...
+     */
+    if (g_utf8_validate ((const gchar *)ptr, valid_string_length, NULL)) {
+        *out = g_malloc (valid_string_length + 1);
+        memcpy (*out, ptr, valid_string_length);
+        (*out)[valid_string_length] = '\0';
+    } else {
+        /* Otherwise, attempt GSM-7 */
+        *out =__qmi_string_utf8_from_gsm7 (ptr, valid_string_length);
+        if (*out == NULL) {
+            /* Otherwise, attempt UCS-2 */
+            *out = __qmi_string_utf8_from_ucs2le (ptr, valid_string_length);
+            if (*out == NULL) {
+                /* Otherwise, error */
+                g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_DATA, "invalid string");
+                return FALSE;
+            }
+        }
     }
 
     *out = g_malloc (valid_string_length + 1);

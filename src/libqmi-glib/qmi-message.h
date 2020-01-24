@@ -916,7 +916,10 @@ gboolean qmi_message_tlv_read_gdouble (QmiMessage  *self,
  * reading from within the TLV value (0 for the first item). If the variable
  * is successfully read, @offset will be updated to point past the read item.
  *
- * Since 1.24.6 the read string is guaranteed to be valid UTF-8.
+ * Since 1.24.6 the read string is guaranteed to be valid UTF-8. Also, in order to
+ * overcome known firmware errors on string fields, this method will also
+ * attempt to parse the string as GSM-7 or UCS-2 if the initial UTF-8 validation
+ * fails.
  *
  * Returns: %TRUE if the variable is successfully read, otherwise %FALSE is returned and @error is set.
  *
