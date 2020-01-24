@@ -1457,6 +1457,33 @@ gboolean qmi_indication_nas_operator_name_output_get_operator_nitz_information (
     const gchar **value_operator_nitz_information_short_name,
     GError **error);
 
+/**
+ * qmi_message_nas_get_home_network_output_get_home_network_3gpp2:
+ * @self: a #QmiMessageNasGetHomeNetworkOutput.
+ * @value_home_network_3gpp2_mcc: a placeholder for the output #guint16, or %NULL if not required.
+ * @value_home_network_3gpp2_mnc: a placeholder for the output #guint16, or %NULL if not required.
+ * @value_home_network_3gpp2_display_description: a placeholder for the output #QmiNasNetworkDescriptionDisplay, or %NULL if not required.
+ * @value_home_network_3gpp2_description_encoding: a placeholder for the output #QmiNasNetworkDescriptionEncoding, or %NULL if not required.
+ * @value_home_network_3gpp2_description: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Home Network 3GPP2' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.26: Use qmi_message_nas_get_home_network_output_get_home_network_3gpp2_ext() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_nas_get_home_network_output_get_home_network_3gpp2_ext)
+gboolean qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
+    QmiMessageNasGetHomeNetworkOutput *self,
+    guint16 *value_home_network_3gpp2_mcc,
+    guint16 *value_home_network_3gpp2_mnc,
+    QmiNasNetworkDescriptionDisplay *value_home_network_3gpp2_display_description,
+    QmiNasNetworkDescriptionEncoding *value_home_network_3gpp2_description_encoding,
+    const gchar **value_home_network_3gpp2_description,
+    GError **error);
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */
