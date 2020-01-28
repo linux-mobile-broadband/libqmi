@@ -94,6 +94,7 @@ typedef enum {
  * @QMI_DMS_RADIO_INTERFACE_GSM: GSM.
  * @QMI_DMS_RADIO_INTERFACE_UMTS: UMTS.
  * @QMI_DMS_RADIO_INTERFACE_LTE: LTE.
+ * @QMI_DMS_RADIO_INTERFACE_5GNR: 5G NR. Since 1.26.
  *
  * Radio interface type.
  *
@@ -104,7 +105,8 @@ typedef enum {
     QMI_DMS_RADIO_INTERFACE_EVDO       = 2,
     QMI_DMS_RADIO_INTERFACE_GSM        = 4,
     QMI_DMS_RADIO_INTERFACE_UMTS       = 5,
-    QMI_DMS_RADIO_INTERFACE_LTE        = 8
+    QMI_DMS_RADIO_INTERFACE_LTE        = 8,
+    QMI_DMS_RADIO_INTERFACE_5GNR       = 10,
 } QmiDmsRadioInterface;
 
 /**
