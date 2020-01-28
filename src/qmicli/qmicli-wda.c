@@ -46,19 +46,32 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
-static gchar *set_data_format_str;
-static gboolean get_data_format_flag;
-static gboolean get_supported_messages_flag;
-static gboolean noop_flag;
+static gchar    *set_data_format_str;
+static gchar    *get_data_format_str;
+static gboolean  get_data_format_flag;
+static gboolean  get_supported_messages_flag;
+static gboolean  noop_flag;
+
+static gboolean
+parse_get_data_format (const gchar  *option_name,
+                       const gchar  *value,
+                       gpointer      data,
+                       GError      **error)
+{
+    get_data_format_flag = TRUE;
+    if (value && value[0])
+        get_data_format_str = g_strdup (value);
+    return TRUE;
+}
 
 static GOptionEntry entries[] = {
     { "wda-set-data-format", 0, 0, G_OPTION_ARG_STRING, &set_data_format_str,
       "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip), ul-protocol (tlp|qc-ncm|mbim|rndis|qmap), dl-protocol (tlp|qc-ncm|mbim|rndis|qmap), dl-datagram-max-size, dl-max-datagrams, ep-type (undefined|hsusb), ep-iface-number)",
       "[\"key=value,...\"]"
     },
-    { "wda-get-data-format", 0, 0, G_OPTION_ARG_NONE, &get_data_format_flag,
-      "Get data format",
-      NULL
+    { "wda-get-data-format", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, parse_get_data_format,
+      "Get data format (allowed keys: ep-type (undefined|hsusb), ep-iface-number); also allows empty key list",
+      "[\"key=value,...\"]"
     },
     { "wda-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
@@ -135,6 +148,102 @@ noop_cb (gpointer unused)
 {
     operation_shutdown (TRUE);
     return FALSE;
+}
+
+typedef struct {
+    QmiDataEndpointType endpoint_type;
+    gint                endpoint_iface_number;
+} GetDataFormatProperties;
+
+static gboolean
+get_data_format_properties_handle (const gchar  *key,
+                                   const gchar  *value,
+                                   GError      **error,
+                                   gpointer      user_data)
+{
+    GetDataFormatProperties *props = (GetDataFormatProperties *)user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "key '%s' requires a value",
+                     key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ep-type") == 0) {
+        if (!qmicli_read_data_endpoint_type_from_string (value, &(props->endpoint_type))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "Unrecognized Endpoint Type '%s'",
+                         value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ep-iface-number") == 0) {
+        props->endpoint_iface_number = atoi (value);
+        return TRUE;
+    }
+
+    g_set_error (error,
+                 QMI_CORE_ERROR,
+                 QMI_CORE_ERROR_FAILED,
+                 "Unrecognized option '%s'",
+                 key);
+    return FALSE;
+}
+
+static QmiMessageWdaGetDataFormatInput *
+get_data_format_input_create (const gchar *str)
+{
+    g_autoptr(QmiMessageWdaGetDataFormatInput) input = NULL;
+    g_autoptr(GError) error = NULL;
+    GetDataFormatProperties props = {
+        .endpoint_type         = QMI_DATA_ENDPOINT_TYPE_UNDEFINED,
+        .endpoint_iface_number = QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED,
+    };
+
+    input = qmi_message_wda_get_data_format_input_new ();
+
+    if (!qmicli_parse_key_value_string (str,
+                                        &error,
+                                        get_data_format_properties_handle,
+                                        &props)) {
+        g_printerr ("error: could not parse input string '%s'\n", error->message);
+        return NULL;
+    }
+
+    if ((props.endpoint_type == QMI_DATA_ENDPOINT_TYPE_UNDEFINED) ^
+        (props.endpoint_iface_number == QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED)) {
+        g_printerr ("error: endpoint type and interface number must be both set or both unset\n");
+        return NULL;
+    }
+
+    if (props.endpoint_type != QMI_DATA_ENDPOINT_TYPE_UNDEFINED &&
+        !qmi_message_wda_get_data_format_input_set_endpoint_info (
+            input,
+            props.endpoint_type,
+            props.endpoint_iface_number,
+            &error)) {
+        g_printerr ("error: could not set peripheral endpoint id: %s\n", error->message);
+        return NULL;
+    }
+
+    if (props.endpoint_iface_number != QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED &&
+        !qmi_message_wda_get_data_format_input_set_endpoint_info (
+            input,
+            QMI_DATA_ENDPOINT_TYPE_HSUSB,
+            props.endpoint_iface_number,
+            &error)) {
+        g_printerr ("error: could not set peripheral endpoint id: %s\n", error->message);
+        return NULL;
+    }
+
+    return g_steal_pointer (&input);
 }
 
 static void
@@ -606,9 +715,19 @@ qmicli_wda_run (QmiDevice *device,
 
     /* Request to read data format? */
     if (get_data_format_flag) {
+        g_autoptr(QmiMessageWdaGetDataFormatInput) input = NULL;
+
+        if (get_data_format_str) {
+            input = get_data_format_input_create (get_data_format_str);
+            if (!input) {
+                operation_shutdown (FALSE);
+                return;
+            }
+        }
+
         g_debug ("Asynchronously getting data format...");
         qmi_client_wda_get_data_format (ctx->client,
-                                        NULL,
+                                        input,
                                         10,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback)get_data_format_ready,
