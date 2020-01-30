@@ -354,9 +354,15 @@ gchar *
 __qmi_string_utf8_from_ucs2le (const guint8 *ucs2le,
                                gsize         ucs2le_len)
 {
-    /* UCS2 data length must be multiple of 2, otherwise it's not UCS2 */
+    gsize               ucs2he_nchars;
+    g_autofree guint16 *ucs2he = NULL;
+
+    /* UCS2 data length given in bytes must be multiple of 2 */
     if (ucs2le_len % 2 != 0)
         return NULL;
+
+    /* Convert length from bytes to number of ucs2 characters */
+    ucs2he_nchars = ucs2le_len / 2;
 
     /* We'll attempt to convert UCS2 to UTF-8, using GLib's support to convert
      * from UTF-16 to UTF-8 (given that UCS2 is a subset of UTF-16). In order
@@ -366,22 +372,22 @@ __qmi_string_utf8_from_ucs2le (const guint8 *ucs2le,
      *
      * We don't want to use g_convert() because that would mean requiring
      * full iconv() support in the system.
+     *
+     * We're using an extra allocation always because we need to increase
+     * alignment (guint8 -> (guint16)gunichar2)
      */
+    ucs2he = g_new (guint16, ucs2he_nchars);
+    g_assert (sizeof (guint16) * ucs2he_nchars == ucs2le_len);
+    memcpy (ucs2he, ucs2le, ucs2le_len);
 #if G_BYTE_ORDER == G_BIG_ENDIAN
     {
-        g_autofree guint8 *ucs2he = NULL;
         guint i;
 
-        ucs2he = g_malloc (ucs2le_len);
-        for (i = 0; i < ucs2le_len; i+=2) {
-            ucs2he[i]   = ucs2le[i+1];
-            ucs2he[i+1] = ucs2le[i];
-        }
-        return g_utf16_to_utf8 ((const gunichar2 *)ucs2he, ucs2le_len / 2, NULL, NULL, NULL);
+        for (i = 0; i < ucs2he_nchars; i++)
+            ucs2he[i] = GUINT16_FROM_LE (ucs2he[i]);
     }
-#else
-    return g_utf16_to_utf8 ((const gunichar2 *)ucs2le, ucs2le_len / 2, NULL, NULL, NULL);
 #endif
+    return g_utf16_to_utf8 ((const gunichar2 *)ucs2he, ucs2he_nchars, NULL, NULL, NULL);
 }
 /*****************************************************************************/
 
