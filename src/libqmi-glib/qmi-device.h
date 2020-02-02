@@ -881,6 +881,19 @@ void qmi_device_new_from_node (QrtrNode            *node,
                                GCancellable        *cancellable,
                                GAsyncReadyCallback  callback,
                                gpointer             user_data);
+
+/**
+ * qmi_device_new_from_node_finish:
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qmi_device_new_from_node().
+ *
+ * Returns: A newly created #QmiDevice, or %NULL if @error is set.
+ */
+QmiDevice *qmi_device_new_from_node_finish (GAsyncResult  *res,
+                                            GError       **error);
+
 #endif /* QMI_QRTR_SUPPORTED */
 
 G_END_DECLS

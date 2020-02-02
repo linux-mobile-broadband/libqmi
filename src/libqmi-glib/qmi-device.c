@@ -2472,9 +2472,9 @@ qmi_device_command (QmiDevice           *self,
 /*****************************************************************************/
 /* New QMI device */
 
-QmiDevice *
-qmi_device_new_finish (GAsyncResult *res,
-                       GError **error)
+static QmiDevice *
+common_device_new_finish (GAsyncResult  *res,
+                          GError      **error)
 {
     GObject *ret;
     GObject *source_object;
@@ -2487,6 +2487,14 @@ qmi_device_new_finish (GAsyncResult *res,
 }
 
 #if QMI_QRTR_SUPPORTED
+
+QmiDevice *
+qmi_device_new_from_node_finish (GAsyncResult *res,
+                                 GError **error)
+{
+    return common_device_new_finish (res, error);
+}
+
 void
 qmi_device_new_from_node (QrtrNode *node,
                           GCancellable *cancellable,
@@ -2502,6 +2510,13 @@ qmi_device_new_from_node (QrtrNode *node,
                                 NULL);
 }
 #endif
+
+QmiDevice *
+qmi_device_new_finish (GAsyncResult *res,
+                       GError **error)
+{
+    return common_device_new_finish (res, error);
+}
 
 void
 qmi_device_new (GFile *file,

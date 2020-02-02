@@ -1578,6 +1578,7 @@ QmiEndpointQrtr
 QmiEndpointQrtrClass
 QmiEndpointQrtrPrivate
 qmi_device_new_from_node
+qmi_device_new_from_node_finish
 qmi_endpoint_qrtr_get_type
 qmi_endpoint_qrtr_new
 </SECTION>
