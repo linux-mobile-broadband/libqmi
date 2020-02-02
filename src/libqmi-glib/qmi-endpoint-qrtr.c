@@ -511,9 +511,10 @@ endpoint_send (QmiEndpoint   *endpoint,
     ClientInfo *client;
     QmiService service;
     struct sockaddr_qrtr addr;
-    int sockfd;
-    int rc;
+    gint sockfd;
+    gint rc;
     GError *inner_error = NULL;
+    gint sq_port;
 
     self = QMI_ENDPOINT_QRTR (endpoint);
 
@@ -552,17 +553,20 @@ endpoint_send (QmiEndpoint   *endpoint,
         return FALSE;
     }
 
-    /* Set up QRTR bus destination address */
-    addr.sq_family = AF_QIPCRTR;
-    addr.sq_node = qrtr_node_id (self->priv->node);
-    addr.sq_port = qrtr_node_lookup_port (self->priv->node, service);
-    if (addr.sq_port == -1) {
+    /* Lookup port */
+    sq_port = qrtr_node_lookup_port (self->priv->node, service);
+    if (sq_port == -1) {
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_FAILED,
                      "Service %u has no servers", service);
         return FALSE;
     }
+
+    /* Set up QRTR bus destination address */
+    addr.sq_family = AF_QIPCRTR;
+    addr.sq_node = qrtr_node_id (self->priv->node);
+    addr.sq_port = (guint) sq_port;
 
     /* Get raw message */
     raw_message = qmi_message_get_data (message, &raw_message_len, &inner_error);
