@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * libqmi-glib -- GLib/GIO based library to control QMI devices
+ * libqrtr-glib -- GLib/GIO based library to control QRTR devices
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2019 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2019-2020 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <endian.h>
@@ -29,10 +30,9 @@
 
 #include <gio/gio.h>
 
-#include "qmi-qrtr-control-socket.h"
-#include "qmi-qrtr-node.h"
-#include "qmi-qrtr-utils.h"
-#include "qmi-enums.h"
+#include "qrtr-control-socket.h"
+#include "qrtr-node.h"
+#include "qrtr-utils.h"
 
 static void initable_iface_init (GInitableIface *iface);
 
@@ -134,7 +134,7 @@ static void
 add_service_info (QrtrControlSocket *self,
                   guint32            node_id,
                   guint32            port,
-                  QmiService         service,
+                  guint32            service,
                   guint32            version,
                   guint32            instance)
 {
@@ -161,7 +161,7 @@ static void
 remove_service_info (QrtrControlSocket *self,
                      guint32            node_id,
                      guint32            port,
-                     QmiService         service,
+                     guint32            service,
                      guint32            version,
                      guint32            instance)
 {
@@ -199,7 +199,7 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
     guint32               type;
     guint32               node_id;
     guint32               port;
-    QmiService            service;
+    guint32               service;
     guint32               version;
     guint32               instance;
 
@@ -227,7 +227,7 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
     /* type is something we handle, parse the packet */
     node_id = GUINT32_FROM_LE (ctrl_packet.server.node);
     port = GUINT32_FROM_LE (ctrl_packet.server.port);
-    service = (QmiService)GUINT32_FROM_LE (ctrl_packet.server.service);
+    service = GUINT32_FROM_LE (ctrl_packet.server.service);
     version = GUINT32_FROM_LE (ctrl_packet.server.instance) & 0xff;
     instance = GUINT32_FROM_LE (ctrl_packet.server.instance) >> 8;
 
@@ -322,7 +322,7 @@ initable_init (GInitable     *initable,
                GError       **error)
 {
     QrtrControlSocket *self;
-    int                fd;
+    gint               fd;
 
     self = QRTR_CONTROL_SOCKET (initable);
 
@@ -341,8 +341,10 @@ initable_init (GInitable     *initable,
 
     g_socket_set_timeout (self->priv->socket, 0);
 
-    if (!send_new_lookup_ctrl_packet (self, error))
+    if (!send_new_lookup_ctrl_packet (self, error)) {
+        close (fd);
         return FALSE;
+    }
 
     setup_socket_source (self);
     return TRUE;

@@ -17,14 +17,16 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2019 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2019-2020 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_ENDPOINT_QRTR_H_
 #define _LIBQMI_GLIB_QMI_ENDPOINT_QRTR_H_
 
+#include <libqrtr-glib.h>
+
 #include "qmi-endpoint.h"
-#include "qmi-qrtr-node.h"
 
 #define QMI_TYPE_ENDPOINT_QRTR            (qmi_endpoint_qrtr_get_type ())
 #define QMI_ENDPOINT_QRTR(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), QMI_TYPE_ENDPOINT_QRTR, QmiEndpointQrtr))

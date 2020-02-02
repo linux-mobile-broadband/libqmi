@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * libqmi-glib -- GLib/GIO based library to control QMI devices
+ * libqrtr-glib -- GLib/GIO based library to control QRTR devices
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,25 +17,26 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2019 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2019-2020 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
  */
 
-#ifndef _LIBQMI_GLIB_QMI_QRTR_CONTROL_SOCKET_H_
-#define _LIBQMI_GLIB_QMI_QRTR_CONTROL_SOCKET_H_
+#ifndef _LIBQRTR_GLIB_QRTR_CONTROL_SOCKET_H_
+#define _LIBQRTR_GLIB_QRTR_CONTROL_SOCKET_H_
 
-#if !defined (__LIBQMI_GLIB_H_INSIDE__) && !defined (LIBQMI_GLIB_COMPILATION)
-#error "Only <libqmi-glib.h> can be included directly."
+#if !defined (__LIBQRTR_GLIB_H_INSIDE__) && !defined (LIBQRTR_GLIB_COMPILATION)
+#error "Only <libqrtr-glib.h> can be included directly."
 #endif
 
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include "qmi-qrtr-node.h"
+#include "qrtr-node.h"
 
 G_BEGIN_DECLS
 
 /**
- * SECTION:qrtr-control-socket
+ * SECTION: qrtr-control-socket
  * @title: QrtrControlSocket
  * @short_description: QRTR bus observer and device event listener
  *
@@ -71,8 +72,6 @@ GType qrtr_control_socket_get_type (void);
  * QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED:
  *
  * Symbol defining the #QrtrControlSocket::qrtr-node-added signal.
- *
- * Since: 1.24
  */
 #define QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED   "qrtr-node-added"
 
@@ -80,8 +79,6 @@ GType qrtr_control_socket_get_type (void);
  * QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED:
  *
  * Symbol defining the #QrtrControlSocket::qrtr-node-removed signal.
- *
- * Since: 1.24
  */
 #define QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED "qrtr-node-removed"
 
@@ -93,8 +90,6 @@ GType qrtr_control_socket_get_type (void);
  * Creates a #QrtrControlSocket object.
  *
  * Returns: A newly created #QrtrControlSocket, or %NULL if @error is set.
- *
- * Since: 1.24
  */
 QrtrControlSocket *qrtr_control_socket_new (GCancellable  *cancellable,
                                             GError       **error);
@@ -105,12 +100,10 @@ QrtrControlSocket *qrtr_control_socket_new (GCancellable  *cancellable,
  *
  * Returns a #QrtrNode object representing the device with the given node ID
  * on the QRTR bus.
- *
- * Since: 1.24
  */
 QrtrNode *qrtr_control_socket_get_node (QrtrControlSocket *socket,
                                         guint32            node_id);
 
 G_END_DECLS
 
-#endif /* _LIBQMI_GLIB_QMI_QRTR_CONTROL_SOCKET_H_ */
+#endif /* _LIBQRTR_GLIB_QRTR_CONTROL_SOCKET_H_ */

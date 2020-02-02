@@ -14,6 +14,13 @@ libhelpers_la_CPPFLAGS = \
 	-I$(top_builddir)/src/libqmi-glib/generated \
 	$(NULL)
 
+if QMI_QRTR_SUPPORTED
+libhelpers_la_CPPFLAGS += \
+	-I$(top_srcdir)/src/libqrtr-glib \
+	-I$(top_builddir)/src/libqrtr-glib \
+	$(NULL)
+endif
+
 libhelpers_la_SOURCES = \
 	qmicli-helpers.c \
 	qmicli-helpers.h \
@@ -36,6 +43,13 @@ qmicli_CPPFLAGS = \
 	-I$(top_builddir)/src/libqmi-glib \
 	-I$(top_builddir)/src/libqmi-glib/generated \
 	$(NULL)
+
+if QMI_QRTR_SUPPORTED
+qmicli_CPPFLAGS += \
+	-I$(top_srcdir)/src/libqrtr-glib \
+	-I$(top_builddir)/src/libqrtr-glib \
+	$(NULL)
+endif
 
 qmicli_SOURCES = \
 	qmicli.c \

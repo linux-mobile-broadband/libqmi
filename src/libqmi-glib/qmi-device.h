@@ -37,7 +37,7 @@
 #include "qmi-version.h"
 
 #if QMI_QRTR_SUPPORTED
-#include "qmi-qrtr-node.h"
+# include <libqrtr-glib.h>
 #endif
 
 G_BEGIN_DECLS
@@ -101,17 +101,6 @@ typedef struct _QmiDevicePrivate QmiDevicePrivate;
 #define QMI_DEVICE_WWAN_IFACE "device-wwan-iface"
 
 /**
- * QMI_DEVICE_NODE:
- *
- * Symbol defining the #QmiDevice:device-node property.
- *
- * Since: 1.24
- */
-#if QMI_QRTR_SUPPORTED
-#define QMI_DEVICE_NODE "device-node"
-#endif
-
-/**
  * QMI_DEVICE_SIGNAL_INDICATION:
  *
  * Symbol defining the #QmiDevice::indication signal.
@@ -168,28 +157,6 @@ void qmi_device_new (GFile               *file,
                      GCancellable        *cancellable,
                      GAsyncReadyCallback  callback,
                      gpointer             user_data);
-
-/**
- * qmi_device_new_from_node:
- * @node: a #QrtrNode.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
- * @callback: a #GAsyncReadyCallback to call when the initialization is finished.
- * @user_data: the data to pass to callback function.
- *
- * Asynchronously creates a #QmiDevice object to manage @node.
- * When the operation is finished, @callback will be invoked. You can then call
- * qmi_device_new_finish() to get the result of the operation.
- *
- * Only available if libqmi was compiled with QRTR support.
- *
- * Since: 1.24
- */
-#if QMI_QRTR_SUPPORTED
-void qmi_device_new_from_node (QrtrNode            *node,
-                               GCancellable        *cancellable,
-                               GAsyncReadyCallback  callback,
-                               gpointer             user_data);
-#endif
 
 /**
  * qmi_device_new_finish:
@@ -883,6 +850,38 @@ QmiDeviceExpectedDataFormat qmi_device_get_expected_data_format (QmiDevice  *sel
 gboolean qmi_device_set_expected_data_format (QmiDevice                    *self,
                                               QmiDeviceExpectedDataFormat   format,
                                               GError                      **error);
+
+
+/******************************************************************************/
+/* New QRTR based APIs */
+
+#if QMI_QRTR_SUPPORTED
+
+/**
+ * QMI_DEVICE_NODE:
+ *
+ * Symbol defining the #QmiDevice:device-node property.
+ */
+#define QMI_DEVICE_NODE "device-node"
+
+/**
+ * qmi_device_new_from_node:
+ * @node: a #QrtrNode.
+ * @cancellable: optional #GCancellable object, #NULL to ignore.
+ * @callback: a #GAsyncReadyCallback to call when the initialization is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously creates a #QmiDevice object to manage @node.
+ * When the operation is finished, @callback will be invoked. You can then call
+ * qmi_device_new_finish() to get the result of the operation.
+ *
+ * Only available if libqmi was compiled with QRTR support.
+ */
+void qmi_device_new_from_node (QrtrNode            *node,
+                               GCancellable        *cancellable,
+                               GAsyncReadyCallback  callback,
+                               gpointer             user_data);
+#endif /* QMI_QRTR_SUPPORTED */
 
 G_END_DECLS
 

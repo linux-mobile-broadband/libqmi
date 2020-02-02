@@ -26,11 +26,8 @@ Makefile.in
 
 /data/pkg-config/qmi-glib.pc
 
-/src/Makefile
-/src/Makefile.in
+/src/libqrtr-glib/qrtr-version.h
 
-/src/libqmi-glib/Makefile
-/src/libqmi-glib/Makefile.in
 /src/libqmi-glib/libqmi-glib.la
 /src/libqmi-glib/qmi-version.h
 
@@ -38,16 +35,12 @@ Makefile.in
 /src/libqmi-glib/generated/*.h
 /src/libqmi-glib/generated/*.sections
 
-/src/libqmi-glib/test/Makefile
-/src/libqmi-glib/test/Makefile.in
 /src/libqmi-glib/test/test-utils
 /src/libqmi-glib/test/test-compat-utils
 /src/libqmi-glib/test/test-message
 /src/libqmi-glib/test/test-generated
 
 /src/qmicli/qmicli
-/src/qmicli/test/Makefile
-/src/qmicli/test/Makefile.in
 /src/qmicli/test/test-helpers
 
 /src/qmi-proxy/qmi-proxy

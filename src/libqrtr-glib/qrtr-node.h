@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * libqmi-glib -- GLib/GIO based library to control QMI devices
+ * libqrtr-glib -- GLib/GIO based library to control QRTR devices
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,24 +17,23 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2019 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2019-2020 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
  */
 
-#ifndef _LIBQMI_GLIB_QMI_QRTR_NODE_H_
-#define _LIBQMI_GLIB_QMI_QRTR_NODE_H_
+#ifndef _LIBQRTR_GLIB_QRTR_NODE_H_
+#define _LIBQRTR_GLIB_QRTR_NODE_H_
 
-#if !defined (__LIBQMI_GLIB_H_INSIDE__) && !defined (LIBQMI_GLIB_COMPILATION)
-#error "Only <libqmi-glib.h> can be included directly."
+#if !defined (__LIBQRTR_GLIB_H_INSIDE__) && !defined (LIBQRTR_GLIB_COMPILATION)
+#error "Only <libqrtr-glib.h> can be included directly."
 #endif
 
 #include <glib-object.h>
 
-#include "qmi-enums.h"
-
 G_BEGIN_DECLS
 
 /* Forward declare QrtrControlSocket for qrtr_node_new. */
-struct _QrtrControlSocket;
+typedef struct _QrtrControlSocket QrtrControlSocket;
 
 /**
  * SECTION:qrtr-node
@@ -71,8 +70,6 @@ GType qrtr_node_get_type (void);
  * QRTR_NODE_SIGNAL_REMOVED:
  *
  * Symbol defining the #QrtrNode::removed signal.
- *
- * Since: 1.24
  */
 #define QRTR_NODE_SIGNAL_REMOVED "removed"
 
@@ -80,8 +77,6 @@ GType qrtr_node_get_type (void);
  * qrtr_node_has_services:
  *
  * Returns TRUE if there are services currently registered on this node.
- *
- * Since: 1.24
  */
 gboolean qrtr_node_has_services (QrtrNode *node);
 
@@ -89,8 +84,6 @@ gboolean qrtr_node_has_services (QrtrNode *node);
  * qrtr_node_id:
  *
  * Returns the node id of the QRTR node represented by @node.
- *
- * Since: 1.24
  */
 guint32 qrtr_node_id (QrtrNode *node);
 
@@ -102,52 +95,61 @@ guint32 qrtr_node_id (QrtrNode *node);
  * return the port number of that service. Otherwise, return -1. This will
  * return the service with the highest version number if multiple instances
  * are registered.
- *
- * Since: 1.24
  */
-gint32 qrtr_node_lookup_port (QrtrNode *node, QmiService service);
+gint32 qrtr_node_lookup_port (QrtrNode *node,
+                              guint32   service);
 
 /**
  * qrtr_node_lookup_service:
  * @port: a port number
  *
  * If a server has announced itself for the given node and port number,
- * return the QMI service it serves. Otherwise, return @QMI_SERVICE_UNKNOWN.
- *
- * Since: 1.24
+ * return the service it serves. Otherwise, return -1.
  */
-QmiService qrtr_node_lookup_service (QrtrNode *node, guint32 port);
+gint32 qrtr_node_lookup_service (QrtrNode *node,
+                                 guint32   port);
 
 G_END_DECLS
 
-/*
+/**
  * qrtr_node_new:
- * @socket: the control socket that created this QrtrNode
- * @node: the node number of this QrtrNode
+ * @socket: the control socket that created this QrtrNode.
+ * @node: the node number of this QrtrNode.
+ *
+ * Create a new QRTR node.
  */
-QrtrNode *qrtr_node_new (struct _QrtrControlSocket *socket, guint32 node);
+QrtrNode *qrtr_node_new (QrtrControlSocket *socket,
+                         guint32            node);
 
-/*
+/**
  * qrtr_node_add_service_info:
- * @service: a #QmiService value representing this service
- * @port: the port number of the new service
- * @version: the version number of the new service
- * @instance: the instance number of the new service
+ * @service: a service value.
+ * @port: the port number of the new service.
+ * @version: the version number of the new service.
+ * @instance: the instance number of the new service.
  *
- * Adds the given service entry to this node. Should only be called by the
- * #QrtrControlSocket.
+ * Adds the given service entry to this node.
+ *
+ * Should only be called by the #QrtrControlSocket.
  */
-void qrtr_node_add_service_info (QrtrNode *node, QmiService service, guint32 port,
-                                 guint32 version, guint32 instance);
+void qrtr_node_add_service_info (QrtrNode *node,
+                                 guint32   service,
+                                 guint32   port,
+                                 guint32   version,
+                                 guint32   instance);
 
-/*
+/**
  * qrtr_node_remove_service_info:
- * @info: a #QrtrServceInfo struct
+ * @info: a #QrtrServceInfo struct.
  *
- * Removes the given service entry from this node. Should only be called by the
- * #QrtrControlSocket.
+ * Removes the given service entry from this node.
+ *
+ * Should only be called by the #QrtrControlSocket.
  */
-void qrtr_node_remove_service_info (QrtrNode *node, QmiService service, guint32 port,
-                                    guint32 version, guint32 instance);
+void qrtr_node_remove_service_info (QrtrNode *node,
+                                    guint32   service,
+                                    guint32   port,
+                                    guint32   version,
+                                    guint32   instance);
 
-#endif /* _LIBQMI_GLIB_QMI_QRTR_NODE_H_ */
+#endif /* _LIBQRTR_GLIB_QRTR_NODE_H_ */

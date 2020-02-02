@@ -16,6 +16,13 @@ libutils_la_CPPFLAGS = \
 	-I$(top_builddir)/src/libqmi-glib/generated \
 	$(NULL)
 
+if QMI_QRTR_SUPPORTED
+libutils_la_CPPFLAGS += \
+	-I$(top_srcdir)/src/libqrtr-glib \
+	-I$(top_builddir)/src/libqrtr-glib \
+	$(NULL)
+endif
+
 libutils_la_LIBADD = \
 	$(top_builddir)/src/libqmi-glib/libqmi-glib.la \
 	$(NULL)
@@ -52,6 +59,13 @@ qmi_firmware_update_CPPFLAGS = \
 	-I$(top_builddir)/src/libqmi-glib \
 	-I$(top_builddir)/src/libqmi-glib/generated \
 	$(NULL)
+
+if QMI_QRTR_SUPPORTED
+qmi_firmware_update_CPPFLAGS += \
+	-I$(top_srcdir)/src/libqrtr-glib \
+	-I$(top_builddir)/src/libqrtr-glib \
+	$(NULL)
+endif
 
 ENUMS = \
 	$(top_srcdir)/src/qmi-firmware-update/qfu-image.h \

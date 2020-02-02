@@ -336,6 +336,13 @@ libqmi_glib_generated_la_LDFLAGS = \
 	$(GLIB_LIBS) \
 	$(NULL)
 
+if QMI_QRTR_SUPPORTED
+libqmi_glib_generated_la_CPPFLAGS += \
+	-I$(top_srcdir)/src/libqrtr-glib \
+	-I$(top_builddir)/src/libqrtr-glib \
+	$(NULL)
+endif
+
 includedir = @includedir@/libqmi-glib
 nodist_include_HEADERS = \
 	qmi-error-types.h \

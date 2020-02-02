@@ -11,6 +11,13 @@ AM_CFLAGS = \
 	-DLIBQMI_GLIB_COMPILATION \
 	$(NULL)
 
+if QMI_QRTR_SUPPORTED
+AM_CFLAGS += \
+	-I$(top_srcdir)/src/libqrtr-glib \
+	-I$(top_builddir)/src/libqrtr-glib \
+	$(NULL)
+endif
+
 AM_LDFLAGS = \
 	$(WARN_LDFLAGS) \
 	$(GLIB_LIBS) \

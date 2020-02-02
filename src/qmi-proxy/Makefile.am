@@ -7,7 +7,15 @@ qmi_proxy_CPPFLAGS = \
 	-I$(top_srcdir)/src/libqmi-glib \
 	-I$(top_srcdir)/src/libqmi-glib/generated \
 	-I$(top_builddir)/src/libqmi-glib \
-	-I$(top_builddir)/src/libqmi-glib/generated
+	-I$(top_builddir)/src/libqmi-glib/generated \
+	$(NULL)
+
+if QMI_QRTR_SUPPORTED
+qmi_proxy_CPPFLAGS += \
+	-I$(top_srcdir)/src/libqrtr-glib \
+	-I$(top_builddir)/src/libqrtr-glib \
+	$(NULL)
+endif
 
 qmi_proxy_SOURCES = qmi-proxy.c
 

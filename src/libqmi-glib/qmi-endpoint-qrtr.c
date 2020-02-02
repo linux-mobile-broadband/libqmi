@@ -17,7 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2019 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2019-2020 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <errno.h>
@@ -29,11 +30,12 @@
 #include <gmodule.h>
 #include <gio/gio.h>
 
+#include <libqrtr-glib.h>
+
 #include "qmi-endpoint-qrtr.h"
 #include "qmi-errors.h"
 #include "qmi-error-types.h"
 #include "qmi-message.h"
-#include "qmi-qrtr-utils.h"
 
 #define QMI_MESSAGE_OUTPUT_TLV_RESULT 0x02
 

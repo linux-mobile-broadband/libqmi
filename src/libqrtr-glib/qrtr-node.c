@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * libqmi-glib -- GLib/GIO based library to control QMI devices
+ * libqrtr-glib -- GLib/GIO based library to control QRTR devices
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2019 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2019-2020 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <endian.h>
@@ -30,8 +31,8 @@
 #include <gio/gio.h>
 #include <gmodule.h>
 
-#include "qmi-qrtr-control-socket.h"
-#include "qmi-qrtr-node.h"
+#include "qrtr-control-socket.h"
+#include "qrtr-node.h"
 
 G_DEFINE_TYPE (QrtrNode, qrtr_node, G_TYPE_OBJECT)
 
@@ -50,7 +51,7 @@ struct _QrtrNodePrivate {
 };
 
 struct QrtrServiceInfo {
-    QmiService service;
+    guint32 service;
     guint32 port;
     guint32 version;
     guint32 instance;
@@ -72,9 +73,8 @@ static guint signals[SIGNAL_LAST] = { 0 };
 /*****************************************************************************/
 
 static void
-node_removed_cb (QrtrControlSocket *socket,
-                 guint node_id,
-                 QrtrNode *self)
+node_removed_cb (QrtrNode *self,
+                 guint     node_id)
 {
     if (node_id != self->priv->node_id)
         return;
@@ -105,11 +105,13 @@ list_holder_free (struct ListHolder *list_holder)
 }
 
 static void
-service_index_add_info (GHashTable *service_index, QmiService service,
+service_index_add_info (GHashTable             *service_index,
+                        guint32                 service,
                         struct QrtrServiceInfo *info)
 {
-    struct ListHolder *service_instances = g_hash_table_lookup (service_index,
-                                                                GUINT_TO_POINTER (service));
+    struct ListHolder *service_instances;
+
+    service_instances = g_hash_table_lookup (service_index, GUINT_TO_POINTER (service));
     if (!service_instances) {
         service_instances = g_slice_new0 (struct ListHolder);
         g_hash_table_insert (service_index, GUINT_TO_POINTER (service), service_instances);
@@ -119,11 +121,13 @@ service_index_add_info (GHashTable *service_index, QmiService service,
 }
 
 static void
-service_index_remove_info (GHashTable *service_index, QmiService service,
+service_index_remove_info (GHashTable             *service_index,
+                           guint32                 service,
                            struct QrtrServiceInfo *info)
 {
-    struct ListHolder *service_instances = g_hash_table_lookup (service_index,
-                                                                GUINT_TO_POINTER (service));
+    struct ListHolder *service_instances;
+
+    service_instances = g_hash_table_lookup (service_index, GUINT_TO_POINTER (service));
     if (!service_instances)
         return;
 
@@ -132,7 +136,7 @@ service_index_remove_info (GHashTable *service_index, QmiService service,
 
 void
 qrtr_node_add_service_info (QrtrNode *node,
-                            QmiService service,
+                            guint32 service,
                             guint32 port,
                             guint32 version,
                             guint32 instance)
@@ -151,7 +155,7 @@ qrtr_node_add_service_info (QrtrNode *node,
 
 void
 qrtr_node_remove_service_info (QrtrNode *node,
-                               QmiService service,
+                               guint32 service,
                                guint32 port,
                                guint32 version,
                                guint32 instance)
@@ -174,7 +178,8 @@ qrtr_node_remove_service_info (QrtrNode *node,
 /*****************************************************************************/
 
 gint32
-qrtr_node_lookup_port (QrtrNode *node, QmiService service)
+qrtr_node_lookup_port (QrtrNode *node,
+                       guint32   service)
 {
     struct ListHolder *service_instances;
     struct QrtrServiceInfo *info;
@@ -188,12 +193,14 @@ qrtr_node_lookup_port (QrtrNode *node, QmiService service)
     return info->port;
 }
 
-QmiService
-qrtr_node_lookup_service (QrtrNode *node, guint32 port)
+gint32
+qrtr_node_lookup_service (QrtrNode *node,
+                          guint32   port)
 {
-    struct QrtrServiceInfo *info =
-        g_hash_table_lookup (node->priv->port_index, GUINT_TO_POINTER (port));
-    return info ? info->service : QMI_SERVICE_UNKNOWN;
+    struct QrtrServiceInfo *info;
+
+    info = g_hash_table_lookup (node->priv->port_index, GUINT_TO_POINTER (port));
+    return info ? (gint32)info->service : -1;
 }
 
 /*****************************************************************************/
@@ -213,23 +220,25 @@ qrtr_node_id (QrtrNode *node)
 /*****************************************************************************/
 
 QrtrNode *
-qrtr_node_new (QrtrControlSocket* socket, guint32 node_id)
+qrtr_node_new (QrtrControlSocket *socket,
+               guint32            node_id)
 {
-    QrtrNode *node = g_object_new (QRTR_TYPE_NODE, NULL);
+    QrtrNode *self;
 
-    node->priv->socket = g_object_ref (socket);
-    node->priv->node_id = node_id;
-    node->priv->node_removed_id = g_signal_connect (node->priv->socket,
-                                                    QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED,
-                                                    G_CALLBACK (node_removed_cb),
-                                                    node);
+    self = g_object_new (QRTR_TYPE_NODE, NULL);
 
-    node->priv->service_list = NULL;
-    node->priv->service_index = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+    self->priv->socket = g_object_ref (socket);
+    self->priv->node_id = node_id;
+    self->priv->node_removed_id = g_signal_connect_swapped (self->priv->socket,
+                                                            QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED,
+                                                            G_CALLBACK (node_removed_cb),
+                                                            self);
+
+    self->priv->service_index = g_hash_table_new_full (g_direct_hash, g_direct_equal,
                                                        NULL, (GDestroyNotify)list_holder_free);
-    node->priv->port_index = g_hash_table_new (g_direct_hash, g_direct_equal);
+    self->priv->port_index = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-    return node;
+    return self;
 }
 
 static void

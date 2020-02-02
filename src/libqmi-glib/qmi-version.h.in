@@ -107,7 +107,7 @@
  *  #endif
  * ]|
  *
- * Since: 1.24
+ * Since: 1.26
  */
 #define QMI_QRTR_SUPPORTED @QMI_QRTR_SUPPORTED@
 

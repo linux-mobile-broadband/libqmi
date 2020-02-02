@@ -243,6 +243,7 @@ AC_CONFIG_FILES([Makefile
                  build-aux/templates/Makefile
                  build-aux/qmi-codegen/Makefile
                  src/Makefile
+                 src/libqrtr-glib/Makefile
                  src/libqmi-glib/Makefile
                  src/libqmi-glib/qmi-version.h
                  src/libqmi-glib/generated/Makefile
@@ -285,9 +286,9 @@ echo "
     Features:
       QMUX over MBIM:      ${enable_mbim_qmux}
       QMI username:        ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
-      QRTR:                ${enable_qrtr}
 
     Built items:
+      libqrtr-glib:        ${enable_qrtr}
       libqmi-glib:         yes
       qmicli:              yes
       qmi-firmware-update: ${build_firmware_update}

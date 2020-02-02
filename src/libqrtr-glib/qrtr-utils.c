@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
- * libqmi-glib -- GLib/GIO based library to control QMI devices
+ * libqrtr-glib -- GLib/GIO based library to control QRTR devices
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,18 +17,17 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2019 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2019-2020 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
  */
 
-#include "qmi-qrtr-utils.h"
+#include "qrtr-utils.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "qmi-errors.h"
-#include "qmi-error-types.h"
-#include "qmi-qrtr-control-socket.h"
-#include "qmi-qrtr-node.h"
+#include "qrtr-control-socket.h"
+#include "qrtr-node.h"
 
 /* Some kernels expose the qrtr header but not the address family macro. */
 #if !defined AF_QIPCRTR
@@ -107,8 +106,8 @@ timeout_cb (GTask *task)
     ctx->node_added_id = 0;
 
     g_task_return_new_error (task,
-                             QMI_CORE_ERROR,
-                             QMI_CORE_ERROR_TIMEOUT,
+                             G_IO_ERROR,
+                             G_IO_ERROR_TIMED_OUT,
                              "QRTR node %u did not appear on the bus",
                              ctx->node_wanted);
     g_object_unref (task);

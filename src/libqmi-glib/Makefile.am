@@ -20,6 +20,13 @@ libqmi_glib_compat_la_CPPFLAGS = \
 	-Wno-deprecated-declarations \
 	$(NULL)
 
+if QMI_QRTR_SUPPORTED
+libqmi_glib_compat_la_CPPFLAGS += \
+	-I$(top_srcdir)/src/libqrtr-glib \
+	-I$(top_builddir)/src/libqrtr-glib \
+	$(NULL)
+endif
+
 libqmi_glib_compat_la_LDFLAGS = \
 	$(WARN_LDFLAGS) \
 	$(GLIB_LIBS) \
@@ -72,23 +79,32 @@ libqmi_glib_la_SOURCES = \
 	qmi-endpoint.h qmi-endpoint.c \
 	qmi-endpoint-qmux.h qmi-endpoint-qmux.c
 
+libqmi_glib_la_LIBADD = \
+	${top_builddir}/src/libqmi-glib/generated/libqmi-glib-generated.la \
+	libqmi-glib-compat.la \
+	$(NULL)
+
 if QMI_MBIM_QMUX_SUPPORTED
 libqmi_glib_la_SOURCES += \
 	qmi-endpoint-mbim.h qmi-endpoint-mbim.c
 endif
 
 if QMI_QRTR_SUPPORTED
-libqmi_glib_la_SOURCES += \
-	qmi-qrtr-control-socket.h qmi-qrtr-control-socket.c \
-	qmi-qrtr-node.h qmi-qrtr-node.c \
-	qmi-qrtr-utils.h qmi-qrtr-utils.c \
-	qmi-endpoint-qrtr.h qmi-endpoint-qrtr.c
-endif
 
-libqmi_glib_la_LIBADD = \
-	${top_builddir}/src/libqmi-glib/generated/libqmi-glib-generated.la \
-	libqmi-glib-compat.la \
+libqmi_glib_la_CPPFLAGS += \
+	-I$(top_srcdir)/src/libqrtr-glib \
+	-I$(top_builddir)/src/libqrtr-glib \
 	$(NULL)
+
+libqmi_glib_la_SOURCES += \
+	qmi-endpoint-qrtr.h qmi-endpoint-qrtr.c \
+	$(NULL)
+
+libqmi_glib_la_LIBADD += \
+	${top_builddir}/src/libqrtr-glib/libqrtr-glib.la \
+	$(NULL)
+
+endif
 
 libqmi_glib_la_LDFLAGS = \
 	-version-info $(QMI_GLIB_LT_CURRENT):$(QMI_GLIB_LT_REVISION):$(QMI_GLIB_LT_AGE) \
@@ -126,13 +142,6 @@ include_HEADERS = \
 	qmi-device.h \
 	qmi-client.h \
 	qmi-proxy.h
-
-if QMI_QRTR_SUPPORTED
-include_HEADERS += \
-	qmi-qrtr-control-socket.h \
-	qmi-qrtr-node.h \
-	qmi-qrtr-utils.h
-endif
 
 EXTRA_DIST = \
 	qmi-version.h.in

@@ -59,8 +59,8 @@
 #include "qmi-version.h"
 
 #if QMI_QRTR_SUPPORTED
-#include "qmi-endpoint-qrtr.h"
-#include "qmi-qrtr-utils.h"
+# include <libqrtr-glib.h>
+# include "qmi-endpoint-qrtr.h"
 #endif
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);

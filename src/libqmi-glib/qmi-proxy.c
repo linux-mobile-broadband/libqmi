@@ -41,7 +41,7 @@
 #include "qmi-version.h"
 
 #if QMI_QRTR_SUPPORTED
-#include "qmi-qrtr-utils.h"
+# include "libqrtr-glib.h"
 #endif
 
 #define BUFFER_SIZE 512
