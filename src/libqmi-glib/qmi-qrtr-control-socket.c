@@ -213,7 +213,7 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
         return FALSE;
     }
 
-    if (bytes_received < sizeof (ctrl_packet)) {
+    if ((gsize)bytes_received < sizeof (ctrl_packet)) {
         g_debug ("[qrtr] short packet received: ignoring");
         return TRUE;
     }
