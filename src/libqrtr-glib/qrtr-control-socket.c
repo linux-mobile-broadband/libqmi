@@ -154,7 +154,7 @@ add_service_info (QrtrControlSocket *self,
         publish_node_entry (self, entry);
     }
 
-    qrtr_node_add_service_info (entry->node, service, port, version, instance);
+    __qrtr_node_add_service_info (entry->node, service, port, version, instance);
 }
 
 static void
@@ -173,7 +173,7 @@ remove_service_info (QrtrControlSocket *self,
         return;
     }
 
-    qrtr_node_remove_service_info (entry->node, service, port, version, instance);
+    __qrtr_node_remove_service_info (entry->node, service, port, version, instance);
     if (!qrtr_node_has_services (entry->node)) {
         g_debug ("[qrtr] removing node %u", node_id);
         /* If we haven't announced that this node is available yet, don't bother

@@ -121,35 +121,24 @@ G_END_DECLS
 QrtrNode *qrtr_node_new (QrtrControlSocket *socket,
                          guint32            node);
 
-/**
- * qrtr_node_add_service_info:
- * @service: a service value.
- * @port: the port number of the new service.
- * @version: the version number of the new service.
- * @instance: the instance number of the new service.
- *
- * Adds the given service entry to this node.
- *
- * Should only be called by the #QrtrControlSocket.
- */
-void qrtr_node_add_service_info (QrtrNode *node,
-                                 guint32   service,
-                                 guint32   port,
-                                 guint32   version,
-                                 guint32   instance);
+/* Other private methods */
 
-/**
- * qrtr_node_remove_service_info:
- * @info: a #QrtrServceInfo struct.
- *
- * Removes the given service entry from this node.
- *
- * Should only be called by the #QrtrControlSocket.
- */
-void qrtr_node_remove_service_info (QrtrNode *node,
-                                    guint32   service,
-                                    guint32   port,
-                                    guint32   version,
-                                    guint32   instance);
+#if defined (LIBQRTR_GLIB_COMPILATION)
+
+G_GNUC_INTERNAL
+void __qrtr_node_add_service_info (QrtrNode *node,
+                                   guint32   service,
+                                   guint32   port,
+                                   guint32   version,
+                                   guint32   instance);
+
+G_GNUC_INTERNAL
+void __qrtr_node_remove_service_info (QrtrNode *node,
+                                      guint32   service,
+                                      guint32   port,
+                                      guint32   version,
+                                      guint32   instance);
+
+#endif /* defined (LIBQMI_GLIB_COMPILATION) */
 
 #endif /* _LIBQRTR_GLIB_QRTR_NODE_H_ */
