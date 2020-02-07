@@ -234,10 +234,6 @@ qrtr_node_new (QrtrControlSocket *socket,
                                                             G_CALLBACK (node_removed_cb),
                                                             self);
 
-    self->priv->service_index = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-                                                       NULL, (GDestroyNotify)list_holder_free);
-    self->priv->port_index = g_hash_table_new (g_direct_hash, g_direct_equal);
-
     return self;
 }
 
@@ -245,6 +241,10 @@ static void
 qrtr_node_init (QrtrNode *self)
 {
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, QRTR_TYPE_NODE, QrtrNodePrivate);
+
+    self->priv->service_index = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+                                                       NULL, (GDestroyNotify)list_holder_free);
+    self->priv->port_index = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 static void
@@ -258,11 +258,19 @@ dispose (GObject *object)
     }
     g_clear_object (&self->priv->socket);
 
+    G_OBJECT_CLASS (qrtr_node_parent_class)->dispose (object);
+}
+
+static void
+finalize (GObject *object)
+{
+    QrtrNode *self = QRTR_NODE (object);
+
     g_hash_table_unref (self->priv->service_index);
     g_hash_table_unref (self->priv->port_index);
     g_list_free_full (self->priv->service_list, (GDestroyNotify)service_info_free);
 
-    G_OBJECT_CLASS (qrtr_node_parent_class)->dispose (object);
+    G_OBJECT_CLASS (qrtr_node_parent_class)->finalize (object);
 }
 
 static void
@@ -273,6 +281,7 @@ qrtr_node_class_init (QrtrNodeClass *klass)
     g_type_class_add_private (object_class, sizeof (QrtrNodePrivate));
 
     object_class->dispose = dispose;
+    object_class->finalize = finalize;
 
     /**
      * QrtrNode::removed:
