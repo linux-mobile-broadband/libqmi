@@ -55,6 +55,20 @@ typedef struct _QrtrNode QrtrNode;
 typedef struct _QrtrNodeClass QrtrNodeClass;
 typedef struct _QrtrNodePrivate QrtrNodePrivate;
 
+/**
+ * QRTR_NODE_SOCKET:
+ *
+ * The control socket.
+ */
+#define QRTR_NODE_SOCKET "socket"
+
+/**
+ * QRTR_NODE_ID:
+ *
+ * The node id.
+ */
+#define QRTR_NODE_ID "node-id"
+
 struct _QrtrNode {
     GObject parent;
     QrtrNodePrivate *priv;

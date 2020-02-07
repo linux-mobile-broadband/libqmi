@@ -36,11 +36,25 @@
 
 G_DEFINE_TYPE (QrtrNode, qrtr_node, G_TYPE_OBJECT)
 
+enum {
+    PROP_0,
+    PROP_SOCKET,
+    PROP_NODE_ID,
+    PROP_LAST
+};
+
+enum {
+    SIGNAL_REMOVED,
+    SIGNAL_LAST
+};
+
+static GParamSpec *properties[PROP_LAST];
+static guint       signals   [SIGNAL_LAST] = { 0 };
+
 struct _QrtrNodePrivate {
     QrtrControlSocket *socket;
-    guint32 node_id;
-
-    guint node_removed_id;
+    guint32            node_id;
+    guint              node_removed_id;
 
     /* Holds QrtrServiceInfo entries */
     GList *service_list;
@@ -62,13 +76,6 @@ struct QrtrServiceInfo {
 struct ListHolder {
     GList *list;
 };
-
-enum {
-    SIGNAL_REMOVED,
-    SIGNAL_LAST
-};
-
-static guint signals[SIGNAL_LAST] = { 0 };
 
 /*****************************************************************************/
 
@@ -223,18 +230,10 @@ QrtrNode *
 qrtr_node_new (QrtrControlSocket *socket,
                guint32            node_id)
 {
-    QrtrNode *self;
-
-    self = g_object_new (QRTR_TYPE_NODE, NULL);
-
-    self->priv->socket = g_object_ref (socket);
-    self->priv->node_id = node_id;
-    self->priv->node_removed_id = g_signal_connect_swapped (self->priv->socket,
-                                                            QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED,
-                                                            G_CALLBACK (node_removed_cb),
-                                                            self);
-
-    return self;
+    return QRTR_NODE (g_object_new (QRTR_TYPE_NODE,
+                                    QRTR_NODE_SOCKET, socket,
+                                    QRTR_NODE_ID,     node_id,
+                                    NULL));
 }
 
 static void
@@ -245,6 +244,53 @@ qrtr_node_init (QrtrNode *self)
     self->priv->service_index = g_hash_table_new_full (g_direct_hash, g_direct_equal,
                                                        NULL, (GDestroyNotify)list_holder_free);
     self->priv->port_index = g_hash_table_new (g_direct_hash, g_direct_equal);
+}
+
+static void
+set_property (GObject      *object,
+              guint         prop_id,
+              const GValue *value,
+              GParamSpec   *pspec)
+{
+    QrtrNode *self = QRTR_NODE (object);
+
+    switch (prop_id) {
+    case PROP_SOCKET:
+        g_assert (!self->priv->socket);
+        self->priv->socket = g_value_dup_object (value);
+        self->priv->node_removed_id = g_signal_connect_swapped (self->priv->socket,
+                                                                QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED,
+                                                                G_CALLBACK (node_removed_cb),
+                                                                self);
+        break;
+    case PROP_NODE_ID:
+        self->priv->node_id = (guint32) g_value_get_uint (value);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+get_property (GObject    *object,
+              guint       prop_id,
+              GValue     *value,
+              GParamSpec *pspec)
+{
+    QrtrNode *self = QRTR_NODE (object);
+
+    switch (prop_id) {
+    case PROP_SOCKET:
+        g_value_set_object (value, self->priv->socket);
+        break;
+    case PROP_NODE_ID:
+        g_value_set_uint (value, (guint)self->priv->node_id);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
 }
 
 static void
@@ -280,8 +326,34 @@ qrtr_node_class_init (QrtrNodeClass *klass)
 
     g_type_class_add_private (object_class, sizeof (QrtrNodePrivate));
 
-    object_class->dispose = dispose;
-    object_class->finalize = finalize;
+    object_class->get_property = get_property;
+    object_class->set_property = set_property;
+    object_class->dispose      = dispose;
+    object_class->finalize     = finalize;
+
+    /**
+     * QrtrNode:socket:
+     */
+    properties[PROP_SOCKET] =
+        g_param_spec_object (QRTR_NODE_SOCKET,
+                             "Socket",
+                             "Control socket",
+                             QRTR_TYPE_CONTROL_SOCKET,
+                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+    g_object_class_install_property (object_class, PROP_SOCKET, properties[PROP_SOCKET]);
+
+    /**
+     * QrtrNode:node-id:
+     */
+    properties[PROP_NODE_ID] =
+        g_param_spec_uint (QRTR_NODE_ID,
+                           "Node ID",
+                           "ID of the QRTR node",
+                           0,
+                           G_MAXUINT32,
+                           0,
+                           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+    g_object_class_install_property (object_class, PROP_NODE_ID, properties[PROP_NODE_ID]);
 
     /**
      * QrtrNode::removed:
