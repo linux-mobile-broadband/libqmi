@@ -95,10 +95,20 @@ QrtrControlSocket *qrtr_control_socket_new (GCancellable  *cancellable,
                                             GError       **error);
 
 /**
+ * qrtr_control_socket_peek_node:
+ * @node_id: the QRTR bus node ID to get
+ *
+ * Returns: (transfer none): a #QrtrNode object representing the device with
+ * the given node ID on the QRTR bus.
+ */
+QrtrNode *qrtr_control_socket_peek_node (QrtrControlSocket *socket,
+                                         guint32            node_id);
+
+/**
  * qrtr_control_socket_get_node:
  * @node_id: the QRTR bus node ID to get
  *
- * Returns a #QrtrNode object representing the device with the given node ID
+ * Returns: a #QrtrNode object representing the device with the given node ID
  * on the QRTR bus.
  */
 QrtrNode *qrtr_control_socket_get_node (QrtrControlSocket *socket,

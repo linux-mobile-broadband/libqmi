@@ -248,8 +248,8 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
 /*****************************************************************************/
 
 QrtrNode *
-qrtr_control_socket_get_node (QrtrControlSocket *socket,
-                              guint32            node_id)
+qrtr_control_socket_peek_node (QrtrControlSocket *socket,
+                               guint32            node_id)
 {
     NodeEntry *entry;
 
@@ -259,6 +259,16 @@ qrtr_control_socket_get_node (QrtrControlSocket *socket,
      * and are thus incompletely specified for the time being, and the caller
      * probably has a stale node ID anyway. */
     return (entry && entry->published) ? entry->node : NULL;
+}
+
+QrtrNode *
+qrtr_control_socket_get_node (QrtrControlSocket *socket,
+                              guint32            node_id)
+{
+    QrtrNode *node;
+
+    node = qrtr_control_socket_peek_node (socket, node_id);
+    return (node ? g_object_ref (node) : NULL);
 }
 
 /*****************************************************************************/

@@ -121,6 +121,7 @@ node_added_cb (QrtrControlSocket *socket,
                GTask             *task)
 {
     NodeOpenContext *ctx;
+    QrtrNode        *node;
 
     ctx = g_task_get_task_data (task);
 
@@ -133,9 +134,9 @@ node_added_cb (QrtrControlSocket *socket,
     g_source_unref (ctx->timeout_source);
     ctx->timeout_source = NULL;
 
-    g_task_return_pointer (task,
-                           qrtr_control_socket_get_node (ctx->socket, node_id),
-                           g_object_unref);
+    /* get a full node reference */
+    node = qrtr_control_socket_get_node (ctx->socket, node_id);
+    g_task_return_pointer (task, node, g_object_unref);
     g_object_unref (task);
 }
 
