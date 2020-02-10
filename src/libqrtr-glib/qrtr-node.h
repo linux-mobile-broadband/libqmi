@@ -33,7 +33,7 @@
 G_BEGIN_DECLS
 
 /* Forward declare QrtrControlSocket for qrtr_node_new. */
-typedef struct _QrtrControlSocket QrtrControlSocket;
+struct _QrtrControlSocket;
 
 /**
  * SECTION:qrtr-node
@@ -132,8 +132,8 @@ G_END_DECLS
  *
  * Create a new QRTR node.
  */
-QrtrNode *qrtr_node_new (QrtrControlSocket *socket,
-                         guint32            node);
+QrtrNode *qrtr_node_new (struct _QrtrControlSocket *socket,
+                         guint32                    node);
 
 /* Other private methods */
 
