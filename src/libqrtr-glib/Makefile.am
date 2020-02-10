@@ -31,6 +31,7 @@ libqrtr_glib_la_LDFLAGS = \
 	$(NULL)
 
 include_HEADERS = \
+	libqrtr-glib.h \
 	qrtr-control-socket.h \
 	qrtr-node.h \
 	qrtr-utils.h \
