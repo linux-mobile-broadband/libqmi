@@ -55,6 +55,7 @@ struct _QrtrNodePrivate {
     QrtrControlSocket *socket;
     guint32            node_id;
     guint              node_removed_id;
+    gboolean           removed;
 
     /* Holds QrtrServiceInfo entries */
     GList *service_list;
@@ -62,6 +63,9 @@ struct _QrtrNodePrivate {
     GHashTable *service_index;
     /* Maps port number to service entry (should only be one) */
     GHashTable *port_index;
+
+    /* Array of QrtrServiceWaiters currently registered. */
+    GPtrArray *waiters;
 };
 
 struct QrtrServiceInfo {
@@ -70,6 +74,12 @@ struct QrtrServiceInfo {
     guint32 version;
     guint32 instance;
 };
+
+typedef struct {
+    GArray   *services;
+    GTask    *task;
+    GSource  *timeout_source;
+} QrtrServiceWaiter;
 
 /* used to avoid calling the free function when values are overwritten
  * in the service index */
@@ -83,10 +93,89 @@ static void
 node_removed_cb (QrtrNode *self,
                  guint     node_id)
 {
+    guint i;
+
     if (node_id != self->priv->node_id)
         return;
 
+    self->priv->removed = TRUE;
+
+    for (i = 0; i < self->priv->waiters->len; i++) {
+        QrtrServiceWaiter *waiter;
+
+        waiter = g_ptr_array_index (self->priv->waiters, i);
+        g_task_return_new_error (waiter->task,
+                                 G_IO_ERROR,
+                                 G_IO_ERROR_CLOSED,
+                                 "QRTR node was removed from the bus");
+    }
+    /* waiters was instantiated with qrtr_service_waiter_free as its free function,
+     * so when we get rid of the contents, all of the constitutent waiter entries
+     * (and their tasks) will be unreffed as well. */
+    g_ptr_array_remove_range (self->priv->waiters, 0, self->priv->waiters->len);
+
     g_signal_emit (self, signals[SIGNAL_REMOVED], 0);
+}
+
+/*****************************************************************************/
+
+static void
+qrtr_service_waiter_free (QrtrServiceWaiter *waiter)
+{
+    g_array_unref (waiter->services);
+    g_object_unref (waiter->task);
+    if (waiter->timeout_source) {
+        g_source_destroy (waiter->timeout_source);
+        g_source_unref (waiter->timeout_source);
+    }
+    g_slice_free (QrtrServiceWaiter, waiter);
+}
+
+static gboolean
+service_waiter_timeout_cb (QrtrServiceWaiter *waiter)
+{
+    QrtrNode *node;
+
+    node = g_task_get_source_object (waiter->task);
+    g_task_return_new_error (waiter->task,
+                             G_IO_ERROR,
+                             G_IO_ERROR_TIMED_OUT,
+                             "QRTR services did not appear on the bus");
+    /* This takes care of unreffing the task. */
+    g_ptr_array_remove_fast (node->priv->waiters, waiter);
+
+    return G_SOURCE_REMOVE;
+}
+
+static void
+dispatch_pending_waiters (QrtrNode *node)
+{
+    guint i;
+
+    for (i = 0; i < node->priv->waiters->len;) {
+        QrtrServiceWaiter *waiter;
+        guint j;
+        gboolean should_dispatch = TRUE;
+
+        waiter = g_ptr_array_index (node->priv->waiters, i);
+        for (j = 0; j < waiter->services->len; j++) {
+	    guint32 service;
+
+            service = g_array_index (waiter->services, guint32, j);
+            if (!g_hash_table_lookup (node->priv->service_index, GUINT_TO_POINTER (service))) {
+                should_dispatch = FALSE;
+                break;
+            }
+        }
+
+        if (should_dispatch) {
+            g_task_return_boolean (waiter->task, TRUE);
+            /* This takes care of unreffing the task. */
+            g_ptr_array_remove_index_fast (node->priv->waiters, i);
+        } else {
+            i++;
+        }
+    }
 }
 
 /*****************************************************************************/
@@ -158,6 +247,7 @@ __qrtr_node_add_service_info (QrtrNode *node,
     node->priv->service_list = g_list_append (node->priv->service_list, info);
     service_index_add_info (node->priv->service_index, service, info);
     g_hash_table_insert (node->priv->port_index, GUINT_TO_POINTER (port), info);
+    dispatch_pending_waiters (node);
 }
 
 void
@@ -226,6 +316,67 @@ qrtr_node_id (QrtrNode *node)
 
 /*****************************************************************************/
 
+gboolean
+qrtr_node_wait_for_services_finish (QrtrNode      *self,
+                                    GAsyncResult  *result,
+                                    GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (result), error);
+}
+
+void
+qrtr_node_wait_for_services (QrtrNode            *self,
+                             GArray              *services,
+                             guint                timeout,
+                             GCancellable        *cancellable,
+                             GAsyncReadyCallback  callback,
+                             gpointer             user_data)
+{
+    GTask *task;
+    QrtrServiceWaiter *waiter;
+    guint i;
+    gboolean services_present = TRUE;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    if (self->priv->removed) {
+        g_task_return_new_error (task,
+                                 G_IO_ERROR,
+                                 G_IO_ERROR_CLOSED,
+                                 "QRTR node was removed from the bus");
+        g_object_unref (task);
+        return;
+    }
+
+    for (i = 0; i < services->len; i++) {
+        guint32 service;
+
+        service = g_array_index (services, guint32, i);
+        if (!g_hash_table_lookup (self->priv->service_index, GUINT_TO_POINTER (service))) {
+            services_present = FALSE;
+            break;
+        }
+    }
+
+    if (services_present) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    waiter = g_slice_new (QrtrServiceWaiter);
+    waiter->services = g_array_ref (services);
+    waiter->task = task;
+    if (timeout > 0) {
+        waiter->timeout_source = g_timeout_source_new_seconds (timeout);
+        g_source_set_callback (waiter->timeout_source, (GSourceFunc)service_waiter_timeout_cb,
+                               waiter, NULL);
+        g_source_attach (waiter->timeout_source, g_main_context_get_thread_default ());
+    }
+
+    g_ptr_array_add (self->priv->waiters, waiter);
+}
+
 QrtrNode *
 qrtr_node_new (QrtrControlSocket *socket,
                guint32            node_id)
@@ -241,9 +392,11 @@ qrtr_node_init (QrtrNode *self)
 {
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, QRTR_TYPE_NODE, QrtrNodePrivate);
 
+    self->priv->removed = FALSE;
     self->priv->service_index = g_hash_table_new_full (g_direct_hash, g_direct_equal,
                                                        NULL, (GDestroyNotify)list_holder_free);
     self->priv->port_index = g_hash_table_new (g_direct_hash, g_direct_equal);
+    self->priv->waiters = g_ptr_array_new_with_free_func ((GDestroyNotify)qrtr_service_waiter_free);
 }
 
 static void
@@ -303,6 +456,11 @@ dispose (GObject *object)
         self->priv->node_removed_id = 0;
     }
     g_clear_object (&self->priv->socket);
+
+    /* We shouldn't have any waiters because they should have been removed when the
+     * node was removed from the bus, and they hold references to self. */
+    g_assert (self->priv->waiters->len == 0);
+    g_clear_pointer (&self->priv->waiters, (GDestroyNotify)g_ptr_array_unref);
 
     G_OBJECT_CLASS (qrtr_node_parent_class)->dispose (object);
 }

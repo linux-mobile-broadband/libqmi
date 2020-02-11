@@ -122,6 +122,40 @@ gint32 qrtr_node_lookup_port (QrtrNode *node,
  */
 gint32 qrtr_node_lookup_service (QrtrNode *node,
                                  guint32   port);
+/**
+ * qrtr_node_wait_for_services:
+ * @services: a #GArray of service types
+ * @timeout: maximum time to wait for the method to complete, in seconds.
+ * A zero timeout is infinite.
+ * @cancellable: a #GCancellable, or #NULL.
+ * @callback: a #GAsyncReadyCallback to call when the request is satisfied.
+ * @user_data: user data to pass to @callback.
+ *
+ * Calls @callback once all the services listed in @services are present
+ * on this node. The @callback will be called with an error if the node is
+ * removed from the bus before all of the services in @services come
+ * up.
+ */
+void qrtr_node_wait_for_services (QrtrNode            *node,
+                                  GArray              *services,
+                                  guint                timeout,
+                                  GCancellable        *cancellable,
+                                  GAsyncReadyCallback  callback,
+                                  gpointer             user_data);
+
+/**
+ * qrtr_node_wait_for_services_finish:
+ * @result: a #GAsyncResult.
+ * @error: Return location for #GError or %NULL.
+ *
+ * Finishes an operation started with qrtr_node_wait_for_services().
+ *
+ * Returns: %TRUE if all requested #QmiServices are present on this node,
+ * or %FALSE if @error is set.
+ */
+gboolean qrtr_node_wait_for_services_finish (QrtrNode      *node,
+                                             GAsyncResult  *result,
+                                             GError       **error);
 
 G_END_DECLS
 
