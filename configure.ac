@@ -204,7 +204,7 @@ AC_CHECK_HEADER(linux/qrtr.h, [have_qrtr=yes], [have_qrtr=no], [])
 AC_ARG_ENABLE(qrtr,
               AS_HELP_STRING([--enable-qrtr], [Enable support for QRTR protocol [default=auto]]),
               [enable_qrtr=$enableval],
-              [enable_qrtr=auto])
+              [enable_qrtr=no])
 
 if test "x$enable_qrtr" = "xauto"; then
     enable_qrtr=$have_qrtr
