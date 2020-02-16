@@ -10,7 +10,15 @@ before_script:
 test:
   stage: test
   script:
-    - ./autogen.sh
+    - ./autogen.sh --disable-mbim-qmux --disable-qrtr
+    - make
+    - make check
+    - make install
+
+test-qrtr:
+  stage: test
+  script:
+    - ./autogen.sh --disable-mbim-qmux --enable-qrtr
     - make
     - make check
     - make install
@@ -24,7 +32,21 @@ test-mbim-qmux:
     - make
     - make install
     - popd
-    - ./autogen.sh --enable-mbim-qmux
+    - ./autogen.sh --enable-mbim-qmux --disable-qrtr
+    - make
+    - make check
+    - make install
+
+test-mbim-qmux-qrtr:
+  stage: test
+  script:
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
+    - pushd libmbim
+    - ./autogen.sh
+    - make
+    - make install
+    - popd
+    - ./autogen.sh --enable-mbim-qmux --enable-qrtr
     - make
     - make check
     - make install
