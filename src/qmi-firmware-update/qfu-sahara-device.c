@@ -242,7 +242,7 @@ receive_response (QfuSaharaDevice  *self,
     }
 
     /* make sure that we can treat the response as a NUL-terminated string */
-    g_assert (rlen <= self->priv->buffer->len - 1);
+    g_assert ((guint)rlen <= self->priv->buffer->len - 1);
     self->priv->buffer->data[rlen] = '\0';
 
     /* Debug output */
@@ -653,7 +653,7 @@ qfu_sahara_device_firehose_write_block (QfuSaharaDevice  *self,
         return FALSE;
     }
 
-    g_assert (reqlen <= self->priv->transfer_block_size);
+    g_assert ((guint)reqlen <= self->priv->transfer_block_size);
     if (send_receive (self,
                       self->priv->buffer->data,
                       size,
