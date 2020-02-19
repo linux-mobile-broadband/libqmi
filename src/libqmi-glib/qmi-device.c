@@ -2195,6 +2195,14 @@ qmi_device_open (QmiDevice *self,
 
     g_return_if_fail (QMI_IS_DEVICE (self));
 
+#if QMI_QRTR_SUPPORTED
+    if (self->priv->node && (flags & QMI_DEVICE_OPEN_FLAGS_VERSION_INFO)) {
+        g_debug ("[%s] QRTR does not support version info check",
+                 qmi_file_get_path_display (self->priv->file));
+        flags &= ~QMI_DEVICE_OPEN_FLAGS_VERSION_INFO;
+    }
+#endif
+
     flags_str = qmi_device_open_flags_build_string_from_mask (flags);
     g_debug ("[%s] Opening device with flags '%s'...",
              qmi_file_get_path_display (self->priv->file),
