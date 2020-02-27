@@ -73,7 +73,7 @@
  * @QMI_CORE_ERROR_UNSUPPORTED: Not supported.
  * @QMI_CORE_ERROR_TLV_EMPTY: TLV has no value. Empty TLVs are not a real error, so this error type is never generated. Since: 1.12. Deprecated: 1.22.
  * @QMI_CORE_ERROR_UNEXPECTED_MESSAGE: QMI message is unexpected. Since: 1.16.
- * @QMI_CORE_ERROR_INVALID_DATA: Invalid data found in the message. Since: 1.26.
+ * @QMI_CORE_ERROR_INVALID_DATA: Invalid data found in the message. Since: 1.24.6.
  *
  * Common errors that may be reported by libqmi-glib.
  *
