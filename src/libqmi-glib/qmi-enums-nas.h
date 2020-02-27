@@ -778,7 +778,7 @@ typedef enum {
  * Returns: the UTF-8 encoded string, or %NULL if an error happened during the conversion.
  * The returned value should be freed with g_free().
  *
- * Since: 1.26
+ * Since: 1.24.6
  */
 gchar *qmi_nas_read_string_from_network_description_encoded_array (QmiNasNetworkDescriptionEncoding  encoding,
                                                                    const GArray                     *array);
