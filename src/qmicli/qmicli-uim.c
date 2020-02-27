@@ -606,7 +606,7 @@ power_on_sim_input_create (const gchar *slot_str)
 
     input = qmi_message_uim_power_on_sim_input_new ();
 
-    if (!qmicli_read_uint_from_string (sim_power_on_str, &slot) || (slot > G_MAXUINT8)) {
+    if (!qmicli_read_uint_from_string (slot_str, &slot) || (slot > G_MAXUINT8)) {
         g_printerr ("error: invalid slot number\n");
         return NULL;
     }
@@ -660,7 +660,7 @@ power_off_sim_input_create (const gchar *slot_str)
 
     input = qmi_message_uim_power_off_sim_input_new ();
 
-    if (!qmicli_read_uint_from_string (sim_power_off_str, &slot) || (slot > G_MAXUINT8)) {
+    if (!qmicli_read_uint_from_string (slot_str, &slot) || (slot > G_MAXUINT8)) {
         g_printerr ("error: invalid slot number\n");
         return NULL;
     }
