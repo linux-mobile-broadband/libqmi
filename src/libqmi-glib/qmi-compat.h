@@ -1997,7 +1997,7 @@ gboolean qmi_indication_nas_operator_name_output_get_operator_nitz_information (
  * Returns: %TRUE if the field is found, %FALSE otherwise.
  *
  * Since: 1.0
- * Deprecated: 1.26: Use qmi_message_nas_get_home_network_output_get_home_network_3gpp2_ext() instead.
+ * Deprecated: 1.24.6: Use qmi_message_nas_get_home_network_output_get_home_network_3gpp2_ext() instead.
  */
 G_DEPRECATED_FOR (qmi_message_nas_get_home_network_output_get_home_network_3gpp2_ext)
 gboolean qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
