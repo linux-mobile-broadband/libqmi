@@ -607,7 +607,6 @@
   {  "name"    : "Power On SIM",
      "type"    : "Message",
      "service" : "UIM",
-     "service" : "UIM",
      "id"      : "0x0031",
      "since"   : "1.18",
      "input"   : [ { "name"      : "Slot",
@@ -629,7 +628,6 @@
   // *********************************************************************************
   {  "name"    : "Change Provisioning Session",
      "type"    : "Message",
-     "service" : "UIM",
      "service" : "UIM",
      "id"      : "0x0038",
      "since"   : "1.24",
