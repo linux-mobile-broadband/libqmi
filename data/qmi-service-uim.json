@@ -619,7 +619,6 @@
   {  "name"    : "Power On SIM",
      "type"    : "Message",
      "service" : "UIM",
-     "service" : "UIM",
      "id"      : "0x0031",
      "version" : "1.0",
      "since"   : "1.18",
@@ -643,7 +642,6 @@
   // *********************************************************************************
   {  "name"    : "Change Provisioning Session",
      "type"    : "Message",
-     "service" : "UIM",
      "service" : "UIM",
      "id"      : "0x0038",
      "version" : "1.0",
