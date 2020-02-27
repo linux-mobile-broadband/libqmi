@@ -1415,7 +1415,7 @@ gboolean qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_
  * Returns: %TRUE if the field is found, %FALSE otherwise.
  *
  * Since: 1.18
- * Deprecated: 1.26: Use qmi_message_nas_get_operator_name_output_get_nitz_information() instead.
+ * Deprecated: 1.24.6: Use qmi_message_nas_get_operator_name_output_get_nitz_information() instead.
  */
 G_DEPRECATED_FOR (qmi_message_nas_get_operator_name_output_get_nitz_information)
 gboolean qmi_message_nas_get_operator_name_output_get_operator_nitz_information (
@@ -1444,7 +1444,7 @@ gboolean qmi_message_nas_get_operator_name_output_get_operator_nitz_information 
  * Returns: %TRUE if the field is found, %FALSE otherwise.
  *
  * Since: 1.18
- * Deprecated: 1.26: Use qmi_indication_nas_operator_name_output_get_nitz_information() instead.
+ * Deprecated: 1.24.6: Use qmi_indication_nas_operator_name_output_get_nitz_information() instead.
  */
 G_DEPRECATED_FOR (qmi_indication_nas_operator_name_output_get_nitz_information)
 gboolean qmi_indication_nas_operator_name_output_get_operator_nitz_information (
