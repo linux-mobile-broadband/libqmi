@@ -1390,7 +1390,7 @@ gboolean qmi_message_uim_change_pin_input_set_session_information (
  * Returns: %TRUE if the field is found, %FALSE otherwise.
  *
  * Since: 1.10
- * Deprecated: 1.26: Use qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams() instead.
+ * Deprecated: 1.24.6: Use qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams() instead.
  */
 G_DEPRECATED_FOR (qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams)
 gboolean qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size
