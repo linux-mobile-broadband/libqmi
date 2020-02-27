@@ -1,4 +1,24 @@
 
+Overview of changes in libqmi 1.24.6
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fixed the close operation logic to make sure that a reopen done right
+      away doesn't close the wrong endpoint.
+   ** Updated string reading logic to make sure that all strings are valid
+      UTF-8.
+   ** Updated string reading logic to attempt parsing as GSM7 or UCS2 if the
+      initial UTF-8 validation fails.
+   *+ Renamed TLV 0x15 in the "WDA Get Data Format" message, and added new
+      compat methods for the old name.
+   ** Fixed the format of the NITZ information TLV, and added new compat
+      methods for the old name.
+   ** Fixed the format of the Home Network 3GPP2 TLV, and added new compat
+      methods for the old name.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.24.4
 ----------------------------------------
 
