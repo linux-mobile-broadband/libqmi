@@ -1596,7 +1596,7 @@
                       "since"         : "1.18",
                       "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref"    : "NAS NITZ Information",
-                      "since"         : "1.26",
+                      "since"         : "1.24.6",
                       "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
 
   {  "name"    : "Operator Name",
@@ -1613,7 +1613,7 @@
                     { "common-ref"    : "NAS Operator String Name",
                       "since"         : "1.18" },
                     { "common-ref"    : "NAS NITZ Information",
-                      "since"         : "1.26" } ] },
+                      "since"         : "1.24.6" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get Cell Location Info",
