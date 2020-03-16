@@ -339,6 +339,7 @@ test_generated_dms_get_time (TestFixture *fixture)
 
 /*****************************************************************************/
 /* NAS Network Scan */
+
 typedef struct {
     guint16 mcc;
     guint16 mnc;
@@ -522,28 +523,6 @@ nas_network_scan_ready (QmiClientNas *client,
 }
 
 static void
-nas_get_cell_location_info_ready (QmiClientNas *client,
-                                  GAsyncResult *res,
-                                  TestFixture  *fixture)
-{
-    QmiMessageNasGetCellLocationInfoOutput *output;
-    GError *error = NULL;
-    gboolean st;
-
-    output = qmi_client_nas_get_cell_location_info_finish (client, res, &error);
-    g_assert_no_error (error);
-    g_assert (output);
-
-    st = qmi_message_nas_get_cell_location_info_output_get_result (output, &error);
-    g_assert_no_error (error);
-    g_assert (st);
-
-    qmi_message_nas_get_cell_location_info_output_unref (output);
-
-    test_fixture_loop_stop (fixture);
-}
-
-static void
 test_generated_nas_network_scan (TestFixture *fixture)
 {
     guint8 expected[] = {
@@ -606,6 +585,31 @@ test_generated_nas_network_scan (TestFixture *fixture)
                                  fixture);
 
     test_fixture_loop_run (fixture);
+}
+
+/*****************************************************************************/
+/* NAS Get Cell Location */
+
+static void
+nas_get_cell_location_info_ready (QmiClientNas *client,
+                                  GAsyncResult *res,
+                                  TestFixture  *fixture)
+{
+    QmiMessageNasGetCellLocationInfoOutput *output;
+    GError *error = NULL;
+    gboolean st;
+
+    output = qmi_client_nas_get_cell_location_info_finish (client, res, &error);
+    g_assert_no_error (error);
+    g_assert (output);
+
+    st = qmi_message_nas_get_cell_location_info_output_get_result (output, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+
+    qmi_message_nas_get_cell_location_info_output_unref (output);
+
+    test_fixture_loop_stop (fixture);
 }
 
 static void
