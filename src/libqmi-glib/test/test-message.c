@@ -322,6 +322,7 @@ test_message_new_request_from_data (void)
     _g_assert_cmpmem (buffer, buffer_length, expected_buffer, sizeof (expected_buffer));
 
     qmi_message_unref (self);
+    g_byte_array_unref (qmi);
 }
 
 static void
