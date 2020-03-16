@@ -120,6 +120,35 @@ __qmi_user_allowed (uid_t uid,
 }
 
 /*****************************************************************************/
+
+gboolean
+__qmi_string_utf8_validate_printable (const guint8 *utf8,
+                                      gsize         utf8_len)
+{
+    const gchar *p;
+    const gchar *init;
+
+    g_assert (utf8);
+    g_assert (utf8_len);
+
+    /* First check if valid UTF-8 */
+    init = (const gchar *)utf8;
+    if (!g_utf8_validate (init, utf8_len, NULL))
+        return FALSE;
+
+    /* Then check if contents are printable. If one is not,
+     * check fails. */
+    for (p = init; (gsize)(p - init) < utf8_len; p = g_utf8_next_char (p)) {
+        gunichar unichar;
+
+        unichar = g_utf8_get_char (p);
+        if (!g_unichar_isprint (unichar))
+            return FALSE;
+    }
+    return TRUE;
+}
+
+/*****************************************************************************/
 /* GSM 03.38 encoding conversion stuff, imported from ModemManager */
 
 #define GSM_DEF_ALPHABET_SIZE 128

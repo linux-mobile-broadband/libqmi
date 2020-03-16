@@ -86,6 +86,10 @@ gboolean __qmi_user_allowed (uid_t uid,
                              GError **error);
 
 G_GNUC_INTERNAL
+gboolean __qmi_string_utf8_validate_printable (const guint8 *utf8,
+                                               gsize         utf8_len);
+
+G_GNUC_INTERNAL
 gchar *__qmi_string_utf8_from_gsm7 (const guint8 *gsm,
                                     gsize         gsm_len);
 
