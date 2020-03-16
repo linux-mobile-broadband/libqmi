@@ -648,6 +648,89 @@ test_generated_nas_get_cell_location_info (TestFixture *fixture)
 }
 
 /*****************************************************************************/
+/* NAS Get Serving System */
+
+static void
+nas_get_serving_system_ready (QmiClientNas *client,
+                              GAsyncResult *res,
+                              TestFixture  *fixture)
+{
+    QmiMessageNasGetServingSystemOutput *output;
+    GError *error = NULL;
+    gboolean st;
+
+    output = qmi_client_nas_get_serving_system_finish (client, res, &error);
+    g_assert_no_error (error);
+    g_assert (output);
+
+    st = qmi_message_nas_get_serving_system_output_get_result (output, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+
+    /* current plmn in GSM-7 instead of UTF-8:
+     *   <<<<<< TLV:
+     *   <<<<<<   type       = "Current PLMN" (0x12)
+     *   <<<<<<   length     = 10
+     *   <<<<<<   value      = DE:00:32:00:05:49:76:3A:4C:06
+     *   <<<<<<   translated = [ mcc = '222' mnc = '50' description = 'Iliad' ]
+     */
+    {
+        guint16 mcc;
+        guint16 mnc;
+        const gchar *description;
+
+        if (qmi_message_nas_get_serving_system_output_get_current_plmn (output, &mcc, &mnc, &description, NULL)) {
+            g_assert_cmpuint (mcc, ==, 222);
+            g_assert_cmpuint (mnc, ==, 50);
+            g_assert_cmpstr (description, ==, "Iliad");
+        }
+    }
+
+    qmi_message_nas_get_serving_system_output_unref (output);
+
+    test_fixture_loop_stop (fixture);
+}
+
+static void
+test_generated_nas_get_serving_system (TestFixture *fixture)
+{
+    guint8 expected[] = {
+        0x01,
+        0x0C, 0x00, 0x00, 0x03, 0x01,
+        0x00, 0x01, 0x00, 0x24, 0x00, 0x00, 0x00
+    };
+    guint8 response[] = {
+        0x01,
+        0x6E, 0x00, 0x80, 0x03, 0x01,
+        0x02, 0x01, 0x00, 0x24, 0x00, 0x62, 0x00, 0x02,
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x06,
+        0x00, 0x01, 0x01, 0x01, 0x02, 0x01, 0x05, 0x10,
+        0x01, 0x00, 0x01, 0x11, 0x04, 0x00, 0x03, 0x03,
+        0x04, 0x05, 0x12, 0x0A, 0x00, 0xDE, 0x00, 0x32,
+        0x00, 0x05, 0x49, 0x76, 0x3A, 0x4C, 0x06, 0x15,
+        0x03, 0x00, 0x01, 0x05, 0x01, 0x1B, 0x01, 0x00,
+        0x00, 0x1C, 0x02, 0x00, 0xB4, 0x5F, 0x1D, 0x04,
+        0x00, 0xCF, 0x5A, 0x13, 0x01, 0x21, 0x05, 0x00,
+        0x02, 0x03, 0x00, 0x00, 0x00, 0x25, 0x08, 0x00,
+        0x03, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+        0x26, 0x02, 0x00, 0x22, 0x01, 0x27, 0x05, 0x00,
+        0xDE, 0x00, 0x32, 0x00, 0x00, 0x28, 0x01, 0x00,
+        0x00
+    };
+
+    test_port_context_set_command (fixture->ctx,
+                                   expected, G_N_ELEMENTS (expected),
+                                   response, G_N_ELEMENTS (response),
+                                   fixture->service_info[QMI_SERVICE_NAS].transaction_id++);
+
+    qmi_client_nas_get_serving_system (QMI_CLIENT_NAS (fixture->service_info[QMI_SERVICE_NAS].client), NULL, 3, NULL,
+                                       (GAsyncReadyCallback) nas_get_serving_system_ready,
+                                       fixture);
+
+    test_fixture_loop_run (fixture);
+}
+
+/*****************************************************************************/
 
 static void
 nas_get_cell_location_info_invalid_response_ready (QmiClientNas *client,
@@ -716,6 +799,7 @@ int main (int argc, char **argv)
     /* NAS */
     TEST_ADD ("/libqmi-glib/generated/nas/network-scan",           test_generated_nas_network_scan);
     TEST_ADD ("/libqmi-glib/generated/nas/get-cell-location-info", test_generated_nas_get_cell_location_info);
+    TEST_ADD ("/libqmi-glib/generated/nas/get-serving-system",     test_generated_nas_get_serving_system);
 
     /* Invalid responses */
     TEST_ADD ("/libqmi-glib/generated/nas/invalid/get-cell-location-info", test_generated_nas_get_cell_location_info_invalid_response);
