@@ -1325,7 +1325,7 @@ qmi_message_tlv_read_string (QmiMessage  *self,
      * but hey, the strings read using this method should all really be ASCII-7
      * and we're trying to do our best to overcome modem firmware problems...
      */
-    if (g_utf8_validate ((const gchar *)ptr, valid_string_length, NULL)) {
+    if (__qmi_string_utf8_validate_printable (ptr, valid_string_length)) {
         *out = g_malloc (valid_string_length + 1);
         memcpy (*out, ptr, valid_string_length);
         (*out)[valid_string_length] = '\0';
