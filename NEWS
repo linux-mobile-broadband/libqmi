@@ -1,4 +1,15 @@
 
+Overview of changes in libqmi 1.24.8
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fixed string reading logic to avoid critical memory leak.
+   ** Improved logic to fallback to GSM7 or UCS2, by making sure that the
+      UTF-8 string validation doesn't consider non-printable characters.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.24.6
 ----------------------------------------
 
