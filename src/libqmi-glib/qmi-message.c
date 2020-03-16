@@ -1344,10 +1344,6 @@ qmi_message_tlv_read_string (QmiMessage  *self,
         }
     }
 
-    *out = g_malloc (valid_string_length + 1);
-    memcpy (*out, ptr, valid_string_length);
-    (*out)[valid_string_length] = '\0';
-
     *offset = (*offset + string_length);
     return TRUE;
 }
