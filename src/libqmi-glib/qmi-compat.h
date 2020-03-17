@@ -1090,6 +1090,20 @@ typedef int QmiDeprecatedProtocolError;
  */
 #define QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE (QmiDeprecatedProtocolError) QMI_PROTOCOL_ERROR_REQUESTED_NUMBER_UNSUPPORTED
 
+/* The following type exists just so that we can get deprecation warnings */
+G_DEPRECATED
+typedef int QmiDeprecatedWdsVerboseCallEndReasonCm;
+
+/**
+ * QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFIGURATION_FAILED:
+ *
+ * Conference (not configuration) failed.
+ *
+ * Since: 1.0
+ * Deprecated: 1.26.0: Use the correct #QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFERENCE_FAILED name instead.
+ */
+#define QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFIGURATION_FAILED (QmiDeprecatedWdsVerboseCallEndReasonCm) QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFERENCE_FAILED
+
 /**
  * qmi_message_tlv_read_gfloat:
  * @self: a #QmiMessage.
