@@ -1497,4 +1497,5 @@ QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE
 <SUBSECTION Private>
 QmiDeprecatedNasSimRejectState
 QmiDeprecatedWdsCdmaCauseCode
+QmiDeprecatedProtocolError
 </SECTION>
