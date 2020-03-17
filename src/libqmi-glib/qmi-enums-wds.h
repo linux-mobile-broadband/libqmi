@@ -998,6 +998,7 @@ typedef enum {
  * QmiWdsVerboseCallEndReasonIpv6:
  * @QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_PREFIX_UNAVAILABLE: Prefix unavailable.
  * @QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_HRPD_IPV6_DISABLED: HRDP IPv6 disabled.
+ * @QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_DISABLED: IPv6 disabled. Since 1.26.
  *
  * IPv6-specific call end reasons, given when the @QmiWdsVerboseCallEndReasonType is #QMI_WDS_VERBOSE_CALL_END_REASON_TYPE_IPV6.
  *
@@ -1005,7 +1006,8 @@ typedef enum {
  */
 typedef enum {
     QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_PREFIX_UNAVAILABLE = 1,
-    QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_HRPD_IPV6_DISABLED = 2
+    QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_HRPD_IPV6_DISABLED = 2,
+    QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_DISABLED           = 3,
 } QmiWdsVerboseCallEndReasonIpv6;
 
 /**
