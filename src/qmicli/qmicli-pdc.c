@@ -798,6 +798,11 @@ set_selected_config_ready_indication (QmiClientPdc *client,
         return;
     }
 
+    ctx->activate_config_indication_id =
+        g_signal_connect (ctx->client,
+                          "activate-config",
+                          G_CALLBACK (activate_config_ready_indication),
+                          NULL);
     qmi_client_pdc_activate_config (ctx->client,
                                     input,
                                     10,
@@ -866,12 +871,6 @@ run_activate_config (void)
         g_signal_connect (ctx->client,
                           "set-selected-config",
                           G_CALLBACK (set_selected_config_ready_indication), NULL);
-    ctx->activate_config_indication_id =
-        g_signal_connect (ctx->client,
-                          "activate-config",
-                          G_CALLBACK (activate_config_ready_indication),
-                          NULL);
-
     qmi_client_pdc_set_selected_config (ctx->client,
                                         input,
                                         10,
