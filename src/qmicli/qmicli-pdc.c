@@ -76,6 +76,7 @@ typedef struct {
 
     guint set_selected_config_indication_id;
     guint activate_config_indication_id;
+    guint device_removed_indication_id;
 
     guint deactivate_config_indication_id;
 
@@ -217,6 +218,9 @@ context_free (Context *context)
 
     if (context->activate_config_indication_id)
         g_signal_handler_disconnect (context->client, context->activate_config_indication_id);
+
+    if (context->device_removed_indication_id)
+        g_signal_handler_disconnect (context->device, context->device_removed_indication_id);
 
     if (context->deactivate_config_indication_id)
         g_signal_handler_disconnect (context->client, context->deactivate_config_indication_id);
@@ -696,6 +700,14 @@ run_list_configs (void)
 /* Activate config */
 
 static void
+device_removed_indication (QmiDevice *device)
+{
+    /* If device gets removed during an activate config operation,
+     * it means the operation is successful */
+    operation_shutdown (TRUE);
+}
+
+static void
 activate_config_ready_indication (QmiClientPdc *client,
                                   QmiIndicationPdcActivateConfigOutput *output)
 {
@@ -802,6 +814,11 @@ set_selected_config_ready_indication (QmiClientPdc *client,
         g_signal_connect (ctx->client,
                           "activate-config",
                           G_CALLBACK (activate_config_ready_indication),
+                          NULL);
+    ctx->device_removed_indication_id =
+        g_signal_connect (ctx->device,
+                          QMI_DEVICE_SIGNAL_REMOVED,
+                          G_CALLBACK (device_removed_indication),
                           NULL);
     qmi_client_pdc_activate_config (ctx->client,
                                     input,
