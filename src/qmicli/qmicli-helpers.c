@@ -586,25 +586,37 @@ qmicli_read_binary_array_from_string (const gchar *str,
     g_return_val_if_fail (out != NULL, FALSE);
     g_return_val_if_fail (str, FALSE);
 
+    /* Ignore ':' digits in the binary string input */
+    for (len = 0, i = 0; str[i]; i++) {
+        if (str[i] == ':')
+            continue;
+        len++;
+    }
+
     /* Length must be a multiple of 2 */
-    len = strlen (str);
     if (len & 1)
         return FALSE;
 
     *out = g_array_sized_new (FALSE, TRUE, sizeof (guint8), len >> 1);
     g_array_set_size (*out, len >> 1);
 
-    for (i = 0, j = 0; i < len; i += 2, j++) {
+    i = 0;
+    j = 0;
+    while (str[i]) {
         gint a, b;
 
-        a = g_ascii_xdigit_value (str[i]);
-        b = g_ascii_xdigit_value (str[i + 1]);
+        while (str[i] == ':')
+            i++;
+        a = g_ascii_xdigit_value (str[i++]);
+        while (str[i] == ':')
+            i++;
+        b = g_ascii_xdigit_value (str[i++]);
         if (a < 0 || b < 0) {
             g_array_unref (*out);
             return FALSE;
         }
 
-        g_array_index (*out, guint8, j) = (a << 4) | b;
+        g_array_index (*out, guint8, j++) = (a << 4) | b;
     }
 
     return TRUE;

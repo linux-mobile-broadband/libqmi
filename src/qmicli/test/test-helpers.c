@@ -118,6 +118,21 @@ test_helpers_raw_printable_4 (void)
 /******************************************************************************/
 
 static void
+test_helpers_binary_array_from_string_0 (void)
+{
+    const guint8 expected[] = {
+        0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0, 0xAB, 0xCD, 0xEF
+    };
+    const gchar *str = "12:34:56:78:9A:BC:DE:F0:ab:cd:ef";
+    GArray *out = NULL;
+
+    g_assert (qmicli_read_binary_array_from_string (str, &out));
+    g_assert (out != NULL);
+    g_assert_cmpmem ((guint8 *)(out->data), out->len, expected, G_N_ELEMENTS (expected));
+    g_array_unref (out);
+}
+
+static void
 test_helpers_binary_array_from_string_1 (void)
 {
     const guint8 expected[] = {
@@ -128,9 +143,7 @@ test_helpers_binary_array_from_string_1 (void)
 
     g_assert (qmicli_read_binary_array_from_string (str, &out));
     g_assert (out != NULL);
-    g_assert_cmpuint (out->len, ==, strlen (str) / 2);
-    g_assert (memcmp ((guint8 *)(out->data), expected, out->len) == 0);
-
+    g_assert_cmpmem ((guint8 *)(out->data), out->len, expected, G_N_ELEMENTS (expected));
     g_array_unref (out);
 }
 
@@ -292,6 +305,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/qmicli/helpers/raw-printable/3",  test_helpers_raw_printable_3);
     g_test_add_func ("/qmicli/helpers/raw-printable/4",  test_helpers_raw_printable_4);
 
+    g_test_add_func ("/qmicli/helpers/binary-array-from-string/0", test_helpers_binary_array_from_string_0);
     g_test_add_func ("/qmicli/helpers/binary-array-from-string/1", test_helpers_binary_array_from_string_1);
     g_test_add_func ("/qmicli/helpers/binary-array-from-string/2", test_helpers_binary_array_from_string_2);
     g_test_add_func ("/qmicli/helpers/binary-array-from-string/3", test_helpers_binary_array_from_string_3);
