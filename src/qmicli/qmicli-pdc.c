@@ -76,6 +76,7 @@ typedef struct {
 
     guint set_selected_config_indication_id;
     guint activate_config_indication_id;
+
     guint deactivate_config_indication_id;
 
     guint token;
@@ -770,8 +771,8 @@ activate_config_input_create (const gchar *str)
 }
 
 static void
-activate_set_selected_config_ready_indication (QmiClientPdc *client,
-                                               QmiIndicationPdcSetSelectedConfigOutput *output)
+set_selected_config_ready_indication (QmiClientPdc *client,
+                                      QmiIndicationPdcSetSelectedConfigOutput *output)
 {
     GError *error = NULL;
     QmiMessagePdcActivateConfigInput *input;
@@ -806,8 +807,8 @@ activate_set_selected_config_ready_indication (QmiClientPdc *client,
 }
 
 static void
-activate_set_selected_config_ready (QmiClientPdc *client,
-                                    GAsyncResult *res)
+set_selected_config_ready (QmiClientPdc *client,
+                           GAsyncResult *res)
 {
     GError *error = NULL;
     QmiMessagePdcSetSelectedConfigOutput *output;
@@ -824,7 +825,7 @@ activate_set_selected_config_ready (QmiClientPdc *client,
 }
 
 static QmiMessagePdcSetSelectedConfigInput *
-activate_set_selected_config_input_create (const gchar *str)
+set_selected_config_input_create (const gchar *str)
 {
     QmiMessagePdcSetSelectedConfigInput *input = NULL;
     QmiConfigTypeAndId *type_and_id;
@@ -854,7 +855,7 @@ run_activate_config (void)
     QmiMessagePdcSetSelectedConfigInput *input;
 
     g_debug ("Activating config asynchronously...");
-    input = activate_set_selected_config_input_create (activate_config_str);
+    input = set_selected_config_input_create (activate_config_str);
     if (!input) {
         operation_shutdown (FALSE);
         return;
@@ -864,7 +865,7 @@ run_activate_config (void)
     ctx->set_selected_config_indication_id =
         g_signal_connect (ctx->client,
                           "set-selected-config",
-                          G_CALLBACK (activate_set_selected_config_ready_indication), NULL);
+                          G_CALLBACK (set_selected_config_ready_indication), NULL);
     ctx->activate_config_indication_id =
         g_signal_connect (ctx->client,
                           "activate-config",
@@ -875,7 +876,7 @@ run_activate_config (void)
                                         input,
                                         10,
                                         ctx->cancellable,
-                                        (GAsyncReadyCallback) activate_set_selected_config_ready,
+                                        (GAsyncReadyCallback) set_selected_config_ready,
                                         NULL);
     qmi_message_pdc_set_selected_config_input_unref (input);
 }
@@ -959,101 +960,18 @@ deactivate_config_input_create (const gchar *str)
 }
 
 static void
-deactivate_set_selected_config_ready_indication (QmiClientPdc *client,
-                                                 QmiIndicationPdcSetSelectedConfigOutput *output)
+run_deactivate_config (void)
 {
-    GError *error = NULL;
     QmiMessagePdcDeactivateConfigInput *input;
-    guint16 error_code = 0;
 
-    if (!qmi_indication_pdc_set_selected_config_output_get_indication_result (output, &error_code, &error)) {
-        g_printerr ("error: couldn't set selected config: %s\n", error->message);
-        g_error_free (error);
-        operation_shutdown (FALSE);
-        return;
-    }
-
-    if (error_code != 0) {
-        g_printerr ("error: couldn't set selected config: %s\n",
-                    qmi_protocol_error_get_string ((QmiProtocolError) error_code));
-        operation_shutdown (FALSE);
-        return;
-    }
-
+    g_debug ("Deactivating config asynchronously...");
     input = deactivate_config_input_create (deactivate_config_str);
     if (!input) {
         operation_shutdown (FALSE);
         return;
     }
 
-    qmi_client_pdc_deactivate_config (ctx->client,
-                                      input,
-                                      10,
-                                      ctx->cancellable,
-                                      (GAsyncReadyCallback) deactivate_config_ready, NULL);
-    qmi_message_pdc_deactivate_config_input_unref (input);
-}
-
-static void
-deactivate_set_selected_config_ready (QmiClientPdc *client,
-                                      GAsyncResult *res)
-{
-    GError *error = NULL;
-    QmiMessagePdcSetSelectedConfigOutput *output;
-
-    output = qmi_client_pdc_set_selected_config_finish (client, res, &error);
-    if (!output) {
-        g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        operation_shutdown (FALSE);
-        return;
-    }
-
-    qmi_message_pdc_set_selected_config_output_unref (output);
-}
-
-static QmiMessagePdcSetSelectedConfigInput *
-deactivate_set_selected_config_input_create (const gchar *str)
-{
-    QmiMessagePdcSetSelectedConfigInput *input = NULL;
-    QmiConfigTypeAndId *type_and_id;
-    GError *error = NULL;
-
-    type_and_id = parse_type_and_id (str);
-    if (!type_and_id)
-        return NULL;
-
-    input = qmi_message_pdc_set_selected_config_input_new ();
-    if (!qmi_message_pdc_set_selected_config_input_set_type_with_id (input, type_and_id, &error) ||
-        !qmi_message_pdc_set_selected_config_input_set_token (input, ctx->token++, &error)) {
-        g_printerr ("error: couldn't create input data bundle: '%s'\n", error->message);
-        g_error_free (error);
-        qmi_message_pdc_set_selected_config_input_unref (input);
-        input = NULL;
-    }
-
-    g_array_unref (type_and_id->id);
-    g_slice_free (QmiConfigTypeAndId, type_and_id);
-    return input;
-}
-
-static void
-run_deactivate_config (void)
-{
-    QmiMessagePdcSetSelectedConfigInput *input;
-
-    g_debug ("Deactivating config asynchronously...");
-    input = deactivate_set_selected_config_input_create (deactivate_config_str);
-    if (!input) {
-        operation_shutdown (FALSE);
-        return;
-    }
-
     /* Results are reported via indications */
-    ctx->set_selected_config_indication_id =
-        g_signal_connect (ctx->client,
-                          "set-selected-config",
-                          G_CALLBACK (deactivate_set_selected_config_ready_indication), NULL);
     ctx->deactivate_config_indication_id =
         g_signal_connect (ctx->client,
                           "deactivate-config",
@@ -1061,13 +979,12 @@ run_deactivate_config (void)
                           (deactivate_config_ready_indication),
                           NULL);
 
-    qmi_client_pdc_set_selected_config (ctx->client,
-                                        input,
-                                        10,
-                                        ctx->cancellable,
-                                        (GAsyncReadyCallback) deactivate_set_selected_config_ready,
-                                        NULL);
-    qmi_message_pdc_set_selected_config_input_unref (input);
+    qmi_client_pdc_deactivate_config (ctx->client,
+                                      input,
+                                      10,
+                                      ctx->cancellable,
+                                      (GAsyncReadyCallback) deactivate_config_ready, NULL);
+    qmi_message_pdc_deactivate_config_input_unref (input);
 }
 
 /******************************************************************************/
