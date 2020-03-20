@@ -59,6 +59,7 @@ typedef struct {
     QmiDevice *device;
     QmiClientPdc *client;
     GCancellable *cancellable;
+    gboolean skip_cid_release;
 
     /* local data */
     guint timeout_id;
@@ -236,9 +237,9 @@ static void
 operation_shutdown (gboolean operation_status)
 {
     /* Cleanup context and finish async operation */
+    qmicli_async_operation_done (operation_status, ctx->skip_cid_release);
     context_free (ctx);
     ctx = NULL;
-    qmicli_async_operation_done (operation_status, FALSE);
 }
 
 /******************************************************************************/
@@ -702,6 +703,9 @@ run_list_configs (void)
 static void
 device_removed_indication (QmiDevice *device)
 {
+    /* Device gone, don't attempt to release CIDs */
+    ctx->skip_cid_release = TRUE;
+
     /* If device gets removed during an activate config operation,
      * it means the operation is successful */
     operation_shutdown (TRUE);
