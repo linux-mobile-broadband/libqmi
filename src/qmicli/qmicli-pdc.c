@@ -703,6 +703,9 @@ run_list_configs (void)
 static void
 device_removed_indication (QmiDevice *device)
 {
+    g_print ("[%s] Successfully requested config activation\n",
+             qmi_device_get_path_display (ctx->device));
+
     /* Device gone, don't attempt to release CIDs */
     ctx->skip_cid_release = TRUE;
 
@@ -731,6 +734,12 @@ activate_config_ready_indication (QmiClientPdc *client,
         operation_shutdown (FALSE);
         return;
     }
+
+    /* NOTE: config activation is expected to reboot the device, so we may detect the
+     * actual reboot before receiving this indication */
+
+    g_print ("[%s] Successfully requested config activation\n",
+             qmi_device_get_path_display (ctx->device));
 
     operation_shutdown (TRUE);
 }
@@ -925,6 +934,9 @@ deactivate_config_ready_indication (QmiClientPdc *client,
         return;
     }
 
+    g_print ("[%s] Successfully requested config deactivation\n",
+             qmi_device_get_path_display (ctx->device));
+
     operation_shutdown (TRUE);
 }
 
@@ -1032,6 +1044,9 @@ delete_config_ready (QmiClientPdc *client,
         operation_shutdown (FALSE);
         return;
     }
+
+    g_print ("[%s] Successfully deleted config\n",
+             qmi_device_get_path_display (ctx->device));
 
     qmi_message_pdc_delete_config_output_unref (output);
     operation_shutdown (TRUE);
