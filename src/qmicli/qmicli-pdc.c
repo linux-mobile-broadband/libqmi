@@ -914,7 +914,7 @@ set_selected_config_ready_indication_deactivation (QmiClientPdc *client,
         return;
     }
 
-    input = deactivate_config_input_create (activate_config_str);
+    input = deactivate_config_input_create (deactivate_config_str);
     if (!input) {
         operation_shutdown (FALSE);
         return;
@@ -1280,7 +1280,7 @@ qmicli_pdc_run (QmiDevice *device,
         QmiMessagePdcSetSelectedConfigInput *input;
 
         g_debug ("Deactivating config asynchronously...");
-        input = set_selected_config_input_create (activate_config_str);
+        input = set_selected_config_input_create (deactivate_config_str);
         if (!input) {
             operation_shutdown (FALSE);
             return;
