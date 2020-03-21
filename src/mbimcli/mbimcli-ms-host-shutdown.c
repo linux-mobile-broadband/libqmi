@@ -56,7 +56,7 @@ mbimcli_ms_host_shutdown_get_option_group (void)
    GOptionGroup *group;
 
    group = g_option_group_new ("ms-host-shutdown",
-                               "Microsoft Host Shutdown options",
+                               "Microsoft Host Shutdown options:",
                                "Show Microsoft Host Shutdown Service options",
                                NULL,
                                NULL);

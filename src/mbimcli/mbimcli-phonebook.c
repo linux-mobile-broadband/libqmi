@@ -83,7 +83,7 @@ mbimcli_phonebook_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("phonebook",
-                                "Phonebook options",
+                                "Phonebook options:",
                                 "Show Phonebook Service options",
                                 NULL,
                                 NULL);

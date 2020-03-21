@@ -64,7 +64,7 @@ mbimcli_dss_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("dss",
-                                "Device Service Stream options",
+                                "Device Service Stream options:",
                                 "Show Device Service Stream options",
                                 NULL,
                                 NULL);

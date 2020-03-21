@@ -56,7 +56,7 @@ mbimcli_intel_firmware_update_get_option_group (void)
    GOptionGroup *group;
 
    group = g_option_group_new ("intel-firmware-update",
-                               "Intel Firmware Update Service options",
+                               "Intel Firmware Update Service options:",
                                "Show Intel Firmware Update Service options",
                                NULL,
                                NULL);

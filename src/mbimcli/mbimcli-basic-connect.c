@@ -214,7 +214,7 @@ mbimcli_basic_connect_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("basic-connect",
-                                "Basic Connect options",
+                                "Basic Connect options:",
                                 "Show Basic Connect Service options",
                                 NULL,
                                 NULL);

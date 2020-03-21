@@ -61,7 +61,7 @@ mbimcli_atds_get_option_group (void)
    GOptionGroup *group;
 
    group = g_option_group_new ("atds",
-                               "AT&T Device Service options",
+                               "AT&T Device Service options:",
                                "Show AT&T Device Service options",
                                NULL,
                                NULL);

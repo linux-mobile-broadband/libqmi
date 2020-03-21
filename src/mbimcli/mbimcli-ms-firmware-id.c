@@ -56,7 +56,7 @@ mbimcli_ms_firmware_id_get_option_group (void)
    GOptionGroup *group;
 
    group = g_option_group_new ("ms-firmware-id",
-                               "Microsoft Firmware ID options",
+                               "Microsoft Firmware ID options:",
                                "Show Microsoft Firmware ID Service options",
                                NULL,
                                NULL);

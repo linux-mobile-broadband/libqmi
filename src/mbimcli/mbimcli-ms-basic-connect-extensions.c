@@ -84,7 +84,7 @@ mbimcli_ms_basic_connect_extensions_get_option_group (void)
    GOptionGroup *group;
 
    group = g_option_group_new ("ms-basic-connect-extensions",
-                               "Microsoft Basic Connect Extensions options",
+                               "Microsoft Basic Connect Extensions options:",
                                "Show Microsoft Basic Connect Extensions Service options",
                                NULL,
                                NULL);
