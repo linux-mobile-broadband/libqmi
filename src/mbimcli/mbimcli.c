@@ -177,8 +177,7 @@ G_GNUC_NORETURN
 static void
 print_version_and_exit (void)
 {
-    g_print ("\n"
-             PROGRAM_NAME " " PROGRAM_VERSION "\n"
+    g_print (PROGRAM_NAME " " PROGRAM_VERSION "\n"
              "Copyright (C) 2013-2020 Aleksander Morgado\n"
              "License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>\n"
              "This is free software: you are free to change and redistribute it.\n"
