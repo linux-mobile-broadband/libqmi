@@ -133,7 +133,7 @@ qmicli_pdc_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("pdc",
-                                "PDC options",
+                                "PDC options:",
                                 "Show platform device configurations options", NULL, NULL);
     g_option_group_add_entries (group, entries);
 

@@ -62,7 +62,7 @@ qmicli_pbm_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("pbm",
-                                "PBM options",
+                                "PBM options:",
                                 "Show Phonebook Management options",
                                 NULL,
                                 NULL);

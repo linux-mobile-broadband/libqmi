@@ -68,7 +68,7 @@ qmicli_dsd_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("dsd",
-                                "DSD options",
+                                "DSD options:",
                                 "Show Data System Determination options",
                                 NULL,
                                 NULL);

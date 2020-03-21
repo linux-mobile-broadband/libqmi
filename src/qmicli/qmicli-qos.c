@@ -81,7 +81,7 @@ qmicli_qos_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("qos",
-                                "QoS options",
+                                "QoS options:",
                                 "Show Quality of Service options",
                                 NULL,
                                 NULL);

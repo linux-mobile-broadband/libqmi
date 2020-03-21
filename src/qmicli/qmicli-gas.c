@@ -73,7 +73,7 @@ qmicli_gas_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("gas",
-                                "GAS options",
+                                "GAS options:",
                                 "Show General Application Service options",
                                 NULL,
                                 NULL);

@@ -347,7 +347,7 @@ qmicli_dms_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("dms",
-                                "DMS options",
+                                "DMS options:",
                                 "Show Device Management Service options",
                                 NULL,
                                 NULL);

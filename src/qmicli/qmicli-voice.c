@@ -68,7 +68,7 @@ qmicli_voice_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("voice",
-                                "VOICE options",
+                                "VOICE options:",
                                 "Show Voice Service options",
                                 NULL,
                                 NULL);

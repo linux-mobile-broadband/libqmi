@@ -198,7 +198,7 @@ qmicli_wds_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("wds",
-                                "WDS options",
+                                "WDS options:",
                                 "Show Wireless Data Service options",
                                 NULL,
                                 NULL);

@@ -135,7 +135,7 @@ qmicli_loc_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("loc",
-                                "LOC options",
+                                "LOC options:",
                                 "Show location options", NULL, NULL);
     g_option_group_add_entries (group, entries);
 

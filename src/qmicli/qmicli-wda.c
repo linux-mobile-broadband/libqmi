@@ -90,7 +90,7 @@ qmicli_wda_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("wda",
-                                "WDA options",
+                                "WDA options:",
                                 "Show Wireless Data Administrative options",
                                 NULL,
                                 NULL);

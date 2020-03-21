@@ -123,7 +123,7 @@ qmicli_uim_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("uim",
-                                "UIM options",
+                                "UIM options:",
                                 "Show User Identity Module options",
                                 NULL,
                                 NULL);

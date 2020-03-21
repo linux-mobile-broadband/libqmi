@@ -68,7 +68,7 @@ qmicli_wms_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("wms",
-                                "WMS options",
+                                "WMS options:",
                                 "Show Wireless Messaging Service options",
                                 NULL,
                                 NULL);
