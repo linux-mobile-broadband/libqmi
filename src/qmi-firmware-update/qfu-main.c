@@ -554,25 +554,25 @@ int main (int argc, char **argv)
     context = g_option_context_new ("- Update firmware in QMI devices");
     g_option_context_set_description (context, context_description);
 
-    group = g_option_group_new ("selection", "Generic device selection options", "", NULL, NULL);
+    group = g_option_group_new ("selection", "Generic device selection options:", "", NULL, NULL);
     g_option_group_add_entries (group, context_selection_entries);
     g_option_context_add_group (context, group);
 
 #if defined WITH_UDEV
-    group = g_option_group_new ("update", "Update options (normal mode)", "", NULL, NULL);
+    group = g_option_group_new ("update", "Update options (normal mode):", "", NULL, NULL);
     g_option_group_add_entries (group, context_update_entries);
     g_option_context_add_group (context, group);
 #endif
 
-    group = g_option_group_new ("reset", "Reset options (normal mode)", "", NULL, NULL);
+    group = g_option_group_new ("reset", "Reset options (normal mode):", "", NULL, NULL);
     g_option_group_add_entries (group, context_reset_entries);
     g_option_context_add_group (context, group);
 
-    group = g_option_group_new ("update-download", "Update options (download mode)", "", NULL, NULL);
+    group = g_option_group_new ("update-download", "Update options (download mode):", "", NULL, NULL);
     g_option_group_add_entries (group, context_update_download_entries);
     g_option_context_add_group (context, group);
 
-    group = g_option_group_new ("verify", "Verify options", "", NULL, NULL);
+    group = g_option_group_new ("verify", "Verify options:", "", NULL, NULL);
     g_option_group_add_entries (group, context_verify_entries);
     g_option_context_add_group (context, group);
 
