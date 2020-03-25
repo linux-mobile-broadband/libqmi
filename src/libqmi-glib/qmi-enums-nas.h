@@ -858,6 +858,7 @@ typedef enum {
  * @QMI_NAS_RAT_MODE_PREFERENCE_UMTS: UMTS.
  * @QMI_NAS_RAT_MODE_PREFERENCE_LTE: LTE.
  * @QMI_NAS_RAT_MODE_PREFERENCE_TD_SCDMA: TD-SCDMA.
+ * @QMI_NAS_RAT_MODE_PREFERENCE_5GNR: 5GNR. Since 1.26.
  *
  * Flags specifying radio access technology mode preference.
  *
@@ -869,7 +870,8 @@ typedef enum {
     QMI_NAS_RAT_MODE_PREFERENCE_GSM         = 1 << 2,
     QMI_NAS_RAT_MODE_PREFERENCE_UMTS        = 1 << 3,
     QMI_NAS_RAT_MODE_PREFERENCE_LTE         = 1 << 4,
-    QMI_NAS_RAT_MODE_PREFERENCE_TD_SCDMA    = 1 << 5
+    QMI_NAS_RAT_MODE_PREFERENCE_TD_SCDMA    = 1 << 5,
+    QMI_NAS_RAT_MODE_PREFERENCE_5GNR        = 1 << 6,
 } QmiNasRatModePreference;
 
 /**
