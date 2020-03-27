@@ -96,10 +96,10 @@ qrtr_message_cb (GSocket *gsocket,
                  GIOCondition cond,
                  QmiEndpointQrtr *self)
 {
-    GError *error = NULL;
-    GSocketAddress *addr;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(GSocketAddress) addr = NULL;
     struct sockaddr_qrtr sq;
-    GByteArray *buf;
+    g_autoptr(GByteArray) buf = NULL;
     gssize next_datagram_size;
     gssize bytes_received;
     ClientInfo *info;
