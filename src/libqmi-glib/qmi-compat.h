@@ -1070,7 +1070,7 @@ typedef int QmiDeprecatedWdsVerboseCallEndReasonCm;
  * Conference (not configuration) failed.
  *
  * Since: 1.0
- * Deprecated: 1.26.0: Use the correct #QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFERENCE_FAILED name instead.
+ * Deprecated: 1.24.10: Use the correct #QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFERENCE_FAILED name instead.
  */
 #define QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFIGURATION_FAILED (QmiDeprecatedWdsVerboseCallEndReasonCm) QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFERENCE_FAILED
 
