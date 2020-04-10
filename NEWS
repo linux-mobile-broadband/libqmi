@@ -1,4 +1,21 @@
 
+Overview of changes in libqmi 1.24.10
+----------------------------------------
+
+ * libqmi-glib:
+   ** Added new WDS verbose call end reasons in the IPv6, PPP, 3GPP, CM and
+      Internal groups.
+   ** Renamed WDS verbose call end reason "CM_CONFIGURATION_FAILED" to
+      "CM_CONFERENCE_FAILED", and added the old name as deprecated in the
+      compat sources.
+   ** Detect QMI control ports exposed as 'smdpkt' or 'rpmsg' virtual devices.
+
+ * qmicli:
+   ** Fixed crash when using --pdc-deactivate-config.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.24.8
 ----------------------------------------
 
