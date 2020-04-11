@@ -1355,26 +1355,37 @@ qmi_message_tlv_read_fixed_size_string (QmiMessage  *self,
                                         gchar       *out,
                                         GError     **error)
 {
+    const guint8 *ptr;
+    const gchar  *end = NULL;
+
     g_return_val_if_fail (self != NULL, FALSE);
     g_return_val_if_fail (offset != NULL, FALSE);
     g_return_val_if_fail (out != NULL, FALSE);
 
-    if (string_length > 0) {
-        const guint8 *ptr;
+    if (string_length == 0)
+        return TRUE;
 
-        if (!(ptr = tlv_error_if_read_overflow (self, tlv_offset, *offset, string_length, error)))
-            return FALSE;
+    if (!(ptr = tlv_error_if_read_overflow (self, tlv_offset, *offset, string_length, error)))
+        return FALSE;
 
-        if (!g_utf8_validate ((const gchar *)ptr, string_length, NULL)) {
-            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_DATA, "invalid string");
-            return FALSE;
-        }
-
+    /* full string valid? */
+    if (g_utf8_validate ((const gchar *)ptr, string_length, &end)) {
         memcpy (out, ptr, string_length);
+        *offset = (*offset + string_length);
+        return TRUE;
     }
 
-    *offset = (*offset + string_length);
-    return TRUE;
+    /* partial string valid? */
+    if (end && end > (const gchar *)ptr) {
+        /* copy only the valid bytes */
+        memcpy (out, ptr, end - (const gchar *)ptr);
+        /* but update offset with the full expected length */
+        *offset = (*offset + string_length);
+        return TRUE;
+    }
+
+    g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_DATA, "invalid string");
+    return FALSE;
 }
 
 guint16
