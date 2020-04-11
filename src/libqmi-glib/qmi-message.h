@@ -953,9 +953,9 @@ gboolean qmi_message_tlv_read_string (QmiMessage  *self,
  * Since 1.24.6 the read string is guaranteed to be valid UTF-8.
  *
  * The fixed sized field may be suffixed with e.g. 0xFF if the contents are
- * shorter than @string_length. Since 1.26, this method will return the valid
- * UTF-8 characters in the start of the string, instead of returning an error
- * when doing the full UTF-8 string validation.
+ * shorter than @string_length. Since 1.24.12, this method will return the
+ * valid UTF-8 characters in the start of the string, instead of returning an
+ * error when doing the full UTF-8 string validation.
  *
  * Returns: %TRUE if the variable is successfully read, otherwise %FALSE is returned and @error is set.
  *
