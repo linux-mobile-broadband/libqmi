@@ -731,6 +731,161 @@ test_generated_nas_get_serving_system (TestFixture *fixture)
 }
 
 /*****************************************************************************/
+/* NAS Get System Info */
+
+static void
+nas_get_system_info_ready (QmiClientNas *client,
+                           GAsyncResult *res,
+                           TestFixture  *fixture)
+{
+    QmiMessageNasGetSystemInfoOutput *output;
+    GError *error = NULL;
+    gboolean st;
+
+    output = qmi_client_nas_get_system_info_finish (client, res, &error);
+    g_assert_no_error (error);
+    g_assert (output);
+
+    st = qmi_message_nas_get_system_info_output_get_result (output, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+
+    {
+        gboolean                    domain_valid = FALSE;
+        QmiNasNetworkServiceDomain  domain;
+        gboolean                    service_capability_valid = FALSE;
+        QmiNasNetworkServiceDomain  service_capability;
+        gboolean                    roaming_status_valid = FALSE;
+        QmiNasRoamingStatus         roaming_status;
+        gboolean                    forbidden_valid = FALSE;
+        gboolean                    forbidden;
+        gboolean                    lac_valid = FALSE;
+        guint16                     lac;
+        gboolean                    cid_valid = FALSE;
+        guint32                     cid;
+        gboolean                    registration_reject_info_valid = FALSE;
+        QmiNasNetworkServiceDomain  registration_reject_domain;
+        guint8                      registration_reject_cause;
+        gboolean                    network_id_valid = FALSE;
+        const gchar                *mcc = NULL;
+        const gchar                *mnc = NULL;
+        gboolean                    tac_valid = FALSE;
+        guint16                     tac;
+
+        /*
+         *	LTE service:
+         *		Status: 'available'
+         *		True Status: 'available'
+         *		Preferred data path: 'no'
+         *		Domain: 'cs-ps'
+         *		Service capability: 'cs-ps'
+         *		Roaming status: 'off'
+         *		Forbidden: 'no'
+         *		Cell ID: '1609474'
+         *		MCC: '530'
+         *		MNC: '24'                -- Given as 2 digits, suffixed with 0xFF!
+         *		Tracking Area Code: '63001'
+         *		Voice support: 'yes'
+         *		IMS voice support: 'no'
+         *		eMBMS coverage info support: 'no'
+         *		eMBMS coverage info trace ID: '65535'
+         *		Cell access: 'all-calls'
+         *		Registration restriction: 'unrestricted'
+         *		Registration domain: 'not-applicable'
+         */
+
+        g_assert (qmi_message_nas_get_system_info_output_get_lte_system_info (output,
+                                                                              &domain_valid,
+                                                                              &domain,
+                                                                              &service_capability_valid,
+                                                                              &service_capability,
+                                                                              &roaming_status_valid,
+                                                                              &roaming_status,
+                                                                              &forbidden_valid,
+                                                                              &forbidden,
+                                                                              &lac_valid,
+                                                                              &lac,
+                                                                              &cid_valid,
+                                                                              &cid,
+                                                                              &registration_reject_info_valid,
+                                                                              &registration_reject_domain,
+                                                                              &registration_reject_cause,
+                                                                              &network_id_valid,
+                                                                              &mcc,
+                                                                              &mnc,
+                                                                              &tac_valid,
+                                                                              &tac,
+                                                                              &error));
+        g_assert_no_error (error);
+        g_assert (domain_valid);
+        g_assert_cmpuint (domain, ==, QMI_NAS_NETWORK_SERVICE_DOMAIN_CS_PS);
+        g_assert (service_capability_valid);
+        g_assert_cmpuint (service_capability, ==, QMI_NAS_NETWORK_SERVICE_DOMAIN_CS_PS);
+        g_assert (roaming_status_valid);
+        g_assert_cmpuint (roaming_status, ==, QMI_NAS_ROAMING_STATUS_OFF);
+        g_assert (forbidden_valid);
+        g_assert (!forbidden);
+        g_assert (!lac_valid);
+        g_assert (cid_valid);
+        g_assert_cmpuint (cid, ==, 1616133);
+        g_assert (!registration_reject_info_valid);
+        g_assert (network_id_valid);
+        g_assert_cmpstr (mcc, ==, "530");
+        g_assert_cmpstr (mnc, ==, "24");
+        g_assert (tac_valid);
+        g_assert_cmpuint (tac, ==, 63001);
+    }
+
+    qmi_message_nas_get_system_info_output_unref (output);
+
+    test_fixture_loop_stop (fixture);
+}
+
+static void
+test_generated_nas_get_system_info (TestFixture *fixture)
+{
+    guint8 expected[] = {
+        0x01,
+        0x0C, 0x00, 0x00, 0x03, 0x01,
+        0x00, 0x01, 0x00, 0x4D, 0x00, 0x00, 0x00
+    };
+    guint8 response[] = {
+        0x01,
+        0x9A, 0x00, 0x80, 0x03, 0x01,
+        0x02, 0x01, 0x00, 0x4D, 0x00, 0x8E, 0x00, 0x02,
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x12, 0x03,
+        0x00, 0x00, 0x00, 0x00, 0x13, 0x03, 0x00, 0x00,
+        0x00, 0x00, 0x14, 0x03, 0x00, 0x02, 0x02, 0x00,
+        0x19, 0x1D, 0x00, 0x01, 0x03, 0x01, 0x03, 0x01,
+        0x00, 0x01, 0x00, 0x00, 0xFF, 0xFF, 0x01, 0x05,
+        0xA9, 0x18, 0x00, 0x00, 0x00, 0x00, 0x01, 0x35,
+        0x33, 0x30, 0x32, 0x34, 0xFF, 0x01, 0x19, 0xF6,
+        0x1E, 0x02, 0x00, 0xFF, 0xFF, 0x21, 0x01, 0x00,
+        0x01, 0x26, 0x01, 0x00, 0x00, 0x27, 0x04, 0x00,
+        0x01, 0x00, 0x00, 0x00, 0x29, 0x01, 0x00, 0x00,
+        0x2A, 0x04, 0x00, 0x03, 0x00, 0x00, 0x00, 0x2F,
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x31, 0x04,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x34, 0x02, 0x00,
+        0xFF, 0xFF, 0x38, 0x04, 0x00, 0x03, 0x00, 0x00,
+        0x00, 0x39, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00,
+        0x3E, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x44,
+        0x04, 0x00, 0x03, 0x00, 0x00, 0x00, 0x46, 0x04,
+        0x00, 0x04, 0x00, 0x00, 0x00
+    };
+
+    test_port_context_set_command (fixture->ctx,
+                                   expected, G_N_ELEMENTS (expected),
+                                   response, G_N_ELEMENTS (response),
+                                   fixture->service_info[QMI_SERVICE_NAS].transaction_id++);
+
+    qmi_client_nas_get_system_info (QMI_CLIENT_NAS (fixture->service_info[QMI_SERVICE_NAS].client), NULL, 3, NULL,
+                                    (GAsyncReadyCallback) nas_get_system_info_ready,
+                                    fixture);
+
+    test_fixture_loop_run (fixture);
+}
+
+/*****************************************************************************/
 
 static void
 nas_get_cell_location_info_invalid_response_ready (QmiClientNas *client,
@@ -800,6 +955,7 @@ int main (int argc, char **argv)
     TEST_ADD ("/libqmi-glib/generated/nas/network-scan",           test_generated_nas_network_scan);
     TEST_ADD ("/libqmi-glib/generated/nas/get-cell-location-info", test_generated_nas_get_cell_location_info);
     TEST_ADD ("/libqmi-glib/generated/nas/get-serving-system",     test_generated_nas_get_serving_system);
+    TEST_ADD ("/libqmi-glib/generated/nas/get-system-info",        test_generated_nas_get_system_info);
 
     /* Invalid responses */
     TEST_ADD ("/libqmi-glib/generated/nas/invalid/get-cell-location-info", test_generated_nas_get_cell_location_info_invalid_response);
