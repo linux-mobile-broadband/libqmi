@@ -679,11 +679,11 @@ nas_get_serving_system_ready (QmiClientNas *client,
         guint16 mnc;
         const gchar *description;
 
-        if (qmi_message_nas_get_serving_system_output_get_current_plmn (output, &mcc, &mnc, &description, NULL)) {
-            g_assert_cmpuint (mcc, ==, 222);
-            g_assert_cmpuint (mnc, ==, 50);
-            g_assert_cmpstr (description, ==, "Iliad");
-        }
+        g_assert (qmi_message_nas_get_serving_system_output_get_current_plmn (output, &mcc, &mnc, &description, &error));
+        g_assert_no_error (error);
+        g_assert_cmpuint (mcc, ==, 222);
+        g_assert_cmpuint (mnc, ==, 50);
+        g_assert_cmpstr (description, ==, "Iliad");
     }
 
     qmi_message_nas_get_serving_system_output_unref (output);
