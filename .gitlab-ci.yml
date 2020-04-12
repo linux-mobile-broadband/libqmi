@@ -5,12 +5,12 @@ stages:
 
 before_script:
   - apt update && apt -y install autoconf automake libtool libgudev-1.0-dev autoconf-archive
-  - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 test-no-mbim-no-qrtr:
   stage: test
   script:
-    - ./autogen.sh --disable-mbim-qmux --disable-qrtr
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --disable-mbim-qmux --disable-qrtr
     - make
     - make check
     - make install
@@ -18,7 +18,8 @@ test-no-mbim-no-qrtr:
 test-no-mbim:
   stage: test
   script:
-    - ./autogen.sh --disable-mbim-qmux --enable-qrtr
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --disable-mbim-qmux --enable-qrtr
     - make
     - make check
     - make install
@@ -28,11 +29,13 @@ test-no-qrtr:
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
-    - ./autogen.sh
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr
     - make
     - make install
     - popd
-    - ./autogen.sh --enable-mbim-qmux --disable-qrtr
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --enable-mbim-qmux --disable-qrtr
     - make
     - make check
     - make install
@@ -42,11 +45,13 @@ test-default:
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
-    - ./autogen.sh
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr
     - make
     - make install
     - popd
-    - ./autogen.sh --enable-mbim-qmux --enable-qrtr
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --enable-mbim-qmux --enable-qrtr
     - make
     - make check
     - make install
