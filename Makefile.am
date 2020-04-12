@@ -7,6 +7,7 @@ DISTCHECK_CONFIGURE_FLAGS = \
 	--with-udev-base-dir="$$dc_install_base" \
 	--enable-gtk-doc \
 	--enable-mbim-qmux \
+	--enable-qrtr \
 	$(NULL)
 
 ChangeLog:
