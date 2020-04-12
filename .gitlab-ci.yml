@@ -56,3 +56,4 @@ test-default:
     - make
     - make check
     - make install
+    - make distcheck
