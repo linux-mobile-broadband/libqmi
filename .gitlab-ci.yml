@@ -7,7 +7,7 @@ before_script:
   - apt update && apt -y install autoconf automake libtool libgudev-1.0-dev autoconf-archive
   - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
-test:
+test-no-mbim-no-qrtr:
   stage: test
   script:
     - ./autogen.sh --disable-mbim-qmux --disable-qrtr
@@ -15,7 +15,7 @@ test:
     - make check
     - make install
 
-test-qrtr:
+test-no-mbim:
   stage: test
   script:
     - ./autogen.sh --disable-mbim-qmux --enable-qrtr
@@ -23,7 +23,7 @@ test-qrtr:
     - make check
     - make install
 
-test-mbim-qmux:
+test-no-qrtr:
   stage: test
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
@@ -37,7 +37,7 @@ test-mbim-qmux:
     - make check
     - make install
 
-test-mbim-qmux-qrtr:
+test-default:
   stage: test
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
