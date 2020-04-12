@@ -43,6 +43,7 @@ test-no-qrtr:
 test-default:
   stage: test
   script:
+    - apt -y install gtk-doc-tools libglib2.0-doc
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
     - NOCONFIGURE=1 ./autogen.sh
@@ -51,7 +52,7 @@ test-default:
     - make install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --enable-mbim-qmux --enable-qrtr
+    - ./configure --prefix=/usr --enable-gtk-doc --enable-mbim-qmux --enable-qrtr
     - make
     - make check
     - make install
