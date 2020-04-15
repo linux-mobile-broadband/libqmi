@@ -109,12 +109,30 @@ AC_SUBST(GLIB_MKENUMS)
 
 AM_PATH_PYTHON([], [], [PYTHON=python])
 
+dnl message collection (existing file in data/qmi-collection-${COLLECTION}.json)
+dnl custom collections may be added as files in data/
+AC_ARG_ENABLE(collection,
+              AS_HELP_STRING([--enable-collection=[minimal|basic|full]],
+                             [message collection to build [default=full]]),
+              [enable_collection=$enableval],
+              [enable_collection=full])
+QMI_COLLECTION_NAME="$enable_collection"
+AC_SUBST(QMI_COLLECTION_NAME)
+AM_CONDITIONAL([QMI_COLLECTION_USED], test "$enable_collection" != "full")
+
 dnl qmi-firmware-update is optional, enabled by default
 AC_ARG_ENABLE([firmware-update],
               AS_HELP_STRING([--enable-firmware-update],
                              [enable compilation of `qmi-firmware-update' [default=yes]]),
               [build_firmware_update=$enableval],
               [build_firmware_update=yes])
+
+if test "x$build_firmware_update" = "xyes"; then
+    if test "$QMI_COLLECTION_NAME" = "minimal"; then
+        AC_MSG_WARN([Cannot build qmi-firmware-update when 'minimal' collection enabled, use at least the 'basic' collection instead.])
+        build_firmware_update=no
+    fi
+fi
 AM_CONDITIONAL([BUILD_FIRMWARE_UPDATE], [test "x$build_firmware_update" = "xyes"])
 
 dnl udev support is optional, enabled by default
@@ -156,6 +174,13 @@ esac
 
 dnl Documentation
 GTK_DOC_CHECK(1.0)
+if test "x$enable_gtk_doc" = "xyes"; then
+    if test "x$QMI_COLLECTION_NAME" != "x"; then
+        AC_MSG_WARN([Cannot build gtk-doc when using an explicit message collection.])
+        enable_gtk_doc=no
+    fi
+fi
+AM_CONDITIONAL([ENABLE_GTK_DOC], [test "x$enable_gtk_doc" = "xyes"])
 
 # QMI username
 QMI_USERNAME="root"
@@ -289,7 +314,7 @@ echo "
 
     Built items:
       libqrtr-glib:        ${enable_qrtr}
-      libqmi-glib:         yes
+      libqmi-glib:         yes (${QMI_COLLECTION_NAME})
       qmicli:              yes
       qmi-firmware-update: ${build_firmware_update}
           with udev:             ${with_udev}

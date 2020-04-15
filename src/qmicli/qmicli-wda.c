@@ -33,6 +33,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_WDA
+
 #define QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED 0xFFFFFFFF
 #define QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED 0xFFFFFFFF
 #define QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED -1
@@ -52,6 +54,8 @@ static gboolean  get_data_format_flag;
 static gboolean  get_supported_messages_flag;
 static gboolean  noop_flag;
 
+#if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
+
 static gboolean
 parse_get_data_format (const gchar  *option_name,
                        const gchar  *value,
@@ -64,19 +68,27 @@ parse_get_data_format (const gchar  *option_name,
     return TRUE;
 }
 
+#endif
+
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_WDA_SET_DATA_FORMAT
     { "wda-set-data-format", 0, 0, G_OPTION_ARG_STRING, &set_data_format_str,
       "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip), ul-protocol (tlp|qc-ncm|mbim|rndis|qmap), dl-protocol (tlp|qc-ncm|mbim|rndis|qmap), dl-datagram-max-size, dl-max-datagrams, ep-type (undefined|hsusb), ep-iface-number)",
       "[\"key=value,...\"]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
     { "wda-get-data-format", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, parse_get_data_format,
       "Get data format (allowed keys: ep-type (undefined|hsusb), ep-iface-number); also allows empty key list",
       "[\"key=value,...\"]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDA_GET_SUPPORTED_MESSAGES
     { "wda-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
       NULL
     },
+#endif
     { "wda-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a WDA client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -149,6 +161,8 @@ noop_cb (gpointer unused)
     operation_shutdown (TRUE);
     return FALSE;
 }
+
+#if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
 
 typedef struct {
     QmiDataEndpointType endpoint_type;
@@ -327,6 +341,10 @@ get_data_format_ready (QmiClientWda *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT */
+
+#if defined HAVE_QMI_MESSAGE_WDA_SET_DATA_FORMAT
+
 static void
 set_data_format_ready (QmiClientWda *client,
                        GAsyncResult *res)
@@ -407,7 +425,6 @@ set_data_format_ready (QmiClientWda *client,
     qmi_message_wda_set_data_format_output_unref (output);
     operation_shutdown (TRUE);
 }
-
 
 typedef struct {
     QmiWdaLinkLayerProtocol link_layer_protocol;
@@ -643,6 +660,10 @@ error_out:
     return NULL;
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDA_SET_DATA_FORMAT */
+
+#if defined HAVE_QMI_MESSAGE_WDA_GET_SUPPORTED_MESSAGES
+
 static void
 get_supported_messages_ready (QmiClientWda *client,
                               GAsyncResult *res)
@@ -681,6 +702,8 @@ get_supported_messages_ready (QmiClientWda *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDA_GET_SUPPORTED_MESSAGES */
+
 void
 qmicli_wda_run (QmiDevice *device,
                 QmiClientWda *client,
@@ -692,7 +715,7 @@ qmicli_wda_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Request to set data format? */
+#if defined HAVE_QMI_MESSAGE_WDA_SET_DATA_FORMAT
     if (set_data_format_str) {
         QmiMessageWdaSetDataFormatInput *input;
 
@@ -712,8 +735,9 @@ qmicli_wda_run (QmiDevice *device,
         qmi_message_wda_set_data_format_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to read data format? */
+#if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
     if (get_data_format_flag) {
         g_autoptr(QmiMessageWdaGetDataFormatInput) input = NULL;
 
@@ -734,8 +758,9 @@ qmicli_wda_run (QmiDevice *device,
                                         NULL);
         return;
     }
+#endif
 
-    /* Request to list supported messages? */
+#if defined HAVE_QMI_MESSAGE_WDA_GET_SUPPORTED_MESSAGES
     if (get_supported_messages_flag) {
         g_debug ("Asynchronously getting supported WDA messages...");
         qmi_client_wda_get_supported_messages (ctx->client,
@@ -746,6 +771,7 @@ qmicli_wda_run (QmiDevice *device,
                                                NULL);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -755,3 +781,5 @@ qmicli_wda_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_WDA */

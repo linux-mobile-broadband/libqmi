@@ -32,8 +32,10 @@ class MessageList:
     """
     Constructor
     """
-    def __init__(self, objects_dictionary, common_objects_dictionary):
-        self.list = []
+    def __init__(self, collection, objects_dictionary, common_objects_dictionary):
+        self.request_list = []
+        self.indication_list = []
+        self.unsupported_list = []
         self.message_id_enum_name = None
         self.indication_id_enum_name = None
         self.service = None
@@ -44,7 +46,13 @@ class MessageList:
             if object_dictionary['type'] == 'Message' or \
                object_dictionary['type'] == 'Indication':
                 message = Message(object_dictionary, common_objects_dictionary)
-                self.list.append(message)
+                if collection is None or message.id_enum_name in collection:
+                    if message.type == 'Message':
+                        self.request_list.append(message)
+                    else:
+                        self.indication_list.append(message)
+                else:
+                    self.unsupported_list.append(message)
             elif object_dictionary['type'] == 'Message-ID-Enum':
                 self.message_id_enum_name = object_dictionary['name']
             elif object_dictionary['type'] == 'Indication-ID-Enum':
@@ -61,26 +69,48 @@ class MessageList:
             raise ValueError('Missing Service field')
 
 
+    def __emit_message_build_symbols(self, f):
+        template = ''
+        for message in self.request_list:
+            translations = { 'build_symbol' : message.build_symbol }
+            message_template = '#define ${build_symbol}\n'
+            template += string.Template(message_template).substitute(translations)
+        for message in self.indication_list:
+            translations = { 'build_symbol' : message.build_symbol }
+            message_template = '#define ${build_symbol}\n'
+            template += string.Template(message_template).substitute(translations)
+        if len(self.unsupported_list) > 0:
+            template += (
+                '\n'
+                '/* messages unsupported in collection */\n')
+            for message in self.unsupported_list:
+                translations = { 'build_symbol' : message.build_symbol }
+                message_template = '/* ${build_symbol} */\n'
+                template += string.Template(message_template).substitute(translations)
+        f.write(string.Template(template).substitute(translations))
+
     """
     Emit the enumeration of the messages found in the specific service
     """
-    def emit_message_ids_enum(self, f):
+    def __emit_message_ids_enum(self, f):
+        # do nothing if nothing in the supported messages list
+        if len(self.request_list) == 0:
+            return
         translations = { 'enum_type' : utils.build_camelcase_name (self.message_id_enum_name) }
         template = (
             '\n'
             'typedef enum {\n')
-        for message in self.list:
-            if message.type == 'Message':
-                translations['enum_name'] = message.id_enum_name
-                translations['enum_value'] = message.id
-                if message.vendor is None:
-                    enum_template = (
-                        '    ${enum_name} = ${enum_value},\n')
-                else:
-                    translations['vendor'] = message.vendor
-                    enum_template = (
-                        '    ${enum_name} = ${enum_value}, /* vendor ${vendor} */\n')
-                template += string.Template(enum_template).substitute(translations)
+        for message in self.request_list:
+            translations['enum_name'] = message.id_enum_name
+            translations['enum_value'] = message.id
+            if message.vendor is None:
+                enum_template = (
+                    '    ${enum_name} = ${enum_value},\n')
+            else:
+                translations['vendor'] = message.vendor
+                enum_template = (
+                    '    ${enum_name} = ${enum_value}, /* vendor ${vendor} */\n')
+            template += string.Template(enum_template).substitute(translations)
 
         template += (
             '} ${enum_type};\n'
@@ -90,18 +120,20 @@ class MessageList:
     """
     Emit the enumeration of the indications found in the specific service
     """
-    def emit_indication_ids_enum(self, f):
+    def __emit_indication_ids_enum(self, f):
+        # do nothing if nothing in the supported indications list
+        if len(self.indication_list) == 0:
+            return
         translations = { 'enum_type' : utils.build_camelcase_name (self.indication_id_enum_name) }
         template = (
             '\n'
             'typedef enum {\n')
-        for message in self.list:
-            if message.type == 'Indication':
-                translations['enum_name'] = message.id_enum_name
-                translations['enum_value'] = message.id
-                enum_template = (
-                    '    ${enum_name} = ${enum_value},\n')
-                template += string.Template(enum_template).substitute(translations)
+        for message in self.indication_list:
+            translations['enum_name'] = message.id_enum_name
+            translations['enum_value'] = message.id
+            enum_template = (
+                '    ${enum_name} = ${enum_value},\n')
+            template += string.Template(enum_template).substitute(translations)
 
         template += (
             '} ${enum_type};\n'
@@ -141,14 +173,13 @@ class MessageList:
             '    if (qmi_message_is_indication (self)) {\n'
             '        switch (qmi_message_get_message_id (self)) {\n')
 
-        for message in self.list:
-            if message.type == 'Indication':
-                translations['enum_name'] = message.id_enum_name
-                translations['message_underscore'] = utils.build_underscore_name (message.name)
-                inner_template = (
-                    '        case ${enum_name}:\n'
-                    '            return indication_${message_underscore}_get_printable (self, line_prefix);\n')
-                template += string.Template(inner_template).substitute(translations)
+        for message in self.indication_list:
+            translations['enum_name'] = message.id_enum_name
+            translations['message_underscore'] = utils.build_underscore_name (message.name)
+            inner_template = (
+                '        case ${enum_name}:\n'
+                '            return indication_${message_underscore}_get_printable (self, line_prefix);\n')
+            template += string.Template(inner_template).substitute(translations)
 
         template += (
             '        default:\n'
@@ -161,8 +192,8 @@ class MessageList:
             '        if (vendor_id == QMI_MESSAGE_VENDOR_GENERIC) {\n'
             '            switch (qmi_message_get_message_id (self)) {\n')
 
-        for message in self.list:
-            if message.type == 'Message' and message.vendor is None:
+        for message in self.request_list:
+            if message.vendor is None:
                 translations['enum_name'] = message.id_enum_name
                 translations['message_underscore'] = utils.build_underscore_name (message.name)
                 inner_template = (
@@ -176,8 +207,8 @@ class MessageList:
             '            }\n'
             '        } else {\n')
 
-        for message in self.list:
-            if message.type == 'Message' and message.vendor is not None:
+        for message in self.request_list:
+            if message.vendor is not None:
                 translations['enum_name'] = message.id_enum_name
                 translations['message_underscore'] = utils.build_underscore_name (message.name)
                 translations['message_vendor'] = message.vendor
@@ -198,10 +229,9 @@ class MessageList:
     Emit the method responsible for checking whether a given message is abortable
     """
     def __emit_is_abortable(self, hfile, cfile):
-
         # do nothing if no abortable messages in service
-        for message in self.list:
-            if message.type == 'Message' and message.abort:
+        for message in self.request_list:
+            if message.abort:
                 break
         else:
             return
@@ -234,15 +264,13 @@ class MessageList:
             '    if (vendor_id == QMI_MESSAGE_VENDOR_GENERIC) {\n'
             '        switch (qmi_message_get_message_id (self)) {\n')
 
-        for message in self.list:
-            if message.type == 'Message' and message.vendor is None:
-                # Only add if it's abortable
-                if message.abort:
-                    translations['enum_name'] = message.id_enum_name
-                    inner_template = (
-                        '        case ${enum_name}:\n'
-                        '            return TRUE;\n')
-                    template += string.Template(inner_template).substitute(translations)
+        for message in self.request_list:
+            if message.vendor is None and message.abort:
+                translations['enum_name'] = message.id_enum_name
+                inner_template = (
+                    '        case ${enum_name}:\n'
+                    '            return TRUE;\n')
+                template += string.Template(inner_template).substitute(translations)
 
         template += (
             '        default:\n'
@@ -250,17 +278,15 @@ class MessageList:
             '        }\n'
             '    } else {\n')
 
-        for message in self.list:
-            if message.type == 'Message' and message.vendor is not None:
-                # Only add if it's abortable
-                if message.abort:
-                    translations['enum_name'] = message.id_enum_name
-                    translations['message_vendor'] = message.vendor
-                    inner_template = (
-                        '        if (vendor_id == ${message_vendor} && (qmi_message_get_message_id (self) == ${enum_name})) {\n'
-                        '            return TRUE;\n'
-                        '        }\n')
-                    template += string.Template(inner_template).substitute(translations)
+        for message in self.request_list:
+            if message.vendor is not None and message.abort:
+                translations['enum_name'] = message.id_enum_name
+                translations['message_vendor'] = message.vendor
+                inner_template = (
+                    '        if (vendor_id == ${message_vendor} && (qmi_message_get_message_id (self) == ${enum_name})) {\n'
+                    '            return TRUE;\n'
+                    '        }\n')
+                template += string.Template(inner_template).substitute(translations)
 
         template += (
             '        return FALSE;\n'
@@ -273,13 +299,22 @@ class MessageList:
     Emit the message list handling implementation
     """
     def emit(self, hfile, cfile):
-        # First, emit the message/indication IDs enum
-        self.emit_message_ids_enum(cfile)
+        # Always write build symbols, even for unsupported messages
+        self.__emit_message_build_symbols(hfile)
+
+        # Do nothing else if nothing in the supported lists
+        if len(self.indication_list) == 0 and len(self.request_list) == 0:
+            return
+
+        # Emit the message/indication IDs enum and the build symbols
+        self.__emit_message_ids_enum(cfile)
         if self.indication_id_enum_name is not None:
-            self.emit_indication_ids_enum(cfile)
+            self.__emit_indication_ids_enum(cfile)
 
         # Then, emit all message handlers
-        for message in self.list:
+        for message in self.indication_list:
+            message.emit(hfile, cfile)
+        for message in self.request_list:
             message.emit(hfile, cfile)
 
         # First, emit common class code
@@ -292,6 +327,11 @@ class MessageList:
     Emit the sections
     """
     def emit_sections(self, sfile):
+        # do nothing if nothing in the supported lists
+        if len(self.indication_list) == 0 and len(self.request_list) == 0:
+            return
         # Emit all message sections
-        for message in self.list:
+        for message in self.indication_list:
+            message.emit_sections(sfile)
+        for message in self.request_list:
             message.emit_sections(sfile)

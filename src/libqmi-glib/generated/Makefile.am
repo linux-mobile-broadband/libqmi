@@ -154,7 +154,7 @@ qmi-flags64-types.c: $(FLAGS64) qmi-flags64-types.h $(top_srcdir)/build-aux/temp
 		--template $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.c \
 		$(FLAGS64) > $@
 
-# CTL service
+# CTL service (always available, regardless of collection)
 qmi-ctl.h qmi-ctl.c qmi-ctl.sections: $(top_srcdir)/data/qmi-service-ctl.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
 	$(AM_V_GEN)  \
 		rm -f qmi-ctl.h && \
@@ -164,154 +164,174 @@ qmi-ctl.h qmi-ctl.c qmi-ctl.sections: $(top_srcdir)/data/qmi-service-ctl.json $(
 			--include $(top_srcdir)/data/qmi-common.json \
 			--output qmi-ctl
 
+if QMI_COLLECTION_USED
+COLLECTION_PATH=$(top_srcdir)/data/qmi-collection-@QMI_COLLECTION_NAME@.json
+COLLECTION_OPT=--collection $(COLLECTION_PATH)
+endif
+
 # DMS service
-qmi-dms.h qmi-dms.c qmi-dms.sections: $(top_srcdir)/data/qmi-service-dms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-dms.h qmi-dms.c qmi-dms.sections: $(top_srcdir)/data/qmi-service-dms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-dms.h && \
 		rm -f qmi-dms.c && \
 		 $(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-dms.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-dms
 
 # WDS service
-qmi-wds.h qmi-wds.c qmi-wds.sections: $(top_srcdir)/data/qmi-service-wds.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-wds.h qmi-wds.c qmi-wds.sections: $(top_srcdir)/data/qmi-service-wds.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-wds.h && \
 		rm -f qmi-wds.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-wds.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-wds
 
 # NAS service
-qmi-nas.h qmi-nas.c qmi-nas.sections: $(top_srcdir)/data/qmi-service-nas.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-nas.h qmi-nas.c qmi-nas.sections: $(top_srcdir)/data/qmi-service-nas.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-nas.h && \
 		rm -f qmi-nas.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-nas.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-nas
 
 # WMS service
-qmi-wms.h qmi-wms.c qmi-wms.sections: $(top_srcdir)/data/qmi-service-wms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-wms.h qmi-wms.c qmi-wms.sections: $(top_srcdir)/data/qmi-service-wms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-wms.h && \
 		rm -f qmi-wms.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-wms.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-wms
 
 # PDS service
-qmi-pds.h qmi-pds.c qmi-pds.sections: $(top_srcdir)/data/qmi-service-pds.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-pds.h qmi-pds.c qmi-pds.sections: $(top_srcdir)/data/qmi-service-pds.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-pds.h && \
 		rm -f qmi-pds.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-pds.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-pds
 
 # PDC service
-qmi-pdc.h qmi-pdc.c qmi-pdc.sections: $(top_srcdir)/data/qmi-service-pdc.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-pdc.h qmi-pdc.c qmi-pdc.sections: $(top_srcdir)/data/qmi-service-pdc.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-pdc.h && \
 		rm -f qmi-pdc.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-pdc.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-pdc
 
 # PBM service
-qmi-pbm.h qmi-pbm.c qmi-pbm.sections: $(top_srcdir)/data/qmi-service-pbm.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-pbm.h qmi-pbm.c qmi-pbm.sections: $(top_srcdir)/data/qmi-service-pbm.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-pbm.h && \
 		rm -f qmi-pbm.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-pbm.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-pbm
 
 # UIM service
-qmi-uim.h qmi-uim.c qmi-uim.sections: $(top_srcdir)/data/qmi-service-uim.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-uim.h qmi-uim.c qmi-uim.sections: $(top_srcdir)/data/qmi-service-uim.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN)  \
 		rm -f qmi-uim.h && \
 		rm -f qmi-uim.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-uim.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-uim
 
 # OMA service
-qmi-oma.h qmi-oma.c qmi-oma.sections: $(top_srcdir)/data/qmi-service-oma.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-oma.h qmi-oma.c qmi-oma.sections: $(top_srcdir)/data/qmi-service-oma.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-oma.h && \
 		rm -f qmi-oma.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-oma.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-oma
 
 # GAS service
-qmi-gas.h qmi-gas.c qmi-gas.sections: $(top_srcdir)/data/qmi-service-gas.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-gas.h qmi-gas.c qmi-gas.sections: $(top_srcdir)/data/qmi-service-gas.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-gas.h && \
 		rm -f qmi-gas.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-gas.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-gas
 
 # WDA service
-qmi-wda.h qmi-wda.c qmi-wda.sections: $(top_srcdir)/data/qmi-service-wda.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-wda.h qmi-wda.c qmi-wda.sections: $(top_srcdir)/data/qmi-service-wda.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-wda.h && \
 		rm -f qmi-wda.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-wda.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-wda
 
 # VOICE service
-qmi-voice.h qmi-voice.c qmi-voice.sections: $(top_srcdir)/data/qmi-service-voice.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-voice.h qmi-voice.c qmi-voice.sections: $(top_srcdir)/data/qmi-service-voice.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-voice.h && \
 		rm -f qmi-voice.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-voice.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-voice
 
 # LOC service
-qmi-loc.h qmi-loc.c qmi-loc.sections: $(top_srcdir)/data/qmi-service-loc.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-loc.h qmi-loc.c qmi-loc.sections: $(top_srcdir)/data/qmi-service-loc.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-loc.h && \
 		rm -f qmi-loc.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-loc.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-loc
 
 # QoS service
-qmi-qos.h qmi-qos.c qmi-qos.sections: $(top_srcdir)/data/qmi-service-qos.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-qos.h qmi-qos.c qmi-qos.sections: $(top_srcdir)/data/qmi-service-qos.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-qos.h && \
 		rm -f qmi-qos.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-qos.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-qos
 
 # DSD service
-qmi-dsd.h qmi-dsd.c qmi-dsd.sections: $(top_srcdir)/data/qmi-service-dsd.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen
+qmi-dsd.h qmi-dsd.c qmi-dsd.sections: $(top_srcdir)/data/qmi-service-dsd.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
 		rm -f qmi-dsd.h && \
 		rm -f qmi-dsd.c && \
 		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
 			--input $(top_srcdir)/data/qmi-service-dsd.json \
 			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
 			--output qmi-dsd
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)

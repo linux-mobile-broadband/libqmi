@@ -18,10 +18,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "qmi-message.h"
-#include "qmi-errors.h"
-#include "qmi-error-types.h"
-#include "qmi-utils.h"
+#include <libqmi-glib.h>
 
 /*****************************************************************************/
 
@@ -217,6 +214,8 @@ test_message_parse_wrong_tlv (void)
     test_message_printable_common (buffer, G_N_ELEMENTS (buffer), "ERROR: Reading TLV would overflow");
 }
 
+#if defined HAVE_QMI_INDICATION_PDS_EVENT_REPORT
+
 static void
 test_message_parse_missing_size (void)
 {
@@ -240,6 +239,10 @@ test_message_parse_missing_size (void)
     test_message_printable_common (buffer, G_N_ELEMENTS (buffer), "ERROR: Reading TLV would overflow");
 }
 
+#endif
+
+#if defined HAVE_QMI_INDICATION_LOC_NMEA
+
 static void
 test_message_parse_string_with_crlf (void)
 {
@@ -256,6 +259,8 @@ test_message_parse_string_with_crlf (void)
 
     test_message_printable_common (buffer, sizeof (buffer), "$GPGSA,A,1,,,,,,,,,,,,,,,*1E");
 }
+
+#endif
 
 /*****************************************************************************/
 
@@ -1585,8 +1590,12 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-short",    test_message_parse_complete_and_short);
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-complete", test_message_parse_complete_and_complete);
     g_test_add_func ("/libqmi-glib/message/parse/wrong-tlv",             test_message_parse_wrong_tlv);
+#if defined HAVE_QMI_INDICATION_PDS_EVENT_REPORT
     g_test_add_func ("/libqmi-glib/message/parse/missing-size",          test_message_parse_missing_size);
+#endif
+#if defined HAVE_QMI_INDICATION_LOC_NMEA
     g_test_add_func ("/libqmi-glib/message/parse/string-with-crlf",      test_message_parse_string_with_crlf);
+#endif
 
     g_test_add_func ("/libqmi-glib/message/new/request",           test_message_new_request);
     g_test_add_func ("/libqmi-glib/message/new/request-from-data", test_message_new_request_from_data);

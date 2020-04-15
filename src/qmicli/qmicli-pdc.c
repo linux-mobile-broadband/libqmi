@@ -34,6 +34,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_PDC
+
 #define LIST_CONFIGS_TIMEOUT_SECS 2
 #define LOAD_CONFIG_CHUNK_SIZE 0x400
 
@@ -93,32 +95,68 @@ static gchar *deactivate_config_str;
 static gchar *load_config_str;
 static gboolean noop_flag;
 
+#if defined HAVE_QMI_MESSAGE_PDC_LIST_CONFIGS && \
+    defined HAVE_QMI_INDICATION_PDC_LIST_CONFIGS && \
+    defined HAVE_QMI_MESSAGE_PDC_GET_SELECTED_CONFIG && \
+    defined HAVE_QMI_INDICATION_PDC_GET_SELECTED_CONFIG && \
+    defined HAVE_QMI_MESSAGE_PDC_GET_CONFIG_INFO && \
+    defined HAVE_QMI_INDICATION_PDC_GET_CONFIG_INFO
+# define HAVE_QMI_ACTION_PDC_LIST_CONFIGS
+#endif
+
+#if defined HAVE_QMI_MESSAGE_PDC_ACTIVATE_CONFIG && \
+    defined HAVE_QMI_INDICATION_PDC_ACTIVATE_CONFIG && \
+    defined HAVE_QMI_MESSAGE_PDC_SET_SELECTED_CONFIG && \
+    defined HAVE_QMI_INDICATION_PDC_SET_SELECTED_CONFIG
+# define HAVE_QMI_ACTION_PDC_ACTIVATE_CONFIG
+#endif
+
+#if defined HAVE_QMI_MESSAGE_PDC_DEACTIVATE_CONFIG && \
+    defined HAVE_QMI_INDICATION_PDC_DEACTIVATE_CONFIG
+# define HAVE_QMI_ACTION_PDC_DEACTIVATE_CONFIG
+#endif
+
+#if defined HAVE_QMI_MESSAGE_PDC_LOAD_CONFIG && \
+    defined HAVE_QMI_INDICATION_PDC_LOAD_CONFIG
+# define HAVE_QMI_ACTION_PDC_LOAD_CONFIG
+#endif
+
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_ACTION_PDC_LIST_CONFIGS
     {
         "pdc-list-configs", 0, 0, G_OPTION_ARG_STRING, &list_configs_str,
         "List all configs",
         "[(platform|software)]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_PDC_DELETE_CONFIG
     {
         "pdc-delete-config", 0, 0, G_OPTION_ARG_STRING, &delete_config_str,
         "Delete config",
         "[(platform|software),ConfigId]"
     },
+#endif
+#if defined HAVE_QMI_ACTION_PDC_ACTIVATE_CONFIG
     {
         "pdc-activate-config", 0, 0, G_OPTION_ARG_STRING, &activate_config_str,
         "Activate config",
         "[(platform|software),ConfigId]"
     },
+#endif
+#if defined HAVE_QMI_ACTION_PDC_DEACTIVATE_CONFIG
     {
         "pdc-deactivate-config", 0, 0, G_OPTION_ARG_STRING, &deactivate_config_str,
         "Deactivate config",
         "[(platform|software),ConfigId]"
     },
+#endif
+#if defined HAVE_QMI_ACTION_PDC_LOAD_CONFIG
     {
         "pdc-load-config", 0, 0, G_OPTION_ARG_STRING, &load_config_str,
         "Load config to device",
         "[Path to config]"
     },
+#endif
     {
         "pdc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
         "Just allocate or release a PDC client. Use with `--client-no-release-cid' and/or `--client-cid'",
@@ -245,6 +283,10 @@ operation_shutdown (gboolean operation_status)
 /******************************************************************************/
 /* Common */
 
+#if defined HAVE_QMI_ACTION_PDC_ACTIVATE_CONFIG || \
+    defined HAVE_QMI_ACTION_PDC_DEACTIVATE_CONFIG || \
+    defined HAVE_QMI_MESSAGE_PDC_DELETE_CONFIG
+
 static QmiConfigTypeAndId *
 parse_type_and_id (const gchar *str)
 {
@@ -281,8 +323,14 @@ parse_type_and_id (const gchar *str)
     return result;
 }
 
+#endif /* HAVE_QMI_ACTION_PDC_ACTIVATE_CONFIG
+        * HAVE_QMI_ACTION_PDC_DEACTIVATE_CONFIG
+        * HAVE_QMI_MESSAGE_PDC_DELETE_CONFIG */
+
 /******************************************************************************/
 /* List configs and get selected config */
+
+#if defined HAVE_QMI_ACTION_PDC_LIST_CONFIGS
 
 static const char *
 status_string (GArray *id)
@@ -697,8 +745,12 @@ run_list_configs (void)
     qmi_message_pdc_get_selected_config_input_unref (get_selected_config_input);
 }
 
+#endif /* HAVE_QMI_ACTION_PDC_LIST_CONFIGS */
+
 /******************************************************************************/
 /* Activate config */
+
+#if defined HAVE_QMI_ACTION_PDC_ACTIVATE_CONFIG
 
 static void
 device_removed_indication (QmiDevice *device)
@@ -910,8 +962,12 @@ run_activate_config (void)
     qmi_message_pdc_set_selected_config_input_unref (input);
 }
 
+#endif /* HAVE_QMI_ACTION_PDC_ACTIVATE_CONFIG */
+
 /******************************************************************************/
 /* Deactivate config */
+
+#if defined HAVE_QMI_ACTION_PDC_DEACTIVATE_CONFIG
 
 static void
 deactivate_config_ready_indication (QmiClientPdc *client,
@@ -1019,8 +1075,12 @@ run_deactivate_config (void)
     qmi_message_pdc_deactivate_config_input_unref (input);
 }
 
+#endif /* HAVE_QMI_ACTION_PDC_DEACTIVATE_CONFIG */
+
 /******************************************************************************/
 /* Delete config */
+
+#if defined HAVE_QMI_MESSAGE_PDC_DELETE_CONFIG
 
 static void
 delete_config_ready (QmiClientPdc *client,
@@ -1098,8 +1158,12 @@ run_delete_config (void)
     qmi_message_pdc_delete_config_input_unref (input);
 }
 
+#endif /* HAVE_QMI_MESSAGE_PDC_DELETE_CONFIG */
+
 /******************************************************************************/
 /* Load config */
+
+#if defined HAVE_QMI_ACTION_PDC_LOAD_CONFIG
 
 static LoadConfigFileData *
 load_config_file_from_string (const gchar *str)
@@ -1324,6 +1388,8 @@ run_load_config (void)
     qmi_message_pdc_load_config_input_unref (input);
 }
 
+#endif /* HAVE_QMI_ACTION_PDC_LOAD_CONFIG */
+
 /******************************************************************************/
 /* Common */
 
@@ -1342,35 +1408,40 @@ qmicli_pdc_run (QmiDevice *device,
     /* Initialize context */
     ctx = context_new (device, client, cancellable);
 
-    /* Request to get all configs */
+#if defined HAVE_QMI_ACTION_PDC_LIST_CONFIGS
     if (list_configs_str) {
         run_list_configs ();
         return;
     }
+#endif
 
-    /* Request to activate config */
+#if defined HAVE_QMI_ACTION_PDC_ACTIVATE_CONFIG
     if (activate_config_str) {
         run_activate_config ();
         return;
     }
+#endif
 
-    /* Request to deactivate config */
+#if defined HAVE_QMI_ACTION_PDC_DEACTIVATE_CONFIG
     if (deactivate_config_str) {
         run_deactivate_config ();
         return;
     }
+#endif
 
-    /* Request to delete config */
+#if defined HAVE_QMI_MESSAGE_PDC_DELETE_CONFIG
     if (delete_config_str) {
         run_delete_config ();
         return;
     }
+#endif
 
-    /* Request to load config */
+#if defined HAVE_QMI_ACTION_PDC_LOAD_CONFIG
     if (load_config_str) {
         run_load_config ();
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -1380,3 +1451,5 @@ qmicli_pdc_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_PDC */

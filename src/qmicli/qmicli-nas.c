@@ -33,6 +33,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_NAS
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -63,78 +65,114 @@ static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_STRENGTH
     { "nas-get-signal-strength", 0, 0, G_OPTION_ARG_NONE, &get_signal_strength_flag,
       "Get signal strength",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_INFO
     { "nas-get-signal-info", 0, 0, G_OPTION_ARG_NONE, &get_signal_info_flag,
       "Get signal info",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_TX_RX_INFO
     { "nas-get-tx-rx-info", 0, 0, G_OPTION_ARG_STRING, &get_tx_rx_info_str,
       "Get TX/RX info",
       "[(Radio Interface)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK
     { "nas-get-home-network", 0, 0, G_OPTION_ARG_NONE, &get_home_network_flag,
       "Get home network",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SERVING_SYSTEM
     { "nas-get-serving-system", 0, 0, G_OPTION_ARG_NONE, &get_serving_system_flag,
       "Get serving system",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO
     { "nas-get-system-info", 0, 0, G_OPTION_ARG_NONE, &get_system_info_flag,
       "Get system info",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_TECHNOLOGY_PREFERENCE
     { "nas-get-technology-preference", 0, 0, G_OPTION_ARG_NONE, &get_technology_preference_flag,
       "Get technology preference",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_SELECTION_PREFERENCE
     { "nas-get-system-selection-preference", 0, 0, G_OPTION_ARG_NONE, &get_system_selection_preference_flag,
       "Get system selection preference",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE
     { "nas-set-system-selection-preference", 0, 0, G_OPTION_ARG_STRING, &set_system_selection_preference_str,
       "Set system selection preference",
       "[cdma-1x|cdma-1xevdo|gsm|umts|lte|td-scdma][,[automatic|manual=MCCMNC]]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
     { "nas-network-scan", 0, 0, G_OPTION_ARG_NONE, &network_scan_flag,
       "Scan networks",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
     { "nas-get-cell-location-info", 0, 0, G_OPTION_ARG_NONE, &get_cell_location_info_flag,
       "Get Cell Location Info",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_FORCE_NETWORK_SEARCH
     { "nas-force-network-search", 0, 0, G_OPTION_ARG_NONE, &force_network_search_flag,
       "Force network search",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME
     { "nas-get-operator-name", 0, 0, G_OPTION_ARG_NONE, &get_operator_name_flag,
       "Get operator name data",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_LTE_CPHY_CA_INFO
     { "nas-get-lte-cphy-ca-info", 0, 0, G_OPTION_ARG_NONE, &get_lte_cphy_ca_info_flag,
       "Get LTE Cphy CA Info",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_RF_BAND_INFORMATION
     { "nas-get-rf-band-info", 0, 0, G_OPTION_ARG_NONE, &get_rf_band_info_flag,
       "Get RF Band Info",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SUPPORTED_MESSAGES
     { "nas-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS
     { "nas-swi-get-status", 0, 0, G_OPTION_ARG_NONE, &swi_get_status_flag,
       "Get status ((Sierra Wireless specific)",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_RESET
     { "nas-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
     },
+#endif
     { "nas-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a NAS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -218,6 +256,9 @@ operation_shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status, FALSE);
 }
 
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_INFO || \
+    defined HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_STRENGTH
+
 static gboolean
 get_db_from_sinr_level (QmiNasEvdoSinrLevel level,
                         gdouble *out)
@@ -257,6 +298,11 @@ get_db_from_sinr_level (QmiNasEvdoSinrLevel level,
         return FALSE;
     }
 }
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_INFO
+        * HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_STRENGTH */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_INFO
 
 static void
 get_signal_info_ready (QmiClientNas *client,
@@ -378,6 +424,10 @@ get_signal_info_ready (QmiClientNas *client,
     qmi_message_nas_get_signal_info_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_INFO */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_STRENGTH
 
 static QmiMessageNasGetSignalStrengthInput *
 get_signal_strength_input_create (void)
@@ -542,6 +592,10 @@ get_signal_strength_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_STRENGTH */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_TX_RX_INFO
+
 static void
 get_tx_rx_info_ready (QmiClientNas *client,
                       GAsyncResult *res,
@@ -697,6 +751,10 @@ get_tx_rx_info_input_create (const gchar *str,
     return input;
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_TX_RX_INFO */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK
+
 static void
 get_home_network_ready (QmiClientNas *client,
                         GAsyncResult *res)
@@ -801,6 +859,10 @@ get_home_network_ready (QmiClientNas *client,
     qmi_message_nas_get_home_network_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SERVING_SYSTEM
 
 static void
 get_serving_system_ready (QmiClientNas *client,
@@ -1242,6 +1304,10 @@ get_serving_system_ready (QmiClientNas *client,
     qmi_message_nas_get_serving_system_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_SERVING_SYSTEM */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO
 
 static void
 get_system_info_ready (QmiClientNas *client,
@@ -1969,6 +2035,10 @@ get_system_info_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_TECHNOLOGY_PREFERENCE
+
 static void
 get_technology_preference_ready (QmiClientNas *client,
                                  GAsyncResult *res)
@@ -2022,6 +2092,10 @@ get_technology_preference_ready (QmiClientNas *client,
     qmi_message_nas_get_technology_preference_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_TECHNOLOGY_PREFERENCE */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_SELECTION_PREFERENCE
 
 static void
 get_system_selection_preference_ready (QmiClientNas *client,
@@ -2264,6 +2338,10 @@ get_system_selection_preference_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_SELECTION_PREFERENCE */
+
+#if defined HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE
+
 static QmiMessageNasSetSystemSelectionPreferenceInput *
 set_system_selection_preference_input_create (const gchar *str)
 {
@@ -2377,6 +2455,10 @@ set_system_selection_preference_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE */
+
+#if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
+
 static void
 network_scan_ready (QmiClientNas *client,
                     GAsyncResult *res)
@@ -2477,6 +2559,10 @@ network_scan_ready (QmiClientNas *client,
     qmi_message_nas_network_scan_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
 
 static gchar *
 str_from_bcd_plmn (const gchar *bcd)
@@ -3015,6 +3101,10 @@ get_cell_location_info_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO */
+
+#if defined HAVE_QMI_MESSAGE_NAS_FORCE_NETWORK_SEARCH
+
 static void
 force_network_search_ready (QmiClientNas *client,
                             GAsyncResult *res)
@@ -3043,6 +3133,10 @@ force_network_search_ready (QmiClientNas *client,
     qmi_message_nas_force_network_search_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_NAS_FORCE_NETWORK_SEARCH */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME
 
 static void
 get_operator_name_ready (QmiClientNas *client,
@@ -3176,6 +3270,10 @@ get_operator_name_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_LTE_CPHY_CA_INFO
+
 static void
 get_lte_cphy_ca_info_ready (QmiClientNas *client,
                             GAsyncResult *res)
@@ -3290,6 +3388,10 @@ get_lte_cphy_ca_info_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_LTE_CPHY_CA_INFO */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_RF_BAND_INFORMATION
+
 static void
 get_rf_band_info_ready (QmiClientNas *client,
                         GAsyncResult *res)
@@ -3381,6 +3483,10 @@ get_rf_band_info_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_RF_BAND_INFORMATION */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SUPPORTED_MESSAGES
+
 static void
 get_supported_messages_ready (QmiClientNas *client,
                               GAsyncResult *res)
@@ -3419,9 +3525,13 @@ get_supported_messages_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_SUPPORTED_MESSAGES */
+
+#if defined HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS
+
 static void
 swi_get_status_ready (QmiClientNas *client,
-                              GAsyncResult *res)
+                      GAsyncResult *res)
 {
     QmiMessageNasSwiGetStatusOutput *output;
     GError *error = NULL;
@@ -3511,6 +3621,10 @@ swi_get_status_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS */
+
+#if defined HAVE_QMI_MESSAGE_NAS_RESET
+
 static void
 reset_ready (QmiClientNas *client,
              GAsyncResult *res)
@@ -3541,6 +3655,8 @@ reset_ready (QmiClientNas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_RESET */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -3559,7 +3675,7 @@ qmicli_nas_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Request to get signal strength? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_STRENGTH
     if (get_signal_strength_flag) {
         QmiMessageNasGetSignalStrengthInput *input;
 
@@ -3575,8 +3691,9 @@ qmicli_nas_run (QmiDevice *device,
         qmi_message_nas_get_signal_strength_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get signal info? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SIGNAL_INFO
     if (get_signal_info_flag) {
         g_debug ("Asynchronously getting signal info...");
         qmi_client_nas_get_signal_info (ctx->client,
@@ -3587,8 +3704,9 @@ qmicli_nas_run (QmiDevice *device,
                                         NULL);
         return;
     }
+#endif
 
-    /* Request to get tx/rx info? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_TX_RX_INFO
     if (get_tx_rx_info_str) {
         QmiMessageNasGetTxRxInfoInput *input;
         QmiNasRadioInterface interface;
@@ -3610,8 +3728,9 @@ qmicli_nas_run (QmiDevice *device,
         qmi_message_nas_get_tx_rx_info_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get home network? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK
     if (get_home_network_flag) {
         g_debug ("Asynchronously getting home network...");
         qmi_client_nas_get_home_network (ctx->client,
@@ -3622,8 +3741,9 @@ qmicli_nas_run (QmiDevice *device,
                                          NULL);
         return;
     }
+#endif
 
-    /* Request to get serving system? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SERVING_SYSTEM
     if (get_serving_system_flag) {
         g_debug ("Asynchronously getting serving system...");
         qmi_client_nas_get_serving_system (ctx->client,
@@ -3634,8 +3754,9 @@ qmicli_nas_run (QmiDevice *device,
                                            NULL);
         return;
     }
+#endif
 
-    /* Request to get system info? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO
     if (get_system_info_flag) {
         g_debug ("Asynchronously getting system info...");
         qmi_client_nas_get_system_info (ctx->client,
@@ -3646,8 +3767,9 @@ qmicli_nas_run (QmiDevice *device,
                                         NULL);
         return;
     }
+#endif
 
-    /* Request to get technology preference? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_TECHNOLOGY_PREFERENCE
     if (get_technology_preference_flag) {
         g_debug ("Asynchronously getting technology preference...");
         qmi_client_nas_get_technology_preference (ctx->client,
@@ -3658,8 +3780,9 @@ qmicli_nas_run (QmiDevice *device,
                                                   NULL);
         return;
     }
+#endif
 
-    /* Request to get system_selection preference? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_SELECTION_PREFERENCE
     if (get_system_selection_preference_flag) {
         g_debug ("Asynchronously getting system selection preference...");
         qmi_client_nas_get_system_selection_preference (ctx->client,
@@ -3670,8 +3793,9 @@ qmicli_nas_run (QmiDevice *device,
                                                         NULL);
         return;
     }
+#endif
 
-    /* Request to set system_selection preference? */
+#if defined HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE
     if (set_system_selection_preference_str) {
         QmiMessageNasSetSystemSelectionPreferenceInput *input;
         g_debug ("Asynchronously setting system selection preference...");
@@ -3691,8 +3815,9 @@ qmicli_nas_run (QmiDevice *device,
         qmi_message_nas_set_system_selection_preference_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to scan networks? */
+#if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
     if (network_scan_flag) {
         g_debug ("Asynchronously scanning networks...");
         qmi_client_nas_network_scan (ctx->client,
@@ -3703,8 +3828,9 @@ qmicli_nas_run (QmiDevice *device,
                                      NULL);
         return;
     }
+#endif
 
-    /* Request to get cell location info? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
     if (get_cell_location_info_flag) {
         g_debug ("Asynchronously getting cell location info ...");
         qmi_client_nas_get_cell_location_info (ctx->client,
@@ -3715,8 +3841,9 @@ qmicli_nas_run (QmiDevice *device,
                                                NULL);
         return;
     }
+#endif
 
-    /* Request to force network search */
+#if defined HAVE_QMI_MESSAGE_NAS_FORCE_NETWORK_SEARCH
     if (force_network_search_flag) {
         g_debug ("Forcing network search...");
         qmi_client_nas_force_network_search (ctx->client,
@@ -3727,8 +3854,9 @@ qmicli_nas_run (QmiDevice *device,
                                              NULL);
         return;
     }
+#endif
 
-    /* Request to get operator name data */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME
     if (get_operator_name_flag) {
         g_debug ("Asynchronously getting operator name data...");
         qmi_client_nas_get_operator_name (ctx->client,
@@ -3739,8 +3867,9 @@ qmicli_nas_run (QmiDevice *device,
                                           NULL);
         return;
     }
+#endif
 
-    /* Request to get carrier aggregation info? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_LTE_CPHY_CA_INFO
     if (get_lte_cphy_ca_info_flag) {
         g_debug ("Asynchronously getting carrier aggregation info ...");
         qmi_client_nas_get_lte_cphy_ca_info (ctx->client,
@@ -3751,8 +3880,9 @@ qmicli_nas_run (QmiDevice *device,
                                              NULL);
         return;
     }
+#endif
 
-    /* Request to get rf band info? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_RF_BAND_INFORMATION
     if (get_rf_band_info_flag) {
         g_debug ("Asynchronously getting RF band info ...");
         qmi_client_nas_get_rf_band_information (ctx->client,
@@ -3763,8 +3893,9 @@ qmicli_nas_run (QmiDevice *device,
                                                 NULL);
         return;
     }
+#endif
 
-    /* Request to list supported messages? */
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SUPPORTED_MESSAGES
     if (get_supported_messages_flag) {
         g_debug ("Asynchronously getting supported NAS messages...");
         qmi_client_nas_get_supported_messages (ctx->client,
@@ -3775,8 +3906,9 @@ qmicli_nas_run (QmiDevice *device,
                                                NULL);
         return;
     }
+#endif
 
-    /* Request to get status */
+#if defined HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS
     if (swi_get_status_flag) {
         g_debug ("Asynchronously getting status (Sierra Wireless specific)...");
         qmi_client_nas_swi_get_status (ctx->client,
@@ -3787,8 +3919,9 @@ qmicli_nas_run (QmiDevice *device,
                                        NULL);
         return;
     }
+#endif
 
-    /* Request to reset NAS service? */
+#if defined HAVE_QMI_MESSAGE_NAS_RESET
     if (reset_flag) {
         g_debug ("Asynchronously resetting NAS service...");
         qmi_client_nas_reset (ctx->client,
@@ -3799,6 +3932,7 @@ qmicli_nas_run (QmiDevice *device,
                               NULL);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -3808,3 +3942,5 @@ qmicli_nas_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_NAS */

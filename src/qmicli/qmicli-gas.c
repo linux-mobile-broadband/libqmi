@@ -33,6 +33,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_GAS
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -48,6 +50,7 @@ static gint     set_active_firmware_int = -1;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_LIST
     { "gas-dms-get-firmware-list", 0, 0, G_OPTION_ARG_NONE, &get_firmware_list_flag,
       "Gets the list of stored firmware",
       NULL
@@ -56,10 +59,13 @@ static GOptionEntry entries[] = {
       "Gets the currently active firmware",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_SET_ACTIVE_FIRMWARE
     { "gas-dms-set-active-firmware", 0, 0, G_OPTION_ARG_INT, &set_active_firmware_int,
       "Sets the active firmware index",
       "[index]"
     },
+#endif
     { "gas-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a GAS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -128,6 +134,8 @@ operation_shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status, FALSE);
 }
 
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_LIST
+
 static void
 print_firmware_listing (guint8       idx,
                         const gchar *name,
@@ -189,6 +197,10 @@ get_firmware_list_ready (QmiClientGas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_LIST */
+
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_SET_ACTIVE_FIRMWARE
+
 static void
 set_active_firmware_ready (QmiClientGas *client,
                            GAsyncResult *res)
@@ -218,6 +230,8 @@ set_active_firmware_ready (QmiClientGas *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_GAS_DMS_SET_ACTIVE_FIRMWARE */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -236,15 +250,20 @@ qmicli_gas_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Request to get list of stored firmware? */
-    if (get_firmware_list_flag) {
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_LIST
+    if (get_firmware_list_flag || get_active_firmware_flag) {
         QmiMessageGasDmsGetFirmwareListInput *input;
 
         input = qmi_message_gas_dms_get_firmware_list_input_new ();
-        qmi_message_gas_dms_get_firmware_list_input_set_mode (input,
-                                                              QMI_GAS_FIRMWARE_LISTING_MODE_ALL_FIRMWARE,
-                                                              NULL);
-        g_debug ("Asynchronously getting stored firmware list...");
+        if (get_firmware_list_flag) {
+            g_debug ("Asynchronously getting full firmware list...");
+            qmi_message_gas_dms_get_firmware_list_input_set_mode (input, QMI_GAS_FIRMWARE_LISTING_MODE_ALL_FIRMWARE, NULL);
+        } else if (get_active_firmware_flag) {
+            g_debug ("Asynchronously getting active firmware list...");
+            qmi_message_gas_dms_get_firmware_list_input_set_mode (input, QMI_GAS_FIRMWARE_LISTING_MODE_ACTIVE_FIRMWARE, NULL);
+        } else
+            g_assert_not_reached ();
+
         qmi_client_gas_dms_get_firmware_list (ctx->client,
                                               input,
                                               10,
@@ -254,27 +273,9 @@ qmicli_gas_run (QmiDevice *device,
         qmi_message_gas_dms_get_firmware_list_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get list of stored firmware? */
-    if (get_active_firmware_flag) {
-        QmiMessageGasDmsGetFirmwareListInput *input;
-
-        input = qmi_message_gas_dms_get_firmware_list_input_new ();
-        qmi_message_gas_dms_get_firmware_list_input_set_mode (input,
-                                                              QMI_GAS_FIRMWARE_LISTING_MODE_ACTIVE_FIRMWARE,
-                                                              NULL);
-        g_debug ("Asynchronously getting active firmware...");
-        qmi_client_gas_dms_get_firmware_list (ctx->client,
-                                              input,
-                                              10,
-                                              ctx->cancellable,
-                                              (GAsyncReadyCallback)get_firmware_list_ready,
-                                              NULL);
-        qmi_message_gas_dms_get_firmware_list_input_unref (input);
-        return;
-    }
-
-    /* Request to set active firmware index? */
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_SET_ACTIVE_FIRMWARE
     if (set_active_firmware_int >= 0) {
         QmiMessageGasDmsSetActiveFirmwareInput *input;
 
@@ -290,6 +291,7 @@ qmicli_gas_run (QmiDevice *device,
         qmi_message_gas_dms_set_active_firmware_input_unref (input);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -299,3 +301,5 @@ qmicli_gas_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_GAS */

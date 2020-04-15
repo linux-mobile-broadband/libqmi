@@ -611,6 +611,8 @@ void qmi_utils_write_fixed_size_string_to_buffer  (guint8      **buffer,
                                                    guint16       fixed_size,
                                                    const gchar  *in);
 
+#if defined HAVE_QMI_MESSAGE_DMS_SET_SERVICE_PROGRAMMING_CODE
+
 /**
  * qmi_message_dms_set_service_programming_code_input_get_new:
  * @self: a #QmiMessageDmsSetServiceProgrammingCodeInput.
@@ -686,6 +688,8 @@ gboolean qmi_message_dms_set_service_programming_code_input_set_current (
     QmiMessageDmsSetServiceProgrammingCodeInput *self,
     const gchar *arg_current,
     GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_SERVICE_PROGRAMMING_CODE */
 
 /* The following type exists just so that we can get deprecation warnings */
 G_DEPRECATED
@@ -1134,6 +1138,8 @@ gboolean qmi_message_tlv_read_gfloat (QmiMessage  *self,
                                       gfloat      *out,
                                       GError     **error);
 
+#if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
+
 /**
  * qmi_message_uim_read_transparent_input_get_session_information:
  * @self: a #QmiMessageUimReadTransparentInput.
@@ -1175,6 +1181,10 @@ gboolean qmi_message_uim_read_transparent_input_set_session_information (
     QmiUimSessionType value_session_information_session_type,
     const gchar *value_session_information_application_identifier,
     GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT */
+
+#if defined HAVE_QMI_MESSAGE_UIM_READ_RECORD
 
 /**
  * qmi_message_uim_read_record_input_get_session_information:
@@ -1218,6 +1228,10 @@ gboolean qmi_message_uim_read_record_input_set_session_information (
     const gchar *value_session_information_application_identifier,
     GError **error);
 
+#endif /* HAVE_QMI_MESSAGE_UIM_READ_RECORD */
+
+#if defined HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES
+
 /**
  * qmi_message_uim_get_file_attributes_input_get_session_information:
  * @self: a #QmiMessageUimGetFileAttributesInput.
@@ -1259,6 +1273,10 @@ gboolean qmi_message_uim_get_file_attributes_input_set_session_information (
     QmiUimSessionType value_session_information_session_type,
     const gchar *value_session_information_application_identifier,
     GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES */
+
+#if defined HAVE_QMI_MESSAGE_UIM_SET_PIN_PROTECTION
 
 /**
  * qmi_message_uim_set_pin_protection_input_get_session_information:
@@ -1302,6 +1320,10 @@ gboolean qmi_message_uim_set_pin_protection_input_set_session_information (
     const gchar *value_session_information_application_identifier,
     GError **error);
 
+#endif /* HAVE_QMI_MESSAGE_UIM_SET_PIN_PROTECTION */
+
+#if defined HAVE_QMI_MESSAGE_UIM_VERIFY_PIN
+
 /**
  * qmi_message_uim_verify_pin_input_get_session_information:
  * @self: a #QmiMessageUimVerifyPinInput.
@@ -1343,6 +1365,10 @@ gboolean qmi_message_uim_verify_pin_input_set_session_information (
     QmiUimSessionType value_session_information_session_type,
     const gchar *value_session_information_application_identifier,
     GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_UIM_VERIFY_PIN */
+
+#if defined HAVE_QMI_MESSAGE_UIM_UNBLOCK_PIN
 
 /**
  * qmi_message_uim_unblock_pin_input_get_session_information:
@@ -1386,6 +1412,10 @@ gboolean qmi_message_uim_unblock_pin_input_set_session_information (
     const gchar *value_session_information_application_identifier,
     GError **error);
 
+#endif /* HAVE_QMI_MESSAGE_UIM_UNBLOCK_PIN */
+
+#if defined HAVE_QMI_MESSAGE_UIM_CHANGE_PIN
+
 /**
  * qmi_message_uim_change_pin_input_get_session_information:
  * @self: a #QmiMessageUimChangePinInput.
@@ -1428,6 +1458,10 @@ gboolean qmi_message_uim_change_pin_input_set_session_information (
     const gchar *value_session_information_application_identifier,
     GError **error);
 
+#endif /* HAVE_QMI_MESSAGE_UIM_CHANGE_PIN */
+
+#if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
+
 /**
  * qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size:
  * @self: a #QmiMessageWdaGetDataFormatOutput.
@@ -1446,6 +1480,8 @@ gboolean qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_
     (QmiMessageWdaGetDataFormatOutput *self,
      guint32 *value_uplink_data_aggregation_max_size,
      GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT */
 
 /**
  * QmiDmsDellFirmwareVersionType:
@@ -1481,6 +1517,8 @@ G_DEPRECATED_FOR (QMI_TYPE_DMS_FOXCONN_FIRMWARE_VERSION_TYPE)
  * Deprecated: 1.26: Use qmi_dms_foxconn_firmware_version_type_get_string() instead.
  */
 const gchar *qmi_dms_dell_firmware_version_type_get_string (QmiDmsDellFirmwareVersionType val);
+
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION
 
 /**
  * QmiMessageDmsDellGetFirmwareVersionInput:
@@ -1703,6 +1741,8 @@ QmiMessageDmsDellGetFirmwareVersionOutput *qmi_client_dms_dell_get_firmware_vers
     GAsyncResult *res,
     GError **error);
 
+#endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION */
+
 /*****************************************************************************/
 /* Helper enums for the 'QMI DMS Dell Change Device Mode' message */
 
@@ -1741,6 +1781,8 @@ G_DEPRECATED_FOR (QMI_TYPE_DMS_FOXCONN_DEVICE_MODE)
  */
 G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_string)
 const gchar *qmi_dms_dell_device_mode_get_string (QmiDmsDellDeviceMode val);
+
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE
 
 /**
  * QmiMessageDmsDellChangeDeviceModeInput:
@@ -1942,6 +1984,10 @@ QmiMessageDmsDellChangeDeviceModeOutput *qmi_client_dms_dell_change_device_mode_
     GAsyncResult *res,
     GError **error);
 
+#endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME
+
 /**
  * qmi_message_nas_get_operator_name_output_get_operator_nitz_information:
  * @self: a #QmiMessageNasGetOperatorNameOutput.
@@ -1970,6 +2016,10 @@ gboolean qmi_message_nas_get_operator_name_output_get_operator_nitz_information 
     const gchar **value_operator_nitz_information_long_name,
     const gchar **value_operator_nitz_information_short_name,
     GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME */
+
+#if defined HAVE_QMI_INDICATION_NAS_OPERATOR_NAME
 
 /**
  * qmi_indication_nas_operator_name_output_get_operator_nitz_information:
@@ -2000,6 +2050,10 @@ gboolean qmi_indication_nas_operator_name_output_get_operator_nitz_information (
     const gchar **value_operator_nitz_information_short_name,
     GError **error);
 
+#endif /* HAVE_QMI_INDICATION_NAS_OPERATOR_NAME */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK
+
 /**
  * qmi_message_nas_get_home_network_output_get_home_network_3gpp2:
  * @self: a #QmiMessageNasGetHomeNetworkOutput.
@@ -2026,6 +2080,8 @@ gboolean qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
     QmiNasNetworkDescriptionEncoding *value_home_network_3gpp2_description_encoding,
     const gchar **value_home_network_3gpp2_description,
     GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK */
 
 #endif /* QMI_DISABLE_DEPRECATED */
 

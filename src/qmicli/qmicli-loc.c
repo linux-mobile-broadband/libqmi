@@ -34,6 +34,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_LOC
+
 /* Context */
 
 typedef enum {
@@ -72,56 +74,77 @@ static gboolean noop_flag;
 #define DEFAULT_LOC_TIMEOUT_SECS 30
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_LOC_START || defined HAVE_QMI_MESSAGE_LOC_STOP
     {
         "loc-session-id", 0, 0, G_OPTION_ARG_INT, &session_id,
         "Session ID for the LOC session",
         "[ID]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_LOC_START
     {
         "loc-start", 0, 0, G_OPTION_ARG_NONE, &start_flag,
         "Start location gathering",
         NULL,
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_LOC_STOP
     {
         "loc-stop", 0, 0, G_OPTION_ARG_NONE, &stop_flag,
         "Stop location gathering",
         NULL,
     },
+#endif
+#if defined HAVE_QMI_INDICATION_LOC_POSITION_REPORT && defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
     {
         "loc-get-position-report", 0, 0, G_OPTION_ARG_NONE, &get_position_report_flag,
         "Get position reported by the location module",
         NULL,
     },
+#endif
+#if defined HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO && defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
     {
         "loc-get-gnss-sv-info", 0, 0, G_OPTION_ARG_NONE, &get_gnss_sv_info_flag,
         "Show GNSS space vehicle info",
         NULL,
     },
+#endif
+#if (defined HAVE_QMI_INDICATION_LOC_POSITION_REPORT || defined HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO) && \
+    defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
     {
         "loc-timeout", 0, 0, G_OPTION_ARG_INT, &timeout,
         "Maximum time to wait for information in `--loc-get-position-report' and `--loc-get-gnss-sv-info' (default 30s)",
         "[SECS]",
     },
+#endif
+#if defined HAVE_QMI_INDICATION_LOC_POSITION_REPORT && defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
     {
         "loc-follow-position-report", 0, 0, G_OPTION_ARG_NONE, &follow_position_report_flag,
         "Follow all position updates reported by the location module indefinitely",
         NULL,
     },
+#endif
+#if defined HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO && defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
     {
         "loc-follow-gnss-sv-info", 0, 0, G_OPTION_ARG_NONE, &follow_gnss_sv_info_flag,
         "Follow all GNSS space vehicle info updates reported by the location module indefinitely",
         NULL,
     },
+#endif
+#if defined HAVE_QMI_INDICATION_LOC_NMEA && defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
     {
         "loc-follow-nmea", 0, 0, G_OPTION_ARG_NONE, &follow_nmea_flag,
         "Follow all NMEA trace updates reported by the location module indefinitely",
         NULL,
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_LOC_DELETE_ASSISTANCE_DATA
     {
         "loc-delete-assistance-data", 0, 0, G_OPTION_ARG_NONE, &delete_assistance_data_flag,
         "Delete positioning assistance data",
         NULL,
     },
+#endif
     { "loc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a LOC client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -229,6 +252,11 @@ operation_shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status, FALSE);
 }
 
+#if (defined HAVE_QMI_INDICATION_LOC_POSITION_REPORT || \
+     defined HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO ||    \
+     defined HAVE_QMI_INDICATION_LOC_NMEA) &&           \
+    defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
+
 static void monitoring_step_run (void);
 
 static gboolean
@@ -259,6 +287,12 @@ monitoring_cancelled (GCancellable *cancellable)
     g_assert_not_reached ();
 }
 
+#endif /* HAVE_QMI_INDICATION_LOC_POSITION_REPORT
+        * HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO
+        * HAVE_QMI_INDICATION_LOC_NMEA */
+
+#if defined HAVE_QMI_INDICATION_LOC_NMEA && defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
+
 static void
 nmea_received (QmiClientLoc               *client,
                QmiIndicationLocNmeaOutput *output)
@@ -270,6 +304,10 @@ nmea_received (QmiClientLoc               *client,
         /* Note: NMEA traces already have an EOL */
         g_print ("%s", nmea);
 }
+
+#endif /* HAVE_QMI_INDICATION_LOC_NMEA */
+
+#if defined HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO && defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
 
 static void
 gnss_sv_info_received (QmiClientLoc                     *client,
@@ -322,6 +360,10 @@ gnss_sv_info_received (QmiClientLoc                     *client,
     if (get_gnss_sv_info_flag)
         operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO */
+
+#if defined HAVE_QMI_INDICATION_LOC_POSITION_REPORT && defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
 
 static void
 position_report_received (QmiClientLoc                         *client,
@@ -534,26 +576,39 @@ position_report_received (QmiClientLoc                         *client,
         operation_shutdown (FALSE);
 }
 
+#endif /* HAVE_QMI_INDICATION_LOC_POSITION_REPORT */
+
+#if (defined HAVE_QMI_INDICATION_LOC_POSITION_REPORT || \
+     defined HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO ||    \
+     defined HAVE_QMI_INDICATION_LOC_NMEA) && \
+    defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
+
 static void
 monitoring_step_ongoing (void)
 {
+#if defined HAVE_QMI_INDICATION_LOC_POSITION_REPORT
     if (get_position_report_flag || follow_position_report_flag)
         ctx->position_report_indication_id = g_signal_connect (ctx->client,
                                                                "position-report",
                                                                G_CALLBACK (position_report_received),
                                                                NULL);
+#endif
 
+#if defined HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO
     if (get_gnss_sv_info_flag || follow_gnss_sv_info_flag)
         ctx->gnss_sv_info_indication_id = g_signal_connect (ctx->client,
                                                             "gnss-sv-info",
                                                             G_CALLBACK (gnss_sv_info_received),
                                                             NULL);
+#endif
 
+#if defined HAVE_QMI_INDICATION_LOC_NMEA
     if (follow_nmea_flag)
         ctx->nmea_indication_id = g_signal_connect (ctx->client,
                                                     "nmea",
                                                     G_CALLBACK (nmea_received),
                                                     NULL);
+#endif
 
     g_assert (ctx->position_report_indication_id ||
               ctx->gnss_sv_info_indication_id ||
@@ -668,6 +723,12 @@ monitoring_step_run (void)
     }
 }
 
+#endif /* HAVE_QMI_INDICATION_LOC_POSITION_REPORT
+        * HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO
+        * HAVE_QMI_INDICATION_LOC_NMEA */
+
+#if defined HAVE_QMI_MESSAGE_LOC_DELETE_ASSISTANCE_DATA
+
 static gboolean
 delete_assistance_data_timed_out (void)
 {
@@ -731,6 +792,10 @@ delete_assistance_data_ready (QmiClientLoc *client,
     qmi_message_loc_delete_assistance_data_output_unref (output);
 }
 
+#endif /* HAVE_QMI_MESSAGE_LOC_DELETE_ASSISTANCE_DATA */
+
+#if defined HAVE_QMI_MESSAGE_LOC_STOP
+
 static void
 stop_ready (QmiClientLoc *client,
             GAsyncResult *res)
@@ -760,6 +825,10 @@ stop_ready (QmiClientLoc *client,
     qmi_message_loc_stop_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_LOC_STOP */
+
+#if defined HAVE_QMI_MESSAGE_LOC_START
 
 static void
 start_ready (QmiClientLoc *client,
@@ -791,6 +860,8 @@ start_ready (QmiClientLoc *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_LOC_START */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -809,7 +880,7 @@ qmicli_loc_run (QmiDevice    *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Request to start location gathering? */
+#if defined HAVE_QMI_MESSAGE_LOC_START
     if (start_flag) {
         QmiMessageLocStartInput *input;
 
@@ -827,8 +898,9 @@ qmicli_loc_run (QmiDevice    *device,
         qmi_message_loc_start_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to stop location gathering? */
+#if defined HAVE_QMI_MESSAGE_LOC_STOP
     if (stop_flag) {
         QmiMessageLocStopInput *input;
 
@@ -843,8 +915,9 @@ qmicli_loc_run (QmiDevice    *device,
         qmi_message_loc_stop_input_unref (input);
         return;
     }
+#endif
 
-    /* Delete assistance data */
+#if defined HAVE_QMI_MESSAGE_LOC_DELETE_ASSISTANCE_DATA
     if (delete_assistance_data_flag) {
         QmiMessageLocDeleteAssistanceDataInput *input;
 
@@ -859,13 +932,19 @@ qmicli_loc_run (QmiDevice    *device,
         qmi_message_loc_delete_assistance_data_input_unref (input);
         return;
     }
+#endif
 
-    /* All the remaining actions require monitoring */
+#if (defined HAVE_QMI_INDICATION_LOC_POSITION_REPORT || \
+     defined HAVE_QMI_INDICATION_LOC_GNSS_SV_INFO ||    \
+     defined HAVE_QMI_INDICATION_LOC_NMEA) &&           \
+    defined HAVE_QMI_MESSAGE_LOC_REGISTER_EVENTS
     if (get_position_report_flag || get_gnss_sv_info_flag || follow_position_report_flag || follow_gnss_sv_info_flag || follow_nmea_flag) {
+        /* All the remaining actions require monitoring */
         ctx->monitoring_step = MONITORING_STEP_FIRST;
         monitoring_step_run ();
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -875,3 +954,5 @@ qmicli_loc_run (QmiDevice    *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_LOC */

@@ -626,6 +626,8 @@ qmi_utils_write_fixed_size_string_to_buffer (guint8      **buffer,
     *buffer_size = (*buffer_size) - fixed_size;
 }
 
+#if defined HAVE_QMI_MESSAGE_DMS_SET_SERVICE_PROGRAMMING_CODE
+
 gboolean
 qmi_message_dms_set_service_programming_code_input_get_new (
     QmiMessageDmsSetServiceProgrammingCodeInput *self,
@@ -661,6 +663,8 @@ qmi_message_dms_set_service_programming_code_input_set_current (
 {
   return qmi_message_dms_set_service_programming_code_input_set_current_code (self, arg_current, error);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_SERVICE_PROGRAMMING_CODE */
 
 gchar *
 qmi_message_get_printable (QmiMessage  *self,
@@ -733,13 +737,29 @@ qmi_message_tlv_read_gfloat (QmiMessage  *self,
         return ret;                                                                                        \
     }
 
-SESSION_INFORMATION_DEPRECATED_METHOD (ReadTransparent,   read_transparent)
-SESSION_INFORMATION_DEPRECATED_METHOD (ReadRecord,        read_record)
+#if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
+SESSION_INFORMATION_DEPRECATED_METHOD (ReadTransparent, read_transparent)
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_READ_RECORD
+SESSION_INFORMATION_DEPRECATED_METHOD (ReadRecord, read_record)
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES
 SESSION_INFORMATION_DEPRECATED_METHOD (GetFileAttributes, get_file_attributes)
-SESSION_INFORMATION_DEPRECATED_METHOD (SetPinProtection,  set_pin_protection)
-SESSION_INFORMATION_DEPRECATED_METHOD (VerifyPin,         verify_pin)
-SESSION_INFORMATION_DEPRECATED_METHOD (UnblockPin,        unblock_pin)
-SESSION_INFORMATION_DEPRECATED_METHOD (ChangePin,         change_pin)
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_SET_PIN_PROTECTION
+SESSION_INFORMATION_DEPRECATED_METHOD (SetPinProtection, set_pin_protection)
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_VERIFY_PIN
+SESSION_INFORMATION_DEPRECATED_METHOD (VerifyPin, verify_pin)
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_UNBLOCK_PIN
+SESSION_INFORMATION_DEPRECATED_METHOD (UnblockPin, unblock_pin)
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_CHANGE_PIN
+SESSION_INFORMATION_DEPRECATED_METHOD (ChangePin, change_pin)
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
 
 gboolean
 qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size (
@@ -749,6 +769,8 @@ qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size (
 {
     return qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams (self, value_uplink_data_aggregation_max_size, error);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT */
 
 gboolean
 qmi_device_close (QmiDevice *self,
@@ -770,6 +792,8 @@ qmi_dms_dell_firmware_version_type_get_string (QmiDmsDellFirmwareVersionType val
 {
     return qmi_dms_foxconn_firmware_version_type_get_string ((QmiDmsFoxconnFirmwareVersionType) val);
 }
+
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION
 
 GType
 qmi_message_dms_dell_get_firmware_version_output_get_type (void)
@@ -869,6 +893,8 @@ qmi_client_dms_dell_get_firmware_version_finish (
     return qmi_client_dms_foxconn_get_firmware_version_finish (self, res, error);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION */
+
 GType
 qmi_dms_dell_device_mode_get_type (void)
 {
@@ -880,6 +906,8 @@ qmi_dms_dell_device_mode_get_string (QmiDmsDellDeviceMode val)
 {
     return qmi_dms_foxconn_device_mode_get_string ((QmiDmsFoxconnDeviceMode) val);
 }
+
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE
 
 GType
 qmi_message_dms_dell_change_device_mode_input_get_type (void)
@@ -970,6 +998,10 @@ qmi_client_dms_dell_change_device_mode_finish (
     return qmi_client_dms_foxconn_change_device_mode_finish (self, res, error);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME
+
 gboolean
 qmi_message_nas_get_operator_name_output_get_operator_nitz_information (
     QmiMessageNasGetOperatorNameOutput *self,
@@ -1001,6 +1033,10 @@ qmi_message_nas_get_operator_name_output_get_operator_nitz_information (
         *value_operator_nitz_information_short_name = (const gchar *)short_name->data;
     return TRUE;
 }
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME */
+
+#if defined HAVE_QMI_INDICATION_NAS_OPERATOR_NAME
 
 gboolean
 qmi_indication_nas_operator_name_output_get_operator_nitz_information (
@@ -1034,6 +1070,10 @@ qmi_indication_nas_operator_name_output_get_operator_nitz_information (
     return TRUE;
 }
 
+#endif /* HAVE_QMI_INDICATION_NAS_OPERATOR_NAME */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK
+
 gboolean
 qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
     QmiMessageNasGetHomeNetworkOutput *self,
@@ -1061,5 +1101,7 @@ qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
 
     return TRUE;
 }
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK */
 
 #endif /* QMI_DISABLE_DEPRECATED */

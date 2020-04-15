@@ -33,6 +33,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_WMS
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -47,14 +49,18 @@ static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_WMS_GET_SUPPORTED_MESSAGES
     { "wms-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WMS_RESET
     { "wms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
     },
+#endif
     { "wms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a WMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -120,6 +126,8 @@ operation_shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status, FALSE);
 }
 
+#if defined HAVE_QMI_MESSAGE_WMS_GET_SUPPORTED_MESSAGES
+
 static void
 get_supported_messages_ready (QmiClientWms *client,
                               GAsyncResult *res)
@@ -158,6 +166,10 @@ get_supported_messages_ready (QmiClientWms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WMS_GET_SUPPORTED_MESSAGES */
+
+#if defined HAVE_QMI_MESSAGE_WMS_RESET
+
 static void
 reset_ready (QmiClientWms *client,
              GAsyncResult *res)
@@ -188,6 +200,8 @@ reset_ready (QmiClientWms *client,
     operation_shutdown (TRUE);
 }
 
+#endif
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -206,7 +220,7 @@ qmicli_wms_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Request to list supported messages? */
+#if defined HAVE_QMI_MESSAGE_WMS_GET_SUPPORTED_MESSAGES
     if (get_supported_messages_flag) {
         g_debug ("Asynchronously getting supported WMS messages...");
         qmi_client_wms_get_supported_messages (ctx->client,
@@ -217,8 +231,9 @@ qmicli_wms_run (QmiDevice *device,
                                                NULL);
         return;
     }
+#endif
 
-    /* Request to reset WMS service? */
+#if defined HAVE_QMI_MESSAGE_WMS_RESET
     if (reset_flag) {
         g_debug ("Asynchronously resetting WMS service...");
         qmi_client_wms_reset (ctx->client,
@@ -229,6 +244,7 @@ qmicli_wms_run (QmiDevice *device,
                               NULL);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -238,3 +254,5 @@ qmicli_wms_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_WMS */

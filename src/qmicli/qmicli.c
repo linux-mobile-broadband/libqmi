@@ -362,44 +362,96 @@ allocate_client_ready (QmiDevice *dev,
     /* Run the service-specific action */
     switch (service) {
     case QMI_SERVICE_DMS:
+#if defined HAVE_QMI_SERVICE_DMS
         qmicli_dms_run (dev, QMI_CLIENT_DMS (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_NAS:
+#if defined HAVE_QMI_SERVICE_NAS
         qmicli_nas_run (dev, QMI_CLIENT_NAS (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_WDS:
+#if defined HAVE_QMI_SERVICE_WDS
         qmicli_wds_run (dev, QMI_CLIENT_WDS (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_PBM:
+#if defined HAVE_QMI_SERVICE_PBM
         qmicli_pbm_run (dev, QMI_CLIENT_PBM (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_PDC:
+#if defined HAVE_QMI_SERVICE_PDC
         qmicli_pdc_run (dev, QMI_CLIENT_PDC (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_UIM:
+#if defined HAVE_QMI_SERVICE_UIM
         qmicli_uim_run (dev, QMI_CLIENT_UIM (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_WMS:
+#if defined HAVE_QMI_SERVICE_WMS
         qmicli_wms_run (dev, QMI_CLIENT_WMS (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_WDA:
+#if defined HAVE_QMI_SERVICE_WDA
         qmicli_wda_run (dev, QMI_CLIENT_WDA (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_VOICE:
+#if defined HAVE_QMI_SERVICE_VOICE
         qmicli_voice_run (dev, QMI_CLIENT_VOICE (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_LOC:
+#if defined HAVE_QMI_SERVICE_LOC
         qmicli_loc_run (dev, QMI_CLIENT_LOC (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_QOS:
+#if defined HAVE_QMI_SERVICE_QOS
         qmicli_qos_run (dev, QMI_CLIENT_QOS (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_GAS:
+#if defined HAVE_QMI_SERVICE_GAS
         qmicli_gas_run (dev, QMI_CLIENT_GAS (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_DSD:
+#if defined HAVE_QMI_SERVICE_DSD
         qmicli_dsd_run (dev, QMI_CLIENT_DSD (client), cancellable);
         return;
+#else
+        break;
+#endif
     case QMI_SERVICE_UNKNOWN:
     case QMI_SERVICE_CTL:
     case QMI_SERVICE_AUTH:
@@ -437,8 +489,9 @@ allocate_client_ready (QmiDevice *dev,
     case QMI_SERVICE_PDS:
     case QMI_SERVICE_OMA:
     default:
-        g_assert_not_reached ();
+        break;
     }
+    g_assert_not_reached ();
 }
 
 static void
@@ -808,83 +861,96 @@ parse_actions (void)
         actions_enabled++;
     }
 
-    /* DMS options? */
+#if defined HAVE_QMI_SERVICE_DMS
     if (qmicli_dms_options_enabled ()) {
         service = QMI_SERVICE_DMS;
         actions_enabled++;
     }
+#endif
 
-    /* NAS options? */
+#if defined HAVE_QMI_SERVICE_NAS
     if (qmicli_nas_options_enabled ()) {
         service = QMI_SERVICE_NAS;
         actions_enabled++;
     }
+#endif
 
-    /* WDS options? */
+#if defined HAVE_QMI_SERVICE_WDS
     if (qmicli_wds_options_enabled ()) {
         service = QMI_SERVICE_WDS;
         actions_enabled++;
     }
+#endif
 
-    /* PBM options? */
+#if defined HAVE_QMI_SERVICE_PBM
     if (qmicli_pbm_options_enabled ()) {
         service = QMI_SERVICE_PBM;
         actions_enabled++;
     }
+#endif
 
-    /* PDC options? */
+#if defined HAVE_QMI_SERVICE_PDC
     if (qmicli_pdc_options_enabled ()) {
         service = QMI_SERVICE_PDC;
         actions_enabled++;
     }
+#endif
 
-    /* UIM options? */
+#if defined HAVE_QMI_SERVICE_UIM
     if (qmicli_uim_options_enabled ()) {
         service = QMI_SERVICE_UIM;
         actions_enabled++;
     }
+#endif
 
-    /* WMS options? */
+#if defined HAVE_QMI_SERVICE_WMS
     if (qmicli_wms_options_enabled ()) {
         service = QMI_SERVICE_WMS;
         actions_enabled++;
     }
+#endif
 
-    /* WDA options? */
+#if defined HAVE_QMI_SERVICE_WDA
     if (qmicli_wda_options_enabled ()) {
         service = QMI_SERVICE_WDA;
         actions_enabled++;
     }
+#endif
 
-    /* VOICE options? */
+#if defined HAVE_QMI_SERVICE_VOICE
     if (qmicli_voice_options_enabled ()) {
         service = QMI_SERVICE_VOICE;
         actions_enabled++;
     }
+#endif
 
-    /* LOC options? */
+#if defined HAVE_QMI_SERVICE_LOC
     if (qmicli_loc_options_enabled ()) {
         service = QMI_SERVICE_LOC;
         actions_enabled++;
     }
+#endif
 
-    /* QOS options? */
+#if defined HAVE_QMI_SERVICE_QOS
     if (qmicli_qos_options_enabled ()) {
         service = QMI_SERVICE_QOS;
         actions_enabled++;
     }
+#endif
 
-    /* GAS options? */
+#if defined HAVE_QMI_SERVICE_GAS
     if (qmicli_gas_options_enabled ()) {
         service = QMI_SERVICE_GAS;
         actions_enabled++;
     }
+#endif
 
-    /* DSD options? */
+#if defined HAVE_QMI_SERVICE_DSD
     if (qmicli_dsd_options_enabled ()) {
         service = QMI_SERVICE_DSD;
         actions_enabled++;
     }
+#endif
 
     /* Cannot mix actions from different services */
     if (actions_enabled > 1) {
@@ -911,32 +977,45 @@ int main (int argc, char **argv)
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Control QMI devices");
-    g_option_context_add_group (context,
-                                qmicli_dms_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_nas_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_wds_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_pbm_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_pdc_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_uim_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_wms_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_wda_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_voice_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_loc_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_qos_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_gas_get_option_group ());
-    g_option_context_add_group (context,
-                                qmicli_dsd_get_option_group ());
+#if defined HAVE_QMI_SERVICE_DMS
+    g_option_context_add_group (context, qmicli_dms_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_NAS
+    g_option_context_add_group (context, qmicli_nas_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_WDS
+    g_option_context_add_group (context, qmicli_wds_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_PBM
+    g_option_context_add_group (context, qmicli_pbm_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_PDC
+    g_option_context_add_group (context, qmicli_pdc_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_UIM
+    g_option_context_add_group (context, qmicli_uim_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_WMS
+    g_option_context_add_group (context, qmicli_wms_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_WDA
+    g_option_context_add_group (context, qmicli_wda_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_VOICE
+    g_option_context_add_group (context, qmicli_voice_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_LOC
+    g_option_context_add_group (context, qmicli_loc_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_QOS
+    g_option_context_add_group (context, qmicli_qos_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_GAS
+    g_option_context_add_group (context, qmicli_gas_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_DSD
+    g_option_context_add_group (context, qmicli_dsd_get_option_group ());
+#endif
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",

@@ -33,6 +33,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_UIM
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -58,58 +60,84 @@ static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_UIM_SET_PIN_PROTECTION
     { "uim-set-pin-protection", 0, 0, G_OPTION_ARG_STRING, &set_pin_protection_str,
       "Set PIN protection",
       "[(PIN1|PIN2|UPIN),(disable|enable),(current PIN)]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_VERIFY_PIN
     { "uim-verify-pin", 0, 0, G_OPTION_ARG_STRING, &verify_pin_str,
       "Verify PIN",
       "[(PIN1|PIN2|UPIN),(current PIN)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_UNBLOCK_PIN
     { "uim-unblock-pin", 0, 0, G_OPTION_ARG_STRING, &unblock_pin_str,
       "Unblock PIN",
       "[(PIN1|PIN2|UPIN),(PUK),(new PIN)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_CHANGE_PIN
     { "uim-change-pin", 0, 0, G_OPTION_ARG_STRING, &change_pin_str,
       "Change PIN",
       "[(PIN1|PIN2|UPIN),(old PIN),(new PIN)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
     { "uim-read-transparent", 0, 0, G_OPTION_ARG_STRING, &read_transparent_str,
       "Read a transparent file given the file path",
       "[0xNNNN,0xNNNN,...]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES
     { "uim-get-file-attributes", 0, 0, G_OPTION_ARG_STRING, &get_file_attributes_str,
       "Get the attributes of a given file",
       "[0xNNNN,0xNNNN,...]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_READ_RECORD
     { "uim-read-record", 0, 0, G_OPTION_ARG_STRING, &read_record_str,
       "Read a record from given file (allowed keys: record-number, record-length, file ([0xNNNN-0xNNNN,...])",
       "[\"key=value,...\"]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_GET_CARD_STATUS
     { "uim-get-card-status", 0, 0, G_OPTION_ARG_NONE, &get_card_status_flag,
       "Get card status",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_GET_SUPPORTED_MESSAGES
     { "uim-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_POWER_ON_SIM
     { "uim-sim-power-on", 0, 0, G_OPTION_ARG_STRING, &sim_power_on_str,
       "Power on SIM card",
       "[(slot number)]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_POWER_OFF_SIM
     { "uim-sim-power-off", 0, 0, G_OPTION_ARG_STRING, &sim_power_off_str,
       "Power off SIM card",
       "[(slot number)]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_CHANGE_PROVISIONING_SESSION
     { "uim-change-provisioning-session", 0, 0, G_OPTION_ARG_STRING, &change_provisioning_session_str,
       "Change provisioning session (allowed keys: session-type, activate, slot, aid)",
       "[\"key=value,...\"]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_RESET
     { "uim-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
     },
+#endif
     { "uim-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a UIM client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -185,6 +213,8 @@ operation_shutdown (gboolean operation_status)
     context_free (ctx);
     qmicli_async_operation_done (operation_status, FALSE);
 }
+
+#if defined HAVE_QMI_MESSAGE_UIM_SET_PIN_PROTECTION
 
 static QmiMessageUimSetPinProtectionInput *
 set_pin_protection_input_create (const gchar *str)
@@ -280,6 +310,10 @@ set_pin_protection_ready (QmiClientUim *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_UIM_SET_PIN_PROTECTION */
+
+#if defined HAVE_QMI_MESSAGE_UIM_VERIFY_PIN
+
 static QmiMessageUimVerifyPinInput *
 verify_pin_input_create (const gchar *str)
 {
@@ -370,6 +404,10 @@ verify_pin_ready (QmiClientUim *client,
     qmi_message_uim_verify_pin_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_UIM_VERIFY_PIN */
+
+#if defined HAVE_QMI_MESSAGE_UIM_UNBLOCK_PIN
 
 static QmiMessageUimUnblockPinInput *
 unblock_pin_input_create (const gchar *str)
@@ -465,6 +503,10 @@ unblock_pin_ready (QmiClientUim *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_UIM_UNBLOCK_PIN */
+
+#if defined HAVE_QMI_MESSAGE_UIM_CHANGE_PIN
+
 static QmiMessageUimChangePinInput *
 change_pin_input_create (const gchar *str)
 {
@@ -559,6 +601,10 @@ change_pin_ready (QmiClientUim *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_UIM_CHANGE_PIN */
+
+#if defined HAVE_QMI_MESSAGE_UIM_GET_SUPPORTED_MESSAGES
+
 static void
 get_supported_messages_ready (QmiClientUim *client,
                               GAsyncResult *res)
@@ -596,6 +642,10 @@ get_supported_messages_ready (QmiClientUim *client,
     qmi_message_uim_get_supported_messages_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_UIM_GET_SUPPORTED_MESSAGES */
+
+#if defined HAVE_QMI_MESSAGE_UIM_POWER_ON_SIM
 
 static QmiMessageUimPowerOnSimInput *
 power_on_sim_input_create (const gchar *slot_str)
@@ -651,6 +701,10 @@ power_on_sim_ready (QmiClientUim *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_UIM_POWER_ON_SIM */
+
+#if defined HAVE_QMI_MESSAGE_UIM_POWER_OFF_SIM
+
 static QmiMessageUimPowerOffSimInput *
 power_off_sim_input_create (const gchar *slot_str)
 {
@@ -704,6 +758,10 @@ power_off_sim_ready (QmiClientUim *client,
     qmi_message_uim_power_off_sim_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_UIM_POWER_OFF_SIM */
+
+#if defined HAVE_QMI_MESSAGE_UIM_CHANGE_PROVISIONING_SESSION
 
 typedef struct {
     QmiUimSessionType  session_type;
@@ -853,6 +911,10 @@ change_provisioning_session_ready (QmiClientUim *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_UIM_CHANGE_PROVISIONING_SESSION */
+
+#if defined HAVE_QMI_MESSAGE_UIM_RESET
+
 static void
 reset_ready (QmiClientUim *client,
              GAsyncResult *res)
@@ -883,12 +945,16 @@ reset_ready (QmiClientUim *client,
     operation_shutdown (TRUE);
 }
 
+#endif
+
 static gboolean
 noop_cb (gpointer unused)
 {
     operation_shutdown (TRUE);
     return FALSE;
 }
+
+#if defined HAVE_QMI_MESSAGE_UIM_GET_CARD_STATUS
 
 static void
 get_card_status_ready (QmiClientUim *client,
@@ -1040,6 +1106,12 @@ get_card_status_ready (QmiClientUim *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* defined HAVE_QMI_MESSAGE_UIM_GET_CARD_STATUS */
+
+#if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT || \
+    defined HAVE_QMI_MESSAGE_UIM_READ_RECORD || \
+    defined HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES
+
 static gboolean
 get_sim_file_id_and_path_with_separator (const gchar *file_path_str,
                                          guint16 *file_id,
@@ -1091,6 +1163,13 @@ get_sim_file_id_and_path_with_separator (const gchar *file_path_str,
     return TRUE;
 }
 
+#endif /* HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
+        * HAVE_QMI_MESSAGE_UIM_READ_RECORD
+        * HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES */
+
+#if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT || \
+    defined HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES
+
 static gboolean
 get_sim_file_id_and_path (const gchar *file_path_str,
                           guint16 *file_id,
@@ -1098,6 +1177,11 @@ get_sim_file_id_and_path (const gchar *file_path_str,
 {
     return get_sim_file_id_and_path_with_separator (file_path_str, file_id, file_path, ",");
 }
+
+#endif /* HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
+        * HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES */
+
+#if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
 
 static void
 read_transparent_ready (QmiClientUim *client,
@@ -1200,6 +1284,10 @@ read_transparent_build_input (const gchar *file_path_str)
     g_array_unref (dummy_aid);
     return input;
 }
+
+#endif /* HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT */
+
+#if defined HAVE_QMI_MESSAGE_UIM_READ_RECORD
 
 static void
 read_record_ready (QmiClientUim *client,
@@ -1389,6 +1477,10 @@ out:
     return input;
 }
 
+#endif /* HAVE_QMI_MESSAGE_UIM_READ_RECORD */
+
+#if defined HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES
+
 static void
 get_file_attributes_ready (QmiClientUim *client,
                            GAsyncResult *res,
@@ -1561,6 +1653,8 @@ get_file_attributes_build_input (const gchar *file_path_str)
     return input;
 }
 
+#endif /* HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES */
+
 void
 qmicli_uim_run (QmiDevice *device,
                 QmiClientUim *client,
@@ -1572,7 +1666,7 @@ qmicli_uim_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Set PIN protection */
+#if defined HAVE_QMI_MESSAGE_UIM_SET_PIN_PROTECTION
     if (set_pin_protection_str) {
         QmiMessageUimSetPinProtectionInput *input;
 
@@ -1591,8 +1685,9 @@ qmicli_uim_run (QmiDevice *device,
         qmi_message_uim_set_pin_protection_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to verify PIN? */
+#if defined HAVE_QMI_MESSAGE_UIM_VERIFY_PIN
     if (verify_pin_str) {
         QmiMessageUimVerifyPinInput *input;
 
@@ -1611,8 +1706,9 @@ qmicli_uim_run (QmiDevice *device,
         qmi_message_uim_verify_pin_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to unblock PIN? */
+#if defined HAVE_QMI_MESSAGE_UIM_UNBLOCK_PIN
     if (unblock_pin_str) {
         QmiMessageUimUnblockPinInput *input;
 
@@ -1631,8 +1727,9 @@ qmicli_uim_run (QmiDevice *device,
         qmi_message_uim_unblock_pin_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to change the PIN? */
+#if defined HAVE_QMI_MESSAGE_UIM_CHANGE_PIN
     if (change_pin_str) {
         QmiMessageUimChangePinInput *input;
 
@@ -1651,8 +1748,9 @@ qmicli_uim_run (QmiDevice *device,
         qmi_message_uim_change_pin_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to read a transparent file? */
+#if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
     if (read_transparent_str) {
         QmiMessageUimReadTransparentInput *input;
 
@@ -1673,8 +1771,9 @@ qmicli_uim_run (QmiDevice *device,
         qmi_message_uim_read_transparent_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to read a transparent file? */
+#if defined HAVE_QMI_MESSAGE_UIM_READ_RECORD
     if (read_record_str) {
         QmiMessageUimReadRecordInput *input;
 
@@ -1695,8 +1794,9 @@ qmicli_uim_run (QmiDevice *device,
         qmi_message_uim_read_record_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get file attributes? */
+#if defined HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES
     if (get_file_attributes_str) {
         QmiMessageUimGetFileAttributesInput *input;
 
@@ -1717,8 +1817,9 @@ qmicli_uim_run (QmiDevice *device,
         qmi_message_uim_get_file_attributes_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to read card status? */
+#if defined HAVE_QMI_MESSAGE_UIM_GET_CARD_STATUS
     if (get_card_status_flag) {
         g_debug ("Asynchronously getting card status...");
         qmi_client_uim_get_card_status (ctx->client,
@@ -1729,8 +1830,9 @@ qmicli_uim_run (QmiDevice *device,
                                         NULL);
         return;
     }
+#endif
 
-    /* Request to list supported messages? */
+#if defined HAVE_QMI_MESSAGE_UIM_GET_SUPPORTED_MESSAGES
     if (get_supported_messages_flag) {
         g_debug ("Asynchronously getting supported UIM messages...");
         qmi_client_uim_get_supported_messages (ctx->client,
@@ -1741,8 +1843,9 @@ qmicli_uim_run (QmiDevice *device,
                                                NULL);
         return;
     }
+#endif
 
-    /* Request to power on SIM card? */
+#if defined HAVE_QMI_MESSAGE_UIM_POWER_ON_SIM
     if (sim_power_on_str) {
         QmiMessageUimPowerOnSimInput *input;
 
@@ -1762,8 +1865,9 @@ qmicli_uim_run (QmiDevice *device,
         qmi_message_uim_power_on_sim_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to power off SIM card? */
+#if defined HAVE_QMI_MESSAGE_UIM_POWER_OFF_SIM
     if (sim_power_off_str) {
         QmiMessageUimPowerOffSimInput *input;
 
@@ -1783,8 +1887,9 @@ qmicli_uim_run (QmiDevice *device,
         qmi_message_uim_power_off_sim_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to change provisioning session? */
+#if defined HAVE_QMI_MESSAGE_UIM_CHANGE_PROVISIONING_SESSION
     if (change_provisioning_session_str) {
         QmiMessageUimChangeProvisioningSessionInput *input;
 
@@ -1804,8 +1909,9 @@ qmicli_uim_run (QmiDevice *device,
         qmi_message_uim_change_provisioning_session_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to reset UIM service? */
+#if defined HAVE_QMI_MESSAGE_UIM_RESET
     if (reset_flag) {
         g_debug ("Asynchronously resetting UIM service...");
         qmi_client_uim_reset (ctx->client,
@@ -1816,6 +1922,7 @@ qmicli_uim_run (QmiDevice *device,
                               NULL);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -1825,3 +1932,5 @@ qmicli_uim_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_UIM */

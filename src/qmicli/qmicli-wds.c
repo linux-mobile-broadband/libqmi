@@ -35,6 +35,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_WDS
+
 #define QMI_WDS_MUX_ID_UNDEFINED 0xFF
 #define QMI_WDS_ENDPOINT_INTERFACE_NUMBER_UNDEFINED -1
 
@@ -81,110 +83,162 @@ static gchar *set_ip_family_str;
 static gboolean get_channel_rates_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_WDS_START_NETWORK
     { "wds-start-network", 0, 0, G_OPTION_ARG_STRING, &start_network_str,
       "Start network (allowed keys: apn, 3gpp-profile, 3gpp2-profile, auth (PAP|CHAP|BOTH), username, password, autoconnect=yes, ip-type (4|6))",
       "[\"key=value,...\"]"
     },
+# if defined HAVE_QMI_MESSAGE_WDS_STOP_NETWORK && defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS
     { "wds-follow-network", 0, 0, G_OPTION_ARG_NONE, &follow_network_flag,
       "Follow the network status until disconnected. Use with `--wds-start-network'",
       NULL
     },
+# endif
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_STOP_NETWORK
     { "wds-stop-network", 0, 0, G_OPTION_ARG_STRING, &stop_network_str,
       "Stop network",
       "[Packet data handle] OR [disable-autoconnect]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_CURRENT_SETTINGS
     { "wds-get-current-settings", 0, 0, G_OPTION_ARG_NONE, &get_current_settings_flag,
       "Get current settings",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS
     { "wds-get-packet-service-status", 0, 0, G_OPTION_ARG_NONE, &get_packet_service_status_flag,
       "Get packet service status",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_STATISTICS
     { "wds-get-packet-statistics", 0, 0, G_OPTION_ARG_NONE, &get_packet_statistics_flag,
       "Get packet statistics",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DATA_BEARER_TECHNOLOGY
     { "wds-get-data-bearer-technology", 0, 0, G_OPTION_ARG_NONE, &get_data_bearer_technology_flag,
       "Get data bearer technology",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_CURRENT_DATA_BEARER_TECHNOLOGY
     { "wds-get-current-data-bearer-technology", 0, 0, G_OPTION_ARG_NONE, &get_current_data_bearer_technology_flag,
       "Get current data bearer technology",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GO_DORMANT
     { "wds-go-dormant", 0, 0, G_OPTION_ARG_NONE, &go_dormant_flag,
       "Make the active data connection go dormant",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GO_ACTIVE
     { "wds-go-active", 0, 0, G_OPTION_ARG_NONE, &go_active_flag,
       "Make the active data connection go active",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DORMANCY_STATUS
     { "wds-get-dormancy-status", 0, 0, G_OPTION_ARG_NONE, &get_dormancy_status_flag,
       "Get the dormancy status of the active data connection",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_CREATE_PROFILE
     { "wds-create-profile", 0, 0, G_OPTION_ARG_STRING, &create_profile_str,
       "Create new profile using first available profile index (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes)",
       "[\"(3gpp|3gpp2)[,key=value,...]\"]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_SWI_CREATE_PROFILE_INDEXED
     { "wds-swi-create-profile-indexed", 0, 0, G_OPTION_ARG_STRING, &swi_create_profile_indexed_str,
       "Create new profile at specified profile index [Sierra Wireless specific] (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes)",
       "[\"(3gpp|3gpp2),#[,key=value,...]\"]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_MODIFY_PROFILE
     { "wds-modify-profile", 0, 0, G_OPTION_ARG_STRING, &modify_profile_str,
       "Modify existing profile (optional keys: name, apn, pdp-type (IP|PPP|IPV6|IPV4V6), auth (NONE|PAP|CHAP|BOTH), username, password, context-num, no-roaming=yes, disabled=yes)",
       "[\"(3gpp|3gpp2),#,key=value,...\"]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_DELETE_PROFILE
     { "wds-delete-profile", 0, 0, G_OPTION_ARG_STRING, &delete_profile_str,
       "Delete existing profile",
       "[(3gpp|3gpp2),#]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_PROFILE_LIST && defined HAVE_QMI_MESSAGE_WDS_GET_PROFILE_SETTINGS
     { "wds-get-profile-list", 0, 0, G_OPTION_ARG_STRING, &get_profile_list_str,
       "Get profile list",
       "[3gpp|3gpp2]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUM
     { "wds-get-default-profile-num", 0, 0, G_OPTION_ARG_STRING, &get_default_profile_num_str,
       "Get default profile number",
       "[3gpp|3gpp2]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUM
     { "wds-set-default-profile-num", 0, 0, G_OPTION_ARG_STRING, &set_default_profile_num_str,
       "Set default profile number",
       "[(3gpp|3gpp2),#]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_SETTINGS
     { "wds-get-default-settings", 0, 0, G_OPTION_ARG_STRING, &get_default_settings_str,
       "Get default settings",
       "[3gpp|3gpp2]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_AUTOCONNECT_SETTINGS
     { "wds-get-autoconnect-settings", 0, 0, G_OPTION_ARG_NONE, &get_autoconnect_settings_flag,
       "Get autoconnect settings",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_SET_AUTOCONNECT_SETTINGS
     { "wds-set-autoconnect-settings", 0, 0, G_OPTION_ARG_STRING, &set_autoconnect_settings_str,
       "Set autoconnect settings (roaming settings optional)",
       "[(enabled|disabled|paused)[,(roaming-allowed|home-only)]]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_SUPPORTED_MESSAGES
     { "wds-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_RESET
     { "wds-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT
     { "wds-bind-mux-data-port", 0, 0, G_OPTION_ARG_STRING, &bind_mux_str,
       "Bind qmux data port to controller device (allowed keys: mux-id, ep-iface-number) to be used with `--client-no-release-cid'",
       "[\"key=value,...\"]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_SET_IP_FAMILY
     { "wds-set-ip-family", 0, 0, G_OPTION_ARG_STRING, &set_ip_family_str,
       "Set IP family",
       "[4|6]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_CHANNEL_RATES
     { "wds-get-channel-rates", 0, 0, G_OPTION_ARG_NONE, &get_channel_rates_flag,
       "Get channel data rates",
       NULL
     },
+#endif
     { "wds-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a WDS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -281,6 +335,8 @@ operation_shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status, FALSE);
 }
 
+#if defined HAVE_QMI_MESSAGE_WDS_START_NETWORK || defined HAVE_QMI_MESSAGE_WDS_STOP_NETWORK
+
 static void
 stop_network_ready (QmiClientWds *client,
                     GAsyncResult *res)
@@ -335,6 +391,13 @@ internal_stop_network (GCancellable *cancellable,
                                  NULL);
     qmi_message_wds_stop_network_input_unref (input);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_START_NETWORK
+        * HAVE_QMI_MESSAGE_WDS_STOP_NETWORK */
+
+#if defined HAVE_QMI_MESSAGE_WDS_START_NETWORK
+
+#if defined HAVE_QMI_MESSAGE_WDS_STOP_NETWORK && defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS
 
 static void
 network_cancelled (GCancellable *cancellable)
@@ -404,6 +467,9 @@ packet_status_timeout (void)
 
     return TRUE;
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_STOP_NETWORK
+        * HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS */
 
 typedef struct {
     gchar                *apn;
@@ -701,6 +767,7 @@ start_network_ready (QmiClientWds *client,
              qmi_device_get_path_display (ctx->device),
              (guint)ctx->packet_data_handle);
 
+#if defined HAVE_QMI_MESSAGE_WDS_STOP_NETWORK && defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS
     if (follow_network_flag) {
         g_print ("\nCtrl+C will stop the network\n");
         ctx->network_started_id = g_cancellable_connect (ctx->cancellable,
@@ -713,10 +780,15 @@ start_network_ready (QmiClientWds *client,
                                                                NULL);
         return;
     }
+#endif
 
     /* Nothing else to do */
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_START_NETWORK */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_CURRENT_SETTINGS
 
 static void
 get_current_settings_ready (QmiClientWds *client,
@@ -859,6 +931,10 @@ get_current_settings_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_CURRENT_SETTINGS */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS
+
 static void
 get_packet_service_status_ready (QmiClientWds *client,
                                  GAsyncResult *res)
@@ -896,6 +972,10 @@ get_packet_service_status_ready (QmiClientWds *client,
     qmi_message_wds_get_packet_service_status_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_STATISTICS
 
 static void
 get_packet_statistics_ready (QmiClientWds *client,
@@ -964,6 +1044,10 @@ get_packet_statistics_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_PACKET_STATISTICS */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DATA_BEARER_TECHNOLOGY
+
 static void
 get_data_bearer_technology_ready (QmiClientWds *client,
                                   GAsyncResult *res)
@@ -1014,6 +1098,10 @@ get_data_bearer_technology_ready (QmiClientWds *client,
     qmi_message_wds_get_data_bearer_technology_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_DATA_BEARER_TECHNOLOGY */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_CURRENT_DATA_BEARER_TECHNOLOGY
 
 static void
 print_current_data_bearer_technology_results (const gchar *which,
@@ -1112,6 +1200,10 @@ get_current_data_bearer_technology_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_CURRENT_DATA_BEARER_TECHNOLOGY */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GO_DORMANT
+
 static void
 go_dormant_ready (QmiClientWds *client,
                   GAsyncResult *res)
@@ -1140,6 +1232,10 @@ go_dormant_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_GO_DORMANT */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GO_ACTIVE
+
 static void
 go_active_ready (QmiClientWds *client,
                  GAsyncResult *res)
@@ -1167,6 +1263,10 @@ go_active_ready (QmiClientWds *client,
     qmi_message_wds_go_active_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_GO_ACTIVE */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DORMANCY_STATUS
 
 static void
 get_dormancy_status_ready (QmiClientWds *client,
@@ -1206,6 +1306,11 @@ get_dormancy_status_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_DORMANCY_STATUS */
+
+#if defined HAVE_QMI_MESSAGE_WDS_CREATE_PROFILE || \
+    defined HAVE_QMI_MESSAGE_WDS_SWI_CREATE_PROFILE_INDEXED || \
+    defined HAVE_QMI_MESSAGE_WDS_MODIFY_PROFILE
 
 typedef struct {
     QmiWdsProfileType     profile_type;
@@ -1338,6 +1443,12 @@ create_modify_profile_properties_handle (const gchar  *key,
                  key);
     return FALSE;
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_CREATE_PROFILE
+        * HAVE_QMI_MESSAGE_WDS_SWI_CREATE_PROFILE_INDEXED
+        * HAVE_QMI_MESSAGE_WDS_MODIFY_PROFILE */
+
+#if defined HAVE_QMI_MESSAGE_WDS_CREATE_PROFILE
 
 static gboolean
 create_profile_input_create (const gchar                      *str,
@@ -1484,6 +1595,10 @@ create_profile_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /*  HAVE_QMI_MESSAGE_WDS_CREATE_PROFILE */
+
+#if defined HAVE_QMI_MESSAGE_WDS_SWI_CREATE_PROFILE_INDEXED
+
 static gboolean
 swi_create_profile_indexed_input_create (const gchar                                *str,
                                          QmiMessageWdsSwiCreateProfileIndexedInput **input,
@@ -1629,6 +1744,10 @@ swi_create_profile_indexed_ready (QmiClientWds *client,
     qmi_message_wds_swi_create_profile_indexed_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_SWI_CREATE_PROFILE_INDEXED */
+
+#if defined HAVE_QMI_MESSAGE_WDS_MODIFY_PROFILE
 
 static gboolean
 modify_profile_input_create (const gchar                      *str,
@@ -1779,6 +1898,10 @@ modify_profile_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_MODIFY_PROFILE */
+
+#if defined HAVE_QMI_MESSAGE_WDS_DELETE_PROFILE
+
 static void
 delete_profile_ready (QmiClientWds *client,
                       GAsyncResult *res)
@@ -1819,6 +1942,10 @@ delete_profile_ready (QmiClientWds *client,
     g_print ("Profile successfully deleted.\n");
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_DELETE_PROFILE */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_PROFILE_LIST && defined HAVE_QMI_MESSAGE_WDS_GET_PROFILE_SETTINGS
 
 typedef struct {
     guint i;
@@ -1986,6 +2113,11 @@ get_profile_list_ready (QmiClientWds *client,
     get_next_profile_settings (inner_ctx);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_PROFILE_LIST
+        * HAVE_QMI_MESSAGE_WDS_GET_PROFILE_SETTINGS */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_SETTINGS
+
 static void
 get_default_settings_ready (QmiClientWds *client,
                             GAsyncResult *res)
@@ -2048,9 +2180,13 @@ get_default_settings_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_SETTINGS */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUM
+
 static void
 get_default_profile_num_ready (QmiClientWds *client,
-                            GAsyncResult *res)
+                               GAsyncResult *res)
 {
     QmiMessageWdsGetDefaultProfileNumOutput *output;
     GError *error = NULL;
@@ -2094,6 +2230,10 @@ get_default_profile_num_ready (QmiClientWds *client,
     qmi_message_wds_get_default_profile_num_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUM */
+
+#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUM
 
 static void
 set_default_profile_num_ready (QmiClientWds *client,
@@ -2195,6 +2335,9 @@ error_out:
     return NULL;
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUM */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_AUTOCONNECT_SETTINGS
 
 static void
 get_autoconnect_settings_ready (QmiClientWds *client,
@@ -2233,6 +2376,10 @@ get_autoconnect_settings_ready (QmiClientWds *client,
     qmi_message_wds_get_autoconnect_settings_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_AUTOCONNECT_SETTINGS */
+
+#if defined HAVE_QMI_MESSAGE_WDS_SET_AUTOCONNECT_SETTINGS
 
 static QmiMessageWdsSetAutoconnectSettingsInput *
 set_autoconnect_settings_input_create (const gchar *str)
@@ -2315,6 +2462,10 @@ set_autoconnect_settings_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_SET_AUTOCONNECT_SETTINGS */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_SUPPORTED_MESSAGES
+
 static void
 get_supported_messages_ready (QmiClientWds *client,
                               GAsyncResult *res)
@@ -2353,6 +2504,10 @@ get_supported_messages_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_SUPPORTED_MESSAGES */
+
+#if defined HAVE_QMI_MESSAGE_WDS_RESET
+
 static void
 reset_ready (QmiClientWds *client,
              GAsyncResult *res)
@@ -2383,12 +2538,16 @@ reset_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_RESET */
+
 static gboolean
 noop_cb (gpointer unused)
 {
     operation_shutdown (TRUE);
     return FALSE;
 }
+
+#if defined HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT
 
 typedef struct {
     guint8 mux_id;
@@ -2537,6 +2696,10 @@ bind_mux_data_port_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT */
+
+#if defined HAVE_QMI_MESSAGE_WDS_SET_IP_FAMILY
+
 static void
 set_ip_family_ready (QmiClientWds *client,
                      GAsyncResult *res)
@@ -2563,6 +2726,10 @@ set_ip_family_ready (QmiClientWds *client,
     qmi_message_wds_set_ip_family_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_WDS_SET_IP_FAMILY */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_CHANNEL_RATES
 
 static void
 get_channel_rates_ready (QmiClientWds *client,
@@ -2621,6 +2788,8 @@ get_channel_rates_ready (QmiClientWds *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_CHANNEL_RATES */
+
 void
 qmicli_wds_run (QmiDevice *device,
                 QmiClientWds *client,
@@ -2634,7 +2803,7 @@ qmicli_wds_run (QmiDevice *device,
     ctx->network_started_id = 0;
     ctx->packet_status_timeout_id = 0;
 
-    /* Request to start network? */
+#if defined HAVE_QMI_MESSAGE_WDS_START_NETWORK
     if (start_network_str) {
         QmiMessageWdsStartNetworkInput *input = NULL;
         GError *error = NULL;
@@ -2656,8 +2825,9 @@ qmicli_wds_run (QmiDevice *device,
             qmi_message_wds_start_network_input_unref (input);
         return;
     }
+#endif /* HAVE_QMI_MESSAGE_WDS_START_NETWORK */
 
-    /* Request to stop network? */
+#if defined HAVE_QMI_MESSAGE_WDS_STOP_NETWORK
     if (stop_network_str) {
         gulong packet_data_handle;
         gboolean disable_autoconnect;
@@ -2683,14 +2853,14 @@ qmicli_wds_run (QmiDevice *device,
         internal_stop_network (ctx->cancellable, (guint32)packet_data_handle, disable_autoconnect);
         return;
     }
+#endif /* HAVE_QMI_MESSAGE_WDS_STOP_NETWORK */
 
-    /* Request to bind mux port? */
+#if defined HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT
     if (bind_mux_str) {
         QmiMessageWdsBindMuxDataPortInput *input;
-        g_print ("Bind mux data port");
 
+        g_debug ("Binding mux data port..");
         input = bind_mux_data_port_input_create (bind_mux_str);
-
         qmi_client_wds_bind_mux_data_port (client,
                                            input,
                                            10,
@@ -2700,8 +2870,9 @@ qmicli_wds_run (QmiDevice *device,
         qmi_message_wds_bind_mux_data_port_input_unref (input);
         return;
     }
+#endif /* HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT */
 
-    /* Request to set IP family? */
+#if defined HAVE_QMI_MESSAGE_WDS_SET_IP_FAMILY
     if (set_ip_family_str) {
         QmiMessageWdsSetIpFamilyInput *input;
 
@@ -2729,8 +2900,9 @@ qmicli_wds_run (QmiDevice *device,
         qmi_message_wds_set_ip_family_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get current settings? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_CURRENT_SETTINGS
     if (get_current_settings_flag) {
         QmiMessageWdsGetCurrentSettingsInput *input;
 
@@ -2756,8 +2928,9 @@ qmicli_wds_run (QmiDevice *device,
         qmi_message_wds_get_current_settings_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get packet service status? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_SERVICE_STATUS
     if (get_packet_service_status_flag) {
         g_debug ("Asynchronously getting packet service status...");
         qmi_client_wds_get_packet_service_status (ctx->client,
@@ -2768,8 +2941,9 @@ qmicli_wds_run (QmiDevice *device,
                                                   NULL);
         return;
     }
+#endif
 
-    /* Request to get packet statistics? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_PACKET_STATISTICS
     if (get_packet_statistics_flag) {
         QmiMessageWdsGetPacketStatisticsInput *input;
 
@@ -2798,8 +2972,9 @@ qmicli_wds_run (QmiDevice *device,
         qmi_message_wds_get_packet_statistics_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get data bearer technology? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DATA_BEARER_TECHNOLOGY
     if (get_data_bearer_technology_flag) {
         g_debug ("Asynchronously getting data bearer technology...");
         qmi_client_wds_get_data_bearer_technology (ctx->client,
@@ -2810,8 +2985,9 @@ qmicli_wds_run (QmiDevice *device,
                                                    NULL);
         return;
     }
+#endif
 
-    /* Request to get current data bearer technology? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_CURRENT_DATA_BEARER_TECHNOLOGY
     if (get_current_data_bearer_technology_flag) {
         g_debug ("Asynchronously getting current data bearer technology...");
         qmi_client_wds_get_current_data_bearer_technology (ctx->client,
@@ -2822,8 +2998,9 @@ qmicli_wds_run (QmiDevice *device,
                                                            NULL);
         return;
     }
+#endif
 
-    /* Request to go dormant? */
+#if defined HAVE_QMI_MESSAGE_WDS_GO_DORMANT
     if (go_dormant_flag) {
         g_debug ("Asynchronously going dormant...");
         qmi_client_wds_go_dormant (ctx->client,
@@ -2834,8 +3011,9 @@ qmicli_wds_run (QmiDevice *device,
                                    NULL);
         return;
     }
+#endif
 
-    /* Request to go active? */
+#if defined HAVE_QMI_MESSAGE_WDS_GO_ACTIVE
     if (go_active_flag) {
         g_debug ("Asynchronously going active...");
         qmi_client_wds_go_active (ctx->client,
@@ -2846,8 +3024,9 @@ qmicli_wds_run (QmiDevice *device,
                                    NULL);
         return;
     }
+#endif
 
-    /* Request to get dormancy status? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DORMANCY_STATUS
     if (get_dormancy_status_flag) {
         g_debug ("Asynchronously getting dormancy status...");
         qmi_client_wds_get_dormancy_status (ctx->client,
@@ -2858,8 +3037,9 @@ qmicli_wds_run (QmiDevice *device,
                                             NULL);
         return;
     }
+#endif
 
-    /* Create a new profile using first available profile index */
+#if defined HAVE_QMI_MESSAGE_WDS_CREATE_PROFILE
     if (create_profile_str) {
         QmiMessageWdsCreateProfileInput *input = NULL;
         GError *error = NULL;
@@ -2881,8 +3061,9 @@ qmicli_wds_run (QmiDevice *device,
        qmi_message_wds_create_profile_input_unref (input);
        return;
     }
+#endif
 
-    /* Create a new profile at spedified profile index (Sierra Wireless only)*/
+#if defined HAVE_QMI_MESSAGE_WDS_SWI_CREATE_PROFILE_INDEXED
     if (swi_create_profile_indexed_str) {
         QmiMessageWdsSwiCreateProfileIndexedInput *input = NULL;
         GError *error = NULL;
@@ -2904,8 +3085,9 @@ qmicli_wds_run (QmiDevice *device,
        qmi_message_wds_swi_create_profile_indexed_input_unref (input);
        return;
     }
+#endif
 
-    /* Modify an existing profile */
+#if defined HAVE_QMI_MESSAGE_WDS_MODIFY_PROFILE
     if (modify_profile_str) {
         QmiMessageWdsModifyProfileInput *input = NULL;
         GError *error = NULL;
@@ -2927,8 +3109,9 @@ qmicli_wds_run (QmiDevice *device,
         qmi_message_wds_modify_profile_input_unref (input);
         return;
     }
+#endif
 
-    /* Delete an existing profile */
+#if defined HAVE_QMI_MESSAGE_WDS_DELETE_PROFILE
     if (delete_profile_str) {
         QmiMessageWdsDeleteProfileInput *input;
         gchar **split;
@@ -2980,8 +3163,9 @@ qmicli_wds_run (QmiDevice *device,
        qmi_message_wds_delete_profile_input_unref (input);
        return;
     }
+#endif
 
-    /* Request to list profiles? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_PROFILE_LIST && defined HAVE_QMI_MESSAGE_WDS_GET_PROFILE_SETTINGS
     if (get_profile_list_str) {
         QmiMessageWdsGetProfileListInput *input;
 
@@ -3007,8 +3191,9 @@ qmicli_wds_run (QmiDevice *device,
         qmi_message_wds_get_profile_list_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get currently active profile number */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUM
     if (get_default_profile_num_str) {
         QmiMessageWdsGetDefaultProfileNumInput *input;
         QmiWdsProfileType profile_type;
@@ -3041,8 +3226,9 @@ qmicli_wds_run (QmiDevice *device,
         qmi_message_wds_get_default_profile_num_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to set currently active profile number */
+#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUM
     if (set_default_profile_num_str) {
         QmiMessageWdsSetDefaultProfileNumInput *input;
 
@@ -3062,8 +3248,9 @@ qmicli_wds_run (QmiDevice *device,
         qmi_message_wds_set_default_profile_num_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to print default settings? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_SETTINGS
     if (get_default_settings_str) {
         QmiMessageWdsGetDefaultSettingsInput *input;
 
@@ -3089,8 +3276,9 @@ qmicli_wds_run (QmiDevice *device,
         qmi_message_wds_get_default_settings_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to print autoconnect settings? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_AUTOCONNECT_SETTINGS
     if (get_autoconnect_settings_flag) {
         g_debug ("Asynchronously getting autoconnect settings...");
         qmi_client_wds_get_autoconnect_settings (ctx->client,
@@ -3101,8 +3289,9 @@ qmicli_wds_run (QmiDevice *device,
                                                  NULL);
         return;
     }
+#endif
 
-    /* Request to print autoconnect settings? */
+#if defined HAVE_QMI_MESSAGE_WDS_SET_AUTOCONNECT_SETTINGS
     if (set_autoconnect_settings_str) {
         QmiMessageWdsSetAutoconnectSettingsInput *input;
 
@@ -3122,8 +3311,9 @@ qmicli_wds_run (QmiDevice *device,
         qmi_message_wds_set_autoconnect_settings_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to list supported messages? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_SUPPORTED_MESSAGES
     if (get_supported_messages_flag) {
         g_debug ("Asynchronously getting supported WDS messages...");
         qmi_client_wds_get_supported_messages (ctx->client,
@@ -3134,8 +3324,9 @@ qmicli_wds_run (QmiDevice *device,
                                                NULL);
         return;
     }
+#endif
 
-    /* Request to reset WDS service? */
+#if defined HAVE_QMI_MESSAGE_WDS_RESET
     if (reset_flag) {
         g_debug ("Asynchronously resetting WDS service...");
         qmi_client_wds_reset (ctx->client,
@@ -3146,8 +3337,9 @@ qmicli_wds_run (QmiDevice *device,
                               NULL);
         return;
     }
+#endif
 
-    /* Request to get channel data rates? */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_CHANNEL_RATES
     if (get_channel_rates_flag) {
         g_debug ("Asynchronously getting channel data rates...");
         qmi_client_wds_get_channel_rates (client,
@@ -3158,6 +3350,7 @@ qmicli_wds_run (QmiDevice *device,
                                           NULL);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -3167,3 +3360,5 @@ qmicli_wds_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_WDS */

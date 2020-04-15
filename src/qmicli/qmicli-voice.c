@@ -33,6 +33,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_VOICE
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -47,14 +49,18 @@ static gboolean get_supported_messages_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_VOICE_GET_CONFIG
     { "voice-get-config", 0, 0, G_OPTION_ARG_NONE, &get_config_flag,
       "Get Voice service configuration",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_VOICE_GET_SUPPORTED_MESSAGES
     { "voice-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
       NULL
     },
+#endif
     { "voice-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a VOICE client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -119,6 +125,8 @@ operation_shutdown (gboolean operation_status)
     context_free (ctx);
     qmicli_async_operation_done (operation_status, FALSE);
 }
+
+#if defined HAVE_QMI_MESSAGE_VOICE_GET_CONFIG
 
 static void
 get_config_ready (QmiClientVoice *client,
@@ -252,6 +260,10 @@ get_config_ready (QmiClientVoice *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_VOICE_GET_CONFIG */
+
+#if defined HAVE_QMI_MESSAGE_VOICE_GET_SUPPORTED_MESSAGES
+
 static void
 get_supported_messages_ready (QmiClientVoice *client,
                               GAsyncResult *res)
@@ -290,6 +302,8 @@ get_supported_messages_ready (QmiClientVoice *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_VOICE_GET_SUPPORTED_MESSAGES */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -308,7 +322,7 @@ qmicli_voice_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Request to get voice configuration? */
+#if defined HAVE_QMI_MESSAGE_VOICE_GET_CONFIG
     if (get_config_flag) {
         QmiMessageVoiceGetConfigInput *input;
 
@@ -335,8 +349,9 @@ qmicli_voice_run (QmiDevice *device,
         qmi_message_voice_get_config_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to list supported messages? */
+#if defined HAVE_QMI_MESSAGE_VOICE_GET_SUPPORTED_MESSAGES
     if (get_supported_messages_flag) {
         g_debug ("Asynchronously getting supported voice messages...");
         qmi_client_voice_get_supported_messages (ctx->client,
@@ -347,6 +362,7 @@ qmicli_voice_run (QmiDevice *device,
                                                  NULL);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -356,3 +372,5 @@ qmicli_voice_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_VOICE */

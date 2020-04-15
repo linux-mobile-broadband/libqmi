@@ -29,6 +29,8 @@ test_generated_core (TestFixture *fixture)
 /*****************************************************************************/
 /* DMS Get IDs */
 
+#if defined HAVE_QMI_MESSAGE_DMS_GET_IDS
+
 static void
 dms_get_ids_ready (QmiClientDms *client,
                    GAsyncResult *res,
@@ -103,8 +105,12 @@ test_generated_dms_get_ids (TestFixture *fixture)
     test_fixture_loop_run (fixture);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_IDS */
+
 /*****************************************************************************/
 /* DMS UIM Get PIN Status */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_PIN_STATUS
 
 static void
 dms_uim_get_pin_status_ready (QmiClientDms *client,
@@ -193,8 +199,12 @@ test_generated_dms_uim_get_pin_status (TestFixture *fixture)
     test_fixture_loop_run (fixture);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_GET_PIN_STATUS */
+
 /*****************************************************************************/
 /* DMS UIM Verify PIN */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_VERIFY_PIN
 
 static void
 dms_uim_verify_pin_ready (QmiClientDms *client,
@@ -256,6 +266,8 @@ test_generated_dms_uim_verify_pin (TestFixture *fixture)
     test_fixture_loop_run (fixture);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_VERIFY_PIN */
+
 /*****************************************************************************/
 /* DMS Get Time
  *
@@ -264,6 +276,8 @@ test_generated_dms_uim_verify_pin (TestFixture *fixture)
  * to explicitly make the 6-byte long uint read different from an 8-byte long
  * read of the same buffer, as QMI_DMS_TIME_SOURCE_DEVICE is actually 0x0000.
  */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_TIME
 
 static void
 dms_get_time_ready (QmiClientDms *client,
@@ -337,8 +351,12 @@ test_generated_dms_get_time (TestFixture *fixture)
     test_fixture_loop_run (fixture);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_TIME */
+
 /*****************************************************************************/
 /* NAS Network Scan */
+
+#if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
 
 typedef struct {
     guint16 mcc;
@@ -587,8 +605,12 @@ test_generated_nas_network_scan (TestFixture *fixture)
     test_fixture_loop_run (fixture);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN */
+
 /*****************************************************************************/
 /* NAS Get Cell Location */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
 
 static void
 nas_get_cell_location_info_ready (QmiClientNas *client,
@@ -647,8 +669,12 @@ test_generated_nas_get_cell_location_info (TestFixture *fixture)
     test_fixture_loop_run (fixture);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO */
+
 /*****************************************************************************/
 /* NAS Get Serving System */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SERVING_SYSTEM
 
 static void
 nas_get_serving_system_ready (QmiClientNas *client,
@@ -730,8 +756,12 @@ test_generated_nas_get_serving_system (TestFixture *fixture)
     test_fixture_loop_run (fixture);
 }
 
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_SERVING_SYSTEM */
+
 /*****************************************************************************/
 /* NAS Get System Info */
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO
 
 static void
 nas_get_system_info_ready (QmiClientNas *client,
@@ -885,7 +915,11 @@ test_generated_nas_get_system_info (TestFixture *fixture)
     test_fixture_loop_run (fixture);
 }
 
+#endif
+
 /*****************************************************************************/
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
 
 static void
 nas_get_cell_location_info_invalid_response_ready (QmiClientNas *client,
@@ -937,6 +971,8 @@ test_generated_nas_get_cell_location_info_invalid_response (TestFixture *fixture
     test_fixture_loop_run (fixture);
 }
 
+#endif
+
 /*****************************************************************************/
 
 int main (int argc, char **argv)
@@ -946,19 +982,35 @@ int main (int argc, char **argv)
     /* Test the setup/teardown test methods */
     TEST_ADD ("/libqmi-glib/generated/core", test_generated_core);
 
-    /* DMS */
-    TEST_ADD ("/libqmi-glib/generated/dms/get-ids",                test_generated_dms_get_ids);
-    TEST_ADD ("/libqmi-glib/generated/dms/uim-get-pin-status",     test_generated_dms_uim_get_pin_status);
-    TEST_ADD ("/libqmi-glib/generated/dms/uim-verify-pin",         test_generated_dms_uim_verify_pin);
-    TEST_ADD ("/libqmi-glib/generated/dms/get-time",               test_generated_dms_get_time);
-    /* NAS */
-    TEST_ADD ("/libqmi-glib/generated/nas/network-scan",           test_generated_nas_network_scan);
-    TEST_ADD ("/libqmi-glib/generated/nas/get-cell-location-info", test_generated_nas_get_cell_location_info);
-    TEST_ADD ("/libqmi-glib/generated/nas/get-serving-system",     test_generated_nas_get_serving_system);
-    TEST_ADD ("/libqmi-glib/generated/nas/get-system-info",        test_generated_nas_get_system_info);
+#if defined HAVE_QMI_MESSAGE_DMS_GET_IDS
+    TEST_ADD ("/libqmi-glib/generated/dms/get-ids", test_generated_dms_get_ids);
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_PIN_STATUS
+    TEST_ADD ("/libqmi-glib/generated/dms/uim-get-pin-status", test_generated_dms_uim_get_pin_status);
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_VERIFY_PIN
+    TEST_ADD ("/libqmi-glib/generated/dms/uim-verify-pin", test_generated_dms_uim_verify_pin);
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_TIME
+    TEST_ADD ("/libqmi-glib/generated/dms/get-time", test_generated_dms_get_time);
+#endif
 
-    /* Invalid responses */
+#if defined HAVE_QMI_MESSAGE_NAS_NETWORK_SCAN
+    TEST_ADD ("/libqmi-glib/generated/nas/network-scan", test_generated_nas_network_scan);
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
+    TEST_ADD ("/libqmi-glib/generated/nas/get-cell-location-info", test_generated_nas_get_cell_location_info);
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SERVING_SYSTEM
+    TEST_ADD ("/libqmi-glib/generated/nas/get-serving-system", test_generated_nas_get_serving_system);
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO
+    TEST_ADD ("/libqmi-glib/generated/nas/get-system-info", test_generated_nas_get_system_info);
+#endif
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
     TEST_ADD ("/libqmi-glib/generated/nas/invalid/get-cell-location-info", test_generated_nas_get_cell_location_info_invalid_response);
+#endif
 
     return g_test_run ();
 }

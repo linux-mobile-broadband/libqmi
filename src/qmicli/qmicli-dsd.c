@@ -33,6 +33,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_DSD
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -47,14 +49,18 @@ static gchar    *set_apn_type_str;
 static gboolean  noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_DSD_GET_APN_INFO
     { "dsd-get-apn-info", 0, 0, G_OPTION_ARG_STRING, &get_apn_info_str,
       "Gets the settings associated to a given APN type",
       "[(type)]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DSD_SET_APN_TYPE
     { "dsd-set-apn-type", 0, 0, G_OPTION_ARG_STRING, &set_apn_type_str,
       "Sets the types associated to a given APN name",
       "[(name), (type1|type2|type3...)]"
     },
+#endif
     { "dsd-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DSD client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -122,6 +128,8 @@ operation_shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status, FALSE);
 }
 
+#if defined HAVE_QMI_MESSAGE_DSD_GET_APN_INFO
+
 static void
 get_apn_info_ready (QmiClientDsd *client,
                     GAsyncResult *res)
@@ -179,6 +187,10 @@ get_apn_info_input_create (const gchar *str)
 
     return input;
 }
+
+#endif /* HAVE_QMI_MESSAGE_DSD_GET_APN_INFO */
+
+#if defined HAVE_QMI_MESSAGE_DSD_SET_APN_TYPE
 
 static void
 set_apn_type_ready (QmiClientDsd *client,
@@ -247,6 +259,8 @@ set_apn_type_input_create (const gchar *str)
     return input;
 }
 
+#endif /* HAVE_QMI_MESSAGE_DSD_SET_APN_TYPE */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -265,7 +279,7 @@ qmicli_dsd_run (QmiDevice    *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Request to get APN info? */
+#if defined HAVE_QMI_MESSAGE_DSD_GET_APN_INFO
     if (get_apn_info_str) {
         QmiMessageDsdGetApnInfoInput *input;
 
@@ -284,8 +298,9 @@ qmicli_dsd_run (QmiDevice    *device,
         qmi_message_dsd_get_apn_info_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to set APN type? */
+#if defined HAVE_QMI_MESSAGE_DSD_SET_APN_TYPE
     if (set_apn_type_str) {
         QmiMessageDsdSetApnTypeInput *input;
 
@@ -304,6 +319,7 @@ qmicli_dsd_run (QmiDevice    *device,
         qmi_message_dsd_set_apn_type_input_unref (input);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -313,3 +329,5 @@ qmicli_dsd_run (QmiDevice    *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_DSD */

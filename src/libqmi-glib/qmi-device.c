@@ -1097,6 +1097,7 @@ qmi_device_allocate_client (QmiDevice *self,
 
     ctx = g_slice_new0 (AllocateClientContext);
     ctx->service = service;
+    ctx->client_type = G_TYPE_INVALID;
 
     task = g_task_new (self, cancellable, callback, user_data);
     g_task_set_task_data (task,
@@ -1123,49 +1124,79 @@ qmi_device_allocate_client (QmiDevice *self,
         g_object_unref (task);
         return;
     case QMI_SERVICE_DMS:
+#if defined HAVE_QMI_SERVICE_DMS
         ctx->client_type = QMI_TYPE_CLIENT_DMS;
+#endif
         break;
     case QMI_SERVICE_WDS:
+#if defined HAVE_QMI_SERVICE_WDS
         ctx->client_type = QMI_TYPE_CLIENT_WDS;
+#endif
         break;
     case QMI_SERVICE_NAS:
+#if defined HAVE_QMI_SERVICE_NAS
         ctx->client_type = QMI_TYPE_CLIENT_NAS;
+#endif
         break;
     case QMI_SERVICE_WMS:
+#if defined HAVE_QMI_SERVICE_WMS
         ctx->client_type = QMI_TYPE_CLIENT_WMS;
+#endif
         break;
     case QMI_SERVICE_PDS:
+#if defined HAVE_QMI_SERVICE_PDS
         ctx->client_type = QMI_TYPE_CLIENT_PDS;
+#endif
         break;
     case QMI_SERVICE_PDC:
+#if defined HAVE_QMI_SERVICE_PDC
         ctx->client_type = QMI_TYPE_CLIENT_PDC;
+#endif
         break;
     case QMI_SERVICE_PBM:
+#if defined HAVE_QMI_SERVICE_PBM
         ctx->client_type = QMI_TYPE_CLIENT_PBM;
+#endif
         break;
     case QMI_SERVICE_UIM:
+#if defined HAVE_QMI_SERVICE_UIM
         ctx->client_type = QMI_TYPE_CLIENT_UIM;
+#endif
         break;
     case QMI_SERVICE_OMA:
+#if defined HAVE_QMI_SERVICE_OMA
         ctx->client_type = QMI_TYPE_CLIENT_OMA;
+#endif
         break;
     case QMI_SERVICE_GAS:
+#if defined HAVE_QMI_SERVICE_GAS
         ctx->client_type = QMI_TYPE_CLIENT_GAS;
+#endif
         break;
     case QMI_SERVICE_WDA:
+#if defined HAVE_QMI_SERVICE_WDA
         ctx->client_type = QMI_TYPE_CLIENT_WDA;
+#endif
         break;
     case QMI_SERVICE_VOICE:
+#if defined HAVE_QMI_SERVICE_VOICE
         ctx->client_type = QMI_TYPE_CLIENT_VOICE;
+#endif
         break;
     case QMI_SERVICE_LOC:
+#if defined HAVE_QMI_SERVICE_LOC
         ctx->client_type = QMI_TYPE_CLIENT_LOC;
+#endif
         break;
     case QMI_SERVICE_QOS:
+#if defined HAVE_QMI_SERVICE_QOS
         ctx->client_type = QMI_TYPE_CLIENT_QOS;
+#endif
         break;
     case QMI_SERVICE_DSD:
+#if defined HAVE_QMI_SERVICE_DSD
         ctx->client_type = QMI_TYPE_CLIENT_DSD;
+#endif
         break;
 
     case QMI_SERVICE_UNKNOWN:
@@ -1204,10 +1235,12 @@ qmi_device_allocate_client (QmiDevice *self,
     case QMI_SERVICE_FOTA:
     case QMI_SERVICE_GMS:
     default:
-        g_task_return_new_error (task,
-                                 QMI_CORE_ERROR,
-                                 QMI_CORE_ERROR_INVALID_ARGS,
-                                 "Clients for service '%s' not yet supported",
+        break;
+    }
+
+    if (ctx->client_type == G_TYPE_INVALID) {
+        g_task_return_new_error (task, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_ARGS,
+                                 "Clients for service '%s' not supported",
                                  qmi_service_get_string (service));
         g_object_unref (task);
         return;

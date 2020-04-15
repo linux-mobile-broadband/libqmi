@@ -68,6 +68,9 @@ class Message:
         # Create the ID enumeration name
         self.id_enum_name = utils.build_underscore_name(self.fullname).upper()
 
+        # Create the build symbol name
+        self.build_symbol = 'HAVE_' + self.id_enum_name
+
         # Build output container.
         # Every defined message will have its own output container, which
         # will generate a new Output type and public getters for each output
@@ -419,6 +422,7 @@ class Message:
                          'camelcase'           : utils.build_camelcase_name (self.fullname),
                          'service'             : utils.build_underscore_name (self.service),
                          'name_underscore'     : utils.build_underscore_name (self.name),
+                         'build_symbol'        : self.build_symbol,
                          'fullname'            : self.service + ' ' + self.name,
                          'type'                : 'response' if self.type == 'Message' else 'indication' }
 
@@ -453,6 +457,7 @@ class Message:
             '${public_types}'
             '${public_methods}'
             '<SUBSECTION Private>\n'
+            '${build_symbol}\n'
             '${private}'
             '<SUBSECTION Standard>\n'
             '${standard}'

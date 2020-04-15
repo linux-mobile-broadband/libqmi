@@ -19,6 +19,7 @@
  */
 
 #include <glib.h>
+#include <libqmi-glib.h>
 
 #ifndef __QMICLI_H__
 #define __QMICLI_H__
@@ -28,95 +29,108 @@ void          qmicli_async_operation_done (gboolean reported_operation_status,
                                            gboolean skip_cid_release);
 void          qmicli_expect_indications   (void);
 
-/* DMS group */
+#if defined HAVE_QMI_SERVICE_DMS
 GOptionGroup *qmicli_dms_get_option_group (void);
 gboolean      qmicli_dms_options_enabled  (void);
 void          qmicli_dms_run              (QmiDevice *device,
                                            QmiClientDms *client,
                                            GCancellable *cancellable);
+#endif
 
-/* WDS group */
+#if defined HAVE_QMI_SERVICE_WDS
 GOptionGroup *qmicli_wds_get_option_group (void);
 gboolean      qmicli_wds_options_enabled  (void);
 void          qmicli_wds_run              (QmiDevice *device,
                                            QmiClientWds *client,
                                            GCancellable *cancellable);
+#endif
 
-/* NAS group */
+#if defined HAVE_QMI_SERVICE_NAS
 GOptionGroup *qmicli_nas_get_option_group (void);
 gboolean      qmicli_nas_options_enabled  (void);
 void          qmicli_nas_run              (QmiDevice *device,
                                            QmiClientNas *client,
                                            GCancellable *cancellable);
+#endif
 
-/* PBM group */
+#if defined HAVE_QMI_SERVICE_PBM
 GOptionGroup *qmicli_pbm_get_option_group (void);
 gboolean      qmicli_pbm_options_enabled  (void);
 void          qmicli_pbm_run              (QmiDevice *device,
                                            QmiClientPbm *client,
                                            GCancellable *cancellable);
+#endif
 
-/* PDC group */
+#if defined HAVE_QMI_SERVICE_PDC
 GOptionGroup *qmicli_pdc_get_option_group (void);
 gboolean      qmicli_pdc_options_enabled  (void);
 void          qmicli_pdc_run              (QmiDevice *device,
                                            QmiClientPdc *client,
                                            GCancellable *cancellable);
+#endif
 
-/* UIM group */
+#if defined HAVE_QMI_SERVICE_UIM
 GOptionGroup *qmicli_uim_get_option_group (void);
 gboolean      qmicli_uim_options_enabled  (void);
 void          qmicli_uim_run              (QmiDevice *device,
                                            QmiClientUim *client,
                                            GCancellable *cancellable);
+#endif
 
-/* WMS group */
+#if defined HAVE_QMI_SERVICE_WMS
 GOptionGroup *qmicli_wms_get_option_group (void);
 gboolean      qmicli_wms_options_enabled  (void);
 void          qmicli_wms_run              (QmiDevice *device,
                                            QmiClientWms *client,
                                            GCancellable *cancellable);
+#endif
 
-/* WDA group */
+#if defined HAVE_QMI_SERVICE_WDA
 GOptionGroup *qmicli_wda_get_option_group (void);
 gboolean      qmicli_wda_options_enabled  (void);
 void          qmicli_wda_run              (QmiDevice *device,
                                            QmiClientWda *client,
                                            GCancellable *cancellable);
+#endif
 
-/* Voice group */
+#if defined HAVE_QMI_SERVICE_VOICE
 GOptionGroup *qmicli_voice_get_option_group (void);
 gboolean      qmicli_voice_options_enabled  (void);
 void          qmicli_voice_run              (QmiDevice *device,
                                              QmiClientVoice *client,
                                              GCancellable *cancellable);
+#endif
 
-/* Location group */
+#if defined HAVE_QMI_SERVICE_LOC
 GOptionGroup *qmicli_loc_get_option_group (void);
 gboolean      qmicli_loc_options_enabled  (void);
 void          qmicli_loc_run              (QmiDevice *device,
                                            QmiClientLoc *client,
                                            GCancellable *cancellable);
+#endif
 
-/* QoS group */
+#if defined HAVE_QMI_SERVICE_QOS
 GOptionGroup *qmicli_qos_get_option_group (void);
 gboolean      qmicli_qos_options_enabled  (void);
 void          qmicli_qos_run              (QmiDevice *device,
                                            QmiClientQos *client,
                                            GCancellable *cancellable);
+#endif
 
-/* GAS group */
+#if defined HAVE_QMI_SERVICE_GAS
 GOptionGroup *qmicli_gas_get_option_group (void);
 gboolean      qmicli_gas_options_enabled  (void);
 void          qmicli_gas_run              (QmiDevice *device,
                                            QmiClientGas *client,
                                            GCancellable *cancellable);
+#endif
 
-/* DSD group */
+#if defined HAVE_QMI_SERVICE_DSD
 GOptionGroup *qmicli_dsd_get_option_group (void);
 gboolean      qmicli_dsd_options_enabled  (void);
 void          qmicli_dsd_run              (QmiDevice *device,
                                            QmiClientDsd *client,
                                            GCancellable *cancellable);
+#endif
 
 #endif /* __QMICLI_H__ */

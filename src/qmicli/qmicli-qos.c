@@ -33,6 +33,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_QOS
+
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
@@ -52,22 +54,30 @@ static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_QOS_GET_FLOW_STATUS
     { "qos-get-flow-status", 0, 0, G_OPTION_ARG_INT, &get_flow_status_int,
       "Get QoS flow status",
       "[QoS ID]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_QOS_GET_NETWORK_STATUS
     { "qos-get-network-status", 0, 0, G_OPTION_ARG_NONE, &get_network_status_flag,
       "Gets the network status",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_QOS_SWI_READ_DATA_STATS
     { "qos-swi-read-data-stats", 0, 0, G_OPTION_ARG_INT, &swi_read_data_stats_int,
       "Read data stats (Sierra Wireless specific)",
       "[APN ID]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_QOS_RESET
     { "qos-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
     },
+#endif
     { "qos-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a QOS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -137,6 +147,8 @@ operation_shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status, FALSE);
 }
 
+#if defined HAVE_QMI_MESSAGE_QOS_GET_FLOW_STATUS
+
 static void
 get_flow_status_ready (QmiClientQos *client,
                        GAsyncResult *res)
@@ -171,6 +183,10 @@ get_flow_status_ready (QmiClientQos *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_QOS_GET_FLOW_STATUS */
+
+#if defined HAVE_QMI_MESSAGE_QOS_GET_NETWORK_STATUS
+
 static void
 get_network_status_ready (QmiClientQos *client,
                           GAsyncResult *res)
@@ -204,6 +220,10 @@ get_network_status_ready (QmiClientQos *client,
     qmi_message_qos_get_network_status_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_QOS_GET_NETWORK_STATUS */
+
+#if defined HAVE_QMI_MESSAGE_QOS_SWI_READ_DATA_STATS
 
 static void
 swi_read_data_stats_ready (QmiClientQos *client,
@@ -282,6 +302,10 @@ swi_read_data_stats_ready (QmiClientQos *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_QOS_SWI_READ_DATA_STATS */
+
+#if defined HAVE_QMI_MESSAGE_QOS_RESET
+
 static void
 reset_ready (QmiClientQos *client,
              GAsyncResult *res)
@@ -312,6 +336,8 @@ reset_ready (QmiClientQos *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_QOS_RESET */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -330,7 +356,7 @@ qmicli_qos_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Request to get QoS flow status? */
+#if defined HAVE_QMI_MESSAGE_QOS_GET_FLOW_STATUS
     if (get_flow_status_int >= 0) {
         QmiMessageQosGetFlowStatusInput *input;
 
@@ -346,8 +372,9 @@ qmicli_qos_run (QmiDevice *device,
         qmi_message_qos_get_flow_status_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get network status? */
+#if defined HAVE_QMI_MESSAGE_QOS_GET_NETWORK_STATUS
     if (get_network_status_flag) {
         g_debug ("Asynchronously getting network status...");
         qmi_client_qos_get_network_status (ctx->client,
@@ -358,8 +385,9 @@ qmicli_qos_run (QmiDevice *device,
                                            NULL);
         return;
     }
+#endif
 
-    /* Request to read data stats? */
+#if defined HAVE_QMI_MESSAGE_QOS_SWI_READ_DATA_STATS
     if (swi_read_data_stats_int >= 0) {
         QmiMessageQosSwiReadDataStatsInput *input;
 
@@ -375,8 +403,9 @@ qmicli_qos_run (QmiDevice *device,
         qmi_message_qos_swi_read_data_stats_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to reset QoS service? */
+#if defined HAVE_QMI_MESSAGE_QOS_RESET
     if (reset_flag) {
         g_debug ("Asynchronously resetting QoS service...");
         qmi_client_qos_reset (ctx->client,
@@ -387,6 +416,7 @@ qmicli_qos_run (QmiDevice *device,
                               NULL);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -396,3 +426,5 @@ qmicli_qos_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_QOS */

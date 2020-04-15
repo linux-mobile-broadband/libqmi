@@ -51,17 +51,21 @@ class Client:
             raise ValueError('Missing Service field')
 
     """
+    Emits the symbol specifying if the service is supported
+    """
+    def __emit_supported(self, f, supported):
+        translations = { 'service' : self.service.upper() }
+        template = '\n'
+        if supported:
+            template += '#define HAVE_QMI_SERVICE_${service}\n'
+        else:
+            template += '/* HAVE_QMI_SERVICE_${service} */\n'
+        f.write(string.Template(template).substitute(translations))
+
+    """
     Emits the generic GObject class implementation
     """
     def __emit_class(self, hfile, cfile, message_list):
-
-        # Check if we'll have indications
-        has_indications = False
-        for message in message_list.list:
-            if message.type == 'Indication':
-                has_indications = True
-                break
-
         translations = { 'underscore'                 : utils.build_underscore_name(self.name),
                          'no_prefix_underscore_upper' : utils.build_underscore_name(self.name[4:]).upper(),
                          'camelcase'                  : utils.build_camelcase_name(self.name),
@@ -121,16 +125,15 @@ class Client:
         template += (
             'G_DEFINE_TYPE (${camelcase}, ${underscore}, QMI_TYPE_CLIENT)\n')
 
-        if has_indications:
+        if len(message_list.indication_list) > 0:
             template += (
                 '\n'
                 'enum {\n')
-            for message in message_list.list:
-                if message.type == 'Indication':
-                    translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
-                    inner_template = (
-                        '    SIGNAL_${signal_id},\n')
-                    template += string.Template(inner_template).substitute(translations)
+            for message in message_list.indication_list:
+                translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
+                inner_template = (
+                    '    SIGNAL_${signal_id},\n')
+                template += string.Template(inner_template).substitute(translations)
             template += (
                 '    SIGNAL_LAST\n'
                 '};\n'
@@ -145,45 +148,44 @@ class Client:
             '{\n'
             '    switch (qmi_message_get_message_id (message)) {\n')
 
-        for message in message_list.list:
-            if message.type == 'Indication':
-                translations['enum_name'] = message.id_enum_name
-                translations['message_fullname_underscore'] = utils.build_underscore_name(message.fullname)
-                translations['message_name'] = message.name
-                translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
-                inner_template = ''
-                if message.output is not None and message.output.fields is not None:
-                    # At least one field in the indication
-                    translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
-                    translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
-                    translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
-                    inner_template += (
-                        '        case ${enum_name}: {\n'
-                        '            ${output_camelcase} *output;\n'
-                        '            GError *error = NULL;\n'
-                        '\n'
-                        '            /* Parse indication */\n'
-                        '            output = __${message_fullname_underscore}_indication_parse (message, &error);\n'
-                        '            if (!output) {\n'
-                        '                g_warning ("Couldn\'t parse \'${message_name}\' indication: %s",\n'
-                        '                           error ? error->message : "Unknown error");\n'
-                        '                if (error)\n'
-                        '                    g_error_free (error);\n'
-                        '            } else {\n'
-                        '                g_signal_emit (self, signals[SIGNAL_${signal_id}], 0, output);\n'
-                        '                ${output_underscore}_unref (output);\n'
-                        '            }\n'
-                        '            break;\n'
-                        '        }\n')
-                else:
-                    # No output field in the indication
-                    inner_template += (
-                        '        case ${enum_name}: {\n'
-                        '            g_signal_emit (self, signals[SIGNAL_${signal_id}], 0, NULL);\n'
-                        '            break;\n'
-                        '        }\n')
+        for message in message_list.indication_list:
+            translations['enum_name'] = message.id_enum_name
+            translations['message_fullname_underscore'] = utils.build_underscore_name(message.fullname)
+            translations['message_name'] = message.name
+            translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
+            inner_template = ''
+            if message.output is not None and message.output.fields is not None:
+                # At least one field in the indication
+                translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
+                translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
+                translations['output_underscore'] = utils.build_underscore_name(message.output.fullname)
+                inner_template += (
+                    '        case ${enum_name}: {\n'
+                    '            ${output_camelcase} *output;\n'
+                    '            GError *error = NULL;\n'
+                    '\n'
+                    '            /* Parse indication */\n'
+                    '            output = __${message_fullname_underscore}_indication_parse (message, &error);\n'
+                    '            if (!output) {\n'
+                    '                g_warning ("Couldn\'t parse \'${message_name}\' indication: %s",\n'
+                    '                           error ? error->message : "Unknown error");\n'
+                    '                if (error)\n'
+                    '                    g_error_free (error);\n'
+                    '            } else {\n'
+                    '                g_signal_emit (self, signals[SIGNAL_${signal_id}], 0, output);\n'
+                    '                ${output_underscore}_unref (output);\n'
+                    '            }\n'
+                    '            break;\n'
+                    '        }\n')
+            else:
+                # No output field in the indication
+                inner_template += (
+                    '        case ${enum_name}: {\n'
+                    '            g_signal_emit (self, signals[SIGNAL_${signal_id}], 0, NULL);\n'
+                    '            break;\n'
+                    '        }\n')
 
-                template += string.Template(inner_template).substitute(translations)
+            template += string.Template(inner_template).substitute(translations)
 
         template += (
             '        default:\n'
@@ -203,64 +205,63 @@ class Client:
             '\n'
             '    client_class->process_indication = process_indication;\n')
 
-        for message in message_list.list:
-            if message.type == 'Indication':
-                translations['signal_name'] = utils.build_dashed_name(message.name)
-                translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
-                translations['message_name'] = message.name
-                translations['since'] = message.since
-                inner_template = ''
-                if message.output is not None and message.output.fields is not None:
-                    # At least one field in the indication
-                    translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
-                    translations['bundle_type'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(message.output.fullname), 'QMI_')
-                    translations['service'] = self.service.upper()
-                    translations['message_name_dashed'] = message.name.replace(' ', '-')
-                    inner_template += (
-                        '\n'
-                        '    /**\n'
-                        '     * ${camelcase}::${signal_name}:\n'
-                        '     * @object: A #${camelcase}.\n'
-                        '     * @output: A #${output_camelcase}.\n'
-                        '     *\n'
-                        '     * The ::${signal_name} signal gets emitted when a \'<link linkend=\"libqmi-glib-${service}-${message_name_dashed}-indication.top_of_page\">${message_name}</link>\' indication is received.\n'
-                        '     *\n'
-                        '     * Since: ${since}\n'
-                        '     */\n'
-                        '    signals[SIGNAL_${signal_id}] =\n'
-                        '        g_signal_new ("${signal_name}",\n'
-                        '                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),\n'
-                        '                      G_SIGNAL_RUN_LAST,\n'
-                        '                      0,\n'
-                        '                      NULL,\n'
-                        '                      NULL,\n'
-                        '                      NULL,\n'
-                        '                      G_TYPE_NONE,\n'
-                        '                      1,\n'
-                        '                      ${bundle_type});\n')
-                else:
-                    # No output field in the indication
-                    inner_template += (
-                        '\n'
-                        '    /**\n'
-                        '     * ${camelcase}::${signal_name}:\n'
-                        '     * @object: A #${camelcase}.\n'
-                        '     *\n'
-                        '     * The ::${signal_name} signal gets emitted when a \'${message_name}\' indication is received.\n'
-                        '     *\n'
-                        '     * Since: ${since}\n'
-                        '     */\n'
-                        '    signals[SIGNAL_${signal_id}] =\n'
-                        '        g_signal_new ("${signal_name}",\n'
-                        '                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),\n'
-                        '                      G_SIGNAL_RUN_LAST,\n'
-                        '                      0,\n'
-                        '                      NULL,\n'
-                        '                      NULL,\n'
-                        '                      NULL,\n'
-                        '                      G_TYPE_NONE,\n'
-                        '                      0);\n')
-                template += string.Template(inner_template).substitute(translations)
+        for message in message_list.indication_list:
+            translations['signal_name'] = utils.build_dashed_name(message.name)
+            translations['signal_id'] = utils.build_underscore_uppercase_name(message.name)
+            translations['message_name'] = message.name
+            translations['since'] = message.since
+            inner_template = ''
+            if message.output is not None and message.output.fields is not None:
+                # At least one field in the indication
+                translations['output_camelcase'] = utils.build_camelcase_name(message.output.fullname)
+                translations['bundle_type'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(message.output.fullname), 'QMI_')
+                translations['service'] = self.service.upper()
+                translations['message_name_dashed'] = message.name.replace(' ', '-')
+                inner_template += (
+                    '\n'
+                    '    /**\n'
+                    '     * ${camelcase}::${signal_name}:\n'
+                    '     * @object: A #${camelcase}.\n'
+                    '     * @output: A #${output_camelcase}.\n'
+                    '     *\n'
+                    '     * The ::${signal_name} signal gets emitted when a \'<link linkend=\"libqmi-glib-${service}-${message_name_dashed}-indication.top_of_page\">${message_name}</link>\' indication is received.\n'
+                    '     *\n'
+                    '     * Since: ${since}\n'
+                    '     */\n'
+                    '    signals[SIGNAL_${signal_id}] =\n'
+                    '        g_signal_new ("${signal_name}",\n'
+                    '                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),\n'
+                    '                      G_SIGNAL_RUN_LAST,\n'
+                    '                      0,\n'
+                    '                      NULL,\n'
+                    '                      NULL,\n'
+                    '                      NULL,\n'
+                    '                      G_TYPE_NONE,\n'
+                    '                      1,\n'
+                    '                      ${bundle_type});\n')
+            else:
+                # No output field in the indication
+                inner_template += (
+                    '\n'
+                    '    /**\n'
+                    '     * ${camelcase}::${signal_name}:\n'
+                    '     * @object: A #${camelcase}.\n'
+                    '     *\n'
+                    '     * The ::${signal_name} signal gets emitted when a \'${message_name}\' indication is received.\n'
+                    '     *\n'
+                    '     * Since: ${since}\n'
+                    '     */\n'
+                    '    signals[SIGNAL_${signal_id}] =\n'
+                    '        g_signal_new ("${signal_name}",\n'
+                    '                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),\n'
+                    '                      G_SIGNAL_RUN_LAST,\n'
+                    '                      0,\n'
+                    '                      NULL,\n'
+                    '                      NULL,\n'
+                    '                      NULL,\n'
+                    '                      G_TYPE_NONE,\n'
+                    '                      0);\n')
+            template += string.Template(inner_template).substitute(translations)
 
         template += (
             '}\n'
@@ -278,11 +279,7 @@ class Client:
                          'service_uppercase' : self.service.upper(),
                          'service_camelcase' : string.capwords(self.service) }
 
-        for message in message_list.list:
-
-            if message.type == 'Indication':
-                continue
-
+        for message in message_list.request_list:
             if message.static:
                 continue
 
@@ -375,6 +372,8 @@ class Client:
             if message.abort:
                 template += (
                     '\n'
+                    '#if defined HAVE_QMI_MESSAGE_${service_uppercase}_ABORT\n'
+                    '\n'
                     'static QmiMessage *\n'
                     '__${message_fullname_underscore}_abortable_build_request (\n'
                     '    QmiDevice   *self,\n'
@@ -415,7 +414,10 @@ class Client:
                     '               abort_response,\n'
                     '               error);\n'
                     '    return !!output;\n'
-                    '}\n')
+                    '}\n'
+                    '\n'
+                    '#endif /* HAVE_QMI_MESSAGE_${service_uppercase}_ABORT */\n'
+                    '\n')
 
             template += (
                 '\n'
@@ -530,10 +532,17 @@ class Client:
 
             if message.abort:
                 template += (
+                    '#if defined HAVE_QMI_MESSAGE_${service_uppercase}_ABORT\n'
                     '                             (QmiDeviceCommandAbortableBuildRequestFn)  __${message_fullname_underscore}_abortable_build_request,\n'
                     '                             (QmiDeviceCommandAbortableParseResponseFn) __${message_fullname_underscore}_abortable_parse_response,\n'
                     '                             g_object_ref (self),\n'
-                    '                             g_object_unref,\n')
+                    '                             g_object_unref,\n'
+                    '#else\n'
+                    '                             NULL,\n'
+                    '                             NULL,\n'
+                    '                             NULL,\n'
+                    '                             NULL,\n'
+                    '#endif\n')
 
             template += (
                 '                             cancellable,\n'
@@ -550,6 +559,13 @@ class Client:
     Emit the service-specific client implementation
     """
     def emit(self, hfile, cfile, message_list):
+        # Do nothing if no supported messages
+        if len(message_list.indication_list) == 0 and len(message_list.request_list) == 0:
+            self.__emit_supported(hfile, False)
+            return
+
+        self.__emit_supported(hfile, True)
+
         # First, emit common class code
         utils.add_separator(hfile, 'CLIENT', self.name);
         utils.add_separator(cfile, 'CLIENT', self.name);
@@ -560,7 +576,11 @@ class Client:
     """
     Emit the sections
     """
-    def emit_sections(self, sfile):
+    def emit_sections(self, sfile, message_list):
+        # Do nothing if no supported messages
+        if len(message_list.indication_list) == 0 and len(message_list.request_list) == 0:
+            return
+
         translations = { 'underscore'                 : utils.build_underscore_name(self.name),
                          'no_prefix_underscore_upper' : utils.build_underscore_name(self.name[4:]).upper(),
                          'camelcase'                  : utils.build_camelcase_name (self.name),

@@ -33,6 +33,8 @@
 #include "qmicli.h"
 #include "qmicli-helpers.h"
 
+#if defined HAVE_QMI_SERVICE_DMS
+
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
@@ -105,239 +107,354 @@ static gboolean reset_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_DMS_GET_IDS
     { "dms-get-ids", 0, 0, G_OPTION_ARG_NONE, &get_ids_flag,
       "Get IDs",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_CAPABILITIES
     { "dms-get-capabilities", 0, 0, G_OPTION_ARG_NONE, &get_capabilities_flag,
       "Get capabilities",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MANUFACTURER
     { "dms-get-manufacturer", 0, 0, G_OPTION_ARG_NONE, &get_manufacturer_flag,
       "Get manufacturer",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MODEL
     { "dms-get-model", 0, 0, G_OPTION_ARG_NONE, &get_model_flag,
       "Get model",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_REVISION
     { "dms-get-revision", 0, 0, G_OPTION_ARG_NONE, &get_revision_flag,
       "Get revision",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MSISDN
     { "dms-get-msisdn", 0, 0, G_OPTION_ARG_NONE, &get_msisdn_flag,
       "Get MSISDN",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_POWER_STATE
     { "dms-get-power-state", 0, 0, G_OPTION_ARG_NONE, &get_power_state_flag,
       "Get power state",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_SET_PIN_PROTECTION
     { "dms-uim-set-pin-protection", 0, 0, G_OPTION_ARG_STRING, &uim_set_pin_protection_str,
       "Set PIN protection in the UIM",
       "[(PIN|PIN2),(disable|enable),(current PIN)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_VERIFY_PIN
     { "dms-uim-verify-pin", 0, 0, G_OPTION_ARG_STRING, &uim_verify_pin_str,
       "Verify PIN",
       "[(PIN|PIN2),(current PIN)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_UNBLOCK_PIN
     { "dms-uim-unblock-pin", 0, 0, G_OPTION_ARG_STRING, &uim_unblock_pin_str,
       "Unblock PIN",
       "[(PIN|PIN2),(PUK),(new PIN)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_CHANGE_PIN
     { "dms-uim-change-pin", 0, 0, G_OPTION_ARG_STRING, &uim_change_pin_str,
       "Change PIN",
       "[(PIN|PIN2),(old PIN),(new PIN)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_PIN_STATUS
     { "dms-uim-get-pin-status", 0, 0, G_OPTION_ARG_NONE, &uim_get_pin_status_flag,
       "Get PIN status",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_ICCID
     { "dms-uim-get-iccid", 0, 0, G_OPTION_ARG_NONE, &uim_get_iccid_flag,
       "Get ICCID",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_IMSI
     { "dms-uim-get-imsi", 0, 0, G_OPTION_ARG_NONE, &uim_get_imsi_flag,
       "Get IMSI",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_STATE
     { "dms-uim-get-state", 0, 0, G_OPTION_ARG_NONE, &uim_get_state_flag,
       "Get UIM State",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_CK_STATUS
     { "dms-uim-get-ck-status", 0, 0, G_OPTION_ARG_STRING, &uim_get_ck_status_str,
       "Get CK Status",
       "[(pn|pu|pp|pc|pf)]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_SET_CK_PROTECTION
     { "dms-uim-set-ck-protection", 0, 0, G_OPTION_ARG_STRING, &uim_set_ck_protection_str,
       "Disable CK protection",
       "[(pn|pu|pp|pc|pf),(disable),(key)]"
     },
+#endif
     { "dms-uim-unblock-ck", 0, 0, G_OPTION_ARG_STRING, &uim_unblock_ck_str,
       "Unblock CK",
       "[(pn|pu|pp|pc|pf),(key)]"
     },
+#if defined HAVE_QMI_MESSAGE_DMS_GET_HARDWARE_REVISION
     { "dms-get-hardware-revision", 0, 0, G_OPTION_ARG_NONE, &get_hardware_revision_flag,
       "Get the HW revision",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_OPERATING_MODE
     { "dms-get-operating-mode", 0, 0, G_OPTION_ARG_NONE, &get_operating_mode_flag,
       "Get the device operating mode",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SET_OPERATING_MODE
     { "dms-set-operating-mode", 0, 0, G_OPTION_ARG_STRING, &set_operating_mode_str,
       "Set the device operating mode",
       "[(Operating mode)]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_TIME
     { "dms-get-time", 0, 0, G_OPTION_ARG_NONE, &get_time_flag,
       "Get the device time",
       NULL,
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_PRL_VERSION
     { "dms-get-prl-version", 0, 0, G_OPTION_ARG_NONE, &get_prl_version_flag,
       "Get the PRL version",
       NULL,
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_ACTIVATION_STATE
     { "dms-get-activation-state", 0, 0, G_OPTION_ARG_NONE, &get_activation_state_flag,
       "Get the state of the service activation",
       NULL,
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_ACTIVATE_AUTOMATIC
     { "dms-activate-automatic", 0, 0, G_OPTION_ARG_STRING, &activate_automatic_str,
       "Request automatic service activation",
       "[Activation Code]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_ACTIVATE_MANUAL
     { "dms-activate-manual", 0, 0, G_OPTION_ARG_STRING, &activate_manual_str,
       "Request manual service activation",
       "[SPC,SID,MDN,MIN]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_USER_LOCK_STATE
     { "dms-get-user-lock-state", 0, 0, G_OPTION_ARG_NONE, &get_user_lock_state_flag,
       "Get the state of the user lock",
       NULL,
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SET_USER_LOCK_STATE
     { "dms-set-user-lock-state", 0, 0, G_OPTION_ARG_STRING, &set_user_lock_state_str,
       "Set the state of the user lock",
       "[(disable|enable),(current lock code)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SET_USER_LOCK_CODE
     { "dms-set-user-lock-code", 0, 0, G_OPTION_ARG_STRING, &set_user_lock_code_str,
       "Change the user lock code",
       "[(old lock code),(new lock code)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_READ_USER_DATA
     { "dms-read-user-data", 0, 0, G_OPTION_ARG_NONE, &read_user_data_flag,
       "Read user data",
       NULL,
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_WRITE_USER_DATA
     { "dms-write-user-data", 0, 0, G_OPTION_ARG_STRING, &write_user_data_str,
       "Write user data",
       "[(User data)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_READ_ERI_FILE
     { "dms-read-eri-file", 0, 0, G_OPTION_ARG_NONE, &read_eri_file_flag,
       "Read ERI file",
       NULL,
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_RESTORE_FACTORY_DEFAULTS
     { "dms-restore-factory-defaults", 0, 0, G_OPTION_ARG_STRING, &restore_factory_defaults_str,
       "Restore factory defaults",
       "[(Service Programming Code)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_VALIDATE_SERVICE_PROGRAMMING_CODE
     { "dms-validate-service-programming-code", 0, 0, G_OPTION_ARG_STRING, &validate_service_programming_code_str,
       "Validate the Service Programming Code",
       "[(Service Programming Code)]",
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_ID
     { "dms-set-firmware-id", 0, 0, G_OPTION_ARG_NONE, &set_firmware_id_flag,
       "Set firmware id",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_BAND_CAPABILITIES
     { "dms-get-band-capabilities", 0, 0, G_OPTION_ARG_NONE, &get_band_capabilities_flag,
       "Get band capabilities",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_FACTORY_SKU
     { "dms-get-factory-sku", 0, 0, G_OPTION_ARG_NONE, &get_factory_sku_flag,
       "Get factory stock keeping unit",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES && defined HAVE_QMI_MESSAGE_DMS_GET_STORED_IMAGE_INFO
     { "dms-list-stored-images", 0, 0, G_OPTION_ARG_NONE, &list_stored_images_flag,
       "List stored images",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE && \
+    defined HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES
     { "dms-select-stored-image", 0, 0, G_OPTION_ARG_STRING, &select_stored_image_str,
       "Select stored image",
       "[modem#,pri#] where # is the index"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE && \
+    defined HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES && \
+    defined HAVE_QMI_MESSAGE_DMS_DELETE_STORED_IMAGE
     { "dms-delete-stored-image", 0, 0, G_OPTION_ARG_STRING, &delete_stored_image_str,
       "Delete stored image",
       "[modem#|pri#] where # is the index"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_FIRMWARE_PREFERENCE
     { "dms-get-firmware-preference", 0, 0, G_OPTION_ARG_NONE, &get_firmware_preference_flag,
       "Get firmware preference",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE
     { "dms-set-firmware-preference", 0, 0, G_OPTION_ARG_STRING, &set_firmware_preference_str,
       "Set firmware preference",
       "[(fwver),(config),(carrier)]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_BOOT_IMAGE_DOWNLOAD_MODE
     { "dms-get-boot-image-download-mode", 0, 0, G_OPTION_ARG_NONE, &get_boot_image_download_mode_flag,
       "Get boot image download mode",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SET_BOOT_IMAGE_DOWNLOAD_MODE
     { "dms-set-boot-image-download-mode", 0, 0, G_OPTION_ARG_STRING, &set_boot_image_download_mode_str,
       "Set boot image download mode",
       "[normal|boot-and-recovery]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_SOFTWARE_VERSION
     { "dms-get-software-version", 0, 0, G_OPTION_ARG_NONE, &get_software_version_flag,
       "Get software version",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FCC_AUTHENTICATION
     { "dms-set-fcc-authentication", 0, 0, G_OPTION_ARG_NONE, &set_fcc_authentication_flag,
       "Set FCC authentication",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_SUPPORTED_MESSAGES
     { "dms-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_HP_CHANGE_DEVICE_MODE
     { "dms-hp-change-device-mode", 0, 0, G_OPTION_ARG_STRING, &hp_change_device_mode_str,
       "Change device mode (HP specific)",
       "[fastboot]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SWI_GET_CURRENT_FIRMWARE
     { "dms-swi-get-current-firmware", 0, 0, G_OPTION_ARG_NONE, &swi_get_current_firmware_flag,
       "Get Current Firmware (Sierra Wireless specific)",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SWI_GET_USB_COMPOSITION
     { "dms-swi-get-usb-composition", 0, 0, G_OPTION_ARG_NONE, &swi_get_usb_composition_flag,
       "Get current and supported USB compositions (Sierra Wireless specific)",
       NULL
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_SWI_SET_USB_COMPOSITION
     { "dms-swi-set-usb-composition", 0, 0, G_OPTION_ARG_STRING, &swi_set_usb_composition_str,
       "Set USB composition (Sierra Wireless specific)",
       "[#]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE
     { "dms-foxconn-change-device-mode", 0, 0, G_OPTION_ARG_STRING, &foxconn_change_device_mode_str,
       "Change device mode (Foxconn specific)",
       "[fastboot-ota|fastboot-online]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION
     { "dms-foxconn-get-firmware-version", 0, 0, G_OPTION_ARG_STRING, &foxconn_get_firmware_version_str,
       "Get firmware version (Foxconn specific)",
       "[firmware-mcfg-apps|firmware-mcfg|apps]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MAC_ADDRESS
     { "dms-get-mac-address", 0, 0, G_OPTION_ARG_STRING, &get_mac_address_str,
       "Get default MAC address",
       "[wlan|bt]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_RESET
     { "dms-reset", 0, 0, G_OPTION_ARG_NONE, &reset_flag,
       "Reset the service state",
       NULL
     },
+#endif
     { "dms-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DMS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
     },
     /* deprecated entries (hidden in --help) */
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE
     { "dms-dell-change-device-mode", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &dell_change_device_mode_str,
       "Change device mode (DELL specific)",
       "[fastboot-ota|fastboot-online]"
     },
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION
     { "dms-dell-get-firmware-version", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &dell_get_firmware_version_str,
       "Get firmware version (DELL specific)",
       "[firmware-mcfg-apps|firmware-mcfg|apps]"
     },
+#endif
     { NULL }
 };
 
@@ -456,6 +573,9 @@ operation_shutdown (gboolean operation_status)
     qmicli_async_operation_done (operation_status, FALSE);
 }
 
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE || \
+    defined HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE
+
 static void
 operation_shutdown_skip_cid_release (gboolean operation_status)
 {
@@ -465,6 +585,10 @@ operation_shutdown_skip_cid_release (gboolean operation_status)
     context_free (ctx);
     qmicli_async_operation_done (operation_status, TRUE);
 }
+
+#endif
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_IDS
 
 static void
 get_ids_ready (QmiClientDms *client,
@@ -515,6 +639,10 @@ get_ids_ready (QmiClientDms *client,
     qmi_message_dms_get_ids_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_IDS */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_CAPABILITIES
 
 static void
 get_capabilities_ready (QmiClientDms *client,
@@ -583,6 +711,10 @@ get_capabilities_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_CAPABILITIES */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MANUFACTURER
+
 static void
 get_manufacturer_ready (QmiClientDms *client,
                         GAsyncResult *res)
@@ -617,6 +749,10 @@ get_manufacturer_ready (QmiClientDms *client,
     qmi_message_dms_get_manufacturer_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_MANUFACTURER */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MODEL
 
 static void
 get_model_ready (QmiClientDms *client,
@@ -653,6 +789,10 @@ get_model_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_MODEL */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_REVISION
+
 static void
 get_revision_ready (QmiClientDms *client,
                     GAsyncResult *res)
@@ -688,6 +828,10 @@ get_revision_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_REVISION */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MSISDN
+
 static void
 get_msisdn_ready (QmiClientDms *client,
                   GAsyncResult *res)
@@ -722,6 +866,10 @@ get_msisdn_ready (QmiClientDms *client,
     qmi_message_dms_get_msisdn_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_MSISDN */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_POWER_STATE
 
 static void
 get_power_state_ready (QmiClientDms *client,
@@ -766,6 +914,10 @@ get_power_state_ready (QmiClientDms *client,
     qmi_message_dms_get_power_state_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_POWER_STATE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_SET_PIN_PROTECTION
 
 static QmiMessageDmsUimSetPinProtectionInput *
 uim_set_pin_protection_input_create (const gchar *str)
@@ -852,6 +1004,10 @@ uim_set_pin_protection_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_SET_PIN_PROTECTION */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_VERIFY_PIN
+
 static QmiMessageDmsUimVerifyPinInput *
 uim_verify_pin_input_create (const gchar *str)
 {
@@ -933,6 +1089,10 @@ uim_verify_pin_ready (QmiClientDms *client,
     qmi_message_dms_uim_verify_pin_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_VERIFY_PIN */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_UNBLOCK_PIN
 
 static QmiMessageDmsUimUnblockPinInput *
 uim_unblock_pin_input_create (const gchar *str)
@@ -1019,6 +1179,10 @@ uim_unblock_pin_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_UNBLOCK_PIN */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_CHANGE_PIN
+
 static QmiMessageDmsUimChangePinInput *
 uim_change_pin_input_create (const gchar *str)
 {
@@ -1104,6 +1268,10 @@ uim_change_pin_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_CHANGE_PIN */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_PIN_STATUS
+
 static void
 uim_get_pin_status_ready (QmiClientDms *client,
                           GAsyncResult *res)
@@ -1169,6 +1337,10 @@ uim_get_pin_status_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_GET_PIN_STATUS */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_ICCID
+
 static void
 uim_get_iccid_ready (QmiClientDms *client,
                      GAsyncResult *res)
@@ -1203,6 +1375,10 @@ uim_get_iccid_ready (QmiClientDms *client,
     qmi_message_dms_uim_get_iccid_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_GET_ICCID */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_IMSI
 
 static void
 uim_get_imsi_ready (QmiClientDms *client,
@@ -1239,6 +1415,10 @@ uim_get_imsi_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_GET_IMSI */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_STATE
+
 static void
 uim_get_state_ready (QmiClientDms *client,
                     GAsyncResult *res)
@@ -1273,6 +1453,10 @@ uim_get_state_ready (QmiClientDms *client,
     qmi_message_dms_uim_get_state_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_GET_STATE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_CK_STATUS
 
 static QmiMessageDmsUimGetCkStatusInput *
 uim_get_ck_status_input_create (const gchar *str)
@@ -1356,6 +1540,10 @@ uim_get_ck_status_ready (QmiClientDms *client,
     qmi_message_dms_uim_get_ck_status_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_GET_CK_STATUS */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_SET_CK_PROTECTION
 
 static QmiMessageDmsUimSetCkProtectionInput *
 uim_set_ck_protection_input_create (const gchar *str)
@@ -1444,6 +1632,10 @@ uim_set_ck_protection_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_SET_CK_PROTECTION */
+
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_UNBLOCK_CK
+
 static QmiMessageDmsUimUnblockCkInput *
 uim_unblock_ck_input_create (const gchar *str)
 {
@@ -1522,6 +1714,10 @@ uim_unblock_ck_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_UIM_UNBLOCK_CK */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_HARDWARE_REVISION
+
 static void
 get_hardware_revision_ready (QmiClientDms *client,
                              GAsyncResult *res)
@@ -1556,6 +1752,10 @@ get_hardware_revision_ready (QmiClientDms *client,
     qmi_message_dms_get_hardware_revision_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_HARDWARE_REVISION */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_OPERATING_MODE
 
 static void
 get_operating_mode_ready (QmiClientDms *client,
@@ -1607,6 +1807,10 @@ get_operating_mode_ready (QmiClientDms *client,
     qmi_message_dms_get_operating_mode_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_OPERATING_MODE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_OPERATING_MODE
 
 static QmiMessageDmsSetOperatingModeInput *
 set_operating_mode_input_create (const gchar *str)
@@ -1662,6 +1866,10 @@ set_operating_mode_ready (QmiClientDms *client,
     qmi_message_dms_set_operating_mode_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_OPERATING_MODE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_TIME
 
 static void
 get_time_ready (QmiClientDms *client,
@@ -1744,6 +1952,10 @@ get_time_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_TIME */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_PRL_VERSION
+
 static void
 get_prl_version_ready (QmiClientDms *client,
                        GAsyncResult *res)
@@ -1791,6 +2003,10 @@ get_prl_version_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_PRL_VERSION */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_ACTIVATION_STATE
+
 static void
 get_activation_state_ready (QmiClientDms *client,
                             GAsyncResult *res)
@@ -1828,6 +2044,10 @@ get_activation_state_ready (QmiClientDms *client,
     qmi_message_dms_get_activation_state_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_ACTIVATION_STATE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_ACTIVATE_MANUAL
 
 static QmiMessageDmsActivateManualInput *
 activate_manual_input_create (const gchar *str)
@@ -1897,6 +2117,10 @@ activate_manual_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_ACTIVATE_MANUAL */
+
+#if defined HAVE_QMI_MESSAGE_DMS_ACTIVATE_AUTOMATIC
+
 static QmiMessageDmsActivateAutomaticInput *
 activate_automatic_input_create (const gchar *str)
 {
@@ -1945,6 +2169,10 @@ activate_automatic_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_USER_LOCK_STATE
+
 static void
 get_user_lock_state_ready (QmiClientDms *client,
                            GAsyncResult *res)
@@ -1982,6 +2210,10 @@ get_user_lock_state_ready (QmiClientDms *client,
     qmi_message_dms_get_user_lock_state_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_USER_LOCK_STATE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_USER_LOCK_STATE
 
 static QmiMessageDmsSetUserLockStateInput *
 set_user_lock_state_input_create (const gchar *str)
@@ -2049,6 +2281,10 @@ set_user_lock_state_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_USER_LOCK_CODE
+
 static QmiMessageDmsSetUserLockCodeInput *
 set_user_lock_code_input_create (const gchar *str)
 {
@@ -2114,6 +2350,10 @@ set_user_lock_code_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_USER_LOCK_CODE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_READ_USER_DATA
+
 static void
 read_user_data_ready (QmiClientDms *client,
                       GAsyncResult *res)
@@ -2157,6 +2397,10 @@ read_user_data_ready (QmiClientDms *client,
     qmi_message_dms_read_user_data_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_READ_USER_DATA */
+
+#if defined HAVE_QMI_MESSAGE_DMS_WRITE_USER_DATA
 
 static QmiMessageDmsWriteUserDataInput *
 write_user_data_input_create (const gchar *str)
@@ -2216,6 +2460,10 @@ write_user_data_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_WRITE_USER_DATA */
+
+#if defined HAVE_QMI_MESSAGE_DMS_READ_ERI_FILE
+
 static void
 read_eri_file_ready (QmiClientDms *client,
                      GAsyncResult *res)
@@ -2259,6 +2507,10 @@ read_eri_file_ready (QmiClientDms *client,
     qmi_message_dms_read_eri_file_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_READ_ERI_FILE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_RESTORE_FACTORY_DEFAULTS
 
 static QmiMessageDmsRestoreFactoryDefaultsInput *
 restore_factory_defaults_input_create (const gchar *str)
@@ -2312,6 +2564,10 @@ restore_factory_defaults_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_RESTORE_FACTORY_DEFAULTS */
+
+#if defined HAVE_QMI_MESSAGE_DMS_VALIDATE_SERVICE_PROGRAMMING_CODE
+
 static QmiMessageDmsValidateServiceProgrammingCodeInput *
 validate_service_programming_code_input_create (const gchar *str)
 {
@@ -2363,6 +2619,10 @@ validate_service_programming_code_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_VALIDATE_SERVICE_PROGRAMMING_CODE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_ID
+
 static void
 set_firmware_id_ready (QmiClientDms *client,
                        GAsyncResult *res)
@@ -2392,6 +2652,10 @@ set_firmware_id_ready (QmiClientDms *client,
     qmi_message_dms_set_firmware_id_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_ID */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_BAND_CAPABILITIES
 
 static void
 get_band_capabilities_ready (QmiClientDms *client,
@@ -2459,6 +2723,10 @@ get_band_capabilities_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_BAND_CAPABILITIES */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_FACTORY_SKU
+
 static void
 get_factory_sku_ready (QmiClientDms *client,
                        GAsyncResult *res)
@@ -2494,6 +2762,11 @@ get_factory_sku_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_FACTORY_SKU */
+
+#if defined HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES &&  \
+    defined HAVE_QMI_MESSAGE_DMS_GET_STORED_IMAGE_INFO
+
 typedef struct {
     QmiMessageDmsListStoredImagesOutput *list_images_output;
     guint i;
@@ -2510,30 +2783,19 @@ list_images_context_free (ListImagesContext *operation_ctx)
 static void get_image_info (ListImagesContext *operation_ctx);
 
 static void
-get_stored_image_info_ready (QmiClientDms *client,
-                             GAsyncResult *res,
-                             ListImagesContext *operation_ctx)
+print_image_info (ListImagesContext *operation_ctx,
+                  QmiMessageDmsGetStoredImageInfoOutput *output)
 {
     GArray *array;
-    QmiMessageDmsGetStoredImageInfoOutput *output;
-    GError *error = NULL;
     QmiMessageDmsListStoredImagesOutputListImage *image;
     QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement *subimage;
-    gchar *unique_id_str;
-
-    output = qmi_client_dms_get_stored_image_info_finish (client, res, &error);
-    if (!output) {
-        /* Fully ignore errors */
-        g_error_free (error);
-    } else if (!qmi_message_dms_get_stored_image_info_output_get_result (output, &error)) {
-        /* Fully ignore errors */
-        g_error_free (error);
-    }
+    g_autofree gchar *unique_id_str = NULL;
 
     qmi_message_dms_list_stored_images_output_get_list (
         operation_ctx->list_images_output,
         &array,
         NULL);
+
     image = &g_array_index (array, QmiMessageDmsListStoredImagesOutputListImage, operation_ctx->i);
     subimage = &g_array_index (image->sublist,
                                QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement,
@@ -2603,12 +2865,23 @@ get_stored_image_info_ready (QmiClientDms *client,
                          lock_id);
             }
         }
-
-        qmi_message_dms_get_stored_image_info_output_unref (output);
     }
-
     g_print ("\n");
-    g_free (unique_id_str);
+}
+
+static void
+get_stored_image_info_ready (QmiClientDms *client,
+                             GAsyncResult *res,
+                             ListImagesContext *operation_ctx)
+{
+
+    g_autoptr(QmiMessageDmsGetStoredImageInfoOutput) output = NULL;
+
+    output = qmi_client_dms_get_stored_image_info_finish (client, res, NULL);
+    if (output && !qmi_message_dms_get_stored_image_info_output_get_result (output, NULL))
+        g_clear_pointer (&output, qmi_message_dms_get_stored_image_info_output_unref);
+
+    print_image_info (operation_ctx, output);
 
     /* Go on to the next one */
     operation_ctx->j++;
@@ -2622,7 +2895,7 @@ get_image_info (ListImagesContext *operation_ctx)
     QmiMessageDmsListStoredImagesOutputListImage *image;
     QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement *subimage;
     QmiMessageDmsGetStoredImageInfoInputImage image_id;
-    QmiMessageDmsGetStoredImageInfoInput *input;
+    g_autoptr(QmiMessageDmsGetStoredImageInfoInput) input = NULL;
 
     qmi_message_dms_list_stored_images_output_get_list (
         operation_ctx->list_images_output,
@@ -2668,14 +2941,12 @@ get_image_info (ListImagesContext *operation_ctx)
     image_id.build_id = subimage->build_id;
     input = qmi_message_dms_get_stored_image_info_input_new ();
     qmi_message_dms_get_stored_image_info_input_set_image (input, &image_id, NULL);
-
     qmi_client_dms_get_stored_image_info (ctx->client,
                                           input,
                                           10,
                                           ctx->cancellable,
                                           (GAsyncReadyCallback)get_stored_image_info_ready,
                                           operation_ctx);
-    qmi_message_dms_get_stored_image_info_input_unref (input);
 }
 
 static void
@@ -2712,6 +2983,11 @@ list_stored_images_ready (QmiClientDms *client,
 
     get_image_info (operation_ctx);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES && HAVE_QMI_MESSAGE_DMS_GET_STORED_IMAGE_INFO */
+
+#if defined HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES && \
+    defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE
 
 typedef struct {
     gint modem_index;
@@ -2933,8 +3209,15 @@ get_stored_image (QmiClientDms *client,
         task);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES
+        * HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE
+
 /* Note:
  *  used by both --dms-set-firmware-preference and --dms-select-stored-image
+ * But only one single symbol check, as the select operation already
+ * requires SET_FIRMWARE_PREFERENCE.
  */
 static void
 dms_set_firmware_preference_ready (QmiClientDms *client,
@@ -3005,6 +3288,11 @@ dms_set_firmware_preference_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE && \
+    defined HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES
+
 static void
 get_stored_image_select_ready (QmiClientDms *client,
                                GAsyncResult *res)
@@ -3052,6 +3340,13 @@ get_stored_image_select_ready (QmiClientDms *client,
     g_free        (pri_image_id.build_id);
     g_array_unref (pri_image_id.unique_id);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE
+        * HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE && \
+    defined HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES && \
+    defined HAVE_QMI_MESSAGE_DMS_DELETE_STORED_IMAGE
 
 static void
 delete_stored_image_ready (QmiClientDms *client,
@@ -3135,6 +3430,12 @@ get_stored_image_delete_ready (QmiClientDms *client,
         g_array_unref (pri_image_id.unique_id);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE
+        * HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES
+        * HAVE_QMI_MESSAGE_DMS_DELETE_STORED_IMAGE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_FIRMWARE_PREFERENCE
+
 static void
 dms_get_firmware_preference_ready (QmiClientDms *client,
                                    GAsyncResult *res)
@@ -3190,6 +3491,10 @@ dms_get_firmware_preference_ready (QmiClientDms *client,
     qmi_message_dms_get_firmware_preference_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_FIRMWARE_PREFERENCE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE
 
 typedef struct {
     QmiMessageDmsSetFirmwarePreferenceInputListImage modem_image_id;
@@ -3257,6 +3562,10 @@ set_firmware_preference_input_create (const gchar                  *str,
     return input;
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_BOOT_IMAGE_DOWNLOAD_MODE
+
 static void
 get_boot_image_download_mode_ready (QmiClientDms *client,
                                     GAsyncResult *res)
@@ -3290,6 +3599,10 @@ get_boot_image_download_mode_ready (QmiClientDms *client,
     qmi_message_dms_get_boot_image_download_mode_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_BOOT_IMAGE_DOWNLOAD_MODE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_BOOT_IMAGE_DOWNLOAD_MODE
 
 static QmiMessageDmsSetBootImageDownloadModeInput *
 set_boot_image_download_mode_input_create (const gchar *str)
@@ -3346,6 +3659,10 @@ set_boot_image_download_mode_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_BOOT_IMAGE_DOWNLOAD_MODE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_SOFTWARE_VERSION
+
 static void
 get_software_version_ready (QmiClientDms *client,
                             GAsyncResult *res)
@@ -3380,6 +3697,10 @@ get_software_version_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FCC_AUTHENTICATION
+
 static void
 set_fcc_authentication_ready (QmiClientDms *client,
                               GAsyncResult *res)
@@ -3409,6 +3730,10 @@ set_fcc_authentication_ready (QmiClientDms *client,
     qmi_message_dms_set_fcc_authentication_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_FCC_AUTHENTICATION */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_SUPPORTED_MESSAGES
 
 static void
 get_supported_messages_ready (QmiClientDms *client,
@@ -3447,6 +3772,10 @@ get_supported_messages_ready (QmiClientDms *client,
     qmi_message_dms_get_supported_messages_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_SUPPORTED_MESSAGES */
+
+#if defined HAVE_QMI_MESSAGE_DMS_HP_CHANGE_DEVICE_MODE
 
 static QmiMessageDmsHpChangeDeviceModeInput *
 hp_change_device_mode_input_create (const gchar *str)
@@ -3505,6 +3834,10 @@ hp_change_device_mode_ready (QmiClientDms *client,
      * client CID */
     operation_shutdown_skip_cid_release (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_HP_CHANGE_DEVICE_MODE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SWI_GET_CURRENT_FIRMWARE
 
 static void
 swi_get_current_firmware_ready (QmiClientDms *client,
@@ -3578,6 +3911,10 @@ swi_get_current_firmware_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_SWI_GET_CURRENT_FIRMWARE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SWI_GET_USB_COMPOSITION
+
 static void
 swi_get_usb_composition_ready (QmiClientDms *client,
                                GAsyncResult *res)
@@ -3630,6 +3967,10 @@ swi_get_usb_composition_ready (QmiClientDms *client,
     qmi_message_dms_swi_get_usb_composition_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_SWI_GET_USB_COMPOSITION */
+
+#if defined HAVE_QMI_MESSAGE_DMS_SWI_SET_USB_COMPOSITION
 
 static void
 swi_set_usb_composition_ready (QmiClientDms *client,
@@ -3686,6 +4027,10 @@ swi_set_usb_composition_input_create (const gchar *str)
 
     return input;
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_SWI_SET_USB_COMPOSITION */
+
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE
 
 static QmiMessageDmsFoxconnChangeDeviceModeInput *
 foxconn_change_device_mode_input_create (const gchar *str)
@@ -3745,6 +4090,10 @@ foxconn_change_device_mode_ready (QmiClientDms *client,
     operation_shutdown_skip_cid_release (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE */
+
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION
+
 static QmiMessageDmsFoxconnGetFirmwareVersionInput *
 foxconn_get_firmware_version_input_create (const gchar *str)
 {
@@ -3803,6 +4152,10 @@ foxconn_get_firmware_version_ready (QmiClientDms *client,
     qmi_message_dms_foxconn_get_firmware_version_output_unref (output);
     operation_shutdown (TRUE);
 }
+
+#endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION */
+
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MAC_ADDRESS
 
 static QmiMessageDmsGetMacAddressInput *
 get_mac_address_input_create (const gchar *str)
@@ -3870,6 +4223,10 @@ get_mac_address_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_MAC_ADDRESS */
+
+#if defined HAVE_QMI_MESSAGE_DMS_RESET
+
 static void
 reset_ready (QmiClientDms *client,
              GAsyncResult *res)
@@ -3900,6 +4257,8 @@ reset_ready (QmiClientDms *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_DMS_RESET */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -3918,7 +4277,7 @@ qmicli_dms_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Request to get IDs? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_IDS
     if (get_ids_flag) {
         g_debug ("Asynchronously getting IDs...");
         qmi_client_dms_get_ids (ctx->client,
@@ -3929,8 +4288,9 @@ qmicli_dms_run (QmiDevice *device,
                                 NULL);
         return;
     }
+#endif
 
-    /* Request to get capabilities? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_CAPABILITIES
     if (get_capabilities_flag) {
         g_debug ("Asynchronously getting capabilities...");
         qmi_client_dms_get_capabilities (ctx->client,
@@ -3941,8 +4301,9 @@ qmicli_dms_run (QmiDevice *device,
                                          NULL);
         return;
     }
+#endif
 
-    /* Request to get manufacturer? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MANUFACTURER
     if (get_manufacturer_flag) {
         g_debug ("Asynchronously getting manufacturer...");
         qmi_client_dms_get_manufacturer (ctx->client,
@@ -3953,8 +4314,9 @@ qmicli_dms_run (QmiDevice *device,
                                          NULL);
         return;
     }
+#endif
 
-    /* Request to get model? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MODEL
     if (get_model_flag) {
         g_debug ("Asynchronously getting model...");
         qmi_client_dms_get_model (ctx->client,
@@ -3965,8 +4327,9 @@ qmicli_dms_run (QmiDevice *device,
                                   NULL);
         return;
     }
+#endif
 
-    /* Request to get revision? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_REVISION
     if (get_revision_flag) {
         g_debug ("Asynchronously getting revision...");
         qmi_client_dms_get_revision (ctx->client,
@@ -3977,8 +4340,9 @@ qmicli_dms_run (QmiDevice *device,
                                      NULL);
         return;
     }
+#endif
 
-    /* Request to get msisdn? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MSISDN
     if (get_msisdn_flag) {
         g_debug ("Asynchronously getting msisdn...");
         qmi_client_dms_get_msisdn (ctx->client,
@@ -3989,8 +4353,9 @@ qmicli_dms_run (QmiDevice *device,
                                    NULL);
         return;
     }
+#endif
 
-    /* Request to get power status? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_POWER_STATE
     if (get_power_state_flag) {
         g_debug ("Asynchronously getting power status...");
         qmi_client_dms_get_power_state (ctx->client,
@@ -4001,8 +4366,9 @@ qmicli_dms_run (QmiDevice *device,
                                         NULL);
         return;
     }
+#endif
 
-    /* Request to set PIN protection? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_SET_PIN_PROTECTION
     if (uim_set_pin_protection_str) {
         QmiMessageDmsUimSetPinProtectionInput *input;
 
@@ -4021,8 +4387,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_uim_set_pin_protection_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to verify PIN? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_VERIFY_PIN
     if (uim_verify_pin_str) {
         QmiMessageDmsUimVerifyPinInput *input;
 
@@ -4041,8 +4408,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_uim_verify_pin_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to unblock PIN? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_UNBLOCK_PIN
     if (uim_unblock_pin_str) {
         QmiMessageDmsUimUnblockPinInput *input;
 
@@ -4061,8 +4429,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_uim_unblock_pin_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to change the PIN? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_CHANGE_PIN
     if (uim_change_pin_str) {
         QmiMessageDmsUimChangePinInput *input;
 
@@ -4081,8 +4450,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_uim_change_pin_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get PIN status? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_PIN_STATUS
     if (uim_get_pin_status_flag) {
         g_debug ("Asynchronously getting PIN status...");
         qmi_client_dms_uim_get_pin_status (ctx->client,
@@ -4093,8 +4463,9 @@ qmicli_dms_run (QmiDevice *device,
                                            NULL);
         return;
     }
+#endif
 
-    /* Request to get UIM ICCID? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_ICCID
     if (uim_get_iccid_flag) {
         g_debug ("Asynchronously getting UIM ICCID...");
         qmi_client_dms_uim_get_iccid (ctx->client,
@@ -4105,8 +4476,9 @@ qmicli_dms_run (QmiDevice *device,
                                       NULL);
         return;
     }
+#endif
 
-    /* Request to get UIM IMSI? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_IMSI
     if (uim_get_imsi_flag) {
         g_debug ("Asynchronously getting UIM IMSI...");
         qmi_client_dms_uim_get_imsi (ctx->client,
@@ -4117,8 +4489,9 @@ qmicli_dms_run (QmiDevice *device,
                                      NULL);
         return;
     }
+#endif
 
-    /* Request to get UIM state? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_STATE
     if (uim_get_state_flag) {
         g_debug ("Asynchronously getting UIM state...");
         qmi_client_dms_uim_get_state (ctx->client,
@@ -4129,8 +4502,9 @@ qmicli_dms_run (QmiDevice *device,
                                       NULL);
         return;
     }
+#endif
 
-    /* Request to get hardware revision? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_HARDWARE_REVISION
     if (get_hardware_revision_flag) {
         g_debug ("Asynchronously getting hardware revision...");
         qmi_client_dms_get_hardware_revision (ctx->client,
@@ -4141,8 +4515,9 @@ qmicli_dms_run (QmiDevice *device,
                                               NULL);
         return;
     }
+#endif
 
-    /* Request to get operating mode? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_OPERATING_MODE
     if (get_operating_mode_flag) {
         g_debug ("Asynchronously getting operating mode...");
         qmi_client_dms_get_operating_mode (ctx->client,
@@ -4153,8 +4528,9 @@ qmicli_dms_run (QmiDevice *device,
                                            NULL);
         return;
     }
+#endif
 
-    /* Request to set operating mode? */
+#if defined HAVE_QMI_MESSAGE_DMS_SET_OPERATING_MODE
     if (set_operating_mode_str) {
         QmiMessageDmsSetOperatingModeInput *input;
 
@@ -4173,8 +4549,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_set_operating_mode_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get time? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_TIME
     if (get_time_flag) {
         g_debug ("Asynchronously getting time...");
         qmi_client_dms_get_time (ctx->client,
@@ -4185,8 +4562,9 @@ qmicli_dms_run (QmiDevice *device,
                                  NULL);
         return;
     }
+#endif
 
-    /* Request to get the PRL version? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_PRL_VERSION
     if (get_prl_version_flag) {
         g_debug ("Asynchronously getting PRL version...");
         qmi_client_dms_get_prl_version (ctx->client,
@@ -4197,8 +4575,9 @@ qmicli_dms_run (QmiDevice *device,
                                         NULL);
         return;
     }
+#endif
 
-    /* Request to get the activation state? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_ACTIVATION_STATE
     if (get_activation_state_flag) {
         g_debug ("Asynchronously getting activation state...");
         qmi_client_dms_get_activation_state (ctx->client,
@@ -4209,8 +4588,9 @@ qmicli_dms_run (QmiDevice *device,
                                              NULL);
         return;
     }
+#endif
 
-    /* Request to activate automatically? */
+#if defined HAVE_QMI_MESSAGE_DMS_ACTIVATE_AUTOMATIC
     if (activate_automatic_str) {
         QmiMessageDmsActivateAutomaticInput *input;
 
@@ -4229,8 +4609,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_activate_automatic_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to activate manually? */
+#if defined HAVE_QMI_MESSAGE_DMS_ACTIVATE_MANUAL
     if (activate_manual_str) {
         QmiMessageDmsActivateManualInput *input;
 
@@ -4249,8 +4630,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_activate_manual_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get the activation state? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_USER_LOCK_STATE
     if (get_user_lock_state_flag) {
         g_debug ("Asynchronously getting user lock state...");
         qmi_client_dms_get_user_lock_state (ctx->client,
@@ -4261,8 +4643,9 @@ qmicli_dms_run (QmiDevice *device,
                                             NULL);
         return;
     }
+#endif
 
-    /* Request to set user lock state? */
+#if defined HAVE_QMI_MESSAGE_DMS_SET_USER_LOCK_STATE
     if (set_user_lock_state_str) {
         QmiMessageDmsSetUserLockStateInput *input;
 
@@ -4281,8 +4664,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_set_user_lock_state_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to set user lock code? */
+#if defined HAVE_QMI_MESSAGE_DMS_SET_USER_LOCK_CODE
     if (set_user_lock_code_str) {
         QmiMessageDmsSetUserLockCodeInput *input;
 
@@ -4301,8 +4685,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_set_user_lock_code_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to read user data? */
+#if defined HAVE_QMI_MESSAGE_DMS_READ_USER_DATA
     if (read_user_data_flag) {
         g_debug ("Asynchronously reading user data...");
         qmi_client_dms_read_user_data (ctx->client,
@@ -4313,8 +4698,9 @@ qmicli_dms_run (QmiDevice *device,
                                        NULL);
         return;
     }
+#endif
 
-    /* Request to write user data? */
+#if defined HAVE_QMI_MESSAGE_DMS_WRITE_USER_DATA
     if (write_user_data_str) {
         QmiMessageDmsWriteUserDataInput *input;
 
@@ -4333,8 +4719,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_write_user_data_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to read ERI file? */
+#if defined HAVE_QMI_MESSAGE_DMS_READ_ERI_FILE
     if (read_eri_file_flag) {
         g_debug ("Asynchronously reading ERI file...");
         qmi_client_dms_read_eri_file (ctx->client,
@@ -4345,8 +4732,9 @@ qmicli_dms_run (QmiDevice *device,
                                       NULL);
         return;
     }
+#endif
 
-    /* Request to restore factory defaults? */
+#if defined HAVE_QMI_MESSAGE_DMS_RESTORE_FACTORY_DEFAULTS
     if (restore_factory_defaults_str) {
         QmiMessageDmsRestoreFactoryDefaultsInput *input;
 
@@ -4365,8 +4753,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_restore_factory_defaults_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to validate SPC? */
+#if defined HAVE_QMI_MESSAGE_DMS_VALIDATE_SERVICE_PROGRAMMING_CODE
     if (validate_service_programming_code_str) {
         QmiMessageDmsValidateServiceProgrammingCodeInput *input;
 
@@ -4385,8 +4774,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_validate_service_programming_code_input_unref (input);
         return;
     }
+#endif
 
-    /* Set firmware id? */
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_ID
     if (set_firmware_id_flag) {
         g_debug ("Asynchronously setting firmware id...");
         qmi_client_dms_set_firmware_id (ctx->client,
@@ -4397,8 +4787,9 @@ qmicli_dms_run (QmiDevice *device,
                                         NULL);
         return;
     }
+#endif
 
-    /* Request to get CK status? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_GET_CK_STATUS
     if (uim_get_ck_status_str) {
         QmiMessageDmsUimGetCkStatusInput *input;
 
@@ -4417,8 +4808,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_uim_get_ck_status_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to set CK protection? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_SET_CK_PROTECTION
     if (uim_set_ck_protection_str) {
         QmiMessageDmsUimSetCkProtectionInput *input;
 
@@ -4437,8 +4829,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_uim_set_ck_protection_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to set CK protection? */
+#if defined HAVE_QMI_MESSAGE_DMS_UIM_UNBLOCK_CK
     if (uim_unblock_ck_str) {
         QmiMessageDmsUimUnblockCkInput *input;
 
@@ -4457,8 +4850,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_uim_unblock_ck_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get band capabilities? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_BAND_CAPABILITIES
     if (get_band_capabilities_flag) {
         g_debug ("Asynchronously getting band capabilities...");
         qmi_client_dms_get_band_capabilities (ctx->client,
@@ -4469,8 +4863,9 @@ qmicli_dms_run (QmiDevice *device,
                                               NULL);
         return;
     }
+#endif
 
-    /* Request to get factory SKU? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_FACTORY_SKU
     if (get_factory_sku_flag) {
         g_debug ("Asynchronously getting factory SKU...");
         qmi_client_dms_get_factory_sku (ctx->client,
@@ -4481,8 +4876,9 @@ qmicli_dms_run (QmiDevice *device,
                                         NULL);
         return;
     }
+#endif
 
-    /* Request to list stored images? */
+#if defined HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES && defined HAVE_QMI_MESSAGE_DMS_GET_STORED_IMAGE_INFO
     if (list_stored_images_flag) {
         g_debug ("Asynchronously listing stored images...");
         qmi_client_dms_list_stored_images (ctx->client,
@@ -4493,8 +4889,10 @@ qmicli_dms_run (QmiDevice *device,
                                            NULL);
         return;
     }
+#endif
 
-    /* Request to select stored image? */
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE && \
+    defined HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES
     if (select_stored_image_str) {
         g_debug ("Asynchronously selecting stored image...");
         get_stored_image (ctx->client,
@@ -4503,8 +4901,11 @@ qmicli_dms_run (QmiDevice *device,
                           NULL);
         return;
     }
+#endif
 
-    /* Request to delete stored image? */
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE && \
+    defined HAVE_QMI_MESSAGE_DMS_LIST_STORED_IMAGES && \
+    defined HAVE_QMI_MESSAGE_DMS_DELETE_STORED_IMAGE
     if (delete_stored_image_str) {
         g_debug ("Asynchronously deleting stored image...");
         get_stored_image (ctx->client,
@@ -4513,8 +4914,9 @@ qmicli_dms_run (QmiDevice *device,
                           NULL);
         return;
     }
+#endif
 
-    /* Get firmware preference? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_FIRMWARE_PREFERENCE
     if (get_firmware_preference_flag) {
         qmi_client_dms_get_firmware_preference (
             client,
@@ -4525,8 +4927,9 @@ qmicli_dms_run (QmiDevice *device,
             NULL);
         return;
     }
+#endif
 
-    /* Set firmware preference? */
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE
     if (set_firmware_preference_str) {
         QmiMessageDmsSetFirmwarePreferenceInput *input;
         SetFirmwarePreferenceContext             firmware_preference_ctx;
@@ -4551,8 +4954,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_set_firmware_preference_input_unref (input);
         return;
     }
+#endif
 
-    /* Get boot image download mode */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_BOOT_IMAGE_DOWNLOAD_MODE
     if (get_boot_image_download_mode_flag) {
         g_debug ("Asynchronously getting boot image download mode...");
         qmi_client_dms_get_boot_image_download_mode (ctx->client,
@@ -4563,8 +4967,9 @@ qmicli_dms_run (QmiDevice *device,
                                                      NULL);
         return;
     }
+#endif
 
-    /* Set boot image download mode */
+#if defined HAVE_QMI_MESSAGE_DMS_SET_BOOT_IMAGE_DOWNLOAD_MODE
     if (set_boot_image_download_mode_str) {
         QmiMessageDmsSetBootImageDownloadModeInput *input;
 
@@ -4583,8 +4988,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_set_boot_image_download_mode_input_unref (input);
         return;
     }
+#endif
 
-    /* Get software version */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_SOFTWARE_VERSION
     if (get_software_version_flag) {
         g_debug ("Asynchronously getting software version...");
         qmi_client_dms_get_software_version (ctx->client,
@@ -4595,8 +5001,9 @@ qmicli_dms_run (QmiDevice *device,
                                              NULL);
         return;
     }
+#endif
 
-    /* Set FCC authentication */
+#if defined HAVE_QMI_MESSAGE_DMS_SET_FCC_AUTHENTICATION
     if (set_fcc_authentication_flag) {
         g_debug ("Asynchronously setting FCC auth...");
         qmi_client_dms_set_fcc_authentication (ctx->client,
@@ -4607,8 +5014,9 @@ qmicli_dms_run (QmiDevice *device,
                                                NULL);
         return;
     }
+#endif
 
-    /* Request to list supported messages? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_SUPPORTED_MESSAGES
     if (get_supported_messages_flag) {
         g_debug ("Asynchronously getting supported DMS messages...");
         qmi_client_dms_get_supported_messages (ctx->client,
@@ -4619,8 +5027,9 @@ qmicli_dms_run (QmiDevice *device,
                                                NULL);
         return;
     }
+#endif
 
-    /* Request to change device download mode */
+#if defined HAVE_QMI_MESSAGE_DMS_HP_CHANGE_DEVICE_MODE
     if (hp_change_device_mode_str) {
         QmiMessageDmsHpChangeDeviceModeInput *input;
 
@@ -4641,8 +5050,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_hp_change_device_mode_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get current firmware */
+#if defined HAVE_QMI_MESSAGE_DMS_SWI_GET_CURRENT_FIRMWARE
     if (swi_get_current_firmware_flag) {
         g_debug ("Asynchronously getting current firmware (Sierra Wireless specific)...");
         qmi_client_dms_swi_get_current_firmware (ctx->client,
@@ -4653,8 +5063,9 @@ qmicli_dms_run (QmiDevice *device,
                                                  NULL);
         return;
     }
+#endif
 
-    /* Request to get current USB composition */
+#if defined HAVE_QMI_MESSAGE_DMS_SWI_GET_USB_COMPOSITION
     if (swi_get_usb_composition_flag) {
         g_debug ("Asynchronously getting USB compositionss (Sierra Wireless specific)...");
         qmi_client_dms_swi_get_usb_composition (ctx->client,
@@ -4665,8 +5076,9 @@ qmicli_dms_run (QmiDevice *device,
                                                 NULL);
         return;
     }
+#endif
 
-    /* Request to set current USB composition */
+#if defined HAVE_QMI_MESSAGE_DMS_SWI_SET_USB_COMPOSITION
     if (swi_set_usb_composition_str) {
         QmiMessageDmsSwiSetUsbCompositionInput *input;
 
@@ -4687,8 +5099,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_swi_set_usb_composition_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to change device download mode */
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE
     if (foxconn_change_device_mode_str || dell_change_device_mode_str) {
         QmiMessageDmsFoxconnChangeDeviceModeInput *input;
 
@@ -4709,8 +5122,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_foxconn_change_device_mode_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get firmware version? */
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION
     if (foxconn_get_firmware_version_str || dell_get_firmware_version_str) {
         QmiMessageDmsFoxconnGetFirmwareVersionInput *input;
 
@@ -4731,8 +5145,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_foxconn_get_firmware_version_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to get MAC address? */
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MAC_ADDRESS
     if (get_mac_address_str) {
         QmiMessageDmsGetMacAddressInput *input;
 
@@ -4753,8 +5168,9 @@ qmicli_dms_run (QmiDevice *device,
         qmi_message_dms_get_mac_address_input_unref (input);
         return;
     }
+#endif
 
-    /* Request to reset DMS service? */
+#if defined HAVE_QMI_MESSAGE_DMS_RESET
     if (reset_flag) {
         g_debug ("Asynchronously resetting DMS service...");
         qmi_client_dms_reset (ctx->client,
@@ -4765,6 +5181,7 @@ qmicli_dms_run (QmiDevice *device,
                               NULL);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -4774,3 +5191,5 @@ qmicli_dms_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_DMS */

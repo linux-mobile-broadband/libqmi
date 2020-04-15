@@ -22,10 +22,18 @@
 #define VIRTUAL_SOCKET_PATH "virtual-socket-path"
 
 static const QmiService services [] = {
+#if defined HAVE_QMI_SERVICE_DMS
     QMI_SERVICE_DMS,
+#endif
+#if defined HAVE_QMI_SERVICE_NAS
     QMI_SERVICE_NAS,
+#endif
+#if defined HAVE_QMI_SERVICE_WDS
     QMI_SERVICE_WDS,
+#endif
+#if defined HAVE_QMI_SERVICE_PDS
     QMI_SERVICE_PDS
+#endif
 };
 
 static void

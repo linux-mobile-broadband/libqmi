@@ -32,6 +32,8 @@
 
 #include "qmicli.h"
 
+#if defined HAVE_QMI_SERVICE_PBM
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -45,10 +47,12 @@ static gboolean get_all_capabilities_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_PBM_GET_ALL_CAPABILITIES
     { "pbm-get-all-capabilities", 0, 0, G_OPTION_ARG_NONE, &get_all_capabilities_flag,
       "Get all phonebook capabilities",
       NULL
     },
+#endif
     { "pbm-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a PBM client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -112,6 +116,8 @@ operation_shutdown (gboolean operation_status)
     context_free (ctx);
     qmicli_async_operation_done (operation_status, FALSE);
 }
+
+#if defined HAVE_QMI_MESSAGE_PBM_GET_ALL_CAPABILITIES
 
 static void
 get_all_capabilities_ready (QmiClientPbm *client,
@@ -296,6 +302,8 @@ get_all_capabilities_ready (QmiClientPbm *client,
     operation_shutdown (TRUE);
 }
 
+#endif /* HAVE_QMI_MESSAGE_PBM_GET_ALL_CAPABILITIES */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -314,7 +322,7 @@ qmicli_pbm_run (QmiDevice *device,
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
 
-    /* Request to get all capabilities? */
+#if defined HAVE_QMI_MESSAGE_PBM_GET_ALL_CAPABILITIES
     if (get_all_capabilities_flag) {
         g_debug ("Asynchronously getting phonebook capabilities...");
         qmi_client_pbm_get_all_capabilities (ctx->client,
@@ -325,6 +333,7 @@ qmicli_pbm_run (QmiDevice *device,
                                              NULL);
         return;
     }
+#endif
 
     /* Just client allocate/release? */
     if (noop_flag) {
@@ -334,3 +343,5 @@ qmicli_pbm_run (QmiDevice *device,
 
     g_warn_if_reached ();
 }
+
+#endif /* HAVE_QMI_SERVICE_PBM */
