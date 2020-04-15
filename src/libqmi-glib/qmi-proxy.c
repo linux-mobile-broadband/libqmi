@@ -729,37 +729,34 @@ connection_readable_cb (GSocket *socket,
 
     self = client->proxy;
 
+    if (condition & G_IO_IN || condition & G_IO_PRI) {
+        r = g_input_stream_read (g_io_stream_get_input_stream (G_IO_STREAM (client->connection)),
+                                buffer,
+                                BUFFER_SIZE,
+                                NULL,
+                                &error);
+        if (r < 0) {
+            g_warning ("Error reading from istream: %s", error ? error->message : "unknown");
+            if (error)
+                g_error_free (error);
+            untrack_client (self, client);
+            return FALSE;
+        }
+
+        if (r > 0) {
+            if (!G_UNLIKELY (client->buffer))
+                client->buffer = g_byte_array_sized_new (r);
+            g_byte_array_append (client->buffer, buffer, r);
+
+            /* Try to parse input messages */
+            parse_request (self, client);
+        }
+    }
+
     if (condition & G_IO_HUP || condition & G_IO_ERR) {
         untrack_client (self, client);
         return FALSE;
     }
-
-    if (!(condition & G_IO_IN || condition & G_IO_PRI))
-        return TRUE;
-
-    r = g_input_stream_read (g_io_stream_get_input_stream (G_IO_STREAM (client->connection)),
-                             buffer,
-                             BUFFER_SIZE,
-                             NULL,
-                             &error);
-    if (r < 0) {
-        g_warning ("Error reading from istream: %s", error ? error->message : "unknown");
-        if (error)
-            g_error_free (error);
-        untrack_client (self, client);
-        return FALSE;
-    }
-
-    if (r == 0)
-        return TRUE;
-
-    /* else, r > 0 */
-    if (!G_UNLIKELY (client->buffer))
-        client->buffer = g_byte_array_sized_new (r);
-    g_byte_array_append (client->buffer, buffer, r);
-
-    /* Try to parse input messages */
-    parse_request (self, client);
 
     return TRUE;
 }
