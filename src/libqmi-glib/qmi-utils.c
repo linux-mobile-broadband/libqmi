@@ -141,6 +141,12 @@ __qmi_string_utf8_validate_printable (const guint8 *utf8,
     for (p = init; (gsize)(p - init) < utf8_len; p = g_utf8_next_char (p)) {
         gunichar unichar;
 
+        /* Explicitly allow CR and LF even if they're control characters, given
+         * that NMEA traces reported via QMI LOC indications seem to have these
+         * suffixed. */
+        if (*p == '\r' || *p == '\n')
+            continue;
+
         unichar = g_utf8_get_char (p);
         if (!g_unichar_isprint (unichar))
             return FALSE;

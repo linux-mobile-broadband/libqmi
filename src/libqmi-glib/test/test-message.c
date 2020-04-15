@@ -175,8 +175,9 @@ test_message_parse_complete_and_complete (void)
 }
 
 static void
-test_message_overflow_common (const guint8 *buffer,
-                              guint buffer_len)
+test_message_printable_common (const guint8 *buffer,
+                               guint         buffer_len,
+                               const gchar  *expected_in_printable)
 {
     QmiMessage *message;
     GByteArray *array;
@@ -190,8 +191,10 @@ test_message_overflow_common (const guint8 *buffer,
     g_assert (message);
 
     printable = qmi_message_get_printable_full (message, NULL, "");
+#ifdef TEST_PRINT_MESSAGE
     g_print ("\n%s\n", printable);
-    g_assert (strstr (printable, "ERROR: Reading TLV would overflow"));
+#endif
+    g_assert (strstr (printable, expected_in_printable));
     g_free (printable);
 
     g_byte_array_unref (array);
@@ -211,7 +214,7 @@ test_message_parse_wrong_tlv (void)
         0x06, 0x00, 0x01, 0x01, 0x01, 0x02, 0x01, 0x05
     };
 
-    test_message_overflow_common (buffer, G_N_ELEMENTS (buffer));
+    test_message_printable_common (buffer, G_N_ELEMENTS (buffer), "ERROR: Reading TLV would overflow");
 }
 
 static void
@@ -234,7 +237,24 @@ test_message_parse_missing_size (void)
         0x01
     };
 
-    test_message_overflow_common (buffer, G_N_ELEMENTS (buffer));
+    test_message_printable_common (buffer, G_N_ELEMENTS (buffer), "ERROR: Reading TLV would overflow");
+}
+
+static void
+test_message_parse_string_with_crlf (void)
+{
+    /* LOC indication: NMEA
+     * The NMEA trace comes suffixed with \r\n, this test makes sure the proper
+     * parsing is done on the string.
+     */
+    const guint8 buffer[] = {
+        0x01, 0x2D, 0x00, 0x80, 0x10, 0x01, 0x04, 0xB4, 0x00, 0x26, 0x00, 0x21,
+        0x00, 0x01, 0x1E, 0x00, 0x24, 0x47, 0x50, 0x47, 0x53, 0x41, 0x2C, 0x41,
+        0x2C, 0x31, 0x2C, 0x2C, 0x2C, 0x2C, 0x2C, 0x2C, 0x2C, 0x2C, 0x2C, 0x2C,
+        0x2C, 0x2C, 0x2C, 0x2C, 0x2C, 0x2A, 0x31, 0x45, 0x0D, 0x0A
+    };
+
+    test_message_printable_common (buffer, sizeof (buffer), "$GPGSA,A,1,,,,,,,,,,,,,,,*1E");
 }
 
 /*****************************************************************************/
@@ -1566,6 +1586,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/parse/complete-and-complete", test_message_parse_complete_and_complete);
     g_test_add_func ("/libqmi-glib/message/parse/wrong-tlv",             test_message_parse_wrong_tlv);
     g_test_add_func ("/libqmi-glib/message/parse/missing-size",          test_message_parse_missing_size);
+    g_test_add_func ("/libqmi-glib/message/parse/string-with-crlf",      test_message_parse_string_with_crlf);
 
     g_test_add_func ("/libqmi-glib/message/new/request",           test_message_new_request);
     g_test_add_func ("/libqmi-glib/message/new/request-from-data", test_message_new_request_from_data);
