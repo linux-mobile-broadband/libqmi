@@ -40,6 +40,24 @@ test-no-qrtr:
     - make check
     - make install
 
+test-collection-minimal:
+  stage: test
+  script:
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --disable-mbim-qmux --disable-qrtr --disable-firmware-update --enable-collection=minimal
+    - make
+    - make check
+    - make install
+
+test-collection-basic:
+  stage: test
+  script:
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --disable-mbim-qmux --disable-qrtr --enable-collection=basic
+    - make
+    - make check
+    - make install
+
 test-default:
   stage: test
   script:
