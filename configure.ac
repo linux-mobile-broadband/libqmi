@@ -175,7 +175,7 @@ esac
 dnl Documentation
 GTK_DOC_CHECK(1.0)
 if test "x$enable_gtk_doc" = "xyes"; then
-    if test "x$QMI_COLLECTION_NAME" != "x"; then
+    if test "x$QMI_COLLECTION_NAME" != "xfull"; then
         AC_MSG_WARN([Cannot build gtk-doc when using an explicit message collection.])
         enable_gtk_doc=no
     fi
