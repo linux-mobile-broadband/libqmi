@@ -215,7 +215,7 @@ qmicli_loc_options_enabled (void)
     /* Actions that require receiving QMI indication messages must specify that
      * indications are expected. */
     if (get_position_report_flag || get_gnss_sv_info_flag || follow_action || delete_assistance_data_flag)
-        qmicli_expect_indications();
+        qmicli_expect_indications ();
 
     checked = TRUE;
     return !!n_actions;
