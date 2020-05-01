@@ -729,6 +729,17 @@
                    { "common-ref" : "Physical Slot Status",
                      "since"      : "1.26" },
                    { "common-ref" : "Physical Slot Information",
+                     "since"      : "1.26" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Slot Status Change",
+     "type"    : "Indication",
+     "service" : "UIM",
+     "id"      : "0x0048",
+     "since"   : "1.26",
+     "output"  : [ { "common-ref" : "Physical Slot Status",
+                     "since"      : "1.26" },
+                   { "common-ref" : "Physical Slot Information",
                      "since"      : "1.26" } ] }
 
 ]
