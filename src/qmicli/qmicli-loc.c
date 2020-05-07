@@ -55,6 +55,7 @@ typedef struct {
     guint           nmea_indication_id;
     guint           gnss_sv_info_indication_id;
     guint           delete_assistance_data_indication_id;
+    guint           get_nmea_types_indication_id;
 } Context;
 static Context *ctx;
 
@@ -69,6 +70,7 @@ static gboolean follow_position_report_flag;
 static gboolean follow_gnss_sv_info_flag;
 static gboolean follow_nmea_flag;
 static gboolean delete_assistance_data_flag;
+static gboolean get_nmea_types_flag;
 static gboolean noop_flag;
 
 #define DEFAULT_LOC_TIMEOUT_SECS 30
@@ -145,6 +147,12 @@ static GOptionEntry entries[] = {
         NULL,
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_LOC_GET_NMEA_TYPES
+    { "loc-get-nmea-types", 0, 0, G_OPTION_ARG_NONE, &get_nmea_types_flag,
+      "Get list of enabled NMEA traces",
+      NULL
+    },
+#endif
     { "loc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a LOC client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -175,13 +183,13 @@ qmicli_loc_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    /* Let's define the following actions::
+    /* Let's define the following actions:
      *  - Start location engine
      *  - Stop location engine
      *  - Show current position (oneshot).
      *  - Show current satellite info (oneshot).
      *  - Follow updates indefinitely, including either position, satellite info or NMEA traces.
-     *  - Delete assistance data.
+     *  - Other single-request operations.
      */
     follow_action = !!(follow_position_report_flag + follow_gnss_sv_info_flag + follow_nmea_flag);
     n_actions = (start_flag +
@@ -190,6 +198,7 @@ qmicli_loc_options_enabled (void)
                  get_gnss_sv_info_flag +
                  follow_action +
                  delete_assistance_data_flag +
+                 get_nmea_types_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -214,7 +223,11 @@ qmicli_loc_options_enabled (void)
 
     /* Actions that require receiving QMI indication messages must specify that
      * indications are expected. */
-    if (get_position_report_flag || get_gnss_sv_info_flag || follow_action || delete_assistance_data_flag)
+    if (get_position_report_flag ||
+        get_gnss_sv_info_flag ||
+        follow_action ||
+        delete_assistance_data_flag ||
+        get_nmea_types_flag)
         qmicli_expect_indications ();
 
     checked = TRUE;
@@ -241,6 +254,9 @@ context_free (Context *context)
 
     if (context->delete_assistance_data_indication_id)
         g_signal_handler_disconnect (context->client, context->delete_assistance_data_indication_id);
+
+    if (context->get_nmea_types_indication_id)
+        g_signal_handler_disconnect (context->client, context->get_nmea_types_indication_id);
 
     g_clear_object (&context->cancellable);
     g_clear_object (&context->client);
@@ -797,6 +813,76 @@ delete_assistance_data_ready (QmiClientLoc *client,
 
 #endif /* HAVE_QMI_MESSAGE_LOC_DELETE_ASSISTANCE_DATA */
 
+#if defined HAVE_QMI_MESSAGE_LOC_GET_NMEA_TYPES
+
+static gboolean
+get_nmea_types_timed_out (void)
+{
+    ctx->timeout_id = 0;
+    g_printerr ("error: operation failed: timeout\n");
+    operation_shutdown (FALSE);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+get_nmea_types_received (QmiClientLoc                       *client,
+                         QmiIndicationLocGetNmeaTypesOutput *output)
+{
+    QmiLocIndicationStatus  status;
+    QmiLocNmeaType          nmea_types_mask;
+    g_autoptr(GError)       error = NULL;
+    g_autofree gchar       *nmea_types_str = NULL;
+
+    if (!qmi_indication_loc_get_nmea_types_output_get_indication_status (output, &status, &error)) {
+        g_printerr ("error: couldn't get NMEA types: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_indication_loc_get_nmea_types_output_get_nmea_types (output, &nmea_types_mask, NULL)) {
+        g_printerr ("error: couldn't get NMEA types: missing\n");
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    nmea_types_str = qmi_loc_nmea_type_build_string_from_mask (nmea_types_mask);
+    g_print ("Successfully retrieved NMEA types: %s\n", nmea_types_str ? nmea_types_str : "none");
+    operation_shutdown (TRUE);
+}
+
+static void
+get_nmea_types_ready (QmiClientLoc *client,
+                      GAsyncResult *res)
+{
+    g_autoptr(QmiMessageLocGetNmeaTypesOutput) output = NULL;
+    g_autoptr(GError)                          error = NULL;
+
+    output = qmi_client_loc_get_nmea_types_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_loc_get_nmea_types_output_get_result (output, &error)) {
+        g_printerr ("error: could not get NMEA types: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    /* Wait for response asynchronously */
+    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                             (GSourceFunc) get_nmea_types_timed_out,
+                                             NULL);
+
+    ctx->get_nmea_types_indication_id = g_signal_connect (ctx->client,
+                                                          "get-nmea-types",
+                                                          G_CALLBACK (get_nmea_types_received),
+                                                          NULL);
+}
+
+#endif /* HAVE_QMI_MESSAGE_LOC_GET_NMEA_TYPES */
+
 #if defined HAVE_QMI_MESSAGE_LOC_STOP
 
 static void
@@ -933,6 +1019,18 @@ qmicli_loc_run (QmiDevice    *device,
                                                (GAsyncReadyCallback) delete_assistance_data_ready,
                                                NULL);
         qmi_message_loc_delete_assistance_data_input_unref (input);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_LOC_GET_NMEA_TYPES
+    if (get_nmea_types_flag) {
+        qmi_client_loc_get_nmea_types (ctx->client,
+                                       NULL,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback) get_nmea_types_ready,
+                                       NULL);
         return;
     }
 #endif
