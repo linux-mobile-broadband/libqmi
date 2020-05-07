@@ -720,7 +720,7 @@
      "output"  : [ { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
-  {  "name"    : "Get Slots Status",
+  {  "name"    : "Get Slot Status",
      "type"    : "Message",
      "service" : "UIM",
      "id"      : "0x0047",
@@ -732,7 +732,7 @@
                      "since"      : "1.26" } ] },
 
   // *********************************************************************************
-  {  "name"    : "Slot Status Change",
+  {  "name"    : "Slot Status",
      "type"    : "Indication",
      "service" : "UIM",
      "id"      : "0x0048",
