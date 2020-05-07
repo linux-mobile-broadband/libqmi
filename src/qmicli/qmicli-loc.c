@@ -749,13 +749,13 @@ delete_assistance_data_received (QmiClientLoc                               *cli
     GError                 *error = NULL;
 
     if (!qmi_indication_loc_delete_assistance_data_output_get_indication_status (output, &status, &error)) {
-        g_printerr ("Couldn't delete assistance data: %s\n", error->message);
+        g_printerr ("error: couldn't delete assistance data: %s\n", error->message);
         g_error_free (error);
         operation_shutdown (FALSE);
         return;
     }
 
-    g_printerr ("Successfully deleted assistance data\n");
+    g_print ("Successfully deleted assistance data\n");
     operation_shutdown (TRUE);
 }
 
