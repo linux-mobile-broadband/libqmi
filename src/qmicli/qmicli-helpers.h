@@ -53,8 +53,9 @@ QMICLI_ENUM_LIST
 #undef QMICLI_ENUM_LIST_ITEM
 
 /* Common helpers to read flags from strings */
-#define QMICLI_FLAGS_LIST                                                              \
-    QMICLI_FLAGS_LIST_ITEM (QmiDeviceOpenFlags, device_open_flags, "device open flags")
+#define QMICLI_FLAGS_LIST                                                               \
+    QMICLI_FLAGS_LIST_ITEM (QmiDeviceOpenFlags, device_open_flags, "device open flags") \
+    QMICLI_FLAGS_LIST_ITEM (QmiLocNmeaType,     loc_nmea_type,     "NMEA type")
 
 #define QMICLI_FLAGS_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);

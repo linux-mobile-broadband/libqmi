@@ -56,6 +56,7 @@ typedef struct {
     guint           gnss_sv_info_indication_id;
     guint           delete_assistance_data_indication_id;
     guint           get_nmea_types_indication_id;
+    guint           set_nmea_types_indication_id;
 } Context;
 static Context *ctx;
 
@@ -71,6 +72,7 @@ static gboolean follow_gnss_sv_info_flag;
 static gboolean follow_nmea_flag;
 static gboolean delete_assistance_data_flag;
 static gboolean get_nmea_types_flag;
+static gchar   *set_nmea_types_str;
 static gboolean noop_flag;
 
 #define DEFAULT_LOC_TIMEOUT_SECS 30
@@ -153,6 +155,12 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_LOC_SET_NMEA_TYPES
+    { "loc-set-nmea-types", 0, 0, G_OPTION_ARG_STRING, &set_nmea_types_str,
+      "Set list of enabled NMEA traces",
+      "[type1|type2|type3...]"
+    },
+#endif
     { "loc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a LOC client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -199,6 +207,7 @@ qmicli_loc_options_enabled (void)
                  follow_action +
                  delete_assistance_data_flag +
                  get_nmea_types_flag +
+                 !!set_nmea_types_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -227,7 +236,8 @@ qmicli_loc_options_enabled (void)
         get_gnss_sv_info_flag ||
         follow_action ||
         delete_assistance_data_flag ||
-        get_nmea_types_flag)
+        get_nmea_types_flag ||
+        set_nmea_types_str)
         qmicli_expect_indications ();
 
     checked = TRUE;
@@ -257,6 +267,9 @@ context_free (Context *context)
 
     if (context->get_nmea_types_indication_id)
         g_signal_handler_disconnect (context->client, context->get_nmea_types_indication_id);
+
+    if (context->set_nmea_types_indication_id)
+        g_signal_handler_disconnect (context->client, context->set_nmea_types_indication_id);
 
     g_clear_object (&context->cancellable);
     g_clear_object (&context->client);
@@ -883,6 +896,88 @@ get_nmea_types_ready (QmiClientLoc *client,
 
 #endif /* HAVE_QMI_MESSAGE_LOC_GET_NMEA_TYPES */
 
+#if defined HAVE_QMI_MESSAGE_LOC_SET_NMEA_TYPES
+
+static gboolean
+set_nmea_types_timed_out (void)
+{
+    ctx->timeout_id = 0;
+    g_printerr ("error: operation failed: timeout\n");
+    operation_shutdown (FALSE);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+set_nmea_types_received (QmiClientLoc                       *client,
+                         QmiIndicationLocSetNmeaTypesOutput *output)
+{
+    QmiLocIndicationStatus status;
+    g_autoptr(GError)      error = NULL;
+
+    if (!qmi_indication_loc_set_nmea_types_output_get_indication_status (output, &status, &error)) {
+        g_printerr ("error: couldn't set NMEA types: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Successfully set NMEA types\n");
+    operation_shutdown (TRUE);
+}
+
+static void
+set_nmea_types_ready (QmiClientLoc *client,
+                      GAsyncResult *res)
+{
+    g_autoptr(QmiMessageLocSetNmeaTypesOutput) output = NULL;
+    g_autoptr(GError)                          error = NULL;
+
+    output = qmi_client_loc_set_nmea_types_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_loc_set_nmea_types_output_get_result (output, &error)) {
+        g_printerr ("error: could not set NMEA types: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    /* Wait for response asynchronously */
+    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                             (GSourceFunc) set_nmea_types_timed_out,
+                                             NULL);
+
+    ctx->set_nmea_types_indication_id = g_signal_connect (ctx->client,
+                                                          "set-nmea-types",
+                                                          G_CALLBACK (set_nmea_types_received),
+                                                          NULL);
+}
+
+static QmiMessageLocSetNmeaTypesInput *
+set_nmea_types_input_create (const gchar *str)
+{
+    g_autoptr(QmiMessageLocSetNmeaTypesInput) input = NULL;
+    g_autoptr(GError)                         error = NULL;
+    QmiLocNmeaType                            nmea_type_mask;
+
+    if (!qmicli_read_loc_nmea_type_from_string (str, &nmea_type_mask)) {
+        g_printerr ("error: couldn't parse input string as NMEA types: '%s'\n", str);
+        return NULL;
+    }
+
+    input = qmi_message_loc_set_nmea_types_input_new ();
+    if (!qmi_message_loc_set_nmea_types_input_set_nmea_types (input, nmea_type_mask, &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n", error->message);
+        return NULL;
+    }
+
+    return g_steal_pointer (&input);
+}
+
+#endif /* HAVE_QMI_MESSAGE_LOC_SET_NMEA_TYPES */
+
 #if defined HAVE_QMI_MESSAGE_LOC_STOP
 
 static void
@@ -1030,6 +1125,26 @@ qmicli_loc_run (QmiDevice    *device,
                                        10,
                                        ctx->cancellable,
                                        (GAsyncReadyCallback) get_nmea_types_ready,
+                                       NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_LOC_SET_NMEA_TYPES
+    if (set_nmea_types_str) {
+        g_autoptr(QmiMessageLocSetNmeaTypesInput) input = NULL;
+
+        g_debug ("Asynchronously setting APN type...");
+        input = set_nmea_types_input_create (set_nmea_types_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+        qmi_client_loc_set_nmea_types (ctx->client,
+                                       input,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback)set_nmea_types_ready,
                                        NULL);
         return;
     }
