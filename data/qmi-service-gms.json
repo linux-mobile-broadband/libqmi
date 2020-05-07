@@ -1,0 +1,53 @@
+[
+  // *********************************************************************************
+  {  "name"    : "GMS",
+     "type"    : "Service" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Client GMS",
+     "type"    : "Client",
+     "since"   : "1.26" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Message GMS",
+     "type"    : "Message-ID-Enum" },
+
+  // *********************************************************************************
+  {  "name"    : "Test Set Value",
+     "type"    : "Message",
+     "service" : "GMS",
+     "id"      : "0x0F00",
+     "since"   : "1.26",
+     "input"   : [ { "name"          : "Test Mandatory Value",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.26",
+                     "format"        : "guint8" },
+                   { "name"          : "Test Optional Value",
+                     "id"            : "0x10",
+                     "type"          : "TLV",
+                     "since"         : "1.26",
+                     "format"        : "guint8" } ],
+     "output"  : [ { "common-ref"    : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Test Get Value",
+     "type"    : "Message",
+     "service" : "GMS",
+     "id"      : "0x0F01",
+     "since"   : "1.26",
+     "output"  : [ { "common-ref"   : "Operation Result" },
+                   { "name"         : "Test Mandatory Value",
+                     "id"           : "0x03",
+                     "type"         : "TLV",
+                     "since"        : "1.26",
+                     "format"       : "guint8",
+                     "prerequisites": [ { "common-ref" : "Success" } ] },
+                   { "name"         : "Test Optional Value",
+                     "id"           : "0x10",
+                     "type"         : "TLV",
+                     "since"        : "1.26",
+                     "format"       : "guint8",
+                     "prerequisites": [ { "common-ref" : "Success" } ] } ] }
+]
+

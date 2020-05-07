@@ -55,6 +55,7 @@
 #include "qmi-loc.h"
 #include "qmi-qos.h"
 #include "qmi-gas.h"
+#include "qmi-gms.h"
 #include "qmi-dsd.h"
 
 #define PACKED __attribute__((packed))
@@ -1682,6 +1683,11 @@ qmi_message_get_printable_full (QmiMessage        *self,
         contents = __qmi_message_gas_get_printable (self, context, line_prefix);
 #endif
         break;
+    case QMI_SERVICE_GMS:
+#if defined HAVE_QMI_SERVICE_GMS
+        contents = __qmi_message_gms_get_printable (self, context, line_prefix);
+#endif
+        break;
     case QMI_SERVICE_WDA:
 #if defined HAVE_QMI_SERVICE_WDA
         contents = __qmi_message_wda_get_printable (self, context, line_prefix);
@@ -1742,7 +1748,6 @@ qmi_message_get_printable_full (QmiMessage        *self,
     case QMI_SERVICE_CAT:
     case QMI_SERVICE_RMS:
     case QMI_SERVICE_FOTA:
-    case QMI_SERVICE_GMS:
     default:
         break;
     }

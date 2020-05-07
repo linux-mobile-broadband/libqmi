@@ -464,6 +464,16 @@
   </chapter>
 
   <chapter>
+    <title>General Modem Service (GMS)</title>
+    <xi:include href="xml/qmi-client-gms.xml"/>
+    <section>
+      <title>GMS Requests</title>
+      <xi:include href="xml/qmi-message-gms-test-set-value.xml"/>
+      <xi:include href="xml/qmi-message-gms-test-get-value.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Data System Determination (DSD)</title>
     <xi:include href="xml/qmi-client-dsd.xml"/>
     <xi:include href="xml/qmi-enums-dsd.xml"/>

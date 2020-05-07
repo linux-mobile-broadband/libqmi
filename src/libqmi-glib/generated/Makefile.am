@@ -21,6 +21,7 @@ GENERATED_H = \
 	qmi-loc.h \
 	qmi-qos.h \
 	qmi-gas.h \
+	qmi-gms.h \
 	qmi-dsd.h \
 	$(NULL)
 
@@ -45,6 +46,7 @@ GENERATED_C = \
 	qmi-loc.c \
 	qmi-qos.c \
 	qmi-gas.c \
+	qmi-gms.c \
 	qmi-dsd.c \
 	$(NULL)
 
@@ -64,6 +66,7 @@ GENERATED_SECTIONS = \
 	qmi-loc.sections \
 	qmi-qos.sections \
 	qmi-gas.sections \
+	qmi-gms.sections \
 	qmi-dsd.sections \
 	$(NULL)
 
@@ -279,6 +282,17 @@ qmi-gas.h qmi-gas.c qmi-gas.sections: $(top_srcdir)/data/qmi-service-gas.json $(
 			$(COLLECTION_OPT) \
 			--output qmi-gas
 
+# GMS service
+qmi-gms.h qmi-gms.c qmi-gms.sections: $(top_srcdir)/data/qmi-service-gms.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
+	$(AM_V_GEN) \
+		rm -f qmi-gms.h && \
+		rm -f qmi-gms.c && \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-gms.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
+			--output qmi-gms
+
 # WDA service
 qmi-wda.h qmi-wda.c qmi-wda.sections: $(top_srcdir)/data/qmi-service-wda.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
 	$(AM_V_GEN) \
@@ -382,6 +396,7 @@ nodist_include_HEADERS = \
 	qmi-loc.h \
 	qmi-qos.h \
 	qmi-gas.h \
+	qmi-gms.h \
 	qmi-dsd.h \
 	$(NULL)
 

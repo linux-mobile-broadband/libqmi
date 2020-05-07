@@ -125,6 +125,14 @@ void          qmicli_gas_run              (QmiDevice *device,
                                            GCancellable *cancellable);
 #endif
 
+#if defined HAVE_QMI_SERVICE_GMS
+GOptionGroup *qmicli_gms_get_option_group (void);
+gboolean      qmicli_gms_options_enabled  (void);
+void          qmicli_gms_run              (QmiDevice *device,
+                                           QmiClientGms *client,
+                                           GCancellable *cancellable);
+#endif
+
 #if defined HAVE_QMI_SERVICE_DSD
 GOptionGroup *qmicli_dsd_get_option_group (void);
 gboolean      qmicli_dsd_options_enabled  (void);

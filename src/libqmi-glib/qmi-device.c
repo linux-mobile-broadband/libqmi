@@ -51,6 +51,7 @@
 #include "qmi-loc.h"
 #include "qmi-qos.h"
 #include "qmi-gas.h"
+#include "qmi-gms.h"
 #include "qmi-dsd.h"
 #include "qmi-utils.h"
 #include "qmi-error-types.h"
@@ -1173,6 +1174,11 @@ qmi_device_allocate_client (QmiDevice *self,
         ctx->client_type = QMI_TYPE_CLIENT_GAS;
 #endif
         break;
+    case QMI_SERVICE_GMS:
+#if defined HAVE_QMI_SERVICE_GMS
+	ctx->client_type = QMI_TYPE_CLIENT_GMS;
+#endif
+	break;
     case QMI_SERVICE_WDA:
 #if defined HAVE_QMI_SERVICE_WDA
         ctx->client_type = QMI_TYPE_CLIENT_WDA;
@@ -1233,7 +1239,6 @@ qmi_device_allocate_client (QmiDevice *self,
     case QMI_SERVICE_CAT:
     case QMI_SERVICE_RMS:
     case QMI_SERVICE_FOTA:
-    case QMI_SERVICE_GMS:
     default:
         break;
     }

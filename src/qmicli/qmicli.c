@@ -445,6 +445,13 @@ allocate_client_ready (QmiDevice *dev,
 #else
         break;
 #endif
+    case QMI_SERVICE_GMS:
+#if defined HAVE_QMI_SERVICE_GMS
+        qmicli_gms_run (dev, QMI_CLIENT_GMS (client), cancellable);
+        return;
+#else
+        break;
+#endif
     case QMI_SERVICE_DSD:
 #if defined HAVE_QMI_SERVICE_DSD
         qmicli_dsd_run (dev, QMI_CLIENT_DSD (client), cancellable);
@@ -485,7 +492,6 @@ allocate_client_ready (QmiDevice *dev,
     case QMI_SERVICE_CAT:
     case QMI_SERVICE_RMS:
     case QMI_SERVICE_FOTA:
-    case QMI_SERVICE_GMS:
     case QMI_SERVICE_PDS:
     case QMI_SERVICE_OMA:
     default:
@@ -945,6 +951,13 @@ parse_actions (void)
     }
 #endif
 
+#if defined HAVE_QMI_SERVICE_GMS
+    if (qmicli_gms_options_enabled ()) {
+        service = QMI_SERVICE_GMS;
+        actions_enabled++;
+    }
+#endif
+
 #if defined HAVE_QMI_SERVICE_DSD
     if (qmicli_dsd_options_enabled ()) {
         service = QMI_SERVICE_DSD;
@@ -1012,6 +1025,9 @@ int main (int argc, char **argv)
 #endif
 #if defined HAVE_QMI_SERVICE_GAS
     g_option_context_add_group (context, qmicli_gas_get_option_group ());
+#endif
+#if defined HAVE_QMI_SERVICE_GMS
+    g_option_context_add_group (context, qmicli_gms_get_option_group ());
 #endif
 #if defined HAVE_QMI_SERVICE_DSD
     g_option_context_add_group (context, qmicli_dsd_get_option_group ());

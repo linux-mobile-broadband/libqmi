@@ -17,6 +17,7 @@ EXTRA_DIST = \
 	qmi-service-loc.json \
 	qmi-service-qos.json \
 	qmi-service-gas.json \
+	qmi-service-gms.json \
 	qmi-service-dsd.json \
 	qmi-collection-minimal.json \
 	qmi-collection-basic.json \
