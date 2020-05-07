@@ -216,6 +216,9 @@ context_free (Context *context)
     if (context->nmea_indication_id)
         g_signal_handler_disconnect (context->client, context->nmea_indication_id);
 
+    if (context->delete_assistance_data_indication_id)
+        g_signal_handler_disconnect (context->client, context->delete_assistance_data_indication_id);
+
     g_clear_object (&context->cancellable);
     g_clear_object (&context->client);
     g_clear_object (&context->device);
