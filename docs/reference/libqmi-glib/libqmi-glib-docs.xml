@@ -411,6 +411,8 @@
       <xi:include href="xml/qmi-indication-loc-fix-recurrence-type.xml"/>
       <xi:include href="xml/qmi-indication-loc-get-operation-mode.xml"/>
       <xi:include href="xml/qmi-indication-loc-set-operation-mode.xml"/>
+      <xi:include href="xml/qmi-indication-loc-set-nmea-types.xml"/>
+      <xi:include href="xml/qmi-indication-loc-get-nmea-types.xml"/>
       <xi:include href="xml/qmi-indication-loc-set-server.xml"/>
       <xi:include href="xml/qmi-indication-loc-get-server.xml"/>
       <xi:include href="xml/qmi-indication-loc-inject-predicted-orbits-data.xml"/>
@@ -425,6 +427,8 @@
       <xi:include href="xml/qmi-message-loc-register-events.xml"/>
       <xi:include href="xml/qmi-message-loc-get-operation-mode.xml"/>
       <xi:include href="xml/qmi-message-loc-set-operation-mode.xml"/>
+      <xi:include href="xml/qmi-message-loc-set-nmea-types.xml"/>
+      <xi:include href="xml/qmi-message-loc-get-nmea-types.xml"/>
       <xi:include href="xml/qmi-message-loc-set-server.xml"/>
       <xi:include href="xml/qmi-message-loc-get-server.xml"/>
       <xi:include href="xml/qmi-message-loc-inject-predicted-orbits-data.xml"/>

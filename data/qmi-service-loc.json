@@ -475,6 +475,51 @@
 
   // *********************************************************************************
 
+  {  "name"    : "Set NMEA Types",
+     "type"    : "Message",
+     "service" : "LOC",
+     "id"      : "0x003E",
+     "since"   : "1.26",
+     "input"   : [ { "name"          : "NMEA Types",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.26",
+                     "format"        : "guint32",
+                     "public-format" : "QmiLocNmeaType" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  {  "name"    : "Set NMEA Types",
+     "type"    : "Indication",
+     "service" : "LOC",
+     "id"      : "0x003E",
+     "since"   : "1.26",
+     "output"  : [ { "common-ref" : "LOC Indication Status" } ] },
+
+  // *********************************************************************************
+
+  {  "name"    : "Get NMEA Types",
+     "type"    : "Message",
+     "service" : "LOC",
+     "id"      : "0x003F",
+     "since"   : "1.26",
+     "input"   : [  ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  {  "name"    : "Get NMEA Types",
+     "type"    : "Indication",
+     "service" : "LOC",
+     "id"      : "0x003F",
+     "since"   : "1.26",
+     "output"  : [ { "common-ref" : "LOC Indication Status" },
+                   { "name"          : "NMEA Types",
+                     "id"            : "0x10",
+                     "type"          : "TLV",
+                     "since"         : "1.26",
+                     "format"        : "guint32",
+                     "public-format" : "QmiLocNmeaType" } ] },
+
+  // *********************************************************************************
+
   {  "name"    : "Set Server",
      "type"    : "Message",
      "service" : "LOC",

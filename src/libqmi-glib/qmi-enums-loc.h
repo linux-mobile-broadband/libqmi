@@ -571,4 +571,35 @@ typedef enum {
  * Since: 1.22
  */
 
+
+/**
+ * QmiLocNmeaType:
+ * @QMI_LOC_NMEA_TYPE_GGA: Enable GGA traces.
+ * @QMI_LOC_NMEA_TYPE_RMC: Enable RMC traces.
+ * @QMI_LOC_NMEA_TYPE_GSV: Enable GSV traces.
+ * @QMI_LOC_NMEA_TYPE_GSA: Enable GSA traces.
+ * @QMI_LOC_NMEA_TYPE_VTG: Enable VTG traces.
+ * @QMI_LOC_NMEA_TYPE_PQXF: Enable PQXF traces.
+ * @QMI_LOC_NMEA_TYPE_PSTIS: Enable PSTIS traces.
+ * @QMI_LOC_NMEA_TYPE_ALL: Enable all supported trace types.
+ *
+ * NMEA trace types that may be enabled in the GNSS engine.
+ */
+typedef enum {
+    QMI_LOC_NMEA_TYPE_GGA   = 1 << 0,
+    QMI_LOC_NMEA_TYPE_RMC   = 1 << 1,
+    QMI_LOC_NMEA_TYPE_GSV   = 1 << 2,
+    QMI_LOC_NMEA_TYPE_GSA   = 1 << 3,
+    QMI_LOC_NMEA_TYPE_VTG   = 1 << 4,
+    QMI_LOC_NMEA_TYPE_PQXFI = 1 << 5,
+    QMI_LOC_NMEA_TYPE_PSTIS = 1 << 6,
+    QMI_LOC_NMEA_TYPE_ALL   = 0x0000FFFF,
+} QmiLocNmeaType;
+
+/**
+ * qmi_loc_nmea_type_build_string_from_mask
+ *
+ * Since: 1.26
+ */
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_LOC_H_ */
