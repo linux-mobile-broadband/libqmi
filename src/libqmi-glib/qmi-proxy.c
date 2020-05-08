@@ -306,8 +306,10 @@ indication_cb (QmiDevice *device,
         QmiClientInfo *info;
 
         info = &g_array_index (client->qmi_client_info_array, QmiClientInfo, i);
+
         /* If service and CID match; or if service and broadcast, forward to
-         * the remote client */
+         * the remote client. This message may therefore be forwarded to multiple
+         * clients, all that match the conditions. */
         if ((qmi_message_get_service (message) == info->service) &&
             (qmi_message_get_client_id (message) == info->cid ||
              qmi_message_get_client_id (message) == QMI_CID_BROADCAST)) {
@@ -317,9 +319,6 @@ indication_cb (QmiDevice *device,
                 g_warning ("couldn't forward indication to client: %s", error->message);
                 g_error_free (error);
             }
-
-            /* Avoid forwarding broadcast messages multiple times */
-            break;
         }
     }
 }
