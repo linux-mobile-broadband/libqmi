@@ -332,6 +332,20 @@ device_removed_cb (QmiDevice *device,
 }
 
 static void
+register_signal_handlers (Client *client)
+{
+    /* Register for device indications */
+    client->indication_id = g_signal_connect (client->device,
+                                              "indication",
+                                              G_CALLBACK (indication_cb),
+                                              client);
+    client->device_removed_id = g_signal_connect (client->device,
+                                                  "device-removed",
+                                                  G_CALLBACK (device_removed_cb),
+                                                  client);
+}
+
+static void
 device_open_ready (QmiDevice *device,
                    GAsyncResult *res,
                    Client *client)
@@ -360,15 +374,7 @@ device_open_ready (QmiDevice *device,
         self->priv->devices = g_list_append (self->priv->devices, g_object_ref (client->device));
     }
 
-    /* Register for device indications */
-    client->indication_id = g_signal_connect (client->device,
-                                              "indication",
-                                              G_CALLBACK (indication_cb),
-                                              client);
-    client->device_removed_id = g_signal_connect (client->device,
-                                                  "device-removed",
-                                                  G_CALLBACK (device_removed_cb),
-                                                  client);
+    register_signal_handlers (client);
 
     complete_internal_proxy_open (self, client);
 
@@ -465,7 +471,8 @@ process_internal_proxy_open (QmiProxy   *self,
         g_object_unref (file);
         g_free (device_file_path);
         return TRUE;
-    }
+    } else
+        register_signal_handlers (client);
 
     g_free (device_file_path);
 
