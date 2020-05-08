@@ -509,7 +509,7 @@ process_internal_proxy_open (QmiProxy   *self,
                               client_ref (client)); /* Full ref */
         } else
 #endif
-	{
+        {
             file = g_file_new_for_path (device_file_path);
             qmi_device_new (file,
                             NULL,
