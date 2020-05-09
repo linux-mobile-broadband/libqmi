@@ -579,7 +579,7 @@ typedef enum {
  * @QMI_LOC_NMEA_TYPE_GSV: Enable GSV traces.
  * @QMI_LOC_NMEA_TYPE_GSA: Enable GSA traces.
  * @QMI_LOC_NMEA_TYPE_VTG: Enable VTG traces.
- * @QMI_LOC_NMEA_TYPE_PQXF: Enable PQXF traces.
+ * @QMI_LOC_NMEA_TYPE_PQXFI: Enable PQXFI traces.
  * @QMI_LOC_NMEA_TYPE_PSTIS: Enable PSTIS traces.
  * @QMI_LOC_NMEA_TYPE_ALL: Enable all supported trace types.
  *
