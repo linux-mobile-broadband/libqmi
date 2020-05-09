@@ -502,7 +502,6 @@
      "service" : "LOC",
      "id"      : "0x003F",
      "since"   : "1.26",
-     "input"   : [  ],
      "output"  : [ { "common-ref" : "Operation Result" } ] },
 
   {  "name"    : "Get NMEA Types",
