@@ -489,10 +489,11 @@ position_report_received (QmiClientLoc                         *client,
             g_print ("   time source: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_sensor_data_usage (output, &sensor_data_usage, NULL)) {
-            g_autofree gchar *sensor_data_usage_str = NULL;
+            gchar *sensor_data_usage_str;
 
             sensor_data_usage_str = qmi_loc_sensor_data_usage_build_string_from_mask (sensor_data_usage);
             g_print ("   sensor data usage: %s\n", sensor_data_usage_str);
+            g_free (sensor_data_usage_str);
         } else
             g_print ("   sensor data usage: n/a\n");
 
