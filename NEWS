@@ -1,4 +1,21 @@
 
+Overview of changes in libqmi 1.24.12
+----------------------------------------
+
+ * libqmi-glib:
+   ** Skip UTF-8 validation on 0xFF suffix that may happen in fixed sized
+      strings (e.g. 2-digit MNC value in 3-byte fixed sized field).
+   ** Explicitly allow CR and LF as valid characters in strings (e.g. when
+      given in NMEA trace indications).
+
+ * qmi-proxy:
+   ** Fix loss of last requests on client hangup.
+   ** Fix missing indication/removal signal handling in clients.
+   ** Fix forwarding of broadcast indications to all clients.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.24.10
 ----------------------------------------
 
