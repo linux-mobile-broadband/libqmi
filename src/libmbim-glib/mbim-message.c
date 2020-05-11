@@ -275,12 +275,12 @@ _mbim_message_read_string (const MbimMessage  *self,
                            gchar             **str,
                            GError            **error)
 {
-    guint32 required_size;
-    guint32 offset;
-    guint32 size;
-    guint32 information_buffer_offset;
-    gunichar2 *utf16d = NULL;
-    const gunichar2 *utf16 = NULL;
+    guint32               required_size;
+    guint32               offset;
+    guint32               size;
+    guint32               information_buffer_offset;
+    g_autofree gunichar2 *utf16d = NULL;
+    const gunichar2      *utf16 = NULL;
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
@@ -329,8 +329,6 @@ _mbim_message_read_string (const MbimMessage  *self,
                             NULL,
                             NULL,
                             error);
-
-    g_free (utf16d);
 
     if (!(*str)) {
         g_prefix_error (error, "Error converting string to UTF-8: ");
@@ -947,18 +945,18 @@ void
 _mbim_struct_builder_append_string (MbimStructBuilder *builder,
                                     const gchar       *value)
 {
-    guint32 offset;
-    guint32 length;
-    gunichar2 *utf16 = NULL;
-    guint32 utf16_bytes = 0;
-    GError *error = NULL;
+    guint32               offset;
+    guint32               length;
+    g_autofree gunichar2 *utf16 = NULL;
+    guint32               utf16_bytes = 0;
 
     /* A string consists of Offset+Size in the static buffer, plus the
      * string itself in the variable buffer */
 
     /* Convert the string from UTF-8 to UTF-16HE */
     if (value && value[0]) {
-        glong items_written = 0;
+        g_autoptr(GError) error = NULL;
+        glong             items_written = 0;
 
         utf16 = g_utf8_to_utf16 (value,
                                  -1,
@@ -967,7 +965,6 @@ _mbim_struct_builder_append_string (MbimStructBuilder *builder,
                                  &error);
         if (!utf16) {
             g_warning ("Error converting string: %s", error->message);
-            g_error_free (error);
             return;
         }
 
@@ -1009,7 +1006,6 @@ _mbim_struct_builder_append_string (MbimStructBuilder *builder,
         g_byte_array_append (builder->variable_buffer, (const guint8 *)utf16, (guint)utf16_bytes);
         bytearray_apply_padding (builder->variable_buffer, &utf16_bytes);
     }
-    g_free (utf16);
 }
 
 void
@@ -1499,8 +1495,8 @@ mbim_message_get_printable (const MbimMessage *self,
                                 line_prefix, _mbim_message_fragment_get_total (self),
                                 line_prefix, _mbim_message_fragment_get_current (self));
         if (!headers_only) {
-            gchar *uuid_printable;
-            const gchar *cid_printable;
+            g_autofree gchar *uuid_printable = NULL;
+            const gchar      *cid_printable;
 
             service_read_fields = mbim_message_command_get_service (self);
 
@@ -1516,7 +1512,6 @@ mbim_message_get_printable (const MbimMessage *self,
                                     line_prefix, mbim_service_lookup_name (mbim_message_command_get_service (self)), uuid_printable,
                                     line_prefix, cid_printable, mbim_message_command_get_cid (self),
                                     line_prefix, mbim_message_command_type_get_string (mbim_message_command_get_command_type (self)), mbim_message_command_get_command_type (self));
-            g_free (uuid_printable);
         }
         break;
 
@@ -1529,9 +1524,9 @@ mbim_message_get_printable (const MbimMessage *self,
                                 line_prefix, _mbim_message_fragment_get_total (self),
                                 line_prefix, _mbim_message_fragment_get_current (self));
         if (!headers_only) {
-            gchar *uuid_printable;
-            MbimStatusError status;
-            const gchar *cid_printable;
+            g_autofree gchar *uuid_printable = NULL;
+            MbimStatusError   status;
+            const gchar      *cid_printable;
 
             service_read_fields = mbim_message_command_done_get_service (self);
 
@@ -1548,7 +1543,6 @@ mbim_message_get_printable (const MbimMessage *self,
                                     line_prefix, mbim_status_error_get_string (status), status,
                                     line_prefix, mbim_service_lookup_name (mbim_message_command_done_get_service (self)), uuid_printable,
                                     line_prefix, cid_printable, mbim_message_command_done_get_cid (self));
-            g_free (uuid_printable);
         }
         break;
 
@@ -1561,8 +1555,8 @@ mbim_message_get_printable (const MbimMessage *self,
                                 line_prefix, _mbim_message_fragment_get_total (self),
                                 line_prefix, _mbim_message_fragment_get_current (self));
         if (!headers_only) {
-            gchar *uuid_printable;
-            const gchar *cid_printable;
+            g_autofree gchar *uuid_printable = NULL;
+            const gchar      *cid_printable;
 
             service_read_fields = mbim_message_indicate_status_get_service (self);
 
@@ -1576,7 +1570,6 @@ mbim_message_get_printable (const MbimMessage *self,
                                     line_prefix,
                                     line_prefix, mbim_service_lookup_name (mbim_message_indicate_status_get_service (self)), uuid_printable,
                                     line_prefix, cid_printable, mbim_message_indicate_status_get_cid (self));
-            g_free (uuid_printable);
         }
         break;
 
@@ -1585,8 +1578,8 @@ mbim_message_get_printable (const MbimMessage *self,
     }
 
     if (service_read_fields != MBIM_SERVICE_INVALID) {
-        gchar *fields_printable = NULL;
-        GError *error = NULL;
+        g_autofree gchar  *fields_printable = NULL;
+        g_autoptr(GError)  error = NULL;
 
         switch (service_read_fields) {
         case MBIM_SERVICE_BASIC_CONNECT:
@@ -1638,19 +1631,15 @@ mbim_message_get_printable (const MbimMessage *self,
             break;
         }
 
-        if (error) {
+        if (error)
             g_string_append_printf (printable,
                                     "%sFields: %s\n",
                                     line_prefix, error->message);
-            g_error_free (error);
-        } else if (fields_printable) {
-            if (fields_printable[0])
-                g_string_append_printf (printable,
-                                        "%sFields:\n"
-                                        "%s",
-                                        line_prefix, fields_printable);
-            g_free (fields_printable);
-        }
+        else if (fields_printable && fields_printable[0])
+            g_string_append_printf (printable,
+                                    "%sFields:\n"
+                                    "%s",
+                                    line_prefix, fields_printable);
     }
 
     return g_string_free (printable, FALSE);
