@@ -4,6 +4,8 @@
 *.la
 *.bz2
 *.pyc
+*.gir
+*.typelib
 
 Makefile
 Makefile.in

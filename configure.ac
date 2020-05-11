@@ -109,6 +109,9 @@ AC_SUBST(GLIB_MKENUMS)
 
 AM_PATH_PYTHON([], [], [PYTHON=python])
 
+dnl GObject Introspection
+GOBJECT_INTROSPECTION_CHECK([0.9.6])
+
 dnl message collection (existing file in data/qmi-collection-${COLLECTION}.json)
 dnl custom collections may be added as files in data/
 AC_ARG_ENABLE(collection,
@@ -296,27 +299,28 @@ echo "
     ==============================================
 
     Build:
-      compiler:            ${CC}
-      cflags:              ${CFLAGS}
-      ldflags:             ${LDFLAGS}
-      warn cflags:         ${WARN_CFLAGS}
-      warn ldflags:        ${WARN_LDFLAGS}
-      Maintainer mode:     ${USE_MAINTAINER_MODE}
-      Documentation:       ${enable_gtk_doc}
+      compiler:                 ${CC}
+      cflags:                   ${CFLAGS}
+      ldflags:                  ${LDFLAGS}
+      warn cflags:              ${WARN_CFLAGS}
+      warn ldflags:             ${WARN_LDFLAGS}
+      Maintainer mode:          ${USE_MAINTAINER_MODE}
+      Documentation:            ${enable_gtk_doc}
+      gobject introspection:    ${found_introspection}
 
     System paths:
-      prefix:              ${prefix}
-      udev base directory: ${UDEV_BASE_DIR}
+      prefix:                   ${prefix}
+      udev base directory:      ${UDEV_BASE_DIR}
 
     Features:
-      QMUX over MBIM:      ${enable_mbim_qmux}
-      QMI username:        ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
+      QMUX over MBIM:           ${enable_mbim_qmux}
+      QMI username:             ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
 
     Built items:
-      libqrtr-glib:        ${enable_qrtr}
-      libqmi-glib:         yes (${QMI_COLLECTION_NAME})
-      qmicli:              yes
-      qmi-firmware-update: ${build_firmware_update}
-          with udev:             ${with_udev}
-          with MM runtime check: ${enable_mm_runtime_check}
+      libqrtr-glib:             ${enable_qrtr}
+      libqmi-glib:              yes (${QMI_COLLECTION_NAME})
+      qmicli:                   yes
+      qmi-firmware-update:      ${build_firmware_update}
+          with udev:                    ${with_udev}
+          with MM runtime check:        ${enable_mm_runtime_check}
 "

@@ -375,10 +375,10 @@ class VariableArray(Variable):
         template = ''
         if self.array_sequence_element != '':
             template += (
-                '${lp}@${name}_sequence: a placeholder for the output sequence number, or %NULL if not required.\n')
+                '${lp}@${name}_sequence: (out): a placeholder for the output sequence number, or %NULL if not required.\n')
 
         template += (
-            '${lp}@${name}: a placeholder for the output #GArray of #${public_array_element_format} elements, or %NULL if not required. Do not free it, it is owned by @self.\n')
+            '${lp}@${name}: (out): a placeholder for the output #GArray of #${public_array_element_format} elements, or %NULL if not required. Do not free it, it is owned by @self.\n')
         return string.Template(template).substitute(translations)
 
 

@@ -577,7 +577,7 @@ gboolean qmi_message_tlv_write_string (QmiMessage   *self,
  * qmi_message_tlv_read_init:
  * @self: a #QmiMessage.
  * @type: specific ID of the TLV to read.
- * @out_tlv_length: optional return location for the TLV size.
+ * @out_tlv_length: (out): optional return location for the TLV size.
  * @error: return location for error or %NULL.
  *
  * Starts reading a given TLV from the #QmiMessage.
@@ -595,8 +595,8 @@ gsize qmi_message_tlv_read_init (QmiMessage  *self,
  * qmi_message_tlv_read_guint8:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of the offset within the TLV value.
- * @out: return location for the read #guint8.
+ * @offset: (inout): address of the offset within the TLV value.
+ * @out: (out): return location for the read #guint8.
  * @error: return location for error or %NULL.
  *
  * Reads an unsigned byte from the TLV.
@@ -619,8 +619,8 @@ gboolean qmi_message_tlv_read_guint8 (QmiMessage  *self,
  * qmi_message_tlv_read_gint8:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
- * @out: return location for the read #gint8.
+ * @offset: (inout): address of a the offset within the TLV value.
+ * @out: (out): return location for the read #gint8.
  * @error: return location for error or %NULL.
  *
  * Reads a signed byte from the TLV.
@@ -643,9 +643,9 @@ gboolean qmi_message_tlv_read_gint8 (QmiMessage  *self,
  * qmi_message_tlv_read_guint16:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @endian: source endianness, which will be swapped to host byte order if necessary.
- * @out: return location for the read #guint16.
+ * @out: (out): return location for the read #guint16.
  * @error: return location for error or %NULL.
  *
  * Reads an unsigned 16-bit integer from the TLV, in host byte order.
@@ -669,9 +669,9 @@ gboolean qmi_message_tlv_read_guint16 (QmiMessage  *self,
  * qmi_message_tlv_read_gint16:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @endian: source endianness, which will be swapped to host byte order if necessary.
- * @out: return location for the read #gint16.
+ * @out: (out): return location for the read #gint16.
  * @error: return location for error or %NULL.
  *
  * Reads a signed 16-bit integer from the TLV, in host byte order.
@@ -695,9 +695,9 @@ gboolean qmi_message_tlv_read_gint16 (QmiMessage  *self,
  * qmi_message_tlv_read_guint32:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @endian: source endianness, which will be swapped to host byte order if necessary.
- * @out: return location for the read #guint32.
+ * @out: (out): return location for the read #guint32.
  * @error: return location for error or %NULL.
  *
  * Reads an unsigned 32-bit integer from the TLV, in host byte order.
@@ -721,9 +721,9 @@ gboolean qmi_message_tlv_read_guint32 (QmiMessage  *self,
  * qmi_message_tlv_read_gint32:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @endian: source endianness, which will be swapped to host byte order if necessary.
- * @out: return location for the read #gint32.
+ * @out: (out): return location for the read #gint32.
  * @error: return location for error or %NULL.
  *
  * Reads a signed 32-bit integer from the TLV, in host byte order.
@@ -747,9 +747,9 @@ gboolean qmi_message_tlv_read_gint32 (QmiMessage  *self,
  * qmi_message_tlv_read_guint64:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @endian: source endianness, which will be swapped to host byte order if necessary.
- * @out: return location for the read #guint64.
+ * @out: (out): return location for the read #guint64.
  * @error: return location for error or %NULL.
  *
  * Reads an unsigned 64-bit integer from the TLV, in host byte order.
@@ -773,9 +773,9 @@ gboolean qmi_message_tlv_read_guint64 (QmiMessage  *self,
  * qmi_message_tlv_read_gint64:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @endian: source endianness, which will be swapped to host byte order if necessary.
- * @out: return location for the read #gint64.
+ * @out: (out): return location for the read #gint64.
  * @error: return location for error or %NULL.
  *
  * Reads a signed 64-bit integer from the TLV, in host byte order.
@@ -799,10 +799,10 @@ gboolean qmi_message_tlv_read_gint64 (QmiMessage  *self,
  * qmi_message_tlv_read_sized_guint:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @n_bytes: number of bytes to read.
  * @endian: source endianness, which will be swapped to host byte order if necessary.
- * @out: return location for the read #guint64.
+ * @out: (out): return location for the read #guint64.
  * @error: return location for error or %NULL.
  *
  * Reads a @b_bytes-sized integer from the TLV, in host byte order.
@@ -827,9 +827,9 @@ gboolean qmi_message_tlv_read_sized_guint (QmiMessage  *self,
  * qmi_message_tlv_read_gfloat_endian:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @endian: source endianness, which will be swapped to host byte order if necessary.
- * @out: return location for the read #gfloat.
+ * @out: (out): return location for the read #gfloat.
  * @error: return location for error or %NULL.
  *
  * Reads a 32-bit floating-point number from the TLV.
@@ -853,9 +853,9 @@ gboolean qmi_message_tlv_read_gfloat_endian (QmiMessage  *self,
  * qmi_message_tlv_read_gdouble:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @endian: source endianness, which will be swapped to host byte order if necessary.
- * @out: return location for the read #gdouble.
+ * @out: (out): return location for the read #gdouble.
  * @error: return location for error or %NULL.
  *
  * Reads a 64-bit floating-point number from the TLV.
@@ -879,10 +879,10 @@ gboolean qmi_message_tlv_read_gdouble (QmiMessage  *self,
  * qmi_message_tlv_read_string:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @n_size_prefix_bytes: number of bytes used in the size prefix.
  * @max_size: maximum number of bytes to read, or 0 to read all available bytes.
- * @out: return location for the read string. The returned value should be freed with g_free().
+ * @out: (out): return location for the read string. The returned value should be freed with g_free().
  * @error: return location for error or %NULL.
  *
  * Reads a string from the TLV.
@@ -912,9 +912,9 @@ gboolean qmi_message_tlv_read_string (QmiMessage  *self,
  * qmi_message_tlv_read_fixed_size_string:
  * @self: a #QmiMessage.
  * @tlv_offset: offset that was returned by qmi_message_tlv_read_init().
- * @offset: address of a the offset within the TLV value.
+ * @offset: (inout): address of a the offset within the TLV value.
  * @string_length: amount of bytes to read.
- * @out: buffer preallocated by the client, with at least @string_length bytes.
+ * @out: (out): buffer preallocated by the client, with at least @string_length bytes.
  * @error: return location for error or %NULL.
  *
  * Reads a string from the TLV.

@@ -145,3 +145,46 @@ include_HEADERS = \
 
 EXTRA_DIST = \
 	qmi-version.h.in
+
+CLEANFILES =
+
+# Introspection
+
+if HAVE_INTROSPECTION
+
+INTROSPECTION_GIRS = libqmi-glib.gir
+INTROSPECTION_SCANNER_ARGS = --warn-all
+INTROSPECTION_COMPILER_ARGS =
+
+libqmi-glib.gir: libqmi-glib.la
+libqmi_glib_gir_INCLUDES = GLib-2.0 GObject-2.0 Gio-2.0
+libqmi_glib_gir_CFLAGS = $(libqmi_glib_la_CPPFLAGS)
+libqmi_glib_gir_LIBS = libqmi-glib.la
+libqmi_glib_gir_EXPORT_PACKAGES = libqmi-glib
+libqmi_glib_gir_SCANNERFLAGS = \
+	$(WARN_SCANNERFLAGS) \
+	--c-include "libqmi-glib.h" \
+	--identifier-prefix=QMI \
+	--identifier-prefix=Qmi \
+	--symbol-prefix=qmi_ \
+	$(NULL)
+libqmi_glib_gir_FILES = \
+	$(include_HEADERS) \
+	$(filter-out %.h,$(libmm_glib_la_SOURCES)) \
+	$(filter %.c,$(libmm_glib_la_SOURCES)) \
+	$(wildcard generated/*.h) \
+	$(wildcard generated/*.c) \
+	$(NULL)
+
+girdir = $(datadir)/gir-1.0
+nodist_gir_DATA = $(INTROSPECTION_GIRS)
+
+typelibdir = $(libdir)/girepository-1.0
+nodist_typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
+
+CLEANFILES += $(nodist_gir_DATA) $(nodist_typelib_DATA)
+
+endif # HAVE_INTROSPECTION
+
+-include $(INTROSPECTION_MAKEFILE)
+

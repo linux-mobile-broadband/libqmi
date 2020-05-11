@@ -405,7 +405,7 @@ void qmi_device_allocate_client (QmiDevice           *self,
  *
  * Finishes an operation started with qmi_device_allocate_client().
  *
- * Returns: a newly allocated #QmiClient, or %NULL if @error is set.
+ * Returns: (transfer full): a newly allocated #QmiClient, or %NULL if @error is set.
  *
  * Since: 1.0
  */
@@ -617,7 +617,7 @@ void qmi_device_command_full (QmiDevice           *self,
  *
  * Finishes an operation started with qmi_device_command_full().
  *
- * Returns: a #QmiMessage response, or %NULL if @error is set. The returned value should be freed with qmi_message_unref().
+ * Returns: (transfer full): a #QmiMessage response, or %NULL if @error is set. The returned value should be freed with qmi_message_unref().
  *
  * Since: 1.18
  */

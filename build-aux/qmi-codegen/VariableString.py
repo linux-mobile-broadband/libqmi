@@ -213,7 +213,7 @@ class VariableString(Variable):
                          'name' : variable_name }
 
         template = (
-            '${lp}@${name}: a placeholder for the output constant string, or %NULL if not required.\n')
+            '${lp}@${name}: (out): a placeholder for the output constant string, or %NULL if not required.\n')
         return string.Template(template).substitute(translations)
 
 
