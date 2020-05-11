@@ -373,8 +373,8 @@ class Struct:
                  field['format'] == 'ipv6' or \
                  field['format'] == 'ref-ipv6':
                 inner_template += (
-                    '        GInetAddress *addr;\n'
-                    '        gchar *tmpstr;\n'
+                    '        g_autoptr(GInetAddress)  addr = NULL;\n'
+                    '        g_autofree gchar        *tmpstr = NULL;\n'
                     '\n')
 
                 if field['format'] == 'ipv4' or \
@@ -388,9 +388,7 @@ class Struct:
 
                 inner_template += (
                     '        tmpstr = g_inet_address_to_string (addr);\n'
-                    '        g_string_append_printf (str, "\'%s\'", tmpstr);\n'
-                    '        g_free (tmpstr);\n'
-                    '        g_object_unref (addr);\n')
+                    '        g_string_append_printf (str, "\'%s\'", tmpstr);\n')
 
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])

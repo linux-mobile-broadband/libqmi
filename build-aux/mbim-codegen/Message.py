@@ -1069,15 +1069,14 @@ class Message:
 
             elif field['format'] == 'uuid':
                 inner_template += (
-                    '        const MbimUuid *tmp;\n'
-                    '        gchar *tmpstr;\n'
+                    '        const MbimUuid   *tmp;\n'
+                    '        g_autofree gchar *tmpstr = NULL;\n'
                     '\n'
                     '        if (!_mbim_message_read_uuid (message, offset, &tmp, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += 16;\n'
                     '        tmpstr = mbim_uuid_get_printable (tmp);\n'
-                    '        g_string_append_printf (str, "\'%s\'", tmpstr);\n'
-                    '        g_free (tmpstr);\n')
+                    '        g_string_append_printf (str, "\'%s\'", tmpstr);\n')
 
             elif field['format'] == 'guint32' or \
                  field['format'] == 'guint64':
@@ -1101,11 +1100,10 @@ class Message:
                         '        g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})tmp));\n'
                         '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
                         '        {\n'
-                        '            gchar *tmpstr;\n'
+                        '            g_autofree gchar *tmpstr = NULL;\n'
                         '\n'
                         '            tmpstr = ${public_underscore}_build_string_from_mask ((${public})tmp);\n'
                         '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
-                        '            g_free (tmpstr);\n'
                         '        }\n'
                         '#else\n'
                         '# error neither enum nor flags\n'
@@ -1120,17 +1118,16 @@ class Message:
 
             elif field['format'] == 'string':
                 inner_template += (
-                    '        gchar *tmp;\n'
+                    '        g_autofree gchar *tmp = NULL;\n'
                     '\n'
                     '        if (!_mbim_message_read_string (message, 0, offset, &tmp, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += 8;\n'
-                    '        g_string_append_printf (str, "\'%s\'", tmp);\n'
-                    '        g_free (tmp);\n')
+                    '        g_string_append_printf (str, "\'%s\'", tmp);\n')
 
             elif field['format'] == 'string-array':
                 inner_template += (
-                    '        gchar **tmp;\n'
+                    '        g_auto(GStrv) tmp = NULL;\n'
                     '        guint i;\n'
                     '\n'
                     '        if (!_mbim_message_read_string_array (message, _${array_size_field}, 0, offset, &tmp, &inner_error))\n'
@@ -1143,15 +1140,14 @@ class Message:
                     '            if (i < (_${array_size_field} - 1))\n'
                     '                g_string_append (str, ", ");\n'
                     '        }\n'
-                    '        g_string_append (str, "\'");\n'
-                    '        g_strfreev (tmp);\n')
+                    '        g_string_append (str, "\'");\n')
 
             elif field['format'] == 'struct':
                 inner_template += (
-                    '        ${struct_type} *tmp;\n'
+                    '        g_autoptr(${struct_type}) tmp = NULL;\n'
+                    '        g_autofree gchar *new_line_prefix = NULL;\n'
+                    '        g_autofree gchar *struct_str = NULL;\n'
                     '        guint32 bytes_read = 0;\n'
-                    '        gchar *new_line_prefix;\n'
-                    '        gchar *struct_str;\n'
                     '\n'
                     '        tmp = _mbim_message_read_${struct_name}_struct (message, offset, &bytes_read, &inner_error);\n'
                     '        if (!tmp)\n'
@@ -1161,15 +1157,12 @@ class Message:
                     '        new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
                     '        struct_str = _mbim_message_print_${struct_name}_struct (tmp, new_line_prefix);\n'
                     '        g_string_append (str, struct_str);\n'
-                    '        g_free (struct_str);\n'
-                    '        g_string_append_printf (str, "%s  }\\n", line_prefix);\n'
-                    '        g_free (new_line_prefix);\n'
-                    '        _${struct_name}_free (tmp);\n')
+                    '        g_string_append_printf (str, "%s  }\\n", line_prefix);\n')
 
             elif field['format'] == 'struct-array' or field['format'] == 'ref-struct-array':
                 inner_template += (
-                    '        ${struct_type} **tmp;\n'
-                    '        gchar *new_line_prefix;\n'
+                    '        g_autoptr(${struct_type}Array) tmp = NULL;\n'
+                    '        g_autofree gchar *new_line_prefix = NULL;\n'
                     '        guint i;\n'
                     '\n')
 
@@ -1188,17 +1181,14 @@ class Message:
                     '        new_line_prefix = g_strdup_printf ("%s        ", line_prefix);\n'
                     '        g_string_append (str, "\'{\\n");\n'
                     '        for (i = 0; i < _${array_size_field}; i++) {\n'
-                    '            gchar *struct_str;\n'
+                    '            g_autofree gchar *struct_str = NULL;\n'
                     '\n'
                     '            g_string_append_printf (str, "%s    [%u] = {\\n", line_prefix, i);\n'
                     '            struct_str = _mbim_message_print_${struct_name}_struct (tmp[i], new_line_prefix);\n'
                     '            g_string_append (str, struct_str);\n'
-                    '            g_free (struct_str);\n'
                     '            g_string_append_printf (str, "%s    },\\n", line_prefix);\n'
                     '        }\n'
-                    '        g_string_append_printf (str, "%s  }\'", line_prefix);\n'
-                    '        g_free (new_line_prefix);\n'
-                    '        ${struct_name}_array_free (tmp);\n')
+                    '        g_string_append_printf (str, "%s  }\'", line_prefix);\n')
 
             elif field['format'] == 'ipv4' or \
                  field['format'] == 'ref-ipv4' or \
@@ -1212,14 +1202,14 @@ class Message:
                         '        const MbimIPv4 *tmp;\n')
                 elif field['format'] == 'ipv4-array':
                     inner_template += (
-                        '        MbimIPv4 *tmp;\n')
+                        '        g_autofree MbimIPv4 *tmp = NULL;\n')
                 elif field['format'] == 'ipv6' or \
                      field['format'] == 'ref-ipv6':
                     inner_template += (
                         '        const MbimIPv6 *tmp;\n')
                 elif field['format'] == 'ipv6-array':
                     inner_template += (
-                        '        MbimIPv6 *tmp;\n')
+                        '        g_autofree MbimIPv6 *tmp = NULL;\n')
 
                 inner_template += (
                     '        guint array_size;\n'
@@ -1267,8 +1257,8 @@ class Message:
                     '        g_string_append (str, "\'");\n'
                     '        if (tmp) {\n'
                     '            for (i = 0; i < array_size; i++) {\n'
-                    '                GInetAddress *addr;\n'
-                    '                gchar *tmpstr;\n'
+                    '                g_autoptr(GInetAddress)  addr = NULL;\n'
+                    '                g_autofree gchar        *tmpstr = NULL;\n'
                     '\n')
 
                 if field['format'] == 'ipv4' or \
@@ -1285,18 +1275,11 @@ class Message:
                 inner_template += (
                     '                tmpstr = g_inet_address_to_string (addr);\n'
                     '                g_string_append_printf (str, "%s", tmpstr);\n'
-                    '                g_free (tmpstr);\n'
-                    '                g_object_unref (addr);\n'
                     '                if (i < (array_size - 1))\n'
                     '                    g_string_append (str, ", ");\n'
                     '            }\n'
                     '        }\n'
                     '        g_string_append (str, "\'");\n')
-
-                if field['format'] == 'ipv4-array' or \
-                   field['format'] == 'ipv6-array':
-                    inner_template += (
-                        '        g_free (tmp);\n')
 
             else:
                 raise ValueError('Field format \'%s\' not printable' % field['format'])
