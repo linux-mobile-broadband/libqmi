@@ -210,8 +210,8 @@ proxy_n_devices_changed (MbimProxy *_proxy)
 
 int main (int argc, char **argv)
 {
-    GError *error = NULL;
-    GOptionContext *context;
+    g_autoptr(GError)         error = NULL;
+    g_autoptr(GOptionContext) context = NULL;
 
     setlocale (LC_ALL, "");
 
@@ -219,11 +219,9 @@ int main (int argc, char **argv)
     context = g_option_context_new ("- Proxy for MBIM devices");
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
-        g_printerr ("error: %s\n",
-                    error->message);
+        g_printerr ("error: %s\n", error->message);
         exit (EXIT_FAILURE);
     }
-    g_option_context_free (context);
 
     if (version_flag)
         print_version_and_exit ();
