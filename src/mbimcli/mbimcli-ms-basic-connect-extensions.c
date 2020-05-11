@@ -47,10 +47,10 @@ static gchar    *query_pco_str;
 static gboolean  query_lte_attach_configuration_flag;
 static gboolean  query_lte_attach_status_flag;
 
-static gboolean query_pco_arg_parse (const char *option_name,
-                                     const char *value,
-                                     gpointer user_data,
-                                     GError **error);
+static gboolean query_pco_arg_parse (const gchar  *option_name,
+                                     const gchar  *value,
+                                     gpointer      user_data,
+                                     GError      **error);
 
 static GOptionEntry entries[] = {
     { "ms-query-pco", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_pco_arg_parse),
@@ -69,10 +69,10 @@ static GOptionEntry entries[] = {
 };
 
 static gboolean
-query_pco_arg_parse (const char *option_name,
-                     const char *value,
-                     gpointer user_data,
-                     GError **error)
+query_pco_arg_parse (const gchar *option_name,
+                     const gchar *value,
+                     gpointer     user_data,
+                     GError      **error)
 {
     query_pco_str = g_strdup (value ? value : "0");
     return TRUE;
@@ -171,30 +171,25 @@ static void
 query_pco_ready (MbimDevice   *device,
                  GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimPcoValue *pco_value;
-    gchar *pco_data;
+    g_autoptr(MbimMessage)   response = NULL;
+    g_autoptr(GError)        error = NULL;
+    g_autoptr(MbimPcoValue)  pco_value = NULL;
+    g_autofree gchar        *pco_data = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
-    g_print ("[%s] Successfully queried PCO\n\n",
-             mbim_device_get_path_display (device));
+    g_print ("[%s] Successfully queried PCO\n", mbim_device_get_path_display (device));
+
     if (!mbim_message_ms_basic_connect_extensions_pco_response_parse (
             response,
             &pco_value,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -210,10 +205,7 @@ query_pco_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (mbim_pco_type_get_string (pco_value->pco_data_type)),
              pco_value->pco_data_size,
              pco_data);
-    g_free (pco_data);
-    mbim_pco_value_free (pco_value);
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -221,18 +213,15 @@ static void
 query_lte_attach_configuration_ready (MbimDevice   *device,
                                       GAsyncResult *res)
 {
-    MbimMessage                 *response;
-    GError                      *error = NULL;
-    guint32                      configuration_count = 0;
-    MbimLteAttachConfiguration **configurations = NULL;
-    guint                        i;
+    g_autoptr(MbimMessage)                     response = NULL;
+    g_autoptr(GError)                          error = NULL;
+    g_autoptr(MbimLteAttachConfigurationArray) configurations = NULL;
+    guint32                                    configuration_count = 0;
+    guint                                      i;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -246,8 +235,6 @@ query_lte_attach_configuration_ready (MbimDevice   *device,
                &configurations,
                &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -266,8 +253,6 @@ query_lte_attach_configuration_ready (MbimDevice   *device,
     }
 #undef VALIDATE_NA
 
-    mbim_lte_attach_configuration_array_free (configurations);
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -275,16 +260,13 @@ static void
 query_lte_attach_status_ready (MbimDevice   *device,
                                GAsyncResult *res)
 {
-    MbimMessage         *response;
-    GError              *error = NULL;
-    MbimLteAttachStatus *lte_attach_status = NULL;
+    g_autoptr(MbimMessage)         response = NULL;
+    g_autoptr(GError)              error = NULL;
+    g_autoptr(MbimLteAttachStatus) lte_attach_status = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -297,8 +279,6 @@ query_lte_attach_status_ready (MbimDevice   *device,
             &lte_attach_status,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -313,8 +293,6 @@ query_lte_attach_status_ready (MbimDevice   *device,
     g_print ("  Auth protocol: %s\n", mbim_auth_protocol_get_string (lte_attach_status->auth_protocol));
 #undef VALIDATE_NA
 
-    mbim_lte_attach_status_free (lte_attach_status);
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -322,6 +300,9 @@ void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
 {
+    g_autoptr(MbimMessage) request = NULL;
+    g_autoptr(GError)      error = NULL;
+
     /* Initialize context */
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
@@ -329,13 +310,10 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
 
     /* Request to get PCO? */
     if (query_pco_str) {
-        MbimMessage *request;
         MbimPcoValue pco_value;
-        GError *error = NULL;
 
         if (!session_id_parse (query_pco_str, &pco_value.session_id, &error)) {
             g_printerr ("error: couldn't parse session ID: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -352,14 +330,11 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_pco_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Request to query LTE attach configuration? */
     if (query_lte_attach_configuration_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying LTE attach configuration...");
         request = mbim_message_ms_basic_connect_extensions_lte_attach_configuration_query_new (NULL);
         mbim_device_command (ctx->device,
@@ -368,14 +343,11 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_lte_attach_configuration_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Request to query LTE attach status? */
     if (query_lte_attach_status_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying LTE attach status...");
         request = mbim_message_ms_basic_connect_extensions_lte_attach_status_query_new (NULL);
         mbim_device_command (ctx->device,
@@ -384,7 +356,6 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_lte_attach_status_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 

@@ -36,15 +36,15 @@
 
 /* Context */
 typedef struct {
-    MbimDevice *device;
+    MbimDevice   *device;
     GCancellable *cancellable;
-    guint32 session_id;
+    guint32       session_id;
 } Context;
 static Context *ctx;
 
 /* Options */
-static gchar    *connect_str;
-static gchar    *disconnect_str;
+static gchar *connect_str;
+static gchar *disconnect_str;
 
 static GOptionEntry entries[] = {
     { "dss-connect", 0, 0, G_OPTION_ARG_STRING, &connect_str,
@@ -121,13 +121,12 @@ enum {
 };
 
 static void
-ip_configuration_query_ready (MbimDevice *device,
-                              GAsyncResult *res,
-                              gpointer unused)
+ip_configuration_query_ready (MbimDevice   *device,
+                              GAsyncResult *res)
 {
-    GError *error = NULL;
-    MbimMessage *response;
-    gboolean success = FALSE;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
+    gboolean               success = FALSE;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response ||
@@ -139,50 +138,40 @@ ip_configuration_query_ready (MbimDevice *device,
             g_printerr ("error: couldn't parse IP configuration response message: %s\n", error->message);
     }
 
-    g_clear_error (&error);
-    if (response)
-        mbim_message_unref (response);
     shutdown (success);
 }
 
 static void
-set_dss_ready (MbimDevice *device,
+set_dss_ready (MbimDevice   *device,
                GAsyncResult *res,
-               gpointer user_data)
+               gpointer      user_data)
 {
-    MbimMessage *response, *message;
-    GError *error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(MbimMessage) message = NULL;
+    g_autoptr(GError)      error = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
     if (!mbim_message_dss_connect_response_parse (response, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
-    mbim_message_unref (response);
 
     if (GPOINTER_TO_UINT (user_data) == DISCONNECT) {
-        g_print ("[%s] Successfully disconnected\n",
-                 mbim_device_get_path_display (device));
+        g_print ("[%s] Successfully disconnected\n", mbim_device_get_path_display (device));
         shutdown (TRUE);
         return;
     }
 
     g_assert (GPOINTER_TO_UINT (user_data) == CONNECT);
 
-    g_print ("[%s] Successfully connected\n",
-             mbim_device_get_path_display (device));
+    g_print ("[%s] Successfully connected\n", mbim_device_get_path_display (device));
 
     message = (mbim_message_ip_configuration_query_new (
                ctx->session_id,
@@ -203,8 +192,6 @@ set_dss_ready (MbimDevice *device,
                &error));
     if (!message) {
         g_printerr ("error: couldn't create IP config request: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (message);
         shutdown (FALSE);
         return;
     }
@@ -215,7 +202,6 @@ set_dss_ready (MbimDevice *device,
                          NULL,
                          (GAsyncReadyCallback)ip_configuration_query_ready,
                          NULL);
-    mbim_message_unref (message);
 }
 
 static gboolean
@@ -223,8 +209,8 @@ common_parse (const gchar *str,
               MbimUuid    *dsid,
               guint32     *ssid)
 {
-    gchar **split;
-    gboolean status = FALSE;
+    g_auto(GStrv) split = NULL;
+    gboolean      status = FALSE;
 
     g_assert (dsid != NULL);
     g_assert (ssid != NULL);
@@ -245,7 +231,6 @@ common_parse (const gchar *str,
     else
         status = TRUE;
 
-    g_strfreev (split);
     return status;
 }
 
@@ -253,8 +238,8 @@ void
 mbimcli_dss_run (MbimDevice   *device,
                  GCancellable *cancellable)
 {
-    MbimMessage *request;
-    GError *error = NULL;
+    g_autoptr(MbimMessage) request = NULL;
+    g_autoptr(GError)      error = NULL;
 
     /* Initialize context */
     ctx = g_slice_new (Context);
@@ -277,7 +262,6 @@ mbimcli_dss_run (MbimDevice   *device,
 
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -288,14 +272,13 @@ mbimcli_dss_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)set_dss_ready,
                              GUINT_TO_POINTER (CONNECT));
-        mbim_message_unref (request);
         return;
     }
 
     /* Disconnect? */
     if (disconnect_str) {
         MbimUuid service_id;
-        guint32 session_id;
+        guint32  session_id;
 
         if (!common_parse (disconnect_str, &service_id, &session_id)) {
             shutdown (FALSE);
@@ -308,7 +291,6 @@ mbimcli_dss_run (MbimDevice   *device,
                                                     &error);
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -319,7 +301,6 @@ mbimcli_dss_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)set_dss_ready,
                              GUINT_TO_POINTER (DISCONNECT));
-        mbim_message_unref (request);
         return;
     }
 

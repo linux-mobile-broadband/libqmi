@@ -144,7 +144,7 @@ phonebook_write_input_parse (const gchar  *str,
                              gchar       **number,
                              guint        *idx)
 {
-    gchar **split;
+    g_auto(GStrv) split = NULL;
 
     g_assert (name != NULL);
     g_assert (number != NULL);
@@ -158,13 +158,11 @@ phonebook_write_input_parse (const gchar  *str,
 
     if (g_strv_length (split) > 3) {
         g_printerr ("error: couldn't parse input string, too many arguments\n");
-        g_strfreev (split);
         return FALSE;
     }
 
     if (g_strv_length (split) < 2) {
         g_printerr ("error: couldn't parse input string, missing arguments\n");
-        g_strfreev (split);
         return FALSE;
     }
 
@@ -172,7 +170,6 @@ phonebook_write_input_parse (const gchar  *str,
     if (split[2]) {
         if (!mbimcli_read_uint_from_string (split[2], idx)) {
             g_printerr ("error: couldn't parse input string, invalid index '%s'\n", split[2]);
-            g_strfreev (split);
             return FALSE;
         }
     } else {
@@ -183,8 +180,6 @@ phonebook_write_input_parse (const gchar  *str,
     /* First two items will always be available */
     *name = g_strdup (split[0]);
     *number = g_strdup (split[1]);
-
-    g_strfreev (split);
     return TRUE;
 }
 
@@ -192,30 +187,24 @@ static void
 set_phonebook_write_ready (MbimDevice   *device,
                            GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
     if (!mbim_message_phonebook_write_response_parse (response, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
     g_print ("Phonebook entry successfully written\n");
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -223,30 +212,24 @@ static void
 set_phonebook_delete_ready (MbimDevice   *device,
                             GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
     if (!mbim_message_phonebook_delete_response_parse (response, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
     g_print ("Phonebook entry/entries successfully deleted");
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -254,18 +237,15 @@ static void
 query_phonebook_read_ready (MbimDevice   *device,
                             GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    guint32 entry_count;
-    MbimPhonebookEntry **phonebook_entries;
+    g_autoptr(MbimMessage)             response = NULL;
+    g_autoptr(GError)                  error = NULL;
+    g_autoptr(MbimPhonebookEntryArray) phonebook_entries = NULL;
+    guint32                            entry_count;
     guint i;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -275,8 +255,6 @@ query_phonebook_read_ready (MbimDevice   *device,
                                                      &phonebook_entries,
                                                      &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -290,9 +268,7 @@ query_phonebook_read_ready (MbimDevice   *device,
                  phonebook_entries[i]->number,
                  phonebook_entries[i]->name);
     }
-    mbim_phonebook_entry_array_free (phonebook_entries);
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -300,21 +276,18 @@ static void
 query_phonebook_configuration_ready (MbimDevice   *device,
                                      GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimPhonebookState state;
-    const gchar *state_str;
-    guint32 number_of_entries;
-    guint32 used_entries;
-    guint32 max_number_length;
-    guint32 max_name;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    MbimPhonebookState      state;
+    const gchar            *state_str;
+    guint32                 number_of_entries;
+    guint32                 used_entries;
+    guint32                 max_number_length;
+    guint32                 max_name;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -327,8 +300,6 @@ query_phonebook_configuration_ready (MbimDevice   *device,
                                                               &max_name,
                                                               &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -347,7 +318,6 @@ query_phonebook_configuration_ready (MbimDevice   *device,
              max_number_length,
              max_name);
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -355,6 +325,8 @@ void
 mbimcli_phonebook_run (MbimDevice   *device,
                        GCancellable *cancellable)
 {
+    g_autoptr(MbimMessage) request = NULL;
+
     /* Initialize context */
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
@@ -362,8 +334,6 @@ mbimcli_phonebook_run (MbimDevice   *device,
 
     /* Request to get configuration? */
     if (phonebook_configuration_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying phonebook configurations...");
         request = mbim_message_phonebook_configuration_query_new (NULL);
         mbim_device_command (ctx->device,
@@ -372,14 +342,11 @@ mbimcli_phonebook_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_phonebook_configuration_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Phonebook read */
     if (phonebook_read_index) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying phonebook read...");
         request = mbim_message_phonebook_read_query_new (MBIM_PHONEBOOK_FLAG_INDEX,
                                                          phonebook_read_index,
@@ -390,14 +357,11 @@ mbimcli_phonebook_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_phonebook_read_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Phonebook read all */
     if (phonebook_read_all_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying phonebook read all...");
         request = mbim_message_phonebook_read_query_new (MBIM_PHONEBOOK_FLAG_ALL, 0, NULL);
         mbim_device_command (ctx->device,
@@ -406,14 +370,11 @@ mbimcli_phonebook_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_phonebook_read_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Phonebook delete */
     if (phonebook_delete_index) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously phonebook delete...");
         request = mbim_message_phonebook_delete_set_new (MBIM_PHONEBOOK_FLAG_INDEX,
                                                          phonebook_delete_index,
@@ -424,14 +385,11 @@ mbimcli_phonebook_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)set_phonebook_delete_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Phonebook delete all */
     if (phonebook_delete_all_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously phonebook delete all...");
         request = mbim_message_phonebook_delete_set_new (MBIM_PHONEBOOK_FLAG_ALL, 0, NULL);
         mbim_device_command (ctx->device,
@@ -440,16 +398,14 @@ mbimcli_phonebook_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)set_phonebook_delete_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Phonebook write */
     if (phonebook_write_str) {
-        MbimMessage *request;
-        gchar *name;
-        gchar *number;
-        guint  idx;
+        g_autofree gchar *name = NULL;
+        g_autofree gchar *number = NULL;
+        guint             idx;
 
         g_debug ("Asynchronously writing phonebook...");
         if (!phonebook_write_input_parse (phonebook_write_str, &name, &number, &idx)) {
@@ -470,7 +426,6 @@ mbimcli_phonebook_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)set_phonebook_write_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 

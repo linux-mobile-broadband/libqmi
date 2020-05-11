@@ -110,15 +110,12 @@ static void
 modem_reboot_ready (MbimDevice   *device,
                     GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -126,14 +123,15 @@ modem_reboot_ready (MbimDevice   *device,
     g_print ("[%s] Successfully requested modem to reboot for firmware update\n\n",
              mbim_device_get_path_display (device));
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
 void
 mbimcli_intel_firmware_update_run (MbimDevice   *device,
-                          GCancellable *cancellable)
+                                   GCancellable *cancellable)
 {
+    g_autoptr(MbimMessage) request = NULL;
+
     /* Initialize context */
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
@@ -141,8 +139,6 @@ mbimcli_intel_firmware_update_run (MbimDevice   *device,
 
     /* Request to reboot modem? */
     if (modem_reboot_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously rebooting modem...");
         request = (mbim_message_intel_firmware_update_modem_reboot_set_new (NULL));
         mbim_device_command (ctx->device,
@@ -151,7 +147,6 @@ mbimcli_intel_firmware_update_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)modem_reboot_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 

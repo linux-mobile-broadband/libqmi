@@ -116,23 +116,20 @@ static void
 query_signal_ready (MbimDevice   *device,
                     GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    g_autofree gchar       *rssi_str = NULL;
+    g_autofree gchar       *error_rate_str = NULL;
+    g_autofree gchar       *rscp_str = NULL;
+    g_autofree gchar       *ecno_str = NULL;
+    g_autofree gchar       *rsrq_str = NULL;
+    g_autofree gchar       *rsrp_str = NULL;
+    g_autofree gchar       *rssnr_str = NULL;
     guint32 rssi = 0, error_rate = 0, rscp = 0, ecno = 0, rsrq = 0, rsrp = 0, rssnr = 0;
-    gchar *rssi_str = NULL;
-    gchar *error_rate_str = NULL;
-    gchar *rscp_str = NULL;
-    gchar *ecno_str = NULL;
-    gchar *rsrq_str = NULL;
-    gchar *rsrp_str = NULL;
-    gchar *rssnr_str = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -148,8 +145,6 @@ query_signal_ready (MbimDevice   *device,
             &rssnr,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -239,15 +234,6 @@ query_signal_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (rsrp_str),
              VALIDATE_UNKNOWN (rssnr_str));
 
-    g_free (rssi_str);
-    g_free (error_rate_str);
-    g_free (rscp_str);
-    g_free (ecno_str);
-    g_free (rsrq_str);
-    g_free (rsrp_str);
-    g_free (rssnr_str);
-
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -255,16 +241,13 @@ static void
 query_location_ready (MbimDevice   *device,
                       GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
     guint32 lac = 0, tac = 0, cellid = 0;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -276,8 +259,6 @@ query_location_ready (MbimDevice   *device,
             &cellid,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -291,7 +272,6 @@ query_location_ready (MbimDevice   *device,
              tac,
              cellid);
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -299,6 +279,8 @@ void
 mbimcli_atds_run (MbimDevice   *device,
                   GCancellable *cancellable)
 {
+    g_autoptr(MbimMessage) request = NULL;
+
     /* Initialize context */
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
@@ -306,8 +288,6 @@ mbimcli_atds_run (MbimDevice   *device,
 
     /* Request to get signal info? */
     if (query_signal_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying signal info...");
         request = (mbim_message_atds_signal_query_new (NULL));
         mbim_device_command (ctx->device,
@@ -316,14 +296,11 @@ mbimcli_atds_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_signal_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Request to get cell location? */
     if (query_location_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying cell location...");
         request = (mbim_message_atds_location_query_new (NULL));
         mbim_device_command (ctx->device,
@@ -332,7 +309,6 @@ mbimcli_atds_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_location_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 

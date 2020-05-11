@@ -48,28 +48,27 @@ mbimcli_read_uint_from_string (const gchar *str,
     return FALSE;
 }
 
-
 gboolean
-mbimcli_print_ip_config (MbimDevice *device,
-                         MbimMessage *response,
-                         GError **error)
+mbimcli_print_ip_config (MbimDevice   *device,
+                         MbimMessage  *response,
+                         GError      **error)
 {
-    MbimIPConfigurationAvailableFlag ipv4configurationavailable;
-    MbimIPConfigurationAvailableFlag ipv6configurationavailable;
-    guint32 ipv4addresscount;
-    MbimIPv4Element **ipv4address;
-    guint32 ipv6addresscount;
-    MbimIPv6Element **ipv6address;
-    const MbimIPv4 *ipv4gateway;
-    const MbimIPv6 *ipv6gateway;
-    guint32 ipv4dnsservercount;
-    MbimIPv4 *ipv4dnsserver;
-    guint32 ipv6dnsservercount;
-    MbimIPv6 *ipv6dnsserver;
-    guint32 ipv4mtu;
-    guint32 ipv6mtu;
-    gchar *str;
-    GInetAddress *addr;
+    MbimIPConfigurationAvailableFlag  ipv4configurationavailable;
+    g_autofree gchar                 *ipv4configurationavailable_str = NULL;
+    MbimIPConfigurationAvailableFlag  ipv6configurationavailable;
+    g_autofree gchar                 *ipv6configurationavailable_str = NULL;
+    guint32                           ipv4addresscount;
+    g_autoptr(MbimIPv4ElementArray)   ipv4address = NULL;
+    guint32                           ipv6addresscount;
+    g_autoptr(MbimIPv6ElementArray)   ipv6address = NULL;
+    const MbimIPv4                   *ipv4gateway;
+    const MbimIPv6                   *ipv6gateway;
+    guint32                           ipv4dnsservercount;
+    g_autofree MbimIPv4              *ipv4dnsserver = NULL;
+    guint32                           ipv6dnsservercount;
+    g_autofree MbimIPv6              *ipv6dnsserver = NULL;
+    guint32                           ipv4mtu;
+    guint32                           ipv6mtu;
 
     if (!mbim_message_ip_configuration_response_parse (
             response,
@@ -93,44 +92,44 @@ mbimcli_print_ip_config (MbimDevice *device,
 
     /* IPv4 info */
 
-    str = mbim_ip_configuration_available_flag_build_string_from_mask (ipv4configurationavailable);
-    g_print ("\n[%s] IPv4 configuration available: '%s'\n", mbim_device_get_path_display (device), str);
-    g_free (str);
+    ipv4configurationavailable_str = mbim_ip_configuration_available_flag_build_string_from_mask (ipv4configurationavailable);
+    g_print ("\n[%s] IPv4 configuration available: '%s'\n", mbim_device_get_path_display (device), ipv4configurationavailable_str);
 
     if (ipv4configurationavailable & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS) {
         guint i;
 
         for (i = 0; i < ipv4addresscount; i++) {
+            g_autoptr(GInetAddress)  addr = NULL;
+            g_autofree gchar        *addr_str = NULL;
+
             addr = g_inet_address_new_from_bytes ((guint8 *)&ipv4address[i]->ipv4_address, G_SOCKET_FAMILY_IPV4);
-            str = g_inet_address_to_string (addr);
-            g_print ("     IP [%u]: '%s/%u'\n",
-                     i,
-                     str,
-                     ipv4address[i]->on_link_prefix_length);
-            g_free (str);
-            g_object_unref (addr);
+            addr_str = g_inet_address_to_string (addr);
+            g_print ("     IP [%u]: '%s/%u'\n", i, addr_str, ipv4address[i]->on_link_prefix_length);
         }
     }
 
     if (ipv4configurationavailable & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_GATEWAY) {
+        g_autoptr(GInetAddress)  addr = NULL;
+        g_autofree gchar        *addr_str = NULL;
+
         addr = g_inet_address_new_from_bytes ((guint8 *)ipv4gateway, G_SOCKET_FAMILY_IPV4);
-        str = g_inet_address_to_string (addr);
-        g_print ("    Gateway: '%s'\n", str);
-        g_free (str);
-        g_object_unref (addr);
+        addr_str = g_inet_address_to_string (addr);
+        g_print ("    Gateway: '%s'\n", addr_str);
     }
 
     if (ipv4configurationavailable & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS) {
         guint i;
 
         for (i = 0; i < ipv4dnsservercount; i++) {
+            g_autoptr(GInetAddress) addr = NULL;
+
             addr = g_inet_address_new_from_bytes ((guint8 *)&ipv4dnsserver[i], G_SOCKET_FAMILY_IPV4);
             if (!g_inet_address_get_is_any (addr)) {
-                str = g_inet_address_to_string (addr);
-                g_print ("    DNS [%u]: '%s'\n", i, str);
-                g_free (str);
+                g_autofree gchar *addr_str = NULL;
+
+                addr_str = g_inet_address_to_string (addr);
+                g_print ("    DNS [%u]: '%s'\n", i, addr_str);
             }
-            g_object_unref (addr);
         }
     }
 
@@ -138,54 +137,50 @@ mbimcli_print_ip_config (MbimDevice *device,
         g_print ("        MTU: '%u'\n", ipv4mtu);
 
     /* IPv6 info */
-    str = mbim_ip_configuration_available_flag_build_string_from_mask (ipv6configurationavailable);
-    g_print ("\n[%s] IPv6 configuration available: '%s'\n", mbim_device_get_path_display (device), str);
-    g_free (str);
+    ipv6configurationavailable_str = mbim_ip_configuration_available_flag_build_string_from_mask (ipv6configurationavailable);
+    g_print ("\n[%s] IPv6 configuration available: '%s'\n", mbim_device_get_path_display (device), ipv6configurationavailable_str);
 
     if (ipv6configurationavailable & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS) {
         guint i;
 
         for (i = 0; i < ipv6addresscount; i++) {
+            g_autoptr(GInetAddress)  addr = NULL;
+            g_autofree gchar        *addr_str = NULL;
+
             addr = g_inet_address_new_from_bytes ((guint8 *)&ipv6address[i]->ipv6_address, G_SOCKET_FAMILY_IPV6);
-            str = g_inet_address_to_string (addr);
-            g_print ("     IP [%u]: '%s/%u'\n",
-                     i,
-                     str,
-                     ipv6address[i]->on_link_prefix_length);
-            g_free (str);
-            g_object_unref (addr);
+            addr_str = g_inet_address_to_string (addr);
+            g_print ("     IP [%u]: '%s/%u'\n", i, addr_str, ipv6address[i]->on_link_prefix_length);
         }
     }
 
     if (ipv6configurationavailable & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_GATEWAY) {
+        g_autoptr(GInetAddress)  addr = NULL;
+        g_autofree gchar        *addr_str = NULL;
+
         addr = g_inet_address_new_from_bytes ((guint8 *)ipv6gateway, G_SOCKET_FAMILY_IPV6);
-        str = g_inet_address_to_string (addr);
-        g_print ("    Gateway: '%s'\n", str);
-        g_free (str);
-        g_object_unref (addr);
+        addr_str = g_inet_address_to_string (addr);
+        g_print ("    Gateway: '%s'\n", addr_str);
     }
 
     if (ipv6configurationavailable & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS) {
         guint i;
 
         for (i = 0; i < ipv6dnsservercount; i++) {
+            g_autoptr(GInetAddress) addr = NULL;
+
             addr = g_inet_address_new_from_bytes ((guint8 *)&ipv6dnsserver[i], G_SOCKET_FAMILY_IPV6);
             if (!g_inet_address_get_is_any (addr)) {
-                str = g_inet_address_to_string (addr);
-                g_print ("    DNS [%u]: '%s'\n", i, str);
-                g_free (str);
+                g_autofree gchar *addr_str = NULL;
+
+                addr_str = g_inet_address_to_string (addr);
+                g_print ("    DNS [%u]: '%s'\n", i, addr_str);
             }
-            g_object_unref (addr);
         }
     }
 
     if (ipv6configurationavailable & MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_MTU)
         g_print ("        MTU: '%u'\n", ipv6mtu);
 
-    mbim_ipv4_element_array_free (ipv4address);
-    mbim_ipv6_element_array_free (ipv6address);
-    g_free (ipv4dnsserver);
-    g_free (ipv6dnsserver);
     return TRUE;
 }
 
@@ -195,13 +190,14 @@ mbimcli_print_ip_config (MbimDevice *device,
  *   key1="this is a string", key2='and so is this'
  */
 gboolean
-mbimcli_parse_key_value_string (const gchar *str,
-                                GError **error,
-                                MbimParseKeyValueForeachFn callback,
-                                gpointer user_data)
+mbimcli_parse_key_value_string (const gchar                 *str,
+                                GError                     **error,
+                                MbimParseKeyValueForeachFn   callback,
+                                gpointer                     user_data)
 {
-    GError *inner_error = NULL;
-    gchar *dupstr, *p, *key, *key_end, *value, *value_end, quote;
+    GError           *inner_error = NULL;
+    g_autofree gchar *dupstr = NULL;
+    gchar *p, *key, *key_end, *value, *value_end, quote;
 
     g_return_val_if_fail (callback != NULL, FALSE);
     g_return_val_if_fail (str != NULL, FALSE);
@@ -326,8 +322,6 @@ mbimcli_parse_key_value_string (const gchar *str,
                                    p);
         break;
     }
-
-    g_free (dupstr);
 
     if (inner_error) {
         g_propagate_error (error, inner_error);

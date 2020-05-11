@@ -335,34 +335,31 @@ static void
 query_device_caps_ready (MbimDevice   *device,
                          GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimDeviceType device_type;
-    const gchar *device_type_str;
-    MbimCellularClass cellular_class;
-    gchar *cellular_class_str;
-    MbimVoiceClass voice_class;
-    const gchar *voice_class_str;
-    MbimSimClass sim_class;
-    gchar *sim_class_str;
-    MbimDataClass data_class;
-    gchar *data_class_str;
-    MbimSmsCaps sms_caps;
-    gchar *sms_caps_str;
-    MbimCtrlCaps ctrl_caps;
-    gchar *ctrl_caps_str;
-    guint32 max_sessions;
-    gchar *custom_data_class;
-    gchar *device_id;
-    gchar *firmware_info;
-    gchar *hardware_info;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    MbimDeviceType          device_type;
+    const gchar            *device_type_str;
+    MbimVoiceClass          voice_class;
+    const gchar            *voice_class_str;
+    MbimCellularClass       cellular_class;
+    g_autofree gchar       *cellular_class_str = NULL;
+    MbimSimClass            sim_class;
+    g_autofree gchar       *sim_class_str = NULL;
+    MbimDataClass           data_class;
+    g_autofree gchar       *data_class_str = NULL;
+    MbimSmsCaps             sms_caps;
+    g_autofree gchar       *sms_caps_str = NULL;
+    MbimCtrlCaps            ctrl_caps;
+    g_autofree gchar       *ctrl_caps_str = NULL;
+    guint32                 max_sessions;
+    g_autofree gchar       *custom_data_class = NULL;
+    g_autofree gchar       *device_id = NULL;
+    g_autofree gchar       *firmware_info = NULL;
+    g_autofree gchar       *hardware_info = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -383,19 +380,17 @@ query_device_caps_ready (MbimDevice   *device,
             &hardware_info,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
-    device_type_str = mbim_device_type_get_string (device_type);
+    device_type_str    = mbim_device_type_get_string (device_type);
     cellular_class_str = mbim_cellular_class_build_string_from_mask (cellular_class);
-    voice_class_str = mbim_voice_class_get_string (voice_class);
-    sim_class_str = mbim_sim_class_build_string_from_mask (sim_class);
-    data_class_str = mbim_data_class_build_string_from_mask (data_class);
-    sms_caps_str = mbim_sms_caps_build_string_from_mask (sms_caps);
-    ctrl_caps_str = mbim_ctrl_caps_build_string_from_mask (ctrl_caps);
+    voice_class_str    = mbim_voice_class_get_string (voice_class);
+    sim_class_str      = mbim_sim_class_build_string_from_mask (sim_class);
+    data_class_str     = mbim_data_class_build_string_from_mask (data_class);
+    sms_caps_str       = mbim_sms_caps_build_string_from_mask (sms_caps);
+    ctrl_caps_str      = mbim_ctrl_caps_build_string_from_mask (ctrl_caps);
 
     g_print ("[%s] Device capabilities retrieved:\n"
              "\t      Device type: '%s'\n"
@@ -424,17 +419,6 @@ query_device_caps_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (firmware_info),
              VALIDATE_UNKNOWN (hardware_info));
 
-    g_free (cellular_class_str);
-    g_free (sim_class_str);
-    g_free (data_class_str);
-    g_free (sms_caps_str);
-    g_free (ctrl_caps_str);
-    g_free (custom_data_class);
-    g_free (device_id);
-    g_free (firmware_info);
-    g_free (hardware_info);
-
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -442,24 +426,21 @@ static void
 query_subscriber_ready_status_ready (MbimDevice   *device,
                                      GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimSubscriberReadyState ready_state;
-    const gchar *ready_state_str;
-    gchar *subscriber_id;
-    gchar *sim_iccid;
-    MbimReadyInfoFlag ready_info;
-    gchar *ready_info_str;
-    guint32 telephone_numbers_count;
-    gchar **telephone_numbers;
-    gchar *telephone_numbers_str;
+    g_autoptr (MbimMessage)   response = NULL;
+    g_autoptr (GError)        error = NULL;
+    MbimSubscriberReadyState  ready_state;
+    const gchar              *ready_state_str;
+    g_autofree gchar         *subscriber_id = NULL;
+    g_autofree gchar         *sim_iccid = NULL;
+    MbimReadyInfoFlag         ready_info;
+    g_autofree gchar         *ready_info_str = NULL;
+    guint32                   telephone_numbers_count;
+    g_auto(GStrv)             telephone_numbers = NULL;
+    g_autofree gchar         *telephone_numbers_str = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -474,8 +455,6 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
             &telephone_numbers,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -497,13 +476,6 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (ready_info_str),
              telephone_numbers_count, VALIDATE_UNKNOWN (telephone_numbers_str));
 
-    g_free (subscriber_id);
-    g_free (sim_iccid);
-    g_free (ready_info_str);
-    g_strfreev (telephone_numbers);
-    g_free (telephone_numbers_str);
-
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -511,19 +483,16 @@ static void
 query_radio_state_ready (MbimDevice   *device,
                          GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimRadioSwitchState hardware_radio_state;
-    const gchar *hardware_radio_state_str;
-    MbimRadioSwitchState software_radio_state;
-    const gchar *software_radio_state_str;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    MbimRadioSwitchState    hardware_radio_state;
+    const gchar            *hardware_radio_state_str;
+    MbimRadioSwitchState    software_radio_state;
+    const gchar            *software_radio_state_str;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -534,8 +503,6 @@ query_radio_state_ready (MbimDevice   *device,
             &software_radio_state,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -550,7 +517,6 @@ query_radio_state_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (hardware_radio_state_str),
              VALIDATE_UNKNOWN (software_radio_state_str));
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -558,18 +524,15 @@ static void
 query_device_services_ready (MbimDevice   *device,
                              GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimDeviceServiceElement **device_services;
-    guint32 device_services_count;
-    guint32 max_dss_sessions;
+    g_autoptr(MbimMessage)                   response = NULL;
+    g_autoptr(GError)                        error = NULL;
+    g_autoptr(MbimDeviceServiceElementArray) device_services = NULL;
+    guint32                                  device_services_count;
+    guint32                                  max_dss_sessions;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -581,9 +544,6 @@ query_device_services_ready (MbimDevice   *device,
             &device_services,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
-        shutdown (FALSE);
         return;
     }
 
@@ -598,10 +558,10 @@ query_device_services_ready (MbimDevice   *device,
 
         g_print ("\t        Services: (%u)\n", device_services_count);
         for (i = 0; i < device_services_count; i++) {
-            MbimService service;
-            gchar *uuid_str;
-            GString *cids;
-            guint32 j;
+            MbimService         service;
+            g_autofree gchar   *uuid_str = NULL;
+            g_autoptr(GString)  cids = NULL;
+            guint32             j;
 
             service = mbim_uuid_to_service (&device_services[i]->device_service_id);
             uuid_str = mbim_uuid_get_printable (&device_services[i]->device_service_id);
@@ -633,36 +593,27 @@ query_device_services_ready (MbimDevice   *device,
                      device_services[i]->dss_payload,
                      device_services[i]->max_dss_instances,
                      cids->str);
-
-            g_string_free (cids, TRUE);
-            g_free (uuid_str);
         }
     }
 
-    mbim_device_service_element_array_free (device_services);
-
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
 static void
 pin_ready (MbimDevice   *device,
            GAsyncResult *res,
-           gpointer user_data)
+           gpointer      user_data)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimPinType pin_type;
-    MbimPinState pin_state;
-    const gchar *pin_state_str;
-    guint32 remaining_attempts;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    MbimPinType             pin_type;
+    MbimPinState            pin_state;
+    const gchar            *pin_state_str;
+    guint32                 remaining_attempts;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -674,8 +625,6 @@ pin_ready (MbimDevice   *device,
             &remaining_attempts,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -700,7 +649,6 @@ pin_ready (MbimDevice   *device,
                  remaining_attempts);
     }
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -710,7 +658,7 @@ set_pin_input_parse (guint         n_expected,
                      gchar       **pin,
                      gchar       **new_pin)
 {
-    gchar **split;
+    g_auto(GStrv) split = NULL;
 
     g_assert (n_expected == 1 || n_expected == 2);
     g_assert (pin != NULL);
@@ -725,20 +673,16 @@ set_pin_input_parse (guint         n_expected,
 
     if (g_strv_length (split) > n_expected) {
         g_printerr ("error: couldn't parse input string, too many arguments\n");
-        g_strfreev (split);
         return FALSE;
     }
 
     if (g_strv_length (split) < n_expected) {
         g_printerr ("error: couldn't parse input string, missing arguments\n");
-        g_strfreev (split);
         return FALSE;
     }
 
     *pin = g_strdup (split[0]);
     *new_pin = g_strdup (split[1]);
-
-    g_strfreev (split);
     return TRUE;
 }
 
@@ -749,7 +693,7 @@ enum {
 };
 
 static void
-print_pin_desc (const gchar *pin_name,
+print_pin_desc (const gchar       *pin_name,
                 const MbimPinDesc *pin_desc)
 {
     g_print ("\t%s:\n"
@@ -766,29 +710,26 @@ print_pin_desc (const gchar *pin_name,
 }
 
 static void
-pin_list_ready (MbimDevice *device,
+pin_list_ready (MbimDevice   *device,
                 GAsyncResult *res,
-                gpointer user_data)
+                gpointer      user_data)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimPinDesc *pin_desc_pin1;
-    MbimPinDesc *pin_desc_pin2;
-    MbimPinDesc *pin_desc_device_sim_pin;
-    MbimPinDesc *pin_desc_device_first_sim_pin;
-    MbimPinDesc *pin_desc_network_pin;
-    MbimPinDesc *pin_desc_network_subset_pin;
-    MbimPinDesc *pin_desc_service_provider_pin;
-    MbimPinDesc *pin_desc_corporate_pin;
-    MbimPinDesc *pin_desc_subsidy_lock;
-    MbimPinDesc *pin_desc_custom;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
+    g_autoptr(MbimPinDesc) pin_desc_pin1 = NULL;
+    g_autoptr(MbimPinDesc) pin_desc_pin2 = NULL;
+    g_autoptr(MbimPinDesc) pin_desc_device_sim_pin = NULL;
+    g_autoptr(MbimPinDesc) pin_desc_device_first_sim_pin = NULL;
+    g_autoptr(MbimPinDesc) pin_desc_network_pin = NULL;
+    g_autoptr(MbimPinDesc) pin_desc_network_subset_pin = NULL;
+    g_autoptr(MbimPinDesc) pin_desc_service_provider_pin = NULL;
+    g_autoptr(MbimPinDesc) pin_desc_corporate_pin = NULL;
+    g_autoptr(MbimPinDesc) pin_desc_subsidy_lock = NULL;
+    g_autoptr(MbimPinDesc) pin_desc_custom = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -807,8 +748,6 @@ pin_list_ready (MbimDevice *device,
             &pin_desc_custom,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -827,29 +766,16 @@ pin_list_ready (MbimDevice *device,
     print_pin_desc ("Subsidy lock", pin_desc_subsidy_lock);
     print_pin_desc ("Custom", pin_desc_custom);
 
-    mbim_pin_desc_free (pin_desc_pin1);
-    mbim_pin_desc_free (pin_desc_pin2);
-    mbim_pin_desc_free (pin_desc_device_sim_pin);
-    mbim_pin_desc_free (pin_desc_device_first_sim_pin);
-    mbim_pin_desc_free (pin_desc_network_pin);
-    mbim_pin_desc_free (pin_desc_network_subset_pin);
-    mbim_pin_desc_free (pin_desc_service_provider_pin);
-    mbim_pin_desc_free (pin_desc_corporate_pin);
-    mbim_pin_desc_free (pin_desc_subsidy_lock);
-    mbim_pin_desc_free (pin_desc_custom);
-
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
 static void
-ip_configuration_query_ready (MbimDevice *device,
-                              GAsyncResult *res,
-                              gpointer unused)
+ip_configuration_query_ready (MbimDevice   *device,
+                              GAsyncResult *res)
 {
-    GError *error = NULL;
-    MbimMessage *response;
-    gboolean success = FALSE;
+    g_autoptr(GError)      error = NULL;
+    g_autoptr(MbimMessage) response;
+    gboolean               success = FALSE;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response ||
@@ -861,19 +787,16 @@ ip_configuration_query_ready (MbimDevice *device,
             g_printerr ("error: couldn't parse IP configuration response message: %s\n", error->message);
     }
 
-    g_clear_error (&error);
-    if (response)
-        mbim_message_unref (response);
     shutdown (success);
 }
 
 static void
-ip_configuration_query (MbimDevice *device,
+ip_configuration_query (MbimDevice   *device,
                         GCancellable *cancellable,
-                        guint32 session_id)
+                        guint32       session_id)
 {
-    MbimMessage *message;
-    GError *error = NULL;
+    g_autoptr(MbimMessage) message = NULL;
+    g_autoptr(GError)      error = NULL;
 
     message = (mbim_message_ip_configuration_query_new (
                    session_id,
@@ -894,7 +817,6 @@ ip_configuration_query (MbimDevice *device,
                    &error));
     if (!message) {
         g_printerr ("error: couldn't create IP config request: %s\n", error->message);
-        g_error_free (error);
         shutdown (FALSE);
         return;
     }
@@ -905,29 +827,25 @@ ip_configuration_query (MbimDevice *device,
                          cancellable,
                          (GAsyncReadyCallback)ip_configuration_query_ready,
                          NULL);
-    mbim_message_unref (message);
 }
 
 static void
 connect_ready (MbimDevice   *device,
                GAsyncResult *res,
-               gpointer user_data)
+               gpointer      user_data)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    guint32 session_id;
-    MbimActivationState activation_state;
-    MbimVoiceCallState voice_call_state;
-    MbimContextIpType ip_type;
-    const MbimUuid *context_type;
-    guint32 nw_error;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    guint32                 session_id;
+    MbimActivationState     activation_state;
+    MbimVoiceCallState      voice_call_state;
+    MbimContextIpType       ip_type;
+    const MbimUuid         *context_type;
+    guint32                 nw_error;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -942,12 +860,9 @@ connect_ready (MbimDevice   *device,
             &nw_error,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
-    mbim_message_unref (response);
 
     switch (GPOINTER_TO_UINT (user_data)) {
     case CONNECT:
@@ -986,22 +901,19 @@ connect_ready (MbimDevice   *device,
 }
 
 static void
-ip_packet_filters_ready (MbimDevice *device,
-                         GAsyncResult *res,
-                         gpointer unused)
+ip_packet_filters_ready (MbimDevice   *device,
+                         GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimPacketFilter **filters;
-    guint32 filters_count, i;
+    g_autoptr(MbimMessage)           response = NULL;
+    g_autoptr(GError)                error = NULL;
+    g_autoptr(MbimPacketFilterArray) filters = NULL;
+    guint32                          filters_count;
+    guint32                          i;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response ||
         !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1013,8 +925,6 @@ ip_packet_filters_ready (MbimDevice *device,
             &filters,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1022,23 +932,18 @@ ip_packet_filters_ready (MbimDevice *device,
     g_print ("\n[%s] IP packet filters: (%u)\n", mbim_device_get_path_display (device), filters_count);
 
     for (i = 0; i < filters_count; i++) {
-        gchar *bytes;
+        g_autofree gchar *packet_filter = NULL;
+        g_autofree gchar *packet_mask = NULL;
+
+        packet_filter = mbim_common_str_hex (filters[i]->packet_filter, filters[i]->filter_size, ' ');
+        packet_mask   = mbim_common_str_hex (filters[i]->packet_mask, filters[i]->filter_size, ' ');
 
         g_print ("\n");
         g_print ("\tFilter size: %u\n", filters[i]->filter_size);
-
-        bytes = mbim_common_str_hex (filters[i]->packet_filter, filters[i]->filter_size, ' ');
-        g_print ("\tPacket filter: %s\n", VALIDATE_UNKNOWN (bytes));
-        g_free (bytes);
-
-        bytes = mbim_common_str_hex (filters[i]->packet_mask, filters[i]->filter_size, ' ');
-        g_print ("\tPacket mask: %s\n", VALIDATE_UNKNOWN (bytes));
-        g_free (bytes);
+        g_print ("\tPacket filter: %s\n", VALIDATE_UNKNOWN (packet_filter));
+        g_print ("\tPacket mask: %s\n", VALIDATE_UNKNOWN (packet_mask));
     }
 
-    mbim_packet_filter_array_free (filters);
-
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -1049,10 +954,12 @@ mbim_auth_protocol_from_string (const gchar      *str,
     if (g_ascii_strcasecmp (str, "PAP") == 0) {
         *auth_protocol = MBIM_AUTH_PROTOCOL_PAP;
         return TRUE;
-    } else if (g_ascii_strcasecmp (str, "CHAP") == 0) {
+    }
+    if (g_ascii_strcasecmp (str, "CHAP") == 0) {
         *auth_protocol = MBIM_AUTH_PROTOCOL_CHAP;
         return TRUE;
-    } else if (g_ascii_strcasecmp (str, "MSCHAPV2") == 0) {
+    }
+    if (g_ascii_strcasecmp (str, "MSCHAPV2") == 0) {
         *auth_protocol = MBIM_AUTH_PROTOCOL_MSCHAPV2;
         return TRUE;
     }
@@ -1067,10 +974,12 @@ mbim_context_ip_type_from_string (const gchar       *str,
     if (g_ascii_strcasecmp (str, "ipv4") == 0) {
         *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4;
         return TRUE;
-    } else if (g_ascii_strcasecmp (str, "ipv6") == 0) {
+    }
+    if (g_ascii_strcasecmp (str, "ipv6") == 0) {
         *ip_type = MBIM_CONTEXT_IP_TYPE_IPV6;
         return TRUE;
-    } else if (g_ascii_strcasecmp (str, "ipv4v6") == 0) {
+    }
+    if (g_ascii_strcasecmp (str, "ipv4v6") == 0) {
         *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4V6;
         return TRUE;
     }
@@ -1126,10 +1035,21 @@ typedef struct {
     MbimContextIpType  ip_type;
 } ConnectActivateProperties;
 
-static gboolean connect_activate_properties_handle (const gchar  *key,
-                                                    const gchar  *value,
-                                                    GError      **error,
-                                                    gpointer      user_data)
+static void
+connect_activate_properties_clear (ConnectActivateProperties *props)
+{
+    g_free (props->apn);
+    g_free (props->username);
+    g_free (props->password);
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(ConnectActivateProperties, connect_activate_properties_clear);
+
+static gboolean
+connect_activate_properties_handle (const gchar  *key,
+                                    const gchar  *value,
+                                    GError      **error,
+                                    gpointer      user_data)
 {
     ConnectActivateProperties *props = user_data;
 
@@ -1191,7 +1111,7 @@ set_connect_activate_parse (const gchar        *str,
                             gchar             **password,
                             MbimContextIpType  *ip_type)
 {
-    ConnectActivateProperties props = {
+    g_auto(ConnectActivateProperties) props = {
         .session_id    = 0,
         .apn           = NULL,
         .auth_protocol = MBIM_AUTH_PROTOCOL_NONE,
@@ -1199,7 +1119,8 @@ set_connect_activate_parse (const gchar        *str,
         .password      = NULL,
         .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT
     };
-    gchar **split = NULL;
+    g_auto(GStrv)     split = NULL;
+    g_autoptr(GError) error = NULL;
 
     g_assert (session_id != NULL);
     g_assert (apn != NULL);
@@ -1209,16 +1130,13 @@ set_connect_activate_parse (const gchar        *str,
     g_assert (ip_type != NULL);
 
     if (strchr (str, '=')) {
-        GError *error = NULL;
-
         /* New key=value format */
         if (!mbimcli_parse_key_value_string (str,
                                              &error,
                                              connect_activate_properties_handle,
                                              &props)) {
             g_printerr ("error: couldn't parse input string: %s\n", error->message);
-            g_error_free (error);
-            goto error;
+            return FALSE;
         }
     } else {
         /* Old non key=value format, like this:
@@ -1228,7 +1146,7 @@ set_connect_activate_parse (const gchar        *str,
 
         if (g_strv_length (split) > 4) {
             g_printerr ("error: couldn't parse input string, too many arguments\n");
-            goto error;
+            return FALSE;
         }
 
         if (g_strv_length (split) > 0) {
@@ -1239,7 +1157,7 @@ set_connect_activate_parse (const gchar        *str,
             if (split[1]) {
                 if (!mbim_auth_protocol_from_string (split[1], &props.auth_protocol)) {
                     g_printerr ("error: couldn't parse input string, unknown auth protocol '%s'\n", split[1]);
-                    goto error;
+                    return FALSE;
                 }
                 /* Username */
                 if (split[2]) {
@@ -1254,63 +1172,44 @@ set_connect_activate_parse (const gchar        *str,
     if (props.auth_protocol == MBIM_AUTH_PROTOCOL_NONE) {
         if (props.username || props.password) {
             g_printerr ("error: username or password requires an auth protocol\n");
-            goto error;
+            return FALSE;
         }
     } else {
         if (!props.username) {
             g_printerr ("error: auth protocol requires a username\n");
-            goto error;
+            return FALSE;
         }
     }
 
-    *session_id = props.session_id;
-    *apn = props.apn;
+    *session_id    = props.session_id;
+    *apn           = g_steal_pointer (&props.apn);
     *auth_protocol = props.auth_protocol;
-    *username = props.username;
-    *password = props.password;
-    *ip_type = props.ip_type;
-
-    if (split)
-        g_strfreev (split);
+    *username      = g_steal_pointer (&props.username);
+    *password      = g_steal_pointer (&props.password);
+    *ip_type       = props.ip_type;
 
     return TRUE;
-
-error:
-    if (split)
-        g_strfreev (split);
-    g_free (props.apn);
-    g_free (props.username);
-    g_free (props.password);
-    return FALSE;
 }
 
 static void
 home_provider_ready (MbimDevice   *device,
-                     GAsyncResult *res,
-                     gpointer user_data)
+                     GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimProvider *provider;
-    gchar *provider_state_str;
-    gchar *cellular_class_str;
+    g_autoptr(MbimMessage)   response = NULL;
+    g_autoptr(GError)        error = NULL;
+    g_autoptr(MbimProvider)  provider = NULL;
+    g_autofree gchar        *provider_state_str = NULL;
+    g_autofree gchar        *cellular_class_str = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
-    if (!mbim_message_home_provider_response_parse (response,
-                                                    &provider,
-                                                    &error)) {
+    if (!mbim_message_home_provider_response_parse (response, &provider, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1333,57 +1232,40 @@ home_provider_ready (MbimDevice   *device,
              provider->rssi,
              provider->error_rate);
 
-    g_free (cellular_class_str);
-    g_free (provider_state_str);
-
-    mbim_provider_free (provider);
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
 static void
 preferred_providers_ready (MbimDevice   *device,
-                           GAsyncResult *res,
-                           gpointer user_data)
+                           GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimProvider **providers;
-    guint n_providers;
-    guint i;
+    g_autoptr(MbimMessage)       response = NULL;
+    g_autoptr(GError)            error = NULL;
+    g_autoptr(MbimProviderArray) providers = NULL;
+    guint                        n_providers;
+    guint                        i;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
-    if (!mbim_message_preferred_providers_response_parse (response,
-                                                          &n_providers,
-                                                          &providers,
-                                                          &error)) {
+    if (!mbim_message_preferred_providers_response_parse (response, &n_providers, &providers, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
     if (!n_providers)
-        g_print ("[%s] No preferred providers given\n",
-                 mbim_device_get_path_display (device));
+        g_print ("[%s] No preferred providers given\n", mbim_device_get_path_display (device));
     else
-        g_print ("[%s] Preferred providers (%u):\n",
-                 mbim_device_get_path_display (device),
-                 n_providers);
+        g_print ("[%s] Preferred providers (%u):\n", mbim_device_get_path_display (device), n_providers);
 
     for (i = 0; i < n_providers; i++) {
-        gchar *provider_state_str;
-        gchar *cellular_class_str;
+        g_autofree gchar *provider_state_str = NULL;
+        g_autofree gchar *cellular_class_str = NULL;
 
         provider_state_str = mbim_provider_state_build_string_from_mask (providers[i]->provider_state);
         cellular_class_str = mbim_cellular_class_build_string_from_mask (providers[i]->cellular_class);
@@ -1402,59 +1284,42 @@ preferred_providers_ready (MbimDevice   *device,
                  VALIDATE_UNKNOWN (cellular_class_str),
                  providers[i]->rssi,
                  providers[i]->error_rate);
-
-        g_free (cellular_class_str);
-        g_free (provider_state_str);
     }
 
-    mbim_provider_array_free (providers);
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
 static void
 visible_providers_ready (MbimDevice   *device,
-                           GAsyncResult *res,
-                           gpointer user_data)
+                         GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimProvider **providers;
-    guint n_providers;
-    guint i;
+    g_autoptr(MbimMessage)       response = NULL;
+    g_autoptr(GError)            error = NULL;
+    g_autoptr(MbimProviderArray) providers = NULL;
+    guint                        n_providers;
+    guint                        i;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
-    if (!mbim_message_visible_providers_response_parse (response,
-                                                        &n_providers,
-                                                        &providers,
-                                                        &error)) {
+    if (!mbim_message_visible_providers_response_parse (response, &n_providers, &providers, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
     if (!n_providers)
-        g_print ("[%s] No visible providers given\n",
-                 mbim_device_get_path_display (device));
+        g_print ("[%s] No visible providers given\n", mbim_device_get_path_display (device));
     else
-        g_print ("[%s] Visible providers (%u):\n",
-                 mbim_device_get_path_display (device),
-                 n_providers);
+        g_print ("[%s] Visible providers (%u):\n", mbim_device_get_path_display (device), n_providers);
 
     for (i = 0; i < n_providers; i++) {
-        gchar *provider_state_str;
-        gchar *cellular_class_str;
+        g_autofree gchar *provider_state_str = NULL;
+        g_autofree gchar *cellular_class_str = NULL;
 
         provider_state_str = mbim_provider_state_build_string_from_mask (providers[i]->provider_state);
         cellular_class_str = mbim_cellular_class_build_string_from_mask (providers[i]->cellular_class);
@@ -1473,42 +1338,34 @@ visible_providers_ready (MbimDevice   *device,
                  VALIDATE_UNKNOWN (cellular_class_str),
                  providers[i]->rssi,
                  providers[i]->error_rate);
-
-        g_free (cellular_class_str);
-        g_free (provider_state_str);
     }
 
-    mbim_provider_array_free (providers);
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
 static void
 register_state_ready (MbimDevice   *device,
                       GAsyncResult *res,
-                      gpointer user_data)
+                      gpointer      user_data)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    MbimNwError nw_error;
-    MbimRegisterState register_state;
-    MbimRegisterMode register_mode;
-    MbimDataClass available_data_classes;
-    gchar *available_data_classes_str;
-    MbimCellularClass cellular_class;
-    gchar *cellular_class_str;
-    gchar *provider_id;
-    gchar *provider_name;
-    gchar *roaming_text;
-    MbimRegistrationFlag registration_flag;
-    gchar *registration_flag_str;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    MbimNwError             nw_error;
+    MbimRegisterState       register_state;
+    MbimRegisterMode        register_mode;
+    MbimDataClass           available_data_classes;
+    g_autofree gchar       *available_data_classes_str = NULL;
+    MbimCellularClass       cellular_class;
+    g_autofree gchar       *cellular_class_str = NULL;
+    g_autofree gchar       *provider_id = NULL;
+    g_autofree gchar       *provider_name = NULL;
+    g_autofree gchar       *roaming_text = NULL;
+    MbimRegistrationFlag    registration_flag;
+    g_autofree gchar       *registration_flag_str = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1525,8 +1382,6 @@ register_state_ready (MbimDevice   *device,
                                                      &registration_flag,
                                                      &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1536,8 +1391,8 @@ register_state_ready (MbimDevice   *device,
                  mbim_device_get_path_display (device));
 
     available_data_classes_str = mbim_data_class_build_string_from_mask (available_data_classes);
-    cellular_class_str = mbim_cellular_class_build_string_from_mask (cellular_class);
-    registration_flag_str = mbim_registration_flag_build_string_from_mask (registration_flag);
+    cellular_class_str         = mbim_cellular_class_build_string_from_mask (cellular_class);
+    registration_flag_str      = mbim_registration_flag_build_string_from_mask (registration_flag);
 
     g_print ("[%s] Registration status:\n"
              "\t         Network error: '%s'\n"
@@ -1560,36 +1415,24 @@ register_state_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (roaming_text),
              VALIDATE_UNKNOWN (registration_flag_str));
 
-    g_free (available_data_classes_str);
-    g_free (cellular_class_str);
-    g_free (registration_flag_str);
-    g_free (provider_name);
-    g_free (provider_id);
-    g_free (roaming_text);
-
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
 static void
 signal_state_ready (MbimDevice   *device,
-                    GAsyncResult *res,
-                    gpointer user_data)
+                    GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    guint32 rssi;
-    guint32 error_rate;
-    guint32 signal_strength_interval;
-    guint32 rssi_threshold;
-    guint32 error_rate_threshold;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
+    guint32                rssi;
+    guint32                error_rate;
+    guint32                signal_strength_interval;
+    guint32                rssi_threshold;
+    guint32                error_rate_threshold;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1602,8 +1445,6 @@ signal_state_ready (MbimDevice   *device,
                                                    &error_rate_threshold,
                                                    &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1624,7 +1465,6 @@ signal_state_ready (MbimDevice   *device,
     else
         g_print ("\t    Error rate threshold: '%u'\n", error_rate_threshold);
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -1637,23 +1477,20 @@ enum {
 static void
 packet_service_ready (MbimDevice   *device,
                       GAsyncResult *res,
-                      gpointer user_data)
+                      gpointer      user_data)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    guint32 nw_error;
-    MbimPacketServiceState packet_service_state;
-    MbimDataClass highest_available_data_class;
-    gchar *highest_available_data_class_str;
-    guint64 uplink_speed;
-    guint64 downlink_speed;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    guint32                 nw_error;
+    MbimPacketServiceState  packet_service_state;
+    MbimDataClass           highest_available_data_class;
+    g_autofree gchar       *highest_available_data_class_str = NULL;
+    guint64                 uplink_speed;
+    guint64                 downlink_speed;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1666,8 +1503,6 @@ packet_service_ready (MbimDevice   *device,
                                                      &downlink_speed,
                                                      &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1700,9 +1535,6 @@ packet_service_ready (MbimDevice   *device,
              uplink_speed,
              downlink_speed);
 
-    g_free (highest_available_data_class_str);
-
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -1710,23 +1542,20 @@ static void
 packet_statistics_ready (MbimDevice   *device,
                          GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    guint32 in_discards;
-    guint32 in_errors;
-    guint64 in_octets;
-    guint64 in_packets;
-    guint64 out_octets;
-    guint64 out_packets;
-    guint32 out_errors;
-    guint32 out_discards;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
+    guint32                in_discards;
+    guint32                in_errors;
+    guint64                in_octets;
+    guint64                in_packets;
+    guint64                out_octets;
+    guint64                out_packets;
+    guint32                out_errors;
+    guint32                out_discards;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1742,8 +1571,6 @@ packet_statistics_ready (MbimDevice   *device,
                                                         &out_discards,
                                                         &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1767,7 +1594,6 @@ packet_statistics_ready (MbimDevice   *device,
              out_discards,
              out_errors);
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -1775,18 +1601,15 @@ static void
 provisioned_contexts_ready (MbimDevice   *device,
                             GAsyncResult *res)
 {
-    MbimMessage *response;
-    MbimProvisionedContextElement **provisioned_contexts;
+    g_autoptr(MbimMessage)                        response = NULL;
+    g_autoptr(MbimProvisionedContextElementArray) provisioned_contexts = NULL;
+    g_autoptr(GError)                             error = NULL;
     guint32 provisioned_contexts_count;
-    guint i;
-    GError *error = NULL;
+    guint   i;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1797,8 +1620,6 @@ provisioned_contexts_ready (MbimDevice   *device,
             &provisioned_contexts,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -1827,9 +1648,6 @@ provisioned_contexts_ready (MbimDevice   *device,
                      provisioned_contexts[i]->auth_protocol)));
     }
 
-    mbim_provisioned_context_element_array_free (provisioned_contexts);
-
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -1837,6 +1655,9 @@ void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
 {
+    g_autoptr(MbimMessage) request = NULL;
+    g_autoptr(GError)      error = NULL;
+
     /* Initialize context */
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
@@ -1844,8 +1665,6 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Request to get capabilities? */
     if (query_device_caps_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying device capabilities...");
         request = (mbim_message_device_caps_query_new (NULL));
         mbim_device_command (ctx->device,
@@ -1854,14 +1673,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_device_caps_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Request to get subscriber ready status? */
     if (query_subscriber_ready_status_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying subscriber ready status...");
         request = (mbim_message_subscriber_ready_status_query_new (NULL));
         mbim_device_command (ctx->device,
@@ -1870,14 +1686,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_subscriber_ready_status_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Request to get radio state? */
     if (query_radio_state_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying radio state...");
         request = (mbim_message_radio_state_query_new (NULL));
         mbim_device_command (ctx->device,
@@ -1886,13 +1699,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_radio_state_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Request to set radio state? */
     if (set_radio_state_str) {
-        MbimMessage *request;
         MbimRadioSwitchState radio_state;
 
         if (g_ascii_strcasecmp (set_radio_state_str, "on") == 0) {
@@ -1914,14 +1725,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_radio_state_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Request to query device services? */
     if (query_device_services_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying device services...");
         request = (mbim_message_device_services_query_new (NULL));
         mbim_device_command (ctx->device,
@@ -1930,14 +1738,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_device_services_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Query PIN state? */
     if (query_pin_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying PIN state...");
         request = (mbim_message_pin_query_new (NULL));
         mbim_device_command (ctx->device,
@@ -1946,7 +1751,6 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)pin_ready,
                              GUINT_TO_POINTER (FALSE));
-        mbim_message_unref (request);
         return;
     }
 
@@ -1956,14 +1760,12 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         set_pin_enable_str ||
         set_pin_disable_str ||
         set_pin_enter_puk_str) {
-        MbimMessage *request;
-        guint n_expected;
-        MbimPinType pin_type;
-        MbimPinOperation pin_operation;
-        gchar *pin;
-        gchar *new_pin;
-        const gchar *input = NULL;
-        GError *error = NULL;
+        guint             n_expected;
+        MbimPinType       pin_type;
+        MbimPinOperation  pin_operation;
+        g_autofree gchar *pin = NULL;
+        g_autofree gchar *new_pin = NULL;
+        const gchar      *input = NULL;
 
         if (set_pin_enter_puk_str) {
             g_debug ("Asynchronously entering PUK...");
@@ -2007,12 +1809,8 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                                              pin,
                                              new_pin,
                                              &error));
-        g_free (pin);
-        g_free (new_pin);
-
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2023,14 +1821,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)pin_ready,
                              GUINT_TO_POINTER (TRUE));
-        mbim_message_unref (request);
         return;
     }
 
     /* Query PIN list? */
     if (query_pin_list_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying PIN list...");
         request = (mbim_message_pin_list_query_new (NULL));
         mbim_device_command (ctx->device,
@@ -2039,14 +1834,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)pin_list_ready,
                              GUINT_TO_POINTER (FALSE));
-        mbim_message_unref (request);
         return;
     }
 
     /* Query home provider? */
     if (query_home_provider_flag) {
-        MbimMessage *request;
-
         request = mbim_message_home_provider_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
@@ -2054,14 +1846,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)home_provider_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Query preferred providers? */
     if (query_preferred_providers_flag) {
-        MbimMessage *request;
-
         request = mbim_message_preferred_providers_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
@@ -2069,14 +1858,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)preferred_providers_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Query visible providers? */
     if (query_visible_providers_flag) {
-        MbimMessage *request;
-
         request = mbim_message_visible_providers_query_new (MBIM_VISIBLE_PROVIDERS_ACTION_FULL_SCAN, NULL);
         mbim_device_command (ctx->device,
                              request,
@@ -2084,14 +1870,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)visible_providers_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Query registration status? */
     if (query_register_state_flag) {
-        MbimMessage *request;
-
         request = mbim_message_register_state_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
@@ -2099,22 +1882,17 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)register_state_ready,
                              GUINT_TO_POINTER (FALSE));
-        mbim_message_unref (request);
         return;
     }
 
     /* Launch automatic registration? */
     if (set_register_state_automatic_flag) {
-        MbimMessage *request;
-        GError *error = NULL;
-
         request = mbim_message_register_state_set_new (NULL,
                                                        MBIM_REGISTER_ACTION_AUTOMATIC,
                                                        0,
                                                        &error);
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2125,14 +1903,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)register_state_ready,
                              GUINT_TO_POINTER (TRUE));
-        mbim_message_unref (request);
         return;
     }
 
     /* Query signal status? */
     if (query_signal_state_flag) {
-        MbimMessage *request;
-
         request = mbim_message_signal_state_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
@@ -2140,14 +1915,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)signal_state_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Query packet service status? */
     if (query_packet_service_flag) {
-        MbimMessage *request;
-
         request = mbim_message_packet_service_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
@@ -2155,16 +1927,13 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)packet_service_ready,
                              GUINT_TO_POINTER (PACKET_SERVICE_STATUS));
-        mbim_message_unref (request);
         return;
     }
 
     /* Launch packet attach or detach? */
     if (set_packet_service_attach_flag ||
         set_packet_service_detach_flag) {
-        MbimMessage *request;
         MbimPacketServiceAction action;
-        GError *error = NULL;
 
         if (set_packet_service_attach_flag)
             action = MBIM_PACKET_SERVICE_ACTION_ATTACH;
@@ -2176,7 +1945,6 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         request = mbim_message_packet_service_set_new (action, &error);
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2189,19 +1957,15 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              GUINT_TO_POINTER (set_packet_service_attach_flag ?
                                                PACKET_SERVICE_ATTACH :
                                                PACKET_SERVICE_DETACH));
-        mbim_message_unref (request);
         return;
     }
 
     /* Query connection status? */
     if (query_connect_str) {
-        MbimMessage *request;
-        GError *error = NULL;
         guint32 session_id = 0;
 
         if (!connect_session_id_parse (query_connect_str, TRUE, &session_id, &error)) {
             g_printerr ("error: couldn't parse session ID: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2215,7 +1979,6 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                                                   &error);
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2226,20 +1989,17 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)connect_ready,
                              GUINT_TO_POINTER (CONNECTION_STATUS));
-        mbim_message_unref (request);
         return;
     }
 
     /* Connect? */
     if (set_connect_activate_str) {
-        MbimMessage *request;
-        GError *error = NULL;
-        guint32 session_id = 0;
-        gchar *apn;
-        MbimAuthProtocol auth_protocol;
-        gchar *username = NULL;
-        gchar *password = NULL;
-        MbimContextIpType ip_type = MBIM_CONTEXT_IP_TYPE_DEFAULT;
+        guint32            session_id = 0;
+        g_autofree gchar  *apn = NULL;
+        MbimAuthProtocol   auth_protocol;
+        g_autofree gchar  *username = NULL;
+        g_autofree gchar  *password = NULL;
+        MbimContextIpType  ip_type = MBIM_CONTEXT_IP_TYPE_DEFAULT;
 
         if (!set_connect_activate_parse (set_connect_activate_str,
                                          &session_id,
@@ -2262,13 +2022,9 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                                                 ip_type,
                                                 mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
                                                 &error);
-        g_free (apn);
-        g_free (username);
-        g_free (password);
 
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2279,18 +2035,15 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)connect_ready,
                              GUINT_TO_POINTER (CONNECT));
-        mbim_message_unref (request);
         return;
     }
 
     /* Query IP configuration? */
     if (query_ip_configuration_str) {
-        GError *error = NULL;
         guint32 session_id = 0;
 
         if (!connect_session_id_parse (query_ip_configuration_str, TRUE, &session_id, &error)) {
             g_printerr ("error: couldn't parse session ID: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2301,13 +2054,10 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Disconnect? */
     if (set_connect_deactivate_str) {
-        MbimMessage *request;
-        GError *error = NULL;
         guint32 session_id = 0;
 
         if (!connect_session_id_parse (set_connect_deactivate_str, TRUE, &session_id, &error)) {
             g_printerr ("error: couldn't parse session ID: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2324,7 +2074,6 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                                                 &error);
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2335,14 +2084,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)connect_ready,
                              GUINT_TO_POINTER (DISCONNECT));
-        mbim_message_unref (request);
         return;
     }
 
     /* Packet statistics? */
     if (query_packet_statistics_flag) {
-        MbimMessage *request;
-
         request = mbim_message_packet_statistics_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
@@ -2350,19 +2096,15 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)packet_statistics_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Query IP packet filters? */
     if (query_ip_packet_filters_str) {
-        MbimMessage *request;
-        GError *error = NULL;
         guint32 session_id = 0;
 
         if (!connect_session_id_parse (query_ip_packet_filters_str, TRUE, &session_id, &error)) {
             g_printerr ("error: couldn't parse session ID: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2374,7 +2116,6 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                        &error));
         if (!request) {
             g_printerr ("error: couldn't create IP packet filters request: %s\n", error->message);
-            g_error_free (error);
             shutdown (FALSE);
             return;
         }
@@ -2385,14 +2126,11 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)ip_packet_filters_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 
     /* Provisioned contexts? */
     if (query_provisioned_contexts_flag) {
-        MbimMessage *request;
-
         request = mbim_message_provisioned_contexts_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
@@ -2400,7 +2138,6 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)provisioned_contexts_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 

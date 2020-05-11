@@ -110,28 +110,20 @@ static void
 query_firmware_id_ready (MbimDevice   *device,
                          GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
-    const MbimUuid *firmware_id;
-    gchar *firmware_id_str;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    const MbimUuid         *firmware_id;
+    g_autofree gchar       *firmware_id_str = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
 
-    if (!mbim_message_ms_firmware_id_get_response_parse (
-            response,
-            &firmware_id,
-            &error)) {
+    if (!mbim_message_ms_firmware_id_get_response_parse (response, &firmware_id, &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        g_error_free (error);
-        mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -141,9 +133,7 @@ query_firmware_id_ready (MbimDevice   *device,
     g_print ("[%s] Firmware ID retrieved: '%s'\n\n",
              mbim_device_get_path_display (device),
              VALIDATE_UNKNOWN (firmware_id_str));
-    g_free (firmware_id_str);
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -151,6 +141,8 @@ void
 mbimcli_ms_firmware_id_run (MbimDevice   *device,
                             GCancellable *cancellable)
 {
+    g_autoptr(MbimMessage) request = NULL;
+
     /* Initialize context */
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
@@ -158,8 +150,6 @@ mbimcli_ms_firmware_id_run (MbimDevice   *device,
 
     /* Request to get firmware ID? */
     if (query_firmware_id_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously querying firmware ID...");
         request = (mbim_message_ms_firmware_id_get_query_new (NULL));
         mbim_device_command (ctx->device,
@@ -168,7 +158,6 @@ mbimcli_ms_firmware_id_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_firmware_id_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 

@@ -110,15 +110,12 @@ static void
 ms_host_shutdown_ready (MbimDevice   *device,
                         GAsyncResult *res)
 {
-    MbimMessage *response;
-    GError *error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
-        if (response)
-            mbim_message_unref (response);
         shutdown (FALSE);
         return;
     }
@@ -126,7 +123,6 @@ ms_host_shutdown_ready (MbimDevice   *device,
     g_print ("[%s] Successfully notified that host is shutting down\n\n",
              mbim_device_get_path_display (device));
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
@@ -134,6 +130,8 @@ void
 mbimcli_ms_host_shutdown_run (MbimDevice   *device,
                               GCancellable *cancellable)
 {
+    g_autoptr(MbimMessage) request = NULL;
+
     /* Initialize context */
     ctx = g_slice_new (Context);
     ctx->device = g_object_ref (device);
@@ -141,8 +139,6 @@ mbimcli_ms_host_shutdown_run (MbimDevice   *device,
 
     /* Request to notify that host is shutting down */
     if (notify_host_shutdown_flag) {
-        MbimMessage *request;
-
         g_debug ("Asynchronously notifying host is shutting down...");
         request = (mbim_message_ms_host_shutdown_notify_set_new (NULL));
         mbim_device_command (ctx->device,
@@ -151,7 +147,6 @@ mbimcli_ms_host_shutdown_run (MbimDevice   *device,
                              ctx->cancellable,
                              (GAsyncReadyCallback)ms_host_shutdown_ready,
                              NULL);
-        mbim_message_unref (request);
         return;
     }
 

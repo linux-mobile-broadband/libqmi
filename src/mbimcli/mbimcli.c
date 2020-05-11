@@ -398,9 +398,9 @@ parse_actions (void)
 
 int main (int argc, char **argv)
 {
-    GError *error = NULL;
-    GFile *file;
-    GOptionContext *context;
+    g_autoptr(GError)         error = NULL;
+    g_autoptr(GFile)          file = NULL;
+    g_autoptr(GOptionContext) context = NULL;
 
     setlocale (LC_ALL, "");
 
@@ -424,11 +424,9 @@ int main (int argc, char **argv)
                                 mbimcli_ms_basic_connect_extensions_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
-        g_printerr ("error: %s\n",
-                    error->message);
+        g_printerr ("error: %s\n", error->message);
         exit (EXIT_FAILURE);
     }
-    g_option_context_free (context);
 
     if (version_flag)
         print_version_and_exit ();
@@ -459,10 +457,7 @@ int main (int argc, char **argv)
     g_unix_signal_add (SIGTERM, (GSourceFunc)signals_handler, GUINT_TO_POINTER (SIGTERM));
 
     /* Launch MbimDevice creation */
-    mbim_device_new (file,
-                     cancellable,
-                     (GAsyncReadyCallback)device_new_ready,
-                     NULL);
+    mbim_device_new (file, cancellable, (GAsyncReadyCallback)device_new_ready, NULL);
     g_main_loop_run (loop);
 
     if (cancellable)
@@ -470,7 +465,6 @@ int main (int argc, char **argv)
     if (device)
         g_object_unref (device);
     g_main_loop_unref (loop);
-    g_object_unref (file);
 
     return (operation_status ? EXIT_SUCCESS : EXIT_FAILURE);
 }
