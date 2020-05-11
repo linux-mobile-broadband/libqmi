@@ -1515,15 +1515,15 @@ proxy_cfg_message_ready (MbimDevice   *self,
 static void
 proxy_cfg_message (GTask *task)
 {
-    MbimDevice *self;
+    MbimDevice        *self;
     DeviceOpenContext *ctx;
-    GError *error = NULL;
-    MbimMessage *request;
+    MbimMessage       *request;
 
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
-    request = mbim_message_proxy_control_configuration_set_new (self->priv->path, ctx->timeout, &error);
+    request = mbim_message_proxy_control_configuration_set_new (self->priv->path, ctx->timeout, NULL);
+    g_assert (request);
 
     /* This message is no longer a direct reply; as the proxy will also try to open the device
      * directly. If it cannot open the device, it will return an error. */
