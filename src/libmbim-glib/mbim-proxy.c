@@ -744,12 +744,12 @@ process_internal_proxy_config (MbimProxy   *self,
                                Client      *client,
                                MbimMessage *message)
 {
-    Request    *request;
-    MbimDevice *device;
-    gchar      *incoming_path;
-    gchar      *path;
-    GFile      *file;
-    GError     *error = NULL;
+    Request           *request;
+    MbimDevice        *device;
+    g_autofree gchar  *incoming_path = NULL;
+    g_autofree gchar  *path = NULL;
+    g_autoptr(GFile)   file = NULL;
+    g_autoptr(GError)  error = NULL;
 
     /* create request holder */
     request = request_new (self, client, message);
@@ -771,7 +771,6 @@ process_internal_proxy_config (MbimProxy   *self,
     /* Retrieve path from request */
     if (!_mbim_message_read_string (message, 0, 0, &incoming_path, &error)) {
         g_warning ("Error reading device path from message: %s", error->message);
-        g_error_free (error);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);
         return TRUE;
@@ -783,13 +782,10 @@ process_internal_proxy_config (MbimProxy   *self,
     path = __mbim_utils_get_devpath (incoming_path, &error);
     if (!path) {
         g_warning ("Error looking up real device path: %s", error->message);
-        g_error_free (error);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);
-        g_free (incoming_path);
         return TRUE;
     }
-    g_free (incoming_path);
 
     /* Only allow subsequent requests with the same path */
     if (client->device) {
@@ -798,14 +794,12 @@ process_internal_proxy_config (MbimProxy   *self,
         else
             request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_FAILURE);
         request_complete_and_free (request);
-        g_free (path);
         return TRUE;
     }
 
     /* Read requested timeout value */
     if (!_mbim_message_read_guint32 (message, 8, &request->timeout_secs, &error)) {
         g_warning ("Error reading requested timeout from message: %s", error->message);
-        g_error_free (error);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);
         return TRUE;
@@ -816,13 +810,11 @@ process_internal_proxy_config (MbimProxy   *self,
     if (device) {
         /* Keep reference and continue */
         client_set_device (client, device);
-
         internal_device_open (self,
                               device,
                               request->timeout_secs,
                               (GAsyncReadyCallback)proxy_config_internal_device_open_ready,
                               request);
-        g_free (path);
         return TRUE;
     }
 
@@ -835,8 +827,6 @@ process_internal_proxy_config (MbimProxy   *self,
                      NULL,
                      (GAsyncReadyCallback)device_new_ready,
                      request);
-    g_object_unref (file);
-    g_free (path);
     return TRUE;
 }
 
@@ -847,14 +837,13 @@ static void
 track_service_subscribe_list (Client      *client,
                               MbimMessage *message)
 {
-    GError          *error = NULL;
-    MbimEventEntry **mbim_event_entry_array;
-    gsize            mbim_event_entry_array_size;
+    g_autoptr(GError)              error = NULL;
+    g_autoptr(MbimEventEntryArray) mbim_event_entry_array = NULL;
+    gsize                          mbim_event_entry_array_size;
 
     mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_request_parse (message, &mbim_event_entry_array_size, &error);
     if (error) {
         g_warning ("Invalid subscribe request message: %s", error->message);
-        g_error_free (error);
         return;
     }
 
@@ -862,7 +851,7 @@ track_service_subscribe_list (Client      *client,
      * events it's subscribed to, so we can safely recreate the whole array each
      * time. */
     g_clear_pointer (&client->mbim_event_entry_array, mbim_event_entry_array_free);
-    client->mbim_event_entry_array = mbim_event_entry_array;
+    client->mbim_event_entry_array = g_steal_pointer (&mbim_event_entry_array);
     client->mbim_event_entry_array_size = mbim_event_entry_array_size;
 
     if (mbim_utils_get_traces_enabled ()) {
@@ -877,8 +866,8 @@ device_service_subscribe_list_set_complete (Request         *request,
                                             MbimStatusError  status)
 {
     struct command_done_message *command_done;
-    guint32 raw_len;
-    const guint8 *raw_data;
+    guint32                      raw_len;
+    const guint8                *raw_data;
 
     /* The raw message data to send back as response to client */
     raw_data = mbim_message_command_get_raw_information_buffer (request->message, &raw_len);
@@ -904,9 +893,9 @@ device_service_subscribe_list_set_ready (MbimDevice   *device,
                                          GAsyncResult *res,
                                          Request      *request)
 {
-    MbimMessage *tmp_response;
-    MbimStatusError error_status_code;
-    GError *error = NULL;
+    g_autoptr(MbimMessage) tmp_response = NULL;
+    g_autoptr(GError)      error = NULL;
+    MbimStatusError        error_status_code;
 
     tmp_response = mbim_device_command_finish (device, res, &error);
     if (!tmp_response) {
@@ -917,16 +906,13 @@ device_service_subscribe_list_set_ready (MbimDevice   *device,
             return;
         }
 
-        g_debug ("sending request to device failed: %s", error->message);
-        g_error_free (error);
         /* Don't disconnect client, just let the request timeout in its side */
+        g_debug ("sending request to device failed: %s", error->message);
         request_complete_and_free (request);
         return;
     }
 
     error_status_code = GUINT32_FROM_LE (((struct full_message *)(tmp_response->data))->message.command_done.status_code);
-    mbim_message_unref (tmp_response);
-
     device_service_subscribe_list_set_complete (request, error_status_code);
 }
 
@@ -935,9 +921,10 @@ process_device_service_subscribe_list (MbimProxy   *self,
                                        Client      *client,
                                        MbimMessage *message)
 {
-    MbimEventEntry **updated;
-    gsize            updated_size = 0;
-    Request         *request;
+    MbimEventEntry        **updated;
+    gsize                   updated_size = 0;
+    Request                *request;
+    g_autoptr(MbimMessage)  request_message = NULL;
 
     /* create request holder */
     request = request_new (self, client, message);
@@ -952,18 +939,16 @@ process_device_service_subscribe_list (MbimProxy   *self,
         return TRUE;
     }
 
-    /* the 'updated' array was given to us as transfer-none */
-    message = mbim_message_device_service_subscribe_list_set_new (updated_size, (const MbimEventEntry *const *)updated, NULL);
-    mbim_message_set_transaction_id (message, mbim_device_get_next_transaction_id (client->device));
+    /* the 'updated' array was given to us as transfer-none!!!! */
+    request_message = mbim_message_device_service_subscribe_list_set_new (updated_size, (const MbimEventEntry *const *)updated, NULL);
+    mbim_message_set_transaction_id (request_message, mbim_device_get_next_transaction_id (client->device));
 
     mbim_device_command (client->device,
-                         message,
+                         request_message,
                          300,
                          NULL,
                          (GAsyncReadyCallback)device_service_subscribe_list_set_ready,
                          request);
-
-    mbim_message_unref (message);
     return TRUE;
 }
 
@@ -971,11 +956,11 @@ process_device_service_subscribe_list (MbimProxy   *self,
 /* Standard command */
 
 static void
-device_command_ready (MbimDevice *device,
+device_command_ready (MbimDevice   *device,
                       GAsyncResult *res,
-                      Request *request)
+                      Request      *request)
 {
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
 
     request->response = mbim_device_command_finish (device, res, &error);
     if (!request->response) {
@@ -986,16 +971,14 @@ device_command_ready (MbimDevice *device,
             return;
         }
 
-        g_debug ("sending request to device failed: %s", error->message);
-        g_error_free (error);
         /* Don't disconnect client, just let the request timeout in its side */
+        g_debug ("sending request to device failed: %s", error->message);
         request_complete_and_free (request);
         return;
     }
 
     /* replace reponse transaction id with the requested transaction id */
     mbim_message_set_transaction_id (request->response, request->original_transaction_id);
-
     request_complete_and_free (request);
 }
 
@@ -1070,8 +1053,8 @@ parse_request (MbimProxy *self,
                Client    *client)
 {
     do {
-        MbimMessage *message;
-        guint32 len = 0;
+        g_autoptr(MbimMessage) message = NULL;
+        guint32                len = 0;
 
         if (client->buffer->len >= sizeof (struct header) &&
             (len = GUINT32_FROM_LE (((struct header *)client->buffer->data)->length)) > client->buffer->len) {
@@ -1085,11 +1068,9 @@ parse_request (MbimProxy *self,
         message = mbim_message_new (client->buffer->data, len);
         if (!message)
             return;
-        g_byte_array_remove_range (client->buffer, 0, len);
 
-        /* Play with the received message */
+        g_byte_array_remove_range (client->buffer, 0, len);
         process_message (self, client, message);
-        mbim_message_unref (message);
     } while (client->buffer->len > 0);
 }
 
@@ -1098,10 +1079,10 @@ connection_readable_cb (GSocket *socket,
                         GIOCondition condition,
                         Client *client)
 {
-    MbimProxy *self;
-    guint8 buffer[BUFFER_SIZE];
-    GError *error = NULL;
-    gssize r;
+    MbimProxy         *self;
+    guint8             buffer[BUFFER_SIZE];
+    g_autoptr(GError)  error = NULL;
+    gssize             r;
 
     /* Recover proxy pointer soon */
     self = client->self;
@@ -1121,8 +1102,6 @@ connection_readable_cb (GSocket *socket,
                              &error);
     if (r < 0) {
         g_warning ("Error reading from istream: %s", error ? error->message : "unknown");
-        if (error)
-            g_error_free (error);
         /* Close the device */
         untrack_client (self, client);
         return FALSE;
@@ -1143,15 +1122,15 @@ connection_readable_cb (GSocket *socket,
 }
 
 static void
-incoming_cb (GSocketService *service,
+incoming_cb (GSocketService    *service,
              GSocketConnection *connection,
-             GObject *unused,
-             MbimProxy *self)
+             GObject           *unused,
+             MbimProxy         *self)
 {
-    Client *client;
-    GCredentials *credentials;
-    GError *error = NULL;
-    uid_t uid;
+    Client                  *client;
+    g_autoptr(GCredentials)  credentials = NULL;
+    g_autoptr(GError)        error = NULL;
+    uid_t                    uid;
 
     g_debug ("Client (%d) connection open...", g_socket_get_fd (g_socket_connection_get_socket (connection)));
 
@@ -1163,16 +1142,13 @@ incoming_cb (GSocketService *service,
     }
 
     uid = g_credentials_get_unix_user (credentials, &error);
-    g_object_unref (credentials);
     if (error) {
         g_warning ("Client not allowed: Error getting unix user id: %s", error->message);
-        g_error_free (error);
         return;
     }
 
     if (!__mbim_user_allowed (uid, &error)) {
         g_warning ("Client not allowed: %s", error->message);
-        g_error_free (error);
         return;
     }
 
@@ -1201,11 +1177,11 @@ incoming_cb (GSocketService *service,
 }
 
 static gboolean
-setup_socket_service (MbimProxy *self,
-                      GError **error)
+setup_socket_service (MbimProxy  *self,
+                      GError    **error)
 {
-    GSocketAddress *socket_address;
-    GSocket *socket;
+    g_autoptr(GSocketAddress) socket_address = NULL;
+    g_autoptr(GSocket)        socket = NULL;
 
     socket = g_socket_new (G_SOCKET_FAMILY_UNIX,
                            G_SOCKET_TYPE_STREAM,
@@ -1219,20 +1195,14 @@ setup_socket_service (MbimProxy *self,
                           MBIM_PROXY_SOCKET_PATH,
                           -1,
                           G_UNIX_SOCKET_ADDRESS_ABSTRACT));
-    if (!g_socket_bind (socket, socket_address, TRUE, error)) {
-        g_object_unref (socket_address);
-        g_object_unref (socket);
+    if (!g_socket_bind (socket, socket_address, TRUE, error))
         return FALSE;
-    }
-    g_object_unref (socket_address);
 
     g_debug ("creating UNIX socket service...");
 
     /* Listen */
-    if (!g_socket_listen (socket, error)) {
-        g_object_unref (socket);
+    if (!g_socket_listen (socket, error))
         return FALSE;
-    }
 
     /* Create socket service */
     self->priv->socket_service = g_socket_service_new ();
@@ -1242,13 +1212,11 @@ setup_socket_service (MbimProxy *self,
                                        NULL, /* don't pass an object, will take a reference */
                                        error)) {
         g_prefix_error (error, "Error adding socket at '%s' to socket service: ", MBIM_PROXY_SOCKET_PATH);
-        g_object_unref (socket);
         return FALSE;
     }
 
     g_debug ("starting UNIX socket service at '%s'...", MBIM_PROXY_SOCKET_PATH);
     g_socket_service_start (self->priv->socket_service);
-    g_object_unref (socket);
     return TRUE;
 }
 
@@ -1298,10 +1266,10 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
                                       MbimDevice *device,
                                       gsize      *out_size)
 {
-    GList           *l;
-    MbimEventEntry **updated;
-    gsize            updated_size = 0;
-    DeviceContext   *ctx;
+    GList                          *l;
+    g_autoptr(MbimEventEntryArray)  updated = NULL;
+    gsize                           updated_size = 0;
+    DeviceContext                  *ctx;
 
     ctx = device_context_get (device);
     g_assert (ctx);
@@ -1331,13 +1299,12 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
             (const MbimEventEntry *const *)updated, updated_size,
             (const MbimEventEntry *const *)ctx->mbim_event_entry_array, ctx->mbim_event_entry_array_size)) {
         g_debug ("Merged service subscribe list not updated for device '%s'", mbim_device_get_path (device));
-        mbim_event_entry_array_free (updated);
         return NULL;
     }
 
     /* Lists are different, update stored one */
     g_clear_pointer (&ctx->mbim_event_entry_array, mbim_event_entry_array_free);
-    ctx->mbim_event_entry_array = updated;
+    ctx->mbim_event_entry_array = g_steal_pointer (&updated);
     ctx->mbim_event_entry_array_size = updated_size;
 
     if (mbim_utils_get_traces_enabled ()) {
@@ -1407,7 +1374,7 @@ peek_device_for_path (MbimProxy   *self,
 
 static void
 proxy_device_removed_cb (MbimDevice *device,
-                         MbimProxy *self)
+                         MbimProxy  *self)
 {
     untrack_device (self, device);
 }
@@ -1416,8 +1383,8 @@ static void
 untrack_device (MbimProxy  *self,
                 MbimDevice *device)
 {
-    GList *l;
-    GList *to_remove = NULL;
+    GList         *l;
+    GList         *to_remove = NULL;
     DeviceContext *ctx;
 
     ctx = device_context_get (device);
@@ -1473,31 +1440,28 @@ track_device (MbimProxy *self,
 MbimProxy *
 mbim_proxy_new (GError **error)
 {
-    MbimProxy *self;
+    g_autoptr(MbimProxy) self = NULL;
 
-    if (!__mbim_user_allowed (getuid(), error)) {
+    if (!__mbim_user_allowed (getuid(), error))
         return NULL;
-    }
 
     self = g_object_new (MBIM_TYPE_PROXY, NULL);
     if (!setup_socket_service (self, error))
-        g_clear_object (&self);
+        return NULL;
+
     return self;
 }
 
 static void
 mbim_proxy_init (MbimProxy *self)
 {
-    /* Setup private data */
-    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              MBIM_TYPE_PROXY,
-                                              MbimProxyPrivate);
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, MBIM_TYPE_PROXY, MbimProxyPrivate);
 }
 
 static void
-get_property (GObject *object,
-              guint prop_id,
-              GValue *value,
+get_property (GObject    *object,
+              guint       prop_id,
+              GValue     *value,
               GParamSpec *pspec)
 {
     MbimProxy *self = MBIM_PROXY (object);
