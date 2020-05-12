@@ -671,10 +671,10 @@ typedef gboolean (* QmiDeviceCommandAbortableParseResponseFn) (QmiDevice   *self
  * @message: the message to send.
  * @message_context: the context of the message.
  * @timeout: maximum time, in seconds, to wait for the response.
- * @abort_build_request_fn: callback to build an abort request.
- * @abort_parse_response_fn: callback to parse an abort response.
- * @abort_user_data: user data to pass to @build_request_fn and @parse_response_fn.
- * @abort_user_data_free: a #GDestroyNotify to free @abort_user_data.
+ * @abort_build_request_fn: (scope async): callback to build an abort request.
+ * @abort_parse_response_fn: (scope async): callback to parse an abort response.
+ * @abort_user_data: (closure): user data to pass to @build_request_fn and @parse_response_fn.
+ * @abort_user_data_free: (destroy abort_user_data): a #GDestroyNotify to free @abort_user_data.
  * @cancellable: a #GCancellable, or %NULL.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
  * @user_data: the data to pass to callback function.
@@ -787,7 +787,9 @@ void qmi_device_get_service_version_info (QmiDevice           *self,
  *
  * Finishes an operation started with qmi_device_get_service_version_info().
  *
- * Returns: a #GArray of #QmiDeviceServiceVersionInfo elements, or %NULL if @error is set. The returned value should be freed with g_array_unref().
+ * Returns: (transfer full)(element-type QmiDeviceServiceVersionInfo):
+ *  a #GArray of #QmiDeviceServiceVersionInfo elements, or %NULL if @error
+ *  is set. The returned value should be freed with g_array_unref().
  *
  * Since: 1.6
  */
