@@ -40,6 +40,7 @@ class VariableStruct(Variable):
         # struct type name
         self.public_format = utils.build_camelcase_name(struct_type_name)
         self.private_format = self.public_format
+        self.element_type = self.public_format
         self.container_type = container_type
 
         # Load members of this struct

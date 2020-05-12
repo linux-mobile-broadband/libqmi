@@ -40,6 +40,11 @@ class Variable:
         self.private_format = None
 
         """
+        Element type to be used in introspection annotations.
+        """
+        self.element_type = None
+
+        """
         Whether the variable is visible in public API or is reserved
         """
         self.visible = False if ('visible' in dictionary and dictionary['visible'] == 'no') else True

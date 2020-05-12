@@ -53,6 +53,8 @@ class VariableInteger(Variable):
             self.private_format = self.format
             self.public_format = dictionary['public-format'] if 'public-format' in dictionary else self.private_format
 
+        self.element_type = self.public_format
+
     """
     Read a single integer from the raw byte buffer
     """

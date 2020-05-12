@@ -37,6 +37,7 @@ class VariableString(Variable):
 
         self.private_format = 'gchar *'
         self.public_format = self.private_format
+        self.element_type = 'utf8'
 
         if 'fixed-size' in dictionary:
             self.is_fixed_size = True

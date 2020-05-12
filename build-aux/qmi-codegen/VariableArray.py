@@ -38,6 +38,7 @@ class VariableArray(Variable):
 
         self.private_format  = 'GArray *'
         self.public_format = self.private_format
+        self.element_type = 'GArray'
         self.fixed_size = 0
         self.name = dictionary['name']
 
@@ -370,6 +371,7 @@ class VariableArray(Variable):
 
         translations = { 'lp'                          : line_prefix,
                          'public_array_element_format' : self.array_element.public_format,
+                         'public_array_element_type'   : self.array_element.element_type,
                          'name'                        : variable_name }
 
         template = ''
@@ -378,7 +380,7 @@ class VariableArray(Variable):
                 '${lp}@${name}_sequence: (out): a placeholder for the output sequence number, or %NULL if not required.\n')
 
         template += (
-            '${lp}@${name}: (out): a placeholder for the output #GArray of #${public_array_element_format} elements, or %NULL if not required. Do not free it, it is owned by @self.\n')
+            '${lp}@${name}: (out)(element-type ${public_array_element_type})(transfer none): a placeholder for the output #GArray of #${public_array_element_format} elements, or %NULL if not required. Do not free it, it is owned by @self.\n')
         return string.Template(template).substitute(translations)
 
 
@@ -440,6 +442,7 @@ class VariableArray(Variable):
 
         translations = { 'lp'                          : line_prefix,
                          'public_array_element_format' : self.array_element.public_format,
+                         'public_array_element_type'   : self.array_element.element_type,
                          'name'                        : variable_name }
 
         template = ''
@@ -448,7 +451,7 @@ class VariableArray(Variable):
                 '${lp}@${name}_sequence: the sequence number.\n')
 
         template += (
-            '${lp}@${name}: a #GArray of #${public_array_element_format} elements. A new reference to @${name} will be taken.\n')
+            '${lp}@${name}: (in)(element-type ${public_array_element_type}): a #GArray of #${public_array_element_format} elements. A new reference to @${name} will be taken.\n')
         return string.Template(template).substitute(translations)
 
 
