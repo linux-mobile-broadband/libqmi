@@ -73,15 +73,6 @@ G_BEGIN_DECLS
  */
 typedef GByteArray QmiMessage;
 
-/**
- * QMI_MESSAGE_VENDOR_GENERIC:
- *
- * Generic vendor id (0x0000).
- *
- * Since: 1.18
- */
-#define QMI_MESSAGE_VENDOR_GENERIC 0x0000
-
 /*****************************************************************************/
 /* QMI Message life cycle */
 
