@@ -51,7 +51,7 @@
  * @QMI_VOICE_CALL_STATE_WAITING: Waiting.
  * @QMI_VOICE_CALL_STATE_DISCONNECTING: Disconnecting.
  * @QMI_VOICE_CALL_STATE_END: Call is finished.
- * @QMI_VOICE_CALL_STATE_SETUP: MT call is in setup state (3GPP).
+ * @QMI_VOICE_CALL_STATE_SETUP: 3GPP specific. MT call is in setup state.
  *
  * State of a call.
  *
@@ -155,7 +155,7 @@ typedef enum {
 
 /**
  * QmiVoiceAls:
- * @QMI_VOICE_ALS_LINE_1: Line 1 (default).
+ * @QMI_VOICE_ALS_LINE_1: Line 1, default.
  * @QMI_VOICE_ALS_LINE_2: Line 2.
  *
  * ALS line indicator.
@@ -178,7 +178,7 @@ typedef enum {
  * @QMI_VOICE_PRESENTATION_ALLOWED: Allowed presentation.
  * @QMI_VOICE_PRESENTATION_RESTRICTED: Restricted presentation.
  * @QMI_VOICE_PRESENTATION_UNAVAILABLE: Unavailable presentation.
- * @QMI_VOICE_PRESENTATION_PAYPHONE: Payphone presentation (3GPP only).
+ * @QMI_VOICE_PRESENTATION_PAYPHONE: 3GPP specific. Payphone presentation.
  *
  * Remote party number presentation indicator.
  *
@@ -397,31 +397,31 @@ typedef enum {
 /**
  * QmiVoiceCallEndReason:
  * @QMI_VOICE_CALL_END_REASON_OFFLINE: Device is offline.
- * @QMI_VOICE_CALL_END_REASON_CDMA_LOCK: (CDMA) Phone is CDMA locked.
+ * @QMI_VOICE_CALL_END_REASON_CDMA_LOCK: CDMA specific. Phone is CDMA locked.
  * @QMI_VOICE_CALL_END_REASON_NO_SERVICE: Device has no service.
  * @QMI_VOICE_CALL_END_REASON_FADE: Fade.
- * @QMI_VOICE_CALL_END_REASON_INTERCEPT: (CDMA) Received intercept from the BS.
- * @QMI_VOICE_CALL_END_REASON_REORDER: (CDMA) Received reorder from the BS.
+ * @QMI_VOICE_CALL_END_REASON_INTERCEPT: CDMA specific. Received intercept from the BS.
+ * @QMI_VOICE_CALL_END_REASON_REORDER: CDMA specific. Received reorder from the BS.
  * @QMI_VOICE_CALL_END_REASON_RELEASE_NORMAL: Received release from the BS.
- * @QMI_VOICE_CALL_END_REASON_RELEASE_SO_REJECT: (CDMA) Received release from the BS.
- * @QMI_VOICE_CALL_END_REASON_INCOMING_CALL: (CDMA) Received incoming call from the BS.
- * @QMI_VOICE_CALL_END_REASON_ALERT_STOP: (CDMA) Received alert stop from the BS.
+ * @QMI_VOICE_CALL_END_REASON_RELEASE_SO_REJECT: CDMA specific. Received release from the BS.
+ * @QMI_VOICE_CALL_END_REASON_INCOMING_CALL: CDMA specific. Received incoming call from the BS.
+ * @QMI_VOICE_CALL_END_REASON_ALERT_STOP: CDMA specific. Received alert stop from the BS.
  * @QMI_VOICE_CALL_END_REASON_CLIENT_END: Client ended the call.
- * @QMI_VOICE_CALL_END_REASON_ACTIVATION: (CDMA) Received end activation.
- * @QMI_VOICE_CALL_END_REASON_MC_ABORT: (CDMA) MC aborted the origination/conversation.
- * @QMI_VOICE_CALL_END_REASON_MAX_ACCESS_PROBE: (CDMA) Maximum access probes transmitted.
- * @QMI_VOICE_CALL_END_REASON_PSIST_N: (CDMA) Persistence test failure.
+ * @QMI_VOICE_CALL_END_REASON_ACTIVATION: CDMA specific. Received end activation.
+ * @QMI_VOICE_CALL_END_REASON_MC_ABORT: CDMA specific. MC aborted the origination/conversation.
+ * @QMI_VOICE_CALL_END_REASON_MAX_ACCESS_PROBE: CDMA specific. Maximum access probes transmitted.
+ * @QMI_VOICE_CALL_END_REASON_PSIST_N: CDMA specific. Persistence test failure.
  * @QMI_VOICE_CALL_END_REASON_UIM_NOT_PRESENT: R-UIM not present.
  * @QMI_VOICE_CALL_END_REASON_ACCESS_ATTEMPT_IN_PROGRESS: Access attempt in progress.
  * @QMI_VOICE_CALL_END_REASON_ACCESS_FAILURE: Access failure.
- * @QMI_VOICE_CALL_END_REASON_ACCESS_RETRY_ORDER: (CDMA) Retry order.
- * @QMI_VOICE_CALL_END_REASON_CCS_NOT_SUPPORTED_BY_BS: (CDMA) Concurrent service not supported by the BS.
- * @QMI_VOICE_CALL_END_REASON_NO_RESPONSE_FROM_BS: (CDMA) No response received from the BS.
- * @QMI_VOICE_CALL_END_REASON_REJECTED_BY_BS: (CDMA) Rejected by the BS.
- * @QMI_VOICE_CALL_END_REASON_INCOMPATIBLE: (CDMA) Concurrent services requested are incompatible.
- * @QMI_VOICE_CALL_END_REASON_ACCESS_BLOCK: (CDMA) Access blocked by the BS.
+ * @QMI_VOICE_CALL_END_REASON_ACCESS_RETRY_ORDER: CDMA specific. Retry order.
+ * @QMI_VOICE_CALL_END_REASON_CCS_NOT_SUPPORTED_BY_BS: CDMA specific. Concurrent service not supported by the BS.
+ * @QMI_VOICE_CALL_END_REASON_NO_RESPONSE_FROM_BS: CDMA specific. No response received from the BS.
+ * @QMI_VOICE_CALL_END_REASON_REJECTED_BY_BS: CDMA specific. Rejected by the BS.
+ * @QMI_VOICE_CALL_END_REASON_INCOMPATIBLE: CDMA specific. Concurrent services requested are incompatible.
+ * @QMI_VOICE_CALL_END_REASON_ACCESS_BLOCK: CDMA specific. Access blocked by the BS.
  * @QMI_VOICE_CALL_END_REASON_ALREADY_IN_TC: Already in TC.
- * @QMI_VOICE_CALL_END_REASON_EMERGENCY_FLASHED: (CDMA) Emergency call is flashed over this call.
+ * @QMI_VOICE_CALL_END_REASON_EMERGENCY_FLASHED: CDMA specific. Emergency call is flashed over this call.
  * @QMI_VOICE_CALL_END_REASON_USER_CALL_ORIGINATED_DURING_GPS: Call originated during GPS.
  * @QMI_VOICE_CALL_END_REASON_USER_CALL_ORIGINATED_DURING_SMS: Call originated during SMS.
  * @QMI_VOICE_CALL_END_REASON_USER_CALL_ORIGINATED_DURING_DATA: Call originated during data.
@@ -440,12 +440,12 @@ typedef enum {
  * @QMI_VOICE_CALL_END_REASON_BAD_FORWARD_LINK: Bad forward link or timer T5M expired.
  * @QMI_VOICE_CALL_END_REASON_TRM_REQUEST_FAILED: Transceiver Resource Manager request failed.
  * @QMI_VOICE_CALL_END_REASON_TIMEOUT_T41: Timer T41 expired.
- * @QMI_VOICE_CALL_END_REASON_INCOMING_REJECTED: (GSM/WCDMA) Client rejected incoming call.
- * @QMI_VOICE_CALL_END_REASON_SETUP_REJECTED: (GSM/WCDMA) Client rejected a setup indication.
- * @QMI_VOICE_CALL_END_REASON_NETWORK_END: (GSM/WCDMA) Network ended the call.
- * @QMI_VOICE_CALL_END_REASON_NO_FUNDS: (GSM/WCDMA) No funds.
- * @QMI_VOICE_CALL_END_REASON_NO_GW_SERVICE: (GSM/WCDMA) Device has no service.
- * @QMI_VOICE_CALL_END_REASON_NO_CDMA_SERVICE: (CDMA) Device has no service.
+ * @QMI_VOICE_CALL_END_REASON_INCOMING_REJECTED: GSM/WCDMA specific. Client rejected incoming call.
+ * @QMI_VOICE_CALL_END_REASON_SETUP_REJECTED: GSM/WCDMA specific. Client rejected a setup indication.
+ * @QMI_VOICE_CALL_END_REASON_NETWORK_END: GSM/WCDMA specific. Network ended the call.
+ * @QMI_VOICE_CALL_END_REASON_NO_FUNDS: GSM/WCDMA specific. No funds.
+ * @QMI_VOICE_CALL_END_REASON_NO_GW_SERVICE: GSM/WCDMA specific. Device has no service.
+ * @QMI_VOICE_CALL_END_REASON_NO_CDMA_SERVICE: CDMA specific. Device has no service.
  * @QMI_VOICE_CALL_END_REASON_NO_FULL_SERVICE: Full service is unavailable.
  * @QMI_VOICE_CALL_END_REASON_MAX_PS_CALLS: No resources available to handle a new MO/MT PS call.
  * @QMI_VOICE_CALL_END_REASON_UNKNOWN_SUBSCRIBER: Unknown subscriber.
