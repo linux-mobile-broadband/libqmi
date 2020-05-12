@@ -769,7 +769,7 @@ typedef enum {
 /**
  * qmi_nas_read_string_from_network_description_encoded_array:
  * @encoding: a #QmiNasNetworkDescriptionEncoding.
- * @array: a #GArray with the encoded data.
+ * @array: (element-type guint8): a #GArray with the encoded data.
  *
  * Converts the encoded data in @array to UTF-8 and returns a newly allocated
  * NUL-terminated string.
@@ -1443,7 +1443,7 @@ typedef enum {
 /**
  * qmi_nas_read_string_from_plmn_encoded_array:
  * @encoding: a #QmiNasPlmnEncodingScheme.
- * @array: a #GArray with the encoded data.
+ * @array: (element-type guint8): a #GArray with the encoded data.
  *
  * Converts the encoded data in @array to UTF-8 and returns a newly allocated
  * NUL-terminated string.
