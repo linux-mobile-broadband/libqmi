@@ -72,20 +72,20 @@ GENERATED_SECTIONS = \
 
 # Error types
 qmi-error-types.h: $(top_srcdir)/src/libqmi-glib/qmi-errors.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.h
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#ifndef __LIBQMI_GLIB_ERROR_TYPES_H__\n#define __LIBQMI_GLIB_ERROR_TYPES_H__\n#include \"qmi-errors.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-error-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ERROR_TYPES_H__ */\n" \
 		$(top_srcdir)/src/libqmi-glib/qmi-errors.h > $@
 
 qmi-error-types.c: $(top_srcdir)/src/libqmi-glib/qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templates/qmi-error-types-template.c
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#include \"qmi-errors.h\"\n#include \"qmi-error-types.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-error-types-template.c \
 		$(top_srcdir)/src/libqmi-glib/qmi-errors.h > $@
 
 qmi-error-quarks.c: $(top_srcdir)/src/libqmi-glib/qmi-errors.h qmi-error-types.h $(top_srcdir)/build-aux/templates/qmi-error-quarks-template.c
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#include \"qmi-errors.h\"\n#include \"qmi-error-types.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-error-quarks-template.c \
 		$(top_srcdir)/src/libqmi-glib/qmi-errors.h > $@
@@ -110,14 +110,14 @@ ENUMS = \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-dsd.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-device.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pdc.h\"\n#include \"qmi-enums-pbm.h\"\n#include \"qmi-enums-uim.h\"\n#include \"qmi-enums-oma.h\"\n#include \"qmi-enums-wda.h\"\n#include \"qmi-enums-voice.h\"\n#include \"qmi-enums-loc.h\"\n#include \"qmi-enums-qos.h\"\n#include \"qmi-enums-gas.h\"\n#include \"qmi-enums-dsd.h\"\n#include \"qmi-device.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
 
 qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/templates/qmi-enum-types-template.c
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#include \"qmi-enum-types.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.c \
 		$(ENUMS) > $@
@@ -126,14 +126,14 @@ qmi-enum-types.c: $(ENUMS) qmi-enum-types.h $(top_srcdir)/build-aux/templates/qm
 PRIVATE_ENUMS = \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-private.h
 qmi-enum-types-private.h:  $(PRIVATE_ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__\n#include \"qmi-enums-private.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__ */\n" \
 		$(PRIVATE_ENUMS) > $@
 
 qmi-enum-types-private.c: $(PRIVATE_ENUMS) qmi-enum-types-private.h $(top_srcdir)/build-aux/templates/qmi-enum-types-template.c
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#include \"qmi-enum-types-private.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.c \
 		$(PRIVATE_ENUMS) > $@
@@ -145,14 +145,14 @@ FLAGS64 = \
 	$(top_srcdir)/src/libqmi-glib/qmi-flags64-loc.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-flags64-dsd.h
 qmi-flags64-types.h:  $(FLAGS64) $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include \"qmi-flags64-dms.h\"\n#include \"qmi-flags64-nas.h\"\n#include \"qmi-flags64-loc.h\"\n#include \"qmi-flags64-dsd.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_FLAGS64_TYPES_H__ */\n" \
 		$(FLAGS64) > $@
 
 qmi-flags64-types.c: $(FLAGS64) qmi-flags64-types.h $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.c
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#include \"qmi-flags64-types.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.c \
 		$(FLAGS64) > $@

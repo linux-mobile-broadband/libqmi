@@ -79,14 +79,14 @@ ENUMS_GENERATED = \
 	$(NULL)
 
 qfu-enum-types.h: Makefile.am $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#ifndef QFU_ENUM_TYPES_H\n#define QFU_ENUM_TYPES_H\n#include \"qfu-image.h\"\n#include \"qfu-qdl-message.h\"\n#include \"qfu-dload-message.h\"\n#include \"qfu-sahara-message.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __QFUENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
 
 qfu-enum-types.c: $(ENUMS) qfu-enum-types.h $(top_srcdir)/build-aux/templates/qmi-enum-types-template.c
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
+	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
 		--fhead "#include \"qfu-enum-types.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.c \
 		$(ENUMS) > $@
