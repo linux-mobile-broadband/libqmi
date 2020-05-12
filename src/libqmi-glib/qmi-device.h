@@ -165,7 +165,7 @@ void qmi_device_new (GFile               *file,
  *
  * Finishes an operation started with qmi_device_new().
  *
- * Returns: A newly created #QmiDevice, or %NULL if @error is set.
+ * Returns: (transfer full): A newly created #QmiDevice, or %NULL if @error is set.
  *
  * Since: 1.0
  */
@@ -178,7 +178,7 @@ QmiDevice *qmi_device_new_finish (GAsyncResult  *res,
  *
  * Get the #GFile associated with this #QmiDevice.
  *
- * Returns: a #GFile that must be freed with g_object_unref().
+ * Returns: (transfer full): a #GFile that must be freed with g_object_unref().
  *
  * Since: 1.0
  */
@@ -191,7 +191,7 @@ GFile *qmi_device_get_file (QmiDevice *self);
  * Get the #GFile associated with this #QmiDevice, without increasing the reference count
  * on the returned object.
  *
- * Returns: a #GFile. Do not free the returned object, it is owned by @self.
+ * Returns: (transfer none): a #GFile. Do not free the returned object, it is owned by @self.
  *
  * Since: 1.0
  */
@@ -563,7 +563,7 @@ void qmi_device_command (QmiDevice           *self,
  *
  * Finishes an operation started with qmi_device_command().
  *
- * Returns: a #QmiMessage response, or %NULL if @error is set. The returned value should be freed with qmi_message_unref().
+ * Returns: (transfer full): a #QmiMessage response, or %NULL if @error is set. The returned value should be freed with qmi_message_unref().
  *
  * Since: 1.0
  * Deprecated: 1.18. Use qmi_device_command_full_finish() instead.
@@ -733,7 +733,7 @@ void qmi_device_command_abortable (QmiDevice                                *sel
  *
  * Finishes an operation started with qmi_device_command_abortable().
  *
- * Returns: a #QmiMessage response, or %NULL if @error is set. The returned value should be freed with qmi_message_unref().
+ * Returns: (transfer full): a #QmiMessage response, or %NULL if @error is set. The returned value should be freed with qmi_message_unref().
  *
  * Since: 1.24
  */
@@ -889,7 +889,7 @@ void qmi_device_new_from_node (QrtrNode            *node,
  *
  * Finishes an operation started with qmi_device_new_from_node().
  *
- * Returns: A newly created #QmiDevice, or %NULL if @error is set.
+ * Returns: (transfer full): A newly created #QmiDevice, or %NULL if @error is set.
  */
 QmiDevice *qmi_device_new_from_node_finish (GAsyncResult  *res,
                                             GError       **error);
