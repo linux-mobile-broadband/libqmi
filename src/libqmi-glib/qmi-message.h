@@ -164,7 +164,7 @@ QmiMessage *qmi_message_response_new (QmiMessage       *request,
  *
  * Atomically increments the reference count of @self by one.
  *
- * Returns: (transfer full) the new reference to @self.
+ * Returns: (transfer full): the new reference to @self.
  *
  * Since: 1.0
  */

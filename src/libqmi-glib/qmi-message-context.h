@@ -90,7 +90,7 @@ QmiMessageContext *qmi_message_context_new (void);
  *
  * Atomically increments the reference count of @self by one.
  *
- * Returns: (transfer full) the new reference to @self.
+ * Returns: (transfer full): the new reference to @self.
  *
  * Since: 1.18
  */

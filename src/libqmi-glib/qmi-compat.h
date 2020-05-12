@@ -727,8 +727,8 @@ gchar *qmi_message_get_printable (QmiMessage  *self,
 /**
  * qmi_message_get_version_introduced:
  * @self: a #QmiMessage.
- * @major: (out) return location for the major version.
- * @minor: (out) return location for the minor version.
+ * @major: (out): return location for the major version.
+ * @minor: (out): return location for the minor version.
  *
  * Gets, if known, the service version in which the given message was first
  * introduced.
@@ -747,8 +747,8 @@ gboolean qmi_message_get_version_introduced (QmiMessage *self,
  * qmi_message_get_version_introduced_full:
  * @self: a #QmiMessage.
  * @context: a #QmiMessageContext.
- * @major: (out) return location for the major version.
- * @minor: (out) return location for the minor version.
+ * @major: (out): return location for the major version.
+ * @minor: (out): return location for the minor version.
  *
  * Gets, if known, the service version in which the given message was first
  * introduced.
