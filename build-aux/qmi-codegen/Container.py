@@ -125,16 +125,18 @@ class Container:
     def __emit_types(self, hfile, cfile, translations):
         translations['type_macro'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(self.fullname), 'QMI_')
         # Emit types header
-        template = (
-            '\n'
-            '/**\n'
-            ' * ${camelcase}:\n'
-            ' *\n'
-            ' * The #${camelcase} structure contains private data and should only be accessed\n'
-            ' * using the provided API.\n'
-            ' *\n'
-            ' * Since: ${since}\n'
-            ' */\n'
+        template = '\n'
+        if self.static == False:
+            template += (
+                '/**\n'
+                ' * ${camelcase}:\n'
+                ' *\n'
+                ' * The #${camelcase} structure contains private data and should only be accessed\n'
+                ' * using the provided API.\n'
+                ' *\n'
+                ' * Since: ${since}\n'
+                ' */\n')
+        template += (
             'typedef struct _${camelcase} ${camelcase};\n'
             '${static}GType ${underscore}_get_type (void) G_GNUC_CONST;\n'
             '#define ${type_macro} (${underscore}_get_type ())\n')
@@ -169,43 +171,51 @@ class Container:
     """
     def __emit_core(self, hfile, cfile, translations):
         # Emit container core header
-        template = (
-            '\n'
-            '/**\n'
-            ' * ${underscore}_ref:\n'
-            ' * @self: a #${camelcase}.\n'
-            ' *\n'
-            ' * Atomically increments the reference count of @self by one.\n'
-            ' *\n'
-            ' * Returns: the new reference to @self.\n'
-            ' *\n'
-            ' * Since: ${since}\n'
-            ' */\n'
-            '${static}${camelcase} *${underscore}_ref (${camelcase} *self);\n'
-            '\n'
-            '/**\n'
-            ' * ${underscore}_unref:\n'
-            ' * @self: a #${camelcase}.\n'
-            ' *\n'
-            ' * Atomically decrements the reference count of @self by one.\n'
-            ' * If the reference count drops to 0, @self is completely disposed.\n'
-            ' *\n'
-            ' * Since: ${since}\n'
-            ' */\n'
-            '${static}void ${underscore}_unref (${camelcase} *self);\n'
-            'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${camelcase}, ${underscore}_unref);\n')
-        if self.readonly == False:
+        template = '\n'
+        if self.static == False:
             template += (
                 '\n'
                 '/**\n'
-                ' * ${underscore}_new:\n'
+                ' * ${underscore}_ref:\n'
+                ' * @self: a #${camelcase}.\n'
                 ' *\n'
-                ' * Allocates a new #${camelcase}.\n'
+                ' * Atomically increments the reference count of @self by one.\n'
                 ' *\n'
-                ' * Returns: the newly created #${camelcase}. The returned value should be freed with ${underscore}_unref().\n'
+                ' * Returns: the new reference to @self.\n'
                 ' *\n'
                 ' * Since: ${since}\n'
-                ' */\n'
+                ' */\n')
+        template += (
+            '${static}${camelcase} *${underscore}_ref (${camelcase} *self);\n'
+            '\n')
+        if self.static == False:
+            template += (
+                '/**\n'
+                ' * ${underscore}_unref:\n'
+                ' * @self: a #${camelcase}.\n'
+                ' *\n'
+                ' * Atomically decrements the reference count of @self by one.\n'
+                ' * If the reference count drops to 0, @self is completely disposed.\n'
+                ' *\n'
+                ' * Since: ${since}\n'
+                ' */\n')
+        template += (
+            '${static}void ${underscore}_unref (${camelcase} *self);\n'
+            'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${camelcase}, ${underscore}_unref);\n')
+        if self.readonly == False:
+            if self.static == False:
+                template += (
+                    '\n'
+                    '/**\n'
+                    ' * ${underscore}_new:\n'
+                    ' *\n'
+                    ' * Allocates a new #${camelcase}.\n'
+                    ' *\n'
+                    ' * Returns: the newly created #${camelcase}. The returned value should be freed with ${underscore}_unref().\n'
+                    ' *\n'
+                    ' * Since: ${since}\n'
+                    ' */\n')
+            template += (
                 '${static}${camelcase} *${underscore}_new (void);\n')
 
         if self.static:

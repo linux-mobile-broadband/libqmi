@@ -37,7 +37,7 @@ class FieldResult(Field):
     def emit_types(self, hfile, cfile):
         if TypeFactory.is_type_emitted(self.fullname) is False:
             TypeFactory.set_type_emitted(self.fullname)
-            self.variable.emit_types(cfile, self.since)
+            self.variable.emit_types(cfile, self.since, True)
 
 
     """
@@ -52,19 +52,22 @@ class FieldResult(Field):
                          'since'             : self.since }
 
         # Emit the getter header
-        template = (
-            '\n'
-            '/**\n'
-            ' * ${prefix_underscore}_get_result:\n'
-            ' * @self: a ${prefix_camelcase}.\n'
-            ' * @error: Return location for error or %NULL.\n'
-            ' *\n'
-            ' * Get the result of the QMI operation.\n'
-            ' *\n'
-            ' * Returns: %TRUE if the QMI operation succeeded, %FALSE if @error is set.\n'
-            ' *\n'
-            ' * Since: ${since}\n'
-            ' */\n'
+        template = '\n'
+        if self.static == False:
+            template += (
+                '\n'
+                '/**\n'
+                ' * ${prefix_underscore}_get_result:\n'
+                ' * @self: a ${prefix_camelcase}.\n'
+                ' * @error: Return location for error or %NULL.\n'
+                ' *\n'
+                ' * Get the result of the QMI operation.\n'
+                ' *\n'
+                ' * Returns: %TRUE if the QMI operation succeeded, %FALSE if @error is set.\n'
+                ' *\n'
+                ' * Since: ${since}\n'
+                ' */\n')
+        template += (
             'gboolean ${prefix_underscore}_get_result (\n'
             '    ${prefix_camelcase} *self,\n'
             '    GError **error);\n')

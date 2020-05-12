@@ -99,7 +99,7 @@ class Field:
     def emit_types(self, hfile, cfile):
         if TypeFactory.is_type_emitted(self.fullname) is False:
             TypeFactory.set_type_emitted(self.fullname)
-            self.variable.emit_types(hfile, self.since)
+            self.variable.emit_types(hfile, self.since, False)
             self.variable.emit_helper_methods(hfile, cfile)
 
 
@@ -124,20 +124,23 @@ class Field:
                          'static'              : 'static ' if self.static else '' }
 
         # Emit the getter header
-        template = (
-            '\n'
-            '/**\n'
-            ' * ${prefix_underscore}_get_${underscore}:\n'
-            ' * @self: a #${prefix_camelcase}.\n'
-            '${variable_getter_doc}'
-            ' * @error: Return location for error or %NULL.\n'
-            ' *\n'
-            ' * Get the \'${name}\' field from @self.\n'
-            ' *\n'
-            ' * Returns: %TRUE if the field is found, %FALSE otherwise.\n'
-            ' *\n'
-            ' * Since: ${since}\n'
-            ' */\n'
+        template = '\n'
+        if self.static == False:
+            template += (
+                '\n'
+                '/**\n'
+                ' * ${prefix_underscore}_get_${underscore}:\n'
+                ' * @self: a #${prefix_camelcase}.\n'
+                '${variable_getter_doc}'
+                ' * @error: Return location for error or %NULL.\n'
+                ' *\n'
+                ' * Get the \'${name}\' field from @self.\n'
+                ' *\n'
+                ' * Returns: %TRUE if the field is found, %FALSE otherwise.\n'
+                ' *\n'
+                ' * Since: ${since}\n'
+                ' */\n')
+        template += (
             '${static}gboolean ${prefix_underscore}_get_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
             '${variable_getter_dec}'
@@ -191,20 +194,23 @@ class Field:
                          'static'              : 'static ' if self.static else '' }
 
         # Emit the setter header
-        template = (
-            '\n'
-            '/**\n'
-            ' * ${prefix_underscore}_set_${underscore}:\n'
-            ' * @self: a #${prefix_camelcase}.\n'
-            '${variable_setter_doc}'
-            ' * @error: Return location for error or %NULL.\n'
-            ' *\n'
-            ' * Set the \'${name}\' field in the message.\n'
-            ' *\n'
-            ' * Returns: %TRUE if @value was successfully set, %FALSE otherwise.\n'
-            ' *\n'
-            ' * Since: ${since}\n'
-            ' */\n'
+        template = '\n'
+        if self.static == False:
+            template += (
+                '\n'
+                '/**\n'
+                ' * ${prefix_underscore}_set_${underscore}:\n'
+                ' * @self: a #${prefix_camelcase}.\n'
+                '${variable_setter_doc}'
+                ' * @error: Return location for error or %NULL.\n'
+                ' *\n'
+                ' * Set the \'${name}\' field in the message.\n'
+                ' *\n'
+                ' * Returns: %TRUE if @value was successfully set, %FALSE otherwise.\n'
+                ' *\n'
+                ' * Since: ${since}\n'
+                ' */\n')
+        template += (
             '${static}gboolean ${prefix_underscore}_set_${underscore} (\n'
             '    ${prefix_camelcase} *self,\n'
             '${variable_setter_dec}'
