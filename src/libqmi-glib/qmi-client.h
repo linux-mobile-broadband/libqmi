@@ -162,7 +162,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiClient, g_object_unref)
  *
  * Get the #QmiDevice associated with this #QmiClient.
  *
- * Returns: a #GObject that must be freed with g_object_unref().
+ * Returns: (transfer full): a #GObject that must be freed with g_object_unref().
  *
  * Since: 1.0
  */
@@ -175,7 +175,7 @@ GObject *qmi_client_get_device (QmiClient *self);
  * Get the #QmiDevice associated with this #QmiClient, without increasing the reference count
  * on the returned object.
  *
- * Returns: a #GObject. Do not free the returned object, it is owned by @self.
+ * Returns: (transfer none): a #GObject. Do not free the returned object, it is owned by @self.
  *
  * Since: 1.0
  */
