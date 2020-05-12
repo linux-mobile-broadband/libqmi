@@ -61,24 +61,6 @@ test-collection-basic:
 test-default:
   stage: test
   script:
-    - apt -y install gtk-doc-tools libglib2.0-doc
-    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
-    - pushd libmbim
-    - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr
-    - make
-    - make install
-    - popd
-    - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --enable-gtk-doc --enable-mbim-qmux --enable-qrtr
-    - make
-    - make check
-    - make install
-    - make distcheck
-
-test-default-introspection:
-  stage: test
-  script:
     - apt -y install gtk-doc-tools libglib2.0-doc gobject-introspection libgirepository1.0-dev
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
@@ -88,7 +70,7 @@ test-default-introspection:
     - make install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --enable-gtk-doc --enable-mbim-qmux --enable-qrtr --enable-introspection=yes --disable-Werror
+    - ./configure --prefix=/usr --enable-gtk-doc --enable-mbim-qmux --enable-qrtr --enable-introspection
     - make
     - make check
     - make install
