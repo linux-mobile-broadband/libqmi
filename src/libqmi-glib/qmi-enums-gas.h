@@ -45,7 +45,7 @@
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_GAS_FIRMWARE_LISTING_MODE_ACTIVE_FIRMWARE   = 0,
     QMI_GAS_FIRMWARE_LISTING_MODE_ALL_FIRMWARE      = 1,
     QMI_GAS_FIRMWARE_LISTING_MODE_SPECIFIC_FIRMWARE = 2,

@@ -49,17 +49,11 @@
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_STORAGE_TYPE_UIM  = 0x00,
     QMI_WMS_STORAGE_TYPE_NV   = 0x01,
     QMI_WMS_STORAGE_TYPE_NONE = 0xFF
 } QmiWmsStorageType;
-
-/**
- * qmi_wms_storage_type_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsAckIndicator:
@@ -70,16 +64,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_ACK_INDICATOR_SEND        = 0x00,
     QMI_WMS_ACK_INDICATOR_DO_NOT_SEND = 0x01
 } QmiWmsAckIndicator;
-
-/**
- * qmi_wms_ack_indicator_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsMessageFormat:
@@ -92,18 +80,12 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_MESSAGE_FORMAT_CDMA                     = 0x00,
     QMI_WMS_MESSAGE_FORMAT_GSM_WCDMA_POINT_TO_POINT = 0x06,
     QMI_WMS_MESSAGE_FORMAT_GSM_WCDMA_BROADCAST      = 0x07,
     QMI_WMS_MESSAGE_FORMAT_MWI                      = 0x08
 } QmiWmsMessageFormat;
-
-/**
- * qmi_wms_message_format_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsMessageMode:
@@ -114,16 +96,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_MESSAGE_MODE_CDMA      = 0x00,
     QMI_WMS_MESSAGE_MODE_GSM_WCDMA = 0x01
 } QmiWmsMessageMode;
-
-/**
- * qmi_wms_message_mode_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsNotificationType:
@@ -135,17 +111,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_NOTIFICATION_TYPE_PRIMARY        = 0x00,
     QMI_WMS_NOTIFICATION_TYPE_SECONDARY_GSM  = 0x01,
     QMI_WMS_NOTIFICATION_TYPE_SECONDARY_UMTS = 0x02
 } QmiWmsNotificationType;
-
-/**
- * qmi_wms_notification_type_get_string:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI WMS Raw Send' request/response */
@@ -160,17 +130,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_CDMA_SERVICE_OPTION_AUTO = 0x00,
     QMI_WMS_CDMA_SERVICE_OPTION_6    = 0x06,
     QMI_WMS_CDMA_SERVICE_OPTION_14   = 0x0E
 } QmiWmsCdmaServiceOption;
-
-/**
- * qmi_wms_cdma_service_option_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsCdmaCauseCode:
@@ -207,7 +171,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     /* Network errors */
     QMI_WMS_CDMA_CAUSE_CODE_NETWORK_ADDRESS_VACANT              = 0x00,
     QMI_WMS_CDMA_CAUSE_CODE_NETWORK_ADDRESS_TRANSLATION_FAILURE = 0x01,
@@ -246,12 +210,6 @@ typedef enum {
 } QmiWmsCdmaCauseCode;
 
 /**
- * qmi_wms_cdma_cause_code_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiWmsCdmaErrorClass:
  * @QMI_WMS_CDMA_ERROR_CLASS_TEMPORARY: Temporary error.
  * @QMI_WMS_CDMA_ERROR_CLASS_PERMANENT: Permanent error.
@@ -260,16 +218,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_CDMA_ERROR_CLASS_TEMPORARY = 0x00,
     QMI_WMS_CDMA_ERROR_CLASS_PERMANENT = 0x01
 } QmiWmsCdmaErrorClass;
-
-/**
- * qmi_wms_cdma_error_class_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsGsmUmtsRpCause:
@@ -302,7 +254,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_GSM_UMTS_RP_CAUSE_UNASSIGNED_NUMBER                    = 0x01,
     QMI_WMS_GSM_UMTS_RP_CAUSE_OPERATOR_DETERMINED_BARRING          = 0x08,
     QMI_WMS_GSM_UMTS_RP_CAUSE_CALL_BARRED                          = 0x0A,
@@ -328,12 +280,6 @@ typedef enum {
     QMI_WMS_GSM_UMTS_RP_CAUSE_PROTOCOL_ERROR                       = 0x6F,
     QMI_WMS_GSM_UMTS_RP_CAUSE_INTERWORKING                         = 0x7F
 } QmiWmsGsmUmtsRpCause;
-
-/**
- * qmi_wms_gsm_umts_rp_cause_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsGsmUmtsTpCause:
@@ -368,7 +314,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_GSM_UMTS_TP_CAUSE_TELE_INTERWORKING_NOT_SUPPORTED    = 0x80,
     QMI_WMS_GSM_UMTS_TP_CAUSE_SHORT_MESSAGE_TYPE_0_NOT_SUPPORTED = 0x81,
     QMI_WMS_GSM_UMTS_TP_CAUSE_SHORT_MESSAGE_CANNOT_BE_REPLACED   = 0x82,
@@ -398,12 +344,6 @@ typedef enum {
 } QmiWmsGsmUmtsTpCause;
 
 /**
- * qmi_wms_gsm_umts_tp_cause_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiWmsMessageDeliveryFailureType:
  * @QMI_WMS_MESSAGE_DELIVERY_FAILURE_TYPE_TEMPORARY: Temporary failure.
  * @QMI_WMS_MESSAGE_DELIVERY_FAILURE_TYPE_PERMANENT: Permanent failure.
@@ -412,16 +352,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_MESSAGE_DELIVERY_FAILURE_TYPE_TEMPORARY = 0x00,
     QMI_WMS_MESSAGE_DELIVERY_FAILURE_TYPE_PERMANENT = 0x01
 } QmiWmsMessageDeliveryFailureType;
-
-/**
- * qmi_wms_message_delivery_failure_type_get_string:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI WMS Read Raw' request/response */
@@ -437,18 +371,12 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_MESSAGE_TAG_TYPE_MT_READ     = 0x00,
     QMI_WMS_MESSAGE_TAG_TYPE_MT_NOT_READ = 0x01,
     QMI_WMS_MESSAGE_TAG_TYPE_MO_SENT     = 0x02,
     QMI_WMS_MESSAGE_TAG_TYPE_MO_NOT_SENT = 0x03
 } QmiWmsMessageTagType;
-
-/**
- * qmi_wms_message_tag_type_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsMessageProtocol:
@@ -459,16 +387,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_MESSAGE_PROTOCOL_CDMA  = 0x00,
     QMI_WMS_MESSAGE_PROTOCOL_WCDMA = 0x01
 } QmiWmsMessageProtocol;
-
-/**
- * qmi_wms_message_protocol_get_string:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI WMS Set Routes' request/response */
@@ -481,15 +403,9 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_MESSAGE_TYPE_POINT_TO_POINT = 0x00
 } QmiWmsMessageType;
-
-/**
- * qmi_wms_message_type_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsMessageClass:
@@ -504,7 +420,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_MESSAGE_CLASS_0    = 0x00,
     QMI_WMS_MESSAGE_CLASS_1    = 0x01,
     QMI_WMS_MESSAGE_CLASS_2    = 0x02,
@@ -512,12 +428,6 @@ typedef enum {
     QMI_WMS_MESSAGE_CLASS_NONE = 0x04,
     QMI_WMS_MESSAGE_CLASS_CDMA = 0x05
 } QmiWmsMessageClass;
-
-/**
- * qmi_wms_message_class_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsReceiptAction:
@@ -531,19 +441,13 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_RECEIPT_ACTION_DISCARD          = 0x00,
     QMI_WMS_RECEIPT_ACTION_STORE_AND_NOTIFY = 0x01,
     QMI_WMS_RECEIPT_ACTION_TRANSFER_ONLY    = 0x02,
     QMI_WMS_RECEIPT_ACTION_TRANSFER_AND_ACK = 0x03,
     QMI_WMS_RECEIPT_ACTION_UNKNOWN          = 0xFF
 } QmiWmsReceiptAction;
-
-/**
- * qmi_wms_receipt_action_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWmsTransferIndication:
@@ -553,14 +457,8 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WMS_TRANSFER_INDICATION_CLIENT = 0x01
 } QmiWmsTransferIndication;
-
-/**
- * qmi_wms_transfer_indication_get_string:
- *
- * Since: 1.0
- */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WMS_H_ */

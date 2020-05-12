@@ -49,17 +49,11 @@
  *
  * Since: 1.20
  */
-typedef enum {
+typedef enum { /*< since=1.20 >*/
     QMI_LOC_INTERMEDIATE_REPORT_STATE_UNKNOWN = 0,
     QMI_LOC_INTERMEDIATE_REPORT_STATE_ENABLE  = 1,
     QMI_LOC_INTERMEDIATE_REPORT_STATE_DISABLE = 2,
 } QmiLocIntermediateReportState;
-
-/**
- * qmi_loc_intermediate_report_state_get_string:
- *
- * Since: 1.20
- */
 
 /**
  * QmiLocIndicationStatus:
@@ -75,7 +69,7 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_INDICATION_STATUS_SUCCESS            = 0,
     QMI_LOC_INDICATION_STATUS_GENERAL_FAILURE    = 1,
     QMI_LOC_INDICATION_STATUS_UNSUPPORTED        = 2,
@@ -84,12 +78,6 @@ typedef enum {
     QMI_LOC_INDICATION_STATUS_PHONE_OFFLINE      = 5,
     QMI_LOC_INDICATION_STATUS_TIMEOUT            = 6,
 } QmiLocIndicationStatus;
-
-/**
- * qmi_loc_indication_status_get_string
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocSessionStatus:
@@ -106,7 +94,7 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_SESSION_STATUS_SUCCESS         = 0,
     QMI_LOC_SESSION_STATUS_IN_PROGRESS     = 1,
     QMI_LOC_SESSION_STATUS_GENERAL_FAILURE = 2,
@@ -118,12 +106,6 @@ typedef enum {
 } QmiLocSessionStatus;
 
 /**
- * qmi_loc_session_status_get_string
- *
- * Since: 1.22
- */
-
-/**
  * QmiLocFixRecurrenceType:
  * @QMI_LOC_FIX_RECURRENCE_TYPE_REQUEST_PERIODIC_FIXES: Periodic fixes.
  * @QMI_LOC_FIX_RECURRENCE_TYPE_REQUEST_SINGLE_FIX: Single fix.
@@ -132,16 +114,10 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_FIX_RECURRENCE_TYPE_REQUEST_PERIODIC_FIXES = 1,
     QMI_LOC_FIX_RECURRENCE_TYPE_REQUEST_SINGLE_FIX     = 2,
 } QmiLocFixRecurrenceType;
-
-/**
- * qmi_loc_fix_recurrence_type_get_string
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocOperationMode:
@@ -156,7 +132,7 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_OPERATION_MODE_DEFAULT    = 1,
     QMI_LOC_OPERATION_MODE_MSB        = 2,
     QMI_LOC_OPERATION_MODE_MSA        = 3,
@@ -164,12 +140,6 @@ typedef enum {
     QMI_LOC_OPERATION_MODE_CELLID     = 5,
     QMI_LOC_OPERATION_MODE_WWAN       = 6,
 } QmiLocOperationMode;
-
-/**
- * qmi_loc_operation_mode_get_string
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocEngineState:
@@ -180,16 +150,10 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_ENGINE_STATE_ON  = 1,
     QMI_LOC_ENGINE_STATE_OFF = 2,
 } QmiLocEngineState;
-
-/**
- * qmi_loc_engine_state_get_string
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocTechnologyUsed:
@@ -206,7 +170,7 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_TECHNOLOGY_USED_SATELLITE          = 1 << 0,
     QMI_LOC_TECHNOLOGY_USED_CELLULAR           = 1 << 1,
     QMI_LOC_TECHNOLOGY_USED_WIFI               = 1 << 2,
@@ -216,12 +180,6 @@ typedef enum {
     QMI_LOC_TECHNOLOGY_USED_AFLT               = 1 << 6,
     QMI_LOC_TECHNOLOGY_USED_HYBRID             = 1 << 7,
 } QmiLocTechnologyUsed;
-
-/**
- * qmi_loc_technology_used_build_string_from_mask
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocReliability:
@@ -235,19 +193,13 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_RELIABILITY_NOT_SET  = 0,
     QMI_LOC_RELIABILITY_VERY_LOW = 1,
     QMI_LOC_RELIABILITY_LOW      = 2,
     QMI_LOC_RELIABILITY_MEDIUM   = 3,
     QMI_LOC_RELIABILITY_HIGH     = 4,
 } QmiLocReliability;
-
-/**
- * qmi_loc_reliability_get_string
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocTimeSource:
@@ -273,7 +225,7 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_TIME_SOURCE_INVALID                =  0,
     QMI_LOC_TIME_SOURCE_NETWORK_TIME_TRANSFER  =  1,
     QMI_LOC_TIME_SOURCE_NETWORK_TIME_TAGGING   =  2,
@@ -294,12 +246,6 @@ typedef enum {
 } QmiLocTimeSource;
 
 /**
- * qmi_loc_time_source_get_string
- *
- * Since: 1.22
- */
-
-/**
  * QmiLocSatelliteValidInformation:
  * @QMI_LOC_SATELLITE_VALID_INFORMATION_SYSTEM: System,
  * @QMI_LOC_SATELLITE_VALID_INFORMATION_GNSS_SATELLITE_ID: GNSS Satellite ID.
@@ -314,7 +260,7 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_SATELLITE_VALID_INFORMATION_SYSTEM                = 1 << 0,
     QMI_LOC_SATELLITE_VALID_INFORMATION_GNSS_SATELLITE_ID     = 1 << 1,
     QMI_LOC_SATELLITE_VALID_INFORMATION_HEALTH_STATUS         = 1 << 2,
@@ -324,12 +270,6 @@ typedef enum {
     QMI_LOC_SATELLITE_VALID_INFORMATION_AZIMUTH               = 1 << 6,
     QMI_LOC_SATELLITE_VALID_INFORMATION_SIGNAL_TO_NOISE_RATIO = 1 << 7,
 } QmiLocSatelliteValidInformation;
-
-/**
- * qmi_loc_satellite_valid_information_build_string_from_mask
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocSystem:
@@ -343,19 +283,13 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_SYSTEM_GPS     = 1,
     QMI_LOC_SYSTEM_GALILEO = 2,
     QMI_LOC_SYSTEM_SBAS    = 3,
     QMI_LOC_SYSTEM_COMPASS = 4,
     QMI_LOC_SYSTEM_GLONASS = 5,
 } QmiLocSystem;
-
-/**
- * qmi_loc_system_get_string
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocHealthStatus:
@@ -366,16 +300,10 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_HEALTH_STATUS_UNHEALTHY = 0,
     QMI_LOC_HEALTH_STATUS_HEALTHY   = 1,
 } QmiLocHealthStatus;
-
-/**
- * qmi_loc_health_status_get_string
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocNavigationData:
@@ -386,16 +314,10 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_NAVIGATION_DATA_HAS_EPHEMERIS = 0,
     QMI_LOC_NAVIGATION_DATA_HAS_ALMANAC   = 1,
 } QmiLocNavigationData;
-
-/**
- * qmi_loc_navigation_data_get_string
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocSatelliteStatus:
@@ -407,17 +329,11 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_SATELLITE_STATUS_IDLE      = 0,
     QMI_LOC_SATELLITE_STATUS_SEARCHING = 1,
     QMI_LOC_SATELLITE_STATUS_TRACKING  = 2,
 } QmiLocSatelliteStatus;
-
-/**
- * qmi_loc_satellite_status_get_string
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocServerType:
@@ -431,19 +347,13 @@ typedef enum {
  *
  * Since: 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_SERVER_TYPE_UNKNOWN    = 0,
     QMI_LOC_SERVER_TYPE_CDMA_PDE   = 1,
     QMI_LOC_SERVER_TYPE_CDMA_MPC   = 2,
     QMI_LOC_SERVER_TYPE_UMTS_SLP   = 3,
     QMI_LOC_SERVER_TYPE_CUSTOM_PDE = 4,
 } QmiLocServerType;
-
-/**
- * qmi_loc_server_type_get_string
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocServerAddressType:
@@ -453,8 +363,10 @@ typedef enum {
  * @QMI_LOC_SERVER_ADDRESS_TYPE_URL: URL server address.
  *
  * Type of server address for Assisted-GPS.
+ *
+ * Since: 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_SERVER_ADDRESS_TYPE_NONE = 0,
     QMI_LOC_SERVER_ADDRESS_TYPE_IPV4 = 1 << 0,
     QMI_LOC_SERVER_ADDRESS_TYPE_IPV6 = 1 << 1,
@@ -462,26 +374,16 @@ typedef enum {
 } QmiLocServerAddressType;
 
 /**
- * qmi_loc_server_address_type_build_string_from_mask
- *
- * Since: 1.22
- */
-
-/**
  * QmiLocPredictedOrbitsDataFormat:
  * @QMI_LOC_PREDICTED_ORBITS_DATA_FORMAT_XTRA: Qualcomm XTRA database.
  *
  * Type of predicted orbits data.
- */
-typedef enum {
-    QMI_LOC_PREDICTED_ORBITS_DATA_FORMAT_XTRA = 0
-} QmiLocPredictedOrbitsDataFormat;
-
-/**
- * qmi_loc_predicted_orbits_data_format_get_string
  *
  * Since: 1.22
  */
+typedef enum { /*< since=1.22 >*/
+    QMI_LOC_PREDICTED_ORBITS_DATA_FORMAT_XTRA = 0
+} QmiLocPredictedOrbitsDataFormat;
 
 /**
  * QmiLocDeleteSvInfo:
@@ -489,17 +391,13 @@ typedef enum {
  * @QMI_LOC_DELETE_SV_INFO_ALMANAC: Almanac.
  *
  * Type of data to delete for a given satellite.
- */
-typedef enum {
-    QMI_LOC_DELETE_SV_INFO_EPHEMERIS = 1 << 0,
-    QMI_LOC_DELETE_SV_INFO_ALMANAC   = 1 << 1,
-} QmiLocDeleteSvInfo;
-
-/**
- * qmi_loc_delete_sv_info_build_string_from_mask
  *
  * Since: 1.22
  */
+typedef enum { /*< since=1.22 >*/
+    QMI_LOC_DELETE_SV_INFO_EPHEMERIS = 1 << 0,
+    QMI_LOC_DELETE_SV_INFO_ALMANAC   = 1 << 1,
+} QmiLocDeleteSvInfo;
 
 /**
  * QmiLocDeleteCellDatabase:
@@ -515,8 +413,10 @@ typedef enum {
  * @QMI_LOC_DELETE_CELL_DATABASE_NEIGHBOR_INFO: Neighboring cell info.
  *
  * Type of data to delete from the cell database.
+ *
+ * Since: 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_DELETE_CELL_DATABASE_POS            = 1 << 0,
     QMI_LOC_DELETE_CELL_DATABASE_LATEST_GPS_POS = 1 << 1,
     QMI_LOC_DELETE_CELL_DATABASE_OTA_POS        = 1 << 2,
@@ -528,12 +428,6 @@ typedef enum {
     QMI_LOC_DELETE_CELL_DATABASE_CUR_SRV_CELL   = 1 << 8,
     QMI_LOC_DELETE_CELL_DATABASE_NEIGHBOR_INFO  = 1 << 9,
 } QmiLocDeleteCellDatabase;
-
-/**
- * qmi_loc_delete_cell_database_build_string_from_mask
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocDeleteClockInfo:
@@ -550,8 +444,10 @@ typedef enum {
  * @QMI_LOC_DELETE_CLOCK_INFO_DISABLE_TT: Disable TT.
  *
  * Type of data to delete from the clock information.
+ *
+ * Since: 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_DELETE_CLOCK_INFO_TIME_EST         = 1 << 0,
     QMI_LOC_DELETE_CLOCK_INFO_FREQ_EST         = 1 << 1,
     QMI_LOC_DELETE_CLOCK_INFO_WEEK_NUMBER      = 1 << 2,
@@ -566,13 +462,6 @@ typedef enum {
 } QmiLocDeleteClockInfo;
 
 /**
- * qmi_loc_delete_clock_info_build_string_from_mask
- *
- * Since: 1.22
- */
-
-
-/**
  * QmiLocNmeaType:
  * @QMI_LOC_NMEA_TYPE_GGA: Enable GGA traces.
  * @QMI_LOC_NMEA_TYPE_RMC: Enable RMC traces.
@@ -584,8 +473,10 @@ typedef enum {
  * @QMI_LOC_NMEA_TYPE_ALL: Enable all supported trace types.
  *
  * NMEA trace types that may be enabled in the GNSS engine.
+ *
+ * Since: 1.26
  */
-typedef enum {
+typedef enum { /*< since=1.26 >*/
     QMI_LOC_NMEA_TYPE_GGA   = 1 << 0,
     QMI_LOC_NMEA_TYPE_RMC   = 1 << 1,
     QMI_LOC_NMEA_TYPE_GSV   = 1 << 2,
@@ -595,11 +486,5 @@ typedef enum {
     QMI_LOC_NMEA_TYPE_PSTIS = 1 << 6,
     QMI_LOC_NMEA_TYPE_ALL   = 0x0000FFFF,
 } QmiLocNmeaType;
-
-/**
- * qmi_loc_nmea_type_build_string_from_mask
- *
- * Since: 1.26
- */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_LOC_H_ */

@@ -25,6 +25,7 @@ GType @enum_name@_get_type (void) G_GNUC_CONST;
  * Gets the nickname string for the #@EnumName@ specified at @val.
  *
  * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ * Since: @enumsince@
  */
 const gchar *@enum_name@_get_string (@EnumName@ val);
 #endif
@@ -38,6 +39,7 @@ const gchar *@enum_name@_get_string (@EnumName@ val);
  * each #@EnumName@ in @mask.
  *
  * Returns: (transfer full): a string with the list of nicknames, or %NULL if none given. The returned value should be freed with g_free().
+ * Since: @enumsince@
  */
 gchar *@enum_name@_build_string_from_mask (@EnumName@ mask);
 #endif

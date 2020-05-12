@@ -56,7 +56,7 @@
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_RADIO_INTERFACE_UNKNOWN     = -1,
     QMI_NAS_RADIO_INTERFACE_NONE        = 0x00,
     QMI_NAS_RADIO_INTERFACE_CDMA_1X     = 0x01,
@@ -68,12 +68,6 @@ typedef enum {
     QMI_NAS_RADIO_INTERFACE_TD_SCDMA    = 0x09,
     QMI_NAS_RADIO_INTERFACE_5GNR        = 0x0C,
 } QmiNasRadioInterface;
-
-/**
- * qmi_nas_radio_interface_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasActiveBand:
@@ -177,7 +171,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_ACTIVE_BAND_BC_0 = 0,
     QMI_NAS_ACTIVE_BAND_BC_1 = 1,
     QMI_NAS_ACTIVE_BAND_BC_2 = 2,
@@ -276,12 +270,6 @@ typedef enum {
 } QmiNasActiveBand;
 
 /**
- * qmi_nas_active_band_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiNasNetworkServiceDomain:
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_NONE: No service.
  * @QMI_NAS_NETWORK_SERVICE_DOMAIN_CS: Circuit switched.
@@ -293,19 +281,13 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_NETWORK_SERVICE_DOMAIN_NONE    = 0x00,
     QMI_NAS_NETWORK_SERVICE_DOMAIN_CS      = 0x01,
     QMI_NAS_NETWORK_SERVICE_DOMAIN_PS      = 0x02,
     QMI_NAS_NETWORK_SERVICE_DOMAIN_CS_PS   = 0x03,
     QMI_NAS_NETWORK_SERVICE_DOMAIN_UNKNOWN = 0x04,
 } QmiNasNetworkServiceDomain;
-
-/**
- * qmi_nas_network_service_domain_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasEvdoSinrLevel:
@@ -323,7 +305,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_EVDO_SINR_LEVEL_0 = 0,
     QMI_NAS_EVDO_SINR_LEVEL_1 = 1,
     QMI_NAS_EVDO_SINR_LEVEL_2 = 2,
@@ -334,12 +316,6 @@ typedef enum {
     QMI_NAS_EVDO_SINR_LEVEL_7 = 7,
     QMI_NAS_EVDO_SINR_LEVEL_8 = 8
 } QmiNasEvdoSinrLevel;
-
-/**
- * qmi_nas_evdo_sinr_level_get_string:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get Signal Strength' request/response */
@@ -360,7 +336,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_SIGNAL_STRENGTH_REQUEST_NONE       = 0,
     QMI_NAS_SIGNAL_STRENGTH_REQUEST_RSSI       = 1 << 0,
     QMI_NAS_SIGNAL_STRENGTH_REQUEST_ECIO       = 1 << 1,
@@ -371,12 +347,6 @@ typedef enum {
     QMI_NAS_SIGNAL_STRENGTH_REQUEST_LTE_SNR    = 1 << 6,
     QMI_NAS_SIGNAL_STRENGTH_REQUEST_LTE_RSRP   = 1 << 7
 } QmiNasSignalStrengthRequest;
-
-/**
- * qmi_nas_signal_strength_request_build_string_from_mask:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Network Scan' request/response */
@@ -392,18 +362,12 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_NETWORK_SCAN_TYPE_GSM      = 1 << 0,
     QMI_NAS_NETWORK_SCAN_TYPE_UMTS     = 1 << 1,
     QMI_NAS_NETWORK_SCAN_TYPE_LTE      = 1 << 2,
     QMI_NAS_NETWORK_SCAN_TYPE_TD_SCDMA = 1 << 3
 } QmiNasNetworkScanType;
-
-/**
- * qmi_nas_network_scan_type_build_string_from_mask:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasNetworkScanResult:
@@ -415,17 +379,11 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_NETWORK_SCAN_RESULT_SUCCESS            = 0,
     QMI_NAS_NETWORK_SCAN_RESULT_ABORT              = 1,
     QMI_NAS_NETWORK_SCAN_RESULT_RADIO_LINK_FAILURE = 2,
 } QmiNasNetworkScanResult;
-
-/**
- * qmi_nas_network_scan_result_get_string:
- *
- * Since: 1.24
- */
 
 /**
  * QmiNasNetworkStatus:
@@ -442,7 +400,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_NETWORK_STATUS_CURRENT_SERVING = 1 << 0,
     QMI_NAS_NETWORK_STATUS_AVAILABLE       = 1 << 1,
     QMI_NAS_NETWORK_STATUS_HOME            = 1 << 2,
@@ -452,12 +410,6 @@ typedef enum {
     QMI_NAS_NETWORK_STATUS_PREFERRED       = 1 << 6,
     QMI_NAS_NETWORK_STATUS_NOT_PREFERRED   = 1 << 7
 } QmiNasNetworkStatus;
-
-/**
- * qmi_nas_network_status_build_string_from_mask:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Initiate Network Register' request/response */
@@ -471,16 +423,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_NETWORK_REGISTER_TYPE_AUTOMATIC = 0x01,
     QMI_NAS_NETWORK_REGISTER_TYPE_MANUAL    = 0x02
 } QmiNasNetworkRegisterType;
-
-/**
- * qmi_nas_network_register_type_get_string:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Attach Detach' request/response */
@@ -494,16 +440,10 @@ typedef enum {
  *
  * Since: 1.20
  */
-typedef enum {
+typedef enum { /*< since=1.20 >*/
     QMI_NAS_PS_ATTACH_ACTION_ATTACH = 0x01,
     QMI_NAS_PS_ATTACH_ACTION_DETACH = 0x02
 } QmiNasPsAttachAction;
-
-/**
- * qmi_nas_ps_attach_action_get_string:
- *
- * Since: 1.20
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get Serving System' request/response */
@@ -520,19 +460,13 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_REGISTRATION_STATE_NOT_REGISTERED           = 0x00,
     QMI_NAS_REGISTRATION_STATE_REGISTERED               = 0x01,
     QMI_NAS_REGISTRATION_STATE_NOT_REGISTERED_SEARCHING = 0x02,
     QMI_NAS_REGISTRATION_STATE_REGISTRATION_DENIED      = 0x03,
     QMI_NAS_REGISTRATION_STATE_UNKNOWN                  = 0x04
 } QmiNasRegistrationState;
-
-/**
- * qmi_nas_registration_state_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasAttachState:
@@ -544,17 +478,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_ATTACH_STATE_UNKNOWN  = 0x00,
     QMI_NAS_ATTACH_STATE_ATTACHED = 0x01,
     QMI_NAS_ATTACH_STATE_DETACHED = 0x02,
 } QmiNasAttachState;
-
-/**
- * qmi_nas_attach_state_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasNetworkType:
@@ -566,17 +494,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_NETWORK_TYPE_UNKNOWN = 0x00,
     QMI_NAS_NETWORK_TYPE_3GPP2   = 0x01,
     QMI_NAS_NETWORK_TYPE_3GPP    = 0x02,
 } QmiNasNetworkType;
-
-/**
- * qmi_nas_network_type_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasRoamingIndicatorStatus:
@@ -587,17 +509,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_ROAMING_INDICATOR_STATUS_ON  = 0x00,
     QMI_NAS_ROAMING_INDICATOR_STATUS_OFF = 0x01,
     /* next values only for 3GPP2 */
 } QmiNasRoamingIndicatorStatus;
-
-/**
- * qmi_nas_roaming_indicator_status_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasDataCapability:
@@ -620,7 +536,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_DATA_CAPABILITY_NONE          = 0x00,
     QMI_NAS_DATA_CAPABILITY_GPRS          = 0x01,
     QMI_NAS_DATA_CAPABILITY_EDGE          = 0x02,
@@ -638,12 +554,6 @@ typedef enum {
 } QmiNasDataCapability;
 
 /**
- * qmi_nas_data_capability_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiNasServiceStatus:
  * @QMI_NAS_SERVICE_STATUS_NONE: No service.
  * @QMI_NAS_SERVICE_STATUS_LIMITED: Limited service.
@@ -655,19 +565,13 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_SERVICE_STATUS_NONE             = 0x00,
     QMI_NAS_SERVICE_STATUS_LIMITED          = 0x01,
     QMI_NAS_SERVICE_STATUS_AVAILABLE        = 0x02,
     QMI_NAS_SERVICE_STATUS_LIMITED_REGIONAL = 0x03,
     QMI_NAS_SERVICE_STATUS_POWER_SAVE       = 0x04
 } QmiNasServiceStatus;
-
-/**
- * qmi_nas_service_status_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasHdrPersonality:
@@ -679,17 +583,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_HDR_PERSONALITY_UNKNOWN = 0x00,
     QMI_NAS_HDR_PERSONALITY_HRPD    = 0x01,
     QMI_NAS_HDR_PERSONALITY_EHRPD   = 0x02,
 } QmiNasHdrPersonality;
-
-/**
- * qmi_nas_hdr_personality_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasCallBarringStatus:
@@ -703,19 +601,13 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_CALL_BARRING_STATUS_NORMAL_ONLY    = 0x00,
     QMI_NAS_CALL_BARRING_STATUS_EMERGENCY_ONLY = 0x01,
     QMI_NAS_CALL_BARRING_STATUS_NO_CALLS       = 0x02,
     QMI_NAS_CALL_BARRING_STATUS_ALL_CALLS      = 0x03,
     QMI_NAS_CALL_BARRING_STATUS_UNKNOWN        = -1
 } QmiNasCallBarringStatus;
-
-/**
- * qmi_nas_call_barring_status_get_string:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get Home Network' request/response */
@@ -730,17 +622,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_NETWORK_DESCRIPTION_DISPLAY_NO      = 0x00,
     QMI_NAS_NETWORK_DESCRIPTION_DISPLAY_YES     = 0x01,
     QMI_NAS_NETWORK_DESCRIPTION_DISPLAY_UNKNOWN = 0xFF
 } QmiNasNetworkDescriptionDisplay;
-
-/**
- * qmi_nas_network_description_display_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasNetworkDescriptionEncoding:
@@ -753,18 +639,12 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_NETWORK_DESCRIPTION_ENCODING_UNSPECIFIED = 0x00,
     QMI_NAS_NETWORK_DESCRIPTION_ENCODING_ASCII7      = 0x01,
     QMI_NAS_NETWORK_DESCRIPTION_ENCODING_UNICODE     = 0x04,
     QMI_NAS_NETWORK_DESCRIPTION_ENCODING_GSM         = 0x09
 } QmiNasNetworkDescriptionEncoding;
-
-/**
- * qmi_nas_network_description_encoding_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * qmi_nas_read_string_from_network_description_encoded_array:
@@ -799,7 +679,7 @@ gchar *qmi_nas_read_string_from_network_description_encoded_array (QmiNasNetwork
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_AUTO          = 0,
     QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_3GPP2         = 1 << 0,
     QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_3GPP          = 1 << 1,
@@ -808,12 +688,6 @@ typedef enum {
     QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_HDR           = 1 << 4,
     QMI_NAS_RADIO_TECHNOLOGY_PREFERENCE_LTE           = 1 << 5
 } QmiNasRadioTechnologyPreference;
-
-/**
- * qmi_nas_radio_technology_preference_build_string_from_mask:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasPreferenceDuration:
@@ -829,7 +703,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_PREFERENCE_DURATION_PERMANENT           = 0x00,
     QMI_NAS_PREFERENCE_DURATION_POWER_CYCLE         = 0x01,
     QMI_NAS_PREFERENCE_DURATION_ONE_CALL            = 0x02,
@@ -838,12 +712,6 @@ typedef enum {
     QMI_NAS_PREFERENCE_DURATION_INTERNAL_ONE_CALL_2 = 0x05,
     QMI_NAS_PREFERENCE_DURATION_INTERNAL_ONE_CALL_3 = 0x06
 } QmiNasPreferenceDuration;
-
-/**
- * qmi_nas_preference_duration_get_string:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get/Set System Selection Preference'
@@ -863,7 +731,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_RAT_MODE_PREFERENCE_CDMA_1X     = 1 << 0,
     QMI_NAS_RAT_MODE_PREFERENCE_CDMA_1XEVDO = 1 << 1,
     QMI_NAS_RAT_MODE_PREFERENCE_GSM         = 1 << 2,
@@ -872,12 +740,6 @@ typedef enum {
     QMI_NAS_RAT_MODE_PREFERENCE_TD_SCDMA    = 1 << 5,
     QMI_NAS_RAT_MODE_PREFERENCE_5GNR        = 1 << 6,
 } QmiNasRatModePreference;
-
-/**
- * qmi_nas_rat_mode_preference_build_string_from_mask:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasCdmaPrlPreference:
@@ -889,17 +751,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_CDMA_PRL_PREFERENCE_A_SIDE_ONLY = 0x0001,
     QMI_NAS_CDMA_PRL_PREFERENCE_B_SIDE_ONLY = 0x0002,
     QMI_NAS_CDMA_PRL_PREFERENCE_ANY         = 0x3FFF
 } QmiNasCdmaPrlPreference;
-
-/**
- * qmi_nas_cdma_prl_preference_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasRoamingPreference:
@@ -912,18 +768,12 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_ROAMING_PREFERENCE_OFF          = 0x01,
     QMI_NAS_ROAMING_PREFERENCE_NOT_OFF      = 0x02,
     QMI_NAS_ROAMING_PREFERENCE_NOT_FLASHING = 0x03,
     QMI_NAS_ROAMING_PREFERENCE_ANY          = 0xFF
 } QmiNasRoamingPreference;
-
-/**
- * qmi_nas_roaming_preference_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasNetworkSelectionPreference:
@@ -934,16 +784,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_NETWORK_SELECTION_PREFERENCE_AUTOMATIC = 0x00,
     QMI_NAS_NETWORK_SELECTION_PREFERENCE_MANUAL    = 0x01
 } QmiNasNetworkSelectionPreference;
-
-/**
- * qmi_nas_network_selection_preference_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasChangeDuration:
@@ -954,16 +798,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_CHANGE_DURATION_POWER_CYCLE = 0x00,
     QMI_NAS_CHANGE_DURATION_PERMANENT   = 0x01
 } QmiNasChangeDuration;
-
-/**
- * qmi_nas_change_duration_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasServiceDomainPreference:
@@ -977,19 +815,13 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_ONLY   = 0x00,
     QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ONLY   = 0x01,
     QMI_NAS_SERVICE_DOMAIN_PREFERENCE_CS_PS     = 0x02,
     QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_ATTACH = 0x03,
     QMI_NAS_SERVICE_DOMAIN_PREFERENCE_PS_DETACH = 0x04,
 } QmiNasServiceDomainPreference;
-
-/**
- * qmi_nas_service_domain_preference_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasGsmWcdmaAcquisitionOrderPreference:
@@ -1001,17 +833,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_AUTOMATIC = 0x00,
     QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_GSM       = 0x01,
     QMI_NAS_GSM_WCDMA_ACQUISITION_ORDER_PREFERENCE_WCDMA     = 0x02
 } QmiNasGsmWcdmaAcquisitionOrderPreference;
-
-/**
- * qmi_nas_gsm_wcdma_acquisition_order_preference_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasTdScdmaBandPreference:
@@ -1026,7 +852,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_TD_SCDMA_BAND_PREFERENCE_A = 1 << 0,
     QMI_NAS_TD_SCDMA_BAND_PREFERENCE_B = 1 << 1,
     QMI_NAS_TD_SCDMA_BAND_PREFERENCE_C = 1 << 2,
@@ -1034,12 +860,6 @@ typedef enum {
     QMI_NAS_TD_SCDMA_BAND_PREFERENCE_E = 1 << 4,
     QMI_NAS_TD_SCDMA_BAND_PREFERENCE_F = 1 << 5
 } QmiNasTdScdmaBandPreference;
-
-/**
- * qmi_nas_td_scdma_band_preference_build_string_from_mask:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasVoiceDomainPreference:
@@ -1052,7 +872,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_VOICE_DOMAIN_PREFERENCE_CS_ONLY      = 0x00,
     QMI_NAS_VOICE_DOMAIN_PREFERENCE_PS_ONLY      = 0x01,
     QMI_NAS_VOICE_DOMAIN_PREFERENCE_CS_PREFERRED = 0x02,
@@ -1072,7 +892,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_NETWORK_SELECTION_REGISTRATION_RESTRICTION_UNRESTRICTED = 0x00,
     QMI_NAS_NETWORK_SELECTION_REGISTRATION_RESTRICTION_CAMPED_ONLY  = 0x01,
     QMI_NAS_NETWORK_SELECTION_REGISTRATION_RESTRICTION_LIMITED      = 0x02,
@@ -1090,7 +910,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_LTE_REGISTRATION_DOMAIN_NOT_APPLICABLE  = 0x00,
     QMI_NAS_LTE_REGISTRATION_DOMAIN_CS_ONLY         = 0x01,
     QMI_NAS_LTE_REGISTRATION_DOMAIN_PS_ONLY         = 0x02,
@@ -1118,7 +938,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_ROAMING_STATUS_OFF                 = 0x00,
     QMI_NAS_ROAMING_STATUS_ON                  = 0x01,
     /* Next ones only for 3GPP2 */
@@ -1136,12 +956,6 @@ typedef enum {
 } QmiNasRoamingStatus;
 
 /**
- * qmi_nas_roaming_status_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiNasLteCellAccessStatus:
  * @QMI_NAS_CELL_ACCESS_STATUS_NORMAL_ONLY: Access is allowed for normal calls only.
  * @QMI_NAS_CELL_ACCESS_STATUS_EMERGENCY_ONLY: Access is allowed for emergency calls only.
@@ -1153,7 +967,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_CELL_ACCESS_STATUS_NORMAL_ONLY    = 0x00,
     QMI_NAS_CELL_ACCESS_STATUS_EMERGENCY_ONLY = 0x01,
     QMI_NAS_CELL_ACCESS_STATUS_NO_CALLS       = 0x02,
@@ -1172,18 +986,12 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_HDR_PROTOCOL_REVISION_NONE  = 0x00,
     QMI_NAS_HDR_PROTOCOL_REVISION_REL_0 = 0x01,
     QMI_NAS_HDR_PROTOCOL_REVISION_REL_A = 0x02,
     QMI_NAS_HDR_PROTOCOL_REVISION_REL_B = 0x03
 } QmiNasHdrProtocolRevision;
-
-/**
- * qmi_nas_hdr_protocol_revision_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasWcdmaHsService:
@@ -1200,7 +1008,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_WCDMA_HS_SERVICE_HSDPA_HSUPA_UNSUPPORTED       = 0x00,
     QMI_NAS_WCDMA_HS_SERVICE_HSDPA_SUPPORTED               = 0x01,
     QMI_NAS_WCDMA_HS_SERVICE_HSUPA_SUPPORTED               = 0x02,
@@ -1212,12 +1020,6 @@ typedef enum {
 } QmiNasWcdmaHsService;
 
 /**
- * qmi_nas_wcdma_hs_service_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiNasCellBroadcastCapability:
  * @QMI_NAS_CELL_BROADCAST_CAPABILITY_UNKNOWN: Unknown.
  * @QMI_NAS_CELL_BROADCAST_CAPABILITY_OFF: Cell broadcast not supported.
@@ -1227,17 +1029,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_CELL_BROADCAST_CAPABILITY_UNKNOWN = 0x00,
     QMI_NAS_CELL_BROADCAST_CAPABILITY_OFF     = 0x01,
     QMI_NAS_CELL_BROADCAST_CAPABILITY_ON      = 0x02
 } QmiNasCellBroadcastCapability;
-
-/**
- * qmi_nas_cell_broadcast_capability_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasSimRejectState:
@@ -1251,19 +1047,13 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_SIM_REJECT_STATE_SIM_UNAVAILABLE   = 0,
     QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE     = 1,
     QMI_NAS_SIM_REJECT_STATE_SIM_CS_INVALID    = 2,
     QMI_NAS_SIM_REJECT_STATE_SIM_PS_INVALID    = 3,
     QMI_NAS_SIM_REJECT_STATE_SIM_CS_PS_INVALID = 4
 } QmiNasSimRejectState;
-
-/**
- * qmi_nas_sim_reject_state_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasCdmaPilotType:
@@ -1274,16 +1064,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_NAS_CDMA_PILOT_TYPE_ACTIVE   = 0,
     QMI_NAS_CDMA_PILOT_TYPE_NEIGHBOR = 1,
 } QmiNasCdmaPilotType;
-
-/**
- * qmi_nas_cdma_pilot_type_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiNasDayOfWeek:
@@ -1299,7 +1083,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     QMI_NAS_DAY_OF_WEEK_MONDAY    = 0,
     QMI_NAS_DAY_OF_WEEK_TUESDAY   = 1,
     QMI_NAS_DAY_OF_WEEK_WEDNESDAY = 2,
@@ -1308,12 +1092,6 @@ typedef enum {
     QMI_NAS_DAY_OF_WEEK_SATURDAY  = 5,
     QMI_NAS_DAY_OF_WEEK_SUNDAY    = 6
 } QmiNasDayOfWeek;
-
-/**
- * qmi_nas_day_of_week_get_string:
- *
- * Since: 1.4
- */
 
 /**
  * QmiNasDaylightSavingsAdjustment:
@@ -1325,17 +1103,11 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     QMI_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT_NONE      = 0,
     QMI_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT_ONE_HOUR  = 1,
     QMI_NAS_DAYLIGHT_SAVINGS_ADJUSTMENT_TWO_HOURS = 2
 } QmiNasDaylightSavingsAdjustment;
-
-/**
- * qmi_nas_daylight_savings_adjustment_get_string:
- *
- * Since: 1.4
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get Cell Location Info' request/response */
@@ -1352,19 +1124,13 @@ typedef enum {
  *
  * Since: 1.10
  */
-typedef enum {
+typedef enum { /*< since=1.10 >*/
     QMI_NAS_WCDMA_RRC_STATE_DISCONNECTED = 0,
     QMI_NAS_WCDMA_RRC_STATE_CELL_PCH     = 1,
     QMI_NAS_WCDMA_RRC_STATE_URA_PCH      = 2,
     QMI_NAS_WCDMA_RRC_STATE_CELL_FACH    = 3,
     QMI_NAS_WCDMA_RRC_STATE_CELL_DCH     = 4
 } QmiNasWcdmaRrcState;
-
-/**
- * qmi_nas_wcdma_rrc_state_get_string:
- *
- * Since: 1.10
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get LTE Cphy CA Info' request/response */
@@ -1384,7 +1150,7 @@ typedef enum {
  *
  * Since: 1.16
  */
-typedef enum {
+typedef enum { /*< since=1.16 >*/
     QMI_NAS_DL_BANDWIDTH_1_4      = 0,
     QMI_NAS_DL_BANDWIDTH_3        = 1,
     QMI_NAS_DL_BANDWIDTH_5        = 2,
@@ -1396,12 +1162,6 @@ typedef enum {
 } QmiNasDLBandwidth;
 
 /**
- * qmi_nas_dl_bandwidth_get_string:
- *
- * Since: 1.16
- */
-
-/**
  * QmiNasScellState:
  * @QMI_NAS_SCELL_STATE_DECONFIGURED: Deconfigured
  * @QMI_NAS_SCELL_STATE_DEACTIVATED: Deactivated
@@ -1411,17 +1171,11 @@ typedef enum {
  *
  * Since: 1.16
  */
-typedef enum {
+typedef enum { /*< since=1.16 >*/
     QMI_NAS_SCELL_STATE_DECONFIGURED = 0,
     QMI_NAS_SCELL_STATE_DEACTIVATED  = 1,
     QMI_NAS_SCELL_STATE_ACTIVATED    = 2
 } QmiNasScellState;
-
-/**
- * qmi_nas_scell_state_get_string:
- *
- * Since: 1.16
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get Operator Name' request/response */
@@ -1435,7 +1189,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_NAS_PLMN_ENCODING_SCHEME_GSM    = 0,
     QMI_NAS_PLMN_ENCODING_SCHEME_UCS2LE = 1,
 } QmiNasPlmnEncodingScheme;
@@ -1472,7 +1226,7 @@ gchar *qmi_nas_read_string_from_plmn_encoded_array (QmiNasPlmnEncodingScheme  en
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_NAS_NETWORK_NAME_DISPLAY_CONDITION_DISPLAY_REGISTERED_PLMN_IF_KNOWN_NETWORK    = 1 << 0,
     QMI_NAS_NETWORK_NAME_DISPLAY_CONDITION_DISPLAY_SPN_NOT_REQUIRED_IF_UNKNOWN_NETWORK = 1 << 1,
 } QmiNasNetworkNameDisplayCondition;
@@ -1488,7 +1242,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_NAS_PLMN_NAME_COUNTRY_INITIALS_DO_NOT_ADD  = 0,
     QMI_NAS_PLMN_NAME_COUNTRY_INIITALS_ADD         = 1,
     QMI_NAS_PLMN_NAME_COUNTRY_INIITALS_UNSPECIFIED = 0xFF,
@@ -1508,7 +1262,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_NETWORK_NAME_SOURCE_UNKNOWN                                                   = 0x00,
     QMI_NAS_NETWORK_NAME_SOURCE_OPERATOR_PLMN_LIST_AND_PLMN_NETWORK_NAME                  = 0x01,
     QMI_NAS_NETWORK_NAME_SOURCE_COMMON_PCN_HANDSET_SPECIFICATION_AND_OPERATOR_NAME_STRING = 0x02,
@@ -1534,7 +1288,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_NAS_PLMN_NAME_SPARE_BITS_UNKNOWN = 0,
     QMI_NAS_PLMN_NAME_SPARE_BITS_BIT_8   = 1,
     QMI_NAS_PLMN_NAME_SPARE_BITS_BITS_78 = 2,
@@ -1555,7 +1309,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_USAGE_PREFERENCE_UNKNOWN       = 0x00,
     QMI_NAS_USAGE_PREFERENCE_VOICE_CENTRIC = 0x01,
     QMI_NAS_USAGE_PREFERENCE_DATA_CENTRIC  = 0x02
@@ -1579,7 +1333,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_SWI_MODEM_MODE_POWERING_OFF    = 0x00,
     QMI_NAS_SWI_MODEM_MODE_FACTORY_TEST    = 0x01,
     QMI_NAS_SWI_MODEM_MODE_OFFLINE         = 0x02,
@@ -1610,7 +1364,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_SWI_SYSTEM_MODE_NO_SERVICE = 0x00,
     QMI_NAS_SWI_SYSTEM_MODE_AMPS       = 0x01,
     QMI_NAS_SWI_SYSTEM_MODE_CDMA       = 0x02,
@@ -1634,7 +1388,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_SWI_IMS_REG_NO_SRV   = 0x00,
     QMI_NAS_SWI_IMS_REG_IN_PROG  = 0x01,
     QMI_NAS_SWI_IMS_REG_FAILED   = 0x02,
@@ -1651,7 +1405,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_SWI_PS_STATE_ATTACHED = 0x00,
     QMI_NAS_SWI_PS_STATE_DETACHED = 0x01,
     QMI_NAS_SWI_PS_STATE_UNKNOWN  = 0xff
@@ -1670,7 +1424,7 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_SWI_EMM_STATE_DEREGISTERED    = 0x00,
     QMI_NAS_SWI_EMM_STATE_REG_INITIATED   = 0x01,
     QMI_NAS_SWI_EMM_STATE_REGISTERED      = 0x02,
@@ -1691,12 +1445,12 @@ typedef enum {
  *
  * Since: 1.24
  */
-typedef enum {
+typedef enum { /*< since=1.24 >*/
     QMI_NAS_SWI_EMM_CONN_STATE_RRC_IDLE        = 0x00,
     QMI_NAS_SWI_EMM_CONN_STATE_WAITING_RRC_CFM = 0x01,
     QMI_NAS_SWI_EMM_CONN_STATE_RRC_CONNECTING  = 0x02,
     QMI_NAS_SWI_EMM_CONN_STATE_RRC_RELEASING   = 0x03,
-    QMI_NAS_SWI_EMM_CONN_STATE_UNKNOWN  = 0xff
+    QMI_NAS_SWI_EMM_CONN_STATE_UNKNOWN         = 0xff
 } QmiNasSwiEmmConnectionState;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */

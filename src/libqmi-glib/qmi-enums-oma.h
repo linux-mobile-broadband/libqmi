@@ -50,7 +50,7 @@
  *
  * Since: 1.6
  */
-typedef enum {
+typedef enum { /*< since=1.6 >*/
     QMI_OMA_SESSION_TYPE_CLIENT_INITIATED_DEVICE_CONFIGURE      = 0,
     QMI_OMA_SESSION_TYPE_CLIENT_INITIATED_PRL_UPDATE            = 1,
     QMI_OMA_SESSION_TYPE_CLIENT_INITIATED_HANDS_FREE_ACTIVATION = 2,
@@ -59,12 +59,6 @@ typedef enum {
     QMI_OMA_SESSION_TYPE_NETWORK_INITIATED_DEVICE_CONFIGURE     = 5,
     QMI_OMA_SESSION_TYPE_DEVICE_INITIATED_PRL_UPDATE            = 6
 } QmiOmaSessionType;
-
-/**
- * qmi_oma_session_type_get_string:
- *
- * Since: 1.6
- */
 
 /**
  * QmiOmaSessionState:
@@ -84,7 +78,7 @@ typedef enum {
  *
  * Since: 1.6
  */
-typedef enum {
+typedef enum { /*< since=1.6 >*/
     QMI_OMA_SESSION_STATE_COMPLETE_INFORMATION_UPDATED             = 0,
     QMI_OMA_SESSION_STATE_COMPLETE_UPDATED_INFORMATION_UNAVAILABLE = 1,
     QMI_OMA_SESSION_STATE_FAILED                                   = 2,
@@ -99,12 +93,6 @@ typedef enum {
 } QmiOmaSessionState;
 
 /**
- * qmi_oma_session_state_get_string:
- *
- * Since: 1.6
- */
-
-/**
  * QmiOmaSessionFailedReason:
  * @QMI_OMA_SESSION_FAILED_REASON_UNKNOWN: Unknown reason.
  * @QMI_OMA_SESSION_FAILED_REASON_NETWORK_UNAVAILABLE: Network unavailable.
@@ -117,7 +105,7 @@ typedef enum {
  *
  * Since: 1.6
  */
-typedef enum {
+typedef enum { /*< since=1.6 >*/
     QMI_OMA_SESSION_FAILED_REASON_UNKNOWN               = 0,
     QMI_OMA_SESSION_FAILED_REASON_NETWORK_UNAVAILABLE   = 1,
     QMI_OMA_SESSION_FAILED_REASON_SERVER_UNAVAILABLE    = 2,
@@ -125,12 +113,6 @@ typedef enum {
     QMI_OMA_SESSION_FAILED_REASON_MAX_RETRY_EXCEEDED    = 4,
     QMI_OMA_SESSION_FAILED_REASON_SESSION_CANCELLED     = 5
 } QmiOmaSessionFailedReason;
-
-/**
- * qmi_oma_session_failed_reason_get_string:
- *
- * Since: 1.6
- */
 
 /**
  * QmiOmaHfaFeatureDoneState:
@@ -142,16 +124,10 @@ typedef enum {
  *
  * Since: 1.6
  */
-typedef enum {
+typedef enum { /*< since=1.6 >*/
     QMI_OMA_HFA_FEATURE_DONE_STATE_NONE      = 0,
     QMI_OMA_HFA_FEATURE_DONE_STATE_SUCCEEDED = 1,
     QMI_OMA_HFA_FEATURE_DONE_STATE_FAILED    = 2
 } QmiOmaHfaFeatureDoneState;
-
-/**
- * qmi_oma_hfa_feature_done_state_get_string:
- *
- * Since: 1.6
- */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_OMA_H_ */

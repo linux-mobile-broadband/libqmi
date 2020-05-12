@@ -26,6 +26,7 @@ G_BEGIN_DECLS
  * each #@EnumName@ in @mask.
  *
  * Returns: (transfer full): a string with the list of nicknames, or %NULL if none given. The returned value should be freed with g_free().
+ * Since: @enumsince@
  */
 gchar *@enum_name@_build_string_from_mask (@EnumName@ mask);
 

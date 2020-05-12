@@ -56,7 +56,7 @@
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_EVENT_REGISTRATION_FLAG_POSITION_REPORT                    = 1 <<  0,
     QMI_LOC_EVENT_REGISTRATION_FLAG_GNSS_SATELLITE_INFO                = 1 <<  1,
     QMI_LOC_EVENT_REGISTRATION_FLAG_NMEA                               = 1 <<  2,
@@ -79,12 +79,6 @@ typedef enum {
 } QmiLocEventRegistrationFlag;
 
 /**
- * qmi_loc_event_registration_flag_build_string_from_mask:
- *
- * Since: 1.22
- */
-
-/**
  * QmiLocSensorDataUsage:
  * @QMI_LOC_SENSOR_DATA_USAGE_ACCELEROMETER_USED: Accelerometer used.
  * @QMI_LOC_SENSOR_DATA_USAGE_GYRO_USED: Gyro used.
@@ -97,7 +91,7 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_SENSOR_DATA_USAGE_ACCELEROMETER_USED = 1 <<  0,
     QMI_LOC_SENSOR_DATA_USAGE_GYRO_USED          = 1 <<  1,
     QMI_LOC_SENSOR_DATA_USAGE_AIDED_HEADING      = ((guint64) 1) << 32,
@@ -105,12 +99,6 @@ typedef enum {
     QMI_LOC_SENSOR_DATA_USAGE_AIDED_POSITION     = ((guint64) 1) << 34,
     QMI_LOC_SENSOR_DATA_USAGE_AIDED_VELOCITY     = ((guint64) 1) << 35,
 } QmiLocSensorDataUsage;
-
-/**
- * qmi_loc_sensor_data_usage_build_string_from_mask:
- *
- * Since: 1.22
- */
 
 /**
  * QmiLocDeleteGnssData:
@@ -138,7 +126,7 @@ typedef enum {
  *
  * Since 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_LOC_DELETE_GNSS_DATA_GPS_SVDIR     =  1 << 0,
     QMI_LOC_DELETE_GNSS_DATA_GPS_SVSTEER   =  1 << 1,
     QMI_LOC_DELETE_GNSS_DATA_GPS_TIME      =  1 << 2,
@@ -159,11 +147,5 @@ typedef enum {
     QMI_LOC_DELETE_GNSS_DATA_SV_NO_EXIST   =  1 << 17,
     QMI_LOC_DELETE_GNSS_DATA_FREQ_BIAS_EST =  1 << 18,
 } QmiLocDeleteGnssData;
-
-/**
- * qmi_loc_delete_gnss_data_build_string_from_mask:
- *
- * Since: 1.22
- */
 
 #endif /* _LIBQMI_GLIB_QMI_FLAGS64_LOC_H_ */

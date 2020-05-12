@@ -57,7 +57,7 @@
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_CALL_STATE_UNKNOWN        = 0x00,
     QMI_VOICE_CALL_STATE_ORIGINATION    = 0x01,
     QMI_VOICE_CALL_STATE_INCOMING       = 0x02,
@@ -72,12 +72,6 @@ typedef enum {
 } QmiVoiceCallState;
 
 /**
- * qmi_voice_call_state_get_string:
- *
- * Since: 1.14
- */
-
-/**
  * QmiVoiceCallType:
  * @QMI_VOICE_CALL_TYPE_VOICE: Voice call.
  * @QMI_VOICE_CALL_TYPE_VOICE_IP: VoIP call.
@@ -90,7 +84,7 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_CALL_TYPE_VOICE         = 0x00,
     QMI_VOICE_CALL_TYPE_VOICE_IP      = 0x02,
     QMI_VOICE_CALL_TYPE_OTAPA         = 0x06,
@@ -98,12 +92,6 @@ typedef enum {
     QMI_VOICE_CALL_TYPE_EMERGENCY     = 0x09,
     QMI_VOICE_CALL_TYPE_SUPS          = 0x0A,
 } QmiVoiceCallType;
-
-/**
- * qmi_voice_call_type_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiVoiceCallDirection:
@@ -115,17 +103,11 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_CALL_DIRECTION_UNKNOWN = 0x00,
     QMI_VOICE_CALL_DIRECTION_MO      = 0x01,
     QMI_VOICE_CALL_DIRECTION_MT      = 0x02,
 } QmiVoiceCallDirection;
-
-/**
- * qmi_voice_call_direction_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiVoiceCallMode:
@@ -139,19 +121,13 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_CALL_MODE_UNKNOWN = 0x00,
     QMI_VOICE_CALL_MODE_CDMA    = 0x01,
     QMI_VOICE_CALL_MODE_GSM     = 0x02,
     QMI_VOICE_CALL_MODE_UMTS    = 0x03,
     QMI_VOICE_CALL_MODE_LTE     = 0x04,
 } QmiVoiceCallMode;
-
-/**
- * qmi_voice_call_mode_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiVoiceAls:
@@ -162,16 +138,10 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_ALS_LINE_1 = 0x00,
     QMI_VOICE_ALS_LINE_2 = 0x01,
 } QmiVoiceAls;
-
-/**
- * qmi_voice_als_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiVoicePresentation:
@@ -184,18 +154,12 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_PRESENTATION_ALLOWED     = 0x00,
     QMI_VOICE_PRESENTATION_RESTRICTED  = 0x01,
     QMI_VOICE_PRESENTATION_UNAVAILABLE = 0x02,
     QMI_VOICE_PRESENTATION_PAYPHONE    = 0x04,
 } QmiVoicePresentation;
-
-/**
- * qmi_voice_presentation_get_string:
- *
- * Since: 1.14
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI Voice Get Config' request/response */
@@ -211,18 +175,12 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_TTY_MODE_FULL = 0x00,
     QMI_VOICE_TTY_MODE_VCO  = 0x01,
     QMI_VOICE_TTY_MODE_HCO  = 0x02,
     QMI_VOICE_TTY_MODE_OFF  = 0x03,
 } QmiVoiceTtyMode;
-
-/**
- * qmi_voice_tty_mode_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiVoiceServiceOption:
@@ -241,7 +199,7 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_SERVICE_OPTION_WILD                    = 0x0000,
     QMI_VOICE_SERVICE_OPTION_IS_96A                  = 0x0001,
     QMI_VOICE_SERVICE_OPTION_EVRC                    = 0x0003,
@@ -255,12 +213,6 @@ typedef enum {
 } QmiVoiceServiceOption;
 
 /**
- * qmi_voice_service_option_get_string:
- *
- * Since: 1.14
- */
-
-/**
  * QmiVoiceWcdmaAmrStatus:
  * @QMI_VOICE_WCDMA_AMR_STATUS_NOT_SUPPORTED: Not supported.
  * @QMI_VOICE_WCDMA_AMR_STATUS_WCDMA_AMR_WB: WCDMA AMR wideband.
@@ -272,19 +224,13 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_WCDMA_AMR_STATUS_NOT_SUPPORTED = 1 << 0,
     QMI_VOICE_WCDMA_AMR_STATUS_WCDMA_AMR_WB  = 1 << 1,
     QMI_VOICE_WCDMA_AMR_STATUS_GSM_HR_AMR    = 1 << 2,
     QMI_VOICE_WCDMA_AMR_STATUS_GSM_AMR_WB    = 1 << 3,
     QMI_VOICE_WCDMA_AMR_STATUS_GSM_AMR_NB    = 1 << 4,
 } QmiVoiceWcdmaAmrStatus;
-
-/**
- * qmi_voice_wcdma_amr_status_build_string_from_mask:
- *
- * Since: 1.14
- */
 
 /**
  * QmiVoicePrivacy:
@@ -295,16 +241,10 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_PRIVACY_STANDARD = 0x00,
     QMI_VOICE_PRIVACY_ENHANCED = 0x01,
 } QmiVoicePrivacy;
-
-/**
- * qmi_voice_privacy_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiVoiceDomain:
@@ -317,18 +257,12 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_VOICE_DOMAIN_CS_ONLY      = 0x00,
     QMI_VOICE_DOMAIN_PS_ONLY      = 0x01,
     QMI_VOICE_DOMAIN_CS_PREFERRED = 0x02,
     QMI_VOICE_DOMAIN_PS_PREFERRED = 0x03,
 } QmiVoiceDomain;
-
-/**
- * qmi_voice_domain_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiVoiceUserAction:
@@ -337,18 +271,14 @@ typedef enum {
  * @QMI_VOICE_USER_ACTION_REQUIRED: User is required to respond to the USSD code.
  *
  * User action type.
+ *
+ * Since: 1.26
  */
-typedef enum {
+typedef enum { /*< since=1.26 >*/
     QMI_VOICE_USER_ACTION_UNKNOWN      = 0x00,
     QMI_VOICE_USER_ACTION_NOT_REQUIRED = 0x01,
     QMI_VOICE_USER_ACTION_REQUIRED     = 0x02,
 } QmiVoiceUserAction;
-
-/**
- * qmi_voice_user_action_get_string:
- *
- * Since: 1.26
- */
 
 /**
  * QmiVoiceUssDataCodingScheme:
@@ -361,18 +291,12 @@ typedef enum {
  *
  * Since: 1.26
  */
-typedef enum {
+typedef enum { /*< since=1.26 >*/
     QMI_VOICE_USS_DATA_CODING_SCHEME_UNKNOWN = 0x00,
     QMI_VOICE_USS_DATA_CODING_SCHEME_ASCII   = 0x01,
     QMI_VOICE_USS_DATA_CODING_SCHEME_8BIT    = 0x02,
     QMI_VOICE_USS_DATA_CODING_SCHEME_UCS2    = 0x03,
 } QmiVoiceUssDataCodingScheme;
-
-/**
- * qmi_voice_uss_data_coding_scheme_get_string:
- *
- * Since: 1.26
- */
 
 /**
  * QmiVoiceAlphaDataCodingScheme:
@@ -383,16 +307,10 @@ typedef enum {
  *
  * Since: 1.26
  */
-typedef enum {
+typedef enum { /*< since=1.26 >*/
     QMI_VOICE_ALPHA_DATA_CODING_SCHEME_GSM  = 0x01,
     QMI_VOICE_ALPHA_DATA_CODING_SCHEME_UCS2 = 0x02,
 } QmiVoiceAlphaDataCodingScheme;
-
-/**
- * qmi_voice_alpha_data_coding_scheme_get_string:
- *
- * Since: 1.26
- */
 
 /**
  * QmiVoiceCallEndReason:
@@ -599,7 +517,7 @@ typedef enum {
  *
  * Since: 1.26
  */
-typedef enum {
+typedef enum { /*< since=1.26 >*/
     QMI_VOICE_CALL_END_REASON_OFFLINE                            = 0,
     QMI_VOICE_CALL_END_REASON_CDMA_LOCK                          = 20,
     QMI_VOICE_CALL_END_REASON_NO_SERVICE                         = 21,
@@ -800,12 +718,6 @@ typedef enum {
 } QmiVoiceCallEndReason;
 
 /**
- * qmi_voice_call_end_reason_get_string:
- *
- * Since: 1.26
- */
-
-/**
  * QmiVoiceCallControlResultType:
  * @QMI_VOICE_CALL_CONTROL_RESULT_TYPE_VOICE: Voice.
  * @QMI_VOICE_CALL_CONTROL_RESULT_TYPE_SUPS: Supplementary service.
@@ -815,17 +727,11 @@ typedef enum {
  *
  * Since: 1.26
  */
-typedef enum {
+typedef enum { /*< since=1.26 >*/
     QMI_VOICE_CALL_CONTROL_RESULT_TYPE_VOICE = 0x00,
     QMI_VOICE_CALL_CONTROL_RESULT_TYPE_SUPS  = 0x01,
     QMI_VOICE_CALL_CONTROL_RESULT_TYPE_USSD  = 0x02,
 } QmiVoiceCallControlResultType;
-
-/**
- * qmi_voice_call_control_result_type_get_string:
- *
- * Since: 1.26
- */
 
 /**
  * QmiVoiceCallControlSupplementaryServiceType:
@@ -841,7 +747,7 @@ typedef enum {
  *
  * Since: 1.26
  */
-typedef enum {
+typedef enum { /*< since=1.26 >*/
     QMI_VOICE_CALL_CONTROL_SUPPLEMENTARY_SERVICE_TYPE_ACTIVATE          = 0x01,
     QMI_VOICE_CALL_CONTROL_SUPPLEMENTARY_SERVICE_TYPE_DEACTIVATE        = 0x02,
     QMI_VOICE_CALL_CONTROL_SUPPLEMENTARY_SERVICE_TYPE_REGISTER          = 0x03,
@@ -850,11 +756,5 @@ typedef enum {
     QMI_VOICE_CALL_CONTROL_SUPPLEMENTARY_SERVICE_TYPE_REGISTER_PASSWORD = 0x06,
     QMI_VOICE_CALL_CONTROL_SUPPLEMENTARY_SERVICE_TYPE_USSD              = 0x07,
 } QmiVoiceCallControlSupplementaryServiceType;
-
-/**
- * qmi_voice_call_control_supplementary_service_type_get_string:
- *
- * Since: 1.26
- */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_VOICE_H_ */

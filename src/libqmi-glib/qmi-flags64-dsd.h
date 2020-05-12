@@ -47,7 +47,7 @@
  *
  * Since: 1.26
  */
-typedef enum { /*< underscore_name=qmi_dsd_apn_type_preference >*/
+typedef enum { /*< since=1.26 >*/
     QMI_DSD_APN_TYPE_PREFERENCE_DEFAULT   = ((guint64) 1) << QMI_DSD_APN_TYPE_DEFAULT,
     QMI_DSD_APN_TYPE_PREFERENCE_IMS       = ((guint64) 1) << QMI_DSD_APN_TYPE_IMS,
     QMI_DSD_APN_TYPE_PREFERENCE_MMS       = ((guint64) 1) << QMI_DSD_APN_TYPE_MMS,
@@ -59,11 +59,5 @@ typedef enum { /*< underscore_name=qmi_dsd_apn_type_preference >*/
     QMI_DSD_APN_TYPE_PREFERENCE_IA        = ((guint64) 1) << QMI_DSD_APN_TYPE_IA,
     QMI_DSD_APN_TYPE_PREFERENCE_EMERGENCY = ((guint64) 1) << QMI_DSD_APN_TYPE_EMERGENCY,
 } QmiDsdApnTypePreference;
-
-/**
- * qmi_dsd_apn_type_preference_build_string_from_mask:
- *
- * Since: 1.26
- */
 
 #endif /* _LIBQMI_GLIB_QMI_FLAGS64_DSD_H_ */

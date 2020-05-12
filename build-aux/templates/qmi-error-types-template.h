@@ -23,6 +23,7 @@ GType  @enum_name@_get_type (void) G_GNUC_CONST;
  * Gets the nickname string for the #@EnumName@ specified at @val.
  *
  * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ * Since: @enumsince@
  */
 const gchar *@enum_name@_get_string (@EnumName@ val);
 /*** END value-header ***/

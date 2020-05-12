@@ -50,18 +50,12 @@
  *
  * Since: 1.22.4
  */
-typedef enum {
+typedef enum { /*< since=1.22.4 >*/
     QMI_UIM_EVENT_REGISTRATION_FLAG_CARD_STATUS          = 1 << 0,
     QMI_UIM_EVENT_REGISTRATION_FLAG_SAP_CONNECTION       = 1 << 1,
     QMI_UIM_EVENT_REGISTRATION_FLAG_EXTENDED_CARD_STATUS = 1 << 2,
     QMI_UIM_EVENT_REGISTRATION_FLAG_PHYSICAL_SLOT_STATUS = 1 << 4,
 } QmiUimEventRegistrationFlag;
-
-/**
- * qmi_uim_event_registration_flag_build_string_from_mask:
- *
- * Since: 1.22.4
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI UIM Read Record' request/response */
@@ -83,7 +77,7 @@ typedef enum {
  *
  * Since: 1.6
  */
-typedef enum {
+typedef enum { /*< since=1.6 >*/
     QMI_UIM_SESSION_TYPE_PRIMARY_GW_PROVISIONING   = 0,
     QMI_UIM_SESSION_TYPE_PRIMARY_1X_PROVISIONING   = 1,
     QMI_UIM_SESSION_TYPE_SECONDARY_GW_PROVISIONING = 2,
@@ -95,12 +89,6 @@ typedef enum {
     QMI_UIM_SESSION_TYPE_LOGICAL_CHANNEL_SLOT_1    = 8,
     QMI_UIM_SESSION_TYPE_LOGICAL_CHANNEL_SLOT_2    = 9
 } QmiUimSessionType;
-
-/**
- * qmi_uim_session_type_get_string:
- *
- * Since: 1.6
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI UIM Get File Attributes' request/response */
@@ -117,19 +105,13 @@ typedef enum {
  *
  * Since: 1.6
  */
-typedef enum {
+typedef enum { /*< since=1.6 >*/
     QMI_UIM_FILE_TYPE_TRANSPARENT    = 0,
     QMI_UIM_FILE_TYPE_CYCLIC         = 1,
     QMI_UIM_FILE_TYPE_LINEAR_FIXED   = 2,
     QMI_UIM_FILE_TYPE_DEDICATED_FILE = 3,
     QMI_UIM_FILE_TYPE_MASTER_FILE    = 4
 } QmiUimFileType;
-
-/**
- * qmi_uim_file_type_get_string:
- *
- * Since: 1.6
- */
 
 /**
  * QmiUimSecurityAttributeLogic:
@@ -143,19 +125,13 @@ typedef enum {
  *
  * Since: 1.6
  */
-typedef enum {
+typedef enum { /*< since=1.6 >*/
     QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_ALWAYS = 0,
     QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_NEVER  = 1,
     QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_AND    = 2,
     QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_OR     = 3,
     QMI_UIM_SECURITY_ATTRIBUTE_LOGIC_SINGLE = 4
 } QmiUimSecurityAttributeLogic;
-
-/**
- * qmi_uim_security_attribute_logic_get_string:
- *
- * Since: 1.6
- */
 
 /**
  * QmiUimSecurityAttribute:
@@ -168,18 +144,12 @@ typedef enum {
  *
  * Since: 1.6
  */
-typedef enum {
+typedef enum { /*< since=1.6 >*/
     QMI_UIM_SECURITY_ATTRIBUTE_PIN1 = 1 << 0,
     QMI_UIM_SECURITY_ATTRIBUTE_PIN2 = 1 << 1,
     QMI_UIM_SECURITY_ATTRIBUTE_UPIN = 1 << 2,
     QMI_UIM_SECURITY_ATTRIBUTE_ADM  = 1 << 3
 } QmiUimSecurityAttribute;
-
-/**
- * qmi_uim_security_attribute_build_string_from_mask:
- *
- * Since: 1.6
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI UIM Set PIN Protection' */
@@ -196,19 +166,13 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_UIM_PIN_ID_UNKNOWN    = 0,
     QMI_UIM_PIN_ID_PIN1       = 1,
     QMI_UIM_PIN_ID_PIN2       = 2,
     QMI_UIM_PIN_ID_UPIN       = 3,
     QMI_UIM_PIN_ID_HIDDEN_KEY = 4
 } QmiUimPinId;
-
-/**
- * qmi_uim_pin_id_get_string:
- *
- * Since: 1.14
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI UIM Get Card Status' request/response */
@@ -223,17 +187,11 @@ typedef enum {
  *
  * Since: 1.10
  */
-typedef enum {
+typedef enum { /*< since=1.10 >*/
     QMI_UIM_CARD_STATE_ABSENT  = 0,
     QMI_UIM_CARD_STATE_PRESENT = 1,
     QMI_UIM_CARD_STATE_ERROR   = 2
 } QmiUimCardState;
-
-/**
- * qmi_uim_card_state_get_string:
- *
- * Since: 1.10
- */
 
 /**
  * QmiUimPinState:
@@ -248,7 +206,7 @@ typedef enum {
  *
  * Since: 1.10
  */
-typedef enum {
+typedef enum { /*< since=1.10 >*/
     QMI_UIM_PIN_STATE_NOT_INITIALIZED      = 0,
     QMI_UIM_PIN_STATE_ENABLED_NOT_VERIFIED = 1,
     QMI_UIM_PIN_STATE_ENABLED_VERIFIED     = 2,
@@ -256,12 +214,6 @@ typedef enum {
     QMI_UIM_PIN_STATE_BLOCKED              = 4,
     QMI_UIM_PIN_STATE_PERMANENTLY_BLOCKED  = 5,
 } QmiUimPinState;
-
-/**
- * qmi_uim_pin_state_get_string:
- *
- * Since: 1.10
- */
 
 /**
  * QmiUimCardError:
@@ -278,7 +230,7 @@ typedef enum {
  *
  * Since: 1.10
  */
-typedef enum {
+typedef enum { /*< since=1.10 >*/
     QMI_UIM_CARD_ERROR_UNKNOWN          = 0,
     QMI_UIM_CARD_ERROR_POWER_DOWN       = 1,
     QMI_UIM_CARD_ERROR_POLL             = 2,
@@ -288,12 +240,6 @@ typedef enum {
     QMI_UIM_CARD_ERROR_POSSIBLY_REMOVED = 6,
     QMI_UIM_CARD_ERROR_TECHNICAL        = 7
 } QmiUimCardError;
-
-/**
- * qmi_uim_card_error_get_string:
- *
- * Since: 1.10
- */
 
 /**
  * QmiUimCardApplicationType:
@@ -308,7 +254,7 @@ typedef enum {
  *
  * Since: 1.10
  */
-typedef enum {
+typedef enum { /*< since=1.10 >*/
     QMI_UIM_CARD_APPLICATION_TYPE_UNKNOWN = 0,
     QMI_UIM_CARD_APPLICATION_TYPE_SIM     = 1,
     QMI_UIM_CARD_APPLICATION_TYPE_USIM    = 2,
@@ -316,12 +262,6 @@ typedef enum {
     QMI_UIM_CARD_APPLICATION_TYPE_CSIM    = 4,
     QMI_UIM_CARD_APPLICATION_TYPE_ISIM    = 5,
 } QmiUimCardApplicationType;
-
-/**
- * qmi_uim_card_application_type_get_string:
- *
- * Since: 1.10
- */
 
 /**
  * QmiUimCardApplicationState:
@@ -338,7 +278,7 @@ typedef enum {
  *
  * Since: 1.10
  */
-typedef enum {
+typedef enum { /*< since=1.10 >*/
     QMI_UIM_CARD_APPLICATION_STATE_UNKNOWN                     = 0,
     QMI_UIM_CARD_APPLICATION_STATE_DETECTED                    = 1,
     QMI_UIM_CARD_APPLICATION_STATE_PIN1_OR_UPIN_PIN_REQUIRED   = 2,
@@ -348,12 +288,6 @@ typedef enum {
     QMI_UIM_CARD_APPLICATION_STATE_ILLEGAL                     = 6,
     QMI_UIM_CARD_APPLICATION_STATE_READY                       = 7,
 } QmiUimCardApplicationState;
-
-/**
- * qmi_uim_card_application_state_get_string:
- *
- * Since: 1.10
- */
 
 /**
  * QmiUimCardApplicationPersonalizationState:
@@ -368,7 +302,7 @@ typedef enum {
  *
  * Since: 1.10
  */
-typedef enum {
+typedef enum { /*< since=1.10 >*/
     QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_UNKNOWN             = 0,
     QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_IN_PROGRESS         = 1,
     QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_READY               = 2,
@@ -376,12 +310,6 @@ typedef enum {
     QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_PUK_CODE_REQUIRED   = 4,
     QMI_UIM_CARD_APPLICATION_PERSONALIZATION_STATE_PERMANENTLY_BLOCKED = 5,
 } QmiUimCardApplicationPersonalizationState;
-
-/**
- * qmi_uim_card_application_personalization_state_get_string:
- *
- * Since: 1.10
- */
 
 /**
  * QmiUimCardApplicationPersonalizationFeature:
@@ -402,7 +330,7 @@ typedef enum {
  *
  * Since: 1.10
  */
-typedef enum {
+typedef enum { /*< since=1.10 >*/
     QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_NETWORK          = 0,
     QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_NETWORK_SUBSET   = 1,
     QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_GW_SERVICE_PROVIDER = 2,
@@ -417,12 +345,6 @@ typedef enum {
     QMI_UIM_CARD_APPLICATION_PERSONALIZATION_FEATURE_UNKNOWN             = 11
 } QmiUimCardApplicationPersonalizationFeature;
 
-/**
- * qmi_uim_card_application_personalization_feature_get_string:
- *
- * Since: 1.10
- */
-
 /*****************************************************************************/
 /* Helper enums for the 'QMI UIM Get Slot Status' request/response */
 
@@ -436,17 +358,11 @@ typedef enum {
  *
  * Since: 1.26
  */
-typedef enum {
+typedef enum { /*< since=1.26 >*/
     QMI_UIM_PHYSICAL_CARD_STATE_UNKNOWN = 0,
     QMI_UIM_PHYSICAL_CARD_STATE_ABSENT  = 1,
     QMI_UIM_PHYSICAL_CARD_STATE_PRESENT = 2,
 } QmiUimPhysicalCardState;
-
-/**
- * qmi_uim_physical_card_state_get_string:
- *
- * Since: 1.26
- */
 
 /**
  * QmiUimSlotState:
@@ -457,16 +373,10 @@ typedef enum {
  *
  * Since: 1.26
  */
-typedef enum {
+typedef enum { /*< since=1.26 >*/
     QMI_UIM_SLOT_STATE_INACTIVE = 0,
     QMI_UIM_SLOT_STATE_ACTIVE   = 1,
 } QmiUimSlotState;
-
-/**
- * qmi_uim_slot_state_get_string:
- *
- * Since: 1.26
- */
 
 /**
  * QmiUimCardProtocol:
@@ -478,16 +388,10 @@ typedef enum {
  *
  * Since: 1.26
  */
-typedef enum {
+typedef enum { /*< since=1.26 >*/
     QMI_UIM_CARD_PROTOCOL_UNKNOWN = 0,
     QMI_UIM_CARD_PROTOCOL_ICC     = 1,
     QMI_UIM_CARD_PROTOCOL_UICC    = 2,
 } QmiUimCardProtocol;
-
-/**
- * qmi_uim_card_protocol_get_string:
- *
- * Since: 1.26
- */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_UIM_H_ */

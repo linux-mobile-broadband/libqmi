@@ -91,7 +91,7 @@
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_SERVICE_UNKNOWN = -1,
     QMI_SERVICE_CTL     = 0x00,
     QMI_SERVICE_WDS     = 0x01,
@@ -146,12 +146,6 @@ typedef enum {
 } QmiService;
 
 /**
- * qmi_service_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiDataEndpointType:
  * @QMI_DATA_ENDPOINT_TYPE_HSUSB: Data Endpoint Type HSUSB.
  * @QMI_DATA_ENDPOINT_TYPE_UNDEFINED: Data Endpoint Type undefined.
@@ -160,15 +154,9 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum { /*< underscore_name=qmi_data_endpoint_type > */
+typedef enum { /*< since=1.18 >*/
     QMI_DATA_ENDPOINT_TYPE_HSUSB     = 0X02,
     QMI_DATA_ENDPOINT_TYPE_UNDEFINED = 0XFF,
 } QmiDataEndpointType;
-
-/**
- * qmi_data_endpoint_type_get_string:
- *
- * Since: 1.18
- */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_H_ */

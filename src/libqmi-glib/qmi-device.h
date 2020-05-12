@@ -264,7 +264,7 @@ gboolean qmi_device_is_open (QmiDevice *self);
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_DEVICE_OPEN_FLAGS_NONE               = 0,
     QMI_DEVICE_OPEN_FLAGS_VERSION_INFO       = 1 << 0,
     QMI_DEVICE_OPEN_FLAGS_SYNC               = 1 << 1,
@@ -277,12 +277,6 @@ typedef enum {
     QMI_DEVICE_OPEN_FLAGS_AUTO               = 1 << 8,
     QMI_DEVICE_OPEN_FLAGS_EXPECT_INDICATIONS = 1 << 9,
 } QmiDeviceOpenFlags;
-
-/**
- * qmi_device_open_flags_build_string_from_mask:
- *
- * Since: 1.0
- */
 
 /**
  * qmi_device_open:
@@ -422,16 +416,10 @@ QmiClient *qmi_device_allocate_client_finish (QmiDevice     *self,
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_DEVICE_RELEASE_CLIENT_FLAGS_NONE        = 0,
     QMI_DEVICE_RELEASE_CLIENT_FLAGS_RELEASE_CID = 1 << 0
 } QmiDeviceReleaseClientFlags;
-
-/**
- * qmi_device_release_client_flags_build_string_from_mask:
- *
- * Since: 1.0
- */
 
 /**
  * qmi_device_release_client:
@@ -806,17 +794,11 @@ GArray *qmi_device_get_service_version_info_finish (QmiDevice     *self,
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN,
     QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3,
     QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP,
 } QmiDeviceExpectedDataFormat;
-
-/**
- * qmi_device_expected_data_format_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * qmi_device_get_expected_data_format:

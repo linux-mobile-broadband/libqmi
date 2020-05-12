@@ -48,15 +48,9 @@
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
    QMI_PDC_CONFIGURATION_TYPE_PLATFORM = 0,
    QMI_PDC_CONFIGURATION_TYPE_SOFTWARE = 1,
 } QmiPdcConfigurationType;
-
-/**
- * qmi_pdc_configuration_type_get_string:
- *
- * Since: 1.18
- */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_PDC_H_ */

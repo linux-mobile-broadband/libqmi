@@ -79,7 +79,7 @@
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=qmi_core_error >*/
+typedef enum { /*< since=1.0 >*/
     QMI_CORE_ERROR_FAILED             = 0, /*< nick=Failed >*/
     QMI_CORE_ERROR_WRONG_STATE        = 1, /*< nick=WrongState >*/
     QMI_CORE_ERROR_TIMEOUT            = 2, /*< nick=Timeout >*/
@@ -92,12 +92,6 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
     QMI_CORE_ERROR_UNEXPECTED_MESSAGE = 9, /*< nick=UnexpectedMessage >*/
     QMI_CORE_ERROR_INVALID_DATA       = 10, /*< nick=InvalidData >*/
 } QmiCoreError;
-
-/**
- * qmi_core_error_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiProtocolError:
@@ -231,7 +225,7 @@ typedef enum { /*< underscore_name=qmi_core_error >*/
   *
   * Since: 1.0
   */
-typedef enum { /*< underscore_name=qmi_protocol_error >*/
+typedef enum { /*< since=1.0 >*/
   QMI_PROTOCOL_ERROR_NONE                             = 0,  /*< nick=None >*/
   QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE                = 1,  /*< nick=MalformedMessage >*/
   QMI_PROTOCOL_ERROR_NO_MEMORY                        = 2,  /*< nick=NoMemory >*/
@@ -358,11 +352,5 @@ typedef enum { /*< underscore_name=qmi_protocol_error >*/
   QMI_PROTOCOL_ERROR_CAT_ENVELOPE_COMMAND_BUSY        = 61444, /*< nick=CatEnvelopeCommandBusy >*/
   QMI_PROTOCOL_ERROR_CAT_ENVELOPE_COMMAND_FAILED      = 61445  /*< nick=CatEnvelopeCommandFailed >*/
 } QmiProtocolError;
-
-/**
- * qmi_protocol_error_get_string:
- *
- * Since: 1.0
- */
 
 #endif /* _LIBQMI_GLIB_QMI_ERRORS_H_ */

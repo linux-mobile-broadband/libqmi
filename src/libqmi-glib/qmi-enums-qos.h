@@ -46,18 +46,12 @@
  *
  * Since: 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_QOS_STATUS_UNKNOWN   = 0,
     QMI_QOS_STATUS_ACTIVATED = 1,
     QMI_QOS_STATUS_SUSPENDED = 2,
     QMI_QOS_STATUS_GONE      = 3,
 } QmiQosStatus;
-
-/**
- * qmi_qos_status_get_string:
- *
- * Since: 1.22
- */
 
 /**
  * QmiQosEvent:
@@ -73,7 +67,7 @@ typedef enum {
  *
  * Since: 1.22
  */
-typedef enum {
+typedef enum { /*< since=1.22 >*/
     QMI_QOS_EVENT_UNKNOWN           = 0,
     QMI_QOS_EVENT_ACTIVATED         = 1,
     QMI_QOS_EVENT_SUSPENDED         = 2,
@@ -82,11 +76,5 @@ typedef enum {
     QMI_QOS_EVENT_MODIFY_REJECTED   = 5,
     QMI_QOS_EVENT_INFO_CODE_UPDATED = 6,
 } QmiQosEvent;
-
-/**
- * qmi_qos_event_get_string:
- *
- * Since: 1.22
- */
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_QOS_H_ */

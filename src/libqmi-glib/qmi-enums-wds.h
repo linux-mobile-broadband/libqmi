@@ -53,18 +53,12 @@
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_IP_FAMILY_UNKNOWN     = 0,
     QMI_WDS_IP_FAMILY_IPV4        = 4,
     QMI_WDS_IP_FAMILY_IPV6        = 6,
     QMI_WDS_IP_FAMILY_UNSPECIFIED = 8
 } QmiWdsIpFamily;
-
-/**
- * qmi_wds_ip_family_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsTechnologyPreference:
@@ -75,16 +69,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_TECHNOLOGY_PREFERENCE_ALLOW_3GPP  = 1 << 0,
     QMI_WDS_TECHNOLOGY_PREFERENCE_ALLOW_3GPP2 = 1 << 1
 } QmiWdsTechnologyPreference;
-
-/**
- * qmi_wds_technology_preference_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsExtendedTechnologyPreference:
@@ -98,19 +86,13 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_CDMA             = 32769,
     QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_UMTS             = 32772,
     QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_EPC              = 34944,
     QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_EMBMS            = 34946,
     QMI_WDS_EXTENDED_TECHNOLOGY_PREFERENCE_MODEM_LINK_LOCAL = 34952,
 } QmiWdsExtendedTechnologyPreference;
-
-/**
- * qmi_wds_extended_technology_preference_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsCallType:
@@ -121,16 +103,10 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_CALL_TYPE_LAPTOP   = 0,
     QMI_WDS_CALL_TYPE_EMBEDDED = 1
 } QmiWdsCallType;
-
-/**
- * qmi_wds_call_type_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsCallEndReason:
@@ -211,7 +187,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     /* Generic reasons */
     QMI_WDS_CALL_END_REASON_GENERIC_UNSPECIFIED                = 1,
     QMI_WDS_CALL_END_REASON_GENERIC_CLIENT_END                 = 2,
@@ -294,12 +270,6 @@ typedef enum {
 } QmiWdsCallEndReason;
 
 /**
- * qmi_wds_call_end_reason_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiWdsVerboseCallEndReasonType:
  * @QMI_WDS_VERBOSE_CALL_END_REASON_TYPE_MIP: Mobile IP.
  * @QMI_WDS_VERBOSE_CALL_END_REASON_TYPE_INTERNAL: Internal.
@@ -313,7 +283,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_VERBOSE_CALL_END_REASON_TYPE_MIP      = 1,
     QMI_WDS_VERBOSE_CALL_END_REASON_TYPE_INTERNAL = 2,
     QMI_WDS_VERBOSE_CALL_END_REASON_TYPE_CM       = 3,
@@ -322,12 +292,6 @@ typedef enum {
     QMI_WDS_VERBOSE_CALL_END_REASON_TYPE_EHRPD    = 8,
     QMI_WDS_VERBOSE_CALL_END_REASON_TYPE_IPV6     = 9
 } QmiWdsVerboseCallEndReasonType;
-
-/**
- * qmi_wds_verbose_call_end_reason_type_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * qmi_wds_verbose_call_end_reason_get_string:
@@ -381,7 +345,7 @@ const gchar *qmi_wds_verbose_call_end_reason_get_string (QmiWdsVerboseCallEndRea
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_VERBOSE_CALL_END_REASON_MIP_ERROR_REASON_UNKNOWN                                = -1,
 
     QMI_WDS_VERBOSE_CALL_END_REASON_MIP_FA_ERROR_REASON_UNSPECIFIED                         = 64,
@@ -418,12 +382,6 @@ typedef enum {
     QMI_WDS_VERBOSE_CALL_END_REASON_MIP_HA_ERROR_REVERSE_TUNNEL_MANDATORY_AND_T_BIT_NOT_SET = 138,
     QMI_WDS_VERBOSE_CALL_END_REASON_MIP_HA_ERROR_ENCAPSULATION_UNAVAILABLE                  = 139
 } QmiWdsVerboseCallEndReasonMip;
-
-/**
- * qmi_wds_verbose_call_end_reason_mip_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsVerboseCallEndReasonInternal:
@@ -481,7 +439,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_VERBOSE_CALL_END_REASON_INTERNAL_ERROR                           = 201,
     QMI_WDS_VERBOSE_CALL_END_REASON_INTERNAL_CALL_ENDED                      = 202,
     QMI_WDS_VERBOSE_CALL_END_REASON_INTERNAL_UNKNOWN_INTERNAL_CAUSE          = 203,
@@ -532,12 +490,6 @@ typedef enum {
     QMI_WDS_VERBOSE_CALL_END_REASON_INTERNAL_DDS_CALL_ABORT                  = 248,
     QMI_WDS_VERBOSE_CALL_END_REASON_INTERNAL_VALIDATION_FAILURE              = 249,
 } QmiWdsVerboseCallEndReasonInternal;
-
-/**
- * qmi_wds_verbose_call_end_reason_internal_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsVerboseCallEndReasonCm:
@@ -672,7 +624,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_VERBOSE_CALL_END_REASON_CM_CDMA_LOCK                       = 500,
     QMI_WDS_VERBOSE_CALL_END_REASON_CM_INTERCEPT                       = 501,
     QMI_WDS_VERBOSE_CALL_END_REASON_CM_REORDER                         = 502,
@@ -806,12 +758,6 @@ typedef enum {
 } QmiWdsVerboseCallEndReasonCm;
 
 /**
- * qmi_wds_verbose_call_end_reason_cm_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiWdsVerboseCallEndReason3gpp:
  * @QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_OPERATOR_DETERMINED_BARRING: Operator-determined barring.
  * @QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_LLC_SNDCP_FAILURE: LLC or SNDCP failure.
@@ -858,7 +804,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=qmi_wds_verbose_call_end_reason_3gpp >*/
+typedef enum { /*< underscore_name=qmi_wds_verbose_call_end_reason_3gpp,since=1.0 >*/
     QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_OPERATOR_DETERMINED_BARRING = 8,
 
     QMI_WDS_VERBOSE_CALL_END_REASON_3GPP_LLC_SNDCP_FAILURE               = 25,
@@ -907,12 +853,6 @@ typedef enum { /*< underscore_name=qmi_wds_verbose_call_end_reason_3gpp >*/
 } QmiWdsVerboseCallEndReason3gpp;
 
 /**
- * qmi_wds_verbose_call_end_reason_3gpp_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiWdsVerboseCallEndReasonPpp:
  * @QMI_WDS_VERBOSE_CALL_END_REASON_PPP_UNKNOWN: Unknown error.
  * @QMI_WDS_VERBOSE_CALL_END_REASON_PPP_TIMEOUT: Timeout.
@@ -926,7 +866,7 @@ typedef enum { /*< underscore_name=qmi_wds_verbose_call_end_reason_3gpp >*/
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_VERBOSE_CALL_END_REASON_PPP_UNKNOWN = -1,
 
     QMI_WDS_VERBOSE_CALL_END_REASON_PPP_TIMEOUT                = 1,
@@ -938,12 +878,6 @@ typedef enum {
     QMI_WDS_VERBOSE_CALL_END_REASON_PPP_CLOSE_IN_PROGRESS = 33,
 
 } QmiWdsVerboseCallEndReasonPpp;
-
-/**
- * qmi_wds_verbose_call_end_reason_ppp_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsVerboseCallEndReasonEhrpd:
@@ -968,7 +902,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_VERBOSE_CALL_END_REASON_EHRPD_SUBSCRIPTION_LIMITED_TO_IPV4 = 1,
     QMI_WDS_VERBOSE_CALL_END_REASON_EHRPD_SUBSCRIPTION_LIMITED_TO_IPV6 = 2,
 
@@ -989,12 +923,6 @@ typedef enum {
 } QmiWdsVerboseCallEndReasonEhrpd;
 
 /**
- * qmi_wds_verbose_call_end_reason_ehrpd_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiWdsVerboseCallEndReasonIpv6:
  * @QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_PREFIX_UNAVAILABLE: Prefix unavailable.
  * @QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_HRPD_IPV6_DISABLED: HRDP IPv6 disabled.
@@ -1004,17 +932,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_PREFIX_UNAVAILABLE = 1,
     QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_HRPD_IPV6_DISABLED = 2,
     QMI_WDS_VERBOSE_CALL_END_REASON_IPV6_DISABLED           = 3,
 } QmiWdsVerboseCallEndReasonIpv6;
-
-/**
- * qmi_wds_verbose_call_end_reason_ipv6_get_string:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI WDS Get Packet Service Status' message */
@@ -1031,19 +953,13 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_CONNECTION_STATUS_UNKNOWN        = 0,
     QMI_WDS_CONNECTION_STATUS_DISCONNECTED   = 1,
     QMI_WDS_CONNECTION_STATUS_CONNECTED      = 2,
     QMI_WDS_CONNECTION_STATUS_SUSPENDED      = 3,
     QMI_WDS_CONNECTION_STATUS_AUTHENTICATING = 4
 } QmiWdsConnectionStatus;
-
-/**
- * qmi_wds_connection_status_get_string:
- *
- * Since: 1.0
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI WDS Get Data Bearer Technology' message */
@@ -1076,7 +992,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_DATA_BEARER_TECHNOLOGY_UNKNOWN                    = -1,
     QMI_WDS_DATA_BEARER_TECHNOLOGY_CDMA20001X                 = 0x01,
     QMI_WDS_DATA_BEARER_TECHNOLOGY_1xEVDO                     = 0x02,
@@ -1100,12 +1016,6 @@ typedef enum {
     QMI_WDS_DATA_BEARER_TECHNOLOGY_TDSCDMA_HSUPA              = 0x14,
 } QmiWdsDataBearerTechnology;
 
-/**
- * qmi_wds_data_bearer_technology_get_string:
- *
- * Since: 1.0
- */
-
 /*****************************************************************************/
 /* Helper enums for the 'QMI WDS Get Current Data Bearer Technology' message */
 
@@ -1119,17 +1029,11 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_NETWORK_TYPE_UNKNOWN = 0,
     QMI_WDS_NETWORK_TYPE_3GPP2   = 1,
     QMI_WDS_NETWORK_TYPE_3GPP    = 2
 } QmiWdsNetworkType;
-
-/**
- * qmi_wds_network_type_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsDataSystemNetworkType:
@@ -1140,16 +1044,10 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_WDS_DATA_SYSTEM_NETWORK_TYPE_3GPP  = 0,
     QMI_WDS_DATA_SYSTEM_NETWORK_TYPE_3GPP2 = 1,
 } QmiWdsDataSystemNetworkType;
-
-/**
- * qmi_wds_data_system_network_type_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiWdsDataSystem:
@@ -1165,7 +1063,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_DATA_SYSTEM_UNKNOWN     = 0,
     QMI_WDS_DATA_SYSTEM_CDMA1X      = 1,
     QMI_WDS_DATA_SYSTEM_CDMA1X_EVDO = 2,
@@ -1174,12 +1072,6 @@ typedef enum {
     QMI_WDS_DATA_SYSTEM_LTE         = 5,
     QMI_WDS_DATA_SYSTEM_TDSCDMA     = 6,
 } QmiWdsDataSystem;
-
-/**
- * qmi_wds_data_system_get_string:
- *
- * Since: 1.18
- */
 
 /**
  * QmiWdsRat3gpp2:
@@ -1197,7 +1089,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=qmi_wds_rat_3gpp2 >*/
+typedef enum { /*< underscore_name=qmi_wds_rat_3gpp2,since=1.0 >*/
     QMI_WDS_RAT_3GPP2_NONE        = 0,
     QMI_WDS_RAT_3GPP2_CDMA1X      = 1 << 0,
     QMI_WDS_RAT_3GPP2_EVDO_REV0   = 1 << 1,
@@ -1207,12 +1099,6 @@ typedef enum { /*< underscore_name=qmi_wds_rat_3gpp2 >*/
     QMI_WDS_RAT_3GPP2_FMC         = 1 << 5,
     QMI_WDS_RAT_3GPP2_NULL_BEARER = 1 << 15
 } QmiWdsRat3gpp2;
-
-/**
- * qmi_wds_rat_3gpp2_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsRat3gpp:
@@ -1234,7 +1120,7 @@ typedef enum { /*< underscore_name=qmi_wds_rat_3gpp2 >*/
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=qmi_wds_rat_3gpp >*/
+typedef enum { /*< underscore_name=qmi_wds_rat_3gpp,since=1.0 >*/
     QMI_WDS_RAT_3GPP_NONE        = 0,
     QMI_WDS_RAT_3GPP_WCDMA       = 1 << 0,
     QMI_WDS_RAT_3GPP_GPRS        = 1 << 1,
@@ -1250,12 +1136,6 @@ typedef enum { /*< underscore_name=qmi_wds_rat_3gpp >*/
 } QmiWdsRat3gpp;
 
 /**
- * qmi_wds_rat_3gpp_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiWdsSoCdma1x:
  * @QMI_WDS_SO_CDMA1X_NONE: Unknown, to be ignored.
  * @QMI_WDS_SO_CDMA1X_IS95: IS95.
@@ -1268,18 +1148,12 @@ typedef enum { /*< underscore_name=qmi_wds_rat_3gpp >*/
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_SO_CDMA1X_NONE         = 0,
     QMI_WDS_SO_CDMA1X_IS95         = 1 << 0,
     QMI_WDS_SO_CDMA1X_IS2000       = 1 << 1,
     QMI_WDS_SO_CDMA1X_IS2000_REL_A = 1 << 2
 } QmiWdsSoCdma1x;
-
-/**
- * qmi_wds_so_cdma1x_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsSoEvdoRev0:
@@ -1292,16 +1166,10 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum { /*< underscore_name=qmi_wds_so_evdo_rev0 >*/
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_SO_EVDO_REV0_NONE = 0,
     QMI_WDS_SO_EVDO_REV0_DPA  = 1 << 0,
 } QmiWdsSoEvdoRev0;
-
-/**
- * qmi_wds_so_evdo_rev0_get_string:
- *
- * Since: 1.18
- */
 
 /**
  * QmiWdsSoEvdoRevA:
@@ -1317,19 +1185,13 @@ typedef enum { /*< underscore_name=qmi_wds_so_evdo_rev0 >*/
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=qmi_wds_so_evdo_reva >*/
+typedef enum { /*< underscore_name=qmi_wds_so_evdo_reva,since=1.0 >*/
     QMI_WDS_SO_EVDO_REVA_NONE       = 0,
     QMI_WDS_SO_EVDO_REVA_DPA        = 1 << 0,
     QMI_WDS_SO_EVDO_REVA_MFPA       = 1 << 1,
     QMI_WDS_SO_EVDO_REVA_EMPA       = 1 << 2,
     QMI_WDS_SO_EVDO_REVA_EMPA_EHRPD = 1 << 3,
 } QmiWdsSoEvdoRevA;
-
-/**
- * qmi_wds_so_evdo_reva_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsSoEvdoRevB:
@@ -1347,7 +1209,7 @@ typedef enum { /*< underscore_name=qmi_wds_so_evdo_reva >*/
  *
  * Since: 1.18
  */
-typedef enum { /*< underscore_name=qmi_wds_so_evdo_revb >*/
+typedef enum { /*< underscore_name=qmi_wds_so_evdo_revb,since=1.18 >*/
     QMI_WDS_SO_EVDO_REVB_NONE       = 0,
     QMI_WDS_SO_EVDO_REVB_DPA        = 1 << 0,
     QMI_WDS_SO_EVDO_REVB_MFPA       = 1 << 1,
@@ -1356,12 +1218,6 @@ typedef enum { /*< underscore_name=qmi_wds_so_evdo_revb >*/
     QMI_WDS_SO_EVDO_REVB_MMPA       = 1 << 4,
     QMI_WDS_SO_EVDO_REVB_MMPA_EHRPD = 1 << 5,
 } QmiWdsSoEvdoRevB;
-
-/**
- * qmi_wds_so_evdo_revb_get_string:
- *
- * Since: 1.18
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI WDS Get Current Settings' message */
@@ -1393,7 +1249,7 @@ typedef enum { /*< underscore_name=qmi_wds_so_evdo_revb >*/
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=qmi_wds_get_current_settings_requested_settings >*/
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_NONE                      = 0,
     QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PROFILE_ID                = 1 << 0,
     QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PROFILE_NAME              = 1 << 1,
@@ -1416,12 +1272,6 @@ typedef enum { /*< underscore_name=qmi_wds_get_current_settings_requested_settin
 } QmiWdsGetCurrentSettingsRequestedSettings;
 
 /**
- * qmi_wds_get_current_settings_requested_settings_get_string:
- *
- * Since: 1.0
- */
-
-/**
  * QmiWdsPdpType:
  * @QMI_WDS_PDP_TYPE_IPV4: IPv4
  * @QMI_WDS_PDP_TYPE_PPP: PPP
@@ -1432,18 +1282,12 @@ typedef enum { /*< underscore_name=qmi_wds_get_current_settings_requested_settin
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=qmi_wds_pdp_type >*/
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_PDP_TYPE_IPV4         = 0,
     QMI_WDS_PDP_TYPE_PPP          = 1,
     QMI_WDS_PDP_TYPE_IPV6         = 2,
     QMI_WDS_PDP_TYPE_IPV4_OR_IPV6 = 3
 } QmiWdsPdpType;
-
-/**
- * qmi_wds_pdp_type_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsTrafficClass:
@@ -1457,19 +1301,13 @@ typedef enum { /*< underscore_name=qmi_wds_pdp_type >*/
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=qmi_wds_traffic_class >*/
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_TRAFFIC_CLASS_SUBSCRIBED     = 0,
     QMI_WDS_TRAFFIC_CLASS_CONVERSATIONAL = 1,
     QMI_WDS_TRAFFIC_CLASS_STREAMING      = 2,
     QMI_WDS_TRAFFIC_CLASS_INTERACTIVE    = 3,
     QMI_WDS_TRAFFIC_CLASS_BACKGROUND     = 4
 } QmiWdsTrafficClass;
-
-/**
- * qmi_wds_traffic_class_get_string:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsAuthentication:
@@ -1481,17 +1319,11 @@ typedef enum { /*< underscore_name=qmi_wds_traffic_class >*/
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=qmi_wds_authentication >*/
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_AUTHENTICATION_NONE = 0,
     QMI_WDS_AUTHENTICATION_PAP  = 1 << 0,
     QMI_WDS_AUTHENTICATION_CHAP = 1 << 1
 } QmiWdsAuthentication;
-
-/**
- * qmi_wds_authentication_build_string_from_mask:
- *
- * Since: 1.0
- */
 
 /**
  * QmiWdsProfileType:
@@ -1502,16 +1334,10 @@ typedef enum { /*< underscore_name=qmi_wds_authentication >*/
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=qmi_wds_profile_type >*/
+typedef enum { /*< since=1.0 >*/
     QMI_WDS_PROFILE_TYPE_3GPP    = 0,
     QMI_WDS_PROFILE_TYPE_3GPP2   = 1
 } QmiWdsProfileType;
-
-/**
- * qmi_wds_profile_type_get_string:
- *
- * Since: 1.0
- */
 
  /**
   * QmiWdsProfileFamily:
@@ -1522,16 +1348,10 @@ typedef enum { /*< underscore_name=qmi_wds_profile_type >*/
   *
   * Since: 1.22
   */
- typedef enum { /*< underscore_name=qmi_wds_profile_family >*/
+ typedef enum { /*< since=1.22 >*/
      QMI_WDS_PROFILE_FAMILY_EMBEDDED = 0,
      QMI_WDS_PROFILE_FAMILY_TETHERED = 1
  } QmiWdsProfileFamily;
-
- /**
-  * qmi_wds_profile_family_get_string:
-  *
-  * Since: 1.22
-  */
 
 /**
  * QmiWdsDeliveryOrder:
@@ -1543,17 +1363,11 @@ typedef enum { /*< underscore_name=qmi_wds_profile_type >*/
  *
  * Since: 1.14
  */
-typedef enum { /*< underscore_name=qmi_wds_delivery_order >*/
+typedef enum { /*< since=1.14 >*/
     QMI_WDS_QOS_DELIVERY_ORDER_SUBSCRIBE = 0,
     QMI_WDS_QOS_DELIVERY_ORDER_ON        = 1,
     QMI_WDS_QOS_DELIVERY_ORDER_OFF       = 2
 } QmiWdsDeliveryOrder;
-
-/**
- * qmi_wds_delivery_order_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiWdsSduErrorRatio:
@@ -1570,7 +1384,7 @@ typedef enum { /*< underscore_name=qmi_wds_delivery_order >*/
  *
  * Since: 1.14
  */
-typedef enum { /*< underscore_name=qmi_wds_sdu_error_ratio >*/
+typedef enum { /*< since=1.14 >*/
     QMI_WDS_SDU_ERROR_RATIO_SUBSCRIBE = 0,
     QMI_WDS_SDU_ERROR_RATIO_1E2       = 1,
     QMI_WDS_SDU_ERROR_RATIO_7E3       = 2,
@@ -1580,12 +1394,6 @@ typedef enum { /*< underscore_name=qmi_wds_sdu_error_ratio >*/
     QMI_WDS_SDU_ERROR_RATIO_1E6       = 6,
     QMI_WDS_SDU_ERROR_RATIO_1E1       = 7
 } QmiWdsSduErrorRatio;
-
-/**
- * qmi_wds_sdu_error_ratio_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiWdsSduResidualBitErrorRatio:
@@ -1604,7 +1412,7 @@ typedef enum { /*< underscore_name=qmi_wds_sdu_error_ratio >*/
  *
  * Since: 1.14
  */
-typedef enum { /*< underscore_name=qmi_wds_sdu_residual_bit_error_ratio >*/
+typedef enum { /*< since=1.14 >*/
     QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_SUBSCRIBE = 0,
     QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_5E2       = 1,
     QMI_WDS_SDU_RESIDUAL_BIT_ERROR_RATIO_1E2       = 2,
@@ -1618,12 +1426,6 @@ typedef enum { /*< underscore_name=qmi_wds_sdu_residual_bit_error_ratio >*/
 } QmiWdsSduResidualBitErrorRatio;
 
 /**
- * qmi_wds_sdu_residual_bit_error_ratio_get_string:
- *
- * Since: 1.14
- */
-
-/**
  * QmiWdsSduErroneousDelivery:
  * @QMI_WDS_SDU_ERRONEOUS_DELIVERY_SUBSCRIBE: Subscribe.
  * @QMI_WDS_SDU_ERRONEOUS_DELIVERY_NO_DETECTION: No detection.
@@ -1634,18 +1436,12 @@ typedef enum { /*< underscore_name=qmi_wds_sdu_residual_bit_error_ratio >*/
  *
  * Since: 1.14
  */
-typedef enum { /*< underscore_name=qmi_wds_sdu_erroneous_delivery >*/
+typedef enum { /*< since=1.14 >*/
     QMI_WDS_SDU_ERRONEOUS_DELIVERY_SUBSCRIBE    = 0,
     QMI_WDS_SDU_ERRONEOUS_DELIVERY_NO_DETECTION = 1,
     QMI_WDS_SDU_ERRONEOUS_DELIVERY_ENABLED      = 2,
     QMI_WDS_SDU_ERRONEOUS_DELIVERY_DISABLED     = 3
 } QmiWdsSduErroneousDelivery;
-
-/**
- * qmi_wds_sdu_erroneous_delivery_get_string:
- *
- * Since: 1.14
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI WDS Get Packet Statistics' message */
@@ -1667,7 +1463,7 @@ typedef enum { /*< underscore_name=qmi_wds_sdu_erroneous_delivery >*/
  *
  * Since: 1.6
  */
-typedef enum {
+typedef enum { /*< since=1.6 >*/
     QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_PACKETS_OK      = 1 << 0,
     QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_PACKETS_OK      = 1 << 1,
     QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_PACKETS_ERROR   = 1 << 2,
@@ -1679,12 +1475,6 @@ typedef enum {
     QMI_WDS_PACKET_STATISTICS_MASK_FLAG_TX_PACKETS_DROPPED = 1 << 8,
     QMI_WDS_PACKET_STATISTICS_MASK_FLAG_RX_PACKETS_DROPPED = 1 << 9
 } QmiWdsPacketStatisticsMaskFlag;
-
-/**
- * qmi_wds_packet_statistics_mask_flag_build_string_from_mask:
- *
- * Since: 1.6
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI WDS Get Profile List' message */
@@ -1716,7 +1506,7 @@ typedef enum {
  *
  * Since: 1.8
  */
-typedef enum {
+typedef enum { /*< since=1.8 >*/
     QMI_WDS_DS_PROFILE_ERROR_UNKNOWN                     = 0,
     QMI_WDS_DS_PROFILE_ERROR_FAIL                        = 1,
     QMI_WDS_DS_PROFILE_ERROR_INVALID_HANDLE              = 2,
@@ -1740,12 +1530,6 @@ typedef enum {
 } QmiWdsDsProfileError;
 
 /**
- * qmi_wds_ds_profile_error_get_string:
- *
- * Since: 1.8
- */
-
-/**
  * QmiWdsAutoconnectSetting:
  * @QMI_WDS_AUTOCONNECT_SETTING_DISABLED: Disabled.
  * @QMI_WDS_AUTOCONNECT_SETTING_ENABLED: Enabled.
@@ -1755,17 +1539,11 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_WDS_AUTOCONNECT_SETTING_DISABLED = 0,
     QMI_WDS_AUTOCONNECT_SETTING_ENABLED  = 1,
     QMI_WDS_AUTOCONNECT_SETTING_PAUSED   = 2,
 } QmiWdsAutoconnectSetting;
-
-/**
- * qmi_wds_autoconnect_setting_get_string:
- *
- * Since: 1.14
- */
 
 /**
  * QmiWdsAutoconnectSettingRoaming:
@@ -1776,16 +1554,10 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     QMI_WDS_AUTOCONNECT_SETTING_ROAMING_ALLOWED   = 0,
     QMI_WDS_AUTOCONNECT_SETTING_ROAMING_HOME_ONLY = 1,
 } QmiWdsAutoconnectSettingRoaming;
-
-/**
- * qmi_wds_autoconnect_setting_roaming_get_string:
- *
- * Since: 1.14
- */
 
 /*****************************************************************************/
 /* Helper enums for the 'QMI WDS Set Event Report' message */
@@ -1808,7 +1580,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_SET_EVENT_REPORT_TRANSFER_STATISTICS_REPORT_TX_PACKETS_OK      = 1 << 0,
     QMI_WDS_SET_EVENT_REPORT_TRANSFER_STATISTICS_REPORT_RX_PACKETS_OK      = 1 << 1,
     QMI_WDS_SET_EVENT_REPORT_TRANSFER_STATISTICS_REPORT_TX_PACKETS_ERROR   = 1 << 2,
@@ -1822,12 +1594,6 @@ typedef enum {
 } QmiWdsSetEventReportTransferStatistics;
 
 /**
- * qmi_wds_set_event_report_transfer_statistics_get_string:
- *
- * Since: 1.18
- */
-
-/**
  * QmiWdsDormancyStatus:
  * @QMI_WDS_DORMANCY_STATUS_UNKNOWN: dormancy status unknown.
  * @QMI_WDS_DORMANCY_STATUS_TRAFFIC_CHANNEL_DORMANT: traffic channel is dormant.
@@ -1837,17 +1603,11 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_DORMANCY_STATUS_UNKNOWN                 = 0,
     QMI_WDS_DORMANCY_STATUS_TRAFFIC_CHANNEL_DORMANT = 1,
     QMI_WDS_DORMANCY_STATUS_TRAFFIC_CHANNEL_ACTIVE  = 2,
 } QmiWdsDormancyStatus;
-
-/**
- * qmi_wds_dormancy_status_get_string:
- *
- * Since: 1.18
- */
 
 /**
  * QmiWdsDataCallStatus:
@@ -1859,17 +1619,11 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_DATA_CALL_STATUS_UNKNOWN    = 0,
     QMI_WDS_DATA_CALL_STATUS_ACTIVATED  = 1,
     QMI_WDS_DATA_CALL_STATUS_TERMINATED = 2,
 } QmiWdsDataCallStatus;
-
-/**
- * qmi_wds_data_call_status_get_string:
- *
- * Since: 1.18
- */
 
 /**
  * QmiWdsDataCallType:
@@ -1882,18 +1636,12 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_DATA_CALL_TYPE_UNKNOWN        = 0,
     QMI_WDS_DATA_CALL_TYPE_EMBEDDED       = 1,
     QMI_WDS_DATA_CALL_TYPE_TETHERED       = 2,
     QMI_WDS_DATA_CALL_TYPE_MODEM_EMBEDDED = 3,
 } QmiWdsDataCallType;
-
-/**
- * qmi_wds_data_call_type_get_string:
- *
- * Since: 1.18
- */
 
 /**
  * QmiWdsTetheredCallType:
@@ -1905,17 +1653,11 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_TETHERED_CALL_TYPE_NON_TETHERED = 0,
     QMI_WDS_TETHERED_CALL_TYPE_RMNET        = 1,
     QMI_WDS_TETHERED_CALL_TYPE_DUN          = 2,
 } QmiWdsTetheredCallType;
-
-/**
- * qmi_wds_tethered_call_type_get_string:
- *
- * Since: 1.18
- */
 
 /**
  * QmiWdsRadioAccessTechnology:
@@ -1936,7 +1678,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_RADIO_ACCESS_TECHNOLOGY_NULL_BEARER   = 0,
     QMI_WDS_RADIO_ACCESS_TECHNOLOGY_3GPP_WCDMA    = 1,
     QMI_WDS_RADIO_ACCESS_TECHNOLOGY_3GPP_GERAN    = 2,
@@ -1950,12 +1692,6 @@ typedef enum {
     QMI_WDS_RADIO_ACCESS_TECHNOLOGY_3GPP2_WLAN    = 104,
     QMI_WDS_RADIO_ACCESS_TECHNOLOGY_3GPP2_MAXIMUM = 200,
 } QmiWdsRadioAccessTechnology;
-
-/**
- * qmi_wds_radio_access_technology_get_string:
- *
- * Since: 1.18
- */
 
 /**
  * QmiWdsExtendedDataBearerTechnology3gpp:
@@ -1979,7 +1715,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum { /*< underscore_name=qmi_wds_extended_data_bearer_technology_3gpp >*/
+typedef enum { /*< underscore_name=qmi_wds_extended_data_bearer_technology_3gpp,since=1.18 >*/
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP_UNKNOWN             = 0,
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP_WCDMA               = 1 << 0,
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP_HSDPA               = 1 << 1,
@@ -1996,12 +1732,6 @@ typedef enum { /*< underscore_name=qmi_wds_extended_data_bearer_technology_3gpp 
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP_LTE_FDD             = 1 << 12,
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP_LTE_TDD             = 1 << 13,
 } QmiWdsExtendedDataBearerTechnology3gpp;
-
-/**
- * qmi_wds_extended_data_bearer_technology_3gpp_build_string_from_mask:
- *
- * Since: 1.18
- */
 
 /**
  * QmiWdsExtendedDataBearerTechnology3gpp2:
@@ -2024,7 +1754,7 @@ typedef enum { /*< underscore_name=qmi_wds_extended_data_bearer_technology_3gpp 
  *
  * Since: 1.18
  */
-typedef enum { /*< underscore_name=qmi_wds_extended_data_bearer_technology_3gpp2 >*/
+typedef enum { /*< underscore_name=qmi_wds_extended_data_bearer_technology_3gpp2,since=1.18 >*/
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP2_UNKNOWN             = 0,
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP2_RESERVED            = 1 << 0,
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP2_CDMA1X_IS95         = 1 << 1,
@@ -2041,12 +1771,6 @@ typedef enum { /*< underscore_name=qmi_wds_extended_data_bearer_technology_3gpp2
     QMI_WDS_EXTENDED_DATA_BEARER_TECHNOLOGY_3GPP2_HDR_EVDO_FMC        = 1 << 12,
 } QmiWdsExtendedDataBearerTechnology3gpp2;
 
-/**
- * qmi_wds_extended_data_bearer_technology_3gpp2_build_string_from_mask:
- *
- * Since: 1.18
- */
-
 /*****************************************************************************/
 /* Helper enums for the 'QMI WDS Profile'-related messages */
 
@@ -2062,19 +1786,13 @@ typedef enum { /*< underscore_name=qmi_wds_extended_data_bearer_technology_3gpp2
  *
  * Since: 1.18
  */
-typedef enum { /*< underscore_name=qmi_wds_pdp_header_compression_type >*/
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_OFF                    = 0,
     QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_MANUFACTURER_PREFERRED = 1,
     QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_RFC1144                = 2,
     QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_RFC2507                = 3,
     QMI_WDS_PDP_HEADER_COMPRESSION_TYPE_RFC3095                = 4,
 } QmiWdsPdpHeaderCompressionType;
-
-/**
- * qmi_wds_pdp_header_compression_type_get_string:
- *
- * Since: 1.18
- */
 
 /**
  * QmiWdsPdpDataCompressionType:
@@ -2087,18 +1805,12 @@ typedef enum { /*< underscore_name=qmi_wds_pdp_header_compression_type >*/
  *
  * Since: 1.18
  */
-typedef enum { /*< underscore_name=qmi_wds_pdp_data_compression_type >*/
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_PDP_DATA_COMPRESSION_TYPE_OFF                    = 0,
     QMI_WDS_PDP_DATA_COMPRESSION_TYPE_MANUFACTURER_PREFERRED = 1,
     QMI_WDS_PDP_DATA_COMPRESSION_TYPE_V42BIS                 = 2,
     QMI_WDS_PDP_DATA_COMPRESSION_TYPE_V44                    = 3,
 } QmiWdsPdpDataCompressionType;
-
-/**
- * qmi_wds_pdp_data_compression_type_get_string:
- *
- * Since: 1.18
- */
 
 /**
  * QmiWdsQosClassIdentifier:
@@ -2116,7 +1828,7 @@ typedef enum { /*< underscore_name=qmi_wds_pdp_data_compression_type >*/
  *
  * Since: 1.18
  */
-typedef enum { /*< underscore_name=qmi_wds_qos_class_identifier >*/
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_QOS_CLASS_IDENTIFIER_NETWORK_ASSIGN          = 0,
     QMI_WDS_QOS_CLASS_IDENTIFIER_GUARANTEED_BITRATE1     = 1,
     QMI_WDS_QOS_CLASS_IDENTIFIER_GUARANTEED_BITRATE2     = 2,
@@ -2129,12 +1841,6 @@ typedef enum { /*< underscore_name=qmi_wds_qos_class_identifier >*/
 } QmiWdsQosClassIdentifier;
 
 /**
- * qmi_wds_qos_class_identifier_get_string:
- *
- * Since: 1.18
- */
-
-/**
  * QmiWdsClientType:
  * @QMI_WDS_CLIENT_TYPE_TETHERED: client type tethered
  * @QMI_WDS_CLIENT_TYPE_UNDEFINED: no client type defined
@@ -2143,16 +1849,10 @@ typedef enum { /*< underscore_name=qmi_wds_qos_class_identifier >*/
  *
  * Since: 1.18
  */
-typedef enum { /*< underscore_name=qmi_wds_client_type > */
+typedef enum { /*< since=1.18 >*/
     QMI_WDS_CLIENT_TYPE_TETHERED = 0x01,
     QMI_WDS_CLIENT_TYPE_UNDEFINED = 0xFF,
 } QmiWdsClientType;
-
-/**
- * qmi_wds_client_type_get_string:
- *
- * Since: 1.18
- */
 
 /**
  * QMI_WDS_RATE_UNAVAILABLE:
