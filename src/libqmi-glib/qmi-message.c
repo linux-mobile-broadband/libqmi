@@ -34,7 +34,7 @@
 #include <endian.h>
 
 #include "qmi-message.h"
-#include "qmi-utils.h"
+#include "qmi-utils-private.h"
 #include "qmi-enums-private.h"
 #include "qmi-enum-types-private.h"
 #include "qmi-enum-types.h"

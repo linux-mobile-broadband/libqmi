@@ -24,6 +24,7 @@
 
 #include "qmi-endpoint.h"
 
+#include "qmi-utils-private.h"
 #include "qmi-error-types.h"
 #include "qmi-errors.h"
 

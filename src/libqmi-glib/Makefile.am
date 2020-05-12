@@ -69,7 +69,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-enums-gas.h \
 	qmi-enums-dsd.h qmi-flags64-dsd.h\
 	qmi-enums.h qmi-enums-private.h \
-	qmi-utils.h qmi-utils.c \
+	qmi-utils.h qmi-utils-private.h qmi-utils.c \
 	qmi-message.h qmi-message.c \
 	qmi-message-context.h qmi-message-context.c \
 	qmi-device.h qmi-device.c \
@@ -187,4 +187,3 @@ CLEANFILES += $(nodist_gir_DATA) $(nodist_typelib_DATA)
 endif # HAVE_INTROSPECTION
 
 -include $(INTROSPECTION_MAKEFILE)
-

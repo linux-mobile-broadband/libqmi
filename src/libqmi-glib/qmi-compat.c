@@ -22,7 +22,7 @@
 #include <string.h>
 
 #include "qmi-compat.h"
-#include "qmi-utils.h"
+#include "qmi-utils-private.h"
 #include "qmi-enum-types.h"
 
 #ifndef QMI_DISABLE_DEPRECATED

@@ -33,6 +33,7 @@
 #include <errno.h>
 
 #include "qmi-utils.h"
+#include "qmi-utils-private.h"
 #include "qmi-error-types.h"
 
 /**

@@ -36,7 +36,7 @@
 #include "qmi-error-types.h"
 #include "qmi-device.h"
 #include "qmi-ctl.h"
-#include "qmi-utils.h"
+#include "qmi-utils-private.h"
 #include "qmi-proxy.h"
 #include "qmi-version.h"
 

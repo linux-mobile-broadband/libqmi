@@ -54,6 +54,7 @@
 #include "qmi-gms.h"
 #include "qmi-dsd.h"
 #include "qmi-utils.h"
+#include "qmi-utils-private.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
 #include "qmi-proxy.h"

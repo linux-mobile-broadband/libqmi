@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include "qmi-enums-nas.h"
-#include "qmi-utils.h"
+#include "qmi-utils-private.h"
 
 gchar *
 qmi_nas_read_string_from_plmn_encoded_array (QmiNasPlmnEncodingScheme  encoding,
