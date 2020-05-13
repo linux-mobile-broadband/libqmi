@@ -123,25 +123,12 @@ __mbim_utils_get_devname (const gchar  *cdc_wdm_path,
 
 static volatile gint __traces_enabled = FALSE;
 
-/**
- * mbim_utils_get_traces_enabled:
- *
- * Checks whether MBIM message traces are currently enabled.
- *
- * Returns: %TRUE if traces are enabled, %FALSE otherwise.
- */
 gboolean
 mbim_utils_get_traces_enabled (void)
 {
     return (gboolean) g_atomic_int_get (&__traces_enabled);
 }
 
-/**
- * mbim_utils_set_traces_enabled:
- * @enabled: %TRUE to enable traces, %FALSE to disable them.
- *
- * Sets whether MBIM message traces are enabled or disabled.
- */
 void
 mbim_utils_set_traces_enabled (gboolean enabled)
 {

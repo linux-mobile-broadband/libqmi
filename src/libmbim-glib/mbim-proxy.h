@@ -24,8 +24,28 @@
 #ifndef MBIM_PROXY_H
 #define MBIM_PROXY_H
 
+#if !defined (__LIBMBIM_GLIB_H_INSIDE__) && !defined (LIBMBIM_GLIB_COMPILATION)
+#error "Only <libmbim-glib.h> can be included directly."
+#endif
+
 #include <glib-object.h>
 #include <gio/gio.h>
+
+G_BEGIN_DECLS
+
+/**
+ * SECTION:mbim-proxy
+ * @title: MbimProxy
+ * @short_description: MBIM proxy handling routines
+ *
+ * The #MbimProxy will setup an abstract socket listening on a predefined
+ * address, and will take care of synchronizing the access to a set of shared
+ * MBIM ports.
+ *
+ * Multiple #MbimDevice objects may be connected to the #MbimProxy at any given
+ * time. The #MbimProxy acts as a stateful proxy (all remote #MbimDevice objects
+ * will need to share the same message sequence).
+ */
 
 #define MBIM_TYPE_PROXY            (mbim_proxy_get_type ())
 #define MBIM_PROXY(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), MBIM_TYPE_PROXY, MbimProxy))
@@ -55,8 +75,36 @@ struct _MbimProxyClass {
 GType mbim_proxy_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimProxy, g_object_unref)
 
-MbimProxy *mbim_proxy_new           (GError **error);
-guint      mbim_proxy_get_n_clients (MbimProxy *self);
-guint      mbim_proxy_get_n_devices (MbimProxy *self);
+/**
+ * mbim_proxy_new:
+ * @error: Return location for error or %NULL.
+ *
+ * Creates a #MbimProxy object.
+ *
+ * Returns: (transfer full): a newly created #MbimProxy, or #NULL if @error is set.
+ */
+MbimProxy *mbim_proxy_new (GError **error);
+
+/**
+ * mbim_proxy_get_n_clients:
+ * @self: a #MbimProxy.
+ *
+ * Get the number of clients currently connected to the proxy.
+ *
+ * Returns: a #guint.
+ */
+guint mbim_proxy_get_n_clients (MbimProxy *self);
+
+/**
+ * mbim_proxy_get_n_devices:
+ * @self: a #MbimProxy.
+ *
+ * Get the number of devices currently connected to the proxy.
+ *
+ * Returns: a #guint.
+ */
+guint mbim_proxy_get_n_devices (MbimProxy *self);
+
+G_END_DECLS
 
 #endif /* MBIM_PROXY_H */

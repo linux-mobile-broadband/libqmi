@@ -32,6 +32,14 @@
 
 G_BEGIN_DECLS
 
+/**
+ * SECTION: mbim-uuid
+ * @title: UUIDs
+ * @short_description: Generic UUID handling routines.
+ *
+ * This section defines the data type for unique identifiers.
+ */
+
 /*****************************************************************************/
 
 /**
@@ -50,11 +58,42 @@ struct MBIM_PACKED _MbimUuid {
 };
 #undef MBIM_PACKED
 
-gboolean  mbim_uuid_cmp            (const MbimUuid *a,
-                                    const MbimUuid *b);
-gchar    *mbim_uuid_get_printable  (const MbimUuid *uuid);
-gboolean  mbim_uuid_from_printable (const gchar *str,
-                                    MbimUuid    *uuid);
+/**
+ * mbim_uuid_cmp:
+ * @a: a #MbimUuid.
+ * @b: a #MbimUuid.
+ *
+ * Compare two %MbimUuid values.
+ *
+ * Returns: %TRUE if @a and @b are equal, %FALSE otherwise.
+ */
+gboolean  mbim_uuid_cmp (const MbimUuid *a,
+                         const MbimUuid *b);
+
+/**
+ * mbim_uuid_get_printable:
+ * @uuid: a #MbimUuid.
+ *
+ * Get a string with the UUID.
+ *
+ * Returns: (transfer full): a newly allocated string, which should be freed with g_free().
+ */
+gchar *mbim_uuid_get_printable (const MbimUuid *uuid);
+
+/**
+ * mbim_uuid_from_printable:
+ * @str: a MBIM UUID.
+ * @uuid: pointer to the target #MbimUuid.
+ *
+ * Fills in @uuid from the printable representation give in @str.
+ *
+ * Only ccepts @str written with dashes separating items, e.g.:
+ *  a289cc33-bcbb-8b4f-b6b0-133ec2aae6df
+ *
+ * Returns: %TRUE if @uuid was correctly set, %FALSE otherwise.
+ */
+gboolean mbim_uuid_from_printable (const gchar *str,
+                                   MbimUuid    *uuid);
 
 /*****************************************************************************/
 
@@ -235,18 +274,73 @@ typedef enum {
  */
 #define MBIM_UUID_MS_BASIC_CONNECT_EXTENSIONS mbim_uuid_from_service (MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS)
 
+/**
+ * mbim_service_lookup_name:
+ * @service: a MbimService or custom service.
+ *
+ * Gets the nickname string for the @service.
+ *
+ * As opposed to mbim_service_get_string(), this methods takes into account
+ * custom services that may have been registered by the user.
+ *
+ * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ */
 const gchar *mbim_service_lookup_name (guint service);
 
+/**
+ * mbim_register_custom_service:
+ * @uuid: MbimUuid structure corresponding to service
+ * @nickname: a printable name for service
+ *
+ * Register a custom service
+ *
+ * Returns: TRUE if service has been registered, FALSE otherwise.
+ */
 guint mbim_register_custom_service (const MbimUuid *uuid,
-                                    const gchar *nickname);
+                                    const gchar    *nickname);
 
+/**
+ * mbim_unregister_custom_service:
+ * @id: ID of the service to unregister.MbimUuid structure corresponding to service
+ *
+ * Unregister a custom service.
+ *
+ * Returns: TRUE if service has been unregistered, FALSE otherwise.
+ */
 gboolean mbim_unregister_custom_service (const guint id);
 
+/**
+ * mbim_service_id_is_custom:
+ * @id: ID of the service
+ *
+ * Checks whether @id is a custom or standard service.
+ *
+ * Returns: TRUE if service is custom, FALSE otherwise.
+ */
 gboolean mbim_service_id_is_custom (const guint id);
 
-/* To/From service */
-const MbimUuid *mbim_uuid_from_service  (MbimService     service);
-MbimService     mbim_uuid_to_service    (const MbimUuid *uuid);
+/**
+ * mbim_uuid_from_service:
+ * @service: a #MbimService.
+ *
+ * Get the UUID corresponding to @service.
+ *
+ * The @service needs to be either a generic one (including #MBIM_SERVICE_INVALID)
+ * or a custom registered one.
+ *
+ * Returns: (transfer none): a #MbimUuid.
+ */
+const MbimUuid *mbim_uuid_from_service (MbimService service);
+
+/**
+ * mbim_uuid_to_service:
+ * @uuid: a #MbimUuid.
+ *
+ * Get the service corresponding to @uuid.
+ *
+ * Returns: a #MbimService.
+ */
+MbimService mbim_uuid_to_service (const MbimUuid *uuid);
 
 /*****************************************************************************/
 
@@ -278,9 +372,25 @@ typedef enum {
     MBIM_CONTEXT_TYPE_LOCAL       = 9,
 } MbimContextType;
 
-/* To/From context type */
-const MbimUuid  *mbim_uuid_from_context_type (MbimContextType  context_type);
-MbimContextType  mbim_uuid_to_context_type   (const MbimUuid  *uuid);
+/**
+ * mbim_uuid_from_context_type:
+ * @context_type: a #MbimContextType.
+ *
+ * Get the UUID corresponding to @context_type.
+ *
+ * Returns: (transfer none): a #MbimUuid.
+ */
+const MbimUuid *mbim_uuid_from_context_type (MbimContextType context_type);
+
+/**
+ * mbim_uuid_to_context_type:
+ * @uuid: a #MbimUuid.
+ *
+ * Get the context type corresponding to @uuid.
+ *
+ * Returns: a #MbimContextType.
+ */
+MbimContextType mbim_uuid_to_context_type (const MbimUuid *uuid);
 
 G_END_DECLS
 

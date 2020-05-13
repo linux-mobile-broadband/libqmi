@@ -35,6 +35,14 @@
 G_BEGIN_DECLS
 
 /**
+ * SECTION: mbim-cid
+ * @title: Command IDs
+ * @short_description: Generic command handling routines.
+ *
+ * This section defines the interface of the known command IDs.
+ */
+
+/**
  * MbimCidBasicConnect:
  * @MBIM_CID_BASIC_CONNECT_UNKNOWN: Unknown command.
  * @MBIM_CID_BASIC_CONNECT_DEVICE_CAPS: Device capabilities.
@@ -295,12 +303,53 @@ typedef enum {
 
 /* Command helpers */
 
-gboolean     mbim_cid_can_set       (MbimService service,
-                                     guint       cid);
-gboolean     mbim_cid_can_query     (MbimService service,
-                                     guint       cid);
-gboolean     mbim_cid_can_notify    (MbimService service,
-                                     guint       cid);
+/**
+ * mbim_cid_can_set:
+ * @service: a #MbimService.
+ * @cid: a command ID.
+ *
+ * Checks whether the given command allows setting.
+ *
+ * Returns: %TRUE if the command allows setting, %FALSE otherwise.
+ */
+gboolean mbim_cid_can_set (MbimService service,
+                           guint       cid);
+
+/**
+ * mbim_cid_can_query:
+ * @service: a #MbimService.
+ * @cid: a command ID.
+ *
+ * Checks whether the given command allows querying.
+ *
+ * Returns: %TRUE if the command allows querying, %FALSE otherwise.
+ */
+gboolean mbim_cid_can_query (MbimService service,
+                             guint       cid);
+
+/**
+ * mbim_cid_can_notify:
+ * @service: a #MbimService.
+ * @cid: a command ID.
+ *
+ * Checks whether the given command allows notifying.
+ *
+ * Returns: %TRUE if the command allows notifying, %FALSE otherwise.
+ */
+gboolean mbim_cid_can_notify (MbimService service,
+                              guint       cid);
+
+
+/**
+ * mbim_cid_get_printable:
+ * @service: a #MbimService.
+ * @cid: a command ID.
+ *
+ * Gets a printable string for the command specified by the @service and the
+ * @cid.
+ *
+ * Returns: a constant string.
+ */
 const gchar *mbim_cid_get_printable (MbimService service,
                                      guint       cid);
 

@@ -74,14 +74,6 @@ static MbimDevice *peek_device_for_path (MbimProxy *self, const gchar *path);
 
 /*****************************************************************************/
 
-/**
- * mbim_proxy_get_n_clients:
- * @self: a #MbimProxy.
- *
- * Get the number of clients currently connected to the proxy.
- *
- * Returns: a #guint.
- */
 guint
 mbim_proxy_get_n_clients (MbimProxy *self)
 {
@@ -90,14 +82,6 @@ mbim_proxy_get_n_clients (MbimProxy *self)
     return g_list_length (self->priv->clients);
 }
 
-/**
- * mbim_proxy_get_n_devices:
- * @self: a #MbimProxy.
- *
- * Get the number of devices currently connected to the proxy.
- *
- * Returns: a #guint.
- */
 guint
 mbim_proxy_get_n_devices (MbimProxy *self)
 {

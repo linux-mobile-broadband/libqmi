@@ -55,17 +55,6 @@
 #include "mbim-proxy.h"
 #include "mbim-proxy-control.h"
 
-/**
- * SECTION:mbim-device
- * @title: MbimDevice
- * @short_description: Generic MBIM device handling routines
- *
- * #MbimDevice is a generic type in charge of controlling the access to the
- * managed MBIM port.
- *
- * A #MbimDevice can only handle one single MBIM port.
- */
-
 static void async_initable_iface_init (GAsyncInitableIface *iface);
 
 G_DEFINE_TYPE_EXTENDED (MbimDevice, mbim_device, G_TYPE_OBJECT, 0,
@@ -408,14 +397,6 @@ device_store_transaction (MbimDevice       *self,
 
 /*****************************************************************************/
 
-/**
- * mbim_device_get_file:
- * @self: a #MbimDevice.
- *
- * Get the #GFile associated with this #MbimDevice.
- *
- * Returns: a #GFile that must be freed with g_object_unref().
- */
 GFile *
 mbim_device_get_file (MbimDevice *self)
 {
@@ -429,15 +410,6 @@ mbim_device_get_file (MbimDevice *self)
     return file;
 }
 
-/**
- * mbim_device_peek_file:
- * @self: a #MbimDevice.
- *
- * Get the #GFile associated with this #MbimDevice, without increasing the reference count
- * on the returned object.
- *
- * Returns: a #GFile. Do not free the returned object, it is owned by @self.
- */
 GFile *
 mbim_device_peek_file (MbimDevice *self)
 {
@@ -446,14 +418,6 @@ mbim_device_peek_file (MbimDevice *self)
     return self->priv->file;
 }
 
-/**
- * mbim_device_get_path:
- * @self: a #MbimDevice.
- *
- * Get the system path of the underlying MBIM device.
- *
- * Returns: the system path of the device.
- */
 const gchar *
 mbim_device_get_path (MbimDevice *self)
 {
@@ -462,14 +426,6 @@ mbim_device_get_path (MbimDevice *self)
     return self->priv->path;
 }
 
-/**
- * mbim_device_get_path_display:
- * @self: a #MbimDevice.
- *
- * Get the system path of the underlying MBIM device in UTF-8.
- *
- * Returns: UTF-8 encoded system path of the device.
- */
 const gchar *
 mbim_device_get_path_display (MbimDevice *self)
 {
@@ -478,14 +434,6 @@ mbim_device_get_path_display (MbimDevice *self)
     return self->priv->path_display;
 }
 
-/**
- * mbim_device_is_open:
- * @self: a #MbimDevice.
- *
- * Checks whether the #MbimDevice is open for I/O.
- *
- * Returns: %TRUE if @self is open, %FALSE otherwise.
- */
 gboolean
 mbim_device_is_open (MbimDevice *self)
 {
@@ -1292,16 +1240,6 @@ device_open_context_free (DeviceOpenContext *ctx)
 
 static void device_open_context_step (GTask *task);
 
-/**
- * mbim_device_open_full_finish:
- * @self: a #MbimDevice.
- * @res: a #GAsyncResult.
- * @error: Return location for error or %NULL.
- *
- * Finishes an asynchronous open operation started with mbim_device_open_full().
- *
- * Returns: %TRUE if successful, %FALSE if @error is set.
- */
 gboolean
 mbim_device_open_full_finish (MbimDevice    *self,
                               GAsyncResult  *res,
@@ -1310,16 +1248,6 @@ mbim_device_open_full_finish (MbimDevice    *self,
     return g_task_propagate_boolean (G_TASK (res), error);
 }
 
-/**
- * mbim_device_open_finish:
- * @self: a #MbimDevice.
- * @res: a #GAsyncResult.
- * @error: Return location for error or %NULL.
- *
- * Finishes an asynchronous open operation started with mbim_device_open().
- *
- * Returns: %TRUE if successful, %FALSE if @error is set.
- */
 gboolean
 mbim_device_open_finish (MbimDevice   *self,
                          GAsyncResult  *res,
@@ -1606,23 +1534,6 @@ device_open_context_step (GTask *task)
     g_assert_not_reached ();
 }
 
-/**
- * mbim_device_open_full:
- * @self: a #MbimDevice.
- * @flags: a set of #MbimDeviceOpenFlags.
- * @timeout: maximum time, in seconds, to wait for the device to be opened.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
- * @callback: a #GAsyncReadyCallback to call when the operation is finished.
- * @user_data: the data to pass to callback function.
- *
- * Asynchronously opens a #MbimDevice for I/O.
- *
- * This method is an extension of the generic mbim_device_open(), which allows
- * launching the #MbimDevice with proxy support.
- *
- * When the operation is finished @callback will be called. You can then call
- * mbim_device_open_full_finish() to get the result of the operation.
- */
 void
 mbim_device_open_full (MbimDevice          *self,
                        MbimDeviceOpenFlags  flags,
@@ -1651,19 +1562,6 @@ mbim_device_open_full (MbimDevice          *self,
     device_open_context_step (task);
 }
 
-/**
- * mbim_device_open:
- * @self: a #MbimDevice.
- * @timeout: maximum time, in seconds, to wait for the device to be opened.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
- * @callback: a #GAsyncReadyCallback to call when the operation is finished.
- * @user_data: the data to pass to callback function.
- *
- * Asynchronously opens a #MbimDevice for I/O.
- *
- * When the operation is finished @callback will be called. You can then call
- * mbim_device_open_finish() to get the result of the operation.
- */
 void
 mbim_device_open (MbimDevice          *self,
                   guint                timeout,
@@ -1725,15 +1623,6 @@ destroy_iochannel (MbimDevice  *self,
     return TRUE;
 }
 
-/**
- * mbim_device_close_force:
- * @self: a #MbimDevice.
- * @error: Return location for error or %NULL.
- *
- * Forces the #MbimDevice to be closed.
- *
- * Returns: %TRUE if @self if no error happens, otherwise %FALSE and @error is set.
- */
 gboolean
 mbim_device_close_force (MbimDevice *self,
                          GError **error)
@@ -1753,16 +1642,6 @@ device_close_context_free (DeviceCloseContext *ctx)
     g_slice_free (DeviceCloseContext, ctx);
 }
 
-/**
- * mbim_device_close_finish:
- * @self: a #MbimDevice.
- * @res: a #GAsyncResult.
- * @error: Return location for error or %NULL.
- *
- * Finishes an asynchronous close operation started with mbim_device_close().
- *
- * Returns: %TRUE if successful, %FALSE if @error is set.
- */
 gboolean
 mbim_device_close_finish (MbimDevice    *self,
                           GAsyncResult  *res,
@@ -1791,19 +1670,6 @@ close_message_ready (MbimDevice   *self,
     g_object_unref (task);
 }
 
-/**
- * mbim_device_close:
- * @self: a #MbimDevice.
- * @timeout: maximum time, in seconds, to wait for the device to be closed.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
- * @callback: a #GAsyncReadyCallback to call when the operation is finished.
- * @user_data: the data to pass to callback function.
- *
- * Asynchronously closes a #MbimDevice for I/O.
- *
- * When the operation is finished @callback will be called. You can then call
- * mbim_device_close_finish() to get the result of the operation.
- */
 void
 mbim_device_close (MbimDevice          *self,
                    guint                timeout,
@@ -1854,15 +1720,6 @@ mbim_device_close (MbimDevice          *self,
 
 /*****************************************************************************/
 
-/**
- * mbim_device_get_next_transaction_id:
- * @self: A #MbimDevice.
- *
- * Acquire the next transaction ID of this #MbimDevice.
- * The internal transaction ID gets incremented.
- *
- * Returns: the next transaction ID.
- */
 guint32
 mbim_device_get_next_transaction_id (MbimDevice *self)
 {
@@ -2082,16 +1939,6 @@ device_report_error (MbimDevice   *self,
 /*****************************************************************************/
 /* Command */
 
-/**
- * mbim_device_command_finish:
- * @self: a #MbimDevice.
- * @res: a #GAsyncResult.
- * @error: Return location for error or %NULL.
- *
- * Finishes an operation started with mbim_device_command().
- *
- * Returns: a #MbimMessage response, or #NULL if @error is set. The returned value should be freed with mbim_message_unref().
- */
 MbimMessage *
 mbim_device_command_finish (MbimDevice    *self,
                             GAsyncResult  *res,
@@ -2100,20 +1947,6 @@ mbim_device_command_finish (MbimDevice    *self,
     return g_task_propagate_pointer (G_TASK (res), error);
 }
 
-/**
- * mbim_device_command:
- * @self: a #MbimDevice.
- * @message: the message to send.
- * @timeout: maximum time, in seconds, to wait for the response.
- * @cancellable: a #GCancellable, or %NULL.
- * @callback: a #GAsyncReadyCallback to call when the operation is finished.
- * @user_data: the data to pass to callback function.
- *
- * Asynchronously sends a #MbimMessage to the device.
- *
- * When the operation is finished @callback will be called. You can then call
- * mbim_device_command_finish() to get the result of the operation.
- */
 void
 mbim_device_command (MbimDevice          *self,
                      MbimMessage         *message,
@@ -2176,15 +2009,6 @@ mbim_device_command (MbimDevice          *self,
 /*****************************************************************************/
 /* New MBIM device */
 
-/**
- * mbim_device_new_finish:
- * @res: a #GAsyncResult.
- * @error: Return location for error or %NULL.
- *
- * Finishes an operation started with mbim_device_new().
- *
- * Returns: A newly created #MbimDevice, or #NULL if @error is set.
- */
 MbimDevice *
 mbim_device_new_finish (GAsyncResult  *res,
                         GError       **error)
@@ -2199,17 +2023,6 @@ mbim_device_new_finish (GAsyncResult  *res,
   return (ret ? MBIM_DEVICE (ret) : NULL);
 }
 
-/**
- * mbim_device_new:
- * @file: a #GFile.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
- * @callback: a #GAsyncReadyCallback to call when the initialization is finished.
- * @user_data: the data to pass to callback function.
- *
- * Asynchronously creates a #MbimDevice object to manage @file.
- * When the operation is finished, @callback will be invoked. You can then call
- * mbim_device_new_finish() to get the result of the operation.
- */
 void
 mbim_device_new (GFile               *file,
                  GCancellable        *cancellable,

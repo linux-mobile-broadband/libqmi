@@ -32,6 +32,14 @@
 
 G_BEGIN_DECLS
 
+/**
+ * SECTION: mbim-compat
+ * @title: Deprecated API
+ * @short_description: Types and functions flagged as deprecated.
+ *
+ * This section defines types and functions that have been deprecated.
+ */
+
 #ifndef MBIM_DISABLE_DEPRECATED
 
 /*****************************************************************************/
@@ -66,12 +74,37 @@ typedef int MbimDeprecatedCidBasicConnect;
  */
 #define MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST (MbimDeprecatedCidBasicConnect) MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST
 
+/**
+ * mbim_message_device_service_subscriber_list_set_new:
+ * @events_count: the 'EventsCount' field, given as a #guint32.
+ * @events: the 'Events' field, given as an array of #MbimEventEntrys.
+ * @error: return location for error or %NULL.
+ *
+ * Create a new request for the 'Device Service Subscribe List' set command in the 'Basic Connect' service.
+ *
+ * Returns: a newly allocated #MbimMessage, which should be freed with mbim_message_unref().
+ *
+ * Deprecated:1.8.0: Use mbim_message_device_service_subscribe_list_set_new() instead.
+ */
 G_DEPRECATED_FOR (mbim_message_device_service_subscribe_list_set_new)
 MbimMessage *mbim_message_device_service_subscriber_list_set_new (
     guint32 events_count,
     const MbimEventEntry *const *events,
     GError **error);
 
+/**
+ * mbim_message_device_service_subscriber_list_response_parse:
+ * @message: the #MbimMessage.
+ * @events_count: return location for a #guint32, or %NULL if the 'EventsCount' field is not needed.
+ * @events: return location for a newly allocated array of #MbimEventEntrys, or %NULL if the 'Events' field is not needed. Free the returned value with mbim_event_entry_array_free().
+ * @error: return location for error or %NULL.
+ *
+ * Create a new request for the 'Events' response command in the 'Basic Connect' service.
+ *
+ * Returns: %TRUE if the message was correctly parsed, %FALSE if @error is set.
+ *
+ * Deprecated:1.8.0: Use mbim_message_device_service_subscribe_list_response_parse() instead.
+ */
 G_DEPRECATED_FOR (mbim_message_device_service_subscribe_list_response_parse)
 gboolean mbim_message_device_service_subscriber_list_response_parse (
     const MbimMessage *message,
