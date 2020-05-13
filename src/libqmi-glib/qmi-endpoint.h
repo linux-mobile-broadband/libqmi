@@ -45,7 +45,7 @@ typedef struct _QmiEndpoint QmiEndpoint;
 typedef struct _QmiEndpointClass QmiEndpointClass;
 typedef struct _QmiEndpointPrivate QmiEndpointPrivate;
 
-#define QMI_ENDPOINT_FILE            "device-file"
+#define QMI_ENDPOINT_FILE            "endpoint-file"
 #define QMI_ENDPOINT_SIGNAL_NEW_DATA "new-data"
 #define QMI_ENDPOINT_SIGNAL_HANGUP   "hangup"
 

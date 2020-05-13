@@ -328,7 +328,7 @@ qmi_endpoint_class_init (QmiEndpointClass *klass)
     klass->setup_indications_finish = endpoint_setup_indications_finish;
 
     /**
-     * QmiDevice:device-file:
+     * QmiEndpoint:endpoint-file:
      */
     properties[PROP_FILE] =
         g_param_spec_object (QMI_ENDPOINT_FILE,
