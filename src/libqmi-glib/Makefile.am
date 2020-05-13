@@ -176,6 +176,15 @@ Qmi_1_0_gir_FILES = \
 	$(wildcard generated/*.c) \
 	$(NULL)
 
+if QMI_QRTR_SUPPORTED
+INTROSPECTION_COMPILER_ARGS += \
+	--includedir="$(top_srcdir)/src/libqrtr-glib" \
+	$(NULL)
+Qmi_1_0_gir_SCANNERFLAGS += \
+	--include-uninstalled="$(top_builddir)/src/libqrtr-glib/Qrtr-1.0.gir" \
+	$(NULL)
+endif
+
 girdir = $(datadir)/gir-1.0
 nodist_gir_DATA = $(INTROSPECTION_GIRS)
 
