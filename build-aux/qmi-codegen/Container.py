@@ -201,7 +201,7 @@ class Container:
                 ' */\n')
         template += (
             '${static}void ${underscore}_unref (${camelcase} *self);\n'
-            'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${camelcase}, ${underscore}_unref);\n')
+            'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${camelcase}, ${underscore}_unref)\n')
         if self.readonly == False:
             if self.static == False:
                 template += (

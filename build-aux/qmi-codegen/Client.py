@@ -105,7 +105,7 @@ class Client:
             '};\n'
             '\n'
             'GType ${underscore}_get_type (void);\n'
-            'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${camelcase}, g_object_unref);\n'
+            'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${camelcase}, g_object_unref)\n'
             '\n')
         hfile.write(string.Template(template).substitute(translations))
 
