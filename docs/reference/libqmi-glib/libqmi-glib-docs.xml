@@ -386,6 +386,7 @@
     </section>
     <section>
       <title>Voice Requests</title>
+      <xi:include href="xml/qmi-message-voice-indication-register.xml"/>
       <xi:include href="xml/qmi-message-voice-dial-call.xml"/>
       <xi:include href="xml/qmi-message-voice-end-call.xml"/>
       <xi:include href="xml/qmi-message-voice-answer-call.xml"/>
