@@ -22,8 +22,10 @@
 #ifndef _LIBQMI_GLIB_QMI_COMPAT_H_
 #define _LIBQMI_GLIB_QMI_COMPAT_H_
 
+#ifndef QMI_DISABLE_DEPRECATED
+
 #if !defined (__LIBQMI_GLIB_H_INSIDE__) && !defined (LIBQMI_GLIB_COMPILATION)
-#error "Only <libqmi-glib.h> can be included directly."
+# error "Only <libqmi-glib.h> can be included directly."
 #endif
 
 #include "qmi-device.h"
@@ -42,8 +44,6 @@
  * shouldn't be used in newly written code. They are provided to avoid
  * innecessary API/ABI breaks, for compatibility purposes only.
  */
-
-#ifndef QMI_DISABLE_DEPRECATED
 
 /**
  * qmi_utils_read_guint8_from_buffer:
@@ -611,86 +611,6 @@ void qmi_utils_write_fixed_size_string_to_buffer  (guint8      **buffer,
                                                    guint16       fixed_size,
                                                    const gchar  *in);
 
-#if defined HAVE_QMI_MESSAGE_DMS_SET_SERVICE_PROGRAMMING_CODE
-
-/**
- * qmi_message_dms_set_service_programming_code_input_get_new:
- * @self: a #QmiMessageDmsSetServiceProgrammingCodeInput.
- * @arg_new: a placeholder for the output constant string, or %NULL if not required.
- * @error: Return location for error or %NULL.
- *
- * Get the 'New Code' field from @self.
- *
- * Returns: %TRUE if the field is found, %FALSE otherwise.
- *
- * Since: 1.0
- * Deprecated: 1.14.0: Use qmi_message_dms_set_service_programming_code_input_get_new_code() instead.
- */
-G_DEPRECATED_FOR (qmi_message_dms_set_service_programming_code_input_get_new_code)
-gboolean qmi_message_dms_set_service_programming_code_input_get_new (
-    QmiMessageDmsSetServiceProgrammingCodeInput *self,
-    const gchar **arg_new,
-    GError **error);
-
-/**
- * qmi_message_dms_set_service_programming_code_input_set_new:
- * @self: a #QmiMessageDmsSetServiceProgrammingCodeInput.
- * @arg_new: a constant string of exactly 6 characters.
- * @error: Return location for error or %NULL.
- *
- * Set the 'New Code' field in the message.
- *
- * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
- *
- * Since: 1.0
- * Deprecated: 1.14.0: Use qmi_message_dms_set_service_programming_code_input_set_new_code() instead.
- */
-G_DEPRECATED_FOR (qmi_message_dms_set_service_programming_code_input_set_new_code)
-gboolean qmi_message_dms_set_service_programming_code_input_set_new (
-    QmiMessageDmsSetServiceProgrammingCodeInput *self,
-    const gchar *arg_new,
-    GError **error);
-
-/**
- * qmi_message_dms_set_service_programming_code_input_get_current:
- * @self: a #QmiMessageDmsSetServiceProgrammingCodeInput.
- * @arg_current: a placeholder for the output constant string, or %NULL if not required.
- * @error: Return location for error or %NULL.
- *
- * Get the 'Current Code' field from @self.
- *
- * Returns: %TRUE if the field is found, %FALSE otherwise.
- *
- * Since: 1.0
- * Deprecated: 1.14.0: Use qmi_message_dms_set_service_programming_code_input_get_current_code() instead.
- */
-G_DEPRECATED_FOR (qmi_message_dms_set_service_programming_code_input_get_current_code)
-gboolean qmi_message_dms_set_service_programming_code_input_get_current (
-    QmiMessageDmsSetServiceProgrammingCodeInput *self,
-    const gchar **arg_current,
-    GError **error);
-
-/**
- * qmi_message_dms_set_service_programming_code_input_set_current:
- * @self: a #QmiMessageDmsSetServiceProgrammingCodeInput.
- * @arg_current: a placeholder for the output constant string, or %NULL if not required.
- * @error: Return location for error or %NULL.
- *
- * Get the 'Current Code' field from @self.
- *
- * Returns: %TRUE if the field is found, %FALSE otherwise.
- *
- * Since: 1.0
- * Deprecated: 1.14.0: Use qmi_message_dms_set_service_programming_code_input_set_current_code() instead.
- */
-G_DEPRECATED_FOR (qmi_message_dms_set_service_programming_code_input_set_current_code)
-gboolean qmi_message_dms_set_service_programming_code_input_set_current (
-    QmiMessageDmsSetServiceProgrammingCodeInput *self,
-    const gchar *arg_current,
-    GError **error);
-
-#endif /* HAVE_QMI_MESSAGE_DMS_SET_SERVICE_PROGRAMMING_CODE */
-
 /* The following type exists just so that we can get deprecation warnings */
 G_DEPRECATED
 typedef int QmiDeprecatedNasSimRejectState;
@@ -1138,6 +1058,186 @@ gboolean qmi_message_tlv_read_gfloat (QmiMessage  *self,
                                       gfloat      *out,
                                       GError     **error);
 
+/**
+ * QmiDmsDellFirmwareVersionType:
+ * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG: E.g. T77W968.F0.0.0.2.3.GC.004.
+ * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS: E.g. T77W968.F0.0.0.2.3.GC.004.011.
+ * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_APPS: E.g. 011.
+ *
+ * Dell specific firmware version types.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use #QmiDmsFoxconnFirmwareVersionType instead.
+ */
+typedef enum {
+    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG      = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG,
+    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS,
+    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_APPS               = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_APPS,
+} QmiDmsDellFirmwareVersionType;
+
+G_DEPRECATED_FOR (qmi_dms_foxconn_firmware_version_type_get_type)
+GType qmi_dms_dell_firmware_version_type_get_type (void) G_GNUC_CONST;
+G_DEPRECATED_FOR (QMI_TYPE_DMS_FOXCONN_FIRMWARE_VERSION_TYPE)
+#define QMI_TYPE_DMS_DELL_FIRMWARE_VERSION_TYPE QMI_TYPE_DMS_FOXCONN_FIRMWARE_VERSION_TYPE
+
+/**
+ * qmi_dms_dell_firmware_version_type_get_string:
+ * @val: a #QmiDmsFoxconnFirmwareVersionType.
+ *
+ * Gets the nickname string for the #QmiDmsFoxconnFirmwareVersionType specified at @val.
+ *
+ * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_dms_foxconn_firmware_version_type_get_string() instead.
+ */
+const gchar *qmi_dms_dell_firmware_version_type_get_string (QmiDmsDellFirmwareVersionType val);
+
+/**
+ * QmiDmsDellDeviceMode:
+ * @QMI_DMS_DELL_DEVICE_MODE_UNKNOWN: Unknown mode.
+ * @QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_ONLINE: Fastboot download mode for full partition files.
+ * @QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_OTA: Fastboot download mode for OTA files.
+ *
+ * Dell specific device modes.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use #QmiDmsFoxconnDeviceMode instead.
+ */
+typedef enum {
+    QMI_DMS_DELL_DEVICE_MODE_UNKNOWN         = QMI_DMS_FOXCONN_DEVICE_MODE_UNKNOWN,
+    QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_ONLINE = QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_ONLINE,
+    QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_OTA    = QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_OTA,
+} QmiDmsDellDeviceMode;
+
+G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_type)
+GType qmi_dms_dell_device_mode_get_type (void) G_GNUC_CONST;
+G_DEPRECATED_FOR (QMI_TYPE_DMS_FOXCONN_DEVICE_MODE)
+#define QMI_TYPE_DMS_DELL_DEVICE_MODE QMI_TYPE_DMS_FOXCONN_DEVICE_MODE
+
+/**
+ * qmi_dms_dell_device_mode_get_string:
+ * @val: a QmiDmsDellDeviceMode.
+ *
+ * Gets the nickname string for the #QmiDmsDellDeviceMode specified at @val.
+ *
+ * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use qmi_dms_foxconn_device_mode_get_string() instead.
+ */
+G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_string)
+const gchar *qmi_dms_dell_device_mode_get_string (QmiDmsDellDeviceMode val);
+
+/* Note: these defines are on purpose out of the #ifdefs, so that gtkdoc-scan
+ * doesn't complain */
+
+/**
+ * QmiMessageDmsDellChangeDeviceModeInput:
+ *
+ * The #QmiMessageDmsDellChangeDeviceModeInput structure contains private data and should only be accessed
+ * using the provided API.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use #QmiMessageDmsFoxconnChangeDeviceModeInput instead.
+ */
+#define QmiMessageDmsDellChangeDeviceModeInput QmiMessageDmsFoxconnChangeDeviceModeInput
+G_DEPRECATED_FOR (QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_INPUT)
+#define QMI_TYPE_MESSAGE_DMS_DELL_CHANGE_DEVICE_MODE_INPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_INPUT
+
+/**
+ * QmiMessageDmsDellChangeDeviceModeOutput:
+ *
+ * The #QmiMessageDmsDellChangeDeviceModeOutput structure contains private data and should only be accessed
+ * using the provided API.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use  instead.
+ */
+#define QmiMessageDmsDellChangeDeviceModeOutput QmiMessageDmsFoxconnChangeDeviceModeOutput
+G_DEPRECATED_FOR (QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_OUTPUT)
+#define QMI_TYPE_MESSAGE_DMS_DELL_CHANGE_DEVICE_MODE_OUTPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_OUTPUT
+
+#if defined HAVE_QMI_MESSAGE_DMS_SET_SERVICE_PROGRAMMING_CODE
+
+/**
+ * qmi_message_dms_set_service_programming_code_input_get_new:
+ * @self: a #QmiMessageDmsSetServiceProgrammingCodeInput.
+ * @arg_new: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'New Code' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.14.0: Use qmi_message_dms_set_service_programming_code_input_get_new_code() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_set_service_programming_code_input_get_new_code)
+gboolean qmi_message_dms_set_service_programming_code_input_get_new (
+    QmiMessageDmsSetServiceProgrammingCodeInput *self,
+    const gchar **arg_new,
+    GError **error);
+
+/**
+ * qmi_message_dms_set_service_programming_code_input_set_new:
+ * @self: a #QmiMessageDmsSetServiceProgrammingCodeInput.
+ * @arg_new: a constant string of exactly 6 characters.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'New Code' field in the message.
+ *
+ * Returns: %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.14.0: Use qmi_message_dms_set_service_programming_code_input_set_new_code() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_set_service_programming_code_input_set_new_code)
+gboolean qmi_message_dms_set_service_programming_code_input_set_new (
+    QmiMessageDmsSetServiceProgrammingCodeInput *self,
+    const gchar *arg_new,
+    GError **error);
+
+/**
+ * qmi_message_dms_set_service_programming_code_input_get_current:
+ * @self: a #QmiMessageDmsSetServiceProgrammingCodeInput.
+ * @arg_current: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Current Code' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.14.0: Use qmi_message_dms_set_service_programming_code_input_get_current_code() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_set_service_programming_code_input_get_current_code)
+gboolean qmi_message_dms_set_service_programming_code_input_get_current (
+    QmiMessageDmsSetServiceProgrammingCodeInput *self,
+    const gchar **arg_current,
+    GError **error);
+
+/**
+ * qmi_message_dms_set_service_programming_code_input_set_current:
+ * @self: a #QmiMessageDmsSetServiceProgrammingCodeInput.
+ * @arg_current: a placeholder for the output constant string, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Current Code' field from @self.
+ *
+ * Returns: %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.14.0: Use qmi_message_dms_set_service_programming_code_input_set_current_code() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_set_service_programming_code_input_set_current_code)
+gboolean qmi_message_dms_set_service_programming_code_input_set_current (
+    QmiMessageDmsSetServiceProgrammingCodeInput *self,
+    const gchar *arg_current,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_DMS_SET_SERVICE_PROGRAMMING_CODE */
+
 #if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
 
 /**
@@ -1483,41 +1583,6 @@ gboolean qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_
 
 #endif /* HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT */
 
-/**
- * QmiDmsDellFirmwareVersionType:
- * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG: E.g. T77W968.F0.0.0.2.3.GC.004.
- * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS: E.g. T77W968.F0.0.0.2.3.GC.004.011.
- * @QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_APPS: E.g. 011.
- *
- * Dell specific firmware version types.
- *
- * Since: 1.22.4
- * Deprecated: 1.26: Use #QmiDmsFoxconnFirmwareVersionType instead.
- */
-typedef enum {
-    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG      = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG,
-    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS,
-    QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_APPS               = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_APPS,
-} QmiDmsDellFirmwareVersionType;
-
-G_DEPRECATED_FOR (qmi_dms_foxconn_firmware_version_type_get_type)
-GType qmi_dms_dell_firmware_version_type_get_type (void) G_GNUC_CONST;
-G_DEPRECATED_FOR (QMI_TYPE_DMS_FOXCONN_FIRMWARE_VERSION_TYPE)
-#define QMI_TYPE_DMS_DELL_FIRMWARE_VERSION_TYPE QMI_TYPE_DMS_FOXCONN_FIRMWARE_VERSION_TYPE
-
-/**
- * qmi_dms_dell_firmware_version_type_get_string:
- * @val: a #QmiDmsFoxconnFirmwareVersionType.
- *
- * Gets the nickname string for the #QmiDmsFoxconnFirmwareVersionType specified at @val.
- *
- * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
- *
- * Since: 1.22.4
- * Deprecated: 1.26: Use qmi_dms_foxconn_firmware_version_type_get_string() instead.
- */
-const gchar *qmi_dms_dell_firmware_version_type_get_string (QmiDmsDellFirmwareVersionType val);
-
 #if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION
 
 /**
@@ -1743,61 +1808,12 @@ QmiMessageDmsDellGetFirmwareVersionOutput *qmi_client_dms_dell_get_firmware_vers
 
 #endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION */
 
-/*****************************************************************************/
-/* Helper enums for the 'QMI DMS Dell Change Device Mode' message */
-
-/**
- * QmiDmsDellDeviceMode:
- * @QMI_DMS_DELL_DEVICE_MODE_UNKNOWN: Unknown mode.
- * @QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_ONLINE: Fastboot download mode for full partition files.
- * @QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_OTA: Fastboot download mode for OTA files.
- *
- * Dell specific device modes.
- *
- * Since: 1.22.4
- * Deprecated: 1.26: Use #QmiDmsFoxconnDeviceMode instead.
- */
-typedef enum {
-    QMI_DMS_DELL_DEVICE_MODE_UNKNOWN         = QMI_DMS_FOXCONN_DEVICE_MODE_UNKNOWN,
-    QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_ONLINE = QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_ONLINE,
-    QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_OTA    = QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_OTA,
-} QmiDmsDellDeviceMode;
-
-G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_type)
-GType qmi_dms_dell_device_mode_get_type (void) G_GNUC_CONST;
-G_DEPRECATED_FOR (QMI_TYPE_DMS_FOXCONN_DEVICE_MODE)
-#define QMI_TYPE_DMS_DELL_DEVICE_MODE QMI_TYPE_DMS_FOXCONN_DEVICE_MODE
-
-/**
- * qmi_dms_dell_device_mode_get_string:
- * @val: a QmiDmsDellDeviceMode.
- *
- * Gets the nickname string for the #QmiDmsDellDeviceMode specified at @val.
- *
- * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
- *
- * Since: 1.22.4
- * Deprecated: 1.26: Use qmi_dms_foxconn_device_mode_get_string() instead.
- */
-G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_string)
-const gchar *qmi_dms_dell_device_mode_get_string (QmiDmsDellDeviceMode val);
-
 #if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE
 
-/**
- * QmiMessageDmsDellChangeDeviceModeInput:
- *
- * The #QmiMessageDmsDellChangeDeviceModeInput structure contains private data and should only be accessed
- * using the provided API.
- *
- * Since: 1.22.4
- * Deprecated: 1.26: Use #QmiMessageDmsFoxconnChangeDeviceModeInput instead.
- */
-#define QmiMessageDmsDellChangeDeviceModeInput QmiMessageDmsFoxconnChangeDeviceModeInput
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_get_type)
 GType qmi_message_dms_dell_change_device_mode_input_get_type (void) G_GNUC_CONST;
-G_DEPRECATED_FOR (QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_INPUT)
-#define QMI_TYPE_MESSAGE_DMS_DELL_CHANGE_DEVICE_MODE_INPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_INPUT
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_output_get_type)
+GType qmi_message_dms_dell_change_device_mode_output_get_type (void) G_GNUC_CONST;
 
 /**
  * qmi_message_dms_dell_change_device_mode_input_get_mode:
@@ -1876,23 +1892,6 @@ void qmi_message_dms_dell_change_device_mode_input_unref (QmiMessageDmsDellChang
  */
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_new)
 QmiMessageDmsDellChangeDeviceModeInput *qmi_message_dms_dell_change_device_mode_input_new (void);
-
-/* --- Output -- */
-
-/**
- * QmiMessageDmsDellChangeDeviceModeOutput:
- *
- * The #QmiMessageDmsDellChangeDeviceModeOutput structure contains private data and should only be accessed
- * using the provided API.
- *
- * Since: 1.22.4
- * Deprecated: 1.26: Use  instead.
- */
-#define QmiMessageDmsDellChangeDeviceModeOutput QmiMessageDmsFoxconnChangeDeviceModeOutput
-G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_output_get_type)
-GType qmi_message_dms_dell_change_device_mode_output_get_type (void) G_GNUC_CONST;
-G_DEPRECATED_FOR (QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_OUTPUT)
-#define QMI_TYPE_MESSAGE_DMS_DELL_CHANGE_DEVICE_MODE_OUTPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_OUTPUT
 
 /**
  * qmi_message_dms_dell_change_device_mode_output_get_result:
