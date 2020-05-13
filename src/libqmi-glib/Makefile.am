@@ -152,23 +152,23 @@ CLEANFILES =
 
 if HAVE_INTROSPECTION
 
-INTROSPECTION_GIRS = libqmi-glib.gir
+INTROSPECTION_GIRS = Qmi-1.0.gir
 INTROSPECTION_SCANNER_ARGS = --warn-all
 INTROSPECTION_COMPILER_ARGS =
 
-libqmi-glib.gir: libqmi-glib.la
-libqmi_glib_gir_INCLUDES = GLib-2.0 GObject-2.0 Gio-2.0
-libqmi_glib_gir_CFLAGS = $(libqmi_glib_la_CPPFLAGS)
-libqmi_glib_gir_LIBS = libqmi-glib.la
-libqmi_glib_gir_EXPORT_PACKAGES = libqmi-glib
-libqmi_glib_gir_SCANNERFLAGS = \
+Qmi-1.0.gir: libqmi-glib.la
+Qmi_1_0_gir_INCLUDES = GLib-2.0 GObject-2.0 Gio-2.0
+Qmi_1_0_gir_CFLAGS = $(libqmi_glib_la_CPPFLAGS)
+Qmi_1_0_gir_LIBS = libqmi-glib.la
+Qmi_1_0_gir_EXPORT_PACKAGES = libqmi-glib
+Qmi_1_0_gir_SCANNERFLAGS = \
 	$(WARN_SCANNERFLAGS) \
 	--c-include "libqmi-glib.h" \
 	--identifier-prefix=QMI \
 	--identifier-prefix=Qmi \
 	--symbol-prefix=qmi_ \
 	$(NULL)
-libqmi_glib_gir_FILES = \
+Qmi_1_0_gir_FILES = \
 	$(include_HEADERS) \
 	$(filter-out %.h,$(libqmi_glib_la_SOURCES)) \
 	$(filter %.c,$(libqmi_glib_la_SOURCES)) \
