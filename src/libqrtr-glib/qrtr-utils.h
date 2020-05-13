@@ -76,7 +76,7 @@ void qrtr_node_for_id (guint32               node_id,
  *
  * Finishes an operation started with qrtr_node_for_id().
  *
- * Returns: A newly created #QrtrNode, or %NULL if @error is set.
+ * Returns: (transfer full): a newly created #QrtrNode, or %NULL if @error is set.
  */
 QrtrNode *qrtr_node_for_id_finish (GAsyncResult  *res,
                                    GError       **error);

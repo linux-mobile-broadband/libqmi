@@ -124,7 +124,7 @@ gint32 qrtr_node_lookup_service (QrtrNode *node,
                                  guint32   port);
 /**
  * qrtr_node_wait_for_services:
- * @services: a #GArray of service types
+ * @services: (in)(element-type guint32): a #GArray of service types
  * @timeout: maximum time to wait for the method to complete, in seconds.
  * A zero timeout is infinite.
  * @cancellable: a #GCancellable, or #NULL.
