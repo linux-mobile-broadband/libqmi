@@ -170,8 +170,8 @@ libqmi_glib_gir_SCANNERFLAGS = \
 	$(NULL)
 libqmi_glib_gir_FILES = \
 	$(include_HEADERS) \
-	$(filter-out %.h,$(libmm_glib_la_SOURCES)) \
-	$(filter %.c,$(libmm_glib_la_SOURCES)) \
+	$(filter-out %.h,$(libqmi_glib_la_SOURCES)) \
+	$(filter %.c,$(libqmi_glib_la_SOURCES)) \
 	$(wildcard generated/*.h) \
 	$(wildcard generated/*.c) \
 	$(NULL)
