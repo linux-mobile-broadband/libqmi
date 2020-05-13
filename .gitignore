@@ -3,39 +3,28 @@
 *.lo
 *.la
 *.bz2
-*.swp
-tags
-.*DS_Store
-.deps
-.libs
-.__autoconf_trace_data
+*.pyc
+*.gir
+*.typelib
 
-ChangeLog
-INSTALL
 Makefile
 Makefile.in
-aclocal.m4
-autom4te.cache
-compile
-config.cache
-config.guess
-config.h
-config.h.in
-config.log
-config.status
-config.sub
-configure
-install-sh
-libtool
-ltmain.sh
-m4
-missing
-stamp-h1
-depcomp
-test-driver
+.deps
+.libs
 
-/build-aux/mbim-codegen/*.pyc
-/build-aux/mbim-codegen/__pycache__
+/INSTALL
+/aclocal.m4
+/autom4te.cache
+/compile
+/config.*
+/configure
+/install-sh
+/libtool
+/ltmain.sh
+/m4
+/missing
+/stamp-h1
+/depcomp
 
 /data/pkg-config/mbim-glib.pc
 
