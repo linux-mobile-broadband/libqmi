@@ -61,7 +61,7 @@ gboolean qrtr_get_node_for_uri (const gchar *uri,
  *
  * Asynchronously creates a #QrtrNode for a given node id.
  * When the operation is finished, @callback will be invoked. You can then call
- * qmi_device_new_finish() to get the result of the operation.
+ * qrtr_node_for_id_finish() to get the result of the operation.
  */
 void qrtr_node_for_id (guint32               node_id,
                        guint                 timeout,
