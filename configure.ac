@@ -136,6 +136,9 @@ AC_SUBST(GLIB_MKENUMS)
 dnl Documentation
 GTK_DOC_CHECK(1.0)
 
+dnl GObject Introspection
+GOBJECT_INTROSPECTION_CHECK([0.9.6])
+
 # MBIM username
 MBIM_USERNAME="root"
 AC_ARG_ENABLE(mbim-username,
@@ -230,19 +233,20 @@ echo "
     ==============================================
 
     Build:
-      compiler:             ${CC}
-      cflags:               ${CFLAGS}
-      ldflags:              ${LDFLAGS}
-      warn cflags:          ${WARN_CFLAGS}
-      warn ldflags:         ${WARN_LDFLAGS}
-      Maintainer mode:      ${USE_MAINTAINER_MODE}
-      Documentation:        ${enable_gtk_doc}
+      compiler:                 ${CC}
+      cflags:                   ${CFLAGS}
+      ldflags:                  ${LDFLAGS}
+      warn cflags:              ${WARN_CFLAGS}
+      warn ldflags:             ${WARN_LDFLAGS}
+      Maintainer mode:          ${USE_MAINTAINER_MODE}
+      Documentation:            ${enable_gtk_doc}
+      gobject introspection:    ${found_introspection}
 
     System paths:
-      prefix:               ${prefix}
-      udev base directory:  ${UDEV_BASE_DIR}
+      prefix:                   ${prefix}
+      udev base directory:      ${UDEV_BASE_DIR}
 
     Features:
-      udev support:         ${with_udev}
-      MBIM username:        ${MBIM_USERNAME_ENABLED} (${MBIM_USERNAME})
+      udev support:             ${with_udev}
+      MBIM username:            ${MBIM_USERNAME_ENABLED} (${MBIM_USERNAME})
 "

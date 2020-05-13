@@ -68,3 +68,43 @@ include_HEADERS = \
 	$(NULL)
 
 EXTRA_DIST = mbim-version.h.in
+
+# Introspection
+
+if HAVE_INTROSPECTION
+
+INTROSPECTION_GIRS = Mbim-1.0.gir
+INTROSPECTION_SCANNER_ARGS = --warn-all
+INTROSPECTION_COMPILER_ARGS =
+
+Mbim-1.0.gir: libmbim-glib.la
+Mbim_1_0_gir_INCLUDES = GLib-2.0 GObject-2.0 Gio-2.0
+Mbim_1_0_gir_CFLAGS = $(libmbim_glib_core_la_CPPFLAGS)
+Mbim_1_0_gir_LIBS = libmbim-glib.la
+Mbim_1_0_gir_EXPORT_PACKAGES = libmbim-glib
+Mbim_1_0_gir_SCANNERFLAGS = \
+	$(WARN_SCANNERFLAGS) \
+	--c-include "libmbim-glib.h" \
+	--identifier-prefix=MBIM \
+	--identifier-prefix=Mbim \
+	--symbol-prefix=mbim_ \
+	$(NULL)
+Mbim_1_0_gir_FILES = \
+	$(include_HEADERS) \
+	$(filter-out %.h,$(libmbim_glib_la_SOURCES)) \
+	$(filter %.c,$(libmbim_glib_la_SOURCES)) \
+	$(wildcard generated/*.h) \
+	$(wildcard generated/*.c) \
+	$(NULL)
+
+girdir = $(datadir)/gir-1.0
+nodist_gir_DATA = $(INTROSPECTION_GIRS)
+
+typelibdir = $(libdir)/girepository-1.0
+nodist_typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
+
+CLEANFILES = $(nodist_gir_DATA) $(nodist_typelib_DATA)
+
+endif # HAVE_INTROSPECTION
+
+-include $(INTROSPECTION_MAKEFILE)

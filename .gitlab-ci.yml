@@ -4,13 +4,13 @@ stages:
   - test
 
 before_script:
-  - apt update && apt -y install autoconf automake libtool libgudev-1.0-dev autoconf-archive gtk-doc-tools libglib2.0-doc
+  - apt update && apt -y install autoconf automake libtool libgudev-1.0-dev autoconf-archive gtk-doc-tools libglib2.0-doc gobject-introspection libgirepository1.0-dev
 
 test:
   stage: test
   script:
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --enable-gtk-doc
+    - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection
     - make
     - make check
     - make install
