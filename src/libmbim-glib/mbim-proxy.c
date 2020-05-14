@@ -1433,7 +1433,7 @@ mbim_proxy_new (GError **error)
     if (!setup_socket_service (self, error))
         return NULL;
 
-    return self;
+    return g_steal_pointer (&self);
 }
 
 static void
