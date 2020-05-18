@@ -56,7 +56,7 @@
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=mbim_core_error >*/
+typedef enum { /*< since=1.0 >*/
     MBIM_CORE_ERROR_FAILED           = 0, /*< nick=Failed >*/
     MBIM_CORE_ERROR_WRONG_STATE      = 1, /*< nick=WrongState >*/
     MBIM_CORE_ERROR_TIMEOUT          = 2, /*< nick=Timeout >*/
@@ -83,7 +83,7 @@ typedef enum { /*< underscore_name=mbim_core_error >*/
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_PROTOCOL_ERROR_INVALID                  = 0, /*< nick=Invalid >*/
     MBIM_PROTOCOL_ERROR_TIMEOUT_FRAGMENT         = 1, /*< nick=TimeoutFragment >*/
     MBIM_PROTOCOL_ERROR_FRAGMENT_OUT_OF_SEQUENCE = 2, /*< nick=FragmentOutOfSequence >*/
@@ -146,7 +146,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_STATUS_ERROR_NONE                             = 0,  /*< nick=None >*/
     MBIM_STATUS_ERROR_BUSY                             = 1,  /*< nick=Busy >*/
     MBIM_STATUS_ERROR_FAILURE                          = 2,  /*< nick=Failure >*/

@@ -234,7 +234,7 @@ gboolean mbim_device_is_open (MbimDevice *self);
  *
  * Since: 1.10
  */
-typedef enum {
+typedef enum { /*< since=1.10 >*/
     MBIM_DEVICE_OPEN_FLAGS_NONE  = 0,
     MBIM_DEVICE_OPEN_FLAGS_PROXY = 1 << 0
 } MbimDeviceOpenFlags;

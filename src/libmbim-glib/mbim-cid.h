@@ -72,7 +72,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CID_BASIC_CONNECT_UNKNOWN                        = 0,
     MBIM_CID_BASIC_CONNECT_DEVICE_CAPS                    = 1,
     MBIM_CID_BASIC_CONNECT_SUBSCRIBER_READY_STATUS        = 2,
@@ -112,7 +112,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CID_SMS_UNKNOWN              = 0,
     MBIM_CID_SMS_CONFIGURATION        = 1,
     MBIM_CID_SMS_READ                 = 2,
@@ -130,7 +130,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CID_USSD_UNKNOWN = 0,
     MBIM_CID_USSD         = 1,
 } MbimCidUssd;
@@ -147,7 +147,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CID_PHONEBOOK_UNKNOWN       = 0,
     MBIM_CID_PHONEBOOK_CONFIGURATION = 1,
     MBIM_CID_PHONEBOOK_READ          = 2,
@@ -166,7 +166,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CID_STK_UNKNOWN           = 0,
     MBIM_CID_STK_PAC               = 1,
     MBIM_CID_STK_TERMINAL_RESPONSE = 2,
@@ -184,7 +184,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CID_AUTH_UNKNOWN = 0,
     MBIM_CID_AUTH_AKA     = 1,
     MBIM_CID_AUTH_AKAP    = 2,
@@ -200,7 +200,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CID_DSS_UNKNOWN = 0,
     MBIM_CID_DSS_CONNECT = 1
 } MbimCidDss;
@@ -214,7 +214,7 @@ typedef enum {
  *
  * Since: 1.8
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CID_MS_FIRMWARE_ID_UNKNOWN = 0,
     MBIM_CID_MS_FIRMWARE_ID_GET     = 1
 } MbimCidMsFirmwareId;
@@ -228,7 +228,7 @@ typedef enum {
  *
  * Since: 1.8
  */
-typedef enum {
+typedef enum { /*< since=1.8 >*/
     MBIM_CID_MS_HOST_SHUTDOWN_UNKNOWN = 0,
     MBIM_CID_MS_HOST_SHUTDOWN_NOTIFY  = 1
 } MbimCidMsHostShutdown;
@@ -242,7 +242,7 @@ typedef enum {
  *
  * Since: 1.10
  */
-typedef enum {
+typedef enum { /*< since=1.10 >*/
     MBIM_CID_PROXY_CONTROL_UNKNOWN       = 0,
     MBIM_CID_PROXY_CONTROL_CONFIGURATION = 1
 } MbimCidProxyControl;
@@ -256,7 +256,7 @@ typedef enum {
  *
  * Since: 1.14
  */
-typedef enum {
+typedef enum { /*< since=1.14 >*/
     MBIM_CID_QMI_UNKNOWN = 0,
     MBIM_CID_QMI_MSG     = 1
 } MbimCidQmi;
@@ -274,7 +274,7 @@ typedef enum {
  *
  * Since: 1.16
  */
-typedef enum {
+typedef enum { /*< since=1.16 >*/
     MBIM_CID_ATDS_UNKNOWN        = 0,
     MBIM_CID_ATDS_SIGNAL         = 1,
     MBIM_CID_ATDS_LOCATION       = 2,
@@ -292,7 +292,7 @@ typedef enum {
  *
  * Since: 1.16
  */
-typedef enum {
+typedef enum { /*< since=1.16 >*/
     MBIM_CID_INTEL_FIRMWARE_UPDATE_UNKNOWN      = 0,
     MBIM_CID_INTEL_FIRMWARE_UPDATE_MODEM_REBOOT = 1,
 } MbimCidIntelFirmwareUpdate;
@@ -315,7 +315,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_UNKNOWN                  = 0,
     MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_PROVISIONED_CONTEXTS     = 1,
     MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_NETWORK_BLACKLIST        = 2,

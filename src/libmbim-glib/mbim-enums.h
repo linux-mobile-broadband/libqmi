@@ -52,7 +52,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_DEVICE_TYPE_UNKNOWN   = 0,
     MBIM_DEVICE_TYPE_EMBEDDED  = 1,
     MBIM_DEVICE_TYPE_REMOVABLE = 2,
@@ -68,7 +68,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CELLULAR_CLASS_GSM  = 1 << 0,
     MBIM_CELLULAR_CLASS_CDMA = 1 << 1
 } MbimCellularClass;
@@ -84,7 +84,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_VOICE_CLASS_UNKNOWN                 = 0,
     MBIM_VOICE_CLASS_NO_VOICE                = 1,
     MBIM_VOICE_CLASS_SEPARATED_VOICE_DATA    = 2,
@@ -100,7 +100,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_SIM_CLASS_LOGICAL   = 1 << 0,
     MBIM_SIM_CLASS_REMOVABLE = 1 << 1
 } MbimSimClass;
@@ -126,7 +126,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_DATA_CLASS_GPRS        = 1 << 0,
     MBIM_DATA_CLASS_EDGE        = 1 << 1,
     MBIM_DATA_CLASS_UMTS        = 1 << 2,
@@ -156,7 +156,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_SMS_CAPS_PDU_RECEIVE  = 1 << 0,
     MBIM_SMS_CAPS_PDU_SEND     = 1 << 1,
     MBIM_SMS_CAPS_TEXT_RECEIVE = 1 << 2,
@@ -175,7 +175,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CTRL_CAPS_REG_MANUAL      = 1 << 0,
     MBIM_CTRL_CAPS_HW_RADIO_SWITCH = 1 << 1,
     MBIM_CTRL_CAPS_CDMA_MOBILE_IP  = 1 << 2,
@@ -200,7 +200,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_SUBSCRIBER_READY_STATE_NOT_INITIALIZED  = 0,
     MBIM_SUBSCRIBER_READY_STATE_INITIALIZED      = 1,
     MBIM_SUBSCRIBER_READY_STATE_SIM_NOT_INSERTED = 2,
@@ -219,7 +219,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_READY_INFO_FLAG_NONE              = 0,
     MBIM_READY_INFO_FLAG_PROTECT_UNIQUE_ID = 1 << 0
 } MbimReadyInfoFlag;
@@ -236,7 +236,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_RADIO_SWITCH_STATE_OFF = 0,
     MBIM_RADIO_SWITCH_STATE_ON  = 1
 } MbimRadioSwitchState;
@@ -269,7 +269,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_PIN_TYPE_UNKNOWN              = 0,
     MBIM_PIN_TYPE_CUSTOM               = 1,
     MBIM_PIN_TYPE_PIN1                 = 2,
@@ -299,7 +299,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_PIN_STATE_UNLOCKED = 0,
     MBIM_PIN_STATE_LOCKED   = 1
 } MbimPinState;
@@ -315,7 +315,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_PIN_OPERATION_ENTER   = 0,
     MBIM_PIN_OPERATION_ENABLE  = 1,
     MBIM_PIN_OPERATION_DISABLE = 2,
@@ -335,7 +335,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_PIN_MODE_NOT_SUPPORTED = 0,
     MBIM_PIN_MODE_ENABLED       = 1,
     MBIM_PIN_MODE_DISABLED      = 2
@@ -351,7 +351,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_PIN_FORMAT_UNKNOWN      = 0,
     MBIM_PIN_FORMAT_NUMERIC      = 1,
     MBIM_PIN_FORMAT_ALPHANUMERIC = 2
@@ -374,7 +374,7 @@ typedef enum {
  *
  * Since: 1.2
  */
-typedef enum {
+typedef enum { /*< since=1.2 >*/
     MBIM_PROVIDER_STATE_UNKNOWN                = 0,
     MBIM_PROVIDER_STATE_HOME                   = 1 << 0,
     MBIM_PROVIDER_STATE_FORBIDDEN              = 1 << 1,
@@ -396,7 +396,7 @@ typedef enum {
  *
  * Since: 1.2
  */
-typedef enum {
+typedef enum { /*< since=1.2 >*/
     MBIM_VISIBLE_PROVIDERS_ACTION_FULL_SCAN       = 0,
     MBIM_VISIBLE_PROVIDERS_ACTION_RESTRICTED_SCAN = 1
 } MbimVisibleProvidersAction;
@@ -457,7 +457,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_NW_ERROR_UNKNOWN                                                    = 0,
     MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR                                        = 2,
     MBIM_NW_ERROR_ILLEGAL_MS                                                 = 3,
@@ -515,7 +515,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_REGISTER_ACTION_AUTOMATIC = 0,
     MBIM_REGISTER_ACTION_MANUAL    = 1
 } MbimRegisterAction;
@@ -534,7 +534,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_REGISTER_STATE_UNKNOWN      = 0,
     MBIM_REGISTER_STATE_DEREGISTERED = 1,
     MBIM_REGISTER_STATE_SEARCHING    = 2,
@@ -554,7 +554,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_REGISTER_MODE_UNKNOWN   = 0,
     MBIM_REGISTER_MODE_AUTOMATIC = 1,
     MBIM_REGISTER_MODE_MANUAL    = 2
@@ -570,7 +570,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_REGISTRATION_FLAG_NONE                            = 0,
     MBIM_REGISTRATION_FLAG_MANUAL_SELECTION_NOT_AVAILABLE  = 1 << 0,
     MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH = 1 << 1,
@@ -588,7 +588,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_PACKET_SERVICE_ACTION_ATTACH = 0,
     MBIM_PACKET_SERVICE_ACTION_DETACH = 1
 } MbimPacketServiceAction;
@@ -605,7 +605,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_PACKET_SERVICE_STATE_UNKNOWN   = 0,
     MBIM_PACKET_SERVICE_STATE_ATTACHING = 1,
     MBIM_PACKET_SERVICE_STATE_ATTACHED  = 2,
@@ -625,7 +625,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_ACTIVATION_COMMAND_DEACTIVATE = 0,
     MBIM_ACTIVATION_COMMAND_ACTIVATE   = 1
 } MbimActivationCommand;
@@ -639,7 +639,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_COMPRESSION_NONE   = 0,
     MBIM_COMPRESSION_ENABLE = 1
 } MbimCompression;
@@ -655,7 +655,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_AUTH_PROTOCOL_NONE     = 0,
     MBIM_AUTH_PROTOCOL_PAP      = 1,
     MBIM_AUTH_PROTOCOL_CHAP     = 2,
@@ -674,7 +674,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CONTEXT_IP_TYPE_DEFAULT       = 0,
     MBIM_CONTEXT_IP_TYPE_IPV4          = 1,
     MBIM_CONTEXT_IP_TYPE_IPV6          = 2,
@@ -694,7 +694,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_ACTIVATION_STATE_UNKNOWN      = 0,
     MBIM_ACTIVATION_STATE_ACTIVATED    = 1,
     MBIM_ACTIVATION_STATE_ACTIVATING   = 2,
@@ -712,7 +712,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_VOICE_CALL_STATE_NONE        = 0,
     MBIM_VOICE_CALL_STATE_IN_PROGRESS = 1,
     MBIM_VOICE_CALL_STATE_HANG_UP     = 2
@@ -733,7 +733,7 @@ typedef enum {
  *
  * Since: 1.0
  */
-typedef enum { /*< underscore_name=mbim_ip_configuration_available_flag >*/
+typedef enum { /*< underscore_name=mbim_ip_configuration_available_flag,since=1.0 >*/
     MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_NONE     = 0,
     MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS  = 1 << 0,
     MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_GATEWAY  = 1 << 1,
@@ -753,7 +753,7 @@ typedef enum { /*< underscore_name=mbim_ip_configuration_available_flag >*/
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_SMS_STORAGE_STATE_NOT_INITIALIZED = 0,
     MBIM_SMS_STORAGE_STATE_INITIALIZED     = 1
 } MbimSmsStorageState;
@@ -767,7 +767,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_SMS_FORMAT_PDU  = 0,
     MBIM_SMS_FORMAT_CDMA = 1
 } MbimSmsFormat;
@@ -789,7 +789,7 @@ typedef enum {
  *
  * Since: 1.4
 */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_SMS_FLAG_ALL   = 0,
     MBIM_SMS_FLAG_INDEX = 1,
     MBIM_SMS_FLAG_NEW   = 2,
@@ -813,7 +813,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_SMS_CDMA_LANG_UNKNOWN  = 0,
     MBIM_SMS_CDMA_LANG_ENGLISH  = 1,
     MBIM_SMS_CDMA_LANG_FRENCH   = 2,
@@ -841,7 +841,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_SMS_CDMA_ENCODING_OCTET        = 0,
     MBIM_SMS_CDMA_ENCODING_EPM          = 1,
     MBIM_SMS_CDMA_ENCODING_7BIT_ASCII   = 2,
@@ -865,7 +865,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_SMS_STATUS_NEW   = 0,
     MBIM_SMS_STATUS_OLD   = 1,
     MBIM_SMS_STATUS_DRAFT = 2,
@@ -885,7 +885,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_SMS_STATUS_FLAG_NONE               = 0,
     MBIM_SMS_STATUS_FLAG_MESSAGE_STORE_FULL = 1,
     MBIM_SMS_STATUS_FLAG_NEW_MESSAGE        = 2
@@ -904,7 +904,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_USSD_ACTION_INITIATE = 0,
     MBIM_USSD_ACTION_CONTINUE = 1,
     MBIM_USSD_ACTION_CANCEL = 2
@@ -923,7 +923,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_USSD_RESPONSE_NO_ACTION_REQUIRED      = 0,
     MBIM_USSD_RESPONSE_ACTION_REQUIRED         = 1,
     MBIM_USSD_RESPONSE_TERMINATED_BY_NETWORK   = 2,
@@ -941,7 +941,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_USSD_SESSION_STATE_NEW_SESSION      = 0,
     MBIM_USSD_SESSION_STATE_EXISTING_SESSION = 1
 } MbimUssdSessionState;
@@ -958,7 +958,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_PHONEBOOK_STATE_NOT_INITIALIZED = 0,
     MBIM_PHONEBOOK_STATE_INITIALIZED     = 1
 } MbimPhonebookState;
@@ -975,7 +975,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_PHONEBOOK_FLAG_ALL   = 0,
     MBIM_PHONEBOOK_FLAG_INDEX = 1
 } MbimPhonebookFlag;
@@ -989,7 +989,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_PHONEBOOK_WRITE_FLAG_SAVE_UNUSED = 0,
     MBIM_PHONEBOOK_WRITE_FLAG_SAVE_INDEX  = 1,
 } MbimPhonebookWriteFlag;
@@ -1012,7 +1012,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_STK_PAC_PROFILE_NOT_HANDLED_BY_FUNCTION_HANDLED_BY_HOST           = 0,
     MBIM_STK_PAC_PROFILE_NOT_HANDLED_BY_FUNCTION_MAY_BE_HANDLED_BY_HOST    = 1,
     MBIM_STK_PAC_PROFILE_HANDLED_BY_FUNCTION_ONLY_TRANSPARENT_TO_HOST      = 2,
@@ -1032,7 +1032,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_STK_PAC_TYPE_PROACTIVE_COMMAND = 0,
     MBIM_STK_PAC_TYPE_NOTIFICATION      = 1
 } MbimStkPacType;
@@ -1049,7 +1049,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_NETWORK_IDLE_HINT_STATE_DISABLED = 0,
     MBIM_NETWORK_IDLE_HINT_STATE_ENABLED  = 1
 } MbimNetworkIdleHintState;
@@ -1066,7 +1066,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_EMERGENCY_MODE_STATE_OFF = 0,
     MBIM_EMERGENCY_MODE_STATE_ON  = 1
 } MbimEmergencyModeState;
@@ -1083,7 +1083,7 @@ typedef enum {
  *
  * Since: 1.4
  */
-typedef enum {
+typedef enum { /*< since=1.4 >*/
     MBIM_DSS_LINK_STATE_DEACTIVATE = 0,
     MBIM_DSS_LINK_STATE_ACTIVATE   = 1
 } MbimDssLinkState;
@@ -1102,7 +1102,7 @@ typedef enum {
  *
  * Since: 1.16
  */
-typedef enum {
+typedef enum { /*< since=1.16 >*/
     MBIM_ATDS_RAT_MODE_AUTOMATIC = 0,
     MBIM_ATDS_RAT_MODE_2G_ONLY   = 1,
     MBIM_ATDS_RAT_MODE_3G_ONLY   = 2,
@@ -1122,7 +1122,7 @@ typedef enum {
  *
  * Since: 1.16
  */
-typedef enum {
+typedef enum { /*< since=1.16 >*/
     MBIM_ATDS_PROVIDER_PLMN_MODE_GSM = 0,
     MBIM_ATDS_PROVIDER_PLMN_MODE_UTRAN = 6,
     MBIM_ATDS_PROVIDER_PLMN_MODE_LTE = 7,
@@ -1140,7 +1140,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     MBIM_PCO_TYPE_COMPLETE = 0,
     MBIM_PCO_TYPE_PARTIAL  = 1
 } MbimPcoType;
@@ -1157,7 +1157,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     MBIM_LTE_ATTACH_CONTEXT_OPERATION_DEFAULT         = 0,
     MBIM_LTE_ATTACH_CONTEXT_OPERATION_RESTORE_FACTORY = 1
 } MbimLteAttachContextOperation;
@@ -1172,7 +1172,7 @@ typedef enum {
  *
  * Since: 1.18
 */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     MBIM_LTE_ATTACH_CONTEXT_ROAMING_CONTROL_HOME        = 0,
     MBIM_LTE_ATTACH_CONTEXT_ROAMING_CONTROL_PARTNER     = 1,
     MBIM_LTE_ATTACH_CONTEXT_ROAMING_CONTROL_NON_PARTNER = 2
@@ -1190,7 +1190,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     MBIM_CONTEXT_SOURCE_ADMIN    = 0,
     MBIM_CONTEXT_SOURCE_USER     = 1,
     MBIM_CONTEXT_SOURCE_OPERATOR = 2,
@@ -1207,7 +1207,7 @@ typedef enum {
  *
  * Since: 1.18
  */
-typedef enum {
+typedef enum { /*< since=1.18 >*/
     MBIM_LTE_ATTACH_STATE_DETACHED = 0,
     MBIM_LTE_ATTACH_STATE_ATTACHED = 1
 } MbimLteAttachState;

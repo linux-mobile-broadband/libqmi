@@ -128,7 +128,7 @@ gboolean mbim_uuid_from_printable (const gchar *str,
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_SERVICE_INVALID                     = 0,
     MBIM_SERVICE_BASIC_CONNECT               = 1,
     MBIM_SERVICE_SMS                         = 2,
@@ -413,7 +413,7 @@ MbimService mbim_uuid_to_service (const MbimUuid *uuid);
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_CONTEXT_TYPE_INVALID     = 0,
     MBIM_CONTEXT_TYPE_NONE        = 1,
     MBIM_CONTEXT_TYPE_INTERNET    = 2,

@@ -100,7 +100,7 @@ struct _MbimIPv6 {
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_MESSAGE_TYPE_INVALID         = 0x00000000,
     /* From Host to Function */
     MBIM_MESSAGE_TYPE_OPEN            = 0x00000001,
@@ -460,7 +460,7 @@ GError *mbim_message_error_get_error (const MbimMessage *self);
  *
  * Since: 1.0
  */
-typedef enum {
+typedef enum { /*< since=1.0 >*/
     MBIM_MESSAGE_COMMAND_TYPE_UNKNOWN = -1,
     MBIM_MESSAGE_COMMAND_TYPE_QUERY   = 0,
     MBIM_MESSAGE_COMMAND_TYPE_SET     = 1
