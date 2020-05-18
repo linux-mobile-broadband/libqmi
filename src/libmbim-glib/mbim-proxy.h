@@ -58,11 +58,41 @@ typedef struct _MbimProxy MbimProxy;
 typedef struct _MbimProxyClass MbimProxyClass;
 typedef struct _MbimProxyPrivate MbimProxyPrivate;
 
+/**
+ * MBIM_PROXY_SOCKET_PATH:
+ *
+ * Symbol defining the default abstract socket name where the #MbimProxy will listen.
+ *
+ * Since: 1.10
+ */
 #define MBIM_PROXY_SOCKET_PATH "mbim-proxy"
 
-#define MBIM_PROXY_N_CLIENTS   "mbim-proxy-n-clients"
-#define MBIM_PROXY_N_DEVICES   "mbim-proxy-n-devices"
+/**
+ * MBIM_PROXY_N_CLIENTS:
+ *
+ * Symbol defining the #MbimProxy:mbim-proxy-n-clients property.
+ *
+ * Since: 1.10
+ */
+#define MBIM_PROXY_N_CLIENTS "mbim-proxy-n-clients"
 
+/**
+ * MBIM_PROXY_N_DEVICES:
+ *
+ * Symbol defining the #MbimProxy:mbim-proxy-n-devices property.
+ *
+ * Since: 1.10
+ */
+#define MBIM_PROXY_N_DEVICES "mbim-proxy-n-devices"
+
+/**
+ * MbimProxy:
+ *
+ * The #MbimProxy structure contains private data and should only be accessed
+ * using the provided API.
+ *
+ * Since: 1.10
+ */
 struct _MbimProxy {
     GObject parent;
     MbimProxyPrivate *priv;
@@ -82,6 +112,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimProxy, g_object_unref)
  * Creates a #MbimProxy object.
  *
  * Returns: (transfer full): a newly created #MbimProxy, or #NULL if @error is set.
+ *
+ * Since: 1.10
  */
 MbimProxy *mbim_proxy_new (GError **error);
 
@@ -92,6 +124,8 @@ MbimProxy *mbim_proxy_new (GError **error);
  * Get the number of clients currently connected to the proxy.
  *
  * Returns: a #guint.
+ *
+ * Since: 1.10
  */
 guint mbim_proxy_get_n_clients (MbimProxy *self);
 
@@ -102,6 +136,8 @@ guint mbim_proxy_get_n_clients (MbimProxy *self);
  * Get the number of devices currently connected to the proxy.
  *
  * Returns: a #guint.
+ *
+ * Since: 1.10
  */
 guint mbim_proxy_get_n_devices (MbimProxy *self);
 

@@ -34,6 +34,8 @@
  *
  * Evaluates to the major version number of libmbim-glib which this source
  * is compiled against.
+ *
+ * Since: 1.2
  */
 #define MBIM_MAJOR_VERSION (@MBIM_MAJOR_VERSION@)
 
@@ -42,6 +44,8 @@
  *
  * Evaluates to the minor version number of libmbim-glib which this source
  * is compiled against.
+ *
+ * Since: 1.2
  */
 #define MBIM_MINOR_VERSION (@MBIM_MINOR_VERSION@)
 
@@ -50,6 +54,8 @@
  *
  * Evaluates to the micro version number of libmbim-glib which this source
  * compiled against.
+ *
+ * Since: 1.2
  */
 #define MBIM_MICRO_VERSION (@MBIM_MICRO_VERSION@)
 
@@ -61,6 +67,8 @@
  *
  * Returns: %TRUE if the version of the libmbim-glib header files
  * is the same as or newer than the passed-in version.
+ *
+ * Since: 1.2
  */
 #define MBIM_CHECK_VERSION(major,minor,micro)                         \
     (MBIM_MAJOR_VERSION > (major) ||                                  \

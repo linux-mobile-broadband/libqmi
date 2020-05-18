@@ -49,6 +49,8 @@ G_BEGIN_DECLS
  * MbimMessage:
  *
  * An opaque type representing a MBIM message.
+ *
+ * Since: 1.0
  */
 typedef struct _MbimMessage MbimMessage;
 
@@ -60,6 +62,8 @@ GType mbim_message_get_type (void) G_GNUC_CONST;
  * @addr: 4 bytes specifying the IPv4 address.
  *
  * An IPv4 address.
+ *
+ * Since: 1.0
  */
 typedef struct _MbimIPv4 MbimIPv4;
 struct _MbimIPv4 {
@@ -71,6 +75,8 @@ struct _MbimIPv4 {
  * @addr: 16 bytes specifying the IPv6 address.
  *
  * An IPv6 address.
+ *
+ * Since: 1.0
  */
 typedef struct _MbimIPv6 MbimIPv6;
 struct _MbimIPv6 {
@@ -91,6 +97,8 @@ struct _MbimIPv6 {
  * @MBIM_MESSAGE_TYPE_INDICATE_STATUS: Unsolicited message from the function.
  *
  * Type of MBIM messages.
+ *
+ * Since: 1.0
  */
 typedef enum {
     MBIM_MESSAGE_TYPE_INVALID         = 0x00000000,
@@ -118,6 +126,8 @@ typedef enum {
  * Create a #MbimMessage with the given contents.
  *
  * Returns: (transfer full): a newly created #MbimMessage, which should be freed with mbim_message_unref().
+ *
+ * Since: 1.0
  */
 MbimMessage *mbim_message_new (const guint8 *data,
                                guint32       data_length);
@@ -129,6 +139,8 @@ MbimMessage *mbim_message_new (const guint8 *data,
  * Create a #MbimMessage with the same contents as @self.
  *
  * Returns: (transfer full): a newly created #MbimMessage, which should be freed with mbim_message_unref().
+ *
+ * Since: 1.0
  */
 MbimMessage *mbim_message_dup (const MbimMessage *self);
 
@@ -139,6 +151,8 @@ MbimMessage *mbim_message_dup (const MbimMessage *self);
  * Atomically increments the reference count of @self by one.
  *
  * Returns: (transfer full): the new reference to @self.
+ *
+ * Since: 1.0
  */
 MbimMessage *mbim_message_ref (MbimMessage *self);
 
@@ -148,6 +162,8 @@ MbimMessage *mbim_message_ref (MbimMessage *self);
  *
  * Atomically decrements the reference count of @self by one.
  * If the reference count drops to 0, @self is completely disposed.
+ *
+ * Since: 1.0
  */
 void mbim_message_unref (MbimMessage *self);
 
@@ -160,6 +176,8 @@ void mbim_message_unref (MbimMessage *self);
  * Gets a printable string with the contents of the whole MBIM message.
  *
  * Returns: a newly allocated string, which should be freed with g_free().
+ *
+ * Since: 1.0
  */
 gchar *mbim_message_get_printable (const MbimMessage  *self,
                                    const gchar        *line_prefix,
@@ -174,6 +192,8 @@ gchar *mbim_message_get_printable (const MbimMessage  *self,
  * Gets the whole raw data buffer of the #MbimMessage.
  *
  * Returns: The raw data buffer, or #NULL if @error is set.
+ *
+ * Since: 1.0
  */
 const guint8 *mbim_message_get_raw (const MbimMessage  *self,
                                     guint32            *length,
@@ -186,6 +206,8 @@ const guint8 *mbim_message_get_raw (const MbimMessage  *self,
  * Gets the message type.
  *
  * Returns: a #MbimMessageType.
+ *
+ * Since: 1.0
  */
 MbimMessageType mbim_message_get_message_type (const MbimMessage *self);
 
@@ -196,6 +218,8 @@ MbimMessageType mbim_message_get_message_type (const MbimMessage *self);
  * Gets the whole message length.
  *
  * Returns: the length of the message.
+ *
+ * Since: 1.0
  */
 guint32 mbim_message_get_message_length (const MbimMessage *self);
 
@@ -206,6 +230,8 @@ guint32 mbim_message_get_message_length (const MbimMessage *self);
  * Gets the transaction ID of the message.
  *
  * Returns: the transaction ID.
+ *
+ * Since: 1.0
  */
 guint32 mbim_message_get_transaction_id (const MbimMessage *self);
 
@@ -215,6 +241,8 @@ guint32 mbim_message_get_transaction_id (const MbimMessage *self);
  * @transaction_id: the transaction id.
  *
  * Sets the transaction ID of the message.
+ *
+ * Since: 1.0
  */
 void mbim_message_set_transaction_id (MbimMessage *self,
                                       guint32      transaction_id);
@@ -234,6 +262,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimMessage, mbim_message_unref)
  *
  * Returns: (transfer full): a newly created #MbimMessage. The returned value
  * should be freed with mbim_message_unref().
+ *
+ * Since: 1.0
  */
 MbimMessage *mbim_message_open_new (guint32 transaction_id,
                                     guint32 max_control_transfer);
@@ -246,6 +276,8 @@ MbimMessage *mbim_message_open_new (guint32 transaction_id,
  * %MBIM_MESSAGE_TYPE_OPEN.
  *
  * Returns: the maximum control transfer.
+ *
+ * Since: 1.0
  */
 guint32 mbim_message_open_get_max_control_transfer (const MbimMessage *self);
 
@@ -261,6 +293,8 @@ guint32 mbim_message_open_get_max_control_transfer (const MbimMessage *self);
  * parameters.
  *
  * Returns: (transfer full): a newly created #MbimMessage, which should be freed with mbim_message_unref().
+ *
+ * Since: 1.10
  */
 MbimMessage *mbim_message_open_done_new (guint32         transaction_id,
                                          MbimStatusError error_status_code);
@@ -272,6 +306,8 @@ MbimMessage *mbim_message_open_done_new (guint32         transaction_id,
  * Get status code from the %MBIM_MESSAGE_TYPE_OPEN_DONE message.
  *
  * Returns: a #MbimStatusError.
+ *
+ * Since: 1.0
  */
 MbimStatusError mbim_message_open_done_get_status_code (const MbimMessage  *self);
 
@@ -283,6 +319,8 @@ MbimStatusError mbim_message_open_done_get_status_code (const MbimMessage  *self
  * Gets the result of the 'Open' operation in the %MBIM_MESSAGE_TYPE_OPEN_DONE message.
  *
  * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.0
  */
 gboolean mbim_message_open_done_get_result (const MbimMessage  *self,
                                             GError            **error);
@@ -299,6 +337,8 @@ gboolean mbim_message_open_done_get_result (const MbimMessage  *self,
  *
  * Returns: (transfer full): a newly created #MbimMessage. The returned value
  * should be freed with mbim_message_unref().
+ *
+ * Since: 1.0
  */
 MbimMessage *mbim_message_close_new (guint32 transaction_id);
 
@@ -314,6 +354,8 @@ MbimMessage *mbim_message_close_new (guint32 transaction_id);
  * parameters.
  *
  * Returns: (transfer full): a newly created #MbimMessage, which should be freed with mbim_message_unref().
+ *
+ * Since: 1.10
  */
 MbimMessage *mbim_message_close_done_new (guint32         transaction_id,
                                           MbimStatusError error_status_code);
@@ -325,6 +367,8 @@ MbimMessage *mbim_message_close_done_new (guint32         transaction_id,
  * Get status code from the %MBIM_MESSAGE_TYPE_CLOSE_DONE message.
  *
  * Returns: a #MbimStatusError.
+ *
+ * Since: 1.0
  */
 MbimStatusError mbim_message_close_done_get_status_code (const MbimMessage  *self);
 
@@ -336,6 +380,8 @@ MbimStatusError mbim_message_close_done_get_status_code (const MbimMessage  *sel
  * Gets the result of the 'Close' operation in the %MBIM_MESSAGE_TYPE_CLOSE_DONE message.
  *
  * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.0
  */
 gboolean mbim_message_close_done_get_result (const MbimMessage  *self,
                                              GError            **error);
@@ -353,6 +399,8 @@ gboolean mbim_message_close_done_get_result (const MbimMessage  *self,
  *
  * Returns: (transfer full): a newly created #MbimMessage. The returned value
  * should be freed with mbim_message_unref().
+ *
+ * Since: 1.0
  */
 MbimMessage *mbim_message_error_new (guint32           transaction_id,
                                      MbimProtocolError error_status_code);
@@ -367,6 +415,8 @@ MbimMessage *mbim_message_error_new (guint32           transaction_id,
  *
  * Returns: (transfer full): a newly created #MbimMessage. The returned value
  * should be freed with mbim_message_unref().
+ *
+ * Since: 1.12
  */
 MbimMessage *mbim_message_function_error_new (guint32           transaction_id,
                                               MbimProtocolError error_status_code);
@@ -379,6 +429,8 @@ MbimMessage *mbim_message_function_error_new (guint32           transaction_id,
  * %MBIM_MESSAGE_TYPE_FUNCTION_ERROR message.
  *
  * Returns: a #MbimProtocolError.
+ *
+ * Since: 1.0
  */
 MbimProtocolError mbim_message_error_get_error_status_code (const MbimMessage *self);
 
@@ -390,6 +442,8 @@ MbimProtocolError mbim_message_error_get_error_status_code (const MbimMessage *s
  * %MBIM_MESSAGE_TYPE_FUNCTION_ERROR message.
  *
  * Returns: a newly allocated #GError, which should be freed with g_error_free().
+ *
+ * Since: 1.0
  */
 GError *mbim_message_error_get_error (const MbimMessage *self);
 
@@ -403,6 +457,8 @@ GError *mbim_message_error_get_error (const MbimMessage *self);
  * @MBIM_MESSAGE_COMMAND_TYPE_SET: Set command.
  *
  * Type of command message.
+ *
+ * Since: 1.0
  */
 typedef enum {
     MBIM_MESSAGE_COMMAND_TYPE_UNKNOWN = -1,
@@ -422,6 +478,8 @@ typedef enum {
  *
  * Returns: (transfer full): a newly created #MbimMessage. The returned value
  * should be freed with mbim_message_unref().
+ *
+ * Since: 1.0
  */
 MbimMessage *mbim_message_command_new (guint32                transaction_id,
                                        MbimService            service,
@@ -435,6 +493,8 @@ MbimMessage *mbim_message_command_new (guint32                transaction_id,
  * @buffer_size: length of the data in @buffer.
  *
  * Appends the contents of @buffer to @self.
+ *
+ * Since: 1.0
  */
 void mbim_message_command_append (MbimMessage  *self,
                                   const guint8 *buffer,
@@ -447,6 +507,8 @@ void mbim_message_command_append (MbimMessage  *self,
  * Get the service of a %MBIM_MESSAGE_TYPE_COMMAND message.
  *
  * Returns: a #MbimService.
+ *
+ * Since: 1.0
  */
 MbimService mbim_message_command_get_service (const MbimMessage *self);
 
@@ -457,6 +519,8 @@ MbimService mbim_message_command_get_service (const MbimMessage *self);
  * Get the service UUID of a %MBIM_MESSAGE_TYPE_COMMAND message.
  *
  * Returns: a #MbimUuid.
+ *
+ * Since: 1.0
  */
 const MbimUuid *mbim_message_command_get_service_id (const MbimMessage *self);
 
@@ -467,6 +531,8 @@ const MbimUuid *mbim_message_command_get_service_id (const MbimMessage *self);
  * Get the command id of a %MBIM_MESSAGE_TYPE_COMMAND message.
  *
  * Returns: a CID.
+ *
+ * Since: 1.0
  */
 guint32 mbim_message_command_get_cid (const MbimMessage *self);
 
@@ -477,6 +543,8 @@ guint32 mbim_message_command_get_cid (const MbimMessage *self);
  * Get the command type of a %MBIM_MESSAGE_TYPE_COMMAND message.
  *
  * Returns: a #MbimMessageCommandType.
+ *
+ * Since: 1.0
  */
 MbimMessageCommandType mbim_message_command_get_command_type (const MbimMessage *self);
 
@@ -488,6 +556,8 @@ MbimMessageCommandType mbim_message_command_get_command_type (const MbimMessage 
  * Gets the information buffer of the %MBIM_MESSAGE_TYPE_COMMAND message.
  *
  * Returns: (transfer none): The raw data buffer, or #NULL if empty.
+ *
+ * Since: 1.0
  */
 const guint8 *mbim_message_command_get_raw_information_buffer (const MbimMessage *self,
                                                                guint32           *out_length);
@@ -502,6 +572,8 @@ const guint8 *mbim_message_command_get_raw_information_buffer (const MbimMessage
  * Get the service of a %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
  *
  * Returns: a #MbimService.
+ *
+ * Since: 1.0
  */
 MbimService mbim_message_command_done_get_service (const MbimMessage  *self);
 
@@ -512,6 +584,8 @@ MbimService mbim_message_command_done_get_service (const MbimMessage  *self);
  * Get the service UUID of a %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
  *
  * Returns: a #MbimUuid.
+ *
+ * Since: 1.0
  */
 const MbimUuid *mbim_message_command_done_get_service_id (const MbimMessage  *self);
 
@@ -522,6 +596,8 @@ const MbimUuid *mbim_message_command_done_get_service_id (const MbimMessage  *se
  * Get the command id of a %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
  *
  * Returns: a CID.
+ *
+ * Since: 1.0
  */
 guint32 mbim_message_command_done_get_cid (const MbimMessage  *self);
 
@@ -532,6 +608,8 @@ guint32 mbim_message_command_done_get_cid (const MbimMessage  *self);
  * Get status code from the %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
  *
  * Returns: a #MbimStatusError.
+ *
+ * Since: 1.0
  */
 MbimStatusError mbim_message_command_done_get_status_code (const MbimMessage  *self);
 
@@ -543,6 +621,8 @@ MbimStatusError mbim_message_command_done_get_status_code (const MbimMessage  *s
  * Gets the result of the 'Command' operation in the %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
  *
  * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.0
  */
 gboolean mbim_message_command_done_get_result (const MbimMessage  *self,
                                                GError            **error);
@@ -555,6 +635,8 @@ gboolean mbim_message_command_done_get_result (const MbimMessage  *self,
  * Gets the information buffer of the %MBIM_MESSAGE_TYPE_COMMAND_DONE message.
  *
  * Returns: (transfer none): The raw data buffer, or #NULL if empty.
+ *
+ * Since: 1.0
  */
 const guint8 *mbim_message_command_done_get_raw_information_buffer (const MbimMessage *self,
                                                                     guint32           *out_length);
@@ -569,6 +651,8 @@ const guint8 *mbim_message_command_done_get_raw_information_buffer (const MbimMe
  * Get the service of a %MBIM_MESSAGE_TYPE_INDICATE_STATUS message.
  *
  * Returns: a #MbimService.
+ *
+ * Since: 1.0
  */
 MbimService mbim_message_indicate_status_get_service (const MbimMessage *self);
 
@@ -579,6 +663,8 @@ MbimService mbim_message_indicate_status_get_service (const MbimMessage *self);
  * Get the service UUID of a %MBIM_MESSAGE_TYPE_INDICATE_STATUS message.
  *
  * Returns: a #MbimUuid.
+ *
+ * Since: 1.0
  */
 const MbimUuid *mbim_message_indicate_status_get_service_id (const MbimMessage  *self);
 
@@ -589,6 +675,8 @@ const MbimUuid *mbim_message_indicate_status_get_service_id (const MbimMessage  
  * Get the command id of a %MBIM_MESSAGE_TYPE_INDICATE_STATUS message.
  *
  * Returns: a CID.
+ *
+ * Since: 1.0
  */
 guint32 mbim_message_indicate_status_get_cid (const MbimMessage *self);
 
@@ -600,6 +688,8 @@ guint32 mbim_message_indicate_status_get_cid (const MbimMessage *self);
  * Gets the information buffer of the %MBIM_MESSAGE_TYPE_INDICATE_STATUS message.
  *
  * Returns: (transfer none): The raw data buffer, or #NULL if empty.
+ *
+ * Since: 1.0
  */
 const guint8 *mbim_message_indicate_status_get_raw_information_buffer (const MbimMessage *self,
                                                                        guint32           *out_length);
@@ -618,6 +708,8 @@ const guint8 *mbim_message_indicate_status_get_raw_information_buffer (const Mbi
  * specified @expected type.
  *
  * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ *
+ * Since: 1.12
  */
 gboolean mbim_message_response_get_result (const MbimMessage  *self,
                                            MbimMessageType     expected,

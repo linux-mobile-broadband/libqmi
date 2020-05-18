@@ -56,19 +56,67 @@ typedef struct _MbimDevice MbimDevice;
 typedef struct _MbimDeviceClass MbimDeviceClass;
 typedef struct _MbimDevicePrivate MbimDevicePrivate;
 
-#define MBIM_DEVICE_FILE           "device-file"
-#define MBIM_DEVICE_TRANSACTION_ID "device-transaction-id"
-#define MBIM_DEVICE_IN_SESSION     "device-in-session"
+/**
+ * MBIM_DEVICE_FILE:
+ *
+ * Symbol defining the #MbimDevice:device-file property.
+ *
+ * Since: 1.0
+ */
+#define MBIM_DEVICE_FILE "device-file"
 
+/**
+ * MBIM_DEVICE_TRANSACTION_ID:
+ *
+ * Symbol defining the #MbimDevice:device-transaction-id property.
+ *
+ * Since: 1.2
+ */
+#define MBIM_DEVICE_TRANSACTION_ID "device-transaction-id"
+
+/**
+ * MBIM_DEVICE_IN_SESSION:
+ *
+ * Symbol defining the #MbimDevice:device-in-session property.
+ *
+ * Since: 1.4
+ */
+#define MBIM_DEVICE_IN_SESSION "device-in-session"
+
+/**
+ * MBIM_DEVICE_SIGNAL_INDICATE_STATUS:
+ *
+ * Symbol defining the #MbimDevice::device-indicate-status signal.
+ *
+ * Since: 1.0
+ */
 #define MBIM_DEVICE_SIGNAL_INDICATE_STATUS "device-indicate-status"
-#define MBIM_DEVICE_SIGNAL_ERROR           "device-error"
-#define MBIM_DEVICE_SIGNAL_REMOVED         "device-removed"
+
+/**
+ * MBIM_DEVICE_SIGNAL_ERROR:
+ *
+ * Symbol defining the #MbimDevice::device-error signal.
+ *
+ * Since: 1.0
+ */
+#define MBIM_DEVICE_SIGNAL_ERROR "device-error"
+
+/**
+ * MBIM_DEVICE_SIGNAL_REMOVED:
+ *
+ * Symbol defining the #MbimDevice::device-removed signal.
+ *
+ * Since: 1.10
+ */
+#define MBIM_DEVICE_SIGNAL_REMOVED "device-removed"
 
 /**
  * MbimDevice:
  *
  * The #MbimDevice structure contains private data and should only be accessed
  * using the provided API.
+ *
+ * Since: 1.0
  */
 struct _MbimDevice {
     /*< private >*/
@@ -94,6 +142,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimDevice, g_object_unref)
  * Asynchronously creates a #MbimDevice object to manage @file.
  * When the operation is finished, @callback will be invoked. You can then call
  * mbim_device_new_finish() to get the result of the operation.
+ *
+ * Since: 1.0
  */
 void mbim_device_new (GFile               *file,
                       GCancellable        *cancellable,
@@ -108,6 +158,8 @@ void mbim_device_new (GFile               *file,
  * Finishes an operation started with mbim_device_new().
  *
  * Returns: (transfer full): a newly created #MbimDevice, or #NULL if @error is set.
+ *
+ * Since: 1.0
  */
 MbimDevice *mbim_device_new_finish (GAsyncResult  *res,
                                     GError       **error);
@@ -119,6 +171,8 @@ MbimDevice *mbim_device_new_finish (GAsyncResult  *res,
  * Get the #GFile associated with this #MbimDevice.
  *
  * Returns: (transfer full): a #GFile that must be freed with g_object_unref().
+ *
+ * Since: 1.0
  */
 GFile *mbim_device_get_file (MbimDevice *self);
 
@@ -130,6 +184,8 @@ GFile *mbim_device_get_file (MbimDevice *self);
  * on the returned object.
  *
  * Returns: (transfer none): a #GFile. Do not free the returned object, it is owned by @self.
+ *
+ * Since: 1.0
  */
 GFile *mbim_device_peek_file (MbimDevice *self);
 
@@ -140,6 +196,8 @@ GFile *mbim_device_peek_file (MbimDevice *self);
  * Get the system path of the underlying MBIM device.
  *
  * Returns: the system path of the device.
+ *
+ * Since: 1.0
  */
 const gchar *mbim_device_get_path (MbimDevice *self);
 
@@ -150,6 +208,8 @@ const gchar *mbim_device_get_path (MbimDevice *self);
  * Get the system path of the underlying MBIM device in UTF-8.
  *
  * Returns: UTF-8 encoded system path of the device.
+ *
+ * Since: 1.0
  */
 const gchar *mbim_device_get_path_display (MbimDevice *self);
 
@@ -160,6 +220,8 @@ const gchar *mbim_device_get_path_display (MbimDevice *self);
  * Checks whether the #MbimDevice is open for I/O.
  *
  * Returns: %TRUE if @self is open, %FALSE otherwise.
+ *
+ * Since: 1.0
  */
 gboolean mbim_device_is_open (MbimDevice *self);
 
@@ -169,6 +231,8 @@ gboolean mbim_device_is_open (MbimDevice *self);
  * @MBIM_DEVICE_OPEN_FLAGS_PROXY: Try to open the port through the 'mbim-proxy'.
  *
  * Flags to specify which actions to be performed when the device is open.
+ *
+ * Since: 1.10
  */
 typedef enum {
     MBIM_DEVICE_OPEN_FLAGS_NONE  = 0,
@@ -191,6 +255,8 @@ typedef enum {
  *
  * When the operation is finished @callback will be called. You can then call
  * mbim_device_open_full_finish() to get the result of the operation.
+ *
+ * Since: 1.10
  */
 void mbim_device_open_full (MbimDevice          *self,
                             MbimDeviceOpenFlags  flags,
@@ -208,6 +274,8 @@ void mbim_device_open_full (MbimDevice          *self,
  * Finishes an asynchronous open operation started with mbim_device_open_full().
  *
  * Returns: %TRUE if successful, %FALSE if @error is set.
+ *
+ * Since: 1.10
  */
 gboolean mbim_device_open_full_finish (MbimDevice    *self,
                                        GAsyncResult  *res,
@@ -225,6 +293,8 @@ gboolean mbim_device_open_full_finish (MbimDevice    *self,
  *
  * When the operation is finished @callback will be called. You can then call
  * mbim_device_open_finish() to get the result of the operation.
+ *
+ * Since: 1.0
  */
 void mbim_device_open (MbimDevice           *self,
                        guint                 timeout,
@@ -241,6 +311,8 @@ void mbim_device_open (MbimDevice           *self,
  * Finishes an asynchronous open operation started with mbim_device_open().
  *
  * Returns: %TRUE if successful, %FALSE if @error is set.
+ *
+ * Since: 1.0
  */
 gboolean mbim_device_open_finish (MbimDevice    *self,
                                   GAsyncResult  *res,
@@ -258,6 +330,8 @@ gboolean mbim_device_open_finish (MbimDevice    *self,
  *
  * When the operation is finished @callback will be called. You can then call
  * mbim_device_close_finish() to get the result of the operation.
+ *
+ * Since: 1.0
  */
 void mbim_device_close (MbimDevice          *self,
                         guint                timeout,
@@ -274,6 +348,8 @@ void mbim_device_close (MbimDevice          *self,
  * Finishes an asynchronous close operation started with mbim_device_close().
  *
  * Returns: %TRUE if successful, %FALSE if @error is set.
+ *
+ * Since: 1.0
  */
 gboolean mbim_device_close_finish (MbimDevice    *self,
                                    GAsyncResult  *res,
@@ -287,6 +363,8 @@ gboolean mbim_device_close_finish (MbimDevice    *self,
  * Forces the #MbimDevice to be closed.
  *
  * Returns: %TRUE if @self if no error happens, otherwise %FALSE and @error is set.
+ *
+ * Since: 1.0
  */
 gboolean mbim_device_close_force (MbimDevice  *self,
                                   GError     **error);
@@ -299,6 +377,8 @@ gboolean mbim_device_close_force (MbimDevice  *self,
  * The internal transaction ID gets incremented.
  *
  * Returns: the next transaction ID.
+ *
+ * Since: 1.0
  */
 guint32 mbim_device_get_next_transaction_id (MbimDevice *self);
 
@@ -315,6 +395,8 @@ guint32 mbim_device_get_next_transaction_id (MbimDevice *self);
  *
  * When the operation is finished @callback will be called. You can then call
  * mbim_device_command_finish() to get the result of the operation.
+ *
+ * Since: 1.0
  */
 void mbim_device_command (MbimDevice          *self,
                           MbimMessage         *message,
@@ -332,6 +414,8 @@ void mbim_device_command (MbimDevice          *self,
  * Finishes an operation started with mbim_device_command().
  *
  * Returns: a #MbimMessage response, or #NULL if @error is set. The returned value should be freed with mbim_message_unref().
+ *
+ * Since: 1.0
  */
 MbimMessage *mbim_device_command_finish (MbimDevice    *self,
                                          GAsyncResult  *res,

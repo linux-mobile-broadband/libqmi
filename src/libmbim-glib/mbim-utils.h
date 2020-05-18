@@ -40,6 +40,8 @@ G_BEGIN_DECLS
  * Checks whether MBIM message traces are currently enabled.
  *
  * Returns: %TRUE if traces are enabled, %FALSE otherwise.
+ *
+ * Since: 1.0
  */
 gboolean mbim_utils_get_traces_enabled (void);
 
@@ -48,6 +50,8 @@ gboolean mbim_utils_get_traces_enabled (void);
  * @enabled: %TRUE to enable traces, %FALSE to disable them.
  *
  * Sets whether MBIM message traces are enabled or disabled.
+ *
+ * Since: 1.0
  */
 void mbim_utils_set_traces_enabled (gboolean enabled);
 

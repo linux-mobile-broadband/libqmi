@@ -54,7 +54,8 @@ typedef int MbimDeprecatedRegistrationFlag;
  *
  * Modem should auto-attach to the network after registration.
  *
- * Deprecated:1.8.0: Use MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH instead.
+ * Since: 1.0
+ * Deprecated: 1.8: Use MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH instead.
  */
 #define MBIM_REGISTRATION_FLAG_MANUAL_PACKET_SERVICE_AUTOMATIC_ATTACH (MbimDeprecatedRegistrationFlag) MBIM_REGISTRATION_FLAG_PACKET_SERVICE_AUTOMATIC_ATTACH
 
@@ -70,7 +71,8 @@ typedef int MbimDeprecatedCidBasicConnect;
  *
  * Device service subscribe list.
  *
- * Deprecated:1.8.0: Use MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST instead.
+ * Since: 1.0
+ * Deprecated: 1.8: Use MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST instead.
  */
 #define MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST (MbimDeprecatedCidBasicConnect) MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBE_LIST
 
@@ -84,7 +86,8 @@ typedef int MbimDeprecatedCidBasicConnect;
  *
  * Returns: a newly allocated #MbimMessage, which should be freed with mbim_message_unref().
  *
- * Deprecated:1.8.0: Use mbim_message_device_service_subscribe_list_set_new() instead.
+ * Since: 1.0
+ * Deprecated: 1.8: Use mbim_message_device_service_subscribe_list_set_new() instead.
  */
 G_DEPRECATED_FOR (mbim_message_device_service_subscribe_list_set_new)
 MbimMessage *mbim_message_device_service_subscriber_list_set_new (
@@ -103,7 +106,8 @@ MbimMessage *mbim_message_device_service_subscriber_list_set_new (
  *
  * Returns: %TRUE if the message was correctly parsed, %FALSE if @error is set.
  *
- * Deprecated:1.8.0: Use mbim_message_device_service_subscribe_list_response_parse() instead.
+ * Since: 1.0
+ * Deprecated: 1.8: Use mbim_message_device_service_subscribe_list_response_parse() instead.
  */
 G_DEPRECATED_FOR (mbim_message_device_service_subscribe_list_response_parse)
 gboolean mbim_message_device_service_subscriber_list_response_parse (

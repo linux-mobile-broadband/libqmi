@@ -2235,6 +2235,11 @@ mbim_device_class_init (MbimDeviceClass *klass)
     object_class->finalize = finalize;
     object_class->dispose = dispose;
 
+    /**
+     * MbimDevice:device-file
+     *
+     * Since: 1.0
+     */
     properties[PROP_FILE] =
         g_param_spec_object (MBIM_DEVICE_FILE,
                              "Device file",
@@ -2243,6 +2248,11 @@ mbim_device_class_init (MbimDeviceClass *klass)
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_FILE, properties[PROP_FILE]);
 
+    /**
+     * MbimDevice:device-transaction-id
+     *
+     * Since: 1.2
+     */
     properties[PROP_TRANSACTION_ID] =
         g_param_spec_uint (MBIM_DEVICE_TRANSACTION_ID,
                            "Transaction ID",
@@ -2253,6 +2263,11 @@ mbim_device_class_init (MbimDeviceClass *klass)
                            G_PARAM_READWRITE);
     g_object_class_install_property (object_class, PROP_TRANSACTION_ID, properties[PROP_TRANSACTION_ID]);
 
+    /**
+     * MbimDevice:in-session
+     *
+     * Since: 1.4
+     */
     properties[PROP_IN_SESSION] =
         g_param_spec_boolean (MBIM_DEVICE_IN_SESSION,
                               "In session",
@@ -2267,6 +2282,8 @@ mbim_device_class_init (MbimDeviceClass *klass)
    * @message: the #MbimMessage indication
    *
    * The ::device-indication-status signal is emitted when a MBIM indication is received.
+   *
+   * Since: 1.0
    */
     signals[SIGNAL_INDICATE_STATUS] =
         g_signal_new (MBIM_DEVICE_SIGNAL_INDICATE_STATUS,
@@ -2286,6 +2303,8 @@ mbim_device_class_init (MbimDeviceClass *klass)
    * @message: the #MbimMessage error
    *
    * The ::device-error signal is emitted when a MBIM error is received.
+   *
+   * Since: 1.0
    */
     signals[SIGNAL_ERROR] =
         g_signal_new (MBIM_DEVICE_SIGNAL_ERROR,
@@ -2305,6 +2324,8 @@ mbim_device_class_init (MbimDeviceClass *klass)
    * @message: None
    *
    * The ::device-removed signal is emitted when an unexpected port hang-up is received.
+   *
+   * Since: 1.10
    */
     signals[SIGNAL_REMOVED] =
         g_signal_new (MBIM_DEVICE_SIGNAL_REMOVED,

@@ -46,6 +46,8 @@ G_BEGIN_DECLS
  * MbimUuid:
  *
  * A UUID as defined in MBIM.
+ *
+ * Since: 1.0
  */
 typedef struct _MbimUuid MbimUuid;
 #define MBIM_PACKED __attribute__((__packed__))
@@ -66,6 +68,8 @@ struct MBIM_PACKED _MbimUuid {
  * Compare two %MbimUuid values.
  *
  * Returns: %TRUE if @a and @b are equal, %FALSE otherwise.
+ *
+ * Since: 1.0
  */
 gboolean  mbim_uuid_cmp (const MbimUuid *a,
                          const MbimUuid *b);
@@ -77,6 +81,8 @@ gboolean  mbim_uuid_cmp (const MbimUuid *a,
  * Get a string with the UUID.
  *
  * Returns: (transfer full): a newly allocated string, which should be freed with g_free().
+ *
+ * Since: 1.0
  */
 gchar *mbim_uuid_get_printable (const MbimUuid *uuid);
 
@@ -91,6 +97,8 @@ gchar *mbim_uuid_get_printable (const MbimUuid *uuid);
  *  a289cc33-bcbb-8b4f-b6b0-133ec2aae6df
  *
  * Returns: %TRUE if @uuid was correctly set, %FALSE otherwise.
+ *
+ * Since: 1.8
  */
 gboolean mbim_uuid_from_printable (const gchar *str,
                                    MbimUuid    *uuid);
@@ -107,16 +115,18 @@ gboolean mbim_uuid_from_printable (const gchar *str,
  * @MBIM_SERVICE_STK: SIM toolkit service.
  * @MBIM_SERVICE_AUTH: Authentication service.
  * @MBIM_SERVICE_DSS: Device Service Stream service.
- * @MBIM_SERVICE_MS_FIRMWARE_ID: Microsoft Firmware ID service.
- * @MBIM_SERVICE_MS_HOST_SHUTDOWN: Microsoft Host Shutdown service.
- * @MBIM_SERVICE_PROXY_CONTROL: Proxy Control service.
- * @MBIM_SERVICE_QMI: QMI-over-MBIM service.
- * @MBIM_SERVICE_ATDS: ATT Device service.
- * @MBIM_SERVICE_INTEL_FIRMWARE_UPDATE: Intel firmware update service.
- * @MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS: Microsoft basic connectivity extensions service.
+ * @MBIM_SERVICE_MS_FIRMWARE_ID: Microsoft Firmware ID service. Since 1.8.
+ * @MBIM_SERVICE_MS_HOST_SHUTDOWN: Microsoft Host Shutdown service. Since 1.8.
+ * @MBIM_SERVICE_PROXY_CONTROL: Proxy Control service. Since 1.10.
+ * @MBIM_SERVICE_QMI: QMI-over-MBIM service. Since 1.14.
+ * @MBIM_SERVICE_ATDS: ATT Device service. Since 1.16.
+ * @MBIM_SERVICE_INTEL_FIRMWARE_UPDATE: Intel firmware update service. Since 1.16.
+ * @MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS: Microsoft basic connectivity extensions service. Since 1.18.
  * @MBIM_SERVICE_LAST: Internal value.
  *
  * Enumeration of the generic MBIM services.
+ *
+ * Since: 1.0
  */
 typedef enum {
     MBIM_SERVICE_INVALID                     = 0,
@@ -145,6 +155,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_INVALID service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.0
  */
 #define MBIM_UUID_INVALID mbim_uuid_from_service (MBIM_SERVICE_INVALID)
 
@@ -154,6 +166,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_BASIC_CONNECT service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.0
  */
 #define MBIM_UUID_BASIC_CONNECT mbim_uuid_from_service (MBIM_SERVICE_BASIC_CONNECT)
 
@@ -163,6 +177,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_SMS service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.0
  */
 #define MBIM_UUID_SMS mbim_uuid_from_service (MBIM_SERVICE_SMS)
 
@@ -172,6 +188,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_USSD service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.0
  */
 #define MBIM_UUID_USSD mbim_uuid_from_service (MBIM_SERVICE_USSD)
 
@@ -181,6 +199,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_PHONEBOOK service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.0
  */
 #define MBIM_UUID_PHONEBOOK mbim_uuid_from_service (MBIM_SERVICE_PHONEBOOK)
 
@@ -190,6 +210,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_STK service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.0
  */
 #define MBIM_UUID_STK mbim_uuid_from_service (MBIM_SERVICE_STK)
 
@@ -199,6 +221,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_AUTH service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.0
  */
 #define MBIM_UUID_AUTH mbim_uuid_from_service (MBIM_SERVICE_AUTH)
 
@@ -208,6 +232,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_DSS service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.0
  */
 #define MBIM_UUID_DSS mbim_uuid_from_service (MBIM_SERVICE_DSS)
 
@@ -217,6 +243,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_MS_FIRMWARE_ID service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.8
  */
 #define MBIM_UUID_MS_FIRMWARE_ID mbim_uuid_from_service (MBIM_SERVICE_MS_FIRMWARE_ID)
 
@@ -226,6 +254,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_MS_HOST_SHUTDOWN service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.8
  */
 #define MBIM_UUID_MS_HOST_SHUTDOWN mbim_uuid_from_service (MBIM_SERVICE_MS_HOST_SHUTDOWN)
 
@@ -235,6 +265,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_PROXY_CONTROL service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.10
  */
 #define MBIM_UUID_PROXY_CONTROL mbim_uuid_from_service (MBIM_SERVICE_PROXY_CONTROL)
 
@@ -244,6 +276,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_QMI service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.14
  */
 #define MBIM_UUID_QMI mbim_uuid_from_service (MBIM_SERVICE_QMI)
 
@@ -253,6 +287,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_ATDS service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.16
  */
 #define MBIM_UUID_ATDS mbim_uuid_from_service (MBIM_SERVICE_ATDS)
 
@@ -262,6 +298,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_INTEL_FIRMWARE_UPDATE service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.16
  */
 #define MBIM_UUID_INTEL_FIRMWARE_UPDATE mbim_uuid_from_service (MBIM_SERVICE_INTEL_FIRMWARE_UPDATE)
 
@@ -271,6 +309,8 @@ typedef enum {
  * Get the UUID of the %MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS service.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.18
  */
 #define MBIM_UUID_MS_BASIC_CONNECT_EXTENSIONS mbim_uuid_from_service (MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS)
 
@@ -284,6 +324,8 @@ typedef enum {
  * custom services that may have been registered by the user.
  *
  * Returns: (transfer none): a string with the nickname, or %NULL if not found. Do not free the returned value.
+ *
+ * Since: 1.10
  */
 const gchar *mbim_service_lookup_name (guint service);
 
@@ -295,6 +337,8 @@ const gchar *mbim_service_lookup_name (guint service);
  * Register a custom service
  *
  * Returns: TRUE if service has been registered, FALSE otherwise.
+ *
+ * Since: 1.10
  */
 guint mbim_register_custom_service (const MbimUuid *uuid,
                                     const gchar    *nickname);
@@ -306,6 +350,8 @@ guint mbim_register_custom_service (const MbimUuid *uuid,
  * Unregister a custom service.
  *
  * Returns: TRUE if service has been unregistered, FALSE otherwise.
+ *
+ * Since: 1.10
  */
 gboolean mbim_unregister_custom_service (const guint id);
 
@@ -316,6 +362,8 @@ gboolean mbim_unregister_custom_service (const guint id);
  * Checks whether @id is a custom or standard service.
  *
  * Returns: TRUE if service is custom, FALSE otherwise.
+ *
+ * Since: 1.10
  */
 gboolean mbim_service_id_is_custom (const guint id);
 
@@ -329,6 +377,8 @@ gboolean mbim_service_id_is_custom (const guint id);
  * or a custom registered one.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.0
  */
 const MbimUuid *mbim_uuid_from_service (MbimService service);
 
@@ -339,6 +389,8 @@ const MbimUuid *mbim_uuid_from_service (MbimService service);
  * Get the service corresponding to @uuid.
  *
  * Returns: a #MbimService.
+ *
+ * Since: 1.0
  */
 MbimService mbim_uuid_to_service (const MbimUuid *uuid);
 
@@ -358,6 +410,8 @@ MbimService mbim_uuid_to_service (const MbimUuid *uuid);
  * @MBIM_CONTEXT_TYPE_LOCAL: A local.
  *
  * Enumeration of the generic MBIM context types.
+ *
+ * Since: 1.0
  */
 typedef enum {
     MBIM_CONTEXT_TYPE_INVALID     = 0,
@@ -379,6 +433,8 @@ typedef enum {
  * Get the UUID corresponding to @context_type.
  *
  * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.0
  */
 const MbimUuid *mbim_uuid_from_context_type (MbimContextType context_type);
 
@@ -389,6 +445,8 @@ const MbimUuid *mbim_uuid_from_context_type (MbimContextType context_type);
  * Get the context type corresponding to @uuid.
  *
  * Returns: a #MbimContextType.
+ *
+ * Since: 1.0
  */
 MbimContextType mbim_uuid_to_context_type (const MbimUuid *uuid);
 

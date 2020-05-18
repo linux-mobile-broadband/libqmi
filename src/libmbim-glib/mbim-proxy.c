@@ -1503,7 +1503,11 @@ mbim_proxy_class_init (MbimProxyClass *proxy_class)
     object_class->get_property = get_property;
     object_class->dispose = dispose;
 
-    /* Properties */
+    /**
+     * MbimProxy:mbim-proxy-n-clients
+     *
+     * Since: 1.10
+     */
     properties[PROP_N_CLIENTS] =
         g_param_spec_uint (MBIM_PROXY_N_CLIENTS,
                            "Number of clients",
@@ -1514,6 +1518,11 @@ mbim_proxy_class_init (MbimProxyClass *proxy_class)
                            G_PARAM_READABLE);
     g_object_class_install_property (object_class, PROP_N_CLIENTS, properties[PROP_N_CLIENTS]);
 
+    /**
+     * MbimProxy:mbim-proxy-n-devices
+     *
+     * Since: 1.10
+     */
     properties[PROP_N_DEVICES] =
         g_param_spec_uint (MBIM_PROXY_N_DEVICES,
                            "Number of devices",

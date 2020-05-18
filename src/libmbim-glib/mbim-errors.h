@@ -50,9 +50,11 @@
  * @MBIM_CORE_ERROR_INVALID_MESSAGE: MBIM message is invalid.
  * @MBIM_CORE_ERROR_UNSUPPORTED: Not supported.
  * @MBIM_CORE_ERROR_ABORTED: Operation aborted.
- * @MBIM_CORE_ERROR_UNKNOWN_STATE: State is unknown.
+ * @MBIM_CORE_ERROR_UNKNOWN_STATE: State is unknown. Since 1.16.
  *
  * Common errors that may be reported by libmbim-glib.
+ *
+ * Since: 1.0
  */
 typedef enum { /*< underscore_name=mbim_core_error >*/
     MBIM_CORE_ERROR_FAILED           = 0, /*< nick=Failed >*/
@@ -78,6 +80,8 @@ typedef enum { /*< underscore_name=mbim_core_error >*/
  * @MBIM_PROTOCOL_ERROR_MAX_TRANSFER: Maximum control transfer not supported.
  *
  * MBIM protocol errors.
+ *
+ * Since: 1.0
  */
 typedef enum {
     MBIM_PROTOCOL_ERROR_INVALID                  = 0, /*< nick=Invalid >*/
@@ -131,7 +135,7 @@ typedef enum {
  * @MBIM_STATUS_ERROR_AUTH_INCORRECT_AUTN: Incorrect AUTN when sending authentication.
  * @MBIM_STATUS_ERROR_AUTH_SYNC_FAILURE: Synchronization failure during the authentication.
  * @MBIM_STATUS_ERROR_AUTH_AMF_NOT_SET: AMF bit not set in the authentication.
- * @MBIM_STATUS_ERROR_CONTEXT_NOT_SUPPORTED: ContextType not supported by the operation.
+ * @MBIM_STATUS_ERROR_CONTEXT_NOT_SUPPORTED: ContextType not supported by the operation. Since 1.16.
  * @MBIM_STATUS_ERROR_SMS_UNKNOWN_SMSC_ADDRESS: Unknown SMSC address.
  * @MBIM_STATUS_ERROR_SMS_NETWORK_TIMEOUT: Network timeout when sending SMS.
  * @MBIM_STATUS_ERROR_SMS_LANG_NOT_SUPPORTED: Language not supported in SMS.
@@ -139,6 +143,8 @@ typedef enum {
  * @MBIM_STATUS_ERROR_SMS_FORMAT_NOT_SUPPORTED: Format not supported in SMS.
  *
  * Status of the MBIM request.
+ *
+ * Since: 1.0
  */
 typedef enum {
     MBIM_STATUS_ERROR_NONE                             = 0,  /*< nick=None >*/
