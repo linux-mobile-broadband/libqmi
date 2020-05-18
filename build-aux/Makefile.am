@@ -1,2 +1,4 @@
 
-SUBDIRS = templates mbim-codegen
+SUBDIRS = templates mbim-codegen .
+
+EXTRA_DIST = mbim-mkenums
