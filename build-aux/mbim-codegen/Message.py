@@ -111,6 +111,9 @@ class Message:
         if 'query' in dictionary:
             self.has_query = True
             self.query = dictionary['query']
+            self.query_since = dictionary['since-ex']['query'] if 'since-ex' in dictionary else dictionary['since'] if 'since' in dictionary else None
+            if self.query_since is None:
+                raise ValueError('Message ' + self.name + ' (query) requires a "since" tag specifying the major version where it was introduced')
             validate_fields(self.query)
         else:
             self.has_query = False
@@ -120,6 +123,9 @@ class Message:
         if 'set' in dictionary:
             self.has_set = True
             self.set = dictionary['set']
+            self.set_since = dictionary['since-ex']['set'] if 'since-ex' in dictionary else dictionary['since'] if 'since' in dictionary else None
+            if self.set_since is None:
+                raise ValueError('Message ' + self.name + ' (set) requires a "since" tag specifying the major version where it was introduced')
             validate_fields(self.set)
         else:
             self.has_set = False
@@ -130,6 +136,9 @@ class Message:
         if 'response' in dictionary:
             self.has_response = True
             self.response = dictionary['response']
+            self.response_since = dictionary['since-ex']['response'] if 'since-ex' in dictionary else dictionary['since'] if 'since' in dictionary else None
+            if self.response_since is None:
+                raise ValueError('Message ' + self.name + ' (response) requires a "since" tag specifying the major version where it was introduced')
             validate_fields(self.response)
         else:
             self.has_response = False
@@ -139,6 +148,9 @@ class Message:
         if 'notification' in dictionary:
             self.has_notification = True
             self.notification = dictionary['notification']
+            self.notification_since = dictionary['since-ex']['notification'] if 'since-ex' in dictionary else dictionary['since'] if 'since' in dictionary else None
+            if self.notification_since is None:
+                raise ValueError('Message ' + self.name + ' (notification) requires a "since" tag specifying the major version where it was introduced')
             validate_fields(self.notification)
         else:
             self.has_notification = False
@@ -166,90 +178,40 @@ class Message:
         if self.has_query:
             utils.add_separator(hfile, 'Message (Query)', self.fullname);
             utils.add_separator(cfile, 'Message (Query)', self.fullname);
-            self._emit_message_creator(hfile, cfile, 'query', self.query)
+            self._emit_message_creator(hfile, cfile, 'query', self.query, self.query_since)
             self._emit_message_printable(cfile, 'query', self.query)
 
         if self.has_set:
             utils.add_separator(hfile, 'Message (Set)', self.fullname);
             utils.add_separator(cfile, 'Message (Set)', self.fullname);
-            self._emit_message_creator(hfile, cfile, 'set', self.set)
+            self._emit_message_creator(hfile, cfile, 'set', self.set, self.set_since)
             self._emit_message_printable(cfile, 'set', self.set)
 
         if self.has_response:
             utils.add_separator(hfile, 'Message (Response)', self.fullname);
             utils.add_separator(cfile, 'Message (Response)', self.fullname);
-            self._emit_message_parser(hfile, cfile, 'response', self.response)
+            self._emit_message_parser(hfile, cfile, 'response', self.response, self.response_since)
             self._emit_message_printable(cfile, 'response', self.response)
 
         if self.has_notification:
             utils.add_separator(hfile, 'Message (Notification)', self.fullname);
             utils.add_separator(cfile, 'Message (Notification)', self.fullname);
-            self._emit_message_parser(hfile, cfile, 'notification', self.notification)
+            self._emit_message_parser(hfile, cfile, 'notification', self.notification, self.notification_since)
             self._emit_message_printable(cfile, 'notification', self.notification)
 
 
     """
     Emit message creator
     """
-    def _emit_message_creator(self, hfile, cfile, message_type, fields):
+    def _emit_message_creator(self, hfile, cfile, message_type, fields, since):
         translations = { 'message'                  : self.name,
                          'service'                  : self.service,
+                         'since'                    : since,
                          'underscore'               : utils.build_underscore_name (self.fullname),
                          'message_type'             : message_type,
                          'message_type_upper'       : message_type.upper(),
                          'service_underscore_upper' : utils.build_underscore_name (self.service).upper(),
                          'cid_enum_name'            : self.cid_enum_name }
-        template = (
-            '\n'
-            'MbimMessage *${underscore}_${message_type}_new (\n')
-
-        for field in fields:
-            translations['field'] = utils.build_underscore_name_from_camelcase (field['name'])
-            translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
-            translations['public'] = field['public-format'] if 'public-format' in field else field['format']
-
-            inner_template = ''
-            if field['format'] == 'byte-array':
-                inner_template = ('    const guint8 *${field},\n')
-            elif field['format'] == 'unsized-byte-array' or \
-                 field['format'] == 'ref-byte-array' or \
-                 field['format'] == 'ref-byte-array-no-offset':
-                inner_template = ('    const guint32 ${field}_size,\n'
-                                  '    const guint8 *${field},\n')
-            elif field['format'] == 'uuid':
-                inner_template = ('    const MbimUuid *${field},\n')
-            elif field['format'] == 'guint32':
-                inner_template = ('    ${public} ${field},\n')
-            elif field['format'] == 'guint64':
-                inner_template = ('    ${public} ${field},\n')
-            elif field['format'] == 'string':
-                inner_template = ('    const gchar *${field},\n')
-            elif field['format'] == 'string-array':
-                inner_template = ('    const gchar *const *${field},\n')
-            elif field['format'] == 'struct':
-                inner_template = ('    const ${struct} *${field},\n')
-            elif field['format'] == 'struct-array':
-                inner_template = ('    const ${struct} *const *${field},\n')
-            elif field['format'] == 'ref-struct-array':
-                inner_template = ('    const ${struct} *const *${field},\n')
-            elif field['format'] == 'ipv4':
-                inner_template = ('    const MbimIPv4 *${field},\n')
-            elif field['format'] == 'ref-ipv4':
-                inner_template = ('    const MbimIPv4 *${field},\n')
-            elif field['format'] == 'ipv4-array':
-                inner_template = ('    const MbimIPv4 *${field},\n')
-            elif field['format'] == 'ipv6':
-                inner_template = ('    const MbimIPv6 *${field},\n')
-            elif field['format'] == 'ref-ipv6':
-                inner_template = ('    const MbimIPv6 *${field},\n')
-            elif field['format'] == 'ipv6-array':
-                inner_template = ('    const MbimIPv6 *${field},\n')
-
-            template += (string.Template(inner_template).substitute(translations))
-
-        template += (
-            '    GError **error);\n')
-        hfile.write(string.Template(template).substitute(translations))
 
         template = (
             '\n'
@@ -308,7 +270,61 @@ class Message:
             ' * Create a new request for the \'${message}\' ${message_type} command in the \'${service}\' service.\n'
             ' *\n'
             ' * Returns: a newly allocated #MbimMessage, which should be freed with mbim_message_unref().\n'
+            ' *\n'
+            ' * Since: ${since}\n'
             ' */\n'
+            'MbimMessage *${underscore}_${message_type}_new (\n')
+
+        for field in fields:
+            translations['field'] = utils.build_underscore_name_from_camelcase (field['name'])
+            translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
+            translations['public'] = field['public-format'] if 'public-format' in field else field['format']
+
+            inner_template = ''
+            if field['format'] == 'byte-array':
+                inner_template = ('    const guint8 *${field},\n')
+            elif field['format'] == 'unsized-byte-array' or \
+                 field['format'] == 'ref-byte-array' or \
+                 field['format'] == 'ref-byte-array-no-offset':
+                inner_template = ('    const guint32 ${field}_size,\n'
+                                  '    const guint8 *${field},\n')
+            elif field['format'] == 'uuid':
+                inner_template = ('    const MbimUuid *${field},\n')
+            elif field['format'] == 'guint32':
+                inner_template = ('    ${public} ${field},\n')
+            elif field['format'] == 'guint64':
+                inner_template = ('    ${public} ${field},\n')
+            elif field['format'] == 'string':
+                inner_template = ('    const gchar *${field},\n')
+            elif field['format'] == 'string-array':
+                inner_template = ('    const gchar *const *${field},\n')
+            elif field['format'] == 'struct':
+                inner_template = ('    const ${struct} *${field},\n')
+            elif field['format'] == 'struct-array':
+                inner_template = ('    const ${struct} *const *${field},\n')
+            elif field['format'] == 'ref-struct-array':
+                inner_template = ('    const ${struct} *const *${field},\n')
+            elif field['format'] == 'ipv4':
+                inner_template = ('    const MbimIPv4 *${field},\n')
+            elif field['format'] == 'ref-ipv4':
+                inner_template = ('    const MbimIPv4 *${field},\n')
+            elif field['format'] == 'ipv4-array':
+                inner_template = ('    const MbimIPv4 *${field},\n')
+            elif field['format'] == 'ipv6':
+                inner_template = ('    const MbimIPv6 *${field},\n')
+            elif field['format'] == 'ref-ipv6':
+                inner_template = ('    const MbimIPv6 *${field},\n')
+            elif field['format'] == 'ipv6-array':
+                inner_template = ('    const MbimIPv6 *${field},\n')
+
+            template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '    GError **error);\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        template = (
+            '\n'
             'MbimMessage *\n'
             '${underscore}_${message_type}_new (\n')
 
@@ -439,65 +455,14 @@ class Message:
     """
     Emit message parser
     """
-    def _emit_message_parser(self, hfile, cfile, message_type, fields):
+    def _emit_message_parser(self, hfile, cfile, message_type, fields, since):
         translations = { 'message'                  : self.name,
                          'service'                  : self.service,
+                         'since'                    : since,
                          'underscore'               : utils.build_underscore_name (self.fullname),
                          'message_type'             : message_type,
                          'message_type_upper'       : message_type.upper(),
                          'service_underscore_upper' : utils.build_underscore_name (self.service).upper() }
-        template = (
-            '\n'
-            'gboolean ${underscore}_${message_type}_parse (\n'
-            '    const MbimMessage *message,\n')
-
-        for field in fields:
-            translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
-            translations['public'] = field['public-format'] if 'public-format' in field else field['format']
-            translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
-
-            inner_template = ''
-            if field['format'] == 'byte-array':
-                inner_template = ('    const guint8 **out_${field},\n')
-            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
-                inner_template = ('    guint32 *out_${field}_size,\n'
-                                  '    const guint8 **out_${field},\n')
-            elif field['format'] == 'uuid':
-                inner_template = ('    const MbimUuid **out_${field},\n')
-            elif field['format'] == 'guint32':
-                inner_template = ('    ${public} *out_${field},\n')
-            elif field['format'] == 'guint64':
-                inner_template = ('    ${public} *out_${field},\n')
-            elif field['format'] == 'string':
-                inner_template = ('    gchar **out_${field},\n')
-            elif field['format'] == 'string-array':
-                inner_template = ('    gchar ***out_${field},\n')
-            elif field['format'] == 'struct':
-                inner_template = ('    ${struct} **out_${field},\n')
-            elif field['format'] == 'struct-array':
-                inner_template = ('    ${struct}Array **out_${field},\n')
-            elif field['format'] == 'ref-struct-array':
-                inner_template = ('    ${struct}Array **out_${field},\n')
-            elif field['format'] == 'ipv4':
-                inner_template = ('    const MbimIPv4 **out_${field},\n')
-            elif field['format'] == 'ref-ipv4':
-                inner_template = ('    const MbimIPv4 **out_${field},\n')
-            elif field['format'] == 'ipv4-array':
-                inner_template = ('    MbimIPv4 **out_${field},\n')
-            elif field['format'] == 'ipv6':
-                inner_template = ('    const MbimIPv6 **out_${field},\n')
-            elif field['format'] == 'ref-ipv6':
-                inner_template = ('    const MbimIPv6 **out_${field},\n')
-            elif field['format'] == 'ipv6-array':
-                inner_template = ('    MbimIPv6 **out_${field},\n')
-            else:
-                raise ValueError('Cannot handle field type \'%s\'' % field['format'])
-
-            template += (string.Template(inner_template).substitute(translations))
-
-        template += (
-            '    GError **error);\n')
-        hfile.write(string.Template(template).substitute(translations))
 
         template = (
             '\n'
@@ -556,7 +521,62 @@ class Message:
             ' * Parses and returns parameters of the \'${message}\' ${message_type} command in the \'${service}\' service.\n'
             ' *\n'
             ' * Returns: %TRUE if the message was correctly parsed, %FALSE if @error is set.\n'
+            ' *\n'
+            ' * Since: ${since}\n'
             ' */\n'
+            'gboolean ${underscore}_${message_type}_parse (\n'
+            '    const MbimMessage *message,\n')
+
+        for field in fields:
+            translations['field'] = utils.build_underscore_name_from_camelcase(field['name'])
+            translations['public'] = field['public-format'] if 'public-format' in field else field['format']
+            translations['struct'] = field['struct-type'] if 'struct-type' in field else ''
+
+            inner_template = ''
+            if field['format'] == 'byte-array':
+                inner_template = ('    const guint8 **out_${field},\n')
+            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
+                inner_template = ('    guint32 *out_${field}_size,\n'
+                                  '    const guint8 **out_${field},\n')
+            elif field['format'] == 'uuid':
+                inner_template = ('    const MbimUuid **out_${field},\n')
+            elif field['format'] == 'guint32':
+                inner_template = ('    ${public} *out_${field},\n')
+            elif field['format'] == 'guint64':
+                inner_template = ('    ${public} *out_${field},\n')
+            elif field['format'] == 'string':
+                inner_template = ('    gchar **out_${field},\n')
+            elif field['format'] == 'string-array':
+                inner_template = ('    gchar ***out_${field},\n')
+            elif field['format'] == 'struct':
+                inner_template = ('    ${struct} **out_${field},\n')
+            elif field['format'] == 'struct-array':
+                inner_template = ('    ${struct}Array **out_${field},\n')
+            elif field['format'] == 'ref-struct-array':
+                inner_template = ('    ${struct}Array **out_${field},\n')
+            elif field['format'] == 'ipv4':
+                inner_template = ('    const MbimIPv4 **out_${field},\n')
+            elif field['format'] == 'ref-ipv4':
+                inner_template = ('    const MbimIPv4 **out_${field},\n')
+            elif field['format'] == 'ipv4-array':
+                inner_template = ('    MbimIPv4 **out_${field},\n')
+            elif field['format'] == 'ipv6':
+                inner_template = ('    const MbimIPv6 **out_${field},\n')
+            elif field['format'] == 'ref-ipv6':
+                inner_template = ('    const MbimIPv6 **out_${field},\n')
+            elif field['format'] == 'ipv6-array':
+                inner_template = ('    MbimIPv6 **out_${field},\n')
+            else:
+                raise ValueError('Cannot handle field type \'%s\'' % field['format'])
+
+            template += (string.Template(inner_template).substitute(translations))
+
+        template += (
+            '    GError **error);\n')
+        hfile.write(string.Template(template).substitute(translations))
+
+        template = (
+            '\n'
             'gboolean\n'
             '${underscore}_${message_type}_parse (\n'
             '    const MbimMessage *message,\n')
