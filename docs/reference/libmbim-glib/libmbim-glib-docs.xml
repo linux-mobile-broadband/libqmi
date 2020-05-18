@@ -99,10 +99,54 @@
     <title>Object Hierarchy</title>
      <xi:include href="xml/tree_index.sgml"/>
   </chapter>
-  <index id="api-index-full">
+  <chapter id="api-index-full">
     <title>API Index</title>
-    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
-  </index>
+    <xi:include href="xml/api-index-full.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-deprecated" role="deprecated">
+    <title>Index of deprecated symbols</title>
+    <xi:include href="xml/api-index-deprecated.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-0" role="1.0">
+    <title>Index of new symbols in 1.0</title>
+    <xi:include href="xml/api-index-1.0.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-2" role="1.2">
+    <title>Index of new symbols in 1.2</title>
+    <xi:include href="xml/api-index-1.2.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-4" role="1.4">
+    <title>Index of new symbols in 1.4</title>
+    <xi:include href="xml/api-index-1.4.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-8" role="1.8">
+    <title>Index of new symbols in 1.8</title>
+    <xi:include href="xml/api-index-1.8.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-10" role="1.10">
+    <title>Index of new symbols in 1.10</title>
+    <xi:include href="xml/api-index-1.10.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-12" role="1.12">
+    <title>Index of new symbols in 1.12</title>
+    <xi:include href="xml/api-index-1.12.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-14" role="1.14">
+    <title>Index of new symbols in 1.14</title>
+    <xi:include href="xml/api-index-1.14.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-16" role="1.16">
+    <title>Index of new symbols in 1.16</title>
+    <xi:include href="xml/api-index-1.16.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-18" role="1.18">
+    <title>Index of new symbols in 1.18</title>
+    <xi:include href="xml/api-index-1.18.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-24" role="1.24">
+    <title>Index of new symbols in 1.24</title>
+    <xi:include href="xml/api-index-1.24.xml"></xi:include>
+  </chapter>
 
   <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
 </book>
