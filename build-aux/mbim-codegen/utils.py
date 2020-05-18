@@ -189,3 +189,24 @@ def read_json_file(path):
         else:
             out += line
     return out
+
+"""
+Compare two version strings given in MAJOR.MINOR format.
+Just to avoid needing to include e.g. packaging.version.parse just for this
+"""
+def version_compare(v1,v2):
+    major_v1 = int(v1.partition(".")[0])
+    major_v2 = int(v2.partition(".")[0])
+    if major_v2 > major_v1:
+        return 1
+    if major_v2 < major_v1:
+        return -1
+    # major_v2 == major_v1
+    minor_v1 = int(v1.partition(".")[2])
+    minor_v2 = int(v2.partition(".")[2])
+    if minor_v2 > minor_v1:
+        return 1
+    if minor_v2 < minor_v1:
+        return -1
+    # minor_v2 == minor_v1
+    return 0

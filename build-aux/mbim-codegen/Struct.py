@@ -20,8 +20,6 @@
 import string
 import utils
 
-from packaging.version import parse as parse_version
-
 """
 The Struct class takes care of emitting the struct type
 """
@@ -253,7 +251,7 @@ class Struct:
 
         if self.array_member:
             # TypeArray was introduced in 1.24
-            translations['array_since'] = self.since if parse_version(self.since) > parse_version('1.24') else '1.24'
+            translations['array_since'] = self.since if utils.version_compare('1.24', self.since) > 0 else '1.24'
             template = (
                 '\n'
                 '/**\n'
