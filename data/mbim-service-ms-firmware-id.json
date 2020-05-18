@@ -7,6 +7,7 @@
   { "name"     : "Get",
     "service"  : "MS Firmware ID",
     "type"     : "Command",
+    "since"    : "1.8",
     "query"    : [],
     "response" : [ { "name"   : "FirmwareId",
                      "format" : "uuid" } ] }

@@ -8,6 +8,7 @@
   { "name"     : "Connect",
     "service"  : "DSS",
     "type"     : "Command",
+    "since"    : "1.4",
     "set"      : [ { "name"   : "DeviceServiceId",
                      "format" : "uuid" },
                    { "name"   : "DssSessionId",

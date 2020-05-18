@@ -1,40 +1,42 @@
 
 [
-    // *********************************************************************************
-    { "type" : "Service",
-      "name" : "Phonebook" },
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Phonebook" },
 
-    // *********************************************************************************
-    { "name"         : "Configuration",
-      "service"      : "Phonebook",
-      "type"         : "Command",
-      "query"        : [],
-      "response"     : [ { "name"          : "State",
-                           "format"        : "guint32",
-                           "public-format" : "MbimPhonebookState" },
-                         { "name"   : "NumberOfEntries",
-                           "format" : "guint32" },
-                         { "name"   : "UsedEntries",
-                           "format" : "guint32" },
-                         { "name"   : "MaxNumberLength",
-                           "format" : "guint32" },
-                         { "name"   : "MaxName",
-                           "format" : "guint32" } ],
-      "notification" : [ { "name"          : "State",
-                           "format"        : "guint32",
-                           "public-format" : "MbimPhonebookState" },
-                         { "name"   : "NumberOfEntries",
-                           "format" : "guint32" },
-                         { "name"   : "UsedEntries",
-                           "format" : "guint32" },
-                         { "name"   : "MaxNumberLength",
-                           "format" : "guint32" },
-                         { "name"   : "MaxName",
-                           "format" : "guint32" } ] },
+  // *********************************************************************************
+  { "name"         : "Configuration",
+    "service"      : "Phonebook",
+    "type"         : "Command",
+    "since"        : "1.4",
+    "query"        : [],
+    "response"     : [ { "name"          : "State",
+                         "format"        : "guint32",
+                         "public-format" : "MbimPhonebookState" },
+                       { "name"   : "NumberOfEntries",
+                         "format" : "guint32" },
+                       { "name"   : "UsedEntries",
+                         "format" : "guint32" },
+                       { "name"   : "MaxNumberLength",
+                         "format" : "guint32" },
+                       { "name"   : "MaxName",
+                         "format" : "guint32" } ],
+    "notification" : [ { "name"          : "State",
+                         "format"        : "guint32",
+                         "public-format" : "MbimPhonebookState" },
+                       { "name"   : "NumberOfEntries",
+                         "format" : "guint32" },
+                       { "name"   : "UsedEntries",
+                         "format" : "guint32" },
+                       { "name"   : "MaxNumberLength",
+                         "format" : "guint32" },
+                       { "name"   : "MaxName",
+                         "format" : "guint32" } ] },
 
-    // *********************************************************************************
+  // *********************************************************************************
   { "name"     : "MbimPhonebookEntry",
     "type"     : "Struct",
+    "since"    : "1.4",
     "contents" : [ { "name"   : "EntryIndex",
                      "format" : "guint32" },
                    { "name"   : "Number",
@@ -45,6 +47,7 @@
   { "name"     : "Read",
     "service"  : "Phonebook",
     "type"     : "Command",
+    "since"    : "1.4",
     "query"    : [ { "name"          : "FilterFlag",
                      "format"        : "guint32",
                      "public-format" : "MbimPhonebookFlag" },
@@ -57,11 +60,11 @@
                      "struct-type"      : "MbimPhonebookEntry",
                      "array-size-field" : "EntryCount" } ] },
 
-    // *********************************************************************************
-
+  // *********************************************************************************
   { "name"     : "Delete",
     "service"  : "Phonebook",
     "type"     : "Command",
+    "since"    : "1.4",
     "set"      : [ { "name"          : "FilterFlag",
                      "format"        : "guint32",
                      "public-format" : "MbimPhonebookFlag" },
@@ -70,11 +73,11 @@
     "response" : [] },
 
 
-    // *********************************************************************************
-
+  // *********************************************************************************
   { "name"     : "Write",
     "service"  : "Phonebook",
     "type"     : "Command",
+    "since"    : "1.4",
     "set"      : [ { "name"          : "SaveFlag",
                      "format"        : "guint32",
                      "public-format" : "MbimPhonebookWriteFlag" },

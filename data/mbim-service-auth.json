@@ -1,13 +1,14 @@
 
 [
-    // *********************************************************************************
-    { "type" : "Service",
-      "name" : "Auth" },
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Auth" },
 
   // *********************************************************************************
   { "name"     : "Aka",
     "service"  : "Auth",
     "type"     : "Command",
+    "since"    : "1.4",
     "query"    : [ { "name"       : "Rand",
                      "format"     : "byte-array",
                      "array-size" : "16" },
@@ -33,6 +34,7 @@
   { "name"     : "Akap",
     "service"  : "Auth",
     "type"     : "Command",
+    "since"    : "1.4",
     "query"    : [ { "name"       : "Rand",
                      "format"     : "byte-array",
                      "array-size" : "16" },
@@ -60,6 +62,7 @@
   { "name"     : "Sim",
     "service"  : "Auth",
     "type"     : "Command",
+    "since"    : "1.4",
     "query"    : [ { "name"       : "Rand1",
                      "format"     : "byte-array",
                      "array-size" : "16" },
