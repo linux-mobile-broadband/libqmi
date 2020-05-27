@@ -101,9 +101,7 @@ test_message_parse_common (const guint8 *buffer,
         }
 
         printable = qmi_message_get_printable_full (message, NULL, "");
-#ifdef TEST_PRINT_MESSAGE
-        g_print ("\n%s\n", printable);
-#endif
+        g_debug ("%s", printable);
         g_free (printable);
 
         n_messages++;
@@ -195,9 +193,7 @@ test_message_printable_common (const guint8 *buffer,
     g_assert (message);
 
     printable = qmi_message_get_printable_full (message, context, "");
-#ifdef TEST_PRINT_MESSAGE
-    g_print ("\n%s\n", printable);
-#endif
+    g_debug ("%s", printable);
     g_assert (strstr (printable, expected_in_printable));
     g_free (printable);
 
