@@ -131,6 +131,14 @@ __qmi_string_utf8_validate_printable (const guint8 *utf8,
     g_assert (utf8);
     g_assert (utf8_len);
 
+    /* Ignore all trailing NUL bytes, if any */
+    while ((utf8_len > 0) && (utf8[utf8_len - 1] == '\0'))
+        utf8_len--;
+
+    /* An empty string */
+    if (!utf8_len)
+        return TRUE;
+
     /* First check if valid UTF-8 */
     init = (const gchar *)utf8;
     if (!g_utf8_validate (init, utf8_len, NULL))

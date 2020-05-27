@@ -177,12 +177,19 @@ test_message_parse_complete_and_complete (void)
 static void
 test_message_printable_common (const guint8 *buffer,
                                guint         buffer_len,
+                               guint16       vendor_id,
                                const gchar  *expected_in_printable)
 {
+    QmiMessageContext *context = NULL;
     QmiMessage *message;
     GByteArray *array;
     GError *error = NULL;
     gchar *printable;
+
+    if (vendor_id != QMI_MESSAGE_VENDOR_GENERIC) {
+        context = qmi_message_context_new ();
+        qmi_message_context_set_vendor_id (context, vendor_id);
+    }
 
     array = g_byte_array_sized_new (buffer_len);
     g_byte_array_append (array, buffer, buffer_len);
@@ -190,7 +197,7 @@ test_message_printable_common (const guint8 *buffer,
     g_assert_no_error (error);
     g_assert (message);
 
-    printable = qmi_message_get_printable_full (message, NULL, "");
+    printable = qmi_message_get_printable_full (message, context, "");
 #ifdef TEST_PRINT_MESSAGE
     g_print ("\n%s\n", printable);
 #endif
@@ -199,6 +206,9 @@ test_message_printable_common (const guint8 *buffer,
 
     g_byte_array_unref (array);
     qmi_message_unref (message);
+
+    if (context)
+        qmi_message_context_unref (context);
 }
 
 static void
@@ -214,7 +224,7 @@ test_message_parse_wrong_tlv (void)
         0x06, 0x00, 0x01, 0x01, 0x01, 0x02, 0x01, 0x05
     };
 
-    test_message_printable_common (buffer, G_N_ELEMENTS (buffer), "ERROR: Reading TLV would overflow");
+    test_message_printable_common (buffer, G_N_ELEMENTS (buffer), QMI_MESSAGE_VENDOR_GENERIC, "ERROR: Reading TLV would overflow");
 }
 
 static void
@@ -237,7 +247,7 @@ test_message_parse_missing_size (void)
         0x01
     };
 
-    test_message_printable_common (buffer, G_N_ELEMENTS (buffer), "ERROR: Reading TLV would overflow");
+    test_message_printable_common (buffer, G_N_ELEMENTS (buffer), QMI_MESSAGE_VENDOR_GENERIC, "ERROR: Reading TLV would overflow");
 }
 
 static void
@@ -254,7 +264,30 @@ test_message_parse_string_with_crlf (void)
         0x2C, 0x2C, 0x2C, 0x2C, 0x2C, 0x2A, 0x31, 0x45, 0x0D, 0x0A
     };
 
-    test_message_printable_common (buffer, sizeof (buffer), "$GPGSA,A,1,,,,,,,,,,,,,,,*1E");
+    test_message_printable_common (buffer, sizeof (buffer), QMI_MESSAGE_VENDOR_GENERIC, "$GPGSA,A,1,,,,,,,,,,,,,,,*1E");
+}
+
+static void
+test_message_parse_string_with_trailing_nul (void)
+{
+    /* The Sierra Wireless (vid 0x1199) specific method to get current firmware
+     * info uses NUL-terminated strings.
+     */
+    const guint8 buffer[] = {
+        0x01, 0x82, 0x00, 0x80, 0x02, 0x03, 0x02, 0x01, 0x00, 0x56, 0x55, 0x76,
+        0x00, 0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x0C, 0x00, 0x30,
+        0x30, 0x32, 0x2E, 0x30, 0x37, 0x32, 0x5F, 0x30, 0x30, 0x30, 0x00, 0x17,
+        0x08, 0x00, 0x47, 0x45, 0x4E, 0x45, 0x52, 0x49, 0x43, 0x00, 0x16, 0x08,
+        0x00, 0x30, 0x30, 0x30, 0x2E, 0x30, 0x30, 0x35, 0x00, 0x15, 0x02, 0x00,
+        0x31, 0x00, 0x13, 0x08, 0x00, 0x31, 0x31, 0x30, 0x32, 0x34, 0x37, 0x36,
+        0x00, 0x12, 0x15, 0x00, 0x53, 0x57, 0x49, 0x39, 0x58, 0x33, 0x30, 0x43,
+        0x5F, 0x30, 0x32, 0x2E, 0x33, 0x33, 0x2E, 0x30, 0x33, 0x2E, 0x30, 0x30,
+        0x00, 0x11, 0x15, 0x00, 0x53, 0x57, 0x49, 0x39, 0x58, 0x33, 0x30, 0x43,
+        0x5F, 0x30, 0x32, 0x2E, 0x33, 0x33, 0x2E, 0x30, 0x33, 0x2E, 0x30, 0x30,
+        0x00, 0x10, 0x07, 0x00, 0x4D, 0x43, 0x37, 0x34, 0x35, 0x35, 0x00
+    };
+
+    test_message_printable_common (buffer, sizeof (buffer), 0x1199, "SWI9X30C_02.33.03.00");
 }
 
 /*****************************************************************************/
@@ -1587,6 +1620,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libqmi-glib/message/parse/wrong-tlv",             test_message_parse_wrong_tlv);
     g_test_add_func ("/libqmi-glib/message/parse/missing-size",          test_message_parse_missing_size);
     g_test_add_func ("/libqmi-glib/message/parse/string-with-crlf",      test_message_parse_string_with_crlf);
+    g_test_add_func ("/libqmi-glib/message/parse/string-with-trailing-nul", test_message_parse_string_with_trailing_nul);
 
     g_test_add_func ("/libqmi-glib/message/new/request",           test_message_new_request);
     g_test_add_func ("/libqmi-glib/message/new/request-from-data", test_message_new_request_from_data);
