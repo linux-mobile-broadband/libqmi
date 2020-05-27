@@ -165,7 +165,7 @@ MbimDevice *mbim_device_new_finish (GAsyncResult  *res,
                                     GError       **error);
 
 /**
- * mbim_device_get_file:
+ * mbim_device_get_file: (skip)
  * @self: a #MbimDevice.
  *
  * Get the #GFile associated with this #MbimDevice.
@@ -177,7 +177,7 @@ MbimDevice *mbim_device_new_finish (GAsyncResult  *res,
 GFile *mbim_device_get_file (MbimDevice *self);
 
 /**
- * mbim_device_peek_file:
+ * mbim_device_peek_file: (skip)
  * @self: a #MbimDevice.
  *
  * Get the #GFile associated with this #MbimDevice, without increasing the reference count

@@ -118,7 +118,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimProxy, g_object_unref)
 MbimProxy *mbim_proxy_new (GError **error);
 
 /**
- * mbim_proxy_get_n_clients:
+ * mbim_proxy_get_n_clients: (skip)
  * @self: a #MbimProxy.
  *
  * Get the number of clients currently connected to the proxy.
@@ -130,7 +130,7 @@ MbimProxy *mbim_proxy_new (GError **error);
 guint mbim_proxy_get_n_clients (MbimProxy *self);
 
 /**
- * mbim_proxy_get_n_devices:
+ * mbim_proxy_get_n_devices: (skip)
  * @self: a #MbimProxy.
  *
  * Get the number of devices currently connected to the proxy.
