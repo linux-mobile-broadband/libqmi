@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+# -*- Mode: python; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation; either version 2 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
+#
+
+import sys, signal, gi
+
+gi.require_version('Mbim', '1.0')
+from gi.repository import GLib, GObject, Gio, Mbim
+
+main_loop = None
+
+def signal_handler(data):
+    main_loop.quit()
+
+def close_ready(mbimdev,result,user_data=None):
+    try:
+        mbimdev.close_finish(result)
+    except GLib.GError as error:
+        sys.stderr.write("Couldn't close MBIM device: %s\n" % error.message)
+    main_loop.quit()
+
+def query_device_caps_ready(mbimdev,result,user_data=None):
+    try:
+        response = mbimdev.command_finish(result)
+        response.command_done_get_result()
+        success, devtype, cellclass, voiceclass, simclass, dataclass, smscaps, controlcaps, maxsessions, customdataclass, deviceid, firmwareinfo, hardwareinfo = response.device_caps_response_parse()
+
+        if success:
+            print("device type:          %s" % Mbim.DeviceType.get_string(devtype))
+            print("cellular class:       %s" % Mbim.CellularClass.build_string_from_mask(cellclass))
+            print("voice class:          %s" % Mbim.VoiceClass.get_string(voiceclass))
+            print("sim class:            %s" % Mbim.SimClass.build_string_from_mask(simclass))
+            print("data class:           %s" % Mbim.DataClass.build_string_from_mask(dataclass))
+            print("sms capabilities:     %s" % Mbim.SmsCaps.build_string_from_mask(smscaps))
+            print("control capabilities: %s" % Mbim.CtrlCaps.build_string_from_mask(controlcaps))
+            print("max sessions:         %u" % maxsessions)
+            print("custom data class:    %s" % customdataclass)
+            print("device id:            %s" % deviceid)
+            print("firmware info:        %s" % firmwareinfo)
+            print("hardware info:        %s" % hardwareinfo)
+
+    except GLib.GError as error:
+        sys.stderr.write("Couldn't run MBIM command: %s\n" % error.message)
+        main_loop.quit()
+
+    mbimdev.close(10, None, close_ready, None)
+
+def open_full_ready(mbimdev,result,user_data=None):
+    try:
+        mbimdev.open_full_finish(result)
+    except GLib.GError as error:
+        sys.stderr.write("Couldn't open MBIM device: %s\n" % error.message)
+        main_loop.quit()
+
+    request = Mbim.Message.device_caps_query_new ()
+    mbimdev.command(request, 10, None, query_device_caps_ready, None)
+
+def new_ready(unused,result,user_data=None):
+    try:
+        mbimdev = Mbim.Device.new_finish(result)
+    except GLib.GError as error:
+        sys.stderr.write("Couldn't create MBIM device: %s\n" % error.message)
+        main_loop.quit()
+
+    mbimdev.open_full(Mbim.DeviceOpenFlags.PROXY, 10, None, open_full_ready, None)
+
+if __name__ == "__main__":
+
+    # Process input arguments
+    if len(sys.argv) != 2:
+        sys.stderr.write('error: wrong number of arguments\n')
+        sys.stdout.write('usage: simple-tester-python <DEVICE>\n')
+        sys.exit(1)
+
+    # Create Mbim device asynchronously
+    file = Gio.File.new_for_path(sys.argv[1])
+    Mbim.Device.new (file, None, new_ready, None)
+
+    # Main loop
+    main_loop = GLib.MainLoop()
+    GLib.unix_signal_add(GLib.PRIORITY_HIGH, signal.SIGHUP, signal_handler, None)
+    GLib.unix_signal_add(GLib.PRIORITY_HIGH, signal.SIGTERM, signal_handler, None)
+    try:
+        main_loop.run()
+    except KeyboardInterrupt:
+        pass

@@ -1,0 +1,29 @@
+
+The simple-tester-python program makes use of the 'libmbim-glib' library
+through GObject Introspection.
+
+The program will:
+ * Open a connection to the mbim-proxy, or launch the mbim-proxy itself
+   if it isn't already running.
+ * Query device capabilities
+
+The output will look like this:
+
+$ ./simple-tester-python /dev/cdc-wdm0
+device type:          embedded
+cellular class:       gsm
+voice class:          no-voice
+sim class:            removable
+data class:           gprs, edge, umts, hsdpa, hsupa, lte
+sms capabilities:     pdu-receive, pdu-send
+control capabilities: reg-manual
+max sessions:         8
+custom data class:    None
+device id:            013937003110648
+firmware info:        FIH7160_V1.1_MODEM_01.1349.12
+hardware info:        XMM7160_V1.1_MBIM_GNSS_NAND_RE
+
+Note that the program requires libmbim-glib to be installed in the system
+and the introspection typelibs available in the standard paths.
+
+Have fun!
