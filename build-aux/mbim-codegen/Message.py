@@ -480,38 +480,38 @@ class Message:
 
             inner_template = ''
             if field['format'] == 'byte-array':
-                inner_template = (' * @out_${field}: (out)(optional): return location for an array of ${array_size} #guint8 values. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for an array of ${array_size} #guint8 values. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
                 inner_template = (' * @out_${field}_size: (out)(optional): return location for the size of the ${field} array.\n'
-                                  ' * @out_${field}: (out)(optional): return location for an array of #guint8 values. Do not free the returned value, it is owned by @message.\n')
+                                  ' * @out_${field}: (out)(optional)(transfer none): return location for an array of #guint8 values. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'uuid':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a #MbimUuid, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimUuid, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'guint32':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a #${public}, or %NULL if the \'${name}\' field is not needed.\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #${public}, or %NULL if the \'${name}\' field is not needed.\n')
             elif field['format'] == 'guint64':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a #guint64, or %NULL if the \'${name}\' field is not needed.\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #guint64, or %NULL if the \'${name}\' field is not needed.\n')
             elif field['format'] == 'string':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a newly allocated string, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated string, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
             elif field['format'] == 'string-array':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a newly allocated array of strings, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_strfreev().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated array of strings, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_strfreev().\n')
             elif field['format'] == 'struct':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a newly allocated #${struct}, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated #${struct}, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_free().\n')
             elif field['format'] == 'struct-array':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a newly allocated array of #${struct}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated array of #${struct}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a newly allocated array of #${struct}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated array of #${struct}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
             elif field['format'] == 'ipv4':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ref-ipv4':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ipv4-array':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a newly allocated array of #MbimIPv4s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated array of #MbimIPv4s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
             elif field['format'] == 'ipv6':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ref-ipv6':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ipv6-array':
-                inner_template = (' * @out_${field}: (out)(optional): return location for a newly allocated array of #MbimIPv6s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated array of #MbimIPv6s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
