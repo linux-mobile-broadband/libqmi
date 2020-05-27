@@ -62,14 +62,12 @@ _g_assert_cmpmem (gconstpointer mem1,
                   gconstpointer mem2,
                   gsize         size2)
 {
-    gchar *str1;
-    gchar *str2;
+    g_autofree gchar *str1 = NULL;
+    g_autofree gchar *str2 = NULL;
 
     str1 = __str_hex (mem1, size1, ':');
     str2 = __str_hex (mem2, size2, ':');
     g_assert_cmpstr (str1, ==, str2);
-    g_free (str1);
-    g_free (str2);
 }
 
 /*****************************************************************************/
@@ -79,38 +77,31 @@ test_message_parse_common (const guint8 *buffer,
                            guint buffer_len,
                            guint n_expected_messages)
 {
-    GError *error = NULL;
-    GByteArray *array;
-    guint n_messages = 0;
+    g_autoptr(GByteArray) array = NULL;
+    guint                 n_messages = 0;
 
     array = g_byte_array_sized_new (buffer_len);
     g_byte_array_append (array, buffer, buffer_len);
 
     do {
-        QmiMessage *message;
-        gchar *printable;
+        g_autoptr(GError)      error = NULL;
+        g_autoptr(QmiMessage)  message = NULL;
+        g_autofree gchar      *printable = NULL;
 
         message = qmi_message_new_from_raw (array, &error);
         if (!message) {
-            if (error) {
-                if (n_messages < n_expected_messages)
-                    g_printerr ("error creating message from raw data: '%s'\n", error->message);
-                g_error_free (error);
-            }
+            if (error && (n_messages < n_expected_messages))
+                g_printerr ("error creating message from raw data: '%s'\n", error->message);
             break;
         }
 
         printable = qmi_message_get_printable_full (message, NULL, "");
         g_debug ("%s", printable);
-        g_free (printable);
 
         n_messages++;
-        qmi_message_unref (message);
     } while (array->len > 0);
 
     g_assert_cmpuint (n_messages, ==, n_expected_messages);
-
-    g_byte_array_unref (array);
 }
 
 static void
@@ -175,11 +166,11 @@ test_message_printable_common (const guint8 *buffer,
                                guint16       vendor_id,
                                const gchar  *expected_in_printable)
 {
-    QmiMessageContext *context = NULL;
-    QmiMessage *message;
-    GByteArray *array;
-    GError *error = NULL;
-    gchar *printable;
+    g_autoptr(QmiMessageContext)  context = NULL;
+    g_autoptr(QmiMessage)         message = NULL;
+    g_autoptr(GByteArray)         array = NULL;
+    g_autoptr(GError)             error = NULL;
+    g_autofree gchar             *printable = NULL;
 
     if (vendor_id != QMI_MESSAGE_VENDOR_GENERIC) {
         context = qmi_message_context_new ();
@@ -195,13 +186,6 @@ test_message_printable_common (const guint8 *buffer,
     printable = qmi_message_get_printable_full (message, context, "");
     g_debug ("%s", printable);
     g_assert (strstr (printable, expected_in_printable));
-    g_free (printable);
-
-    g_byte_array_unref (array);
-    qmi_message_unref (message);
-
-    if (context)
-        qmi_message_context_unref (context);
 }
 
 static void
@@ -312,10 +296,10 @@ test_message_new_request (void)
         0x00, 0x00, /* all tlvs length */
     };
 
-    QmiMessage *self;
-    GError *error = NULL;
-    const guint8 *buffer;
-    gsize buffer_length = 0;
+    g_autoptr(QmiMessage)  self = NULL;
+    g_autoptr(GError)      error = NULL;
+    const guint8          *buffer;
+    gsize                  buffer_length = 0;
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
     g_assert (self);
@@ -326,8 +310,6 @@ test_message_new_request (void)
     g_assert_cmpuint (buffer_length, >, 0);
 
     _g_assert_cmpmem (buffer, buffer_length, expected_buffer, sizeof (expected_buffer));
-
-    qmi_message_unref (self);
 }
 
 static void
@@ -340,11 +322,11 @@ test_message_new_request_from_data (void)
         0x00, 0x00, /* all tlvs length */
     };
 
-    GByteArray *qmi;
-    QmiMessage *self;
-    GError *error = NULL;
-    const guint8 *buffer;
-    gsize buffer_length = 0;
+    g_autoptr(GByteArray)  qmi = NULL;
+    g_autoptr(QmiMessage)  self = NULL;
+    g_autoptr(GError)      error = NULL;
+    const guint8          *buffer;
+    gsize                  buffer_length = 0;
 
     /* set up service header */
     qmi = g_byte_array_new ();
@@ -378,9 +360,6 @@ test_message_new_request_from_data (void)
     g_assert (buffer != NULL);
     g_assert_cmpuint (buffer_length, >, 0);
     _g_assert_cmpmem (buffer, buffer_length, expected_buffer, sizeof (expected_buffer));
-
-    qmi_message_unref (self);
-    g_byte_array_unref (qmi);
 }
 
 static void
@@ -402,11 +381,11 @@ test_message_new_response_ok (void)
         0x00, 0x00, 0x00, 0x00
     };
 
-    QmiMessage *request;
-    QmiMessage *response;
-    GError *error = NULL;
-    const guint8 *buffer;
-    gsize buffer_length = 0;
+    g_autoptr(QmiMessage)  request = NULL;
+    g_autoptr(QmiMessage)  response = NULL;
+    g_autoptr(GError)      error = NULL;
+    const guint8          *buffer;
+    gsize                  buffer_length = 0;
 
     request = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
     g_assert (request);
@@ -420,9 +399,6 @@ test_message_new_response_ok (void)
     g_assert_cmpuint (buffer_length, >, 0);
 
     _g_assert_cmpmem (buffer, buffer_length, expected_buffer, sizeof (expected_buffer));
-
-    qmi_message_unref (request);
-    qmi_message_unref (response);
 }
 
 static void
@@ -444,11 +420,11 @@ test_message_new_response_error (void)
         0x01, 0x00, 0x03, 0x00
     };
 
-    QmiMessage *request;
-    QmiMessage *response;
-    GError *error = NULL;
-    const guint8 *buffer;
-    gsize buffer_length = 0;
+    g_autoptr(QmiMessage)  request = NULL;
+    g_autoptr(QmiMessage)  response = NULL;
+    g_autoptr(GError)      error = NULL;
+    const guint8          *buffer;
+    gsize                  buffer_length = 0;
 
     request = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
     g_assert (request);
@@ -462,9 +438,6 @@ test_message_new_response_error (void)
     g_assert_cmpuint (buffer_length, >, 0);
 
     _g_assert_cmpmem (buffer, buffer_length, expected_buffer, sizeof (expected_buffer));
-
-    qmi_message_unref (request);
-    qmi_message_unref (response);
 }
 
 /*****************************************************************************/
@@ -472,10 +445,10 @@ test_message_new_response_error (void)
 static void
 test_message_tlv_write_empty (void)
 {
-    QmiMessage *self;
-    GError *error = NULL;
-    gboolean ret;
-    gsize init_offset;
+    g_autoptr(QmiMessage) self = NULL;
+    g_autoptr(GError)     error = NULL;
+    gboolean              ret;
+    gsize                 init_offset;
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
 
@@ -486,18 +459,16 @@ test_message_tlv_write_empty (void)
     ret = qmi_message_tlv_write_complete (self, init_offset, &error);
     g_assert_no_error (error);
     g_assert (ret);
-
-    qmi_message_unref (self);
 }
 
 static void
 test_message_tlv_write_reset (void)
 {
-    QmiMessage *self;
-    GError *error = NULL;
-    gboolean ret;
-    gsize init_offset;
-    gsize previous_size;
+    g_autoptr(QmiMessage) self = NULL;
+    g_autoptr(GError)     error = NULL;
+    gboolean              ret;
+    gsize                 init_offset;
+    gsize                 previous_size;
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
     previous_size = qmi_message_get_length (self);
@@ -521,22 +492,20 @@ test_message_tlv_write_reset (void)
 
     qmi_message_tlv_write_reset (self, init_offset);
     g_assert_cmpuint (previous_size, ==, qmi_message_get_length (self));
-
-    qmi_message_unref (self);
 }
 
 static void
 test_message_tlv_rw_8 (void)
 {
-    QmiMessage *self;
-    GError *error = NULL;
-    gboolean ret;
-    gsize init_offset;
-    gsize expected_tlv_payload_size = 0;
-    guint16 tlv_length = 0;
-    gsize offset;
-    guint8 uint8;
-    gint8 int8;
+    g_autoptr(QmiMessage) self = NULL;
+    g_autoptr(GError)     error = NULL;
+    gboolean              ret;
+    gsize                 init_offset;
+    gsize                 expected_tlv_payload_size = 0;
+    guint16               tlv_length = 0;
+    gsize                 offset;
+    guint8                uint8;
+    gint8                 int8;
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
 
@@ -576,8 +545,6 @@ test_message_tlv_rw_8 (void)
     g_assert_no_error (error);
     g_assert (ret);
     g_assert_cmpuint (int8, ==, 0 - 0x12);
-
-    qmi_message_unref (self);
 }
 
 static void
@@ -588,16 +555,16 @@ test_message_tlv_rw_16 (void)
     /* We'll add [0 or 1] bytes before the actual 16-bit values, so that we
      * check all possible memory alignments. */
     for (n_bytes_prefixed = 0; n_bytes_prefixed <= 1; n_bytes_prefixed++) {
-        QmiMessage *self;
-        GError *error = NULL;
-        gboolean ret;
-        gsize init_offset;
-        guint16 tlv_length = 0;
-        gsize offset;
-        gsize expected_tlv_payload_size = 0;
-        guint16 uint16;
-        gint16 int16;
-        guint i;
+        g_autoptr(QmiMessage) self = NULL;
+        g_autoptr(GError)     error = NULL;
+        gboolean              ret;
+        gsize                 init_offset;
+        guint16               tlv_length = 0;
+        gsize                 offset;
+        gsize                 expected_tlv_payload_size = 0;
+        guint16               uint16;
+        gint16                int16;
+        guint                 i;
 
         self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
 
@@ -673,8 +640,6 @@ test_message_tlv_rw_16 (void)
         g_assert_no_error (error);
         g_assert (ret);
         g_assert_cmpuint (int16, ==, 0 - 0x1212);
-
-        qmi_message_unref (self);
     }
 }
 
@@ -686,16 +651,16 @@ test_message_tlv_rw_32 (void)
     /* We'll add [0, 1, 2, 3] bytes before the actual 32-bit values, so that we
      * check all possible memory alignments. */
     for (n_bytes_prefixed = 0; n_bytes_prefixed <= 3; n_bytes_prefixed++) {
-        QmiMessage *self;
-        GError *error = NULL;
-        gboolean ret;
-        gsize init_offset;
-        guint16 tlv_length = 0;
-        gsize offset;
-        gsize expected_tlv_payload_size = 0;
-        guint32 uint32;
-        gint32 int32;
-        guint i;
+        g_autoptr(QmiMessage) self = NULL;
+        g_autoptr(GError)     error = NULL;
+        gboolean              ret;
+        gsize                 init_offset;
+        guint16               tlv_length = 0;
+        gsize                 offset;
+        gsize                 expected_tlv_payload_size = 0;
+        guint32               uint32;
+        gint32                int32;
+        guint                 i;
 
         self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
 
@@ -771,8 +736,6 @@ test_message_tlv_rw_32 (void)
         g_assert_no_error (error);
         g_assert (ret);
         g_assert_cmpuint (int32, ==, 0 - 0x12121212);
-
-        qmi_message_unref (self);
     }
 }
 
@@ -784,16 +747,16 @@ test_message_tlv_rw_64 (void)
     /* We'll add [0, 1, 2, 3, 4, 5, 6, 7] bytes before the actual 64-bit values,
      * so that we check all possible memory alignments. */
     for (n_bytes_prefixed = 0; n_bytes_prefixed <= 7; n_bytes_prefixed++) {
-        QmiMessage *self;
-        GError *error = NULL;
-        gboolean ret;
-        gsize init_offset;
-        guint16 tlv_length = 0;
-        gsize offset;
-        gsize expected_tlv_payload_size = 0;
-        guint64 uint64;
-        gint64 int64;
-        guint i;
+        g_autoptr(QmiMessage) self = NULL;
+        g_autoptr(GError)     error = NULL;
+        gboolean              ret;
+        gsize                 init_offset;
+        guint16               tlv_length = 0;
+        gsize                 offset;
+        gsize                 expected_tlv_payload_size = 0;
+        guint64               uint64;
+        gint64                int64;
+        guint                 i;
 
         self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
 
@@ -869,8 +832,6 @@ test_message_tlv_rw_64 (void)
         g_assert_no_error (error);
         g_assert (ret);
         g_assert_cmpuint (int64, ==, 0 - 0x1212121212121212LL);
-
-        qmi_message_unref (self);
     }
 }
 
@@ -886,17 +847,17 @@ test_message_tlv_rw_sized (void)
         /* We'll add [0, 1, 2, 3, 4, 5, 6, 7] bytes before the actual N-bit values,
          * so that we check all possible memory alignments. */
         for (n_bytes_prefixed = 0; n_bytes_prefixed <= sized[sized_i] - 1; n_bytes_prefixed++) {
-            QmiMessage *self;
-            GError *error = NULL;
-            gboolean ret;
-            gsize init_offset;
-            guint16 tlv_length = 0;
-            gsize offset;
-            gsize expected_tlv_payload_size = 0;
-            guint64 uint64;
-            guint i;
-            guint64 value;
-            guint64 tmp;
+            g_autoptr(QmiMessage) self = NULL;
+            g_autoptr(GError)     error = NULL;
+            gboolean              ret;
+            gsize                 init_offset;
+            guint16               tlv_length = 0;
+            gsize                 offset;
+            gsize                 expected_tlv_payload_size = 0;
+            guint64               uint64;
+            guint                 i;
+            guint64               value;
+            guint64               tmp;
 
             value = 0x1212121212121212ULL;
             tmp = 0xFF;
@@ -956,8 +917,6 @@ test_message_tlv_rw_sized (void)
 
             qmi_message_tlv_read_sized_guint (self, init_offset, &offset, sized[sized_i], QMI_ENDIAN_BIG, &uint64, &error);
             g_assert_cmpuint (uint64, ==, value);
-
-            qmi_message_unref (self);
         }
     }
 }
@@ -965,15 +924,15 @@ test_message_tlv_rw_sized (void)
 static void
 test_message_tlv_rw_strings (void)
 {
-    QmiMessage *self;
-    GError *error = NULL;
-    gboolean ret;
-    gsize init_offset;
-    guint16 tlv_length = 0;
-    gsize offset;
-    gsize expected_tlv_payload_size = 0;
-    gchar *str;
-    gchar fixed_str[5];
+    g_autoptr(QmiMessage)  self = NULL;
+    g_autoptr(GError)      error = NULL;
+    gboolean               ret;
+    gsize                  init_offset;
+    guint16                tlv_length = 0;
+    gsize                  offset;
+    gsize                  expected_tlv_payload_size = 0;
+    gchar                 *str;
+    gchar                  fixed_str[5];
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
 
@@ -1084,28 +1043,26 @@ test_message_tlv_rw_strings (void)
     g_assert (ret);
     g_assert_cmpstr (str, ==, "");
     g_free (str);
-
-    qmi_message_unref (self);
 }
 
 static void
 test_message_tlv_rw_mixed (void)
 {
-    QmiMessage *self;
-    GError *error = NULL;
-    gboolean ret;
-    gsize init_offset;
-    guint16 tlv_length = 0;
-    gsize offset;
-    gsize expected_tlv_payload_size = 0;
-    guint8 uint8;
-    gint8  int8;
-    guint16 uint16;
-    gint16 int16;
-    guint32 uint32;
-    gint32 int32;
-    guint64 uint64;
-    gint64 int64;
+    g_autoptr(QmiMessage) self = NULL;
+    g_autoptr(GError)     error = NULL;
+    gboolean              ret;
+    gsize                 init_offset;
+    guint16               tlv_length = 0;
+    gsize                 offset;
+    gsize                 expected_tlv_payload_size = 0;
+    guint8                uint8;
+    gint8                 int8;
+    guint16               uint16;
+    gint16                int16;
+    guint32               uint32;
+    gint32                int32;
+    guint64               uint64;
+    gint64                int64;
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
 
@@ -1220,17 +1177,15 @@ test_message_tlv_rw_mixed (void)
     g_assert_no_error (error);
     g_assert (ret);
     g_assert_cmpuint (int64, ==, 0 - 0x1212121212121212LL);
-
-    qmi_message_unref (self);
 }
 
 static void
 test_message_tlv_write_overflow (void)
 {
-    QmiMessage *self;
-    GError *error = NULL;
-    gsize init_offset;
-    gboolean ret;
+    g_autoptr(QmiMessage) self = NULL;
+    g_autoptr(GError)     error = NULL;
+    gboolean              ret;
+    gsize                 init_offset;
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
 
@@ -1321,28 +1276,26 @@ test_message_tlv_write_overflow (void)
     g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
     g_assert (init_offset == 0);
     g_clear_error (&error);
-
-    qmi_message_unref (self);
 }
 
 static void
 test_message_tlv_read_overflow_message (void)
 {
-    QmiMessage *self;
-    GError *error = NULL;
-    gsize init_offset;
-    guint16 tlv_length = 0;
-    gsize offset;
-    gboolean ret;
-    gchar *str;
-    guint8 uint8;
-    gint8  int8;
-    guint16 uint16;
-    gint16 int16;
-    guint32 uint32;
-    gint32 int32;
-    guint64 uint64;
-    gint64 int64;
+    g_autoptr(QmiMessage)  self = NULL;
+    g_autoptr(GError)      error = NULL;
+    gboolean               ret;
+    gsize                  init_offset;
+    guint16                tlv_length = 0;
+    gsize                  offset;
+    gchar                 *str;
+    guint8                 uint8;
+    gint8                  int8;
+    guint16                uint16;
+    gint16                 int16;
+    guint32                uint32;
+    gint32                 int32;
+    guint64                uint64;
+    gint64                 int64;
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
     init_offset = qmi_message_tlv_write_init (self, 0x01, &error);
@@ -1367,7 +1320,7 @@ test_message_tlv_read_overflow_message (void)
     g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
     g_assert (!ret);
     g_clear_error (&error);
-    qmi_message_unref (self);
+    g_clear_pointer (&self, qmi_message_unref);
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
     init_offset = qmi_message_tlv_write_init (self, 0x01, &error);
@@ -1430,27 +1383,27 @@ test_message_tlv_read_overflow_message (void)
     g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
     g_assert (!ret);
     g_clear_error (&error);
-    qmi_message_unref (self);
+    g_clear_pointer (&self, qmi_message_unref);
 }
 
 static void
 test_message_tlv_read_overflow_tlv (void)
 {
-    QmiMessage *self;
-    GError *error = NULL;
-    gsize init_offset;
-    guint16 tlv_length = 0;
-    gsize offset;
-    gboolean ret;
-    gchar *str;
-    guint8 uint8;
-    gint8  int8;
-    guint16 uint16;
-    gint16 int16;
-    guint32 uint32;
-    gint32 int32;
-    guint64 uint64;
-    gint64 int64;
+    g_autoptr(QmiMessage)  self = NULL;
+    g_autoptr(GError)      error = NULL;
+    gboolean               ret;
+    gsize                  init_offset;
+    guint16                tlv_length = 0;
+    gsize                  offset;
+    gchar                 *str;
+    guint8                 uint8;
+    gint8                  int8;
+    guint16                uint16;
+    gint16                 int16;
+    guint32                uint32;
+    gint32                 int32;
+    guint64                uint64;
+    gint64                 int64;
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
     init_offset = qmi_message_tlv_write_init (self, 0x01, &error);
@@ -1484,8 +1437,7 @@ test_message_tlv_read_overflow_tlv (void)
     g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
     g_assert (!ret);
     g_clear_error (&error);
-    qmi_message_unref (self);
-
+    g_clear_pointer (&self, qmi_message_unref);
 
     self = qmi_message_new (QMI_SERVICE_DMS, 0x01, 0x02, 0xFFFF);
     init_offset = qmi_message_tlv_write_init (self, 0x01, &error);
@@ -1557,7 +1509,7 @@ test_message_tlv_read_overflow_tlv (void)
     g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_TLV_TOO_LONG);
     g_assert (!ret);
     g_clear_error (&error);
-    qmi_message_unref (self);
+    g_clear_pointer (&self, qmi_message_unref);
 }
 
 /*****************************************************************************/
@@ -1565,10 +1517,11 @@ test_message_tlv_read_overflow_tlv (void)
 static void
 test_message_set_transaction_id_ctl (void)
 {
-    GByteArray *buffer;
-    QmiMessage *message;
-    GError     *error = NULL;
-    guint8      ctl_message[] = {
+    g_autoptr(GByteArray) buffer = NULL;
+    g_autoptr(QmiMessage) message = NULL;
+    g_autoptr(GError)     error = NULL;
+
+    guint8 ctl_message[] = {
         0x01, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00,
         0xFF, /* TRID to update */
         0x22, 0x00, 0x04, 0x00, 0x01, 0x01, 0x00, 0x01
@@ -1582,18 +1535,16 @@ test_message_set_transaction_id_ctl (void)
 
     qmi_message_set_transaction_id (message, 0x55);
     g_assert_cmpuint (qmi_message_get_transaction_id (message), ==, 0x55);
-
-    qmi_message_unref (message);
-    g_byte_array_unref (buffer);
 }
 
 static void
 test_message_set_transaction_id_services (void)
 {
-    GByteArray *buffer;
-    QmiMessage *message;
-    GError     *error = NULL;
-    guint8      dms_message[] = {
+    g_autoptr(GByteArray) buffer = NULL;
+    g_autoptr(QmiMessage) message = NULL;
+    g_autoptr(GError)     error = NULL;
+
+    guint8 dms_message[] = {
         0x01, 0x0C, 0x00, 0x00, 0x02, 0x01, 0x00,
         0xFF, 0xFF, /* TRID to update */
         0x25, 0x00, 0x00, 0x00
@@ -1607,9 +1558,6 @@ test_message_set_transaction_id_services (void)
 
     qmi_message_set_transaction_id (message, 0x5566);
     g_assert_cmpuint (qmi_message_get_transaction_id (message), ==, 0x5566);
-
-    qmi_message_unref (message);
-    g_byte_array_unref (buffer);
 }
 
 /*****************************************************************************/
