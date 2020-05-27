@@ -1,4 +1,22 @@
 
+Overview of changes in libmbim 1.24
+----------------------------------------
+
+ * Build now requires GLib/GObject/GIO 2.48.
+
+ * Added new GObject Introspection support in the library, that can be
+   explicitly requested during configure with --enable-introspection=yes.
+   With the new introspection support, the libmbim-glib library can now be
+   used directly from e.g. python programs, as in the example included with
+   the release.
+
+ * Added release version information to all the types and methods of the public
+   library API, and added new per-version indices in the documentation.
+
+ * Added g_autoptr() support to all public types.
+
+ * Several other minor improvements and fixes.
+
 Overview of changes in libmbim 1.22
 ----------------------------------------
 
