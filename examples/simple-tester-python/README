@@ -1,0 +1,24 @@
+
+The simple-tester-python program makes use of the 'libqmi-glib' library
+through GObject Introspection.
+
+The program will:
+ * Open a connection to the qmi-proxy, or launch the qmi-proxy itself
+   if it isn't already running.
+ * Allocate a DMS client.
+ * Query device capabilities.
+ * Release DMS client.
+
+The output will look like this:
+
+$ ./simple-tester-python /dev/cdc-wdm0
+max tx channel rate: 50000000
+max rx channel rate: 100000000
+data service:        non-simultaneous-cs-ps
+sim:                 supported
+networks:            gsm, umts, lte
+
+Note that the program requires libqmi-glib to be installed in the system
+and the introspection typelibs available in the standard paths.
+
+Have fun!

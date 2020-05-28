@@ -1,5 +1,5 @@
 
-SUBDIRS = . data build-aux src utils docs
+SUBDIRS = . data build-aux src examples utils docs
 
 ACLOCAL_AMFLAGS = -I m4
 

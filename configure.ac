@@ -279,6 +279,8 @@ AC_CONFIG_FILES([Makefile
                  src/qmi-firmware-update/Makefile
                  src/qmi-firmware-update/test/Makefile
                  utils/Makefile
+                 examples/Makefile
+                 examples/simple-tester-python/Makefile
                  docs/Makefile
                  docs/reference/Makefile
                  docs/reference/libqmi-glib/Makefile
