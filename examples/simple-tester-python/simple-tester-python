@@ -58,6 +58,7 @@ def query_device_caps_ready(mbimdev,result,user_data=None):
     except GLib.GError as error:
         sys.stderr.write("Couldn't run MBIM command: %s\n" % error.message)
         main_loop.quit()
+        return
 
     mbimdev.close(10, None, close_ready, None)
 
@@ -67,6 +68,7 @@ def open_full_ready(mbimdev,result,user_data=None):
     except GLib.GError as error:
         sys.stderr.write("Couldn't open MBIM device: %s\n" % error.message)
         main_loop.quit()
+        return
 
     request = Mbim.Message.device_caps_query_new ()
     mbimdev.command(request, 10, None, query_device_caps_ready, None)
@@ -77,6 +79,7 @@ def new_ready(unused,result,user_data=None):
     except GLib.GError as error:
         sys.stderr.write("Couldn't create MBIM device: %s\n" % error.message)
         main_loop.quit()
+        return
 
     mbimdev.open_full(Mbim.DeviceOpenFlags.PROXY, 10, None, open_full_ready, None)
 
