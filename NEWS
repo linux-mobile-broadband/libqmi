@@ -1,4 +1,13 @@
 
+Overview of changes in libqmi 1.24.14
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fix build with GLib < 2.44.
+   ** Fix UTF-8 string validation when the string contains a trailing NUL byte
+      (e.g. the Sierra specific "DMS Swi Get Current Firmware" command).
+
+
 Overview of changes in libqmi 1.24.12
 ----------------------------------------
 
