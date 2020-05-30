@@ -60,8 +60,6 @@ def query_device_caps_ready(mbimdev,result,user_data=None):
 
     except GLib.GError as error:
         sys.stderr.write("Couldn't run MBIM command: %s\n" % error.message)
-        main_loop.quit()
-        return
 
     mbimdev.close(10, None, close_ready, None)
 
