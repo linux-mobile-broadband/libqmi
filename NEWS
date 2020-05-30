@@ -1,4 +1,116 @@
 
+Overview of changes in libqmi 1.26.0
+----------------------------------------
+
+ * Build now requires GLib/GObject/GIO 2.48.
+
+ * Build updated with several improvements:
+   ** The build has been updated to use by default all warnings enabled by
+      AX_COMPILER_FLAGS(), and therefore when building the release from a git
+      checkout, autoconf-archive >= 2017.03.21 is now required. This new build
+      dependency isn't required when building from the release tarball.
+   ** Also when building from a git checkout, beware because by default
+      --enable-compile-warnings=error is enabled, which implies -Werror. If
+      you'd like to build from git and avoid -Werror, you should explicitly use
+      --enable-compile-warnings=yes (to keep the warnings but without being
+      errors), --enable-compile-warnings=no (to disable all the extra warnings
+      enabled by default) or --disable-Werror (to unconditionally make all
+      compiler warnings non-fatal).
+
+ * Added new message collections support, so that users can select which
+   messages to include in the built library during configure with the
+   --enable-collection option. Three predefined sets are given:
+   ** minimal: the bare minimum messages required to control connectivity.
+   ** basic: all messages and indications that ModemManager requires.
+   ** full: all supported messages and indications.
+   Users can install custom collections under data/ and reference them in
+   the same way as the predefined sets. E.g. installing a new
+   data/qmi-collection-custom.json set can be enabled during configure with
+   --enable-collection=custom.
+
+ * Added new GObject Introspection support in the library, that can be
+   explicitly requested during configure with --enable-introspection=yes.
+   With the new introspection support, the libqmi-glib library can now be
+   used directly from e.g. python programs, as in the example included with
+   the release.
+
+ * Implemented new QRTR backend support, disabled by default. This new backend
+   allows to perform QMI operations on systems with the Qualcomm IPC router
+   protocol available (since Linux 4.7). Users can build the QRTR backend
+   support with --enable-qrtr, and will require the corresponding kernel
+   headers. When this backend is enabled, a new libqrtr-glib library is built
+   and installed along with libqmi-glib. The API of this libqrtr-glib library,
+   and the QRTR-specific APIs in libqmi-glib (e.g. qmi_device_new_from_node())
+   must not be considered stable yet, they may change in future versions of the
+   project, even in 1.26.x updates. The libqmi-glib headers include a new
+   QMI_QRTR_SUPPORTED symbol that specifies whether the QRTR backed has been
+   enabled (if set to 1) or not (if set to 0).
+
+ * Added 5GNR radio access technology support, with new enum values in both the
+   DMS and NAS services.
+
+ * New services:
+   ** New 'GMS' (Telit General Modem Service) service, for now just implementing
+      basic test get/set value commands.
+   ** New 'DSD' (Data System Determination) service, implementing methods to get
+      and set default bearer APN settings.
+
+ * New request/response/indications:
+   ** dms: implement "Get MAC Address" request/response.
+   ** dms: renamed "Dell Get Firmware Version" to "Foxconn Get Firmware Version"
+      as the command applies not only to the Dell-branded variant, but also to
+      the generic Foxconn-branded models. The old APIs are kept available but
+      flagged as deprecated.
+   ** loc: implement "Set NMEA Types" request/response.
+   ** loc: implement "Get NMEA Types" request/response.
+   ** uim: implement "Switch Slot" request/response.
+   ** uim: implement "Get Slot Status" request/response.
+   ** uim: implement "Slot Status" indication.
+   ** voice: implement "Indication Register" request/response.
+   ** voice: implement "Originate USSD" request/response.
+   ** voice: implement "Answer USSD" request/response.
+   ** voice: implement "Cancel USSD" request/response.
+   ** voice: implement "Release USSD" request/response.
+   ** voice: implement "USSD" indication.
+   ** voice: implement "Originate USSD No Wait" request/response.
+   ** voice: implement "Originate USSD No Wait" indication.
+
+ * New TLVs supported in existing messages:
+   ** nas: added 'Extended List' and 'Bandwidth List' in "Get RF Band
+      Information".
+   ** wda: added 'Endpoint Info' in "Get Data Format".
+
+ * libqmi-glib:
+   ** Added g_autoptr() support to all public types.
+   ** The qmi_message_get_version_introduced_full() method is now deprecated
+      and should no longer be used in newly written code. This method will
+      always return FALSE as the details of which protocol version introduced
+      the message are no longer available.
+
+The following features which were backported to 1.24.x releases are also present
+in libqmi 1.26.0:
+
+ * libqmi-glib:
+   ** The logic behind QMI_DEVICE_OPEN_FLAGS_VERSION_INFO has been updated, and
+      from now on it will only make sure the version info of the device is
+      loaded when it's opened. The library will no longer prevent a given
+      message from being sent to the module based on the version information
+      kept in the message database.
+   ** Updated string reading logic to make sure that all strings are valid
+      UTF-8, and also automatically attempt parsing as GSM7 or UCS2 if the
+      initial UTF-8 validation fails.
+   *+ Renamed TLV 0x15 in the "WDA Get Data Format" message, and added new
+      compat methods for the old name.
+   ** Fixed the format of the NITZ information TLV, and added new compat
+      methods for the old name.
+   ** Fixed the format of the Home Network 3GPP2 TLV, and added new compat
+      methods for the old name.
+   ** Added new WDS verbose call end reasons in the IPv6, PPP, 3GPP, CM and
+      Internal groups.
+   ** Updated to detect QMI control ports exposed as 'smdpkt' or 'rpmsg' virtual
+      devices.
+
+
 Overview of changes in libqmi 1.24.0
 ----------------------------------------
 
