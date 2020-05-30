@@ -21,7 +21,7 @@
 import sys, signal, gi
 
 gi.require_version('Mbim', '1.0')
-from gi.repository import GLib, GObject, Gio, Mbim
+from gi.repository import GLib, Gio, Mbim
 
 main_loop = None
 
