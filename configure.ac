@@ -227,7 +227,7 @@ AM_CONDITIONAL([QMI_MBIM_QMUX_SUPPORTED], [test "x$QMI_MBIM_QMUX_SUPPORTED" = "x
 # QRTR support
 AC_CHECK_HEADER(linux/qrtr.h, [have_qrtr=yes], [have_qrtr=no], [])
 AC_ARG_ENABLE(qrtr,
-              AS_HELP_STRING([--enable-qrtr], [Enable support for QRTR protocol [default=auto]]),
+              AS_HELP_STRING([--enable-qrtr], [Enable support for QRTR protocol [default=no]]),
               [enable_qrtr=$enableval],
               [enable_qrtr=no])
 
