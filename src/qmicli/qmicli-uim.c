@@ -980,8 +980,8 @@ print_slot_status (GArray *physical_slots,
 
     for (i = 0; i < physical_slots->len; i++) {
         QmiPhysicalSlotStatusSlot *slot_status;
-        gchar *iccid;
         QmiPhysicalSlotInformationSlot *slot_info = NULL;
+        g_autofree gchar *iccid = NULL;
 
         slot_status = &g_array_index (physical_slots, QmiPhysicalSlotStatusSlot, i);
 
@@ -997,9 +997,9 @@ print_slot_status (GArray *physical_slots,
         if (slot_status->physical_card_status != QMI_UIM_PHYSICAL_CARD_STATE_PRESENT)
             continue;
 
-        iccid = decode_iccid (slot_status->iccid->data, slot_status->iccid->len);
+        if (slot_status->iccid->len)
+            iccid = decode_iccid (slot_status->iccid->data, slot_status->iccid->len);
         g_print ("           ICCID: %s\n", VALIDATE_UNKNOWN (iccid));
-        g_free (iccid);
 
         /* Extended information, if available */
         if (!ext_information)
