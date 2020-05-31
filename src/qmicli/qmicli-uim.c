@@ -987,9 +987,9 @@ print_slot_status (GArray *physical_slots,
 
         g_print ("  Physical slot %u:\n", i + 1);
         g_print ("     Card status: %s\n",
-            qmi_uim_physical_card_state_get_string (slot_status->physical_card_status));
+                 qmi_uim_physical_card_state_get_string (slot_status->physical_card_status));
         g_print ("     Slot status: %s\n",
-            qmi_uim_slot_state_get_string (slot_status->physical_slot_status));
+                 qmi_uim_slot_state_get_string (slot_status->physical_slot_status));
 
         if (slot_status->physical_slot_status == QMI_UIM_SLOT_STATE_ACTIVE)
             g_print ("    Logical slot: %u\n", slot_status->logical_slot);
@@ -1007,7 +1007,7 @@ print_slot_status (GArray *physical_slots,
 
         slot_info = &g_array_index (ext_information, QmiPhysicalSlotInformationSlot, i);
         g_print ("        Protocol: %s\n",
-            qmi_uim_card_protocol_get_string (slot_info->card_protocol));
+                 qmi_uim_card_protocol_get_string (slot_info->card_protocol));
         g_print ("        Num apps: %u\n", slot_info->valid_applications);
         g_print ("        Is eUICC: %s\n", slot_info->is_euicc ? "yes" : "no");
     }
@@ -1046,7 +1046,7 @@ get_slot_status_ready (QmiClientUim *client,
              qmi_device_get_path_display (ctx->device));
 
     if (!qmi_message_uim_get_slot_status_output_get_physical_slot_status (
-          output, &physical_slots, &error)) {
+            output, &physical_slots, &error)) {
         g_printerr ("error: could not parse slots status response: %s\n", error->message);
         g_error_free (error);
         qmi_message_uim_get_slot_status_output_unref (output);
@@ -1055,7 +1055,7 @@ get_slot_status_ready (QmiClientUim *client,
     }
 
     if (!qmi_message_uim_get_slot_status_output_get_physical_slot_information (
-          output, &ext_information, &error)) {
+            output, &ext_information, &error)) {
         /* Recoverable, just print less information per slot */
         g_print ("  Extended slots information is unavailable: %s\n", error->message);
         g_error_free (error);
