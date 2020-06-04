@@ -153,6 +153,19 @@
                                          "public-format" : "gboolean" } ] } },
 
   // *********************************************************************************
+  { "common-ref"         : "Slot EID Information",
+    "name"               : "Slot EID Information",
+    "fullname"           : "Qmi Slot EID Information",
+    "id"                 : "0x12",
+    "type"               : "TLV",
+    "format"             : "array",
+    "size-prefix-format" : "guint8",
+    "array-element" : { "name"               : "EID",
+                        "format"             : "array",
+                        "size-prefix-format" : "guint8",
+                        "array-element"      : { "format" : "guint8" } } },
+
+  // *********************************************************************************
   {  "name"    : "Reset",
      "type"    : "Message",
      "service" : "UIM",
@@ -729,6 +742,8 @@
                    { "common-ref" : "Physical Slot Status",
                      "since"      : "1.26" },
                    { "common-ref" : "Physical Slot Information",
+                     "since"      : "1.26" },
+                   { "common-ref" : "Slot EID Information",
                      "since"      : "1.26" } ] },
 
   // *********************************************************************************
@@ -740,6 +755,8 @@
      "output"  : [ { "common-ref" : "Physical Slot Status",
                      "since"      : "1.26" },
                    { "common-ref" : "Physical Slot Information",
+                     "since"      : "1.26" },
+                   { "common-ref" : "Slot EID Information",
                      "since"      : "1.26" } ] }
 
 ]
