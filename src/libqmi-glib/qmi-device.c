@@ -2407,7 +2407,7 @@ qmi_device_command_abortable (QmiDevice                                *self,
     tr = transaction_new (self, message, message_context, cancellable, callback, user_data);
 
     /* Device must be open */
-    if (!qmi_endpoint_is_open (self->priv->endpoint)) {
+    if (!qmi_device_is_open (self)) {
         error = g_error_new (QMI_CORE_ERROR,
                              QMI_CORE_ERROR_WRONG_STATE,
                              "Device must be open to send commands");
