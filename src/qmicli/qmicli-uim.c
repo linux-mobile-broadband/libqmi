@@ -44,6 +44,7 @@ typedef struct {
     /* For Slot Status indication */
     guint slot_status_indication_id;
     gboolean warned_slot_ext_info_unavailable;
+    gboolean warned_slot_eid_info_unavailable;
 } Context;
 static Context *ctx;
 
@@ -962,26 +963,61 @@ decode_iccid (const gchar *bcd, gsize bcd_len)
     GString *str;
     gsize i;
 
-    g_return_val_if_fail (bcd != NULL, NULL);
+    if (!bcd)
+        return NULL;
 
     str = g_string_sized_new (bcd_len * 2 + 1);
-    for (i = 0 ; i < bcd_len; i++) {
+    for (i = 0; i < bcd_len; i++) {
         str = g_string_append_c (str, bcd_chars[bcd[i] & 0xF]);
         str = g_string_append_c (str, bcd_chars[(bcd[i] >> 4) & 0xF]);
     }
     return g_string_free (str, FALSE);
 }
 
+#define EID_LENGTH 16
+
+static gchar *
+decode_eid (const gchar *eid, gsize eid_len)
+{
+    GString *str;
+    gsize i;
+
+    if (!eid)
+        return NULL;
+    if (eid_len != EID_LENGTH)
+        return NULL;
+
+    str = g_string_sized_new (eid_len * 2 + 1);
+    for (i = 0; i < eid_len; i++) {
+        str = g_string_append_c (str, bcd_chars[(eid[i] >> 4) & 0xF]);
+        str = g_string_append_c (str, bcd_chars[eid[i] & 0xF]);
+    }
+    return g_string_free (str, FALSE);
+}
+
 static void
 print_slot_status (GArray *physical_slots,
-                   GArray *ext_information)
+                   GArray *ext_information,
+                   GArray *slot_eids)
 {
     guint i;
+
+    if (ext_information && physical_slots->len != ext_information->len) {
+        g_print ("Malformed extended information data");
+        ext_information = NULL;
+    }
+
+    if (slot_eids && physical_slots->len != slot_eids->len) {
+        g_print ("Malformed slot EID data");
+        slot_eids = NULL;
+    }
 
     for (i = 0; i < physical_slots->len; i++) {
         QmiPhysicalSlotStatusSlot *slot_status;
         QmiPhysicalSlotInformationSlot *slot_info = NULL;
+        GArray *slot_eid = NULL;
         g_autofree gchar *iccid = NULL;
+        g_autofree gchar *eid = NULL;
 
         slot_status = &g_array_index (physical_slots, QmiPhysicalSlotStatusSlot, i);
 
@@ -1010,6 +1046,15 @@ print_slot_status (GArray *physical_slots,
                  qmi_uim_card_protocol_get_string (slot_info->card_protocol));
         g_print ("        Num apps: %u\n", slot_info->valid_applications);
         g_print ("        Is eUICC: %s\n", slot_info->is_euicc ? "yes" : "no");
+
+        /* EID info, if available and this is an eUICC */
+        if (!slot_info->is_euicc || !slot_eids)
+            continue;
+
+        slot_eid = g_array_index (slot_eids, GArray *, i);
+        if (slot_eid->len)
+            eid = decode_eid (slot_eid->data, slot_eid->len);
+        g_print ("             EID: %s\n", VALIDATE_UNKNOWN (eid));
     }
 }
 
@@ -1024,6 +1069,7 @@ get_slot_status_ready (QmiClientUim *client,
     QmiMessageUimGetSlotStatusOutput *output;
     GArray *physical_slots;
     GArray *ext_information = NULL;
+    GArray *slot_eids = NULL;
     GError *error = NULL;
 
     output = qmi_client_uim_get_slot_status_finish (client, res, &error);
@@ -1058,13 +1104,20 @@ get_slot_status_ready (QmiClientUim *client,
             output, &ext_information, &error)) {
         /* Recoverable, just print less information per slot */
         g_print ("  Extended slots information is unavailable: %s\n", error->message);
-        g_error_free (error);
+        g_clear_error (&error);
+    }
+
+    if (!qmi_message_uim_get_slot_status_output_get_slot_eid_information (
+          output, &slot_eids, &error)) {
+        /* Recoverable, just print less information per slot */
+        g_print ("  Slot EID information is unavailable: %s\n", error->message);
+        g_clear_error (&error);
     }
 
     g_print ("[%s] %u physical slots found:\n",
              qmi_device_get_path_display (ctx->device), physical_slots->len);
 
-    print_slot_status (physical_slots, ext_information);
+    print_slot_status (physical_slots, ext_information, slot_eids);
 
     qmi_message_uim_get_slot_status_output_unref (output);
     operation_shutdown (TRUE);
@@ -1215,6 +1268,7 @@ slot_status_received (QmiClientUim *client,
 {
     GArray *physical_slots;
     GArray *ext_information = NULL;
+    GArray *slot_eids = NULL;
     GError *error = NULL;
 
     g_print ("[%s] Received slot status indication:\n",
@@ -1229,16 +1283,23 @@ slot_status_received (QmiClientUim *client,
         return;
     }
 
+    /* Both of these are recoverable, just print less information per slot. Only print
+     * these messages once rather than every time we get an indication */
     if (!qmi_indication_uim_slot_status_output_get_physical_slot_information (
           output, &ext_information, &error) && !ctx->warned_slot_ext_info_unavailable) {
-        /* Recoverable, just print less information per slot. Only print this
-         * message once rather than every time we get an indication */
         g_print ("  Extended slots information is unavailable: %s\n", error->message);
         ctx->warned_slot_ext_info_unavailable = TRUE;
-        g_error_free (error);
+        g_clear_error (&error);
     }
 
-    print_slot_status (physical_slots, ext_information);
+    if (!qmi_indication_uim_slot_status_output_get_slot_eid_information (
+          output, &slot_eids, &error) && !ctx->warned_slot_eid_info_unavailable) {
+        g_print ("  Slot EID information is unavailable: %s\n", error->message);
+        ctx->warned_slot_eid_info_unavailable = TRUE;
+        g_clear_error (&error);
+    }
+
+    print_slot_status (physical_slots, ext_information, slot_eids);
 
     qmi_indication_uim_slot_status_output_unref (output);
 }
