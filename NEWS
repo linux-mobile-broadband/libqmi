@@ -87,6 +87,11 @@ Overview of changes in libqmi 1.26.0
       always return FALSE as the details of which protocol version introduced
       the message are no longer available.
 
+ * qmi-proxy:
+   ** Updated to keep track of QMI clients that have not been explicitly
+      released, so that qmicli --client-cid=[CID] and --client-no-release-cid
+      operations can handle indications properly.
+
 The following features which were backported to 1.24.x releases are also present
 in libqmi 1.26.0:
 
