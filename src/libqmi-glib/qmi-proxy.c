@@ -49,6 +49,8 @@
 #define QMI_MESSAGE_OUTPUT_TLV_RESULT 0x02
 #define QMI_MESSAGE_OUTPUT_TLV_ALLOCATION_INFO 0x01
 #define QMI_MESSAGE_CTL_ALLOCATE_CID 0x0022
+
+#define QMI_MESSAGE_INPUT_TLV_RELEASE_INFO 0x01
 #define QMI_MESSAGE_CTL_RELEASE_CID 0x0023
 
 #define QMI_MESSAGE_CTL_INTERNAL_PROXY_OPEN 0xFF00
@@ -68,11 +70,16 @@ struct _QmiProxyPrivate {
     /* Unix socket service */
     GSocketService *socket_service;
 
-    /* Clients */
+    /* Client applications */
     GList *clients;
 
     /* Devices */
     GList *devices;
+
+    /* Array of QMI client infos that are not owned by any client
+     * application (e.g. they were allocated by a client application but
+     * then not explicitly released). */
+    GArray *disowned_qmi_client_info_array;
 };
 
 /*****************************************************************************/
@@ -89,7 +96,7 @@ qmi_proxy_get_n_clients (QmiProxy *self)
 
 typedef struct {
     QmiService service;
-    guint8 cid;
+    guint8     cid;
 } QmiClientInfo;
 
 typedef struct {
@@ -142,13 +149,9 @@ client_unref (Client *client)
             g_object_unref (client->device);
         }
 
-        if (client->buffer)
-            g_byte_array_unref (client->buffer);
-
-        if (client->internal_proxy_open_request)
-            g_byte_array_unref (client->internal_proxy_open_request);
-
-        g_array_unref (client->qmi_client_info_array);
+        g_clear_pointer (&client->buffer,                      g_byte_array_unref);
+        g_clear_pointer (&client->internal_proxy_open_request, g_byte_array_unref);
+        g_clear_pointer (&client->qmi_client_info_array,       g_array_unref);
 
         g_slice_free (Client, client);
     }
@@ -218,6 +221,35 @@ get_n_clients_with_device (QmiProxy *self,
 }
 
 static void
+disown_not_released_clients (QmiProxy *self,
+                             Client   *client)
+{
+    guint i;
+
+    if (!client->qmi_client_info_array->len)
+        return;
+
+    for (i = 0; i < client->qmi_client_info_array->len; i++) {
+        QmiClientInfo *info;
+
+        info = &g_array_index (client->qmi_client_info_array, QmiClientInfo, i);
+        g_debug ("QMI client disowned [%s,%s,%u]",
+                 qmi_device_get_path_display (client->device),
+                 qmi_service_get_string (info->service),
+                 info->cid);
+    }
+
+    if (!self->priv->disowned_qmi_client_info_array)
+        self->priv->disowned_qmi_client_info_array = g_steal_pointer (&client->qmi_client_info_array);
+    else {
+        self->priv->disowned_qmi_client_info_array = g_array_append_vals (self->priv->disowned_qmi_client_info_array,
+                                                                         client->qmi_client_info_array->data,
+                                                                         client->qmi_client_info_array->len);
+        g_clear_pointer (&client->qmi_client_info_array, g_array_unref);
+    }
+}
+
+static void
 untrack_client (QmiProxy *self,
                 Client   *client)
 {
@@ -227,6 +259,9 @@ untrack_client (QmiProxy *self,
 
     /* Disconnect the client explicitly when untracking */
     client_disconnect (client);
+
+    /* Disown all QMI clients that were not explicitly released */
+    disown_not_released_clients (self, client);
 
     if (g_list_find (self->priv->clients, client)) {
         self->priv->clients = g_list_remove (self->priv->clients, client);
@@ -530,9 +565,25 @@ process_internal_proxy_open (QmiProxy   *self,
     return FALSE;
 }
 
+static gint
+qmi_client_info_array_lookup_cid (GArray     *array,
+                                  QmiService  service,
+                                  guint8      cid)
+{
+    guint i;
+
+    for (i = 0; i < array->len; i++) {
+        QmiClientInfo *item;
+
+        item = &g_array_index (array, QmiClientInfo, i);
+        if (item->service == service && item->cid == cid)
+            return (gint)i;
+    }
+    return -1;
+}
+
 static void
-track_cid (Client *client,
-           gboolean track,
+track_cid (Client     *client,
            QmiMessage *message)
 {
     gsize          offset = 0;
@@ -542,8 +593,10 @@ track_cid (Client *client,
     GError        *error = NULL;
     guint8         service_tmp;
     QmiClientInfo  info;
-    gboolean       exists;
-    guint          i;
+    gint           i;
+
+    g_assert_cmpuint (qmi_message_get_service (message), ==, QMI_SERVICE_CTL);
+    g_assert (qmi_message_is_response (message));
 
     if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_OUTPUT_TLV_RESULT, NULL, &error)) == 0) ||
         !qmi_message_tlv_read_guint16 (message, init_offset, &offset, QMI_ENDIAN_LITTLE, &error_status, &error) ||
@@ -567,28 +620,108 @@ track_cid (Client *client,
     info.service = (QmiService)service_tmp;
 
     /* Check if it already exists */
-    for (i = 0; i < client->qmi_client_info_array->len; i++) {
-        QmiClientInfo *existing;
-
-        existing = &g_array_index (client->qmi_client_info_array, QmiClientInfo, i);
-        if (existing->service == info.service && existing->cid == info.cid)
-            break;
-    }
-    exists = (i < client->qmi_client_info_array->len);
-
-    if (track && !exists) {
+    i = qmi_client_info_array_lookup_cid (client->qmi_client_info_array, info.service, info.cid);
+    if (i < 0) {
         g_debug ("QMI client tracked [%s,%s,%u]",
                  qmi_device_get_path_display (client->device),
                  qmi_service_get_string (info.service),
                  info.cid);
         g_array_append_val (client->qmi_client_info_array, info);
-    } else if (!track && exists) {
+    }
+}
+
+static void
+untrack_cid (QmiProxy   *self,
+             Client     *client,
+             QmiMessage *message)
+{
+    gsize          offset = 0;
+    gsize          init_offset;
+    GError        *error = NULL;
+    guint8         service_tmp;
+    QmiClientInfo  info;
+    gint           i;
+
+    g_assert_cmpuint (qmi_message_get_service (message), ==, QMI_SERVICE_CTL);
+    g_assert (qmi_message_is_request (message));
+
+    if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_INPUT_TLV_RELEASE_INFO, NULL, &error)) == 0) ||
+        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service_tmp, &error) ||
+        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &(info.cid), &error)) {
+        g_warning ("invalid 'CTL release CID' request: missing or invalid release info TLV: %s", error->message);
+        g_error_free (error);
+        return;
+    }
+    info.service = (QmiService)service_tmp;
+
+    /* Check if it already exists in the client */
+    i = qmi_client_info_array_lookup_cid (client->qmi_client_info_array, info.service, info.cid);
+    if (i >= 0) {
         g_debug ("QMI client untracked [%s,%s,%u]",
                  qmi_device_get_path_display (client->device),
                  qmi_service_get_string (info.service),
                  info.cid);
         g_array_remove_index (client->qmi_client_info_array, i);
+        return;
     }
+
+    /* Otherwise, check if it wasn't onwned */
+    i = qmi_client_info_array_lookup_cid (self->priv->disowned_qmi_client_info_array, info.service, info.cid);
+    if (i >= 0) {
+        g_debug ("disowned QMI client untracked [%s,%s,%u]",
+                 qmi_device_get_path_display (client->device),
+                 qmi_service_get_string (info.service),
+                 info.cid);
+        g_array_remove_index (self->priv->disowned_qmi_client_info_array, i);
+        return;
+    }
+
+    g_debug ("unexpected attempt to release QMI client [%s,%s,%u]",
+             qmi_device_get_path_display (client->device),
+             qmi_service_get_string (info.service),
+             info.cid);
+}
+
+static void
+track_implicit_cid (QmiProxy   *self,
+                    Client     *client,
+                    QmiMessage *message)
+{
+    QmiClientInfo info;
+    gint          i;
+
+    info.service = qmi_message_get_service (message);
+    info.cid     = qmi_message_get_client_id (message);
+
+    g_assert_cmpuint (info.service, !=, QMI_SERVICE_CTL);
+
+    /* Check if the QMI client already exists in the client application, and if
+     * so, nothing else to do */
+    i = qmi_client_info_array_lookup_cid (client->qmi_client_info_array, info.service, info.cid);
+    if (i >= 0)
+        return;
+
+    /* The QMI client doesn't exist in the client application, see if it
+     * was disowned previously */
+    i = qmi_client_info_array_lookup_cid (self->priv->disowned_qmi_client_info_array, info.service, info.cid);
+    if (i >= 0) {
+        /* Remove client info from array of disowned ones, and append it to the client */
+        g_debug ("QMI client reowned [%s,%s,%u]",
+                 qmi_device_get_path_display (client->device),
+                 qmi_service_get_string (info.service),
+                 info.cid);
+        g_array_remove_index (self->priv->disowned_qmi_client_info_array, i);
+        g_array_append_val (client->qmi_client_info_array, info);
+        return;
+    }
+
+    /* The QMI client wasn't disowned earlier either. Well, this could be due to the proxy
+     * having crashed and restarted. Just create a new client info from scratch. */
+    g_debug ("QMI client tracked implicitly [%s,%s,%u]",
+             qmi_device_get_path_display (client->device),
+             qmi_service_get_string (info.service),
+             info.cid);
+    g_array_append_val (client->qmi_client_info_array, info);
 }
 
 typedef struct {
@@ -626,9 +759,7 @@ device_command_ready (QmiDevice *device,
     if (qmi_message_get_service (response) == QMI_SERVICE_CTL) {
         qmi_message_set_transaction_id (response, request->in_trid);
         if (qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_ALLOCATE_CID)
-            track_cid (request->client, TRUE, response);
-        else if (qmi_message_get_message_id (response) == QMI_MESSAGE_CTL_RELEASE_CID)
-            track_cid (request->client, FALSE, response);
+            track_cid (request->client, response);
     }
 
     if (!client_send_message (request->client, response, &error)) {
@@ -665,7 +796,12 @@ process_message (QmiProxy   *self,
     if (qmi_message_get_service (message) == QMI_SERVICE_CTL) {
         request->in_trid = qmi_message_get_transaction_id (message);
         qmi_message_set_transaction_id (message, 0);
-    }
+        /* Try to untrack QMI client as soon as we detect the associated
+         * release message, no need to wait for the response. */
+        if (qmi_message_get_message_id (message) == QMI_MESSAGE_CTL_RELEASE_CID)
+            untrack_cid (self, client, message);
+    } else
+        track_implicit_cid (self, client, message);
 
     /* The timeout needs to be big enough for any kind of transaction to
      * complete, otherwise the remote clients will lose the reply if they
@@ -918,10 +1054,8 @@ dispose (GObject *object)
 {
     QmiProxyPrivate *priv = QMI_PROXY (object)->priv;
 
-    if (priv->clients) {
-        g_list_free_full (priv->clients, (GDestroyNotify) client_unref);
-        priv->clients = NULL;
-    }
+    g_clear_pointer (&priv->disowned_qmi_client_info_array, g_array_unref);
+    g_list_free_full (g_steal_pointer (&priv->clients), (GDestroyNotify) client_unref);
 
     if (priv->socket_service) {
         if (g_socket_service_is_active (priv->socket_service))
