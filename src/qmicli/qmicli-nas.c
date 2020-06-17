@@ -318,6 +318,11 @@ get_signal_info_ready (QmiClientNas *client,
     gint16 rsrp;
     gint16 snr;
     gint8 rscp;
+    gint16 rsrq_5g;
+    gint32 rssi_tdma;
+    gint32 rscp_tdma;
+    gint32 ecio_tdma;
+    gint32 sinr_tdma;
 
     output = qmi_client_nas_get_signal_info_finish (client, res, &error);
     if (!output) {
@@ -419,6 +424,43 @@ get_signal_info_ready (QmiClientNas *client,
         g_print ("TDMA:\n"
                  "\tRSCP: '%d dBm'\n",
                  rscp);
+    }
+
+    /* TDMA extended */
+    if (qmi_message_nas_get_signal_info_output_get_tdma_signal_strength_extended (output,
+                                                                                  &rssi_tdma,
+                                                                                  &rscp_tdma,
+                                                                                  &ecio_tdma,
+                                                                                  &sinr_tdma,
+                                                                                  NULL)) {
+        g_print ("\tRSSI: '%d dB'\n"
+                 "\tRSCP: '%d dBm'\n"
+                 "\tECIO: '%d dBm'\n"
+                 "\tSINR: '%d dB'\n",
+                 rssi_tdma,
+                 rscp_tdma,
+                 ecio_tdma,
+                 sinr_tdma);
+    }
+
+    /* 5G, values of -32768 in EN-DC mode indicate the modem is not connected... */
+    if (qmi_message_nas_get_signal_info_output_get_5g_signal_strength (output,
+                                                                       &rsrp,
+                                                                       &snr,
+                                                                       NULL)) {
+        g_print ("5G:\n"
+                 "\tRSRP: '%d dBm'\n"
+                 "\tSNR: '%.1lf dB'\n",
+                 rsrp,
+                 (0.1) * ((gdouble)snr));
+    }
+
+    /* 5G extended... */
+    if (qmi_message_nas_get_signal_info_output_get_5g_signal_strength_extended (output,
+                                                                                &rsrq_5g,
+                                                                                NULL)) {
+        g_print ("\tRSRQ: '%d dB'\n",
+                 rsrq_5g);
     }
 
     qmi_message_nas_get_signal_info_output_unref (output);
