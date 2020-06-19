@@ -1330,6 +1330,8 @@ typedef enum { /*< since=1.24 >*/
  * @QMI_NAS_SWI_MODEM_MODE_RESETTING_MODEM: Resetting modem
  * @QMI_NAS_SWI_MODEM_MODE_UNKNOWN: Unknown
  *
+ * Modem mode (Sierra Wireless specific).
+ *
  * Since: 1.24
  */
 typedef enum { /*< since=1.24 >*/
@@ -1361,6 +1363,8 @@ typedef enum { /*< since=1.24 >*/
  * @QMI_NAS_SWI_SYSTEM_MODE_LTE: LTE
  * @QMI_NAS_SWI_SYSTEM_MODE_UNKNOWN: Unknown
  *
+ * System mode (Sierra Wireless specific).
+ *
  * Since: 1.24
  */
 typedef enum { /*< since=1.24 >*/
@@ -1385,6 +1389,8 @@ typedef enum { /*< since=1.24 >*/
  * @QMI_NAS_SWI_IMS_REG_FULL_SRV: Full service
  * @QMI_NAS_SWI_IMS_REG__UNKNOWN: Unknown
  *
+ * IMS registration state. (Sierra Wireless specific).
+ *
  * Since: 1.24
  */
 typedef enum { /*< since=1.24 >*/
@@ -1401,6 +1407,8 @@ typedef enum { /*< since=1.24 >*/
  * @QMI_NAS_SWI_PS_STATE_ATTACHED: Attached
  * @QMI_NAS_SWI_PS_STATE_DETACHED: Detached
  * @QMI_NAS_SWI_PS_STATE_UNKNOWN: Unknown
+ *
+ * PS registration state. (Sierra Wireless specific).
  *
  * Since: 1.24
  */
@@ -1420,6 +1428,8 @@ typedef enum { /*< since=1.24 >*/
  * @QMI_NAS_SWI_EMM_STATE_DEREG_INITIATED: Deregistration initiated
  * @QMI_NAS_SWI_EMM_STATE_INVALID: Invalid
  * @QMI_NAS_SWI_EMM_STATE_UNKNOWN: Unknown
+ *
+ * EMM registration state. (Sierra Wireless specific).
  *
  * Since: 1.24
  */
@@ -1441,6 +1451,8 @@ typedef enum { /*< since=1.24 >*/
  * @QMI_NAS_SWI_EMM_CONN_STATE_RRC_CONNECTING: RRC connecting
  * @QMI_NAS_SWI_EMM_CONN_STATE_RRC_RELEASING: RRC releasing
  * @QMI_NAS_SWI_EMM_CONN_STATE_UNKNOWN: Unknown
+ *
+ * EMM connection state state. (Sierra Wireless specific).
  *
  * Since: 1.24
  */
