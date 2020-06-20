@@ -27,6 +27,7 @@
 
 #ifndef QMI_DISABLE_DEPRECATED
 
+/*****************************************************************************/
 
 #if defined UTILS_ENABLE_TRACE
 static void
@@ -626,6 +627,76 @@ qmi_utils_write_fixed_size_string_to_buffer (guint8      **buffer,
     *buffer_size = (*buffer_size) - fixed_size;
 }
 
+/*****************************************************************************/
+
+gchar *
+qmi_message_get_printable (QmiMessage  *self,
+                           const gchar *line_prefix)
+{
+    return qmi_message_get_printable_full (self, NULL, line_prefix);
+}
+
+gboolean
+qmi_message_get_version_introduced (QmiMessage *self,
+                                    guint      *major,
+                                    guint      *minor)
+{
+    return qmi_message_get_version_introduced_full (self, NULL, major, minor);
+}
+
+gboolean
+qmi_message_get_version_introduced_full (QmiMessage        *self,
+                                         QmiMessageContext *context,
+                                         guint             *major,
+                                         guint             *minor)
+{
+    /* We keep the method just avoid breaking API, but this is really no longer
+     * usable */
+    return FALSE;
+}
+
+gboolean
+qmi_message_tlv_read_gfloat (QmiMessage  *self,
+                             gsize        tlv_offset,
+                             gsize       *offset,
+                             gfloat      *out,
+                             GError     **error)
+{
+    return qmi_message_tlv_read_gfloat_endian (self, tlv_offset, offset, __QMI_ENDIAN_HOST, out, error);
+}
+
+/*****************************************************************************/
+
+gboolean
+qmi_device_close (QmiDevice *self,
+                  GError **error)
+{
+    g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
+    qmi_device_close_async (self, 0, NULL, NULL, NULL);
+    return TRUE;
+}
+
+QmiMessage *
+qmi_device_command_finish (QmiDevice     *self,
+                           GAsyncResult  *res,
+                           GError       **error)
+{
+    return qmi_device_command_full_finish (self, res, error);
+}
+
+void
+qmi_device_command (QmiDevice           *self,
+                    QmiMessage          *message,
+                    guint                timeout,
+                    GCancellable        *cancellable,
+                    GAsyncReadyCallback  callback,
+                    gpointer             user_data)
+{
+    qmi_device_command_full (self, message, NULL, timeout, cancellable, callback, user_data);
+}
+
+/*****************************************************************************/
+
 #if defined HAVE_QMI_MESSAGE_DMS_SET_SERVICE_PROGRAMMING_CODE
 
 gboolean
@@ -666,41 +737,7 @@ qmi_message_dms_set_service_programming_code_input_set_current (
 
 #endif /* HAVE_QMI_MESSAGE_DMS_SET_SERVICE_PROGRAMMING_CODE */
 
-gchar *
-qmi_message_get_printable (QmiMessage  *self,
-                           const gchar *line_prefix)
-{
-    return qmi_message_get_printable_full (self, NULL, line_prefix);
-}
-
-gboolean
-qmi_message_get_version_introduced (QmiMessage *self,
-                                    guint      *major,
-                                    guint      *minor)
-{
-    return qmi_message_get_version_introduced_full (self, NULL, major, minor);
-}
-
-gboolean
-qmi_message_get_version_introduced_full (QmiMessage        *self,
-                                         QmiMessageContext *context,
-                                         guint             *major,
-                                         guint             *minor)
-{
-    /* We keep the method just avoid breaking API, but this is really no longer
-     * usable */
-    return FALSE;
-}
-
-gboolean
-qmi_message_tlv_read_gfloat (QmiMessage  *self,
-                             gsize        tlv_offset,
-                             gsize       *offset,
-                             gfloat      *out,
-                             GError     **error)
-{
-    return qmi_message_tlv_read_gfloat_endian (self, tlv_offset, offset, __QMI_ENDIAN_HOST, out, error);
-}
+/*****************************************************************************/
 
 #define SESSION_INFORMATION_DEPRECATED_METHOD(BUNDLE_SUBSTR,METHOD_SUBSTR)                                 \
     gboolean                                                                                               \
@@ -759,6 +796,8 @@ SESSION_INFORMATION_DEPRECATED_METHOD (UnblockPin, unblock_pin)
 SESSION_INFORMATION_DEPRECATED_METHOD (ChangePin, change_pin)
 #endif
 
+/*****************************************************************************/
+
 #if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
 
 gboolean
@@ -772,33 +811,7 @@ qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size (
 
 #endif /* HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT */
 
-gboolean
-qmi_device_close (QmiDevice *self,
-                  GError **error)
-{
-    g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
-    qmi_device_close_async (self, 0, NULL, NULL, NULL);
-    return TRUE;
-}
-
-QmiMessage *
-qmi_device_command_finish (QmiDevice     *self,
-                           GAsyncResult  *res,
-                           GError       **error)
-{
-    return qmi_device_command_full_finish (self, res, error);
-}
-
-void
-qmi_device_command (QmiDevice           *self,
-                    QmiMessage          *message,
-                    guint                timeout,
-                    GCancellable        *cancellable,
-                    GAsyncReadyCallback  callback,
-                    gpointer             user_data)
-{
-    qmi_device_command_full (self, message, NULL, timeout, cancellable, callback, user_data);
-}
+/*****************************************************************************/
 
 GType
 qmi_dms_dell_firmware_version_type_get_type (void)
@@ -914,6 +927,8 @@ qmi_client_dms_dell_get_firmware_version_finish (
 
 #endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION */
 
+/*****************************************************************************/
+
 GType
 qmi_dms_dell_device_mode_get_type (void)
 {
@@ -1019,6 +1034,8 @@ qmi_client_dms_dell_change_device_mode_finish (
 
 #endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE */
 
+/*****************************************************************************/
+
 #if defined HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME
 
 gboolean
@@ -1090,6 +1107,8 @@ qmi_indication_nas_operator_name_output_get_operator_nitz_information (
 }
 
 #endif /* HAVE_QMI_INDICATION_NAS_OPERATOR_NAME */
+
+/*****************************************************************************/
 
 #if defined HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK
 
