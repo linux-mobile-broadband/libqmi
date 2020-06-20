@@ -781,6 +781,25 @@ qmi_device_close (QmiDevice *self,
     return TRUE;
 }
 
+QmiMessage *
+qmi_device_command_finish (QmiDevice     *self,
+                           GAsyncResult  *res,
+                           GError       **error)
+{
+    return qmi_device_command_full_finish (self, res, error);
+}
+
+void
+qmi_device_command (QmiDevice           *self,
+                    QmiMessage          *message,
+                    guint                timeout,
+                    GCancellable        *cancellable,
+                    GAsyncReadyCallback  callback,
+                    gpointer             user_data)
+{
+    qmi_device_command_full (self, message, NULL, timeout, cancellable, callback, user_data);
+}
+
 GType
 qmi_dms_dell_firmware_version_type_get_type (void)
 {

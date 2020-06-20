@@ -78,8 +78,6 @@ qmi_device_release_client
 qmi_device_release_client_finish
 qmi_device_set_instance_id
 qmi_device_set_instance_id_finish
-qmi_device_command
-qmi_device_command_finish
 qmi_device_command_full
 qmi_device_command_full_finish
 qmi_device_command_abortable
@@ -1484,6 +1482,8 @@ __QmiTransportType
 <FILE>qmi-compat</FILE>
 <SUBSECTION Device>
 qmi_device_close
+qmi_device_command
+qmi_device_command_finish
 <SUBSECTION Utils>
 qmi_utils_read_guint8_from_buffer
 qmi_utils_read_gint8_from_buffer
