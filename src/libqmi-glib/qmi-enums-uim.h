@@ -30,7 +30,6 @@
 
 /**
  * SECTION: qmi-enums-uim
- * @title: UIM enumerations and flags
  *
  * This section defines enumerations and flags used in the UIM service
  * interface.

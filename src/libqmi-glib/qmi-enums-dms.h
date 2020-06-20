@@ -32,7 +32,6 @@
 
 /**
  * SECTION: qmi-enums-dms
- * @title: DMS enumerations and flags
  *
  * This section defines enumerations and flags used in the DMS service
  * interface.

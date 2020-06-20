@@ -29,7 +29,6 @@
 
 /**
  * SECTION: qmi-enums-wda
- * @title: WDA enumerations and flags
  *
  * This section defines enumerations and flags used in the WDA service
  * interface.

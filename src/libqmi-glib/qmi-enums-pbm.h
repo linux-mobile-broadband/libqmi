@@ -30,7 +30,6 @@
 
 /**
  * SECTION: qmi-enums-pbm
- * @title: PBM enumerations and flags
  *
  * This section defines enumerations and flags used in the PBM service
  * interface.

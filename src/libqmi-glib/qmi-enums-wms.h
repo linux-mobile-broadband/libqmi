@@ -30,7 +30,6 @@
 
 /**
  * SECTION: qmi-enums-wms
- * @title: WMS enumerations and flags
  *
  * This section defines enumerations and flags used in the WMS service
  * interface.
