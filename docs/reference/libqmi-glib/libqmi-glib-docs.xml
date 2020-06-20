@@ -559,7 +559,7 @@
     <xi:include href="xml/api-index-1.24.xml"></xi:include>
   </chapter>
   <chapter id="api-index-1-24-6" role="1.24.6">
-    <title>Index of new core symbols in 1.24.6</title>
+    <title>Index of new symbols in 1.24.6</title>
     <xi:include href="xml/api-index-1.24.6.xml"></xi:include>
   </chapter>
   <chapter id="api-index-1-26" role="1.26">
