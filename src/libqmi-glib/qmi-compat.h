@@ -38,7 +38,7 @@
 
 /**
  * SECTION:qmi-compat
- * @title: Deprecated interface
+ * @short_description: Deprecated types and methods.
  *
  * These types and methods are flagged as deprecated and therefore
  * shouldn't be used in newly written code. They are provided to avoid

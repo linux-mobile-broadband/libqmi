@@ -1480,6 +1480,7 @@ __QmiTransportType
 
 <SECTION>
 <FILE>qmi-compat</FILE>
+<TITLE>Deprecated Interface</TITLE>
 <SUBSECTION Device>
 qmi_device_close
 qmi_device_command
