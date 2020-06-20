@@ -1639,6 +1639,7 @@ qmi_message_dms_dell_change_device_mode_output_get_type
 </SECTION>
 
 <SECTION>
+<FILE>ignored</FILE>
 <SUBSECTION Private>
 QMI_DEVICE_NODE
 QMI_ENDPOINT_QRTR
