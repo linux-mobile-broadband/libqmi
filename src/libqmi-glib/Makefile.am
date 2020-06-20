@@ -179,6 +179,7 @@ Qmi_1_0_gir_FILES = \
 if QMI_QRTR_SUPPORTED
 INTROSPECTION_COMPILER_ARGS += \
 	--includedir="$(top_srcdir)/src/libqrtr-glib" \
+	--includedir="$(top_builddir)/src/libqrtr-glib" \
 	$(NULL)
 Qmi_1_0_gir_SCANNERFLAGS += \
 	--include-uninstalled="$(top_builddir)/src/libqrtr-glib/Qrtr-1.0.gir" \
