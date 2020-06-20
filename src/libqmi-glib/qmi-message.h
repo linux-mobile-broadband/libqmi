@@ -45,7 +45,6 @@ G_BEGIN_DECLS
 
 /**
  * SECTION:qmi-message
- * @title: QmiMessage
  * @short_description: Generic QMI message handling routines
  *
  * #QmiMessage is a generic type representing a QMI message of any kind

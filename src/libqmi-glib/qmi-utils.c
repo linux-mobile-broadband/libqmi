@@ -38,7 +38,6 @@
 
 /**
  * SECTION:qmi-utils
- * @title: Common utilities
  *
  * This section exposes a set of common utilities that may be used to work
  * with the QMI library.

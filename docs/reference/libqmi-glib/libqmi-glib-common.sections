@@ -1411,6 +1411,7 @@ qmi_protocol_error_get_type
 
 <SECTION>
 <FILE>qmi-message</FILE>
+<TITLE>QmiMessage</TITLE>
 QMI_MESSAGE_QMUX_MARKER
 QmiMessage
 qmi_message_new
@@ -1473,6 +1474,7 @@ qmi_message_get_tlv_printable
 
 <SECTION>
 <FILE>qmi-message-context</FILE>
+<TITLE>QmiMessageContext</TITLE>
 QMI_MESSAGE_VENDOR_GENERIC
 QmiMessageContext
 qmi_message_context_new
@@ -1487,6 +1489,7 @@ qmi_message_context_get_type
 
 <SECTION>
 <FILE>qmi-utils</FILE>
+<TITLE>Common utilities</TITLE>
 QmiEndian
 <SUBSECTION Traces>
 qmi_utils_get_traces_enabled

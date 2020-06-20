@@ -35,7 +35,6 @@ G_BEGIN_DECLS
 
 /**
  * SECTION:qmi-message-context
- * @title: QmiMessageContext
  * @short_description: the QMI message context
  *
  * The #QmiMessageContext defines non-standard features of the QMI message
