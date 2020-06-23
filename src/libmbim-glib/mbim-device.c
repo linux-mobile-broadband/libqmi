@@ -679,6 +679,26 @@ process_message (MbimDevice        *self,
     }
 }
 
+static gboolean
+validate_message_type (const MbimMessage *message)
+{
+    switch (mbim_message_get_message_type (message)) {
+        case MBIM_MESSAGE_TYPE_OPEN:
+        case MBIM_MESSAGE_TYPE_CLOSE:
+        case MBIM_MESSAGE_TYPE_COMMAND:
+        case MBIM_MESSAGE_TYPE_HOST_ERROR:
+        case MBIM_MESSAGE_TYPE_OPEN_DONE:
+        case MBIM_MESSAGE_TYPE_CLOSE_DONE:
+        case MBIM_MESSAGE_TYPE_COMMAND_DONE:
+        case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
+        case MBIM_MESSAGE_TYPE_INDICATE_STATUS:
+            return TRUE;
+        default:
+        case MBIM_MESSAGE_TYPE_INVALID:
+            return FALSE;
+    }
+}
+
 static void
 parse_response (MbimDevice *self)
 {
@@ -692,9 +712,16 @@ parse_response (MbimDevice *self)
 
         message = (const MbimMessage *)self->priv->response;
 
+        /* Fully ignore data that is clearly not a MBIM message */
+        if (!validate_message_type (message)) {
+            g_warning ("[%s] discarding %u bytes in MBIM stream as message type validation fails",
+                       self->priv->path_display, self->priv->response->len);
+            g_byte_array_remove_range (self->priv->response, 0, self->priv->response->len);
+            return;
+        }
+
         /* No full message yet */
         in_length = mbim_message_get_message_length (message);
-
         if (self->priv->response->len < in_length)
             return;
 
