@@ -1293,7 +1293,8 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
 
     if (mbim_utils_get_traces_enabled ()) {
         g_debug ("Merged service subscribe list built for device '%s'", mbim_device_get_path (device));
-        _mbim_proxy_helper_service_subscribe_list_debug ((const MbimEventEntry * const *)updated, updated_size);
+        _mbim_proxy_helper_service_subscribe_list_debug ((const MbimEventEntry * const *)ctx->mbim_event_entry_array,
+                                                         ctx->mbim_event_entry_array_size);
     }
 
     *out_size = updated_size;
