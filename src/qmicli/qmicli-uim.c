@@ -1486,7 +1486,7 @@ get_card_status_ready (QmiClientUim *client,
             g_print ("\tCard state: '%s'\n",
                      qmi_uim_card_state_get_string (card->card_state));
         else
-            g_print ("\tCard state: '%s: %s (%u)\n",
+            g_print ("\tCard state: '%s: %s (%u)'\n",
                      qmi_uim_card_state_get_string (card->card_state),
                      VALIDATE_UNKNOWN (qmi_uim_card_error_get_string (card->error_code)),
                      card->error_code);
