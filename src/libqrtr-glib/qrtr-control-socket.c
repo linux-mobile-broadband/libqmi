@@ -50,83 +50,11 @@ static guint signals[SIGNAL_LAST] = { 0 };
 struct _QrtrControlSocketPrivate {
     /* Underlying QRTR socket */
     GSocket *socket;
-    /* Map of node id -> NodeEntry */
+    /* Map of node id -> QrtrNode */
     GHashTable *node_map;
     /* Callback source for when NEW_SERVER/DEL_SERVER control packets come in */
     GSource *source;
 };
-
-/*****************************************************************************/
-
-typedef struct {
-    QrtrNode *node;
-    gboolean  published;
-    GSource  *publish_source;
-} NodeEntry;
-
-static void
-node_entry_free (NodeEntry *entry)
-{
-    g_clear_object (&entry->node);
-    if (entry->publish_source) {
-        g_source_destroy (entry->publish_source);
-        g_source_unref (entry->publish_source);
-    }
-    g_slice_free (NodeEntry, entry);
-}
-
-/*****************************************************************************/
-
-#define PUBLISH_TIMEOUT_MS 100
-
-typedef struct {
-    QrtrControlSocket *self;
-    guint32            node_id;
-} PublishRequest;
-
-static gboolean
-publish_node_entry_timed_out (PublishRequest *request)
-{
-    NodeEntry *entry;
-
-    /* Check to make sure the node is actually still around and unpublished. */
-    entry = g_hash_table_lookup (request->self->priv->node_map,
-                                 GUINT_TO_POINTER (request->node_id));
-
-    if (entry && !entry->published) {
-        entry->published = TRUE;
-        g_signal_emit (request->self, signals[SIGNAL_NODE_ADDED], 0, request->node_id);
-    }
-
-    return G_SOURCE_REMOVE;
-}
-
-static void
-publish_node_entry (QrtrControlSocket *self,
-                    NodeEntry         *entry)
-{
-    PublishRequest *request;
-
-    g_assert (!entry->published);
-
-    /* If called multiple times consecutively, we only want one single timeout set,
-     * the last one */
-    if (entry->publish_source) {
-        g_source_destroy (entry->publish_source);
-        g_source_unref (entry->publish_source);
-    }
-
-    request = g_new0 (PublishRequest, 1);
-    request->self = self;
-    request->node_id = qrtr_node_id (entry->node);
-
-    entry->publish_source = g_timeout_source_new (PUBLISH_TIMEOUT_MS);
-    g_source_set_callback (entry->publish_source,
-                           (GSourceFunc)publish_node_entry_timed_out,
-                           request,
-                           (GDestroyNotify)g_free);
-    g_source_attach (entry->publish_source, g_main_context_get_thread_default ());
-}
 
 /*****************************************************************************/
 
@@ -138,23 +66,17 @@ add_service_info (QrtrControlSocket *self,
                   guint32            version,
                   guint32            instance)
 {
-    NodeEntry *entry;
+    QrtrNode *node;
 
-    entry = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
-    if (!entry) {
-        entry = g_slice_new0 (NodeEntry);
-        entry->node = qrtr_node_new (self, node_id);
-        entry->published = FALSE;
-        g_assert (g_hash_table_insert (self->priv->node_map, GUINT_TO_POINTER (node_id), entry));
+    node = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
+    if (!node) {
+        node = qrtr_node_new (self, node_id);
+        g_assert (g_hash_table_insert (self->priv->node_map, GUINT_TO_POINTER (node_id), node));
         g_debug ("[qrtr] created new node %u", node_id);
-    }
-    if (!entry->published) {
-        /* Schedule or reschedule the publish callback since we might continue
-         * to see more services for this node for a bit. */
-        publish_node_entry (self, entry);
+        g_signal_emit (self, signals[SIGNAL_NODE_ADDED], 0, node_id);
     }
 
-    __qrtr_node_add_service_info (entry->node, service, port, version, instance);
+    __qrtr_node_add_service_info (node, service, port, version, instance);
 }
 
 static void
@@ -165,23 +87,18 @@ remove_service_info (QrtrControlSocket *self,
                      guint32            version,
                      guint32            instance)
 {
-    NodeEntry *entry;
+    QrtrNode *node;
 
-    entry = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
-    if (!entry) {
+    node = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
+    if (!node) {
         g_warning ("[qrtr] cannot remove service info: nonexistent node %u", node_id);
         return;
     }
 
-    __qrtr_node_remove_service_info (entry->node, service, port, version, instance);
-    if (!qrtr_node_has_services (entry->node)) {
+    __qrtr_node_remove_service_info (node, service, port, version, instance);
+    if (!qrtr_node_has_services (node)) {
         g_debug ("[qrtr] removing node %u", node_id);
-        /* If we haven't announced that this node is available yet, don't bother
-         * announcing that we've removed it. */
-        if (entry->published) {
-            entry->published = FALSE;
-            g_signal_emit (self, signals[SIGNAL_NODE_REMOVED], 0, node_id);
-        }
+        g_signal_emit (self, signals[SIGNAL_NODE_REMOVED], 0, node_id);
         g_hash_table_remove (self->priv->node_map, GUINT_TO_POINTER (node_id));
     }
 }
@@ -251,14 +168,8 @@ QrtrNode *
 qrtr_control_socket_peek_node (QrtrControlSocket *socket,
                                guint32            node_id)
 {
-    NodeEntry *entry;
-
-    entry = g_hash_table_lookup (socket->priv->node_map,
-                                 GUINT_TO_POINTER (node_id));
-    /* Don't return unpublished nodes. They are still receiving server packets
-     * and are thus incompletely specified for the time being, and the caller
-     * probably has a stale node ID anyway. */
-    return (entry && entry->published) ? entry->node : NULL;
+    return g_hash_table_lookup (socket->priv->node_map,
+                                GUINT_TO_POINTER (node_id));
 }
 
 QrtrNode *
@@ -382,7 +293,7 @@ qrtr_control_socket_init (QrtrControlSocket *self)
     self->priv->node_map = g_hash_table_new_full (g_direct_hash,
                                                   g_direct_equal,
                                                   NULL,
-                                                  (GDestroyNotify)node_entry_free);
+                                                  (GDestroyNotify)g_object_unref);
 }
 
 static void
