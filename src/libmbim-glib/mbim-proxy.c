@@ -1297,8 +1297,8 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
                                                          ctx->mbim_event_entry_array_size);
     }
 
-    *out_size = updated_size;
-    return updated;
+    *out_size = ctx->mbim_event_entry_array_size;
+    return ctx->mbim_event_entry_array;
 }
 
 static void
