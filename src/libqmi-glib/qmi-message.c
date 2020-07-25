@@ -521,10 +521,10 @@ qmi_message_response_new (QmiMessage       *request,
         ((struct full_message *)(((GByteArray *)response)->data))->qmi.service.header.flags |= QMI_SERVICE_FLAG_RESPONSE;
 
     /* Add result TLV, should never fail */
-    g_assert ((tlv_offset = qmi_message_tlv_write_init (response, 0x02, NULL)) > 0);
-    g_assert (qmi_message_tlv_write_guint16 (response, QMI_ENDIAN_LITTLE, (error != QMI_PROTOCOL_ERROR_NONE), NULL));
-    g_assert (qmi_message_tlv_write_guint16 (response, QMI_ENDIAN_LITTLE, error, NULL));
-    g_assert (qmi_message_tlv_write_complete (response, tlv_offset, NULL));
+    tlv_offset = qmi_message_tlv_write_init (response, 0x02, NULL);
+    qmi_message_tlv_write_guint16 (response, QMI_ENDIAN_LITTLE, (error != QMI_PROTOCOL_ERROR_NONE), NULL);
+    qmi_message_tlv_write_guint16 (response, QMI_ENDIAN_LITTLE, error, NULL);
+    qmi_message_tlv_write_complete (response, tlv_offset, NULL);
 
     /* We shouldn't create invalid response messages */
     g_assert (message_check (response, NULL));
