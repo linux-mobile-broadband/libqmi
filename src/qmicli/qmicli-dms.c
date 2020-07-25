@@ -3129,10 +3129,10 @@ get_stored_image_list_stored_images_ready (QmiClientDms *client,
         g_free (unique_id_str);
 
         if (image->type == QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM) {
-            result->modem_unique_id = subimage->unique_id ? g_array_ref (subimage->unique_id) : NULL;
+            result->modem_unique_id = g_array_ref (subimage->unique_id);
             result->modem_build_id = g_strdup (subimage->build_id);
         } else if (image->type == QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI) {
-            result->pri_unique_id = subimage->unique_id ? g_array_ref (subimage->unique_id) : NULL;
+            result->pri_unique_id = g_array_ref (subimage->unique_id);
             result->pri_build_id = g_strdup (subimage->build_id);
         } else
             g_assert_not_reached ();
