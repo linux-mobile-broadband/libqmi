@@ -55,8 +55,10 @@ qfu_image_get_data_chunk_size (QfuImage *self,
     guint  n_chunks;
 
     n_chunks = qfu_image_get_n_data_chunks (self);
-    if (chunk_i == (n_chunks - 1)) {
-        chunk_size = qfu_image_get_data_size (self) - (chunk_i * QFU_IMAGE_CHUNK_SIZE);
+    g_assert (chunk_i < n_chunks);
+
+    if ((guint)chunk_i == (n_chunks - 1)) {
+        chunk_size = qfu_image_get_data_size (self) - ((gssize)chunk_i * QFU_IMAGE_CHUNK_SIZE);
         g_assert (chunk_size > 0);
     } else
         chunk_size = QFU_IMAGE_CHUNK_SIZE;
@@ -100,7 +102,7 @@ qfu_image_read_data_chunk (QfuImage      *self,
     }
 
     /* Compute chunk offset */
-    chunk_offset = qfu_image_get_header_size (self) + (chunk_i * QFU_IMAGE_CHUNK_SIZE);
+    chunk_offset = qfu_image_get_header_size (self) + ((goffset)chunk_i * QFU_IMAGE_CHUNK_SIZE);
     g_debug ("[qfu-image] chunk #%u offset: %" G_GOFFSET_FORMAT " bytes", chunk_i, chunk_offset);
 
     /* Seek to the correct place: note that this is likely a noop if already in that offset */
