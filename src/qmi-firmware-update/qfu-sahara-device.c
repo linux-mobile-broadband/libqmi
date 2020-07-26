@@ -622,7 +622,7 @@ qfu_sahara_device_firehose_write_block (QfuSaharaDevice  *self,
     g_assert (self->priv->transfer_block_size < self->priv->buffer->len);
     memset (self->priv->buffer->data, 0, self->priv->transfer_block_size);
 
-    offset = block_i * self->priv->transfer_block_size;
+    offset = block_i * (goffset)self->priv->transfer_block_size;
     size = qfu_image_get_size (image) - offset;
     if (size >= self->priv->transfer_block_size)
         size = self->priv->transfer_block_size;
