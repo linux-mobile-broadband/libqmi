@@ -102,6 +102,7 @@ static gchar *dell_change_device_mode_str; /* deprecated */
 static gchar *foxconn_change_device_mode_str;
 static gchar *dell_get_firmware_version_str; /* deprecated */
 static gchar *foxconn_get_firmware_version_str;
+static gint foxconn_set_fcc_authentication_int = -1;
 static gchar *get_mac_address_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -426,6 +427,12 @@ static GOptionEntry entries[] = {
       "[firmware-mcfg-apps|firmware-mcfg|apps]"
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_SET_FCC_AUTHENTICATION
+    { "dms-foxconn-set-fcc-authentication", 0, 0, G_OPTION_ARG_INT, &foxconn_set_fcc_authentication_int,
+      "Set FCC authentication (Foxconn specific)",
+      "[magic]"
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_DMS_GET_MAC_ADDRESS
     { "dms-get-mac-address", 0, 0, G_OPTION_ARG_STRING, &get_mac_address_str,
       "Get default MAC address",
@@ -537,6 +544,7 @@ qmicli_dms_options_enabled (void)
                  !!foxconn_change_device_mode_str +
                  !!dell_get_firmware_version_str +
                  !!foxconn_get_firmware_version_str +
+                 (foxconn_set_fcc_authentication_int >= 0) +
                  !!get_mac_address_str +
                  reset_flag +
                  noop_flag);
@@ -4279,6 +4287,35 @@ foxconn_get_firmware_version_ready (QmiClientDms *client,
 
 #endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION */
 
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_SET_FCC_AUTHENTICATION
+
+static void
+foxconn_set_fcc_authentication_ready (QmiClientDms *client,
+                                      GAsyncResult *res)
+{
+    g_autoptr(QmiMessageDmsFoxconnSetFccAuthenticationOutput) output = NULL;
+    g_autoptr(GError)                                         error = NULL;
+
+    output = qmi_client_dms_foxconn_set_fcc_authentication_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_foxconn_set_fcc_authentication_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't run Foxconn FCC authentication: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully run Foxconn FCC authentication\n",
+             qmi_device_get_path_display (ctx->device));
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_SET_FCC_AUTHENTICATION */
+
 #if defined HAVE_QMI_MESSAGE_DMS_GET_MAC_ADDRESS
 
 static QmiMessageDmsGetMacAddressInput *
@@ -5268,6 +5305,30 @@ qmicli_dms_run (QmiDevice *device,
                                                      (GAsyncReadyCallback)foxconn_get_firmware_version_ready,
                                                      NULL);
         qmi_message_dms_foxconn_get_firmware_version_input_unref (input);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_SET_FCC_AUTHENTICATION
+    if (foxconn_set_fcc_authentication_int >= 0) {
+        g_autoptr(QmiMessageDmsFoxconnSetFccAuthenticationInput) input = NULL;
+
+        if (foxconn_set_fcc_authentication_int > 0xFF) {
+            g_printerr ("error: magic value out of [0,255] range\n");
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously running Foxconn FCC authentication...");
+
+        input = qmi_message_dms_foxconn_set_fcc_authentication_input_new ();
+        qmi_message_dms_foxconn_set_fcc_authentication_input_set_value (input, (guint8)foxconn_set_fcc_authentication_int, NULL);
+        qmi_client_dms_foxconn_set_fcc_authentication (ctx->client,
+                                                       input,
+                                                       10,
+                                                       ctx->cancellable,
+                                                       (GAsyncReadyCallback)foxconn_set_fcc_authentication_ready,
+                                                       NULL);
         return;
     }
 #endif
