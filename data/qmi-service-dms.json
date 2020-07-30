@@ -1425,6 +1425,20 @@
                      "since"         : "1.26",
                      "format"        : "guint8",
                      "public-format" : "QmiDmsFoxconnDeviceMode" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Foxconn Set FCC Authentication",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x5571",
+     "vendor"  : "0x0489",
+     "since"   : "1.30",
+     "input"   : [ { "name"          : "Value",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.30",
+                     "format"        : "guint8" } ],
      "output"  : [ { "common-ref" : "Operation Result" } ] }
 
 ]
