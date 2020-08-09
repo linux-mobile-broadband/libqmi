@@ -514,9 +514,9 @@ internal_device_open_caps_query_ready (MbimDevice   *device,
                                        GAsyncResult *res,
                                        GTask        *task)
 {
-    MbimProxy   *self;
-    GError      *error = NULL;
-    MbimMessage *response;
+    MbimProxy              *self;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
 
     self = g_task_get_source_object (task);
 
@@ -527,26 +527,23 @@ internal_device_open_caps_query_ready (MbimDevice   *device,
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
         /* If we get a not-opened error, well, force closing right away and reopen */
         if (g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_NOT_OPENED)) {
-            g_debug ("device not-opened error reported, reopening");
+            g_debug ("[%s] device not-opened error reported, reopening", mbim_device_get_path (device));
             reset_client_service_subscribe_lists (self, device);
             mbim_device_close_force (device, NULL);
             internal_open (task);
-            if (response)
-                mbim_message_unref (response);
-            g_error_free (error);
             return;
         }
 
         /* Warn other (unlikely!) errors, but keep on anyway */
-        g_warning ("device caps query during internal open failed: %s", error->message);
-        g_error_free (error);
+        g_warning ("[%s] device caps query during internal open failed: %s",
+                   mbim_device_get_path (device), error->message);
     }
+
+    g_debug ("[%s] device caps query during internal open succeeded",
+             mbim_device_get_path (device));
 
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
-
-    if (response)
-        mbim_message_unref (response);
 }
 
 static void
@@ -577,7 +574,8 @@ internal_device_open (MbimProxy           *self,
          * ready callback, and we'll reopen silently if we find this. */
         g_signal_handlers_block_by_func (device, proxy_device_error_cb, self);
 
-        g_debug ("checking device caps during client device open...");
+        g_debug ("[%s] checking device caps during client device open...",
+                 mbim_device_get_path (device));
         message = mbim_message_device_caps_query_new (NULL);
         mbim_device_command (device,
                              message,
@@ -1293,7 +1291,7 @@ device_context_get (MbimDevice *device)
         ctx = g_slice_new0 (DeviceContext);
         ctx->mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_list_new_standard (&ctx->mbim_event_entry_array_size);
 
-        g_debug ("Initial device subscribe list...");
+        g_debug ("[%s] initial device subscribe list...", mbim_device_get_path (device));
         _mbim_proxy_helper_service_subscribe_list_debug ((const MbimEventEntry * const *)ctx->mbim_event_entry_array, ctx->mbim_event_entry_array_size);
 
         g_object_set_qdata_full (G_OBJECT (device), device_context_quark, ctx, (GDestroyNotify)device_context_free);
@@ -1312,6 +1310,7 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
     gsize                           updated_size = 0;
     DeviceContext                  *ctx;
 
+    g_debug ("[%s] merging client service subscribe lists...", mbim_device_get_path (device));
     ctx = device_context_get (device);
     g_assert (ctx);
 
@@ -1339,7 +1338,7 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
     if (_mbim_proxy_helper_service_subscribe_list_cmp (
             (const MbimEventEntry *const *)updated, updated_size,
             (const MbimEventEntry *const *)ctx->mbim_event_entry_array, ctx->mbim_event_entry_array_size)) {
-        g_debug ("Merged service subscribe list not updated for device '%s'", mbim_device_get_path (device));
+        g_debug ("[%s] merged service subscribe list not updated", mbim_device_get_path (device));
         return NULL;
     }
 
@@ -1349,7 +1348,7 @@ merge_client_service_subscribe_lists (MbimProxy  *self,
     ctx->mbim_event_entry_array_size = updated_size;
 
     if (mbim_utils_get_traces_enabled ()) {
-        g_debug ("Merged service subscribe list built for device '%s'", mbim_device_get_path (device));
+        g_debug ("[%s] merged service subscribe list built", mbim_device_get_path (device));
         _mbim_proxy_helper_service_subscribe_list_debug ((const MbimEventEntry * const *)ctx->mbim_event_entry_array,
                                                          ctx->mbim_event_entry_array_size);
     }
@@ -1365,6 +1364,7 @@ reset_client_service_subscribe_lists (MbimProxy  *self,
     DeviceContext *ctx;
     GList         *l;
 
+    g_debug ("[%s] reseting client service subscribe lists...", mbim_device_get_path (device));
     ctx = device_context_get (device);
     g_assert (ctx);
 
@@ -1393,7 +1393,7 @@ proxy_device_error_cb (MbimDevice *device,
                        MbimProxy  *self)
 {
     if (g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_NOT_OPENED)) {
-        g_debug ("device '%s' reports as being closed...", mbim_device_get_path (device));
+        g_debug ("[%s] reports as being closed...", mbim_device_get_path (device));
         reset_client_service_subscribe_lists (self, device);
         mbim_device_close_force (device, NULL);
     }
@@ -1428,6 +1428,7 @@ untrack_device (MbimProxy  *self,
     GList *l;
     GList *to_remove = NULL;
 
+    g_debug ("[%s] untracking device...", mbim_device_get_path (device));
 
     if (!g_list_find (self->priv->devices, device))
         return;
