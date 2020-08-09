@@ -196,7 +196,7 @@ device_close_ready (MbimDevice   *dev,
     GError *error = NULL;
 
     if (!mbim_device_close_finish (dev, res, &error)) {
-        g_printerr ("error: couldn't close device: %s", error->message);
+        g_printerr ("error: couldn't close device: %s\n", error->message);
         g_error_free (error);
     } else
         g_debug ("Device closed");
