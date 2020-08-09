@@ -1367,12 +1367,9 @@ static void
 untrack_device (MbimProxy  *self,
                 MbimDevice *device)
 {
-    GList         *l;
-    GList         *to_remove = NULL;
-    DeviceContext *ctx;
+    GList *l;
+    GList *to_remove = NULL;
 
-    ctx = device_context_get (device);
-    g_assert (ctx);
 
     if (!g_list_find (self->priv->devices, device))
         return;
