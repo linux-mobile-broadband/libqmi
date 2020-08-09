@@ -95,6 +95,7 @@ mbim_proxy_get_n_devices (MbimProxy *self)
 
 typedef struct {
     volatile gint ref_count;
+    gulong        id;
 
     MbimProxy *self; /* not full ref */
     GSocketConnection *connection;
@@ -127,7 +128,7 @@ client_disconnect (Client *client)
     }
 
     if (client->connection) {
-        g_debug ("Client (%d) connection closed...", g_socket_get_fd (g_socket_connection_get_socket (client->connection)));
+        g_debug ("[client %lu] connection closed", client->id);
         g_output_stream_close (g_io_stream_get_output_stream (G_IO_STREAM (client->connection)), NULL, NULL);
         g_object_unref (client->connection);
         client->connection = NULL;
@@ -187,9 +188,9 @@ client_ref (Client *client)
 }
 
 static gboolean
-client_send_message (Client *client,
-                     MbimMessage *message,
-                     GError **error)
+client_send_message (Client       *client,
+                     MbimMessage  *message,
+                     GError      **error)
 {
     if (!client->connection) {
         g_set_error (error,
@@ -199,7 +200,6 @@ client_send_message (Client *client,
         return FALSE;
     }
 
-    g_debug ("Client (%d) TX: %u bytes", g_socket_get_fd (g_socket_connection_get_socket (client->connection)), message->len);
     if (!g_output_stream_write_all (g_io_stream_get_output_stream (G_IO_STREAM (client->connection)),
                                     message->data,
                                     message->len,
@@ -245,12 +245,10 @@ static void
 forward_indication (Client      *client,
                     MbimMessage *message)
 {
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
 
-    if (!client_send_message (client, message, &error)) {
-        g_warning ("couldn't forward indication to client");
-        g_error_free (error);
-    }
+    if (!client_send_message (client, message, &error))
+        g_warning ("[client %lu] couldn't forward indication: %s", client->id, error->message);
 }
 
 static void
@@ -312,13 +310,13 @@ static void
 request_complete_and_free (Request *request)
 {
     if (request->response) {
-        GError *error = NULL;
+        g_autoptr(GError) error = NULL;
 
         /* Try to send response to client; if it fails, always assume we have
          * to close the connection */
         if (!client_send_message (request->client, request->response, &error)) {
-            g_debug ("couldn't send response back to client: %s", error->message);
-            g_error_free (error);
+            g_warning ("[client %lu,0x%08x] couldn't send response back to client: %s",
+                       request->client->id, request->original_transaction_id, error->message);
             /* Disconnect and untrack client */
             untrack_client (request->self, request->client);
         }
@@ -609,11 +607,11 @@ process_internal_proxy_open (MbimProxy   *self,
     request = request_new (self, client, message);
 
     if (!client->device)
-        g_warning ("cannot process Open: device not set");
+        g_warning ("[client %lu] cannot process MBIM open: device not set", client->id);
     else if (!mbim_device_is_open (client->device))
-        g_warning ("cannot process Open: device not opened by proxy");
+        g_warning ("[client %lu] cannot process MBIM open: device not opened by proxy", client->id);
     else {
-        g_debug ("connection to MBIM device '%s' established", mbim_device_get_path (client->device));
+        g_debug ("[client %lu] connection to MBIM device '%s' established", client->id, mbim_device_get_path (client->device));
         status = MBIM_STATUS_ERROR_NONE;
     }
 
@@ -631,9 +629,14 @@ process_internal_proxy_close (MbimProxy   *self,
                               MbimMessage *message)
 {
     Request *request;
+    guint32  original_transaction_id;
+
+    original_transaction_id = mbim_message_get_transaction_id (message);
+    g_debug ("[client %lu,0x%08x] requested explicit MBIM channel close",
+             client->id, original_transaction_id);
 
     request = request_new (self, client, message);
-    request->response = mbim_message_close_done_new (mbim_message_get_transaction_id (message), MBIM_STATUS_ERROR_NONE);
+    request->response = mbim_message_close_done_new (original_transaction_id, MBIM_STATUS_ERROR_NONE);
     request_complete_and_free (request);
     return TRUE;
 }
@@ -667,16 +670,19 @@ proxy_config_internal_device_open_ready (MbimProxy    *self,
                                          GAsyncResult *res,
                                          Request      *request)
 {
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
 
     if (!internal_device_open_finish (self, res, &error)) {
-        g_warning ("error opening device: %s", error->message);
-        g_error_free (error);
+        g_warning ("[client %lu,0x%08x] cannot configure proxy: couldn't open MBIM device: %s",
+                   request->client->id, request->original_transaction_id, error->message);
         /* Untrack client and complete without response */
         untrack_client (request->self, request->client);
         request_complete_and_free (request);
         return;
     }
+
+    g_debug ("[client %lu,0x%08x] proxy configured",
+             request->client->id, request->original_transaction_id);
 
     if (request->client->config_ongoing == TRUE)
         request->client->config_ongoing = FALSE;
@@ -689,14 +695,14 @@ device_new_ready (GObject      *source,
                   GAsyncResult *res,
                   Request      *request)
 {
-    GError *error = NULL;
-    MbimDevice *existing;
-    MbimDevice *device;
+    g_autoptr(GError)  error = NULL;
+    MbimDevice        *existing;
+    MbimDevice        *device;
 
     device = mbim_device_new_finish (res, &error);
     if (!device) {
-        g_warning ("couldn't create MBIM device: %s", error->message);
-        g_error_free (error);
+        g_warning ("[client %lu,0x%08x] cannot configure proxy: couldn't create MBIM device: %s",
+                   request->client->id, request->original_transaction_id, error->message);
         /* Untrack client and complete without response */
         untrack_client (request->self, request->client);
         request_complete_and_free (request);
@@ -738,8 +744,13 @@ process_internal_proxy_config (MbimProxy   *self,
     /* create request holder */
     request = request_new (self, client, message);
 
+    g_debug ("[client %lu,0x%08x] request to configure proxy",
+             request->client->id, request->original_transaction_id);
+
     /* Error out if there is already a proxy config ongoing */
     if (client->config_ongoing) {
+        g_warning ("[client %lu,0x%08x] cannot configure proxy: another request already ongoing",
+                   request->client->id, request->original_transaction_id);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_BUSY);
         request_complete_and_free (request);
         return TRUE;
@@ -747,6 +758,8 @@ process_internal_proxy_config (MbimProxy   *self,
 
     /* Only allow SET command */
     if (mbim_message_command_get_command_type (message) != MBIM_MESSAGE_COMMAND_TYPE_SET) {
+        g_warning ("[client %lu,0x%08x] cannot configure proxy: invalid request type",
+                   request->client->id, request->original_transaction_id);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);
         return TRUE;
@@ -754,7 +767,8 @@ process_internal_proxy_config (MbimProxy   *self,
 
     /* Retrieve path from request */
     if (!_mbim_message_read_string (message, 0, 0, &incoming_path, &error)) {
-        g_warning ("Error reading device path from message: %s", error->message);
+        g_warning ("[client %lu,0x%08x] cannot configure proxy: couldn't read device path from request: %s",
+                   request->client->id, request->original_transaction_id, error->message);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);
         return TRUE;
@@ -765,7 +779,8 @@ process_internal_proxy_config (MbimProxy   *self,
      * each other. */
     path = __mbim_utils_get_devpath (incoming_path, &error);
     if (!path) {
-        g_warning ("Error looking up real device path: %s", error->message);
+        g_warning ("[client %lu,0x%08x] cannot configure proxy: couldn't lookup real device path: %s",
+                   request->client->id, request->original_transaction_id, error->message);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);
         return TRUE;
@@ -773,17 +788,23 @@ process_internal_proxy_config (MbimProxy   *self,
 
     /* Only allow subsequent requests with the same path */
     if (client->device) {
-        if (g_str_equal (path, mbim_device_get_path (client->device)))
+        if (g_str_equal (path, mbim_device_get_path (client->device))) {
+            g_debug ("[client %lu,0x%08x] proxy re-configured",
+                       request->client->id, request->original_transaction_id);
             request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_NONE);
-        else
+        } else {
+            g_warning ("[client %lu,0x%08x] cannot configure proxy: different device path given",
+                       request->client->id, request->original_transaction_id);
             request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_FAILURE);
+        }
         request_complete_and_free (request);
         return TRUE;
     }
 
     /* Read requested timeout value */
     if (!_mbim_message_read_guint32 (message, 8, &request->timeout_secs, &error)) {
-        g_warning ("Error reading requested timeout from message: %s", error->message);
+        g_warning ("[client %lu,0x%08x] cannot configure proxy: couldn't read timeout from request: %s",
+                   request->client->id, request->original_transaction_id, error->message);
         request->response = build_proxy_control_command_done (message, MBIM_STATUS_ERROR_INVALID_PARAMETERS);
         request_complete_and_free (request);
         return TRUE;
@@ -827,7 +848,7 @@ track_service_subscribe_list (Client      *client,
 
     mbim_event_entry_array = _mbim_proxy_helper_service_subscribe_request_parse (message, &mbim_event_entry_array_size, &error);
     if (error) {
-        g_warning ("Invalid subscribe request message: %s", error->message);
+        g_warning ("[client %lu] invalid subscribe request message: %s", client->id, error->message);
         return;
     }
 
@@ -839,7 +860,7 @@ track_service_subscribe_list (Client      *client,
     client->mbim_event_entry_array_size = mbim_event_entry_array_size;
 
     if (mbim_utils_get_traces_enabled ()) {
-        g_debug ("Client (%d) service subscribe list built", g_socket_get_fd (g_socket_connection_get_socket (client->connection)));
+        g_debug ("[client %lu] service subscribe list built", client->id);
         _mbim_proxy_helper_service_subscribe_list_debug ((const MbimEventEntry * const *)client->mbim_event_entry_array,
                                                          client->mbim_event_entry_array_size);
     }
@@ -885,17 +906,22 @@ device_service_subscribe_list_set_ready (MbimDevice   *device,
     if (!tmp_response) {
         /* Translate a MbimDevice wrong state error into a Not-Opened function error. */
         if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_WRONG_STATE)) {
+            g_debug ("[client %lu,0x%08x] sending request to device failed: wrong state",
+                     request->client->id, request->original_transaction_id);
             request->response = mbim_message_function_error_new (mbim_message_get_transaction_id (request->message), MBIM_PROTOCOL_ERROR_NOT_OPENED);
             request_complete_and_free (request);
             return;
         }
 
         /* Don't disconnect client, just let the request timeout in its side */
-        g_debug ("sending request to device failed: %s", error->message);
+        g_debug ("[client %lu,0x%08x] sending request to device failed: %s",
+                 request->client->id, request->original_transaction_id, error->message);
         request_complete_and_free (request);
         return;
     }
 
+    g_debug ("[client %lu,0x%08x] response from device received",
+             request->client->id, request->original_transaction_id);
     error_status_code = GUINT32_FROM_LE (((struct full_message *)(tmp_response->data))->message.command_done.status_code);
     device_service_subscribe_list_set_complete (request, error_status_code);
 }
@@ -913,12 +939,17 @@ process_device_service_subscribe_list (MbimProxy   *self,
     /* create request holder */
     request = request_new (self, client, message);
 
+    g_debug ("[client %lu,0x%08x] request to update service subscribe list received",
+             request->client->id, request->original_transaction_id);
+
     /* trace the service subscribe list for the client */
     track_service_subscribe_list (client, message);
 
     /* merge all service subscribe list for all clients to set on device */
     updated = merge_client_service_subscribe_lists (self, client->device, &updated_size);
     if (!updated) {
+        g_debug ("[client %lu,0x%08x] service subscribe list update in device not needed",
+                 request->client->id, request->original_transaction_id);
         device_service_subscribe_list_set_complete (request, MBIM_STATUS_ERROR_NONE);
         return TRUE;
     }
@@ -927,6 +958,8 @@ process_device_service_subscribe_list (MbimProxy   *self,
     request_message = mbim_message_device_service_subscribe_list_set_new (updated_size, (const MbimEventEntry *const *)updated, NULL);
     mbim_message_set_transaction_id (request_message, mbim_device_get_next_transaction_id (client->device));
 
+    g_debug ("[client %lu,0x%08x] updating service subscribe list in device...",
+             request->client->id, request->original_transaction_id);
     mbim_device_command (client->device,
                          request_message,
                          300,
@@ -950,18 +983,23 @@ device_command_ready (MbimDevice   *device,
     if (!request->response) {
         /* Translate a MbimDevice wrong state error into a Not-Opened function error. */
         if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_WRONG_STATE)) {
+            g_debug ("[client %lu,0x%08x] sending request to device failed: wrong state",
+                     request->client->id, request->original_transaction_id);
             request->response = mbim_message_function_error_new (request->original_transaction_id, MBIM_PROTOCOL_ERROR_NOT_OPENED);
             request_complete_and_free (request);
             return;
         }
 
         /* Don't disconnect client, just let the request timeout in its side */
-        g_debug ("sending request to device failed: %s", error->message);
+        g_debug ("[client %lu,0x%08x] sending request to device failed: %s",
+                 request->client->id, request->original_transaction_id, error->message);
         request_complete_and_free (request);
         return;
     }
 
     /* replace reponse transaction id with the requested transaction id */
+    g_debug ("[client %lu,0x%08x] response from device received",
+             request->client->id, request->original_transaction_id);
     mbim_message_set_transaction_id (request->response, request->original_transaction_id);
     request_complete_and_free (request);
 }
@@ -971,10 +1009,24 @@ process_command (MbimProxy   *self,
                  Client      *client,
                  MbimMessage *message)
 {
-    Request *request;
+    Request     *request;
+    const gchar *command;
+    const gchar *command_type;
+    const gchar *service;
+
+    command = mbim_cid_get_printable (mbim_message_command_get_service (message),
+                                      mbim_message_command_get_cid (message));
+    command_type = mbim_message_command_type_get_string (mbim_message_command_get_command_type (message));
+    service = mbim_service_get_string (mbim_message_command_get_service (message));
 
     /* create request holder */
     request = request_new (self, client, message);
+
+    g_debug ("[client %lu,0x%08x] forwarding request to device: %s, %s, %s",
+             client->id, request->original_transaction_id,
+             service      ? service      : "unknown service",
+             command_type ? command_type : "unknown command type",
+             command      ? command      : "unknown command");
 
     /* replace command transaction id with internal proxy transaction id to avoid collision */
     mbim_message_set_transaction_id (message, mbim_device_get_next_transaction_id (client->device));
@@ -1025,7 +1077,7 @@ process_message (MbimProxy   *self,
     case MBIM_MESSAGE_TYPE_CLOSE_DONE:
     case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
     default:
-        g_debug ("invalid message from client: not a command message");
+        g_debug ("[client %lu] invalid message: not a command", client->id);
         return FALSE;
     }
 
@@ -1085,7 +1137,7 @@ connection_readable_cb (GSocket *socket,
                              NULL,
                              &error);
     if (r < 0) {
-        g_warning ("Error reading from istream: %s", error ? error->message : "unknown");
+        g_warning ("[client %lu] error reading from istream: %s", client->id, error ? error->message : "unknown");
         /* Close the device */
         untrack_client (self, client);
         return FALSE;
@@ -1111,27 +1163,32 @@ incoming_cb (GSocketService    *service,
              GObject           *unused,
              MbimProxy         *self)
 {
+    static gulong            client_id = 0;
     Client                  *client;
     g_autoptr(GCredentials)  credentials = NULL;
     g_autoptr(GError)        error = NULL;
     uid_t                    uid;
 
-    g_debug ("Client (%d) connection open...", g_socket_get_fd (g_socket_connection_get_socket (connection)));
+    /* Each new incoming request updates the client id, even if the request is
+     * not accepted */
+    client_id++;
+
+    g_debug ("[client %lu] connection open...", client_id);
 
     credentials = g_socket_get_credentials (g_socket_connection_get_socket (connection), &error);
     if (!credentials) {
-        g_warning ("Client not allowed: Error getting socket credentials: %s", error->message);
+        g_warning ("[client %lu] not allowed: error getting socket credentials: %s", client_id, error->message);
         return;
     }
 
     uid = g_credentials_get_unix_user (credentials, &error);
     if (error) {
-        g_warning ("Client not allowed: Error getting unix user id: %s", error->message);
+        g_warning ("[client %lu] not allowed: error getting unix user id: %s", client_id, error->message);
         return;
     }
 
     if (!__mbim_user_allowed (uid, &error)) {
-        g_warning ("Client not allowed: %s", error->message);
+        g_warning ("[client %lu] not allowed: %s", client_id, error->message);
         return;
     }
 
@@ -1139,6 +1196,7 @@ incoming_cb (GSocketService    *service,
     client = g_slice_new0 (Client);
     client->self = self;
     client->ref_count = 1;
+    client->id = client_id;
     client->connection = g_object_ref (connection);
 
     /* By default, a new client has all the standard services enabled for indications */
