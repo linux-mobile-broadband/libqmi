@@ -1121,7 +1121,6 @@ incoming_cb (GSocketService    *service,
     credentials = g_socket_get_credentials (g_socket_connection_get_socket (connection), &error);
     if (!credentials) {
         g_warning ("Client not allowed: Error getting socket credentials: %s", error->message);
-        g_error_free (error);
         return;
     }
 
