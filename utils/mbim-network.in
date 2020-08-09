@@ -200,6 +200,10 @@ save_state ()
     KEY=$1
     VAL=$2
 
+    if [ -n "${PROXY_OPT}" ]; then
+        return
+    fi
+
     echo "Saving state at ${STATE_FILE}... ($KEY: $VAL)"
 
     if [ -f "$STATE_FILE" ]; then
@@ -219,10 +223,13 @@ save_state ()
 
 load_state ()
 {
+    if [ -n "${PROXY_OPT}" ]; then
+        return
+    fi
+
     if [ -f "$STATE_FILE" ]; then
         echo "Loading previous state from ${STATE_FILE}..."
         . $STATE_FILE
-
         if [ -n "$TRID" ]; then
             echo "    Previous Transaction ID: $TRID"
         fi
@@ -231,6 +238,10 @@ load_state ()
 
 clear_state ()
 {
+    if [ -n "${PROXY_OPT}" ]; then
+        return
+    fi
+
     echo "Clearing state at ${STATE_FILE}..."
     rm -f $STATE_FILE
 }
@@ -249,44 +260,57 @@ clear_state ()
 connect ()
 {
     # Always try to connect using a fresh session
-    if [ -n "$TRID" ]; then
-        mbimcli -d $DEVICE --no-open=$TRID $PROXY_OPT
-        clear_state
+    if [ -z "${PROXY_OPT}" ]; then
+        if [ -n "$TRID" ]; then
+            # This will implicitly close the previous session
+            mbimcli -d $DEVICE --no-open=$TRID
+            clear_state
+        fi
     fi
 
-    SUBSCRIBER_READY_CMD="mbimcli -d $DEVICE --query-subscriber-ready-status --no-close $PROXY_OPT"
+    if [ -z "${PROXY_OPT}" ]; then
+        EXTRA_OPT="--no-close"
+    else
+        EXTRA_OPT="${PROXY_OPT}"
+    fi
+
+    SUBSCRIBER_READY_CMD="mbimcli -d $DEVICE --query-subscriber-ready-status ${EXTRA_OPT}"
     echo "Querying subscriber ready status '$SUBSCRIBER_READY_CMD'..."
 
     SUBSCRIBER_READY_OUT=`$SUBSCRIBER_READY_CMD`
     echo $SUBSCRIBER_READY_OUT
 
-    # Save the new TRID
-    TRID=`echo "$SUBSCRIBER_READY_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
-    if [ -n "$TRID" ]; then
-        save_state "TRID" $TRID
+    if [ -z "${PROXY_OPT}" ]; then
+        TRID=`echo "$SUBSCRIBER_READY_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
+        EXTRA_OPT="--no-open=$TRID --no-close"
+    else
+        EXTRA_OPT="${PROXY_OPT}"
     fi
 
-    REGISTRATION_STATE_CMD="mbimcli -d $DEVICE --query-registration-state --no-open=$TRID --no-close $PROXY_OPT"
+    REGISTRATION_STATE_CMD="mbimcli -d $DEVICE --query-registration-state ${EXTRA_OPT}"
     echo "Querying registration state '$REGISTRATION_STATE_CMD'..."
 
     REGISTRATION_STATE_OUT=`$REGISTRATION_STATE_CMD`
     echo $REGISTRATION_STATE_OUT
 
-    # Save the new TRID
-    TRID=`echo "$REGISTRATION_STATE_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
-    if [ -n "$TRID" ]; then
-        save_state "TRID" $TRID
+    if [ -z "${PROXY_OPT}" ]; then
+        TRID=`echo "$REGISTRATION_STATE_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
+        EXTRA_OPT="--no-open=$TRID --no-close"
+    else
+        EXTRA_OPT="${PROXY_OPT}"
     fi
 
-    ATTACH_CMD="mbimcli -d $DEVICE --attach-packet-service --no-open=$TRID --no-close $PROXY_OPT"
+    ATTACH_CMD="mbimcli -d $DEVICE --attach-packet-service ${EXTRA_OPT}"
     echo "Attaching to packet service with '$ATTACH_CMD'..."
 
     ATTACH_OUT=`$ATTACH_CMD`
+    echo $ATTACH_OUT
 
-    # Save the new TRID
-    TRID=`echo "$ATTACH_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
-    if [ -n "$TRID" ]; then
-        save_state "TRID" $TRID
+    if [ -z "${PROXY_OPT}" ]; then
+        TRID=`echo "$ATTACH_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
+        EXTRA_OPT="--no-open=$TRID --no-close"
+    else
+        EXTRA_OPT="${PROXY_OPT}"
     fi
 
     CONNECT_ARGS="apn='$APN'"
@@ -300,7 +324,7 @@ connect ()
         fi
     fi
 
-    CONNECT_CMD="mbimcli -d $DEVICE --connect=$CONNECT_ARGS --no-open=$TRID --no-close $PROXY_OPT"
+    CONNECT_CMD="mbimcli -d $DEVICE --connect=$CONNECT_ARGS ${EXTRA_OPT}"
     echo "Starting network with '$CONNECT_CMD'..."
 
     CONNECT_OUT=`$CONNECT_CMD`
@@ -312,9 +336,11 @@ connect ()
     fi
 
     # Save the new TRID
-    TRID=`echo "$CONNECT_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
-    if [ -n "$TRID" ]; then
-        save_state "TRID" $TRID
+    if [ -z "${PROXY_OPT}" ]; then
+        TRID=`echo "$CONNECT_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
+        if [ -n "$TRID" ]; then
+            save_state "TRID" $TRID
+        fi
     fi
 }
 
@@ -332,11 +358,15 @@ connect ()
 disconnect ()
 {
     # Always close the session when disconnecting
-    if [ -n "$TRID" ]; then
-        DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect --no-open=$TRID $PROXY_OPT"
+    if [ -n "${PROXY_OPT}" ]; then
+        EXTRA_OPT="${PROXY_OPT}"
+    elif [ -n "$TRID" ]; then
+        EXTRA_OPT="--no-open=$TRID"
     else
-        DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect $PROXY_OPT"
+        EXTRA_OPT=""
     fi
+    DISCONNECT_CMD="mbimcli -d $DEVICE --disconnect ${EXTRA_OPT}"
+
     echo "Stopping network with '$DISCONNECT_CMD'..."
 
     DISCONNECT_OUT=`$DISCONNECT_CMD`
@@ -362,19 +392,25 @@ disconnect ()
 #
 status ()
 {
-    if [ -n "$TRID" ]; then
-        STATUS_CMD="mbimcli -d $DEVICE --query-connection-state --no-close --no-open=$TRID $PROXY_OPT"
+    if [ -n "${PROXY_OPT}" ]; then
+        EXTRA_OPT="${PROXY_OPT}"
+    elif [ -n "$TRID" ]; then
+        EXTRA_OPT="--no-open=$TRID --no-close"
     else
-        STATUS_CMD="mbimcli -d $DEVICE --query-connection-state $PROXY_OPT"
+        EXTRA_OPT=""
     fi
+
+    STATUS_CMD="mbimcli -d $DEVICE --query-connection-state ${EXTRA_OPT}"
     echo "Getting status with '$STATUS_CMD'..."
 
     STATUS_OUT=`$STATUS_CMD`
 
     # Save the new TRID
-    TRID=`echo "$STATUS_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
-    if [ -n "$TRID" ]; then
-        save_state "TRID" $TRID
+    if [ -z "${PROXY_OPT}" ]; then
+        TRID=`echo "$STATUS_OUT" | sed -n "s/.*TRID.*'\(.*\)'.*/\1/p"`
+        if [ -n "$TRID" ]; then
+            save_state "TRID" $TRID
+        fi
     fi
 
     CONN=`echo "$STATUS_OUT" | sed -n "s/.*Activation state:.*'\(.*\)'.*/\1/p"`
