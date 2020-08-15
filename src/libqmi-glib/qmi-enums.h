@@ -147,6 +147,7 @@ typedef enum { /*< since=1.0 >*/
 /**
  * QmiDataEndpointType:
  * @QMI_DATA_ENDPOINT_TYPE_HSUSB: Data Endpoint Type HSUSB.
+ * @QMI_DATA_ENDPOINT_TYPE_EMBEDDED: Data Endpoint Type embedded. Since 1.28.
  * @QMI_DATA_ENDPOINT_TYPE_UNDEFINED: Data Endpoint Type undefined.
  *
  * Data Endpoint Type.
@@ -155,6 +156,7 @@ typedef enum { /*< since=1.0 >*/
  */
 typedef enum { /*< since=1.18 >*/
     QMI_DATA_ENDPOINT_TYPE_HSUSB     = 0X02,
+    QMI_DATA_ENDPOINT_TYPE_EMBEDDED  = 0X04,
     QMI_DATA_ENDPOINT_TYPE_UNDEFINED = 0XFF,
 } QmiDataEndpointType;
 
