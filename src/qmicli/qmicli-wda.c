@@ -237,20 +237,11 @@ get_data_format_input_create (const gchar *str)
         return NULL;
     }
 
-    if (props.endpoint_type != QMI_DATA_ENDPOINT_TYPE_UNDEFINED &&
+    if ((props.endpoint_type != QMI_DATA_ENDPOINT_TYPE_UNDEFINED) &&
+        (props.endpoint_iface_number != QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED) &&
         !qmi_message_wda_get_data_format_input_set_endpoint_info (
             input,
             props.endpoint_type,
-            props.endpoint_iface_number,
-            &error)) {
-        g_printerr ("error: could not set peripheral endpoint id: %s\n", error->message);
-        return NULL;
-    }
-
-    if (props.endpoint_iface_number != QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED &&
-        !qmi_message_wda_get_data_format_input_set_endpoint_info (
-            input,
-            QMI_DATA_ENDPOINT_TYPE_HSUSB,
             props.endpoint_iface_number,
             &error)) {
         g_printerr ("error: could not set peripheral endpoint id: %s\n", error->message);
@@ -571,7 +562,6 @@ set_data_format_input_create (const gchar *str)
                         props.dl_protocol, error->message);
             g_error_free (error);
             goto error_out;
-
         }
 
         if (props.dl_datagram_max_size != QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAM_SIZE_UNDEFINED &&
@@ -583,7 +573,6 @@ set_data_format_input_create (const gchar *str)
                         props.dl_datagram_max_size, error->message);
             g_error_free (error);
             goto error_out;
-
         }
 
         if (props.dl_max_datagrams != QMI_WDA_DL_AGGREGATION_PROTOCOL_MAX_DATAGRAMS_UNDEFINED &&
@@ -604,7 +593,8 @@ set_data_format_input_create (const gchar *str)
             goto error_out;
         }
 
-        if (props.endpoint_type != QMI_DATA_ENDPOINT_TYPE_UNDEFINED &&
+        if ((props.endpoint_type != QMI_DATA_ENDPOINT_TYPE_UNDEFINED) &&
+            (props.endpoint_iface_number != QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED) &&
             !qmi_message_wda_set_data_format_input_set_endpoint_info (
                 input,
                 props.endpoint_type,
@@ -613,19 +603,6 @@ set_data_format_input_create (const gchar *str)
             g_printerr ("error: could not set peripheral endpoint id: %s\n", error->message);
             g_error_free (error);
             goto error_out;
-
-        }
-
-        if (props.endpoint_iface_number != QMI_WDA_ENDPOINT_INTERFACE_NUMBER_UNDEFINED &&
-            !qmi_message_wda_set_data_format_input_set_endpoint_info (
-                input,
-                QMI_DATA_ENDPOINT_TYPE_HSUSB,
-                props.endpoint_iface_number,
-                &error)) {
-            g_printerr ("error: could not set peripheral endpoint id: %s\n", error->message);
-            g_error_free (error);
-            goto error_out;
-
         }
     }
     /* Old non key=value format, like this:
