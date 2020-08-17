@@ -223,7 +223,7 @@ static GOptionEntry entries[] = {
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT
     { "wds-bind-mux-data-port", 0, 0, G_OPTION_ARG_STRING, &bind_mux_str,
-      "Bind qmux data port to controller device (allowed keys: mux-id, ep-iface-number) to be used with `--client-no-release-cid'",
+      "Bind qmux data port to controller device (allowed keys: mux-id, ep-type (undefined|hsusb|pcie), ep-iface-number) to be used with `--client-no-release-cid'",
       "[\"key=value,...\"]"
     },
 #endif
@@ -2551,7 +2551,7 @@ noop_cb (gpointer unused)
 
 typedef struct {
     guint8 mux_id;
-    guint8 ep_type;
+    QmiDataEndpointType ep_type;
     gint ep_iface_number;
     QmiWdsClientType client_type;
 } BindMuxDataPortProperties;
@@ -2583,6 +2583,18 @@ bind_mux_data_port_properties_handle (const gchar *key,
             return FALSE;
         }
         props->mux_id = (guint8) aux;
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "ep-type") == 0) {
+        if (!qmicli_read_data_endpoint_type_from_string (value, &(props->ep_type))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "Unrecognized Endpoint Type '%s'",
+                         value);
+            return FALSE;
+        }
         return TRUE;
     }
 

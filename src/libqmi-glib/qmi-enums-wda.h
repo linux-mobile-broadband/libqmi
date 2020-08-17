@@ -58,6 +58,7 @@ typedef enum { /*< since=1.10 >*/
  * @QMI_WDA_DATA_AGGREGATION_PROTOCOL_MBIM: MBIM enabled.
  * @QMI_WDA_DATA_AGGREGATION_PROTOCOL_RNDIS: RNDIS enabled.
  * @QMI_WDA_DATA_AGGREGATION_PROTOCOL_QMAP: QMAP enabled.
+ * @QMI_WDA_DATA_AGGREGATION_PROTOCOL_QMAPV5: QMAPV5 enabled. Since: 1.28.
  *
  * Data aggregation protocol in uplink or downlink.
  *
@@ -70,6 +71,7 @@ typedef enum { /*< since=1.10 >*/
     QMI_WDA_DATA_AGGREGATION_PROTOCOL_MBIM     = 0x03,
     QMI_WDA_DATA_AGGREGATION_PROTOCOL_RNDIS    = 0x04,
     QMI_WDA_DATA_AGGREGATION_PROTOCOL_QMAP     = 0x05,
+    QMI_WDA_DATA_AGGREGATION_PROTOCOL_QMAPV5   = 0x09,
 } QmiWdaDataAggregationProtocol;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WDA_H_ */
