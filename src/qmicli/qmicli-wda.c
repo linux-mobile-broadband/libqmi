@@ -73,13 +73,13 @@ parse_get_data_format (const gchar  *option_name,
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WDA_SET_DATA_FORMAT
     { "wda-set-data-format", 0, 0, G_OPTION_ARG_STRING, &set_data_format_str,
-      "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip), ul-protocol (tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-protocol (tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-datagram-max-size, dl-max-datagrams, ep-type (undefined|hsusb|pcie), ep-iface-number)",
+      "Set data format (allowed keys: link-layer-protocol (802-3|raw-ip), ul-protocol (tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-protocol (tlp|qc-ncm|mbim|rndis|qmap|qmapv5), dl-datagram-max-size, dl-max-datagrams, ep-type (undefined|hsusb|pcie|embedded), ep-iface-number)",
       "[\"key=value,...\"]"
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
     { "wda-get-data-format", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, parse_get_data_format,
-      "Get data format (allowed keys: ep-type (undefined|hsusb|pcie), ep-iface-number); also allows empty key list",
+      "Get data format (allowed keys: ep-type (undefined|hsusb|pcie|embedded), ep-iface-number); also allows empty key list",
       "[\"key=value,...\"]"
     },
 #endif
