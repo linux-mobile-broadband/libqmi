@@ -651,6 +651,24 @@
      "output"  : [ { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
+  {  "name"    : "Refresh Complete",
+     "type"    : "Message",
+     "service" : "UIM",
+     "id"      : "0x002C",
+     "since"   : "1.28",
+     "input"   : [ { "common-ref" : "UIM Session",
+                     "since"      : "1.28" },
+                   { "name"      : "Info",
+                     "id"        : "0x02",
+                     "type"      : "TLV",
+                     "since"     : "1.28",
+                     "format"    : "sequence",
+                     "contents"  : [ { "name"          : "Refresh Success",
+                                       "format"        : "guint8",
+                                       "public-format" : "gboolean" } ] } ],
+    "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Register Events",
      "type"    : "Message",
      "service" : "UIM",
