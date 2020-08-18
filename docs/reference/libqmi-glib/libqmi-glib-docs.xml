@@ -318,6 +318,7 @@
       <title>UIM Indications</title>
       <xi:include href="xml/qmi-indication-uim-card-status.xml"/>
       <xi:include href="xml/qmi-indication-uim-slot-status.xml"/>
+      <xi:include href="xml/qmi-indication-uim-refresh.xml"/>
     </section>
     <section>
       <title>UIM Requests</title>
@@ -337,6 +338,8 @@
       <xi:include href="xml/qmi-message-uim-change-provisioning-session.xml"/>
       <xi:include href="xml/qmi-message-uim-switch-slot.xml"/>
       <xi:include href="xml/qmi-message-uim-get-slot-status.xml"/>
+      <xi:include href="xml/qmi-message-uim-refresh-register.xml"/>
+      <xi:include href="xml/qmi-message-uim-refresh-register-all.xml"/>
     </section>
   </chapter>
 

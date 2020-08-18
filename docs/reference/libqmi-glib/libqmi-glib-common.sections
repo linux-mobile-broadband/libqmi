@@ -1010,6 +1010,8 @@ QmiUimPinId
 QmiUimCardProtocol
 QmiUimPhysicalCardState
 QmiUimSlotState
+QmiUimRefreshMode
+QmiUimRefreshStage
 <SUBSECTION Methods>
 qmi_uim_event_registration_flag_get_string
 qmi_uim_session_type_get_string
@@ -1027,6 +1029,8 @@ qmi_uim_pin_id_get_string
 qmi_uim_card_protocol_get_string
 qmi_uim_physical_card_state_get_string
 qmi_uim_slot_state_get_string
+qmi_uim_refresh_mode_get_string
+qmi_uim_refresh_stage_get_string
 <SUBSECTION Private>
 qmi_uim_event_registration_flag_build_string_from_mask
 qmi_uim_session_type_build_string_from_mask
@@ -1044,6 +1048,8 @@ qmi_uim_pin_id_build_string_from_mask
 qmi_uim_card_protocol_build_string_from_mask
 qmi_uim_physical_card_state_build_string_from_mask
 qmi_uim_slot_state_build_string_from_mask
+qmi_uim_refresh_mode_build_string_from_mask
+qmi_uim_refresh_stage_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_UIM_EVENT_REGISTRATION_FLAG
 QMI_TYPE_UIM_SESSION_TYPE
@@ -1061,6 +1067,8 @@ QMI_TYPE_UIM_PIN_ID
 QMI_TYPE_UIM_CARD_PROTOCOL
 QMI_TYPE_UIM_PHYSICAL_CARD_STATE
 QMI_TYPE_UIM_SLOT_STATE
+QMI_TYPE_UIM_REFRESH_MODE
+QMI_TYPE_UIM_REFRESH_STAGE
 qmi_uim_event_registration_flag_get_type
 qmi_uim_session_type_get_type
 qmi_uim_file_type_get_type
@@ -1077,6 +1085,8 @@ qmi_uim_pin_id_get_type
 qmi_uim_card_protocol_get_type
 qmi_uim_physical_card_state_get_type
 qmi_uim_slot_state_get_type
+qmi_uim_refresh_mode_get_type
+qmi_uim_refresh_stage_get_type
 </SECTION>
 
 <SECTION>

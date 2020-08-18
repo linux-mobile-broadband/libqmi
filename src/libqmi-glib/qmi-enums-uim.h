@@ -375,6 +375,51 @@ typedef enum { /*< since=1.10 >*/
 } QmiUimCardApplicationPersonalizationFeature;
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI UIM Refresh' indication */
+
+/**
+ * QmiUimRefreshStage:
+ * @QMI_UIM_REFRESH_STAGE_WAIT_FOR_OK: Waiting for REFRESH OK message.
+ * @QMI_UIM_REFRESH_STAGE_START: Refresh started.
+ * @QMI_UIM_REFRESH_STAGE_END_WITH_SUCCESS: Refresh completed successfully.
+ * @QMI_UIM_REFRESH_STAGE_END_WITH_FAILURE: Refresh has failed.
+ *
+ * Current stage of the refresh procedure.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    QMI_UIM_REFRESH_STAGE_WAIT_FOR_OK      = 0,
+    QMI_UIM_REFRESH_STAGE_START            = 1,
+    QMI_UIM_REFRESH_STAGE_END_WITH_SUCCESS = 2,
+    QMI_UIM_REFRESH_STAGE_END_WITH_FAILURE = 3
+} QmiUimRefreshStage;
+
+/**
+ * QmiUimRefreshMode:
+ * @QMI_UIM_REFRESH_MODE_RESET: Reset.
+ * @QMI_UIM_REFRESH_MODE_INIT: Init.
+ * @QMI_UIM_REFRESH_MODE_INIT_FCN: Init & FCN.
+ * @QMI_UIM_REFRESH_MODE_FCN: FCN.
+ * @QMI_UIM_REFRESH_MODE_INIT_FULL_FCN: Init & full FCN.
+ * @QMI_UIM_REFRESH_MODE_APP_RESET: Application reset.
+ * @QMI_UIM_REFRESH_MODE_3G_RESET: 3G session reset.
+ *
+ * Refresh mode
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    QMI_UIM_REFRESH_MODE_RESET         = 0,
+    QMI_UIM_REFRESH_MODE_INIT          = 1,
+    QMI_UIM_REFRESH_MODE_INIT_FCN      = 2,
+    QMI_UIM_REFRESH_MODE_FCN           = 3,
+    QMI_UIM_REFRESH_MODE_INIT_FULL_FCN = 4,
+    QMI_UIM_REFRESH_MODE_APP_RESET     = 5,
+    QMI_UIM_REFRESH_MODE_3G_RESET      = 6
+} QmiUimRefreshMode;
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI UIM Get Slot Status' request/response */
 
 /**
