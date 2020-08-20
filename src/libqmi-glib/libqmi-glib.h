@@ -90,6 +90,9 @@
 #include "qmi-flags64-dsd.h"
 #include "qmi-dsd.h"
 
+#include "qmi-enums-sar.h"
+#include "qmi-sar.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

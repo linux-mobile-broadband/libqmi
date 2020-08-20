@@ -15,6 +15,7 @@ GENERATED_H = \
 	qmi-pdc.h \
 	qmi-pbm.h \
 	qmi-uim.h \
+	qmi-sar.h \
 	qmi-oma.h \
 	qmi-wda.h \
 	qmi-voice.h \
@@ -48,6 +49,7 @@ GENERATED_C = \
 	qmi-gas.c \
 	qmi-gms.c \
 	qmi-dsd.c \
+	qmi-sar.c \
 	$(NULL)
 
 GENERATED_SECTIONS = \
@@ -68,6 +70,7 @@ GENERATED_SECTIONS = \
 	qmi-gas.sections \
 	qmi-gms.sections \
 	qmi-dsd.sections \
+	qmi-sar.sections \
 	$(NULL)
 
 # Error types
@@ -101,6 +104,7 @@ ENUMS = \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-pds.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-pbm.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-uim.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-enums-sar.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-oma.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-wda.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-enums-voice.h \
@@ -111,7 +115,7 @@ ENUMS = \
 	$(top_srcdir)/src/libqmi-glib/qmi-device.h
 qmi-enum-types.h:  $(ENUMS) $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h
 	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
-		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pdc.h\"\n#include \"qmi-enums-pbm.h\"\n#include \"qmi-enums-uim.h\"\n#include \"qmi-enums-oma.h\"\n#include \"qmi-enums-wda.h\"\n#include \"qmi-enums-voice.h\"\n#include \"qmi-enums-loc.h\"\n#include \"qmi-enums-qos.h\"\n#include \"qmi-enums-gas.h\"\n#include \"qmi-enums-dsd.h\"\n#include \"qmi-device.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include \"qmi-enums.h\"\n#include \"qmi-enums-wds.h\"\n#include \"qmi-enums-dms.h\"\n#include \"qmi-enums-nas.h\"\n#include \"qmi-enums-wms.h\"\n#include \"qmi-enums-pds.h\"\n#include \"qmi-enums-pdc.h\"\n#include \"qmi-enums-pbm.h\"\n#include \"qmi-enums-uim.h\"\n#include \"qmi-enums-sar.h\"\n#include \"qmi-enums-oma.h\"\n#include \"qmi-enums-wda.h\"\n#include \"qmi-enums-voice.h\"\n#include \"qmi-enums-loc.h\"\n#include \"qmi-enums-qos.h\"\n#include \"qmi-enums-gas.h\"\n#include \"qmi-enums-dsd.h\"\n#include \"qmi-device.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-enum-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n" \
 		$(ENUMS) > $@
@@ -347,6 +351,17 @@ qmi-dsd.h qmi-dsd.c qmi-dsd.sections: $(top_srcdir)/data/qmi-service-dsd.json $(
 			--include $(top_srcdir)/data/qmi-common.json \
 			$(COLLECTION_OPT) \
 			--output qmi-dsd
+
+# sar service
+qmi-sar.h qmi-sar.c qmi-sar.sections: $(top_srcdir)/data/qmi-service-sar.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
+	$(AM_V_GEN)  \
+		rm -f qmi-sar.h && \
+		rm -f qmi-sar.c && \
+		$(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-sar.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
+			--output qmi-sar
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 

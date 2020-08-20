@@ -12,7 +12,8 @@ QMICLI_SOURCES_WITH_HELP = \
 	$(top_srcdir)/src/qmicli/qmicli-nas.c \
 	$(top_srcdir)/src/qmicli/qmicli-wds.c \
 	$(top_srcdir)/src/qmicli/qmicli-pbm.c \
-	$(top_srcdir)/src/qmicli/qmicli-uim.c
+	$(top_srcdir)/src/qmicli/qmicli-uim.c \
+	$(top_srcdir)/src/qmicli/qmicli-sar.c
 
 # Depend only in the source files, not in the actual program, so that the
 # manpage doesn't get rebuilt when building from a tarball

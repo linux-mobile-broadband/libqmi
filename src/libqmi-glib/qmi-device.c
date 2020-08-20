@@ -45,6 +45,7 @@
 #include "qmi-pds.h"
 #include "qmi-pbm.h"
 #include "qmi-uim.h"
+#include "qmi-sar.h"
 #include "qmi-oma.h"
 #include "qmi-wda.h"
 #include "qmi-voice.h"
@@ -1238,6 +1239,11 @@ qmi_device_allocate_client (QmiDevice *self,
         ctx->client_type = QMI_TYPE_CLIENT_DSD;
 #endif
         break;
+    case QMI_SERVICE_SAR:
+#if defined HAVE_QMI_SERVICE_SAR
+        ctx->client_type = QMI_TYPE_CLIENT_SAR;
+#endif
+        break;
 
     case QMI_SERVICE_UNKNOWN:
         g_assert_not_reached ();
@@ -1248,7 +1254,6 @@ qmi_device_allocate_client (QmiDevice *self,
     case QMI_SERVICE_QCHAT:
     case QMI_SERVICE_RMTFS:
     case QMI_SERVICE_TEST:
-    case QMI_SERVICE_SAR:
     case QMI_SERVICE_IMS:
     case QMI_SERVICE_ADC:
     case QMI_SERVICE_CSD:

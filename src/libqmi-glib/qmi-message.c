@@ -57,6 +57,7 @@
 #include "qmi-gas.h"
 #include "qmi-gms.h"
 #include "qmi-dsd.h"
+#include "qmi-sar.h"
 
 #define PACKED __attribute__((packed))
 

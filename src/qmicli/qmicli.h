@@ -141,4 +141,12 @@ void          qmicli_dsd_run              (QmiDevice *device,
                                            GCancellable *cancellable);
 #endif
 
+#if defined HAVE_QMI_SERVICE_SAR
+GOptionGroup *qmicli_sar_get_option_group (void);
+gboolean      qmicli_sar_options_enabled  (void);
+void          qmicli_sar_run              (QmiDevice *device,
+                                           QmiClientSar *client,
+                                           GCancellable *cancellable);
+#endif
+
 #endif /* __QMICLI_H__ */

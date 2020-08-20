@@ -1,0 +1,45 @@
+[
+  // *********************************************************************************
+  {  "name"    : "SAR",
+     "type"    : "Service" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Client SAR",
+     "type"    : "Client",
+     "since"   : "1.28" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Message SAR",
+     "type"    : "Message-ID-Enum" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Indication SAR",
+     "type"    : "Indication-ID-Enum" },
+
+  // *********************************************************************************
+  {  "name"    : "RF Set State",
+     "type"    : "Message",
+     "service" : "SAR",
+     "id"      : "0x0001",
+     "since"   : "1.28",
+     "input"   : [ { "name"          : "State",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.28",
+                     "format"        : "guint32",
+                     "public-format" : "QmiSarRfState" } ],
+     "output"  : [ { "common-ref"    : "Operation Result" } ] },
+
+  {  "name"    : "RF Get State",
+     "type"    : "Message",
+     "service" : "SAR",
+     "id"      : "0x0002",
+     "since"   : "1.28",
+     "output"  : [ { "common-ref"    : "Operation Result" },
+                   { "name"          : "State",
+                     "id"            : "0x10",
+                     "type"          : "TLV",
+                     "since"         : "1.28",
+                     "format"        : "guint32",
+                     "public-format" : "QmiSarRfState" } ] }
+]

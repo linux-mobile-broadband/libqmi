@@ -60,6 +60,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-enums-pdc.h \
 	qmi-enums-pbm.h \
 	qmi-enums-uim.h \
+	qmi-enums-sar.h \
 	qmi-enums-oma.h \
 	qmi-enums-wda.h \
 	qmi-enums-voice.h \
@@ -138,6 +139,7 @@ include_HEADERS = \
 	qmi-enums-qos.h \
 	qmi-enums-gas.h \
 	qmi-enums-dsd.h qmi-flags64-dsd.h \
+	qmi-enums-sar.h \
 	qmi-utils.h \
 	qmi-message.h \
 	qmi-message-context.h \

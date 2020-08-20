@@ -45,7 +45,8 @@
     QMICLI_ENUM_LIST_ITEM (QmiDmsFoxconnFirmwareVersionType, dms_foxconn_firmware_version_type, "foxconn firmware version type") \
     QMICLI_ENUM_LIST_ITEM (QmiUimSessionType,                uim_session_type,                  "session type")                  \
     QMICLI_ENUM_LIST_ITEM (QmiDsdApnType,                    dsd_apn_type,                      "apn type")                      \
-    QMICLI_ENUM_LIST_ITEM (QmiDmsMacType,                    dms_mac_type,                      "mac address type")
+    QMICLI_ENUM_LIST_ITEM (QmiDmsMacType,                    dms_mac_type,                      "mac address type")              \
+    QMICLI_ENUM_LIST_ITEM (QmiSarRfState,                    sar_rf_state,                      "sar rf state")
 
 #define QMICLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);
@@ -100,7 +101,6 @@ gboolean qmicli_read_authentication_from_string              (const gchar *str,
                                                               QmiWdsAuthentication *out);
 gboolean qmicli_read_pdp_type_from_string                    (const gchar *str,
                                                               QmiWdsPdpType *out);
-
 gboolean qmicli_read_non_empty_string           (const gchar *str,
                                                  const gchar *description,
                                                  gchar **out);

@@ -1397,6 +1397,19 @@ qmi_dsd_apn_type_preference_get_type
 </SECTION>
 
 <SECTION>
+<FILE>qmi-enums-sar</FILE>
+<TITLE>SAR enumerations and flags</TITLE>
+QmiSarRfState
+<SUBSECTION Methods>
+qmi_sar_rf_state_get_string
+<SUBSECTION Private>
+qmi_sar_rf_state_build_string_from_mask
+<SUBSECTION Standard>
+QMI_TYPE_SAR_RF_STATE
+qmi_sar_rf_state_get_type
+</SECTION>
+
+<SECTION>
 <FILE>qmi-errors</FILE>
 <TITLE>Errors</TITLE>
 QmiCoreError
@@ -1670,6 +1683,7 @@ HAVE_QMI_MESSAGE_NAS_ABORT
 HAVE_QMI_MESSAGE_WDS_ABORT
 HAVE_QMI_SERVICE_DMS
 HAVE_QMI_SERVICE_DSD
+HAVE_QMI_SERVICE_SAR
 HAVE_QMI_SERVICE_GAS
 HAVE_QMI_SERVICE_GMS
 HAVE_QMI_SERVICE_LOC

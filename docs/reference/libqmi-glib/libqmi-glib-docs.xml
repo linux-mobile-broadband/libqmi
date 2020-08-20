@@ -494,6 +494,17 @@
   </chapter>
 
   <chapter>
+    <title>Specific Absorption Rate (SAR)</title>
+    <xi:include href="xml/qmi-client-sar.xml"/>
+    <xi:include href="xml/qmi-enums-sar.xml"/>
+    <section>
+      <title>SAR Requests</title>
+      <xi:include href="xml/qmi-message-sar-rf-set-state.xml"/>
+      <xi:include href="xml/qmi-message-sar-rf-get-state.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>
@@ -573,6 +584,10 @@
   <chapter id="api-index-1-26-2" role="1.26.2">
     <title>Index of new symbols in 1.26.2</title>
     <xi:include href="xml/api-index-1.26.2.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-28" role="1.28">
+    <title>Index of new symbols in 1.28</title>
+    <xi:include href="xml/api-index-1.28.xml"></xi:include>
   </chapter>
 
   <xi:include href="xml/annotation-glossary.xml"></xi:include>
