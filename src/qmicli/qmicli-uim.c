@@ -1278,7 +1278,6 @@ slot_status_received (QmiClientUim *client,
           output, &physical_slots, &error)) {
         g_printerr ("error: could not parse slots status: %s\n", error->message);
         g_error_free (error);
-        qmi_indication_uim_slot_status_output_unref (output);
         operation_shutdown (FALSE);
         return;
     }
@@ -1289,19 +1288,17 @@ slot_status_received (QmiClientUim *client,
           output, &ext_information, &error) && !ctx->warned_slot_ext_info_unavailable) {
         g_print ("  Extended slots information is unavailable: %s\n", error->message);
         ctx->warned_slot_ext_info_unavailable = TRUE;
-        g_clear_error (&error);
     }
+    g_clear_error (&error);
 
     if (!qmi_indication_uim_slot_status_output_get_slot_eid_information (
           output, &slot_eids, &error) && !ctx->warned_slot_eid_info_unavailable) {
         g_print ("  Slot EID information is unavailable: %s\n", error->message);
         ctx->warned_slot_eid_info_unavailable = TRUE;
-        g_clear_error (&error);
     }
+    g_clear_error (&error);
 
     print_slot_status (physical_slots, ext_information, slot_eids);
-
-    qmi_indication_uim_slot_status_output_unref (output);
 }
 
 static void
