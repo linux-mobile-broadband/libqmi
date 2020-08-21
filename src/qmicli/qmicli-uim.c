@@ -43,6 +43,7 @@ typedef struct {
 
     /* For Slot Status indication */
     guint slot_status_indication_id;
+    guint refresh_indication_id;
     gboolean warned_slot_ext_info_unavailable;
     gboolean warned_slot_eid_info_unavailable;
 } Context;
@@ -60,11 +61,13 @@ static gchar *sim_power_on_str;
 static gchar *sim_power_off_str;
 static gchar *change_provisioning_session_str;
 static gchar *switch_slot_str;
+static gchar **monitor_refresh_file_array;
 static gboolean get_card_status_flag;
 static gboolean get_supported_messages_flag;
 static gboolean get_slot_status_flag;
 static gboolean monitor_slot_status_flag;
 static gboolean reset_flag;
+static gboolean monitor_refresh_all_flag;
 static gboolean noop_flag;
 
 #undef VALIDATE_UNKNOWN
@@ -167,6 +170,18 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER
+    { "uim-monitor-refresh-file", 0, 0, G_OPTION_ARG_STRING_ARRAY, &monitor_refresh_file_array,
+      "Watch for REFRESH events for given file paths",
+      "[0xNNNN,0xNNNN,...]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER_ALL
+    { "uim-monitor-refresh-all", 0, 0, G_OPTION_ARG_NONE, &monitor_refresh_all_flag,
+      "Watch for REFRESH events for any file",
+      NULL
+    },
+#endif
     { "uim-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a UIM client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -209,11 +224,13 @@ qmicli_uim_options_enabled (void)
                  !!sim_power_off_str +
                  !!change_provisioning_session_str +
                  !!switch_slot_str +
+                 !!monitor_refresh_file_array +
                  get_card_status_flag +
                  get_supported_messages_flag +
                  get_slot_status_flag +
                  monitor_slot_status_flag +
                  reset_flag +
+                 monitor_refresh_all_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -221,7 +238,7 @@ qmicli_uim_options_enabled (void)
         exit (EXIT_FAILURE);
     }
 
-    if (monitor_slot_status_flag)
+    if (monitor_slot_status_flag || monitor_refresh_file_array || monitor_refresh_all_flag)
         qmicli_expect_indications ();
 
     checked = TRUE;
@@ -237,6 +254,9 @@ context_free (Context *context)
     if (context->slot_status_indication_id)
         g_signal_handler_disconnect (context->client,
                                      context->slot_status_indication_id);
+    if (context->refresh_indication_id)
+        g_signal_handler_disconnect (context->client,
+                                     context->refresh_indication_id);
 
     if (context->client)
         g_object_unref (context->client);
@@ -1613,7 +1633,8 @@ get_sim_file_id_and_path_with_separator (const gchar *file_path_str,
         * HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES */
 
 #if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT || \
-    defined HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES
+    defined HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES || \
+    defined HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER
 
 static gboolean
 get_sim_file_id_and_path (const gchar *file_path_str,
@@ -1624,7 +1645,8 @@ get_sim_file_id_and_path (const gchar *file_path_str,
 }
 
 #endif /* HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
-        * HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES */
+        * HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES
+        * HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER */
 
 #if defined HAVE_QMI_MESSAGE_UIM_READ_TRANSPARENT
 
@@ -2100,6 +2122,293 @@ get_file_attributes_build_input (const gchar *file_path_str)
 
 #endif /* HAVE_QMI_MESSAGE_UIM_GET_FILE_ATTRIBUTES */
 
+#if defined HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER || \
+    defined HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER_ALL
+
+static void
+refresh_complete_ready (QmiClientUim *client,
+                        GAsyncResult *res)
+{
+    QmiMessageUimRefreshCompleteOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_uim_refresh_complete_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: refresh complete failed: %s\n", error->message);
+        g_error_free (error);
+        return;
+    }
+
+    /* Ignore error, just log it as warning. In case we send complete message when
+     * the modem does not expect it, we could get an error that is harmless.
+     */
+    if (!qmi_message_uim_refresh_complete_output_get_result (output, &error)) {
+        g_warning ("refresh complete failed: %s\n", error->message);
+        g_error_free (error);
+    } else
+        g_debug ("Refresh complete OK.");
+
+    qmi_message_uim_refresh_complete_output_unref (output);
+}
+
+static void
+refresh_complete (QmiClientUim *client,
+                  gboolean success)
+{
+    QmiMessageUimRefreshCompleteInput *refresh_complete_input;
+    GArray *dummy_aid;
+
+    dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+
+    refresh_complete_input = qmi_message_uim_refresh_complete_input_new ();
+    qmi_message_uim_refresh_complete_input_set_session (
+        refresh_complete_input,
+        QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
+        dummy_aid, /* ignored */
+        NULL);
+    qmi_message_uim_refresh_complete_input_set_info (
+        refresh_complete_input,
+        success,
+        NULL);
+
+    qmi_client_uim_refresh_complete (
+        ctx->client,
+        refresh_complete_input,
+        10,
+        ctx->cancellable,
+        (GAsyncReadyCallback) refresh_complete_ready,
+        NULL);
+    qmi_message_uim_refresh_complete_input_unref (refresh_complete_input);
+    g_array_unref (dummy_aid);
+}
+
+static void
+refresh_received (QmiClientUim *client,
+                  QmiIndicationUimRefreshOutput *output)
+{
+    QmiUimRefreshStage stage;
+    QmiUimRefreshMode mode;
+    GArray *files = NULL;
+    GError *error = NULL;
+    guint i, j;
+
+    g_print ("[%s] Received refresh indication:\n",
+             qmi_device_get_path_display (ctx->device));
+    if (!qmi_indication_uim_refresh_output_get_event (
+          output, &stage, &mode, NULL, NULL, &files, &error)) {
+        g_printerr ("error: could not parse refresh ind: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+    g_print ("  Refresh stage: %s\n",
+             qmi_uim_refresh_stage_get_string (stage));
+    g_print ("  Refresh mode: %s\n",
+             qmi_uim_refresh_mode_get_string (mode));
+    g_print ("  Files:\n");
+    if (files && files->len > 0)
+        for (i = 0; i < files->len; i++) {
+            QmiIndicationUimRefreshOutputEventFilesElement *file;
+            GArray *path;
+
+            file = &g_array_index (files, QmiIndicationUimRefreshOutputEventFilesElement, i);
+            g_print ("    0x%x; path:",
+                     file->file_id);
+            path = file->path;
+            if (path && path->len >= 2)
+                for (j = 0; j < path->len / 2; j++) {
+                    guint16 path_component;
+                    path_component = g_array_index (path, guint8, j * 2) |
+                                    ((guint16)g_array_index (path, guint8, j * 2 + 1) << 8);
+                    g_print (" 0x%x", path_component);
+                }
+            else
+                g_print (" <none>");
+            g_print ("\n");
+        }
+    else
+        g_print ("    <none>\n");
+    /* Send refresh complete message only in start stage and only if the
+     * mode is something other than reset.
+     */
+    if (stage == QMI_UIM_REFRESH_STAGE_START && mode != QMI_UIM_REFRESH_MODE_RESET)
+        refresh_complete (client, TRUE);
+}
+
+static void
+refresh_cancelled (GCancellable *cancellable)
+{
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER
+        * HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER_ALL */
+
+#if defined HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER
+
+static void
+register_refresh_events_ready (QmiClientUim *client,
+                               GAsyncResult *res)
+{
+    QmiMessageUimRefreshRegisterOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_uim_refresh_register_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_refresh_register_output_get_result (output, &error)) {
+        g_printerr ("error: could not register refresh file events: %s\n", error->message);
+        qmi_message_uim_refresh_register_output_unref (output);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_debug ("Registered refresh file events...");
+    ctx->refresh_indication_id =
+        g_signal_connect (ctx->client,
+                          "refresh",
+                          G_CALLBACK (refresh_received),
+                          NULL);
+
+    /* User can use Ctrl+C to cancel the monitoring at any time */
+    g_cancellable_connect (ctx->cancellable,
+                           G_CALLBACK (refresh_cancelled),
+                           NULL,
+                           NULL);
+    qmi_message_uim_refresh_register_output_unref (output);
+}
+
+static void
+register_refresh_events (gchar **file_path_array)
+{
+    QmiMessageUimRefreshRegisterInput *refresh_input;
+    GArray *dummy_aid;
+    GArray *file_list;
+    QmiMessageUimRefreshRegisterInputInfoFilesElement file_element;
+    guint i;
+
+    file_list = g_array_new (FALSE, FALSE, sizeof (QmiMessageUimRefreshRegisterInputInfoFilesElement));
+    while (*file_path_array) {
+        memset (&file_element, 0, sizeof (file_element));
+        if (!get_sim_file_id_and_path (*file_path_array, &file_element.file_id, &file_element.path))
+            goto out;
+
+        g_array_append_val (file_list, file_element);
+        file_path_array++;
+    }
+
+    dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+    refresh_input = qmi_message_uim_refresh_register_input_new ();
+    qmi_message_uim_refresh_register_input_set_session (
+        refresh_input,
+        QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
+        dummy_aid, /* ignored */
+        NULL);
+    qmi_message_uim_refresh_register_input_set_info (
+        refresh_input,
+        TRUE,
+        FALSE,
+        file_list,
+        NULL);
+
+    qmi_client_uim_refresh_register (
+        ctx->client,
+        refresh_input,
+        10,
+        ctx->cancellable,
+        (GAsyncReadyCallback) register_refresh_events_ready,
+        NULL);
+    qmi_message_uim_refresh_register_input_unref (refresh_input);
+    g_array_unref (dummy_aid);
+
+out:
+    for (i = 0; i < file_list->len; i++) {
+        QmiMessageUimRefreshRegisterInputInfoFilesElement *file;
+        file = &g_array_index (file_list, QmiMessageUimRefreshRegisterInputInfoFilesElement, i);
+        g_array_unref (file->path);
+    }
+    g_array_unref (file_list);
+}
+
+#endif /* HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER */
+
+#if defined HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER_ALL
+
+static void
+register_refresh_all_events_ready (QmiClientUim *client,
+                                   GAsyncResult *res)
+{
+    QmiMessageUimRefreshRegisterAllOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_uim_refresh_register_all_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_uim_refresh_register_all_output_get_result (output, &error)) {
+        g_printerr ("error: could not register refresh file events: %s\n", error->message);
+        qmi_message_uim_refresh_register_all_output_unref (output);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_debug ("Registered refresh all file events...");
+    ctx->refresh_indication_id =
+        g_signal_connect (ctx->client,
+                          "refresh",
+                          G_CALLBACK (refresh_received),
+                          NULL);
+
+    /* User can use Ctrl+C to cancel the monitoring at any time */
+    g_cancellable_connect (ctx->cancellable,
+                           G_CALLBACK (refresh_cancelled),
+                           NULL,
+                           NULL);
+    qmi_message_uim_refresh_register_all_output_unref (output);
+}
+
+static void
+register_refresh_all_events (void)
+{
+    QmiMessageUimRefreshRegisterAllInput *refresh_all_input;
+    GArray *dummy_aid;
+
+    refresh_all_input = qmi_message_uim_refresh_register_all_input_new ();
+    dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+    qmi_message_uim_refresh_register_all_input_set_session (
+        refresh_all_input,
+        QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
+        dummy_aid, /* ignored */
+        NULL);
+
+    qmi_message_uim_refresh_register_all_input_set_info (
+        refresh_all_input,
+        TRUE,
+        NULL);
+    qmi_client_uim_refresh_register_all (
+        ctx->client,
+        refresh_all_input,
+        10,
+        ctx->cancellable,
+        (GAsyncReadyCallback) register_refresh_all_events_ready,
+        NULL);
+    qmi_message_uim_refresh_register_all_input_unref (refresh_all_input);
+    g_array_unref (dummy_aid);
+}
+
+#endif /* HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER_ALL */
+
 void
 qmicli_uim_run (QmiDevice *device,
                 QmiClientUim *client,
@@ -2398,6 +2707,22 @@ qmicli_uim_run (QmiDevice *device,
     if (monitor_slot_status_flag) {
         g_debug ("Listening for slot status changes...");
         register_physical_slot_status_events ();
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER
+    if (monitor_refresh_file_array) {
+        g_debug ("Listening for refresh events...");
+        register_refresh_events (monitor_refresh_file_array);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER_ALL
+    if (monitor_refresh_all_flag) {
+        g_debug ("Listening for all refresh events...");
+        register_refresh_all_events ();
         return;
     }
 #endif
