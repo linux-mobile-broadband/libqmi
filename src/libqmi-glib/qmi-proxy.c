@@ -763,8 +763,10 @@ device_command_ready (QmiDevice *device,
     }
 
     if (!client_send_message (request->client, response, &error)) {
-        g_warning ("sending request to device failed: %s", error->message);
-        g_error_free (error);
+        /* ignore errors when client is not connected, because it really didn't
+         * need this response back */
+        if (!g_error_matches (error, QMI_CORE_ERROR, QMI_CORE_ERROR_WRONG_STATE))
+            g_warning ("forwarding response to client failed: %s", error->message);
         untrack_client (request->self, request->client);
     }
 
