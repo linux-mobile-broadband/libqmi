@@ -102,15 +102,19 @@ typedef struct {
 typedef struct {
     volatile gint ref_count;
 
-    QmiProxy *proxy; /* not full ref */
+    QmiProxy          *proxy; /* not full ref */
+
+    /* client socket connection context */
     GSocketConnection *connection;
-    GSource *connection_readable_source;
-    GByteArray *buffer;
-    QmiDevice *device;
+    GSource           *connection_readable_source;
+    GByteArray        *buffer;
+
+    /* QMI device associated to connection */
+    QmiDevice  *device;
     QmiMessage *internal_proxy_open_request;
-    GArray *qmi_client_info_array;
-    guint indication_id;
-    guint device_removed_id;
+    GArray     *qmi_client_info_array;
+    guint       indication_id;
+    guint       device_removed_id;
 } Client;
 
 static gboolean connection_readable_cb (GSocket *socket, GIOCondition condition, Client *client);
@@ -202,24 +206,6 @@ track_client (QmiProxy *self,
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
 }
 
-static guint
-get_n_clients_with_device (QmiProxy *self,
-                           QmiDevice *device)
-{
-    GList *l;
-    guint n = 0;
-
-    for (l = self->priv->clients; l; l = g_list_next (l)) {
-        Client *client = l->data;
-
-        if (client->device && (device == client->device ||
-            g_str_equal (qmi_device_get_path (device), qmi_device_get_path (client->device))))
-            n++;
-    }
-
-    return n;
-}
-
 static void
 disown_not_released_clients (QmiProxy *self,
                              Client   *client)
@@ -249,11 +235,14 @@ disown_not_released_clients (QmiProxy *self,
     }
 }
 
+static void device_close_if_unused (QmiProxy  *self,
+                                    QmiDevice *device);
+
 static void
 untrack_client (QmiProxy *self,
                 Client   *client)
 {
-    QmiDevice *device;
+    g_autoptr(QmiDevice) device = NULL;
 
     device = client->device ? g_object_ref (client->device) : NULL;
 
@@ -269,28 +258,8 @@ untrack_client (QmiProxy *self,
         g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_CLIENTS]);
     }
 
-    if (!device)
-        return;
-
-    /* If no more clients using the device, close and cleanup */
-    if (get_n_clients_with_device (self, device) == 0) {
-        GList *l;
-
-        for (l = self->priv->devices; l; l = g_list_next (l)) {
-            QmiDevice *device_in_list = QMI_DEVICE (l->data);
-
-            if (device_in_list && (device == device_in_list ||
-                g_str_equal (qmi_device_get_path (device), qmi_device_get_path (device_in_list)))) {
-                g_debug ("closing device '%s': no longer used", qmi_device_get_path_display (device));
-                qmi_device_close_async (device_in_list, 0, NULL, NULL, NULL);
-                g_object_unref (device_in_list);
-                self->priv->devices = g_list_remove (self->priv->devices, device_in_list);
-                break;
-            }
-        }
-    }
-
-    g_object_unref (device);
+    if (device)
+        device_close_if_unused (self, device);
 }
 
 static QmiDevice *
@@ -724,10 +693,83 @@ track_implicit_cid (QmiProxy   *self,
     g_array_append_val (client->qmi_client_info_array, info);
 }
 
+/*****************************************************************************/
+
+#define TRACK_CTL_QUARK_STR "track-ctl-data"
+static GQuark track_ctl_quark;
+
+static void
+device_track_ctl_request (QmiDevice *device)
+{
+    guint ongoing_ctl;
+
+    if (G_UNLIKELY (!track_ctl_quark)) {
+        track_ctl_quark = g_quark_from_static_string (TRACK_CTL_QUARK_STR);
+        ongoing_ctl = 0;
+    } else
+        ongoing_ctl = GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (device), track_ctl_quark));
+    g_object_set_qdata (G_OBJECT (device), track_ctl_quark, GUINT_TO_POINTER (ongoing_ctl + 1));
+}
+
+static void
+device_untrack_ctl_request (QmiDevice *device)
+{
+    guint ongoing_ctl;
+
+    g_assert (track_ctl_quark != 0);
+    ongoing_ctl = GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (device), track_ctl_quark));
+    g_assert_cmpuint (ongoing_ctl, >, 0);
+    g_object_set_qdata (G_OBJECT (device), track_ctl_quark, GUINT_TO_POINTER (ongoing_ctl - 1));
+}
+
+static void
+device_close_if_unused (QmiProxy  *self,
+                        QmiDevice *device)
+{
+    GList *l;
+
+    /* If there is at least one client using the device,
+     * no need to close */
+    for (l = self->priv->clients; l; l = g_list_next (l)) {
+        Client *client = l->data;
+
+        if (client->device &&
+            (device == client->device ||
+             g_str_equal (qmi_device_get_path (device), qmi_device_get_path (client->device))))
+            return;
+    }
+
+    /* If there are no clients using the device BUT there
+     * are still ongoing CTL requests ongoing, no need to
+     * close */
+    if (GPOINTER_TO_UINT (g_object_get_qdata (G_OBJECT (device), track_ctl_quark)) > 0)
+        return;
+
+    /* Now, untrack device from proxy and close it */
+    for (l = self->priv->devices; l; l = g_list_next (l)) {
+        QmiDevice *device_in_list = QMI_DEVICE (l->data);
+
+        if (device_in_list &&
+            (device == device_in_list ||
+             g_str_equal (qmi_device_get_path (device), qmi_device_get_path (device_in_list)))) {
+            g_debug ("closing device '%s': no longer used", qmi_device_get_path_display (device));
+            qmi_device_close_async (device_in_list, 0, NULL, NULL, NULL);
+            g_object_unref (device_in_list);
+            self->priv->devices = g_list_remove (self->priv->devices, device_in_list);
+            return;
+        }
+    }
+
+    g_assert_not_reached ();
+}
+
+/*****************************************************************************/
+
 typedef struct {
     QmiProxy *self;   /* Full ref */
     Client   *client; /* Full ref */
     guint8    in_trid;
+    gboolean  ctl;
 } Request;
 
 static void
@@ -741,19 +783,17 @@ request_free (Request *request)
 }
 
 static void
-device_command_ready (QmiDevice *device,
+device_command_ready (QmiDevice    *device,
                       GAsyncResult *res,
-                      Request *request)
+                      Request      *request)
 {
-    QmiMessage *response;
-    GError *error = NULL;
+    g_autoptr(QmiMessage) response = NULL;
+    g_autoptr(GError)     error = NULL;
 
     response = qmi_device_command_full_finish (device, res, &error);
     if (!response) {
         g_warning ("sending request to device failed: %s", error->message);
-        g_error_free (error);
-        request_free (request);
-        return;
+        goto out;
     }
 
     if (qmi_message_get_service (response) == QMI_SERVICE_CTL) {
@@ -770,7 +810,11 @@ device_command_ready (QmiDevice *device,
         untrack_client (request->self, request->client);
     }
 
-    qmi_message_unref (response);
+ out:
+    if (request->ctl) {
+        device_untrack_ctl_request (device);
+        device_close_if_unused (request->self, device);
+    }
     request_free (request);
 }
 
@@ -796,6 +840,9 @@ process_message (QmiProxy   *self,
     request->client = client_ref (client);
 
     if (qmi_message_get_service (message) == QMI_SERVICE_CTL) {
+        /* Keep track of how many CTL requests are ongoing */
+        device_track_ctl_request (client->device);
+        request->ctl = TRUE;
         request->in_trid = qmi_message_get_transaction_id (message);
         qmi_message_set_transaction_id (message, 0);
         /* Try to untrack QMI client as soon as we detect the associated
