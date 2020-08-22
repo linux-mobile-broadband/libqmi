@@ -500,6 +500,26 @@ device_match_transaction (QmiDevice *self,
 }
 
 /*****************************************************************************/
+
+static void
+device_hangup_transactions (QmiDevice *self)
+{
+    GHashTableIter    iter;
+    gpointer          key, value;
+    g_autoptr(GError) common_error = NULL;
+
+    common_error = g_error_new (QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED, "endpoint hangup");
+
+    g_hash_table_iter_init (&iter, self->priv->transactions);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+        Transaction *tr = value;
+
+        transaction_complete_and_free (tr, NULL, common_error);
+        g_hash_table_iter_remove (&iter);
+    }
+}
+
+/*****************************************************************************/
 /* Version info request */
 
 GArray *
@@ -1523,6 +1543,12 @@ static void
 endpoint_hangup_cb (QmiEndpoint *endpoint,
                     QmiDevice   *self)
 {
+    g_debug ("[%s] QMI endpoint hangup: removed",
+             qmi_file_get_path_display (self->priv->file));
+
+    /* cancel all ongoing transactions as the endpoing hangup happened */
+    device_hangup_transactions (self);
+
     g_signal_emit (self, signals[SIGNAL_REMOVED], 0);
 }
 
