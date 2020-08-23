@@ -1,4 +1,18 @@
 
+Overview of changes in libqmi 1.26.2
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fix QMI response message building when assertions are disabled in the
+      build.
+   ** Added new 5G signal TLVs in "NAS Get Signal Info".
+
+ * qmicli:
+   ** Add missing quote when listing card states in --uim-get-card-status.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.26.0
 ----------------------------------------
 
