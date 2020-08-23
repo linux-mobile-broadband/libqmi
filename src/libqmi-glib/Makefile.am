@@ -153,9 +153,11 @@ EXTRA_DIST = \
 	qmi-version.h.in \
 	$(NULL)
 
-CLEANFILES = \
+DISTCLEANFILES = \
 	qmi-version.h \
 	$(NULL)
+
+CLEANFILES =
 
 # Introspection
 
