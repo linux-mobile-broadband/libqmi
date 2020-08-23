@@ -70,6 +70,11 @@ test-default:
     - make install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --enable-mbim-qmux --enable-qrtr
+    - make
+    - make clean
+    - make
+    - make distclean
     - ./configure --prefix=/usr --enable-gtk-doc --enable-mbim-qmux --enable-qrtr --enable-introspection
     - make
     - make check
