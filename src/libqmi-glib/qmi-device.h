@@ -827,6 +827,31 @@ void qmi_device_new_from_node (QrtrNode            *node,
 QmiDevice *qmi_device_new_from_node_finish (GAsyncResult  *res,
                                             GError       **error);
 
+/**
+ * qmi_device_get_node:
+ * @self: a #QmiDevice.
+ *
+ * Get the #QrtrNode associated with this #QmiDevice.
+ *
+ * Returns: (transfer full): a #QrtrNode that must be freed with g_object_unref() or %NULL if none available.
+ *
+ * Since: 1.28
+ */
+QrtrNode *qmi_device_get_node (QmiDevice *self);
+
+/**
+ * qmi_device_peek_node:
+ * @self: a #QmiDevice.
+ *
+ * Get the #QrtrNode associated with this #QmiDevice, without increasing the
+ * reference count on the returned object.
+ *
+ * Returns: (transfer none): a #QrtrNode or %NULL if none available. Do not free the returned object, it is owned by @self.
+ *
+ * Since: 1.28
+ */
+QrtrNode *qmi_device_peek_node (QmiDevice *self);
+
 #endif /* QMI_QRTR_SUPPORTED */
 
 G_END_DECLS

@@ -2578,6 +2578,22 @@ qmi_device_new_from_node (QrtrNode *node,
                                 QMI_DEVICE_NODE, node,
                                 NULL);
 }
+
+QrtrNode *
+qmi_device_get_node (QmiDevice *self)
+{
+    g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
+
+    return self->priv->node ? g_object_ref (self->priv->node) : NULL;
+}
+
+QrtrNode *
+qmi_device_peek_node (QmiDevice *self)
+{
+    g_return_val_if_fail (QMI_IS_DEVICE (self), NULL);
+
+    return self->priv->node;
+}
 #endif
 
 QmiDevice *
