@@ -405,6 +405,7 @@ nodist_include_HEADERS = \
 	qmi-pdc.h \
 	qmi-pbm.h \
 	qmi-uim.h \
+	qmi-sar.h \
 	qmi-oma.h \
 	qmi-wda.h \
 	qmi-voice.h \
