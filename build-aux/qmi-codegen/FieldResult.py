@@ -63,7 +63,7 @@ class FieldResult(Field):
                 ' *\n'
                 ' * Get the result of the QMI operation.\n'
                 ' *\n'
-                ' * Returns: %TRUE if the QMI operation succeeded, %FALSE if @error is set.\n'
+                ' * Returns: (skip): %TRUE if the QMI operation succeeded, %FALSE if @error is set.\n'
                 ' *\n'
                 ' * Since: ${since}\n'
                 ' */\n')
