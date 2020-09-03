@@ -54,6 +54,42 @@ def release_client(qmidev,qmiclient):
     qmidev.release_client(qmiclient, Qmi.DeviceReleaseClientFlags.RELEASE_CID, 10, None, release_client_ready, None)
 
 
+def get_ids_ready(qmiclient,result,qmidev):
+    try:
+        output = qmiclient.get_ids_finish(result)
+        output.get_result()
+    except GLib.GError as error:
+        sys.stderr.write("Couldn't query device ids: %s\n" % error.message)
+        release_client(qmidev, qmiclient)
+        return
+
+    try:
+        success, imei = output.get_imei()
+        print("imei:                  %s" % imei)
+    except:
+        pass
+
+    try:
+        success, imei_software_version = output.get_imei_software_version()
+        print("imei software version: %s" % imei_software_version)
+    except:
+        pass
+
+    try:
+        success, meid = output.get_meid()
+        print("meid:                  %s" % meid)
+    except:
+        pass
+
+    try:
+        success, esn = output.get_esn()
+        print("esn:                   %s" % esn)
+    except:
+        pass
+
+    release_client(qmidev, qmiclient)
+
+
 def get_capabilities_ready(qmiclient,result,qmidev):
     try:
         output = qmiclient.get_capabilities_finish(result)
@@ -61,21 +97,22 @@ def get_capabilities_ready(qmiclient,result,qmidev):
         success, maxtxrate, maxrxrate, dataservicecaps, simcaps, radioifaces = output.get_info()
 
         if success:
-            print("max tx channel rate: %u" % maxtxrate)
-            print("max rx channel rate: %u" % maxrxrate)
-            print("data service:        %s" % Qmi.DmsDataServiceCapability.get_string(dataservicecaps))
-            print("sim:                 %s" % Qmi.DmsSimCapability.get_string(simcaps))
+            print("max tx channel rate:   %u" % maxtxrate)
+            print("max rx channel rate:   %u" % maxrxrate)
+            print("data service:          %s" % Qmi.DmsDataServiceCapability.get_string(dataservicecaps))
+            print("sim:                   %s" % Qmi.DmsSimCapability.get_string(simcaps))
             networks = ""
             for radioiface in radioifaces:
                 if networks != "":
                     networks += ", "
                 networks += Qmi.DmsRadioInterface.get_string(radioiface)
-            print("networks:            %s" % networks)
+            print("networks:              %s" % networks)
 
     except GLib.GError as error:
         sys.stderr.write("Couldn't query device capabilities: %s\n" % error.message)
 
-    release_client(qmidev, qmiclient)
+    qmiclient.get_ids(None, 10, None, get_ids_ready, qmidev)
+
 
 def allocate_client_ready(qmidev,result,user_data=None):
     try:
