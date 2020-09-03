@@ -136,7 +136,7 @@ class Field:
                 ' *\n'
                 ' * Get the \'${name}\' field from @self.\n'
                 ' *\n'
-                ' * Returns: %TRUE if the field is found, %FALSE otherwise.\n'
+                ' * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.\n'
                 ' *\n'
                 ' * Since: ${since}\n'
                 ' */\n')
@@ -206,7 +206,7 @@ class Field:
                 ' *\n'
                 ' * Set the \'${name}\' field in the message.\n'
                 ' *\n'
-                ' * Returns: %TRUE if @value was successfully set, %FALSE otherwise.\n'
+                ' * Returns: (skip): %TRUE if @value was successfully set, %FALSE otherwise.\n'
                 ' *\n'
                 ' * Since: ${since}\n'
                 ' */\n')
