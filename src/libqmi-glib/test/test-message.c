@@ -279,6 +279,23 @@ test_message_parse_string_with_trailing_nul (void)
 
 #endif
 
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MODEL
+
+static void
+test_message_parse_string_with_trailing_tab (void)
+{
+    /* Quectel EM12-AW model strint has a trailing TAB character (ASCII 0x09) */
+    const guint8 buffer[] = {
+        0x01, 0x1E, 0x00, 0x80, 0x02, 0x05, 0x02, 0x01, 0x00, 0x22, 0x00, 0x12,
+        0x00, 0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x08, 0x00, 0x45,
+        0x4D, 0x31, 0x32, 0x2D, 0x41, 0x57, 0x09
+    };
+
+    test_message_printable_common (buffer, sizeof (buffer), QMI_MESSAGE_VENDOR_GENERIC, "EM12-AW");
+}
+
+#endif
+
 /*****************************************************************************/
 
 static void
@@ -1579,6 +1596,9 @@ int main (int argc, char **argv)
 #endif
 #if defined HAVE_QMI_MESSAGE_DMS_SWI_GET_CURRENT_FIRMWARE
     g_test_add_func ("/libqmi-glib/message/parse/string-with-trailing-nul", test_message_parse_string_with_trailing_nul);
+#endif
+#if defined HAVE_QMI_MESSAGE_DMS_GET_MODEL
+    g_test_add_func ("/libqmi-glib/message/parse/string-with-trailing-tab", test_message_parse_string_with_trailing_tab);
 #endif
 
     g_test_add_func ("/libqmi-glib/message/new/request",           test_message_new_request);

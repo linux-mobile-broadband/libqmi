@@ -151,8 +151,10 @@ __qmi_string_utf8_validate_printable (const guint8 *utf8,
 
         /* Explicitly allow CR and LF even if they're control characters, given
          * that NMEA traces reported via QMI LOC indications seem to have these
-         * suffixed. */
-        if (*p == '\r' || *p == '\n')
+         * suffixed.
+         * Also, explicitly allow TAB as some manufacturers seem to include it
+         * e.g. in model info strings. */
+        if (*p == '\r' || *p == '\n' || *p == '\t')
             continue;
 
         unichar = g_utf8_get_char (p);
