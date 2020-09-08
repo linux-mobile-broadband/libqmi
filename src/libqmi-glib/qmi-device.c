@@ -685,14 +685,13 @@ qmi_device_is_open (QmiDevice *self)
 static void
 reload_wwan_iface_name (QmiDevice *self)
 {
-    gchar *cdc_wdm_device_name;
+    g_autofree gchar *cdc_wdm_device_name = NULL;
     static const gchar *driver_names[] = { "usbmisc", "usb" };
     GError *error = NULL;
     guint i;
 
     /* Early cleanup */
-    g_free (self->priv->wwan_iface);
-    self->priv->wwan_iface = NULL;
+    g_clear_pointer (&self->priv->wwan_iface, g_free);
 
 #if QMI_QRTR_SUPPORTED
     if (self->priv->node) {
@@ -711,9 +710,10 @@ reload_wwan_iface_name (QmiDevice *self)
     }
 
     for (i = 0; i < G_N_ELEMENTS (driver_names) && !self->priv->wwan_iface; i++) {
-        gchar *sysfs_path;
-        GFile *sysfs_file;
-        GFileEnumerator *enumerator;
+        g_autofree gchar           *sysfs_path = NULL;
+        g_autoptr(GFile)            sysfs_file = NULL;
+        g_autoptr(GFileEnumerator)  enumerator = NULL;
+        GFileInfo                  *file_info  = NULL;
 
         sysfs_path = g_strdup_printf ("/sys/class/%s/%s/device/net/", driver_names[i], cdc_wdm_device_name);
         sysfs_file = g_file_new_for_path (sysfs_path);
@@ -727,34 +727,28 @@ reload_wwan_iface_name (QmiDevice *self)
                      qmi_file_get_path_display (self->priv->file),
                      sysfs_path,
                      error->message);
-            g_error_free (error);
-        } else {
-            GFileInfo *file_info;
-
-            /* Ignore errors when enumerating */
-            while ((file_info = g_file_enumerator_next_file (enumerator, NULL, NULL)) != NULL) {
-                const gchar *name;
-
-                name = g_file_info_get_name (file_info);
-                if (name) {
-                    /* We only expect ONE file in the sysfs directory corresponding
-                     * to this control port, if more found for any reason, warn about it */
-                    if (self->priv->wwan_iface)
-                        g_warning ("[%s] invalid additional wwan iface found: %s",
-                               qmi_file_get_path_display (self->priv->file), name);
-                    else
-                        self->priv->wwan_iface = g_strdup (name);
-                }
-                g_object_unref (file_info);
-            }
-
-            g_object_unref (enumerator);
+            g_clear_error (&error);
+            continue;
         }
 
-        g_free (sysfs_path);
-        g_object_unref (sysfs_file);
+        /* Ignore errors when enumerating */
+        while ((file_info = g_file_enumerator_next_file (enumerator, NULL, NULL)) != NULL) {
+            const gchar *name;
+
+            name = g_file_info_get_name (file_info);
+            if (name) {
+                /* We only expect ONE file in the sysfs directory corresponding
+                 * to this control port, if more found for any reason, warn about it */
+                if (self->priv->wwan_iface)
+                    g_warning ("[%s] invalid additional wwan iface found: %s",
+                               qmi_file_get_path_display (self->priv->file), name);
+                else
+                    self->priv->wwan_iface = g_strdup (name);
+            }
+            g_object_unref (file_info);
+        }
     }
-    g_free (cdc_wdm_device_name);
+
     if (!self->priv->wwan_iface)
         g_warning ("[%s] wwan iface not found", qmi_file_get_path_display (self->priv->file));
 }
