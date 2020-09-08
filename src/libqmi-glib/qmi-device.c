@@ -2800,7 +2800,7 @@ get_property (GObject    *object,
         break;
 #if QMI_QRTR_SUPPORTED
     case PROP_NODE:
-        g_value_set_object (value, g_object_ref (self->priv->node));
+        g_value_set_object (value, self->priv->node);
         break;
 #endif
     default:
