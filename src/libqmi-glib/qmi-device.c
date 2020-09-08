@@ -2734,13 +2734,10 @@ initable_init_async (GAsyncInitable *initable,
 static QmiFile *
 get_file_for_node (QrtrNode *node)
 {
-    gchar *uri;
-    QmiFile *file;
+    g_autofree gchar *uri = NULL;
 
     uri = qrtr_get_uri_for_node (qrtr_node_id (node));
-    file = qmi_file_new (g_file_new_for_uri (uri));
-    g_free (uri);
-    return file;
+    return qmi_file_new (g_file_new_for_uri (uri));
 }
 #endif
 
