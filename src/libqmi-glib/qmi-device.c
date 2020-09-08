@@ -2695,6 +2695,9 @@ initable_init_async (GAsyncInitable *initable,
     self = QMI_DEVICE (initable);
     task = g_task_new (self, cancellable, callback, user_data);
 
+    /* We need a proper file to initialize */
+    g_assert (QMI_IS_FILE (self->priv->file));
+
 #if QMI_QRTR_SUPPORTED
     /* If we have a node, just skip to setting up the control client */
     if (self->priv->node) {
@@ -2702,16 +2705,6 @@ initable_init_async (GAsyncInitable *initable,
         return;
     }
 #endif
-
-    /* We need a proper file to initialize */
-    if (!self->priv->file) {
-        g_task_return_new_error (task,
-                                 QMI_CORE_ERROR,
-                                 QMI_CORE_ERROR_INVALID_ARGS,
-                                 "Cannot initialize QMI device: No file given");
-        g_object_unref (task);
-        return;
-    }
 
     /* If no file check requested, don't do it */
     if (self->priv->no_file_check) {
