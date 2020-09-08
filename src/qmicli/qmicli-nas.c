@@ -753,6 +753,84 @@ get_tx_rx_info_ready (QmiClientNas *client,
         }
     }
 
+    /* RX Channel 2 */
+    if (qmi_message_nas_get_tx_rx_info_output_get_rx_chain_2_info (
+            output,
+            &is_radio_tuned,
+            &power,
+            &ecio,
+            &rscp,
+            &rsrp,
+            &phase,
+            NULL)) {
+        g_print ("RX Chain 2:\n"
+                 "\tRadio tuned: '%s'\n"
+                 "\tPower: '%.1lf dBm'\n",
+                 is_radio_tuned ? "yes" : "no",
+                 (0.1) * ((gdouble)power));
+        if (interface == QMI_NAS_RADIO_INTERFACE_CDMA_1X ||
+            interface == QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO ||
+            interface == QMI_NAS_RADIO_INTERFACE_GSM ||
+            interface == QMI_NAS_RADIO_INTERFACE_UMTS ||
+            interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR)
+            g_print ("\tECIO: '%.1lf dB'\n", (0.1) * ((gdouble)ecio));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_UMTS)
+            g_print ("\tRSCP: '%.1lf dBm'\n", (0.1) * ((gdouble)rscp));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR)
+            g_print ("\tRSRP: '%.1lf dBm'\n", (0.1) * ((gdouble)rsrp));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR) {
+            if (phase == 0xFFFFFFFF)
+                g_print ("\tPhase: 'unknown'\n");
+            else
+                g_print ("\tPhase: '%.2lf degrees'\n", (0.01) * ((gdouble)phase));
+        }
+    }
+
+    /* RX Channel 3 */
+    if (qmi_message_nas_get_tx_rx_info_output_get_rx_chain_3_info (
+            output,
+            &is_radio_tuned,
+            &power,
+            &ecio,
+            &rscp,
+            &rsrp,
+            &phase,
+            NULL)) {
+        g_print ("RX Chain 3:\n"
+                 "\tRadio tuned: '%s'\n"
+                 "\tPower: '%.1lf dBm'\n",
+                 is_radio_tuned ? "yes" : "no",
+                 (0.1) * ((gdouble)power));
+        if (interface == QMI_NAS_RADIO_INTERFACE_CDMA_1X ||
+            interface == QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO ||
+            interface == QMI_NAS_RADIO_INTERFACE_GSM ||
+            interface == QMI_NAS_RADIO_INTERFACE_UMTS ||
+            interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR)
+            g_print ("\tECIO: '%.1lf dB'\n", (0.1) * ((gdouble)ecio));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_UMTS)
+            g_print ("\tRSCP: '%.1lf dBm'\n", (0.1) * ((gdouble)rscp));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR)
+            g_print ("\tRSRP: '%.1lf dBm'\n", (0.1) * ((gdouble)rsrp));
+
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR) {
+            if (phase == 0xFFFFFFFF)
+                g_print ("\tPhase: 'unknown'\n");
+            else
+                g_print ("\tPhase: '%.2lf degrees'\n", (0.01) * ((gdouble)phase));
+        }
+    }
+
     /* TX Channel */
     if (qmi_message_nas_get_tx_rx_info_output_get_tx_info (
             output,
