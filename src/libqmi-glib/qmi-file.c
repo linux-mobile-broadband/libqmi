@@ -30,10 +30,10 @@
 G_DEFINE_TYPE (QmiFile, qmi_file, G_TYPE_OBJECT)
 
 struct _QmiFilePrivate {
-    GFile *file;
-    gboolean is_uri;
-    gchar *path;
-    gchar *path_display;
+    GFile    *file;
+    gboolean  is_uri;
+    gchar    *path;
+    gchar    *path_display;
 };
 
 /*****************************************************************************/
@@ -41,36 +41,24 @@ struct _QmiFilePrivate {
 GFile *
 qmi_file_get_file (QmiFile *self)
 {
-    if (!self)
-        return NULL;
-
     return g_object_ref (self->priv->file);
 }
 
 GFile *
 qmi_file_peek_file (QmiFile *self)
 {
-    if (!self)
-        return NULL;
-
     return self->priv->file;
 }
 
 const gchar *
 qmi_file_get_path (QmiFile *self)
 {
-    if (!self)
-        return NULL;
-
     return self->priv->path;
 }
 
 const gchar *
 qmi_file_get_path_display (QmiFile *self)
 {
-    if (!self)
-        return NULL;
-
     return self->priv->path_display;
 }
 
@@ -85,9 +73,9 @@ qmi_file_check_type_finish (QmiFile       *self,
 }
 
 static void
-query_info_async_ready (GFile *file,
+query_info_async_ready (GFile        *file,
                         GAsyncResult *res,
-                        GTask *task)
+                        GTask        *task)
 {
     GError *error = NULL;
     GFileInfo *info;
@@ -156,10 +144,9 @@ QmiFile *
 qmi_file_new (GFile *file)
 {
     QmiFile *self;
-    gchar *path;
+    gchar   *path;
 
-    if (!file)
-        return NULL;
+    g_assert (G_IS_FILE (file));
 
     self = g_object_new (QMI_TYPE_FILE, NULL);
     self->priv->file = g_object_ref (file);
