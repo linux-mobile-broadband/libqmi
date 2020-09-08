@@ -2539,31 +2539,29 @@ static QmiDevice *
 common_device_new_finish (GAsyncResult  *res,
                           GError      **error)
 {
-    GObject *ret;
-    GObject *source_object;
+    g_autoptr(GObject) source_object = NULL;
 
     source_object = g_async_result_get_source_object (res);
-    ret = g_async_initable_new_finish (G_ASYNC_INITABLE (source_object), res, error);
-    g_object_unref (source_object);
-
-    return (ret ? QMI_DEVICE (ret) : NULL);
+    return QMI_DEVICE (g_async_initable_new_finish (G_ASYNC_INITABLE (source_object), res, error));
 }
 
 #if QMI_QRTR_SUPPORTED
 
 QmiDevice *
-qmi_device_new_from_node_finish (GAsyncResult *res,
-                                 GError **error)
+qmi_device_new_from_node_finish (GAsyncResult  *res,
+                                 GError       **error)
 {
     return common_device_new_finish (res, error);
 }
 
 void
-qmi_device_new_from_node (QrtrNode *node,
-                          GCancellable *cancellable,
-                          GAsyncReadyCallback callback,
-                          gpointer user_data)
+qmi_device_new_from_node (QrtrNode            *node,
+                          GCancellable        *cancellable,
+                          GAsyncReadyCallback  callback,
+                          gpointer             user_data)
 {
+    g_return_if_fail (QRTR_IS_NODE (node));
+
     g_async_initable_new_async (QMI_TYPE_DEVICE,
                                 G_PRIORITY_DEFAULT,
                                 cancellable,
@@ -2591,18 +2589,20 @@ qmi_device_peek_node (QmiDevice *self)
 #endif
 
 QmiDevice *
-qmi_device_new_finish (GAsyncResult *res,
-                       GError **error)
+qmi_device_new_finish (GAsyncResult  *res,
+                       GError       **error)
 {
     return common_device_new_finish (res, error);
 }
 
 void
-qmi_device_new (GFile *file,
-                GCancellable *cancellable,
-                GAsyncReadyCallback callback,
-                gpointer user_data)
+qmi_device_new (GFile               *file,
+                GCancellable        *cancellable,
+                GAsyncReadyCallback  callback,
+                gpointer             user_data)
 {
+    g_return_if_fail (G_IS_FILE (file));
+
     g_async_initable_new_async (QMI_TYPE_DEVICE,
                                 G_PRIORITY_DEFAULT,
                                 cancellable,
@@ -2742,24 +2742,22 @@ get_file_for_node (QrtrNode *node)
 #endif
 
 static void
-set_property (GObject *object,
-              guint prop_id,
+set_property (GObject      *object,
+              guint         prop_id,
               const GValue *value,
-              GParamSpec *pspec)
+              GParamSpec   *pspec)
 {
     QmiDevice *self = QMI_DEVICE (object);
 
     switch (prop_id) {
-    case PROP_FILE:
-#if QMI_QRTR_SUPPORTED
-        /* Ensure that we only set one of FILE or NODE. */
-        if (!g_value_get_object (value))
-            break;
-        g_assert (self->priv->node == NULL);
-#endif
-        g_assert (self->priv->file == NULL);
-        self->priv->file = qmi_file_new (g_value_get_object (value));
+    case PROP_FILE: {
+        GFile *file;
+
+        file = g_value_get_object (value);
+        g_assert (!self->priv->file);
+        self->priv->file = file ? qmi_file_new (file) : NULL;
         break;
+    }
     case PROP_NO_FILE_CHECK:
         self->priv->no_file_check = g_value_get_boolean (value);
         break;
@@ -2769,13 +2767,12 @@ set_property (GObject *object,
         break;
 #if QMI_QRTR_SUPPORTED
     case PROP_NODE:
-        /* Ensure that we only set one of FILE or NODE. */
-        if (!g_value_get_object (value))
-            break;
-        g_assert (self->priv->file == NULL);
-        g_assert (self->priv->node == NULL);
+        g_assert (!self->priv->node);
         self->priv->node = g_value_dup_object (value);
-        self->priv->file = get_file_for_node (self->priv->node);
+        if (self->priv->node) {
+            g_assert (!self->priv->file);
+            self->priv->file = get_file_for_node (self->priv->node);
+        }
         break;
 #endif
     default:
@@ -2785,15 +2782,16 @@ set_property (GObject *object,
 }
 
 static void
-get_property (GObject *object,
-              guint prop_id,
-              GValue *value,
+get_property (GObject    *object,
+              guint       prop_id,
+              GValue     *value,
               GParamSpec *pspec)
 {
     QmiDevice *self = QMI_DEVICE (object);
 
     switch (prop_id) {
     case PROP_FILE:
+        g_assert (QMI_IS_FILE (self->priv->file));
         g_value_set_object (value, qmi_file_get_file (self->priv->file));
         break;
     case PROP_WWAN_IFACE:
