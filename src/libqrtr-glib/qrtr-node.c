@@ -280,14 +280,19 @@ qrtr_node_lookup_port (QrtrNode *node,
 {
     struct ListHolder *service_instances;
     struct QrtrServiceInfo *info;
+    GList *list;
 
     service_instances = g_hash_table_lookup (node->priv->service_index,
                                              GUINT_TO_POINTER (service));
     if (!service_instances)
         return -1;
 
-    info = g_list_last (service_instances->list)->data;
-    return info->port;
+    list = g_list_last (service_instances->list);
+    if (!list)
+        return -1;
+
+    info = list->data;
+    return (info) ? (gint32)info->port : -1;
 }
 
 gint32
