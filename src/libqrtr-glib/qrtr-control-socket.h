@@ -83,6 +83,20 @@ GType qrtr_control_socket_get_type (void);
 #define QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED "qrtr-node-removed"
 
 /**
+ * QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_ADDED:
+ *
+ * Symbol defining the #QrtrControlSocket::qrtr-service-added signal.
+ */
+#define QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_ADDED   "qrtr-service-added"
+
+/**
+ * QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_REMOVED:
+ *
+ * Symbol defining the #QrtrControlSocket::qrtr-service-removed signal.
+ */
+#define QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_REMOVED "qrtr-service-removed"
+
+/**
  * qrtr_control_socket_new:
  * @cancellable: optional #GCancellable object, #NULL to ignore.
  * @error: Return location for error or %NULL.

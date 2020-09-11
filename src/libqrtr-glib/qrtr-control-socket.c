@@ -42,6 +42,8 @@ G_DEFINE_TYPE_EXTENDED (QrtrControlSocket, qrtr_control_socket, G_TYPE_OBJECT, 0
 enum {
     SIGNAL_NODE_ADDED,
     SIGNAL_NODE_REMOVED,
+    SIGNAL_SERVICE_ADDED,
+    SIGNAL_SERVICE_REMOVED,
     SIGNAL_LAST
 };
 
@@ -77,6 +79,7 @@ add_service_info (QrtrControlSocket *self,
     }
 
     __qrtr_node_add_service_info (node, service, port, version, instance);
+    g_signal_emit (self, signals[SIGNAL_SERVICE_ADDED], 0, node_id, service);
 }
 
 static void
@@ -96,6 +99,7 @@ remove_service_info (QrtrControlSocket *self,
     }
 
     __qrtr_node_remove_service_info (node, service, port, version, instance);
+    g_signal_emit (self, signals[SIGNAL_SERVICE_REMOVED], 0, node_id, service);
     if (!qrtr_node_has_services (node)) {
         g_debug ("[qrtr] removing node %u", node_id);
         g_signal_emit (self, signals[SIGNAL_NODE_REMOVED], 0, node_id);
@@ -379,5 +383,49 @@ qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
                       NULL,
                       G_TYPE_NONE,
                       1,
+                      G_TYPE_UINT);
+
+    /**
+     * QrtrControlSocket::qrtr-service-added:
+     * @self: the #QrtrControlSocket
+     * @node: the node ID where service is added
+     * @service: the service ID of the service that has been added
+     *
+     * The ::qrtr-service-added signal is emitted when a new service registers
+     * on the QRTR bus.
+     */
+    signals[SIGNAL_SERVICE_ADDED] =
+        g_signal_new (QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_ADDED,
+                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
+                      G_SIGNAL_RUN_LAST,
+                      0,
+                      NULL,
+                      NULL,
+                      NULL,
+                      G_TYPE_NONE,
+                      2,
+                      G_TYPE_UINT,
+                      G_TYPE_UINT);
+
+    /**
+     * QrtrControlSocket::qrtr-service-removed:
+     * @self: the #QrtrControlSocket
+     * @node: the node ID where service is removed
+     * @service: the service ID of the service that was removed
+     *
+     * The ::qrtr-service-removed signal is emitted when a service deregisters
+     * from the QRTR bus.
+     */
+    signals[SIGNAL_SERVICE_REMOVED] =
+        g_signal_new (QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_REMOVED,
+                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
+                      G_SIGNAL_RUN_LAST,
+                      0,
+                      NULL,
+                      NULL,
+                      NULL,
+                      G_TYPE_NONE,
+                      2,
+                      G_TYPE_UINT,
                       G_TYPE_UINT);
 }
