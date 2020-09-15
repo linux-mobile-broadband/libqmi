@@ -613,9 +613,9 @@ test_generated_nas_network_scan (TestFixture *fixture)
 #if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
 
 static void
-nas_get_cell_location_info_ready (QmiClientNas *client,
-                                  GAsyncResult *res,
-                                  TestFixture  *fixture)
+nas_get_cell_location_info_1_ready (QmiClientNas *client,
+                                    GAsyncResult *res,
+                                    TestFixture  *fixture)
 {
     QmiMessageNasGetCellLocationInfoOutput *output;
     GError *error = NULL;
@@ -635,7 +635,7 @@ nas_get_cell_location_info_ready (QmiClientNas *client,
 }
 
 static void
-test_generated_nas_get_cell_location_info (TestFixture *fixture)
+test_generated_nas_get_cell_location_info_1 (TestFixture *fixture)
 {
     guint8 expected[] = {
         0x01,
@@ -663,7 +663,57 @@ test_generated_nas_get_cell_location_info (TestFixture *fixture)
                                    fixture->service_info[QMI_SERVICE_NAS].transaction_id++);
 
     qmi_client_nas_get_cell_location_info (QMI_CLIENT_NAS (fixture->service_info[QMI_SERVICE_NAS].client), NULL, 3, NULL,
-                                           (GAsyncReadyCallback) nas_get_cell_location_info_ready,
+                                           (GAsyncReadyCallback) nas_get_cell_location_info_1_ready,
+                                           fixture);
+
+    test_fixture_loop_run (fixture);
+}
+
+static void
+nas_get_cell_location_info_invalid_ready (QmiClientNas *client,
+                                          GAsyncResult *res,
+                                          TestFixture  *fixture)
+{
+    QmiMessageNasGetCellLocationInfoOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_nas_get_cell_location_info_finish (client, res, &error);
+    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_UNEXPECTED_MESSAGE);
+    g_assert (!output);
+
+    test_fixture_loop_stop (fixture);
+}
+
+static void
+test_generated_nas_get_cell_location_info_invalid (TestFixture *fixture)
+{
+    guint8 expected[] = {
+        0x01,
+        0x0C, 0x00, 0x00, 0x03, 0x01,
+        0x00, 0x01, 0x00, 0x43, 0x00, 0x00, 0x00
+    };
+    guint8 response[] = {
+        0x01,
+        0x53, 0x00, 0x80, 0x03, 0x01,
+        0x02, 0x01, 0x00, 0x44, 0x00, 0x47, 0x00, 0x02, /* command id set to 0x0044 instead of 0x0043 */
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x3D,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF,
+        0xFF, 0x28, 0x00, 0x03, 0x7D, 0x6F, 0x00, 0x00,
+        0x32, 0xF4, 0x51, 0xB3, 0x00, 0x4D, 0x00, 0x11,
+        0x2A, 0x00, 0x8A, 0x3C, 0x00, 0x00, 0x32, 0xF4,
+        0x51, 0xB3, 0x00, 0x63, 0x00, 0x30, 0x14, 0x00,
+        0x89, 0x3C, 0x00, 0x00, 0x32, 0xF4, 0x51, 0xB3,
+        0x00, 0x59, 0x00, 0x11, 0x0D, 0x00
+    };
+
+    test_port_context_set_command (fixture->ctx,
+                                   expected, G_N_ELEMENTS (expected),
+                                   response, G_N_ELEMENTS (response),
+                                   fixture->service_info[QMI_SERVICE_NAS].transaction_id++);
+
+    qmi_client_nas_get_cell_location_info (QMI_CLIENT_NAS (fixture->service_info[QMI_SERVICE_NAS].client), NULL, 3, NULL,
+                                           (GAsyncReadyCallback) nas_get_cell_location_info_invalid_ready,
                                            fixture);
 
     test_fixture_loop_run (fixture);
@@ -919,62 +969,6 @@ test_generated_nas_get_system_info (TestFixture *fixture)
 
 /*****************************************************************************/
 
-#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
-
-static void
-nas_get_cell_location_info_invalid_response_ready (QmiClientNas *client,
-                                                   GAsyncResult *res,
-                                                   TestFixture  *fixture)
-{
-    QmiMessageNasGetCellLocationInfoOutput *output;
-    GError *error = NULL;
-
-    output = qmi_client_nas_get_cell_location_info_finish (client, res, &error);
-    g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_UNEXPECTED_MESSAGE);
-    g_assert (!output);
-
-    test_fixture_loop_stop (fixture);
-}
-
-static void
-test_generated_nas_get_cell_location_info_invalid_response (TestFixture *fixture)
-{
-    guint8 expected[] = {
-        0x01,
-        0x0C, 0x00, 0x00, 0x03, 0x01,
-        0x00, 0x01, 0x00, 0x43, 0x00, 0x00, 0x00
-    };
-    guint8 response[] = {
-        0x01,
-        0x53, 0x00, 0x80, 0x03, 0x01,
-        0x02, 0x01, 0x00, 0x44, 0x00, 0x47, 0x00, 0x02, /* command id set to 0x0044 instead of 0x0043 */
-        0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x3D,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF,
-        0xFF, 0x28, 0x00, 0x03, 0x7D, 0x6F, 0x00, 0x00,
-        0x32, 0xF4, 0x51, 0xB3, 0x00, 0x4D, 0x00, 0x11,
-        0x2A, 0x00, 0x8A, 0x3C, 0x00, 0x00, 0x32, 0xF4,
-        0x51, 0xB3, 0x00, 0x63, 0x00, 0x30, 0x14, 0x00,
-        0x89, 0x3C, 0x00, 0x00, 0x32, 0xF4, 0x51, 0xB3,
-        0x00, 0x59, 0x00, 0x11, 0x0D, 0x00
-    };
-
-    test_port_context_set_command (fixture->ctx,
-                                   expected, G_N_ELEMENTS (expected),
-                                   response, G_N_ELEMENTS (response),
-                                   fixture->service_info[QMI_SERVICE_NAS].transaction_id++);
-
-    qmi_client_nas_get_cell_location_info (QMI_CLIENT_NAS (fixture->service_info[QMI_SERVICE_NAS].client), NULL, 3, NULL,
-                                           (GAsyncReadyCallback) nas_get_cell_location_info_invalid_response_ready,
-                                           fixture);
-
-    test_fixture_loop_run (fixture);
-}
-
-#endif
-
-/*****************************************************************************/
-
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -999,17 +993,14 @@ int main (int argc, char **argv)
     TEST_ADD ("/libqmi-glib/generated/nas/network-scan", test_generated_nas_network_scan);
 #endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
-    TEST_ADD ("/libqmi-glib/generated/nas/get-cell-location-info", test_generated_nas_get_cell_location_info);
+    TEST_ADD ("/libqmi-glib/generated/nas/get-cell-location-info/1",       test_generated_nas_get_cell_location_info_1);
+    TEST_ADD ("/libqmi-glib/generated/nas/get-cell-location-info/invalid", test_generated_nas_get_cell_location_info_invalid);
 #endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_SERVING_SYSTEM
     TEST_ADD ("/libqmi-glib/generated/nas/get-serving-system", test_generated_nas_get_serving_system);
 #endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO
     TEST_ADD ("/libqmi-glib/generated/nas/get-system-info", test_generated_nas_get_system_info);
-#endif
-
-#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
-    TEST_ADD ("/libqmi-glib/generated/nas/invalid/get-cell-location-info", test_generated_nas_get_cell_location_info_invalid_response);
 #endif
 
     return g_test_run ();
