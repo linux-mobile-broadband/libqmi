@@ -2133,6 +2133,155 @@ gboolean qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
 
 #endif /* HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK */
 
+#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
+
+/**
+ * QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement:
+ * @cell_id: a #guint32.
+ * @plmn: a string of exactly 3 characters.
+ * @lac: a #guint16.
+ * @geran_absolute_rf_channel_number: a #guint16.
+ * @base_station_identity_code: a #guint8.
+ * @rx_level: a #guint16.
+ *
+ * A QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement struct.
+ *
+ * Since: 1.10
+ * Deprecated: 1.28.
+ */
+G_DEPRECATED
+typedef struct _QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement {
+    guint32 cell_id;
+    gchar *plmn;
+    guint16 lac;
+    guint16 geran_absolute_rf_channel_number;
+    guint8 base_station_identity_code;
+    guint16 rx_level;
+} QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement;
+
+typedef QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement;
+
+/**
+ * qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info:
+ * @self: a #QmiMessageNasGetCellLocationInfoOutput.
+ * @value_intrafrequency_lte_info_ue_in_idle: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_intrafrequency_lte_info_plmn: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_intrafrequency_lte_info_tracking_area_code: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_intrafrequency_lte_info_global_cell_id: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_intrafrequency_lte_info_eutra_absolute_rf_channel_number: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_intrafrequency_lte_info_serving_cell_id: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_intrafrequency_lte_info_cell_reselection_priority: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_intrafrequency_lte_info_s_non_intra_search_threshold: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_intrafrequency_lte_info_serving_cell_low_threshold: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_intrafrequency_lte_info_s_intra_search_threshold: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_intrafrequency_lte_info_cell: (out)(element-type QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement)(transfer none): a placeholder for the output #GArray of #QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement elements, or %NULL if not required. Do not free it, it is owned by @self.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Intrafrequency LTE Info' field from @self.
+ *
+ * This method is deprecated and returns an empty
+ * @value_intrafrequency_lte_info_plmn string.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.10
+ * Deprecated: 1.28. Use qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2)
+gboolean qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info (
+    QmiMessageNasGetCellLocationInfoOutput *self,
+    gboolean *value_intrafrequency_lte_info_ue_in_idle,
+    const gchar **value_intrafrequency_lte_info_plmn,
+    guint16 *value_intrafrequency_lte_info_tracking_area_code,
+    guint32 *value_intrafrequency_lte_info_global_cell_id,
+    guint16 *value_intrafrequency_lte_info_eutra_absolute_rf_channel_number,
+    guint16 *value_intrafrequency_lte_info_serving_cell_id,
+    guint8 *value_intrafrequency_lte_info_cell_reselection_priority,
+    guint8 *value_intrafrequency_lte_info_s_non_intra_search_threshold,
+    guint8 *value_intrafrequency_lte_info_serving_cell_low_threshold,
+    guint8 *value_intrafrequency_lte_info_s_intra_search_threshold,
+    GArray **value_intrafrequency_lte_info_cell,
+    GError **error);
+
+typedef QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2CellElement QmiMessageNasGetCellLocationInfoOutputUmtsInfoCellElement;
+typedef QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2NeighboringGeranElement QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringGeranElement;
+
+/**
+ * qmi_message_nas_get_cell_location_info_output_get_umts_info:
+ * @self: a #QmiMessageNasGetCellLocationInfoOutput.
+ * @value_umts_info_cell_id: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_umts_info_plmn: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_umts_info_lac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_umts_info_utra_absolute_rf_channel_number: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_umts_info_primary_scrambling_code: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_umts_info_rscp: (out): a placeholder for the output #gint16, or %NULL if not required.
+ * @value_umts_info_ecio: (out): a placeholder for the output #gint16, or %NULL if not required.
+ * @value_umts_info_cell: (out)(element-type QmiMessageNasGetCellLocationInfoOutputUmtsInfoCellElement)(transfer none): a placeholder for the output #GArray of #QmiMessageNasGetCellLocationInfoOutputUmtsInfoCellElement elements, or %NULL if not required. Do not free it, it is owned by @self.
+ * @value_umts_info_neighboring_geran: (out)(element-type QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringGeranElement)(transfer none): a placeholder for the output #GArray of #QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringGeranElement elements, or %NULL if not required. Do not free it, it is owned by @self.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'UMTS Info' field from @self.
+ *
+ * This method is deprecated and returns an empty @value_umts_info_plmn
+ * string.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.10
+ * Deprecated: 1.28. Use qmi_message_nas_get_cell_location_info_output_get_umts_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_nas_get_cell_location_info_output_get_umts_info_v2)
+gboolean qmi_message_nas_get_cell_location_info_output_get_umts_info (
+    QmiMessageNasGetCellLocationInfoOutput *self,
+    guint16 *value_umts_info_cell_id,
+    const gchar **value_umts_info_plmn,
+    guint16 *value_umts_info_lac,
+    guint16 *value_umts_info_utra_absolute_rf_channel_number,
+    guint16 *value_umts_info_primary_scrambling_code,
+    gint16 *value_umts_info_rscp,
+    gint16 *value_umts_info_ecio,
+    GArray **value_umts_info_cell,
+    GArray **value_umts_info_neighboring_geran,
+    GError **error);
+
+/**
+ * qmi_message_nas_get_cell_location_info_output_get_geran_info:
+ * @self: a #QmiMessageNasGetCellLocationInfoOutput.
+ * @value_geran_info_cell_id: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_geran_info_plmn: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_geran_info_lac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_geran_info_geran_absolute_rf_channel_number: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_geran_info_base_station_identity_code: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_geran_info_timing_advance: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_geran_info_rx_level: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_geran_info_cell: (out)(element-type QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement)(transfer none): a placeholder for the output #GArray of #QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement elements, or %NULL if not required. Do not free it, it is owned by @self.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'GERAN Info' field from @self.
+ *
+ * This method is deprecated and returns an empty @value_geran_info_plmn
+ * string and an empty @value_geran_info_cell array.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.10
+ * Deprecated: 1.28. Use qmi_message_nas_get_cell_location_info_output_get_geran_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_nas_get_cell_location_info_output_get_geran_info_v2)
+gboolean qmi_message_nas_get_cell_location_info_output_get_geran_info (
+    QmiMessageNasGetCellLocationInfoOutput *self,
+    guint32 *value_geran_info_cell_id,
+    const gchar **value_geran_info_plmn,
+    guint16 *value_geran_info_lac,
+    guint16 *value_geran_info_geran_absolute_rf_channel_number,
+    guint8 *value_geran_info_base_station_identity_code,
+    guint32 *value_geran_info_timing_advance,
+    guint16 *value_geran_info_rx_level,
+    GArray **value_geran_info_cell,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO */
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */

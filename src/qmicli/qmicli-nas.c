@@ -2607,19 +2607,22 @@ network_scan_ready (QmiClientNas *client,
 #if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
 
 static gchar *
-str_from_bcd_plmn (const gchar *bcd)
+str_from_bcd_plmn (GArray *bcd)
 {
     static const gchar bcd_chars[] = "0123456789*#abc\0\0";
     gchar *str;
     guint i;
     guint j;
 
-    str = g_malloc (7);
-    for (i = 0, j = 0 ; i < 3; i++) {
-        str[j] = bcd_chars[bcd[i] & 0xF];
+    if (!bcd || !bcd->len)
+        return NULL;
+
+    str = g_malloc (1 + (bcd->len * 2));
+    for (i = 0, j = 0 ; i < bcd->len; i++) {
+        str[j] = bcd_chars[g_array_index (bcd, guint8, i) & 0xF];
         if (str[j])
             j++;
-        str[j] = bcd_chars[(bcd[i] >> 4) & 0xF];
+        str[j] = bcd_chars[(g_array_index (bcd, guint8, i) >> 4) & 0xF];
         if (str[j])
             j++;
     }
@@ -2637,7 +2640,7 @@ get_cell_location_info_ready (QmiClientNas *client,
     GArray *array;
     GArray *array2;
 
-    const gchar *operator;
+    GArray *operator;
 
     guint32 cell_id;
     guint16 lac;
@@ -2689,7 +2692,7 @@ get_cell_location_info_ready (QmiClientNas *client,
              qmi_device_get_path_display (ctx->device));
 
     array = NULL;
-    if (qmi_message_nas_get_cell_location_info_output_get_geran_info (
+    if (qmi_message_nas_get_cell_location_info_output_get_geran_info_v2 (
             output,
             &cell_id,
             &operator,
@@ -2742,9 +2745,9 @@ get_cell_location_info_ready (QmiClientNas *client,
 
 
         for (i = 0; i < array->len; i++) {
-            QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement *element;
+            QmiMessageNasGetCellLocationInfoOutputGeranInfoV2CellElement *element;
 
-            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement, i);
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputGeranInfoV2CellElement, i);
 
             g_print ("\tCell [%u]:\n", i);
             if (element->cell_id == 0xFFFFFFFF)
@@ -2783,7 +2786,7 @@ get_cell_location_info_ready (QmiClientNas *client,
 
     array = NULL;
     array2 = NULL;
-    if (qmi_message_nas_get_cell_location_info_output_get_umts_info (
+    if (qmi_message_nas_get_cell_location_info_output_get_umts_info_v2 (
             output,
             &cell_id_16,
             &operator,
@@ -2884,7 +2887,7 @@ get_cell_location_info_ready (QmiClientNas *client,
     }
 
     array = NULL;
-    if (qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info (
+    if (qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2 (
             output,
             &ue_in_idle,
             &operator,
