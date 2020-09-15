@@ -1142,4 +1142,110 @@ qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
 
 #endif /* HAVE_QMI_MESSAGE_NAS_GET_HOME_NETWORK */
 
+#if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
+
+/* This PLMN string is returned because it's a 3-char long valid UTF-8. */
+static const gchar invalid_plmn_str[] = "   ";
+
+gboolean
+qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info (
+    QmiMessageNasGetCellLocationInfoOutput *self,
+    gboolean *value_intrafrequency_lte_info_ue_in_idle,
+    const gchar **value_intrafrequency_lte_info_plmn,
+    guint16 *value_intrafrequency_lte_info_tracking_area_code,
+    guint32 *value_intrafrequency_lte_info_global_cell_id,
+    guint16 *value_intrafrequency_lte_info_eutra_absolute_rf_channel_number,
+    guint16 *value_intrafrequency_lte_info_serving_cell_id,
+    guint8 *value_intrafrequency_lte_info_cell_reselection_priority,
+    guint8 *value_intrafrequency_lte_info_s_non_intra_search_threshold,
+    guint8 *value_intrafrequency_lte_info_serving_cell_low_threshold,
+    guint8 *value_intrafrequency_lte_info_s_intra_search_threshold,
+    GArray **value_intrafrequency_lte_info_cell,
+    GError **error)
+{
+    if (!qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2 (
+             self,
+             value_intrafrequency_lte_info_ue_in_idle,
+             NULL,
+             value_intrafrequency_lte_info_tracking_area_code,
+             value_intrafrequency_lte_info_global_cell_id,
+             value_intrafrequency_lte_info_eutra_absolute_rf_channel_number,
+             value_intrafrequency_lte_info_serving_cell_id,
+             value_intrafrequency_lte_info_cell_reselection_priority,
+             value_intrafrequency_lte_info_s_non_intra_search_threshold,
+             value_intrafrequency_lte_info_serving_cell_low_threshold,
+             value_intrafrequency_lte_info_s_intra_search_threshold,
+             value_intrafrequency_lte_info_cell,
+             error))
+      return FALSE;
+
+    *value_intrafrequency_lte_info_plmn = invalid_plmn_str;
+    return TRUE;
+}
+
+gboolean
+qmi_message_nas_get_cell_location_info_output_get_umts_info (
+    QmiMessageNasGetCellLocationInfoOutput *self,
+    guint16 *value_umts_info_cell_id,
+    const gchar **value_umts_info_plmn,
+    guint16 *value_umts_info_lac,
+    guint16 *value_umts_info_utra_absolute_rf_channel_number,
+    guint16 *value_umts_info_primary_scrambling_code,
+    gint16 *value_umts_info_rscp,
+    gint16 *value_umts_info_ecio,
+    GArray **value_umts_info_cell,
+    GArray **value_umts_info_neighboring_geran,
+    GError **error)
+{
+    if (!qmi_message_nas_get_cell_location_info_output_get_umts_info_v2 (
+           self,
+           value_umts_info_cell_id,
+           NULL,
+           value_umts_info_lac,
+           value_umts_info_utra_absolute_rf_channel_number,
+           value_umts_info_primary_scrambling_code,
+           value_umts_info_rscp,
+           value_umts_info_ecio,
+           value_umts_info_cell,
+           value_umts_info_neighboring_geran,
+           error))
+        return FALSE;
+
+    *value_umts_info_plmn = invalid_plmn_str;
+    return TRUE;
+}
+
+gboolean
+qmi_message_nas_get_cell_location_info_output_get_geran_info (
+    QmiMessageNasGetCellLocationInfoOutput *self,
+    guint32 *value_geran_info_cell_id,
+    const gchar **value_geran_info_plmn,
+    guint16 *value_geran_info_lac,
+    guint16 *value_geran_info_geran_absolute_rf_channel_number,
+    guint8 *value_geran_info_base_station_identity_code,
+    guint32 *value_geran_info_timing_advance,
+    guint16 *value_geran_info_rx_level,
+    GArray **value_geran_info_cell,
+    GError **error)
+{
+    if (!qmi_message_nas_get_cell_location_info_output_get_geran_info_v2 (
+            self,
+            value_geran_info_cell_id,
+            NULL,
+            value_geran_info_lac,
+            value_geran_info_geran_absolute_rf_channel_number,
+            value_geran_info_base_station_identity_code,
+            value_geran_info_timing_advance,
+            value_geran_info_rx_level,
+            NULL,
+            error))
+        return FALSE;
+
+    *value_geran_info_plmn = invalid_plmn_str;
+    *value_geran_info_cell = NULL;
+    return TRUE;
+}
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO */
+
 #endif /* QMI_DISABLE_DEPRECATED */

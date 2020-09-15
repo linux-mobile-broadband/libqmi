@@ -670,6 +670,108 @@ test_generated_nas_get_cell_location_info_1 (TestFixture *fixture)
 }
 
 static void
+nas_get_cell_location_info_2_ready (QmiClientNas *client,
+                                    GAsyncResult *res,
+                                    TestFixture  *fixture)
+{
+    QmiMessageNasGetCellLocationInfoOutput *output;
+    GError *error = NULL;
+    gboolean st;
+
+    output = qmi_client_nas_get_cell_location_info_finish (client, res, &error);
+    g_assert_no_error (error);
+    g_assert (output);
+
+    st = qmi_message_nas_get_cell_location_info_output_get_result (output, &error);
+    g_assert_no_error (error);
+    g_assert (st);
+
+    {
+        gboolean  value_intrafrequency_lte_info_ue_in_idle = FALSE;
+        GArray   *value_intrafrequency_lte_info_plmn = NULL;
+        guint16   value_intrafrequency_lte_info_tracking_area_code = 0;
+        guint32   value_intrafrequency_lte_info_global_cell_id = 0;
+        guint16   value_intrafrequency_lte_info_eutra_absolute_rf_channel_number = 0;
+        guint16   value_intrafrequency_lte_info_serving_cell_id = 0;
+        guint8    value_intrafrequency_lte_info_cell_reselection_priority = 0;
+        guint8    value_intrafrequency_lte_info_s_non_intra_search_threshold = 0;
+        guint8    value_intrafrequency_lte_info_serving_cell_low_threshold = 0;
+        guint8    value_intrafrequency_lte_info_s_intra_search_threshold = 0;
+        GArray   *value_intrafrequency_lte_info_cell = NULL;
+
+        st = qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2 (output,
+                                                                                           &value_intrafrequency_lte_info_ue_in_idle,
+                                                                                           &value_intrafrequency_lte_info_plmn,
+                                                                                           &value_intrafrequency_lte_info_tracking_area_code,
+                                                                                           &value_intrafrequency_lte_info_global_cell_id,
+                                                                                           &value_intrafrequency_lte_info_eutra_absolute_rf_channel_number,
+                                                                                           &value_intrafrequency_lte_info_serving_cell_id,
+                                                                                           &value_intrafrequency_lte_info_cell_reselection_priority,
+                                                                                           &value_intrafrequency_lte_info_s_non_intra_search_threshold,
+                                                                                           &value_intrafrequency_lte_info_serving_cell_low_threshold,
+                                                                                           &value_intrafrequency_lte_info_s_intra_search_threshold,
+                                                                                           &value_intrafrequency_lte_info_cell,
+                                                                                           &error);
+        g_assert_no_error (error);
+        g_assert (st);
+    }
+
+    qmi_message_nas_get_cell_location_info_output_unref (output);
+
+    test_fixture_loop_stop (fixture);
+}
+
+static void
+test_generated_nas_get_cell_location_info_2 (TestFixture *fixture)
+{
+    guint8 expected[] = {
+        0x01,
+        0x0C, 0x00, 0x00, 0x03,
+        0x01, 0x00, 0x01, 0x00, 0x43, 0x00, 0x00, 0x00,
+    };
+    guint8 response[] = {
+        0x01,
+        0x67, 0x00, 0x80, 0x03, 0x01,
+        0x02, 0x01, 0x00, 0x43, 0x00, 0x5B, 0x00, 0x02,
+        0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x13, 0x1D, 0x00,
+            0x01, 0x99, 0xF9, 0x04, 0x99, 0x00, 0x01,
+            0xC2, 0x01, 0x00, 0x7E, 0xA9, 0x00, 0x00, 0x01,
+            0x3E, 0x28, 0x3E, 0x01, 0x00, 0x00, 0xBD, 0xFF,
+            0x19, 0xFC, 0x23, 0xFD, 0x1E, 0x00,
+        0x14, 0x02, 0x00,
+            0x01, 0x00,
+        0x15, 0x02, 0x00,
+            0x01, 0x00,
+        0x16, 0x02, 0x00,
+            0x01, 0x00,
+        0x1E, 0x04, 0x00,
+            0xFF, 0xFF, 0xFF, 0xFF,
+        0x26, 0x02, 0x00,
+            0x46, 0x00,
+        0x27, 0x04, 0x00,
+            0x7E, 0xA9, 0x00, 0x00,
+        0x28, 0x01, 0x00,
+            0x00,
+        0x2A, 0x04, 0x00,
+            0x03, 0x00, 0x00, 0x00,
+        0x2C, 0x04, 0x00,
+            0x00, 0x00, 0x00, 0x00
+    };
+
+    test_port_context_set_command (fixture->ctx,
+                                   expected, G_N_ELEMENTS (expected),
+                                   response, G_N_ELEMENTS (response),
+                                   fixture->service_info[QMI_SERVICE_NAS].transaction_id++);
+
+    qmi_client_nas_get_cell_location_info (QMI_CLIENT_NAS (fixture->service_info[QMI_SERVICE_NAS].client), NULL, 3, NULL,
+                                           (GAsyncReadyCallback) nas_get_cell_location_info_2_ready,
+                                           fixture);
+
+    test_fixture_loop_run (fixture);
+}
+
+static void
 nas_get_cell_location_info_invalid_ready (QmiClientNas *client,
                                           GAsyncResult *res,
                                           TestFixture  *fixture)
@@ -994,6 +1096,7 @@ int main (int argc, char **argv)
 #endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
     TEST_ADD ("/libqmi-glib/generated/nas/get-cell-location-info/1",       test_generated_nas_get_cell_location_info_1);
+    TEST_ADD ("/libqmi-glib/generated/nas/get-cell-location-info/2",       test_generated_nas_get_cell_location_info_2);
     TEST_ADD ("/libqmi-glib/generated/nas/get-cell-location-info/invalid", test_generated_nas_get_cell_location_info_invalid);
 #endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_SERVING_SYSTEM
