@@ -694,16 +694,19 @@ get_tx_rx_info_ready (QmiClientNas *client,
             interface == QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO ||
             interface == QMI_NAS_RADIO_INTERFACE_GSM ||
             interface == QMI_NAS_RADIO_INTERFACE_UMTS ||
-            interface == QMI_NAS_RADIO_INTERFACE_LTE)
+            interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR)
             g_print ("\tECIO: '%.1lf dB'\n", (0.1) * ((gdouble)ecio));
 
         if (interface == QMI_NAS_RADIO_INTERFACE_UMTS)
             g_print ("\tRSCP: '%.1lf dBm'\n", (0.1) * ((gdouble)rscp));
 
-        if (interface == QMI_NAS_RADIO_INTERFACE_LTE)
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR)
             g_print ("\tRSRP: '%.1lf dBm'\n", (0.1) * ((gdouble)rsrp));
 
-        if (interface == QMI_NAS_RADIO_INTERFACE_LTE) {
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR) {
             if (phase == 0xFFFFFFFF)
                 g_print ("\tPhase: 'unknown'\n");
             else
@@ -730,16 +733,19 @@ get_tx_rx_info_ready (QmiClientNas *client,
             interface == QMI_NAS_RADIO_INTERFACE_CDMA_1XEVDO ||
             interface == QMI_NAS_RADIO_INTERFACE_GSM ||
             interface == QMI_NAS_RADIO_INTERFACE_UMTS ||
-            interface == QMI_NAS_RADIO_INTERFACE_LTE)
+            interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR)
             g_print ("\tECIO: '%.1lf dB'\n", (0.1) * ((gdouble)ecio));
 
         if (interface == QMI_NAS_RADIO_INTERFACE_UMTS)
             g_print ("\tRSCP: '%.1lf dBm'\n", (0.1) * ((gdouble)rscp));
 
-        if (interface == QMI_NAS_RADIO_INTERFACE_LTE)
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR)
             g_print ("\tRSRP: '%.1lf dBm'\n", (0.1) * ((gdouble)rsrp));
 
-        if (interface == QMI_NAS_RADIO_INTERFACE_LTE) {
+        if (interface == QMI_NAS_RADIO_INTERFACE_LTE ||
+            interface == QMI_NAS_RADIO_INTERFACE_5GNR) {
             if (phase == 0xFFFFFFFF)
                 g_print ("\tPhase: 'unknown'\n");
             else
