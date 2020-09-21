@@ -383,6 +383,19 @@ gboolean mbim_device_close_force (MbimDevice  *self,
 guint32 mbim_device_get_next_transaction_id (MbimDevice *self);
 
 /**
+ * mbim_device_get_transaction_id:
+ * @self: A #MbimDevice.
+ *
+ * Acquire the transaction ID of this #MbimDevice without
+ * incrementing the internal transaction ID.
+ *
+ * Returns: the current transaction ID.
+ *
+ * Since: 1.26
+ */
+guint32 mbim_device_get_transaction_id (MbimDevice *self);
+
+/**
  * mbim_device_command:
  * @self: a #MbimDevice.
  * @message: the message to send.

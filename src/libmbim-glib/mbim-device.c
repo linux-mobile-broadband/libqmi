@@ -1768,6 +1768,16 @@ mbim_device_get_next_transaction_id (MbimDevice *self)
 
 /*****************************************************************************/
 
+guint32
+mbim_device_get_transaction_id (MbimDevice *self)
+{
+    g_return_val_if_fail (MBIM_IS_DEVICE (self), 0);
+
+    return self->priv->transaction_id;
+}
+
+/*****************************************************************************/
+
 static gboolean
 device_write (MbimDevice    *self,
               const guint8  *data,
