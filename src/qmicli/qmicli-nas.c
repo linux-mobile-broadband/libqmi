@@ -2152,6 +2152,8 @@ get_system_info_ready (QmiClientNas *client,
         QmiNasNetworkSelectionRegistrationRestriction registration_restriction;
         QmiNasLteCellAccessStatus cell_access_status;
         QmiNasLteRegistrationDomain registration_domain;
+        gboolean endc_available;
+        gboolean restrict_dcnr;
 
         if (qmi_message_nas_get_system_info_output_get_lte_service_status (
                 output,
@@ -2261,6 +2263,20 @@ get_system_info_ready (QmiClientNas *client,
                     &registration_domain,
                     NULL)) {
                 g_print ("\t\tRegistration domain: '%s'\n", qmi_nas_lte_registration_domain_get_string (registration_domain));
+            }
+
+            if (qmi_message_nas_get_system_info_output_get_eutra_with_nr5g_availability (
+                    output,
+                    &endc_available,
+                    NULL)) {
+                g_print ("\t\t5G NSA Available: '%s'\n", endc_available ? "yes" : "no");
+            }
+
+            if (qmi_message_nas_get_system_info_output_get_dcnr_restriction_info (
+                    output,
+                    &restrict_dcnr,
+                    NULL)) {
+                g_print ("\t\tDCNR Restriction: '%s'\n", restrict_dcnr ? "yes" : "no");
             }
         }
     }
@@ -2385,6 +2401,106 @@ get_system_info_ready (QmiClientNas *client,
                     NULL)) {
                 g_print ("\tSIM reject info: '%s'\n", qmi_nas_sim_reject_state_get_string (sim_reject_info));
             }
+        }
+    }
+
+    /* 5G SA */
+    {
+        QmiNasServiceStatus service_status;
+        QmiNasServiceStatus true_service_status;
+        gboolean preferred_data_path;
+        gboolean domain_valid;
+        QmiNasNetworkServiceDomain domain;
+        gboolean service_capability_valid;
+        QmiNasNetworkServiceDomain service_capability;
+        gboolean roaming_status_valid;
+        QmiNasRoamingStatus roaming_status;
+        gboolean forbidden_valid;
+        gboolean forbidden;
+        gboolean lac_valid;
+        guint16 lac;
+        gboolean cid_valid;
+        guint32 cid;
+        gboolean registration_reject_info_valid;
+        QmiNasNetworkServiceDomain registration_reject_domain;
+        guint8 registration_reject_cause;
+        gboolean network_id_valid;
+        const gchar *mcc;
+        const gchar *mnc;
+        gboolean tac_valid;
+        guint16 tac;
+
+        if (qmi_message_nas_get_system_info_output_get_nr5g_service_status_info (
+                output,
+                &service_status,
+                &true_service_status,
+                &preferred_data_path,
+                NULL)) {
+            g_print ("\t5G SA service:\n"
+                     "\t\tStatus: '%s'\n"
+                     "\t\tTrue Status: '%s'\n"
+                     "\t\tPreferred data path: '%s'\n",
+                     qmi_nas_service_status_get_string (service_status),
+                     qmi_nas_service_status_get_string (true_service_status),
+                     preferred_data_path ? "yes" : "no");
+
+            if (qmi_message_nas_get_system_info_output_get_nr5g_system_info (
+                    output,
+                    &domain_valid, &domain,
+                    &service_capability_valid, &service_capability,
+                    &roaming_status_valid, &roaming_status,
+                    &forbidden_valid, &forbidden,
+                    &lac_valid, &lac,
+                    &cid_valid, &cid,
+                    &registration_reject_info_valid,&registration_reject_domain,&registration_reject_cause,
+                    &network_id_valid, &mcc, &mnc,
+                    &tac_valid, &tac,
+                    NULL)) {
+                if (domain_valid)
+                    g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
+                if (service_capability_valid)
+                    g_print ("\t\tService capability: '%s'\n", qmi_nas_network_service_domain_get_string (service_capability));
+                if (roaming_status_valid)
+                    g_print ("\t\tRoaming status: '%s'\n", qmi_nas_roaming_status_get_string (roaming_status));
+                if (forbidden_valid)
+                    g_print ("\t\tForbidden: '%s'\n", forbidden ? "yes" : "no");
+                if (lac_valid)
+                    g_print ("\t\tLocation Area Code: '%" G_GUINT16_FORMAT"'\n", lac);
+                if (cid_valid)
+                    g_print ("\t\tCell ID: '%u'\n", cid);
+                if (registration_reject_info_valid)
+                    g_print ("\t\tRegistration reject: '%s' (%u)\n",
+                             qmi_nas_network_service_domain_get_string (registration_reject_domain),
+                             registration_reject_cause);
+                if (network_id_valid) {
+                    g_print ("\t\tMCC: '%s'\n", mcc);
+                    if ((guchar)mnc[2] == 0xFF)
+                        g_print ("\t\tMNC: '%.2s'\n", mnc);
+                    else
+                        g_print ("\t\tMNC: '%.3s'\n", mnc);
+                }
+                if (tac_valid)
+                    g_print ("\t\tTracking Area Code: '%" G_GUINT16_FORMAT"'\n", tac);
+            }
+        }
+    }
+
+    {
+        GArray *nr5g_tracking_area_code;
+
+        if (qmi_message_nas_get_system_info_output_get_nr5g_tracking_area_code (
+            output,
+            &nr5g_tracking_area_code,
+            NULL)) {
+            guint32           tac;
+
+            g_assert (nr5g_tracking_area_code->len == 3);
+            tac = ((((g_array_index (nr5g_tracking_area_code, guint8, 0) << 8) |
+                     g_array_index (nr5g_tracking_area_code, guint8, 1)) << 8) |
+                   g_array_index (nr5g_tracking_area_code, guint8, 2));
+
+            g_print ("\t5GNR Tracking Area Code: '%" G_GUINT32_FORMAT "'\n",
+                     tac);
         }
     }
 
