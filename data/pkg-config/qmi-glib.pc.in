@@ -2,6 +2,8 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
+qmi_qrtr_supported=@QMI_QRTR_SUPPORTED@
+qmi_mbim_qmux_supported=@QMI_MBIM_QMUX_SUPPORTED@
 
 Name: qmi-glib
 Description: Library to communicate with QMI-powered modems
