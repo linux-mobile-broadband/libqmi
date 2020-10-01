@@ -223,6 +223,7 @@ mbim_device_open_full_finish
 mbim_device_close
 mbim_device_close_finish
 mbim_device_close_force
+mbim_device_get_transaction_id
 mbim_device_get_next_transaction_id
 mbim_device_command
 mbim_device_command_finish

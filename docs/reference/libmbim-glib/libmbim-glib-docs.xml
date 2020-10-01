@@ -147,6 +147,10 @@
     <title>Index of new symbols in 1.24</title>
     <xi:include href="xml/api-index-1.24.xml"></xi:include>
   </chapter>
+  <chapter id="api-index-1-26" role="1.26">
+    <title>Index of new symbols in 1.26</title>
+    <xi:include href="xml/api-index-1.26.xml"></xi:include>
+  </chapter>
 
   <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
 </book>
