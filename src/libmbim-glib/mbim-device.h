@@ -391,7 +391,7 @@ guint32 mbim_device_get_next_transaction_id (MbimDevice *self);
  *
  * Returns: the current transaction ID.
  *
- * Since: 1.26
+ * Since: 1.24.4
  */
 guint32 mbim_device_get_transaction_id (MbimDevice *self);
 
