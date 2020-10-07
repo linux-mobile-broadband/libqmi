@@ -1,4 +1,18 @@
 
+Overview of changes in libqmi 1.26.6
+----------------------------------------
+
+ * libqmi-glib:
+   ** New TLV read APIs added in "NAS Get Cell Location Info" so that BCD
+      encoded PLMN strings are read as arrays instead of as UTF-8 validated
+      strings.
+   ** Allow TAB characters as printable in strings.
+
+  * qmicli: report EcIo, RSRP and phase for 5GNR in "NAS Get TX/RX Info".
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.26.4
 ----------------------------------------
 
