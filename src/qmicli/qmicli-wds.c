@@ -385,7 +385,7 @@ internal_stop_network (GCancellable *cancellable,
     g_print ("Network cancelled... releasing resources\n");
     qmi_client_wds_stop_network (ctx->client,
                                  input,
-                                 10,
+                                 120,
                                  ctx->cancellable,
                                  (GAsyncReadyCallback)stop_network_ready,
                                  NULL);
@@ -2819,7 +2819,7 @@ qmicli_wds_run (QmiDevice *device,
         g_debug ("Asynchronously starting network...");
         qmi_client_wds_start_network (ctx->client,
                                       input,
-                                      45,
+                                      180,
                                       ctx->cancellable,
                                       (GAsyncReadyCallback)start_network_ready,
                                       NULL);
