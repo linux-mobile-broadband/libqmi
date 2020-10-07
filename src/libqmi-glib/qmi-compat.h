@@ -2147,7 +2147,7 @@ gboolean qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
  * A QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement struct.
  *
  * Since: 1.10
- * Deprecated: 1.28.
+ * Deprecated: 1.26.6.
  */
 G_DEPRECATED
 typedef struct _QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement {
@@ -2185,7 +2185,7 @@ typedef QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement
  * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
  *
  * Since: 1.10
- * Deprecated: 1.28. Use qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2() instead.
+ * Deprecated: 1.26.6. Use qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2() instead.
  */
 G_DEPRECATED_FOR (qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2)
 gboolean qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info (
@@ -2228,7 +2228,7 @@ typedef QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2NeighboringGeranElement 
  * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
  *
  * Since: 1.10
- * Deprecated: 1.28. Use qmi_message_nas_get_cell_location_info_output_get_umts_info_v2() instead.
+ * Deprecated: 1.26.6. Use qmi_message_nas_get_cell_location_info_output_get_umts_info_v2() instead.
  */
 G_DEPRECATED_FOR (qmi_message_nas_get_cell_location_info_output_get_umts_info_v2)
 gboolean qmi_message_nas_get_cell_location_info_output_get_umts_info (
@@ -2265,7 +2265,7 @@ gboolean qmi_message_nas_get_cell_location_info_output_get_umts_info (
  * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
  *
  * Since: 1.10
- * Deprecated: 1.28. Use qmi_message_nas_get_cell_location_info_output_get_geran_info_v2() instead.
+ * Deprecated: 1.26.6. Use qmi_message_nas_get_cell_location_info_output_get_geran_info_v2() instead.
  */
 G_DEPRECATED_FOR (qmi_message_nas_get_cell_location_info_output_get_geran_info_v2)
 gboolean qmi_message_nas_get_cell_location_info_output_get_geran_info (
