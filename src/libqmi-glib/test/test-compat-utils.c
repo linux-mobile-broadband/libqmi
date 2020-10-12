@@ -1264,4 +1264,11 @@ int main (int argc, char **argv)
     return g_test_run ();
 }
 
+#else
+
+int main (int argc, char **argv)
+{
+    return 0;
+}
+
 #endif /* QMI_DISABLE_DEPRECATED */
