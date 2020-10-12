@@ -79,6 +79,15 @@ test-clean-distclean:
     - ./configure --prefix=/usr
     - make
 
+test-vpath:
+  stage: test
+  script:
+    - NOCONFIGURE=1 ./autogen.sh
+    - mkdir build
+    - cd build
+    - ../configure --prefix=/usr
+    - make
+
 test-default:
   stage: test
   script:
