@@ -2904,9 +2904,9 @@ get_cell_location_info_ready (QmiClientNas *client,
         g_free (plmn);
 
         for (i = 0; i < array->len; i++) {
-            QmiMessageNasGetCellLocationInfoOutputUmtsInfoCellElement *element;
+            QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2CellElement *element;
 
-            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputUmtsInfoCellElement, i);
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2CellElement, i);
             g_print ("\tCell [%u]:\n"
                      "\t\tUTRA Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n"
                      "\t\tPrimary Scrambling Code: '%" G_GUINT16_FORMAT"'\n"
@@ -2920,9 +2920,9 @@ get_cell_location_info_ready (QmiClientNas *client,
         }
 
         for (i = 0; i < array2->len; i++) {
-            QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringGeranElement *element;
+            QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2NeighboringGeranElement *element;
 
-            element = &g_array_index (array2, QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringGeranElement, i);
+            element = &g_array_index (array2, QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2NeighboringGeranElement, i);
             g_print ("\tNeighboring GERAN Cell [%u]:\n"
                      "\t\tGERAN Absolute RF Channel Number: '%" G_GUINT16_FORMAT"'\n",
                      i,
@@ -3013,9 +3013,9 @@ get_cell_location_info_ready (QmiClientNas *client,
                      s_intra_search_threshold);
 
         for (i = 0; i < array->len; i++) {
-            QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement *element;
+            QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement *element;
 
-            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement, i);
+            element = &g_array_index (array, QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement, i);
             g_print ("\tCell [%u]:\n"
                      "\t\tPhysical Cell ID: '%" G_GUINT16_FORMAT"'\n"
                      "\t\tRSRQ: '%.1lf' dB\n"
