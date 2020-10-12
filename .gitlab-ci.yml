@@ -67,6 +67,18 @@ test-collection-basic:
     - make check
     - make install
 
+test-clean-distclean:
+  stage: test
+  script:
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr
+    - make
+    - make clean
+    - make
+    - make distclean
+    - ./configure --prefix=/usr
+    - make
+
 test-default:
   stage: test
   script:
@@ -79,11 +91,6 @@ test-default:
     - make install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --enable-mbim-qmux --enable-qrtr
-    - make
-    - make clean
-    - make
-    - make distclean
     - ./configure --prefix=/usr --enable-gtk-doc --enable-mbim-qmux --enable-qrtr --enable-introspection
     - make
     - make check
@@ -96,6 +103,3 @@ test-default:
       - /builds/$CI_PROJECT_ROOT_NAMESPACE/$CI_PROJECT_NAME/$CI_PROJECT_NAME-*.tar.xz
       - /builds/$CI_PROJECT_ROOT_NAMESPACE/$CI_PROJECT_NAME/pkg_hash.txt
     expire_in: 2 days
-
-
-
