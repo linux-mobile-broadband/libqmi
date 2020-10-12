@@ -6,6 +6,15 @@ stages:
 before_script:
   - apt update && apt -y install autoconf automake libtool libgudev-1.0-dev autoconf-archive
 
+test-no-deprecated:
+  stage: test
+  script:
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr CFLAGS="-DQMI_DISABLE_DEPRECATED"
+    - make
+    - make check
+    - make install
+
 test-no-mbim-no-qrtr:
   stage: test
   script:
