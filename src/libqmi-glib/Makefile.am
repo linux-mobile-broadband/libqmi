@@ -182,7 +182,7 @@ Qmi_1_0_gir_SCANNERFLAGS = \
 	--symbol-prefix=qmi_ \
 	$(NULL)
 Qmi_1_0_gir_FILES = \
-	$(include_HEADERS) \
+	$(filter-out qmi-compat.h,$(include_HEADERS)) \
 	$(filter-out %.h,$(libqmi_glib_la_SOURCES)) \
 	$(filter %.c,$(libqmi_glib_la_SOURCES)) \
 	$(wildcard generated/*.h) \
