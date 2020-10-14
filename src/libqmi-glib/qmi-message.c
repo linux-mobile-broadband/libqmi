@@ -319,7 +319,9 @@ message_check (QmiMessage *self,
         g_set_error (error,
                      QMI_CORE_ERROR,
                      QMI_CORE_ERROR_INVALID_MESSAGE,
-                     "Marker is incorrect");
+                     "Marker is incorrect (0x%02x != 0x%02x)",
+                     ((struct full_message *)(self->data))->marker,
+                     QMI_MESSAGE_QMUX_MARKER);
         return FALSE;
     }
 
