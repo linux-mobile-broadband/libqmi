@@ -1840,6 +1840,20 @@ typedef enum { /*< since=1.18 >*/
 } QmiWdsQosClassIdentifier;
 
 /**
+ * QmiWdsAttachPdnListAction:
+ * @WDS_ATTACH_PDN_LIST_ACTION_NONE: No action (default)
+ * @WDS_ATTACH_PDN_LIST_ACTION_DETACH_OR_PDN_DISCONNECT: PS detach or PDN disconnect based on the modem configuration
+ *
+ * Action when setting the attach PDN list.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    QMI_WDS_ATTACH_PDN_LIST_ACTION_NONE                     = 0x01,
+    QMI_WDS_ATTACH_PDN_LIST_ACTION_DETACH_OR_PDN_DISCONNECT = 0x02,
+} QmiWdsAttachPdnListAction;
+
+/**
  * QmiWdsClientType:
  * @QMI_WDS_CLIENT_TYPE_TETHERED: client type tethered
  * @QMI_WDS_CLIENT_TYPE_UNDEFINED: no client type defined
