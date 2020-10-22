@@ -162,4 +162,34 @@ typedef enum { /*< since=1.18 >*/
     QMI_DATA_ENDPOINT_TYPE_UNDEFINED = 0XFF,
 } QmiDataEndpointType;
 
+/**
+ * QmiSioPort:
+ * @QMI_SIO_PORT_NONE: Invalid port number.
+ * @QMI_SIO_PORT_A2_MUX_RMNET0: A2 MUX (BAM-DMUX) port for rmnet0.
+ * @QMI_SIO_PORT_A2_MUX_RMNET1: A2 MUX (BAM-DMUX) port for rmnet1.
+ * @QMI_SIO_PORT_A2_MUX_RMNET2: A2 MUX (BAM-DMUX) port for rmnet2.
+ * @QMI_SIO_PORT_A2_MUX_RMNET3: A2 MUX (BAM-DMUX) port for rmnet3.
+ * @QMI_SIO_PORT_A2_MUX_RMNET4: A2 MUX (BAM-DMUX) port for rmnet4.
+ * @QMI_SIO_PORT_A2_MUX_RMNET5: A2 MUX (BAM-DMUX) port for rmnet5.
+ * @QMI_SIO_PORT_A2_MUX_RMNET6: A2 MUX (BAM-DMUX) port for rmnet6.
+ * @QMI_SIO_PORT_A2_MUX_RMNET7: A2 MUX (BAM-DMUX) port for rmnet7.
+ *
+ * SIO (serial I/O) port numbers. All ports available in the modem have a SIO
+ * port number. This enum is incomplete, only few port numbers are publicly
+ * known.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    QMI_SIO_PORT_NONE          = 0x0000,
+    QMI_SIO_PORT_A2_MUX_RMNET0 = 0x0e04,
+    QMI_SIO_PORT_A2_MUX_RMNET1 = 0x0e05,
+    QMI_SIO_PORT_A2_MUX_RMNET2 = 0x0e06,
+    QMI_SIO_PORT_A2_MUX_RMNET3 = 0x0e07,
+    QMI_SIO_PORT_A2_MUX_RMNET4 = 0x0e08,
+    QMI_SIO_PORT_A2_MUX_RMNET5 = 0x0e09,
+    QMI_SIO_PORT_A2_MUX_RMNET6 = 0x0e0a,
+    QMI_SIO_PORT_A2_MUX_RMNET7 = 0x0e0b,
+} QmiSioPort;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_H_ */

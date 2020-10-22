@@ -134,17 +134,22 @@ qmi_proxy_get_type
 <TITLE>Common enumerations and flags</TITLE>
 QmiService
 QmiDataEndpointType
+QmiSioPort
 <SUBSECTION Methods>
 qmi_service_get_string
 qmi_data_endpoint_type_get_string
+qmi_sio_port_get_string
 <SUBSECTION Private>
 qmi_service_build_string_from_mask
 qmi_data_endpoint_type_build_string_from_mask
+qmi_sio_port_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_SERVICE
 QMI_TYPE_DATA_ENDPOINT_TYPE
+QMI_TYPE_SIO_PORT
 qmi_service_get_type
 qmi_data_endpoint_type_get_type
+qmi_sio_port_get_type
 </SECTION>
 
 <SECTION>
