@@ -475,6 +475,52 @@
 
   // *********************************************************************************
 
+  {  "name"    : "Set Engine Lock",
+     "type"    : "Message",
+     "service" : "LOC",
+     "id"      : "0x003A",
+     "since"   : "1.28",
+     "input"   : [ { "name"          : "Lock Type",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.28",
+                     "format"        : "guint32",
+                     "public-format" : "QmiLocLockType" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  {  "name"    : "Set Engine Lock",
+     "type"    : "Indication",
+     "service" : "LOC",
+     "id"      : "0x003A",
+     "since"   : "1.28",
+     "output"  : [ { "common-ref" : "LOC Indication Status" ,
+                     "since"      : "1.28" } ] },
+
+  // *********************************************************************************
+
+  {  "name"    : "Get Engine Lock",
+     "type"    : "Message",
+     "service" : "LOC",
+     "id"      : "0x003B",
+     "since"   : "1.28",
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  {  "name"    : "Get Engine Lock",
+     "type"    : "Indication",
+     "service" : "LOC",
+     "id"      : "0x003B",
+     "since"   : "1.28",
+     "output"  : [ { "common-ref"    : "LOC Indication Status",
+                     "since"         : "1.28" },
+                   { "name"          : "Lock Type",
+                     "id"            : "0x10",
+                     "type"          : "TLV",
+                     "since"         : "1.28",
+                     "format"        : "guint32",
+                     "public-format" : "QmiLocLockType" } ] },
+
+  // *********************************************************************************
+
   {  "name"    : "Set NMEA Types",
      "type"    : "Message",
      "service" : "LOC",

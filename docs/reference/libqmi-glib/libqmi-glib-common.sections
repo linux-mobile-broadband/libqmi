@@ -1260,6 +1260,7 @@ QmiLocDeleteClockInfo
 QmiLocDeleteGnssData
 QmiLocNmeaType
 QmiLocDeleteSvInfo
+QmiLocLockType
 <SUBSECTION Methods>
 qmi_loc_intermediate_report_state_get_string
 qmi_loc_fix_recurrence_type_get_string
@@ -1283,6 +1284,7 @@ qmi_loc_delete_clock_info_build_string_from_mask
 qmi_loc_delete_gnss_data_build_string_from_mask
 qmi_loc_delete_sv_info_build_string_from_mask
 qmi_loc_nmea_type_build_string_from_mask
+qmi_loc_lock_type_get_string
 <SUBSECTION Private>
 qmi_loc_intermediate_report_state_build_string_from_mask
 qmi_loc_operation_mode_build_string_from_mask
@@ -1307,6 +1309,7 @@ qmi_loc_delete_cell_database_get_string
 qmi_loc_delete_clock_info_get_string
 qmi_loc_delete_sv_info_get_string
 qmi_loc_nmea_type_get_string
+qmi_loc_lock_type_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_LOC_INTERMEDIATE_REPORT_STATE
 QMI_TYPE_LOC_FIX_RECURRENCE_TYPE
@@ -1329,6 +1332,7 @@ QMI_TYPE_LOC_DELETE_CELL_DATABASE
 QMI_TYPE_LOC_DELETE_CLOCK_INFO
 QMI_TYPE_LOC_DELETE_SV_INFO
 QMI_TYPE_LOC_NMEA_TYPE
+QMI_TYPE_LOC_LOCK_TYPE
 qmi_loc_intermediate_report_state_get_type
 qmi_loc_fix_recurrence_type_get_type
 qmi_loc_operation_mode_get_type
@@ -1350,6 +1354,7 @@ qmi_loc_delete_cell_database_get_type
 qmi_loc_delete_clock_info_get_type
 qmi_loc_delete_sv_info_get_type
 qmi_loc_nmea_type_get_type
+qmi_loc_lock_type_get_type
 </SECTION>
 
 <SECTION>

@@ -486,4 +486,22 @@ typedef enum { /*< since=1.26 >*/
     QMI_LOC_NMEA_TYPE_ALL   = 0x0000FFFF,
 } QmiLocNmeaType;
 
+/**
+ * QmiLocLockType:
+ * @QMI_LOC_LOCK_TYPE_NONE: Do not lock any position sessions.
+ * @QMI_LOC_LOCK_TYPE_MI: Lock mobile-initiated position sessions.
+ * @QMI_LOC_LOCK_TYPE_MT: Lock mobile-terminated position sessions.
+ * @QMI_LOC_LOCK_TYPE_ALL: Lock all position sessions.
+ *
+ * Location engine lock type.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    QMI_LOC_LOCK_TYPE_NONE = 1,
+    QMI_LOC_LOCK_TYPE_MI   = 2,
+    QMI_LOC_LOCK_TYPE_MT   = 3,
+    QMI_LOC_LOCK_TYPE_ALL  = 4,
+} QmiLocLockType;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_LOC_H_ */
