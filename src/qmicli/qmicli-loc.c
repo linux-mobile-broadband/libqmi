@@ -59,6 +59,8 @@ typedef struct {
     guint           set_nmea_types_indication_id;
     guint           get_operation_mode_indication_id;
     guint           set_operation_mode_indication_id;
+    guint           get_engine_lock_indication_id;
+    guint           set_engine_lock_indication_id;
 } Context;
 static Context *ctx;
 
@@ -77,6 +79,8 @@ static gboolean get_nmea_types_flag;
 static gchar   *set_nmea_types_str;
 static gboolean get_operation_mode_flag;
 static gchar   *set_operation_mode_str;
+static gboolean get_engine_lock_flag;
+static gchar   *set_engine_lock_str;
 static gboolean noop_flag;
 
 #define DEFAULT_LOC_TIMEOUT_SECS 30
@@ -177,6 +181,18 @@ static GOptionEntry entries[] = {
       "[default|msb|msa|standalone|cellid|wwan]"
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_LOC_GET_ENGINE_LOCK
+    { "loc-get-engine-lock", 0, 0, G_OPTION_ARG_NONE, &get_engine_lock_flag,
+      "Get engine lock status",
+      NULL
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_LOC_SET_ENGINE_LOCK
+    { "loc-set-engine-lock", 0, 0, G_OPTION_ARG_STRING, &set_engine_lock_str,
+      "Set engine lock status",
+      "[none|mi|mt|all]"
+    },
+#endif
     { "loc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a LOC client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -226,6 +242,8 @@ qmicli_loc_options_enabled (void)
                  !!set_nmea_types_str +
                  get_operation_mode_flag +
                  !!set_operation_mode_str +
+                 get_engine_lock_flag +
+                 !!set_engine_lock_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -257,7 +275,9 @@ qmicli_loc_options_enabled (void)
         get_nmea_types_flag ||
         set_nmea_types_str ||
         get_operation_mode_flag ||
-        set_operation_mode_str)
+        set_operation_mode_str ||
+        get_engine_lock_flag ||
+        set_engine_lock_str)
         qmicli_expect_indications ();
 
     checked = TRUE;
@@ -296,6 +316,12 @@ context_free (Context *context)
 
     if (context->set_operation_mode_indication_id)
         g_signal_handler_disconnect (context->client, context->set_operation_mode_indication_id);
+
+    if (context->get_engine_lock_indication_id)
+        g_signal_handler_disconnect (context->client, context->get_engine_lock_indication_id);
+
+    if (context->set_engine_lock_indication_id)
+        g_signal_handler_disconnect (context->client, context->set_engine_lock_indication_id);
 
     g_clear_object (&context->cancellable);
     g_clear_object (&context->client);
@@ -1154,6 +1180,153 @@ set_operation_mode_input_create (const gchar *str)
 
 #endif /* HAVE_QMI_MESSAGE_LOC_SET_OPERATION_MODE */
 
+#if defined HAVE_QMI_MESSAGE_LOC_GET_ENGINE_LOCK
+
+static gboolean
+get_engine_lock_timed_out (void)
+{
+    ctx->timeout_id = 0;
+    g_printerr ("error: operation failed: timeout\n");
+    operation_shutdown (FALSE);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+get_engine_lock_received (QmiClientLoc                        *client,
+                          QmiIndicationLocGetEngineLockOutput *output)
+{
+    QmiLocIndicationStatus  status;
+    QmiLocLockType          type;
+    g_autoptr(GError)       error = NULL;
+
+    if (!qmi_indication_loc_get_engine_lock_output_get_indication_status (output, &status, &error)) {
+        g_printerr ("error: couldn't get engine lock %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_indication_loc_get_engine_lock_output_get_lock_type (output, &type, NULL)) {
+        g_printerr ("error: couldn't get engine lock: missing\n");
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Successfully retrieved engine lock: %s\n", qmi_loc_lock_type_get_string (type));
+    operation_shutdown (TRUE);
+}
+
+static void
+get_engine_lock_ready (QmiClientLoc *client,
+                       GAsyncResult *res)
+{
+    g_autoptr(QmiMessageLocGetEngineLockOutput) output = NULL;
+    g_autoptr(GError)                           error = NULL;
+
+    output = qmi_client_loc_get_engine_lock_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_loc_get_engine_lock_output_get_result (output, &error)) {
+        g_printerr ("error: could not get engine lock: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    /* Wait for response asynchronously */
+    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                             (GSourceFunc) get_engine_lock_timed_out,
+                                             NULL);
+
+    ctx->get_engine_lock_indication_id = g_signal_connect (ctx->client,
+                                                           "get-engine-lock",
+                                                           G_CALLBACK (get_engine_lock_received),
+                                                           NULL);
+}
+#endif /* HAVE_QMI_MESSAGE_LOC_GET_ENGINE_LOCK */
+
+#if defined HAVE_QMI_MESSAGE_LOC_SET_ENGINE_LOCK
+
+static gboolean
+set_engine_lock_timed_out (void)
+{
+    ctx->timeout_id = 0;
+    g_printerr ("error: operation failed: timeout\n");
+    operation_shutdown (FALSE);
+    return G_SOURCE_REMOVE;
+}
+
+static void
+set_engine_lock_received (QmiClientLoc                        *client,
+                          QmiIndicationLocSetEngineLockOutput *output)
+{
+    QmiLocIndicationStatus status;
+    g_autoptr(GError)      error = NULL;
+
+    if (!qmi_indication_loc_set_engine_lock_output_get_indication_status (output, &status, &error)) {
+        g_printerr ("error: couldn't set engine lock: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Successfully set engine lock\n");
+    operation_shutdown (TRUE);
+}
+
+static void
+set_engine_lock_ready (QmiClientLoc *client,
+                          GAsyncResult *res)
+{
+    g_autoptr(QmiMessageLocSetEngineLockOutput) output = NULL;
+    g_autoptr(GError)                           error = NULL;
+
+    output = qmi_client_loc_set_engine_lock_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_loc_set_engine_lock_output_get_result (output, &error)) {
+        g_printerr ("error: could not set engine lock: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    /* Wait for response asynchronously */
+    ctx->timeout_id = g_timeout_add_seconds (timeout > 0 ? timeout : DEFAULT_LOC_TIMEOUT_SECS,
+                                             (GSourceFunc) set_engine_lock_timed_out,
+                                             NULL);
+
+    ctx->set_engine_lock_indication_id = g_signal_connect (ctx->client,
+                                                           "set-engine-lock",
+                                                           G_CALLBACK (set_engine_lock_received),
+                                                           NULL);
+}
+
+static QmiMessageLocSetEngineLockInput *
+set_engine_lock_input_create (const gchar *str)
+{
+    g_autoptr(QmiMessageLocSetEngineLockInput) input = NULL;
+    g_autoptr(GError)                          error = NULL;
+    QmiLocLockType                             type;
+
+    if (!qmicli_read_loc_lock_type_from_string (str, &type))
+        return NULL;
+
+    input = qmi_message_loc_set_engine_lock_input_new ();
+    if (!qmi_message_loc_set_engine_lock_input_set_lock_type (input, type, &error)) {
+        g_printerr ("error: couldn't create input data bundle: '%s'\n", error->message);
+        return NULL;
+    }
+
+    return g_steal_pointer (&input);
+}
+
+#endif /* HAVE_QMI_MESSAGE_LOC_SET_ENGINE_LOCK */
+
 #if defined HAVE_QMI_MESSAGE_LOC_STOP
 
 static void
@@ -1354,6 +1527,38 @@ qmicli_loc_run (QmiDevice    *device,
                                            ctx->cancellable,
                                            (GAsyncReadyCallback)set_operation_mode_ready,
                                            NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_LOC_GET_ENGINE_LOCK
+    if (get_engine_lock_flag) {
+        qmi_client_loc_get_engine_lock (ctx->client,
+                                        NULL,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback) get_engine_lock_ready,
+                                        NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_LOC_SET_ENGINE_LOCK
+    if (set_engine_lock_str) {
+        g_autoptr(QmiMessageLocSetEngineLockInput) input = NULL;
+
+        g_debug ("Asynchronously setting engine lock...");
+        input = set_engine_lock_input_create (set_engine_lock_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+        qmi_client_loc_set_engine_lock (ctx->client,
+                                        input,
+                                        10,
+                                        ctx->cancellable,
+                                        (GAsyncReadyCallback)set_engine_lock_ready,
+                                        NULL);
         return;
     }
 #endif

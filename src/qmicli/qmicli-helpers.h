@@ -48,7 +48,8 @@
     QMICLI_ENUM_LIST_ITEM (QmiDmsMacType,                    dms_mac_type,                      "mac address type")              \
     QMICLI_ENUM_LIST_ITEM (QmiSarRfState,                    sar_rf_state,                      "sar rf state")                  \
     QMICLI_ENUM_LIST_ITEM (QmiSioPort,                       sio_port,                          "sio port")                      \
-    QMICLI_ENUM_LIST_ITEM (QmiLocOperationMode,              loc_operation_mode,                "operation mode")
+    QMICLI_ENUM_LIST_ITEM (QmiLocOperationMode,              loc_operation_mode,                "operation mode")                \
+    QMICLI_ENUM_LIST_ITEM (QmiLocLockType,                   loc_lock_type,                     "lock type")
 
 #define QMICLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);
