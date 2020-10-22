@@ -46,7 +46,8 @@
     QMICLI_ENUM_LIST_ITEM (QmiUimSessionType,                uim_session_type,                  "session type")                  \
     QMICLI_ENUM_LIST_ITEM (QmiDsdApnType,                    dsd_apn_type,                      "apn type")                      \
     QMICLI_ENUM_LIST_ITEM (QmiDmsMacType,                    dms_mac_type,                      "mac address type")              \
-    QMICLI_ENUM_LIST_ITEM (QmiSarRfState,                    sar_rf_state,                      "sar rf state")
+    QMICLI_ENUM_LIST_ITEM (QmiSarRfState,                    sar_rf_state,                      "sar rf state")                  \
+    QMICLI_ENUM_LIST_ITEM (QmiSioPort,                       sio_port,                          "sio port")
 
 #define QMICLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);

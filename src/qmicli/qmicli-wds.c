@@ -78,6 +78,7 @@ static gchar *set_autoconnect_settings_str;
 static gboolean get_supported_messages_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
+static gchar *bind_data_port_str;
 static gchar *bind_mux_str;
 static gchar *set_ip_family_str;
 static gboolean get_channel_rates_flag;
@@ -221,6 +222,12 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_WDS_BIND_DATA_PORT
+    { "wds-bind-data-port", 0, 0, G_OPTION_ARG_STRING, &bind_data_port_str,
+      "Bind data port to controller device to be used with `--client-no-release-cid'",
+      "[a2-mux-rmnet0-7|#]"
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT
     { "wds-bind-mux-data-port", 0, 0, G_OPTION_ARG_STRING, &bind_mux_str,
       "Bind qmux data port to controller device (allowed keys: mux-id, ep-type (undefined|hsusb|pcie|embedded), ep-iface-number) to be used with `--client-no-release-cid'",
@@ -272,6 +279,7 @@ qmicli_wds_options_enabled (void)
 
     n_actions = (!!start_network_str +
                  !!stop_network_str +
+                 !!bind_data_port_str +
                  !!bind_mux_str +
                  !!set_ip_family_str +
                  get_current_settings_flag +
@@ -2547,6 +2555,53 @@ noop_cb (gpointer unused)
     return FALSE;
 }
 
+#if defined HAVE_QMI_MESSAGE_WDS_BIND_DATA_PORT
+
+static QmiMessageWdsBindDataPortInput *
+bind_data_port_input_create (const gchar *str)
+{
+    g_autoptr(QmiMessageWdsBindDataPortInput) input = NULL;
+    g_autoptr(GError)                         error = NULL;
+    QmiSioPort                                sio_port;
+
+    sio_port = strtoul(str, NULL, 0);
+    if (!sio_port && !qmicli_read_sio_port_from_string (str, &sio_port))
+        return NULL;
+
+    input = qmi_message_wds_bind_data_port_input_new ();
+    if (!qmi_message_wds_bind_data_port_input_set_data_port (input, sio_port, &error)) {
+        g_printerr ("error: couldn't set data port: '%s'\n", error->message);
+        return NULL;
+    }
+
+    return g_steal_pointer (&input);
+}
+
+static void
+bind_data_port_ready (QmiClientWds *client,
+                      GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWdsBindDataPortOutput) output = NULL;
+    g_autoptr(GError)                          error = NULL;
+
+    output = qmi_client_wds_bind_data_port_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_bind_data_port_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't bind data port: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WDS_BIND_DATA_PORT */
+
 #if defined HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT
 
 typedef struct {
@@ -2856,6 +2911,26 @@ qmicli_wds_run (QmiDevice *device,
         return;
     }
 #endif /* HAVE_QMI_MESSAGE_WDS_STOP_NETWORK */
+
+#if defined HAVE_QMI_MESSAGE_WDS_BIND_DATA_PORT
+    if (bind_data_port_str) {
+        g_autoptr(QmiMessageWdsBindDataPortInput) input = NULL;
+
+        g_debug ("Binding data port...");
+        input = bind_data_port_input_create (bind_data_port_str);
+        if (!input) {
+            operation_shutdown (FALSE);
+            return;
+        }
+        qmi_client_wds_bind_data_port (client,
+                                       input,
+                                       10,
+                                       ctx->cancellable,
+                                       (GAsyncReadyCallback) bind_data_port_ready,
+                                       NULL);
+        return;
+    }
+#endif /* HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT */
 
 #if defined HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT
     if (bind_mux_str) {
