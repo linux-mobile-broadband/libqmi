@@ -127,8 +127,7 @@ struct _QmiDevicePrivate {
 };
 
 #if QMI_QRTR_SUPPORTED
-#define DEFAULT_RMNET_DATA_IFACE_NAME "rmnet_data0"
-#define QMI_CLIENT_VERSION_UNKNOWN 99
+# define QMI_CLIENT_VERSION_UNKNOWN 99
 #endif
 
 /*****************************************************************************/
@@ -685,27 +684,25 @@ qmi_device_is_open (QmiDevice *self)
 static void
 reload_wwan_iface_name (QmiDevice *self)
 {
-    g_autofree gchar *cdc_wdm_device_name = NULL;
-    static const gchar *driver_names[] = { "usbmisc", "usb" };
-    GError *error = NULL;
-    guint i;
-
-    /* Early cleanup */
-    g_clear_pointer (&self->priv->wwan_iface, g_free);
+    g_autofree gchar   *cdc_wdm_device_name = NULL;
+    guint               i;
+    g_autoptr(GError)   error = NULL;
+    static const gchar *driver_names[] = { "usbmisc", /* kernel >= 3.6 */
+                                           "usb" };   /* kernel < 3.6 */
 
 #if QMI_QRTR_SUPPORTED
-    if (self->priv->node) {
-        self->priv->wwan_iface = g_strdup (DEFAULT_RMNET_DATA_IFACE_NAME);
+    /* QRTR doesn't have a device file in sysfs, exit right away */
+    if (self->priv->node)
         return;
-    }
 #endif
+
+    g_clear_pointer (&self->priv->wwan_iface, g_free);
 
     cdc_wdm_device_name = __qmi_utils_get_devname (qmi_file_get_path (self->priv->file), &error);
     if (!cdc_wdm_device_name) {
         g_warning ("[%s] invalid path for cdc-wdm control port: %s",
                    qmi_file_get_path_display (self->priv->file),
                    error->message);
-        g_error_free (error);
         return;
     }
 
@@ -715,21 +712,18 @@ reload_wwan_iface_name (QmiDevice *self)
         g_autoptr(GFileEnumerator)  enumerator = NULL;
         GFileInfo                  *file_info  = NULL;
 
+        /* WWAN iface name loading only applicable for qmi_wwan driver right now
+         * (so QMI port exposed by the cdc-wdm driver in the usbmisc subsystem),
+         * not for QRTR or any other subsystem or driver */
         sysfs_path = g_strdup_printf ("/sys/class/%s/%s/device/net/", driver_names[i], cdc_wdm_device_name);
         sysfs_file = g_file_new_for_path (sysfs_path);
         enumerator = g_file_enumerate_children (sysfs_file,
                                                 G_FILE_ATTRIBUTE_STANDARD_NAME,
                                                 G_FILE_QUERY_INFO_NONE,
                                                 NULL,
-                                                &error);
-        if (!enumerator) {
-            g_debug ("[%s] cannot enumerate files at path '%s': %s",
-                     qmi_file_get_path_display (self->priv->file),
-                     sysfs_path,
-                     error->message);
-            g_clear_error (&error);
+                                                NULL);
+        if (!enumerator)
             continue;
-        }
 
         /* Ignore errors when enumerating */
         while ((file_info = g_file_enumerator_next_file (enumerator, NULL, NULL)) != NULL) {
@@ -747,10 +741,12 @@ reload_wwan_iface_name (QmiDevice *self)
             }
             g_object_unref (file_info);
         }
+        if (!self->priv->wwan_iface)
+            g_warning ("[%s] wwan iface not found", qmi_file_get_path_display (self->priv->file));
     }
 
-    if (!self->priv->wwan_iface)
-        g_warning ("[%s] wwan iface not found", qmi_file_get_path_display (self->priv->file));
+    /* wwan_iface won't be set at this point if the kernel driver in use isn't in
+     * the usbmisc subsystem */
 }
 
 const gchar *
@@ -852,34 +848,39 @@ set_expected_data_format (QmiDevice *self,
 }
 
 static QmiDeviceExpectedDataFormat
-common_get_set_expected_data_format (QmiDevice *self,
-                                     QmiDeviceExpectedDataFormat requested,
-                                     GError **error)
+common_get_set_expected_data_format (QmiDevice                    *self,
+                                     QmiDeviceExpectedDataFormat   requested,
+                                     GError                      **error)
 {
-    gchar *sysfs_path = NULL;
-    QmiDeviceExpectedDataFormat expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
-    gboolean readonly;
-
-    readonly = (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN);
+    g_autofree gchar            *sysfs_path = NULL;
+    QmiDeviceExpectedDataFormat  expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
+    gboolean                     readonly;
 
     /* Make sure we load the WWAN iface name */
     reload_wwan_iface_name (self);
+
+    /* Expected data format setting and getting is only supported in the qmi_wwan
+     * driver, same as the WWAN iface name detection. Therefore, if we cannot load
+     * the WWAN iface name we can safely assume that we're not using the qmi_wwan
+     * driver. */
     if (!self->priv->wwan_iface) {
-        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
-                     "Unknown wwan iface");
-        goto out;
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_UNSUPPORTED,
+                     "Setting Expected data format management is unsupported by the driver");
+        return QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
     }
+
+    readonly = (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN);
 
     /* Build sysfs file path and open it */
     sysfs_path = g_strdup_printf ("/sys/class/net/%s/qmi/raw_ip", self->priv->wwan_iface);
 
     /* Set operation? */
     if (!readonly && !set_expected_data_format (self, sysfs_path, requested, error))
-        goto out;
+        return QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
 
     /* Get/Set operations */
     if ((expected = get_expected_data_format (self, sysfs_path, error)) == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN)
-        goto out;
+        return QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
 
     /* If we requested an update but we didn't read that value, report an error */
     if (!readonly && (requested != expected)) {
@@ -887,11 +888,9 @@ common_get_set_expected_data_format (QmiDevice *self,
                      "Expected data format not updated properly to '%s': got '%s' instead",
                      qmi_device_expected_data_format_get_string (requested),
                      qmi_device_expected_data_format_get_string (expected));
-        expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
+        return QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
     }
 
- out:
-    g_free (sysfs_path);
     return expected;
 }
 

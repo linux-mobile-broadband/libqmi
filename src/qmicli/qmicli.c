@@ -77,15 +77,15 @@ static GOptionEntry main_entries[] = {
       "[PATH]"
     },
     { "get-wwan-iface", 'w', 0, G_OPTION_ARG_NONE, &get_wwan_iface_flag,
-      "Get the WWAN iface name associated with this control port",
+      "(qmi_wwan specific) Get the associated WWAN iface name",
       NULL
     },
     { "get-expected-data-format", 'e', 0, G_OPTION_ARG_NONE, &get_expected_data_format_flag,
-      "Get the expected data format in the WWAN iface",
+      "(qmi_wwan specific) Get the expected data format in the WWAN iface",
       NULL
     },
     { "set-expected-data-format", 'E', 0, G_OPTION_ARG_STRING, &set_expected_data_format_str,
-      "Set the expected data format in the WWAN iface",
+      "(qmi_wwan specific) Set the expected data format in the WWAN iface",
       "[802-3|raw-ip]"
     },
     { "get-service-version-info", 0, 0, G_OPTION_ARG_NONE, &get_service_version_info_flag,

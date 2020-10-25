@@ -225,8 +225,12 @@ const gchar *qmi_device_get_path_display (QmiDevice *self);
  * qmi_device_get_wwan_iface:
  * @self: a #QmiDevice.
  *
- * Get the WWAN interface name associated with this /dev/cdc-wdm control port.
+ * Get the WWAN interface name associated with the QMI control port.
  * This value will be loaded every time it's asked for it.
+ *
+ * <note><para>
+ * This method is only applicable when using the qmi_wwan kernel driver.
+ * </para></note>
  *
  * Returns: UTF-8 encoded network interface name, or %NULL if not available.
  *
@@ -757,8 +761,13 @@ typedef enum { /*< since=1.14 >*/
  * Retrieves the data format currently expected by the kernel in the network
  * interface.
  *
- * If @QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN is returned, the user should assume
- * that 802.3 is the expected format.
+ * If @QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN is returned, the user should
+ * assume that 802.3 is the expected format, as that is what the qmi_wwan
+ * driver expected by default before kernel 4.5.
+ *
+ * <note><para>
+ * This method is only applicable when using the qmi_wwan kernel driver.
+ * </para></note>
  *
  * Returns: a valid #QmiDeviceExpectedDataFormat, or @QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN if @error is set.
  *
@@ -775,6 +784,10 @@ QmiDeviceExpectedDataFormat qmi_device_get_expected_data_format (QmiDevice  *sel
  *
  * Configures the data format currently expected by the kernel in the network
  * interface.
+ *
+ * <note><para>
+ * This method is only applicable when using the qmi_wwan kernel driver.
+ * </para></note>
  *
  * Returns: %TRUE if successful, or %NULL if @error is set.
  *
