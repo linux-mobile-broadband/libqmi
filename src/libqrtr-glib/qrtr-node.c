@@ -159,7 +159,7 @@ dispatch_pending_waiters (QrtrNode *node)
 
         waiter = g_ptr_array_index (node->priv->waiters, i);
         for (j = 0; j < waiter->services->len; j++) {
-	    guint32 service;
+            guint32 service;
 
             service = g_array_index (waiter->services, guint32, j);
             if (!g_hash_table_lookup (node->priv->service_index, GUINT_TO_POINTER (service))) {
