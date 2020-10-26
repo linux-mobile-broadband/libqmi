@@ -940,10 +940,10 @@ parse_actions (void)
 #endif
 
 #if defined HAVE_QMI_SERVICE_SAR
-  if (qmicli_sar_options_enabled ()) {
-    service = QMI_SERVICE_SAR;
-    actions_enabled++;
-  }
+    if (qmicli_sar_options_enabled ()) {
+        service = QMI_SERVICE_SAR;
+        actions_enabled++;
+    }
 #endif
 
 #if defined HAVE_QMI_SERVICE_WMS
