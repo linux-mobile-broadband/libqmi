@@ -822,6 +822,8 @@ gboolean qmi_device_set_expected_data_format (QmiDevice                    *self
  * qmi_device_new_finish() to get the result of the operation.
  *
  * Only available if libqmi was compiled with QRTR support.
+ *
+ * Since: 1.26
  */
 void qmi_device_new_from_node (QrtrNode            *node,
                                GCancellable        *cancellable,
@@ -836,6 +838,8 @@ void qmi_device_new_from_node (QrtrNode            *node,
  * Finishes an operation started with qmi_device_new_from_node().
  *
  * Returns: (transfer full): A newly created #QmiDevice, or %NULL if @error is set.
+ *
+ * Since: 1.26
  */
 QmiDevice *qmi_device_new_from_node_finish (GAsyncResult  *res,
                                             GError       **error);
@@ -864,6 +868,109 @@ QrtrNode *qmi_device_get_node (QmiDevice *self);
  * Since: 1.28
  */
 QrtrNode *qmi_device_peek_node (QmiDevice *self);
+
+/**
+ * QMI_DEVICE_MUX_ID_AUTOMATIC:
+ *
+ * Symbol defining a mux id that will be automatically allocated during runtime
+ * when creating net links.
+ *
+ * Since: 1.28
+ */
+#define QMI_DEVICE_MUX_ID_AUTOMATIC G_MAXUINT
+
+/**
+ * QMI_DEVICE_MUX_ID_UNBOUND:
+ *
+ * Symbol defining the mux id for an unbound interface. This value is also used
+ * to indicate an invalid mux id.
+ *
+ * Since: 1.28
+ */
+#define QMI_DEVICE_MUX_ID_UNBOUND 0
+
+/**
+ * qmi_device_add_link:
+ * @self: a #QmiDevice.
+ * @mux_id: the mux ID for the link, or #QMI_DEVICE_MUX_ID_AUTOMATIC to find the first available mux id.
+ * @base_ifname: the interface which the new link will be created on.
+ * @ifname_prefix: the prefix to be used for the name of the new link created.
+ * @cancellable: a #GCancellable, or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously creates a new virtual network device node with a custom prefix on top
+ * of @base_ifname. This allows having multiple net interfaces running on top of another
+ * using multiplexing. Drivers like IPA and BAM-DMUX provide this capability.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qmi_device_add_link_finish() to get the result of the operation.
+ *
+ * Since: 1.28
+ */
+void qmi_device_add_link (QmiDevice           *self,
+                          guint                mux_id,
+                          const gchar         *base_ifname,
+                          const gchar         *ifname_prefix,
+                          GCancellable        *cancellable,
+                          GAsyncReadyCallback  callback,
+                          gpointer             user_data);
+
+/**
+ * qmi_device_add_link_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @mux_id: the mux ID for the link created.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qmi_device_add_link().
+ *
+ * Returns: The name of the net interface created, %NULL if @error is set.
+ *
+ * Since: 1.28
+ */
+gchar * qmi_device_add_link_finish (QmiDevice     *self,
+                                    GAsyncResult  *res,
+                                    guint         *mux_id,
+                                    GError       **error);
+
+/**
+ * qmi_device_del_link:
+ * @self: a #QmiDevice.
+ * @ifname: the name of the net interface to remove.
+ * @cancellable: a #GCancellable, or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously deletes a virtual network interface that has been previously
+ * created with qmi_device_add_link().
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qmi_device_del_link_finish() to get the result of the operation.
+ *
+ * Since: 1.28
+ */
+void qmi_device_del_link (QmiDevice           *self,
+                          const gchar         *ifname,
+                          GCancellable        *cancellable,
+                          GAsyncReadyCallback  callback,
+                          gpointer             user_data);
+
+/**
+ * qmi_device_del_link_finish:
+ * @self: a #QmiDevice.
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qmi_device_del_link().
+ *
+ * Returns: %TRUE if successful, %FALSE if @error is set.
+ *
+ * Since: 1.28
+ */
+gboolean qmi_device_del_link_finish (QmiDevice     *self,
+                                     GAsyncResult  *res,
+                                     GError       **error);
 
 #endif /* QMI_QRTR_SUPPORTED */
 

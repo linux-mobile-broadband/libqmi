@@ -102,6 +102,7 @@ libqmi_glib_la_CPPFLAGS += \
 
 libqmi_glib_la_SOURCES += \
 	qmi-endpoint-qrtr.h qmi-endpoint-qrtr.c \
+	qmi-net-port-manager.h qmi-net-port-manager.c \
 	$(NULL)
 
 libqmi_glib_la_LIBADD += \

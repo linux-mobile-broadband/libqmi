@@ -225,7 +225,11 @@ AC_SUBST(QMI_MBIM_QMUX_SUPPORTED)
 AM_CONDITIONAL([QMI_MBIM_QMUX_SUPPORTED], [test "x$QMI_MBIM_QMUX_SUPPORTED" = "x1"])
 
 # QRTR support
-AC_CHECK_HEADER(linux/qrtr.h, [have_qrtr=yes], [have_qrtr=no], [])
+have_qrtr="yes"
+AC_CHECK_HEADER(linux/qrtr.h, [], [have_qrtr=no], [])
+AC_CHECK_HEADER(linux/if_link.h, [], [have_qrtr=no], [])
+AC_CHECK_HEADER(linux/netlink.h, [], [have_qrtr=no], [])
+AC_CHECK_HEADER(linux/rtnetlink.h, [], [have_qrtr=no], [])
 AC_ARG_ENABLE(qrtr,
               AS_HELP_STRING([--enable-qrtr], [Enable support for QRTR protocol [default=no]]),
               [enable_qrtr=$enableval],
@@ -237,7 +241,7 @@ fi
 
 if test "x$enable_qrtr" = "xyes"; then
     if test "x$have_qrtr" = "xno"; then
-        AC_MSG_ERROR([Couldn't find linux/qrtr.h. Install it, or otherwise configure using --disable-qrtr to disable QRTR support.])
+        AC_MSG_ERROR([Couldn't find one of the follwing linux headers (qrtr.h, if_link.h, netlink.h, rtnetlink.h). Install them, or otherwise configure using --disable-qrtr to disable QRTR support.])
     fi
     AC_DEFINE(QRTR_ENABLED, 1, [Define if QRTR support enabled])
     QMI_QRTR_SUPPORTED=1

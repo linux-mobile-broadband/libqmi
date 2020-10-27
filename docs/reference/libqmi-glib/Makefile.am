@@ -60,6 +60,7 @@ IGNORE_HFILES = \
 	qmi-endpoint-qmux.h \
 	qmi-endpoint-mbim.h \
 	qmi-endpoint-qrtr.h \
+	qmi-net-port-manager.h \
 	qmi-file.h \
 	qmi-ctl.h \
 	test-port-context.h \

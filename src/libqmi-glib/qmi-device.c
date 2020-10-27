@@ -62,8 +62,9 @@
 #include "qmi-version.h"
 
 #if QMI_QRTR_SUPPORTED
-# include <libqrtr-glib.h>
 # include "qmi-endpoint-qrtr.h"
+# include "qmi-net-port-manager.h"
+# include <libqrtr-glib.h>
 #endif
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
@@ -103,6 +104,11 @@ struct _QmiDevicePrivate {
     /* WWAN interface */
     gboolean no_wwan_check;
     gchar *wwan_iface;
+
+#if QMI_QRTR_SUPPORTED
+    /* Information necessary for data port */
+    QmiNetPortManager *net_port_manager;
+#endif
 
     /* Implicit CTL client */
     QmiClientCtl *client_ctl;
@@ -2030,6 +2036,105 @@ device_create_endpoint (QmiDevice *self,
     g_debug ("[%s] created endpoint", qmi_file_get_path_display (self->priv->file));
 }
 
+#if QMI_QRTR_SUPPORTED
+
+typedef struct {
+    guint  mux_id;
+    gchar *ifname;
+} AddLinkResult;
+
+static void
+add_link_result_free (AddLinkResult *ctx)
+{
+    g_free (ctx->ifname);
+    g_free (ctx);
+}
+
+gchar *
+qmi_device_add_link_finish (QmiDevice     *self,
+                            GAsyncResult  *res,
+                            guint         *mux_id,
+                            GError       **error)
+{
+    AddLinkResult *ctx;
+
+    ctx = g_task_propagate_pointer (G_TASK (res), error);
+    if (!ctx)
+        return NULL;
+
+    if (mux_id)
+        *mux_id = ctx->mux_id;
+
+    return g_steal_pointer (&ctx->ifname);
+}
+
+static void
+device_add_link_ready (QmiNetPortManager *manager,
+                       GAsyncResult      *res,
+                       GTask             *task)
+{
+    QmiDevice     *self;
+    GError        *error = NULL;
+    AddLinkResult *ctx;
+
+    self = g_task_get_source_object (task);
+
+    ctx = g_new0 (AddLinkResult, 1);
+    ctx->ifname = qmi_net_port_manager_add_link_finish (manager, &ctx->mux_id, res, &error);
+
+    if (!ctx->ifname) {
+        g_prefix_error (&error, "Could not allocate link: ");
+        g_task_return_error (task, error);
+        add_link_result_free (ctx);
+    } else {
+        g_debug ("[%s] Allocated link %s for mux id %d",
+                 qmi_file_get_path_display (self->priv->file),
+                 ctx->ifname,
+                 ctx->mux_id);
+        g_task_return_pointer (task, ctx, (GDestroyNotify) add_link_result_free);
+    }
+
+    g_object_unref (task);
+}
+
+void
+qmi_device_add_link (QmiDevice           *self,
+                     guint                mux_id,
+                     const gchar         *base_ifname,
+                     const gchar         *ifname_prefix,
+                     GCancellable        *cancellable,
+                     GAsyncReadyCallback  callback,
+                     gpointer             user_data)
+{
+    GTask  *task;
+    GError *error = NULL;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    if (!self->priv->net_port_manager) {
+        self->priv->net_port_manager = qmi_net_port_manager_new (&error);
+        if (!self->priv->net_port_manager) {
+            g_debug ("Failed to create the net port manager: %s",
+                     error->message);
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+        }
+    }
+
+    qmi_net_port_manager_add_link (self->priv->net_port_manager,
+                                   mux_id,
+                                   base_ifname,
+                                   ifname_prefix,
+                                   5,
+                                   cancellable,
+                                   (GAsyncReadyCallback) device_add_link_ready,
+                                   task);
+
+}
+
+#endif
+
 static gboolean
 device_setup_open_flags_by_transport (QmiDevice          *self,
                                       DeviceOpenContext  *ctx,
@@ -2338,6 +2443,68 @@ endpoint_close_ready (QmiEndpoint  *endpoint,
         g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
+
+#if QMI_QRTR_SUPPORTED
+gboolean
+qmi_device_del_link_finish (QmiDevice     *self,
+                            GAsyncResult  *res,
+                            GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+device_del_link_ready (QmiNetPortManager *manager,
+                       GAsyncResult      *res,
+                       GTask             *task)
+{
+    QmiDevice *self;
+    GError    *error = NULL;
+
+    self = g_task_get_source_object (task);
+
+    if (!qmi_net_port_manager_del_link_finish (manager, res, &error)) {
+        g_debug ("[%s] Could not delete link: %s",
+                 qmi_file_get_path_display (self->priv->file),
+                 error->message);
+        g_task_return_error (task, error);
+    } else
+        g_task_return_boolean (task, TRUE);
+
+    g_object_unref (task);
+}
+
+void
+qmi_device_del_link (QmiDevice           *self,
+                     const gchar         *ifname,
+                     GCancellable        *cancellable,
+                     GAsyncReadyCallback  callback,
+                     gpointer             user_data)
+{
+    GTask  *task;
+    GError *error = NULL;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    if (!self->priv->net_port_manager) {
+        self->priv->net_port_manager = qmi_net_port_manager_new (&error);
+        if (!self->priv->net_port_manager) {
+            g_debug ("Failed to create the net port manager: %s",
+                     error->message);
+            g_task_return_error (task, error);
+            g_object_unref (task);
+            return;
+        }
+    }
+
+    qmi_net_port_manager_del_link (self->priv->net_port_manager,
+                                   ifname,
+                                   5, /* timeout */
+                                   cancellable,
+                                   (GAsyncReadyCallback) device_del_link_ready,
+                                   task);
+}
+#endif
 
 void
 qmi_device_close_async (QmiDevice           *self,
@@ -2866,6 +3033,11 @@ dispose (GObject *object)
         }
         g_clear_object (&self->priv->endpoint);
     }
+
+#if QMI_QRTR_SUPPORTED
+    g_clear_object (&self->priv->net_port_manager);
+#endif
+
     g_clear_object (&self->priv->file);
 #if QMI_QRTR_SUPPORTED
     g_clear_object (&self->priv->node);
