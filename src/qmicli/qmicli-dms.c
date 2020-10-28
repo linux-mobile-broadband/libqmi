@@ -356,8 +356,8 @@ static GOptionEntry entries[] = {
 #endif
 #if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE
     { "dms-set-firmware-preference", 0, 0, G_OPTION_ARG_STRING, &set_firmware_preference_str,
-      "Set firmware preference",
-      "[(fwver),(config),(carrier)]"
+      "Set firmware preference (required keys: firmware-version, config-version, carrier; optional keys: modem-storage-index, override-download=yes)",
+      "[\"key=value,...\"]"
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_DMS_GET_BOOT_IMAGE_DOWNLOAD_MODE
@@ -3511,39 +3511,159 @@ set_firmware_preference_context_clear (SetFirmwarePreferenceContext *firmware_pr
     g_free (firmware_preference_ctx->pri_image_id.build_id);
 }
 
-static QmiMessageDmsSetFirmwarePreferenceInput *
-set_firmware_preference_input_create (const gchar                  *str,
-                                      SetFirmwarePreferenceContext *firmware_preference_ctx)
-{
-    QmiMessageDmsSetFirmwarePreferenceInput *input;
-    GArray *array;
-    gchar **split;
+typedef struct {
+    gchar    *firmware_version;
+    gchar    *config_version;
+    gchar    *carrier;
+    gint      modem_storage_index;
+    gboolean  override_download;
+    gboolean  override_download_set;
+} SetFirmwarePreferenceProperties;
 
-    /* Prepare inputs.
-     * Format of the string is:
-     *    "[(fwver),(config),(carrier)]"
+static void
+set_firmware_preference_properties_clear (SetFirmwarePreferenceProperties *props)
+{
+    g_free (props->firmware_version);
+    g_free (props->config_version);
+    g_free (props->carrier);
+}
+
+static gboolean
+set_firmware_preference_properties_handle (const gchar  *key,
+                                           const gchar  *value,
+                                           GError      **error,
+                                           gpointer      user_data)
+{
+    SetFirmwarePreferenceProperties *props = user_data;
+
+    if (!value || !value[0]) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "key '%s' required a value",
+                     key);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (key, "firmware-version") == 0 && !props->firmware_version) {
+        props->firmware_version = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "config-version") == 0 && !props->config_version) {
+        props->config_version = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "carrier") == 0 && !props->carrier) {
+        props->carrier = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "override-download") == 0 && !props->override_download_set) {
+        if (!qmicli_read_yes_no_from_string (value, &(props->override_download))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown override-download '%s'",
+                         value);
+            return FALSE;
+        }
+        props->override_download_set = TRUE;
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "modem-storage-index") == 0 && props->modem_storage_index == -1) {
+        props->modem_storage_index = atoi (value);
+        if (props->modem_storage_index < 0 || props->modem_storage_index > G_MAXUINT8) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "invalid modem-storage-index '%s'",
+                         value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    g_set_error (error,
+                 QMI_CORE_ERROR,
+                 QMI_CORE_ERROR_FAILED,
+                 "unrecognized or duplicate option '%s'",
+                 key);
+    return FALSE;
+}
+
+static QmiMessageDmsSetFirmwarePreferenceInput *
+set_firmware_preference_input_create (const gchar                   *str,
+                                      SetFirmwarePreferenceContext  *firmware_preference_ctx,
+                                      GError                       **error)
+{
+    g_autoptr(QmiMessageDmsSetFirmwarePreferenceInput) input = NULL;
+    g_autoptr(GArray)                                  array = NULL;
+
+    SetFirmwarePreferenceProperties props = {
+        .firmware_version = NULL,
+        .config_version = NULL,
+        .carrier = NULL,
+        .modem_storage_index = -1,
+        .override_download = FALSE,
+        .override_download_set = FALSE,
+    };
+
+    /* New key=value format */
+    if (strchr (str, '=')) {
+        g_autoptr(GError) parse_error = NULL;
+
+        if (!qmicli_parse_key_value_string (str,
+                                            &parse_error,
+                                            set_firmware_preference_properties_handle,
+                                            &props)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "Couldn't parse input string: %s", parse_error->message);
+            set_firmware_preference_properties_clear (&props);
+            return NULL;
+        }
+
+        if (!props.firmware_version || !props.config_version || !props.carrier) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "Missing mandatory parameters: 'firmware-version', 'config-version' and 'carrier' are mandatory");
+            set_firmware_preference_properties_clear (&props);
+            return NULL;
+        }
+    }
+    /* Old non key=value format, like this:
+     *    "[(firmware_version),(config_version),(carrier)]"
      */
-    split = g_strsplit (str, ",", -1);
-    if (g_strv_length (split) != 3) {
-        g_printerr ("error: invalid format string, expected 3 elements: [(fwver),(config),(carrier)]\n");
-        g_strfreev (split);
-        return NULL;
+    else {
+        g_auto(GStrv) split = NULL;
+
+        split = g_strsplit (str, ",", -1);
+        if (g_strv_length (split) != 3) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "Invalid format string, expected 3 elements: 'firmware-version', 'config-version' and 'carrier'");
+            return NULL;
+        }
+
+        props.firmware_version = g_strdup (split[0]);
+        props.config_version   = g_strdup (split[1]);
+        props.carrier          = g_strdup (split[2]);
     }
 
     /* modem unique id is the fixed wildcard string '?_?' matching any pri.
-     * modem build id format is "(fwver)_?", matching any carrier */
+     * modem build id format is "(firmware_version)_?", matching any carrier */
     firmware_preference_ctx->modem_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM;
     firmware_preference_ctx->modem_image_id.unique_id = g_array_sized_new (FALSE, TRUE, 1, 16);
     g_array_insert_vals (firmware_preference_ctx->modem_image_id.unique_id, 0, "?_?", 3);
     g_array_set_size (firmware_preference_ctx->modem_image_id.unique_id, 16);
-    firmware_preference_ctx->modem_image_id.build_id = g_strdup_printf ("%s_?", split[0]);
+    firmware_preference_ctx->modem_image_id.build_id = g_strdup_printf ("%s_?", props.firmware_version);
 
-    /* pri unique id is the "(config)" input */
+    /* pri unique id is the "(config_version)" input */
     firmware_preference_ctx->pri_image_id.type = QMI_DMS_FIRMWARE_IMAGE_TYPE_PRI;
     firmware_preference_ctx->pri_image_id.unique_id = g_array_sized_new (FALSE, TRUE, 1, 16);
-    g_array_insert_vals (firmware_preference_ctx->pri_image_id.unique_id, 0, split[1], strlen (split[1]));
+    g_array_insert_vals (firmware_preference_ctx->pri_image_id.unique_id, 0, props.config_version, strlen (props.config_version));
     g_array_set_size (firmware_preference_ctx->pri_image_id.unique_id, 16);
-    firmware_preference_ctx->pri_image_id.build_id = g_strdup_printf ("%s_%s", split[0], split[2]);
+    firmware_preference_ctx->pri_image_id.build_id = g_strdup_printf ("%s_%s", props.firmware_version, props.carrier);
 
     /* Create an array with both images, the contents of each image struct,
      * though, aren't owned by the array (i.e. need to be disposed afterwards
@@ -3555,11 +3675,15 @@ set_firmware_preference_input_create (const gchar                  *str,
     /* The input bundle takes a reference to the array itself */
     input = qmi_message_dms_set_firmware_preference_input_new ();
     qmi_message_dms_set_firmware_preference_input_set_list (input, array, NULL);
-    g_array_unref (array);
 
-    g_strfreev (split);
+    /* Other optional settings */
+    if (props.modem_storage_index >= 0)
+        qmi_message_dms_set_firmware_preference_input_set_modem_storage_index (input, (guint8)props.modem_storage_index, NULL);
+    if (props.override_download_set)
+        qmi_message_dms_set_firmware_preference_input_set_download_override (input, props.override_download, NULL);
 
-    return input;
+    set_firmware_preference_properties_clear (&props);
+    return g_steal_pointer (&input);
 }
 
 #endif /* HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE */
@@ -4931,14 +5055,16 @@ qmicli_dms_run (QmiDevice *device,
 
 #if defined HAVE_QMI_MESSAGE_DMS_SET_FIRMWARE_PREFERENCE
     if (set_firmware_preference_str) {
-        QmiMessageDmsSetFirmwarePreferenceInput *input;
-        SetFirmwarePreferenceContext             firmware_preference_ctx;
+        g_autoptr(GError)                                  error = NULL;
+        g_autoptr(QmiMessageDmsSetFirmwarePreferenceInput) input = NULL;
+        SetFirmwarePreferenceContext                       firmware_preference_ctx;
 
         memset (&firmware_preference_ctx, 0, sizeof (firmware_preference_ctx));
 
         g_debug ("Asynchronously setting firmware preference...");
-        input = set_firmware_preference_input_create (set_firmware_preference_str, &firmware_preference_ctx);
+        input = set_firmware_preference_input_create (set_firmware_preference_str, &firmware_preference_ctx, &error);
         if (!input) {
+            g_printerr ("error: %s\n", error->message);
             operation_shutdown (FALSE);
             return;
         }
@@ -4951,7 +5077,6 @@ qmicli_dms_run (QmiDevice *device,
             (GAsyncReadyCallback)dms_set_firmware_preference_ready,
             NULL);
         set_firmware_preference_context_clear (&firmware_preference_ctx);
-        qmi_message_dms_set_firmware_preference_input_unref (input);
         return;
     }
 #endif
