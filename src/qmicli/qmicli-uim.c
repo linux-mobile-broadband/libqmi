@@ -44,8 +44,6 @@ typedef struct {
     /* For Slot Status indication */
     guint slot_status_indication_id;
     guint refresh_indication_id;
-    gboolean warned_slot_ext_info_unavailable;
-    gboolean warned_slot_eid_info_unavailable;
 } Context;
 static Context *ctx;
 
@@ -1120,19 +1118,9 @@ get_slot_status_ready (QmiClientUim *client,
         return;
     }
 
-    if (!qmi_message_uim_get_slot_status_output_get_physical_slot_information (
-            output, &ext_information, &error)) {
-        /* Recoverable, just print less information per slot */
-        g_print ("  Extended slots information is unavailable: %s\n", error->message);
-        g_clear_error (&error);
-    }
-
-    if (!qmi_message_uim_get_slot_status_output_get_slot_eid_information (
-          output, &slot_eids, &error)) {
-        /* Recoverable, just print less information per slot */
-        g_print ("  Slot EID information is unavailable: %s\n", error->message);
-        g_clear_error (&error);
-    }
+    /* Both of these are recoverable, just print less information per slot */
+    qmi_message_uim_get_slot_status_output_get_physical_slot_information (output, &ext_information, NULL);
+    qmi_message_uim_get_slot_status_output_get_slot_eid_information (output, &slot_eids, NULL);
 
     g_print ("[%s] %u physical slots found:\n",
              qmi_device_get_path_display (ctx->device), physical_slots->len);
@@ -1302,21 +1290,9 @@ slot_status_received (QmiClientUim *client,
         return;
     }
 
-    /* Both of these are recoverable, just print less information per slot. Only print
-     * these messages once rather than every time we get an indication */
-    if (!qmi_indication_uim_slot_status_output_get_physical_slot_information (
-          output, &ext_information, &error) && !ctx->warned_slot_ext_info_unavailable) {
-        g_print ("  Extended slots information is unavailable: %s\n", error->message);
-        ctx->warned_slot_ext_info_unavailable = TRUE;
-    }
-    g_clear_error (&error);
-
-    if (!qmi_indication_uim_slot_status_output_get_slot_eid_information (
-          output, &slot_eids, &error) && !ctx->warned_slot_eid_info_unavailable) {
-        g_print ("  Slot EID information is unavailable: %s\n", error->message);
-        ctx->warned_slot_eid_info_unavailable = TRUE;
-    }
-    g_clear_error (&error);
+    /* Both of these are recoverable, just print less information per slot */
+    qmi_indication_uim_slot_status_output_get_physical_slot_information (output, &ext_information, NULL);
+    qmi_indication_uim_slot_status_output_get_slot_eid_information (output, &slot_eids, NULL);
 
     print_slot_status (physical_slots, ext_information, slot_eids);
 }
