@@ -1204,9 +1204,9 @@ qmi_device_allocate_client (QmiDevice *self,
         break;
     case QMI_SERVICE_GMS:
 #if defined HAVE_QMI_SERVICE_GMS
-	ctx->client_type = QMI_TYPE_CLIENT_GMS;
+        ctx->client_type = QMI_TYPE_CLIENT_GMS;
 #endif
-	break;
+        break;
     case QMI_SERVICE_WDA:
 #if defined HAVE_QMI_SERVICE_WDA
         ctx->client_type = QMI_TYPE_CLIENT_WDA;
@@ -2004,7 +2004,7 @@ device_create_endpoint (QmiDevice *self,
             self->priv->endpoint = QMI_ENDPOINT (qmi_endpoint_qrtr_new (self->priv->node));
         } else
 #endif
-	{
+        {
             self->priv->endpoint = QMI_ENDPOINT (qmi_endpoint_qmux_new (self->priv->file,
                                                                         self->priv->proxy_path,
                                                                         self->priv->client_ctl));

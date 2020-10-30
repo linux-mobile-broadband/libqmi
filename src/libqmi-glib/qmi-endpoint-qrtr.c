@@ -307,10 +307,10 @@ construct_alloc_tlv (QmiMessage *message, guint8 service, guint8 client)
     init_offset = qmi_message_tlv_write_init (message,
                                               QMI_MESSAGE_TLV_ALLOCATION_INFO,
                                               NULL);
-	return init_offset &&
-	    qmi_message_tlv_write_guint8 (message, service, NULL) &&
-	    qmi_message_tlv_write_guint8 (message, client, NULL) &&
-	    qmi_message_tlv_write_complete (message, init_offset, NULL);
+    return init_offset &&
+        qmi_message_tlv_write_guint8 (message, service, NULL) &&
+        qmi_message_tlv_write_guint8 (message, client, NULL) &&
+        qmi_message_tlv_write_complete (message, init_offset, NULL);
 }
 
 static void
