@@ -369,7 +369,7 @@ qrtr_node_wait_for_services (QrtrNode            *self,
         return;
     }
 
-    waiter = g_slice_new (QrtrServiceWaiter);
+    waiter = g_slice_new0 (QrtrServiceWaiter);
     waiter->services = g_array_ref (services);
     waiter->task = task;
     if (timeout > 0) {
