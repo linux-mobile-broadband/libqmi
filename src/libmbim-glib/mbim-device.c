@@ -877,8 +877,13 @@ read_max_control_transfer (MbimDevice *self)
     /* Build descriptors filepath */
     descriptors_path = get_descriptors_filepath (self);
     if (!descriptors_path) {
-        g_warning ("[%s] Couldn't get descriptors file path",
-                   self->priv->path_display);
+        /* If descriptors file doesn't exist, it's probably because we're using
+         * some other kernel driver, not the cdc_wdm/cdc_mbim pair, so fallback to
+         * the default and avoid warning about it. */
+        g_debug ("[%s] Couldn't find descriptors file, possibly not using cdc_mbim",
+                 self->priv->path_display);
+        g_debug ("[%s] Fallback to default max control message size: %u",
+                 self->priv->path_display, MAX_CONTROL_TRANSFER);
         return MAX_CONTROL_TRANSFER;
     }
 
