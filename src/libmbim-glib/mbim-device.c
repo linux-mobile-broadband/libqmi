@@ -41,10 +41,6 @@
 #define OPEN_RETRY_TIMEOUT_SECS 5
 #define OPEN_CLOSE_TIMEOUT_SECS 2
 
-#if defined WITH_UDEV
-# include <gudev/gudev.h>
-#endif
-
 #include "mbim-common.h"
 #include "mbim-utils.h"
 #include "mbim-device.h"
@@ -827,89 +823,6 @@ struct usb_cdc_mbim_desc {
     guint8  bmNetworkCapabilities;
 } __attribute__ ((packed));
 
-#if defined WITH_UDEV
-
-static gchar *
-get_descriptors_filepath (MbimDevice *self)
-{
-    GUdevClient       *client;
-    GUdevDevice       *device = NULL;
-    GUdevDevice       *parent_device = NULL;
-    GUdevDevice       *grandparent_device = NULL;
-    g_autofree gchar  *descriptors_path = NULL;
-    g_autofree gchar  *device_basename = NULL;
-    g_autoptr(GError)  error = NULL;
-
-    client = g_udev_client_new (NULL);
-    if (!G_UDEV_IS_CLIENT (client)) {
-        g_warning ("[%s] Couldn't get udev client",
-                   self->priv->path_display);
-        goto out;
-    }
-
-    /* We need to get the sysfs of the cdc-wdm's grandfather:
-     *
-     *   * Device's sysfs path is like:
-     *      /sys/devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.5/2-1.5:2.0/usbmisc/cdc-wdm0
-     *   * Parent's sysfs path is like:
-     *      /sys/devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.5/2-1.5:2.0
-     *   * Grandparent's sysfs path is like:
-     *      /sys/devices/pci0000:00/0000:00:1d.0/usb2/2-1/2-1.5
-     *
-     *   Which is the one with the descriptors file.
-     */
-
-    device_basename = __mbim_utils_get_devname (self->priv->path, &error);
-    if (!device_basename) {
-        g_warning ("[%s] Invalid path for cdc-wdm control port: %s",
-                   self->priv->path_display, error->message);
-        goto out;
-    }
-
-    device = g_udev_client_query_by_subsystem_and_name (client, "usb", device_basename);
-    if (!device) {
-        device = g_udev_client_query_by_subsystem_and_name (client, "usbmisc", device_basename);
-        if (!device) {
-            g_warning ("[%s] Couldn't find udev device",
-                       self->priv->path_display);
-            goto out;
-        }
-    }
-
-    parent_device = g_udev_device_get_parent (device);
-    if (!parent_device) {
-        g_warning ("[%s] Couldn't find parent udev device",
-                   self->priv->path_display);
-        goto out;
-    }
-
-    grandparent_device = g_udev_device_get_parent (parent_device);
-    if (!grandparent_device) {
-        g_warning ("[%s] Couldn't find grandparent udev device",
-                   self->priv->path_display);
-        goto out;
-    }
-
-    descriptors_path = g_build_path (G_DIR_SEPARATOR_S,
-                                     g_udev_device_get_sysfs_path (grandparent_device),
-                                     "descriptors",
-                                     NULL);
-
-out:
-    if (parent_device)
-        g_object_unref (parent_device);
-    if (grandparent_device)
-        g_object_unref (grandparent_device);
-    if (device)
-        g_object_unref (device);
-    if (client)
-        g_object_unref (client);
-
-    return g_steal_pointer (&descriptors_path);
-}
-
-#else
-
 static gchar *
 get_descriptors_filepath (MbimDevice *self)
 {
@@ -950,8 +863,6 @@ get_descriptors_filepath (MbimDevice *self)
 
     return g_steal_pointer (&descriptors_path);
 }
-
-#endif
 
 static guint16
 read_max_control_transfer (MbimDevice *self)

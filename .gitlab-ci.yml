@@ -4,7 +4,7 @@ stages:
   - test
 
 before_script:
-  - apt update && apt -y install autoconf automake libtool libgudev-1.0-dev autoconf-archive gtk-doc-tools libglib2.0-doc gobject-introspection libgirepository1.0-dev
+  - apt update && apt -y install autoconf automake libtool autoconf-archive gtk-doc-tools libglib2.0-doc gobject-introspection libgirepository1.0-dev
 
 test:
   stage: test
@@ -22,4 +22,3 @@ test:
       - /builds/$CI_PROJECT_ROOT_NAMESPACE/$CI_PROJECT_NAME/$CI_PROJECT_NAME-*.tar.xz
       - /builds/$CI_PROJECT_ROOT_NAMESPACE/$CI_PROJECT_NAME/pkg_hash.txt
     expire_in: 2 days
-
