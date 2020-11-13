@@ -845,7 +845,7 @@ get_descriptors_filepath (MbimDevice *self)
         tmp = g_strdup_printf ("/sys/class/%s/%s/device", subsystems[i], device_basename);
         path = realpath (tmp, NULL);
 
-        if (g_file_test (path, G_FILE_TEST_EXISTS)) {
+        if (path && g_file_test (path, G_FILE_TEST_EXISTS)) {
             /* Now look for the parent dir with descriptors file. */
             g_autofree gchar *dirname = NULL;
 
