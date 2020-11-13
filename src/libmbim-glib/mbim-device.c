@@ -158,8 +158,11 @@ transaction_context_free (TransactionContext *ctx)
     if (ctx->fragments)
         mbim_message_unref (ctx->fragments);
 
-    if (ctx->timeout_source)
-        g_source_destroy (ctx->timeout_source);
+    if (ctx->timeout_source) {
+        if (!g_source_is_destroyed (ctx->timeout_source))
+            g_source_destroy (ctx->timeout_source);
+        g_source_unref (ctx->timeout_source);
+    }
 
     if (ctx->cancellable) {
         if (ctx->cancellable_id)
@@ -369,7 +372,6 @@ device_store_transaction (MbimDevice       *self,
         ctx->timeout_source = g_timeout_source_new (timeout_ms);
         g_source_set_callback (ctx->timeout_source, (GSourceFunc)transaction_timed_out, ctx->wait_ctx, NULL);
         g_source_attach (ctx->timeout_source, g_main_context_get_thread_default ());
-        g_source_unref (ctx->timeout_source);
     }
 
     /* Indication transactions don't have cancellable */
