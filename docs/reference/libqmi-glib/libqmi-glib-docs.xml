@@ -352,6 +352,8 @@
       <xi:include href="xml/qmi-message-uim-power-off-sim.xml"/>
       <xi:include href="xml/qmi-message-uim-power-on-sim.xml"/>
       <xi:include href="xml/qmi-message-uim-change-provisioning-session.xml"/>
+      <xi:include href="xml/qmi-message-uim-depersonalization.xml"/>
+      <xi:include href="xml/qmi-message-uim-get-configuration.xml"/>
       <xi:include href="xml/qmi-message-uim-switch-slot.xml"/>
       <xi:include href="xml/qmi-message-uim-get-slot-status.xml"/>
       <xi:include href="xml/qmi-message-uim-refresh-register.xml"/>

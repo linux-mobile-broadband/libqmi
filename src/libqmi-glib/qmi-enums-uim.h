@@ -468,4 +468,35 @@ typedef enum { /*< since=1.26 >*/
     QMI_UIM_CARD_PROTOCOL_UICC    = 2,
 } QmiUimCardProtocol;
 
+/**
+ * QmiUimConfiguration:
+ * @QMI_UIM_CONFIGURATION_AUTOMATIC_SELECTION: Automatic selection.
+ * @QMI_UIM_CONFIGURATION_PERSONALIZATION_STATUS: Personalization status.
+ * @QMI_UIM_CONFIGURATION_HALT_SUBSCRIPTION: Halt publication of subscription.
+ *
+ * Requested configurations. If none explicitly requested, all configuration
+ * items are returned.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.30 >*/
+    QMI_UIM_CONFIGURATION_AUTOMATIC_SELECTION    = 1 << 0,
+    QMI_UIM_CONFIGURATION_PERSONALIZATION_STATUS = 1 << 1,
+    QMI_UIM_CONFIGURATION_HALT_SUBSCRIPTION      = 1 << 2,
+} QmiUimConfiguration;
+
+/**
+ * QmiUimDepersonalizationOperation:
+ * @QMI_UIM_DEPERSONALIZATION_OPERATION_DEACTIVATE: Deactivate personalization
+ * @QMI_UIM_DEPERSONALIZATION_OPERATION_UNBLOCK: Unblock personalization
+ *
+ * Depersonalization operation to perform.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.30 >*/
+    QMI_UIM_DEPERSONALIZATION_OPERATION_DEACTIVATE = 0,
+    QMI_UIM_DEPERSONALIZATION_OPERATION_UNBLOCK    = 1,
+} QmiUimDepersonalizationOperation;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_UIM_H_ */
