@@ -58,6 +58,7 @@ Makefile.in
 /docs/reference/libqmi-glib/libqmi-glib.interfaces
 /docs/reference/libqmi-glib/libqmi-glib.prerequisites
 /docs/reference/libqmi-glib/libqmi-glib.signals
+/docs/reference/libqmi-glib/libqmi-glib.actions
 /docs/reference/libqmi-glib/libqmi-glib.types
 /docs/reference/libqmi-glib/*.mstamp
 /docs/reference/libqmi-glib/*.stamp
