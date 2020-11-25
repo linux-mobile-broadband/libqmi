@@ -20,6 +20,7 @@ mbimcli_SOURCES = \
 	mbimcli-dss.c \
 	mbimcli-ms-firmware-id.c \
 	mbimcli-ms-host-shutdown.c \
+	mbimcli-ms-sar.c \
 	mbimcli-atds.c \
 	mbimcli-intel-firmware-update.c \
 	mbimcli-ms-basic-connect-extensions.c \

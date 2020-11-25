@@ -11,6 +11,7 @@ MBIMCLI_SOURCES_WITH_HELP = \
 	$(top_srcdir)/src/mbimcli/mbimcli-dss.c \
 	$(top_srcdir)/src/mbimcli/mbimcli-ms-firmware-id.c \
 	$(top_srcdir)/src/mbimcli/mbimcli-ms-host-shutdown.c \
+	$(top_srcdir)/src/mbimcli/mbimcli-ms-sar.c \
 	$(top_srcdir)/src/mbimcli/mbimcli-intel-firmware-update.c \
 	$(top_srcdir)/src/mbimcli/mbimcli-phonebook.c \
 	$(top_srcdir)/src/mbimcli/mbimcli.c

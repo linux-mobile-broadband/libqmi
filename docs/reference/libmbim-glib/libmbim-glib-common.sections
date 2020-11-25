@@ -27,6 +27,7 @@ MBIM_UUID_PROXY_CONTROL
 MBIM_UUID_QMI
 MBIM_UUID_INTEL_FIRMWARE_UPDATE
 MBIM_UUID_MS_BASIC_CONNECT_EXTENSIONS
+MBIM_UUID_MS_SAR
 <SUBSECTION Methods>
 mbim_service_get_string
 mbim_service_lookup_name
@@ -63,6 +64,7 @@ MbimCidProxyControl
 MbimCidQmi
 MbimCidIntelFirmwareUpdate
 MbimCidMsBasicConnectExtensions
+MbimCidMsSar
 <SUBSECTION Methods>
 mbim_cid_can_set
 mbim_cid_can_query
@@ -82,6 +84,7 @@ mbim_cid_proxy_control_get_string
 mbim_cid_qmi_get_string
 mbim_cid_intel_firmware_update_get_string
 mbim_cid_ms_basic_connect_extensions_get_string
+mbim_cid_ms_sar_get_string
 <SUBSECTION Private>
 mbim_cid_atds_build_string_from_mask
 mbim_cid_basic_connect_build_string_from_mask
@@ -97,6 +100,7 @@ mbim_cid_proxy_control_build_string_from_mask
 mbim_cid_qmi_build_string_from_mask
 mbim_cid_intel_firmware_update_build_string_from_mask
 mbim_cid_ms_basic_connect_extensions_build_string_from_mask
+mbim_cid_ms_sar_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_CID_ATDS
 MBIM_TYPE_CID_AUTH
@@ -112,6 +116,7 @@ MBIM_TYPE_CID_PROXY_CONTROL
 MBIM_TYPE_CID_QMI
 MBIM_TYPE_CID_INTEL_FIRMWARE_UPDATE
 MBIM_TYPE_CID_MS_BASIC_CONNECT_EXTENSIONS
+MBIM_TYPE_CID_MS_SAR
 mbim_cid_atds_get_type
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
@@ -126,6 +131,7 @@ mbim_cid_proxy_control_get_type
 mbim_cid_qmi_get_type
 mbim_cid_intel_firmware_update_get_type
 mbim_cid_ms_basic_connect_extensions_get_type
+mbim_cid_ms_sar_get_type
 </SECTION>
 
 <SECTION>
@@ -320,6 +326,9 @@ MbimContextSource
 MbimLteAttachContextOperation
 MbimLteAttachContextRoamingControl
 MbimLteAttachState
+MbimSarBackoffState
+MbimSarControlMode
+MbimSarWifiHardwareState
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -376,6 +385,9 @@ mbim_context_source_get_string
 mbim_lte_attach_context_operation_get_string
 mbim_lte_attach_context_roaming_control_get_string
 mbim_lte_attach_state_get_string
+mbim_sar_backoff_state_get_string
+mbim_sar_control_mode_get_string
+mbim_sar_wifi_hardware_state_get_string
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -434,6 +446,9 @@ mbim_context_source_build_string_from_mask
 mbim_lte_attach_context_operation_build_string_from_mask
 mbim_lte_attach_context_roaming_control_build_string_from_mask
 mbim_lte_attach_state_build_string_from_mask
+mbim_sar_backoff_state_build_string_from_mask
+mbim_sar_control_mode_build_string_from_mask
+mbim_sar_wifi_hardware_state_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -495,6 +510,9 @@ MBIM_TYPE_CONTEXT_SOURCE
 MBIM_TYPE_LTE_ATTACH_CONTEXT_OPERATION
 MBIM_TYPE_LTE_ATTACH_CONTEXT_ROAMING_CONTROL
 MBIM_TYPE_LTE_ATTACH_STATE
+MBIM_TYPE_SAR_BACKOFF_STATE
+MBIM_TYPE_SAR_CONTROL_MODE
+MBIM_TYPE_SAR_WIFI_HARDWARE_STATE
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type
@@ -555,6 +573,9 @@ mbim_context_source_get_type
 mbim_lte_attach_context_operation_get_type
 mbim_lte_attach_context_roaming_control_get_type
 mbim_lte_attach_state_get_type
+mbim_sar_backoff_state_get_type
+mbim_sar_control_mode_get_type
+mbim_sar_wifi_hardware_state_get_type
 </SECTION>
 
 <SECTION>

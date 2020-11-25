@@ -1212,6 +1212,45 @@ typedef enum { /*< since=1.18 >*/
     MBIM_LTE_ATTACH_STATE_ATTACHED = 1
 } MbimLteAttachState;
 
+/*****************************************************************************/
+/* 'SAR config' enums */
+
+/**
+ * MbimSarControlMode:
+ * @MBIM_SAR_CONTROL_MODE_DEVICE: SAR backoff is controlled by the modem directly.
+ * @MBIM_SAR_CONTROL_MODE_OS: SAR backoff is controlled by the host operating system.
+ *
+ * SAR backoff mechanism control modes.
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_SAR_CONTROL_MODE_DEVICE = 0,
+    MBIM_SAR_CONTROL_MODE_OS     = 1
+} MbimSarControlMode;
+
+/**
+ * MbimSarBackoffState:
+ * @MBIM_SAR_BACKOFF_STATE_DISABLED: SAR backoff is disabled.
+ * @MBIM_SAR_BACKOFF_STATE_ENABLED: SAR backoff is enabled.
+ *
+ * SAR backoff state.
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_SAR_BACKOFF_STATE_DISABLED = 0,
+    MBIM_SAR_BACKOFF_STATE_ENABLED  = 1
+} MbimSarBackoffState;
+
+/**
+ * MbimSarWifiHardwareState:
+ * @MBIM_SAR_WIFI_HARDWARE_STATE_INTEGRATED: Integrated.
+ * @MBIM_SAR_WIFI_HARDWARE_STATE_NOT_INTEGRATED: Not integrated.
+ *
+ * Whether the Wi-Fi and cellular SAR are integrated at hardware level.
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_SAR_WIFI_HARDWARE_STATE_INTEGRATED = 0,
+    MBIM_SAR_WIFI_HARDWARE_STATE_NOT_INTEGRATED = 1
+} MbimSarWifiHardwareState;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

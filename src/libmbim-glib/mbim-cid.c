@@ -128,6 +128,13 @@ static const CidConfig cid_ms_host_shutdown_config [MBIM_CID_MS_HOST_SHUTDOWN_LA
 };
 
 /* Note: index of the array is CID-1 */
+#define MBIM_CID_MS_SAR_LAST MBIM_CID_MS_SAR_TRANSMISSION_STATUS
+static const CidConfig cid_ms_sar_config [MBIM_CID_MS_SAR_LAST] = {
+    { SET, QUERY, NOTIFY }, /* MBIM_CID_MS_SAR_CONFIG */
+    { SET, QUERY, NOTIFY }, /* MBIM_CID_MS_SAR_TRANSMISSION_STATUS */
+};
+
+/* Note: index of the array is CID-1 */
 #define MBIM_CID_PROXY_CONTROL_LAST MBIM_CID_PROXY_CONTROL_CONFIGURATION
 static const CidConfig cid_proxy_control_config [MBIM_CID_PROXY_CONTROL_LAST] = {
     { SET, NO_QUERY, NO_NOTIFY }, /* MBIM_CID_PROXY_CONTROL_CONFIGURATION */
@@ -199,6 +206,8 @@ mbim_cid_can_set (MbimService service,
         return cid_ms_firmware_id_config[cid - 1].set;
     case MBIM_SERVICE_MS_HOST_SHUTDOWN:
         return cid_ms_host_shutdown_config[cid - 1].set;
+    case MBIM_SERVICE_MS_SAR:
+        return cid_ms_sar_config[cid - 1].set;
     case MBIM_SERVICE_PROXY_CONTROL:
         return cid_proxy_control_config[cid - 1].set;
     case MBIM_SERVICE_QMI:
@@ -246,6 +255,8 @@ mbim_cid_can_query (MbimService service,
         return cid_ms_firmware_id_config[cid - 1].query;
     case MBIM_SERVICE_MS_HOST_SHUTDOWN:
         return cid_ms_host_shutdown_config[cid - 1].query;
+    case MBIM_SERVICE_MS_SAR:
+        return cid_ms_sar_config[cid - 1].query;
     case MBIM_SERVICE_PROXY_CONTROL:
         return cid_proxy_control_config[cid - 1].query;
     case MBIM_SERVICE_QMI:
@@ -293,6 +304,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_ms_firmware_id_config[cid - 1].notify;
     case MBIM_SERVICE_MS_HOST_SHUTDOWN:
         return cid_ms_host_shutdown_config[cid - 1].notify;
+    case MBIM_SERVICE_MS_SAR:
+        return cid_ms_sar_config[cid - 1].notify;
     case MBIM_SERVICE_PROXY_CONTROL:
         return cid_proxy_control_config[cid - 1].notify;
     case MBIM_SERVICE_QMI:
@@ -341,6 +354,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_ms_firmware_id_get_string (cid);
     case MBIM_SERVICE_MS_HOST_SHUTDOWN:
         return mbim_cid_ms_host_shutdown_get_string (cid);
+    case MBIM_SERVICE_MS_SAR:
+        return mbim_cid_ms_sar_get_string (cid);
     case MBIM_SERVICE_PROXY_CONTROL:
         return mbim_cid_proxy_control_get_string (cid);
     case MBIM_SERVICE_QMI:

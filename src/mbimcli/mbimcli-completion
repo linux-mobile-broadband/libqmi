@@ -65,7 +65,7 @@ _mbimcli()
         '-V'|'--version')
             return 0
             ;;
-        '-h'|'--help'|'--help-all'|'--help-basic-connect'|'--help-phonebook'|'--help-dss'|'--help-ms-firmware-id'|'--help-ms-host-shutdown')
+        '-h'|'--help'|'--help-all'|'--help-basic-connect'|'--help-phonebook'|'--help-dss'|'--help-ms-firmware-id'|'--help-ms-host-shutdown'|'--help-ms-sar')
             return 0
             ;;
     esac

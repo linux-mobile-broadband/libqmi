@@ -34,6 +34,7 @@ GOptionGroup *mbimcli_phonebook_get_option_group        (void);
 GOptionGroup *mbimcli_dss_get_option_group              (void);
 GOptionGroup *mbimcli_ms_firmware_id_get_option_group   (void);
 GOptionGroup *mbimcli_ms_host_shutdown_get_option_group (void);
+GOptionGroup *mbimcli_ms_sar_get_option_group           (void);
 GOptionGroup *mbimcli_atds_get_option_group             (void);
 GOptionGroup *mbimcli_intel_firmware_update_get_option_group (void);
 GOptionGroup *mbimcli_ms_basic_connect_extensions_get_option_group (void);
@@ -43,6 +44,7 @@ gboolean      mbimcli_phonebook_options_enabled         (void);
 gboolean      mbimcli_dss_options_enabled               (void);
 gboolean      mbimcli_ms_firmware_id_options_enabled    (void);
 gboolean      mbimcli_ms_host_shutdown_options_enabled  (void);
+gboolean      mbimcli_ms_sar_options_enabled            (void);
 gboolean      mbimcli_atds_options_enabled              (void);
 gboolean      mbimcli_intel_firmware_update_options_enabled (void);
 gboolean      mbimcli_ms_basic_connect_extensions_options_enabled (void);
@@ -56,6 +58,8 @@ void          mbimcli_dss_run                           (MbimDevice *device,
 void          mbimcli_ms_firmware_id_run                (MbimDevice *device,
                                                          GCancellable *cancellable);
 void          mbimcli_ms_host_shutdown_run              (MbimDevice *device,
+                                                         GCancellable *cancellable);
+void          mbimcli_ms_sar_run                        (MbimDevice *device,
                                                          GCancellable *cancellable);
 void          mbimcli_atds_run                          (MbimDevice *device,
                                                          GCancellable *cancellable);

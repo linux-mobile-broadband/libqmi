@@ -278,6 +278,9 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_MS_HOST_SHUTDOWN:
         mbimcli_ms_host_shutdown_run (dev, cancellable);
         return;
+    case MBIM_SERVICE_MS_SAR:
+        mbimcli_ms_sar_run (dev, cancellable);
+        return;
     case MBIM_SERVICE_ATDS:
         mbimcli_atds_run (dev, cancellable);
         return;
@@ -366,6 +369,9 @@ parse_actions (void)
     } else if (mbimcli_ms_host_shutdown_options_enabled ()) {
         service = MBIM_SERVICE_MS_HOST_SHUTDOWN;
         actions_enabled++;
+    } else if (mbimcli_ms_sar_options_enabled ()) {
+        service = MBIM_SERVICE_MS_SAR;
+        actions_enabled++;
     } else if (mbimcli_atds_options_enabled ()) {
         service = MBIM_SERVICE_ATDS;
         actions_enabled++;
@@ -416,6 +422,8 @@ int main (int argc, char **argv)
                                 mbimcli_ms_firmware_id_get_option_group ());
     g_option_context_add_group (context,
                                 mbimcli_ms_host_shutdown_get_option_group ());
+    g_option_context_add_group (context,
+                                mbimcli_ms_sar_get_option_group ());
     g_option_context_add_group (context,
                                 mbimcli_atds_get_option_group ());
     g_option_context_add_group (context,

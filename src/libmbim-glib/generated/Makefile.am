@@ -12,6 +12,7 @@ GENERATED_H = \
 	mbim-dss.h \
 	mbim-ms-firmware-id.h \
 	mbim-ms-host-shutdown.h \
+	mbim-ms-sar.h \
 	mbim-proxy-control.h \
 	mbim-qmi.h \
 	mbim-atds.h \
@@ -31,6 +32,7 @@ GENERATED_C = \
 	mbim-dss.c \
 	mbim-ms-firmware-id.c \
 	mbim-ms-host-shutdown.c \
+	mbim-ms-sar.c \
 	mbim-proxy-control.c \
 	mbim-qmi.c \
 	mbim-atds.c \
@@ -47,6 +49,7 @@ GENERATED_SECTIONS = \
 	mbim-dss.sections \
 	mbim-ms-firmware-id.sections \
 	mbim-ms-host-shutdown.sections \
+	mbim-ms-sar.sections \
 	mbim-proxy-control.sections \
 	mbim-qmi.sections \
 	mbim-atds.sections \
@@ -172,6 +175,15 @@ mbim-ms-host-shutdown.h mbim-ms-host-shutdown.c mbim-ms-host-shutdown.sections: 
 		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-ms-host-shutdown.json \
 			--output mbim-ms-host-shutdown
+
+# Microsoft SAR service
+mbim-ms-sar.h mbim-ms-sar.c mbim-ms-sar.sections: $(top_srcdir)/data/mbim-service-ms-sar.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-ms-sar.h && \
+		rm -f mbim-ms-sar.c && \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-ms-sar.json \
+			--output mbim-ms-sar
 
 # Proxy Control service
 mbim-proxy-control.h mbim-proxy-control.c mbim-proxy-control.sections: $(top_srcdir)/data/mbim-service-proxy-control.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen

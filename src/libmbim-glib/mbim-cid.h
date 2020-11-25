@@ -234,6 +234,22 @@ typedef enum { /*< since=1.8 >*/
 } MbimCidMsHostShutdown;
 
 /**
+ * MbimCidMsSar:
+ * @MBIM_CID_MS_SAR_UNKNOWN: Unknown command.
+ * @MBIM_CID_MS_SAR_CONFIG: SAR backoff mode and level configuration.
+ * @MBIM_CID_MS_SAR_TRANSMISSION_STATUS: Transmission status indication setup.
+ *
+ * MBIM commands in the %MBIM_SERVICE_MS_SAR service.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_CID_MS_SAR_UNKNOWN             = 0,
+    MBIM_CID_MS_SAR_CONFIG              = 1,
+    MBIM_CID_MS_SAR_TRANSMISSION_STATUS = 2
+} MbimCidMsSar;
+
+/**
  * MbimCidProxyControl:
  * @MBIM_CID_PROXY_CONTROL_UNKNOWN: Unknown command.
  * @MBIM_CID_PROXY_CONTROL_CONFIGURATION: Configuration.

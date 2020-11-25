@@ -17,6 +17,7 @@ ALL_SECTIONS = \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-dss.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-ms-firmware-id.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-ms-host-shutdown.sections \
+	$(top_builddir)/src/libmbim-glib/generated/mbim-ms-sar.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-qmi.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-atds.sections \
 	$(top_builddir)/src/libmbim-glib/generated/mbim-intel-firmware-update.sections \

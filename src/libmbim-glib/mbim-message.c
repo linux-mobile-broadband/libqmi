@@ -43,6 +43,7 @@
 #include "mbim-qmi.h"
 #include "mbim-ms-firmware-id.h"
 #include "mbim-ms-host-shutdown.h"
+#include "mbim-ms-sar.h"
 #include "mbim-atds.h"
 #include "mbim-intel-firmware-update.h"
 #include "mbim-ms-basic-connect-extensions.h"
@@ -1516,6 +1517,9 @@ mbim_message_get_printable (const MbimMessage *self,
             break;
         case MBIM_SERVICE_MS_HOST_SHUTDOWN:
             fields_printable = __mbim_message_ms_host_shutdown_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_MS_SAR:
+            fields_printable = __mbim_message_ms_sar_get_printable_fields (self, line_prefix, &error);
             break;
         case MBIM_SERVICE_PROXY_CONTROL:
             fields_printable = __mbim_message_proxy_control_get_printable_fields (self, line_prefix, &error);

@@ -182,6 +182,14 @@ static const MbimUuid uuid_ms_host_shutdown = {
     .e = { 0x27, 0xd7, 0xfb, 0x80, 0x95, 0x9c }
 };
 
+static const MbimUuid uuid_ms_sar = {
+    .a = { 0x68, 0x22, 0x3d, 0x04 },
+    .b = { 0x9f, 0x6c },
+    .c = { 0x4e, 0x0f },
+    .d = { 0x82, 0x2d },
+    .e = { 0x28, 0x44, 0x1f, 0xb7, 0x23, 0x40 }
+};
+
 static const MbimUuid uuid_proxy_control = {
     .a = { 0x83, 0x8c, 0xf7, 0xfb },
     .b = { 0x8d, 0x0d },
@@ -336,6 +344,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_ms_firmware_id;
     case MBIM_SERVICE_MS_HOST_SHUTDOWN:
         return &uuid_ms_host_shutdown;
+    case MBIM_SERVICE_MS_SAR:
+        return &uuid_ms_sar;
     case MBIM_SERVICE_PROXY_CONTROL:
         return &uuid_proxy_control;
     case MBIM_SERVICE_QMI:
@@ -388,6 +398,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_ms_host_shutdown))
         return MBIM_SERVICE_MS_HOST_SHUTDOWN;
+
+    if (mbim_uuid_cmp (uuid, &uuid_ms_sar))
+        return MBIM_SERVICE_MS_SAR;
 
     if (mbim_uuid_cmp (uuid, &uuid_proxy_control))
         return MBIM_SERVICE_PROXY_CONTROL;

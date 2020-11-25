@@ -121,6 +121,14 @@ test_cid_ms_host_shutdown (void)
                  TRUE, FALSE, FALSE);
 }
 
+static void
+test_cid_ms_sar (void)
+{
+    test_common (MBIM_SERVICE_MS_SAR,
+                 MBIM_CID_MS_SAR_CONFIG,
+                 TRUE, TRUE, TRUE);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -134,6 +142,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/cid/dss",              test_cid_dss);
     g_test_add_func ("/libmbim-glib/cid/ms-firmware-id",   test_cid_ms_firmware_id);
     g_test_add_func ("/libmbim-glib/cid/ms-host-shutdown", test_cid_ms_host_shutdown);
+    g_test_add_func ("/libmbim-glib/cid/ms-sar",           test_cid_ms_sar);
 
     return g_test_run ();
 }
