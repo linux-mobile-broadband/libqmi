@@ -266,7 +266,7 @@ class Struct:
                 ' * ${name_underscore}_array_free:\n'
                 ' * @array: a #NULL terminated array of #${name} structs.\n'
                 ' *\n'
-                ' * Frees the memory allocated for the array of #${name}s.\n'
+                ' * Frees the memory allocated for the array of #${name} structs.\n'
                 ' *\n'
                 ' * Since: ${since}\n'
                 ' */\n'
