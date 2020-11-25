@@ -98,6 +98,7 @@ CLEANFILES += \
 	$(DOC_MODULE).interfaces \
 	$(DOC_MODULE).prerequisites \
 	$(DOC_MODULE).signals \
+	$(DOC_MODULE).actions \
 	$(DOC_MODULE).types \
 	$(DOC_MODULE)-sections.txt \
 	$(DOC_MODULE)-sections.mstamp \

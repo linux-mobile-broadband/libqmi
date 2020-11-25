@@ -34,6 +34,7 @@ Makefile.in
 /docs/reference/libmbim-glib/libmbim-glib.interfaces
 /docs/reference/libmbim-glib/libmbim-glib.prerequisites
 /docs/reference/libmbim-glib/libmbim-glib.signals
+/docs/reference/libmbim-glib/libmbim-glib.actions
 /docs/reference/libmbim-glib/libmbim-glib.types
 /docs/reference/libmbim-glib/*.mstamp
 /docs/reference/libmbim-glib/*.stamp
