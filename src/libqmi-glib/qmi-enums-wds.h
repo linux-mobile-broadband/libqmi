@@ -1841,8 +1841,8 @@ typedef enum { /*< since=1.18 >*/
 
 /**
  * QmiWdsAttachPdnListAction:
- * @WDS_ATTACH_PDN_LIST_ACTION_NONE: No action (default)
- * @WDS_ATTACH_PDN_LIST_ACTION_DETACH_OR_PDN_DISCONNECT: PS detach or PDN disconnect based on the modem configuration
+ * @QMI_WDS_ATTACH_PDN_LIST_ACTION_NONE: No action (default)
+ * @QMI_WDS_ATTACH_PDN_LIST_ACTION_DETACH_OR_PDN_DISCONNECT: PS detach or PDN disconnect based on the modem configuration
  *
  * Action when setting the attach PDN list.
  *
