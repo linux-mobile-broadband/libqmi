@@ -83,8 +83,8 @@ static gchar *bind_mux_str;
 static gchar *set_ip_family_str;
 static gboolean get_channel_rates_flag;
 static gboolean get_max_attach_pdn_flag;
-static gboolean get_attach_pdn_list_flag;
-static gchar *set_attach_pdn_list_str;
+static gboolean get_lte_attach_pdn_list_flag;
+static gchar *set_lte_attach_pdn_list_str;
 
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WDS_START_NETWORK
@@ -256,15 +256,15 @@ static GOptionEntry entries[] = {
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_GET_LTE_ATTACH_PDN_LIST
-    { "wds-get-lte-attach-pdn-list", 0, 0, G_OPTION_ARG_NONE, &get_attach_pdn_list_flag,
-      "Get the list of LTE Attach PDN",
+    { "wds-get-lte-attach-pdn-list", 0, 0, G_OPTION_ARG_NONE, &get_lte_attach_pdn_list_flag,
+      "Get the list of LTE attach PDN",
       NULL
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_SET_LTE_ATTACH_PDN_LIST
-    { "wds-set-lte-attach-pdn-list", 0, 0, G_OPTION_ARG_STRING, &set_attach_pdn_list_str,
-      "Set the list of LTE Attach PDN",
-      "[#,...]"
+    { "wds-set-lte-attach-pdn-list", 0, 0, G_OPTION_ARG_STRING, &set_lte_attach_pdn_list_str,
+      "Set the list of LTE attach PDN",
+      "[#,#,...]"
     },
 #endif
     { "wds-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
@@ -325,8 +325,8 @@ qmicli_wds_options_enabled (void)
                  reset_flag +
                  !!get_channel_rates_flag +
                  get_max_attach_pdn_flag +
-                 get_attach_pdn_list_flag +
-                 !!set_attach_pdn_list_str +
+                 get_lte_attach_pdn_list_flag +
+                 !!set_lte_attach_pdn_list_str +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -2877,34 +2877,25 @@ static void
 get_max_attach_pdn_ready (QmiClientWds *client,
                           GAsyncResult *res)
 {
-    QmiMessageWdsGetLteMaxAttachPdnNumOutput *output;
-    guint8 maxnum = 0;
-    GError *error = NULL;
+    g_autoptr(QmiMessageWdsGetLteMaxAttachPdnNumOutput) output = NULL;
+    g_autoptr(GError)                                   error = NULL;
+    guint8                                              maxnum = 0;
 
     output = qmi_client_wds_get_lte_max_attach_pdn_num_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
         operation_shutdown (FALSE);
         return;
     }
 
     if (!qmi_message_wds_get_lte_max_attach_pdn_num_output_get_result (output, &error)) {
-        g_printerr ("error: couldn't get maximum number of attach PDN: %s\n",
-                    error->message);
-        g_error_free (error);
-        qmi_message_wds_get_lte_max_attach_pdn_num_output_unref (output);
+        g_printerr ("error: couldn't get maximum number of attach PDN: %s\n", error->message);
         operation_shutdown (FALSE);
         return;
     }
 
-    qmi_message_wds_get_lte_max_attach_pdn_num_output_get_max_attach_pdn_number (output,
-                                                                                 &maxnum,
-                                                                                 NULL);
-
-    g_print ("Maximum number of LTE Attach PDN: %u\n", maxnum);
-
-    qmi_message_wds_get_lte_max_attach_pdn_num_output_unref (output);
+    qmi_message_wds_get_lte_max_attach_pdn_num_output_get_max_attach_pdn_number (output, &maxnum, NULL);
+    g_print ("Maximum number of LTE attach PDN: %u\n", maxnum);
     operation_shutdown (TRUE);
 }
 
@@ -2913,40 +2904,39 @@ get_max_attach_pdn_ready (QmiClientWds *client,
 #if defined HAVE_QMI_MESSAGE_WDS_GET_LTE_ATTACH_PDN_LIST
 
 static void
-get_attach_pdn_list_ready (QmiClientWds *client,
-                           GAsyncResult *res)
+get_lte_attach_pdn_list_ready (QmiClientWds *client,
+                               GAsyncResult *res)
 {
-    QmiMessageWdsGetLteAttachPdnListOutput *output;
-    GArray *pdn_list = NULL;
-    GError *error = NULL;
-    guint i;
+    g_autoptr(QmiMessageWdsGetLteAttachPdnListOutput) output = NULL;
+    g_autoptr(GError)                                 error = NULL;
+    GArray                                           *pdn_list = NULL;
+    guint                                             i;
 
     output = qmi_client_wds_get_lte_attach_pdn_list_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
         operation_shutdown (FALSE);
         return;
     }
 
     if (!qmi_message_wds_get_lte_attach_pdn_list_output_get_result (output, &error)) {
-        g_printerr ("error: couldn't get the list of LTE attach PDN: %s\n",
-                    error->message);
-        g_error_free (error);
-        qmi_message_wds_get_lte_attach_pdn_list_output_unref (output);
+        g_printerr ("error: couldn't get the list of LTE attach PDN: %s\n", error->message);
         operation_shutdown (FALSE);
         return;
     }
 
-    qmi_message_wds_get_lte_attach_pdn_list_output_get_lte_attach_pdn_list (output,
-                                                                            &pdn_list,
-                                                                            NULL);
-    g_print ("LTE Attach PDN list (%u): ", pdn_list->len);
-    for (i = 0; i < pdn_list->len; i++)
-        g_print("[%u] ", g_array_index (pdn_list, guint16, i));
-    g_print ("\n");
+    qmi_message_wds_get_lte_attach_pdn_list_output_get_lte_attach_pdn_list (output, &pdn_list, NULL);
 
-    qmi_message_wds_get_lte_attach_pdn_list_output_unref (output);
+    if (!pdn_list || !pdn_list->len) {
+        g_print ("Attach PDN list: n/a\n");
+        operation_shutdown (TRUE);
+        return;
+    }
+
+    g_print ("Attach PDN list retrieved: '");
+    for (i = 0; i < pdn_list->len; i++)
+        g_print ("%s %u", i > 0 ? "," : "", g_array_index (pdn_list, guint16, i));
+    g_print ("'\n");
     operation_shutdown (TRUE);
 }
 
@@ -2955,34 +2945,33 @@ get_attach_pdn_list_ready (QmiClientWds *client,
 #if defined HAVE_QMI_MESSAGE_WDS_SET_LTE_ATTACH_PDN_LIST
 
 static QmiMessageWdsSetLteAttachPdnListInput *
-set_attach_pdn_list_input_create (const gchar *str)
+set_lte_attach_pdn_list_input_create (const gchar *str)
 {
-    QmiMessageWdsSetLteAttachPdnListInput *input = NULL;
-    GError *error = NULL;
-    guint profile_index;
-    gchar **split;
-    GArray *pdn_list;
-    guint i;
-    gboolean success;
+    g_autoptr(QmiMessageWdsSetLteAttachPdnListInput) input = NULL;
+    g_autoptr(GError)                                error = NULL;
+    g_auto(GStrv)                                    split = NULL;
+    g_autoptr(GArray)                                pdn_list = NULL;
+    guint                                            i;
 
     pdn_list = g_array_new (FALSE, FALSE, sizeof (guint16));
 
     split = g_strsplit (str, ",", -1);
 
     for (i = 0; i < g_strv_length (split); i++) {
+        guint    val = 0;
+        guint16  profile_index;
+        gboolean success;
+
         g_strstrip (split[i]);
-	success = qmicli_read_uint_from_string(split[i], &profile_index);
-        if (!success || profile_index <= 0 || profile_index > G_MAXUINT16) {
-            g_printerr ("error: invalid or out of range profile number [1,%u]: '%s'\n",
-                        G_MAXUINT16,
-                        split[i]);
+        success = qmicli_read_uint_from_string (split[i], &val);
+        if (!success || val == 0 || val > G_MAXUINT16) {
+            g_printerr ("error: invalid or out of range profile number [1,%u]: '%s'\n", G_MAXUINT16, split[i]);
             operation_shutdown (FALSE);
             return NULL;
         }
+        profile_index = (guint16) val;
         g_array_append_val (pdn_list, profile_index);
     }
-
-    g_strfreev (split);
 
     input = qmi_message_wds_set_lte_attach_pdn_list_input_new ();
     if (!qmi_message_wds_set_lte_attach_pdn_list_input_set_attach_pdn_list (input, pdn_list, &error)) {
@@ -2994,15 +2983,15 @@ set_attach_pdn_list_input_create (const gchar *str)
         return NULL;
     }
 
-    return input;
+    return g_steal_pointer (&input);
 }
 
 static void
-set_attach_pdn_list_ready (QmiClientWds *client,
-                           GAsyncResult *res)
+set_lte_attach_pdn_list_ready (QmiClientWds *client,
+                               GAsyncResult *res)
 {
-    QmiMessageWdsSetLteAttachPdnListOutput *output = NULL;
-    GError *error = NULL;
+    g_autoptr(QmiMessageWdsSetLteAttachPdnListOutput) output = NULL;
+    g_autoptr(GError)                                 error = NULL;
 
     output = qmi_client_wds_set_lte_attach_pdn_list_finish (client, res, &error);
     if (!output) {
@@ -3012,11 +3001,12 @@ set_attach_pdn_list_ready (QmiClientWds *client,
     }
 
     if (!qmi_message_wds_set_lte_attach_pdn_list_output_get_result (output, &error)) {
-        g_printerr ("error: couldn't set Attach PDN list: %s\n", error->message);
+        g_printerr ("error: couldn't set attach PDN list: %s\n", error->message);
         operation_shutdown (FALSE);
         return;
     }
 
+    g_print ("Attach PDN list update successfully requested\n");
     operation_shutdown (TRUE);
 }
 
@@ -3618,31 +3608,30 @@ qmicli_wds_run (QmiDevice *device,
 #endif
 
 #if defined HAVE_QMI_MESSAGE_WDS_GET_LTE_ATTACH_PDN_LIST
-    if (get_attach_pdn_list_flag) {
+    if (get_lte_attach_pdn_list_flag) {
         g_debug ("Asynchronously getting LTE Attach PDN list...");
         qmi_client_wds_get_lte_attach_pdn_list (client,
                                                 NULL,
                                                 10,
                                                 ctx->cancellable,
-                                                (GAsyncReadyCallback)get_attach_pdn_list_ready,
+                                                (GAsyncReadyCallback)get_lte_attach_pdn_list_ready,
                                                 NULL);
         return;
     }
 #endif
 
 #if defined HAVE_QMI_MESSAGE_WDS_SET_LTE_ATTACH_PDN_LIST
-    if (set_attach_pdn_list_str) {
-        QmiMessageWdsSetLteAttachPdnListInput *input;
+    if (set_lte_attach_pdn_list_str) {
+        g_autoptr(QmiMessageWdsSetLteAttachPdnListInput) input = NULL;
 
-        input = set_attach_pdn_list_input_create (set_attach_pdn_list_str);
+        input = set_lte_attach_pdn_list_input_create (set_lte_attach_pdn_list_str);
         g_debug ("Asynchronously setting LTE Attach PDN list...");
         qmi_client_wds_set_lte_attach_pdn_list (client,
                                                 input,
                                                 10,
                                                 ctx->cancellable,
-                                                (GAsyncReadyCallback) set_attach_pdn_list_ready,
+                                                (GAsyncReadyCallback) set_lte_attach_pdn_list_ready,
                                                 NULL);
-        qmi_message_wds_set_lte_attach_pdn_list_input_unref (input);
         return;
     }
 #endif
