@@ -82,7 +82,7 @@ static gchar *bind_data_port_str;
 static gchar *bind_mux_str;
 static gchar *set_ip_family_str;
 static gboolean get_channel_rates_flag;
-static gboolean get_max_attach_pdn_flag;
+static gboolean get_max_lte_attach_pdn_number_flag;
 static gboolean get_lte_attach_pdn_list_flag;
 static gchar *set_lte_attach_pdn_list_str;
 
@@ -249,9 +249,9 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
-#if defined HAVE_QMI_MESSAGE_WDS_GET_LTE_MAX_ATTACH_PDN_NUM
-    { "wds-get-lte-max-attach-pdn-num", 0, 0, G_OPTION_ARG_NONE, &get_max_attach_pdn_flag,
-      "Get the maximum number of attach PDN",
+#if defined HAVE_QMI_MESSAGE_WDS_GET_MAX_LTE_ATTACH_PDN_NUMBER
+    { "wds-get-max-lte-attach-pdn-num", 0, 0, G_OPTION_ARG_NONE, &get_max_lte_attach_pdn_number_flag,
+      "Get the maximum number of LTE attach PDN",
       NULL
     },
 #endif
@@ -324,7 +324,7 @@ qmicli_wds_options_enabled (void)
                  get_supported_messages_flag +
                  reset_flag +
                  !!get_channel_rates_flag +
-                 get_max_attach_pdn_flag +
+                 get_max_lte_attach_pdn_number_flag +
                  get_lte_attach_pdn_list_flag +
                  !!set_lte_attach_pdn_list_str +
                  noop_flag);
@@ -2871,35 +2871,35 @@ get_channel_rates_ready (QmiClientWds *client,
 
 #endif /* HAVE_QMI_MESSAGE_WDS_GET_CHANNEL_RATES */
 
-#if defined HAVE_QMI_MESSAGE_WDS_GET_LTE_MAX_ATTACH_PDN_NUM
+#if defined HAVE_QMI_MESSAGE_WDS_GET_MAX_LTE_ATTACH_PDN_NUMBER
 
 static void
-get_max_attach_pdn_ready (QmiClientWds *client,
-                          GAsyncResult *res)
+get_max_lte_attach_pdn_number_ready (QmiClientWds *client,
+                                     GAsyncResult *res)
 {
-    g_autoptr(QmiMessageWdsGetLteMaxAttachPdnNumOutput) output = NULL;
-    g_autoptr(GError)                                   error = NULL;
-    guint8                                              maxnum = 0;
+    g_autoptr(QmiMessageWdsGetMaxLteAttachPdnNumberOutput) output = NULL;
+    g_autoptr(GError)                                      error = NULL;
+    guint8                                                 maxnum = 0;
 
-    output = qmi_client_wds_get_lte_max_attach_pdn_num_finish (client, res, &error);
+    output = qmi_client_wds_get_max_lte_attach_pdn_number_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
         operation_shutdown (FALSE);
         return;
     }
 
-    if (!qmi_message_wds_get_lte_max_attach_pdn_num_output_get_result (output, &error)) {
+    if (!qmi_message_wds_get_max_lte_attach_pdn_number_output_get_result (output, &error)) {
         g_printerr ("error: couldn't get maximum number of attach PDN: %s\n", error->message);
         operation_shutdown (FALSE);
         return;
     }
 
-    qmi_message_wds_get_lte_max_attach_pdn_num_output_get_max_attach_pdn_number (output, &maxnum, NULL);
+    qmi_message_wds_get_max_lte_attach_pdn_number_output_get_info (output, &maxnum, NULL);
     g_print ("Maximum number of LTE attach PDN: %u\n", maxnum);
     operation_shutdown (TRUE);
 }
 
-#endif /* HAVE_QMI_MESSAGE_WDS_GET_LTE_MAX_ATTACH_PDN_NUM */
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_MAX_LTE_ATTACH_PDN_NUMBER */
 
 #if defined HAVE_QMI_MESSAGE_WDS_GET_LTE_ATTACH_PDN_LIST
 
@@ -3594,15 +3594,15 @@ qmicli_wds_run (QmiDevice *device,
     }
 #endif
 
-#if defined HAVE_QMI_MESSAGE_WDS_GET_LTE_MAX_ATTACH_PDN_NUM
-    if (get_max_attach_pdn_flag) {
-        g_debug ("Asynchronously getting max attach PDN number...");
-        qmi_client_wds_get_lte_max_attach_pdn_num (client,
-                                                   NULL,
-                                                   10,
-                                                   ctx->cancellable,
-                                                   (GAsyncReadyCallback)get_max_attach_pdn_ready,
-                                                   NULL);
+#if defined HAVE_QMI_MESSAGE_WDS_GET_MAX_LTE_ATTACH_PDN_NUMBER
+    if (get_max_lte_attach_pdn_number_flag) {
+        g_debug ("Asynchronously getting max LTE attach PDN number...");
+        qmi_client_wds_get_max_lte_attach_pdn_number (client,
+                                                      NULL,
+                                                      10,
+                                                      ctx->cancellable,
+                                                      (GAsyncReadyCallback)get_max_lte_attach_pdn_number_ready,
+                                                      NULL);
         return;
     }
 #endif
