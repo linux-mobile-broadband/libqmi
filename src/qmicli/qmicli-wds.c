@@ -2909,7 +2909,8 @@ get_lte_attach_pdn_list_ready (QmiClientWds *client,
 {
     g_autoptr(QmiMessageWdsGetLteAttachPdnListOutput) output = NULL;
     g_autoptr(GError)                                 error = NULL;
-    GArray                                           *pdn_list = NULL;
+    GArray                                           *current_list = NULL;
+    GArray                                           *pending_list = NULL;
     guint                                             i;
 
     output = qmi_client_wds_get_lte_attach_pdn_list_finish (client, res, &error);
@@ -2925,18 +2926,28 @@ get_lte_attach_pdn_list_ready (QmiClientWds *client,
         return;
     }
 
-    qmi_message_wds_get_lte_attach_pdn_list_output_get_lte_attach_pdn_list (output, &pdn_list, NULL);
+    g_print ("Attach PDN list retrieved:\n");
 
-    if (!pdn_list || !pdn_list->len) {
-        g_print ("Attach PDN list: n/a\n");
-        operation_shutdown (TRUE);
-        return;
+    qmi_message_wds_get_lte_attach_pdn_list_output_get_current_list (output, &current_list, NULL);
+    if (!current_list || !current_list->len) {
+        g_print ("\tCurrent list: n/a\n");
+    } else {
+        g_print ("\tCurrent list: '\n");
+        for (i = 0; i < current_list->len; i++)
+            g_print ("%s %u", i > 0 ? "," : "", g_array_index (current_list, guint16, i));
+        g_print ("'\n");
     }
 
-    g_print ("Attach PDN list retrieved: '");
-    for (i = 0; i < pdn_list->len; i++)
-        g_print ("%s %u", i > 0 ? "," : "", g_array_index (pdn_list, guint16, i));
-    g_print ("'\n");
+    qmi_message_wds_get_lte_attach_pdn_list_output_get_pending_list (output, &pending_list, NULL);
+    if (!pending_list || !pending_list->len) {
+        g_print ("\tPending list: n/a\n");
+    } else {
+        g_print ("\tPending list: '\n");
+        for (i = 0; i < pending_list->len; i++)
+            g_print ("%s %u", i > 0 ? "," : "", g_array_index (pending_list, guint16, i));
+        g_print ("'\n");
+    }
+
     operation_shutdown (TRUE);
 }
 
