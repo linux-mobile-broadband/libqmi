@@ -2045,7 +2045,7 @@
       "service" : "WDS",
       "id"      : "0x0093",
       "since"   : "1.28",
-      "input"   : [ { "name"          : "Attach PDN List",
+      "input"   : [ { "name"          : "List",
                       "id"            : "0x01",
                       "type"          : "TLV",
                       "since"         : "1.28",

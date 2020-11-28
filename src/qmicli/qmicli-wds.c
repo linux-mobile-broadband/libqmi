@@ -2974,7 +2974,7 @@ set_lte_attach_pdn_list_input_create (const gchar *str)
     }
 
     input = qmi_message_wds_set_lte_attach_pdn_list_input_new ();
-    if (!qmi_message_wds_set_lte_attach_pdn_list_input_set_attach_pdn_list (input, pdn_list, &error)) {
+    if (!qmi_message_wds_set_lte_attach_pdn_list_input_set_list (input, pdn_list, &error)) {
         g_printerr ("error: couldn't set attach PDN list: '%s'\n", error->message);
         return NULL;
     }
