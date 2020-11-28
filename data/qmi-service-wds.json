@@ -2061,8 +2061,7 @@
                     ],
       "output"  : [ { "common-ref" : "Operation Result" } ] },
 
-  // *********************************************************************************
-  {   "name"    : "Set LTE Attach PDN List Action Result",
+  {   "name"    : "Set LTE Attach PDN List",
       "type"    : "Indication",
       "service" : "WDS",
       "id"      : "0x0093",
