@@ -1225,7 +1225,7 @@ const gchar *qmi_dms_dell_device_mode_get_string (QmiDmsDellDeviceMode val);
  * using the provided API.
  *
  * Since: 1.22.4
- * Deprecated: 1.26: Use  instead.
+ * Deprecated: 1.26: Use #QmiMessageDmsFoxconnChangeDeviceModeOutput instead.
  */
 #define QmiMessageDmsDellChangeDeviceModeOutput QmiMessageDmsFoxconnChangeDeviceModeOutput
 #define QMI_TYPE_MESSAGE_DMS_DELL_CHANGE_DEVICE_MODE_OUTPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_CHANGE_DEVICE_MODE_OUTPUT
