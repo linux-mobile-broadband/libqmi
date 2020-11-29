@@ -1178,8 +1178,33 @@ GType qmi_dms_dell_device_mode_get_type (void) G_GNUC_CONST;
 G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_string)
 const gchar *qmi_dms_dell_device_mode_get_string (QmiDmsDellDeviceMode val);
 
+/******************************************************************************/
 /* Note: these defines are on purpose out of the #ifdefs, so that gtkdoc-scan
  * doesn't complain */
+
+/**
+ * QmiMessageDmsDellGetFirmwareVersionInput:
+ *
+ * The #QmiMessageDmsDellGetFirmwareVersionInput structure contains private data and should only be accessed
+ * using the provided API.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use #QmiMessageDmsFoxconnGetFirmwareVersionInput instead.
+ */
+#define QmiMessageDmsDellGetFirmwareVersionInput QmiMessageDmsFoxconnGetFirmwareVersionInput
+#define QMI_TYPE_MESSAGE_DMS_DELL_GET_FIRMWARE_VERSION_INPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION_INPUT
+
+/**
+ * QmiMessageDmsDellGetFirmwareVersionOutput:
+ *
+ * The #QmiMessageDmsDellGetFirmwareVersionOutput structure contains private data and should only be accessed
+ * using the provided API.
+ *
+ * Since: 1.22.4
+ * Deprecated: 1.26: Use #QmiMessageDmsFoxconnGetFirmwareVersionOutput instead.
+ */
+#define QmiMessageDmsDellGetFirmwareVersionOutput QmiMessageDmsFoxconnGetFirmwareVersionOutput
+#define QMI_TYPE_MESSAGE_DMS_DELL_GET_FIRMWARE_VERSION_OUTPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION_OUTPUT
 
 /**
  * QmiMessageDmsDellChangeDeviceModeInput:
@@ -1632,19 +1657,8 @@ gboolean qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_
 
 #if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION
 
-/**
- * QmiMessageDmsDellGetFirmwareVersionInput:
- *
- * The #QmiMessageDmsDellGetFirmwareVersionInput structure contains private data and should only be accessed
- * using the provided API.
- *
- * Since: 1.22.4
- * Deprecated: 1.26: Use #QmiMessageDmsFoxconnGetFirmwareVersionInput instead.
- */
-#define QmiMessageDmsDellGetFirmwareVersionInput QmiMessageDmsFoxconnGetFirmwareVersionInput
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_get_type)
 GType qmi_message_dms_dell_get_firmware_version_input_get_type (void) G_GNUC_CONST;
-#define QMI_TYPE_MESSAGE_DMS_DELL_GET_FIRMWARE_VERSION_INPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION_INPUT
 
 /**
  * qmi_message_dms_dell_get_firmware_version_input_get_version_type:
@@ -1724,21 +1738,8 @@ void qmi_message_dms_dell_get_firmware_version_input_unref (QmiMessageDmsDellGet
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_new)
 QmiMessageDmsDellGetFirmwareVersionInput *qmi_message_dms_dell_get_firmware_version_input_new (void);
 
-/* --- Output -- */
-
-/**
- * QmiMessageDmsDellGetFirmwareVersionOutput:
- *
- * The #QmiMessageDmsDellGetFirmwareVersionOutput structure contains private data and should only be accessed
- * using the provided API.
- *
- * Since: 1.22.4
- * Deprecated: 1.26: Use #QmiMessageDmsFoxconnGetFirmwareVersionOutput instead.
- */
-#define QmiMessageDmsDellGetFirmwareVersionOutput QmiMessageDmsFoxconnGetFirmwareVersionOutput
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_output_get_type)
 GType qmi_message_dms_dell_get_firmware_version_output_get_type (void) G_GNUC_CONST;
-#define QMI_TYPE_MESSAGE_DMS_DELL_GET_FIRMWARE_VERSION_OUTPUT QMI_TYPE_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION_OUTPUT
 
 /**
  * qmi_message_dms_dell_get_firmware_version_output_get_result:
@@ -1855,8 +1856,6 @@ QmiMessageDmsDellGetFirmwareVersionOutput *qmi_client_dms_dell_get_firmware_vers
 
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_get_type)
 GType qmi_message_dms_dell_change_device_mode_input_get_type (void) G_GNUC_CONST;
-G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_output_get_type)
-GType qmi_message_dms_dell_change_device_mode_output_get_type (void) G_GNUC_CONST;
 
 /**
  * qmi_message_dms_dell_change_device_mode_input_get_mode:
@@ -1935,6 +1934,9 @@ void qmi_message_dms_dell_change_device_mode_input_unref (QmiMessageDmsDellChang
  */
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_new)
 QmiMessageDmsDellChangeDeviceModeInput *qmi_message_dms_dell_change_device_mode_input_new (void);
+
+G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_output_get_type)
+GType qmi_message_dms_dell_change_device_mode_output_get_type (void) G_GNUC_CONST;
 
 /**
  * qmi_message_dms_dell_change_device_mode_output_get_result:
