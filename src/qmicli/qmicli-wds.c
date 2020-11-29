@@ -2976,9 +2976,9 @@ get_lte_attach_pdn_list_ready (QmiClientWds *client,
     if (!current_list || !current_list->len) {
         g_print ("\tCurrent list: n/a\n");
     } else {
-        g_print ("\tCurrent list: '\n");
+        g_print ("\tCurrent list: '");
         for (i = 0; i < current_list->len; i++)
-            g_print ("%s %u", i > 0 ? "," : "", g_array_index (current_list, guint16, i));
+            g_print ("%s%u", i > 0 ? ", " : "", g_array_index (current_list, guint16, i));
         g_print ("'\n");
     }
 
@@ -2986,9 +2986,9 @@ get_lte_attach_pdn_list_ready (QmiClientWds *client,
     if (!pending_list || !pending_list->len) {
         g_print ("\tPending list: n/a\n");
     } else {
-        g_print ("\tPending list: '\n");
+        g_print ("\tPending list: '");
         for (i = 0; i < pending_list->len; i++)
-            g_print ("%s %u", i > 0 ? "," : "", g_array_index (pending_list, guint16, i));
+            g_print ("%s%u", i > 0 ? ", " : "", g_array_index (pending_list, guint16, i));
         g_print ("'\n");
     }
 
