@@ -70,8 +70,10 @@ static gchar *swi_create_profile_indexed_str;
 static gchar *modify_profile_str;
 static gchar *delete_profile_str;
 static gchar *get_profile_list_str;
-static gchar *get_default_profile_num_str;
-static gchar *set_default_profile_num_str;
+static gchar *get_default_profile_num_str; /* deprecated */
+static gchar *get_default_profile_number_str;
+static gchar *set_default_profile_num_str; /* deprecated */
+static gchar *set_default_profile_number_str;
 static gchar *get_default_settings_str;
 static gboolean get_autoconnect_settings_flag;
 static gchar *set_autoconnect_settings_str;
@@ -183,14 +185,14 @@ static GOptionEntry entries[] = {
       "[3gpp|3gpp2]"
     },
 #endif
-#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUM
-    { "wds-get-default-profile-num", 0, 0, G_OPTION_ARG_STRING, &get_default_profile_num_str,
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUMBER
+    { "wds-get-default-profile-number", 0, 0, G_OPTION_ARG_STRING, &get_default_profile_number_str,
       "Get default profile number",
       "[3gpp|3gpp2]"
     },
 #endif
-#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUM
-    { "wds-set-default-profile-num", 0, 0, G_OPTION_ARG_STRING, &set_default_profile_num_str,
+#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUMBER
+    { "wds-set-default-profile-number", 0, 0, G_OPTION_ARG_STRING, &set_default_profile_number_str,
       "Set default profile number",
       "[(3gpp|3gpp2),#]"
     },
@@ -271,6 +273,19 @@ static GOptionEntry entries[] = {
       "Just allocate or release a WDS client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
     },
+    /* deprecated entries (hidden in --help) */
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUMBER
+    { "wds-get-default-profile-num", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &get_default_profile_num_str,
+      "Get default profile number",
+      "[3gpp|3gpp2]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUMBER
+    { "wds-set-default-profile-num", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &set_default_profile_num_str,
+      "Set default profile number",
+      "[(3gpp|3gpp2),#]"
+    },
+#endif
     { NULL }
 };
 
@@ -317,7 +332,9 @@ qmicli_wds_options_enabled (void)
                  !!delete_profile_str +
                  !!get_profile_list_str +
                  !!get_default_profile_num_str +
+                 !!get_default_profile_number_str +
                  !!set_default_profile_num_str +
+                 !!set_default_profile_number_str +
                  !!get_default_settings_str +
                  get_autoconnect_settings_flag +
                  !!set_autoconnect_settings_str +
@@ -2214,81 +2231,74 @@ get_default_settings_ready (QmiClientWds *client,
 
 #endif /* HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_SETTINGS */
 
-#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUM
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUMBER
 
 static void
-get_default_profile_num_ready (QmiClientWds *client,
-                               GAsyncResult *res)
+get_default_profile_number_ready (QmiClientWds *client,
+                                  GAsyncResult *res)
 {
-    QmiMessageWdsGetDefaultProfileNumOutput *output;
-    GError *error = NULL;
-    guint8 profile_num;
+    g_autoptr(QmiMessageWdsGetDefaultProfileNumberOutput) output = NULL;
+    g_autoptr(GError)                                     error = NULL;
+    guint8                                                profile_num;
 
-    output = qmi_client_wds_get_default_profile_num_finish (client, res, &error);
+    output = qmi_client_wds_get_default_profile_number_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
         operation_shutdown (FALSE);
         return;
     }
 
-    if (!qmi_message_wds_get_default_profile_num_output_get_result (output, &error)) {
+    if (!qmi_message_wds_get_default_profile_number_output_get_result (output, &error)) {
         QmiWdsDsProfileError ds_profile_error;
 
         if (g_error_matches (error,
                              QMI_PROTOCOL_ERROR,
                              QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL) &&
-            qmi_message_wds_get_default_profile_num_output_get_extended_error_code (
+            qmi_message_wds_get_default_profile_number_output_get_extended_error_code (
                 output,
                 &ds_profile_error,
                 NULL)) {
-            g_printerr ("error: couldn't get default settings: ds profile error: %s\n",
+            g_printerr ("error: couldn't get default profile number: ds profile error: %s\n",
                         qmi_wds_ds_profile_error_get_string (ds_profile_error));
         } else {
-            g_printerr ("error: couldn't get default settings: %s\n",
+            g_printerr ("error: couldn't get default profile number: %s\n",
                         error->message);
         }
-        g_error_free (error);
-        qmi_message_wds_get_default_profile_num_output_unref (output);
         operation_shutdown (FALSE);
         return;
     }
 
     g_print ("Default profile number retrieved:\n");
-
-    if (qmi_message_wds_get_default_profile_num_output_get_default_profile_number (output, &profile_num, NULL))
+    if (qmi_message_wds_get_default_profile_number_output_get_index (output, &profile_num, NULL))
         g_print ("\tDefault profile number: '%d'\n", profile_num);
-
-    qmi_message_wds_get_default_profile_num_output_unref (output);
     operation_shutdown (TRUE);
 }
 
-#endif /* HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUM */
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUMBER */
 
-#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUM
+#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUMBER
 
 static void
-set_default_profile_num_ready (QmiClientWds *client,
-                               GAsyncResult *res)
+set_default_profile_number_ready (QmiClientWds *client,
+                                  GAsyncResult *res)
 {
-    QmiMessageWdsSetDefaultProfileNumOutput *output;
-    GError *error = NULL;
+    g_autoptr(QmiMessageWdsSetDefaultProfileNumberOutput) output = NULL;
+    g_autoptr(GError)                                     error = NULL;
 
-    output = qmi_client_wds_set_default_profile_num_finish (client, res, &error);
+    output = qmi_client_wds_set_default_profile_number_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
-        g_error_free (error);
         operation_shutdown (FALSE);
         return;
     }
 
-    if (!qmi_message_wds_set_default_profile_num_output_get_result (output, &error)) {
+    if (!qmi_message_wds_set_default_profile_number_output_get_result (output, &error)) {
         QmiWdsDsProfileError ds_profile_error;
 
         if (g_error_matches (error,
                              QMI_PROTOCOL_ERROR,
                              QMI_PROTOCOL_ERROR_EXTENDED_INTERNAL) &&
-            qmi_message_wds_set_default_profile_num_output_get_extended_error_code (
+            qmi_message_wds_set_default_profile_number_output_get_extended_error_code (
                 output,
                 &ds_profile_error,
                 NULL)) {
@@ -2298,32 +2308,29 @@ set_default_profile_num_ready (QmiClientWds *client,
             g_printerr ("error: couldn't set default settings: %s\n",
                         error->message);
         }
-        g_error_free (error);
-        qmi_message_wds_set_default_profile_num_output_unref (output);
         operation_shutdown (FALSE);
         return;
     }
 
     g_print ("Default profile number updated\n");
-    qmi_message_wds_set_default_profile_num_output_unref (output);
     operation_shutdown (TRUE);
 }
 
-static QmiMessageWdsSetDefaultProfileNumInput *
-set_default_profile_num_input_create (const gchar *str)
+static QmiMessageWdsSetDefaultProfileNumberInput *
+set_default_profile_number_input_create (const gchar *str)
 {
-    QmiMessageWdsSetDefaultProfileNumInput *input;
-    GError *error = NULL;
-    gchar **split;
-    QmiWdsProfileType profile_type;
-    guint profile_num;
+    g_autoptr(QmiMessageWdsSetDefaultProfileNumberInput) input = NULL;
+    g_autoptr(GError)                                    error = NULL;
+    g_auto(GStrv)                                        split = NULL;
+    QmiWdsProfileType                                    profile_type;
+    guint                                                profile_num;
 
     split = g_strsplit (str, ",", -1);
-    input = qmi_message_wds_set_default_profile_num_input_new ();
+    input = qmi_message_wds_set_default_profile_number_input_new ();
 
     if (g_strv_length (split) != 2) {
         g_printerr ("error: expected 2 options in default profile number settings\n");
-        goto error_out;
+        return NULL;
     }
 
     g_strstrip (split[0]);
@@ -2332,9 +2339,8 @@ set_default_profile_num_input_create (const gchar *str)
     else if (g_str_equal (split[0], "3gpp2"))
         profile_type = QMI_WDS_PROFILE_TYPE_3GPP2;
     else {
-        g_printerr ("error: invalid profile type '%s'. Expected '3gpp' or '3gpp2'.'\n",
-                    split[0]);
-        goto error_out;
+        g_printerr ("error: invalid profile type '%s'. Expected '3gpp' or '3gpp2'.'\n", split[0]);
+        return NULL;
     }
 
     g_strstrip (split[1]);
@@ -2343,31 +2349,23 @@ set_default_profile_num_input_create (const gchar *str)
         g_printerr ("error: invalid or out of range profile number [1,%u]: '%s'\n",
                     G_MAXUINT8,
                     split[1]);
-        goto error_out;
+        return NULL;
     }
 
-    if (!qmi_message_wds_set_default_profile_num_input_set_profile_identifier (
+    if (!qmi_message_wds_set_default_profile_number_input_set_profile_identifier (
             input,
             profile_type,
             QMI_WDS_PROFILE_FAMILY_TETHERED,
             (guint8)profile_num,
             &error)) {
         g_printerr ("error: couldn't create input bundle: '%s'\n", error->message);
-        goto error_out;
+        return NULL;
     }
 
-    g_strfreev (split);
-    return input;
-
-error_out:
-    if (error)
-        g_error_free (error);
-    g_strfreev (split);
-    qmi_message_wds_set_default_profile_num_input_unref (input);
-    return NULL;
+    return g_steal_pointer (&input);
 }
 
-#endif /* HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUM */
+#endif /* HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUMBER */
 
 #if defined HAVE_QMI_MESSAGE_WDS_GET_AUTOCONNECT_SETTINGS
 
@@ -3446,59 +3444,58 @@ qmicli_wds_run (QmiDevice *device,
     }
 #endif
 
-#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUM
-    if (get_default_profile_num_str) {
-        QmiMessageWdsGetDefaultProfileNumInput *input;
-        QmiWdsProfileType profile_type;
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUMBER
+    if (get_default_profile_number_str || get_default_profile_num_str) {
+        g_autoptr(QmiMessageWdsGetDefaultProfileNumberInput)  input = NULL;
+        QmiWdsProfileType                                     profile_type;
+        const gchar                                          *str;
 
-        if (g_str_equal (get_default_profile_num_str, "3gpp"))
+        str = get_default_profile_number_str ? get_default_profile_number_str : get_default_profile_num_str;
+        if (g_str_equal (str, "3gpp"))
             profile_type = QMI_WDS_PROFILE_TYPE_3GPP;
-        else if (g_str_equal (get_default_profile_num_str, "3gpp2"))
+        else if (g_str_equal (str, "3gpp2"))
             profile_type = QMI_WDS_PROFILE_TYPE_3GPP2;
         else {
-            g_printerr ("error: invalid profile type '%s'. Expected '3gpp' or '3gpp2'.'\n",
-                        get_default_profile_num_str);
+            g_printerr ("error: invalid profile type '%s'. Expected '3gpp' or '3gpp2'.'\n", str);
             operation_shutdown (FALSE);
             return;
         }
 
-        input = qmi_message_wds_get_default_profile_num_input_new ();
+        input = qmi_message_wds_get_default_profile_number_input_new ();
         /* always use profile family 'tethered', we don't really know what it means */
-        qmi_message_wds_get_default_profile_num_input_set_profile_type (input,
-                                                                        profile_type,
-                                                                        QMI_WDS_PROFILE_FAMILY_TETHERED,
-                                                                        NULL);
+        qmi_message_wds_get_default_profile_number_input_set_profile_type (input,
+                                                                           profile_type,
+                                                                           QMI_WDS_PROFILE_FAMILY_TETHERED,
+                                                                           NULL);
 
         g_debug ("Asynchronously getting default profile number...");
-        qmi_client_wds_get_default_profile_num (ctx->client,
-                                                input,
-                                                10,
-                                                ctx->cancellable,
-                                                (GAsyncReadyCallback)get_default_profile_num_ready,
-                                                NULL);
-        qmi_message_wds_get_default_profile_num_input_unref (input);
+        qmi_client_wds_get_default_profile_number (ctx->client,
+                                                   input,
+                                                   10,
+                                                   ctx->cancellable,
+                                                   (GAsyncReadyCallback)get_default_profile_number_ready,
+                                                   NULL);
         return;
     }
 #endif
 
-#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUM
-    if (set_default_profile_num_str) {
-        QmiMessageWdsSetDefaultProfileNumInput *input;
+#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUMBER
+    if (set_default_profile_number_str || set_default_profile_num_str) {
+        g_autoptr(QmiMessageWdsSetDefaultProfileNumberInput) input = NULL;
 
-        input = set_default_profile_num_input_create (set_default_profile_num_str);
+        input = set_default_profile_number_input_create (set_default_profile_number_str ? set_default_profile_number_str : set_default_profile_num_str);
         if (!input) {
             operation_shutdown (FALSE);
             return;
         }
 
         g_debug ("Asynchronously setting default profile number...");
-        qmi_client_wds_set_default_profile_num (ctx->client,
-                                                input,
-                                                10,
-                                                ctx->cancellable,
-                                                (GAsyncReadyCallback)set_default_profile_num_ready,
-                                                NULL);
-        qmi_message_wds_set_default_profile_num_input_unref (input);
+        qmi_client_wds_set_default_profile_number (ctx->client,
+                                                   input,
+                                                   10,
+                                                   ctx->cancellable,
+                                                   (GAsyncReadyCallback)set_default_profile_number_ready,
+                                                   NULL);
         return;
     }
 #endif

@@ -16,7 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2016-2019 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2020 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <string.h>
@@ -1247,5 +1247,256 @@ qmi_message_nas_get_cell_location_info_output_get_geran_info (
 }
 
 #endif /* HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO */
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUMBER
+
+GType
+qmi_message_wds_get_default_profile_num_input_get_type (void)
+{
+    return qmi_message_wds_get_default_profile_number_input_get_type ();
+}
+
+gboolean
+qmi_message_wds_get_default_profile_num_input_get_profile_type (
+    QmiMessageWdsGetDefaultProfileNumInput *self,
+    QmiWdsProfileType *value_profile_type_profile_type,
+    QmiWdsProfileFamily *value_profile_type_profile_family,
+    GError **error)
+{
+    return qmi_message_wds_get_default_profile_number_input_get_profile_type (self,
+                                                                              value_profile_type_profile_type,
+                                                                              value_profile_type_profile_family,
+                                                                              error);
+}
+
+gboolean
+qmi_message_wds_get_default_profile_num_input_set_profile_type (
+    QmiMessageWdsGetDefaultProfileNumInput *self,
+    QmiWdsProfileType value_profile_type_profile_type,
+    QmiWdsProfileFamily value_profile_type_profile_family,
+    GError **error)
+{
+    return qmi_message_wds_get_default_profile_number_input_set_profile_type (self,
+                                                                              value_profile_type_profile_type,
+                                                                              value_profile_type_profile_family,
+                                                                              error);
+}
+
+QmiMessageWdsGetDefaultProfileNumInput *
+qmi_message_wds_get_default_profile_num_input_ref (QmiMessageWdsGetDefaultProfileNumInput *self)
+{
+    return qmi_message_wds_get_default_profile_number_input_ref (self);
+}
+
+void
+qmi_message_wds_get_default_profile_num_input_unref (QmiMessageWdsGetDefaultProfileNumInput *self)
+{
+    qmi_message_wds_get_default_profile_number_input_unref (self);
+}
+
+QmiMessageWdsGetDefaultProfileNumInput *
+qmi_message_wds_get_default_profile_num_input_new (void)
+{
+    return qmi_message_wds_get_default_profile_number_input_new ();
+}
+
+GType
+qmi_message_wds_get_default_profile_num_output_get_type (void)
+{
+    return qmi_message_wds_get_default_profile_number_output_get_type ();
+}
+
+gboolean
+qmi_message_wds_get_default_profile_num_output_get_result (
+    QmiMessageWdsGetDefaultProfileNumOutput *self,
+    GError **error)
+{
+    return qmi_message_wds_get_default_profile_number_output_get_result (self, error);
+}
+
+gboolean
+qmi_message_wds_get_default_profile_num_output_get_default_profile_number (
+    QmiMessageWdsGetDefaultProfileNumOutput *self,
+    guint8 *value_default_profile_number,
+    GError **error)
+{
+    return qmi_message_wds_get_default_profile_number_output_get_index (self,
+                                                                        value_default_profile_number,
+                                                                        error);
+}
+
+gboolean
+qmi_message_wds_get_default_profile_num_output_get_extended_error_code (
+    QmiMessageWdsGetDefaultProfileNumOutput *self,
+    QmiWdsDsProfileError *value_extended_error_code,
+    GError **error)
+{
+    return qmi_message_wds_get_default_profile_number_output_get_extended_error_code (self,
+                                                                                      value_extended_error_code,
+                                                                                      error);
+}
+
+QmiMessageWdsGetDefaultProfileNumOutput *
+qmi_message_wds_get_default_profile_num_output_ref (QmiMessageWdsGetDefaultProfileNumOutput *self)
+{
+    return qmi_message_wds_get_default_profile_number_output_ref (self);
+}
+
+void
+qmi_message_wds_get_default_profile_num_output_unref (QmiMessageWdsGetDefaultProfileNumOutput *self)
+{
+    qmi_message_wds_get_default_profile_number_output_unref (self);
+}
+
+void
+qmi_client_wds_get_default_profile_num (
+    QmiClientWds *self,
+    QmiMessageWdsGetDefaultProfileNumberInput *input,
+    guint timeout,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data)
+{
+    qmi_client_wds_get_default_profile_number (
+        self,
+        input,
+        timeout,
+        cancellable,
+        callback,
+        user_data);
+}
+
+QmiMessageWdsGetDefaultProfileNumberOutput *
+qmi_client_wds_get_default_profile_num_finish (
+    QmiClientWds *self,
+    GAsyncResult *res,
+    GError **error)
+{
+    return qmi_client_wds_get_default_profile_number_finish (self, res, error);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_DEFAULT_PROFILE_NUMBER */
+
+#if defined HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUMBER
+
+GType
+qmi_message_wds_set_default_profile_num_output_get_type (void)
+{
+    return qmi_message_wds_set_default_profile_number_output_get_type ();
+}
+
+gboolean
+qmi_message_wds_set_default_profile_num_input_get_profile_identifier (
+    QmiMessageWdsSetDefaultProfileNumInput *self,
+    QmiWdsProfileType *value_profile_identifier_profile_type,
+    QmiWdsProfileFamily *value_profile_identifier_profile_family,
+    guint8 *value_profile_identifier_profile_index,
+    GError **error)
+{
+    return qmi_message_wds_set_default_profile_number_input_get_profile_identifier (self,
+                                                                                    value_profile_identifier_profile_type,
+                                                                                    value_profile_identifier_profile_family,
+                                                                                    value_profile_identifier_profile_index,
+                                                                                    error);
+}
+
+gboolean
+qmi_message_wds_set_default_profile_num_input_set_profile_identifier (
+    QmiMessageWdsSetDefaultProfileNumInput *self,
+    QmiWdsProfileType value_profile_identifier_profile_type,
+    QmiWdsProfileFamily value_profile_identifier_profile_family,
+    guint8 value_profile_identifier_profile_index,
+    GError **error)
+{
+    return qmi_message_wds_set_default_profile_number_input_set_profile_identifier (self,
+                                                                                    value_profile_identifier_profile_type,
+                                                                                    value_profile_identifier_profile_family,
+                                                                                    value_profile_identifier_profile_index,
+                                                                                    error);
+}
+
+QmiMessageWdsSetDefaultProfileNumInput *
+qmi_message_wds_set_default_profile_num_input_ref (QmiMessageWdsSetDefaultProfileNumInput *self)
+{
+    return qmi_message_wds_set_default_profile_number_input_ref (self);
+}
+
+void
+qmi_message_wds_set_default_profile_num_input_unref (QmiMessageWdsSetDefaultProfileNumInput *self)
+{
+    qmi_message_wds_set_default_profile_number_input_unref (self);
+}
+
+QmiMessageWdsSetDefaultProfileNumInput *
+qmi_message_wds_set_default_profile_num_input_new (void)
+{
+    return qmi_message_wds_set_default_profile_number_input_new ();
+}
+
+GType
+qmi_message_wds_set_default_profile_num_input_get_type (void)
+{
+    return qmi_message_wds_set_default_profile_number_input_get_type ();
+}
+
+gboolean
+qmi_message_wds_set_default_profile_num_output_get_result (
+    QmiMessageWdsSetDefaultProfileNumOutput *self,
+    GError **error)
+{
+    return qmi_message_wds_set_default_profile_number_output_get_result (self, error);
+}
+
+gboolean
+qmi_message_wds_set_default_profile_num_output_get_extended_error_code (
+    QmiMessageWdsSetDefaultProfileNumOutput *self,
+    QmiWdsDsProfileError *value_extended_error_code,
+    GError **error)
+{
+    return qmi_message_wds_set_default_profile_number_output_get_extended_error_code (self,
+                                                                                      value_extended_error_code,
+                                                                                      error);
+}
+
+QmiMessageWdsSetDefaultProfileNumOutput *
+qmi_message_wds_set_default_profile_num_output_ref (QmiMessageWdsSetDefaultProfileNumOutput *self)
+{
+    return qmi_message_wds_set_default_profile_number_output_ref (self);
+}
+
+void
+qmi_message_wds_set_default_profile_num_output_unref (QmiMessageWdsSetDefaultProfileNumOutput *self)
+{
+    qmi_message_wds_set_default_profile_number_output_unref (self);
+}
+
+void
+qmi_client_wds_set_default_profile_num (
+    QmiClientWds *self,
+    QmiMessageWdsSetDefaultProfileNumberInput *input,
+    guint timeout,
+    GCancellable *cancellable,
+    GAsyncReadyCallback callback,
+    gpointer user_data)
+{
+    qmi_client_wds_set_default_profile_number (
+        self,
+        input,
+        timeout,
+        cancellable,
+        callback,
+        user_data);
+}
+
+QmiMessageWdsSetDefaultProfileNumberOutput *
+qmi_client_wds_set_default_profile_num_finish (
+    QmiClientWds *self,
+    GAsyncResult *res,
+    GError **error)
+{
+    return qmi_client_wds_set_default_profile_number_finish (self, res, error);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUMBER */
 
 #endif /* QMI_DISABLE_DEPRECATED */
