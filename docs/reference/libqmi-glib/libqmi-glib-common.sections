@@ -623,6 +623,7 @@ QmiWdsSoEvdoRevB
 QmiWdsTetheredCallType
 QmiWdsAttachPdnListAction
 QmiWdsClientType
+QmiWdsIpSupportType
 QMI_WDS_RATE_UNAVAILABLE
 <SUBSECTION Methods>
 qmi_wds_ip_family_get_string
@@ -677,6 +678,7 @@ qmi_wds_so_evdo_revb_get_string
 qmi_wds_tethered_call_type_get_string
 qmi_wds_attach_pdn_list_action_get_string
 qmi_wds_client_type_get_string
+qmi_wds_ip_support_type_get_string
 <SUBSECTION Private>
 qmi_wds_ip_family_build_string_from_mask
 qmi_wds_profile_family_build_string_from_mask
@@ -729,6 +731,7 @@ qmi_wds_so_evdo_revb_build_string_from_mask
 qmi_wds_tethered_call_type_build_string_from_mask
 qmi_wds_attach_pdn_list_action_build_string_from_mask
 qmi_wds_client_type_build_string_from_mask
+qmi_wds_ip_support_type_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_WDS_AUTHENTICATION
 QMI_TYPE_WDS_AUTOCONNECT_SETTING
@@ -781,6 +784,7 @@ QMI_TYPE_WDS_SO_EVDO_REVB
 QMI_TYPE_WDS_TETHERED_CALL_TYPE
 QMI_TYPE_WDS_ATTACH_PDN_LIST_ACTION
 QMI_TYPE_WDS_CLIENT_TYPE
+QMI_TYPE_WDS_IP_SUPPORT_TYPE
 qmi_wds_authentication_get_type
 qmi_wds_autoconnect_setting_get_type
 qmi_wds_autoconnect_setting_roaming_get_type
@@ -832,6 +836,7 @@ qmi_wds_so_evdo_revb_get_type
 qmi_wds_tethered_call_type_get_type
 qmi_wds_attach_pdn_list_action_get_type
 qmi_wds_client_type_get_type
+qmi_wds_ip_support_type_get_type
 </SECTION>
 
 <SECTION>

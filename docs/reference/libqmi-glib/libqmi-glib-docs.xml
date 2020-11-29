@@ -211,6 +211,7 @@
       <xi:include href="xml/qmi-message-wds-set-ip-family.xml"/>
       <xi:include href="xml/qmi-message-wds-get-supported-messages.xml"/>
       <xi:include href="xml/qmi-message-wds-get-pdn-throttle-info.xml"/>
+      <xi:include href="xml/qmi-message-wds-get-lte-attach-parameters.xml"/>
       <xi:include href="xml/qmi-message-wds-get-max-lte-attach-pdn-number.xml"/>
       <xi:include href="xml/qmi-message-wds-get-lte-attach-pdn-list.xml"/>
       <xi:include href="xml/qmi-message-wds-set-lte-attach-pdn-list.xml"/>
