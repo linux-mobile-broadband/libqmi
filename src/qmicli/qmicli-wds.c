@@ -84,6 +84,7 @@ static gchar *bind_data_port_str;
 static gchar *bind_mux_str;
 static gchar *set_ip_family_str;
 static gboolean get_channel_rates_flag;
+static gboolean get_lte_attach_parameters_flag;
 static gboolean get_max_lte_attach_pdn_number_flag;
 static gboolean get_lte_attach_pdn_list_flag;
 static gchar *set_lte_attach_pdn_list_str;
@@ -251,6 +252,12 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_WDS_GET_LTE_ATTACH_PARAMETERS
+    { "wds-get-lte-attach-parameters", 0, 0, G_OPTION_ARG_NONE, &get_lte_attach_parameters_flag,
+      "Get LTE attach parameters",
+      NULL
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_WDS_GET_MAX_LTE_ATTACH_PDN_NUMBER
     { "wds-get-max-lte-attach-pdn-num", 0, 0, G_OPTION_ARG_NONE, &get_max_lte_attach_pdn_number_flag,
       "Get the maximum number of LTE attach PDN",
@@ -341,6 +348,7 @@ qmicli_wds_options_enabled (void)
                  get_supported_messages_flag +
                  reset_flag +
                  !!get_channel_rates_flag +
+                 get_lte_attach_parameters_flag +
                  get_max_lte_attach_pdn_number_flag +
                  get_lte_attach_pdn_list_flag +
                  !!set_lte_attach_pdn_list_str +
@@ -2869,6 +2877,44 @@ get_channel_rates_ready (QmiClientWds *client,
 
 #endif /* HAVE_QMI_MESSAGE_WDS_GET_CHANNEL_RATES */
 
+#if defined HAVE_QMI_MESSAGE_WDS_GET_LTE_ATTACH_PARAMETERS
+
+static void
+get_lte_attach_parameters_ready (QmiClientWds *client,
+                                 GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWdsGetLteAttachParametersOutput)  output = NULL;
+    g_autoptr(GError)                                     error = NULL;
+    const gchar                                          *apn;
+    gboolean                                              ota_attach_performed;
+    QmiWdsIpSupportType                                   ip_support_type;
+
+    output = qmi_client_wds_get_lte_attach_parameters_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wds_get_lte_attach_parameters_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get LTE attach parameters: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("LTE attach parameters successfully retrieved:\n");
+    if (qmi_message_wds_get_lte_attach_parameters_output_get_apn (output, &apn, NULL))
+        g_print ("\tAPN: %s\n", apn);
+    if (qmi_message_wds_get_lte_attach_parameters_output_get_ip_support_type (output, &ip_support_type, NULL))
+        g_print ("\tIP support type: %s\n", qmi_wds_ip_support_type_get_string (ip_support_type));
+    if (qmi_message_wds_get_lte_attach_parameters_output_get_ota_attach_performed (output, &ota_attach_performed, NULL))
+        g_print ("\tOTA attach performed: %s\n", ota_attach_performed ? "yes" : "no");
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WDS_GET_LTE_ATTACH_PARAMETERS */
+
 #if defined HAVE_QMI_MESSAGE_WDS_GET_MAX_LTE_ATTACH_PDN_NUMBER
 
 static void
@@ -3598,6 +3644,19 @@ qmicli_wds_run (QmiDevice *device,
                                           ctx->cancellable,
                                           (GAsyncReadyCallback)get_channel_rates_ready,
                                           NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WDS_GET_LTE_ATTACH_PARAMETERS
+    if (get_lte_attach_parameters_flag) {
+        g_debug ("Asynchronously getting LTE attach parameters...");
+        qmi_client_wds_get_lte_attach_parameters (client,
+                                                  NULL,
+                                                  10,
+                                                  ctx->cancellable,
+                                                  (GAsyncReadyCallback)get_lte_attach_parameters_ready,
+                                                  NULL);
         return;
     }
 #endif
