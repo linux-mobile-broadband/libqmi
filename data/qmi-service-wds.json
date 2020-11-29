@@ -2026,6 +2026,20 @@
                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Bind Data Port",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0089",
+     "since"   : "1.28",
+     "input"   : [ { "name"          : "Data Port",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.28",
+                     "format"        : "guint16",
+                     "public-format" : "QmiSioPort" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get Max LTE Attach PDN Number",
      "type"    : "Message",
      "service" : "WDS",
@@ -2098,20 +2112,6 @@
                      "array-element" : { "name"     : "PDN Profile ID",
                                          "format"   : "guint16" },
                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
-
-// *********************************************************************************
-    {   "name"    : "Bind Data Port",
-        "type"    : "Message",
-        "service" : "WDS",
-        "id"      : "0x0089",
-        "since"   : "1.28",
-        "input"   : [ { "name"          : "Data Port",
-                        "id"            : "0x01",
-                        "type"          : "TLV",
-                        "since"         : "1.28",
-                        "format"        : "guint16",
-                        "public-format" : "QmiSioPort" } ],
-        "output"  : [ { "common-ref" : "Operation Result" } ] },
 
 // *********************************************************************************
     {   "name"    : "Bind Mux Data Port",
