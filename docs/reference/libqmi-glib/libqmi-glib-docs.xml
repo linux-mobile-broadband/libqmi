@@ -171,6 +171,7 @@
       <xi:include href="xml/qmi-message-nas-get-lte-cphy-ca-info.xml"/>
       <xi:include href="xml/qmi-message-nas-get-operator-name.xml"/>
       <xi:include href="xml/qmi-message-nas-swi-get-status.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-drx.xml"/>
     </section>
   </chapter>
 

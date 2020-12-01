@@ -3578,6 +3578,21 @@
                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
+  {  "name"    : "Get DRX",
+     "type"    : "Message",
+     "service" : "NAS",
+     "id"      : "0x0089",
+     "since"   : "1.28",
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"          : "Info",
+                     "id"            : "0x10",
+                     "type"          : "TLV",
+                     "since"         : "1.28",
+                     "format"        : "guint32",
+                     "public-format" : "QmiNasDrx",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get LTE Cphy CA Info",
      "type"    : "Message",
      "service" : "NAS",

@@ -59,6 +59,7 @@ static gboolean force_network_search_flag;
 static gboolean get_operator_name_flag;
 static gboolean get_lte_cphy_ca_info_flag;
 static gboolean get_rf_band_info_flag;
+static gboolean get_drx_flag;
 static gboolean get_supported_messages_flag;
 static gboolean swi_get_status_flag;
 static gboolean reset_flag;
@@ -155,6 +156,12 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_DRX
+    { "nas-get-drx", 0, 0, G_OPTION_ARG_NONE, &get_drx_flag,
+      "Get DRX",
+      NULL
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_SUPPORTED_MESSAGES
     { "nas-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
@@ -219,6 +226,7 @@ qmicli_nas_options_enabled (void)
                  get_operator_name_flag +
                  get_lte_cphy_ca_info_flag +
                  get_rf_band_info_flag +
+                 get_drx_flag +
                  get_supported_messages_flag +
                  swi_get_status_flag +
                  reset_flag +
@@ -3626,6 +3634,43 @@ get_rf_band_info_ready (QmiClientNas *client,
 
 #endif /* HAVE_QMI_MESSAGE_NAS_GET_RF_BAND_INFORMATION */
 
+#if defined HAVE_QMI_MESSAGE_NAS_GET_DRX
+
+static void
+get_drx_ready (QmiClientNas *client,
+               GAsyncResult *res)
+{
+    g_autoptr(QmiMessageNasGetDrxOutput) output = NULL;
+    g_autoptr(GError)                    error = NULL;
+    QmiNasDrx                            drx = QMI_NAS_DRX_UNKNOWN;
+
+    output = qmi_client_nas_get_drx_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_drx_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get DRX: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_drx_output_get_info (output, &drx, NULL)) {
+        g_printerr ("error: DRX info not provided\n");
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got DRX: %s\n",
+             qmi_device_get_path_display (ctx->device),
+             qmi_nas_drx_get_string (drx));
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_DRX */
+
 #if defined HAVE_QMI_MESSAGE_NAS_GET_SUPPORTED_MESSAGES
 
 static void
@@ -4032,6 +4077,19 @@ qmicli_nas_run (QmiDevice *device,
                                                 ctx->cancellable,
                                                 (GAsyncReadyCallback)get_rf_band_info_ready,
                                                 NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_DRX
+    if (get_drx_flag) {
+        g_debug ("Asynchronously getting DRX ...");
+        qmi_client_nas_get_drx (ctx->client,
+                                NULL,
+                                10,
+                                ctx->cancellable,
+                                (GAsyncReadyCallback)get_drx_ready,
+                                NULL);
         return;
     }
 #endif

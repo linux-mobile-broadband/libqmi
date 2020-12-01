@@ -1464,4 +1464,24 @@ typedef enum { /*< since=1.24 >*/
     QMI_NAS_SWI_EMM_CONN_STATE_UNKNOWN         = 0xff
 } QmiNasSwiEmmConnectionState;
 
+/**
+ * QmiNasDrx:
+ * @QMI_NAS_DRX_UNKNOWN: Unknown or not specified.
+ * @QMI_NAS_DRX_CN6_T32: CN=6, T=32.
+ * @QMI_NAS_DRX_CN7_T64: CN=7, T=64.
+ * @QMI_NAS_DRX_CN8_T128: CN=8, T=128.
+ * @QMI_NAS_DRX_CN9_T256: CN=9, T=256.
+ *
+ * DRX setting of the device.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    QMI_NAS_DRX_UNKNOWN  = 0x00,
+    QMI_NAS_DRX_CN6_T32  = 0x06,
+    QMI_NAS_DRX_CN7_T64  = 0x07,
+    QMI_NAS_DRX_CN8_T128 = 0x08,
+    QMI_NAS_DRX_CN9_T256 = 0x09,
+} QmiNasDrx;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
