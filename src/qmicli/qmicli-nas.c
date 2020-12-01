@@ -2756,6 +2756,8 @@ get_cell_location_info_ready (QmiClientNas *client,
 
     QmiNasWcdmaRrcState rrc_state;
 
+    guint32 lte_timing_advance;
+
     output = qmi_client_nas_get_cell_location_info_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
@@ -3224,6 +3226,16 @@ get_cell_location_info_ready (QmiClientNas *client,
             g_print ("\t\tIs TDD?: '%s'\n",
                      element->is_tdd ? "yes" : "no");
         }
+    }
+
+    if (qmi_message_nas_get_cell_location_info_output_get_lte_info_timing_advance (
+            output,
+            &lte_timing_advance,
+            NULL)) {
+        if (lte_timing_advance == 0xFFFFFFFF)
+            g_print ("LTE Timing Advance: 'unavailable'\n");
+        else
+            g_print ("LTE Timing Advance: '%" G_GUINT32_FORMAT"' us\n", lte_timing_advance);
     }
 
     qmi_message_nas_get_cell_location_info_output_unref (output);

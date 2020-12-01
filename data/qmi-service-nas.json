@@ -1898,7 +1898,12 @@
                                                                              "format" : "gint16" },
                                                                            { "name"          : "Is TDD",
                                                                              "format"        : "guint8",
-                                                                             "public-format" : "gboolean" } ] } } ] } ] },
+                                                                             "public-format" : "gboolean" } ] } } ] },
+                    { "name"      : "LTE Info Timing Advance",
+                      "id"        : "0x1E",
+                      "type"      : "TLV",
+                      "since"     : "1.28",
+                      "format"    : "guint32" } ] },
 
   // *********************************************************************************
   {  "name"    : "Network Time",
