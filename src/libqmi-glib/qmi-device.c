@@ -1604,10 +1604,10 @@ trace_message (QmiDevice         *self,
 
     if (sent_or_received) {
         prefix_str = "<<<<<< ";
-        action_str = "sent";
+        action_str = "Sent";
     } else {
         prefix_str = "<<<<<< ";
-        action_str = "received";
+        action_str = "Received";
     }
 
     printable = __qmi_utils_str_hex (((GByteArray *)message)->data,
