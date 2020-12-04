@@ -53,6 +53,7 @@ static gboolean get_system_info_flag;
 static gboolean get_technology_preference_flag;
 static gboolean get_system_selection_preference_flag;
 static gchar *set_system_selection_preference_str;
+static gchar *get_plmn_name_str;
 static gboolean network_scan_flag;
 static gboolean get_cell_location_info_flag;
 static gboolean force_network_search_flag;
@@ -144,6 +145,12 @@ static GOptionEntry entries[] = {
       NULL
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_NAS_GET_PLMN_NAME
+    { "nas-get-plmn-name", 0, 0, G_OPTION_ARG_STRING, &get_plmn_name_str,
+      "Get plmn name data",
+      "[mccmnc]"
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_NAS_GET_LTE_CPHY_CA_INFO
     { "nas-get-lte-cphy-ca-info", 0, 0, G_OPTION_ARG_NONE, &get_lte_cphy_ca_info_flag,
       "Get LTE Cphy CA Info",
@@ -220,6 +227,7 @@ qmicli_nas_options_enabled (void)
                  get_technology_preference_flag +
                  get_system_selection_preference_flag +
                  !!set_system_selection_preference_str +
+                 !!get_plmn_name_str +
                  network_scan_flag +
                  get_cell_location_info_flag +
                  force_network_search_flag +
@@ -3421,6 +3429,126 @@ get_operator_name_ready (QmiClientNas *client,
 
 #endif /* HAVE_QMI_MESSAGE_NAS_GET_OPERATOR_NAME */
 
+#if defined HAVE_QMI_MESSAGE_NAS_GET_PLMN_NAME
+
+static QmiMessageNasGetPlmnNameInput *
+set_plmn_name_input_plmn_create (const gchar *str)
+{
+    g_autoptr(GError) error = NULL;
+    g_autoptr(QmiMessageNasGetPlmnNameInput) input = NULL;
+    guint16 mcc = 0;
+    guint16 mnc = 0;
+
+    if (!qmicli_read_parse_3gpp_mcc_mnc (str, &mcc, &mnc)) {
+        g_printerr ("error: invalid net selection MCC/MNC: '%s'\n", str);
+        return NULL;
+    }
+
+    input = qmi_message_nas_get_plmn_name_input_new ();
+    if (!qmi_message_nas_get_plmn_name_input_set_plmn (
+            input,
+            mcc,
+            mnc,
+            &error)) {
+        g_printerr ("error: couldn't set MCC/MNC: '%s'\n",
+                    error->message);
+        g_clear_pointer(&input, qmi_message_nas_get_plmn_name_input_unref);
+    }
+
+    return input;
+}
+
+static void
+get_plmn_name_ready (QmiClientNas *client,
+                     GAsyncResult *res)
+{
+    g_autoptr(QmiMessageNasGetPlmnNameOutput) output = NULL;
+    g_autoptr(GError) error = NULL;
+    GArray *array;
+    QmiNasNetworkDescriptionEncoding plmn_name_service_provider_name_encoding;
+    GArray *plmn_name_service_provider_name;
+    QmiNasNetworkDescriptionEncoding plmn_name_short_name_encoding;
+    QmiNasPlmnNameCountryInitials plmn_name_short_name_country_initials;
+    QmiNasPlmnNameSpareBits plmn_name_short_name_spare_bits;
+    GArray *plmn_name_short_name;
+    QmiNasNetworkDescriptionEncoding plmn_name_long_name_encoding;
+    QmiNasPlmnNameCountryInitials plmn_name_long_name_country_initials;
+    QmiNasPlmnNameSpareBits plmn_name_long_name_spare_bits;
+    GArray *plmn_name_long_name;
+
+    output = qmi_client_nas_get_plmn_name_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_nas_get_plmn_name_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get operator name data: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully got plmn name data\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (qmi_message_nas_get_plmn_name_output_get_3gpp_eons_plmn_name (
+        output,
+        &plmn_name_service_provider_name_encoding,
+        &plmn_name_service_provider_name,
+        &plmn_name_short_name_encoding,
+        &plmn_name_short_name_country_initials,
+        &plmn_name_short_name_spare_bits,
+        &plmn_name_short_name,
+        &plmn_name_long_name_encoding,
+        &plmn_name_long_name_country_initials,
+        &plmn_name_long_name_spare_bits,
+        &plmn_name_long_name,
+        NULL)) {
+            g_autofree gchar *long_name = NULL;
+            g_autofree gchar *short_name = NULL;
+            g_autofree gchar *service_name = NULL;
+            long_name = qmi_nas_read_string_from_network_description_encoded_array (plmn_name_long_name_encoding, plmn_name_long_name);
+            short_name = qmi_nas_read_string_from_network_description_encoded_array (plmn_name_short_name_encoding, plmn_name_short_name);
+            service_name = qmi_nas_read_string_from_network_description_encoded_array (plmn_name_service_provider_name_encoding, plmn_name_service_provider_name);
+            g_print ("3GPP EONS PLMN Name:\n"
+                 "\tLong Name:  '%s'\n"
+                 "\tShort Name: '%s'\n"
+                 "\tService Name: '%s'\n"
+                 "\tCountry:    '%s'\n",
+                 long_name ?: "",
+                 short_name ?: "",
+                 service_name ?: "",
+                 qmi_nas_plmn_name_country_initials_get_string (plmn_name_short_name_country_initials));
+    }
+
+    if (qmi_message_nas_get_plmn_name_output_get_plmn_name_with_language_id (output, &array, NULL)) {
+        guint i;
+
+        g_print ("3GPP EONS PLMN Name with Language ID:\n");
+        for (i = 0; i < array->len; i++) {
+            QmiMessageNasGetPlmnNameOutputPlmnNameWithLanguageIdElement *element;
+            g_autofree gchar *long_name;
+            g_autofree gchar *short_name;
+
+            element = &g_array_index (array, QmiMessageNasGetPlmnNameOutputPlmnNameWithLanguageIdElement, i);
+            long_name = qmi_nas_read_string_from_plmn_encoded_array (QMI_NAS_PLMN_ENCODING_SCHEME_UCS2LE, element->long_name);
+            short_name = qmi_nas_read_string_from_plmn_encoded_array (QMI_NAS_PLMN_ENCODING_SCHEME_UCS2LE, element->short_name);
+            g_print ("\t%d: '%s'%s%s%s\t\tCountry: '%s'\n",
+                     i,
+                     long_name ?: "",
+                     short_name ? " ('" : "",
+                     short_name ?: "",
+                     short_name ? "')" : "",
+                     qmi_nas_plmn_language_id_get_string (element->language_id));
+        }
+    }
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_PLMN_NAME */
+
 #if defined HAVE_QMI_MESSAGE_NAS_GET_LTE_CPHY_CA_INFO
 
 static void
@@ -4050,6 +4178,23 @@ qmicli_nas_run (QmiDevice *device,
                                           10,
                                           ctx->cancellable,
                                           (GAsyncReadyCallback)get_operator_name_ready,
+                                          NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_NAS_GET_PLMN_NAME
+    if (get_plmn_name_str) {
+
+        g_autoptr(QmiMessageNasGetPlmnNameInput) input = NULL;
+        input = set_plmn_name_input_plmn_create(get_plmn_name_str);
+
+        g_debug ("Asynchronously getting plmn name data...");
+        qmi_client_nas_get_plmn_name (ctx->client,
+                                          input,
+                                          10,
+                                          ctx->cancellable,
+                                          (GAsyncReadyCallback)get_plmn_name_ready,
                                           NULL);
         return;
     }

@@ -449,6 +449,26 @@ qmicli_read_ssp_net_options_from_string (const gchar                      *str,
 }
 
 gboolean
+qmicli_read_parse_3gpp_mcc_mnc (const gchar *str,
+                                guint16     *out_mcc,
+                                guint16     *out_mnc)
+{
+    g_autofree gchar *copy = NULL;
+    guint16 mcc = 0, mnc = 0;
+    
+    copy = g_strdup (str);
+    if (!parse_3gpp_mcc_mnc (copy, &mcc, &mnc)) {
+        g_printerr ("error: invalid net selection MCC/MNC: '%s'\n", str);
+        return FALSE;
+    }
+
+    *out_mcc = mcc;
+    *out_mnc = mnc;
+
+    return TRUE;
+}
+
+gboolean
 qmicli_read_enable_disable_from_string (const gchar *str,
                                         gboolean *out)
 {

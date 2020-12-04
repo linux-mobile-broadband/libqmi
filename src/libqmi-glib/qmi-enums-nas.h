@@ -1484,4 +1484,32 @@ typedef enum { /*< since=1.28 >*/
     QMI_NAS_DRX_CN9_T256 = 0x09,
 } QmiNasDrx;
 
+/**
+ * QmiNasBoolean:
+ * @QMI_NAS_BOOLEAN_FALSE: Status FALSE
+ * @QMI_NAS_BOOLEAN_TRUE: Status TRUE
+ * @QMI_NAS_BOOLEAN_UNKNOWN: Status Unknown
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    QMI_NAS_BOOLEAN_FALSE    = 0x00,
+    QMI_NAS_BOOLEAN_TRUE     = 0x01,
+    QMI_NAS_BOOLEAN_UNKNOWN  = 0x02
+} QmiNasBoolean;
+
+/**
+ * QmiNasPlmnLanguageId:
+ * @QMI_NAS_PLMN_LANGUAGE_ID_UNKNOWN: Language Unknown
+ * @QMI_NAS_PLMN_LANGUAGE_ID_ZH_TRAD: Traditional Chinese
+ * @QMI_NAS_PLMN_LANGUAGE_ID_ZH_SIMP: Simplified Chinese
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    QMI_NAS_PLMN_LANGUAGE_ID_UNKNOWN = 0x00,
+    QMI_NAS_PLMN_LANGUAGE_ID_ZH_TRAD = 0x01,
+    QMI_NAS_PLMN_LANGUAGE_ID_ZH_SIMP = 0x02
+} QmiNasPlmnLanguageId;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_NAS_H_ */
