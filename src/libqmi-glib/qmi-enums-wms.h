@@ -210,16 +210,21 @@ typedef enum { /*< since=1.0 >*/
 
 /**
  * QmiWmsCdmaErrorClass:
- * @QMI_WMS_CDMA_ERROR_CLASS_TEMPORARY: Temporary error.
- * @QMI_WMS_CDMA_ERROR_CLASS_PERMANENT: Permanent error.
+ * @QMI_WMS_CDMA_ERROR_CLASS_TEMPORARY: Temporary error reported by network.
+ * @QMI_WMS_CDMA_ERROR_CLASS_PERMANENT: Permanent error reported by network.
+ * @QMI_WMS_CDMA_ERROR_CLASS_TEMPORARY_DEVICE: Temporary error reported by device. Since 1.28.
+ * @QMI_WMS_CDMA_ERROR_CLASS_PERMANENT_DEVICE: Permanent error reported by device. Since 1.28.
  *
- * Error class when failed to send an SMS in CDMA.
+ * Error class reported from the network when failed to send an SMS in CDMA,
+ * or reported by the device when failed to process a transfer-only CDMA message.
  *
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
-    QMI_WMS_CDMA_ERROR_CLASS_TEMPORARY = 0x00,
-    QMI_WMS_CDMA_ERROR_CLASS_PERMANENT = 0x01
+    QMI_WMS_CDMA_ERROR_CLASS_TEMPORARY        = 0x00,
+    QMI_WMS_CDMA_ERROR_CLASS_PERMANENT        = 0x01,
+    QMI_WMS_CDMA_ERROR_CLASS_TEMPORARY_DEVICE = 0x02,
+    QMI_WMS_CDMA_ERROR_CLASS_PERMANENT_DEVICE = 0x03,
 } QmiWmsCdmaErrorClass;
 
 /**
@@ -459,5 +464,21 @@ typedef enum { /*< since=1.0 >*/
 typedef enum { /*< since=1.0 >*/
     QMI_WMS_TRANSFER_INDICATION_CLIENT = 0x01
 } QmiWmsTransferIndication;
+
+/**
+ * QmiWmsAckFailureCause:
+ * @QMI_WMS_ACK_FAILURE_CAUSE_NO_NETWORK_RESPONSE: No network response.
+ * @QMI_WMS_ACK_FAILURE_CAUSE_NETWORK_RELEASED_LINK: Network released link.
+ * @QMI_WMS_ACK_FAILURE_CAUSE_NOT_SENT: Not sent.
+ *
+ * Ack failure cause.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    QMI_WMS_ACK_FAILURE_CAUSE_NO_NETWORK_RESPONSE   = 0x00,
+    QMI_WMS_ACK_FAILURE_CAUSE_NETWORK_RELEASED_LINK = 0x01,
+    QMI_WMS_ACK_FAILURE_CAUSE_NOT_SENT              = 0x02,
+} QmiWmsAckFailureCause;
 
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_WMS_H_ */

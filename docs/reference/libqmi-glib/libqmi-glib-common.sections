@@ -874,6 +874,7 @@ QmiWmsMessageType
 QmiWmsMessageClass
 QmiWmsReceiptAction
 QmiWmsTransferIndication
+QmiWmsAckFailureCause
 <SUBSECTION Methods>
 qmi_wms_storage_type_get_string
 qmi_wms_ack_indicator_get_string
@@ -892,6 +893,7 @@ qmi_wms_message_type_get_string
 qmi_wms_message_class_get_string
 qmi_wms_receipt_action_get_string
 qmi_wms_transfer_indication_get_string
+qmi_wms_ack_failure_cause_get_string
 <SUBSECTION Private>
 qmi_wms_storage_type_build_string_from_mask
 qmi_wms_ack_indicator_build_string_from_mask
@@ -910,6 +912,7 @@ qmi_wms_message_type_build_string_from_mask
 qmi_wms_message_class_build_string_from_mask
 qmi_wms_receipt_action_build_string_from_mask
 qmi_wms_transfer_indication_build_string_from_mask
+qmi_wms_ack_failure_cause_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_WMS_ACK_INDICATOR
 QMI_TYPE_WMS_CDMA_CAUSE_CODE
@@ -928,6 +931,7 @@ QMI_TYPE_WMS_NOTIFICATION_TYPE
 QMI_TYPE_WMS_RECEIPT_ACTION
 QMI_TYPE_WMS_STORAGE_TYPE
 QMI_TYPE_WMS_TRANSFER_INDICATION
+QMI_TYPE_WMS_ACK_FAILURE_CAUSE
 qmi_wms_ack_indicator_get_type
 qmi_wms_cdma_cause_code_get_type
 qmi_wms_cdma_error_class_get_type
@@ -945,6 +949,7 @@ qmi_wms_notification_type_get_type
 qmi_wms_receipt_action_get_type
 qmi_wms_storage_type_get_type
 qmi_wms_transfer_indication_get_type
+qmi_wms_ack_failure_cause_get_type
 </SECTION>
 
 <SECTION>
