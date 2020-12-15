@@ -333,6 +333,8 @@ QmiNasSwiModemMode
 QmiNasSwiPsState
 QmiNasSwiSystemMode
 QmiNasDrx
+QmiNasBoolean
+QmiNasPlmnLanguageId
 <SUBSECTION Methods>
 qmi_nas_radio_interface_get_string
 qmi_nas_active_band_get_string
@@ -396,6 +398,8 @@ qmi_nas_swi_modem_mode_get_string
 qmi_nas_swi_ps_state_get_string
 qmi_nas_swi_system_mode_get_string
 qmi_nas_drx_get_string
+qmi_nas_boolean_get_string
+qmi_nas_plmn_language_id_get_string
 <SUBSECTION Private>
 qmi_nas_radio_interface_build_string_from_mask
 qmi_nas_active_band_build_string_from_mask
@@ -455,6 +459,8 @@ qmi_nas_swi_modem_mode_build_string_from_mask
 qmi_nas_swi_ps_state_build_string_from_mask
 qmi_nas_swi_system_mode_build_string_from_mask
 qmi_nas_drx_build_string_from_mask
+qmi_nas_boolean_build_string_from_mask
+qmi_nas_plmn_language_id_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_NAS_ACTIVE_BAND
 QMI_TYPE_NAS_ATTACH_STATE
@@ -514,6 +520,8 @@ QMI_TYPE_NAS_SWI_MODEM_MODE
 QMI_TYPE_NAS_SWI_PS_STATE
 QMI_TYPE_NAS_SWI_SYSTEM_MODE
 QMI_TYPE_NAS_DRX
+QMI_TYPE_NAS_BOOLEAN
+QMI_TYPE_NAS_PLMN_LANGUAGE_ID
 qmi_nas_active_band_get_type
 qmi_nas_attach_state_get_type
 qmi_nas_call_barring_status_get_type
@@ -572,6 +580,8 @@ qmi_nas_swi_modem_mode_get_type
 qmi_nas_swi_ps_state_get_type
 qmi_nas_swi_system_mode_get_type
 qmi_nas_drx_get_type
+qmi_nas_boolean_get_type
+qmi_nas_plmn_language_id_get_type
 </SECTION>
 
 <SECTION>
