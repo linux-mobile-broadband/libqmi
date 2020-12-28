@@ -1749,22 +1749,11 @@ qmi_message_wds_set_default_profile_num_output_get_type
 <FILE>ignored</FILE>
 <SUBSECTION Private>
 QMI_DEVICE_NODE
-QMI_ENDPOINT_QRTR
-QMI_ENDPOINT_QRTR_CLASS
-QMI_ENDPOINT_QRTR_GET_CLASS
-QMI_IS_ENDPOINT_QRTR
-QMI_IS_ENDPOINT_QRTR_CLASS
 QMI_QRTR_SUPPORTED
-QMI_TYPE_ENDPOINT_QRTR
-QmiEndpointQrtr
-QmiEndpointQrtrClass
-QmiEndpointQrtrPrivate
 qmi_device_new_from_node
 qmi_device_new_from_node_finish
 qmi_device_get_node
 qmi_device_peek_node
-qmi_endpoint_qrtr_get_type
-qmi_endpoint_qrtr_new
 HAVE_QMI_MESSAGE_NAS_ABORT
 HAVE_QMI_MESSAGE_WDS_ABORT
 HAVE_QMI_SERVICE_DMS
