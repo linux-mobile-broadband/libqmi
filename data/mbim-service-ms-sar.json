@@ -44,21 +44,6 @@
                        { "name"             : "ConfigStates",
                          "format"           : "ref-struct-array" ,
                          "struct-type"      : "MbimSarConfigState",
-                         "array-size-field" : "ConfigStatesCount" } ],
-    "notification" : [ { "name"          : "Mode",
-                         "format"        : "guint32",
-                         "public-format" : "MbimSarControlMode" },
-                       { "name"          : "BackoffState",
-                         "format"        : "guint32",
-                         "public-format" : "MbimSarBackoffState" },
-                       { "name"          : "WifiIntegration",
-                         "format"        : "guint32",
-                         "public-format" : "MbimSarWifiHardwareState" },
-                       { "name"   : "ConfigStatesCount",
-                         "format" : "guint32" },
-                       { "name"             : "ConfigStates",
-                         "format"           : "ref-struct-array" ,
-                         "struct-type"      : "MbimSarConfigState",
                          "array-size-field" : "ConfigStatesCount" } ] }
 
 ]

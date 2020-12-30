@@ -31,6 +31,7 @@
 #include <libmbim-glib.h>
 
 #include "mbimcli.h"
+#include "mbimcli-helpers.h"
 
 /* Context */
 typedef struct {
@@ -40,9 +41,14 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
+static gchar   *set_sar_config_flag;
 static gboolean query_sar_config_flag;
 
 static GOptionEntry entries[] = {
+    { "ms-set-sar-config", 0, 0, G_OPTION_ARG_STRING, &set_sar_config_flag,
+      "Set SAR config",
+      "(device|os),(enabled|disabled)[,[{antenna_index,backoff_index}...]]"
+    },
     { "ms-query-sar-config", 0, 0, G_OPTION_ARG_NONE, &query_sar_config_flag,
       "Query SAR config",
       NULL
@@ -74,7 +80,8 @@ mbimcli_ms_sar_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = query_sar_config_flag;
+    n_actions = !!set_sar_config_flag +
+                query_sar_config_flag;
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft SAR actions requested\n");
@@ -167,9 +174,79 @@ ms_sar_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static gboolean
+sar_config_input_parse (const gchar         *str,
+                        MbimSarControlMode  *mode,
+                        MbimSarBackoffState *state,
+                        GPtrArray          **states_array)
+{
+    g_auto(GStrv) split = NULL;
+
+    g_assert (mode != NULL);
+    g_assert (state != NULL);
+    g_assert (states_array!= NULL);
+
+    /* Format of the string is:
+     *    "(mode:device or os),(state: enabled or disabled)[,[{antenna_index,backoff_index}...]]"
+     *    i.e. array of {antenna_index,backoff_index} is optional
+     */
+    split = g_strsplit (str, ",", 3);
+
+    if (g_strv_length (split) < 2) {
+        g_printerr ("error: couldn't parse input string, missing arguments\n");
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (split[0], "device") == 0) {
+        *mode = MBIM_SAR_CONTROL_MODE_DEVICE;
+    } else if (g_ascii_strcasecmp (split[0], "os") == 0) {
+        *mode = MBIM_SAR_CONTROL_MODE_OS;
+    } else {
+        g_printerr ("error: invalid mode: '%s', it must be device or os\n", split[0]);
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (split[1], "disabled") == 0) {
+        *state = MBIM_SAR_BACKOFF_STATE_DISABLED;
+    } else if (g_ascii_strcasecmp (split[1], "enabled") == 0) {
+        *state = MBIM_SAR_BACKOFF_STATE_ENABLED;
+    } else {
+        g_printerr ("error: invalid state: '%s', it must be enabled or disabled\n", split[1]);
+        return FALSE;
+    }
+
+    /* Check whether we have the optional item array: [{antenna_index,backoff_index}...] */
+    if (split[2]) {
+        const gchar *state_begin;
+
+        state_begin = strchr (split[2], '[');
+        if (state_begin != NULL) {
+            *states_array = g_ptr_array_new_with_free_func (g_free);
+            while ((state_begin = strchr (state_begin, '{')) != NULL) {
+                guint32 antenna_index;
+                guint32 backoff_index;
+
+                if (sscanf (state_begin, "{%d,%d}", &antenna_index, &backoff_index) == 2) {
+                    MbimSarConfigState *config_state;
+
+                    config_state = g_new (MbimSarConfigState, 1);
+                    config_state->antenna_index = antenna_index;
+                    config_state->backoff_index = backoff_index;
+                    g_ptr_array_add (*states_array, config_state);
+                    ++state_begin;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    return TRUE;
+}
+
 void
 mbimcli_ms_sar_run (MbimDevice   *device,
-		    GCancellable *cancellable)
+                    GCancellable *cancellable)
 {
     g_autoptr(MbimMessage) request = NULL;
 
@@ -178,7 +255,37 @@ mbimcli_ms_sar_run (MbimDevice   *device,
     ctx->device = g_object_ref (device);
     ctx->cancellable = cancellable ? g_object_ref (cancellable) : NULL;
 
-    /* Request to notify that host is shutting down */
+    /* Request to set SAR config */
+    if (set_sar_config_flag) {
+        g_autoptr(GPtrArray) states_array = NULL;
+
+        MbimSarControlMode         mode;
+        MbimSarBackoffState        state;
+        guint                      states_count = 0;
+        const MbimSarConfigState **states_ptrs  = NULL;
+
+        g_print ("Asynchronously set sar config\n");
+        if (!sar_config_input_parse (set_sar_config_flag, &mode, &state, &states_array)) {
+            shutdown (FALSE);
+            return;
+        }
+
+        if (states_array != NULL) {
+            states_count = states_array->len;
+            states_ptrs  = (const MbimSarConfigState **)states_array->pdata;
+        }
+
+        request = mbim_message_ms_sar_config_set_new (mode, state, states_count, states_ptrs, NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)ms_sar_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to querying SAR config */
     if (query_sar_config_flag) {
         g_debug ("Asynchronously querying SAR config...");
         request = (mbim_message_ms_sar_config_query_new (NULL));
