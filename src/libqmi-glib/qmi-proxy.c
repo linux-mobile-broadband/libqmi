@@ -212,7 +212,7 @@ disown_not_released_clients (QmiProxy *self,
 {
     guint i;
 
-    if (!client->qmi_client_info_array->len)
+    if (!client->qmi_client_info_array || !client->qmi_client_info_array->len)
         return;
 
     for (i = 0; i < client->qmi_client_info_array->len; i++) {
@@ -310,6 +310,9 @@ indication_cb (QmiDevice *device,
                Client *client)
 {
     guint i;
+
+    if (!client->qmi_client_info_array)
+        return;
 
     for (i = 0; i < client->qmi_client_info_array->len; i++) {
         QmiClientInfo *info;
@@ -540,6 +543,9 @@ qmi_client_info_array_lookup_cid (GArray     *array,
                                   guint8      cid)
 {
     guint i;
+
+    if (!array)
+        return -1;
 
     for (i = 0; i < array->len; i++) {
         QmiClientInfo *item;
