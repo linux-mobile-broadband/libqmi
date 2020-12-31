@@ -43,6 +43,8 @@ static Context *ctx;
 /* Options */
 static gchar   *set_sar_config_flag;
 static gboolean query_sar_config_flag;
+static gchar   *set_transmission_status_flag;
+static gboolean query_transmission_status_flag;
 
 static GOptionEntry entries[] = {
     { "ms-set-sar-config", 0, 0, G_OPTION_ARG_STRING, &set_sar_config_flag,
@@ -51,6 +53,14 @@ static GOptionEntry entries[] = {
     },
     { "ms-query-sar-config", 0, 0, G_OPTION_ARG_NONE, &query_sar_config_flag,
       "Query SAR config",
+      NULL
+    },
+    { "ms-set-transmission-status", 0, 0, G_OPTION_ARG_STRING, &set_transmission_status_flag,
+      "Set transmission status(notification enabled or disabled, hysteresis timer 1~5 second)",
+      "(enabled|disabled),(seconds)"
+    },
+    { "ms-query-transmission-status", 0, 0, G_OPTION_ARG_NONE, &query_transmission_status_flag,
+      "Query transmission status",
       NULL
     },
     { NULL }
@@ -81,7 +91,9 @@ mbimcli_ms_sar_options_enabled (void)
         return !!n_actions;
 
     n_actions = !!set_sar_config_flag +
-                query_sar_config_flag;
+                query_sar_config_flag +
+                !!set_transmission_status_flag +
+                query_transmission_status_flag;
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft SAR actions requested\n");
@@ -174,6 +186,51 @@ ms_sar_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+modem_transmission_status_ready (MbimDevice   *device,
+                                 GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)         response = NULL;
+    g_autoptr(GError)              error = NULL;
+    MbimMsTransmissionNotification channel_notification;
+    const gchar                   *channel_notification_str;
+    MbimMsTransmissionState        transmission_status;
+    const gchar                   *transmission_status_str;
+    guint32                        hysteresis_timer;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_sar_transmission_status_response_parse (
+            response,
+            &channel_notification,
+            &transmission_status,
+            &hysteresis_timer,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    channel_notification_str = mbim_ms_transmission_notification_get_string (channel_notification);
+    transmission_status_str  = mbim_ms_transmission_state_get_string (transmission_status);
+
+    g_print ("[%s] Transmission status:\n"
+             "\t        notification: %s\n"
+             "\t              status: %s\n"
+             "\t    hysteresis timer: (%u)\n",
+             mbim_device_get_path_display (device),
+             VALIDATE_UNKNOWN (channel_notification_str),
+             VALIDATE_UNKNOWN (transmission_status_str),
+             hysteresis_timer);
+
+    shutdown (TRUE);
+}
+
 static gboolean
 sar_config_input_parse (const gchar         *str,
                         MbimSarControlMode  *mode,
@@ -244,6 +301,48 @@ sar_config_input_parse (const gchar         *str,
     return TRUE;
 }
 
+static gboolean
+transmission_status_input_parse (const gchar                    *str,
+                                 MbimMsTransmissionNotification *notification,
+                                 guint                          *hysteresis_timer)
+{
+    g_auto(GStrv) split = NULL;
+
+    g_assert (notification != NULL);
+    g_assert (hysteresis_timer != NULL);
+
+    /* Format of the string is:
+     *    "(notification: enabled or disabled),(seconds: 1~5)"
+     */
+    split = g_strsplit (str, ",", -1);
+
+    if (g_strv_length (split) < 2) {
+        g_printerr ("error: couldn't parse input string, missing arguments\n");
+        return FALSE;
+    }
+
+    if (g_ascii_strcasecmp (split[0], "disabled") == 0) {
+        *notification = MBIM_MS_TRANSMISSION_NOTIFICATION_DISABLED;
+    } else if (g_ascii_strcasecmp (split[0], "enabled") == 0) {
+        *notification = MBIM_MS_TRANSMISSION_NOTIFICATION_ENABLED;
+    } else {
+        g_printerr ("error: invalid state: '%s', it must be enabled or disabled\n", split[0]);
+        return FALSE;
+    }
+
+    if (!mbimcli_read_uint_from_string (split[1], hysteresis_timer)) {
+        g_printerr ("error: couldn't parse input string, invalid seconds '%s'\n", split[1]);
+        return FALSE;
+    }
+
+    if (*hysteresis_timer < 1 || *hysteresis_timer > 5) {
+        g_printerr ("error: the seconds of hysteresis_timer is %u, it must in range [1,5]\n", *hysteresis_timer);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 void
 mbimcli_ms_sar_run (MbimDevice   *device,
                     GCancellable *cancellable)
@@ -294,6 +393,42 @@ mbimcli_ms_sar_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)ms_sar_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to set transmission status */
+    if (set_transmission_status_flag) {
+        MbimMsTransmissionNotification notification     = MBIM_MS_TRANSMISSION_NOTIFICATION_DISABLED;
+        guint32                        hysteresis_timer = 0;
+        g_debug ("Asynchronously set transmission status");
+
+        if (!transmission_status_input_parse (set_transmission_status_flag,
+                                              &notification,
+                                              &hysteresis_timer)) {
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_ms_sar_transmission_status_set_new (notification, hysteresis_timer, NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)modem_transmission_status_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to query transmission status */
+    if (query_transmission_status_flag) {
+        g_debug ("Asynchronously query transmission status");
+        request = mbim_message_ms_sar_transmission_status_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)modem_transmission_status_ready,
                              NULL);
         return;
     }

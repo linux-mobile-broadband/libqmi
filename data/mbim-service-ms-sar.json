@@ -44,6 +44,34 @@
                        { "name"             : "ConfigStates",
                          "format"           : "ref-struct-array" ,
                          "struct-type"      : "MbimSarConfigState",
-                         "array-size-field" : "ConfigStatesCount" } ] }
+                         "array-size-field" : "ConfigStatesCount" } ] },
 
+  // *********************************************************************************
+
+  { "name"         : "Transmission status",
+    "service"      : "MS SAR",
+    "type"         : "Command",
+    "since"        : "1.26",
+    "set"          : [ { "name"             : "ChannelNotification",
+                         "format"           : "guint32" ,
+                         "public-format"    : "MbimMsTransmissionNotification"},
+                       { "name"             : "HysteresisTimer",
+                         "format"           : "guint32" } ],
+    "query"        : [],
+    "response"     : [ { "name"             : "ChannelNotification",
+                         "format"           : "guint32" ,
+                         "public-format"    : "MbimMsTransmissionNotification"},
+                       { "name"             : "TransmissionStatus",
+                         "format"           : "guint32" ,
+                         "public-format"    : "MbimMsTransmissionState"},
+                       { "name"             : "HysteresisTimer",
+                         "format"           : "guint32" } ],
+    "notification" : [ { "name"             : "ChannelNotification",
+                         "format"           : "guint32" ,
+                         "public-format"    : "MbimMsTransmissionNotification"},
+                       { "name"             : "TransmissionStatus",
+                         "format"           : "guint32" ,
+                         "public-format"    : "MbimMsTransmissionState"},
+                       { "name"             : "HysteresisTimer",
+                         "format"           : "guint32" } ] }
 ]
