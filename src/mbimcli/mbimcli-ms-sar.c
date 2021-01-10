@@ -190,13 +190,13 @@ static void
 modem_transmission_status_ready (MbimDevice   *device,
                                  GAsyncResult *res)
 {
-    g_autoptr(MbimMessage)         response = NULL;
-    g_autoptr(GError)              error = NULL;
-    MbimMsTransmissionNotification channel_notification;
-    const gchar                   *channel_notification_str;
-    MbimMsTransmissionState        transmission_status;
-    const gchar                   *transmission_status_str;
-    guint32                        hysteresis_timer;
+    g_autoptr(MbimMessage)              response = NULL;
+    g_autoptr(GError)                   error = NULL;
+    MbimTransmissionNotificationStatus  channel_notification;
+    const gchar                        *channel_notification_str;
+    MbimTransmissionState               transmission_status;
+    const gchar                        *transmission_status_str;
+    guint32                             hysteresis_timer;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -216,8 +216,8 @@ modem_transmission_status_ready (MbimDevice   *device,
         return;
     }
 
-    channel_notification_str = mbim_ms_transmission_notification_get_string (channel_notification);
-    transmission_status_str  = mbim_ms_transmission_state_get_string (transmission_status);
+    channel_notification_str = mbim_transmission_notification_status_get_string (channel_notification);
+    transmission_status_str  = mbim_transmission_state_get_string (transmission_status);
 
     g_print ("[%s] Transmission status:\n"
              "\t        notification: %s\n"
@@ -302,9 +302,9 @@ sar_config_input_parse (const gchar         *str,
 }
 
 static gboolean
-transmission_status_input_parse (const gchar                    *str,
-                                 MbimMsTransmissionNotification *notification,
-                                 guint                          *hysteresis_timer)
+transmission_status_input_parse (const gchar                        *str,
+                                 MbimTransmissionNotificationStatus *notification,
+                                 guint                              *hysteresis_timer)
 {
     g_auto(GStrv) split = NULL;
 
@@ -322,9 +322,9 @@ transmission_status_input_parse (const gchar                    *str,
     }
 
     if (g_ascii_strcasecmp (split[0], "disabled") == 0) {
-        *notification = MBIM_MS_TRANSMISSION_NOTIFICATION_DISABLED;
+        *notification = MBIM_TRANSMISSION_NOTIFICATION_STATUS_DISABLED;
     } else if (g_ascii_strcasecmp (split[0], "enabled") == 0) {
-        *notification = MBIM_MS_TRANSMISSION_NOTIFICATION_ENABLED;
+        *notification = MBIM_TRANSMISSION_NOTIFICATION_STATUS_ENABLED;
     } else {
         g_printerr ("error: invalid state: '%s', it must be enabled or disabled\n", split[0]);
         return FALSE;
@@ -399,8 +399,8 @@ mbimcli_ms_sar_run (MbimDevice   *device,
 
     /* Request to set transmission status */
     if (set_transmission_status_str) {
-        MbimMsTransmissionNotification notification     = MBIM_MS_TRANSMISSION_NOTIFICATION_DISABLED;
-        guint32                        hysteresis_timer = 0;
+        MbimTransmissionNotificationStatus notification     = MBIM_TRANSMISSION_NOTIFICATION_STATUS_DISABLED;
+        guint32                            hysteresis_timer = 0;
         g_debug ("Asynchronously set transmission status");
 
         if (!transmission_status_input_parse (set_transmission_status_str,

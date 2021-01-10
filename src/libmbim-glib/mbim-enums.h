@@ -1253,37 +1253,37 @@ typedef enum { /*< since=1.26 >*/
  * Since: 1.26
  */
 typedef enum { /*< since=1.26 >*/
-    MBIM_SAR_WIFI_HARDWARE_STATE_INTEGRATED = 0,
+    MBIM_SAR_WIFI_HARDWARE_STATE_INTEGRATED     = 0,
     MBIM_SAR_WIFI_HARDWARE_STATE_NOT_INTEGRATED = 1
 } MbimSarWifiHardwareState;
 
 /**
- * MbimMsTransmissionNotification:
- * @MBIM_MS_TRANSMISSION_NOTIFICATION_DISABLED: Notification disabled.
- * @MBIM_MS_TRANSMISSION_NOTIFICATION_ENABLED: Notification enabled.
+ * MbimTransmissionNotificationStatus:
+ * @MBIM_TRANSMISSION_NOTIFICATION_STATUS_DISABLED: Notification disabled.
+ * @MBIM_TRANSMISSION_NOTIFICATION_STATUS_ENABLED: Notification enabled.
  *
  * Whether modem channel transmission status notification is disabled or enabled.
  *
  * Since: 1.26
  */
 typedef enum { /*< since=1.26 >*/
-    MBIM_MS_TRANSMISSION_NOTIFICATION_DISABLED = 0,
-    MBIM_MS_TRANSMISSION_NOTIFICATION_ENABLED = 1
-} MbimMsTransmissionNotification;
+    MBIM_TRANSMISSION_NOTIFICATION_STATUS_DISABLED = 0,
+    MBIM_TRANSMISSION_NOTIFICATION_STATUS_ENABLED  = 1
+} MbimTransmissionNotificationStatus;
 
 /**
- * MbimMsTransmissionState:
- * @MBIM_MS_TRANSMISSION_STATE_INACTIVE: Modem was not actively transmitting data.
- * @MBIM_MS_TRANSMISSION_STATE_ACTIVE: Modem was actively transmitting data.
+ * MbimTransmissionState:
+ * @MBIM_TRANSMISSION_STATE_INACTIVE: Modem was not actively transmitting data.
+ * @MBIM_TRANSMISSION_STATE_ACTIVE: Modem was actively transmitting data.
  *
- * Whether modem is having TX traffic every HysteresisTimer seconds.
+ * Whether modem is having TX traffic every hysteresis timeout.
  *
  * Since: 1.26
  */
 typedef enum { /*< since=1.26 >*/
-    MBIM_MS_TRANSMISSION_STATE_INACTIVE = 0,
-    MBIM_MS_TRANSMISSION_STATE_ACTIVE = 1
-} MbimMsTransmissionState;
+    MBIM_TRANSMISSION_STATE_INACTIVE = 0,
+    MBIM_TRANSMISSION_STATE_ACTIVE   = 1
+} MbimTransmissionState;
 
 G_END_DECLS
 
