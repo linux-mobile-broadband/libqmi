@@ -329,6 +329,8 @@ MbimLteAttachState
 MbimSarBackoffState
 MbimSarControlMode
 MbimSarWifiHardwareState
+MbimTransmissionNotificationStatus
+MbimTransmissionState
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -388,6 +390,8 @@ mbim_lte_attach_state_get_string
 mbim_sar_backoff_state_get_string
 mbim_sar_control_mode_get_string
 mbim_sar_wifi_hardware_state_get_string
+mbim_transmission_notification_status_get_string
+mbim_transmission_state_get_string
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -449,6 +453,8 @@ mbim_lte_attach_state_build_string_from_mask
 mbim_sar_backoff_state_build_string_from_mask
 mbim_sar_control_mode_build_string_from_mask
 mbim_sar_wifi_hardware_state_build_string_from_mask
+mbim_transmission_notification_status_build_string_from_mask
+mbim_transmission_state_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -513,6 +519,8 @@ MBIM_TYPE_LTE_ATTACH_STATE
 MBIM_TYPE_SAR_BACKOFF_STATE
 MBIM_TYPE_SAR_CONTROL_MODE
 MBIM_TYPE_SAR_WIFI_HARDWARE_STATE
+MBIM_TYPE_TRANSMISSION_NOTIFICATION_STATUS
+MBIM_TYPE_TRANSMISSION_STATE
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type
@@ -576,6 +584,8 @@ mbim_lte_attach_state_get_type
 mbim_sar_backoff_state_get_type
 mbim_sar_control_mode_get_type
 mbim_sar_wifi_hardware_state_get_type
+mbim_transmission_notification_status_get_type
+mbim_transmission_state_get_type
 </SECTION>
 
 <SECTION>
