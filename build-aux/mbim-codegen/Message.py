@@ -246,21 +246,21 @@ class Message:
             elif field['format'] == 'struct':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #${struct}.\n')
             elif field['format'] == 'struct-array':
-                inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type ${struct}): the \'${name}\' field, given as an array of #${struct}s.\n')
+                inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type ${struct}): the \'${name}\' field, given as an array of #${struct} items.\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template = (' * @${field}: (in): the \'${name}\' field, given as an array of #${struct}s.\n')
+                inner_template = (' * @${field}: (in): the \'${name}\' field, given as an array of #${struct} items.\n')
             elif field['format'] == 'ipv4':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimIPv4.\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimIPv4.\n')
             elif field['format'] == 'ipv4-array':
-                inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type MbimIPv4): the \'${name}\' field, given as an array of #MbimIPv4.\n')
+                inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type MbimIPv4): the \'${name}\' field, given as an array of #MbimIPv4 items.\n')
             elif field['format'] == 'ipv6':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimIPv6.\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimIPv6.\n')
             elif field['format'] == 'ipv6-array':
-                inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type MbimIPv6): the \'${name}\' field, given as an array of #MbimIPv6.\n')
+                inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type MbimIPv6): the \'${name}\' field, given as an array of #MbimIPv6 items.\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
@@ -497,21 +497,21 @@ class Message:
             elif field['format'] == 'struct':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated #${struct}, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_free().\n')
             elif field['format'] == 'struct-array':
-                inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type ${struct}): return location for a newly allocated array of #${struct}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type ${struct}): return location for a newly allocated array of #${struct} items, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type ${struct}): return location for a newly allocated array of #${struct}s, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type ${struct}): return location for a newly allocated array of #${struct} items, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
             elif field['format'] == 'ipv4':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ref-ipv4':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ipv4-array':
-                inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type MbimIPv4): return location for a newly allocated array of #MbimIPv4s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type MbimIPv4): return location for a newly allocated array of #MbimIPv4 items, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
             elif field['format'] == 'ipv6':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ref-ipv6':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ipv6-array':
-                inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type MbimIPv6): return location for a newly allocated array of #MbimIPv6s, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type MbimIPv6): return location for a newly allocated array of #MbimIPv6 items, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
