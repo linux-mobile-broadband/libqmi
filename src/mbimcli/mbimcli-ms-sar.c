@@ -49,15 +49,15 @@ static gboolean query_transmission_status_flag;
 static GOptionEntry entries[] = {
     { "ms-set-sar-config", 0, 0, G_OPTION_ARG_STRING, &set_sar_config_flag,
       "Set SAR config",
-      "(device|os),(enabled|disabled)[,[{antenna_index,backoff_index}...]]"
+      "[(device|os),(enabled|disabled)[,[{antenna_index,backoff_index}...]]]"
     },
     { "ms-query-sar-config", 0, 0, G_OPTION_ARG_NONE, &query_sar_config_flag,
       "Query SAR config",
       NULL
     },
     { "ms-set-transmission-status", 0, 0, G_OPTION_ARG_STRING, &set_transmission_status_flag,
-      "Set transmission status(notification enabled or disabled, hysteresis timer 1~5 second)",
-      "(enabled|disabled),(seconds)"
+      "Set transmission status and hysteresis timer (in seconds)",
+      "[(enabled|disabled),(timer)]"
     },
     { "ms-query-transmission-status", 0, 0, G_OPTION_ARG_NONE, &query_transmission_status_flag,
       "Query transmission status",
