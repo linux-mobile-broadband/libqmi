@@ -41,13 +41,13 @@ typedef struct {
 static Context *ctx;
 
 /* Options */
-static gchar   *set_sar_config_flag;
+static gchar   *set_sar_config_str;
 static gboolean query_sar_config_flag;
-static gchar   *set_transmission_status_flag;
+static gchar   *set_transmission_status_str;
 static gboolean query_transmission_status_flag;
 
 static GOptionEntry entries[] = {
-    { "ms-set-sar-config", 0, 0, G_OPTION_ARG_STRING, &set_sar_config_flag,
+    { "ms-set-sar-config", 0, 0, G_OPTION_ARG_STRING, &set_sar_config_str,
       "Set SAR config",
       "[(device|os),(enabled|disabled)[,[{antenna_index,backoff_index}...]]]"
     },
@@ -55,7 +55,7 @@ static GOptionEntry entries[] = {
       "Query SAR config",
       NULL
     },
-    { "ms-set-transmission-status", 0, 0, G_OPTION_ARG_STRING, &set_transmission_status_flag,
+    { "ms-set-transmission-status", 0, 0, G_OPTION_ARG_STRING, &set_transmission_status_str,
       "Set transmission status and hysteresis timer (in seconds)",
       "[(enabled|disabled),(timer)]"
     },
@@ -90,9 +90,9 @@ mbimcli_ms_sar_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = !!set_sar_config_flag +
+    n_actions = !!set_sar_config_str +
                 query_sar_config_flag +
-                !!set_transmission_status_flag +
+                !!set_transmission_status_str +
                 query_transmission_status_flag;
 
     if (n_actions > 1) {
@@ -355,7 +355,7 @@ mbimcli_ms_sar_run (MbimDevice   *device,
     ctx->cancellable = cancellable ? g_object_ref (cancellable) : NULL;
 
     /* Request to set SAR config */
-    if (set_sar_config_flag) {
+    if (set_sar_config_str) {
         g_autoptr(GPtrArray) states_array = NULL;
 
         MbimSarControlMode         mode;
@@ -364,7 +364,7 @@ mbimcli_ms_sar_run (MbimDevice   *device,
         const MbimSarConfigState **states_ptrs  = NULL;
 
         g_print ("Asynchronously set sar config\n");
-        if (!sar_config_input_parse (set_sar_config_flag, &mode, &state, &states_array)) {
+        if (!sar_config_input_parse (set_sar_config_str, &mode, &state, &states_array)) {
             shutdown (FALSE);
             return;
         }
@@ -398,12 +398,12 @@ mbimcli_ms_sar_run (MbimDevice   *device,
     }
 
     /* Request to set transmission status */
-    if (set_transmission_status_flag) {
+    if (set_transmission_status_str) {
         MbimMsTransmissionNotification notification     = MBIM_MS_TRANSMISSION_NOTIFICATION_DISABLED;
         guint32                        hysteresis_timer = 0;
         g_debug ("Asynchronously set transmission status");
 
-        if (!transmission_status_input_parse (set_transmission_status_flag,
+        if (!transmission_status_input_parse (set_transmission_status_str,
                                               &notification,
                                               &hysteresis_timer)) {
             shutdown (FALSE);
