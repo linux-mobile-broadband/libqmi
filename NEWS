@@ -1,4 +1,17 @@
 
+Overview of changes in libqmi 1.26.8
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fix proxy segfault when accessing length of NULL GArray.
+   ** Add "Release USSD" indication to Basic collection.
+
+ * qmicli:
+   ** Fix element types used in "NAS Get Cell Location Info".
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.26.6
 ----------------------------------------
 
