@@ -8,7 +8,10 @@
 <book id="libmbim-glib">
   <bookinfo>
     <title>libmbim-glib Reference Manual</title>
-    <releaseinfo>for libmbim-glib &version;</releaseinfo>
+    <releaseinfo>
+      For libmbim-glib &version;. The latest version of this documentation can be found on-line at
+     <ulink role="online-location" url="https://www.freedesktop.org/software/libmbim/libmbim-glib/latest/">https://www.freedesktop.org/software/libmbim/libmbim-glib/latest/</ulink>.
+    </releaseinfo>
 
     <copyright>
       <year>2013</year>
