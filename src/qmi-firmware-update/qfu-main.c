@@ -344,7 +344,7 @@ print_version (void)
     g_print ("\n"
              PROGRAM_NAME " " PROGRAM_VERSION "\n"
              "\n"
-             "  Copyright (C) 2016-2020 Aleksander Morgado\n"
+             "  Copyright (C) 2016-2021 Aleksander Morgado\n"
              "  Copyright (C) 2016-2019 Bjørn Mork\n"
              "  Copyright (C) 2016-2018 Zodiac Inflight Innovations\n"
              "\n"
