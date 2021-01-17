@@ -79,6 +79,7 @@ struct _QrtrNodeClass {
 };
 
 GType qrtr_node_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrNode, g_object_unref)
 
 /**
  * QRTR_NODE_SIGNAL_REMOVED:

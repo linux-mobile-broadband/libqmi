@@ -67,6 +67,7 @@ struct _QrtrControlSocketClass {
 };
 
 GType qrtr_control_socket_get_type (void);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrControlSocket, g_object_unref)
 
 /**
  * QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED:
