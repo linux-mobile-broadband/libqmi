@@ -8,7 +8,10 @@
 <book id="libqmi-glib">
   <bookinfo>
     <title>libqmi-glib Reference Manual</title>
-    <releaseinfo>for libqmi-glib &version;</releaseinfo>
+    <releaseinfo>
+      For libqmi-glib &version;. The latest version of this documentation can be found on-line at
+     <ulink role="online-location" url="https://www.freedesktop.org/software/libqmi/libqmi-glib/latest/">https://www.freedesktop.org/software/libqmi/libqmi-glib/latest/</ulink>.
+    </releaseinfo>
 
     <copyright>
       <year>2012</year>
