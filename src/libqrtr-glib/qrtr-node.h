@@ -175,18 +175,18 @@ QrtrNode *qrtr_node_new (struct _QrtrControlSocket *socket,
 #if defined (LIBQRTR_GLIB_COMPILATION)
 
 G_GNUC_INTERNAL
-void __qrtr_node_add_service_info (QrtrNode *node,
-                                   guint32   service,
-                                   guint32   port,
-                                   guint32   version,
-                                   guint32   instance);
+void qrtr_node_add_service_info (QrtrNode *node,
+                                 guint32   service,
+                                 guint32   port,
+                                 guint32   version,
+                                 guint32   instance);
 
 G_GNUC_INTERNAL
-void __qrtr_node_remove_service_info (QrtrNode *node,
-                                      guint32   service,
-                                      guint32   port,
-                                      guint32   version,
-                                      guint32   instance);
+void qrtr_node_remove_service_info (QrtrNode *node,
+                                    guint32   service,
+                                    guint32   port,
+                                    guint32   version,
+                                    guint32   instance);
 
 #endif /* defined (LIBQMI_GLIB_COMPILATION) */
 

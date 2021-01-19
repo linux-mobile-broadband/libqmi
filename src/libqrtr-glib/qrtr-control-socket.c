@@ -78,7 +78,7 @@ add_service_info (QrtrControlSocket *self,
         g_signal_emit (self, signals[SIGNAL_NODE_ADDED], 0, node_id);
     }
 
-    __qrtr_node_add_service_info (node, service, port, version, instance);
+    qrtr_node_add_service_info (node, service, port, version, instance);
     g_signal_emit (self, signals[SIGNAL_SERVICE_ADDED], 0, node_id, service);
 }
 
@@ -98,7 +98,7 @@ remove_service_info (QrtrControlSocket *self,
         return;
     }
 
-    __qrtr_node_remove_service_info (node, service, port, version, instance);
+    qrtr_node_remove_service_info (node, service, port, version, instance);
     g_signal_emit (self, signals[SIGNAL_SERVICE_REMOVED], 0, node_id, service);
     if (!qrtr_node_has_services (node)) {
         g_debug ("[qrtr] removing node %u", node_id);

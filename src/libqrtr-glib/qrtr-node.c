@@ -231,11 +231,11 @@ service_index_remove_info (GHashTable             *service_index,
 }
 
 void
-__qrtr_node_add_service_info (QrtrNode *node,
-                              guint32 service,
-                              guint32 port,
-                              guint32 version,
-                              guint32 instance)
+qrtr_node_add_service_info (QrtrNode *node,
+                            guint32 service,
+                            guint32 port,
+                            guint32 version,
+                            guint32 instance)
 {
     struct QrtrServiceInfo *info;
 
@@ -251,11 +251,11 @@ __qrtr_node_add_service_info (QrtrNode *node,
 }
 
 void
-__qrtr_node_remove_service_info (QrtrNode *node,
-                                 guint32 service,
-                                 guint32 port,
-                                 guint32 version,
-                                 guint32 instance)
+qrtr_node_remove_service_info (QrtrNode *node,
+                               guint32 service,
+                               guint32 port,
+                               guint32 version,
+                               guint32 instance)
 {
     struct QrtrServiceInfo *info;
 
