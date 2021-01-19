@@ -37,6 +37,13 @@
 
 G_BEGIN_DECLS
 
+/**
+ * SECTION:qmi-utils
+ *
+ * This section exposes a set of common utilities that may be used to work
+ * with the QMI library.
+ */
+
 /* Enabling/Disabling traces */
 
 /**

@@ -83,4 +83,6 @@ typedef enum {
     QMI_SERVICE_FLAG_INDICATION = 1 << 2
 } QmiServiceFlag;
 
+
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_PRIVATE_H_ */

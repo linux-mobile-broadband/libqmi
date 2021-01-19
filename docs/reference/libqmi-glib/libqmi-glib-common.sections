@@ -1538,6 +1538,8 @@ qmi_message_set_transaction_id
 <SUBSECTION Printable>
 qmi_message_get_printable_full
 qmi_message_get_tlv_printable
+<SUBSECTION Private>
+qmi_message_tlv_read_remaining_size
 </SECTION>
 
 <SECTION>

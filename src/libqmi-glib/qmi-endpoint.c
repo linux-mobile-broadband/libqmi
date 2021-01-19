@@ -24,7 +24,7 @@
 
 #include "qmi-endpoint.h"
 
-#include "qmi-utils-private.h"
+#include "qmi-helpers.h"
 #include "qmi-error-types.h"
 #include "qmi-errors.h"
 
@@ -92,8 +92,7 @@ qmi_endpoint_parse_buffer (QmiEndpoint        *self,
                 gchar *printable;
                 guint len = MIN (self->priv->buffer->len, 2048);
 
-                printable = __qmi_utils_str_hex (self->priv->buffer->data,
-                                                 len, ':');
+                printable = qmi_helpers_str_hex (self->priv->buffer->data, len, ':');
                 g_debug ("<<<<<< RAW INVALID MESSAGE:\n"
                          "<<<<<<   length = %u\n"
                          "<<<<<<   data   = %s\n",

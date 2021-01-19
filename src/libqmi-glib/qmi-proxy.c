@@ -36,7 +36,7 @@
 #include "qmi-error-types.h"
 #include "qmi-device.h"
 #include "qmi-ctl.h"
-#include "qmi-utils-private.h"
+#include "qmi-helpers.h"
 #include "qmi-proxy.h"
 #include "qmi-version.h"
 
@@ -481,7 +481,7 @@ process_internal_proxy_open (QmiProxy   *self,
     /* The incoming path may be a symlink. In the proxy, we always use the real path of the
      * device, so that clients using different symlinks for the same file don't collide with
      * each other. */
-    device_file_path = __qmi_utils_get_devpath (incoming_path, &error);
+    device_file_path = qmi_helpers_get_devpath (incoming_path, &error);
     if (!device_file_path) {
         g_warning ("Error looking up real device path: %s", error->message);
         g_error_free (error);
@@ -491,7 +491,7 @@ process_internal_proxy_open (QmiProxy   *self,
     g_free (incoming_path);
 
     /* The remaining size of the buffer needs to be 0 if we successfully read the TLV */
-    if ((offset = __qmi_message_tlv_read_remaining_size (message, init_offset, offset)) > 0)
+    if ((offset = qmi_message_tlv_read_remaining_size (message, init_offset, offset)) > 0)
         g_warning ("Left '%" G_GSIZE_FORMAT "' bytes unread when getting the 'Device Path' TLV", offset);
 
     g_debug ("valid request to open connection to QMI device file: %s", device_file_path);
@@ -580,7 +580,7 @@ track_cid (Client     *client,
         g_error_free (error);
         return;
     }
-    g_warn_if_fail (__qmi_message_tlv_read_remaining_size (message, init_offset, offset) == 0);
+    g_warn_if_fail (qmi_message_tlv_read_remaining_size (message, init_offset, offset) == 0);
     if ((error_status != 0x00) || (error_code != QMI_PROTOCOL_ERROR_NONE))
         return;
 
@@ -985,7 +985,7 @@ incoming_cb (GSocketService *service,
         g_error_free (error);
         return;
     }
-    if (!__qmi_user_allowed (uid, &error)) {
+    if (!qmi_helpers_check_user_allowed (uid, &error)) {
         g_warning ("Client not allowed: %s", error->message);
         g_error_free (error);
         return;
@@ -1068,7 +1068,7 @@ qmi_proxy_new (GError **error)
 {
     QmiProxy *self;
 
-    if (!__qmi_user_allowed (getuid (), error))
+    if (!qmi_helpers_check_user_allowed (getuid (), error))
         return NULL;
 
     self = g_object_new (QMI_TYPE_PROXY, NULL);

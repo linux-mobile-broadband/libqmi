@@ -935,9 +935,9 @@ gboolean qmi_message_tlv_read_fixed_size_string (QmiMessage  *self,
 
 #if defined (LIBQMI_GLIB_COMPILATION)
 G_GNUC_INTERNAL
-guint16 __qmi_message_tlv_read_remaining_size (QmiMessage  *self,
-                                               gsize        tlv_offset,
-                                               gsize        offset);
+guint16 qmi_message_tlv_read_remaining_size (QmiMessage  *self,
+                                             gsize        tlv_offset,
+                                             gsize        offset);
 #endif
 
 /*****************************************************************************/

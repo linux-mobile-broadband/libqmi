@@ -327,7 +327,7 @@ class Field:
         template = (
             '\n'
             '${lp}/* The remaining size of the buffer needs to be 0 if we successfully read the TLV */\n'
-            '${lp}if ((offset = __qmi_message_tlv_read_remaining_size (message, init_offset, offset)) > 0) {\n'
+            '${lp}if ((offset = qmi_message_tlv_read_remaining_size (message, init_offset, offset)) > 0) {\n'
             '${lp}    g_warning ("Left \'%" G_GSIZE_FORMAT "\' bytes unread when getting the \'${name}\' TLV", offset);\n'
             '${lp}}\n'
             '\n'
@@ -382,7 +382,7 @@ class Field:
 
         template = (
             '\n'
-            '    if ((offset = __qmi_message_tlv_read_remaining_size (message, init_offset, offset)) > 0)\n'
+            '    if ((offset = qmi_message_tlv_read_remaining_size (message, init_offset, offset)) > 0)\n'
             '        g_string_append_printf (printable, "Additional unexpected \'%" G_GSIZE_FORMAT "\' bytes", offset);\n'
             '\n'
             'out:\n'

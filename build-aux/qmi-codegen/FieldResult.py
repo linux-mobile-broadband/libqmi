@@ -160,7 +160,7 @@ class FieldResult(Field):
             '        return NULL;\n'
             '    if (!qmi_message_tlv_read_guint16 (self, init_offset, &offset, QMI_ENDIAN_LITTLE, &error_code, NULL))\n'
             '        return NULL;\n'
-            '    g_warn_if_fail (__qmi_message_tlv_read_remaining_size (self, init_offset, offset) == 0);\n'
+            '    g_warn_if_fail (qmi_message_tlv_read_remaining_size (self, init_offset, offset) == 0);\n'
             '\n'
             '    if (error_status == QMI_STATUS_SUCCESS)\n'
             '        return g_strdup ("SUCCESS");\n'

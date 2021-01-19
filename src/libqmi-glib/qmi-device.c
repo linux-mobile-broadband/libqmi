@@ -55,7 +55,7 @@
 #include "qmi-gms.h"
 #include "qmi-dsd.h"
 #include "qmi-utils.h"
-#include "qmi-utils-private.h"
+#include "qmi-helpers.h"
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
 #include "qmi-proxy.h"
@@ -704,7 +704,7 @@ reload_wwan_iface_name (QmiDevice *self)
 
     g_clear_pointer (&self->priv->wwan_iface, g_free);
 
-    cdc_wdm_device_name = __qmi_utils_get_devname (qmi_file_get_path (self->priv->file), &error);
+    cdc_wdm_device_name = qmi_helpers_get_devname (qmi_file_get_path (self->priv->file), &error);
     if (!cdc_wdm_device_name) {
         g_warning ("[%s] invalid path for cdc-wdm control port: %s",
                    qmi_file_get_path_display (self->priv->file),
@@ -1616,7 +1616,7 @@ trace_message (QmiDevice         *self,
         action_str = "Received";
     }
 
-    printable = __qmi_utils_str_hex (((GByteArray *)message)->data,
+    printable = qmi_helpers_str_hex (((GByteArray *)message)->data,
                                      ((GByteArray *)message)->len,
                                      ':');
     g_debug ("[%s] %s message...\n"
@@ -2140,11 +2140,11 @@ device_setup_open_flags_by_transport (QmiDevice          *self,
                                       DeviceOpenContext  *ctx,
                                       GError            **error)
 {
-    __QmiTransportType  transport;
-    GError             *inner_error = NULL;
+    QmiHelpersTransportType  transport;
+    GError                  *inner_error = NULL;
 
-    transport = __qmi_utils_get_transport_type (qmi_file_get_path (self->priv->file), &inner_error);
-    if ((transport == __QMI_TRANSPORT_TYPE_UNKNOWN) && !self->priv->no_file_check)
+    transport = qmi_helpers_get_transport_type (qmi_file_get_path (self->priv->file), &inner_error);
+    if ((transport == QMI_HELPERS_TRANSPORT_TYPE_UNKNOWN) && !self->priv->no_file_check)
         g_warning ("[%s] couldn't detect transport type of port: %s", qmi_file_get_path_display (self->priv->file), inner_error->message);
     g_clear_error (&inner_error);
 
@@ -2153,15 +2153,15 @@ device_setup_open_flags_by_transport (QmiDevice          *self,
     /* Auto mode requested? */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_AUTO) {
         switch (transport) {
-        case __QMI_TRANSPORT_TYPE_MBIM:
+        case QMI_HELPERS_TRANSPORT_TYPE_MBIM:
             g_debug ("[%s] automatically selecting MBIM mode", qmi_file_get_path_display (self->priv->file));
             ctx->flags |= QMI_DEVICE_OPEN_FLAGS_MBIM;
             break;
-        case __QMI_TRANSPORT_TYPE_QMUX:
+        case QMI_HELPERS_TRANSPORT_TYPE_QMUX:
             g_debug ("[%s] automatically selecting QMI mode", qmi_file_get_path_display (self->priv->file));
             ctx->flags &= ~QMI_DEVICE_OPEN_FLAGS_MBIM;
             break;
-        case __QMI_TRANSPORT_TYPE_UNKNOWN:
+        case QMI_HELPERS_TRANSPORT_TYPE_UNKNOWN:
             g_set_error (&inner_error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
                          "Cannot automatically select QMI/MBIM mode");
             break;
@@ -2173,7 +2173,7 @@ device_setup_open_flags_by_transport (QmiDevice          *self,
 
     /* MBIM mode requested? */
     if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_MBIM) {
-        if ((transport != __QMI_TRANSPORT_TYPE_MBIM) && !self->priv->no_file_check)
+        if ((transport != QMI_HELPERS_TRANSPORT_TYPE_MBIM) && !self->priv->no_file_check)
             g_warning ("[%s] requested MBIM mode but unexpected transport type found", qmi_file_get_path_display (self->priv->file));
         goto out;
     }
@@ -2191,7 +2191,7 @@ device_setup_open_flags_by_transport (QmiDevice          *self,
 #endif /* MBIM_QMUX_ENABLED */
 
     /* QMI mode requested? */
-    if ((transport != __QMI_TRANSPORT_TYPE_QMUX) && !self->priv->no_file_check)
+    if ((transport != QMI_HELPERS_TRANSPORT_TYPE_QMUX) && !self->priv->no_file_check)
         g_warning ("[%s] requested QMI mode but unexpected transport type found",
                    qmi_file_get_path_display (self->priv->file));
 

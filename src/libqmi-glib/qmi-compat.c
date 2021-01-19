@@ -22,7 +22,7 @@
 #include <string.h>
 
 #include "qmi-compat.h"
-#include "qmi-utils-private.h"
+#include "qmi-helpers.h"
 #include "qmi-enum-types.h"
 
 #ifndef QMI_DISABLE_DEPRECATED
@@ -39,8 +39,8 @@ print_read_bytes_trace (const gchar *type,
     gchar *str1;
     gchar *str2;
 
-    str1 = __qmi_utils_str_hex (buffer, n_bytes, ':');
-    str2 = __qmi_utils_str_hex (out, n_bytes, ':');
+    str1 = qmi_helpers_str_hex (buffer, n_bytes, ':');
+    str2 = qmi_helpers_str_hex (out, n_bytes, ':');
 
     g_debug ("Read %s (%s) --> (%s)", type, str1, str2);
     g_warn_if_fail (g_str_equal (str1, str2));
@@ -662,7 +662,7 @@ qmi_message_tlv_read_gfloat (QmiMessage  *self,
                              gfloat      *out,
                              GError     **error)
 {
-    return qmi_message_tlv_read_gfloat_endian (self, tlv_offset, offset, __QMI_ENDIAN_HOST, out, error);
+    return qmi_message_tlv_read_gfloat_endian (self, tlv_offset, offset, QMI_ENDIAN_HOST, out, error);
 }
 
 /*****************************************************************************/

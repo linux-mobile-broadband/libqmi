@@ -63,6 +63,7 @@ IGNORE_HFILES = \
 	qmi-net-port-manager.h \
 	qmi-file.h \
 	qmi-ctl.h \
+	qmi-helpers.h \
 	test-port-context.h \
 	test-fixture.h
 

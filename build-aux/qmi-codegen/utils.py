@@ -119,7 +119,7 @@ def add_source_start(f, output_name):
         "#include \"qmi-flags64-types.h\"\n"
         "#include \"qmi-error-types.h\"\n"
         "#include \"qmi-device.h\"\n"
-        "#include \"qmi-utils-private.h\"\n"
+        "#include \"qmi-helpers.h\"\n"
         '\n'
         '#define QMI_STATUS_SUCCESS 0x0000\n'
         '#define QMI_STATUS_FAILURE 0x0001\n'

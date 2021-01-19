@@ -34,7 +34,7 @@
 #include <endian.h>
 
 #include "qmi-message.h"
-#include "qmi-utils-private.h"
+#include "qmi-helpers.h"
 #include "qmi-enums-private.h"
 #include "qmi-enum-types-private.h"
 #include "qmi-enum-types.h"
@@ -1232,9 +1232,9 @@ qmi_message_tlv_read_gfloat_endian (QmiMessage  *self,
 
     memcpy (out, ptr, 4);
     if (endian == QMI_ENDIAN_BIG)
-        *out = __QMI_GFLOAT_FROM_BE (*out);
+        *out = QMI_GFLOAT_FROM_BE (*out);
     else
-        *out = __QMI_GFLOAT_FROM_LE (*out);
+        *out = QMI_GFLOAT_FROM_LE (*out);
     *offset = *offset + 4;
     return TRUE;
 }
@@ -1259,9 +1259,9 @@ qmi_message_tlv_read_gdouble (QmiMessage  *self,
     /* Yeah, do this for now */
     memcpy (out, ptr, 8);
     if (endian == QMI_ENDIAN_BIG)
-        *out = __QMI_GDOUBLE_FROM_BE (*out);
+        *out = QMI_GDOUBLE_FROM_BE (*out);
     else
-        *out = __QMI_GDOUBLE_FROM_LE (*out);
+        *out = QMI_GDOUBLE_FROM_LE (*out);
     *offset = *offset + 8;
     return TRUE;
 }
@@ -1330,16 +1330,16 @@ qmi_message_tlv_read_string (QmiMessage  *self,
      * but hey, the strings read using this method should all really be ASCII-7
      * and we're trying to do our best to overcome modem firmware problems...
      */
-    if (__qmi_string_utf8_validate_printable (ptr, valid_string_length)) {
+    if (qmi_helpers_string_utf8_validate_printable (ptr, valid_string_length)) {
         *out = g_malloc (valid_string_length + 1);
         memcpy (*out, ptr, valid_string_length);
         (*out)[valid_string_length] = '\0';
     } else {
         /* Otherwise, attempt GSM-7 */
-        *out =__qmi_string_utf8_from_gsm7 (ptr, valid_string_length);
+        *out =qmi_helpers_string_utf8_from_gsm7 (ptr, valid_string_length);
         if (*out == NULL) {
             /* Otherwise, attempt UCS-2 */
-            *out = __qmi_string_utf8_from_ucs2le (ptr, valid_string_length);
+            *out = qmi_helpers_string_utf8_from_ucs2le (ptr, valid_string_length);
             if (*out == NULL) {
                 /* Otherwise, error */
                 g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_DATA, "invalid string");
@@ -1394,9 +1394,9 @@ qmi_message_tlv_read_fixed_size_string (QmiMessage  *self,
 }
 
 guint16
-__qmi_message_tlv_read_remaining_size (QmiMessage *self,
-                                       gsize       tlv_offset,
-                                       gsize       offset)
+qmi_message_tlv_read_remaining_size (QmiMessage *self,
+                                     gsize       tlv_offset,
+                                     gsize       offset)
 {
     struct tlv *tlv;
 
@@ -1545,7 +1545,7 @@ qmi_message_get_tlv_printable (QmiMessage *self,
     g_return_val_if_fail (raw != NULL, NULL);
     g_return_val_if_fail (raw_length > 0, NULL);
 
-    value_hex = __qmi_utils_str_hex (raw, raw_length, ':');
+    value_hex = qmi_helpers_str_hex (raw, raw_length, ':');
     printable = g_strdup_printf ("%sTLV:\n"
                                  "%s  type   = 0x%02x\n"
                                  "%s  length = %" G_GSIZE_FORMAT "\n"
