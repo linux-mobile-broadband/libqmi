@@ -145,6 +145,20 @@ typedef enum { /*< since=1.0 >*/
 } QmiService;
 
 /**
+ * QmiEndian:
+ * @QMI_ENDIAN_LITTLE: Little endian.
+ * @QMI_ENDIAN_BIG: Big endian.
+ *
+ * Type of endianness.
+ *
+ * Since: 1.0
+ */
+typedef enum { /*< since=1.28 >*/   /* the get_string() helper and QmiEndian type added in 1.28 */
+    QMI_ENDIAN_LITTLE = 0,
+    QMI_ENDIAN_BIG    = 1
+} QmiEndian;
+
+/**
  * QmiDataEndpointType:
  * @QMI_DATA_ENDPOINT_TYPE_HSUSB: Data Endpoint Type HSUSB.
  * @QMI_DATA_ENDPOINT_TYPE_PCIE: Data Endpoint Type PCIE. Since: 1.28.

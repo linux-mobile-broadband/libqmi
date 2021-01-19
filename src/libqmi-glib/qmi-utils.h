@@ -37,20 +37,6 @@
 
 G_BEGIN_DECLS
 
-/**
- * QmiEndian:
- * @QMI_ENDIAN_LITTLE: Little endian.
- * @QMI_ENDIAN_BIG: Big endian.
- *
- * Type of endianness
- *
- * Since: 1.0
- */
-typedef enum {
-    QMI_ENDIAN_LITTLE = 0,
-    QMI_ENDIAN_BIG    = 1
-} QmiEndian;
-
 /* Enabling/Disabling traces */
 
 /**
