@@ -72,7 +72,11 @@ add_service_info (QrtrControlSocket *self,
 
     node = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
     if (!node) {
-        node = qrtr_node_new (self, node_id);
+        /* Node objects are exclusively created at this point */
+        node = QRTR_NODE (g_object_new (QRTR_TYPE_NODE,
+                                        QRTR_NODE_SOCKET, self,
+                                        QRTR_NODE_ID,     node_id,
+                                        NULL));
         g_assert (g_hash_table_insert (self->priv->node_map, GUINT_TO_POINTER (node_id), node));
         g_debug ("[qrtr] created new node %u", node_id);
         g_signal_emit (self, signals[SIGNAL_NODE_ADDED], 0, node_id);

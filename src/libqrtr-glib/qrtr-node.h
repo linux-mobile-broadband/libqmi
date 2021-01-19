@@ -32,9 +32,6 @@
 
 G_BEGIN_DECLS
 
-/* Forward declare QrtrControlSocket for qrtr_node_new. */
-struct _QrtrControlSocket;
-
 /**
  * SECTION:qrtr-node
  * @title: QrtrNode
@@ -159,16 +156,6 @@ gboolean qrtr_node_wait_for_services_finish (QrtrNode      *node,
                                              GError       **error);
 
 G_END_DECLS
-
-/**
- * qrtr_node_new:
- * @socket: the control socket that created this QrtrNode.
- * @node: the node number of this QrtrNode.
- *
- * Create a new QRTR node.
- */
-QrtrNode *qrtr_node_new (struct _QrtrControlSocket *socket,
-                         guint32                    node);
 
 /* Other private methods */
 

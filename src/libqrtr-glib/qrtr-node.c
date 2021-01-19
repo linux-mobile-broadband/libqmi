@@ -382,16 +382,6 @@ qrtr_node_wait_for_services (QrtrNode            *self,
     g_ptr_array_add (self->priv->waiters, waiter);
 }
 
-QrtrNode *
-qrtr_node_new (QrtrControlSocket *socket,
-               guint32            node_id)
-{
-    return QRTR_NODE (g_object_new (QRTR_TYPE_NODE,
-                                    QRTR_NODE_SOCKET, socket,
-                                    QRTR_NODE_ID,     node_id,
-                                    NULL));
-}
-
 static void
 qrtr_node_init (QrtrNode *self)
 {
