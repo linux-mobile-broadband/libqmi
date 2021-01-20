@@ -76,9 +76,9 @@ typedef struct {
 
 /* used to avoid calling the free function when values are overwritten
  * in the service index */
-struct ListHolder {
+typedef struct {
     GList *list;
-};
+} ListHolder;
 
 /*****************************************************************************/
 
@@ -226,10 +226,10 @@ sort_services_by_version (const QrtrNodeServiceInfo *a,
 }
 
 static void
-list_holder_free (struct ListHolder *list_holder)
+list_holder_free (ListHolder *list_holder)
 {
     g_list_free (list_holder->list);
-    g_slice_free (struct ListHolder, list_holder);
+    g_slice_free (ListHolder, list_holder);
 }
 
 static void
@@ -237,11 +237,11 @@ service_index_add_info (GHashTable          *service_index,
                         guint32              service,
                         QrtrNodeServiceInfo *info)
 {
-    struct ListHolder *service_instances;
+    ListHolder *service_instances;
 
     service_instances = g_hash_table_lookup (service_index, GUINT_TO_POINTER (service));
     if (!service_instances) {
-        service_instances = g_slice_new0 (struct ListHolder);
+        service_instances = g_slice_new0 (ListHolder);
         g_hash_table_insert (service_index, GUINT_TO_POINTER (service), service_instances);
     }
     service_instances->list = g_list_insert_sorted (service_instances->list, info,
@@ -253,7 +253,7 @@ service_index_remove_info (GHashTable          *service_index,
                            guint32              service,
                            QrtrNodeServiceInfo *info)
 {
-    struct ListHolder *service_instances;
+    ListHolder *service_instances;
 
     service_instances = g_hash_table_lookup (service_index, GUINT_TO_POINTER (service));
     if (!service_instances)
@@ -310,7 +310,7 @@ gint32
 qrtr_node_lookup_port (QrtrNode *node,
                        guint32   service)
 {
-    struct ListHolder   *service_instances;
+    ListHolder          *service_instances;
     QrtrNodeServiceInfo *info;
     GList               *list;
 
