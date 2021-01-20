@@ -73,6 +73,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrControlSocket, g_object_unref)
  * QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED:
  *
  * Symbol defining the #QrtrControlSocket::qrtr-node-added signal.
+ *
+ * Since: 1.28
  */
 #define QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED   "qrtr-node-added"
 
@@ -80,6 +82,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrControlSocket, g_object_unref)
  * QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED:
  *
  * Symbol defining the #QrtrControlSocket::qrtr-node-removed signal.
+ *
+ * Since: 1.28
  */
 #define QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED "qrtr-node-removed"
 
@@ -87,6 +91,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrControlSocket, g_object_unref)
  * QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_ADDED:
  *
  * Symbol defining the #QrtrControlSocket::qrtr-service-added signal.
+ *
+ * Since: 1.28
  */
 #define QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_ADDED   "qrtr-service-added"
 
@@ -94,6 +100,8 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrControlSocket, g_object_unref)
  * QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_REMOVED:
  *
  * Symbol defining the #QrtrControlSocket::qrtr-service-removed signal.
+ *
+ * Since: 1.28
  */
 #define QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_REMOVED "qrtr-service-removed"
 
@@ -105,28 +113,45 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrControlSocket, g_object_unref)
  * Creates a #QrtrControlSocket object.
  *
  * Returns: A newly created #QrtrControlSocket, or %NULL if @error is set.
+ *
+ * Since: 1.28
  */
 QrtrControlSocket *qrtr_control_socket_new (GCancellable  *cancellable,
                                             GError       **error);
 
 /**
  * qrtr_control_socket_peek_node:
+ * @self: a #QrtrControlSocket.
  * @node_id: the QRTR bus node ID to get
  *
- * Returns: (transfer none): a #QrtrNode object representing the device with
- * the given node ID on the QRTR bus.
+ * Get the #QrtrNode with node ID @node_id, without increasing the reference count
+ * on the returned object.
+ *
+ * This method will fail if there is no node with the give @node_id in the QRTR bus.
+ *
+ * Returns: (transfer none): a #QrtrNode, or %NULL if none available.
+ *  Do not free the returned object, it is owned by @self.
+ *
+ * Since: 1.28
  */
-QrtrNode *qrtr_control_socket_peek_node (QrtrControlSocket *socket,
+QrtrNode *qrtr_control_socket_peek_node (QrtrControlSocket *self,
                                          guint32            node_id);
 
 /**
  * qrtr_control_socket_get_node:
+ * @self: a #QrtrControlSocket.
  * @node_id: the QRTR bus node ID to get
  *
- * Returns: (transfer full): a #QrtrNode object representing the device with
- * the given node ID on the QRTR bus.
+ * Get the #QrtrNode with node ID @node_id.
+ *
+ * This method will fail if there is no node with the give @node_id in the QRTR bus.
+ *
+ * Returns: (transfer full): a #QrtrNode that must be freed with g_object_unref(),
+ *  or %NULL if none available
+ *
+ * Since: 1.28
  */
-QrtrNode *qrtr_control_socket_get_node (QrtrControlSocket *socket,
+QrtrNode *qrtr_control_socket_get_node (QrtrControlSocket *self,
                                         guint32            node_id);
 
 G_END_DECLS

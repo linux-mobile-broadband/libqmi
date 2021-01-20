@@ -177,20 +177,23 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
 /*****************************************************************************/
 
 QrtrNode *
-qrtr_control_socket_peek_node (QrtrControlSocket *socket,
+qrtr_control_socket_peek_node (QrtrControlSocket *self,
                                guint32            node_id)
 {
-    return g_hash_table_lookup (socket->priv->node_map,
-                                GUINT_TO_POINTER (node_id));
+    g_return_val_if_fail (QRTR_IS_CONTROL_SOCKET (self), NULL);
+
+    return g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
 }
 
 QrtrNode *
-qrtr_control_socket_get_node (QrtrControlSocket *socket,
+qrtr_control_socket_get_node (QrtrControlSocket *self,
                               guint32            node_id)
 {
     QrtrNode *node;
 
-    node = qrtr_control_socket_peek_node (socket, node_id);
+    g_return_val_if_fail (QRTR_IS_CONTROL_SOCKET (self), NULL);
+
+    node = qrtr_control_socket_peek_node (self, node_id);
     return (node ? g_object_ref (node) : NULL);
 }
 
@@ -351,6 +354,8 @@ qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
      *
      * The ::qrtr-node-added signal is emitted when a new node registers a service on
      * the QRTR bus.
+     *
+     * Since: 1.28
      */
     signals[SIGNAL_NODE_ADDED] =
         g_signal_new (QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED,
@@ -371,6 +376,8 @@ qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
      *
      * The ::qrtr-node-removed signal is emitted when a node deregisters all services
      * from the QRTR bus.
+     *
+     * Since: 1.28
      */
     signals[SIGNAL_NODE_REMOVED] =
         g_signal_new (QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED,
@@ -392,6 +399,8 @@ qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
      *
      * The ::qrtr-service-added signal is emitted when a new service registers
      * on the QRTR bus.
+     *
+     * Since: 1.28
      */
     signals[SIGNAL_SERVICE_ADDED] =
         g_signal_new (QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_ADDED,
@@ -414,6 +423,8 @@ qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
      *
      * The ::qrtr-service-removed signal is emitted when a service deregisters
      * from the QRTR bus.
+     *
+     * Since: 1.28
      */
     signals[SIGNAL_SERVICE_REMOVED] =
         g_signal_new (QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_REMOVED,
