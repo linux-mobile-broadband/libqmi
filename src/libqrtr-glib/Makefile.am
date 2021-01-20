@@ -1,7 +1,4 @@
 
-# ship under libqmi-glib for now
-includedir = @includedir@/libqmi-glib
-
 if QMI_QRTR_SUPPORTED
 
 noinst_LTLIBRARIES = libqrtr-glib.la
@@ -25,17 +22,37 @@ libqrtr_glib_la_SOURCES = \
 	qrtr-utils.h qrtr-utils.c \
 	$(NULL)
 
+nodist_libqrtr_glib_la_SOURCES = \
+	qrtr-version.h \
+	$(NULL)
+
 libqrtr_glib_la_LDFLAGS = \
+	-version-info $(QRTR_GLIB_LT_CURRENT):$(QRTR_GLIB_LT_REVISION):$(QRTR_GLIB_LT_AGE) \
 	$(WARN_CFLAGS) \
 	$(GLIB_LIBS) \
 	$(NULL)
 
+includedir = @includedir@/libqrtr-glib
 include_HEADERS = \
 	libqrtr-glib.h \
 	qrtr-bus.h \
 	qrtr-node.h \
 	qrtr-utils.h \
 	$(NULL)
+
+nodist_include_HEADERS = \
+	qrtr-version.h \
+	$(NULL)
+
+EXTRA_DIST = \
+	qrtr-version.h.in \
+	$(NULL)
+
+DISTCLEANFILES = \
+	qrtr-version.h \
+	$(NULL)
+
+CLEANFILES =
 
 # Introspection
 

@@ -20,6 +20,17 @@ m4_define([qmi_glib_lt_current],  [12])
 m4_define([qmi_glib_lt_revision], [0])
 m4_define([qmi_glib_lt_age],      [7])
 
+dnl libtool versioning for libqrtr-glib (-version-info c:r:a)
+dnl    If the interface is unchanged, but the implementation has changed or
+dnl        been fixed, then increment r.
+dnl    Otherwise, increment c and zero r.
+dnl        If the interface has grown (that is, the new library is compatible
+dnl            with old code), increment a.
+dnl        If the interface has changed in an incompatible way (that is,
+dnl            functions have changed or been removed), then zero a.
+m4_define([qrtr_glib_lt_current],  [0])
+m4_define([qrtr_glib_lt_revision], [0])
+m4_define([qrtr_glib_lt_age],      [0])
 
 AC_INIT([libqmi], [qmi_version], [libqmi-devel@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([config.h.in])
@@ -87,6 +98,12 @@ QMI_GLIB_LT_AGE=qmi_glib_lt_age
 AC_SUBST(QMI_GLIB_LT_CURRENT)
 AC_SUBST(QMI_GLIB_LT_REVISION)
 AC_SUBST(QMI_GLIB_LT_AGE)
+QRTR_GLIB_LT_CURRENT=qrtr_glib_lt_current
+QRTR_GLIB_LT_REVISION=qrtr_glib_lt_revision
+QRTR_GLIB_LT_AGE=qrtr_glib_lt_age
+AC_SUBST(QRTR_GLIB_LT_CURRENT)
+AC_SUBST(QRTR_GLIB_LT_REVISION)
+AC_SUBST(QRTR_GLIB_LT_AGE)
 
 dnl Required dependency versions
 GLIB_VERSION=2.48
@@ -273,6 +290,7 @@ AC_CONFIG_FILES([Makefile
                  build-aux/qmi-codegen/Makefile
                  src/Makefile
                  src/libqrtr-glib/Makefile
+                 src/libqrtr-glib/qrtr-version.h
                  src/libqmi-glib/Makefile
                  src/libqmi-glib/qmi-version.h
                  src/libqmi-glib/generated/Makefile
