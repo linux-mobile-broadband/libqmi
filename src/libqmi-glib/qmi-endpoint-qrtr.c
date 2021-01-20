@@ -139,7 +139,7 @@ qrtr_message_cb (GSocket *gsocket,
     }
 
     if (sq.sq_family != AF_QIPCRTR ||
-        sq.sq_node != qrtr_node_id (self->priv->node) ||
+        sq.sq_node != qrtr_node_get_id (self->priv->node) ||
         sq.sq_port == QRTR_PORT_CTRL) {
         /* ignore all CTRL messages or ones not from our node, we only want real
          * QMI messages */
@@ -567,7 +567,7 @@ endpoint_send (QmiEndpoint   *endpoint,
 
     /* Set up QRTR bus destination address */
     addr.sq_family = AF_QIPCRTR;
-    addr.sq_node = qrtr_node_id (self->priv->node);
+    addr.sq_node = qrtr_node_get_id (self->priv->node);
     addr.sq_port = (guint) sq_port;
 
     /* Get raw message */
@@ -633,7 +633,7 @@ qmi_endpoint_qrtr_new (QrtrNode *node)
     if (!node)
         return NULL;
 
-    uri = qrtr_get_uri_for_node (qrtr_node_id (node));
+    uri = qrtr_get_uri_for_node (qrtr_node_get_id (node));
     file = qmi_file_new (g_file_new_for_uri (uri));
     g_free (uri);
 

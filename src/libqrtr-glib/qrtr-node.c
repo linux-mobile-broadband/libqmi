@@ -314,7 +314,7 @@ qrtr_node_has_services (QrtrNode *node)
 }
 
 guint32
-qrtr_node_id (QrtrNode *node)
+qrtr_node_get_id (QrtrNode *node)
 {
     return node->priv->node_id;
 }

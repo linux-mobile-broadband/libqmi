@@ -2895,7 +2895,7 @@ get_file_for_node (QrtrNode *node)
 {
     g_autofree gchar *uri = NULL;
 
-    uri = qrtr_get_uri_for_node (qrtr_node_id (node));
+    uri = qrtr_get_uri_for_node (qrtr_node_get_id (node));
     return qmi_file_new (g_file_new_for_uri (uri));
 }
 #endif

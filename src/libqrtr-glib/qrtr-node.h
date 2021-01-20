@@ -104,7 +104,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrNode, g_object_unref)
 gboolean qrtr_node_has_services (QrtrNode *self);
 
 /**
- * qrtr_node_id:
+ * qrtr_node_get_id:
  * @self: a #QrtrNode.
  *
  * Gets the node ID in the QRTR bus.
@@ -113,7 +113,7 @@ gboolean qrtr_node_has_services (QrtrNode *self);
  *
  * Since: 1.28
  */
-guint32 qrtr_node_id (QrtrNode *self);
+guint32 qrtr_node_get_id (QrtrNode *self);
 
 /**
  * qrtr_node_lookup_port:
