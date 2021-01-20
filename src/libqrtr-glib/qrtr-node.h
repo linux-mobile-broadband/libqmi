@@ -53,11 +53,11 @@ typedef struct _QrtrNodeClass QrtrNodeClass;
 typedef struct _QrtrNodePrivate QrtrNodePrivate;
 
 /**
- * QRTR_NODE_SOCKET:
+ * QRTR_NODE_BUS:
  *
- * The control socket.
+ * The QRTR bus.
  */
-#define QRTR_NODE_SOCKET "socket"
+#define QRTR_NODE_BUS "bus"
 
 /**
  * QRTR_NODE_ID:

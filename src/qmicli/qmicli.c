@@ -51,7 +51,7 @@ static QmiService service;
 static gboolean operation_status;
 static gboolean expect_indications;
 #if QMI_QRTR_SUPPORTED
-static QrtrControlSocket *qrtr_bus;
+static QrtrBus *qrtr_bus;
 #endif
 
 /* Main options */
@@ -821,14 +821,14 @@ wait_for_services_ready (QrtrNode     *node,
 }
 
 static void
-wait_for_node_ready (QrtrControlSocket *_qrtr_bus,
-                     GAsyncResult      *res)
+wait_for_node_ready (QrtrBus      *_qrtr_bus,
+                     GAsyncResult *res)
 {
     g_autoptr(QrtrNode) node = NULL;
     g_autoptr(GArray)   services = NULL;
     g_autoptr(GError)   error = NULL;
 
-    node = qrtr_control_socket_wait_for_node_finish (_qrtr_bus, res, &error);
+    node = qrtr_bus_wait_for_node_finish (_qrtr_bus, res, &error);
     if (!node) {
         g_printerr ("error: failed to wait for QRTR node: %s\n", error->message);
         exit (EXIT_FAILURE);
@@ -870,18 +870,18 @@ make_device (GFile *file)
             g_autoptr(GError) error = NULL;
 
             /* Describes a QRTR node */
-            qrtr_bus = qrtr_control_socket_new (cancellable, &error);
+            qrtr_bus = qrtr_bus_new (cancellable, &error);
             if (!qrtr_bus) {
                 g_printerr ("error: couldn't access the QRTR bus: %s\n", error->message);
                 return FALSE;
             }
 
-            qrtr_control_socket_wait_for_node (qrtr_bus,
-                                               node_id,
-                                               10000, /* ms */
-                                               cancellable,
-                                               (GAsyncReadyCallback)wait_for_node_ready,
-                                               NULL);
+            qrtr_bus_wait_for_node (qrtr_bus,
+                                    node_id,
+                                    10000, /* ms */
+                                    cancellable,
+                                    (GAsyncReadyCallback)wait_for_node_ready,
+                                    NULL);
             return TRUE;
         }
 

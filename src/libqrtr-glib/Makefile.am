@@ -20,7 +20,7 @@ libqrtr_glib_la_CPPFLAGS = \
 
 libqrtr_glib_la_SOURCES = \
 	libqrtr-glib.h \
-	qrtr-control-socket.h qrtr-control-socket.c \
+	qrtr-bus.h qrtr-bus.c \
 	qrtr-node.h qrtr-node.c \
 	qrtr-utils.h qrtr-utils.c \
 	$(NULL)
@@ -32,7 +32,7 @@ libqrtr_glib_la_LDFLAGS = \
 
 include_HEADERS = \
 	libqrtr-glib.h \
-	qrtr-control-socket.h \
+	qrtr-bus.h \
 	qrtr-node.h \
 	qrtr-utils.h \
 	$(NULL)

@@ -31,14 +31,14 @@
 #include <gio/gio.h>
 #include <gmodule.h>
 
-#include "qrtr-control-socket.h"
+#include "qrtr-bus.h"
 #include "qrtr-node.h"
 
 G_DEFINE_TYPE (QrtrNode, qrtr_node, G_TYPE_OBJECT)
 
 enum {
     PROP_0,
-    PROP_SOCKET,
+    PROP_BUS,
     PROP_NODE_ID,
     PROP_LAST
 };
@@ -52,10 +52,10 @@ static GParamSpec *properties[PROP_LAST];
 static guint       signals   [SIGNAL_LAST] = { 0 };
 
 struct _QrtrNodePrivate {
-    QrtrControlSocket *socket;
-    guint32            node_id;
-    guint              node_removed_id;
-    gboolean           removed;
+    QrtrBus   *bus;
+    guint32    node_id;
+    guint      node_removed_id;
+    gboolean   removed;
 
     /* Holds QrtrServiceInfo entries */
     GList *service_list;
@@ -403,11 +403,11 @@ set_property (GObject      *object,
     QrtrNode *self = QRTR_NODE (object);
 
     switch (prop_id) {
-    case PROP_SOCKET:
-        g_assert (!self->priv->socket);
-        self->priv->socket = g_value_dup_object (value);
-        self->priv->node_removed_id = g_signal_connect_swapped (self->priv->socket,
-                                                                QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED,
+    case PROP_BUS:
+        g_assert (!self->priv->bus);
+        self->priv->bus = g_value_dup_object (value);
+        self->priv->node_removed_id = g_signal_connect_swapped (self->priv->bus,
+                                                                QRTR_BUS_SIGNAL_NODE_REMOVED,
                                                                 G_CALLBACK (node_removed_cb),
                                                                 self);
         break;
@@ -429,8 +429,8 @@ get_property (GObject    *object,
     QrtrNode *self = QRTR_NODE (object);
 
     switch (prop_id) {
-    case PROP_SOCKET:
-        g_value_set_object (value, self->priv->socket);
+    case PROP_BUS:
+        g_value_set_object (value, self->priv->bus);
         break;
     case PROP_NODE_ID:
         g_value_set_uint (value, (guint)self->priv->node_id);
@@ -447,10 +447,10 @@ dispose (GObject *object)
     QrtrNode *self = QRTR_NODE (object);
 
     if (self->priv->node_removed_id) {
-        g_signal_handler_disconnect (self->priv->socket, self->priv->node_removed_id);
+        g_signal_handler_disconnect (self->priv->bus, self->priv->node_removed_id);
         self->priv->node_removed_id = 0;
     }
-    g_clear_object (&self->priv->socket);
+    g_clear_object (&self->priv->bus);
 
     /* We shouldn't have any waiters because they should have been removed when the
      * node was removed from the bus, and they hold references to self. */
@@ -485,15 +485,15 @@ qrtr_node_class_init (QrtrNodeClass *klass)
     object_class->finalize     = finalize;
 
     /**
-     * QrtrNode:socket:
+     * QrtrNode:bus:
      */
-    properties[PROP_SOCKET] =
-        g_param_spec_object (QRTR_NODE_SOCKET,
-                             "Socket",
-                             "Control socket",
-                             QRTR_TYPE_CONTROL_SOCKET,
+    properties[PROP_BUS] =
+        g_param_spec_object (QRTR_NODE_BUS,
+                             "bus",
+                             "QRTR bus",
+                             QRTR_TYPE_BUS,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
-    g_object_class_install_property (object_class, PROP_SOCKET, properties[PROP_SOCKET]);
+    g_object_class_install_property (object_class, PROP_BUS, properties[PROP_BUS]);
 
     /**
      * QrtrNode:node-id:

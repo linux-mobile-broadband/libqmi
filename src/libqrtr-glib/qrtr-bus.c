@@ -17,8 +17,8 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2019-2020 Eric Caruso <ejcaruso@chromium.org>
- * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2019-2021 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2020-2021 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <endian.h>
@@ -30,13 +30,13 @@
 
 #include <gio/gio.h>
 
-#include "qrtr-control-socket.h"
+#include "qrtr-bus.h"
 #include "qrtr-node.h"
 #include "qrtr-utils.h"
 
 static void initable_iface_init (GInitableIface *iface);
 
-G_DEFINE_TYPE_EXTENDED (QrtrControlSocket, qrtr_control_socket, G_TYPE_OBJECT, 0,
+G_DEFINE_TYPE_EXTENDED (QrtrBus, qrtr_bus, G_TYPE_OBJECT, 0,
                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init))
 
 enum {
@@ -49,12 +49,12 @@ enum {
 
 static guint signals[SIGNAL_LAST] = { 0 };
 
-struct _QrtrControlSocketPrivate {
+struct _QrtrBusPrivate {
     /* Underlying QRTR socket */
     GSocket *socket;
 
     /* Map of node id -> QrtrNode. This hash table contains full references to
-     * the available QrtrNodes; i.e. the nodes are owned by the control socket
+     * the available QrtrNodes; i.e. the nodes are owned by the bus
      * unconditionally. */
     GHashTable *node_map;
 
@@ -65,12 +65,12 @@ struct _QrtrControlSocketPrivate {
 /*****************************************************************************/
 
 static void
-add_service_info (QrtrControlSocket *self,
-                  guint32            node_id,
-                  guint32            port,
-                  guint32            service,
-                  guint32            version,
-                  guint32            instance)
+add_service_info (QrtrBus *self,
+                  guint32  node_id,
+                  guint32  port,
+                  guint32  service,
+                  guint32  version,
+                  guint32  instance)
 {
     QrtrNode *node;
 
@@ -78,8 +78,8 @@ add_service_info (QrtrControlSocket *self,
     if (!node) {
         /* Node objects are exclusively created at this point */
         node = QRTR_NODE (g_object_new (QRTR_TYPE_NODE,
-                                        QRTR_NODE_SOCKET, self,
-                                        QRTR_NODE_ID,     node_id,
+                                        QRTR_NODE_BUS, self,
+                                        QRTR_NODE_ID,  node_id,
                                         NULL));
         g_assert (g_hash_table_insert (self->priv->node_map, GUINT_TO_POINTER (node_id), node));
         g_debug ("[qrtr] created new node %u", node_id);
@@ -91,12 +91,12 @@ add_service_info (QrtrControlSocket *self,
 }
 
 static void
-remove_service_info (QrtrControlSocket *self,
-                     guint32            node_id,
-                     guint32            port,
-                     guint32            service,
-                     guint32            version,
-                     guint32            instance)
+remove_service_info (QrtrBus *self,
+                     guint32  node_id,
+                     guint32  port,
+                     guint32  service,
+                     guint32  version,
+                     guint32  instance)
 {
     QrtrNode *node;
 
@@ -118,9 +118,9 @@ remove_service_info (QrtrControlSocket *self,
 /*****************************************************************************/
 
 static gboolean
-qrtr_ctrl_message_cb (GSocket           *gsocket,
-                      GIOCondition       cond,
-                      QrtrControlSocket *self)
+qrtr_ctrl_message_cb (GSocket      *gsocket,
+                      GIOCondition  cond,
+                      QrtrBus      *self)
 {
     GError               *error = NULL;
     struct qrtr_ctrl_pkt  ctrl_packet;
@@ -177,23 +177,23 @@ qrtr_ctrl_message_cb (GSocket           *gsocket,
 /*****************************************************************************/
 
 QrtrNode *
-qrtr_control_socket_peek_node (QrtrControlSocket *self,
-                               guint32            node_id)
+qrtr_bus_peek_node (QrtrBus *self,
+                    guint32  node_id)
 {
-    g_return_val_if_fail (QRTR_IS_CONTROL_SOCKET (self), NULL);
+    g_return_val_if_fail (QRTR_IS_BUS (self), NULL);
 
     return g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
 }
 
 QrtrNode *
-qrtr_control_socket_get_node (QrtrControlSocket *self,
-                              guint32            node_id)
+qrtr_bus_get_node (QrtrBus *self,
+                   guint32  node_id)
 {
     QrtrNode *node;
 
-    g_return_val_if_fail (QRTR_IS_CONTROL_SOCKET (self), NULL);
+    g_return_val_if_fail (QRTR_IS_BUS (self), NULL);
 
-    node = qrtr_control_socket_peek_node (self, node_id);
+    node = qrtr_bus_peek_node (self, node_id);
     return (node ? g_object_ref (node) : NULL);
 }
 
@@ -206,7 +206,7 @@ typedef struct {
 } WaitForNodeContext;
 
 static void
-wait_for_node_context_cleanup (QrtrControlSocket  *self,
+wait_for_node_context_cleanup (QrtrBus            *self,
                                WaitForNodeContext *ctx)
 {
     if (ctx->timeout_source) {
@@ -230,9 +230,9 @@ wait_for_node_context_free (WaitForNodeContext *ctx)
 }
 
 QrtrNode *
-qrtr_control_socket_wait_for_node_finish (QrtrControlSocket  *self,
-                                          GAsyncResult       *res,
-                                          GError            **error)
+qrtr_bus_wait_for_node_finish (QrtrBus       *self,
+                               GAsyncResult  *res,
+                               GError       **error)
 {
     return g_task_propagate_pointer (G_TASK (res), error);
 }
@@ -240,7 +240,7 @@ qrtr_control_socket_wait_for_node_finish (QrtrControlSocket  *self,
 static gboolean
 wait_for_node_timeout_cb (GTask *task)
 {
-    QrtrControlSocket  *self;
+    QrtrBus            *self;
     WaitForNodeContext *ctx;
 
     self = g_task_get_source_object (task);
@@ -258,9 +258,9 @@ wait_for_node_timeout_cb (GTask *task)
 }
 
 static void
-wait_for_node_added_cb (QrtrControlSocket *self,
-                        guint              node_id,
-                        GTask             *task)
+wait_for_node_added_cb (QrtrBus *self,
+                        guint    node_id,
+                        GTask   *task)
 {
     WaitForNodeContext *ctx;
     QrtrNode           *node;
@@ -276,29 +276,29 @@ wait_for_node_added_cb (QrtrControlSocket *self,
     wait_for_node_context_cleanup (self, ctx);
 
     /* get a full node reference */
-    node = qrtr_control_socket_get_node (self, node_id);
+    node = qrtr_bus_get_node (self, node_id);
     g_task_return_pointer (task, node, g_object_unref);
     g_object_unref (task);
 }
 
 void
-qrtr_control_socket_wait_for_node (QrtrControlSocket   *self,
-                                   guint32              node_id,
-                                   guint                timeout_ms,
-                                   GCancellable        *cancellable,
-                                   GAsyncReadyCallback  callback,
-                                   gpointer             user_data)
+qrtr_bus_wait_for_node (QrtrBus             *self,
+                        guint32              node_id,
+                        guint                timeout_ms,
+                        GCancellable        *cancellable,
+                        GAsyncReadyCallback  callback,
+                        gpointer             user_data)
 {
     GTask              *task;
     WaitForNodeContext *ctx;
     QrtrNode           *existing_node;
 
-    g_return_if_fail (QRTR_IS_CONTROL_SOCKET (self));
+    g_return_if_fail (QRTR_IS_BUS (self));
 
     task = g_task_new (self, cancellable, callback, user_data);
 
     /* Nothing to do if it already exists */
-    existing_node = qrtr_control_socket_get_node (self, node_id);
+    existing_node = qrtr_bus_get_node (self, node_id);
     if (existing_node) {
         g_task_return_pointer (task, existing_node, (GDestroyNotify)g_object_unref);
         g_object_unref (task);
@@ -313,7 +313,7 @@ qrtr_control_socket_wait_for_node (QrtrControlSocket   *self,
 
     /* Monitor added nodes */
     ctx->added_id = g_signal_connect_swapped (self,
-                                              QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED,
+                                              QRTR_BUS_SIGNAL_NODE_ADDED,
                                               G_CALLBACK (wait_for_node_added_cb),
                                               task);
 
@@ -330,8 +330,8 @@ qrtr_control_socket_wait_for_node (QrtrControlSocket   *self,
 /*****************************************************************************/
 
 static gboolean
-send_new_lookup_ctrl_packet (QrtrControlSocket  *self,
-                             GError            **error)
+send_new_lookup_ctrl_packet (QrtrBus  *self,
+                             GError  **error)
 {
     struct qrtr_ctrl_pkt ctl_packet;
     struct sockaddr_qrtr addr;
@@ -372,7 +372,7 @@ send_new_lookup_ctrl_packet (QrtrControlSocket  *self,
 }
 
 static void
-setup_socket_source (QrtrControlSocket *self)
+setup_socket_source (QrtrBus *self)
 {
     self->priv->source = g_socket_create_source (self->priv->socket, G_IO_IN, NULL);
     g_source_set_callback (self->priv->source,
@@ -387,10 +387,10 @@ initable_init (GInitable     *initable,
                GCancellable  *cancellable,
                GError       **error)
 {
-    QrtrControlSocket *self;
+    QrtrBus *self;
     gint               fd;
 
-    self = QRTR_CONTROL_SOCKET (initable);
+    self = QRTR_BUS (initable);
 
     fd = socket (AF_QIPCRTR, SOCK_DGRAM, 0);
     if (fd < 0) {
@@ -418,22 +418,22 @@ initable_init (GInitable     *initable,
 
 /*****************************************************************************/
 
-QrtrControlSocket *
-qrtr_control_socket_new (GCancellable  *cancellable,
-                         GError       **error)
+QrtrBus *
+qrtr_bus_new (GCancellable  *cancellable,
+              GError       **error)
 {
-    return QRTR_CONTROL_SOCKET (g_initable_new (QRTR_TYPE_CONTROL_SOCKET,
-                                                cancellable,
-                                                error,
-                                                NULL));
+    return QRTR_BUS (g_initable_new (QRTR_TYPE_BUS,
+                                     cancellable,
+                                     error,
+                                     NULL));
 }
 
 static void
-qrtr_control_socket_init (QrtrControlSocket *self)
+qrtr_bus_init (QrtrBus *self)
 {
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-                                              QRTR_TYPE_CONTROL_SOCKET,
-                                              QrtrControlSocketPrivate);
+                                              QRTR_TYPE_BUS,
+                                              QrtrBusPrivate);
 
     self->priv->node_map = g_hash_table_new_full (g_direct_hash,
                                                   g_direct_equal,
@@ -444,7 +444,7 @@ qrtr_control_socket_init (QrtrControlSocket *self)
 static void
 dispose (GObject *object)
 {
-    QrtrControlSocket *self = QRTR_CONTROL_SOCKET (object);
+    QrtrBus *self = QRTR_BUS (object);
 
     if (self->priv->source) {
         g_source_destroy (self->priv->source);
@@ -459,7 +459,7 @@ dispose (GObject *object)
 
     g_clear_pointer (&self->priv->node_map, g_hash_table_unref);
 
-    G_OBJECT_CLASS (qrtr_control_socket_parent_class)->dispose (object);
+    G_OBJECT_CLASS (qrtr_bus_parent_class)->dispose (object);
 }
 
 static void
@@ -469,26 +469,26 @@ initable_iface_init (GInitableIface *iface)
 }
 
 static void
-qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
+qrtr_bus_class_init (QrtrBusClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-    g_type_class_add_private (object_class, sizeof (QrtrControlSocketPrivate));
+    g_type_class_add_private (object_class, sizeof (QrtrBusPrivate));
 
     object_class->dispose = dispose;
 
     /**
-     * QrtrControlSocket::qrtr-node-added:
-     * @self: the #QrtrControlSocket
+     * QrtrBus::node-added:
+     * @self: the #QrtrBus
      * @node: the node ID of the node that has been added
      *
-     * The ::qrtr-node-added signal is emitted when a new node registers a service on
+     * The ::node-added signal is emitted when a new node registers a service on
      * the QRTR bus.
      *
      * Since: 1.28
      */
     signals[SIGNAL_NODE_ADDED] =
-        g_signal_new (QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED,
+        g_signal_new (QRTR_BUS_SIGNAL_NODE_ADDED,
                       G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
                       G_SIGNAL_RUN_LAST,
                       0,
@@ -500,17 +500,17 @@ qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
                       G_TYPE_UINT);
 
     /**
-     * QrtrControlSocket::qrtr-node-removed:
-     * @self: the #QrtrControlSocket
+     * QrtrBus::node-removed:
+     * @self: the #QrtrBus
      * @node: the node ID of the node that was removed
      *
-     * The ::qrtr-node-removed signal is emitted when a node deregisters all services
+     * The ::node-removed signal is emitted when a node deregisters all services
      * from the QRTR bus.
      *
      * Since: 1.28
      */
     signals[SIGNAL_NODE_REMOVED] =
-        g_signal_new (QRTR_CONTROL_SOCKET_SIGNAL_NODE_REMOVED,
+        g_signal_new (QRTR_BUS_SIGNAL_NODE_REMOVED,
                       G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
                       G_SIGNAL_RUN_LAST,
                       0,
@@ -522,18 +522,18 @@ qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
                       G_TYPE_UINT);
 
     /**
-     * QrtrControlSocket::qrtr-service-added:
-     * @self: the #QrtrControlSocket
+     * QrtrBus::service-added:
+     * @self: the #QrtrBus
      * @node: the node ID where service is added
      * @service: the service ID of the service that has been added
      *
-     * The ::qrtr-service-added signal is emitted when a new service registers
+     * The ::service-added signal is emitted when a new service registers
      * on the QRTR bus.
      *
      * Since: 1.28
      */
     signals[SIGNAL_SERVICE_ADDED] =
-        g_signal_new (QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_ADDED,
+        g_signal_new (QRTR_BUS_SIGNAL_SERVICE_ADDED,
                       G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
                       G_SIGNAL_RUN_LAST,
                       0,
@@ -546,18 +546,18 @@ qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
                       G_TYPE_UINT);
 
     /**
-     * QrtrControlSocket::qrtr-service-removed:
-     * @self: the #QrtrControlSocket
+     * QrtrBus::service-removed:
+     * @self: the #QrtrBus
      * @node: the node ID where service is removed
      * @service: the service ID of the service that was removed
      *
-     * The ::qrtr-service-removed signal is emitted when a service deregisters
+     * The ::service-removed signal is emitted when a service deregisters
      * from the QRTR bus.
      *
      * Since: 1.28
      */
     signals[SIGNAL_SERVICE_REMOVED] =
-        g_signal_new (QRTR_CONTROL_SOCKET_SIGNAL_SERVICE_REMOVED,
+        g_signal_new (QRTR_BUS_SIGNAL_SERVICE_REMOVED,
                       G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
                       G_SIGNAL_RUN_LAST,
                       0,

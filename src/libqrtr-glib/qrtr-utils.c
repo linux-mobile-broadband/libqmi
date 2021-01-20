@@ -26,9 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "qrtr-control-socket.h"
-#include "qrtr-node.h"
-
 /* Some kernels expose the qrtr header but not the address family macro. */
 #if !defined AF_QIPCRTR
 # define AF_QIPCRTR 42

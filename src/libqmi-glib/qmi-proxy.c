@@ -82,7 +82,7 @@ struct _QmiProxyPrivate {
     GArray *disowned_qmi_client_info_array;
 
 #if QMI_QRTR_SUPPORTED
-    QrtrControlSocket *qrtr_bus;
+    QrtrBus *qrtr_bus;
 #endif
 };
 
@@ -431,9 +431,9 @@ out:
 #if QMI_QRTR_SUPPORTED
 
 static void
-wait_for_node_ready (QrtrControlSocket *_qrtr_bus,
-                     GAsyncResult      *res,
-                     Client            *client)
+wait_for_node_ready (QrtrBus      *_qrtr_bus,
+                     GAsyncResult *res,
+                     Client       *client)
 {
     QmiProxy            *self;
     g_autoptr(QrtrNode)  node = NULL;
@@ -441,7 +441,7 @@ wait_for_node_ready (QrtrControlSocket *_qrtr_bus,
 
     self = client->proxy;
 
-    node = qrtr_control_socket_wait_for_node_finish (_qrtr_bus, res, &error);
+    node = qrtr_bus_wait_for_node_finish (_qrtr_bus, res, &error);
     if (!node) {
         g_debug ("couldn't open QRTR node: %s", error->message);
         untrack_client (self, client);
@@ -505,19 +505,19 @@ process_internal_proxy_open (QmiProxy   *self,
 
         if (qrtr_get_node_for_uri (device_file_path, &node_id)) {
             if (!self->priv->qrtr_bus) {
-                self->priv->qrtr_bus = qrtr_control_socket_new (NULL, &error);
+                self->priv->qrtr_bus = qrtr_bus_new (NULL, &error);
                 g_warning ("Error accessing the QRTR bus: %s", error->message);
                 g_error_free (error);
                 g_free (device_file_path);
                 return FALSE;
             }
 
-            qrtr_control_socket_wait_for_node (self->priv->qrtr_bus,
-                                               node_id,
-                                               10000, /* ms */
-                                               NULL,
-                                               (GAsyncReadyCallback)wait_for_node_ready,
-                                               client_ref (client)); /* Full ref */
+            qrtr_bus_wait_for_node (self->priv->qrtr_bus,
+                                    node_id,
+                                    10000, /* ms */
+                                    NULL,
+                                    (GAsyncReadyCallback)wait_for_node_ready,
+                                    client_ref (client)); /* Full ref */
             return TRUE;
         }
 #endif

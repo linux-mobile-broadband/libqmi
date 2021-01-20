@@ -26,7 +26,7 @@
 
 #define __LIBQRTR_GLIB_H_INSIDE__
 
-#include "qrtr-control-socket.h"
+#include "qrtr-bus.h"
 #include "qrtr-node.h"
 #include "qrtr-utils.h"
 
