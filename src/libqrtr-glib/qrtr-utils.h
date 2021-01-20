@@ -51,34 +51,4 @@ gchar *qrtr_get_uri_for_node (guint32 node_id);
 gboolean qrtr_get_node_for_uri (const gchar *uri,
                                 guint32     *node_id);
 
-/**
- * qrtr_node_for_id:
- * @node_id: id of the node.
- * @timeout: maximum time to wait for the node to appear, in seconds.
- * @cancellable: optional #GCancellable object, #NULL to ignore.
- * @callback: a #GAsyncReadyCallback to call when the initialization is finished.
- * @user_data: the data to pass to callback function.
- *
- * Asynchronously creates a #QrtrNode for a given node id.
- * When the operation is finished, @callback will be invoked. You can then call
- * qrtr_node_for_id_finish() to get the result of the operation.
- */
-void qrtr_node_for_id (guint32               node_id,
-                       guint                 timeout,
-                       GCancellable         *cancellable,
-                       GAsyncReadyCallback   callback,
-                       gpointer              user_data);
-
-/**
- * qrtr_node_for_id_finish:
- * @res: a #GAsyncResult.
- * @error: Return location for error or %NULL.
- *
- * Finishes an operation started with qrtr_node_for_id().
- *
- * Returns: (transfer full): a newly created #QrtrNode, or %NULL if @error is set.
- */
-QrtrNode *qrtr_node_for_id_finish (GAsyncResult  *res,
-                                   GError       **error);
-
 #endif /* _LIBQRTR_GLIB_QRTR_UTILS_H_ */

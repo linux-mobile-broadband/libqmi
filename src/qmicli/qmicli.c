@@ -50,6 +50,9 @@ static QmiClient *client;
 static QmiService service;
 static gboolean operation_status;
 static gboolean expect_indications;
+#if QMI_QRTR_SUPPORTED
+static QrtrControlSocket *qrtr_bus;
+#endif
 
 /* Main options */
 static gchar *device_str;
@@ -798,12 +801,13 @@ device_new_ready (GObject *unused,
 }
 
 #if QMI_QRTR_SUPPORTED
+
 static void
-wait_for_services_ready (QrtrNode *node,
+wait_for_services_ready (QrtrNode     *node,
                          GAsyncResult *res,
-                         gpointer user_data)
+                         gpointer      user_data)
 {
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
 
     if (!qrtr_node_wait_for_services_finish (node, res, &error)) {
         g_printerr ("error: failed to wait for QRTR services: %s\n", error->message);
@@ -817,16 +821,16 @@ wait_for_services_ready (QrtrNode *node,
 }
 
 static void
-qrtr_node_ready (GObject *unused,
-                 GAsyncResult *res)
+wait_for_node_ready (QrtrControlSocket *_qrtr_bus,
+                     GAsyncResult      *res)
 {
-    QrtrNode *node;
-    GArray *services;
-    GError *error = NULL;
+    g_autoptr(QrtrNode) node = NULL;
+    g_autoptr(GArray)   services = NULL;
+    g_autoptr(GError)   error = NULL;
 
-    node = qrtr_node_for_id_finish (res, &error);
+    node = qrtr_control_socket_wait_for_node_finish (_qrtr_bus, res, &error);
     if (!node) {
-        g_printerr ("error: couldn't open QRTR node: %s\n", error->message);
+        g_printerr ("error: failed to wait for QRTR node: %s\n", error->message);
         exit (EXIT_FAILURE);
     }
 
@@ -836,22 +840,16 @@ qrtr_node_ready (GObject *unused,
     qrtr_node_wait_for_services (node,
                                  services,
                                  5,
-                                 NULL,
+                                 cancellable,
                                  (GAsyncReadyCallback) wait_for_services_ready,
                                  NULL);
-
-    g_array_unref (services);
-    g_object_unref (node);
 }
 #endif
 
 static gboolean
 make_device (GFile *file)
 {
-    gchar *id;
-#if QMI_QRTR_SUPPORTED
-    guint32 node_id;
-#endif
+    g_autofree gchar *id = NULL;
 
     id = g_file_get_path (file);
     if (id) {
@@ -860,26 +858,38 @@ make_device (GFile *file)
                         cancellable,
                         (GAsyncReadyCallback)device_new_ready,
                         NULL);
-        g_free (id);
         return TRUE;
     }
 
 #if QMI_QRTR_SUPPORTED
-    id = g_file_get_uri (file);
-    if (!qrtr_get_node_for_uri (id, &node_id)) {
-        g_printerr ("error: URI wasn't a QRTR node: %s\n", id);
-        g_free (id);
+    {
+        guint32 node_id;
+
+        id = g_file_get_uri (file);
+        if (qrtr_get_node_for_uri (id, &node_id)) {
+            g_autoptr(GError) error = NULL;
+
+            /* Describes a QRTR node */
+            qrtr_bus = qrtr_control_socket_new (cancellable, &error);
+            if (!qrtr_bus) {
+                g_printerr ("error: couldn't access the QRTR bus: %s\n", error->message);
+                return FALSE;
+            }
+
+            qrtr_control_socket_wait_for_node (qrtr_bus,
+                                               node_id,
+                                               10000, /* ms */
+                                               cancellable,
+                                               (GAsyncReadyCallback)wait_for_node_ready,
+                                               NULL);
+            return TRUE;
+        }
+
+        g_printerr ("error: URI is neither a local file path nor a QRTR node: %s\n", id);
         return FALSE;
     }
-
-    qrtr_node_for_id (node_id,
-                      10,
-                      cancellable,
-                      (GAsyncReadyCallback)qrtr_node_ready,
-                      NULL);
-    g_free (id);
-    return TRUE;
 #else
+    g_printerr ("error: URI is not a local file path: %s\n", id);
     return FALSE;
 #endif
 }
