@@ -52,8 +52,12 @@ static guint signals[SIGNAL_LAST] = { 0 };
 struct _QrtrControlSocketPrivate {
     /* Underlying QRTR socket */
     GSocket *socket;
-    /* Map of node id -> QrtrNode */
+
+    /* Map of node id -> QrtrNode. This hash table contains full references to
+     * the available QrtrNodes; i.e. the nodes are owned by the control socket
+     * unconditionally. */
     GHashTable *node_map;
+
     /* Callback source for when NEW_SERVER/DEL_SERVER control packets come in */
     GSource *source;
 };
@@ -320,17 +324,9 @@ dispose (GObject *object)
         g_clear_object (&self->priv->socket);
     }
 
+    g_clear_pointer (&self->priv->node_map, g_hash_table_unref);
+
     G_OBJECT_CLASS (qrtr_control_socket_parent_class)->dispose (object);
-}
-
-static void
-finalize (GObject *object)
-{
-    QrtrControlSocket *self = QRTR_CONTROL_SOCKET (object);
-
-    g_hash_table_unref (self->priv->node_map);
-
-    G_OBJECT_CLASS (qrtr_control_socket_parent_class)->finalize (object);
 }
 
 static void
@@ -347,7 +343,6 @@ qrtr_control_socket_class_init (QrtrControlSocketClass *klass)
     g_type_class_add_private (object_class, sizeof (QrtrControlSocketPrivate));
 
     object_class->dispose = dispose;
-    object_class->finalize = finalize;
 
     /**
      * QrtrControlSocket::qrtr-node-added:
