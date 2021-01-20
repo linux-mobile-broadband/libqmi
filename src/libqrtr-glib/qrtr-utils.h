@@ -35,7 +35,10 @@
  *
  * Build a URI for the given QRTR node.
  *
- * Returns: a string with the URI, or %NULL if none given. The returned value should be freed with g_free().
+ * Returns: a string with the URI, or %NULL if none given. The returned value
+ *  should be freed with g_free().
+ *
+ * Since: 1.28
  */
 gchar *qrtr_get_uri_for_node (guint32 node_id);
 
@@ -47,6 +50,8 @@ gchar *qrtr_get_uri_for_node (guint32 node_id);
  * Get the QRTR node id from the specified URI.
  *
  * Returns: %TRUE if @node_id is set, %FALSE otherwise.
+ *
+ * Since: 1.28
  */
 gboolean qrtr_get_node_for_uri (const gchar *uri,
                                 guint32     *node_id);
