@@ -319,6 +319,18 @@ qrtr_node_get_id (QrtrNode *node)
     return node->priv->node_id;
 }
 
+QrtrBus *
+qrtr_node_peek_bus (QrtrNode *self)
+{
+    return self->priv->bus;
+}
+
+QrtrBus *
+qrtr_node_get_bus (QrtrNode *self)
+{
+    return g_object_ref (self->priv->bus);
+}
+
 /*****************************************************************************/
 
 gboolean

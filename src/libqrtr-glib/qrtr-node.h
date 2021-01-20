@@ -115,6 +115,36 @@ gboolean qrtr_node_has_services (QrtrNode *self);
  */
 guint32 qrtr_node_get_id (QrtrNode *self);
 
+/* forward references for the QrtrBus */
+typedef struct _QrtrBus QrtrBus;
+struct _QrtrBus;
+
+/**
+ * qrtr_node_peek_bus:
+ * @self: a #QrtrNode.
+ *
+ * Get the #QrtrBus where this node is available, without increasing the
+ * reference count on the returned object.
+ *
+ * Returns: (transfer none): a #QrtrBus. Do not free the returned object, it is
+ *  owned by @self.
+ *
+ * Since: 1.28
+ */
+QrtrBus *qrtr_node_peek_bus (QrtrNode *self);
+
+/**
+ * qrtr_node_get_bus:
+ * @self: a #QrtrNode.
+ *
+ * Get the #QrtrBus where this node is available.
+ *
+ * Returns: (transfer full): a #QrtrBus that must be freed with g_object_unref().
+ *
+ * Since: 1.28
+ */
+QrtrBus *qrtr_node_get_bus (QrtrNode *self);
+
 /**
  * qrtr_node_lookup_port:
  * @self: a #QrtrNode.
