@@ -92,18 +92,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrNode, g_object_unref)
 #define QRTR_NODE_SIGNAL_REMOVED "removed"
 
 /**
- * qrtr_node_has_services:
- * @self: a #QrtrNode.
- *
- * Checks whether the node has services already registered.
- *
- * Returns: %TRUE if the node has services, %FALSE otherwise.
- *
- * Since: 1.28
- */
-gboolean qrtr_node_has_services (QrtrNode *self);
-
-/**
  * qrtr_node_get_id:
  * @self: a #QrtrNode.
  *
@@ -144,6 +132,104 @@ QrtrBus *qrtr_node_peek_bus (QrtrNode *self);
  * Since: 1.28
  */
 QrtrBus *qrtr_node_get_bus (QrtrNode *self);
+
+/**
+ * QrtrNodeServiceInfo:
+ *
+ * Information for a service instance in the #QrtrNode.
+ *
+ * Since: 1.28
+ */
+typedef struct _QrtrNodeServiceInfo QrtrNodeServiceInfo;
+
+#define QRTR_TYPE_NODE_SERVICE_INFO (qrtr_node_service_info_get_type ())
+GType qrtr_node_service_info_get_type (void);
+
+/**
+ * qrtr_node_service_info_get_service:
+ * @info: a #QrtrNodeServiceInfo.
+ *
+ * Get the service number from the #QrtrNodeServiceInfo.
+ *
+ * Returns: the service number.
+ *
+ * Since: 1.28
+ */
+guint32 qrtr_node_service_info_get_service (QrtrNodeServiceInfo *info);
+
+/**
+ * qrtr_node_service_info_get_port:
+ * @info: a #QrtrNodeServiceInfo.
+ *
+ * Get the port number from the #QrtrNodeServiceInfo.
+ *
+ * Returns: the port number.
+ *
+ * Since: 1.28
+ */
+guint32 qrtr_node_service_info_get_port (QrtrNodeServiceInfo *info);
+
+/**
+ * qrtr_node_service_info_get_version:
+ * @info: a #QrtrNodeServiceInfo.
+ *
+ * Get the version number from the #QrtrNodeServiceInfo.
+ *
+ * Returns: the version number.
+ *
+ * Since: 1.28
+ */
+guint32 qrtr_node_service_info_get_version (QrtrNodeServiceInfo *info);
+
+/**
+ * qrtr_node_service_info_get_instance:
+ * @info: a #QrtrNodeServiceInfo.
+ *
+ * Get the instance number from the #QrtrNodeServiceInfo.
+ *
+ * Returns: the instance number.
+ *
+ * Since: 1.28
+ */
+guint32 qrtr_node_service_info_get_instance (QrtrNodeServiceInfo *info);
+
+/**
+ * qrtr_node_service_info_free:
+ * @info: a #QrtrNodeServiceInfo.
+ *
+ * Frees a single #QrtrNodeServiceInfo, as returned by qrtr_node_get_service_info_list().
+ *
+ * Since: 1.28
+ */
+void qrtr_node_service_info_free (QrtrNodeServiceInfo *info);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrNodeServiceInfo, qrtr_node_service_info_free)
+
+/**
+ * qrtr_node_peek_service_info_list:
+ * @self: a #QrtrNode.
+ *
+ * Get the list of services currently supported by the #QrtrNode.
+ *
+ * Returns: (element-type QrtrNodeServiceInfo)(transfer none): a #GList of #QrtrNodeServiceInfo elements. Do not
+ *  free the returned object, it is owned by @self.
+ *
+ * Since: 1.28
+ */
+GList *qrtr_node_peek_service_info_list (QrtrNode *self);
+
+/**
+ * qrtr_node_get_service_info_list:
+ * @self: a #QrtrNode.
+ *
+ * Get the list of services currently supported by the #QrtrNode.
+ *
+ * Returns: (element-type QrtrNodeServiceInfo)(transfer full): a #GList of #QrtrNodeServiceInfo elements, that
+ *  must be freed with g_list_free_full() using qrtr_node_service_info_free()
+ *  as #GDestroyNotify.
+ *
+ * Since: 1.28
+ */
+GList *qrtr_node_get_service_info_list (QrtrNode *self);
 
 /**
  * qrtr_node_lookup_port:

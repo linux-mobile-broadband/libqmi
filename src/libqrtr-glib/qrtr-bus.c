@@ -108,7 +108,7 @@ remove_service_info (QrtrBus *self,
 
     qrtr_node_remove_service_info (node, service, port, version, instance);
     g_signal_emit (self, signals[SIGNAL_SERVICE_REMOVED], 0, node_id, service);
-    if (!qrtr_node_has_services (node)) {
+    if (!qrtr_node_peek_service_info_list (node)) {
         g_debug ("[qrtr] removing node %u", node_id);
         g_signal_emit (self, signals[SIGNAL_NODE_REMOVED], 0, node_id);
         g_hash_table_remove (self->priv->node_map, GUINT_TO_POINTER (node_id));

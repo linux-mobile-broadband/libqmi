@@ -57,7 +57,7 @@ struct _QrtrNodePrivate {
     guint      node_removed_id;
     gboolean   removed;
 
-    /* Holds QrtrServiceInfo entries */
+    /* Holds QrtrNodeServiceInfo entries */
     GList *service_list;
     /* Maps service numbers to a list of service entries */
     GHashTable *service_index;
@@ -66,13 +66,6 @@ struct _QrtrNodePrivate {
 
     /* Array of QrtrServiceWaiters currently registered. */
     GPtrArray *waiters;
-};
-
-struct QrtrServiceInfo {
-    guint32 service;
-    guint32 port;
-    guint32 version;
-    guint32 instance;
 };
 
 typedef struct {
@@ -180,15 +173,54 @@ dispatch_pending_waiters (QrtrNode *node)
 
 /*****************************************************************************/
 
-static void
-service_info_free (struct QrtrServiceInfo *info)
+struct _QrtrNodeServiceInfo {
+    guint32 service;
+    guint32 port;
+    guint32 version;
+    guint32 instance;
+};
+
+void
+qrtr_node_service_info_free (QrtrNodeServiceInfo *info)
 {
-    g_slice_free (struct QrtrServiceInfo, info);
+    g_slice_free (QrtrNodeServiceInfo, info);
 }
 
+guint32
+qrtr_node_service_info_get_service (QrtrNodeServiceInfo *info)
+{
+    return info->service;
+}
+
+guint32
+qrtr_node_service_info_get_port (QrtrNodeServiceInfo *info)
+{
+    return info->port;
+}
+
+guint32
+qrtr_node_service_info_get_version (QrtrNodeServiceInfo *info)
+{
+    return info->version;
+}
+
+guint32
+qrtr_node_service_info_get_instance (QrtrNodeServiceInfo *info)
+{
+    return info->instance;
+}
+
+static QrtrNodeServiceInfo *
+node_service_info_copy (const QrtrNodeServiceInfo *src)
+{
+    return g_slice_copy (sizeof (QrtrNodeServiceInfo), src);
+}
+
+G_DEFINE_BOXED_TYPE (QrtrNodeServiceInfo, qrtr_node_service_info, (GBoxedCopyFunc)node_service_info_copy, (GBoxedFreeFunc)qrtr_node_service_info_free)
+
 static gint
-sort_services_by_version (const struct QrtrServiceInfo *a,
-                          const struct QrtrServiceInfo *b)
+sort_services_by_version (const QrtrNodeServiceInfo *a,
+                          const QrtrNodeServiceInfo *b)
 {
     return a->version - b->version;
 }
@@ -201,9 +233,9 @@ list_holder_free (struct ListHolder *list_holder)
 }
 
 static void
-service_index_add_info (GHashTable             *service_index,
-                        guint32                 service,
-                        struct QrtrServiceInfo *info)
+service_index_add_info (GHashTable          *service_index,
+                        guint32              service,
+                        QrtrNodeServiceInfo *info)
 {
     struct ListHolder *service_instances;
 
@@ -217,9 +249,9 @@ service_index_add_info (GHashTable             *service_index,
 }
 
 static void
-service_index_remove_info (GHashTable             *service_index,
-                           guint32                 service,
-                           struct QrtrServiceInfo *info)
+service_index_remove_info (GHashTable          *service_index,
+                           guint32              service,
+                           QrtrNodeServiceInfo *info)
 {
     struct ListHolder *service_instances;
 
@@ -232,14 +264,14 @@ service_index_remove_info (GHashTable             *service_index,
 
 void
 qrtr_node_add_service_info (QrtrNode *node,
-                            guint32 service,
-                            guint32 port,
-                            guint32 version,
-                            guint32 instance)
+                            guint32   service,
+                            guint32   port,
+                            guint32   version,
+                            guint32   instance)
 {
-    struct QrtrServiceInfo *info;
+    QrtrNodeServiceInfo *info;
 
-    info = g_slice_new (struct QrtrServiceInfo);
+    info = g_slice_new (QrtrNodeServiceInfo);
     info->service = service;
     info->port = port;
     info->version = version;
@@ -252,12 +284,12 @@ qrtr_node_add_service_info (QrtrNode *node,
 
 void
 qrtr_node_remove_service_info (QrtrNode *node,
-                               guint32 service,
-                               guint32 port,
-                               guint32 version,
-                               guint32 instance)
+                               guint32   service,
+                               guint32   port,
+                               guint32   version,
+                               guint32   instance)
 {
-    struct QrtrServiceInfo *info;
+    QrtrNodeServiceInfo *info;
 
     info = g_hash_table_lookup (node->priv->port_index, GUINT_TO_POINTER (port));
     if (!info) {
@@ -269,7 +301,7 @@ qrtr_node_remove_service_info (QrtrNode *node,
     service_index_remove_info (node->priv->service_index, service, info);
     g_hash_table_remove (node->priv->port_index, GUINT_TO_POINTER (port));
     node->priv->service_list = g_list_remove (node->priv->service_list, info);
-    service_info_free (info);
+    qrtr_node_service_info_free (info);
 }
 
 /*****************************************************************************/
@@ -278,9 +310,9 @@ gint32
 qrtr_node_lookup_port (QrtrNode *node,
                        guint32   service)
 {
-    struct ListHolder *service_instances;
-    struct QrtrServiceInfo *info;
-    GList *list;
+    struct ListHolder   *service_instances;
+    QrtrNodeServiceInfo *info;
+    GList               *list;
 
     service_instances = g_hash_table_lookup (node->priv->service_index,
                                              GUINT_TO_POINTER (service));
@@ -299,7 +331,7 @@ gint32
 qrtr_node_lookup_service (QrtrNode *node,
                           guint32   port)
 {
-    struct QrtrServiceInfo *info;
+    QrtrNodeServiceInfo *info;
 
     info = g_hash_table_lookup (node->priv->port_index, GUINT_TO_POINTER (port));
     return info ? (gint32)info->service : -1;
@@ -307,10 +339,16 @@ qrtr_node_lookup_service (QrtrNode *node,
 
 /*****************************************************************************/
 
-gboolean
-qrtr_node_has_services (QrtrNode *node)
+GList *
+qrtr_node_peek_service_info_list (QrtrNode *self)
 {
-    return node->priv->service_list != NULL;
+    return self->priv->service_list;
+}
+
+GList *
+qrtr_node_get_service_info_list (QrtrNode *self)
+{
+    return g_list_copy_deep (self->priv->service_list, (GCopyFunc)node_service_info_copy, NULL);
 }
 
 guint32
@@ -479,7 +517,7 @@ finalize (GObject *object)
 
     g_hash_table_unref (self->priv->service_index);
     g_hash_table_unref (self->priv->port_index);
-    g_list_free_full (self->priv->service_list, (GDestroyNotify)service_info_free);
+    g_list_free_full (self->priv->service_list, (GDestroyNotify)qrtr_node_service_info_free);
 
     G_OBJECT_CLASS (qrtr_node_parent_class)->finalize (object);
 }
