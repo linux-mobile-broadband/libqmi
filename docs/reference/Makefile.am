@@ -1,2 +1,2 @@
 
-SUBDIRS = libqmi-glib
+SUBDIRS = libqrtr-glib libqmi-glib

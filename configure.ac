@@ -305,6 +305,8 @@ AC_CONFIG_FILES([Makefile
                  examples/simple-tester-python/Makefile
                  docs/Makefile
                  docs/reference/Makefile
+                 docs/reference/libqrtr-glib/Makefile
+                 docs/reference/libqrtr-glib/version.xml
                  docs/reference/libqmi-glib/Makefile
                  docs/reference/libqmi-glib/version.xml
                  docs/man/Makefile])
