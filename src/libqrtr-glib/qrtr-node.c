@@ -486,6 +486,8 @@ qrtr_node_class_init (QrtrNodeClass *klass)
 
     /**
      * QrtrNode:bus:
+     *
+     * Since: 1.28
      */
     properties[PROP_BUS] =
         g_param_spec_object (QRTR_NODE_BUS,
@@ -497,6 +499,8 @@ qrtr_node_class_init (QrtrNodeClass *klass)
 
     /**
      * QrtrNode:node-id:
+     *
+     * Since: 1.28
      */
     properties[PROP_NODE_ID] =
         g_param_spec_uint (QRTR_NODE_ID,
@@ -511,6 +515,8 @@ qrtr_node_class_init (QrtrNodeClass *klass)
     /**
      * QrtrNode::removed:
      * @self: the #QrtrNode
+     *
+     * Since: 1.28
      */
     signals[SIGNAL_REMOVED] =
         g_signal_new (QRTR_NODE_SIGNAL_REMOVED,

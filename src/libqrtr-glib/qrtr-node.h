@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 /**
  * SECTION:qrtr-node
  * @title: QrtrNode
- * @short_description: QRTR bus observer and service event listener
+ * @short_description: QRTR node handler.
  *
  * #QrtrNode represents a device on the QRTR bus and can be used to look up
  * services published by that device.
@@ -56,6 +56,8 @@ typedef struct _QrtrNodePrivate QrtrNodePrivate;
  * QRTR_NODE_BUS:
  *
  * The QRTR bus.
+ *
+ * Since: 1.28
  */
 #define QRTR_NODE_BUS "bus"
 
@@ -63,6 +65,8 @@ typedef struct _QrtrNodePrivate QrtrNodePrivate;
  * QRTR_NODE_ID:
  *
  * The node id.
+ *
+ * Since: 1.28
  */
 #define QRTR_NODE_ID "node-id"
 
@@ -82,59 +86,91 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrNode, g_object_unref)
  * QRTR_NODE_SIGNAL_REMOVED:
  *
  * Symbol defining the #QrtrNode::removed signal.
+ *
+ * Since: 1.28
  */
 #define QRTR_NODE_SIGNAL_REMOVED "removed"
 
 /**
  * qrtr_node_has_services:
+ * @self: a #QrtrNode.
  *
- * Returns TRUE if there are services currently registered on this node.
+ * Checks whether the node has services already registered.
+ *
+ * Returns: %TRUE if the node has services, %FALSE otherwise.
+ *
+ * Since: 1.28
  */
-gboolean qrtr_node_has_services (QrtrNode *node);
+gboolean qrtr_node_has_services (QrtrNode *self);
 
 /**
  * qrtr_node_id:
+ * @self: a #QrtrNode.
  *
- * Returns the node id of the QRTR node represented by @node.
+ * Gets the node ID in the QRTR bus.
+ *
+ * Returns: the node id.
+ *
+ * Since: 1.28
  */
-guint32 qrtr_node_id (QrtrNode *node);
+guint32 qrtr_node_id (QrtrNode *self);
 
 /**
  * qrtr_node_lookup_port:
- * @service: a QMI service
+ * @self: a #QrtrNode.
+ * @service: a service number.
  *
  * If a server has announced itself for the given node and service number,
- * return the port number of that service. Otherwise, return -1. This will
- * return the service with the highest version number if multiple instances
- * are registered.
+ * return the port number of that service.
+ *
+ * If multiple instances are registered, this method returns the port number
+ * for the service with the highest version number.
+ *
+ * Returns: the port number of the service in the node, or -1 if not found.
+ *
+ * Since: 1.28
  */
-gint32 qrtr_node_lookup_port (QrtrNode *node,
+gint32 qrtr_node_lookup_port (QrtrNode *self,
                               guint32   service);
 
 /**
  * qrtr_node_lookup_service:
- * @port: a port number
+ * @self: a #QrtrNode.
+ * @port: a port number.
  *
  * If a server has announced itself for the given node and port number,
- * return the service it serves. Otherwise, return -1.
+ * return the service it serves.
+ *
+ * Returns: the service number, or -1 if not found.
+ *
+ * Since: 1.28
  */
-gint32 qrtr_node_lookup_service (QrtrNode *node,
+gint32 qrtr_node_lookup_service (QrtrNode *self,
                                  guint32   port);
+
 /**
  * qrtr_node_wait_for_services:
+ * @self: a #QrtrNode.
  * @services: (in)(element-type guint32): a #GArray of service types
  * @timeout: maximum time to wait for the method to complete, in seconds.
- * A zero timeout is infinite.
+ *   A zero timeout is infinite.
  * @cancellable: a #GCancellable, or #NULL.
  * @callback: a #GAsyncReadyCallback to call when the request is satisfied.
  * @user_data: user data to pass to @callback.
  *
- * Calls @callback once all the services listed in @services are present
- * on this node. The @callback will be called with an error if the node is
- * removed from the bus before all of the services in @services come
- * up.
+ * Asynchronously waits until all the services listed in @services are present
+ * on the node.
+ *
+ * The operation may fail if any of the requested services isn't notified, or
+ * if the node is removed from the bus while waiting.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qrtr_node_wait_for_services_finish() to get the result of the
+ * operation.
+ *
+ * Since: 1.28
  */
-void qrtr_node_wait_for_services (QrtrNode            *node,
+void qrtr_node_wait_for_services (QrtrNode            *self,
                                   GArray              *services,
                                   guint                timeout,
                                   GCancellable        *cancellable,
@@ -143,15 +179,18 @@ void qrtr_node_wait_for_services (QrtrNode            *node,
 
 /**
  * qrtr_node_wait_for_services_finish:
+ * @self: a #QrtrNode.
  * @result: a #GAsyncResult.
  * @error: Return location for #GError or %NULL.
  *
  * Finishes an operation started with qrtr_node_wait_for_services().
  *
- * Returns: %TRUE if all requested #QmiServices are present on this node,
+ * Returns: %TRUE if all requested services are present on this node,
  * or %FALSE if @error is set.
+ *
+ * Since: 1.28
  */
-gboolean qrtr_node_wait_for_services_finish (QrtrNode      *node,
+gboolean qrtr_node_wait_for_services_finish (QrtrNode      *self,
                                              GAsyncResult  *result,
                                              GError       **error);
 
