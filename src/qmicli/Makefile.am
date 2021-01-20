@@ -75,6 +75,12 @@ qmicli_LDADD = \
 	$(top_builddir)/src/libqmi-glib/libqmi-glib.la \
 	$(NULL)
 
+if QMI_QRTR_SUPPORTED
+qmicli_LDADD += \
+	$(top_builddir)/src/libqrtr-glib/libqrtr-glib.la \
+	$(NULL)
+endif
+
 qmicli_LDFLAGS = \
 	$(WARN_LDFLAGS) \
 	$(MBIM_LIBS) \

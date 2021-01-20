@@ -1,7 +1,9 @@
 
+includedir = @includedir@/libqrtr-glib
+
 if QMI_QRTR_SUPPORTED
 
-noinst_LTLIBRARIES = libqrtr-glib.la
+lib_LTLIBRARIES = libqrtr-glib.la
 
 libqrtr_glib_la_CPPFLAGS = \
 	$(WARN_CFLAGS) \
@@ -32,7 +34,6 @@ libqrtr_glib_la_LDFLAGS = \
 	$(GLIB_LIBS) \
 	$(NULL)
 
-includedir = @includedir@/libqrtr-glib
 include_HEADERS = \
 	libqrtr-glib.h \
 	qrtr-bus.h \
@@ -86,7 +87,7 @@ nodist_gir_DATA = $(INTROSPECTION_GIRS)
 typelibdir = $(libdir)/girepository-1.0
 nodist_typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
 
-CLEANFILES = $(nodist_gir_DATA) $(nodist_typelib_DATA)
+CLEANFILES += $(nodist_gir_DATA) $(nodist_typelib_DATA)
 
 endif # HAVE_INTROSPECTION
 
