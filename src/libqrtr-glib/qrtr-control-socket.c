@@ -199,6 +199,136 @@ qrtr_control_socket_get_node (QrtrControlSocket *self,
 
 /*****************************************************************************/
 
+typedef struct {
+    guint32  node_id;
+    guint    added_id;
+    GSource *timeout_source;
+} WaitForNodeContext;
+
+static void
+wait_for_node_context_cleanup (QrtrControlSocket  *self,
+                               WaitForNodeContext *ctx)
+{
+    if (ctx->timeout_source) {
+        g_source_destroy (ctx->timeout_source);
+        g_source_unref (ctx->timeout_source);
+        ctx->timeout_source = NULL;
+    }
+
+    if (ctx->added_id) {
+        g_signal_handler_disconnect (self, ctx->added_id);
+        ctx->added_id = 0;
+    }
+}
+
+static void
+wait_for_node_context_free (WaitForNodeContext *ctx)
+{
+    g_assert (!ctx->added_id);
+    g_assert (!ctx->timeout_source);
+    g_slice_free (WaitForNodeContext, ctx);
+}
+
+QrtrNode *
+qrtr_control_socket_wait_for_node_finish (QrtrControlSocket  *self,
+                                          GAsyncResult       *res,
+                                          GError            **error)
+{
+    return g_task_propagate_pointer (G_TASK (res), error);
+}
+
+static gboolean
+wait_for_node_timeout_cb (GTask *task)
+{
+    QrtrControlSocket  *self;
+    WaitForNodeContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
+
+    /* cleanup the context right away, so that we take exclusive ownership
+     * of the task */
+    wait_for_node_context_cleanup (self, ctx);
+
+    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_TIMED_OUT,
+                             "QRTR node %u did not appear on the bus", ctx->node_id);
+    g_object_unref (task);
+
+    return G_SOURCE_REMOVE;
+}
+
+static void
+wait_for_node_added_cb (QrtrControlSocket *self,
+                        guint              node_id,
+                        GTask             *task)
+{
+    WaitForNodeContext *ctx;
+    QrtrNode           *node;
+
+    ctx = g_task_get_task_data (task);
+
+    /* not the one we want, ignore */
+    if (node_id != ctx->node_id)
+        return;
+
+    /* cleanup the context right away, so that we take exclusive ownership
+     * of the task */
+    wait_for_node_context_cleanup (self, ctx);
+
+    /* get a full node reference */
+    node = qrtr_control_socket_get_node (self, node_id);
+    g_task_return_pointer (task, node, g_object_unref);
+    g_object_unref (task);
+}
+
+void
+qrtr_control_socket_wait_for_node (QrtrControlSocket   *self,
+                                   guint32              node_id,
+                                   guint                timeout_ms,
+                                   GCancellable        *cancellable,
+                                   GAsyncReadyCallback  callback,
+                                   gpointer             user_data)
+{
+    GTask              *task;
+    WaitForNodeContext *ctx;
+    QrtrNode           *existing_node;
+
+    g_return_if_fail (QRTR_IS_CONTROL_SOCKET (self));
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    /* Nothing to do if it already exists */
+    existing_node = qrtr_control_socket_get_node (self, node_id);
+    if (existing_node) {
+        g_task_return_pointer (task, existing_node, (GDestroyNotify)g_object_unref);
+        g_object_unref (task);
+        return;
+    }
+
+    /* The ownership of the task is shared between the signal handler and the timeout;
+     * we need to make sure that we cancel the other one if we're completing the task
+     * from one of them. */
+    ctx = g_slice_new0 (WaitForNodeContext);
+    ctx->node_id = node_id;
+
+    /* Monitor added nodes */
+    ctx->added_id = g_signal_connect_swapped (self,
+                                              QRTR_CONTROL_SOCKET_SIGNAL_NODE_ADDED,
+                                              G_CALLBACK (wait_for_node_added_cb),
+                                              task);
+
+    /* Setup timeout for the operation */
+    if (timeout_ms > 0) {
+        ctx->timeout_source = g_timeout_source_new (timeout_ms);
+        g_source_set_callback (ctx->timeout_source, (GSourceFunc)wait_for_node_timeout_cb, task, NULL);
+        g_source_attach (ctx->timeout_source, g_main_context_get_thread_default ());
+    }
+
+    g_task_set_task_data (task, ctx, (GDestroyNotify)wait_for_node_context_free);
+}
+
+/*****************************************************************************/
+
 static gboolean
 send_new_lookup_ctrl_packet (QrtrControlSocket  *self,
                              GError            **error)

@@ -154,6 +154,47 @@ QrtrNode *qrtr_control_socket_peek_node (QrtrControlSocket *self,
 QrtrNode *qrtr_control_socket_get_node (QrtrControlSocket *self,
                                         guint32            node_id);
 
+/**
+ * qrtr_control_socket_wait_for_node:
+ * @self: a #QrtrControlSocket.
+ * @node_id: the QRTR bus node ID to lookup.
+ * @timeout_ms: the timeout, in milliseconds, to wait for the node to appear in
+ *  the bus. A zero timeout is infinite.
+ * @cancellable: a #GCancellable, or #NULL.
+ * @callback: a #GAsyncReadyCallback to call when the request is satisfied.
+ * @user_data: user data to pass to @callback.
+ *
+ * Asynchronously waits for the node with ID @node_id.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * qrtr_control_socket_wait_for_node_finish() to get the result of the
+ * operation.
+ *
+ * Since: 1.28
+ */
+void qrtr_control_socket_wait_for_node (QrtrControlSocket   *self,
+                                        guint32              node_id,
+                                        guint                timeout_ms,
+                                        GCancellable        *cancellable,
+                                        GAsyncReadyCallback  callback,
+                                        gpointer             user_data);
+
+/**
+ * qrtr_control_socket_wait_for_node_finish:
+ * @self: a #QrtrControlSocket.
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qrtr_control_socket_wait_for_node().
+ *
+ * Returns: (transfer full): A #QrtrNode, or %NULL if @error is set.
+ *
+ * Since: 1.28
+ */
+QrtrNode *qrtr_control_socket_wait_for_node_finish (QrtrControlSocket  *self,
+                                                    GAsyncResult       *res,
+                                                    GError            **error);
+
 G_END_DECLS
 
 #endif /* _LIBQRTR_GLIB_QRTR_CONTROL_SOCKET_H_ */
