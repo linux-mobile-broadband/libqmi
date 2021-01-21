@@ -222,23 +222,6 @@ const gchar *qmi_device_get_path (QmiDevice *self);
 const gchar *qmi_device_get_path_display (QmiDevice *self);
 
 /**
- * qmi_device_get_wwan_iface:
- * @self: a #QmiDevice.
- *
- * Get the WWAN interface name associated with the QMI control port.
- * This value will be loaded every time it's asked for it.
- *
- * <note><para>
- * This method is only applicable when using the qmi_wwan kernel driver.
- * </para></note>
- *
- * Returns: UTF-8 encoded network interface name, or %NULL if not available.
- *
- * Since: 1.14
- */
-const gchar *qmi_device_get_wwan_iface (QmiDevice *self);
-
-/**
  * qmi_device_is_open:
  * @self: a #QmiDevice.
  *
@@ -737,6 +720,27 @@ void qmi_device_get_service_version_info (QmiDevice           *self,
 GArray *qmi_device_get_service_version_info_finish (QmiDevice     *self,
                                                     GAsyncResult  *res,
                                                     GError       **error);
+
+/******************************************************************************/
+/* qmi_wwan specific APIs */
+
+/**
+ * qmi_device_get_wwan_iface:
+ * @self: a #QmiDevice.
+ *
+ * Get the WWAN interface name associated with the QMI control port.
+ * This value will be loaded every time it's asked for it.
+ *
+ * <note><para>
+ * This method is only applicable when using the qmi_wwan kernel driver.
+ * </para></note>
+ *
+ * Returns: UTF-8 encoded network interface name, or %NULL if not available.
+ *
+ * Since: 1.14
+ */
+const gchar *qmi_device_get_wwan_iface (QmiDevice *self);
+
 /**
  * QmiDeviceExpectedDataFormat:
  * @QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN: Unknown.
@@ -744,6 +748,10 @@ GArray *qmi_device_get_service_version_info_finish (QmiDevice     *self,
  * @QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP: Raw IP.
  *
  * Data format expected by the kernel.
+ *
+ * <note><para>
+ * This type is only applicable when using the qmi_wwan kernel driver.
+ * </para></note>
  *
  * Since: 1.14
  */
