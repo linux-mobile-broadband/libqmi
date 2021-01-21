@@ -76,6 +76,7 @@ libqmi_glib_la_SOURCES = \
 	qmi-endpoint.h qmi-endpoint.c \
 	qmi-endpoint-qmux.h qmi-endpoint-qmux.c \
 	qmi-net-port-manager.h qmi-net-port-manager.c \
+	qmi-net-port-manager-rmnet.h qmi-net-port-manager-rmnet.c \
 	$(NULL)
 
 nodist_libqmi_glib_la_SOURCES = \

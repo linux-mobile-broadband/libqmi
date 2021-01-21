@@ -17,8 +17,9 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2020 Eric Caruso <ejcaruso@chromium.org>
- * Copyright (C) 2020 Andrew Lassalle <andrewlassalle@chromium.org>
+ * Copyright (C) 2020-2021 Eric Caruso <ejcaruso@chromium.org>
+ * Copyright (C) 2020-2021 Andrew Lassalle <andrewlassalle@chromium.org>
+ * Copyright (C) 2021 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_NET_PORT_MANAGER_H_
@@ -34,51 +35,65 @@
 #define QMI_IS_NET_PORT_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),  QMI_TYPE_NET_PORT_MANAGER))
 #define QMI_NET_PORT_MANAGER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),  QMI_TYPE_NET_PORT_MANAGER, QmiNetPortManagerClass))
 
-typedef struct _QmiNetPortManager        QmiNetPortManager;
-typedef struct _QmiNetPortManagerClass   QmiNetPortManagerClass;
-typedef struct _QmiNetPortManagerPrivate QmiNetPortManagerPrivate;
+typedef struct _QmiNetPortManager      QmiNetPortManager;
+typedef struct _QmiNetPortManagerClass QmiNetPortManagerClass;
 
 struct _QmiNetPortManager {
-    /*< private >*/
-    GObject                   parent;
-    QmiNetPortManagerPrivate *priv;
+    GObject parent;
 };
 
 struct _QmiNetPortManagerClass {
-    /*< private >*/
     GObjectClass parent;
+
+    void     (* add_link)        (QmiNetPortManager    *self,
+                                  guint                 mux_id,
+                                  const gchar          *base_ifname,
+                                  const gchar          *ifname_prefix,
+                                  guint                 timeout,
+                                  GCancellable         *cancellable,
+                                  GAsyncReadyCallback   callback,
+                                  gpointer              user_data);
+    gchar *  (* add_link_finish) (QmiNetPortManager    *self,
+                                  guint                *mux_id,
+                                  GAsyncResult         *res,
+                                  GError              **error);
+
+    void     (* del_link)        (QmiNetPortManager    *self,
+                                  const gchar          *ifname,
+                                  guint                 timeout,
+                                  GCancellable         *cancellable,
+                                  GAsyncReadyCallback   callback,
+                                  gpointer              user_data);
+    gboolean (* del_link_finish) (QmiNetPortManager    *self,
+                                  GAsyncResult         *res,
+                                  GError              **error);
 };
 
 GType qmi_net_port_manager_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiNetPortManager, g_object_unref)
 
-QmiNetPortManager *qmi_net_port_manager_new (GError **error);
 
-/* Requests to add a link for the given mux_id. */
-void qmi_net_port_manager_add_link (QmiNetPortManager   *self,
-                                    guint                mux_id,
-                                    const gchar         *base_ifname,
-                                    const gchar         *ifname_prefix,
-                                    guint                timeout,
-                                    GCancellable        *cancellable,
-                                    GAsyncReadyCallback  callback,
-                                    gpointer             user_data);
+void      qmi_net_port_manager_add_link        (QmiNetPortManager    *self,
+                                                guint                 mux_id,
+                                                const gchar          *base_ifname,
+                                                const gchar          *ifname_prefix,
+                                                guint                 timeout,
+                                                GCancellable         *cancellable,
+                                                GAsyncReadyCallback   callback,
+                                                gpointer              user_data);
+gchar    *qmi_net_port_manager_add_link_finish (QmiNetPortManager    *self,
+                                                guint                *mux_id,
+                                                GAsyncResult         *res,
+                                                GError              **error);
 
-/* Returns the name of the new link. */
-gchar *qmi_net_port_manager_add_link_finish (QmiNetPortManager *self,
-                                             guint             *mux_id,
-                                             GAsyncResult      *res,
-                                             GError **          error);
-
-void qmi_net_port_manager_del_link (QmiNetPortManager   *self,
-                                    const gchar         *ifname,
-                                    guint                timeout,
-                                    GCancellable        *cancellable,
-                                    GAsyncReadyCallback  callback,
-                                    gpointer             user_data);
-
-gboolean qmi_net_port_manager_del_link_finish (QmiNetPortManager *self,
-                                               GAsyncResult      *res,
-                                               GError **          error);
+void      qmi_net_port_manager_del_link        (QmiNetPortManager    *self,
+                                                const gchar          *ifname,
+                                                guint                 timeout,
+                                                GCancellable         *cancellable,
+                                                GAsyncReadyCallback   callback,
+                                                gpointer              user_data);
+gboolean  qmi_net_port_manager_del_link_finish (QmiNetPortManager    *self,
+                                                GAsyncResult         *res,
+                                                GError              **error);
 
 #endif /* _LIBQMI_GLIB_QMI_NET_PORT_MANAGER_H_ */

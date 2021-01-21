@@ -59,7 +59,7 @@
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
 #include "qmi-proxy.h"
-#include "qmi-net-port-manager.h"
+#include "qmi-net-port-manager-rmnet.h"
 #include "qmi-version.h"
 
 #if QMI_QRTR_SUPPORTED
@@ -1782,7 +1782,7 @@ qmi_device_add_link (QmiDevice           *self,
     task = g_task_new (self, cancellable, callback, user_data);
 
     if (!self->priv->net_port_manager) {
-        self->priv->net_port_manager = qmi_net_port_manager_new (&error);
+        self->priv->net_port_manager = QMI_NET_PORT_MANAGER (qmi_net_port_manager_rmnet_new (&error));
         if (!self->priv->net_port_manager) {
             g_debug ("Failed to create the net port manager: %s",
                      error->message);
@@ -1844,7 +1844,7 @@ qmi_device_delete_link (QmiDevice           *self,
     task = g_task_new (self, cancellable, callback, user_data);
 
     if (!self->priv->net_port_manager) {
-        self->priv->net_port_manager = qmi_net_port_manager_new (&error);
+        self->priv->net_port_manager = QMI_NET_PORT_MANAGER (qmi_net_port_manager_rmnet_new (&error));
         if (!self->priv->net_port_manager) {
             g_debug ("Failed to create the net port manager: %s",
                      error->message);
