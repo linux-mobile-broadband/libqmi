@@ -6,6 +6,7 @@ QMI_MINOR_VERSION
 QMI_MICRO_VERSION
 QMI_CHECK_VERSION
 QMI_MBIM_QMUX_SUPPORTED
+QMI_QRTR_SUPPORTED
 </SECTION>
 
 <SECTION>
@@ -87,6 +88,18 @@ qmi_device_get_service_version_info_finish
 qmi_device_open_flags_build_string_from_mask
 qmi_device_release_client_flags_build_string_from_mask
 qmi_device_expected_data_format_get_string
+<SUBSECTION QrtrSupport>
+QMI_DEVICE_NODE
+QMI_DEVICE_MUX_ID_AUTOMATIC
+QMI_DEVICE_MUX_ID_UNBOUND
+qmi_device_new_from_node
+qmi_device_new_from_node_finish
+qmi_device_get_node
+qmi_device_peek_node
+qmi_device_add_link
+qmi_device_add_link_finish
+qmi_device_del_link
+qmi_device_del_link_finish
 <SUBSECTION Standard>
 QmiDeviceClass
 QMI_DEVICE
@@ -1751,18 +1764,6 @@ qmi_message_wds_set_default_profile_num_output_get_type
 <SECTION>
 <FILE>ignored</FILE>
 <SUBSECTION Private>
-QMI_DEVICE_NODE
-QMI_QRTR_SUPPORTED
-QMI_DEVICE_MUX_ID_AUTOMATIC
-QMI_DEVICE_MUX_ID_UNBOUND
-qmi_device_new_from_node
-qmi_device_new_from_node_finish
-qmi_device_get_node
-qmi_device_peek_node
-qmi_device_add_link
-qmi_device_add_link_finish
-qmi_device_del_link
-qmi_device_del_link_finish
 HAVE_QMI_MESSAGE_NAS_ABORT
 HAVE_QMI_MESSAGE_WDS_ABORT
 HAVE_QMI_SERVICE_DMS

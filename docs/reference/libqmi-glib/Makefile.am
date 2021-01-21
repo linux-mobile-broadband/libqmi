@@ -90,6 +90,9 @@ expand_content_files =
 
 extra_files =
 
+# Extra options to supply to gtkdoc-fixref
+FIXXREF_OPTIONS=--extra-dir=$(srcdir)/../libqrtr-glib/html
+
 include $(top_srcdir)/gtk-doc.make
 
 EXTRA_DIST += \
