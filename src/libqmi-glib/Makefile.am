@@ -78,7 +78,9 @@ libqmi_glib_la_SOURCES = \
 	qmi-proxy.h qmi-proxy.c \
 	qmi-file.h qmi-file.c \
 	qmi-endpoint.h qmi-endpoint.c \
-	qmi-endpoint-qmux.h qmi-endpoint-qmux.c
+	qmi-endpoint-qmux.h qmi-endpoint-qmux.c \
+	qmi-net-port-manager.h qmi-net-port-manager.c \
+	$(NULL)
 
 nodist_libqmi_glib_la_SOURCES = \
 	qmi-version.h \
@@ -103,7 +105,6 @@ libqmi_glib_la_CPPFLAGS += \
 
 libqmi_glib_la_SOURCES += \
 	qmi-endpoint-qrtr.h qmi-endpoint-qrtr.c \
-	qmi-net-port-manager.h qmi-net-port-manager.c \
 	$(NULL)
 
 libqmi_glib_la_LIBADD += \

@@ -88,6 +88,10 @@ qmi_device_get_service_version_info_finish
 qmi_device_open_flags_build_string_from_mask
 qmi_device_release_client_flags_build_string_from_mask
 qmi_device_expected_data_format_get_string
+qmi_device_add_link
+qmi_device_add_link_finish
+qmi_device_del_link
+qmi_device_del_link_finish
 <SUBSECTION QrtrSupport>
 QMI_DEVICE_NODE
 QMI_DEVICE_MUX_ID_AUTOMATIC
@@ -96,10 +100,6 @@ qmi_device_new_from_node
 qmi_device_new_from_node_finish
 qmi_device_get_node
 qmi_device_peek_node
-qmi_device_add_link
-qmi_device_add_link_finish
-qmi_device_del_link
-qmi_device_del_link_finish
 <SUBSECTION Standard>
 QmiDeviceClass
 QMI_DEVICE
