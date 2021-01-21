@@ -76,8 +76,13 @@ static gboolean version_flag;
 
 static GOptionEntry main_entries[] = {
     { "device", 'd', 0, G_OPTION_ARG_STRING, &device_str,
+#if QMI_QRTR_SUPPORTED
+      "Specify device path or QRTR URI (e.g. qrtr://0)",
+      "[PATH|URI]"
+#else
       "Specify device path",
       "[PATH]"
+#endif
     },
     { "get-wwan-iface", 'w', 0, G_OPTION_ARG_NONE, &get_wwan_iface_flag,
       "(qmi_wwan specific) Get the associated WWAN iface name",
