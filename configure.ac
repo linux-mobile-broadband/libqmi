@@ -262,10 +262,13 @@ if test "x$enable_qrtr" = "xyes"; then
     fi
     AC_DEFINE(QRTR_ENABLED, 1, [Define if QRTR support enabled])
     QMI_QRTR_SUPPORTED=1
+    QRTR_PKGCONFIG_NAME="qrtr-glib"
 else
     QMI_QRTR_SUPPORTED=0
+    QRTR_PKGCONFIG_NAME=""
 fi
 AC_SUBST(QMI_QRTR_SUPPORTED)
+AC_SUBST(QRTR_PKGCONFIG_NAME)
 AM_CONDITIONAL([QMI_QRTR_SUPPORTED], [test "x$QMI_QRTR_SUPPORTED" = "x1"])
 
 # udev base directory
@@ -285,6 +288,7 @@ AC_CONFIG_FILES([Makefile
                  data/Makefile
                  data/pkg-config/Makefile
                  data/pkg-config/qmi-glib.pc
+                 data/pkg-config/qrtr-glib.pc
                  build-aux/Makefile
                  build-aux/templates/Makefile
                  build-aux/qmi-codegen/Makefile

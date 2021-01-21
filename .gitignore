@@ -27,6 +27,7 @@ Makefile.in
 /depcomp
 
 /data/pkg-config/qmi-glib.pc
+/data/pkg-config/qrtr-glib.pc
 
 /src/libqrtr-glib/qrtr-version.h
 
