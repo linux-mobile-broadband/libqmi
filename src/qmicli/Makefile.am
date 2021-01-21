@@ -28,7 +28,7 @@ libhelpers_la_SOURCES = \
 
 libhelpers_la_LDFLAGS = \
 	$(WARN_LDFLAGS) \
-        $(GLIB_LIBS) \
+	$(GLIB_LIBS) \
 	$(NULL)
 
 bin_PROGRAMS = qmicli
