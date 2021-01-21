@@ -268,8 +268,8 @@ gint32 qrtr_node_lookup_service (QrtrNode *self,
  * qrtr_node_wait_for_services:
  * @self: a #QrtrNode.
  * @services: (in)(element-type guint32): a #GArray of service types
- * @timeout: maximum time to wait for the method to complete, in seconds.
- *   A zero timeout is infinite.
+ * @timeout_ms: the timeout, in milliseconds, to wait for the the services to
+ *  be exposed in the node. A zero timeout is infinite.
  * @cancellable: a #GCancellable, or #NULL.
  * @callback: a #GAsyncReadyCallback to call when the request is satisfied.
  * @user_data: user data to pass to @callback.
@@ -288,7 +288,7 @@ gint32 qrtr_node_lookup_service (QrtrNode *self,
  */
 void qrtr_node_wait_for_services (QrtrNode            *self,
                                   GArray              *services,
-                                  guint                timeout,
+                                  guint                timeout_ms,
                                   GCancellable        *cancellable,
                                   GAsyncReadyCallback  callback,
                                   gpointer             user_data);

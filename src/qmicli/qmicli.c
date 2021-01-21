@@ -839,7 +839,7 @@ wait_for_node_ready (QrtrBus      *_qrtr_bus,
 
     qrtr_node_wait_for_services (node,
                                  services,
-                                 5,
+                                 5000, /* ms */
                                  cancellable,
                                  (GAsyncReadyCallback) wait_for_services_ready,
                                  NULL);

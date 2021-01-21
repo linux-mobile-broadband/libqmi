@@ -382,7 +382,7 @@ qrtr_node_wait_for_services_finish (QrtrNode      *self,
 void
 qrtr_node_wait_for_services (QrtrNode            *self,
                              GArray              *services,
-                             guint                timeout,
+                             guint                timeout_ms,
                              GCancellable        *cancellable,
                              GAsyncReadyCallback  callback,
                              gpointer             user_data)
@@ -422,8 +422,8 @@ qrtr_node_wait_for_services (QrtrNode            *self,
     waiter = g_slice_new0 (QrtrServiceWaiter);
     waiter->services = g_array_ref (services);
     waiter->task = task;
-    if (timeout > 0) {
-        waiter->timeout_source = g_timeout_source_new_seconds (timeout);
+    if (timeout_ms > 0) {
+        waiter->timeout_source = g_timeout_source_new (timeout_ms);
         g_source_set_callback (waiter->timeout_source, (GSourceFunc)service_waiter_timeout_cb,
                                waiter, NULL);
         g_source_attach (waiter->timeout_source, g_main_context_get_thread_default ());
