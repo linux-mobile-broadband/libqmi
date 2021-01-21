@@ -807,6 +807,12 @@ gboolean qmi_device_set_expected_data_format (QmiDevice                    *self
  * QMI_DEVICE_NODE:
  *
  * Symbol defining the #QmiDevice:device-node property.
+ *
+ * <note><para>
+ * This property is only available when the library is built with QRTR support.
+ * </para></note>
+ *
+ * Since: 1.28
  */
 #define QMI_DEVICE_NODE "device-node"
 
@@ -821,9 +827,11 @@ gboolean qmi_device_set_expected_data_format (QmiDevice                    *self
  * When the operation is finished, @callback will be invoked. You can then call
  * qmi_device_new_finish() to get the result of the operation.
  *
- * Only available if libqmi was compiled with QRTR support.
+ * <note><para>
+ * This method is only available when the library is built with QRTR support.
+ * </para></note>
  *
- * Since: 1.26
+ * Since: 1.28
  */
 void qmi_device_new_from_node (QrtrNode            *node,
                                GCancellable        *cancellable,
@@ -837,9 +845,13 @@ void qmi_device_new_from_node (QrtrNode            *node,
  *
  * Finishes an operation started with qmi_device_new_from_node().
  *
+ * <note><para>
+ * This method is only available when the library is built with QRTR support.
+ * </para></note>
+ *
  * Returns: (transfer full): A newly created #QmiDevice, or %NULL if @error is set.
  *
- * Since: 1.26
+ * Since: 1.28
  */
 QmiDevice *qmi_device_new_from_node_finish (GAsyncResult  *res,
                                             GError       **error);
@@ -849,6 +861,10 @@ QmiDevice *qmi_device_new_from_node_finish (GAsyncResult  *res,
  * @self: a #QmiDevice.
  *
  * Get the #QrtrNode associated with this #QmiDevice.
+ *
+ * <note><para>
+ * This method is only available when the library is built with QRTR support.
+ * </para></note>
  *
  * Returns: (transfer full): a #QrtrNode that must be freed with g_object_unref() or %NULL if none available.
  *
@@ -862,6 +878,10 @@ QrtrNode *qmi_device_get_node (QmiDevice *self);
  *
  * Get the #QrtrNode associated with this #QmiDevice, without increasing the
  * reference count on the returned object.
+ *
+ * <note><para>
+ * This method is only available when the library is built with QRTR support.
+ * </para></note>
  *
  * Returns: (transfer none): a #QrtrNode or %NULL if none available. Do not free the returned object, it is owned by @self.
  *
