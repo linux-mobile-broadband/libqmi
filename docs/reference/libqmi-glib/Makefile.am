@@ -41,6 +41,7 @@ SCAN_OPTIONS = --rebuild-types --deprecated-guards="QMI_DISABLE_DEPRECATED"
 # The directory containing the source code.
 DOC_SOURCE_DIR = \
 	$(top_srcdir)/src/libqmi-glib \
+	$(top_builddir)/src/libqmi-glib \
 	$(top_builddir)/src/libqmi-glib/generated
 
 # Used for dependencies
