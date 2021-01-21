@@ -63,6 +63,7 @@ IGNORE_HFILES = \
 	qmi-endpoint-qrtr.h \
 	qmi-net-port-manager.h \
 	qmi-net-port-manager-rmnet.h \
+	qmi-net-port-manager-qmiwwan.h \
 	qmi-file.h \
 	qmi-ctl.h \
 	qmi-helpers.h \

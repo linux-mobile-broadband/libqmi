@@ -836,7 +836,8 @@ gboolean qmi_device_set_expected_data_format (QmiDevice                    *self
  * @mux_id: the mux ID for the link, or #QMI_DEVICE_MUX_ID_AUTOMATIC to find the
  *   first available mux id.
  * @base_ifname: the interface which the new link will be created on.
- * @ifname_prefix: the prefix to be used for the name of the new link created.
+ * @ifname_prefix: the prefix suggested to be used for the name of the new link
+ *   created.
  * @cancellable: a #GCancellable, or %NULL.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
  * @user_data: the data to pass to callback function.
@@ -848,8 +849,36 @@ gboolean qmi_device_set_expected_data_format (QmiDevice                    *self
  * If the kernel driver doesn't allow this functionality, a
  * %QMI_CORE_ERROR_UNSUPPORTED error will be returned.
  *
+ * The operation may fail if the given interface name is not associated to the
+ * QMI control port managed by the #QmiDevice.
+ *
+ * Depending on the kernel driver in use and the multiplexing method, the given
+ * @ifname_prefix may be ignored. The user should not assume that the returned
+ * link interface name is prefixed with @ifname_prefix as it may not be the
+ * case.
+ *
  * When the operation is finished @callback will be called. You can then call
  * qmi_device_add_link_finish() to get the result of the operation.
+ *
+ * <note><para>
+ * When using the qmi_wwan kernel driver, the configured expected kernel data
+ * format will be used to select the type of multiplexing method. If the
+ * format is %QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP the qmi_wwan specific
+ * add_mux/del_mux operations will be used. If the format is
+ * %QMI_DEVICE_EXPECTED_DATA_FORMAT_QMAP_PASS_THROUGH, the generic rmnet netlink
+ * operations will be used. No multiplexing support exists when the format is
+ * %QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3.
+ * </para><para>
+ * For every other kernel driver (e.g. ipa), rmnet netlink operations are
+ * assumed to be supported.
+ * </para></note>
+ *
+ * <note><para>
+ * When using the qmi_wwan driver from a kernel older than v5.12, some of the
+ * multiplexing features like using #QMI_DEVICE_MUX_ID_AUTOMATIC may not be fully
+ * available for programs that use ephimeral #QmiDevice objects for single
+ * operations.
+ * </para></note>
  *
  * Since: 1.28
  */
@@ -895,6 +924,12 @@ gchar *qmi_device_add_link_finish (QmiDevice     *self,
  *
  * When the operation is finished @callback will be called. You can then call
  * qmi_device_delete_link_finish() to get the result of the operation.
+ *
+ * <note><para>
+ * When using the qmi_wwan driver from a kernel older than v5.12, the link
+ * deletion operation may not be supported, as there is no way to know
+ * which mux id applies to a given link interface.
+ * </para></note>
  *
  * Since: 1.28
  */
