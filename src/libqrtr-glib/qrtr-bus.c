@@ -388,7 +388,7 @@ initable_init (GInitable     *initable,
                GError       **error)
 {
     QrtrBus *self;
-    gint               fd;
+    gint     fd;
 
     self = QRTR_BUS (initable);
 
