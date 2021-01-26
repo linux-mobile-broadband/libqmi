@@ -563,8 +563,11 @@ qrtr_node_class_init (QrtrNodeClass *klass)
     g_object_class_install_property (object_class, PROP_NODE_ID, properties[PROP_NODE_ID]);
 
     /**
-     * QrtrNode::removed:
+     * QrtrNode::node-removed:
      * @self: the #QrtrNode
+     *
+     * The ::node-removed signal is emitted when the node fully disappears from
+     * the QRTR bus.
      *
      * Since: 1.28
      */

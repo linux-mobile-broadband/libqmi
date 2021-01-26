@@ -85,11 +85,11 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrNode, g_object_unref)
 /**
  * QRTR_NODE_SIGNAL_REMOVED:
  *
- * Symbol defining the #QrtrNode::removed signal.
+ * Symbol defining the #QrtrNode::node-removed signal.
  *
  * Since: 1.28
  */
-#define QRTR_NODE_SIGNAL_REMOVED "removed"
+#define QRTR_NODE_SIGNAL_REMOVED "node-removed"
 
 /**
  * qrtr_node_get_id:
