@@ -1110,6 +1110,11 @@ int main (int argc, char **argv)
         mbim_utils_set_traces_enabled (TRUE);
 #endif
 
+#if QMI_QRTR_SUPPORTED
+    /* libqrtr-glib logging */
+    g_log_set_handler ("Qrtr", G_LOG_LEVEL_MASK, log_handler, NULL);
+#endif
+
     /* No device path given? */
     if (!device_str) {
         g_printerr ("error: no device path specified\n");
