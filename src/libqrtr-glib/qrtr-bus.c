@@ -312,10 +312,10 @@ qrtr_bus_wait_for_node (QrtrBus             *self,
     ctx->node_id = node_id;
 
     /* Monitor added nodes */
-    ctx->added_id = g_signal_connect_swapped (self,
-                                              QRTR_BUS_SIGNAL_NODE_ADDED,
-                                              G_CALLBACK (wait_for_node_added_cb),
-                                              task);
+    ctx->added_id = g_signal_connect (self,
+                                      QRTR_BUS_SIGNAL_NODE_ADDED,
+                                      G_CALLBACK (wait_for_node_added_cb),
+                                      task);
 
     /* Setup timeout for the operation */
     if (timeout_ms > 0) {
