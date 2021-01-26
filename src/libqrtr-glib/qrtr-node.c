@@ -127,35 +127,35 @@ qrtr_service_waiter_free (QrtrServiceWaiter *waiter)
 static gboolean
 service_waiter_timeout_cb (QrtrServiceWaiter *waiter)
 {
-    QrtrNode *node;
+    QrtrNode *self;
 
-    node = g_task_get_source_object (waiter->task);
+    self = g_task_get_source_object (waiter->task);
     g_task_return_new_error (waiter->task,
                              G_IO_ERROR,
                              G_IO_ERROR_TIMED_OUT,
                              "QRTR services did not appear on the bus");
     /* This takes care of unreffing the task. */
-    g_ptr_array_remove_fast (node->priv->waiters, waiter);
+    g_ptr_array_remove_fast (self->priv->waiters, waiter);
 
     return G_SOURCE_REMOVE;
 }
 
 static void
-dispatch_pending_waiters (QrtrNode *node)
+dispatch_pending_waiters (QrtrNode *self)
 {
     guint i;
 
-    for (i = 0; i < node->priv->waiters->len;) {
+    for (i = 0; i < self->priv->waiters->len;) {
         QrtrServiceWaiter *waiter;
         guint j;
         gboolean should_dispatch = TRUE;
 
-        waiter = g_ptr_array_index (node->priv->waiters, i);
+        waiter = g_ptr_array_index (self->priv->waiters, i);
         for (j = 0; j < waiter->services->len; j++) {
             guint32 service;
 
             service = g_array_index (waiter->services, guint32, j);
-            if (!g_hash_table_lookup (node->priv->service_index, GUINT_TO_POINTER (service))) {
+            if (!g_hash_table_lookup (self->priv->service_index, GUINT_TO_POINTER (service))) {
                 should_dispatch = FALSE;
                 break;
             }
@@ -164,7 +164,7 @@ dispatch_pending_waiters (QrtrNode *node)
         if (should_dispatch) {
             g_task_return_boolean (waiter->task, TRUE);
             /* This takes care of unreffing the task. */
-            g_ptr_array_remove_index_fast (node->priv->waiters, i);
+            g_ptr_array_remove_index_fast (self->priv->waiters, i);
         } else {
             i++;
         }
@@ -263,7 +263,7 @@ service_index_remove_info (GHashTable          *service_index,
 }
 
 void
-qrtr_node_add_service_info (QrtrNode *node,
+qrtr_node_add_service_info (QrtrNode *self,
                             guint32   service,
                             guint32   port,
                             guint32   version,
@@ -276,14 +276,14 @@ qrtr_node_add_service_info (QrtrNode *node,
     info->port = port;
     info->version = version;
     info->instance = instance;
-    node->priv->service_list = g_list_append (node->priv->service_list, info);
-    service_index_add_info (node->priv->service_index, service, info);
-    g_hash_table_insert (node->priv->port_index, GUINT_TO_POINTER (port), info);
-    dispatch_pending_waiters (node);
+    self->priv->service_list = g_list_append (self->priv->service_list, info);
+    service_index_add_info (self->priv->service_index, service, info);
+    g_hash_table_insert (self->priv->port_index, GUINT_TO_POINTER (port), info);
+    dispatch_pending_waiters (self);
 }
 
 void
-qrtr_node_remove_service_info (QrtrNode *node,
+qrtr_node_remove_service_info (QrtrNode *self,
                                guint32   service,
                                guint32   port,
                                guint32   version,
@@ -291,30 +291,30 @@ qrtr_node_remove_service_info (QrtrNode *node,
 {
     QrtrNodeServiceInfo *info;
 
-    info = g_hash_table_lookup (node->priv->port_index, GUINT_TO_POINTER (port));
+    info = g_hash_table_lookup (self->priv->port_index, GUINT_TO_POINTER (port));
     if (!info) {
         g_info ("[qrtr node@%u]: tried to remove unknown service %u, port %u",
-                node->priv->node_id, service, port);
+                self->priv->node_id, service, port);
         return;
     }
 
-    service_index_remove_info (node->priv->service_index, service, info);
-    g_hash_table_remove (node->priv->port_index, GUINT_TO_POINTER (port));
-    node->priv->service_list = g_list_remove (node->priv->service_list, info);
+    service_index_remove_info (self->priv->service_index, service, info);
+    g_hash_table_remove (self->priv->port_index, GUINT_TO_POINTER (port));
+    self->priv->service_list = g_list_remove (self->priv->service_list, info);
     qrtr_node_service_info_free (info);
 }
 
 /*****************************************************************************/
 
 gint32
-qrtr_node_lookup_port (QrtrNode *node,
+qrtr_node_lookup_port (QrtrNode *self,
                        guint32   service)
 {
     ListHolder          *service_instances;
     QrtrNodeServiceInfo *info;
     GList               *list;
 
-    service_instances = g_hash_table_lookup (node->priv->service_index,
+    service_instances = g_hash_table_lookup (self->priv->service_index,
                                              GUINT_TO_POINTER (service));
     if (!service_instances)
         return -1;
@@ -328,12 +328,12 @@ qrtr_node_lookup_port (QrtrNode *node,
 }
 
 gint32
-qrtr_node_lookup_service (QrtrNode *node,
+qrtr_node_lookup_service (QrtrNode *self,
                           guint32   port)
 {
     QrtrNodeServiceInfo *info;
 
-    info = g_hash_table_lookup (node->priv->port_index, GUINT_TO_POINTER (port));
+    info = g_hash_table_lookup (self->priv->port_index, GUINT_TO_POINTER (port));
     return info ? (gint32)info->service : -1;
 }
 
@@ -352,9 +352,9 @@ qrtr_node_get_service_info_list (QrtrNode *self)
 }
 
 guint32
-qrtr_node_get_id (QrtrNode *node)
+qrtr_node_get_id (QrtrNode *self)
 {
-    return node->priv->node_id;
+    return self->priv->node_id;
 }
 
 QrtrBus *
