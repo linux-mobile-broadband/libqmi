@@ -32,7 +32,7 @@
 
 #include <libqmi-glib.h>
 
-#if defined MBIM_QMUX_ENABLED
+#if QMI_MBIM_QMUX_SUPPORTED
 #include <libmbim-glib.h>
 #endif
 
@@ -1103,7 +1103,7 @@ int main (int argc, char **argv)
     if (verbose_flag)
         qmi_utils_set_traces_enabled (TRUE);
 
-#if defined MBIM_QMUX_ENABLED
+#if QMI_MBIM_QMUX_SUPPORTED
     /* libmbim logging */
     g_log_set_handler ("Mbim", G_LOG_LEVEL_MASK, log_handler, NULL);
     if (verbose_flag)
