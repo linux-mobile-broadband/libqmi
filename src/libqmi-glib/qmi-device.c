@@ -2129,6 +2129,56 @@ open_version_info_ready (QmiClientCtl *client_ctl,
     device_open_step (task);
 }
 
+#if QMI_QRTR_SUPPORTED
+
+static void
+build_services_from_qrtr_node (GTask *task)
+{
+    QmiDevice           *self;
+    DeviceOpenContext   *ctx;
+    GList               *services;
+    guint                n_services;
+    GList               *elem;
+    QrtrNodeServiceInfo *qrtr_serv_info;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
+    g_assert (self->priv->node);
+    services = qrtr_node_peek_service_info_list (self->priv->node);
+    n_services = g_list_length (services);
+
+    self->priv->supported_services = g_array_sized_new (FALSE,
+                                                        FALSE,
+                                                        sizeof (QmiMessageCtlGetVersionInfoOutputServiceListService),
+                                                        n_services);
+
+    g_debug ("[%s] QMI Device supports %u services:",
+             qmi_file_get_path_display (self->priv->file),
+             n_services);
+
+    for (elem = services; elem; elem = elem->next) {
+        const gchar *service_str;
+        QmiMessageCtlGetVersionInfoOutputServiceListService info;
+
+        qrtr_serv_info = elem->data;
+        info.service = qrtr_node_service_info_get_service (qrtr_serv_info);
+        info.major_version = qrtr_node_service_info_get_version (qrtr_serv_info);
+        g_array_append_val (self->priv->supported_services, info);
+
+        service_str = qmi_service_get_string (info.service);
+        if (service_str)
+            g_debug ("[%s]    %s (%d) ",
+                     qmi_file_get_path_display (self->priv->file),
+                     service_str,
+                     info.major_version);
+    }
+
+    ctx->step++;
+    device_open_step (task);
+}
+#endif
+
 static void
 endpoint_ready (QmiEndpoint *endpoint,
                 GAsyncResult *res,
@@ -2322,12 +2372,21 @@ device_open_step (GTask *task)
             g_debug ("[%s] Checking version info (%u retries)...",
                      qmi_file_get_path_display (self->priv->file),
                      ctx->version_check_retries);
-            qmi_client_ctl_get_version_info (self->priv->client_ctl,
-                                             NULL,
-                                             1,
-                                             g_task_get_cancellable (task),
-                                             (GAsyncReadyCallback)open_version_info_ready,
-                                             task);
+#if QMI_QRTR_SUPPORTED
+            if (self->priv->node) {
+                g_debug ("[%s] QRTR does not support version info check: checking only for available services",
+                         qmi_file_get_path_display (self->priv->file));
+                build_services_from_qrtr_node (task);
+            }
+            else
+#endif
+                qmi_client_ctl_get_version_info (self->priv->client_ctl,
+                                                NULL,
+                                                1,
+                                                g_task_get_cancellable (task),
+                                                (GAsyncReadyCallback)open_version_info_ready,
+                                                task);
+
             return;
         }
         ctx->step++;
@@ -2431,14 +2490,6 @@ qmi_device_open (QmiDevice *self,
         g_return_if_fail (flags & (QMI_DEVICE_OPEN_FLAGS_NET_802_3 | QMI_DEVICE_OPEN_FLAGS_NET_RAW_IP));
 
     g_return_if_fail (QMI_IS_DEVICE (self));
-
-#if QMI_QRTR_SUPPORTED
-    if (self->priv->node && (flags & QMI_DEVICE_OPEN_FLAGS_VERSION_INFO)) {
-        g_debug ("[%s] QRTR does not support version info check",
-                 qmi_file_get_path_display (self->priv->file));
-        flags &= ~QMI_DEVICE_OPEN_FLAGS_VERSION_INFO;
-    }
-#endif
 
     flags_str = qmi_device_open_flags_build_string_from_mask (flags);
     g_debug ("[%s] Opening device with flags '%s'...",
