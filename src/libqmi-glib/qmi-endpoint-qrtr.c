@@ -626,16 +626,17 @@ endpoint_close (QmiEndpoint         *endpoint,
 QmiEndpointQrtr *
 qmi_endpoint_qrtr_new (QrtrNode *node)
 {
-    QmiEndpointQrtr *self;
-    gchar *uri;
-    QmiFile *file;
+    QmiEndpointQrtr    *self;
+    g_autofree gchar   *uri = NULL;
+    g_autoptr(GFile)    gfile = NULL;
+    g_autoptr(QmiFile)  file = NULL;
 
     if (!node)
         return NULL;
 
     uri = qrtr_get_uri_for_node (qrtr_node_get_id (node));
-    file = qmi_file_new (g_file_new_for_uri (uri));
-    g_free (uri);
+    gfile = g_file_new_for_uri (uri);
+    file = qmi_file_new (gfile);
 
     self = g_object_new (QMI_TYPE_ENDPOINT_QRTR,
                          QMI_ENDPOINT_FILE, file,
