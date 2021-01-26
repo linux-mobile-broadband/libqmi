@@ -189,24 +189,32 @@ qrtr_node_service_info_free (QrtrNodeServiceInfo *info)
 guint32
 qrtr_node_service_info_get_service (QrtrNodeServiceInfo *info)
 {
+    g_return_val_if_fail (info != NULL, 0);
+
     return info->service;
 }
 
 guint32
 qrtr_node_service_info_get_port (QrtrNodeServiceInfo *info)
 {
+    g_return_val_if_fail (info != NULL, 0);
+
     return info->port;
 }
 
 guint32
 qrtr_node_service_info_get_version (QrtrNodeServiceInfo *info)
 {
+    g_return_val_if_fail (info != NULL, 0);
+
     return info->version;
 }
 
 guint32
 qrtr_node_service_info_get_instance (QrtrNodeServiceInfo *info)
 {
+    g_return_val_if_fail (info != NULL, 0);
+
     return info->instance;
 }
 
@@ -314,6 +322,8 @@ qrtr_node_lookup_port (QrtrNode *self,
     QrtrNodeServiceInfo *info;
     GList               *list;
 
+    g_return_val_if_fail (QRTR_IS_NODE (self), -1);
+
     service_instances = g_hash_table_lookup (self->priv->service_index,
                                              GUINT_TO_POINTER (service));
     if (!service_instances)
@@ -333,6 +343,8 @@ qrtr_node_lookup_service (QrtrNode *self,
 {
     QrtrNodeServiceInfo *info;
 
+    g_return_val_if_fail (QRTR_IS_NODE (self), -1);
+
     info = g_hash_table_lookup (self->priv->port_index, GUINT_TO_POINTER (port));
     return info ? (gint32)info->service : -1;
 }
@@ -342,30 +354,40 @@ qrtr_node_lookup_service (QrtrNode *self,
 GList *
 qrtr_node_peek_service_info_list (QrtrNode *self)
 {
+    g_return_val_if_fail (QRTR_IS_NODE (self), NULL);
+
     return self->priv->service_list;
 }
 
 GList *
 qrtr_node_get_service_info_list (QrtrNode *self)
 {
+    g_return_val_if_fail (QRTR_IS_NODE (self), NULL);
+
     return g_list_copy_deep (self->priv->service_list, (GCopyFunc)node_service_info_copy, NULL);
 }
 
 guint32
 qrtr_node_get_id (QrtrNode *self)
 {
+    g_return_val_if_fail (QRTR_IS_NODE (self), 0);
+
     return self->priv->node_id;
 }
 
 QrtrBus *
 qrtr_node_peek_bus (QrtrNode *self)
 {
+    g_return_val_if_fail (QRTR_IS_NODE (self), NULL);
+
     return self->priv->bus;
 }
 
 QrtrBus *
 qrtr_node_get_bus (QrtrNode *self)
 {
+    g_return_val_if_fail (QRTR_IS_NODE (self), NULL);
+
     return g_object_ref (self->priv->bus);
 }
 
@@ -387,10 +409,12 @@ qrtr_node_wait_for_services (QrtrNode            *self,
                              GAsyncReadyCallback  callback,
                              gpointer             user_data)
 {
-    GTask *task;
+    GTask             *task;
     QrtrServiceWaiter *waiter;
-    guint i;
-    gboolean services_present = TRUE;
+    guint              i;
+    gboolean           services_present = TRUE;
+
+    g_return_if_fail (QRTR_IS_NODE (self));
 
     task = g_task_new (self, cancellable, callback, user_data);
 
