@@ -504,8 +504,8 @@ process_internal_proxy_open (QmiProxy   *self,
         guint32 node_id;
 
         if (qrtr_get_node_for_uri (device_file_path, &node_id)) {
+            self->priv->qrtr_bus = qrtr_bus_new (NULL, &error);
             if (!self->priv->qrtr_bus) {
-                self->priv->qrtr_bus = qrtr_bus_new (NULL, &error);
                 g_warning ("Error accessing the QRTR bus: %s", error->message);
                 g_error_free (error);
                 g_free (device_file_path);
