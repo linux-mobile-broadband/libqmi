@@ -27,7 +27,7 @@
 
 #include <libqmi-glib.h>
 
-#if defined MBIM_QMUX_ENABLED
+#if QMI_MBIM_QMUX_SUPPORTED
 #include <libmbim-glib.h>
 #endif
 
@@ -145,7 +145,7 @@ qfu_log_init (gboolean     stdout_verbose,
     if (stdout_verbose_flag || verbose_log_file)
         qmi_utils_set_traces_enabled (TRUE);
 
-#if defined MBIM_QMUX_ENABLED
+#if QMI_MBIM_QMUX_SUPPORTED
     /* libmbim logging */
     g_log_set_handler ("Mbim", G_LOG_LEVEL_MASK, log_handler, NULL);
     if (stdout_verbose_flag || verbose_log_file)
