@@ -71,24 +71,21 @@ typedef struct {
 
 /*****************************************************************************/
 
-static gboolean
+static void
 add_qmi_message_to_buffer (QmiEndpointQrtr *self,
-                           QmiMessage *message)
+                           QmiMessage      *message)
 {
-    const guint8 *raw_message;
-    gsize raw_message_len;
-    GError *error = NULL;
+    g_autoptr(GError)  error = NULL;
+    const guint8      *raw_message;
+    gsize              raw_message_len;
 
     raw_message = qmi_message_get_raw (message, &raw_message_len, &error);
-    if (!raw_message) {
+    if (!raw_message)
         g_warning ("[%s] Got malformed QMI message: %s",
                    qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
-        return FALSE;
-    }
-
-    qmi_endpoint_add_message (QMI_ENDPOINT (self), raw_message, raw_message_len);
+    else
+        qmi_endpoint_add_message (QMI_ENDPOINT (self), raw_message, raw_message_len);
     qmi_message_unref (message);
-    return TRUE;
 }
 
 static gboolean
