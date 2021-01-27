@@ -34,6 +34,7 @@
 
 #include "qmi-endpoint-qrtr.h"
 #include "qmi-errors.h"
+#include "qmi-enum-types.h"
 #include "qmi-error-types.h"
 #include "qmi-message.h"
 
@@ -52,22 +53,12 @@ G_DEFINE_TYPE (QmiEndpointQrtr, qmi_endpoint_qrtr, QMI_TYPE_ENDPOINT)
 
 struct _QmiEndpointQrtrPrivate {
     QrtrNode *node;
-    guint node_removed_id;
-    gboolean node_removed;
+    guint     node_removed_id;
+    gboolean  node_removed;
 
-    /* Holds ClientInfo entries */
-    GList *client_list;
-    /* Map of client id -> ClientInfo */
-    GTree *client_map;
-    /* Map of socket -> ClientInfo */
-    GHashTable *socket_map;
+    gboolean  endpoint_open;
+    GList    *clients;
 };
-
-typedef struct {
-    guint client_id;
-    GSocket *socket;
-    GSource *source;
-} ClientInfo;
 
 /*****************************************************************************/
 
@@ -88,216 +79,191 @@ add_qmi_message_to_buffer (QmiEndpointQrtr *self,
     qmi_message_unref (message);
 }
 
-static gboolean
-qrtr_message_cb (GSocket *gsocket,
-                 GIOCondition cond,
-                 QmiEndpointQrtr *self)
+/*****************************************************************************/
+
+#define QRTR_CLIENT_DATA_SERVICE "service"
+#define QRTR_CLIENT_DATA_CID     "cid"
+
+typedef struct {
+    QmiService  service;
+    guint       cid;
+    QrtrClient *client;
+    guint       client_message_id;
+} ClientInfo;
+
+static void
+client_info_free (ClientInfo *client_info)
 {
-    g_autoptr(GError) error = NULL;
-    g_autoptr(GSocketAddress) addr = NULL;
-    struct sockaddr_qrtr sq;
-    g_autoptr(GByteArray) buf = NULL;
-    gssize next_datagram_size;
-    gssize bytes_received;
-    ClientInfo *info;
-    QmiService service;
-    guint client;
-    QmiMessage *message;
-
-    info = g_hash_table_lookup (self->priv->socket_map, gsocket);
-    if (!info) {
-        /* We're no longer watching this socket. */
-        return FALSE;
-    }
-
-    next_datagram_size = g_socket_get_available_bytes (gsocket);
-    buf = g_byte_array_new ();
-    g_byte_array_set_size (buf, next_datagram_size);
-
-    bytes_received = g_socket_receive_from (gsocket, &addr, (gchar *)buf->data,
-                                            next_datagram_size, NULL, &error);
-    if (bytes_received < 0) {
-        g_warning ("[%s] Socket IO failure: %s",
-                   qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
-        g_signal_emit_by_name (QMI_ENDPOINT (self), QMI_ENDPOINT_SIGNAL_HANGUP);
-        return FALSE;
-    }
-
-    if (bytes_received != next_datagram_size) {
-        g_debug ("[%s] Datagram was not expected size", qmi_endpoint_get_name (QMI_ENDPOINT (self)));
-        return TRUE;
-    }
-
-    /* Figure out where we got this message from */
-    if (!g_socket_address_to_native (addr, &sq, sizeof(sq), &error)) {
-        g_warning ("[%s] Could not parse QRTR address: %s",
-                   qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
-        return TRUE;
-    }
-
-    if (sq.sq_family != AF_QIPCRTR ||
-        sq.sq_node != qrtr_node_get_id (self->priv->node) ||
-        sq.sq_port == QRTR_PORT_CTRL) {
-        /* ignore all CTRL messages or ones not from our node, we only want real
-         * QMI messages */
-        return TRUE;
-    }
-
-    /* Create a fake QMUX header and add this message to the buffer */
-    service = qrtr_node_lookup_service (self->priv->node, sq.sq_port);
-    client = info->client_id;
-    message = qmi_message_new_from_data (service, client, buf, &error);
-    if (!message) {
-        g_warning ("[%s] Got malformed QMI message: %s",
-                   qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
-        return TRUE;
-    }
-
-    add_qmi_message_to_buffer (self, message);
-    return TRUE;
+    g_signal_handler_disconnect (client_info->client, client_info->client_message_id);
+    g_object_unref (client_info->client);
+    g_slice_free (ClientInfo, client_info);
 }
 
 static void
-node_removed_cb (QrtrNode *node,
-                 QmiEndpointQrtr *self)
+client_info_list_free (GList *list)
 {
-    self->priv->node_removed = TRUE;
-    g_signal_emit_by_name (QMI_ENDPOINT (self), QMI_ENDPOINT_SIGNAL_HANGUP);
+    g_list_free_full (list, (GDestroyNotify) client_info_free);
 }
 
+static ClientInfo *
+client_info_lookup (QmiEndpointQrtr *self,
+                    QmiService       service,
+                    guint            cid)
+{
+    GList *l;
+
+    for (l = self->priv->clients; l; l = g_list_next (l)) {
+        ClientInfo *client_info = l->data;
+
+        if ((service == client_info->service) &&
+            (cid == client_info->cid))
+            return client_info;
+    }
+    return NULL;
+}
+
+static gint
+client_info_cmp (const ClientInfo *a,
+                 const ClientInfo *b)
+{
+    if (a->service != b->service)
+        return a->service - b->service;
+    return a->cid - b->cid;
+}
+
+static void
+client_message_cb (QrtrClient      *qrtr_client,
+                   GByteArray      *qrtr_message,
+                   QmiEndpointQrtr *self)
+{
+    QmiMessage        *message;
+    guint              service;
+    guint              cid;
+    g_autoptr(GError)  error = NULL;
+
+    service = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (qrtr_client), QRTR_CLIENT_DATA_SERVICE));
+    cid     = GPOINTER_TO_UINT (g_object_get_data (G_OBJECT (qrtr_client), QRTR_CLIENT_DATA_CID));
+
+    /* Create a fake QMUX header and add this message to the buffer */
+    message = qmi_message_new_from_data (service, cid, qrtr_message, &error);
+    if (!message)
+        g_warning ("[%s] Got malformed QMI message: %s",
+                   qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
+    else
+        add_qmi_message_to_buffer (self, message);
+}
+
+static ClientInfo *
+client_info_new (QmiEndpointQrtr  *self,
+                 QmiService        service,
+                 GError          **error)
+{
+    ClientInfo *client_info;
+    QrtrClient *qrtr_client;
+    GList      *l;
+    guint       max_cid = 0;
+    guint       min_available_cid = 1;
+    guint       cid = 0;
+    gint32      port;
+
+    for (l = self->priv->clients; l; l = g_list_next (l)) {
+        client_info = l->data;
+
+        if (service != client_info->service)
+            continue;
+
+        max_cid = client_info->cid;
+        if (min_available_cid == client_info->cid)
+            min_available_cid++;
+    }
+
+    cid = max_cid + 1;
+    if (cid > G_MAXUINT8) {
+        cid = min_available_cid;
+        if (min_available_cid > G_MAXUINT8) {
+            g_set_error (error, QMI_PROTOCOL_ERROR, QMI_PROTOCOL_ERROR_CLIENT_IDS_EXHAUSTED,
+                         "Client IDs have been exhausted");
+            return NULL;
+        }
+    }
+
+    port = qrtr_node_lookup_port (self->priv->node, service);
+    if (port < 0) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_UNSUPPORTED,
+                     "Service not supported");
+        return NULL;
+    }
+
+    qrtr_client = qrtr_client_new (self->priv->node, (guint)port, NULL, error);
+    if (!qrtr_client) {
+        g_prefix_error (error, "Couldn't create QRTR client: ");
+        return NULL;
+    }
+
+    /* store service and cid info in the client itself for quicker access */
+    g_object_set_data (G_OBJECT (qrtr_client), QRTR_CLIENT_DATA_SERVICE, GUINT_TO_POINTER (service));
+    g_object_set_data (G_OBJECT (qrtr_client), QRTR_CLIENT_DATA_CID,     GUINT_TO_POINTER (cid));
+
+    client_info = g_slice_new0 (ClientInfo);
+    client_info->service = service;
+    client_info->cid = cid;
+    client_info->client = qrtr_client;
+    client_info->client_message_id = g_signal_connect (qrtr_client,
+                                                       QRTR_CLIENT_SIGNAL_MESSAGE,
+                                                       G_CALLBACK (client_message_cb),
+                                                       self);
+
+    self->priv->clients = g_list_insert_sorted (self->priv->clients,
+                                                client_info,
+                                                (GCompareFunc)client_info_cmp);
+
+    return client_info;
+}
 
 /*****************************************************************************/
 /* Client info operations */
 
-static void
-client_info_destroy (ClientInfo *info)
-{
-    if (info->source) {
-        g_source_destroy (info->source);
-        g_source_unref (info->source);
-    }
-    if (info->socket) {
-        g_socket_close (info->socket, NULL);
-        g_clear_object (&info->socket);
-    }
-    g_slice_free (ClientInfo, info);
-}
-
-static gint
-client_map_key_cmp (gconstpointer v1,
-                    gconstpointer v2)
-{
-    return GPOINTER_TO_INT (v1) - GPOINTER_TO_INT (v2);
-}
-
-static gboolean
-client_map_traverse_func (gpointer key,
-                          gpointer value,
-                          gpointer data)
-{
-    if (GPOINTER_TO_UINT (key) > *(guint *)data + 1)
-        return TRUE;
-
-    *(guint *)data = GPOINTER_TO_UINT (key);
-    return FALSE;
-}
-
 static guint
-get_next_free_id (GTree *client_map)
+allocate_client (QmiEndpointQrtr  *self,
+                 QmiService        service,
+                 GError          **error)
 {
-    guint last_contiguous_id = -1;
-    g_tree_foreach (client_map, client_map_traverse_func, &last_contiguous_id);
-    return last_contiguous_id + 1;
-}
+    ClientInfo *client_info;
 
-static gint
-allocate_client (QmiEndpointQrtr *self, GError **error)
-{
-    GError *inner_error = NULL;
-    int socket_fd;
-    GSocket *gsocket;
-    guint client_id;
-    ClientInfo *info;
-
-    if (!self->priv->client_map) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_WRONG_STATE,
-                     "[%s] Endpoint is not open",
-                     qmi_endpoint_get_name (QMI_ENDPOINT (self)));
-        return -QMI_PROTOCOL_ERROR_INTERNAL;
+    if (!self->priv->endpoint_open) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_WRONG_STATE,
+                     "Endpoint is not open");
+        return 0;
     }
 
-    client_id = get_next_free_id (self->priv->client_map);
-    if (client_id > G_MAXUINT8) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_FAILED,
-                     "[%s] Client IDs have been exhausted",
-                     qmi_endpoint_get_name (QMI_ENDPOINT (self)));
-        return -QMI_PROTOCOL_ERROR_CLIENT_IDS_EXHAUSTED;
-    }
+    client_info = client_info_new (self, service, error);
+    if (!client_info)
+        return 0;
 
-    socket_fd = socket (AF_QIPCRTR, SOCK_DGRAM, 0);
-    if (socket_fd < 0) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_FAILED,
-                     "[%s] Could not open QRTR socket: %s",
-                     qmi_endpoint_get_name (QMI_ENDPOINT (self)), strerror(errno));
-        return -QMI_PROTOCOL_ERROR_INTERNAL;
-    }
-
-    gsocket = g_socket_new_from_fd (socket_fd, &inner_error);
-    if (!gsocket) {
-        g_propagate_prefixed_error (error, inner_error,
-                                    "[%s] Socket setup failed: ",
-                                    qmi_endpoint_get_name (QMI_ENDPOINT (self)));
-        close (socket_fd);
-        return -QMI_PROTOCOL_ERROR_INTERNAL;
-    }
-
-    g_socket_set_timeout (gsocket, 0);
-
-    info = g_slice_new0 (ClientInfo);
-    info->client_id = client_id;
-    info->socket = gsocket;
-    info->source = g_socket_create_source (gsocket, G_IO_IN, NULL);
-    g_source_set_callback (info->source, (GSourceFunc) qrtr_message_cb,
-                           self, NULL);
-    g_source_attach (info->source, NULL);
-
-    self->priv->client_list = g_list_append (self->priv->client_list, info);
-    g_tree_insert (self->priv->client_map, GUINT_TO_POINTER (info->client_id), info);
-    g_hash_table_insert (self->priv->socket_map, gsocket, info);
-    return info->client_id;
+    return client_info->cid;
 }
 
 static void
-release_client (QmiEndpointQrtr *self, guint client_id)
+release_client (QmiEndpointQrtr *self,
+                QmiService       service,
+                guint            cid)
 {
-    ClientInfo *info;
+    ClientInfo *client_info;
 
-    info = g_tree_lookup (self->priv->client_map, GUINT_TO_POINTER (client_id));
-    if (!info)
+    client_info = client_info_lookup (self, service, cid);
+    if (!client_info)
         return;
 
-    g_hash_table_remove (self->priv->socket_map, info->socket);
-    g_tree_remove (self->priv->client_map, GUINT_TO_POINTER (client_id));
-    self->priv->client_list = g_list_remove (self->priv->client_list, info);
-    client_info_destroy (info);
-}
-
-static void
-client_list_destroy (GList *list)
-{
-    g_list_free_full (list, (GDestroyNotify) client_info_destroy);
+    self->priv->clients = g_list_remove (self->priv->clients, client_info);
+    client_info_free (client_info);
 }
 
 /*****************************************************************************/
 
 static gboolean
-construct_alloc_tlv (QmiMessage *message, guint8 service, guint8 client)
+construct_alloc_tlv (QmiMessage *message,
+                     guint8      service,
+                     guint8      client)
 {
     gsize init_offset;
 
@@ -311,77 +277,76 @@ construct_alloc_tlv (QmiMessage *message, guint8 service, guint8 client)
 }
 
 static void
-handle_alloc_cid (QmiEndpointQrtr *self, QmiMessage *message)
+handle_alloc_cid (QmiEndpointQrtr *self,
+                  QmiMessage      *message)
 {
-    gsize offset = 0;
-    gsize init_offset;
-    guint8 service;
-    gint client_id;
-    QmiMessage *response;
-    QmiProtocolError result = QMI_PROTOCOL_ERROR_NONE;
-    GError *error = NULL;
+    gsize                 offset = 0;
+    gsize                 init_offset;
+    guint8                service;
+    guint                 cid;
+    QmiProtocolError      result = QMI_PROTOCOL_ERROR_NONE;
+    g_autoptr(QmiMessage) response = NULL;
+    g_autoptr(GError)     error = NULL;
 
     if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_TLV_ALLOCATION_INFO, NULL, &error)) == 0) ||
         !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service, &error)) {
-        g_debug ("Error allocating CID: could not parse message: %s", error->message);
-        g_error_free (error);
+        g_debug ("[%s] error allocating CID: could not parse message: %s",
+                 qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
         result = QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE;
     }
 
-    client_id = allocate_client (self, &error);
-    if (client_id < 0) {
-        g_debug ("Error allocating CID: could not parse message: %s", error->message);
-        g_error_free (error);
-        result = -client_id;
+    cid = allocate_client (self, service, &error);
+    if (!cid) {
+        g_debug ("[%s] error allocating CID: %s",
+                 qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
+        result = QMI_PROTOCOL_ERROR_INTERNAL;
     }
 
     response = qmi_message_response_new (message, result);
     if (!response)
         return;
 
-    if (!construct_alloc_tlv (response, service, client_id)) {
-        qmi_message_unref (response);
+    if (!construct_alloc_tlv (response, service, cid))
         return;
-    }
 
-    add_qmi_message_to_buffer (self, response);
+    add_qmi_message_to_buffer (self, g_steal_pointer (&response));
 }
 
 static void
-handle_release_cid (QmiEndpointQrtr *self, QmiMessage *message)
+handle_release_cid (QmiEndpointQrtr *self,
+                    QmiMessage      *message)
 {
-    gsize offset = 0;
-    gsize init_offset;
-    guint8 service;
-    guint8 client_id = 0;
-    QmiMessage *response;
-    QmiProtocolError result = QMI_PROTOCOL_ERROR_NONE;
-    GError *error = NULL;
+    gsize                 offset = 0;
+    gsize                 init_offset;
+    guint8                service;
+    guint8                cid = 0;
+    QmiProtocolError      result = QMI_PROTOCOL_ERROR_NONE;
+    g_autoptr(QmiMessage) response = NULL;
+    g_autoptr(GError)     error = NULL;
 
     if (((init_offset = qmi_message_tlv_read_init (message, QMI_MESSAGE_TLV_ALLOCATION_INFO, NULL, &error)) == 0) ||
         !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &service, &error) ||
-        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &client_id, &error)) {
-        g_debug ("Error releasing CID: could not parse message: %s", error->message);
-        g_error_free (error);
+        !qmi_message_tlv_read_guint8 (message, init_offset, &offset, &cid, &error)) {
+        g_debug ("[%s] error releasing CID: could not parse message: %s",
+                 qmi_endpoint_get_name (QMI_ENDPOINT (self)), error->message);
         result = QMI_PROTOCOL_ERROR_MALFORMED_MESSAGE;
     }
 
-    release_client (self, client_id);
+    release_client (self, service, cid);
 
     response = qmi_message_response_new (message, result);
     if (!response)
         return;
 
-    if (!construct_alloc_tlv (response, service, client_id)) {
-        qmi_message_unref (response);
+    if (!construct_alloc_tlv (response, service, cid))
         return;
-    }
 
-    add_qmi_message_to_buffer (self, response);
+    add_qmi_message_to_buffer (self, g_steal_pointer (&response));
 }
 
 static void
-handle_sync (QmiEndpointQrtr *self, QmiMessage *message)
+handle_sync (QmiEndpointQrtr *self,
+             QmiMessage      *message)
 {
     QmiMessage *response;
 
@@ -394,30 +359,20 @@ handle_sync (QmiEndpointQrtr *self, QmiMessage *message)
 
 static void
 unhandled_message (QmiEndpointQrtr *self,
-                   QmiMessage *message,
-                   gboolean log_warning)
+                   QmiMessage      *message)
 {
     QmiMessage *response;
-
-    if (log_warning) {
-        gchar *message_text;
-
-        message_text = qmi_message_get_printable_full (message, NULL, "  ");
-        g_warning ("[%s] Unhandled client message:\n%s",
-                   qmi_endpoint_get_name (QMI_ENDPOINT (self)),
-                   message_text);
-        g_free (message_text);
-    }
 
     response = qmi_message_response_new (message, QMI_PROTOCOL_ERROR_NOT_SUPPORTED);
     if (!response)
         return;
+
     add_qmi_message_to_buffer (self, response);
 }
 
 static void
 handle_ctl_message (QmiEndpointQrtr *self,
-                    QmiMessage *message)
+                    QmiMessage      *message)
 {
     switch (qmi_message_get_message_id (message)) {
         case QMI_MESSAGE_CTL_ALLOCATE_CID:
@@ -430,11 +385,8 @@ handle_ctl_message (QmiEndpointQrtr *self,
             handle_sync (self, message);
             break;
         case QMI_MESSAGE_CTL_GET_VERSION_INFO:
-            /* Messages we expect to see should not be logged. */
-            unhandled_message (self, message, FALSE);
-            break;
         default:
-            unhandled_message (self, message, TRUE);
+            unhandled_message (self, message);
             break;
     }
 }
@@ -457,12 +409,11 @@ endpoint_open (QmiEndpoint         *endpoint,
                GAsyncReadyCallback  callback,
                gpointer             user_data)
 {
-    QmiEndpointQrtr *self;
-    GTask *task;
+    QmiEndpointQrtr *self = QMI_ENDPOINT_QRTR (endpoint);
+    GTask           *task;
 
     g_assert (!use_proxy);
 
-    self = QMI_ENDPOINT_QRTR (endpoint);
     task = g_task_new (self, cancellable, callback, user_data);
 
     if (self->priv->node_removed) {
@@ -474,7 +425,7 @@ endpoint_open (QmiEndpoint         *endpoint,
         return;
     }
 
-    if (self->priv->client_map) {
+    if (self->priv->endpoint_open) {
         g_task_return_new_error (task,
                                  QMI_CORE_ERROR,
                                  QMI_CORE_ERROR_WRONG_STATE,
@@ -483,9 +434,9 @@ endpoint_open (QmiEndpoint         *endpoint,
         return;
     }
 
-    g_assert (self->priv->client_list == NULL);
-    self->priv->client_map = g_tree_new (client_map_key_cmp);
-    self->priv->socket_map = g_hash_table_new (g_direct_hash, g_direct_equal);
+    g_assert (self->priv->clients == NULL);
+    self->priv->endpoint_open = TRUE;
+
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
@@ -493,7 +444,7 @@ endpoint_open (QmiEndpoint         *endpoint,
 static gboolean
 endpoint_is_open (QmiEndpoint *self)
 {
-    return !!(QMI_ENDPOINT_QRTR (self)->priv->client_map);
+    return QMI_ENDPOINT_QRTR (self)->priv->endpoint_open;
 }
 
 static gboolean
@@ -503,92 +454,52 @@ endpoint_send (QmiEndpoint   *endpoint,
                GCancellable  *cancellable,
                GError       **error)
 {
-    QmiEndpointQrtr *self;
-    gconstpointer raw_message;
-    gsize raw_message_len;
-    guint client_id;
-    ClientInfo *client;
-    QmiService service;
-    struct sockaddr_qrtr addr;
-    gint sockfd;
-    gint rc;
-    GError *inner_error = NULL;
-    gint sq_port;
+    QmiEndpointQrtr       *self = QMI_ENDPOINT_QRTR (endpoint);
+    ClientInfo            *client_info;
+    QmiService             service;
+    guint                  cid;
+    gconstpointer          raw_message;
+    gsize                  raw_message_len;
+    g_autoptr(GByteArray)  qrtr_message = NULL;
 
-    self = QMI_ENDPOINT_QRTR (endpoint);
-
-    /* Figure out if we have a valid client */
+    /* We implement the CTL service here, so divert those messages */
     service = qmi_message_get_service (message);
-    client_id = qmi_message_get_client_id (message);
-    client = g_tree_lookup (self->priv->client_map, GUINT_TO_POINTER (client_id));
     if (service == QMI_SERVICE_CTL) {
-        if (client && client->socket) {
-            g_set_error (error,
-                         QMI_CORE_ERROR,
-                         QMI_CORE_ERROR_WRONG_STATE,
-                         "Client %u is not a CTL client", client_id);
-            return FALSE;
-        }
-        if (!client) {
-            /* Dummy entry for CTL client with no socket */
-            ClientInfo *info;
-
-            info = g_slice_new0 (ClientInfo);
-            info->client_id = client_id;
-            self->priv->client_list = g_list_append (self->priv->client_list, info);
-            g_tree_insert (self->priv->client_map, GUINT_TO_POINTER (info->client_id), info);
-        }
-        /* We implement the control client here, so divert those messages */
         handle_ctl_message (self, message);
         return TRUE;
     }
 
-    /* It's a normal service, so we should have an open client for it. */
-    if (!client) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_WRONG_STATE,
-                     "Client %u is not open", client_id);
+    cid = qmi_message_get_client_id (message);
+    client_info = client_info_lookup (self, service, cid);
+    if (!client_info) {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_WRONG_STATE,
+                     "Unknown client %u for service %s", cid, qmi_service_get_string (service));
         return FALSE;
     }
 
-    /* Lookup port */
-    sq_port = qrtr_node_lookup_port (self->priv->node, service);
-    if (sq_port == -1) {
-        g_set_error (error,
-                     QMI_CORE_ERROR,
-                     QMI_CORE_ERROR_FAILED,
-                     "Service %u has no servers", service);
-        return FALSE;
-    }
-
-    /* Set up QRTR bus destination address */
-    addr.sq_family = AF_QIPCRTR;
-    addr.sq_node = qrtr_node_get_id (self->priv->node);
-    addr.sq_port = (guint) sq_port;
-
-    /* Get raw message */
-    raw_message = qmi_message_get_data (message, &raw_message_len, &inner_error);
+    /* Build raw QRTR message without QMUX header */
+    raw_message = qmi_message_get_data (message, &raw_message_len, error);
     if (!raw_message) {
-        g_propagate_prefixed_error (error, inner_error, "Message was invalid: ");
+        g_prefix_error (error, "Invalid QMI message: ");
         return FALSE;
     }
+    qrtr_message = g_byte_array_sized_new (raw_message_len);
+    g_byte_array_append (qrtr_message, raw_message, raw_message_len);
 
-    sockfd = g_socket_get_fd (client->socket);
-    rc = sendto (sockfd, (void *)raw_message, raw_message_len,
-                 0, (struct sockaddr *)&addr, sizeof (addr));
-    if (rc < 0) {
-        g_set_error (error,
-                     G_IO_ERROR,
-                     g_io_error_from_errno (errno),
-                     "Failed to send QMI packet");
-        return FALSE;
-    }
-
-    return TRUE;
+    return qrtr_client_send (client_info->client,
+                             qrtr_message,
+                             cancellable,
+                             error);
 }
 
 /*****************************************************************************/
+
+static void
+internal_close (QmiEndpointQrtr *self)
+{
+    g_clear_pointer (&self->priv->clients, client_info_list_free);
+    self->priv->endpoint_open = FALSE;
+}
 
 static gboolean
 endpoint_close_finish (QmiEndpoint   *self,
@@ -605,20 +516,26 @@ endpoint_close (QmiEndpoint         *endpoint,
                 GAsyncReadyCallback  callback,
                 gpointer             user_data)
 {
-    QmiEndpointQrtr *self;
-    GTask *task;
+    QmiEndpointQrtr *self = QMI_ENDPOINT_QRTR (endpoint);
+    GTask           *task;
 
-    self = QMI_ENDPOINT_QRTR (endpoint);
     task = g_task_new (self, cancellable, callback, user_data);
 
-    g_clear_pointer (&self->priv->socket_map, g_hash_table_destroy);
-    g_clear_pointer (&self->priv->client_map, g_tree_destroy);
-    g_clear_pointer (&self->priv->client_list, client_list_destroy);
+    internal_close (self);
+
     g_task_return_boolean (task, TRUE);
     g_object_unref (task);
 }
 
 /*****************************************************************************/
+
+static void
+node_removed_cb (QrtrNode        *node,
+                 QmiEndpointQrtr *self)
+{
+    self->priv->node_removed = TRUE;
+    g_signal_emit_by_name (QMI_ENDPOINT (self), QMI_ENDPOINT_SIGNAL_HANGUP);
+}
 
 QmiEndpointQrtr *
 qmi_endpoint_qrtr_new (QrtrNode *node)
@@ -662,9 +579,7 @@ dispose (GObject *object)
 {
     QmiEndpointQrtr *self = QMI_ENDPOINT_QRTR (object);
 
-    g_clear_pointer (&self->priv->socket_map, g_hash_table_destroy);
-    g_clear_pointer (&self->priv->client_map, g_tree_destroy);
-    g_clear_pointer (&self->priv->client_list, client_list_destroy);
+    internal_close (self);
 
     if (self->priv->node) {
         if (self->priv->node_removed_id) {
