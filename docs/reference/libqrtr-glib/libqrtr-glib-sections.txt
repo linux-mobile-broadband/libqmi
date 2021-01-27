@@ -66,6 +66,30 @@ qrtr_node_service_info_get_type
 </SECTION>
 
 <SECTION>
+<FILE>qrtr-client</FILE>
+<TITLE>QrtrClient</TITLE>
+QRTR_CLIENT_NODE
+QRTR_CLIENT_PORT
+QRTR_CLIENT_SIGNAL_MESSAGE
+QrtrClient
+qrtr_client_new
+qrtr_client_peek_node
+qrtr_client_get_node
+qrtr_client_get_port
+qrtr_client_send
+<SUBSECTION Standard>
+QRTR_CLIENT
+QRTR_CLIENT_CLASS
+QRTR_CLIENT_GET_CLASS
+QRTR_IS_CLIENT
+QRTR_IS_CLIENT_CLASS
+QRTR_TYPE_CLIENT
+QrtrClientClass
+QrtrClientPrivate
+qrtr_client_get_type
+</SECTION>
+
+<SECTION>
 <FILE>qrtr-utils</FILE>
 qrtr_get_uri_for_node
 qrtr_get_node_for_uri

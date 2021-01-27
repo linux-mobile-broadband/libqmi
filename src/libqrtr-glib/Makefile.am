@@ -21,6 +21,7 @@ libqrtr_glib_la_SOURCES = \
 	libqrtr-glib.h \
 	qrtr-bus.h qrtr-bus.c \
 	qrtr-node.h qrtr-node.c \
+	qrtr-client.h qrtr-client.c \
 	qrtr-utils.h qrtr-utils.c \
 	$(NULL)
 
@@ -38,6 +39,7 @@ include_HEADERS = \
 	libqrtr-glib.h \
 	qrtr-bus.h \
 	qrtr-node.h \
+	qrtr-client.h \
 	qrtr-utils.h \
 	$(NULL)
 

@@ -28,6 +28,7 @@
 
 #include "qrtr-bus.h"
 #include "qrtr-node.h"
+#include "qrtr-client.h"
 #include "qrtr-utils.h"
 
 #endif /* _LIBQRTR_GLIB_H_ */

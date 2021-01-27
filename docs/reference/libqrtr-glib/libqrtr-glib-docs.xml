@@ -45,6 +45,7 @@
     <xi:include href="xml/qrtr-version.xml"/>
     <xi:include href="xml/qrtr-bus.xml"/>
     <xi:include href="xml/qrtr-node.xml"/>
+    <xi:include href="xml/qrtr-client.xml"/>
     <xi:include href="xml/qrtr-utils.xml"/>
   </chapter>
 
