@@ -160,17 +160,23 @@ qrtr_ctrl_message_cb (GSocket      *gsocket,
     version = GUINT32_FROM_LE (ctrl_packet.server.instance) & 0xff;
     instance = GUINT32_FROM_LE (ctrl_packet.server.instance) >> 8;
 
-    if (type == QRTR_TYPE_NEW_SERVER) {
-        g_debug ("[qrtr] added server on %u:%u -> service %u, version %u, instance %u",
-                node_id, port, service, version, instance);
-        add_service_info (self, node_id, port, service, version, instance);
-    } else if (type == QRTR_TYPE_DEL_SERVER) {
+    if (type == QRTR_TYPE_DEL_SERVER) {
         g_debug ("[qrtr] removed server on %u:%u -> service %u, version %u, instance %u",
-                node_id, port, service, version, instance);
+                 node_id, port, service, version, instance);
         remove_service_info (self, node_id, port, service, version, instance);
-    } else
-        g_assert_not_reached ();
+        return TRUE;
+    }
 
+    g_assert (type == QRTR_TYPE_NEW_SERVER);
+
+    if (!node_id && !port && !service && !version && !instance) {
+        g_debug ("[qrtr] initial lookup finished");
+        return TRUE;
+    }
+
+    g_debug ("[qrtr] added server on %u:%u -> service %u, version %u, instance %u",
+             node_id, port, service, version, instance);
+    add_service_info (self, node_id, port, service, version, instance);
     return TRUE;
 }
 
