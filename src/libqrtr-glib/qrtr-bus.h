@@ -196,7 +196,7 @@ QrtrNode *qrtr_bus_get_node (QrtrBus *self,
  * @self: a #QrtrBus.
  * @node_id: the QRTR bus node ID to lookup.
  * @timeout_ms: the timeout, in milliseconds, to wait for the node to appear in
- *  the bus. A zero timeout is infinite.
+ *  the bus.
  * @cancellable: a #GCancellable, or #NULL.
  * @callback: a #GAsyncReadyCallback to call when the request is satisfied.
  * @user_data: user data to pass to @callback.

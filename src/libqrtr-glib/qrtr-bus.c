@@ -316,6 +316,7 @@ qrtr_bus_wait_for_node (QrtrBus             *self,
     QrtrNode           *existing_node;
 
     g_return_if_fail (QRTR_IS_BUS (self));
+    g_return_if_fail (timeout_ms > 0);
 
     task = g_task_new (self, cancellable, callback, user_data);
 
@@ -340,11 +341,9 @@ qrtr_bus_wait_for_node (QrtrBus             *self,
                                       task);
 
     /* Setup timeout for the operation */
-    if (timeout_ms > 0) {
-        ctx->timeout_source = g_timeout_source_new (timeout_ms);
-        g_source_set_callback (ctx->timeout_source, (GSourceFunc)wait_for_node_timeout_cb, task, NULL);
-        g_source_attach (ctx->timeout_source, g_main_context_get_thread_default ());
-    }
+    ctx->timeout_source = g_timeout_source_new (timeout_ms);
+    g_source_set_callback (ctx->timeout_source, (GSourceFunc)wait_for_node_timeout_cb, task, NULL);
+    g_source_attach (ctx->timeout_source, g_main_context_get_thread_default ());
 
     g_task_set_task_data (task, ctx, (GDestroyNotify)wait_for_node_context_free);
 }
