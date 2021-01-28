@@ -808,29 +808,10 @@ device_new_ready (GObject *unused,
 #if QMI_QRTR_SUPPORTED
 
 static void
-wait_for_services_ready (QrtrNode     *node,
-                         GAsyncResult *res,
-                         gpointer      user_data)
-{
-    g_autoptr(GError) error = NULL;
-
-    if (!qrtr_node_wait_for_services_finish (node, res, &error)) {
-        g_printerr ("error: failed to wait for QRTR services: %s\n", error->message);
-        exit (EXIT_FAILURE);
-    }
-
-    qmi_device_new_from_node (node,
-                              cancellable,
-                              (GAsyncReadyCallback)device_new_ready,
-                              NULL);
-}
-
-static void
 wait_for_node_ready (QrtrBus      *_qrtr_bus,
                      GAsyncResult *res)
 {
     g_autoptr(QrtrNode) node = NULL;
-    g_autoptr(GArray)   services = NULL;
     g_autoptr(GError)   error = NULL;
 
     node = qrtr_bus_wait_for_node_finish (_qrtr_bus, res, &error);
@@ -839,15 +820,10 @@ wait_for_node_ready (QrtrBus      *_qrtr_bus,
         exit (EXIT_FAILURE);
     }
 
-    services = g_array_sized_new (FALSE, FALSE, sizeof (QmiService), 1);
-    g_array_append_val (services, service);
-
-    qrtr_node_wait_for_services (node,
-                                 services,
-                                 5000, /* ms */
-                                 cancellable,
-                                 (GAsyncReadyCallback) wait_for_services_ready,
-                                 NULL);
+    qmi_device_new_from_node (node,
+                              cancellable,
+                              (GAsyncReadyCallback)device_new_ready,
+                              NULL);
 }
 #endif
 
