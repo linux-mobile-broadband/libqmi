@@ -97,24 +97,6 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrBus, g_object_unref)
 #define QRTR_BUS_SIGNAL_NODE_REMOVED "node-removed"
 
 /**
- * QRTR_BUS_SIGNAL_SERVICE_ADDED:
- *
- * Symbol defining the #QrtrBus::service-added signal.
- *
- * Since: 1.28
- */
-#define QRTR_BUS_SIGNAL_SERVICE_ADDED "service-added"
-
-/**
- * QRTR_BUS_SIGNAL_SERVICE_REMOVED:
- *
- * Symbol defining the #QrtrBus::service-removed signal.
- *
- * Since: 1.28
- */
-#define QRTR_BUS_SIGNAL_SERVICE_REMOVED "service-removed"
-
-/**
  * qrtr_bus_new:
  * @lookup_timeout_ms: the timeout, in milliseconds, to wait for the initial bus
  *   lookup to complete. A zero timeout disables the lookup.

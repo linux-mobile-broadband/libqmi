@@ -49,8 +49,6 @@ enum {
 enum {
     SIGNAL_NODE_ADDED,
     SIGNAL_NODE_REMOVED,
-    SIGNAL_SERVICE_ADDED,
-    SIGNAL_SERVICE_REMOVED,
     SIGNAL_LAST
 };
 
@@ -116,7 +114,6 @@ add_service_info (QrtrBus *self,
         node = QRTR_NODE (list_item->data);
 
     qrtr_node_add_service_info (node, service, port, version, instance);
-    g_signal_emit (self, signals[SIGNAL_SERVICE_ADDED], 0, node_id, service);
 }
 
 static void
@@ -138,7 +135,6 @@ remove_service_info (QrtrBus *self,
 
     node = QRTR_NODE (list_item->data);
     qrtr_node_remove_service_info (node, service, port, version, instance);
-    g_signal_emit (self, signals[SIGNAL_SERVICE_REMOVED], 0, node_id, service);
 
     if (!qrtr_node_peek_service_info_list (node)) {
         g_debug ("[qrtr] removing node %u", node_id);
@@ -722,53 +718,5 @@ qrtr_bus_class_init (QrtrBusClass *klass)
                       NULL,
                       G_TYPE_NONE,
                       1,
-                      G_TYPE_UINT);
-
-    /**
-     * QrtrBus::service-added:
-     * @self: the #QrtrBus
-     * @node: the node ID where service is added
-     * @service: the service ID of the service that has been added
-     *
-     * The ::service-added signal is emitted when a new service registers
-     * on the QRTR bus.
-     *
-     * Since: 1.28
-     */
-    signals[SIGNAL_SERVICE_ADDED] =
-        g_signal_new (QRTR_BUS_SIGNAL_SERVICE_ADDED,
-                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
-                      G_SIGNAL_RUN_LAST,
-                      0,
-                      NULL,
-                      NULL,
-                      NULL,
-                      G_TYPE_NONE,
-                      2,
-                      G_TYPE_UINT,
-                      G_TYPE_UINT);
-
-    /**
-     * QrtrBus::service-removed:
-     * @self: the #QrtrBus
-     * @node: the node ID where service is removed
-     * @service: the service ID of the service that was removed
-     *
-     * The ::service-removed signal is emitted when a service deregisters
-     * from the QRTR bus.
-     *
-     * Since: 1.28
-     */
-    signals[SIGNAL_SERVICE_REMOVED] =
-        g_signal_new (QRTR_BUS_SIGNAL_SERVICE_REMOVED,
-                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
-                      G_SIGNAL_RUN_LAST,
-                      0,
-                      NULL,
-                      NULL,
-                      NULL,
-                      G_TYPE_NONE,
-                      2,
-                      G_TYPE_UINT,
                       G_TYPE_UINT);
 }

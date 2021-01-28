@@ -83,6 +83,24 @@ GType qrtr_node_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrNode, g_object_unref)
 
 /**
+ * QRTR_NODE_SIGNAL_SERVICE_ADDED:
+ *
+ * Symbol defining the #QrtrNode::service-added signal.
+ *
+ * Since: 1.28
+ */
+#define QRTR_NODE_SIGNAL_SERVICE_ADDED "service-added"
+
+/**
+ * QRTR_NODE_SIGNAL_SERVICE_REMOVED:
+ *
+ * Symbol defining the #QrtrNode::service-removed signal.
+ *
+ * Since: 1.28
+ */
+#define QRTR_NODE_SIGNAL_SERVICE_REMOVED "service-removed"
+
+/**
  * QRTR_NODE_SIGNAL_REMOVED:
  *
  * Symbol defining the #QrtrNode::node-removed signal.
