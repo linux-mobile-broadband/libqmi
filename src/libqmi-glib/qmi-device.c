@@ -2168,9 +2168,14 @@ build_services_from_qrtr_node (GTask *task)
 
         service_str = qmi_service_get_string (info.service);
         if (service_str)
-            g_debug ("[%s]    %s (%d) ",
+            g_debug ("[%s]    %s (%u) ",
                      qmi_file_get_path_display (self->priv->file),
                      service_str,
+                     info.major_version);
+        else
+            g_debug ("[%s]    unknown [0x%04x] (%u)",
+                     qmi_file_get_path_display (self->priv->file),
+                     info.service,
                      info.major_version);
     }
 
