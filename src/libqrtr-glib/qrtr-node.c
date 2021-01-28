@@ -415,6 +415,7 @@ qrtr_node_wait_for_services (QrtrNode            *self,
     gboolean           services_present = TRUE;
 
     g_return_if_fail (QRTR_IS_NODE (self));
+    g_return_if_fail (timeout_ms > 0);
 
     task = g_task_new (self, cancellable, callback, user_data);
 
@@ -446,12 +447,10 @@ qrtr_node_wait_for_services (QrtrNode            *self,
     waiter = g_slice_new0 (QrtrServiceWaiter);
     waiter->services = g_array_ref (services);
     waiter->task = task;
-    if (timeout_ms > 0) {
-        waiter->timeout_source = g_timeout_source_new (timeout_ms);
-        g_source_set_callback (waiter->timeout_source, (GSourceFunc)service_waiter_timeout_cb,
-                               waiter, NULL);
-        g_source_attach (waiter->timeout_source, g_main_context_get_thread_default ());
-    }
+    waiter->timeout_source = g_timeout_source_new (timeout_ms);
+    g_source_set_callback (waiter->timeout_source, (GSourceFunc)service_waiter_timeout_cb,
+                           waiter, NULL);
+    g_source_attach (waiter->timeout_source, g_main_context_get_thread_default ());
 
     g_ptr_array_add (self->priv->waiters, waiter);
 }
