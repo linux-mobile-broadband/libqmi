@@ -306,7 +306,7 @@ handle_alloc_cid (QmiEndpointQrtr *self,
     if (!response)
         return;
 
-    if (!construct_alloc_tlv (response, service, cid))
+    if ((result == QMI_PROTOCOL_ERROR_NONE) && !construct_alloc_tlv (response, service, cid))
         return;
 
     add_qmi_message_to_buffer (self, g_steal_pointer (&response));
@@ -338,7 +338,7 @@ handle_release_cid (QmiEndpointQrtr *self,
     if (!response)
         return;
 
-    if (!construct_alloc_tlv (response, service, cid))
+    if ((result == QMI_PROTOCOL_ERROR_NONE) && !construct_alloc_tlv (response, service, cid))
         return;
 
     add_qmi_message_to_buffer (self, g_steal_pointer (&response));
