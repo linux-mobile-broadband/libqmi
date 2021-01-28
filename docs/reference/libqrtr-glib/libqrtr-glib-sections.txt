@@ -2,12 +2,14 @@
 <SECTION>
 <FILE>qrtr-bus</FILE>
 <TITLE>QrtrBus</TITLE>
+QRTR_BUS_LOOKUP_TIMEOUT
 QRTR_BUS_SIGNAL_NODE_ADDED
 QRTR_BUS_SIGNAL_NODE_REMOVED
 QRTR_BUS_SIGNAL_SERVICE_ADDED
 QRTR_BUS_SIGNAL_SERVICE_REMOVED
 QrtrBus
 qrtr_bus_new
+qrtr_bus_new_finish
 qrtr_bus_peek_node
 qrtr_bus_get_node
 qrtr_bus_wait_for_node

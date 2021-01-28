@@ -808,15 +808,25 @@ device_new_ready (GObject *unused,
 #if QMI_QRTR_SUPPORTED
 
 static void
-wait_for_node_ready (QrtrBus      *_qrtr_bus,
-                     GAsyncResult *res)
+bus_new_ready (GObject      *source,
+               GAsyncResult *res,
+               gpointer      user_data)
 {
-    g_autoptr(QrtrNode) node = NULL;
-    g_autoptr(GError)   error = NULL;
+    g_autoptr(GError)  error = NULL;
+    guint              node_id;
+    QrtrNode          *node;
 
-    node = qrtr_bus_wait_for_node_finish (_qrtr_bus, res, &error);
+    node_id = GPOINTER_TO_UINT (user_data);
+
+    qrtr_bus = qrtr_bus_new_finish (res, &error);
+    if (!qrtr_bus) {
+        g_printerr ("error: couldn't access QRTR bus: %s\n", error->message);
+        exit (EXIT_FAILURE);
+    }
+
+    node = qrtr_bus_peek_node (qrtr_bus, node_id);
     if (!node) {
-        g_printerr ("error: failed to wait for QRTR node: %s\n", error->message);
+        g_printerr ("error: node with id %u not found in QRTR bus\n", node_id);
         exit (EXIT_FAILURE);
     }
 
@@ -825,6 +835,7 @@ wait_for_node_ready (QrtrBus      *_qrtr_bus,
                               (GAsyncReadyCallback)device_new_ready,
                               NULL);
 }
+
 #endif
 
 static gboolean
@@ -848,21 +859,10 @@ make_device (GFile *file)
 
         id = g_file_get_uri (file);
         if (qrtr_get_node_for_uri (id, &node_id)) {
-            g_autoptr(GError) error = NULL;
-
-            /* Describes a QRTR node */
-            qrtr_bus = qrtr_bus_new (cancellable, &error);
-            if (!qrtr_bus) {
-                g_printerr ("error: couldn't access the QRTR bus: %s\n", error->message);
-                return FALSE;
-            }
-
-            qrtr_bus_wait_for_node (qrtr_bus,
-                                    node_id,
-                                    10000, /* ms */
-                                    cancellable,
-                                    (GAsyncReadyCallback)wait_for_node_ready,
-                                    NULL);
+            qrtr_bus_new (1000, /* ms */
+                          cancellable,
+                          (GAsyncReadyCallback)bus_new_ready,
+                          GUINT_TO_POINTER (node_id));
             return TRUE;
         }
 

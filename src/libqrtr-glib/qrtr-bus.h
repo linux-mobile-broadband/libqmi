@@ -70,6 +70,15 @@ GType qrtr_bus_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrBus, g_object_unref)
 
 /**
+ * QRTR_BUS_LOOKUP_TIMEOUT:
+ *
+ * Symbol defining the #QrtrBus:lookup-timeout property.
+ *
+ * Since: 1.28
+ */
+#define QRTR_BUS_LOOKUP_TIMEOUT "lookup-timeout"
+
+/**
  * QRTR_BUS_SIGNAL_NODE_ADDED:
  *
  * Symbol defining the #QrtrBus::node-added signal.
@@ -107,19 +116,45 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (QrtrBus, g_object_unref)
 
 /**
  * qrtr_bus_new:
- * @cancellable: optional #GCancellable object, #NULL to ignore.
- * @error: Return location for error or %NULL.
+ * @lookup_timeout_ms: the timeout, in milliseconds, to wait for the initial bus
+ *   lookup to complete. A zero timeout disables the lookup.
+ * @cancellable: optional #GCancellable object, %NULL to ignore.
+ * @callback: a #GAsyncReadyCallback to call when the initialization is finished.
+ * @user_data: the data to pass to callback function.
  *
- * Creates a #QrtrBus object.
+ * Asynchronously creates a #QrtrBus object.
  *
- * This method will fail if the access to the QRTR bus is not possible.
+ * This method will fail if the access to the QRTR bus is not possible, or if
+ * the initial lookup doesn't finish on time.
  *
- * Returns: A newly created #QrtrBus, or %NULL if @error is set.
+ * When @lookup_timeout_ms is 0, this method does not guarantee that the
+ * initial bus lookup has already finished, the user should wait for the required
+ * #QrtrBus::node-added or #QrtrBus::service-added signals before assuming the
+ * nodes are accessible.
+ *
+ * When the operation is finished, @callback will be invoked. You can then call
+ * qrtr_bus_new_finish() to get the result of the operation.
  *
  * Since: 1.28
  */
-QrtrBus *qrtr_bus_new (GCancellable  *cancellable,
-                       GError       **error);
+void qrtr_bus_new (guint                lookup_timeout_ms,
+                   GCancellable        *cancellable,
+                   GAsyncReadyCallback  callback,
+                   gpointer             user_data);
+
+/**
+ * qrtr_bus_new_finish:
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with qrtr_bus_new().
+ *
+ * Returns: (transfer full): A newly created #QrtrBus, or %NULL if @error is set.
+ *
+ * Since: 1.28
+ */
+QrtrBus *qrtr_bus_new_finish (GAsyncResult  *res,
+                              GError       **error);
 
 /**
  * qrtr_bus_peek_node:

@@ -106,7 +106,7 @@ typedef struct {
 typedef struct {
     volatile gint ref_count;
 
-    QmiProxy          *proxy; /* not full ref */
+    QmiProxy *proxy; /* not full ref */
 
     /* client socket connection context */
     GSocketConnection *connection;
@@ -119,6 +119,9 @@ typedef struct {
     GArray     *qmi_client_info_array;
     guint       indication_id;
     guint       device_removed_id;
+#if QMI_QRTR_SUPPORTED
+    guint node_id;
+#endif
 } Client;
 
 static gboolean connection_readable_cb (GSocket *socket, GIOCondition condition, Client *client);
@@ -431,30 +434,57 @@ out:
 #if QMI_QRTR_SUPPORTED
 
 static void
-wait_for_node_ready (QrtrBus      *_qrtr_bus,
-                     GAsyncResult *res,
-                     Client       *client)
+device_from_node (QmiProxy *self,
+                  Client   *client)
+{
+    QrtrNode *node;
+
+    g_assert (self->priv->qrtr_bus);
+
+    node = qrtr_bus_peek_node (self->priv->qrtr_bus, client->node_id);
+    if (!node) {
+        g_debug ("node with id %u not found in QRTR bus", client->node_id);
+        untrack_client (self, client);
+        return;
+    }
+
+    qmi_device_new_from_node (node,
+                              NULL,
+                              (GAsyncReadyCallback)device_new_ready,
+                              client_ref (client)); /* full reference */
+}
+
+static void
+bus_new_ready (GObject      *source,
+               GAsyncResult *res,
+               Client       *client)
 {
     QmiProxy            *self;
-    g_autoptr(QrtrNode)  node = NULL;
+    g_autoptr(QrtrBus)   qrtr_bus = NULL;
     g_autoptr(GError)    error = NULL;
+
+    /* Note: we get a full client ref */
 
     self = client->proxy;
 
-    node = qrtr_bus_wait_for_node_finish (_qrtr_bus, res, &error);
-    if (!node) {
-        g_debug ("couldn't open QRTR node: %s", error->message);
+    qrtr_bus = qrtr_bus_new_finish (res, &error);
+    if (!qrtr_bus) {
+        g_debug ("couldn't access QRTR bus: %s", error->message);
         untrack_client (self, client);
-    } else {
-        qmi_device_new_from_node (node,
-                                  NULL,
-                                  (GAsyncReadyCallback)device_new_ready,
-                                  client_ref (client)); /* Full ref */
+        client_unref (client);
+        return;
     }
 
-    /* Balance out the reference we got */
+    /* Don't store the new bus if some other concurrent request already did
+     * it. We don't really care which bus object to use, we just need to use
+     * always the same */
+    if (!self->priv->qrtr_bus)
+        self->priv->qrtr_bus = g_object_ref (qrtr_bus);
+
+    device_from_node (self, client);
     client_unref (client);
 }
+
 #endif
 
 static gboolean
@@ -501,23 +531,16 @@ process_internal_proxy_open (QmiProxy   *self,
     /* Need to create a device ourselves */
     if (!client->device) {
 #if QMI_QRTR_SUPPORTED
-        guint32 node_id;
-
-        if (qrtr_get_node_for_uri (device_file_path, &node_id)) {
-            self->priv->qrtr_bus = qrtr_bus_new (NULL, &error);
+        if (qrtr_get_node_for_uri (device_file_path, &client->node_id)) {
             if (!self->priv->qrtr_bus) {
-                g_warning ("Error accessing the QRTR bus: %s", error->message);
-                g_error_free (error);
-                g_free (device_file_path);
-                return FALSE;
+                qrtr_bus_new (1000, /* ms */
+                              NULL,
+                              (GAsyncReadyCallback)bus_new_ready,
+                              client_ref (client)); /* Full ref */
+                return TRUE;
             }
 
-            qrtr_bus_wait_for_node (self->priv->qrtr_bus,
-                                    node_id,
-                                    10000, /* ms */
-                                    NULL,
-                                    (GAsyncReadyCallback)wait_for_node_ready,
-                                    client_ref (client)); /* Full ref */
+            device_from_node (self, client);
             return TRUE;
         }
 #endif

@@ -34,10 +34,17 @@
 #include "qrtr-node.h"
 #include "qrtr-utils.h"
 
-static void initable_iface_init (GInitableIface *iface);
+static void async_initable_iface_init (GAsyncInitableIface *iface);
 
 G_DEFINE_TYPE_EXTENDED (QrtrBus, qrtr_bus, G_TYPE_OBJECT, 0,
-                        G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init))
+                        G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, async_initable_iface_init))
+
+enum {
+    PROP_0,
+    PROP_LOOKUP_TIMEOUT,
+    PROP_PORT,
+    PROP_LAST
+};
 
 enum {
     SIGNAL_NODE_ADDED,
@@ -47,7 +54,8 @@ enum {
     SIGNAL_LAST
 };
 
-static guint signals[SIGNAL_LAST] = { 0 };
+static GParamSpec *properties[PROP_LAST];
+static guint       signals[SIGNAL_LAST] = { 0 };
 
 struct _QrtrBusPrivate {
     /* Underlying QRTR socket */
@@ -60,6 +68,11 @@ struct _QrtrBusPrivate {
 
     /* Callback source for when NEW_SERVER/DEL_SERVER control packets come in */
     GSource *source;
+
+    /* initial lookup support */
+    guint    lookup_timeout;
+    GTask   *init_task;
+    GSource *init_timeout_source;
 };
 
 /*****************************************************************************/
@@ -117,6 +130,8 @@ remove_service_info (QrtrBus *self,
 
 /*****************************************************************************/
 
+static void initable_complete (QrtrBus *self);
+
 static gboolean
 qrtr_ctrl_message_cb (GSocket      *gsocket,
                       GIOCondition  cond,
@@ -171,6 +186,7 @@ qrtr_ctrl_message_cb (GSocket      *gsocket,
 
     if (!node_id && !port && !service && !version && !instance) {
         g_debug ("[qrtr] initial lookup finished");
+        initable_complete (self);
         return TRUE;
     }
 
@@ -389,14 +405,10 @@ setup_socket_source (QrtrBus *self)
 }
 
 static gboolean
-initable_init (GInitable     *initable,
-               GCancellable  *cancellable,
-               GError       **error)
+common_init (QrtrBus  *self,
+             GError  **error)
 {
-    QrtrBus *self;
-    gint     fd;
-
-    self = QRTR_BUS (initable);
+    gint fd;
 
     fd = socket (AF_QIPCRTR, SOCK_DGRAM, 0);
     if (fd < 0) {
@@ -424,15 +436,110 @@ initable_init (GInitable     *initable,
 
 /*****************************************************************************/
 
-QrtrBus *
-qrtr_bus_new (GCancellable  *cancellable,
-              GError       **error)
+typedef struct {
+
+} InitContext;
+
+static gboolean
+initable_init_finish (GAsyncInitable  *initable,
+                      GAsyncResult    *result,
+                      GError         **error)
 {
-    return QRTR_BUS (g_initable_new (QRTR_TYPE_BUS,
-                                     cancellable,
-                                     error,
-                                     NULL));
+    return g_task_propagate_boolean (G_TASK (result), error);
 }
+
+static gboolean
+initable_timeout (QrtrBus *self)
+{
+    g_autoptr(GTask) task = NULL;
+
+    task = g_steal_pointer (&self->priv->init_task);
+    g_assert (task);
+
+    g_clear_pointer (&self->priv->init_timeout_source, g_source_unref);
+
+    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_TIMED_OUT,
+                             "Timed out waiting for the initial bus lookup");
+    return G_SOURCE_REMOVE;
+}
+
+static void
+initable_complete (QrtrBus *self)
+{
+    g_autoptr(GTask) task = NULL;
+
+    task = g_steal_pointer (&self->priv->init_task);
+    if (!task) {
+        g_assert (!self->priv->init_timeout_source);
+        return;
+    }
+
+    g_assert (self->priv->init_timeout_source);
+    g_source_destroy (self->priv->init_timeout_source);
+    g_clear_pointer (&self->priv->init_timeout_source, g_source_unref);
+
+    g_task_return_boolean (task, TRUE);
+}
+
+static void
+initable_init_async (GAsyncInitable      *initable,
+                     int                  io_priority,
+                     GCancellable        *cancellable,
+                     GAsyncReadyCallback  callback,
+                     gpointer             user_data)
+{
+    QrtrBus          *self = QRTR_BUS (initable);
+    GError           *error = NULL;
+    g_autoptr(GTask)  task = NULL;
+
+    task = g_task_new (initable, cancellable, callback, user_data);
+
+    if (!common_init (self, &error)) {
+        g_task_return_error (task, error);
+        return;
+    }
+
+    /* if lookup timeout is disabled, we're done */
+    if (!self->priv->lookup_timeout) {
+        g_task_return_boolean (task, TRUE);
+        return;
+    }
+
+    /* setup wait for the initial lookup completion */
+    self->priv->init_task = g_steal_pointer (&task);
+    self->priv->init_timeout_source = g_timeout_source_new (self->priv->lookup_timeout);
+    g_source_set_callback (self->priv->init_timeout_source, (GSourceFunc)initable_timeout, self, NULL);
+    g_source_attach (self->priv->init_timeout_source, g_main_context_get_thread_default ());
+}
+
+/*****************************************************************************/
+
+QrtrBus *
+qrtr_bus_new_finish (GAsyncResult  *res,
+                     GError       **error)
+{
+    g_autoptr(GObject) source_object = NULL;
+
+    source_object = g_async_result_get_source_object (res);
+    return QRTR_BUS (g_async_initable_new_finish (G_ASYNC_INITABLE (source_object), res, error));
+}
+
+void
+qrtr_bus_new (guint                lookup_timeout_ms,
+              GCancellable        *cancellable,
+              GAsyncReadyCallback  callback,
+              gpointer             user_data)
+{
+    g_async_initable_new_async (QRTR_TYPE_BUS,
+                                G_PRIORITY_DEFAULT,
+                                cancellable,
+                                callback,
+                                user_data,
+                                QRTR_BUS_LOOKUP_TIMEOUT, lookup_timeout_ms,
+                                NULL);
+}
+
+/*****************************************************************************/
 
 static void
 qrtr_bus_init (QrtrBus *self)
@@ -448,9 +555,48 @@ qrtr_bus_init (QrtrBus *self)
 }
 
 static void
+set_property (GObject      *object,
+              guint         prop_id,
+              const GValue *value,
+              GParamSpec   *pspec)
+{
+    QrtrBus *self = QRTR_BUS (object);
+
+    switch (prop_id) {
+    case PROP_LOOKUP_TIMEOUT:
+        self->priv->lookup_timeout = g_value_get_uint (value);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
+get_property (GObject    *object,
+              guint       prop_id,
+              GValue     *value,
+              GParamSpec *pspec)
+{
+    QrtrBus *self = QRTR_BUS (object);
+
+    switch (prop_id) {
+    case PROP_LOOKUP_TIMEOUT:
+        g_value_set_uint (value, self->priv->lookup_timeout);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+}
+
+static void
 dispose (GObject *object)
 {
     QrtrBus *self = QRTR_BUS (object);
+
+    g_assert (!self->priv->init_task);
+    g_assert (!self->priv->init_timeout_source);
 
     if (self->priv->source) {
         g_source_destroy (self->priv->source);
@@ -469,9 +615,10 @@ dispose (GObject *object)
 }
 
 static void
-initable_iface_init (GInitableIface *iface)
+async_initable_iface_init (GAsyncInitableIface *iface)
 {
-    iface->init = initable_init;
+    iface->init_async  = initable_init_async;
+    iface->init_finish = initable_init_finish;
 }
 
 static void
@@ -481,7 +628,24 @@ qrtr_bus_class_init (QrtrBusClass *klass)
 
     g_type_class_add_private (object_class, sizeof (QrtrBusPrivate));
 
+    object_class->get_property = get_property;
+    object_class->set_property = set_property;
     object_class->dispose = dispose;
+
+    /**
+     * QrtrBus:lookup-timeout:
+     *
+     * Since: 1.28
+     */
+    properties[PROP_LOOKUP_TIMEOUT] =
+        g_param_spec_uint (QRTR_BUS_LOOKUP_TIMEOUT,
+                           "lookup timeout",
+                           "Timeout in ms to wait for the initial lookup to finish, or 0 to disable it",
+                           0,
+                           G_MAXUINT,
+                           0,
+                           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
+    g_object_class_install_property (object_class, PROP_LOOKUP_TIMEOUT, properties[PROP_LOOKUP_TIMEOUT]);
 
     /**
      * QrtrBus::node-added:
