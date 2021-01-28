@@ -192,6 +192,35 @@ QrtrNode *qrtr_bus_get_node (QrtrBus *self,
                              guint32  node_id);
 
 /**
+ * qrtr_bus_peek_nodes:
+ * @self: a #QrtrBus.
+ *
+ * Gets a list of all the #QrtrNode objects in the bus, without increasing
+ * the reference count on the returned object or the list.
+ *
+ * Returns: (transfer none)(nullable)(element-type QrtrNode): a list of
+ *  #QrtrNode elements. The caller should not free the result, it is
+ *  owned by @self.
+ *
+ * Since: 1.28
+ */
+GList *qrtr_bus_peek_nodes (QrtrBus *self);
+
+/**
+ * qrtr_bus_get_nodes:
+ * @self: a #QrtrBus.
+ *
+ * Gets a list of all the #QrtrNode objects in the bus.
+ *
+ * Returns: (transfer full)(nullable)(element-type QrtrNode): a list of
+ *  #QrtrNode elements. The caller should free the result by using
+ *  g_list_free_full() with g_object_unref() as #GDestroyNotify.
+ *
+ * Since: 1.28
+ */
+GList *qrtr_bus_get_nodes (QrtrBus *self);
+
+/**
  * qrtr_bus_wait_for_node:
  * @self: a #QrtrBus.
  * @node_id: the QRTR bus node ID to lookup.

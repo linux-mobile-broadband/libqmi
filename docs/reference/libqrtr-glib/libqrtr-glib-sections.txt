@@ -12,6 +12,8 @@ qrtr_bus_new
 qrtr_bus_new_finish
 qrtr_bus_peek_node
 qrtr_bus_get_node
+qrtr_bus_get_nodes
+qrtr_bus_peek_nodes
 qrtr_bus_wait_for_node
 qrtr_bus_wait_for_node_finish
 <SUBSECTION Standard>

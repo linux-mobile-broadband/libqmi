@@ -61,10 +61,9 @@ struct _QrtrBusPrivate {
     /* Underlying QRTR socket */
     GSocket *socket;
 
-    /* Map of node id -> QrtrNode. This hash table contains full references to
-     * the available QrtrNodes; i.e. the nodes are owned by the bus
-     * unconditionally. */
-    GHashTable *node_map;
+    /* List with full references to the available QrtrNodes; i.e. the nodes are
+     * owned by the bus unconditionally. */
+    GList *nodes;
 
     /* Callback source for when NEW_SERVER/DEL_SERVER control packets come in */
     GSource *source;
@@ -77,6 +76,20 @@ struct _QrtrBusPrivate {
 
 /*****************************************************************************/
 
+static gint
+node_cmp (QrtrNode *a,
+          QrtrNode *b)
+{
+    return qrtr_node_get_id (a) - qrtr_node_get_id (b);
+}
+
+static gint
+node_find_cmp (QrtrNode *a,
+               gpointer  user_data)
+{
+    return qrtr_node_get_id (a) - GPOINTER_TO_UINT (user_data);
+}
+
 static void
 add_service_info (QrtrBus *self,
                   guint32  node_id,
@@ -85,19 +98,22 @@ add_service_info (QrtrBus *self,
                   guint32  version,
                   guint32  instance)
 {
+    GList    *list_item;
     QrtrNode *node;
 
-    node = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
-    if (!node) {
+    list_item = g_list_find_custom (self->priv->nodes, GUINT_TO_POINTER (node_id), (GCompareFunc)node_find_cmp);
+    if (!list_item) {
         /* Node objects are exclusively created at this point */
         node = QRTR_NODE (g_object_new (QRTR_TYPE_NODE,
                                         QRTR_NODE_BUS, self,
                                         QRTR_NODE_ID,  node_id,
                                         NULL));
-        g_assert (g_hash_table_insert (self->priv->node_map, GUINT_TO_POINTER (node_id), node));
+
+        self->priv->nodes = g_list_insert_sorted (self->priv->nodes, node, (GCompareFunc)node_cmp);
         g_debug ("[qrtr] created new node %u", node_id);
         g_signal_emit (self, signals[SIGNAL_NODE_ADDED], 0, node_id);
-    }
+    } else
+        node = QRTR_NODE (list_item->data);
 
     qrtr_node_add_service_info (node, service, port, version, instance);
     g_signal_emit (self, signals[SIGNAL_SERVICE_ADDED], 0, node_id, service);
@@ -111,20 +127,23 @@ remove_service_info (QrtrBus *self,
                      guint32  version,
                      guint32  instance)
 {
+    GList    *list_item;
     QrtrNode *node;
 
-    node = g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
-    if (!node) {
+    list_item = g_list_find_custom (self->priv->nodes, GUINT_TO_POINTER (node_id), (GCompareFunc)node_find_cmp);
+    if (!list_item) {
         g_warning ("[qrtr] cannot remove service info: nonexistent node %u", node_id);
         return;
     }
 
+    node = QRTR_NODE (list_item->data);
     qrtr_node_remove_service_info (node, service, port, version, instance);
     g_signal_emit (self, signals[SIGNAL_SERVICE_REMOVED], 0, node_id, service);
+
     if (!qrtr_node_peek_service_info_list (node)) {
         g_debug ("[qrtr] removing node %u", node_id);
         g_signal_emit (self, signals[SIGNAL_NODE_REMOVED], 0, node_id);
-        g_hash_table_remove (self->priv->node_map, GUINT_TO_POINTER (node_id));
+        self->priv->nodes = g_list_delete_link (self->priv->nodes, list_item);
     }
 }
 
@@ -202,9 +221,12 @@ QrtrNode *
 qrtr_bus_peek_node (QrtrBus *self,
                     guint32  node_id)
 {
+    GList *list_item;
+
     g_return_val_if_fail (QRTR_IS_BUS (self), NULL);
 
-    return g_hash_table_lookup (self->priv->node_map, GUINT_TO_POINTER (node_id));
+    list_item = g_list_find_custom (self->priv->nodes, GUINT_TO_POINTER (node_id), (GCompareFunc)node_find_cmp);
+    return (list_item ? QRTR_NODE (list_item->data) : NULL);
 }
 
 QrtrNode *
@@ -217,6 +239,22 @@ qrtr_bus_get_node (QrtrBus *self,
 
     node = qrtr_bus_peek_node (self, node_id);
     return (node ? g_object_ref (node) : NULL);
+}
+
+GList *
+qrtr_bus_peek_nodes (QrtrBus *self)
+{
+    g_return_val_if_fail (QRTR_IS_BUS (self), NULL);
+
+    return self->priv->nodes;
+}
+
+GList *
+qrtr_bus_get_nodes (QrtrBus *self)
+{
+    g_return_val_if_fail (QRTR_IS_BUS (self), NULL);
+
+    return g_list_copy_deep (self->priv->nodes, (GCopyFunc) g_object_ref, NULL);
 }
 
 /*****************************************************************************/
@@ -546,11 +584,6 @@ qrtr_bus_init (QrtrBus *self)
     self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
                                               QRTR_TYPE_BUS,
                                               QrtrBusPrivate);
-
-    self->priv->node_map = g_hash_table_new_full (g_direct_hash,
-                                                  g_direct_equal,
-                                                  NULL,
-                                                  (GDestroyNotify)g_object_unref);
 }
 
 static void
@@ -608,7 +641,8 @@ dispose (GObject *object)
         g_clear_object (&self->priv->socket);
     }
 
-    g_clear_pointer (&self->priv->node_map, g_hash_table_unref);
+    g_list_free_full (self->priv->nodes, g_object_unref);
+    self->priv->nodes = NULL;
 
     G_OBJECT_CLASS (qrtr_bus_parent_class)->dispose (object);
 }
