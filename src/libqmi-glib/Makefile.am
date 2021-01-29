@@ -176,7 +176,7 @@ Qmi-1.0.gir: libqmi-glib.la
 Qmi_1_0_gir_INCLUDES = GLib-2.0 GObject-2.0 Gio-2.0
 Qmi_1_0_gir_CFLAGS = $(libqmi_glib_la_CPPFLAGS)
 Qmi_1_0_gir_LIBS = libqmi-glib.la
-Qmi_1_0_gir_EXPORT_PACKAGES = libqmi-glib
+Qmi_1_0_gir_EXPORT_PACKAGES = qmi-glib
 Qmi_1_0_gir_SCANNERFLAGS = \
 	$(WARN_SCANNERFLAGS) \
 	--c-include "libqmi-glib.h" \
