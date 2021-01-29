@@ -27,6 +27,13 @@ test-no-mbim-no-qrtr:
 test-no-mbim:
   stage: test
   script:
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr.git
+    - pushd libqrtr
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr
+    - make
+    - make install
+    - popd
     - NOCONFIGURE=1 ./autogen.sh
     - ./configure --prefix=/usr --disable-mbim-qmux --enable-qrtr
     - make
@@ -94,6 +101,13 @@ test-default:
     - apt -y install gtk-doc-tools libglib2.0-doc gobject-introspection libgirepository1.0-dev
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr
+    - make
+    - make install
+    - popd
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr.git
+    - pushd libqrtr
     - NOCONFIGURE=1 ./autogen.sh
     - ./configure --prefix=/usr
     - make

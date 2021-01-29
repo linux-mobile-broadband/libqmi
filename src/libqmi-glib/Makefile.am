@@ -10,6 +10,7 @@ libqmi_glib_compat_la_SOURCES = \
 libqmi_glib_compat_la_CPPFLAGS = \
 	$(WARN_CFLAGS) \
 	$(GLIB_CFLAGS) \
+	$(QRTR_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/libqmi-glib \
 	-I$(top_srcdir)/src/libqmi-glib/generated \
@@ -20,16 +21,10 @@ libqmi_glib_compat_la_CPPFLAGS = \
 	-Wno-deprecated-declarations \
 	$(NULL)
 
-if QMI_QRTR_SUPPORTED
-libqmi_glib_compat_la_CPPFLAGS += \
-	-I$(top_srcdir)/src/libqrtr-glib \
-	-I$(top_builddir)/src/libqrtr-glib \
-	$(NULL)
-endif
-
 libqmi_glib_compat_la_LDFLAGS = \
 	$(WARN_LDFLAGS) \
 	$(GLIB_LIBS) \
+	$(QRTR_LIBS) \
 	$(NULL)
 
 lib_LTLIBRARIES = libqmi-glib.la
@@ -38,6 +33,7 @@ libqmi_glib_la_CPPFLAGS = \
 	$(WARN_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(MBIM_CFLAGS) \
+	$(QRTR_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_builddir) \
 	-I$(top_srcdir)/src/libqmi-glib \
@@ -97,20 +93,9 @@ libqmi_glib_la_SOURCES += \
 endif
 
 if QMI_QRTR_SUPPORTED
-
-libqmi_glib_la_CPPFLAGS += \
-	-I$(top_srcdir)/src/libqrtr-glib \
-	-I$(top_builddir)/src/libqrtr-glib \
-	$(NULL)
-
 libqmi_glib_la_SOURCES += \
 	qmi-endpoint-qrtr.h qmi-endpoint-qrtr.c \
 	$(NULL)
-
-libqmi_glib_la_LIBADD += \
-	${top_builddir}/src/libqrtr-glib/libqrtr-glib.la \
-	$(NULL)
-
 endif
 
 libqmi_glib_la_LDFLAGS = \
@@ -118,6 +103,7 @@ libqmi_glib_la_LDFLAGS = \
 	$(WARN_CFLAGS) \
 	$(GLIB_LIBS) \
 	$(MBIM_LIBS) \
+	$(QRTR_LIBS) \
 	$(NULL)
 
 includedir = @includedir@/libqmi-glib
@@ -174,6 +160,9 @@ INTROSPECTION_COMPILER_ARGS =
 
 Qmi-1.0.gir: libqmi-glib.la
 Qmi_1_0_gir_INCLUDES = GLib-2.0 GObject-2.0 Gio-2.0
+if QMI_QRTR_SUPPORTED
+Qmi_1_0_gir_INCLUDES += Qrtr-1.0
+endif
 Qmi_1_0_gir_CFLAGS = $(libqmi_glib_la_CPPFLAGS)
 Qmi_1_0_gir_LIBS = libqmi-glib.la
 Qmi_1_0_gir_EXPORT_PACKAGES = qmi-glib
@@ -191,16 +180,6 @@ Qmi_1_0_gir_FILES = \
 	$(wildcard generated/*.h) \
 	$(wildcard generated/*.c) \
 	$(NULL)
-
-if QMI_QRTR_SUPPORTED
-INTROSPECTION_COMPILER_ARGS += \
-	--includedir="$(top_srcdir)/src/libqrtr-glib" \
-	--includedir="$(top_builddir)/src/libqrtr-glib" \
-	$(NULL)
-Qmi_1_0_gir_SCANNERFLAGS += \
-	--include-uninstalled="$(top_builddir)/src/libqrtr-glib/Qrtr-1.0.gir" \
-	$(NULL)
-endif
 
 girdir = $(datadir)/gir-1.0
 nodist_gir_DATA = $(INTROSPECTION_GIRS)

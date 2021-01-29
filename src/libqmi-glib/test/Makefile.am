@@ -3,6 +3,7 @@ include $(top_srcdir)/gtester.make
 AM_CFLAGS = \
 	$(WARN_CFLAGS) \
 	$(GLIB_CFLAGS) \
+	$(QRTR_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/libqmi-glib \
 	-I$(top_srcdir)/src/libqmi-glib/generated \
@@ -11,15 +12,9 @@ AM_CFLAGS = \
 	-DLIBQMI_GLIB_COMPILATION \
 	$(NULL)
 
-if QMI_QRTR_SUPPORTED
-AM_CFLAGS += \
-	-I$(top_srcdir)/src/libqrtr-glib \
-	-I$(top_builddir)/src/libqrtr-glib \
-	$(NULL)
-endif
-
 AM_LDFLAGS = \
 	$(WARN_LDFLAGS) \
+	$(QRTR_LIBS) \
 	$(GLIB_LIBS) \
 	$(NULL)
 

@@ -27,9 +27,6 @@ Makefile.in
 /depcomp
 
 /data/pkg-config/qmi-glib.pc
-/data/pkg-config/qrtr-glib.pc
-
-/src/libqrtr-glib/qrtr-version.h
 
 /src/libqmi-glib/libqmi-glib.la
 /src/libqmi-glib/qmi-version.h
@@ -52,22 +49,6 @@ Makefile.in
 /src/qmi-firmware-update/qmi-firmware-update
 
 /build-aux/qmi-codegen/*.pyc
-
-/docs/reference/libqrtr-glib/version.xml
-/docs/reference/libqrtr-glib/libqrtr-glib.args
-/docs/reference/libqrtr-glib/libqrtr-glib.hierarchy
-/docs/reference/libqrtr-glib/libqrtr-glib.interfaces
-/docs/reference/libqrtr-glib/libqrtr-glib.prerequisites
-/docs/reference/libqrtr-glib/libqrtr-glib.signals
-/docs/reference/libqrtr-glib/libqrtr-glib.actions
-/docs/reference/libqrtr-glib/libqrtr-glib.types
-/docs/reference/libqrtr-glib/*.mstamp
-/docs/reference/libqrtr-glib/*.stamp
-/docs/reference/libqrtr-glib/*.txt
-/docs/reference/libqrtr-glib/*.bak
-/docs/reference/libqrtr-glib/html
-/docs/reference/libqrtr-glib/tmpl
-/docs/reference/libqrtr-glib/xml
 
 /docs/reference/libqmi-glib/version.xml
 /docs/reference/libqmi-glib/libqmi-glib.args

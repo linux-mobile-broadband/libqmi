@@ -372,6 +372,7 @@ nodist_libqmi_glib_generated_la_SOURCES = \
 libqmi_glib_generated_la_CPPFLAGS = \
 	$(WARN_CFLAGS) \
 	$(GLIB_CFLAGS) \
+	$(QRTR_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/libqmi-glib \
 	-I$(top_builddir)/src/libqmi-glib \
@@ -383,14 +384,8 @@ libqmi_glib_generated_la_CPPFLAGS = \
 libqmi_glib_generated_la_LDFLAGS = \
 	$(WARN_LDFLAGS) \
 	$(GLIB_LIBS) \
+	$(QRTR_LIBS) \
 	$(NULL)
-
-if QMI_QRTR_SUPPORTED
-libqmi_glib_generated_la_CPPFLAGS += \
-	-I$(top_srcdir)/src/libqrtr-glib \
-	-I$(top_builddir)/src/libqrtr-glib \
-	$(NULL)
-endif
 
 includedir = @includedir@/libqmi-glib
 nodist_include_HEADERS = \

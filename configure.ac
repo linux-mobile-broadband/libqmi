@@ -20,18 +20,6 @@ m4_define([qmi_glib_lt_current],  [12])
 m4_define([qmi_glib_lt_revision], [0])
 m4_define([qmi_glib_lt_age],      [7])
 
-dnl libtool versioning for libqrtr-glib (-version-info c:r:a)
-dnl    If the interface is unchanged, but the implementation has changed or
-dnl        been fixed, then increment r.
-dnl    Otherwise, increment c and zero r.
-dnl        If the interface has grown (that is, the new library is compatible
-dnl            with old code), increment a.
-dnl        If the interface has changed in an incompatible way (that is,
-dnl            functions have changed or been removed), then zero a.
-m4_define([qrtr_glib_lt_current],  [0])
-m4_define([qrtr_glib_lt_revision], [0])
-m4_define([qrtr_glib_lt_age],      [0])
-
 AC_INIT([libqmi], [qmi_version], [libqmi-devel@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
@@ -98,12 +86,6 @@ QMI_GLIB_LT_AGE=qmi_glib_lt_age
 AC_SUBST(QMI_GLIB_LT_CURRENT)
 AC_SUBST(QMI_GLIB_LT_REVISION)
 AC_SUBST(QMI_GLIB_LT_AGE)
-QRTR_GLIB_LT_CURRENT=qrtr_glib_lt_current
-QRTR_GLIB_LT_REVISION=qrtr_glib_lt_revision
-QRTR_GLIB_LT_AGE=qrtr_glib_lt_age
-AC_SUBST(QRTR_GLIB_LT_CURRENT)
-AC_SUBST(QRTR_GLIB_LT_REVISION)
-AC_SUBST(QRTR_GLIB_LT_AGE)
 
 dnl Required dependency versions
 GLIB_VERSION=2.48
@@ -242,13 +224,10 @@ AC_SUBST(QMI_MBIM_QMUX_SUPPORTED)
 AM_CONDITIONAL([QMI_MBIM_QMUX_SUPPORTED], [test "x$QMI_MBIM_QMUX_SUPPORTED" = "x1"])
 
 # QRTR support
-have_qrtr="yes"
-AC_CHECK_HEADER(linux/qrtr.h, [], [have_qrtr=no], [])
-AC_CHECK_HEADER(linux/if_link.h, [], [have_qrtr=no], [])
-AC_CHECK_HEADER(linux/netlink.h, [], [have_qrtr=no], [])
-AC_CHECK_HEADER(linux/rtnetlink.h, [], [have_qrtr=no], [])
+QRTR_GLIB_VERSION=0.0.1
+PKG_CHECK_MODULES([QRTR], [qrtr-glib >= ${QRTR_GLIB_VERSION}], [have_qrtr=yes], [have_qrtr=no])
 AC_ARG_ENABLE(qrtr,
-              AS_HELP_STRING([--enable-qrtr], [Enable support for QRTR protocol [default=no]]),
+              AS_HELP_STRING([--enable-qrtr], [Enable support for QMI over QRTR [default=auto]]),
               [enable_qrtr=$enableval],
               [enable_qrtr=auto])
 
@@ -258,9 +237,11 @@ fi
 
 if test "x$enable_qrtr" = "xyes"; then
     if test "x$have_qrtr" = "xno"; then
-        AC_MSG_ERROR([Couldn't find one of the follwing linux headers (qrtr.h, if_link.h, netlink.h, rtnetlink.h). Install them, or otherwise configure using --disable-qrtr to disable QRTR support.])
+        AC_MSG_ERROR([Couldn't find `libqrtr-glib` >= ${QRTR_GLIB_VERSION}. Install it, or otherwise configure using --disable-qrtr to disable the QMI over QRTR support.])
     fi
-    AC_DEFINE(QRTR_ENABLED, 1, [Define if QRTR support enabled])
+    AC_DEFINE(QRTR_ENABLED, 1, [Define if QRTR QMUX support enabled])
+    AC_SUBST(QRTR_CFLAGS)
+    AC_SUBST(QRTR_LIBS)
     QMI_QRTR_SUPPORTED=1
     QRTR_PKGCONFIG_NAME="qrtr-glib"
 else
@@ -288,13 +269,10 @@ AC_CONFIG_FILES([Makefile
                  data/Makefile
                  data/pkg-config/Makefile
                  data/pkg-config/qmi-glib.pc
-                 data/pkg-config/qrtr-glib.pc
                  build-aux/Makefile
                  build-aux/templates/Makefile
                  build-aux/qmi-codegen/Makefile
                  src/Makefile
-                 src/libqrtr-glib/Makefile
-                 src/libqrtr-glib/qrtr-version.h
                  src/libqmi-glib/Makefile
                  src/libqmi-glib/qmi-version.h
                  src/libqmi-glib/generated/Makefile
@@ -309,8 +287,6 @@ AC_CONFIG_FILES([Makefile
                  examples/simple-tester-python/Makefile
                  docs/Makefile
                  docs/reference/Makefile
-                 docs/reference/libqrtr-glib/Makefile
-                 docs/reference/libqrtr-glib/version.xml
                  docs/reference/libqmi-glib/Makefile
                  docs/reference/libqmi-glib/version.xml
                  docs/man/Makefile])
@@ -340,11 +316,11 @@ echo "
       udev base directory:      ${UDEV_BASE_DIR}
 
     Features:
-      QMUX over MBIM:           ${enable_mbim_qmux}
+      QMI over MBIM:            ${enable_mbim_qmux}
+      QMI over QRTR:            ${enable_qrtr}
       QMI username:             ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
 
     Built items:
-      libqrtr-glib:             ${enable_qrtr}
       libqmi-glib:              yes (${QMI_COLLECTION_NAME})
       qmicli:                   yes
       qmi-firmware-update:      ${build_firmware_update}

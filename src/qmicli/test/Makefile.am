@@ -10,19 +10,14 @@ test_helpers_SOURCES = \
 
 test_helpers_CPPFLAGS = \
 	$(GLIB_CFLAGS) \
+	$(QRTR_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src/qmicli \
 	-I$(top_srcdir)/src/libqmi-glib \
 	-I$(top_srcdir)/src/libqmi-glib/generated \
 	-I$(top_builddir)/src/libqmi-glib \
-	-I$(top_builddir)/src/libqmi-glib/generated
-
-if QMI_QRTR_SUPPORTED
-test_helpers_CPPFLAGS += \
-	-I$(top_srcdir)/src/libqrtr-glib \
-	-I$(top_builddir)/src/libqrtr-glib \
+	-I$(top_builddir)/src/libqmi-glib/generated \
 	$(NULL)
-endif
 
 test_helpers_LDADD = \
 	$(GLIB_LIBS) \
