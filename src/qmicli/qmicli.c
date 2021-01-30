@@ -57,6 +57,8 @@ static QrtrBus *qrtr_bus;
 /* Main options */
 static gchar *device_str;
 static gboolean get_service_version_info_flag;
+static gchar *link_add_str;
+static gchar *link_delete_str;
 static gchar *device_set_instance_id_str;
 static gboolean device_open_version_info_flag;
 static gboolean device_open_sync_flag;
@@ -84,6 +86,14 @@ static GOptionEntry main_entries[] = {
     { "get-service-version-info", 0, 0, G_OPTION_ARG_NONE, &get_service_version_info_flag,
       "Get service version info",
       NULL
+    },
+    { "link-add", 0, 0, G_OPTION_ARG_STRING, &link_add_str,
+      "Create new network interface link",
+      "[mux-id=N|auto,iface=IFACE,prefix=PREFIX]"
+    },
+    { "link-delete", 0, 0, G_OPTION_ARG_STRING, &link_delete_str,
+      "Delete a given network interface link",
+      "[Link IFACE]"
     },
     { "device-set-instance-id", 0, 0, G_OPTION_ARG_STRING, &device_set_instance_id_str,
       "Set instance ID",
@@ -243,7 +253,9 @@ generic_options_enabled (void)
         return !!n_actions;
 
     n_actions = (!!device_set_instance_id_str +
-                 get_service_version_info_flag);
+                 get_service_version_info_flag +
+                 !!link_add_str +
+                 !!link_delete_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many generic actions requested\n");
@@ -629,6 +641,134 @@ device_get_service_version_info (QmiDevice *dev)
 }
 
 static void
+link_delete_ready (QmiDevice    *dev,
+                   GAsyncResult *res)
+{
+    g_autoptr(GError) error = NULL;
+
+    if (!qmi_device_delete_link_finish (dev, res, &error))
+        g_printerr ("error: couldn't delete link: %s\n",
+                    error->message);
+    else
+        g_print ("[%s] link successfully deleted\n",
+                 qmi_device_get_path_display (dev));
+
+    qmicli_async_operation_done (!error, FALSE);
+}
+
+static void
+device_link_delete (QmiDevice   *dev,
+                    const gchar *link_iface)
+{
+    qmi_device_delete_link (dev,
+                            link_iface,
+                            cancellable,
+                            (GAsyncReadyCallback)link_delete_ready,
+                            NULL);
+}
+
+typedef struct {
+    guint  mux_id;
+    gchar *iface;
+    gchar *prefix;
+} AddLinkProperties;
+
+static void
+link_add_ready (QmiDevice    *dev,
+                GAsyncResult *res)
+{
+    g_autoptr(GError)  error = NULL;
+    g_autofree gchar  *link_iface = NULL;
+    guint              mux_id;
+
+    link_iface = qmi_device_add_link_finish (dev, res, &mux_id, &error);
+    if (!link_iface)
+        g_printerr ("error: couldn't add link: %s\n",
+                    error->message);
+    else
+        g_print ("[%s] link successfully added:\n"
+                 "  iface name: %s\n"
+                 "  mux-id:     %u\n",
+                 qmi_device_get_path_display (dev),
+                 link_iface,
+                 mux_id);
+
+    qmicli_async_operation_done (!error, FALSE);
+}
+
+static gboolean
+add_link_properties_handle (const gchar        *key,
+                            const gchar        *value,
+                            GError            **error,
+                            AddLinkProperties  *props)
+{
+    if (g_ascii_strcasecmp (key, "mux-id") == 0 && props->mux_id == QMI_DEVICE_MUX_ID_AUTOMATIC) {
+        if (!qmicli_read_uint_from_string (value, &props->mux_id)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid mux-id given: '%s'", value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "iface") == 0 && !props->iface) {
+        props->iface = g_strdup (value);
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "prefix") == 0 && !props->prefix) {
+        props->prefix = g_strdup (value);
+        return TRUE;
+    }
+
+    g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                 "unrecognized or duplicate option '%s'", key);
+    return FALSE;
+}
+
+static void
+device_link_add (QmiDevice   *dev,
+                 const gchar *add_settings)
+{
+    g_autoptr(GError) error = NULL;
+    AddLinkProperties props = {
+        .mux_id = QMI_DEVICE_MUX_ID_AUTOMATIC,
+        .iface = NULL,
+        .prefix = NULL,
+    };
+
+    if (!qmicli_parse_key_value_string (add_settings,
+                                        &error,
+                                        (QmiParseKeyValueForeachFn)add_link_properties_handle,
+                                        &props)) {
+        g_printerr ("error: couldn't parse input add link settings: %s\n",
+                    error->message);
+        qmicli_async_operation_done (FALSE, FALSE);
+        return;
+    }
+
+    if (!props.iface) {
+        g_printerr ("error: missing mandatory 'iface' setting\n");
+        qmicli_async_operation_done (FALSE, FALSE);
+        return;
+    }
+
+    if (!props.prefix)
+        props.prefix = g_strdup_printf ("%s.", props.iface);
+
+    qmi_device_add_link (dev,
+                         props.mux_id,
+                         props.iface,
+                         props.prefix,
+                         cancellable,
+                         (GAsyncReadyCallback)link_add_ready,
+                         NULL);
+
+    g_free (props.iface);
+    g_free (props.prefix);
+}
+
+static void
 device_open_ready (QmiDevice *dev,
                    GAsyncResult *res)
 {
@@ -647,6 +787,10 @@ device_open_ready (QmiDevice *dev,
         device_set_instance_id (dev);
     else if (get_service_version_info_flag)
         device_get_service_version_info (dev);
+    else if (link_add_str)
+        device_link_add (dev, link_add_str);
+    else if (link_delete_str)
+        device_link_delete (dev, link_delete_str);
     else if (qmicli_qmiwwan_options_enabled ())
         qmicli_qmiwwan_run (dev, cancellable);
     else
