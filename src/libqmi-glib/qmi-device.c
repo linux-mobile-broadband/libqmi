@@ -766,78 +766,59 @@ qmi_device_get_wwan_iface (QmiDevice *self)
 /* Expected data format */
 
 static gboolean
-get_expected_data_format (QmiDevice *self,
-                          const gchar *sysfs_path,
-                          GError **error)
+read_sysfs_file (const gchar  *sysfs_path,
+                 gchar        *out_value,
+                 GError      **error)
 {
-    QmiDeviceExpectedDataFormat expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
-    gchar value = '\0';
-    FILE *f;
-
-    g_debug ("[%s] Reading expected data format from: %s",
-             qmi_file_get_path_display (self->priv->file),
-             sysfs_path);
+    FILE     *f;
+    gboolean  status = FALSE;
 
     if (!(f = fopen (sysfs_path, "r"))) {
         g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
-                     "Failed to open file '%s': %s",
+                     "Failed to open sysfs file '%s': %s",
                      sysfs_path, g_strerror (errno));
         goto out;
     }
 
-    if (fread (&value, 1, 1, f) != 1) {
+    if (fread (out_value, 1, 1, f) != 1) {
         g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
-                     "Failed to read from file '%s': %s",
+                     "Failed to read from sysfs file '%s': %s",
                      sysfs_path, g_strerror (errno));
         goto out;
     }
 
-    if (value == 'Y')
-        expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP;
-    else if (value == 'N')
-        expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3;
-    else
+    if (*out_value != 'Y' && *out_value != 'N') {
         g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
-                     "Unexpected sysfs file contents");
+                     "Unexpected sysfs file contents: %c", *out_value);
+        goto out;
+    }
+
+    status = TRUE;
 
  out:
-    g_prefix_error (error, "Expected data format not retrieved properly: ");
     if (f)
         fclose (f);
-    return expected;
+    return status;
 }
 
 static gboolean
-set_expected_data_format (QmiDevice *self,
-                          const gchar *sysfs_path,
-                          QmiDeviceExpectedDataFormat requested,
-                          GError **error)
+write_sysfs_file (const gchar  *sysfs_path,
+                  gchar         value,
+                  GError      **error)
 {
-    gboolean status = FALSE;
-    gchar value;
-    FILE *f;
-
-    g_debug ("[%s] Writing expected data format to: %s",
-             qmi_file_get_path_display (self->priv->file),
-             sysfs_path);
-
-    if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP)
-        value = 'Y';
-    else if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3)
-        value = 'N';
-    else
-        g_assert_not_reached ();
+    gboolean  status = FALSE;
+    FILE     *f;
 
     if (!(f = fopen (sysfs_path, "w"))) {
         g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
-                     "Failed to open file '%s' for R/W: %s",
+                     "Failed to open sysfs file '%s' for R/W: %s",
                      sysfs_path, g_strerror (errno));
         goto out;
     }
 
     if (fwrite (&value, 1, 1, f) != 1) {
         g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
-                     "Failed to write to file '%s': %s",
+                     "Failed to write to sysfs file '%s': %s",
                      sysfs_path, g_strerror (errno));
         goto out;
     }
@@ -845,10 +826,55 @@ set_expected_data_format (QmiDevice *self,
     status = TRUE;
 
  out:
-    g_prefix_error (error, "Expected data format not updated properly: ");
     if (f)
         fclose (f);
     return status;
+}
+
+static gboolean
+get_expected_data_format (QmiDevice    *self,
+                          const gchar  *raw_ip_sysfs_path,
+                          const gchar  *pass_through_sysfs_path,
+                          GError      **error)
+{
+    gchar raw_ip_value = '\0';
+    gchar pass_through_value = '\0';
+
+    if (!read_sysfs_file (raw_ip_sysfs_path, &raw_ip_value, error))
+        return QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
+
+    if (raw_ip_value == 'N')
+        return QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3;
+
+    if (read_sysfs_file (pass_through_sysfs_path, &pass_through_value, NULL) && (pass_through_value == 'Y'))
+        return QMI_DEVICE_EXPECTED_DATA_FORMAT_QMAP_PASS_THROUGH;
+
+    return QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP;
+}
+
+static gboolean
+set_expected_data_format (QmiDevice                    *self,
+                          const gchar                  *raw_ip_sysfs_path,
+                          const gchar                  *pass_through_sysfs_path,
+                          QmiDeviceExpectedDataFormat   requested,
+                          GError                      **error)
+{
+    if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3) {
+        write_sysfs_file (pass_through_sysfs_path, 'N', NULL);
+        return write_sysfs_file (raw_ip_sysfs_path, 'N', error);
+    }
+
+    if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP) {
+        write_sysfs_file (pass_through_sysfs_path, 'N', NULL);
+        return write_sysfs_file (raw_ip_sysfs_path, 'Y', error);
+    }
+
+    if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_QMAP_PASS_THROUGH) {
+        return (write_sysfs_file (raw_ip_sysfs_path, 'Y', error) &&
+                write_sysfs_file (pass_through_sysfs_path, 'Y', error));
+    }
+
+    g_assert_not_reached ();
 }
 
 static QmiDeviceExpectedDataFormat
@@ -856,7 +882,8 @@ common_get_set_expected_data_format (QmiDevice                    *self,
                                      QmiDeviceExpectedDataFormat   requested,
                                      GError                      **error)
 {
-    g_autofree gchar            *sysfs_path = NULL;
+    g_autofree gchar            *raw_ip = NULL;
+    g_autofree gchar            *pass_through = NULL;
     QmiDeviceExpectedDataFormat  expected = QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
     gboolean                     readonly;
 
@@ -869,21 +896,22 @@ common_get_set_expected_data_format (QmiDevice                    *self,
      * driver. */
     if (!self->priv->wwan_iface) {
         g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_UNSUPPORTED,
-                     "Setting Expected data format management is unsupported by the driver");
+                     "Setting expected data format management is unsupported by the driver");
         return QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
     }
 
     readonly = (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN);
 
-    /* Build sysfs file path and open it */
-    sysfs_path = g_strdup_printf ("/sys/class/net/%s/qmi/raw_ip", self->priv->wwan_iface);
+    /* Build sysfs file paths */
+    raw_ip = g_strdup_printf ("/sys/class/net/%s/qmi/raw_ip", self->priv->wwan_iface);
+    pass_through = g_strdup_printf ("/sys/class/net/%s/qmi/pass_through", self->priv->wwan_iface);
 
     /* Set operation? */
-    if (!readonly && !set_expected_data_format (self, sysfs_path, requested, error))
+    if (!readonly && !set_expected_data_format (self, raw_ip, pass_through, requested, error))
         return QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
 
     /* Get/Set operations */
-    if ((expected = get_expected_data_format (self, sysfs_path, error)) == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN)
+    if ((expected = get_expected_data_format (self, raw_ip, pass_through, error)) == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN)
         return QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
 
     /* If we requested an update but we didn't read that value, report an error */

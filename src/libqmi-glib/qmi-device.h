@@ -746,6 +746,7 @@ const gchar *qmi_device_get_wwan_iface (QmiDevice *self);
  * @QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN: Unknown.
  * @QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3: 802.3.
  * @QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP: Raw IP.
+ * @QMI_DEVICE_EXPECTED_DATA_FORMAT_QMAP_PASS_THROUGH: QMAP pass-through. Since 1.28.
  *
  * Data format expected by the kernel.
  *
@@ -759,6 +760,7 @@ typedef enum { /*< since=1.14 >*/
     QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN,
     QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3,
     QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP,
+    QMI_DEVICE_EXPECTED_DATA_FORMAT_QMAP_PASS_THROUGH,
 } QmiDeviceExpectedDataFormat;
 
 /**
