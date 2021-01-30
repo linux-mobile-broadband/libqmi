@@ -57,9 +57,6 @@ static QrtrBus *qrtr_bus;
 /* Main options */
 static gchar *device_str;
 static gboolean get_service_version_info_flag;
-static gboolean get_wwan_iface_flag;
-static gboolean get_expected_data_format_flag;
-static gchar *set_expected_data_format_str;
 static gchar *device_set_instance_id_str;
 static gboolean device_open_version_info_flag;
 static gboolean device_open_sync_flag;
@@ -83,18 +80,6 @@ static GOptionEntry main_entries[] = {
       "Specify device path",
       "[PATH]"
 #endif
-    },
-    { "get-wwan-iface", 'w', 0, G_OPTION_ARG_NONE, &get_wwan_iface_flag,
-      "(qmi_wwan specific) Get the associated WWAN iface name",
-      NULL
-    },
-    { "get-expected-data-format", 'e', 0, G_OPTION_ARG_NONE, &get_expected_data_format_flag,
-      "(qmi_wwan specific) Get the expected data format in the WWAN iface",
-      NULL
-    },
-    { "set-expected-data-format", 'E', 0, G_OPTION_ARG_STRING, &set_expected_data_format_str,
-      "(qmi_wwan specific) Set the expected data format in the WWAN iface",
-      "[802-3|raw-ip|qmap-pass-through]"
     },
     { "get-service-version-info", 0, 0, G_OPTION_ARG_NONE, &get_service_version_info_flag,
       "Get service version info",
@@ -258,10 +243,7 @@ generic_options_enabled (void)
         return !!n_actions;
 
     n_actions = (!!device_set_instance_id_str +
-                 get_service_version_info_flag +
-                 get_wwan_iface_flag +
-                 get_expected_data_format_flag +
-                 !!set_expected_data_format_str);
+                 get_service_version_info_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many generic actions requested\n");
@@ -646,89 +628,6 @@ device_get_service_version_info (QmiDevice *dev)
                                          NULL);
 }
 
-static gboolean
-device_set_expected_data_format_cb (QmiDevice *dev)
-{
-    QmiDeviceExpectedDataFormat expected;
-    GError *error = NULL;
-
-    if (!qmicli_read_device_expected_data_format_from_string (set_expected_data_format_str, &expected) ||
-        expected == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN)
-        g_printerr ("error: invalid requested data format: %s", set_expected_data_format_str);
-    else if (!qmi_device_set_expected_data_format (dev, expected, &error)) {
-        g_printerr ("error: cannot set expected data format: %s\n", error->message);
-        g_error_free (error);
-    } else
-        g_print ("[%s] expected data format set to: %s\n",
-                 qmi_device_get_path_display (dev),
-                 qmi_device_expected_data_format_get_string (expected));
-
-    /* We're done now */
-    qmicli_async_operation_done (!error, FALSE);
-
-    g_object_unref (dev);
-    return FALSE;
-}
-
-static void
-device_set_expected_data_format (QmiDevice *dev)
-{
-    g_debug ("Setting expected WWAN data format this control port...");
-    g_idle_add ((GSourceFunc) device_set_expected_data_format_cb, g_object_ref (dev));
-}
-
-static gboolean
-device_get_expected_data_format_cb (QmiDevice *dev)
-{
-    QmiDeviceExpectedDataFormat expected;
-    GError *error = NULL;
-
-    expected = qmi_device_get_expected_data_format (dev, &error);
-    if (expected == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN) {
-        g_printerr ("error: cannot get expected data format: %s\n", error->message);
-        g_error_free (error);
-    } else
-        g_print ("%s\n", qmi_device_expected_data_format_get_string (expected));
-
-    /* We're done now */
-    qmicli_async_operation_done (!error, FALSE);
-
-    g_object_unref (dev);
-    return FALSE;
-}
-
-static void
-device_get_expected_data_format (QmiDevice *dev)
-{
-    g_debug ("Getting expected WWAN data format this control port...");
-    g_idle_add ((GSourceFunc) device_get_expected_data_format_cb, g_object_ref (dev));
-}
-
-static gboolean
-device_get_wwan_iface_cb (QmiDevice *dev)
-{
-    const gchar *wwan_iface;
-
-    wwan_iface = qmi_device_get_wwan_iface (dev);
-    if (!wwan_iface)
-        g_printerr ("error: cannot get WWAN interface name\n");
-    else
-        g_print ("%s\n", wwan_iface);
-
-    /* We're done now */
-    qmicli_async_operation_done (!!wwan_iface, FALSE);
-
-    g_object_unref (dev);
-    return FALSE;
-}
-
-static void
-device_get_wwan_iface (QmiDevice *dev)
-{
-    g_debug ("Getting WWAN iface for this control port...");
-    g_idle_add ((GSourceFunc) device_get_wwan_iface_cb, g_object_ref (dev));
-}
-
 static void
 device_open_ready (QmiDevice *dev,
                    GAsyncResult *res)
@@ -748,12 +647,8 @@ device_open_ready (QmiDevice *dev,
         device_set_instance_id (dev);
     else if (get_service_version_info_flag)
         device_get_service_version_info (dev);
-    else if (get_wwan_iface_flag)
-        device_get_wwan_iface (dev);
-    else if (get_expected_data_format_flag)
-        device_get_expected_data_format (dev);
-    else if (set_expected_data_format_str)
-        device_set_expected_data_format (dev);
+    else if (qmicli_qmiwwan_options_enabled ())
+        qmicli_qmiwwan_run (dev, cancellable);
     else
         device_allocate_client (dev);
 }
@@ -882,9 +777,13 @@ parse_actions (void)
 {
     guint actions_enabled = 0;
 
-    /* Generic options? */
     if (generic_options_enabled ()) {
         service = QMI_SERVICE_CTL;
+        actions_enabled++;
+    }
+
+    if (qmicli_qmiwwan_options_enabled ()) {
+        service = QMI_SERVICE_UNKNOWN;
         actions_enabled++;
     }
 
@@ -1063,6 +962,7 @@ int main (int argc, char **argv)
 #if defined HAVE_QMI_SERVICE_DSD
     g_option_context_add_group (context, qmicli_dsd_get_option_group ());
 #endif
+    g_option_context_add_group (context, qmicli_qmiwwan_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n",
