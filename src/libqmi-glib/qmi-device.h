@@ -880,7 +880,7 @@ gchar *qmi_device_add_link_finish (QmiDevice     *self,
                                    GError       **error);
 
 /**
- * qmi_device_del_link:
+ * qmi_device_delete_link:
  * @self: a #QmiDevice.
  * @ifname: the name of the net interface to remove.
  * @cancellable: a #GCancellable, or %NULL.
@@ -894,31 +894,31 @@ gchar *qmi_device_add_link_finish (QmiDevice     *self,
  * %QMI_CORE_ERROR_UNSUPPORTED error will be returned.
  *
  * When the operation is finished @callback will be called. You can then call
- * qmi_device_del_link_finish() to get the result of the operation.
+ * qmi_device_delete_link_finish() to get the result of the operation.
  *
  * Since: 1.28
  */
-void qmi_device_del_link (QmiDevice           *self,
-                          const gchar         *ifname,
-                          GCancellable        *cancellable,
-                          GAsyncReadyCallback  callback,
-                          gpointer             user_data);
+void qmi_device_delete_link (QmiDevice           *self,
+                             const gchar         *ifname,
+                             GCancellable        *cancellable,
+                             GAsyncReadyCallback  callback,
+                             gpointer             user_data);
 
 /**
- * qmi_device_del_link_finish:
+ * qmi_device_delete_link_finish:
  * @self: a #QmiDevice.
  * @res: a #GAsyncResult.
  * @error: Return location for error or %NULL.
  *
- * Finishes an operation started with qmi_device_del_link().
+ * Finishes an operation started with qmi_device_delete_link().
  *
  * Returns: %TRUE if successful, %FALSE if @error is set.
  *
  * Since: 1.28
  */
-gboolean qmi_device_del_link_finish (QmiDevice     *self,
-                                     GAsyncResult  *res,
-                                     GError       **error);
+gboolean qmi_device_delete_link_finish (QmiDevice     *self,
+                                        GAsyncResult  *res,
+                                        GError       **error);
 
 /******************************************************************************/
 /* New QRTR based APIs */

@@ -1854,9 +1854,9 @@ qmi_device_add_link (QmiDevice           *self,
 }
 
 gboolean
-qmi_device_del_link_finish (QmiDevice     *self,
-                            GAsyncResult  *res,
-                            GError       **error)
+qmi_device_delete_link_finish (QmiDevice     *self,
+                               GAsyncResult  *res,
+                               GError       **error)
 {
     return g_task_propagate_boolean (G_TASK (res), error);
 }
@@ -1883,11 +1883,11 @@ device_del_link_ready (QmiNetPortManager *manager,
 }
 
 void
-qmi_device_del_link (QmiDevice           *self,
-                     const gchar         *ifname,
-                     GCancellable        *cancellable,
-                     GAsyncReadyCallback  callback,
-                     gpointer             user_data)
+qmi_device_delete_link (QmiDevice           *self,
+                        const gchar         *ifname,
+                        GCancellable        *cancellable,
+                        GAsyncReadyCallback  callback,
+                        gpointer             user_data)
 {
     GTask  *task;
     GError *error = NULL;
