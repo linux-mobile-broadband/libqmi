@@ -32,6 +32,8 @@
 #include <pwd.h>
 #include <errno.h>
 
+#include <gio/gio.h>
+
 #include "qmi-helpers.h"
 #include "qmi-error-types.h"
 
@@ -560,4 +562,70 @@ qmi_helpers_get_devname (const gchar  *cdc_wdm_path,
     }
 
     return devname;
+}
+
+gboolean
+qmi_helpers_read_sysfs_file (const gchar  *sysfs_path,
+                             gchar        *out_value,
+                             GError      **error)
+{
+    FILE     *f;
+    gboolean  status = FALSE;
+
+    if (!(f = fopen (sysfs_path, "r"))) {
+        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                     "Failed to open sysfs file '%s': %s",
+                     sysfs_path, g_strerror (errno));
+        goto out;
+    }
+
+    if (fread (out_value, 1, 1, f) != 1) {
+        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                     "Failed to read from sysfs file '%s': %s",
+                     sysfs_path, g_strerror (errno));
+        goto out;
+    }
+
+    if (*out_value != 'Y' && *out_value != 'N') {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "Unexpected sysfs file contents: %c", *out_value);
+        goto out;
+    }
+
+    status = TRUE;
+
+ out:
+    if (f)
+        fclose (f);
+    return status;
+}
+
+gboolean
+qmi_helpers_write_sysfs_file (const gchar  *sysfs_path,
+                              gchar         value,
+                              GError      **error)
+{
+    gboolean  status = FALSE;
+    FILE     *f;
+
+    if (!(f = fopen (sysfs_path, "w"))) {
+        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                     "Failed to open sysfs file '%s' for R/W: %s",
+                     sysfs_path, g_strerror (errno));
+        goto out;
+    }
+
+    if (fwrite (&value, 1, 1, f) != 1) {
+        g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                     "Failed to write to sysfs file '%s': %s",
+                     sysfs_path, g_strerror (errno));
+        goto out;
+    }
+
+    status = TRUE;
+
+ out:
+    if (f)
+        fclose (f);
+    return status;
 }
