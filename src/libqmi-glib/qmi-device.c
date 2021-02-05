@@ -60,6 +60,7 @@
 #include "qmi-enum-types.h"
 #include "qmi-proxy.h"
 #include "qmi-net-port-manager-rmnet.h"
+#include "qmi-net-port-manager-qmiwwan.h"
 #include "qmi-version.h"
 
 #if QMI_QRTR_SUPPORTED
@@ -871,6 +872,10 @@ common_get_set_expected_data_format (QmiDevice                    *self,
                      qmi_device_expected_data_format_get_string (expected));
         return QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
     }
+
+    /* If the set operation succeeds, we clear the net port manager, as we may need to use a
+     * different one */
+    g_clear_object (&self->priv->net_port_manager);
 
     return expected;
 }
@@ -1706,6 +1711,44 @@ process_message (QmiMessage *message,
 }
 
 /*****************************************************************************/
+
+static gboolean
+setup_net_port_manager (QmiDevice  *self,
+                        GError    **error)
+{
+    QmiDeviceExpectedDataFormat expected_data_format;
+
+    /* If we have a valid one already, use that one */
+    if (self->priv->net_port_manager)
+        return TRUE;
+
+    /* The qmi_wwan driver allows configuring the expected data format,
+     * and depending on the configured one, we'll use one link management
+     * api or another one. */
+    expected_data_format = qmi_device_get_expected_data_format (self, NULL);
+
+    switch (expected_data_format) {
+    case QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3:
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "Link management not supported with the expected data format configured as 802.3");
+        break;
+    case QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP:
+        self->priv->net_port_manager = QMI_NET_PORT_MANAGER (qmi_net_port_manager_qmiwwan_new (self->priv->wwan_iface, error));
+        break;
+    case QMI_DEVICE_EXPECTED_DATA_FORMAT_QMAP_PASS_THROUGH:
+    case QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN:
+    default:
+        /* when the data format is unknown, it very likely is because this
+         * is not the qmi_wwan driver; fallback to plain rmnet in that
+         * case. */
+        self->priv->net_port_manager = QMI_NET_PORT_MANAGER (qmi_net_port_manager_rmnet_new (error));
+        break;
+    }
+
+    return !!self->priv->net_port_manager;
+}
+
+/*****************************************************************************/
 /* Link management APIs */
 
 typedef struct {
@@ -1739,30 +1782,22 @@ qmi_device_add_link_finish (QmiDevice     *self,
 }
 
 static void
-device_add_link_ready (QmiNetPortManager *manager,
+device_add_link_ready (QmiNetPortManager *net_port_manager,
                        GAsyncResult      *res,
                        GTask             *task)
 {
-    QmiDevice     *self;
     GError        *error = NULL;
     AddLinkResult *ctx;
 
-    self = g_task_get_source_object (task);
-
     ctx = g_new0 (AddLinkResult, 1);
-    ctx->ifname = qmi_net_port_manager_add_link_finish (manager, &ctx->mux_id, res, &error);
+    ctx->ifname = qmi_net_port_manager_add_link_finish (net_port_manager, &ctx->mux_id, res, &error);
 
     if (!ctx->ifname) {
         g_prefix_error (&error, "Could not allocate link: ");
         g_task_return_error (task, error);
         add_link_result_free (ctx);
-    } else {
-        g_debug ("[%s] Allocated link %s for mux id %d",
-                 qmi_file_get_path_display (self->priv->file),
-                 ctx->ifname,
-                 ctx->mux_id);
+    } else
         g_task_return_pointer (task, ctx, (GDestroyNotify) add_link_result_free);
-    }
 
     g_object_unref (task);
 }
@@ -1781,17 +1816,13 @@ qmi_device_add_link (QmiDevice           *self,
 
     task = g_task_new (self, cancellable, callback, user_data);
 
-    if (!self->priv->net_port_manager) {
-        self->priv->net_port_manager = QMI_NET_PORT_MANAGER (qmi_net_port_manager_rmnet_new (&error));
-        if (!self->priv->net_port_manager) {
-            g_debug ("Failed to create the net port manager: %s",
-                     error->message);
-            g_task_return_error (task, error);
-            g_object_unref (task);
-            return;
-        }
+    if (!setup_net_port_manager (self, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
     }
 
+    g_assert (self->priv->net_port_manager);
     qmi_net_port_manager_add_link (self->priv->net_port_manager,
                                    mux_id,
                                    base_ifname,
@@ -1811,23 +1842,16 @@ qmi_device_delete_link_finish (QmiDevice     *self,
 }
 
 static void
-device_del_link_ready (QmiNetPortManager *manager,
+device_del_link_ready (QmiNetPortManager *net_port_manager,
                        GAsyncResult      *res,
                        GTask             *task)
 {
-    QmiDevice *self;
-    GError    *error = NULL;
+    GError *error = NULL;
 
-    self = g_task_get_source_object (task);
-
-    if (!qmi_net_port_manager_del_link_finish (manager, res, &error)) {
-        g_debug ("[%s] Could not delete link: %s",
-                 qmi_file_get_path_display (self->priv->file),
-                 error->message);
+    if (!qmi_net_port_manager_del_link_finish (net_port_manager, res, &error))
         g_task_return_error (task, error);
-    } else
+    else
         g_task_return_boolean (task, TRUE);
-
     g_object_unref (task);
 }
 
@@ -1843,17 +1867,13 @@ qmi_device_delete_link (QmiDevice           *self,
 
     task = g_task_new (self, cancellable, callback, user_data);
 
-    if (!self->priv->net_port_manager) {
-        self->priv->net_port_manager = QMI_NET_PORT_MANAGER (qmi_net_port_manager_rmnet_new (&error));
-        if (!self->priv->net_port_manager) {
-            g_debug ("Failed to create the net port manager: %s",
-                     error->message);
-            g_task_return_error (task, error);
-            g_object_unref (task);
-            return;
-        }
+    if (!setup_net_port_manager (self, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
     }
 
+    g_assert (self->priv->net_port_manager);
     qmi_net_port_manager_del_link (self->priv->net_port_manager,
                                    ifname,
                                    5, /* timeout */
