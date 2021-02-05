@@ -73,12 +73,13 @@ gchar *qmi_helpers_get_devname (const gchar  *cdc_wdm_path,
 
 G_GNUC_INTERNAL
 gboolean qmi_helpers_read_sysfs_file (const gchar  *sysfs_path,
-                                      gchar        *out_value,
+                                      gchar        *out_value, /* caller allocates */
+                                      guint         max_read_size,
                                       GError      **error);
 
 G_GNUC_INTERNAL
 gboolean qmi_helpers_write_sysfs_file (const gchar  *sysfs_path,
-                                       gchar         value,
+                                       const gchar  *value,
                                        GError      **error);
 
 static inline gfloat

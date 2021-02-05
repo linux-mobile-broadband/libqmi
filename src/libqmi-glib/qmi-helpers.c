@@ -567,6 +567,7 @@ qmi_helpers_get_devname (const gchar  *cdc_wdm_path,
 gboolean
 qmi_helpers_read_sysfs_file (const gchar  *sysfs_path,
                              gchar        *out_value,
+                             guint         max_read_size,
                              GError      **error)
 {
     FILE     *f;
@@ -579,16 +580,10 @@ qmi_helpers_read_sysfs_file (const gchar  *sysfs_path,
         goto out;
     }
 
-    if (fread (out_value, 1, 1, f) != 1) {
+    if (fread (out_value, 1, max_read_size, f) == 0) {
         g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
                      "Failed to read from sysfs file '%s': %s",
                      sysfs_path, g_strerror (errno));
-        goto out;
-    }
-
-    if (*out_value != 'Y' && *out_value != 'N') {
-        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
-                     "Unexpected sysfs file contents: %c", *out_value);
         goto out;
     }
 
@@ -602,11 +597,12 @@ qmi_helpers_read_sysfs_file (const gchar  *sysfs_path,
 
 gboolean
 qmi_helpers_write_sysfs_file (const gchar  *sysfs_path,
-                              gchar         value,
+                              const gchar  *value,
                               GError      **error)
 {
     gboolean  status = FALSE;
     FILE     *f;
+    guint     value_len;
 
     if (!(f = fopen (sysfs_path, "w"))) {
         g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
@@ -615,7 +611,8 @@ qmi_helpers_write_sysfs_file (const gchar  *sysfs_path,
         goto out;
     }
 
-    if (fwrite (&value, 1, 1, f) != 1) {
+    value_len = strlen (value);
+    if (fwrite (value, 1, value_len, f) != value_len) {
         g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
                      "Failed to write to sysfs file '%s': %s",
                      sysfs_path, g_strerror (errno));

@@ -766,6 +766,19 @@ qmi_device_get_wwan_iface (QmiDevice *self)
 /* Expected data format */
 
 static gboolean
+validate_yes_or_no (const gchar   value,
+                    GError      **error)
+{
+    if (value != 'Y' && value != 'N') {
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "Unexpected sysfs file contents: %c", value);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
 get_expected_data_format (QmiDevice    *self,
                           const gchar  *raw_ip_sysfs_path,
                           const gchar  *pass_through_sysfs_path,
@@ -774,13 +787,15 @@ get_expected_data_format (QmiDevice    *self,
     gchar raw_ip_value = '\0';
     gchar pass_through_value = '\0';
 
-    if (!qmi_helpers_read_sysfs_file (raw_ip_sysfs_path, &raw_ip_value, error))
+    if (!qmi_helpers_read_sysfs_file (raw_ip_sysfs_path, &raw_ip_value, 1, error) ||
+        !validate_yes_or_no (raw_ip_value, error))
         return QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN;
 
     if (raw_ip_value == 'N')
         return QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3;
 
-    if (qmi_helpers_read_sysfs_file (pass_through_sysfs_path, &pass_through_value, NULL) && (pass_through_value == 'Y'))
+    if (qmi_helpers_read_sysfs_file (pass_through_sysfs_path, &pass_through_value, 1, NULL) &&
+        (pass_through_value == 'Y'))
         return QMI_DEVICE_EXPECTED_DATA_FORMAT_QMAP_PASS_THROUGH;
 
     return QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP;
@@ -794,18 +809,18 @@ set_expected_data_format (QmiDevice                    *self,
                           GError                      **error)
 {
     if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3) {
-        qmi_helpers_write_sysfs_file (pass_through_sysfs_path, 'N', NULL);
-        return qmi_helpers_write_sysfs_file (raw_ip_sysfs_path, 'N', error);
+        qmi_helpers_write_sysfs_file (pass_through_sysfs_path, "N", NULL);
+        return qmi_helpers_write_sysfs_file (raw_ip_sysfs_path, "N", error);
     }
 
     if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP) {
-        qmi_helpers_write_sysfs_file (pass_through_sysfs_path, 'N', NULL);
-        return qmi_helpers_write_sysfs_file (raw_ip_sysfs_path, 'Y', error);
+        qmi_helpers_write_sysfs_file (pass_through_sysfs_path, "N", NULL);
+        return qmi_helpers_write_sysfs_file (raw_ip_sysfs_path, "Y", error);
     }
 
     if (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_QMAP_PASS_THROUGH) {
-        return (qmi_helpers_write_sysfs_file (raw_ip_sysfs_path, 'Y', error) &&
-                qmi_helpers_write_sysfs_file (pass_through_sysfs_path, 'Y', error));
+        return (qmi_helpers_write_sysfs_file (raw_ip_sysfs_path, "Y", error) &&
+                qmi_helpers_write_sysfs_file (pass_through_sysfs_path, "Y", error));
     }
 
     g_assert_not_reached ();
