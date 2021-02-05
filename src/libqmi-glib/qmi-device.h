@@ -831,10 +831,29 @@ gboolean qmi_device_set_expected_data_format (QmiDevice                    *self
 #define QMI_DEVICE_MUX_ID_UNBOUND 0
 
 /**
+ * QMI_DEVICE_MUX_ID_MIN:
+ *
+ * Symbol defining the minimum supported mux id.
+ *
+ * Since: 1.28
+ */
+#define QMI_DEVICE_MUX_ID_MIN 1
+
+/**
+ * QMI_DEVICE_MUX_ID_MAX:
+ *
+ * Symbol defining the maximum supported mux id.
+ *
+ * Since: 1.28
+ */
+#define QMI_DEVICE_MUX_ID_MAX 0xFE
+
+/**
  * qmi_device_add_link:
  * @self: a #QmiDevice.
- * @mux_id: the mux ID for the link, or #QMI_DEVICE_MUX_ID_AUTOMATIC to find the
- *   first available mux id.
+ * @mux_id: the mux id for the link, in the
+ *   [#QMI_DEVICE_MUX_ID_MIN,#QMI_DEVICE_MUX_ID_MAX] range, or
+ *   #QMI_DEVICE_MUX_ID_AUTOMATIC to find the first available mux id.
  * @base_ifname: the interface which the new link will be created on.
  * @ifname_prefix: the prefix suggested to be used for the name of the new link
  *   created.

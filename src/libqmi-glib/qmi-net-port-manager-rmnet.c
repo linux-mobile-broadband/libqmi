@@ -411,7 +411,7 @@ get_first_free_mux_id (QmiNetPortManagerRmnet *self,
      * to inspect mux IDs of existing rmnet interfaces, so we will pass it
      * for now. */
 
-    for (i = 1; i <= RMNET_MAX_MUX_ID; i++) {
+    for (i = QMI_DEVICE_MUX_ID_MIN; i <= QMI_DEVICE_MUX_ID_MAX; i++) {
         gchar   *ifname;
         gboolean mux_id_is_free;
 

@@ -1814,6 +1814,9 @@ qmi_device_add_link (QmiDevice           *self,
     GTask  *task;
     GError *error = NULL;
 
+    g_return_if_fail (mux_id >= QMI_DEVICE_MUX_ID_MIN);
+    g_return_if_fail ((mux_id <= QMI_DEVICE_MUX_ID_MAX) || (mux_id == QMI_DEVICE_MUX_ID_AUTOMATIC));
+
     task = g_task_new (self, cancellable, callback, user_data);
 
     if (!setup_net_port_manager (self, &error)) {

@@ -85,6 +85,10 @@ QmiDeviceCommandAbortableParseResponseFn
 qmi_device_command_abortable
 qmi_device_command_abortable_finish
 <SUBSECTION LinkSupport>
+QMI_DEVICE_MUX_ID_AUTOMATIC
+QMI_DEVICE_MUX_ID_UNBOUND
+QMI_DEVICE_MUX_ID_MIN
+QMI_DEVICE_MUX_ID_MAX
 qmi_device_add_link
 qmi_device_add_link_finish
 qmi_device_delete_link
@@ -97,8 +101,6 @@ qmi_device_get_expected_data_format
 qmi_device_set_expected_data_format
 <SUBSECTION QrtrSupport>
 QMI_DEVICE_NODE
-QMI_DEVICE_MUX_ID_AUTOMATIC
-QMI_DEVICE_MUX_ID_UNBOUND
 qmi_device_new_from_node
 qmi_device_new_from_node_finish
 qmi_device_get_node

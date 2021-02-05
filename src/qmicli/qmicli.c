@@ -756,6 +756,14 @@ device_link_add (QmiDevice   *dev,
     if (!props.prefix)
         props.prefix = g_strdup_printf ("%s.", props.iface);
 
+    if ((props.mux_id != QMI_DEVICE_MUX_ID_AUTOMATIC) &&
+        (props.mux_id < QMI_DEVICE_MUX_ID_MIN || props.mux_id > QMI_DEVICE_MUX_ID_MAX)) {
+        g_printerr ("error: mux id %u out of range [%u,%u]\n",
+                    props.mux_id, QMI_DEVICE_MUX_ID_MIN, QMI_DEVICE_MUX_ID_MAX);
+        qmicli_async_operation_done (FALSE, FALSE);
+        return;
+    }
+
     qmi_device_add_link (dev,
                          props.mux_id,
                          props.iface,
