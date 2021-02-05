@@ -611,8 +611,11 @@ qmi_helpers_write_sysfs_file (const gchar  *sysfs_path,
         goto out;
     }
 
+    /* we require unbuffered so that we get errors on the fwrite() */
+    setvbuf (f, NULL, _IONBF, 0);
+
     value_len = strlen (value);
-    if (fwrite (value, 1, value_len, f) != value_len) {
+    if ((fwrite (value, 1, value_len, f) != value_len) || ferror (f)) {
         g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
                      "Failed to write to sysfs file '%s': %s",
                      sysfs_path, g_strerror (errno));
