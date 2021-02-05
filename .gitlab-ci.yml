@@ -27,8 +27,8 @@ test-no-mbim-no-qrtr:
 test-no-mbim:
   stage: test
   script:
-    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr.git
-    - pushd libqrtr
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
+    - pushd libqrtr-glib
     - NOCONFIGURE=1 ./autogen.sh
     - ./configure --prefix=/usr
     - make
@@ -106,8 +106,8 @@ test-default:
     - make
     - make install
     - popd
-    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr.git
-    - pushd libqrtr
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
+    - pushd libqrtr-glib
     - NOCONFIGURE=1 ./autogen.sh
     - ./configure --prefix=/usr
     - make
