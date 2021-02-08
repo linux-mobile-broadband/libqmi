@@ -779,6 +779,18 @@ validate_yes_or_no (const gchar   value,
     return TRUE;
 }
 
+static gchar *
+build_raw_ip_sysfs_path (QmiDevice *self)
+{
+    return g_strdup_printf ("/sys/class/net/%s/qmi/raw_ip", self->priv->wwan_iface);
+}
+
+static gchar *
+build_pass_through_sysfs_path (QmiDevice *self)
+{
+    return g_strdup_printf ("/sys/class/net/%s/qmi/pass_through", self->priv->wwan_iface);
+}
+
 static gboolean
 get_expected_data_format (QmiDevice    *self,
                           const gchar  *raw_ip_sysfs_path,
@@ -853,8 +865,8 @@ common_get_set_expected_data_format (QmiDevice                    *self,
     readonly = (requested == QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN);
 
     /* Build sysfs file paths */
-    raw_ip = g_strdup_printf ("/sys/class/net/%s/qmi/raw_ip", self->priv->wwan_iface);
-    pass_through = g_strdup_printf ("/sys/class/net/%s/qmi/pass_through", self->priv->wwan_iface);
+    raw_ip = build_raw_ip_sysfs_path (self);
+    pass_through = build_pass_through_sysfs_path (self);
 
     /* Set operation? */
     if (!readonly && !set_expected_data_format (self, raw_ip, pass_through, requested, error))
@@ -897,6 +909,37 @@ qmi_device_set_expected_data_format (QmiDevice *self,
     g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
 
     return (common_get_set_expected_data_format (self, format, error) != QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN);
+}
+
+gboolean
+qmi_device_check_expected_data_format_supported (QmiDevice                    *self,
+                                                 QmiDeviceExpectedDataFormat   format,
+                                                 GError                      **error)
+{
+    g_autofree gchar *sysfs_path = NULL;
+    gchar             value = '\0';
+
+    switch (format) {
+        case QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3:
+            return TRUE;
+        case QMI_DEVICE_EXPECTED_DATA_FORMAT_RAW_IP:
+            reload_wwan_iface_name (self);
+            sysfs_path = build_raw_ip_sysfs_path (self);
+            break;
+        case QMI_DEVICE_EXPECTED_DATA_FORMAT_QMAP_PASS_THROUGH:
+            reload_wwan_iface_name (self);
+            sysfs_path = build_pass_through_sysfs_path (self);
+            break;
+        default:
+        case QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN:
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "Unknown expected data format given: 0x%x", format);
+            return FALSE;
+    }
+
+    g_assert (sysfs_path);
+    return (qmi_helpers_read_sysfs_file (sysfs_path, &value, 1, error) &&
+            validate_yes_or_no (value, error));
 }
 
 /*****************************************************************************/

@@ -807,6 +807,27 @@ gboolean qmi_device_set_expected_data_format (QmiDevice                    *self
                                               QmiDeviceExpectedDataFormat   format,
                                               GError                      **error);
 
+/**
+ * qmi_device_check_expected_data_format_supported:
+ * @self: a #QmiDevice.
+ * @format: a known #QmiDeviceExpectedDataFormat.
+ * @error: Return location for error or %NULL.
+ *
+ * Checks whether the given data format is supported by the kernel.
+ * interface.
+ *
+ * <note><para>
+ * This method is only applicable when using the qmi_wwan kernel driver.
+ * </para></note>
+ *
+ * Returns: %TRUE if the data format is supported, or %FALSE if @error is set.
+ *
+ * Since: 1.28
+ */
+gboolean qmi_device_check_expected_data_format_supported (QmiDevice                    *self,
+                                                          QmiDeviceExpectedDataFormat   format,
+                                                          GError                      **error);
+
 /******************************************************************************/
 /* Link management APIs */
 
