@@ -799,7 +799,7 @@ QmiDeviceExpectedDataFormat qmi_device_get_expected_data_format (QmiDevice  *sel
  * This method is only applicable when using the qmi_wwan kernel driver.
  * </para></note>
  *
- * Returns: %TRUE if successful, or %NULL if @error is set.
+ * Returns: %TRUE if successful, or %FALSE if @error is set.
  *
  * Since: 1.14
  */
