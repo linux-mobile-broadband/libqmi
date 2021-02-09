@@ -995,6 +995,20 @@ gboolean qmi_device_delete_link_finish (QmiDevice     *self,
                                         GAsyncResult  *res,
                                         GError       **error);
 
+/**
+ * qmi_device_check_link_supported:
+ * @self: a #QmiDevice.
+ * @error: Return location for error or %NULL.
+ *
+ * Checks whether link management is supported by the kernel.
+ *
+ * Returns: %TRUE if link management is supported, or %FALSE if @error is set.
+ *
+ * Since: 1.28
+ */
+gboolean qmi_device_check_link_supported (QmiDevice  *self,
+                                          GError    **error);
+
 /******************************************************************************/
 /* New QRTR based APIs */
 

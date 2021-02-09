@@ -1929,6 +1929,16 @@ qmi_device_delete_link (QmiDevice           *self,
 }
 
 /*****************************************************************************/
+
+gboolean
+qmi_device_check_link_supported (QmiDevice  *self,
+                                 GError    **error)
+{
+    /* if we can setup a net port manager, link management is supported */
+    return setup_net_port_manager (self, error);
+}
+
+/*****************************************************************************/
 /* Open device */
 
 #define SYNC_TIMEOUT_SECS 2

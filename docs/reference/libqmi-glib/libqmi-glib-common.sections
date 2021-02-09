@@ -93,6 +93,7 @@ qmi_device_add_link
 qmi_device_add_link_finish
 qmi_device_delete_link
 qmi_device_delete_link_finish
+qmi_device_check_link_supported
 <SUBSECTION UpstreamKernelSupport>
 qmi_device_get_wwan_iface
 QmiDeviceExpectedDataFormat
