@@ -1486,9 +1486,11 @@ typedef enum { /*< since=1.28 >*/
 
 /**
  * QmiNasBoolean:
- * @QMI_NAS_BOOLEAN_FALSE: Status FALSE
- * @QMI_NAS_BOOLEAN_TRUE: Status TRUE
- * @QMI_NAS_BOOLEAN_UNKNOWN: Status Unknown
+ * @QMI_NAS_BOOLEAN_FALSE: Status FALSE.
+ * @QMI_NAS_BOOLEAN_TRUE: Status TRUE.
+ * @QMI_NAS_BOOLEAN_UNKNOWN: Status Unknown.
+ *
+ * Boolean flag with validity info.
  *
  * Since: 1.28
  */
@@ -1500,9 +1502,11 @@ typedef enum { /*< since=1.28 >*/
 
 /**
  * QmiNasPlmnLanguageId:
- * @QMI_NAS_PLMN_LANGUAGE_ID_UNKNOWN: Language Unknown
- * @QMI_NAS_PLMN_LANGUAGE_ID_ZH_TRAD: Traditional Chinese
- * @QMI_NAS_PLMN_LANGUAGE_ID_ZH_SIMP: Simplified Chinese
+ * @QMI_NAS_PLMN_LANGUAGE_ID_UNKNOWN: Language Unknown.
+ * @QMI_NAS_PLMN_LANGUAGE_ID_ZH_TRAD: Traditional Chinese.
+ * @QMI_NAS_PLMN_LANGUAGE_ID_ZH_SIMP: Simplified Chinese.
+ *
+ * Language ID used when encoding the PLMN.
  *
  * Since: 1.28
  */
