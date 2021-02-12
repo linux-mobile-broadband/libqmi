@@ -57,6 +57,7 @@ static QrtrBus *qrtr_bus;
 /* Main options */
 static gchar *device_str;
 static gboolean get_service_version_info_flag;
+static gchar *link_list_str;
 static gchar *link_add_str;
 static gchar *link_delete_str;
 static gchar *device_set_instance_id_str;
@@ -86,6 +87,10 @@ static GOptionEntry main_entries[] = {
     { "get-service-version-info", 0, 0, G_OPTION_ARG_NONE, &get_service_version_info_flag,
       "Get service version info",
       NULL
+    },
+    { "link-list", 0, 0, G_OPTION_ARG_STRING, &link_list_str,
+      "List links created from a given interface",
+      "[IFACE]"
     },
     { "link-add", 0, 0, G_OPTION_ARG_STRING, &link_add_str,
       "Create new network interface link",
@@ -254,6 +259,7 @@ generic_options_enabled (void)
 
     n_actions = (!!device_set_instance_id_str +
                  get_service_version_info_flag +
+                 !!link_list_str +
                  !!link_add_str +
                  !!link_delete_str);
 
@@ -840,6 +846,32 @@ device_link_add (QmiDevice   *dev,
 }
 
 static void
+device_link_list (QmiDevice   *dev,
+                  const gchar *iface)
+{
+    g_autoptr(GError) error = NULL;
+    g_autoptr(GPtrArray) links = NULL;
+
+    if (!qmi_device_list_links (dev, iface, &links, &error))
+        g_printerr ("error: couldn't list links: %s\n", error->message);
+    else {
+        guint i;
+        guint n_links;
+
+        n_links = (links ? links->len : 0);
+
+        g_print ("[%s] found %u links%s\n",
+                 qmi_device_get_path_display (dev),
+                 n_links,
+                 n_links > 0 ? ":" : "");
+        for (i = 0; i < n_links; i++)
+            g_print ("  [%u] %s\n", i, (const gchar *) g_ptr_array_index (links, i));
+    }
+
+    qmicli_async_operation_done (!error, FALSE);
+}
+
+static void
 device_open_ready (QmiDevice *dev,
                    GAsyncResult *res)
 {
@@ -858,6 +890,8 @@ device_open_ready (QmiDevice *dev,
         device_set_instance_id (dev);
     else if (get_service_version_info_flag)
         device_get_service_version_info (dev);
+    else if (link_list_str)
+        device_link_list (dev, link_list_str);
     else if (link_add_str)
         device_link_add (dev, link_add_str);
     else if (link_delete_str)
