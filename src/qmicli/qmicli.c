@@ -60,6 +60,7 @@ static gboolean get_service_version_info_flag;
 static gchar *link_list_str;
 static gchar *link_add_str;
 static gchar *link_delete_str;
+static gchar *link_delete_all_str;
 static gchar *device_set_instance_id_str;
 static gboolean device_open_version_info_flag;
 static gboolean device_open_sync_flag;
@@ -99,6 +100,10 @@ static GOptionEntry main_entries[] = {
     { "link-delete", 0, 0, G_OPTION_ARG_STRING, &link_delete_str,
       "Delete a given network interface link",
       "[link-iface=IFACE][,[mux-id=N]]"
+    },
+    { "link-delete-all", 0, 0, G_OPTION_ARG_STRING, &link_delete_all_str,
+      "Delete all network interface links from the given interface",
+      "[IFACE]"
     },
     { "device-set-instance-id", 0, 0, G_OPTION_ARG_STRING, &device_set_instance_id_str,
       "Set instance ID",
@@ -261,7 +266,8 @@ generic_options_enabled (void)
                  get_service_version_info_flag +
                  !!link_list_str +
                  !!link_add_str +
-                 !!link_delete_str);
+                 !!link_delete_str +
+                 !!link_delete_all_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many generic actions requested\n");
@@ -646,6 +652,32 @@ device_get_service_version_info (QmiDevice *dev)
                                          NULL);
 }
 
+static void
+link_delete_all_ready (QmiDevice    *dev,
+                       GAsyncResult *res)
+{
+    g_autoptr(GError) error = NULL;
+
+    if (!qmi_device_delete_all_links_finish (dev, res, &error))
+        g_printerr ("error: couldn't delete all links: %s\n", error->message);
+    else
+        g_print ("[%s] all links successfully deleted\n",
+                 qmi_device_get_path_display (dev));
+
+    qmicli_async_operation_done (!error, FALSE);
+}
+
+static void
+device_link_delete_all (QmiDevice   *dev,
+                        const gchar *iface)
+{
+    qmi_device_delete_all_links (dev,
+                                 iface,
+                                 cancellable,
+                                 (GAsyncReadyCallback)link_delete_all_ready,
+                                 NULL);
+}
+
 typedef struct {
     guint  mux_id;
     gchar *link_iface;
@@ -896,6 +928,8 @@ device_open_ready (QmiDevice *dev,
         device_link_add (dev, link_add_str);
     else if (link_delete_str)
         device_link_delete (dev, link_delete_str);
+    else if (link_delete_all_str)
+        device_link_delete_all (dev, link_delete_all_str);
     else if (qmicli_qmiwwan_options_enabled ())
         qmicli_qmiwwan_run (dev, cancellable);
     else
