@@ -628,7 +628,9 @@ run_del_link (GTask *task)
                 g_debug ("Couldn't get tracked mux id: %s", error->message);
                 g_clear_error (&error);
 
-                g_task_return_new_error (task, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_ARGS,
+                /* This unsupported error allows us to flag when del_all_links()
+                 * needs to switch to the fallback mechanism */
+                g_task_return_new_error (task, QMI_CORE_ERROR, QMI_CORE_ERROR_UNSUPPORTED,
                                          "Cannot delete link '%s': unknown mux id",
                                          ctx->link_iface);
                 g_object_unref (task);
@@ -686,6 +688,122 @@ net_port_manager_del_link (QmiNetPortManager   *_self,
     self->priv->running = TRUE;
 
     run_del_link (task);
+}
+
+/*****************************************************************************/
+
+static gboolean
+net_port_manager_del_all_links_finish (QmiNetPortManager  *self,
+                                       GAsyncResult       *res,
+                                       GError            **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+fallback_del_all_links (GTask *task)
+{
+    QmiNetPortManagerQmiwwan *self;
+    guint                     i;
+    g_autoptr(GPtrArray)      links_before = NULL;
+    g_autoptr(GPtrArray)      links_after = NULL;
+    GError                   *error = NULL;
+    guint                     n_deleted = 0;
+
+    self = g_task_get_source_object (task);
+
+    g_debug ("Running fallback link deletion logic...");
+
+    if (!qmi_helpers_list_links (self->priv->sysfs_file,
+                                 g_task_get_cancellable (task),
+                                 NULL,
+                                 &links_before,
+                                 &error)) {
+        g_prefix_error (&error, "Couldn't list links before deleting all: ");
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    if (!links_before) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    for (i = QMI_DEVICE_MUX_ID_MIN; i <= QMI_DEVICE_MUX_ID_MAX; i++) {
+        g_autofree gchar *mux_id = NULL;
+
+        mux_id = g_strdup_printf ("0x%02x", i);
+
+        /* attempt to delete link with the given mux id; if there is no such link
+         * the kernel will complain with a harmless "mux_id not present" warning */
+        if ((qmi_helpers_write_sysfs_file (self->priv->del_mux_sysfs_path, mux_id, NULL) &&
+             (++n_deleted == links_before->len))) {
+            /* early break if all N links deleted already */
+            break;
+        }
+    }
+
+    if (!qmi_helpers_list_links (self->priv->sysfs_file,
+                                 g_task_get_cancellable (task),
+                                 NULL,
+                                 &links_after,
+                                 &error)) {
+        g_prefix_error (&error, "Couldn't list links after deleting all: ");
+        g_task_return_error (task, error);
+    } else if (links_after)
+        g_task_return_new_error (task, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                                 "Not all links were deleted");
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+parent_del_all_links_ready (QmiNetPortManager *self,
+                            GAsyncResult      *res,
+                            GTask             *task)
+{
+    g_autoptr(GError) error = NULL;
+
+    if (!QMI_NET_PORT_MANAGER_CLASS (qmi_net_port_manager_qmiwwan_parent_class)->del_all_links_finish (self, res, &error)) {
+        if (g_error_matches (error, QMI_CORE_ERROR, QMI_CORE_ERROR_UNSUPPORTED)) {
+            fallback_del_all_links (task);
+            return;
+        }
+        g_task_return_error (task, g_steal_pointer (&error));
+    } else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+static void
+net_port_manager_del_all_links (QmiNetPortManager    *_self,
+                                const gchar          *base_ifname,
+                                GCancellable         *cancellable,
+                                GAsyncReadyCallback   callback,
+                                gpointer              user_data)
+{
+    QmiNetPortManagerQmiwwan *self = QMI_NET_PORT_MANAGER_QMIWWAN (_self);
+    GTask                    *task;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    /* validate base ifname before doing anything else */
+    if (base_ifname && !g_str_equal (base_ifname, self->priv->iface)) {
+        g_task_return_new_error (task, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_ARGS,
+                                 "Invalid base interface given: '%s' (must be '%s')",
+                                 base_ifname, self->priv->iface);
+        g_object_unref (task);
+        return;
+    }
+
+    QMI_NET_PORT_MANAGER_CLASS (qmi_net_port_manager_qmiwwan_parent_class)->del_all_links (_self,
+                                                                                           base_ifname,
+                                                                                           cancellable,
+                                                                                           (GAsyncReadyCallback)parent_del_all_links_ready,
+                                                                                           task);
 }
 
 /*****************************************************************************/
@@ -758,4 +876,6 @@ qmi_net_port_manager_qmiwwan_class_init (QmiNetPortManagerQmiwwanClass *klass)
     net_port_manager_class->add_link_finish = net_port_manager_add_link_finish;
     net_port_manager_class->del_link = net_port_manager_del_link;
     net_port_manager_class->del_link_finish = net_port_manager_del_link_finish;
+    net_port_manager_class->del_all_links = net_port_manager_del_all_links;
+    net_port_manager_class->del_all_links_finish = net_port_manager_del_all_links_finish;
 }
