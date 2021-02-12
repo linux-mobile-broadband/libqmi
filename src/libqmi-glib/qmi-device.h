@@ -999,6 +999,23 @@ gboolean qmi_device_delete_link_finish (QmiDevice     *self,
                                         GError       **error);
 
 /**
+ * qmi_device_list_links:
+ * @self: a #QmiDevice.
+ * @base_ifname: the base interface.
+ * @out_links: (out)(transfer full)(element-type utf8): a placeholder for the
+ *   output #GPtrArray of link names.
+ * @error: Return location for error or %NULL.
+ *
+ * Returns: %TRUE if successful, %FALSE if @error is set.
+ *
+ * Since: 1.28
+ */
+gboolean qmi_device_list_links (QmiDevice    *self,
+                                const gchar  *base_ifname,
+                                GPtrArray   **out_links,
+                                GError      **error);
+
+/**
  * qmi_device_check_link_supported:
  * @self: a #QmiDevice.
  * @error: Return location for error or %NULL.

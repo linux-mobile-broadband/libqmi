@@ -45,6 +45,11 @@ struct _QmiNetPortManager {
 struct _QmiNetPortManagerClass {
     GObjectClass parent;
 
+    gboolean (* list_links)      (QmiNetPortManager    *self,
+                                  const gchar          *base_ifname,
+                                  GPtrArray           **out_links,
+                                  GError              **error);
+
     void     (* add_link)        (QmiNetPortManager    *self,
                                   guint                 mux_id,
                                   const gchar          *base_ifname,
@@ -73,6 +78,10 @@ struct _QmiNetPortManagerClass {
 GType qmi_net_port_manager_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (QmiNetPortManager, g_object_unref)
 
+gboolean  qmi_net_port_manager_list_links      (QmiNetPortManager    *self,
+                                                const gchar          *base_ifname,
+                                                GPtrArray           **out_links,
+                                                GError              **error);
 
 void      qmi_net_port_manager_add_link        (QmiNetPortManager    *self,
                                                 guint                 mux_id,

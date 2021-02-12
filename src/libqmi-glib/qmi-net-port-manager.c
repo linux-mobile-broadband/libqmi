@@ -21,6 +21,7 @@
  */
 
 #include "qmi-net-port-manager.h"
+#include "qmi-helpers.h"
 
 G_DEFINE_ABSTRACT_TYPE (QmiNetPortManager, qmi_net_port_manager, G_TYPE_OBJECT)
 
@@ -81,6 +82,33 @@ qmi_net_port_manager_del_link_finish (QmiNetPortManager  *self,
     return QMI_NET_PORT_MANAGER_GET_CLASS (self)->del_link_finish (self, res, error);
 }
 
+gboolean
+qmi_net_port_manager_list_links (QmiNetPortManager  *self,
+                                 const gchar        *base_ifname,
+                                 GPtrArray         **out_links,
+                                 GError            **error)
+{
+    return QMI_NET_PORT_MANAGER_GET_CLASS (self)->list_links (self, base_ifname, out_links, error);
+}
+
+/*****************************************************************************/
+/* Default implementations */
+
+static gboolean
+net_port_manager_list_links (QmiNetPortManager  *self,
+                             const gchar        *base_ifname,
+                             GPtrArray         **out_links,
+                             GError            **error)
+{
+    g_autoptr(GFile)  sysfs_file = NULL;
+    g_autofree gchar *sysfs_path = NULL;
+
+    sysfs_path = g_strdup_printf ("/sys/class/net/%s", base_ifname);
+    sysfs_file = g_file_new_for_path (sysfs_path);
+
+    return qmi_helpers_list_links (sysfs_file, NULL, NULL, out_links, error);
+}
+
 /*****************************************************************************/
 
 static void
@@ -91,4 +119,5 @@ qmi_net_port_manager_init (QmiNetPortManager *self)
 static void
 qmi_net_port_manager_class_init (QmiNetPortManagerClass *klass)
 {
+    klass->list_links = net_port_manager_list_links;
 }

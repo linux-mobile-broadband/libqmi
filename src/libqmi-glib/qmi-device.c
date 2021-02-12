@@ -1933,6 +1933,24 @@ qmi_device_delete_link (QmiDevice           *self,
 /*****************************************************************************/
 
 gboolean
+qmi_device_list_links (QmiDevice    *self,
+                       const gchar  *base_ifname,
+                       GPtrArray   **out_links,
+                       GError      **error)
+{
+    if (!setup_net_port_manager (self, error))
+        return FALSE;
+
+    g_assert (self->priv->net_port_manager);
+    return qmi_net_port_manager_list_links (self->priv->net_port_manager,
+                                            base_ifname,
+                                            out_links,
+                                            error);
+}
+
+/*****************************************************************************/
+
+gboolean
 qmi_device_check_link_supported (QmiDevice  *self,
                                  GError    **error)
 {

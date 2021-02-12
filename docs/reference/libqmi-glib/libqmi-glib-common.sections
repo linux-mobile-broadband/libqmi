@@ -89,6 +89,7 @@ QMI_DEVICE_MUX_ID_AUTOMATIC
 QMI_DEVICE_MUX_ID_UNBOUND
 QMI_DEVICE_MUX_ID_MIN
 QMI_DEVICE_MUX_ID_MAX
+qmi_device_list_links
 qmi_device_add_link
 qmi_device_add_link_finish
 qmi_device_delete_link
