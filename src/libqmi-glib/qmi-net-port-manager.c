@@ -21,6 +21,7 @@
  */
 
 #include "qmi-net-port-manager.h"
+#include "qmi-device.h"
 #include "qmi-helpers.h"
 
 G_DEFINE_ABSTRACT_TYPE (QmiNetPortManager, qmi_net_port_manager, G_TYPE_OBJECT)
@@ -82,6 +83,28 @@ qmi_net_port_manager_del_link_finish (QmiNetPortManager  *self,
     return QMI_NET_PORT_MANAGER_GET_CLASS (self)->del_link_finish (self, res, error);
 }
 
+void
+qmi_net_port_manager_del_all_links (QmiNetPortManager    *self,
+                                    const gchar          *base_ifname,
+                                    GCancellable         *cancellable,
+                                    GAsyncReadyCallback   callback,
+                                    gpointer              user_data)
+{
+    QMI_NET_PORT_MANAGER_GET_CLASS (self)->del_all_links (self,
+                                                          base_ifname,
+                                                          cancellable,
+                                                          callback,
+                                                          user_data);
+}
+
+gboolean
+qmi_net_port_manager_del_all_links_finish (QmiNetPortManager    *self,
+                                           GAsyncResult         *res,
+                                           GError              **error)
+{
+    return QMI_NET_PORT_MANAGER_GET_CLASS (self)->del_all_links_finish (self, res, error);
+}
+
 gboolean
 qmi_net_port_manager_list_links (QmiNetPortManager  *self,
                                  const gchar        *base_ifname,
@@ -109,6 +132,95 @@ net_port_manager_list_links (QmiNetPortManager  *self,
     return qmi_helpers_list_links (sysfs_file, NULL, NULL, out_links, error);
 }
 
+typedef struct {
+    GPtrArray *links;
+    guint      link_i;
+} DelAllLinksContext;
+
+static void
+del_all_links_context_free (DelAllLinksContext *ctx)
+{
+    g_clear_pointer (&ctx->links, g_ptr_array_unref);
+    g_slice_free (DelAllLinksContext, ctx);
+}
+
+static gboolean
+net_port_manager_del_all_links_finish (QmiNetPortManager  *self,
+                                       GAsyncResult       *res,
+                                       GError            **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void delete_next_link (GTask *task);
+
+static void
+port_manager_del_link_ready (QmiNetPortManager *self,
+                             GAsyncResult      *res,
+                             GTask             *task)
+{
+    GError *error = NULL;
+
+    if (!qmi_net_port_manager_del_link_finish (self, res, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    delete_next_link (task);
+}
+
+static void
+delete_next_link (GTask *task)
+{
+    QmiNetPortManager  *self;
+    DelAllLinksContext *ctx;
+    g_autofree gchar   *link_name = NULL;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
+    if (!ctx->links || ctx->links->len == 0) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    link_name = g_ptr_array_steal_index_fast (ctx->links, 0);
+
+    qmi_net_port_manager_del_link (self,
+                                   link_name,
+                                   QMI_DEVICE_MUX_ID_UNBOUND,
+                                   5,
+                                   g_task_get_cancellable (task),
+                                   (GAsyncReadyCallback)port_manager_del_link_ready,
+                                   task);
+}
+
+static void
+net_port_manager_del_all_links (QmiNetPortManager    *self,
+                                const gchar          *base_ifname,
+                                GCancellable         *cancellable,
+                                GAsyncReadyCallback   callback,
+                                gpointer              user_data)
+{
+    GTask              *task;
+    DelAllLinksContext *ctx;
+    GError             *error = NULL;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    ctx = g_slice_new0 (DelAllLinksContext);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)del_all_links_context_free);
+
+    if (!qmi_net_port_manager_list_links (self, base_ifname, &ctx->links, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    delete_next_link (task);
+}
+
 /*****************************************************************************/
 
 static void
@@ -120,4 +232,6 @@ static void
 qmi_net_port_manager_class_init (QmiNetPortManagerClass *klass)
 {
     klass->list_links = net_port_manager_list_links;
+    klass->del_all_links = net_port_manager_del_all_links;
+    klass->del_all_links_finish = net_port_manager_del_all_links_finish;
 }

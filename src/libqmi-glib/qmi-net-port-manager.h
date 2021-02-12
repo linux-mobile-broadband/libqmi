@@ -73,6 +73,15 @@ struct _QmiNetPortManagerClass {
     gboolean (* del_link_finish) (QmiNetPortManager    *self,
                                   GAsyncResult         *res,
                                   GError              **error);
+
+    void     (* del_all_links)        (QmiNetPortManager    *self,
+                                       const gchar          *base_ifname,
+                                       GCancellable         *cancellable,
+                                       GAsyncReadyCallback   callback,
+                                       gpointer              user_data);
+    gboolean (* del_all_links_finish) (QmiNetPortManager    *self,
+                                       GAsyncResult         *res,
+                                       GError              **error);
 };
 
 GType qmi_net_port_manager_get_type (void);
@@ -106,5 +115,14 @@ void      qmi_net_port_manager_del_link        (QmiNetPortManager    *self,
 gboolean  qmi_net_port_manager_del_link_finish (QmiNetPortManager    *self,
                                                 GAsyncResult         *res,
                                                 GError              **error);
+
+void     qmi_net_port_manager_del_all_links        (QmiNetPortManager    *self,
+                                                    const gchar          *base_ifname,
+                                                    GCancellable         *cancellable,
+                                                    GAsyncReadyCallback   callback,
+                                                    gpointer              user_data);
+gboolean qmi_net_port_manager_del_all_links_finish (QmiNetPortManager    *self,
+                                                    GAsyncResult         *res,
+                                                    GError              **error);
 
 #endif /* _LIBQMI_GLIB_QMI_NET_PORT_MANAGER_H_ */

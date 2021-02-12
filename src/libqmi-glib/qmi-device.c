@@ -1933,6 +1933,56 @@ qmi_device_delete_link (QmiDevice           *self,
 /*****************************************************************************/
 
 gboolean
+qmi_device_delete_all_links_finish (QmiDevice     *self,
+                                    GAsyncResult  *res,
+                                    GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+device_del_all_links_ready (QmiNetPortManager *net_port_manager,
+                            GAsyncResult      *res,
+                            GTask             *task)
+{
+    GError *error = NULL;
+
+    if (!qmi_net_port_manager_del_all_links_finish (net_port_manager, res, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+void
+qmi_device_delete_all_links (QmiDevice           *self,
+                             const gchar         *base_ifname,
+                             GCancellable        *cancellable,
+                             GAsyncReadyCallback  callback,
+                             gpointer             user_data)
+{
+    GTask  *task;
+    GError *error = NULL;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    if (!setup_net_port_manager (self, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_assert (self->priv->net_port_manager);
+    qmi_net_port_manager_del_all_links (self->priv->net_port_manager,
+                                        base_ifname,
+                                        cancellable,
+                                        (GAsyncReadyCallback) device_del_all_links_ready,
+                                        task);
+}
+
+/*****************************************************************************/
+
+gboolean
 qmi_device_list_links (QmiDevice    *self,
                        const gchar  *base_ifname,
                        GPtrArray   **out_links,
