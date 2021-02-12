@@ -60,6 +60,7 @@ struct _QmiNetPortManagerClass {
 
     void     (* del_link)        (QmiNetPortManager    *self,
                                   const gchar          *ifname,
+                                  guint                 mux_id,
                                   guint                 timeout,
                                   GCancellable         *cancellable,
                                   GAsyncReadyCallback   callback,
@@ -88,6 +89,7 @@ gchar    *qmi_net_port_manager_add_link_finish (QmiNetPortManager    *self,
 
 void      qmi_net_port_manager_del_link        (QmiNetPortManager    *self,
                                                 const gchar          *ifname,
+                                                guint                 mux_id,
                                                 guint                 timeout,
                                                 GCancellable         *cancellable,
                                                 GAsyncReadyCallback   callback,

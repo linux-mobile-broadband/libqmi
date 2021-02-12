@@ -951,7 +951,8 @@ gchar *qmi_device_add_link_finish (QmiDevice     *self,
 /**
  * qmi_device_delete_link:
  * @self: a #QmiDevice.
- * @ifname: the name of the net interface to remove.
+ * @ifname: the name of the link to remove.
+ * @mux_id: the mux ID of the link to remove.
  * @cancellable: a #GCancellable, or %NULL.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
  * @user_data: the data to pass to callback function.
@@ -966,15 +967,17 @@ gchar *qmi_device_add_link_finish (QmiDevice     *self,
  * qmi_device_delete_link_finish() to get the result of the operation.
  *
  * <note><para>
- * When using the qmi_wwan driver from a kernel older than v5.12, the link
- * deletion operation may not be supported, as there is no way to know
- * which mux id applies to a given link interface.
+ * The %QMI_DEVICE_MUX_ID_UNBOUND value may be given as @mux_id if the user
+ * can guarantee that the underlying kernel support doesn't require the
+ * mux id info to delete the link. When using the qmi_wwan driver from a kernel
+ * older than v5.12, a valid @mux_id is required.
  * </para></note>
  *
  * Since: 1.28
  */
 void qmi_device_delete_link (QmiDevice           *self,
                              const gchar         *ifname,
+                             guint                mux_id,
                              GCancellable        *cancellable,
                              GAsyncReadyCallback  callback,
                              gpointer             user_data);

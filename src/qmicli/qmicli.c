@@ -93,7 +93,7 @@ static GOptionEntry main_entries[] = {
     },
     { "link-delete", 0, 0, G_OPTION_ARG_STRING, &link_delete_str,
       "Delete a given network interface link",
-      "[Link IFACE]"
+      "[link-iface=IFACE][,[mux-id=N]]"
     },
     { "device-set-instance-id", 0, 0, G_OPTION_ARG_STRING, &device_set_instance_id_str,
       "Set instance ID",
@@ -640,6 +640,11 @@ device_get_service_version_info (QmiDevice *dev)
                                          NULL);
 }
 
+typedef struct {
+    guint  mux_id;
+    gchar *link_iface;
+} DeleteLinkProperties;
+
 static void
 link_delete_ready (QmiDevice    *dev,
                    GAsyncResult *res)
@@ -656,15 +661,73 @@ link_delete_ready (QmiDevice    *dev,
     qmicli_async_operation_done (!error, FALSE);
 }
 
+static gboolean
+del_link_properties_handle (const gchar           *key,
+                            const gchar           *value,
+                            GError               **error,
+                            DeleteLinkProperties  *props)
+{
+    if (g_ascii_strcasecmp (key, "mux-id") == 0 && props->mux_id == QMI_DEVICE_MUX_ID_UNBOUND) {
+        if (!qmicli_read_uint_from_string (value, &props->mux_id)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid mux-id given: '%s'", value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "link-iface") == 0 && !props->link_iface) {
+        props->link_iface = g_strdup (value);
+        return TRUE;
+    }
+
+    g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                 "unrecognized or duplicate option '%s'", key);
+    return FALSE;
+}
+
 static void
 device_link_delete (QmiDevice   *dev,
-                    const gchar *link_iface)
+                    const gchar *del_settings)
 {
+    g_autoptr(GError) error = NULL;
+    DeleteLinkProperties props = {
+        .mux_id = QMI_DEVICE_MUX_ID_UNBOUND,
+        .link_iface = NULL,
+    };
+
+    if (!qmicli_parse_key_value_string (del_settings,
+                                        &error,
+                                        (QmiParseKeyValueForeachFn)del_link_properties_handle,
+                                        &props)) {
+        g_printerr ("error: couldn't parse input add link settings: %s\n",
+                    error->message);
+        qmicli_async_operation_done (FALSE, FALSE);
+        return;
+    }
+
+    if (!props.link_iface) {
+        g_printerr ("error: missing mandatory 'link-iface' setting\n");
+        qmicli_async_operation_done (FALSE, FALSE);
+        return;
+    }
+
+    if ((props.mux_id != QMI_DEVICE_MUX_ID_UNBOUND) &&
+        (props.mux_id < QMI_DEVICE_MUX_ID_MIN || props.mux_id > QMI_DEVICE_MUX_ID_MAX)) {
+        g_printerr ("error: mux id %u out of range [%u,%u]\n",
+                    props.mux_id, QMI_DEVICE_MUX_ID_MIN, QMI_DEVICE_MUX_ID_MAX);
+        qmicli_async_operation_done (FALSE, FALSE);
+        return;
+    }
+
     qmi_device_delete_link (dev,
-                            link_iface,
+                            props.link_iface,
+                            props.mux_id,
                             cancellable,
                             (GAsyncReadyCallback)link_delete_ready,
                             NULL);
+
+    g_free (props.link_iface);
 }
 
 typedef struct {

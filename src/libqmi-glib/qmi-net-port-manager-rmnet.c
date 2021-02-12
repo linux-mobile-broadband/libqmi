@@ -549,6 +549,7 @@ net_port_manager_del_link_finish (QmiNetPortManager  *self,
 static void
 net_port_manager_del_link (QmiNetPortManager   *_self,
                            const gchar         *ifname,
+                           guint                mux_id_unused,
                            guint                timeout,
                            GCancellable        *cancellable,
                            GAsyncReadyCallback  callback,

@@ -1904,6 +1904,7 @@ device_del_link_ready (QmiNetPortManager *net_port_manager,
 void
 qmi_device_delete_link (QmiDevice           *self,
                         const gchar         *ifname,
+                        guint                mux_id,
                         GCancellable        *cancellable,
                         GAsyncReadyCallback  callback,
                         gpointer             user_data)
@@ -1922,6 +1923,7 @@ qmi_device_delete_link (QmiDevice           *self,
     g_assert (self->priv->net_port_manager);
     qmi_net_port_manager_del_link (self->priv->net_port_manager,
                                    ifname,
+                                   mux_id,
                                    5, /* timeout */
                                    cancellable,
                                    (GAsyncReadyCallback) device_del_link_ready,

@@ -668,23 +668,26 @@ run_del_link (GTask *task)
         return;
     }
 
-    ctx->mux_id = read_link_mux_id (ctx->link_iface, &error);
+    /* Try to guess mux id if not given as input */
     if (!ctx->mux_id) {
-        const gchar *mux_id;
+        ctx->mux_id = read_link_mux_id (ctx->link_iface, &error);
+        if (!ctx->mux_id) {
+            const gchar *mux_id;
 
-        g_debug ("Couldn't read mux id from sysfs: %s", error->message);
-        g_clear_error (&error);
-
-        mux_id = get_tracked_mux_id (self, ctx->link_iface, &error);
-        if (!mux_id) {
-            g_debug ("Couldn't get tracked mux id: %s", error->message);
+            g_debug ("Couldn't read mux id from sysfs: %s", error->message);
             g_clear_error (&error);
 
-            g_task_return_new_error (task, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_ARGS,
-                                     "Cannot delete link '%s': unknown mux id",
-                                     ctx->link_iface);
-            g_object_unref (task);
-            return;
+            mux_id = get_tracked_mux_id (self, ctx->link_iface, &error);
+            if (!mux_id) {
+                g_debug ("Couldn't get tracked mux id: %s", error->message);
+                g_clear_error (&error);
+
+                g_task_return_new_error (task, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_ARGS,
+                                         "Cannot delete link '%s': unknown mux id",
+                                         ctx->link_iface);
+                g_object_unref (task);
+                return;
+            }
         }
     }
 
@@ -706,6 +709,7 @@ run_del_link (GTask *task)
 static void
 net_port_manager_del_link (QmiNetPortManager   *_self,
                            const gchar         *ifname,
+                           guint                mux_id,
                            guint                timeout,
                            GCancellable        *cancellable,
                            GAsyncReadyCallback  callback,
@@ -725,6 +729,7 @@ net_port_manager_del_link (QmiNetPortManager   *_self,
 
     ctx = g_task_get_task_data (task);
     ctx->link_iface = g_strdup (ifname);
+    ctx->mux_id = (mux_id != QMI_DEVICE_MUX_ID_UNBOUND) ? g_strdup_printf ("0x%02x", mux_id) : NULL;
 
     /* If there is another task running, queue the new one */
     if (self->priv->running) {
