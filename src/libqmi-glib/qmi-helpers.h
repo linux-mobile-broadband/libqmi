@@ -30,6 +30,7 @@
 #define _LIBQMI_GLIB_QMI_HELPERS_H_
 
 #include <glib.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -81,6 +82,13 @@ G_GNUC_INTERNAL
 gboolean qmi_helpers_write_sysfs_file (const gchar  *sysfs_path,
                                        const gchar  *value,
                                        GError      **error);
+
+G_GNUC_INTERNAL
+gboolean qmi_helpers_list_links (GFile         *sysfs_file,
+                                 GCancellable  *cancellable,
+                                 GPtrArray     *previous_links,
+                                 GPtrArray    **out_links,
+                                 GError       **error);
 
 static inline gfloat
 QMI_GFLOAT_SWAP_LE_BE (gfloat in)

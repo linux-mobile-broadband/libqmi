@@ -104,76 +104,6 @@ get_tracked_mux_id (QmiNetPortManagerQmiwwan  *self,
 
 /*****************************************************************************/
 
-static gboolean
-lookup_exact_link (GPtrArray   *links,
-                   const gchar *iface_name)
-{
-    if (!links)
-        return FALSE;
-
-    return g_ptr_array_find_with_equal_func (links, iface_name, g_str_equal, NULL);
-}
-
-static gboolean
-list_links (QmiNetPortManagerQmiwwan  *self,
-            GCancellable              *cancellable,
-            GPtrArray                 *previous_links,
-            GPtrArray                **out_links,
-            GError                   **error)
-{
-    g_autoptr(GFileEnumerator) direnum = NULL;
-    g_autoptr(GPtrArray)       links = NULL;
-
-    direnum = g_file_enumerate_children (self->priv->sysfs_file,
-                                         G_FILE_ATTRIBUTE_STANDARD_NAME,
-                                         G_FILE_QUERY_INFO_NONE,
-                                         cancellable,
-                                         error);
-    if (!direnum)
-        return FALSE;
-
-    links = g_ptr_array_new_with_free_func (g_free);
-
-    while (TRUE) {
-        GFileInfo        *info;
-        g_autofree gchar *filename = NULL;
-        g_autofree gchar *link_path = NULL;
-        g_autofree gchar *real_path = NULL;
-        g_autofree gchar *basename = NULL;
-
-        if (!g_file_enumerator_iterate (direnum, &info, NULL, cancellable, error))
-            return FALSE;
-        if (!info)
-            break;
-
-        filename = g_file_info_get_attribute_as_string (info, G_FILE_ATTRIBUTE_STANDARD_NAME);
-        if (!filename || !g_str_has_prefix (filename, "upper_qmimux"))
-            continue;
-
-        link_path = g_strdup_printf ("%s/%s", self->priv->sysfs_path, filename);
-        real_path = realpath (link_path, NULL);
-        if (!real_path)
-            continue;
-
-        basename = g_path_get_basename (real_path);
-
-        /* skip interface if it was already known */
-        if (lookup_exact_link (previous_links, basename))
-            continue;
-
-        g_ptr_array_add (links, g_steal_pointer (&basename));
-    }
-
-    if (!links || !links->len) {
-        *out_links = NULL;
-        return TRUE;
-    }
-
-    g_ptr_array_sort (links, (GCompareFunc) g_ascii_strcasecmp);
-    *out_links = g_steal_pointer (&links);
-    return TRUE;
-}
-
 static gchar *
 read_link_mux_id (const gchar  *link_iface,
                   GError      **error)
@@ -232,7 +162,7 @@ lookup_first_new_link (GPtrArray *links_before,
 
         link_iface = g_ptr_array_index (links_after, i);
 
-        if (!lookup_exact_link (links_before, link_iface))
+        if (!links_before || !g_ptr_array_find_with_equal_func (links_before, link_iface, g_str_equal, NULL))
             return g_strdup (link_iface);
     }
     return NULL;
@@ -454,7 +384,11 @@ add_link_check_timeout (GTask *task)
     self = g_task_get_source_object (task);
     ctx  = g_task_get_task_data (task);
 
-    if (!list_links (self, g_task_get_cancellable (task), ctx->links_before, &links_after, &error)) {
+    if (!qmi_helpers_list_links (self->priv->sysfs_file,
+                                 g_task_get_cancellable (task),
+                                 ctx->links_before,
+                                 &links_after,
+                                 &error)) {
         g_prefix_error (&error, "Couldn't enumerate files in the sysfs directory: ");
         g_task_return_error (task, error);
         g_object_unref (task);
@@ -509,7 +443,11 @@ run_add_link (GTask *task)
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
-    if (!list_links (self, g_task_get_cancellable (task), NULL, &ctx->links_before, &error)) {
+    if (!qmi_helpers_list_links (self->priv->sysfs_file,
+                                 g_task_get_cancellable (task),
+                                 NULL,
+                                 &ctx->links_before,
+                                 &error)) {
         g_prefix_error (&error, "Couldn't enumerate files in the sysfs directory: ");
         g_task_return_error (task, error);
         g_object_unref (task);
@@ -612,14 +550,18 @@ del_link_check_timeout (GTask *task)
     self = g_task_get_source_object (task);
     ctx  = g_task_get_task_data (task);
 
-    if (!list_links (self, g_task_get_cancellable (task), ctx->links_before, &links_after, &error)) {
+    if (!qmi_helpers_list_links (self->priv->sysfs_file,
+                                 g_task_get_cancellable (task),
+                                 ctx->links_before,
+                                 &links_after,
+                                 &error)) {
         g_prefix_error (&error, "Couldn't enumerate files in the sysfs directory: ");
         g_task_return_error (task, error);
         g_object_unref (task);
         return G_SOURCE_REMOVE;
     }
 
-    if (!lookup_exact_link (links_after, ctx->link_iface)) {
+    if (!links_after || !g_ptr_array_find_with_equal_func (links_after, ctx->link_iface, g_str_equal, NULL)) {
         if (!untrack_mux_id (self, ctx->link_iface, &error)) {
             g_debug ("couldn't untrack mux id: %s", error->message);
             g_clear_error (&error);
@@ -653,14 +595,18 @@ run_del_link (GTask *task)
 
     g_debug ("Running del link operation...");
 
-    if (!list_links (self, g_task_get_cancellable (task), NULL, &ctx->links_before, &error)) {
+    if (!qmi_helpers_list_links (self->priv->sysfs_file,
+                                 g_task_get_cancellable (task),
+                                 NULL,
+                                 &ctx->links_before,
+                                 &error)) {
         g_prefix_error (&error, "Couldn't enumerate files in the sysfs directory: ");
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
 
-    if (!lookup_exact_link (ctx->links_before, ctx->link_iface)) {
+    if (!ctx->links_before || !g_ptr_array_find_with_equal_func (ctx->links_before, ctx->link_iface, g_str_equal, NULL)) {
         g_task_return_new_error (task, QMI_CORE_ERROR, QMI_CORE_ERROR_INVALID_ARGS,
                                  "Cannot delete link '%s': interface not found",
                                  ctx->link_iface);
