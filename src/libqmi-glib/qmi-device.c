@@ -922,6 +922,8 @@ qmi_device_check_expected_data_format_supported (QmiDevice                    *s
     g_autofree gchar *sysfs_path = NULL;
     gchar             value = '\0';
 
+    g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
+
     switch (format) {
         case QMI_DEVICE_EXPECTED_DATA_FORMAT_802_3:
             return TRUE;
@@ -1532,6 +1534,8 @@ qmi_device_set_instance_id (QmiDevice *self,
     GTask *task;
     QmiMessageCtlSetInstanceIdInput *input;
 
+    g_return_if_fail (QMI_IS_DEVICE (self));
+
     task = g_task_new (self, cancellable, callback, user_data);
 
     input = qmi_message_ctl_set_instance_id_input_new ();
@@ -1865,6 +1869,8 @@ qmi_device_add_link (QmiDevice           *self,
     GTask  *task;
     GError *error = NULL;
 
+    g_return_if_fail (QMI_IS_DEVICE (self));
+    g_return_if_fail (base_ifname);
     g_return_if_fail (mux_id >= QMI_DEVICE_MUX_ID_MIN);
     g_return_if_fail ((mux_id <= QMI_DEVICE_MUX_ID_MAX) || (mux_id == QMI_DEVICE_MUX_ID_AUTOMATIC));
 
@@ -1920,6 +1926,9 @@ qmi_device_delete_link (QmiDevice           *self,
     GTask  *task;
     GError *error = NULL;
 
+    g_return_if_fail (QMI_IS_DEVICE (self));
+    g_return_if_fail (ifname);
+
     task = g_task_new (self, cancellable, callback, user_data);
 
     if (!setup_net_port_manager (self, &error)) {
@@ -1972,6 +1981,9 @@ qmi_device_delete_all_links (QmiDevice           *self,
     GTask  *task;
     GError *error = NULL;
 
+    g_return_if_fail (QMI_IS_DEVICE (self));
+    g_return_if_fail (base_ifname);
+
     task = g_task_new (self, cancellable, callback, user_data);
 
     if (!setup_net_port_manager (self, &error)) {
@@ -1996,6 +2008,9 @@ qmi_device_list_links (QmiDevice    *self,
                        GPtrArray   **out_links,
                        GError      **error)
 {
+    g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
+    g_return_val_if_fail (base_ifname, FALSE);
+
     if (!setup_net_port_manager (self, error))
         return FALSE;
 
@@ -2012,6 +2027,8 @@ gboolean
 qmi_device_check_link_supported (QmiDevice  *self,
                                  GError    **error)
 {
+    g_return_val_if_fail (QMI_IS_DEVICE (self), FALSE);
+
     /* if we can setup a net port manager, link management is supported */
     return setup_net_port_manager (self, error);
 }
