@@ -108,6 +108,16 @@ AM_PATH_PYTHON([], [], [PYTHON=python])
 dnl GObject Introspection
 GOBJECT_INTROSPECTION_CHECK([0.9.6])
 
+dnl rmnet support in the kernel
+AC_EGREP_HEADER([ifla_rmnet_flags],
+                [linux/if_link.h],
+                [enable_rmnet_support=yes],
+                [enable_rmnet_support=no])
+if test "x$enable_rmnet_support" = "xyes"; then
+    AC_DEFINE(RMNET_SUPPORT_ENABLED, 1, [Define if rmnet support is built])
+fi
+AM_CONDITIONAL([RMNET_SUPPORT_ENABLED], test "x$enable_rmnet_support" = "xyes")
+
 dnl message collection (existing file in data/qmi-collection-${COLLECTION}.json)
 dnl custom collections may be added as files in data/
 AC_ARG_ENABLE(collection,
@@ -319,6 +329,7 @@ echo "
       QMI over MBIM:            ${enable_mbim_qmux}
       QMI over QRTR:            ${enable_qrtr}
       QMI username:             ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
+      rmnet support:            ${enable_rmnet_support}
 
     Built items:
       libqmi-glib:              yes (${QMI_COLLECTION_NAME})

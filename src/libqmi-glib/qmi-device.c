@@ -18,7 +18,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2012 Lanedo GmbH
- * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2012-2021 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #include <config.h>
@@ -59,13 +59,16 @@
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"
 #include "qmi-proxy.h"
-#include "qmi-net-port-manager-rmnet.h"
 #include "qmi-net-port-manager-qmiwwan.h"
 #include "qmi-version.h"
 
 #if QMI_QRTR_SUPPORTED
 # include "qmi-endpoint-qrtr.h"
 # include <libqrtr-glib.h>
+#endif
+
+#if defined RMNET_SUPPORT_ENABLED
+# include "qmi-net-port-manager-rmnet.h"
 #endif
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
@@ -1781,10 +1784,15 @@ setup_net_port_manager (QmiDevice  *self,
     case QMI_DEVICE_EXPECTED_DATA_FORMAT_QMAP_PASS_THROUGH:
     case QMI_DEVICE_EXPECTED_DATA_FORMAT_UNKNOWN:
     default:
+#if defined RMNET_SUPPORT_ENABLED
         /* when the data format is unknown, it very likely is because this
          * is not the qmi_wwan driver; fallback to plain rmnet in that
          * case. */
         self->priv->net_port_manager = QMI_NET_PORT_MANAGER (qmi_net_port_manager_rmnet_new (error));
+#else
+        g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                     "Link management not supported");
+#endif
         break;
     }
 

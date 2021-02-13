@@ -76,7 +76,6 @@ libqmi_glib_la_SOURCES = \
 	qmi-endpoint.h qmi-endpoint.c \
 	qmi-endpoint-qmux.h qmi-endpoint-qmux.c \
 	qmi-net-port-manager.h qmi-net-port-manager.c \
-	qmi-net-port-manager-rmnet.h qmi-net-port-manager-rmnet.c \
 	qmi-net-port-manager-qmiwwan.h qmi-net-port-manager-qmiwwan.c \
 	$(NULL)
 
@@ -97,6 +96,12 @@ endif
 if QMI_QRTR_SUPPORTED
 libqmi_glib_la_SOURCES += \
 	qmi-endpoint-qrtr.h qmi-endpoint-qrtr.c \
+	$(NULL)
+endif
+
+if RMNET_SUPPORT_ENABLED
+libqmi_glib_la_SOURCES += \
+	qmi-net-port-manager-rmnet.h qmi-net-port-manager-rmnet.c \
 	$(NULL)
 endif
 
