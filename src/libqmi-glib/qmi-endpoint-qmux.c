@@ -470,8 +470,8 @@ endpoint_close (QmiEndpoint         *endpoint,
 /*****************************************************************************/
 
 QmiEndpointQmux *
-qmi_endpoint_qmux_new (QmiFile *file,
-                       gchar *proxy_path,
+qmi_endpoint_qmux_new (QmiFile      *file,
+                       const gchar  *proxy_path,
                        QmiClientCtl *client_ctl)
 {
     QmiEndpointQmux *self;
@@ -482,7 +482,7 @@ qmi_endpoint_qmux_new (QmiFile *file,
     self = g_object_new (QMI_TYPE_ENDPOINT_QMUX,
                          QMI_ENDPOINT_FILE, file,
                          NULL);
-    self->priv->proxy_path = proxy_path;
+    self->priv->proxy_path = g_strdup (proxy_path);
     self->priv->client_ctl = g_object_ref (client_ctl);
     return self;
 }
@@ -505,6 +505,7 @@ dispose (GObject *object)
 
     destroy_iostream (self);
     g_clear_object (&self->priv->client_ctl);
+    g_clear_pointer (&self->priv->proxy_path, g_free);
 
     G_OBJECT_CLASS (qmi_endpoint_qmux_parent_class)->dispose (object);
 }
