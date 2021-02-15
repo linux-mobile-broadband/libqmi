@@ -1,4 +1,12 @@
 
+Overview of changes in libqmi 1.26.10
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fix internal QmiClientCtl leak in the QmiDevice when using the QMUX
+      endpoint.
+
+
 Overview of changes in libqmi 1.26.8
 ----------------------------------------
 
