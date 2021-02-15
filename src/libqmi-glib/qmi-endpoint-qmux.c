@@ -504,6 +504,7 @@ dispose (GObject *object)
     QmiEndpointQmux *self = QMI_ENDPOINT_QMUX (object);
 
     destroy_iostream (self);
+    g_clear_object (&self->priv->client_ctl);
 
     G_OBJECT_CLASS (qmi_endpoint_qmux_parent_class)->dispose (object);
 }
