@@ -1,4 +1,13 @@
 
+Overview of changes in libqmi 1.24.16
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fix invalid access to already freed endpoint object.
+   ** Fix internal QmiClientCtl leak in the QmiDevice when using the QMUX
+      endpoint.
+
+
 Overview of changes in libqmi 1.24.14
 ----------------------------------------
 
