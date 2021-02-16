@@ -43,6 +43,7 @@ qmicli_SOURCES = \
 	qmicli.c \
 	qmicli.h \
 	qmicli-qmiwwan.c \
+	qmicli-link-management.c \
 	qmicli-dms.c \
 	qmicli-wds.c \
 	qmicli-nas.c \

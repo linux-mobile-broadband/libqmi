@@ -35,6 +35,12 @@ gboolean      qmicli_qmiwwan_options_enabled  (void);
 void          qmicli_qmiwwan_run              (QmiDevice    *device,
                                                GCancellable *cancellable);
 
+/* link management */
+GOptionGroup *qmicli_link_management_get_option_group (void);
+gboolean      qmicli_link_management_options_enabled  (void);
+void          qmicli_link_management_run              (QmiDevice    *device,
+                                                       GCancellable *cancellable);
+
 #if defined HAVE_QMI_SERVICE_DMS
 GOptionGroup *qmicli_dms_get_option_group (void);
 gboolean      qmicli_dms_options_enabled  (void);
