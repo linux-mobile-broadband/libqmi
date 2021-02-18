@@ -159,6 +159,8 @@
       <xi:include href="xml/qmi-message-nas-attach-detach.xml"/>
       <xi:include href="xml/qmi-message-nas-get-serving-system.xml"/>
       <xi:include href="xml/qmi-message-nas-get-home-network.xml"/>
+      <xi:include href="xml/qmi-message-nas-get-preferred-networks.xml"/>
+      <xi:include href="xml/qmi-message-nas-set-preferred-networks.xml"/>
       <xi:include href="xml/qmi-message-nas-set-technology-preference.xml"/>
       <xi:include href="xml/qmi-message-nas-get-technology-preference.xml"/>
       <xi:include href="xml/qmi-message-nas-get-rf-band-information.xml"/>

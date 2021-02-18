@@ -662,6 +662,32 @@ gchar *qmi_nas_read_string_from_network_description_encoded_array (QmiNasNetwork
                                                                    const GArray                     *array);
 
 /*****************************************************************************/
+/* Helper enums for the 'QMI NAS Get Preferred Networks' request/response */
+
+/**
+ * QmiNasPlmnAccessTechnologyIdentifier:
+ * @QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_UNSPECIFIED: Unspecified.
+ * @QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_GSM_COMPACT: GSM Compact.
+ * @QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_GSM: GSM.
+ * @QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_EUTRAN: E-UTRAN.
+ * @QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_UTRAN: UTRAN.
+ * @QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_ALL: All technologies.
+ *
+ * Preferred networks access technology identifier as specified in
+ * ETSI TS 131 102, chapter 4.2.5.
+ *
+ * Since: 1.30
+ */
+typedef enum { /*< since=1.30 >*/
+    QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_UNSPECIFIED = 0x0000,
+    QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_GSM_COMPACT = 1 << 6,
+    QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_GSM         = 1 << 7,
+    QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_EUTRAN      = 1 << 14,
+    QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_UTRAN       = 1 << 15,
+    QMI_NAS_PLMN_ACCESS_TECHNOLOGY_IDENTIFIER_ALL         = 0xFFFF
+} QmiNasPlmnAccessTechnologyIdentifier;
+
+/*****************************************************************************/
 /* Helper enums for the 'QMI NAS Get Technology Preference' request/response */
 
 /**
