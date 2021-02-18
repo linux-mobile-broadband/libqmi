@@ -234,7 +234,7 @@ AC_SUBST(QMI_MBIM_QMUX_SUPPORTED)
 AM_CONDITIONAL([QMI_MBIM_QMUX_SUPPORTED], [test "x$QMI_MBIM_QMUX_SUPPORTED" = "x1"])
 
 # QRTR support
-QRTR_GLIB_VERSION=0.0.1
+QRTR_GLIB_VERSION=1.0.0
 PKG_CHECK_MODULES([QRTR], [qrtr-glib >= ${QRTR_GLIB_VERSION}], [have_qrtr=yes], [have_qrtr=no])
 AC_ARG_ENABLE(qrtr,
               AS_HELP_STRING([--enable-qrtr], [Enable support for QMI over QRTR [default=auto]]),
