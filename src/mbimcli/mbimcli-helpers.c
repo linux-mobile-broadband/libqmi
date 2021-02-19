@@ -330,3 +330,23 @@ mbimcli_parse_key_value_string (const gchar                 *str,
 
     return TRUE;
 }
+
+MbimPinType
+mbimcli_read_pintype_from_string (const gchar *str)
+{
+    const gchar *feature;
+    gint i;
+
+    if (str == NULL)
+        return MBIM_PIN_TYPE_UNKNOWN;
+
+    /* Compare string to nicknames from mbim_pin_type_values */
+    i = MBIM_PIN_TYPE_CUSTOM;
+    while (NULL != (feature = mbim_pin_type_get_string (i))) {
+        if (g_str_equal (feature, str))
+            return i;
+        i++;
+    }
+
+    return MBIM_PIN_TYPE_UNKNOWN;
+}

@@ -42,4 +42,6 @@ gboolean mbimcli_parse_key_value_string (const gchar *str,
                                          MbimParseKeyValueForeachFn callback,
                                          gpointer user_data);
 
+MbimPinType mbimcli_read_pintype_from_string (const gchar *str);
+
 #endif /* __MBIMCLI_H__ */

@@ -118,8 +118,9 @@ static GOptionEntry entries[] = {
       NULL
     },
     { "enter-pin", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_str,
-      "Enter PIN",
-      "[(current PIN)]"
+      "Enter PIN (PIN type is optional, defaults to PIN1, allowed options: "
+        "(pin1,network-pin,network-subset-pin,service-provider-pin,corporate-pin)",
+      "[(PIN type),(current PIN)]"
     },
     { "change-pin", 0, 0, G_OPTION_ARG_STRING, &set_pin_change_str,
       "Change PIN",
@@ -130,12 +131,13 @@ static GOptionEntry entries[] = {
       "[(current PIN)]"
     },
     { "disable-pin", 0, 0, G_OPTION_ARG_STRING, &set_pin_disable_str,
-      "Disable PIN",
-      "[(current PIN)]"
+      "Disable PIN (PIN type is optional, see enter-pin for details)",
+      "[(PIN type),(current PIN)]"
     },
     { "enter-puk", 0, 0, G_OPTION_ARG_STRING, &set_pin_enter_puk_str,
-      "Enter PUK",
-      "[(PUK),(new PIN)]"
+      "Enter PUK (PUK type is optional, defaults to PUK1, allowed options: "
+        "(puk1,network-puk,network-subset-puk,service-provider-puk,corporate-puk)",
+      "[(PUK type),(PUK),(new PIN)]"
     },
     { "query-pin-list", 0, 0, G_OPTION_ARG_NONE, &query_pin_list_flag,
       "Query PIN list",
@@ -653,36 +655,55 @@ pin_ready (MbimDevice   *device,
 }
 
 static gboolean
-set_pin_input_parse (guint         n_expected,
-                     const gchar  *str,
+set_pin_input_parse (const gchar  *str,
                      gchar       **pin,
-                     gchar       **new_pin)
+                     gchar       **new_pin,
+                     MbimPinType  *pin_type)
 {
     g_auto(GStrv) split = NULL;
+    guint n_min, n_max, n = 0;
+    MbimPinType new_pin_type;
 
-    g_assert (n_expected == 1 || n_expected == 2);
     g_assert (pin != NULL);
-    g_assert (new_pin != NULL);
+    n_min = (new_pin ? 2 : 1);
+    n_max = n_min + (pin_type ? 1 : 0);
 
     /* Format of the string is:
      *    "[(current PIN)]"
      * or:
+     *    "[(PIN name),(current PIN)]"
+     * or:
      *    "[(current PIN),(new PIN)]"
+     * or:
+     *    "[(PUK name),(PUK),(new PIN)]"
      */
     split = g_strsplit (str, ",", -1);
 
-    if (g_strv_length (split) > n_expected) {
+    if (g_strv_length (split) > n_max) {
         g_printerr ("error: couldn't parse input string, too many arguments\n");
         return FALSE;
     }
 
-    if (g_strv_length (split) < n_expected) {
+    if (g_strv_length (split) < n_min) {
         g_printerr ("error: couldn't parse input string, missing arguments\n");
         return FALSE;
     }
 
-    *pin = g_strdup (split[0]);
-    *new_pin = g_strdup (split[1]);
+    if (pin_type && (g_strv_length (split) == n_max)) {
+        new_pin_type = mbimcli_read_pintype_from_string (split[n++]);
+        if (new_pin_type == MBIM_PIN_TYPE_UNKNOWN ||
+            (*pin_type == MBIM_PIN_TYPE_PIN1 && new_pin_type >= MBIM_PIN_TYPE_PUK1) ||
+            (*pin_type == MBIM_PIN_TYPE_PUK1 && new_pin_type < MBIM_PIN_TYPE_PUK1)) {
+            g_printerr ("error: couldn't parse input string, invalid PIN type\n");
+            return FALSE;
+        }
+        *pin_type = new_pin_type;
+    }
+
+    *pin = g_strdup (split[n++]);
+    if (new_pin)
+        *new_pin = g_strdup (split[n]);
+
     return TRUE;
 }
 
@@ -1760,46 +1781,39 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         set_pin_enable_str ||
         set_pin_disable_str ||
         set_pin_enter_puk_str) {
-        guint             n_expected;
         MbimPinType       pin_type;
         MbimPinOperation  pin_operation;
         g_autofree gchar *pin = NULL;
         g_autofree gchar *new_pin = NULL;
-        const gchar      *input = NULL;
 
         if (set_pin_enter_puk_str) {
             g_debug ("Asynchronously entering PUK...");
             pin_type = MBIM_PIN_TYPE_PUK1;
-            input = set_pin_enter_puk_str;
-            n_expected = 2;
             pin_operation = MBIM_PIN_OPERATION_ENTER;
+            set_pin_input_parse (set_pin_enter_puk_str, &pin, &new_pin, &pin_type);
         } else {
             pin_type = MBIM_PIN_TYPE_PIN1;
             if (set_pin_change_str) {
                 g_debug ("Asynchronously changing PIN...");
-                input = set_pin_change_str;
-                n_expected = 2;
                 pin_operation = MBIM_PIN_OPERATION_CHANGE;
+                set_pin_input_parse (set_pin_change_str, &pin, &new_pin, NULL);
             } else if (set_pin_enable_str) {
                 g_debug ("Asynchronously enabling PIN...");
-                input = set_pin_enable_str;
-                n_expected = 1;
                 pin_operation = MBIM_PIN_OPERATION_ENABLE;
+                set_pin_input_parse (set_pin_enable_str, &pin, NULL, NULL);
             } else if (set_pin_disable_str) {
                 g_debug ("Asynchronously disabling PIN...");
-                input = set_pin_disable_str;
-                n_expected = 1;
                 pin_operation = MBIM_PIN_OPERATION_DISABLE;
+                set_pin_input_parse (set_pin_disable_str, &pin, NULL, &pin_type);
             } else if (set_pin_enter_str) {
                 g_debug ("Asynchronously entering PIN...");
-                input = set_pin_enter_str;
-                n_expected = 1;
                 pin_operation = MBIM_PIN_OPERATION_ENTER;
+                set_pin_input_parse (set_pin_enter_str, &pin, NULL, &pin_type);
             } else
                 g_assert_not_reached ();
         }
 
-        if (!set_pin_input_parse (n_expected, input, &pin, &new_pin)) {
+        if (!pin || pin_type == MBIM_PIN_TYPE_UNKNOWN) {
             shutdown (FALSE);
             return;
         }
