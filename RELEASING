@@ -23,9 +23,35 @@ The libqmi releases are generated using the GNU autotools.
     $ gpg --verify libqmi-${VERSION}.tar.xz.asc libqmi-${VERSION}.tar.xz
 
 5) Upload source tarball (.tar.xz) and signature (.tar.xz.asc) to
-   freedesktop.org
+   freedesktop.org.
+    $ scp libqmi-${VERSION}.tar.xz* fd.o:${libqmi}/
 
-TODO: manpages and gtk-doc references
+6) Create directories for the manpages and gtk-doc documentation in
+   freedesktop.org, and also update the 'latest' links:
+    $ ssh fd.o
+    [fd.o] $ cd ${libqmi}/man/
+    [fd.o] $ rm latest
+    [fd.o] $ mkdir -p ${VERSION}
+    [fd.o] $ ln -s ${VERSION} latest
+    [fd.o] $ cd ${libqmi}/libqmi-glib/
+    [fd.o] $ rm latest
+    [fd.o] $ mkdir -p ${VERSION}
+    [fd.o] $ ln -s ${VERSION} latest
+
+7) Generate HTML for the manpages:
+    $ roffit < docs/man/qmicli.1 > qmicli.1.html
+    $ roffit < docs/man/qmi-network.1 > qmi-network.1.html
+    $ roffit < docs/man/qmi-firmware-update.1 > qmi-firmware-update.1.html
+
+8) Upload manpages in HTML to freedesktop.org:
+    $ scp *.1.html fd.o:${libqmi}/man/${VERSION}/
+
+9) Upload the gtk-doc in HTML available inside the source tarball to
+   freedesktop.org. It must be the one inside the tarball because it contains
+   the correct fixed refs to the online documentation of the dependencies
+   (e.g. the glib/gobject/gio documentation URLs in http://developer.gnome.org)
+    $ tar -Jxvf libqmi-${VERSION}.tar.xz
+    $ scp libqmi-${VERSION}/docs/reference/libqmi-glib/html/* fd.o:${libqmi}/libqmi-glib/${VERSION}/
 
 -------------------------------------------------------------------------------
 
