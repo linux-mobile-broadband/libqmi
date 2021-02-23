@@ -1,6 +1,14 @@
 
 The libqmi releases are generated using the GNU autotools.
 
+0.1) For major releases:
+     * Increment qmi_minor_version and reset qmi_micro_version.
+     * Assuming API/ABI compatibility, increment both qmi_glib_lt_current and
+       qmi_glib_lt_age.
+
+0.2) For stable branch releases:
+     * Increment qmi_micro_version.
+
 1) Configure and build the whole project, making sure gtk-doc is enabled:
 
     $ NOCONFIGURE=1 ./autogen.sh
@@ -52,6 +60,14 @@ The libqmi releases are generated using the GNU autotools.
    (e.g. the glib/gobject/gio documentation URLs in http://developer.gnome.org)
     $ tar -Jxvf libqmi-${VERSION}.tar.xz
     $ scp libqmi-${VERSION}/docs/reference/libqmi-glib/html/* fd.o:${libqmi}/libqmi-glib/${VERSION}/
+
+10.1) For major releases:
+     * Fork new stable branch (e.g. qmi-${MAJOR}-${MINOR})
+     * Post-release version bump in the master branch, increment qmi_minor_version.
+     * Post-release version bump in the stable branch, increment qmi_micro_version.
+
+10.2) For stable branch releases:
+     * Post-release version bump, increment qmi_micro_version.
 
 -------------------------------------------------------------------------------
 
