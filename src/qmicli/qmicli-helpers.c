@@ -377,7 +377,8 @@ qmicli_read_ssp_rat_options_from_string (const gchar              *str,
 static gboolean
 parse_3gpp_mcc_mnc (const gchar *str,
                     guint16 *out_mcc,
-                    guint16 *out_mnc)
+                    guint16 *out_mnc,
+                    gboolean *out_pcs_digit)
 {
     guint len;
     guint i;
@@ -405,6 +406,8 @@ parse_3gpp_mcc_mnc (const gchar *str,
     } else
         memcpy (&aux[0], &str[3], 3);
     *out_mnc = atoi (aux);
+    if (out_pcs_digit)
+        *out_pcs_digit = len == 6;
 
     return TRUE;
 }
@@ -426,7 +429,7 @@ qmicli_read_ssp_net_options_from_string (const gchar                      *str,
     if (equals) {
         /* Parse MCC/MNC */
         *equals++ = '\0';
-        if (!parse_3gpp_mcc_mnc (equals, &mcc, &mnc)) {
+        if (!parse_3gpp_mcc_mnc (equals, &mcc, &mnc, NULL)) {
             g_free (copy);
             g_printerr ("error: invalid net selection MCC/MNC: '%s'\n", equals);
             return FALSE;
@@ -451,19 +454,23 @@ qmicli_read_ssp_net_options_from_string (const gchar                      *str,
 gboolean
 qmicli_read_parse_3gpp_mcc_mnc (const gchar *str,
                                 guint16     *out_mcc,
-                                guint16     *out_mnc)
+                                guint16     *out_mnc,
+                                gboolean    *out_pcs_digit)
 {
     g_autofree gchar *copy = NULL;
     guint16 mcc = 0, mnc = 0;
+    gboolean pcs_digit = FALSE;
     
     copy = g_strdup (str);
-    if (!parse_3gpp_mcc_mnc (copy, &mcc, &mnc)) {
+    if (!parse_3gpp_mcc_mnc (copy, &mcc, &mnc, &pcs_digit)) {
         g_printerr ("error: invalid net selection MCC/MNC: '%s'\n", str);
         return FALSE;
     }
 
     *out_mcc = mcc;
     *out_mnc = mnc;
+    if (out_pcs_digit)
+        *out_pcs_digit = pcs_digit;
 
     return TRUE;
 }

@@ -3439,7 +3439,7 @@ set_plmn_name_input_plmn_create (const gchar *str)
     guint16 mcc = 0;
     guint16 mnc = 0;
 
-    if (!qmicli_read_parse_3gpp_mcc_mnc (str, &mcc, &mnc)) {
+    if (!qmicli_read_parse_3gpp_mcc_mnc (str, &mcc, &mnc, NULL)) {
         g_printerr ("error: invalid net selection MCC/MNC: '%s'\n", str);
         return NULL;
     }
