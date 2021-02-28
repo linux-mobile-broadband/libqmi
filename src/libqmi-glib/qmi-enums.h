@@ -160,20 +160,26 @@ typedef enum { /*< since=1.28 >*/   /* the get_string() helper and QmiEndian typ
 
 /**
  * QmiDataEndpointType:
- * @QMI_DATA_ENDPOINT_TYPE_HSUSB: Data Endpoint Type HSUSB.
- * @QMI_DATA_ENDPOINT_TYPE_PCIE: Data Endpoint Type PCIE. Since: 1.28.
- * @QMI_DATA_ENDPOINT_TYPE_EMBEDDED: Data Endpoint Type embedded. Since 1.28.
- * @QMI_DATA_ENDPOINT_TYPE_UNDEFINED: Data Endpoint Type undefined.
+ * @QMI_DATA_ENDPOINT_TYPE_UNKNOWN: Unknown. Since 1.30.
+ * @QMI_DATA_ENDPOINT_TYPE_HSIC: High-speed inter-chip interface. Since 1.30.
+ * @QMI_DATA_ENDPOINT_TYPE_HSUSB: High-speed USB.
+ * @QMI_DATA_ENDPOINT_TYPE_PCIE: PCIe. Since: 1.28.
+ * @QMI_DATA_ENDPOINT_TYPE_EMBEDDED: Embedded. Since 1.28.
+ * @QMI_DATA_ENDPOINT_TYPE_BAM_DMUX: BAM/DMUX. Since 1.30.
+ * @QMI_DATA_ENDPOINT_TYPE_UNDEFINED: Undefined.
  *
  * Data Endpoint Type.
  *
  * Since: 1.18
  */
 typedef enum { /*< since=1.18 >*/
-    QMI_DATA_ENDPOINT_TYPE_HSUSB     = 0X02,
-    QMI_DATA_ENDPOINT_TYPE_PCIE      = 0X03,
-    QMI_DATA_ENDPOINT_TYPE_EMBEDDED  = 0X04,
-    QMI_DATA_ENDPOINT_TYPE_UNDEFINED = 0XFF,
+    QMI_DATA_ENDPOINT_TYPE_UNKNOWN   = 0x00,
+    QMI_DATA_ENDPOINT_TYPE_HSIC      = 0x01,
+    QMI_DATA_ENDPOINT_TYPE_HSUSB     = 0x02,
+    QMI_DATA_ENDPOINT_TYPE_PCIE      = 0x03,
+    QMI_DATA_ENDPOINT_TYPE_EMBEDDED  = 0x04,
+    QMI_DATA_ENDPOINT_TYPE_BAM_DMUX  = 0x05,
+    QMI_DATA_ENDPOINT_TYPE_UNDEFINED = 0xFF,
 } QmiDataEndpointType;
 
 /**
