@@ -3774,14 +3774,6 @@
                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
-  {  "name"    : "Force Network Search",
-     "type"    : "Message",
-     "service" : "NAS",
-     "id"      : "0x0067",
-     "since"   : "1.16",
-     "output"  : [ { "common-ref" : "Operation Result" } ] },
-
-  // *********************************************************************************
   {  "name"    : "Get CDMA Position Info",
      "type"    : "Message",
      "service" : "NAS",
@@ -3820,6 +3812,14 @@
                                                                                 { "name"          : "GPS Time In Milliseconds",
                                                                                   "format"        : "guint64" } ] } } ],
                      "prerequisites": [ { "common-ref" : "Success" } ] } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Force Network Search",
+     "type"    : "Message",
+     "service" : "NAS",
+     "id"      : "0x0067",
+     "since"   : "1.16",
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get DRX",
