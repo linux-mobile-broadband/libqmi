@@ -365,6 +365,7 @@ QmiNasDrx
 QmiNasBoolean
 QmiNasPlmnLanguageId
 QmiNasLteVoiceDomain
+QmiNasRejectCause
 <SUBSECTION Methods>
 qmi_nas_radio_interface_get_string
 qmi_nas_active_band_get_string
@@ -432,6 +433,7 @@ qmi_nas_drx_get_string
 qmi_nas_boolean_get_string
 qmi_nas_plmn_language_id_get_string
 qmi_nas_lte_voice_domain_get_string
+qmi_nas_reject_cause_get_string
 <SUBSECTION Private>
 qmi_nas_radio_interface_build_string_from_mask
 qmi_nas_active_band_build_string_from_mask
@@ -495,6 +497,7 @@ qmi_nas_drx_build_string_from_mask
 qmi_nas_boolean_build_string_from_mask
 qmi_nas_plmn_language_id_build_string_from_mask
 qmi_nas_lte_voice_domain_build_string_from_mask
+qmi_nas_reject_cause_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_NAS_ACTIVE_BAND
 QMI_TYPE_NAS_ATTACH_STATE
@@ -558,6 +561,7 @@ QMI_TYPE_NAS_DRX
 QMI_TYPE_NAS_BOOLEAN
 QMI_TYPE_NAS_PLMN_LANGUAGE_ID
 QMI_TYPE_NAS_LTE_VOICE_DOMAIN
+QMI_TYPE_NAS_REJECT_CAUSE
 qmi_nas_active_band_get_type
 qmi_nas_attach_state_get_type
 qmi_nas_call_barring_status_get_type
@@ -620,6 +624,7 @@ qmi_nas_drx_get_type
 qmi_nas_boolean_get_type
 qmi_nas_plmn_language_id_get_type
 qmi_nas_lte_voice_domain_get_type
+qmi_nas_reject_cause_get_type
 </SECTION>
 
 <SECTION>

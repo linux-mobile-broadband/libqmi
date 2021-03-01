@@ -147,6 +147,7 @@
       <xi:include href="xml/qmi-indication-nas-system-info.xml"/>
       <xi:include href="xml/qmi-indication-nas-signal-info.xml"/>
       <xi:include href="xml/qmi-indication-nas-operator-name.xml"/>
+      <xi:include href="xml/qmi-indication-nas-network-reject.xml"/>
     </section>
     <section>
       <title>NAS Requests</title>
