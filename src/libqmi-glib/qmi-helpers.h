@@ -141,6 +141,20 @@ QMI_GDOUBLE_SWAP_LE_BE (gdouble in)
 #define QMI_GDOUBLE_FROM_LE(val) (QMI_GDOUBLE_TO_LE (val))
 #define QMI_GDOUBLE_FROM_BE(val) (QMI_GDOUBLE_TO_BE (val))
 
+
+
+#if !GLIB_CHECK_VERSION(2,54,0)
+
+/* Pointer Array lookup with a GEqualFunc, imported from GLib 2.54 */
+#define g_ptr_array_find_with_equal_func qmi_ptr_array_find_with_equal_func
+G_GNUC_INTERNAL
+gboolean qmi_ptr_array_find_with_equal_func (GPtrArray     *haystack,
+                                             gconstpointer  needle,
+                                             GEqualFunc     equal_func,
+                                             guint         *index_);
+
+#endif
+
 G_END_DECLS
 
 #endif /* _LIBQMI_GLIB_QMI_UTILS_PRIVATE_H_ */
