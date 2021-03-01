@@ -28,6 +28,7 @@
 #include <net/if_arp.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <string.h>
 
 #include "qmi-device.h"
 #include "qmi-error-types.h"
