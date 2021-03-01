@@ -159,7 +159,10 @@ port_manager_del_link_ready (QmiNetPortManager *self,
                              GAsyncResult      *res,
                              GTask             *task)
 {
-    GError *error = NULL;
+    DelAllLinksContext *ctx;
+    GError             *error = NULL;
+
+    ctx = g_task_get_task_data (task);
 
     if (!qmi_net_port_manager_del_link_finish (self, res, &error)) {
         g_task_return_error (task, error);
@@ -167,6 +170,7 @@ port_manager_del_link_ready (QmiNetPortManager *self,
         return;
     }
 
+    g_ptr_array_remove_index_fast (ctx->links, 0);
     delete_next_link (task);
 }
 
@@ -175,7 +179,6 @@ delete_next_link (GTask *task)
 {
     QmiNetPortManager  *self;
     DelAllLinksContext *ctx;
-    g_autofree gchar   *link_name = NULL;
 
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
@@ -186,10 +189,8 @@ delete_next_link (GTask *task)
         return;
     }
 
-    link_name = g_ptr_array_steal_index_fast (ctx->links, 0);
-
     qmi_net_port_manager_del_link (self,
-                                   link_name,
+                                   g_ptr_array_index (ctx->links, 0),
                                    QMI_DEVICE_MUX_ID_UNBOUND,
                                    5,
                                    g_task_get_cancellable (task),
