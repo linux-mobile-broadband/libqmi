@@ -1,4 +1,13 @@
 
+Overview of changes in libqmi 1.28.2
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fixed build with GLib < 2.58.
+   ** Simplified the qmi_wwan add_mux/del_mux logic assuming there is no delay
+      in the creation and deletion of the net links.
+
+
 Overview of changes in libqmi 1.28.0
 ----------------------------------------
 
