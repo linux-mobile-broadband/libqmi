@@ -2753,6 +2753,542 @@ QmiMessageWdsSetDefaultProfileNumberOutput *qmi_client_wds_set_default_profile_n
 
 #endif /* HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUMBER */
 
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO
+
+/**
+ * qmi_message_nas_get_system_info_output_get_gsm_system_info:
+ * @self: a #QmiMessageNasGetSystemInfoOutput.
+ * @value_gsm_system_info_domain_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_gsm_system_info_service_capability_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_service_capability: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_gsm_system_info_roaming_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_roaming_status: (out): a placeholder for the output #QmiNasRoamingStatus, or %NULL if not required.
+ * @value_gsm_system_info_forbidden_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_forbidden: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_lac_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_lac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_gsm_system_info_cid_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_cid: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_gsm_system_info_registration_reject_info_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_registration_reject_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_gsm_system_info_registration_reject_cause: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_gsm_system_info_network_id_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_mcc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_gsm_system_info_mnc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_gsm_system_info_egprs_support_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_egprs_support: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_dtm_support_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_dtm_support: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'GSM System Info' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.30. Use qmi_message_nas_get_system_info_output_get_gsm_system_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_nas_get_system_info_output_get_gsm_system_info_v2)
+gboolean qmi_message_nas_get_system_info_output_get_gsm_system_info (
+    QmiMessageNasGetSystemInfoOutput *self,
+    gboolean *value_gsm_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_domain,
+    gboolean *value_gsm_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_service_capability,
+    gboolean *value_gsm_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_gsm_system_info_roaming_status,
+    gboolean *value_gsm_system_info_forbidden_valid,
+    gboolean *value_gsm_system_info_forbidden,
+    gboolean *value_gsm_system_info_lac_valid,
+    guint16 *value_gsm_system_info_lac,
+    gboolean *value_gsm_system_info_cid_valid,
+    guint32 *value_gsm_system_info_cid,
+    gboolean *value_gsm_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_registration_reject_domain,
+    guint8 *value_gsm_system_info_registration_reject_cause,
+    gboolean *value_gsm_system_info_network_id_valid,
+    const gchar **value_gsm_system_info_mcc,
+    const gchar **value_gsm_system_info_mnc,
+    gboolean *value_gsm_system_info_egprs_support_valid,
+    gboolean *value_gsm_system_info_egprs_support,
+    gboolean *value_gsm_system_info_dtm_support_valid,
+    gboolean *value_gsm_system_info_dtm_support,
+    GError **error);
+
+/**
+ * qmi_message_nas_get_system_info_output_get_wcdma_system_info:
+ * @self: a #QmiMessageNasGetSystemInfoOutput.
+ * @value_wcdma_system_info_domain_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_wcdma_system_info_service_capability_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_service_capability: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_wcdma_system_info_roaming_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_roaming_status: (out): a placeholder for the output #QmiNasRoamingStatus, or %NULL if not required.
+ * @value_wcdma_system_info_forbidden_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_forbidden: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_lac_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_lac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_wcdma_system_info_cid_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_cid: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_wcdma_system_info_registration_reject_info_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_registration_reject_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_wcdma_system_info_registration_reject_cause: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_wcdma_system_info_network_id_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_mcc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_wcdma_system_info_mnc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_wcdma_system_info_hs_call_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_hs_call_status: (out): a placeholder for the output #QmiNasWcdmaHsService, or %NULL if not required.
+ * @value_wcdma_system_info_hs_service_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_hs_service: (out): a placeholder for the output #QmiNasWcdmaHsService, or %NULL if not required.
+ * @value_wcdma_system_info_primary_scrambling_code_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_primary_scrambling_code: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'WCDMA System Info' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.30. Use qmi_message_nas_get_system_info_output_get_wcdma_system_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_nas_get_system_info_output_get_wcdma_system_info_v2)
+gboolean qmi_message_nas_get_system_info_output_get_wcdma_system_info (
+    QmiMessageNasGetSystemInfoOutput *self,
+    gboolean *value_wcdma_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_domain,
+    gboolean *value_wcdma_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_service_capability,
+    gboolean *value_wcdma_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_wcdma_system_info_roaming_status,
+    gboolean *value_wcdma_system_info_forbidden_valid,
+    gboolean *value_wcdma_system_info_forbidden,
+    gboolean *value_wcdma_system_info_lac_valid,
+    guint16 *value_wcdma_system_info_lac,
+    gboolean *value_wcdma_system_info_cid_valid,
+    guint32 *value_wcdma_system_info_cid,
+    gboolean *value_wcdma_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_registration_reject_domain,
+    guint8 *value_wcdma_system_info_registration_reject_cause,
+    gboolean *value_wcdma_system_info_network_id_valid,
+    const gchar **value_wcdma_system_info_mcc,
+    const gchar **value_wcdma_system_info_mnc,
+    gboolean *value_wcdma_system_info_hs_call_status_valid,
+    QmiNasWcdmaHsService *value_wcdma_system_info_hs_call_status,
+    gboolean *value_wcdma_system_info_hs_service_valid,
+    QmiNasWcdmaHsService *value_wcdma_system_info_hs_service,
+    gboolean *value_wcdma_system_info_primary_scrambling_code_valid,
+    guint16 *value_wcdma_system_info_primary_scrambling_code,
+    GError **error);
+
+/**
+ * qmi_message_nas_get_system_info_output_get_lte_system_info:
+ * @self: a #QmiMessageNasGetSystemInfoOutput.
+ * @value_lte_system_info_domain_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_lte_system_info_service_capability_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_service_capability: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_lte_system_info_roaming_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_roaming_status: (out): a placeholder for the output #QmiNasRoamingStatus, or %NULL if not required.
+ * @value_lte_system_info_forbidden_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_forbidden: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_lac_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_lac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_lte_system_info_cid_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_cid: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_lte_system_info_registration_reject_info_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_registration_reject_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_lte_system_info_registration_reject_cause: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_lte_system_info_network_id_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_mcc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_lte_system_info_mnc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_lte_system_info_tac_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_tac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'LTE System Info' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.30. Use qmi_message_nas_get_system_info_output_get_lte_system_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_nas_get_system_info_output_get_lte_system_info_v2)
+gboolean qmi_message_nas_get_system_info_output_get_lte_system_info (
+    QmiMessageNasGetSystemInfoOutput *self,
+    gboolean *value_lte_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_domain,
+    gboolean *value_lte_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_service_capability,
+    gboolean *value_lte_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_lte_system_info_roaming_status,
+    gboolean *value_lte_system_info_forbidden_valid,
+    gboolean *value_lte_system_info_forbidden,
+    gboolean *value_lte_system_info_lac_valid,
+    guint16 *value_lte_system_info_lac,
+    gboolean *value_lte_system_info_cid_valid,
+    guint32 *value_lte_system_info_cid,
+    gboolean *value_lte_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_registration_reject_domain,
+    guint8 *value_lte_system_info_registration_reject_cause,
+    gboolean *value_lte_system_info_network_id_valid,
+    const gchar **value_lte_system_info_mcc,
+    const gchar **value_lte_system_info_mnc,
+    gboolean *value_lte_system_info_tac_valid,
+    guint16 *value_lte_system_info_tac,
+    GError **error);
+
+/**
+ * qmi_message_nas_get_system_info_output_get_td_scdma_system_info:
+ * @self: a #QmiMessageNasGetSystemInfoOutput.
+ * @value_td_scdma_system_info_domain_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_td_scdma_system_info_service_capability_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_service_capability: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_td_scdma_system_info_roaming_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_roaming_status: (out): a placeholder for the output #QmiNasRoamingStatus, or %NULL if not required.
+ * @value_td_scdma_system_info_forbidden_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_forbidden: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_lac_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_lac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_td_scdma_system_info_cid_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_cid: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_td_scdma_system_info_registration_reject_info_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_registration_reject_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_td_scdma_system_info_registration_reject_cause: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_td_scdma_system_info_network_id_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_mcc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_td_scdma_system_info_mnc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_td_scdma_system_info_hs_call_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_hs_call_status: (out): a placeholder for the output #QmiNasWcdmaHsService, or %NULL if not required.
+ * @value_td_scdma_system_info_hs_service_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_hs_service: (out): a placeholder for the output #QmiNasWcdmaHsService, or %NULL if not required.
+ * @value_td_scdma_system_info_cell_parameter_id_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_cell_parameter_id: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_td_scdma_system_info_cell_broadcast_support_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_cell_broadcast_support: (out): a placeholder for the output #QmiNasCellBroadcastCapability, or %NULL if not required.
+ * @value_td_scdma_system_info_cs_call_barring_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_cs_call_barring_status: (out): a placeholder for the output #QmiNasCallBarringStatus, or %NULL if not required.
+ * @value_td_scdma_system_info_ps_call_barring_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_ps_call_barring_status: (out): a placeholder for the output #QmiNasCallBarringStatus, or %NULL if not required.
+ * @value_td_scdma_system_info_cipher_domain_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scdma_system_info_cipher_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'TD SCDMA System Info' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.30. Use qmi_message_nas_get_system_info_output_get_td_scdma_system_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_nas_get_system_info_output_get_td_scdma_system_info_v2)
+gboolean qmi_message_nas_get_system_info_output_get_td_scdma_system_info (
+    QmiMessageNasGetSystemInfoOutput *self,
+    gboolean *value_td_scdma_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_td_scdma_system_info_domain,
+    gboolean *value_td_scdma_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_td_scdma_system_info_service_capability,
+    gboolean *value_td_scdma_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_td_scdma_system_info_roaming_status,
+    gboolean *value_td_scdma_system_info_forbidden_valid,
+    gboolean *value_td_scdma_system_info_forbidden,
+    gboolean *value_td_scdma_system_info_lac_valid,
+    guint16 *value_td_scdma_system_info_lac,
+    gboolean *value_td_scdma_system_info_cid_valid,
+    guint32 *value_td_scdma_system_info_cid,
+    gboolean *value_td_scdma_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_td_scdma_system_info_registration_reject_domain,
+    guint8 *value_td_scdma_system_info_registration_reject_cause,
+    gboolean *value_td_scdma_system_info_network_id_valid,
+    const gchar **value_td_scdma_system_info_mcc,
+    const gchar **value_td_scdma_system_info_mnc,
+    gboolean *value_td_scdma_system_info_hs_call_status_valid,
+    QmiNasWcdmaHsService *value_td_scdma_system_info_hs_call_status,
+    gboolean *value_td_scdma_system_info_hs_service_valid,
+    QmiNasWcdmaHsService *value_td_scdma_system_info_hs_service,
+    gboolean *value_td_scdma_system_info_cell_parameter_id_valid,
+    guint16 *value_td_scdma_system_info_cell_parameter_id,
+    gboolean *value_td_scdma_system_info_cell_broadcast_support_valid,
+    QmiNasCellBroadcastCapability *value_td_scdma_system_info_cell_broadcast_support,
+    gboolean *value_td_scdma_system_info_cs_call_barring_status_valid,
+    QmiNasCallBarringStatus *value_td_scdma_system_info_cs_call_barring_status,
+    gboolean *value_td_scdma_system_info_ps_call_barring_status_valid,
+    QmiNasCallBarringStatus *value_td_scdma_system_info_ps_call_barring_status,
+    gboolean *value_td_scdma_system_info_cipher_domain_valid,
+    QmiNasNetworkServiceDomain *value_td_scdma_system_info_cipher_domain,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO */
+
+#if defined HAVE_QMI_INDICATION_NAS_SYSTEM_INFO
+
+/**
+ * qmi_indication_nas_system_info_output_get_gsm_system_info:
+ * @self: a #QmiIndicationNasSystemInfoOutput.
+ * @value_gsm_system_info_domain_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_gsm_system_info_service_capability_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_service_capability: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_gsm_system_info_roaming_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_roaming_status: (out): a placeholder for the output #QmiNasRoamingStatus, or %NULL if not required.
+ * @value_gsm_system_info_forbidden_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_forbidden: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_lac_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_lac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_gsm_system_info_cid_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_cid: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_gsm_system_info_registration_reject_info_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_registration_reject_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_gsm_system_info_registration_reject_cause: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_gsm_system_info_network_id_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_mcc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_gsm_system_info_mnc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_gsm_system_info_egprs_support_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_egprs_support: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_dtm_support_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_gsm_system_info_dtm_support: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'GSM System Info' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.30. Use qmi_indication_nas_system_info_output_get_gsm_system_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_indication_nas_system_info_output_get_gsm_system_info_v2)
+gboolean qmi_indication_nas_system_info_output_get_gsm_system_info (
+    QmiIndicationNasSystemInfoOutput *self,
+    gboolean *value_gsm_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_domain,
+    gboolean *value_gsm_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_service_capability,
+    gboolean *value_gsm_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_gsm_system_info_roaming_status,
+    gboolean *value_gsm_system_info_forbidden_valid,
+    gboolean *value_gsm_system_info_forbidden,
+    gboolean *value_gsm_system_info_lac_valid,
+    guint16 *value_gsm_system_info_lac,
+    gboolean *value_gsm_system_info_cid_valid,
+    guint32 *value_gsm_system_info_cid,
+    gboolean *value_gsm_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_registration_reject_domain,
+    guint8 *value_gsm_system_info_registration_reject_cause,
+    gboolean *value_gsm_system_info_network_id_valid,
+    const gchar **value_gsm_system_info_mcc,
+    const gchar **value_gsm_system_info_mnc,
+    gboolean *value_gsm_system_info_egprs_support_valid,
+    gboolean *value_gsm_system_info_egprs_support,
+    gboolean *value_gsm_system_info_dtm_support_valid,
+    gboolean *value_gsm_system_info_dtm_support,
+    GError **error);
+
+/**
+ * qmi_indication_nas_system_info_output_get_wcdma_system_info:
+ * @self: a #QmiIndicationNasSystemInfoOutput.
+ * @value_wcdma_system_info_domain_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_wcdma_system_info_service_capability_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_service_capability: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_wcdma_system_info_roaming_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_roaming_status: (out): a placeholder for the output #QmiNasRoamingStatus, or %NULL if not required.
+ * @value_wcdma_system_info_forbidden_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_forbidden: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_lac_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_lac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_wcdma_system_info_cid_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_cid: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_wcdma_system_info_registration_reject_info_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_registration_reject_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_wcdma_system_info_registration_reject_cause: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_wcdma_system_info_network_id_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_mcc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_wcdma_system_info_mnc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_wcdma_system_info_hs_call_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_hs_call_status: (out): a placeholder for the output #QmiNasWcdmaHsService, or %NULL if not required.
+ * @value_wcdma_system_info_hs_service_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_hs_service: (out): a placeholder for the output #QmiNasWcdmaHsService, or %NULL if not required.
+ * @value_wcdma_system_info_primary_scrambling_code_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_wcdma_system_info_primary_scrambling_code: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'WCDMA System Info' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.30. Use qmi_indication_nas_system_info_output_get_wcdma_system_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_indication_nas_system_info_output_get_wcdma_system_info_v2)
+gboolean qmi_indication_nas_system_info_output_get_wcdma_system_info (
+    QmiIndicationNasSystemInfoOutput *self,
+    gboolean *value_wcdma_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_domain,
+    gboolean *value_wcdma_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_service_capability,
+    gboolean *value_wcdma_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_wcdma_system_info_roaming_status,
+    gboolean *value_wcdma_system_info_forbidden_valid,
+    gboolean *value_wcdma_system_info_forbidden,
+    gboolean *value_wcdma_system_info_lac_valid,
+    guint16 *value_wcdma_system_info_lac,
+    gboolean *value_wcdma_system_info_cid_valid,
+    guint32 *value_wcdma_system_info_cid,
+    gboolean *value_wcdma_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_registration_reject_domain,
+    guint8 *value_wcdma_system_info_registration_reject_cause,
+    gboolean *value_wcdma_system_info_network_id_valid,
+    const gchar **value_wcdma_system_info_mcc,
+    const gchar **value_wcdma_system_info_mnc,
+    gboolean *value_wcdma_system_info_hs_call_status_valid,
+    QmiNasWcdmaHsService *value_wcdma_system_info_hs_call_status,
+    gboolean *value_wcdma_system_info_hs_service_valid,
+    QmiNasWcdmaHsService *value_wcdma_system_info_hs_service,
+    gboolean *value_wcdma_system_info_primary_scrambling_code_valid,
+    guint16 *value_wcdma_system_info_primary_scrambling_code,
+    GError **error);
+
+/**
+ * qmi_indication_nas_system_info_output_get_lte_system_info:
+ * @self: a #QmiIndicationNasSystemInfoOutput.
+ * @value_lte_system_info_domain_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_lte_system_info_service_capability_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_service_capability: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_lte_system_info_roaming_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_roaming_status: (out): a placeholder for the output #QmiNasRoamingStatus, or %NULL if not required.
+ * @value_lte_system_info_forbidden_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_forbidden: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_lac_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_lac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_lte_system_info_cid_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_cid: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_lte_system_info_registration_reject_info_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_registration_reject_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_lte_system_info_registration_reject_cause: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_lte_system_info_network_id_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_mcc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_lte_system_info_mnc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_lte_system_info_tac_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_lte_system_info_tac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'LTE System Info' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprected: 1.30. Use qmi_indication_nas_system_info_output_get_lte_system_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_indication_nas_system_info_output_get_lte_system_info_v2)
+gboolean qmi_indication_nas_system_info_output_get_lte_system_info (
+    QmiIndicationNasSystemInfoOutput *self,
+    gboolean *value_lte_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_domain,
+    gboolean *value_lte_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_service_capability,
+    gboolean *value_lte_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_lte_system_info_roaming_status,
+    gboolean *value_lte_system_info_forbidden_valid,
+    gboolean *value_lte_system_info_forbidden,
+    gboolean *value_lte_system_info_lac_valid,
+    guint16 *value_lte_system_info_lac,
+    gboolean *value_lte_system_info_cid_valid,
+    guint32 *value_lte_system_info_cid,
+    gboolean *value_lte_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_registration_reject_domain,
+    guint8 *value_lte_system_info_registration_reject_cause,
+    gboolean *value_lte_system_info_network_id_valid,
+    const gchar **value_lte_system_info_mcc,
+    const gchar **value_lte_system_info_mnc,
+    gboolean *value_lte_system_info_tac_valid,
+    guint16 *value_lte_system_info_tac,
+    GError **error);
+
+/**
+ * qmi_indication_nas_system_info_output_get_td_scma_system_info:
+ * @self: a #QmiIndicationNasSystemInfoOutput.
+ * @value_td_scma_system_info_domain_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_td_scma_system_info_service_capability_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_service_capability: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_td_scma_system_info_roaming_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_roaming_status: (out): a placeholder for the output #QmiNasRoamingStatus, or %NULL if not required.
+ * @value_td_scma_system_info_forbidden_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_forbidden: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_lac_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_lac: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_td_scma_system_info_cid_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_cid: (out): a placeholder for the output #guint32, or %NULL if not required.
+ * @value_td_scma_system_info_registration_reject_info_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_registration_reject_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @value_td_scma_system_info_registration_reject_cause: (out): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_td_scma_system_info_network_id_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_mcc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_td_scma_system_info_mnc: (out): a placeholder for the output constant string, or %NULL if not required.
+ * @value_td_scma_system_info_hs_call_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_hs_call_status: (out): a placeholder for the output #QmiNasWcdmaHsService, or %NULL if not required.
+ * @value_td_scma_system_info_hs_service_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_hs_service: (out): a placeholder for the output #QmiNasWcdmaHsService, or %NULL if not required.
+ * @value_td_scma_system_info_cell_parameter_id_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_cell_parameter_id: (out): a placeholder for the output #guint16, or %NULL if not required.
+ * @value_td_scma_system_info_cell_broadcast_support_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_cell_broadcast_support: (out): a placeholder for the output #QmiNasCellBroadcastCapability, or %NULL if not required.
+ * @value_td_scma_system_info_cs_call_barring_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_cs_call_barring_status: (out): a placeholder for the output #QmiNasCallBarringStatus, or %NULL if not required.
+ * @value_td_scma_system_info_ps_call_barring_status_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_ps_call_barring_status: (out): a placeholder for the output #QmiNasCallBarringStatus, or %NULL if not required.
+ * @value_td_scma_system_info_cipher_domain_valid: (out): a placeholder for the output #gboolean, or %NULL if not required.
+ * @value_td_scma_system_info_cipher_domain: (out): a placeholder for the output #QmiNasNetworkServiceDomain, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'TD SCMA System Info' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.30. Use qmi_indication_nas_system_info_output_get_td_scma_system_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_indication_nas_system_info_output_get_td_scma_system_info_v2)
+gboolean qmi_indication_nas_system_info_output_get_td_scma_system_info (
+    QmiIndicationNasSystemInfoOutput *self,
+    gboolean *value_td_scma_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_td_scma_system_info_domain,
+    gboolean *value_td_scma_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_td_scma_system_info_service_capability,
+    gboolean *value_td_scma_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_td_scma_system_info_roaming_status,
+    gboolean *value_td_scma_system_info_forbidden_valid,
+    gboolean *value_td_scma_system_info_forbidden,
+    gboolean *value_td_scma_system_info_lac_valid,
+    guint16 *value_td_scma_system_info_lac,
+    gboolean *value_td_scma_system_info_cid_valid,
+    guint32 *value_td_scma_system_info_cid,
+    gboolean *value_td_scma_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_td_scma_system_info_registration_reject_domain,
+    guint8 *value_td_scma_system_info_registration_reject_cause,
+    gboolean *value_td_scma_system_info_network_id_valid,
+    const gchar **value_td_scma_system_info_mcc,
+    const gchar **value_td_scma_system_info_mnc,
+    gboolean *value_td_scma_system_info_hs_call_status_valid,
+    QmiNasWcdmaHsService *value_td_scma_system_info_hs_call_status,
+    gboolean *value_td_scma_system_info_hs_service_valid,
+    QmiNasWcdmaHsService *value_td_scma_system_info_hs_service,
+    gboolean *value_td_scma_system_info_cell_parameter_id_valid,
+    guint16 *value_td_scma_system_info_cell_parameter_id,
+    gboolean *value_td_scma_system_info_cell_broadcast_support_valid,
+    QmiNasCellBroadcastCapability *value_td_scma_system_info_cell_broadcast_support,
+    gboolean *value_td_scma_system_info_cs_call_barring_status_valid,
+    QmiNasCallBarringStatus *value_td_scma_system_info_cs_call_barring_status,
+    gboolean *value_td_scma_system_info_ps_call_barring_status_valid,
+    QmiNasCallBarringStatus *value_td_scma_system_info_ps_call_barring_status,
+    gboolean *value_td_scma_system_info_cipher_domain_valid,
+    QmiNasNetworkServiceDomain *value_td_scma_system_info_cipher_domain,
+    GError **error);
+
+#endif /* HAVE_QMI_INDICATION_NAS_SYSTEM_INFO */
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */

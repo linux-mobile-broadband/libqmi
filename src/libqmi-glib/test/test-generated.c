@@ -947,7 +947,7 @@ nas_get_system_info_ready (QmiClientNas *client,
         guint32                     cid;
         gboolean                    registration_reject_info_valid = FALSE;
         QmiNasNetworkServiceDomain  registration_reject_domain;
-        guint8                      registration_reject_cause;
+        QmiNasRejectCause           registration_reject_cause;
         gboolean                    network_id_valid = FALSE;
         const gchar                *mcc = NULL;
         const gchar                *mnc = NULL;
@@ -976,28 +976,29 @@ nas_get_system_info_ready (QmiClientNas *client,
          *		Registration domain: 'not-applicable'
          */
 
-        g_assert (qmi_message_nas_get_system_info_output_get_lte_system_info (output,
-                                                                              &domain_valid,
-                                                                              &domain,
-                                                                              &service_capability_valid,
-                                                                              &service_capability,
-                                                                              &roaming_status_valid,
-                                                                              &roaming_status,
-                                                                              &forbidden_valid,
-                                                                              &forbidden,
-                                                                              &lac_valid,
-                                                                              &lac,
-                                                                              &cid_valid,
-                                                                              &cid,
-                                                                              &registration_reject_info_valid,
-                                                                              &registration_reject_domain,
-                                                                              &registration_reject_cause,
-                                                                              &network_id_valid,
-                                                                              &mcc,
-                                                                              &mnc,
-                                                                              &tac_valid,
-                                                                              &tac,
-                                                                              &error));
+        g_assert (qmi_message_nas_get_system_info_output_get_lte_system_info_v2 (
+                      output,
+                      &domain_valid,
+                      &domain,
+                      &service_capability_valid,
+                      &service_capability,
+                      &roaming_status_valid,
+                      &roaming_status,
+                      &forbidden_valid,
+                      &forbidden,
+                      &lac_valid,
+                      &lac,
+                      &cid_valid,
+                      &cid,
+                      &registration_reject_info_valid,
+                      &registration_reject_domain,
+                      &registration_reject_cause,
+                      &network_id_valid,
+                      &mcc,
+                      &mnc,
+                      &tac_valid,
+                      &tac,
+                      &error));
         g_assert_no_error (error);
         g_assert (domain_valid);
         g_assert_cmpuint (domain, ==, QMI_NAS_NETWORK_SERVICE_DOMAIN_CS_PS);

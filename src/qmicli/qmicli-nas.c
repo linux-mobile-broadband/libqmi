@@ -1897,7 +1897,7 @@ get_system_info_ready (QmiClientNas *client,
         guint32 cid;
         gboolean registration_reject_info_valid;
         QmiNasNetworkServiceDomain registration_reject_domain;
-        guint8 registration_reject_cause;
+        QmiNasRejectCause registration_reject_cause;
         gboolean network_id_valid;
         const gchar *mcc;
         const gchar *mnc;
@@ -1925,7 +1925,7 @@ get_system_info_ready (QmiClientNas *client,
                      qmi_nas_service_status_get_string (true_service_status),
                      preferred_data_path ? "yes" : "no");
 
-            if (qmi_message_nas_get_system_info_output_get_gsm_system_info (
+            if (qmi_message_nas_get_system_info_output_get_gsm_system_info_v2 (
                     output,
                     &domain_valid, &domain,
                     &service_capability_valid, &service_capability,
@@ -1951,9 +1951,9 @@ get_system_info_ready (QmiClientNas *client,
                 if (cid_valid)
                     g_print ("\t\tCell ID: '%u'\n", cid);
                 if (registration_reject_info_valid)
-                    g_print ("\t\tRegistration reject: '%s' (%u)\n",
+                    g_print ("\t\tRegistration reject: '%s' (%s)\n",
                              qmi_nas_network_service_domain_get_string (registration_reject_domain),
-                             registration_reject_cause);
+                             qmi_nas_reject_cause_get_string (registration_reject_cause));
                 if (network_id_valid) {
                     g_print ("\t\tMCC: '%s'\n", mcc);
                     if ((guchar)mnc[2] == 0xFF)
@@ -2014,7 +2014,7 @@ get_system_info_ready (QmiClientNas *client,
         guint32 cid;
         gboolean registration_reject_info_valid;
         QmiNasNetworkServiceDomain registration_reject_domain;
-        guint8 registration_reject_cause;
+        QmiNasRejectCause registration_reject_cause;
         gboolean network_id_valid;
         const gchar *mcc;
         const gchar *mnc;
@@ -2044,7 +2044,7 @@ get_system_info_ready (QmiClientNas *client,
                      qmi_nas_service_status_get_string (true_service_status),
                      preferred_data_path ? "yes" : "no");
 
-            if (qmi_message_nas_get_system_info_output_get_wcdma_system_info (
+            if (qmi_message_nas_get_system_info_output_get_wcdma_system_info_v2 (
                     output,
                     &domain_valid, &domain,
                     &service_capability_valid, &service_capability,
@@ -2057,7 +2057,7 @@ get_system_info_ready (QmiClientNas *client,
                     &hs_call_status_valid, &hs_call_status,
                     &hs_service_valid, &hs_service,
                     &primary_scrambling_code_valid, &primary_scrambling_code,
-                NULL)) {
+                    NULL)) {
                 if (domain_valid)
                     g_print ("\t\tDomain: '%s'\n", qmi_nas_network_service_domain_get_string (domain));
                 if (service_capability_valid)
@@ -2071,9 +2071,9 @@ get_system_info_ready (QmiClientNas *client,
                 if (cid_valid)
                     g_print ("\t\tCell ID: '%u'\n", cid);
                 if (registration_reject_info_valid)
-                    g_print ("\t\tRegistration reject: '%s' (%u)\n",
+                    g_print ("\t\tRegistration reject: '%s' (%s)\n",
                              qmi_nas_network_service_domain_get_string (registration_reject_domain),
-                             registration_reject_cause);
+                             qmi_nas_reject_cause_get_string (registration_reject_cause));
                 if (network_id_valid) {
                     g_print ("\t\tMCC: '%s'\n", mcc);
                     if ((guchar)mnc[2] == 0xFF)
@@ -2136,7 +2136,7 @@ get_system_info_ready (QmiClientNas *client,
         guint32 cid;
         gboolean registration_reject_info_valid;
         QmiNasNetworkServiceDomain registration_reject_domain;
-        guint8 registration_reject_cause;
+        QmiNasRejectCause registration_reject_cause;
         gboolean network_id_valid;
         const gchar *mcc;
         const gchar *mnc;
@@ -2165,7 +2165,7 @@ get_system_info_ready (QmiClientNas *client,
                      qmi_nas_service_status_get_string (true_service_status),
                      preferred_data_path ? "yes" : "no");
 
-            if (qmi_message_nas_get_system_info_output_get_lte_system_info (
+            if (qmi_message_nas_get_system_info_output_get_lte_system_info_v2 (
                     output,
                     &domain_valid, &domain,
                     &service_capability_valid, &service_capability,
@@ -2190,9 +2190,9 @@ get_system_info_ready (QmiClientNas *client,
                 if (cid_valid)
                     g_print ("\t\tCell ID: '%u'\n", cid);
                 if (registration_reject_info_valid)
-                    g_print ("\t\tRegistration reject: '%s' (%u)\n",
+                    g_print ("\t\tRegistration reject: '%s' (%s)\n",
                              qmi_nas_network_service_domain_get_string (registration_reject_domain),
-                             registration_reject_cause);
+                             qmi_nas_reject_cause_get_string (registration_reject_cause));
                 if (network_id_valid) {
                     g_print ("\t\tMCC: '%s'\n", mcc);
                     if ((guchar)mnc[2] == 0xFF)
@@ -2282,7 +2282,7 @@ get_system_info_ready (QmiClientNas *client,
         guint32 cid;
         gboolean registration_reject_info_valid;
         QmiNasNetworkServiceDomain registration_reject_domain;
-        guint8 registration_reject_cause;
+        QmiNasRejectCause registration_reject_cause;
         gboolean network_id_valid;
         const gchar *mcc;
         const gchar *mnc;
@@ -2315,7 +2315,7 @@ get_system_info_ready (QmiClientNas *client,
                      qmi_nas_service_status_get_string (true_service_status),
                      preferred_data_path ? "yes" : "no");
 
-            if (qmi_message_nas_get_system_info_output_get_td_scdma_system_info (
+            if (qmi_message_nas_get_system_info_output_get_td_scdma_system_info_v2 (
                     output,
                     &domain_valid, &domain,
                     &service_capability_valid, &service_capability,
@@ -2346,9 +2346,9 @@ get_system_info_ready (QmiClientNas *client,
                 if (cid_valid)
                     g_print ("\t\tCell ID: '%u'\n", cid);
                 if (registration_reject_info_valid)
-                    g_print ("\t\tRegistration reject: '%s' (%u)\n",
+                    g_print ("\t\tRegistration reject: '%s' (%s)\n",
                              qmi_nas_network_service_domain_get_string (registration_reject_domain),
-                             registration_reject_cause);
+                             qmi_nas_reject_cause_get_string (registration_reject_cause));
                 if (network_id_valid) {
                     g_print ("\t\tMCC: '%s'\n", mcc);
                     if ((guchar)mnc[2] == 0xFF)

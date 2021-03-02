@@ -1499,4 +1499,539 @@ qmi_client_wds_set_default_profile_num_finish (
 
 #endif /* HAVE_QMI_MESSAGE_WDS_SET_DEFAULT_PROFILE_NUMBER */
 
+#if defined HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO
+
+gboolean
+qmi_message_nas_get_system_info_output_get_gsm_system_info (
+    QmiMessageNasGetSystemInfoOutput *self,
+    gboolean *value_gsm_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_domain,
+    gboolean *value_gsm_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_service_capability,
+    gboolean *value_gsm_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_gsm_system_info_roaming_status,
+    gboolean *value_gsm_system_info_forbidden_valid,
+    gboolean *value_gsm_system_info_forbidden,
+    gboolean *value_gsm_system_info_lac_valid,
+    guint16 *value_gsm_system_info_lac,
+    gboolean *value_gsm_system_info_cid_valid,
+    guint32 *value_gsm_system_info_cid,
+    gboolean *value_gsm_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_registration_reject_domain,
+    guint8 *value_gsm_system_info_registration_reject_cause,
+    gboolean *value_gsm_system_info_network_id_valid,
+    const gchar **value_gsm_system_info_mcc,
+    const gchar **value_gsm_system_info_mnc,
+    gboolean *value_gsm_system_info_egprs_support_valid,
+    gboolean *value_gsm_system_info_egprs_support,
+    gboolean *value_gsm_system_info_dtm_support_valid,
+    gboolean *value_gsm_system_info_dtm_support,
+    GError **error)
+{
+    QmiNasRejectCause reject_cause = QMI_NAS_REJECT_CAUSE_NONE;
+
+    if (!qmi_message_nas_get_system_info_output_get_gsm_system_info_v2 (
+            self,
+            value_gsm_system_info_domain_valid,
+            value_gsm_system_info_domain,
+            value_gsm_system_info_service_capability_valid,
+            value_gsm_system_info_service_capability,
+            value_gsm_system_info_roaming_status_valid,
+            value_gsm_system_info_roaming_status,
+            value_gsm_system_info_forbidden_valid,
+            value_gsm_system_info_forbidden,
+            value_gsm_system_info_lac_valid,
+            value_gsm_system_info_lac,
+            value_gsm_system_info_cid_valid,
+            value_gsm_system_info_cid,
+            value_gsm_system_info_registration_reject_info_valid,
+            value_gsm_system_info_registration_reject_domain,
+            &reject_cause,
+            value_gsm_system_info_network_id_valid,
+            value_gsm_system_info_mcc,
+            value_gsm_system_info_mnc,
+            value_gsm_system_info_egprs_support_valid,
+            value_gsm_system_info_egprs_support,
+            value_gsm_system_info_dtm_support_valid,
+            value_gsm_system_info_dtm_support,
+            error))
+        return FALSE;
+
+    if (value_gsm_system_info_registration_reject_cause)
+        *value_gsm_system_info_registration_reject_cause = (guint8) reject_cause;
+    return TRUE;
+}
+
+gboolean
+qmi_message_nas_get_system_info_output_get_wcdma_system_info (
+    QmiMessageNasGetSystemInfoOutput *self,
+    gboolean *value_wcdma_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_domain,
+    gboolean *value_wcdma_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_service_capability,
+    gboolean *value_wcdma_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_wcdma_system_info_roaming_status,
+    gboolean *value_wcdma_system_info_forbidden_valid,
+    gboolean *value_wcdma_system_info_forbidden,
+    gboolean *value_wcdma_system_info_lac_valid,
+    guint16 *value_wcdma_system_info_lac,
+    gboolean *value_wcdma_system_info_cid_valid,
+    guint32 *value_wcdma_system_info_cid,
+    gboolean *value_wcdma_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_registration_reject_domain,
+    guint8 *value_wcdma_system_info_registration_reject_cause,
+    gboolean *value_wcdma_system_info_network_id_valid,
+    const gchar **value_wcdma_system_info_mcc,
+    const gchar **value_wcdma_system_info_mnc,
+    gboolean *value_wcdma_system_info_hs_call_status_valid,
+    QmiNasWcdmaHsService *value_wcdma_system_info_hs_call_status,
+    gboolean *value_wcdma_system_info_hs_service_valid,
+    QmiNasWcdmaHsService *value_wcdma_system_info_hs_service,
+    gboolean *value_wcdma_system_info_primary_scrambling_code_valid,
+    guint16 *value_wcdma_system_info_primary_scrambling_code,
+    GError **error)
+{
+    QmiNasRejectCause reject_cause = QMI_NAS_REJECT_CAUSE_NONE;
+
+    if (!qmi_message_nas_get_system_info_output_get_wcdma_system_info_v2 (
+            self,
+            value_wcdma_system_info_domain_valid,
+            value_wcdma_system_info_domain,
+            value_wcdma_system_info_service_capability_valid,
+            value_wcdma_system_info_service_capability,
+            value_wcdma_system_info_roaming_status_valid,
+            value_wcdma_system_info_roaming_status,
+            value_wcdma_system_info_forbidden_valid,
+            value_wcdma_system_info_forbidden,
+            value_wcdma_system_info_lac_valid,
+            value_wcdma_system_info_lac,
+            value_wcdma_system_info_cid_valid,
+            value_wcdma_system_info_cid,
+            value_wcdma_system_info_registration_reject_info_valid,
+            value_wcdma_system_info_registration_reject_domain,
+            &reject_cause,
+            value_wcdma_system_info_network_id_valid,
+            value_wcdma_system_info_mcc,
+            value_wcdma_system_info_mnc,
+            value_wcdma_system_info_hs_call_status_valid,
+            value_wcdma_system_info_hs_call_status,
+            value_wcdma_system_info_hs_service_valid,
+            value_wcdma_system_info_hs_service,
+            value_wcdma_system_info_primary_scrambling_code_valid,
+            value_wcdma_system_info_primary_scrambling_code,
+            error))
+        return FALSE;
+
+    if (value_wcdma_system_info_registration_reject_cause)
+        *value_wcdma_system_info_registration_reject_cause = (guint8) reject_cause;
+    return TRUE;
+}
+
+gboolean
+qmi_message_nas_get_system_info_output_get_lte_system_info (
+    QmiMessageNasGetSystemInfoOutput *self,
+    gboolean *value_lte_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_domain,
+    gboolean *value_lte_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_service_capability,
+    gboolean *value_lte_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_lte_system_info_roaming_status,
+    gboolean *value_lte_system_info_forbidden_valid,
+    gboolean *value_lte_system_info_forbidden,
+    gboolean *value_lte_system_info_lac_valid,
+    guint16 *value_lte_system_info_lac,
+    gboolean *value_lte_system_info_cid_valid,
+    guint32 *value_lte_system_info_cid,
+    gboolean *value_lte_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_registration_reject_domain,
+    guint8 *value_lte_system_info_registration_reject_cause,
+    gboolean *value_lte_system_info_network_id_valid,
+    const gchar **value_lte_system_info_mcc,
+    const gchar **value_lte_system_info_mnc,
+    gboolean *value_lte_system_info_tac_valid,
+    guint16 *value_lte_system_info_tac,
+    GError **error)
+{
+    QmiNasRejectCause reject_cause = QMI_NAS_REJECT_CAUSE_NONE;
+
+    if (!qmi_message_nas_get_system_info_output_get_lte_system_info_v2 (
+            self,
+            value_lte_system_info_domain_valid,
+            value_lte_system_info_domain,
+            value_lte_system_info_service_capability_valid,
+            value_lte_system_info_service_capability,
+            value_lte_system_info_roaming_status_valid,
+            value_lte_system_info_roaming_status,
+            value_lte_system_info_forbidden_valid,
+            value_lte_system_info_forbidden,
+            value_lte_system_info_lac_valid,
+            value_lte_system_info_lac,
+            value_lte_system_info_cid_valid,
+            value_lte_system_info_cid,
+            value_lte_system_info_registration_reject_info_valid,
+            value_lte_system_info_registration_reject_domain,
+            &reject_cause,
+            value_lte_system_info_network_id_valid,
+            value_lte_system_info_mcc,
+            value_lte_system_info_mnc,
+            value_lte_system_info_tac_valid,
+            value_lte_system_info_tac,
+            error))
+        return FALSE;
+
+    if (value_lte_system_info_registration_reject_cause)
+        *value_lte_system_info_registration_reject_cause = (guint8) reject_cause;
+
+    return TRUE;
+}
+
+gboolean
+qmi_message_nas_get_system_info_output_get_td_scdma_system_info (
+    QmiMessageNasGetSystemInfoOutput *self,
+    gboolean *value_td_scdma_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_td_scdma_system_info_domain,
+    gboolean *value_td_scdma_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_td_scdma_system_info_service_capability,
+    gboolean *value_td_scdma_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_td_scdma_system_info_roaming_status,
+    gboolean *value_td_scdma_system_info_forbidden_valid,
+    gboolean *value_td_scdma_system_info_forbidden,
+    gboolean *value_td_scdma_system_info_lac_valid,
+    guint16 *value_td_scdma_system_info_lac,
+    gboolean *value_td_scdma_system_info_cid_valid,
+    guint32 *value_td_scdma_system_info_cid,
+    gboolean *value_td_scdma_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_td_scdma_system_info_registration_reject_domain,
+    guint8 *value_td_scdma_system_info_registration_reject_cause,
+    gboolean *value_td_scdma_system_info_network_id_valid,
+    const gchar **value_td_scdma_system_info_mcc,
+    const gchar **value_td_scdma_system_info_mnc,
+    gboolean *value_td_scdma_system_info_hs_call_status_valid,
+    QmiNasWcdmaHsService *value_td_scdma_system_info_hs_call_status,
+    gboolean *value_td_scdma_system_info_hs_service_valid,
+    QmiNasWcdmaHsService *value_td_scdma_system_info_hs_service,
+    gboolean *value_td_scdma_system_info_cell_parameter_id_valid,
+    guint16 *value_td_scdma_system_info_cell_parameter_id,
+    gboolean *value_td_scdma_system_info_cell_broadcast_support_valid,
+    QmiNasCellBroadcastCapability *value_td_scdma_system_info_cell_broadcast_support,
+    gboolean *value_td_scdma_system_info_cs_call_barring_status_valid,
+    QmiNasCallBarringStatus *value_td_scdma_system_info_cs_call_barring_status,
+    gboolean *value_td_scdma_system_info_ps_call_barring_status_valid,
+    QmiNasCallBarringStatus *value_td_scdma_system_info_ps_call_barring_status,
+    gboolean *value_td_scdma_system_info_cipher_domain_valid,
+    QmiNasNetworkServiceDomain *value_td_scdma_system_info_cipher_domain,
+    GError **error)
+{
+    QmiNasRejectCause reject_cause = QMI_NAS_REJECT_CAUSE_NONE;
+
+    if (!qmi_message_nas_get_system_info_output_get_td_scdma_system_info_v2 (
+            self,
+            value_td_scdma_system_info_domain_valid,
+            value_td_scdma_system_info_domain,
+            value_td_scdma_system_info_service_capability_valid,
+            value_td_scdma_system_info_service_capability,
+            value_td_scdma_system_info_roaming_status_valid,
+            value_td_scdma_system_info_roaming_status,
+            value_td_scdma_system_info_forbidden_valid,
+            value_td_scdma_system_info_forbidden,
+            value_td_scdma_system_info_lac_valid,
+            value_td_scdma_system_info_lac,
+            value_td_scdma_system_info_cid_valid,
+            value_td_scdma_system_info_cid,
+            value_td_scdma_system_info_registration_reject_info_valid,
+            value_td_scdma_system_info_registration_reject_domain,
+            &reject_cause,
+            value_td_scdma_system_info_network_id_valid,
+            value_td_scdma_system_info_mcc,
+            value_td_scdma_system_info_mnc,
+            value_td_scdma_system_info_hs_call_status_valid,
+            value_td_scdma_system_info_hs_call_status,
+            value_td_scdma_system_info_hs_service_valid,
+            value_td_scdma_system_info_hs_service,
+            value_td_scdma_system_info_cell_parameter_id_valid,
+            value_td_scdma_system_info_cell_parameter_id,
+            value_td_scdma_system_info_cell_broadcast_support_valid,
+            value_td_scdma_system_info_cell_broadcast_support,
+            value_td_scdma_system_info_cs_call_barring_status_valid,
+            value_td_scdma_system_info_cs_call_barring_status,
+            value_td_scdma_system_info_ps_call_barring_status_valid,
+            value_td_scdma_system_info_ps_call_barring_status,
+            value_td_scdma_system_info_cipher_domain_valid,
+            value_td_scdma_system_info_cipher_domain,
+            error))
+        return FALSE;
+
+    if (value_td_scdma_system_info_registration_reject_cause)
+        *value_td_scdma_system_info_registration_reject_cause = (guint8) reject_cause;
+    return TRUE;
+}
+
+#endif /* HAVE_QMI_MESSAGE_NAS_GET_SYSTEM_INFO */
+
+#if defined HAVE_QMI_INDICATION_NAS_SYSTEM_INFO
+
+gboolean qmi_indication_nas_system_info_output_get_gsm_system_info (
+    QmiIndicationNasSystemInfoOutput *self,
+    gboolean *value_gsm_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_domain,
+    gboolean *value_gsm_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_service_capability,
+    gboolean *value_gsm_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_gsm_system_info_roaming_status,
+    gboolean *value_gsm_system_info_forbidden_valid,
+    gboolean *value_gsm_system_info_forbidden,
+    gboolean *value_gsm_system_info_lac_valid,
+    guint16 *value_gsm_system_info_lac,
+    gboolean *value_gsm_system_info_cid_valid,
+    guint32 *value_gsm_system_info_cid,
+    gboolean *value_gsm_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_gsm_system_info_registration_reject_domain,
+    guint8 *value_gsm_system_info_registration_reject_cause,
+    gboolean *value_gsm_system_info_network_id_valid,
+    const gchar **value_gsm_system_info_mcc,
+    const gchar **value_gsm_system_info_mnc,
+    gboolean *value_gsm_system_info_egprs_support_valid,
+    gboolean *value_gsm_system_info_egprs_support,
+    gboolean *value_gsm_system_info_dtm_support_valid,
+    gboolean *value_gsm_system_info_dtm_support,
+    GError **error)
+{
+    QmiNasRejectCause reject_cause = QMI_NAS_REJECT_CAUSE_NONE;
+
+    if (!qmi_indication_nas_system_info_output_get_gsm_system_info_v2 (
+            self,
+            value_gsm_system_info_domain_valid,
+            value_gsm_system_info_domain,
+            value_gsm_system_info_service_capability_valid,
+            value_gsm_system_info_service_capability,
+            value_gsm_system_info_roaming_status_valid,
+            value_gsm_system_info_roaming_status,
+            value_gsm_system_info_forbidden_valid,
+            value_gsm_system_info_forbidden,
+            value_gsm_system_info_lac_valid,
+            value_gsm_system_info_lac,
+            value_gsm_system_info_cid_valid,
+            value_gsm_system_info_cid,
+            value_gsm_system_info_registration_reject_info_valid,
+            value_gsm_system_info_registration_reject_domain,
+            &reject_cause,
+            value_gsm_system_info_network_id_valid,
+            value_gsm_system_info_mcc,
+            value_gsm_system_info_mnc,
+            value_gsm_system_info_egprs_support_valid,
+            value_gsm_system_info_egprs_support,
+            value_gsm_system_info_dtm_support_valid,
+            value_gsm_system_info_dtm_support,
+            error))
+        return FALSE;
+
+    if (value_gsm_system_info_registration_reject_cause)
+        *value_gsm_system_info_registration_reject_cause = (guint8) reject_cause;
+    return TRUE;
+}
+
+gboolean qmi_indication_nas_system_info_output_get_wcdma_system_info (
+    QmiIndicationNasSystemInfoOutput *self,
+    gboolean *value_wcdma_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_domain,
+    gboolean *value_wcdma_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_service_capability,
+    gboolean *value_wcdma_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_wcdma_system_info_roaming_status,
+    gboolean *value_wcdma_system_info_forbidden_valid,
+    gboolean *value_wcdma_system_info_forbidden,
+    gboolean *value_wcdma_system_info_lac_valid,
+    guint16 *value_wcdma_system_info_lac,
+    gboolean *value_wcdma_system_info_cid_valid,
+    guint32 *value_wcdma_system_info_cid,
+    gboolean *value_wcdma_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_wcdma_system_info_registration_reject_domain,
+    guint8 *value_wcdma_system_info_registration_reject_cause,
+    gboolean *value_wcdma_system_info_network_id_valid,
+    const gchar **value_wcdma_system_info_mcc,
+    const gchar **value_wcdma_system_info_mnc,
+    gboolean *value_wcdma_system_info_hs_call_status_valid,
+    QmiNasWcdmaHsService *value_wcdma_system_info_hs_call_status,
+    gboolean *value_wcdma_system_info_hs_service_valid,
+    QmiNasWcdmaHsService *value_wcdma_system_info_hs_service,
+    gboolean *value_wcdma_system_info_primary_scrambling_code_valid,
+    guint16 *value_wcdma_system_info_primary_scrambling_code,
+    GError **error)
+{
+    QmiNasRejectCause reject_cause = QMI_NAS_REJECT_CAUSE_NONE;
+
+    if (!qmi_indication_nas_system_info_output_get_wcdma_system_info_v2 (
+            self,
+            value_wcdma_system_info_domain_valid,
+            value_wcdma_system_info_domain,
+            value_wcdma_system_info_service_capability_valid,
+            value_wcdma_system_info_service_capability,
+            value_wcdma_system_info_roaming_status_valid,
+            value_wcdma_system_info_roaming_status,
+            value_wcdma_system_info_forbidden_valid,
+            value_wcdma_system_info_forbidden,
+            value_wcdma_system_info_lac_valid,
+            value_wcdma_system_info_lac,
+            value_wcdma_system_info_cid_valid,
+            value_wcdma_system_info_cid,
+            value_wcdma_system_info_registration_reject_info_valid,
+            value_wcdma_system_info_registration_reject_domain,
+            &reject_cause,
+            value_wcdma_system_info_network_id_valid,
+            value_wcdma_system_info_mcc,
+            value_wcdma_system_info_mnc,
+            value_wcdma_system_info_hs_call_status_valid,
+            value_wcdma_system_info_hs_call_status,
+            value_wcdma_system_info_hs_service_valid,
+            value_wcdma_system_info_hs_service,
+            value_wcdma_system_info_primary_scrambling_code_valid,
+            value_wcdma_system_info_primary_scrambling_code,
+            error))
+        return FALSE;
+
+    if (value_wcdma_system_info_registration_reject_cause)
+        *value_wcdma_system_info_registration_reject_cause = (guint8) reject_cause;
+    return TRUE;
+}
+
+gboolean
+qmi_indication_nas_system_info_output_get_lte_system_info (
+    QmiIndicationNasSystemInfoOutput *self,
+    gboolean *value_lte_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_domain,
+    gboolean *value_lte_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_service_capability,
+    gboolean *value_lte_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_lte_system_info_roaming_status,
+    gboolean *value_lte_system_info_forbidden_valid,
+    gboolean *value_lte_system_info_forbidden,
+    gboolean *value_lte_system_info_lac_valid,
+    guint16 *value_lte_system_info_lac,
+    gboolean *value_lte_system_info_cid_valid,
+    guint32 *value_lte_system_info_cid,
+    gboolean *value_lte_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_lte_system_info_registration_reject_domain,
+    guint8 *value_lte_system_info_registration_reject_cause,
+    gboolean *value_lte_system_info_network_id_valid,
+    const gchar **value_lte_system_info_mcc,
+    const gchar **value_lte_system_info_mnc,
+    gboolean *value_lte_system_info_tac_valid,
+    guint16 *value_lte_system_info_tac,
+    GError **error)
+{
+    QmiNasRejectCause reject_cause = QMI_NAS_REJECT_CAUSE_NONE;
+
+    if (!qmi_indication_nas_system_info_output_get_lte_system_info_v2 (
+            self,
+            value_lte_system_info_domain_valid,
+            value_lte_system_info_domain,
+            value_lte_system_info_service_capability_valid,
+            value_lte_system_info_service_capability,
+            value_lte_system_info_roaming_status_valid,
+            value_lte_system_info_roaming_status,
+            value_lte_system_info_forbidden_valid,
+            value_lte_system_info_forbidden,
+            value_lte_system_info_lac_valid,
+            value_lte_system_info_lac,
+            value_lte_system_info_cid_valid,
+            value_lte_system_info_cid,
+            value_lte_system_info_registration_reject_info_valid,
+            value_lte_system_info_registration_reject_domain,
+            &reject_cause,
+            value_lte_system_info_network_id_valid,
+            value_lte_system_info_mcc,
+            value_lte_system_info_mnc,
+            value_lte_system_info_tac_valid,
+            value_lte_system_info_tac,
+            error))
+        return FALSE;
+
+    if (value_lte_system_info_registration_reject_cause)
+        *value_lte_system_info_registration_reject_cause = (guint8) reject_cause;
+    return TRUE;
+}
+
+gboolean
+qmi_indication_nas_system_info_output_get_td_scma_system_info (
+    QmiIndicationNasSystemInfoOutput *self,
+    gboolean *value_td_scma_system_info_domain_valid,
+    QmiNasNetworkServiceDomain *value_td_scma_system_info_domain,
+    gboolean *value_td_scma_system_info_service_capability_valid,
+    QmiNasNetworkServiceDomain *value_td_scma_system_info_service_capability,
+    gboolean *value_td_scma_system_info_roaming_status_valid,
+    QmiNasRoamingStatus *value_td_scma_system_info_roaming_status,
+    gboolean *value_td_scma_system_info_forbidden_valid,
+    gboolean *value_td_scma_system_info_forbidden,
+    gboolean *value_td_scma_system_info_lac_valid,
+    guint16 *value_td_scma_system_info_lac,
+    gboolean *value_td_scma_system_info_cid_valid,
+    guint32 *value_td_scma_system_info_cid,
+    gboolean *value_td_scma_system_info_registration_reject_info_valid,
+    QmiNasNetworkServiceDomain *value_td_scma_system_info_registration_reject_domain,
+    guint8 *value_td_scma_system_info_registration_reject_cause,
+    gboolean *value_td_scma_system_info_network_id_valid,
+    const gchar **value_td_scma_system_info_mcc,
+    const gchar **value_td_scma_system_info_mnc,
+    gboolean *value_td_scma_system_info_hs_call_status_valid,
+    QmiNasWcdmaHsService *value_td_scma_system_info_hs_call_status,
+    gboolean *value_td_scma_system_info_hs_service_valid,
+    QmiNasWcdmaHsService *value_td_scma_system_info_hs_service,
+    gboolean *value_td_scma_system_info_cell_parameter_id_valid,
+    guint16 *value_td_scma_system_info_cell_parameter_id,
+    gboolean *value_td_scma_system_info_cell_broadcast_support_valid,
+    QmiNasCellBroadcastCapability *value_td_scma_system_info_cell_broadcast_support,
+    gboolean *value_td_scma_system_info_cs_call_barring_status_valid,
+    QmiNasCallBarringStatus *value_td_scma_system_info_cs_call_barring_status,
+    gboolean *value_td_scma_system_info_ps_call_barring_status_valid,
+    QmiNasCallBarringStatus *value_td_scma_system_info_ps_call_barring_status,
+    gboolean *value_td_scma_system_info_cipher_domain_valid,
+    QmiNasNetworkServiceDomain *value_td_scma_system_info_cipher_domain,
+    GError **error)
+{
+    QmiNasRejectCause reject_cause = QMI_NAS_REJECT_CAUSE_NONE;
+
+    if (!qmi_indication_nas_system_info_output_get_td_scma_system_info_v2 (
+            self,
+            value_td_scma_system_info_domain_valid,
+            value_td_scma_system_info_domain,
+            value_td_scma_system_info_service_capability_valid,
+            value_td_scma_system_info_service_capability,
+            value_td_scma_system_info_roaming_status_valid,
+            value_td_scma_system_info_roaming_status,
+            value_td_scma_system_info_forbidden_valid,
+            value_td_scma_system_info_forbidden,
+            value_td_scma_system_info_lac_valid,
+            value_td_scma_system_info_lac,
+            value_td_scma_system_info_cid_valid,
+            value_td_scma_system_info_cid,
+            value_td_scma_system_info_registration_reject_info_valid,
+            value_td_scma_system_info_registration_reject_domain,
+            &reject_cause,
+            value_td_scma_system_info_network_id_valid,
+            value_td_scma_system_info_mcc,
+            value_td_scma_system_info_mnc,
+            value_td_scma_system_info_hs_call_status_valid,
+            value_td_scma_system_info_hs_call_status,
+            value_td_scma_system_info_hs_service_valid,
+            value_td_scma_system_info_hs_service,
+            value_td_scma_system_info_cell_parameter_id_valid,
+            value_td_scma_system_info_cell_parameter_id,
+            value_td_scma_system_info_cell_broadcast_support_valid,
+            value_td_scma_system_info_cell_broadcast_support,
+            value_td_scma_system_info_cs_call_barring_status_valid,
+            value_td_scma_system_info_cs_call_barring_status,
+            value_td_scma_system_info_ps_call_barring_status_valid,
+            value_td_scma_system_info_ps_call_barring_status,
+            value_td_scma_system_info_cipher_domain_valid,
+            value_td_scma_system_info_cipher_domain,
+            error))
+        return FALSE;
+
+    if (value_td_scma_system_info_registration_reject_cause)
+        *value_td_scma_system_info_registration_reject_cause = (guint8) reject_cause;
+    return TRUE;
+}
+
+#endif /* HAVE_QMI_INDICATION_NAS_SYSTEM_INFO */
+
 #endif /* QMI_DISABLE_DEPRECATED */
