@@ -47,6 +47,7 @@
 #include "qmi-enums-nas.h"
 #include "qmi-nas.h"
 
+#include "qmi-flags64-wds.h"
 #include "qmi-enums-wds.h"
 #include "qmi-wds.h"
 

@@ -2046,10 +2046,18 @@ get_profile_settings_ready (QmiClientWds *client,
         guint8 context_number;
         QmiWdsPdpType pdp_type;
         QmiWdsAuthentication auth;
+        QmiWdsApnTypeMask apn_type;
         gboolean flag;
 
         if (qmi_message_wds_get_profile_settings_output_get_apn_name (output, &str, NULL))
             g_print ("\t\tAPN: '%s'\n", str);
+        if (qmi_message_wds_get_profile_settings_output_get_apn_type_mask (output, &apn_type, NULL)) {
+            gchar *aux;
+
+            aux = qmi_wds_apn_type_mask_build_string_from_mask (apn_type);
+            g_print ("\t\tAPN type: '%s'\n", aux);
+            g_free (aux);
+        }
         if (qmi_message_wds_get_profile_settings_output_get_pdp_type (output, &pdp_type, NULL))
             g_print ("\t\tPDP type: '%s'\n", qmi_wds_pdp_type_get_string (pdp_type));
         if (qmi_message_wds_get_profile_settings_output_get_pdp_context_number (output, &context_number, NULL))

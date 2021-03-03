@@ -147,10 +147,11 @@ FLAGS64 = \
 	$(top_srcdir)/src/libqmi-glib/qmi-flags64-dms.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-flags64-nas.h \
 	$(top_srcdir)/src/libqmi-glib/qmi-flags64-loc.h \
-	$(top_srcdir)/src/libqmi-glib/qmi-flags64-dsd.h
+	$(top_srcdir)/src/libqmi-glib/qmi-flags64-dsd.h \
+	$(top_srcdir)/src/libqmi-glib/qmi-flags64-wds.h
 qmi-flags64-types.h:  $(FLAGS64) $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h
 	$(AM_V_GEN) $(PYTHON) $(top_srcdir)/build-aux/qmi-mkenums \
-		--fhead "#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include \"qmi-flags64-dms.h\"\n#include \"qmi-flags64-nas.h\"\n#include \"qmi-flags64-loc.h\"\n#include \"qmi-flags64-dsd.h\"\n" \
+		--fhead "#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include \"qmi-flags64-dms.h\"\n#include \"qmi-flags64-nas.h\"\n#include \"qmi-flags64-loc.h\"\n#include \"qmi-flags64-dsd.h\"\n#include \"qmi-flags64-wds.h\"\n" \
 		--template $(top_srcdir)/build-aux/templates/qmi-flags64-types-template.h \
 		--ftail "#endif /* __LIBQMI_GLIB_FLAGS64_TYPES_H__ */\n" \
 		$(FLAGS64) > $@

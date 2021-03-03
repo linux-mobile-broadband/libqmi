@@ -388,6 +388,13 @@
       "format"        : "guint8",
       "public-format" : "gboolean" },
 
+    { "common-ref"    : "WDS APN Type",
+      "name"          : "APN Type Mask",
+      "id"            : "0xDD",
+      "type"          : "TLV",
+      "format"        : "guint64",
+      "public-format" : "QmiWdsApnTypeMask" },
+
   // *********************************************************************************
   {  "name"    : "Reset",
      "type"    : "Message",
@@ -1452,6 +1459,9 @@
                     // 0xA9, APN enabled
                     // 0xAA, PDN inactivity timeout
                     // 0xAB, APN class
+                    { "common-ref"    : "WDS APN Type",
+                      "since"         : "1.30",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
                     { "common-ref" : "WDS Extended Error Code",
                       "since"      : "1.8" } ] },
 

@@ -48,7 +48,7 @@ libqmi_glib_la_CPPFLAGS = \
 libqmi_glib_la_SOURCES = \
 	libqmi-glib.h \
 	qmi-errors.h \
-	qmi-enums-wds.h qmi-enums-wds.c \
+	qmi-enums-wds.h qmi-flags64-wds.h qmi-enums-wds.c \
 	qmi-enums-dms.h qmi-flags64-dms.h qmi-enums-dms.c \
 	qmi-enums-nas.h qmi-flags64-nas.h qmi-enums-nas.c \
 	qmi-enums-wms.h \
@@ -121,7 +121,7 @@ include_HEADERS = \
 	qmi-enums-private.h \
 	qmi-compat.h \
 	qmi-enums-dms.h qmi-flags64-dms.h \
-	qmi-enums-wds.h \
+	qmi-enums-wds.h qmi-flags64-wds.h \
 	qmi-enums-nas.h qmi-flags64-nas.h \
 	qmi-enums-wms.h \
 	qmi-enums-pds.h \
