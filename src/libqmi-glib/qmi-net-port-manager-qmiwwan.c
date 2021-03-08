@@ -23,11 +23,12 @@
 #include <limits.h>
 #include <stdlib.h>
 
-#include "qmi-device.h"
+#include "qmi-net-port-manager-qmiwwan.h"
+#include "qmi-enum-types.h"
 #include "qmi-error-types.h"
 #include "qmi-errors.h"
 #include "qmi-helpers.h"
-#include "qmi-net-port-manager-qmiwwan.h"
+
 
 G_DEFINE_TYPE (QmiNetPortManagerQmiwwan, qmi_net_port_manager_qmiwwan, QMI_TYPE_NET_PORT_MANAGER)
 
@@ -255,14 +256,15 @@ net_port_manager_add_link_finish (QmiNetPortManager  *self,
 }
 
 static void
-net_port_manager_add_link (QmiNetPortManager   *_self,
-                           guint                mux_id,
-                           const gchar         *base_ifname,
-                           const gchar         *ifname_prefix,
-                           guint                timeout,
-                           GCancellable        *cancellable,
-                           GAsyncReadyCallback  callback,
-                           gpointer             user_data)
+net_port_manager_add_link (QmiNetPortManager     *_self,
+                           guint                  mux_id,
+                           const gchar           *base_ifname,
+                           const gchar           *ifname_prefix,
+                           QmiDeviceAddLinkFlags  flags,
+                           guint                  timeout,
+                           GCancellable          *cancellable,
+                           GAsyncReadyCallback    callback,
+                           gpointer               user_data)
 {
     QmiNetPortManagerQmiwwan *self = QMI_NET_PORT_MANAGER_QMIWWAN (_self);
     GTask                    *task;
@@ -276,6 +278,16 @@ net_port_manager_add_link (QmiNetPortManager   *_self,
     g_debug ("Running add link operation...");
 
     task = g_task_new (self, cancellable, callback, user_data);
+
+    if (flags != QMI_DEVICE_ADD_LINK_FLAGS_NONE) {
+        g_autofree gchar *flags_str = NULL;
+
+        flags_str = qmi_device_add_link_flags_build_string_from_mask (flags);
+        g_task_return_new_error (task, QMI_CORE_ERROR, QMI_CORE_ERROR_UNSUPPORTED,
+                                 "Adding link with flags '%s' is not supported", flags_str);
+        g_object_unref (task);
+        return;
+    }
 
     if (!qmi_helpers_list_links (self->priv->sysfs_file,
                                  cancellable,

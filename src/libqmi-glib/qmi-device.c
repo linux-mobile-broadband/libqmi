@@ -1819,10 +1819,10 @@ add_link_result_free (AddLinkResult *ctx)
 }
 
 gchar *
-qmi_device_add_link_finish (QmiDevice     *self,
-                            GAsyncResult  *res,
-                            guint         *mux_id,
-                            GError       **error)
+qmi_device_add_link_with_flags_finish (QmiDevice     *self,
+                                       GAsyncResult  *res,
+                                       guint         *mux_id,
+                                       GError       **error)
 {
     AddLinkResult *ctx;
 
@@ -1834,6 +1834,15 @@ qmi_device_add_link_finish (QmiDevice     *self,
         *mux_id = ctx->mux_id;
 
     return g_steal_pointer (&ctx->ifname);
+}
+
+gchar *
+qmi_device_add_link_finish (QmiDevice     *self,
+                            GAsyncResult  *res,
+                            guint         *mux_id,
+                            GError       **error)
+{
+    return qmi_device_add_link_with_flags_finish (self, res, mux_id, error);
 }
 
 static void
@@ -1858,13 +1867,14 @@ device_add_link_ready (QmiNetPortManager *net_port_manager,
 }
 
 void
-qmi_device_add_link (QmiDevice           *self,
-                     guint                mux_id,
-                     const gchar         *base_ifname,
-                     const gchar         *ifname_prefix,
-                     GCancellable        *cancellable,
-                     GAsyncReadyCallback  callback,
-                     gpointer             user_data)
+qmi_device_add_link_with_flags (QmiDevice             *self,
+                                guint                  mux_id,
+                                const gchar           *base_ifname,
+                                const gchar           *ifname_prefix,
+                                QmiDeviceAddLinkFlags  flags,
+                                GCancellable          *cancellable,
+                                GAsyncReadyCallback    callback,
+                                gpointer               user_data)
 {
     GTask  *task;
     GError *error = NULL;
@@ -1887,10 +1897,25 @@ qmi_device_add_link (QmiDevice           *self,
                                    mux_id,
                                    base_ifname,
                                    ifname_prefix,
+                                   flags,
                                    5,
                                    cancellable,
                                    (GAsyncReadyCallback) device_add_link_ready,
                                    task);
+}
+
+void
+qmi_device_add_link (QmiDevice           *self,
+                     guint                mux_id,
+                     const gchar         *base_ifname,
+                     const gchar         *ifname_prefix,
+                     GCancellable        *cancellable,
+                     GAsyncReadyCallback  callback,
+                     gpointer             user_data)
+{
+    qmi_device_add_link_with_flags (self, mux_id, base_ifname, ifname_prefix,
+                                    QMI_DEVICE_ADD_LINK_FLAGS_NONE,
+                                    cancellable, callback, user_data);
 }
 
 gboolean

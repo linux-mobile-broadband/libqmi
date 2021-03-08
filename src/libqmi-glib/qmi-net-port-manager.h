@@ -28,6 +28,8 @@
 #include <gio/gio.h>
 #include <glib-object.h>
 
+#include "qmi-device.h"
+
 #define QMI_TYPE_NET_PORT_MANAGER            (qmi_net_port_manager_get_type ())
 #define QMI_NET_PORT_MANAGER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), QMI_TYPE_NET_PORT_MANAGER, QmiNetPortManager))
 #define QMI_NET_PORT_MANAGER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  QMI_TYPE_NET_PORT_MANAGER, QmiNetPortManagerClass))
@@ -50,18 +52,19 @@ struct _QmiNetPortManagerClass {
                                   GPtrArray           **out_links,
                                   GError              **error);
 
-    void     (* add_link)        (QmiNetPortManager    *self,
-                                  guint                 mux_id,
-                                  const gchar          *base_ifname,
-                                  const gchar          *ifname_prefix,
-                                  guint                 timeout,
-                                  GCancellable         *cancellable,
-                                  GAsyncReadyCallback   callback,
-                                  gpointer              user_data);
-    gchar *  (* add_link_finish) (QmiNetPortManager    *self,
-                                  guint                *mux_id,
-                                  GAsyncResult         *res,
-                                  GError              **error);
+    void     (* add_link)        (QmiNetPortManager      *self,
+                                  guint                   mux_id,
+                                  const gchar            *base_ifname,
+                                  const gchar            *ifname_prefix,
+                                  QmiDeviceAddLinkFlags   flags,
+                                  guint                   timeout,
+                                  GCancellable           *cancellable,
+                                  GAsyncReadyCallback     callback,
+                                  gpointer                user_data);
+    gchar *  (* add_link_finish) (QmiNetPortManager      *self,
+                                  guint                  *mux_id,
+                                  GAsyncResult           *res,
+                                  GError                **error);
 
     void     (* del_link)        (QmiNetPortManager    *self,
                                   const gchar          *ifname,
@@ -92,18 +95,19 @@ gboolean  qmi_net_port_manager_list_links      (QmiNetPortManager    *self,
                                                 GPtrArray           **out_links,
                                                 GError              **error);
 
-void      qmi_net_port_manager_add_link        (QmiNetPortManager    *self,
-                                                guint                 mux_id,
-                                                const gchar          *base_ifname,
-                                                const gchar          *ifname_prefix,
-                                                guint                 timeout,
-                                                GCancellable         *cancellable,
-                                                GAsyncReadyCallback   callback,
-                                                gpointer              user_data);
-gchar    *qmi_net_port_manager_add_link_finish (QmiNetPortManager    *self,
-                                                guint                *mux_id,
-                                                GAsyncResult         *res,
-                                                GError              **error);
+void      qmi_net_port_manager_add_link        (QmiNetPortManager      *self,
+                                                guint                   mux_id,
+                                                const gchar            *base_ifname,
+                                                const gchar            *ifname_prefix,
+                                                QmiDeviceAddLinkFlags   flags,
+                                                guint                   timeout,
+                                                GCancellable           *cancellable,
+                                                GAsyncReadyCallback     callback,
+                                                gpointer                user_data);
+gchar    *qmi_net_port_manager_add_link_finish (QmiNetPortManager      *self,
+                                                guint                  *mux_id,
+                                                GAsyncResult           *res,
+                                                GError                **error);
 
 void      qmi_net_port_manager_del_link        (QmiNetPortManager    *self,
                                                 const gchar          *ifname,

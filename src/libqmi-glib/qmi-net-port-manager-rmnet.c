@@ -301,7 +301,9 @@ transaction_new (QmiNetPortManagerRmnet *manager,
 static NetlinkMessage *
 netlink_message_new_link (guint  mux_id,
                           gchar *ifname,
-                          guint  base_if_index)
+                          guint  base_if_index,
+                          guint  rmnet_flags,
+                          guint  rmnet_mask)
 {
     NetlinkMessage          *msg;
     guint                    linkinfo_pos, datainfo_pos;
@@ -324,8 +326,8 @@ netlink_message_new_link (guint  mux_id,
     append_netlink_attribute_nested (msg, IFLA_INFO_DATA);
     append_netlink_attribute_uint16 (msg, IFLA_RMNET_MUX_ID, mux_id);
 
-    flags.flags = RMNET_FLAGS_EGRESS_MAP_CKSUMV4 | RMNET_FLAGS_INGRESS_MAP_CKSUMV4 | RMNET_FLAGS_INGRESS_DEAGGREGATION;
-    flags.mask = flags.flags;
+    flags.flags = rmnet_flags;
+    flags.mask = rmnet_mask;
     append_netlink_attribute (msg, IFLA_RMNET_FLAGS, &flags, sizeof (struct ifla_rmnet_flags));
 
     /* Use memcpy to preserve byte alignment */
@@ -460,14 +462,15 @@ net_port_manager_add_link_finish (QmiNetPortManager  *self,
 }
 
 static void
-net_port_manager_add_link (QmiNetPortManager   *_self,
-                           guint                mux_id,
-                           const gchar         *base_ifname,
-                           const gchar         *ifname_prefix,
-                           guint                timeout,
-                           GCancellable        *cancellable,
-                           GAsyncReadyCallback  callback,
-                           gpointer             user_data)
+net_port_manager_add_link (QmiNetPortManager     *_self,
+                           guint                  mux_id,
+                           const gchar           *base_ifname,
+                           const gchar           *ifname_prefix,
+                           QmiDeviceAddLinkFlags  flags,
+                           guint                  timeout,
+                           GCancellable          *cancellable,
+                           GAsyncReadyCallback    callback,
+                           gpointer               user_data)
 {
     QmiNetPortManagerRmnet *self = QMI_NET_PORT_MANAGER_RMNET (_self);
     NetlinkMessage         *msg;
@@ -477,6 +480,8 @@ net_port_manager_add_link (QmiNetPortManager   *_self,
     gssize                  bytes_sent;
     guint                   base_if_index;
     AddLinkContext         *ctx;
+    guint                   rmnet_flags;
+    guint                   rmnet_mask;
 
     task = g_task_new (self, cancellable, callback, user_data);
 
@@ -521,7 +526,17 @@ net_port_manager_add_link (QmiNetPortManager   *_self,
 
     ctx->ifname = mux_id_to_ifname (ifname_prefix, ctx->mux_id);
 
-    msg = netlink_message_new_link (ctx->mux_id, ctx->ifname, base_if_index);
+    /* Convert flags from libqmi API to rmnet API */
+    rmnet_flags = RMNET_FLAGS_INGRESS_DEAGGREGATION;
+    if (flags & QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV4)
+        rmnet_flags |= RMNET_FLAGS_INGRESS_MAP_CKSUMV4;
+    if (flags & QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV4)
+        rmnet_flags |= RMNET_FLAGS_EGRESS_MAP_CKSUMV4;
+    rmnet_mask = (RMNET_FLAGS_EGRESS_MAP_CKSUMV4  |
+                  RMNET_FLAGS_INGRESS_MAP_CKSUMV4 |
+                  RMNET_FLAGS_INGRESS_DEAGGREGATION);
+
+    msg = netlink_message_new_link (ctx->mux_id, ctx->ifname, base_if_index, rmnet_flags, rmnet_mask);
 
     /* The task ownership is transferred to the transaction. */
     tr = transaction_new (self, msg, timeout, task);
