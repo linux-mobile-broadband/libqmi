@@ -47,7 +47,7 @@ static GOptionEntry entries[] = {
     },
     { "link-add", 0, 0, G_OPTION_ARG_STRING, &link_add_str,
       "Create new network interface link",
-      "[mux-id=N|auto,iface=IFACE,prefix=PREFIX]"
+      "[mux-id=N|auto,iface=IFACE,prefix=PREFIX,flags=FLAGS]"
     },
     { "link-delete", 0, 0, G_OPTION_ARG_STRING, &link_delete_str,
       "Delete a given network interface link",
@@ -218,9 +218,10 @@ device_link_delete (QmiDevice    *dev,
 }
 
 typedef struct {
-    guint  mux_id;
-    gchar *iface;
-    gchar *prefix;
+    guint                  mux_id;
+    gchar                 *iface;
+    gchar                 *prefix;
+    QmiDeviceAddLinkFlags  flags;
 } AddLinkProperties;
 
 static void
@@ -231,7 +232,7 @@ link_add_ready (QmiDevice    *dev,
     g_autofree gchar  *link_iface = NULL;
     guint              mux_id;
 
-    link_iface = qmi_device_add_link_finish (dev, res, &mux_id, &error);
+    link_iface = qmi_device_add_link_with_flags_finish (dev, res, &mux_id, &error);
     if (!link_iface)
         g_printerr ("error: couldn't add link: %s\n",
                     error->message);
@@ -271,6 +272,15 @@ add_link_properties_handle (const gchar        *key,
         return TRUE;
     }
 
+    if (g_ascii_strcasecmp (key, "flags") == 0 && !props->flags) {
+        if (!qmicli_read_device_add_link_flags_from_string (value, &props->flags)) {
+            g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
+                         "invalid flags given: '%s'", value);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
     g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
                  "unrecognized or duplicate option '%s'", key);
     return FALSE;
@@ -286,6 +296,7 @@ device_link_add (QmiDevice    *dev,
         .mux_id = QMI_DEVICE_MUX_ID_AUTOMATIC,
         .iface = NULL,
         .prefix = NULL,
+        .flags = QMI_DEVICE_ADD_LINK_FLAGS_NONE,
     };
 
     if (!qmicli_parse_key_value_string (add_settings,
@@ -315,13 +326,14 @@ device_link_add (QmiDevice    *dev,
         return;
     }
 
-    qmi_device_add_link (dev,
-                         props.mux_id,
-                         props.iface,
-                         props.prefix,
-                         cancellable,
-                         (GAsyncReadyCallback)link_add_ready,
-                         NULL);
+    qmi_device_add_link_with_flags (dev,
+                                    props.mux_id,
+                                    props.iface,
+                                    props.prefix,
+                                    props.flags,
+                                    cancellable,
+                                    (GAsyncReadyCallback)link_add_ready,
+                                    NULL);
 
     g_free (props.iface);
     g_free (props.prefix);
