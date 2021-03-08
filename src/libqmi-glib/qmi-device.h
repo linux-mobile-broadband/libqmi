@@ -351,7 +351,7 @@ gboolean qmi_device_close_finish (QmiDevice     *self,
  * qmi_device_allocate_client:
  * @self: a #QmiDevice.
  * @service: a valid #QmiService.
- * @cid: a valid client ID, or #QMI_CID_NONE.
+ * @cid: a valid client ID, or %QMI_CID_NONE.
  * @timeout: maximum time to wait.
  * @cancellable: optional #GCancellable object, %NULL to ignore.
  * @callback: a #GAsyncReadyCallback to call when the operation is finished.
@@ -359,13 +359,13 @@ gboolean qmi_device_close_finish (QmiDevice     *self,
  *
  * Asynchronously allocates a new #QmiClient in @self.
  *
- * If #QMI_CID_NONE is given in @cid, a new client ID will be allocated;
+ * If %QMI_CID_NONE is given in @cid, a new client ID will be allocated;
  * otherwise a client with the given @cid will be generated.
  *
  * When the operation is finished @callback will be called. You can then call
  * qmi_device_allocate_client_finish() to get the result of the operation.
  *
- * Note: Clients for the #QMI_SERVICE_CTL cannot be created with this method;
+ * Note: Clients for the %QMI_SERVICE_CTL cannot be created with this method;
  * instead get/peek the implicit one from @self.
  *
  * Since: 1.0
@@ -873,8 +873,8 @@ gboolean qmi_device_check_expected_data_format_supported (QmiDevice             
  * qmi_device_add_link:
  * @self: a #QmiDevice.
  * @mux_id: the mux id for the link, in the
- *   [#QMI_DEVICE_MUX_ID_MIN,#QMI_DEVICE_MUX_ID_MAX] range, or
- *   #QMI_DEVICE_MUX_ID_AUTOMATIC to find the first available mux id.
+ *   [%QMI_DEVICE_MUX_ID_MIN,%QMI_DEVICE_MUX_ID_MAX] range, or
+ *   %QMI_DEVICE_MUX_ID_AUTOMATIC to find the first available mux id.
  * @base_ifname: the interface which the new link will be created on.
  * @ifname_prefix: the prefix suggested to be used for the name of the new link
  *   created.
@@ -915,7 +915,7 @@ gboolean qmi_device_check_expected_data_format_supported (QmiDevice             
  *
  * <note><para>
  * When using the qmi_wwan driver from a kernel older than v5.12, some of the
- * multiplexing features like using #QMI_DEVICE_MUX_ID_AUTOMATIC may not be fully
+ * multiplexing features like using %QMI_DEVICE_MUX_ID_AUTOMATIC may not be fully
  * available for programs that use ephimeral #QmiDevice objects for single
  * operations.
  * </para></note>
