@@ -18,29 +18,32 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2013 - 2019 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2013 - 2021 Aleksander Morgado <aleksander@aleksander.es>
  */
 
-#include "mbim-utils.h"
+#ifndef _LIBMBIM_GLIB_MBIM_HELPERS_H_
+#define _LIBMBIM_GLIB_MBIM_HELPERS_H_
 
-/**
- * SECTION:mbim-utils
- * @title: Common utilities
- *
- * This section exposes a set of common utilities that may be used to work
- * with the MBIM library.
- */
+#if !defined (LIBMBIM_GLIB_COMPILATION)
+#error "This is a private header!!"
+#endif
 
-static volatile gint __traces_enabled = FALSE;
+#include <glib.h>
 
-gboolean
-mbim_utils_get_traces_enabled (void)
-{
-    return (gboolean) g_atomic_int_get (&__traces_enabled);
-}
+G_BEGIN_DECLS
 
-void
-mbim_utils_set_traces_enabled (gboolean enabled)
-{
-    g_atomic_int_set (&__traces_enabled, enabled);
-}
+G_GNUC_INTERNAL
+gboolean mbim_helpers_check_user_allowed (uid_t    uid,
+                                          GError **error);
+
+G_GNUC_INTERNAL
+gchar *mbim_helpers_get_devpath (const gchar  *cdc_wdm_path,
+                                 GError      **error);
+
+G_GNUC_INTERNAL
+gchar *mbim_helpers_get_devname (const gchar  *cdc_wdm_path,
+                                 GError      **error);
+
+G_END_DECLS
+
+#endif /* _LIBMBIM_GLIB_MBIM_HELPERS_H_ */

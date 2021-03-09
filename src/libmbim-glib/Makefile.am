@@ -23,6 +23,7 @@ libmbim_glib_core_la_SOURCES = \
 	mbim-version.h \
 	mbim-errors.h \
 	mbim-enums.h \
+	mbim-helpers.h mbim-helpers.c \
 	mbim-utils.h mbim-utils.c \
 	mbim-uuid.h mbim-uuid.c \
 	mbim-cid.h mbim-cid.c \

@@ -55,17 +55,6 @@ gboolean mbim_utils_get_traces_enabled (void);
  */
 void mbim_utils_set_traces_enabled (gboolean enabled);
 
-/* Other private methods */
-
-#if defined (LIBMBIM_GLIB_COMPILATION)
-gboolean  __mbim_user_allowed      (uid_t         uid,
-                                    GError      **error);
-gchar    *__mbim_utils_get_devpath (const gchar  *cdc_wdm_path,
-                                    GError      **error);
-gchar    *__mbim_utils_get_devname (const gchar  *cdc_wdm_path,
-                                    GError      **error);
-#endif
-
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_UTILS_H_ */
