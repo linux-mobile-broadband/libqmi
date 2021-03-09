@@ -66,7 +66,7 @@ qmicli_link_management_get_option_group (void)
     GOptionGroup *group;
 
     group = g_option_group_new ("link-management",
-                                "Ling management options:",
+                                "Link management options:",
                                 "Show link management specific options",
                                 NULL, NULL);
     g_option_group_add_entries (group, entries);
