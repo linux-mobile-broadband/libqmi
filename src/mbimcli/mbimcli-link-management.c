@@ -38,6 +38,7 @@
 static gchar *link_list_str;
 static gchar *link_add_str;
 static gchar *link_delete_str;
+static gchar *link_delete_all_str;
 
 static GOptionEntry entries[] = {
     { "link-list", 0, 0, G_OPTION_ARG_STRING, &link_list_str,
@@ -51,6 +52,10 @@ static GOptionEntry entries[] = {
     { "link-delete", 0, 0, G_OPTION_ARG_STRING, &link_delete_str,
       "Delete a given network interface link",
       "IFACE"
+    },
+    { "link-delete-all", 0, 0, G_OPTION_ARG_STRING, &link_delete_all_str,
+      "Delete all network interface links from the given interface",
+      "[IFACE]"
     },
     { NULL }
 };
@@ -80,7 +85,8 @@ mbimcli_link_management_options_enabled (void)
 
     n_actions = (!!link_list_str +
                  !!link_add_str +
-                 !!link_delete_str);
+                 !!link_delete_str +
+                 !!link_delete_all_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many link management actions requested\n");
@@ -89,6 +95,35 @@ mbimcli_link_management_options_enabled (void)
 
     checked = TRUE;
     return !!n_actions;
+}
+
+/******************************************************************************/
+
+static void
+link_delete_all_ready (MbimDevice   *dev,
+                       GAsyncResult *res)
+{
+    g_autoptr(GError) error = NULL;
+
+    if (!mbim_device_delete_all_links_finish (dev, res, &error))
+        g_printerr ("error: couldn't delete all links: %s\n", error->message);
+    else
+        g_print ("[%s] all links successfully deleted\n",
+                 mbim_device_get_path_display (dev));
+
+    mbimcli_async_operation_done (!error);
+}
+
+static void
+device_link_delete_all (MbimDevice   *dev,
+                        GCancellable *cancellable,
+                        const gchar  *iface)
+{
+    mbim_device_delete_all_links (dev,
+                                  iface,
+                                  cancellable,
+                                  (GAsyncReadyCallback)link_delete_all_ready,
+                                  NULL);
 }
 
 /******************************************************************************/
@@ -271,6 +306,8 @@ mbimcli_link_management_run (MbimDevice   *dev,
         device_link_add (dev, cancellable, link_add_str);
     else if (link_delete_str)
         device_link_delete (dev, cancellable, link_delete_str);
+    else if (link_delete_all_str)
+        device_link_delete_all (dev, cancellable, link_delete_all_str);
     else
       g_warn_if_reached ();
 }
