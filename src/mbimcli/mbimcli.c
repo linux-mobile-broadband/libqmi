@@ -427,24 +427,15 @@ int main (int argc, char **argv)
 
     /* Setup option context, process it and destroy it */
     context = g_option_context_new ("- Control MBIM devices");
-    g_option_context_add_group (context,
-                                mbimcli_basic_connect_get_option_group ());
-    g_option_context_add_group (context,
-                                mbimcli_phonebook_get_option_group ());
-    g_option_context_add_group (context,
-                                mbimcli_dss_get_option_group ());
-    g_option_context_add_group (context,
-                                mbimcli_ms_firmware_id_get_option_group ());
-    g_option_context_add_group (context,
-                                mbimcli_ms_host_shutdown_get_option_group ());
-    g_option_context_add_group (context,
-                                mbimcli_ms_sar_get_option_group ());
-    g_option_context_add_group (context,
-                                mbimcli_atds_get_option_group ());
-    g_option_context_add_group (context,
-                                mbimcli_intel_firmware_update_get_option_group ());
-    g_option_context_add_group (context,
-                                mbimcli_ms_basic_connect_extensions_get_option_group ());
+    g_option_context_add_group (context, mbimcli_basic_connect_get_option_group ());
+    g_option_context_add_group (context, mbimcli_phonebook_get_option_group ());
+    g_option_context_add_group (context, mbimcli_dss_get_option_group ());
+    g_option_context_add_group (context, mbimcli_ms_firmware_id_get_option_group ());
+    g_option_context_add_group (context, mbimcli_ms_host_shutdown_get_option_group ());
+    g_option_context_add_group (context, mbimcli_ms_sar_get_option_group ());
+    g_option_context_add_group (context, mbimcli_atds_get_option_group ());
+    g_option_context_add_group (context, mbimcli_intel_firmware_update_get_option_group ());
+    g_option_context_add_group (context, mbimcli_ms_basic_connect_extensions_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n", error->message);
