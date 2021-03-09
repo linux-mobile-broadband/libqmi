@@ -261,6 +261,12 @@ device_open_ready (MbimDevice   *dev,
         return;
     }
 
+    /* Link management action? */
+    if (mbimcli_link_management_options_enabled ()) {
+        mbimcli_link_management_run (dev, cancellable);
+        return;
+    }
+
     /* Run the service-specific action */
     switch (service) {
     case MBIM_SERVICE_BASIC_CONNECT:
@@ -353,6 +359,9 @@ parse_actions (void)
 {
     guint actions_enabled = 0;
 
+    if (mbimcli_link_management_options_enabled ())
+        actions_enabled++;
+
     if (mbimcli_basic_connect_options_enabled ()) {
         service = MBIM_SERVICE_BASIC_CONNECT;
         actions_enabled++;
@@ -436,6 +445,7 @@ int main (int argc, char **argv)
     g_option_context_add_group (context, mbimcli_atds_get_option_group ());
     g_option_context_add_group (context, mbimcli_intel_firmware_update_get_option_group ());
     g_option_context_add_group (context, mbimcli_ms_basic_connect_extensions_get_option_group ());
+    g_option_context_add_group (context, mbimcli_link_management_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
         g_printerr ("error: %s\n", error->message);

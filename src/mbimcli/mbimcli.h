@@ -68,4 +68,11 @@ void          mbimcli_intel_firmware_update_run         (MbimDevice *device,
 void          mbimcli_ms_basic_connect_extensions_run   (MbimDevice *device,
                                                          GCancellable *cancellable);
 
+
+/* link management */
+GOptionGroup *mbimcli_link_management_get_option_group (void);
+gboolean      mbimcli_link_management_options_enabled  (void);
+void          mbimcli_link_management_run              (MbimDevice   *device,
+                                                        GCancellable *cancellable);
+
 #endif /* __MBIMCLI_H__ */

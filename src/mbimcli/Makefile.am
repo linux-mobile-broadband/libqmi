@@ -24,6 +24,7 @@ mbimcli_SOURCES = \
 	mbimcli-atds.c \
 	mbimcli-intel-firmware-update.c \
 	mbimcli-ms-basic-connect-extensions.c \
+	mbimcli-link-management.c \
 	$(NULL)
 
 mbimcli_LDADD = \
