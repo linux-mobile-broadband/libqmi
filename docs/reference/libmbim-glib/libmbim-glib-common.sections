@@ -242,6 +242,8 @@ mbim_device_add_link
 mbim_device_add_link_finish
 mbim_device_delete_link
 mbim_device_delete_link_finish
+mbim_device_delete_all_links
+mbim_device_delete_all_links_finish
 <SUBSECTION Private>
 MbimDeviceClass
 <SUBSECTION Standard>

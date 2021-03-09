@@ -602,6 +602,97 @@ mbim_net_port_manager_list_links (MbimNetPortManager  *self,
 
 /*****************************************************************************/
 
+typedef struct {
+    GPtrArray *links;
+    guint      link_i;
+} DelAllLinksContext;
+
+static void
+del_all_links_context_free (DelAllLinksContext *ctx)
+{
+    g_clear_pointer (&ctx->links, g_ptr_array_unref);
+    g_slice_free (DelAllLinksContext, ctx);
+}
+
+gboolean
+mbim_net_port_manager_del_all_links_finish (MbimNetPortManager  *self,
+                                            GAsyncResult       *res,
+                                            GError            **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void delete_next_link (GTask *task);
+
+static void
+port_manager_del_link_ready (MbimNetPortManager *self,
+                             GAsyncResult      *res,
+                             GTask             *task)
+{
+    DelAllLinksContext *ctx;
+    GError             *error = NULL;
+
+    ctx = g_task_get_task_data (task);
+
+    if (!mbim_net_port_manager_del_link_finish (self, res, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_ptr_array_remove_index_fast (ctx->links, 0);
+    delete_next_link (task);
+}
+
+static void
+delete_next_link (GTask *task)
+{
+    MbimNetPortManager *self;
+    DelAllLinksContext *ctx;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
+    if (!ctx->links || ctx->links->len == 0) {
+        g_task_return_boolean (task, TRUE);
+        g_object_unref (task);
+        return;
+    }
+
+    mbim_net_port_manager_del_link (self,
+                                    g_ptr_array_index (ctx->links, 0),
+                                    5,
+                                    g_task_get_cancellable (task),
+                                    (GAsyncReadyCallback)port_manager_del_link_ready,
+                                    task);
+}
+
+void
+mbim_net_port_manager_del_all_links (MbimNetPortManager   *self,
+                                     const gchar          *base_ifname,
+                                     GCancellable         *cancellable,
+                                     GAsyncReadyCallback   callback,
+                                     gpointer              user_data)
+{
+    GTask              *task;
+    DelAllLinksContext *ctx;
+    GError             *error = NULL;
+
+    task = g_task_new (self, cancellable, callback, user_data);
+    ctx = g_slice_new0 (DelAllLinksContext);
+    g_task_set_task_data (task, ctx, (GDestroyNotify)del_all_links_context_free);
+
+    if (!mbim_net_port_manager_list_links (self, base_ifname, &ctx->links, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    delete_next_link (task);
+}
+
+/*****************************************************************************/
+
 MbimNetPortManager *
 mbim_net_port_manager_new (const gchar  *iface,
                            GError      **error)

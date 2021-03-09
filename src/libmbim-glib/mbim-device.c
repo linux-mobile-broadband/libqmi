@@ -676,6 +676,59 @@ mbim_device_delete_link (MbimDevice          *self,
 /*****************************************************************************/
 
 gboolean
+mbim_device_delete_all_links_finish (MbimDevice    *self,
+                                     GAsyncResult  *res,
+                                     GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+device_del_all_links_ready (MbimNetPortManager *net_port_manager,
+                            GAsyncResult       *res,
+                            GTask              *task)
+{
+    GError *error = NULL;
+
+    if (!mbim_net_port_manager_del_all_links_finish (net_port_manager, res, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+void
+mbim_device_delete_all_links (MbimDevice          *self,
+                              const gchar         *base_ifname,
+                              GCancellable        *cancellable,
+                              GAsyncReadyCallback  callback,
+                              gpointer             user_data)
+{
+    GTask  *task;
+    GError *error = NULL;
+
+    g_return_if_fail (MBIM_IS_DEVICE (self));
+    g_return_if_fail (base_ifname);
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    if (!setup_net_port_manager (self, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_assert (self->priv->net_port_manager);
+    mbim_net_port_manager_del_all_links (self->priv->net_port_manager,
+                                         base_ifname,
+                                         cancellable,
+                                         (GAsyncReadyCallback) device_del_all_links_ready,
+                                         task);
+}
+
+/*****************************************************************************/
+
+gboolean
 mbim_device_list_links (MbimDevice   *self,
                         const gchar  *base_ifname,
                         GPtrArray   **out_links,

@@ -84,4 +84,13 @@ gboolean  mbim_net_port_manager_del_link_finish (MbimNetPortManager   *self,
                                                  GAsyncResult         *res,
                                                  GError              **error);
 
+void      mbim_net_port_manager_del_all_links        (MbimNetPortManager   *self,
+                                                      const gchar          *base_ifname,
+                                                      GCancellable         *cancellable,
+                                                      GAsyncReadyCallback   callback,
+                                                      gpointer              user_data);
+gboolean  mbim_net_port_manager_del_all_links_finish (MbimNetPortManager   *self,
+                                                      GAsyncResult         *res,
+                                                      GError              **error);
+
 #endif /* _LIBMBIM_GLIB_MBIM_NET_PORT_MANAGER_H_ */

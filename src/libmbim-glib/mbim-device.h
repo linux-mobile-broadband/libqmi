@@ -562,6 +562,51 @@ gboolean mbim_device_delete_link_finish (MbimDevice    *self,
                                          GError       **error);
 
 /**
+ * mbim_device_delete_all_links:
+ * @self: a #MbimDevice.
+ * @base_ifname: the interface where all links are available.
+ * @cancellable: a #GCancellable, or %NULL.
+ * @callback: a #GAsyncReadyCallback to call when the operation is finished.
+ * @user_data: the data to pass to callback function.
+ *
+ * Asynchronously deletes all virtual network interfaces that have been previously
+ * created with mbim_device_add_link() in @base_ifname.
+ *
+ * When the operation is finished @callback will be called. You can then call
+ * mbim_device_delete_link_finish() to get the result of the operation.
+ *
+ * <note><para>
+ * There is no guarantee that other processes haven't created new links by the
+ * time this method returns. This method should be used with caution, or in setups
+ * where only one single process is expected to do MBIM network interface link
+ * management.
+ * </para></note>
+ *
+ * Since: 1.26
+ */
+void mbim_device_delete_all_links (MbimDevice          *self,
+                                   const gchar         *base_ifname,
+                                   GCancellable        *cancellable,
+                                   GAsyncReadyCallback  callback,
+                                   gpointer             user_data);
+
+/**
+ * mbim_device_delete_all_links_finish:
+ * @self: a #MbimDevice.
+ * @res: a #GAsyncResult.
+ * @error: Return location for error or %NULL.
+ *
+ * Finishes an operation started with mbim_device_delete_all_links().
+ *
+ * Returns: %TRUE if successful, %FALSE if @error is set.
+ *
+ * Since: 1.26
+ */
+gboolean mbim_device_delete_all_links_finish (MbimDevice    *self,
+                                              GAsyncResult  *res,
+                                              GError       **error);
+
+/**
  * mbim_device_list_links:
  * @self: a #MbimDevice.
  * @base_ifname: the base interface.
