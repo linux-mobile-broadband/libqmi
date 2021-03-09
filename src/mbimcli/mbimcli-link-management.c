@@ -35,10 +35,15 @@
 #include "mbimcli-helpers.h"
 
 /* Options */
+static gchar *link_list_str;
 static gchar *link_add_str;
 static gchar *link_delete_str;
 
 static GOptionEntry entries[] = {
+    { "link-list", 0, 0, G_OPTION_ARG_STRING, &link_list_str,
+      "List links created from a given interface",
+      "[IFACE]"
+    },
     { "link-add", 0, 0, G_OPTION_ARG_STRING, &link_add_str,
       "Create new network interface link",
       "[iface=IFACE,prefix=PREFIX[,session-id=N]]"
@@ -73,7 +78,8 @@ mbimcli_link_management_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (!!link_add_str +
+    n_actions = (!!link_list_str +
+                 !!link_add_str +
                  !!link_delete_str);
 
     if (n_actions > 1) {
@@ -225,6 +231,33 @@ device_link_add (MbimDevice   *dev,
     g_free (props.prefix);
 }
 
+static void
+device_link_list (MbimDevice   *dev,
+                  GCancellable *cancellable,
+                  const gchar  *iface)
+{
+    g_autoptr(GError) error = NULL;
+    g_autoptr(GPtrArray) links = NULL;
+
+    if (!mbim_device_list_links (dev, iface, &links, &error))
+        g_printerr ("error: couldn't list links: %s\n", error->message);
+    else {
+        guint i;
+        guint n_links;
+
+        n_links = (links ? links->len : 0);
+
+        g_print ("[%s] found %u links%s\n",
+                 mbim_device_get_path_display (dev),
+                 n_links,
+                 n_links > 0 ? ":" : "");
+        for (i = 0; i < n_links; i++)
+            g_print ("  [%u] %s\n", i, (const gchar *) g_ptr_array_index (links, i));
+    }
+
+    mbimcli_async_operation_done (!error);
+}
+
 /******************************************************************************/
 /* Common */
 
@@ -232,7 +265,9 @@ void
 mbimcli_link_management_run (MbimDevice   *dev,
                              GCancellable *cancellable)
 {
-    if (link_add_str)
+    if (link_list_str)
+        device_link_list (dev, cancellable, link_list_str);
+    else if (link_add_str)
         device_link_add (dev, cancellable, link_add_str);
     else if (link_delete_str)
         device_link_delete (dev, cancellable, link_delete_str);
