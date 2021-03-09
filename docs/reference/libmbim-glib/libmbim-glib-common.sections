@@ -237,6 +237,7 @@ mbim_device_command_finish
 MBIM_DEVICE_SESSION_ID_AUTOMATIC
 MBIM_DEVICE_SESSION_ID_MIN
 MBIM_DEVICE_SESSION_ID_MAX
+mbim_device_check_link_supported
 mbim_device_list_links
 mbim_device_add_link
 mbim_device_add_link_finish

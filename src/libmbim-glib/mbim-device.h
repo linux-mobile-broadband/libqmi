@@ -623,6 +623,20 @@ gboolean mbim_device_list_links (MbimDevice   *self,
                                  GPtrArray   **out_links,
                                  GError      **error);
 
+/**
+ * mbim_device_check_link_supported:
+ * @self: a #MbimDevice.
+ * @error: Return location for error or %NULL.
+ *
+ * Checks whether link management is supported by the kernel.
+ *
+ * Returns: %TRUE if link management is supported, or %FALSE if @error is set.
+ *
+ * Since: 1.26
+ */
+gboolean mbim_device_check_link_supported (MbimDevice  *self,
+                                           GError     **error);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_DEVICE_H_ */

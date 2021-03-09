@@ -748,6 +748,18 @@ mbim_device_list_links (MbimDevice   *self,
 }
 
 /*****************************************************************************/
+
+gboolean
+mbim_device_check_link_supported (MbimDevice  *self,
+                                  GError     **error)
+{
+    g_return_val_if_fail (MBIM_IS_DEVICE (self), FALSE);
+
+    /* if we can setup a net port manager, link management is supported */
+    return setup_net_port_manager (self, error);
+}
+
+/*****************************************************************************/
 /* Open device */
 
 static void
