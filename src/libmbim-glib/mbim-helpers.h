@@ -29,6 +29,7 @@
 #endif
 
 #include <glib.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -43,6 +44,25 @@ gchar *mbim_helpers_get_devpath (const gchar  *cdc_wdm_path,
 G_GNUC_INTERNAL
 gchar *mbim_helpers_get_devname (const gchar  *cdc_wdm_path,
                                  GError      **error);
+
+G_GNUC_INTERNAL
+gboolean mbim_helpers_list_links (GFile         *sysfs_file,
+                                  GCancellable  *cancellable,
+                                  GPtrArray     *previous_links,
+                                  GPtrArray    **out_links,
+                                  GError       **error);
+
+#if !GLIB_CHECK_VERSION(2,54,0)
+
+/* Pointer Array lookup with a GEqualFunc, imported from GLib 2.54 */
+#define g_ptr_array_find_with_equal_func mbim_ptr_array_find_with_equal_func
+G_GNUC_INTERNAL
+gboolean mbim_ptr_array_find_with_equal_func (GPtrArray     *haystack,
+                                              gconstpointer  needle,
+                                              GEqualFunc     equal_func,
+                                              guint         *index_);
+
+#endif
 
 G_END_DECLS
 

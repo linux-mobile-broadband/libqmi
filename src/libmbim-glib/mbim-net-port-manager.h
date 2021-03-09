@@ -56,6 +56,11 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimNetPortManager, g_object_unref)
 MbimNetPortManager *mbim_net_port_manager_new (const gchar  *iface,
                                                GError      **error);
 
+gboolean  mbim_net_port_manager_list_links     (MbimNetPortManager   *self,
+                                                const gchar          *base_ifname,
+                                                GPtrArray           **out_links,
+                                                GError              **error);
+
 void      mbim_net_port_manager_add_link        (MbimNetPortManager   *self,
                                                  guint                 session_id,
                                                  const gchar          *base_ifname,

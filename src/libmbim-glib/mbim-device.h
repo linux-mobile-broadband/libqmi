@@ -561,6 +561,23 @@ gboolean mbim_device_delete_link_finish (MbimDevice    *self,
                                          GAsyncResult  *res,
                                          GError       **error);
 
+/**
+ * mbim_device_list_links:
+ * @self: a #MbimDevice.
+ * @base_ifname: the base interface.
+ * @out_links: (out)(transfer full)(element-type utf8): a placeholder for the
+ *   output #GPtrArray of link names.
+ * @error: Return location for error or %NULL.
+ *
+ * Returns: %TRUE if successful, %FALSE if @error is set.
+ *
+ * Since: 1.26
+ */
+gboolean mbim_device_list_links (MbimDevice   *self,
+                                 const gchar  *base_ifname,
+                                 GPtrArray   **out_links,
+                                 GError      **error);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_DEVICE_H_ */

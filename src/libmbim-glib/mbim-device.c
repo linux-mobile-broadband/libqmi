@@ -674,6 +674,27 @@ mbim_device_delete_link (MbimDevice          *self,
 }
 
 /*****************************************************************************/
+
+gboolean
+mbim_device_list_links (MbimDevice   *self,
+                        const gchar  *base_ifname,
+                        GPtrArray   **out_links,
+                        GError      **error)
+{
+    g_return_val_if_fail (MBIM_IS_DEVICE (self), FALSE);
+    g_return_val_if_fail (base_ifname, FALSE);
+
+    if (!setup_net_port_manager (self, error))
+        return FALSE;
+
+    g_assert (self->priv->net_port_manager);
+    return mbim_net_port_manager_list_links (self->priv->net_port_manager,
+                                             base_ifname,
+                                             out_links,
+                                             error);
+}
+
+/*****************************************************************************/
 /* Open device */
 
 static void

@@ -585,6 +585,23 @@ mbim_net_port_manager_del_link (MbimNetPortManager  *self,
 
 /*****************************************************************************/
 
+gboolean
+mbim_net_port_manager_list_links (MbimNetPortManager  *self,
+                                  const gchar         *base_ifname,
+                                  GPtrArray          **out_links,
+                                  GError             **error)
+{
+    g_autoptr(GFile)  sysfs_file = NULL;
+    g_autofree gchar *sysfs_path = NULL;
+
+    sysfs_path = g_strdup_printf ("/sys/class/net/%s", base_ifname);
+    sysfs_file = g_file_new_for_path (sysfs_path);
+
+    return mbim_helpers_list_links (sysfs_file, NULL, NULL, out_links, error);
+}
+
+/*****************************************************************************/
+
 MbimNetPortManager *
 mbim_net_port_manager_new (const gchar  *iface,
                            GError      **error)
