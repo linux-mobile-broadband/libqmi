@@ -47,7 +47,7 @@ static GOptionEntry entries[] = {
     },
     { "link-add", 0, 0, G_OPTION_ARG_STRING, &link_add_str,
       "Create new network interface link",
-      "[mux-id=N|auto,iface=IFACE,prefix=PREFIX,flags=FLAGS]"
+      "[iface=IFACE,prefix=PREFIX[,mux-id=N][,flags=FLAGS]]"
     },
     { "link-delete", 0, 0, G_OPTION_ARG_STRING, &link_delete_str,
       "Delete a given network interface link",
