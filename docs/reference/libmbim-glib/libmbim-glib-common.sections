@@ -233,6 +233,14 @@ mbim_device_get_transaction_id
 mbim_device_get_next_transaction_id
 mbim_device_command
 mbim_device_command_finish
+<SUBSECTION LinkSupport>
+MBIM_DEVICE_SESSION_ID_AUTOMATIC
+MBIM_DEVICE_SESSION_ID_MIN
+MBIM_DEVICE_SESSION_ID_MAX
+mbim_device_add_link
+mbim_device_add_link_finish
+mbim_device_delete_link
+mbim_device_delete_link_finish
 <SUBSECTION Private>
 MbimDeviceClass
 <SUBSECTION Standard>

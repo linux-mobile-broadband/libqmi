@@ -52,7 +52,8 @@ CFILE_GLOB = \
 # Headers to ignore
 IGNORE_HFILES = \
 	mbim-message-private.h \
-	mbim-helpers.h
+	mbim-helpers.h \
+	mbim-net-port-manager.h
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.

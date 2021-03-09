@@ -32,6 +32,7 @@ libmbim_glib_core_la_SOURCES = \
 	mbim-compat.h mbim-compat.c \
 	mbim-proxy.h mbim-proxy.c \
 	mbim-proxy-helpers.h mbim-proxy-helpers.c \
+	mbim-net-port-manager.h mbim-net-port-manager.c \
 	$(NULL)
 
 # Final installable library

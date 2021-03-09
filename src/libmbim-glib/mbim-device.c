@@ -48,8 +48,10 @@
 #include "mbim-message-private.h"
 #include "mbim-error-types.h"
 #include "mbim-enum-types.h"
+#include "mbim-helpers.h"
 #include "mbim-proxy.h"
 #include "mbim-proxy-control.h"
+#include "mbim-net-port-manager.h"
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
 
@@ -94,6 +96,9 @@ struct _MbimDevicePrivate {
     gchar *path;
     gchar *path_display;
 
+    /* WWAN interface */
+    gchar *wwan_iface;
+
     /* I/O channel, set when the file is open */
     GIOChannel *iochannel;
     GSource *iochannel_source;
@@ -119,6 +124,9 @@ struct _MbimDevicePrivate {
 
     /* message size */
     guint16 max_control_transfer;
+
+    /* Link management */
+    MbimNetPortManager *net_port_manager;
 };
 
 #define MAX_SPAWN_RETRIES             10
@@ -438,6 +446,231 @@ mbim_device_is_open (MbimDevice *self)
     g_return_val_if_fail (MBIM_IS_DEVICE (self), FALSE);
 
     return (self->priv->open_status == OPEN_STATUS_OPEN);
+}
+
+/*****************************************************************************/
+
+static void
+reload_wwan_iface_name (MbimDevice *self)
+{
+    g_autofree gchar   *cdc_wdm_device_name = NULL;
+    guint               i;
+    g_autoptr(GError)   error = NULL;
+    static const gchar *driver_names[] = { "usbmisc", /* kernel >= 3.6 */
+                                           "usb" };   /* kernel < 3.6 */
+
+    g_clear_pointer (&self->priv->wwan_iface, g_free);
+
+    cdc_wdm_device_name = mbim_helpers_get_devname (self->priv->path, &error);
+    if (!cdc_wdm_device_name) {
+        g_warning ("[%s] invalid path for cdc-wdm control port: %s",
+                   self->priv->path_display,
+                   error->message);
+        return;
+    }
+
+    for (i = 0; i < G_N_ELEMENTS (driver_names) && !self->priv->wwan_iface; i++) {
+        g_autofree gchar           *sysfs_path = NULL;
+        g_autoptr(GFile)            sysfs_file = NULL;
+        g_autoptr(GFileEnumerator)  enumerator = NULL;
+        GFileInfo                  *file_info  = NULL;
+
+        /* WWAN iface name loading only applicable for cdc_mbim driver right now
+         * (so MBIM port exposed by the cdc-wdm driver in the usbmisc subsystem),
+         * not for any other subsystem or driver */
+        sysfs_path = g_strdup_printf ("/sys/class/%s/%s/device/net/", driver_names[i], cdc_wdm_device_name);
+        sysfs_file = g_file_new_for_path (sysfs_path);
+        enumerator = g_file_enumerate_children (sysfs_file,
+                                                G_FILE_ATTRIBUTE_STANDARD_NAME,
+                                                G_FILE_QUERY_INFO_NONE,
+                                                NULL,
+                                                NULL);
+        if (!enumerator)
+            continue;
+
+        /* Ignore errors when enumerating */
+        while ((file_info = g_file_enumerator_next_file (enumerator, NULL, NULL)) != NULL) {
+            const gchar *name;
+
+            name = g_file_info_get_name (file_info);
+            if (name) {
+                /* We only expect ONE file in the sysfs directory corresponding
+                 * to this control port, if more found for any reason, warn about it */
+                if (self->priv->wwan_iface)
+                    g_warning ("[%s] invalid additional wwan iface found: %s",
+                               self->priv->path_display, name);
+                else
+                    self->priv->wwan_iface = g_strdup (name);
+            }
+            g_object_unref (file_info);
+        }
+        if (!self->priv->wwan_iface)
+            g_warning ("[%s] wwan iface not found", self->priv->path_display);
+    }
+
+    /* wwan_iface won't be set at this point if the kernel driver in use isn't in
+     * the usbmisc subsystem */
+}
+
+static gboolean
+setup_net_port_manager (MbimDevice  *self,
+                        GError    **error)
+{
+    /* If we have a valid one already, use that one */
+    if (self->priv->net_port_manager)
+        return TRUE;
+
+    /* For now we only support link management with cdc-mbim */
+    reload_wwan_iface_name (self);
+    if (!self->priv->wwan_iface) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNSUPPORTED,
+                     "Link management is unsupported");
+        return FALSE;
+    }
+
+    self->priv->net_port_manager = mbim_net_port_manager_new (self->priv->wwan_iface, error);
+    return !!self->priv->net_port_manager;
+}
+
+/*****************************************************************************/
+/* Link management */
+
+typedef struct {
+    guint  session_id;
+    gchar *ifname;
+} AddLinkResult;
+
+static void
+add_link_result_free (AddLinkResult *ctx)
+{
+    g_free (ctx->ifname);
+    g_free (ctx);
+}
+
+gchar *
+mbim_device_add_link_finish (MbimDevice    *self,
+                             GAsyncResult  *res,
+                             guint         *session_id,
+                             GError       **error)
+{
+    AddLinkResult *ctx;
+
+    ctx = g_task_propagate_pointer (G_TASK (res), error);
+    if (!ctx)
+        return NULL;
+
+    if (session_id)
+        *session_id = ctx->session_id;
+
+    return g_steal_pointer (&ctx->ifname);
+}
+
+static void
+device_add_link_ready (MbimNetPortManager *net_port_manager,
+                       GAsyncResult      *res,
+                       GTask             *task)
+{
+    GError        *error = NULL;
+    AddLinkResult *ctx;
+
+    ctx = g_new0 (AddLinkResult, 1);
+    ctx->ifname = mbim_net_port_manager_add_link_finish (net_port_manager, &ctx->session_id, res, &error);
+
+    if (!ctx->ifname) {
+        g_prefix_error (&error, "Could not allocate link: ");
+        g_task_return_error (task, error);
+        add_link_result_free (ctx);
+    } else
+        g_task_return_pointer (task, ctx, (GDestroyNotify) add_link_result_free);
+
+    g_object_unref (task);
+}
+
+void
+mbim_device_add_link (MbimDevice          *self,
+                      guint                session_id,
+                      const gchar         *base_ifname,
+                      const gchar         *ifname_prefix,
+                      GCancellable        *cancellable,
+                      GAsyncReadyCallback  callback,
+                      gpointer             user_data)
+{
+    GTask  *task;
+    GError *error = NULL;
+
+    g_return_if_fail (MBIM_IS_DEVICE (self));
+    g_return_if_fail (base_ifname);
+    g_return_if_fail ((session_id <= MBIM_DEVICE_SESSION_ID_MAX) || (session_id == MBIM_DEVICE_SESSION_ID_AUTOMATIC));
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    if (!setup_net_port_manager (self, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_assert (self->priv->net_port_manager);
+    mbim_net_port_manager_add_link (self->priv->net_port_manager,
+                                    session_id,
+                                    base_ifname,
+                                    ifname_prefix,
+                                    5,
+                                    cancellable,
+                                    (GAsyncReadyCallback) device_add_link_ready,
+                                    task);
+}
+
+gboolean
+mbim_device_delete_link_finish (MbimDevice    *self,
+                                GAsyncResult  *res,
+                                GError       **error)
+{
+    return g_task_propagate_boolean (G_TASK (res), error);
+}
+
+static void
+device_del_link_ready (MbimNetPortManager *net_port_manager,
+                       GAsyncResult       *res,
+                       GTask              *task)
+{
+    GError *error = NULL;
+
+    if (!mbim_net_port_manager_del_link_finish (net_port_manager, res, &error))
+        g_task_return_error (task, error);
+    else
+        g_task_return_boolean (task, TRUE);
+    g_object_unref (task);
+}
+
+void
+mbim_device_delete_link (MbimDevice          *self,
+                         const gchar         *ifname,
+                         GCancellable        *cancellable,
+                         GAsyncReadyCallback  callback,
+                         gpointer             user_data)
+{
+    GTask  *task;
+    GError *error = NULL;
+
+    g_return_if_fail (MBIM_IS_DEVICE (self));
+    g_return_if_fail (ifname);
+
+    task = g_task_new (self, cancellable, callback, user_data);
+
+    if (!setup_net_port_manager (self, &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    g_assert (self->priv->net_port_manager);
+    mbim_net_port_manager_del_link (self->priv->net_port_manager,
+                                   ifname,
+                                    5, /* timeout */
+                                    cancellable,
+                                    (GAsyncReadyCallback) device_del_link_ready,
+                                    task);
 }
 
 /*****************************************************************************/
@@ -2145,6 +2378,7 @@ dispose (GObject *object)
     g_clear_object (&self->priv->file);
 
     destroy_iochannel (self, NULL);
+    g_clear_object (&self->priv->net_port_manager);
 
     G_OBJECT_CLASS (mbim_device_parent_class)->dispose (object);
 }
@@ -2167,6 +2401,7 @@ finalize (GObject *object)
 
     g_free (self->priv->path);
     g_free (self->priv->path_display);
+    g_free (self->priv->wwan_iface);
 
     G_OBJECT_CLASS (mbim_device_parent_class)->finalize (object);
 }
