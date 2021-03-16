@@ -36,6 +36,9 @@
 
 #if defined HAVE_QMI_SERVICE_LOC
 
+#undef VALIDATE_MASK_NONE
+#define VALIDATE_MASK_NONE(str) (str ? str : "none")
+
 /* Context */
 
 typedef enum {
@@ -572,7 +575,7 @@ position_report_received (QmiClientLoc                         *client,
             g_autofree gchar *technology_str = NULL;
 
             technology_str = qmi_loc_technology_used_build_string_from_mask (technology);
-            g_print ("   technology: %s\n", technology_str);
+            g_print ("   technology: %s\n", VALIDATE_MASK_NONE (technology_str));
         } else
             g_print ("   technology: n/a\n");
 
@@ -615,7 +618,7 @@ position_report_received (QmiClientLoc                         *client,
             g_autofree gchar *sensor_data_usage_str = NULL;
 
             sensor_data_usage_str = qmi_loc_sensor_data_usage_build_string_from_mask (sensor_data_usage);
-            g_print ("   sensor data usage: %s\n", sensor_data_usage_str);
+            g_print ("   sensor data usage: %s\n", VALIDATE_MASK_NONE (sensor_data_usage_str));
         } else
             g_print ("   sensor data usage: n/a\n");
 
@@ -914,7 +917,7 @@ get_nmea_types_received (QmiClientLoc                       *client,
     }
 
     nmea_types_str = qmi_loc_nmea_type_build_string_from_mask (nmea_types_mask);
-    g_print ("Successfully retrieved NMEA types: %s\n", nmea_types_str ? nmea_types_str : "none");
+    g_print ("Successfully retrieved NMEA types: %s\n", VALIDATE_MASK_NONE (nmea_types_str));
     operation_shutdown (TRUE);
 }
 

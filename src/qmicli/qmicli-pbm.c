@@ -34,6 +34,9 @@
 
 #if defined HAVE_QMI_SERVICE_PBM
 
+#undef VALIDATE_MASK_NONE
+#define VALIDATE_MASK_NONE(str) (str ? str : "none")
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -189,7 +192,7 @@ get_all_capabilities_ready (QmiClientPbm *client,
                                             QmiMessagePbmGetAllCapabilitiesOutputCapabilityBasicInformationElementPhonebooksElement,
                                             j);
                 phonebook_type_str = qmi_pbm_phonebook_type_build_string_from_mask (phonebook->phonebook_type);
-                g_print ("\t\t[%s]:\n", phonebook_type_str);
+                g_print ("\t\t[%s]:\n", VALIDATE_MASK_NONE (phonebook_type_str));
                 g_print ("\t\t\tUsed records: %" G_GUINT16_FORMAT "\n", phonebook->used_records);
                 g_print ("\t\t\tMaximum records: %" G_GUINT16_FORMAT "\n", phonebook->maximum_records);
                 g_print ("\t\t\tMaximum number length: %u\n", phonebook->maximum_number_length);

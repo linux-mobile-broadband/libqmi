@@ -35,6 +35,9 @@
 
 #if defined HAVE_QMI_SERVICE_VOICE
 
+#undef VALIDATE_MASK_NONE
+#define VALIDATE_MASK_NONE(str) (str ? str : "none")
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -237,7 +240,7 @@ get_config_ready (QmiClientVoice *client,
                  "\tGSM: '%s'\n"
                  "\tWCDMA: '%s' (0x%04X)\n",
                  current_amr_status_gsm ? "enabled" : "disabled",
-                 current_amr_status_wcdma_str ? current_amr_status_wcdma_str : "unknown",
+                 VALIDATE_MASK_NONE (current_amr_status_wcdma_str),
                  current_amr_status_wcdma);
         g_free (current_amr_status_wcdma_str);
     }

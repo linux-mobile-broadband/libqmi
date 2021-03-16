@@ -35,6 +35,9 @@
 
 #if defined HAVE_QMI_SERVICE_NAS
 
+#undef VALIDATE_MASK_NONE
+#define VALIDATE_MASK_NONE(str) (str ? str : "none")
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -1069,7 +1072,7 @@ get_preferred_networks_ready (QmiClientNas *client,
                      i,
                      element->mcc,
                      element->mnc,
-                     access_tech_string);
+                     VALIDATE_MASK_NONE (access_tech_string));
         }
     }
 
@@ -2430,7 +2433,7 @@ get_technology_preference_ready (QmiClientNas *client,
     g_print ("[%s] Successfully got technology preference\n"
              "\tActive: '%s', duration: '%s'\n",
              qmi_device_get_path_display (ctx->device),
-             preference_string,
+             VALIDATE_MASK_NONE (preference_string),
              qmi_nas_preference_duration_get_string (duration));
 
     if (qmi_message_nas_get_technology_preference_output_get_persistent (
@@ -2438,7 +2441,7 @@ get_technology_preference_ready (QmiClientNas *client,
             &preference,
             NULL)) {
         persistent_preference_string = qmi_nas_radio_technology_preference_build_string_from_mask (preference);
-        g_print ("\tPersistent: '%s'\n", persistent_preference_string);
+        g_print ("\tPersistent: '%s'\n", VALIDATE_MASK_NONE (persistent_preference_string));
     }
 
     qmi_message_nas_get_technology_preference_output_unref (output);
@@ -2509,7 +2512,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
         g_autofree gchar *str = NULL;
 
         str = qmi_nas_rat_mode_preference_build_string_from_mask (mode_preference);
-        g_print ("\tMode preference: '%s'\n", str);
+        g_print ("\tMode preference: '%s'\n", VALIDATE_MASK_NONE (str));
     }
 
     if (qmi_message_nas_get_system_selection_preference_output_get_disabled_modes (
@@ -2519,7 +2522,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
         g_autofree gchar *str = NULL;
 
         str = qmi_nas_rat_mode_preference_build_string_from_mask (disabled_modes);
-        g_print ("\tDisabled modes: '%s'\n", str);
+        g_print ("\tDisabled modes: '%s'\n", VALIDATE_MASK_NONE (str));
     }
 
 
@@ -2530,7 +2533,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
         g_autofree gchar *str = NULL;
 
         str = qmi_nas_band_preference_build_string_from_mask (band_preference);
-        g_print ("\tBand preference: '%s'\n", str);
+        g_print ("\tBand preference: '%s'\n", VALIDATE_MASK_NONE (str));
     }
 
     if (qmi_message_nas_get_system_selection_preference_output_get_lte_band_preference (
@@ -2540,7 +2543,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
         g_autofree gchar *str = NULL;
 
         str = qmi_nas_lte_band_preference_build_string_from_mask (lte_band_preference);
-        g_print ("\tLTE band preference: '%s'\n", str);
+        g_print ("\tLTE band preference: '%s'\n", VALIDATE_MASK_NONE (str));
     }
 
     if (qmi_message_nas_get_system_selection_preference_output_get_extended_lte_band_preference (
@@ -2580,7 +2583,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
         g_autofree gchar *str = NULL;
 
         str = qmi_nas_td_scdma_band_preference_build_string_from_mask (td_scdma_band_preference);
-        g_print ("\tTD-SCDMA band preference: '%s'\n", str);
+        g_print ("\tTD-SCDMA band preference: '%s'\n", VALIDATE_MASK_NONE (str));
     }
 
     if (qmi_message_nas_get_system_selection_preference_output_get_cdma_prl_preference (
@@ -2852,7 +2855,7 @@ network_scan_ready (QmiClientNas *client,
                      i,
                      element->mcc,
                      element->mnc,
-                     status_str,
+                     VALIDATE_MASK_NONE (status_str),
                      element->description);
         }
     }
@@ -3546,7 +3549,7 @@ get_operator_name_ready (QmiClientNas *client,
         g_print ("Service Provider Name\n");
         g_print ("\tDisplay Condition: '%s'\n"
                  "\tName             : '%s'\n",
-                 dc_string,
+                 VALIDATE_MASK_NONE (dc_string),
                  spn);
     }
 

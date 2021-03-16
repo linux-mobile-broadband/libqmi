@@ -38,6 +38,9 @@
 #undef VALIDATE_UNKNOWN
 #define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
 
+#undef VALIDATE_MASK_NONE
+#define VALIDATE_MASK_NONE(str) (str ? str : "none")
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -907,7 +910,7 @@ get_power_state_ready (QmiClientDms *client,
              "\tPower state: '%s'\n"
              "\tBattery level: '%u %%'\n",
              qmi_device_get_path_display (ctx->device),
-             power_state_str,
+             VALIDATE_MASK_NONE (power_state_str),
              (guint)battery_level);
 
     qmi_message_dms_get_power_state_output_unref (output);
@@ -1790,12 +1793,13 @@ get_operating_mode_ready (QmiClientDms *client,
 
     if (mode == QMI_DMS_OPERATING_MODE_OFFLINE || mode == QMI_DMS_OPERATING_MODE_LOW_POWER) {
         QmiDmsOfflineReason reason;
-        g_autofree gchar *reason_str = NULL;
 
-        if (qmi_message_dms_get_operating_mode_output_get_offline_reason (output, &reason, NULL))
+        if (qmi_message_dms_get_operating_mode_output_get_offline_reason (output, &reason, NULL)) {
+            g_autofree gchar *reason_str = NULL;
+
             reason_str = qmi_dms_offline_reason_build_string_from_mask (reason);
-
-        g_print ("\tReason: '%s'\n", VALIDATE_UNKNOWN (reason_str));
+            g_print ("\tReason: '%s'\n", VALIDATE_MASK_NONE (reason_str));
+        }
     }
 
     qmi_message_dms_get_operating_mode_output_get_hardware_restricted_mode (output, &hw_restricted, NULL);
@@ -2690,7 +2694,7 @@ get_band_capabilities_ready (QmiClientDms *client,
         g_print ("[%s] Device band capabilities retrieved:\n"
                  "\tBands: '%s'\n",
                  qmi_device_get_path_display (ctx->device),
-                 str);
+                 VALIDATE_MASK_NONE (str));
     }
 
     if (qmi_message_dms_get_band_capabilities_output_get_lte_band_capability (
@@ -2700,7 +2704,7 @@ get_band_capabilities_ready (QmiClientDms *client,
         g_autofree gchar *str = NULL;
 
         str = qmi_dms_lte_band_capability_build_string_from_mask (lte_band_capability);
-        g_print ("\tLTE bands: '%s'\n", str);
+        g_print ("\tLTE bands: '%s'\n", VALIDATE_MASK_NONE (str));
     }
 
     if (qmi_message_dms_get_band_capabilities_output_get_extended_lte_band_capability (

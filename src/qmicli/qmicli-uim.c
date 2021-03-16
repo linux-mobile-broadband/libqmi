@@ -35,6 +35,9 @@
 
 #if defined HAVE_QMI_SERVICE_UIM
 
+#undef VALIDATE_MASK_NONE
+#define VALIDATE_MASK_NONE(str) (str ? str : "none")
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -2050,27 +2053,27 @@ get_file_attributes_ready (QmiClientUim *client,
         read_security_attributes_str = qmi_uim_security_attribute_build_string_from_mask (read_security_attributes);
         g_print ("\tRead security attributes: (%s) %s\n",
                  qmi_uim_security_attribute_logic_get_string (read_security_attributes_logic),
-                 read_security_attributes_str);
+                 VALIDATE_MASK_NONE (read_security_attributes_str));
 
         write_security_attributes_str = qmi_uim_security_attribute_build_string_from_mask (write_security_attributes);
         g_print ("\tWrite security attributes: (%s) %s\n",
                  qmi_uim_security_attribute_logic_get_string (write_security_attributes_logic),
-                 write_security_attributes_str);
+                 VALIDATE_MASK_NONE (write_security_attributes_str));
 
         increase_security_attributes_str = qmi_uim_security_attribute_build_string_from_mask (increase_security_attributes);
         g_print ("\tIncrease security attributes: (%s) %s\n",
                  qmi_uim_security_attribute_logic_get_string (increase_security_attributes_logic),
-                 increase_security_attributes_str);
+                 VALIDATE_MASK_NONE (increase_security_attributes_str));
 
         deactivate_security_attributes_str = qmi_uim_security_attribute_build_string_from_mask (deactivate_security_attributes);
         g_print ("\tDeactivate security attributes: (%s) %s\n",
                  qmi_uim_security_attribute_logic_get_string (deactivate_security_attributes_logic),
-                 deactivate_security_attributes_str);
+                 VALIDATE_MASK_NONE (deactivate_security_attributes_str));
 
         activate_security_attributes_str = qmi_uim_security_attribute_build_string_from_mask (activate_security_attributes);
         g_print ("\tActivate security attributes: (%s) %s\n",
                  qmi_uim_security_attribute_logic_get_string (activate_security_attributes_logic),
-                 activate_security_attributes_str);
+                 VALIDATE_MASK_NONE (activate_security_attributes_str));
 
         raw_str = qmicli_get_raw_data_printable (raw, 80, "\t");
         g_print ("\tRaw: %s\n", raw_str);
