@@ -2677,7 +2677,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
             NULL)) {
         guint i;
 
-        g_print ("\tAcquisition order preference: ");
+        g_print ("\tAcquisition order preference: '");
         for (i = 0; i < acquisition_order_preference->len; i++) {
             QmiNasRadioInterface radio_interface;
 
@@ -2686,7 +2686,7 @@ get_system_selection_preference_ready (QmiClientNas *client,
                      i > 0 ? ", " : "",
                      qmi_nas_radio_interface_get_string (radio_interface));
         }
-        g_print ("\n");
+        g_print ("'\n");
     }
 
     qmi_message_nas_get_system_selection_preference_output_unref (output);
