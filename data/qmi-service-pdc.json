@@ -71,6 +71,12 @@
                      "type"          : "TLV",
                      "since"         : "1.18",
                      "format"        : "guint8",
+                     "public-format" : "gboolean"},
+                   { "name"          : "Enable Refresh",
+                     "id"            : "0x11",
+                     "type"          : "TLV",
+                     "since"         : "1.32",
+                     "format"        : "guint8",
                      "public-format" : "gboolean"}],
      "output"  : [ { "common-ref" : "Operation Result" } ] },
 
@@ -403,5 +409,29 @@
      "output"  : [ { "common-ref" : "Indication Result",
                      "since"      : "1.18" },
                    { "common-ref" : "Token",
-                     "since"      : "1.18" }] }
+                     "since"      : "1.18" }] },
+
+  // *********************************************************************************
+  {  "name"    : "Refresh",
+     "type"    : "Indication",
+     "service" : "PDC",
+     "id"      : "0x2F",
+     "since"   : "1.32",
+     "output"  : [ { "name"          : "Refresh Event",
+                     "id"            : "0x01",
+                     "mandatory"     : "yes",
+                     "type"          : "TLV",
+                     "since"         : "1.32",
+                     "format"        : "guint32",
+                     "public-format" : "QmiPdcRefreshEventType" },
+                   { "name"          : "Subscription ID",
+                     "id"            : "0x10",
+                     "type"          : "TLV",
+                     "since"         : "1.32",
+                     "format"        : "guint32" },
+                   { "name"          : "Slot ID",
+                     "id"            : "0x11",
+                     "type"          : "TLV",
+                     "since"         : "1.32",
+                     "format"        : "guint32" }] }
 ]
