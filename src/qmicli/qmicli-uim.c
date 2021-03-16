@@ -2033,7 +2033,12 @@ get_file_attributes_ready (QmiClientUim *client,
             &activate_security_attributes,
             &raw,
             NULL)) {
-        gchar *str;
+        g_autofree gchar *read_security_attributes_str = NULL;
+        g_autofree gchar *write_security_attributes_str = NULL;
+        g_autofree gchar *increase_security_attributes_str = NULL;
+        g_autofree gchar *deactivate_security_attributes_str = NULL;
+        g_autofree gchar *activate_security_attributes_str = NULL;
+        g_autofree gchar *raw_str = NULL;
 
         g_print ("File attributes:\n");
         g_print ("\tFile size: %u\n", (guint)file_size);
@@ -2042,39 +2047,33 @@ get_file_attributes_ready (QmiClientUim *client,
         g_print ("\tRecord size: %u\n", (guint)record_size);
         g_print ("\tRecord count: %u\n", (guint)record_count);
 
-        str = qmi_uim_security_attribute_build_string_from_mask (read_security_attributes);
+        read_security_attributes_str = qmi_uim_security_attribute_build_string_from_mask (read_security_attributes);
         g_print ("\tRead security attributes: (%s) %s\n",
                  qmi_uim_security_attribute_logic_get_string (read_security_attributes_logic),
-                 str);
-        g_free (str);
+                 read_security_attributes_str);
 
-        str = qmi_uim_security_attribute_build_string_from_mask (write_security_attributes);
+        write_security_attributes_str = qmi_uim_security_attribute_build_string_from_mask (write_security_attributes);
         g_print ("\tWrite security attributes: (%s) %s\n",
                  qmi_uim_security_attribute_logic_get_string (write_security_attributes_logic),
-                 str);
-        g_free (str);
+                 write_security_attributes_str);
 
-        str = qmi_uim_security_attribute_build_string_from_mask (increase_security_attributes);
+        increase_security_attributes_str = qmi_uim_security_attribute_build_string_from_mask (increase_security_attributes);
         g_print ("\tIncrease security attributes: (%s) %s\n",
                  qmi_uim_security_attribute_logic_get_string (increase_security_attributes_logic),
-                 str);
-        g_free (str);
+                 increase_security_attributes_str);
 
-        str = qmi_uim_security_attribute_build_string_from_mask (deactivate_security_attributes);
+        deactivate_security_attributes_str = qmi_uim_security_attribute_build_string_from_mask (deactivate_security_attributes);
         g_print ("\tDeactivate security attributes: (%s) %s\n",
                  qmi_uim_security_attribute_logic_get_string (deactivate_security_attributes_logic),
-                 str);
-        g_free (str);
+                 deactivate_security_attributes_str);
 
-        str = qmi_uim_security_attribute_build_string_from_mask (activate_security_attributes);
+        activate_security_attributes_str = qmi_uim_security_attribute_build_string_from_mask (activate_security_attributes);
         g_print ("\tActivate security attributes: (%s) %s\n",
                  qmi_uim_security_attribute_logic_get_string (activate_security_attributes_logic),
-                 str);
-        g_free (str);
+                 activate_security_attributes_str);
 
-        str = qmicli_get_raw_data_printable (raw, 80, "\t");
-        g_print ("\tRaw: %s\n", str);
-        g_free (str);
+        raw_str = qmicli_get_raw_data_printable (raw, 80, "\t");
+        g_print ("\tRaw: %s\n", raw_str);
     }
 
     qmi_message_uim_get_file_attributes_output_unref (output);

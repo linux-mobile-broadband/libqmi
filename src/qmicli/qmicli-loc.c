@@ -470,7 +470,6 @@ position_report_received (QmiClientLoc                         *client,
         QmiLocSensorDataUsage sensor_data_usage;
         QmiIndicationLocPositionReportOutputDilutionOfPrecision dop;
         QmiIndicationLocPositionReportOutputGpsTime gps_time;
-        gchar *auxs;
         gboolean auxb;
         GArray *array;
 
@@ -570,9 +569,10 @@ position_report_received (QmiClientLoc                         *client,
             g_print ("   magnetic deviation: n/a\n");
 
         if (qmi_indication_loc_position_report_output_get_technology_used (output, &technology, NULL)) {
-            auxs = qmi_loc_technology_used_build_string_from_mask (technology);
-            g_print ("   technology: %s\n", auxs);
-            g_free (auxs);
+            g_autofree gchar *technology_str = NULL;
+
+            technology_str = qmi_loc_technology_used_build_string_from_mask (technology);
+            g_print ("   technology: %s\n", technology_str);
         } else
             g_print ("   technology: n/a\n");
 

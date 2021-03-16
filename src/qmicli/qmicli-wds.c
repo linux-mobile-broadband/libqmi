@@ -641,7 +641,7 @@ start_network_input_create (const gchar                     *str,
                             QmiMessageWdsStartNetworkInput **input,
                             GError                         **error)
 {
-    gchar *aux_auth_str = NULL;
+    g_autofree gchar *aux_auth_str = NULL;
     const gchar *ip_type_str = NULL;
     gchar **split = NULL;
     StartNetworkProperties props = {
@@ -757,7 +757,6 @@ out:
     g_free     (props.apn);
     g_free     (props.username);
     g_free     (props.password);
-    g_free     (aux_auth_str);
 
     return success;
 }
@@ -1166,8 +1165,8 @@ print_current_data_bearer_technology_results (const gchar *which,
                                               guint32 rat_mask,
                                               guint32 so_mask)
 {
-    gchar *rat_string = NULL;
-    gchar *so_string = NULL;
+    g_autofree gchar *rat_string = NULL;
+    g_autofree gchar *so_string = NULL;
 
     if (network_type == QMI_WDS_NETWORK_TYPE_3GPP2) {
         rat_string = qmi_wds_rat_3gpp2_build_string_from_mask (rat_mask);
@@ -1190,9 +1189,6 @@ print_current_data_bearer_technology_results (const gchar *which,
     if (network_type == QMI_WDS_NETWORK_TYPE_3GPP2)
         g_print ("            Service Option: '%s'\n",
                  VALIDATE_UNKNOWN (so_string));
-
-    g_free (rat_string);
-    g_free (so_string);
 }
 
 static void
@@ -2052,11 +2048,10 @@ get_profile_settings_ready (QmiClientWds *client,
         if (qmi_message_wds_get_profile_settings_output_get_apn_name (output, &str, NULL))
             g_print ("\t\tAPN: '%s'\n", str);
         if (qmi_message_wds_get_profile_settings_output_get_apn_type_mask (output, &apn_type, NULL)) {
-            gchar *aux;
+            g_autofree gchar *aux = NULL;
 
             aux = qmi_wds_apn_type_mask_build_string_from_mask (apn_type);
             g_print ("\t\tAPN type: '%s'\n", aux);
-            g_free (aux);
         }
         if (qmi_message_wds_get_profile_settings_output_get_pdp_type (output, &pdp_type, NULL))
             g_print ("\t\tPDP type: '%s'\n", qmi_wds_pdp_type_get_string (pdp_type));
@@ -2067,11 +2062,10 @@ get_profile_settings_ready (QmiClientWds *client,
         if (qmi_message_wds_get_profile_settings_output_get_password (output, &str, NULL))
             g_print ("\t\tPassword: '%s'\n", str);
         if (qmi_message_wds_get_profile_settings_output_get_authentication (output, &auth, NULL)) {
-            gchar *aux;
+            g_autofree gchar *aux = NULL;
 
             aux = qmi_wds_authentication_build_string_from_mask (auth);
             g_print ("\t\tAuth: '%s'\n", aux);
-            g_free (aux);
         }
         if (qmi_message_wds_get_profile_settings_output_get_roaming_disallowed_flag (output, &flag, NULL))
             g_print ("\t\tNo roaming: '%s'\n", flag ? "yes" : "no");
@@ -2234,11 +2228,10 @@ get_default_settings_ready (QmiClientWds *client,
     if (qmi_message_wds_get_default_settings_output_get_password (output, &str, NULL))
         g_print ("\tPassword: '%s'\n", str);
     if (qmi_message_wds_get_default_settings_output_get_authentication (output, &auth, NULL)) {
-        gchar *aux;
+        g_autofree gchar *aux = NULL;
 
         aux = qmi_wds_authentication_build_string_from_mask (auth);
         g_print ("\tAuth: '%s'\n", aux);
-        g_free (aux);
     }
 
     qmi_message_wds_get_default_settings_output_unref (output);

@@ -875,7 +875,7 @@ static void
 get_power_state_ready (QmiClientDms *client,
                        GAsyncResult *res)
 {
-    gchar *power_state_str;
+    g_autofree gchar *power_state_str = NULL;
     guint8 power_state_flags;
     guint8 battery_level;
     QmiMessageDmsGetPowerStateOutput *output;
@@ -910,7 +910,6 @@ get_power_state_ready (QmiClientDms *client,
              power_state_str,
              (guint)battery_level);
 
-    g_free (power_state_str);
     qmi_message_dms_get_power_state_output_unref (output);
     operation_shutdown (TRUE);
 }
@@ -1791,14 +1790,12 @@ get_operating_mode_ready (QmiClientDms *client,
 
     if (mode == QMI_DMS_OPERATING_MODE_OFFLINE || mode == QMI_DMS_OPERATING_MODE_LOW_POWER) {
         QmiDmsOfflineReason reason;
-        gchar *reason_str = NULL;
+        g_autofree gchar *reason_str = NULL;
 
-        if (qmi_message_dms_get_operating_mode_output_get_offline_reason (output, &reason, NULL)) {
+        if (qmi_message_dms_get_operating_mode_output_get_offline_reason (output, &reason, NULL))
             reason_str = qmi_dms_offline_reason_build_string_from_mask (reason);
-        }
 
         g_print ("\tReason: '%s'\n", VALIDATE_UNKNOWN (reason_str));
-        g_free (reason_str);
     }
 
     qmi_message_dms_get_operating_mode_output_get_hardware_restricted_mode (output, &hw_restricted, NULL);
@@ -2666,7 +2663,6 @@ get_band_capabilities_ready (QmiClientDms *client,
     QmiDmsLteBandCapability lte_band_capability;
     GArray *extended_lte_band_capability;
     GError *error = NULL;
-    gchar *str;
 
     output = qmi_client_dms_get_band_capabilities_finish (client, res, &error);
     if (!output) {
@@ -2684,25 +2680,27 @@ get_band_capabilities_ready (QmiClientDms *client,
         return;
     }
 
-    qmi_message_dms_get_band_capabilities_output_get_band_capability (
-        output,
-        &band_capability,
-        NULL);
+    if (qmi_message_dms_get_band_capabilities_output_get_band_capability (
+            output,
+            &band_capability,
+            NULL)) {
+        g_autofree gchar *str = NULL;
 
-    str = qmi_dms_band_capability_build_string_from_mask (band_capability);
-    g_print ("[%s] Device band capabilities retrieved:\n"
-             "\tBands: '%s'\n",
-             qmi_device_get_path_display (ctx->device),
-             str);
-    g_free (str);
+        str = qmi_dms_band_capability_build_string_from_mask (band_capability);
+        g_print ("[%s] Device band capabilities retrieved:\n"
+                 "\tBands: '%s'\n",
+                 qmi_device_get_path_display (ctx->device),
+                 str);
+    }
 
     if (qmi_message_dms_get_band_capabilities_output_get_lte_band_capability (
             output,
             &lte_band_capability,
             NULL)) {
+        g_autofree gchar *str = NULL;
+
         str = qmi_dms_lte_band_capability_build_string_from_mask (lte_band_capability);
         g_print ("\tLTE bands: '%s'\n", str);
-        g_free (str);
     }
 
     if (qmi_message_dms_get_band_capabilities_output_get_extended_lte_band_capability (
