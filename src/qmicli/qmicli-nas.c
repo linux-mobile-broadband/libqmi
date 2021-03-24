@@ -2981,6 +2981,16 @@ get_cell_location_info_ready (QmiClientNas *client,
 
     guint32 lte_timing_advance;
 
+    guint32 nr5g_arfcn;
+
+    GArray  *nr5g_cell_information_plmn;
+    GArray  *nr5g_cell_information_tac;
+    guint64  nr5g_cell_information_global_cell_id;
+    guint16  nr5g_cell_information_physical_cell_id;
+    gint16   nr5g_cell_information_rsrp;
+    gint16   nr5g_cell_information_rsrq;
+    gint16   nr5g_cell_information_snr;
+
     output = qmi_client_nas_get_cell_location_info_finish (client, res, &error);
     if (!output) {
         g_printerr ("error: operation failed: %s\n", error->message);
@@ -3459,6 +3469,50 @@ get_cell_location_info_ready (QmiClientNas *client,
             g_print ("LTE Timing Advance: 'unavailable'\n");
         else
             g_print ("LTE Timing Advance: '%" G_GUINT32_FORMAT"' us\n", lte_timing_advance);
+    }
+
+    if (qmi_message_nas_get_cell_location_info_output_get_nr5g_arfcn (
+            output,
+            &nr5g_arfcn,
+            NULL)) {
+        g_print ("5GNR ARFCN: '%" G_GUINT32_FORMAT"'\n", nr5g_arfcn);
+    }
+
+    if (qmi_message_nas_get_cell_location_info_output_get_nr5g_cell_information (
+            output,
+            &nr5g_cell_information_plmn,
+            &nr5g_cell_information_tac,
+            &nr5g_cell_information_global_cell_id,
+            &nr5g_cell_information_physical_cell_id,
+            &nr5g_cell_information_rsrq,
+            &nr5g_cell_information_rsrp,
+            &nr5g_cell_information_snr,
+            NULL)) {
+        g_autofree gchar *plmn = NULL;
+        guint32           tac;
+
+        plmn = str_from_bcd_plmn (nr5g_cell_information_plmn);
+
+        g_assert (nr5g_cell_information_tac->len == 3);
+        tac = ((((g_array_index (nr5g_cell_information_tac, guint8, 0) << 8) |
+                 g_array_index (nr5g_cell_information_tac, guint8, 1)) << 8) |
+               g_array_index (nr5g_cell_information_tac, guint8, 2));
+
+        g_print ("5GNR cell information\n"
+                 "\tPLMN: '%s'\n"
+                 "\tTracking Area Code: '%" G_GUINT32_FORMAT "'\n"
+                 "\tGlobal Cell ID: '%" G_GUINT64_FORMAT "'\n"
+                 "\tPhysical Cell ID: '%" G_GUINT16_FORMAT "'\n"
+                 "\tRSRQ: '%.1lf dB'\n"
+                 "\tRSRP: '%.1lf dBm'\n"
+                 "\tSNR: '%.1lf dB'\n",
+                 plmn,
+                 tac,
+                 nr5g_cell_information_global_cell_id,
+                 nr5g_cell_information_physical_cell_id,
+                 (0.1) * ((gdouble)nr5g_cell_information_rsrq),
+                 (0.1) * ((gdouble)nr5g_cell_information_rsrp),
+                 (0.1) * ((gdouble)nr5g_cell_information_snr));
     }
 
     qmi_message_nas_get_cell_location_info_output_unref (output);
