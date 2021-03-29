@@ -24,8 +24,15 @@
 #include <linux/if_link.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+
 #include <net/if.h>
 #include <net/if_arp.h>
+
+/* The if_arp.h from libc may not have this symbol yet */
+#if !defined ARPHRD_RAWIP
+#define ARPHRD_RAWIP 519
+#endif
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <string.h>
