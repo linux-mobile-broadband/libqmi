@@ -83,6 +83,8 @@ typedef struct {
 
     guint deactivate_config_indication_id;
 
+    guint refresh_indication_id;
+
     guint token;
 } Context;
 static Context *ctx;
@@ -93,6 +95,7 @@ static gchar *delete_config_str;
 static gchar *activate_config_str;
 static gchar *deactivate_config_str;
 static gchar *load_config_str;
+static gboolean monitor_refresh_flag;
 static gboolean noop_flag;
 
 #if defined HAVE_QMI_MESSAGE_PDC_LIST_CONFIGS && \
@@ -119,6 +122,11 @@ static gboolean noop_flag;
 #if defined HAVE_QMI_MESSAGE_PDC_LOAD_CONFIG && \
     defined HAVE_QMI_INDICATION_PDC_LOAD_CONFIG
 # define HAVE_QMI_ACTION_PDC_LOAD_CONFIG
+#endif
+
+#if defined HAVE_QMI_INDICATION_PDC_REFRESH && \
+    defined HAVE_QMI_MESSAGE_PDC_REGISTER
+# define HAVE_QMI_ACTION_PDC_REFRESH
 #endif
 
 static GOptionEntry entries[] = {
@@ -157,6 +165,13 @@ static GOptionEntry entries[] = {
         "[Path to config]"
     },
 #endif
+#if defined HAVE_QMI_ACTION_PDC_REFRESH
+    {
+        "pdc-monitor-refresh", 0, 0, G_OPTION_ARG_NONE, &monitor_refresh_flag,
+        "Watch for refresh indications",
+        NULL
+    },
+#endif
     {
         "pdc-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
         "Just allocate or release a PDC client. Use with `--client-no-release-cid' and/or `--client-cid'",
@@ -192,6 +207,7 @@ qmicli_pdc_options_enabled (void)
                  !!activate_config_str +
                  !!deactivate_config_str +
                  !!load_config_str +
+                 monitor_refresh_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -201,7 +217,7 @@ qmicli_pdc_options_enabled (void)
 
     /* Actions that require receiving QMI indication messages must specify that
      * indications are expected. */
-    if (list_configs_str || activate_config_str || deactivate_config_str || load_config_str)
+    if (list_configs_str || activate_config_str || deactivate_config_str || load_config_str || monitor_refresh_flag)
         qmicli_expect_indications ();
 
     checked = TRUE;
@@ -1391,6 +1407,111 @@ run_load_config (void)
 #endif /* HAVE_QMI_ACTION_PDC_LOAD_CONFIG */
 
 /******************************************************************************/
+/* Refresh */
+
+#if defined HAVE_QMI_ACTION_PDC_REFRESH
+
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
+static void
+monitoring_cancelled (GCancellable *cancellable)
+{
+    operation_shutdown (TRUE);
+}
+
+static void
+refresh_received (QmiClientPdc *client,
+                  QmiIndicationPdcRefreshOutput *output)
+{
+    GError *error = NULL;
+    QmiPdcRefreshEventType type;
+    guint subscription_id;
+    guint slot_id;
+
+    g_print ("[%s] Received refresh indication:\n",
+             qmi_device_get_path_display (ctx->device));
+
+    if (!qmi_indication_pdc_refresh_output_get_refresh_event (
+          output, &type, &error)) {
+        g_printerr ("error: refresh event has no type: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("  Received event type %s",
+             VALIDATE_UNKNOWN (qmi_pdc_refresh_event_type_get_string (type)));
+
+    if (qmi_indication_pdc_refresh_output_get_subscription_id (
+          output, &subscription_id, NULL)) {
+        g_print (", subscription ID: %u", subscription_id);
+    }
+    if (qmi_indication_pdc_refresh_output_get_slot_id (
+          output, &slot_id, NULL)) {
+        g_print (", slot ID: %u", slot_id);
+    }
+
+    g_print ("\n");
+}
+
+static void
+register_refresh_ready (QmiClientPdc *client,
+                        GAsyncResult *res)
+{
+    QmiMessagePdcRegisterOutput *output;
+    GError                      *error = NULL;
+
+    output = qmi_client_pdc_register_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_pdc_register_output_get_result (output, &error)) {
+        g_printerr ("error: could not register for refresh events: %s\n", error->message);
+        qmi_message_pdc_register_output_unref (output);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_debug ("Registered for refresh events...");
+    ctx->refresh_indication_id =
+        g_signal_connect (ctx->client,
+                          "refresh",
+                          G_CALLBACK (refresh_received),
+                          NULL);
+
+    /* User can use Ctrl+C to cancel the monitoring at any time */
+    g_cancellable_connect (ctx->cancellable,
+                           G_CALLBACK (monitoring_cancelled),
+                           NULL,
+                           NULL);
+}
+
+static void
+register_refresh_events (void)
+{
+    QmiMessagePdcRegisterInput *re_input;
+
+    re_input = qmi_message_pdc_register_input_new ();
+    qmi_message_pdc_register_input_set_enable_reporting (re_input, TRUE, NULL);
+    qmi_message_pdc_register_input_set_enable_refresh (re_input, TRUE, NULL);
+    qmi_client_pdc_register (
+        ctx->client,
+        re_input,
+        10,
+        ctx->cancellable,
+        (GAsyncReadyCallback) register_refresh_ready,
+        NULL);
+    qmi_message_pdc_register_input_unref (re_input);
+}
+
+#endif /* HAVE_QMI_ACTION_PDC_REFRESH */
+
+/******************************************************************************/
 /* Common */
 
 static gboolean
@@ -1439,6 +1560,13 @@ qmicli_pdc_run (QmiDevice *device,
 #if defined HAVE_QMI_ACTION_PDC_LOAD_CONFIG
     if (load_config_str) {
         run_load_config ();
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_ACTION_PDC_REFRESH
+    if (monitor_refresh_flag) {
+        register_refresh_events ();
         return;
     }
 #endif
