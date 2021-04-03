@@ -750,6 +750,8 @@ finalize (GObject *object)
 {
     MbimNetPortManager *self = MBIM_NET_PORT_MANAGER (object);
 
+    g_assert (g_hash_table_size (self->priv->transactions) == 0);
+    g_hash_table_unref (self->priv->transactions);
     g_free (self->priv->iface);
 
     G_OBJECT_CLASS (mbim_net_port_manager_parent_class)->finalize (object);
