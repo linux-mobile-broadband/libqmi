@@ -554,6 +554,7 @@ mbim_device_add_link_finish (MbimDevice    *self,
                              GError       **error)
 {
     AddLinkResult *ctx;
+    gchar         *ifname;
 
     ctx = g_task_propagate_pointer (G_TASK (res), error);
     if (!ctx)
@@ -562,7 +563,9 @@ mbim_device_add_link_finish (MbimDevice    *self,
     if (session_id)
         *session_id = ctx->session_id;
 
-    return g_steal_pointer (&ctx->ifname);
+    ifname = g_steal_pointer (&ctx->ifname);
+    add_link_result_free (ctx);
+    return ifname;
 }
 
 static void
