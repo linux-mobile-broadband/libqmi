@@ -1138,7 +1138,7 @@
                    // 0x30, PDN inactivity timeout
                    // 0x31, APN class
                    { "common-ref"    : "WDS Roaming Disallowed Flag",
-                     "since"         : "1.22" } ],
+                     "since"         : "1.22" },
                    // 0x90, Negotiate DNS server preference
                    // 0x91, PPP session close timer for DO
                    // 0x92, PPP session close timer for 1X
@@ -1167,6 +1167,8 @@
                    // 0xA9, APN enabled
                    // 0xAA, PDN inactivity timeout
                    // 0xAB, APN class
+                   { "common-ref"    : "WDS APN Type",
+                     "since"         : "1.30" } ],
      "output"  : [ { "common-ref" : "Operation Result" },
                    { "common-ref"    : "WDS Profile Identifier",
                      "since"         : "1.18",
@@ -1245,7 +1247,7 @@
                    // 0x30, PDN inactivity timeout
                    // 0x31, APN class
                    { "common-ref"    : "WDS Roaming Disallowed Flag",
-                     "since"         : "1.22" } ],
+                     "since"         : "1.22" },
                    // 0x90, Negotiate DNS server preference
                    // 0x91, PPP session close timer for DO
                    // 0x92, PPP session close timer for 1X
@@ -1274,6 +1276,8 @@
                    // 0xA9, APN enabled
                    // 0xAA, PDN inactivity timeout
                    // 0xAB, APN class
+                   { "common-ref"    : "WDS APN Type",
+                     "since"         : "1.30" } ],
      "output"  : [ { "common-ref" : "Operation Result" },
                    { "common-ref" : "WDS Extended Error Code",
                      "since"      : "1.18" } ] },

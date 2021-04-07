@@ -72,7 +72,8 @@ QMICLI_FLAGS_LIST
 
 /* Common helpers to read 64bit flags from strings */
 #define QMICLI_FLAGS64_LIST                                                                            \
-    QMICLI_FLAGS64_LIST_ITEM (QmiDsdApnTypePreference, dsd_apn_type_preference, "apn type preference")
+    QMICLI_FLAGS64_LIST_ITEM (QmiDsdApnTypePreference, dsd_apn_type_preference, "apn type preference") \
+    QMICLI_FLAGS64_LIST_ITEM (QmiWdsApnTypeMask,       wds_apn_type_mask,       "apn type mask")
 
 #define QMICLI_FLAGS64_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);

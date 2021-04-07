@@ -1375,6 +1375,8 @@ typedef struct {
     gchar                *name;
     QmiWdsPdpType         pdp_type;
     gboolean              pdp_type_set;
+    QmiWdsApnTypeMask     apn_type;
+    gboolean              apn_type_set;
     gchar                *apn;
     gchar                *username;
     gchar                *password;
@@ -1463,6 +1465,19 @@ create_modify_profile_properties_handle (const gchar  *key,
             return FALSE;
         }
         props->pdp_type_set = TRUE;
+        return TRUE;
+    }
+
+    if (g_ascii_strcasecmp (key, "apn-type-mask") == 0 && !props->apn_type_set) {
+        if (!qmicli_read_wds_apn_type_mask_from_string (value, &(props->apn_type))) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown apn type '%s'",
+                         value);
+            return FALSE;
+        }
+        props->apn_type_set = TRUE;
         return TRUE;
     }
 
@@ -1566,6 +1581,9 @@ create_profile_input_create (const gchar                      *str,
 
     if (props.pdp_type_set)
         qmi_message_wds_create_profile_input_set_pdp_type (*input, props.pdp_type, NULL);
+
+    if (props.apn_type_set)
+        qmi_message_wds_create_profile_input_set_apn_type_mask (*input, props.apn_type, NULL);
 
     if (props.name)
         qmi_message_wds_create_profile_input_set_profile_name (*input, props.name, NULL);
@@ -1879,6 +1897,9 @@ modify_profile_input_create (const gchar                      *str,
 
     if (props.pdp_type_set)
         qmi_message_wds_modify_profile_input_set_pdp_type (*input, props.pdp_type, NULL);
+
+    if (props.apn_type_set)
+        qmi_message_wds_modify_profile_input_set_apn_type_mask (*input, props.apn_type, NULL);
 
     if (props.name)
         qmi_message_wds_modify_profile_input_set_profile_name (*input, props.name, NULL);
