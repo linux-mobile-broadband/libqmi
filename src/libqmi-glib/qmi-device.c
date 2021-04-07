@@ -2268,6 +2268,8 @@ open_version_info_ready (QmiClientCtl *client_ctl,
     qmi_message_ctl_get_version_info_output_get_service_list (output,
                                                               &service_list,
                                                               NULL);
+
+    g_clear_pointer (&self->priv->supported_services, g_array_unref);
     self->priv->supported_services = g_array_ref (service_list);
 
     g_debug ("[%s] QMI Device supports %u services:",
@@ -2321,6 +2323,7 @@ build_services_from_qrtr_node (GTask *task)
     services = qrtr_node_peek_service_info_list (self->priv->node);
     n_services = g_list_length (services);
 
+    g_clear_pointer (&self->priv->supported_services, g_array_unref);
     self->priv->supported_services = g_array_sized_new (FALSE,
                                                         FALSE,
                                                         sizeof (QmiMessageCtlGetVersionInfoOutputServiceListService),
