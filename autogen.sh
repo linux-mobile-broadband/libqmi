@@ -14,7 +14,7 @@ PKG_NAME=libmbim
 }
 
 (cd $srcdir;
-    autoreconf --force --install --verbose
+    GTKDOCIZE="true" autoreconf --force --install --verbose
 )
 
 if test -z "$NOCONFIGURE"; then
