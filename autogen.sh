@@ -14,7 +14,7 @@ PKG_NAME=libqmi
 }
 
 (cd $srcdir;
-    autoreconf --force --install --verbose
+    GTKDOCIZE="true" autoreconf --force --install --verbose
 )
 
 if test -z "$NOCONFIGURE"; then
