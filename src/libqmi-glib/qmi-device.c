@@ -54,6 +54,7 @@
 #include "qmi-gas.h"
 #include "qmi-gms.h"
 #include "qmi-dsd.h"
+#include "qmi-dpm.h"
 #include "qmi-utils.h"
 #include "qmi-helpers.h"
 #include "qmi-error-types.h"
@@ -1269,6 +1270,11 @@ qmi_device_allocate_client (QmiDevice *self,
     case QMI_SERVICE_SAR:
 #if defined HAVE_QMI_SERVICE_SAR
         ctx->client_type = QMI_TYPE_CLIENT_SAR;
+#endif
+        break;
+    case QMI_SERVICE_DPM:
+#if defined HAVE_QMI_SERVICE_DPM
+        ctx->client_type = QMI_TYPE_CLIENT_DPM;
 #endif
         break;
 

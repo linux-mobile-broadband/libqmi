@@ -24,6 +24,7 @@ GENERATED_H = \
 	qmi-gas.h \
 	qmi-gms.h \
 	qmi-dsd.h \
+	qmi-dpm.h \
 	$(NULL)
 
 GENERATED_C = \
@@ -50,6 +51,7 @@ GENERATED_C = \
 	qmi-gms.c \
 	qmi-dsd.c \
 	qmi-sar.c \
+	qmi-dpm.c \
 	$(NULL)
 
 GENERATED_SECTIONS = \
@@ -71,6 +73,7 @@ GENERATED_SECTIONS = \
 	qmi-gms.sections \
 	qmi-dsd.sections \
 	qmi-sar.sections \
+	qmi-dpm.sections \
 	$(NULL)
 
 # Error types
@@ -364,6 +367,17 @@ qmi-sar.h qmi-sar.c qmi-sar.sections: $(top_srcdir)/data/qmi-service-sar.json $(
 			$(COLLECTION_OPT) \
 			--output qmi-sar
 
+# DPM service
+qmi-dpm.h qmi-dpm.c qmi-dpm.sections: $(top_srcdir)/data/qmi-service-dpm.json $(top_srcdir)/build-aux/qmi-codegen/*.py $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen $(COLLECTION_PATH)
+	$(AM_V_GEN) \
+		rm -f qmi-dpm.h && \
+		rm -f qmi-dpm.c && \
+		 $(PYTHON) $(top_srcdir)/build-aux/qmi-codegen/qmi-codegen \
+			--input $(top_srcdir)/data/qmi-service-dpm.json \
+			--include $(top_srcdir)/data/qmi-common.json \
+			$(COLLECTION_OPT) \
+			--output qmi-dpm
+
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 
 nodist_libqmi_glib_generated_la_SOURCES = \
@@ -410,6 +424,7 @@ nodist_include_HEADERS = \
 	qmi-gas.h \
 	qmi-gms.h \
 	qmi-dsd.h \
+	qmi-dpm.h \
 	$(NULL)
 
 CLEANFILES = $(GENERATED_H) $(GENERATED_C) $(GENERATED_SECTIONS)

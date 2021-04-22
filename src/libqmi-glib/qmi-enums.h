@@ -79,6 +79,7 @@
  * @QMI_SERVICE_RFRPE: RF radiated performance enhancement service. Since: 1.8.
  * @QMI_SERVICE_DSD: Data system determination service. Since: 1.8.
  * @QMI_SERVICE_SSCTL: Subsystem control service. Since: 1.8.
+ * @QMI_SERVICE_DPM: Data Port Mapper service. Since: 1.30.
  * @QMI_SERVICE_CAT: Card Application Toolkit service (v1).
  * @QMI_SERVICE_RMS: Remote Management Service.
  * @QMI_SERVICE_OMA: Open Mobile Alliance device management service.
@@ -136,6 +137,7 @@ typedef enum { /*< since=1.0 >*/
     QMI_SERVICE_RFRPE   = 0x29,
     QMI_SERVICE_DSD     = 0x2A,
     QMI_SERVICE_SSCTL   = 0x2B,
+    QMI_SERVICE_DPM     = 0x2F,
     QMI_SERVICE_CAT     = 0xE0,
     QMI_SERVICE_RMS     = 0xE1,
     QMI_SERVICE_OMA     = 0xE2,

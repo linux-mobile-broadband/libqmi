@@ -70,8 +70,8 @@ def add_header_start(f, output_name, service):
         "#include <gio/gio.h>\n"
         "\n"
         "#include \"qmi-enums.h\"\n")
-    # CTL and GMS don't have enums
-    if service not in ('CTL', 'GMS'):
+    # CTL, DPM and GMS don't have enums
+    if service not in ('CTL', 'DPM', 'GMS'):
         template += (
             "#include \"qmi-enums-${service}.h\"\n")
     if service == 'CTL':

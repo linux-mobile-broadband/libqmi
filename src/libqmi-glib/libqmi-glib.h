@@ -94,6 +94,8 @@
 #include "qmi-enums-sar.h"
 #include "qmi-sar.h"
 
+#include "qmi-dpm.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

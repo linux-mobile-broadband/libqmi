@@ -527,6 +527,16 @@
   </chapter>
 
   <chapter>
+    <title>Data Port Mapper (DPM)</title>
+    <xi:include href="xml/qmi-client-dpm.xml"/>
+    <section>
+      <title>DPM Requests</title>
+      <xi:include href="xml/qmi-message-dpm-open-port.xml"/>
+      <xi:include href="xml/qmi-message-dpm-close-port.xml"/>
+    </section>
+  </chapter>
+
+  <chapter>
     <title>Compatibility with older versions</title>
     <xi:include href="xml/qmi-compat.xml"/>
   </chapter>

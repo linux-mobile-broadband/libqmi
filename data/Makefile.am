@@ -20,6 +20,7 @@ EXTRA_DIST = \
 	qmi-service-gms.json \
 	qmi-service-dsd.json \
 	qmi-service-sar.json \
+	qmi-service-dpm.json \
 	qmi-collection-minimal.json \
 	qmi-collection-basic.json \
 	$(NULL)

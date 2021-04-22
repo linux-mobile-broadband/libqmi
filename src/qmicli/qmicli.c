@@ -485,6 +485,7 @@ allocate_client_ready (QmiDevice *dev,
     case QMI_SERVICE_IMSRTP:
     case QMI_SERVICE_RFRPE:
     case QMI_SERVICE_SSCTL:
+    case QMI_SERVICE_DPM:
     case QMI_SERVICE_CAT:
     case QMI_SERVICE_RMS:
     case QMI_SERVICE_FOTA:
