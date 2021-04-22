@@ -161,4 +161,12 @@ void          qmicli_sar_run              (QmiDevice *device,
                                            GCancellable *cancellable);
 #endif
 
+#if defined HAVE_QMI_SERVICE_DPM
+GOptionGroup *qmicli_dpm_get_option_group (void);
+gboolean      qmicli_dpm_options_enabled  (void);
+void          qmicli_dpm_run              (QmiDevice *device,
+                                           QmiClientDpm *client,
+                                           GCancellable *cancellable);
+#endif
+
 #endif /* __QMICLI_H__ */

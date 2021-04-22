@@ -58,7 +58,9 @@ qmicli_SOURCES = \
 	qmicli-gas.c \
 	qmicli-gms.c \
 	qmicli-dsd.c \
-	qmicli-sar.c
+	qmicli-sar.c \
+	qmicli-dpm.c \
+	$(NULL)
 
 qmicli_LDADD = \
 	libhelpers.la \
