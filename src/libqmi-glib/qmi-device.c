@@ -1825,6 +1825,7 @@ qmi_device_add_link_finish (QmiDevice     *self,
                             GError       **error)
 {
     AddLinkResult *ctx;
+    gchar         *ifname;
 
     ctx = g_task_propagate_pointer (G_TASK (res), error);
     if (!ctx)
@@ -1833,7 +1834,9 @@ qmi_device_add_link_finish (QmiDevice     *self,
     if (mux_id)
         *mux_id = ctx->mux_id;
 
-    return g_steal_pointer (&ctx->ifname);
+    ifname = g_steal_pointer (&ctx->ifname);
+    add_link_result_free (ctx);
+    return ifname;
 }
 
 static void
