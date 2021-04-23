@@ -1543,7 +1543,6 @@ qmi_message_get_tlv_printable (QmiMessage *self,
     g_return_val_if_fail (self != NULL, NULL);
     g_return_val_if_fail (line_prefix != NULL, NULL);
     g_return_val_if_fail (raw != NULL, NULL);
-    g_return_val_if_fail (raw_length > 0, NULL);
 
     value_hex = qmi_helpers_str_hex (raw, raw_length, ':');
     printable = g_strdup_printf ("%sTLV:\n"
