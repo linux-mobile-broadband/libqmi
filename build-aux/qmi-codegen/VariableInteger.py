@@ -298,7 +298,7 @@ class VariableInteger(Variable):
                          'name'          : variable_name }
 
         template = (
-            '${lp}@${name}: (out): a placeholder for the output #${public_format}, or %NULL if not required.\n')
+            '${lp}@${name}: (out)(optional): a placeholder for the output #${public_format}, or %NULL if not required.\n')
         return string.Template(template).substitute(translations)
 
     """
