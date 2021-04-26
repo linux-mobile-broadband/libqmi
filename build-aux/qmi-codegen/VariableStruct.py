@@ -196,7 +196,7 @@ class VariableStruct(Variable):
                          'name'   : variable_name }
 
         template = (
-            '${lp}@${name}: (out): a placeholder for the output constant #${format}, or %NULL if not required.\n')
+            '${lp}@${name}: (out)(transfer none): a placeholder for the output constant #${format}, or %NULL if not required.\n')
         return string.Template(template).substitute(translations)
 
 
