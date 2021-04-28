@@ -315,6 +315,7 @@ typedef enum { /*< since=1.16 >*/
 
 /**
  * MbimCidQdu:
+ * @MBIM_CID_QDU_UNKNOWN: Unknown command.
  * @MBIM_CID_QDU_UPDATE_SESSION: Update session command.
  * @MBIM_CID_QDU_FILE_OPEN: Open QDU file for firmware update.
  * @MBIM_CID_QDU_FILE_WRITE: Write QDU file for firmware update.
