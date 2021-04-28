@@ -1,120 +1,216 @@
-image: gcc
+include:
+  - project: freedesktop/ci-templates
+    ref: 290b79e0e78eab67a83766f4e9691be554fc4afd
+    file:
+    - templates/ubuntu.yml
 
 stages:
-  - test
+  - container prep
+  - build
 
-before_script:
-  - apt update && apt -y install autoconf automake libtool libgudev-1.0-dev autoconf-archive
+.common_variables:
+  variables:
+    FDO_UPSTREAM_REPO: mobile-broadband/libqmi
+    FDO_DISTRIBUTION_VERSION: '20.04'
+    FDO_DISTRIBUTION_TAG: '2021-04-28.2'
+    FDO_DISTRIBUTION_PACKAGES: ca-certificates git gcc autoconf automake libtool
+                               libgirepository1.0-dev libglib2.0-dev autopoint
+                               autoconf-archive gtk-doc-tools libglib2.0-doc
+                               libgudev-1.0-dev gobject-introspection valac
 
-test-no-deprecated:
-  stage: test
+build container:
+  extends:
+  - .fdo.container-build@ubuntu
+  - .common_variables
+  stage: container prep
+  only:
+    - master
+    - branches
+    - merge_requests
+    - tags
+    - pushes
+
+
+build-autotools-no-deprecated:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
   script:
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr CFLAGS="-DQMI_DISABLE_DEPRECATED"
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection CFLAGS="-DQMI_DISABLE_DEPRECATED"
     - make
     - make check
     - make install
 
-test-no-mbim-no-qrtr:
-  stage: test
+build-autotools-no-mbim-no-qrtr:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
   script:
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --disable-mbim-qmux --disable-qrtr
+    - ./configure --prefix=/usr --disable-mbim-qmux --disable-qrtr --disable-gtk-doc --disable-introspection
     - make
     - make check
     - make install
 
-test-no-mbim:
-  stage: test
+build-autotools-no-mbim:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
     - pushd libqrtr-glib
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection
     - make
     - make install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --disable-mbim-qmux --enable-qrtr
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --disable-mbim-qmux --enable-qrtr
     - make
     - make check
     - make install
 
-test-no-qrtr:
-  stage: test
+build-autotools-no-qrtr:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection
     - make
     - make install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --enable-mbim-qmux --disable-qrtr
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --enable-mbim-qmux --disable-qrtr
     - make
     - make check
     - make install
 
-test-collection-minimal:
-  stage: test
+build-autotools-collection-minimal:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
   script:
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --disable-mbim-qmux --disable-qrtr --disable-firmware-update --enable-collection=minimal
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --disable-mbim-qmux --disable-qrtr --disable-firmware-update --enable-collection=minimal
     - make
     - make check
     - make install
 
-test-collection-basic:
-  stage: test
+build-autotools-collection-basic:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
   script:
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --disable-mbim-qmux --disable-qrtr --enable-collection=basic
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --disable-mbim-qmux --disable-qrtr --enable-collection=basic
     - make
     - make check
     - make install
 
-test-clean-distclean:
-  stage: test
+build-autotools-clean-distclean:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
   script:
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection
     - make
     - make clean
     - make
     - make distclean
-    - ./configure --prefix=/usr
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection
     - make
 
-test-vpath:
-  stage: test
+build-autotools-vpath:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
   script:
     - NOCONFIGURE=1 ./autogen.sh
     - mkdir build
     - cd build
-    - ../configure --prefix=/usr
+    - ../configure --prefix=/usr --disable-gtk-doc --disable-introspection
     - make
 
-test-default:
-  stage: test
+build-autotools-default:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
   script:
-    - apt -y install gtk-doc-tools libglib2.0-doc gobject-introspection libgirepository1.0-dev
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr
+    - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection
     - make
     - make install
     - popd
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
     - pushd libqrtr-glib
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr
+    - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection
     - make
     - make install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --enable-gtk-doc --enable-mbim-qmux --enable-qrtr --enable-introspection
+    - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection --enable-mbim-qmux --enable-qrtr
     - make
     - make check
     - make install
