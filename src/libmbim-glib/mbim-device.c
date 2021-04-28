@@ -2105,36 +2105,36 @@ device_send (MbimDevice   *self,
 
     fragments = _mbim_message_split_fragments (message, MAX_CONTROL_TRANSFER, &n_fragments);
     for (i = 0; i < n_fragments; i++) {
-        g_autoptr(GByteArray) gbytearray = NULL;
+        g_autoptr(GByteArray)  full_fragment = NULL;
+        g_autofree gchar      *printable_headers = NULL;
+
+        /* Build compiled fragment headers */
+        full_fragment = g_byte_array_new ();
+        g_byte_array_append (full_fragment, (guint8 *)&fragments[i].header, sizeof (fragments[i].header));
+        g_byte_array_append (full_fragment, (guint8 *)&fragments[i].fragment_header, sizeof (fragments[i].fragment_header));
+
+        /* Build dummy message with only headers for printable purposes only */
+        if (mbim_utils_get_traces_enabled ())
+            printable_headers = mbim_message_get_printable ((MbimMessage *)full_fragment, "<<<<<< ", TRUE);
+
+        /* Append the actual fragment data */
+        g_byte_array_append (full_fragment, (guint8 *)fragments[i].data, fragments[i].data_length);
 
         if (mbim_utils_get_traces_enabled ()) {
-            g_autoptr(GByteArray)  bytearray = NULL;
-            g_autofree gchar      *printable = NULL;
-            g_autofree gchar      *printable_h = NULL;
-            g_autofree gchar      *printable_fh = NULL;
-            g_autofree gchar      *printable_d = NULL;
+            g_autofree gchar *printable_full = NULL;
 
-            printable_h  = mbim_common_str_hex (&fragments[i].header, sizeof (fragments[i].header), ':');
-            printable_fh = mbim_common_str_hex (&fragments[i].fragment_header, sizeof (fragments[i].fragment_header), ':');
-            printable_d  = mbim_common_str_hex (fragments[i].data, fragments[i].data_length, ':');
+            printable_full  = mbim_common_str_hex ((const guint8 *)full_fragment->data, full_fragment->len, ':');
             g_debug ("[%s] Sent fragment (%u)...\n"
                      "<<<<<< RAW:\n"
                      "<<<<<<   length = %u\n"
-                     "<<<<<<   data   = %s%s%s\n",
+                     "<<<<<<   data   = %s\n",
                      self->priv->path_display, i,
-                     (guint)(sizeof (fragments[i].header) +
-                             sizeof (fragments[i].fragment_header) +
-                             fragments[i].data_length),
-                     printable_h, printable_fh, printable_d);
+                     full_fragment->len,
+                     printable_full);
 
-            /* Dummy message for printable purposes only */
-            bytearray = g_byte_array_new ();
-            g_byte_array_append (bytearray, (guint8 *)&fragments[i].header, sizeof (fragments[i].header));
-            g_byte_array_append (bytearray, (guint8 *)&fragments[i].fragment_header, sizeof (fragments[i].fragment_header));
-            printable = mbim_message_get_printable ((MbimMessage *)bytearray, "<<<<<< ", TRUE);
             g_debug ("[%s] Sent fragment (translated)...\n%s",
                      self->priv->path_display,
-                     printable);
+                     printable_headers);
         }
 
         /* Write whole packet to MBIM device.
@@ -2142,17 +2142,11 @@ device_send (MbimDevice   *self,
          * fragment_header, data, because some MBIM devices may have errors on
          * seperated fragment case, such as "MBIM protocol error: LengthMismatch"
          */
-        gbytearray = g_byte_array_new ();
-        g_byte_array_append (gbytearray, (guint8 *)&fragments[i].header, sizeof (fragments[i].header));
-        g_byte_array_append (gbytearray, (guint8 *)&fragments[i].fragment_header, sizeof (fragments[i].fragment_header));
-        g_byte_array_append (gbytearray, (guint8 *)fragments[i].data, fragments[i].data_length);
-        /* Write fragment headers */
         if (!device_write (self,
-                           (guint8 *)gbytearray->data,
-                           gbytearray->len,
+                           (guint8 *)full_fragment->data,
+                           full_fragment->len,
                            error))
             return FALSE;
-
     }
 
     return TRUE;
