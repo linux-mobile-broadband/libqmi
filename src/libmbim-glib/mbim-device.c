@@ -2073,7 +2073,6 @@ device_send (MbimDevice   *self,
     g_autofree struct fragment_info *fragments = NULL;
     guint                            n_fragments;
     guint                            i;
-    g_autoptr(GByteArray)            gbytearray = NULL;
 
     raw_message = mbim_message_get_raw (message, &raw_message_len, NULL);
     g_assert (raw_message);
@@ -2106,6 +2105,8 @@ device_send (MbimDevice   *self,
 
     fragments = _mbim_message_split_fragments (message, MAX_CONTROL_TRANSFER, &n_fragments);
     for (i = 0; i < n_fragments; i++) {
+        g_autoptr(GByteArray) gbytearray = NULL;
+
         if (mbim_utils_get_traces_enabled ()) {
             g_autoptr(GByteArray)  bytearray = NULL;
             g_autofree gchar      *printable = NULL;
