@@ -17,6 +17,7 @@ GENERATED_H = \
 	mbim-qmi.h \
 	mbim-atds.h \
 	mbim-intel-firmware-update.h \
+	mbim-qdu.h \
 	mbim-ms-basic-connect-extensions.h
 
 GENERATED_C = \
@@ -37,6 +38,7 @@ GENERATED_C = \
 	mbim-qmi.c \
 	mbim-atds.c \
 	mbim-intel-firmware-update.c \
+	mbim-qdu.c \
 	mbim-ms-basic-connect-extensions.c
 
 GENERATED_SECTIONS = \
@@ -54,6 +56,7 @@ GENERATED_SECTIONS = \
 	mbim-qmi.sections \
 	mbim-atds.sections \
 	mbim-intel-firmware-update.sections \
+	mbim-qdu.sections \
 	mbim-ms-basic-connect-extensions.sections
 
 # Error types
@@ -220,6 +223,15 @@ mbim-intel-firmware-update.h mbim-intel-firmware-update.c mbim-intel-firmware-up
 		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-intel-firmware-update.json \
 			--output mbim-intel-firmware-update
+
+# QDU Service
+mbim-qdu.h mbim-qdu.c mbim-qdu.sections: $(top_srcdir)/data/mbim-service-qdu.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-qdu.h && \
+		rm -f mbim-qdu.c && \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-qdu.json \
+			--output mbim-qdu
 
 # Microsoft Basic Connect Extensions service
 mbim-ms-basic-connect-extensions.h mbim-ms-basic-connect-extensions.c mbim-ms-basic-connect-extensions.sections: $(top_srcdir)/data/mbim-service-ms-basic-connect-extensions.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen

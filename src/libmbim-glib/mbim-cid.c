@@ -177,6 +177,13 @@ static const CidConfig cid_ms_basic_connect_extensions_config [MBIM_CID_MS_BASIC
     { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_DEVICE_RESET */
 };
 
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_QDU_LAST MBIM_CID_QDU_FILE_WRITE
+static const CidConfig cid_qdu_config [MBIM_CID_QDU_LAST] = {
+    { SET,    QUERY,    NOTIFY    }, /* MBIM_CID_QDU_UPDATE_SESSION */
+    { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QDU_FILE_OPEN */
+    { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QDU_FILE_WRITE */
+};
 gboolean
 mbim_cid_can_set (MbimService service,
                   guint       cid)
@@ -216,6 +223,8 @@ mbim_cid_can_set (MbimService service,
         return cid_atds_config[cid - 1].set;
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
         return cid_intel_firmware_update_config[cid - 1].set;
+    case MBIM_SERVICE_QDU:
+        return cid_qdu_config[cid - 1].set;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return cid_ms_basic_connect_extensions_config[cid - 1].set;
     case MBIM_SERVICE_INVALID:
@@ -265,6 +274,8 @@ mbim_cid_can_query (MbimService service,
         return cid_atds_config[cid - 1].query;
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
         return cid_intel_firmware_update_config[cid - 1].query;
+    case MBIM_SERVICE_QDU:
+        return cid_qdu_config[cid - 1].query;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return cid_ms_basic_connect_extensions_config[cid - 1].query;
     case MBIM_SERVICE_INVALID:
@@ -314,6 +325,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_atds_config[cid - 1].notify;
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
         return cid_intel_firmware_update_config[cid - 1].notify;
+    case MBIM_SERVICE_QDU:
+        return cid_qdu_config[cid - 1].notify;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return cid_ms_basic_connect_extensions_config[cid - 1].notify;
     case MBIM_SERVICE_INVALID:
@@ -364,6 +377,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_atds_get_string (cid);
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
         return mbim_cid_intel_firmware_update_get_string (cid);
+    case MBIM_SERVICE_QDU:
+        return mbim_cid_qdu_get_string (cid);
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return mbim_cid_ms_basic_connect_extensions_get_string (cid);
     case MBIM_SERVICE_LAST:

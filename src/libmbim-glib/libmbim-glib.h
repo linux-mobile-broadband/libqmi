@@ -51,6 +51,7 @@
 #include "mbim-ms-sar.h"
 #include "mbim-qmi.h"
 #include "mbim-atds.h"
+#include "mbim-qdu.h"
 #include "mbim-intel-firmware-update.h"
 #include "mbim-ms-basic-connect-extensions.h"
 

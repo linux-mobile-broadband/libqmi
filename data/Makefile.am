@@ -14,5 +14,6 @@ EXTRA_DIST = \
 	mbim-service-proxy-control.json \
 	mbim-service-qmi.json \
 	mbim-service-atds.json \
+	mbim-service-qdu.json \
 	mbim-service-intel-firmware-update.json \
 	mbim-service-ms-basic-connect-extensions.json

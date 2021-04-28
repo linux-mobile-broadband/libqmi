@@ -96,6 +96,11 @@
   </chapter>
 
   <chapter>
+    <title>QDU-defined Services</title>
+    <xi:include href="xml/mbim-qdu.xml"/>
+  </chapter>
+
+  <chapter>
     <title>Compatibility</title>
     <xi:include href="xml/mbim-compat.xml"/>
   </chapter>

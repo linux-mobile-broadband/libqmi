@@ -25,6 +25,7 @@ MBIM_UUID_MS_FIRMWARE_ID
 MBIM_UUID_MS_HOST_SHUTDOWN
 MBIM_UUID_PROXY_CONTROL
 MBIM_UUID_QMI
+MBIM_UUID_QDU
 MBIM_UUID_INTEL_FIRMWARE_UPDATE
 MBIM_UUID_MS_BASIC_CONNECT_EXTENSIONS
 MBIM_UUID_MS_SAR
@@ -62,6 +63,7 @@ MbimCidMsFirmwareId
 MbimCidMsHostShutdown
 MbimCidProxyControl
 MbimCidQmi
+MbimCidQdu
 MbimCidIntelFirmwareUpdate
 MbimCidMsBasicConnectExtensions
 MbimCidMsSar
@@ -82,6 +84,7 @@ mbim_cid_ms_firmware_id_get_string
 mbim_cid_ms_host_shutdown_get_string
 mbim_cid_proxy_control_get_string
 mbim_cid_qmi_get_string
+mbim_cid_qdu_get_string
 mbim_cid_intel_firmware_update_get_string
 mbim_cid_ms_basic_connect_extensions_get_string
 mbim_cid_ms_sar_get_string
@@ -98,6 +101,7 @@ mbim_cid_ms_firmware_id_build_string_from_mask
 mbim_cid_ms_host_shutdown_build_string_from_mask
 mbim_cid_proxy_control_build_string_from_mask
 mbim_cid_qmi_build_string_from_mask
+mbim_cid_qdu_build_string_from_mask
 mbim_cid_intel_firmware_update_build_string_from_mask
 mbim_cid_ms_basic_connect_extensions_build_string_from_mask
 mbim_cid_ms_sar_build_string_from_mask
@@ -114,6 +118,7 @@ MBIM_TYPE_CID_MS_FIRMWARE_ID
 MBIM_TYPE_CID_MS_HOST_SHUTDOWN
 MBIM_TYPE_CID_PROXY_CONTROL
 MBIM_TYPE_CID_QMI
+MBIM_TYPE_CID_QDU
 MBIM_TYPE_CID_INTEL_FIRMWARE_UPDATE
 MBIM_TYPE_CID_MS_BASIC_CONNECT_EXTENSIONS
 MBIM_TYPE_CID_MS_SAR
@@ -129,6 +134,7 @@ mbim_cid_ms_firmware_id_get_type
 mbim_cid_ms_host_shutdown_get_type
 mbim_cid_proxy_control_get_type
 mbim_cid_qmi_get_type
+mbim_cid_qdu_get_type
 mbim_cid_intel_firmware_update_get_type
 mbim_cid_ms_basic_connect_extensions_get_type
 mbim_cid_ms_sar_get_type
@@ -333,6 +339,10 @@ MbimStkPacType
 MbimNetworkIdleHintState
 MbimEmergencyModeState
 MbimDssLinkState
+MbimQduSessionAction
+MbimQduSessionType
+MbimQduSessionStatus
+MbimQduSessionResult
 MbimPcoType
 MbimContextSource
 MbimLteAttachContextOperation

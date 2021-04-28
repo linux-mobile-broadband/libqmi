@@ -314,6 +314,23 @@ typedef enum { /*< since=1.16 >*/
 } MbimCidIntelFirmwareUpdate;
 
 /**
+ * MbimCidQdu:
+ * @MBIM_CID_QDU_UPDATE_SESSION: Update session command.
+ * @MBIM_CID_QDU_FILE_OPEN: Open QDU file for firmware update.
+ * @MBIM_CID_QDU_FILE_WRITE: Write QDU file for firmware update.
+ *
+ * MBIM commands in the %MBIM_SERVICE_QDU service.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_CID_QDU_UNKNOWN             = 0,
+    MBIM_CID_QDU_UPDATE_SESSION      = 1,
+    MBIM_CID_QDU_FILE_OPEN           = 2,
+    MBIM_CID_QDU_FILE_WRITE          = 3,
+} MbimCidQdu;
+
+/**
  * MbimCidMsBasicConnectExtensions:
  * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_UNKNOWN: Unknown command.
  * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_PROVISIONED_CONTEXTS: Provisioned contexts (v2).

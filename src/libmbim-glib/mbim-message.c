@@ -46,6 +46,7 @@
 #include "mbim-ms-sar.h"
 #include "mbim-atds.h"
 #include "mbim-intel-firmware-update.h"
+#include "mbim-qdu.h" 
 #include "mbim-ms-basic-connect-extensions.h"
 
 /*****************************************************************************/
@@ -1532,6 +1533,9 @@ mbim_message_get_printable (const MbimMessage *self,
             break;
         case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
             fields_printable = __mbim_message_intel_firmware_update_get_printable_fields (self, line_prefix, &error);
+            break;
+        case MBIM_SERVICE_QDU:
+            fields_printable = __mbim_message_qdu_get_printable_fields (self, line_prefix, &error);
             break;
         case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
             fields_printable = __mbim_message_ms_basic_connect_extensions_get_printable_fields (self, line_prefix, &error);

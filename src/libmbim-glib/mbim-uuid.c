@@ -223,6 +223,14 @@ static const MbimUuid uuid_intel_firmware_update = {
     .e = { 0x3b, 0x3f, 0xd7, 0x6f, 0x56, 0x41 }
 };
 
+static const MbimUuid uuid_qdu = {
+    .a = { 0x64, 0x27, 0x01, 0x5f },
+    .b = { 0x57, 0x9d },
+    .c = { 0x48, 0xf5 },
+    .d = { 0x8c, 0x54 },
+    .e = { 0xf4, 0x3e, 0xd1, 0xe7, 0x6f, 0x83 }
+};
+
 static const MbimUuid uuid_ms_basic_connect_extensions = {
     .a = { 0x3d, 0x01, 0xdc, 0xc5 },
     .b = { 0xfe, 0xf5 },
@@ -352,6 +360,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_qmi;
     case MBIM_SERVICE_ATDS:
         return &uuid_atds;
+    case MBIM_SERVICE_QDU:
+        return &uuid_qdu;
     case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
         return &uuid_intel_firmware_update;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
@@ -413,6 +423,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_intel_firmware_update))
         return MBIM_SERVICE_INTEL_FIRMWARE_UPDATE;
+
+    if (mbim_uuid_cmp (uuid, &uuid_qdu))
+        return MBIM_SERVICE_QDU;
 
     if (mbim_uuid_cmp (uuid, &uuid_ms_basic_connect_extensions))
         return MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS;

@@ -1089,6 +1089,91 @@ typedef enum { /*< since=1.4 >*/
 } MbimDssLinkState;
 
 /*****************************************************************************/
+/* 'QDU update session' enums */
+
+/**
+ * MbimQduSessionAction:
+ * @MBIM_QDU_SESSION_ACTION_START: Start init
+ * @MBIM_QDU_SESSION_ACTION_STOP: Stop
+ *
+ * Action performed for the session initialization.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_QDU_SESSION_ACTION_START = 0,
+    MBIM_QDU_SESSION_ACTION_STOP = 1
+} MbimQduSessionAction;
+
+/*****************************************************************************/
+/* 'QDU session type' enums */
+
+/**
+ * MbimQduSessionType:
+ * @MBIM_QDU_SESSION_TYPE_NONE: No update session
+ * @MBIM_QDU_SESSION_TYPE_LE: LE-based update procedure
+ *
+ * QDU session types.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_QDU_SESSION_TYPE_NONE = 0,
+    MBIM_QDU_SESSION_TYPE_LE  = 1
+} MbimQduSessionType;
+
+/*****************************************************************************/
+/* 'QDU session status' enums */
+
+/**
+ * MbimQduSessionStatus:
+ * @MBIM_QDU_SESSION_STATUS_INACTIVE: Update session is not active
+ * @MBIM_QDU_SESSION_STATUS_FILE_TRANSFER: Updated files are being transferred from host to function or function is waiting host to send updated files.
+ * @MBIM_QDU_SESSION_STATUS_APPLY_UPDATE: The function is applying the update package.
+ *
+ * QDU session status.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_QDU_SESSION_STATUS_INACTIVE = 0,
+    MBIM_QDU_SESSION_STATUS_FILE_TRANSFER  = 1,
+    MBIM_QDU_SESSION_STATUS_APPLY_UPDATE = 2
+} MbimQduSessionStatus;
+
+/*****************************************************************************/
+/* 'QDU session result' enums */
+
+/**
+ * MbimQduSessionResult:
+ * @MBIM_QDU_SESSION_RESULT_SUCCESS: Success
+ * @MBIM_QDU_SESSION_RESULT_FAILURE: Failure
+ *
+ * QDU session result.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_QDU_SESSION_RESULT_SUCCESS = 0,
+    MBIM_QDU_SESSION_RESULT_FAILURE = 1
+} MbimQduSessionResult;
+
+/*****************************************************************************/
+/* 'QDU file type' enums */
+
+/**
+ * MbimQduFileType:
+ * @MBIM_QDU_FILE_TYPE_LITTLE_ENDIAN_PACKAGE: LE Package
+ *
+ * QDU session result.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_QDU_FILE_TYPE_LITTLE_ENDIAN_PACKAGE = 0
+} MbimQduFileType;
+
+/*****************************************************************************/
 /* 'ATDS RAT' enums */
 
 /**
