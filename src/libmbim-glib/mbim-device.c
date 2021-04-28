@@ -2073,6 +2073,7 @@ device_send (MbimDevice   *self,
     g_autofree struct fragment_info *fragments = NULL;
     guint                            n_fragments;
     guint                            i;
+    g_autoptr(GByteArray)            gbytearray = NULL;
 
     raw_message = mbim_message_get_raw (message, &raw_message_len, NULL);
     g_assert (raw_message);
@@ -2135,25 +2136,22 @@ device_send (MbimDevice   *self,
                      printable);
         }
 
+        /* Write whole packet to MBIM device.
+         * Here send whole packet rather than seperated elements, such as header,
+         * fragment_header, data, because some MBIM devices may have errors on
+         * seperated fragment case, such as "MBIM protocol error: LengthMismatch"
+         */
+        gbytearray = g_byte_array_new ();
+        g_byte_array_append (gbytearray, (guint8 *)&fragments[i].header, sizeof (fragments[i].header));
+        g_byte_array_append (gbytearray, (guint8 *)&fragments[i].fragment_header, sizeof (fragments[i].fragment_header));
+        g_byte_array_append (gbytearray, (guint8 *)fragments[i].data, fragments[i].data_length);
         /* Write fragment headers */
         if (!device_write (self,
-                           (guint8 *)&fragments[i].header,
-                           sizeof (fragments[i].header),
+                           (guint8 *)gbytearray->data,
+                           gbytearray->len,
                            error))
             return FALSE;
 
-        if (!device_write (self,
-                           (guint8 *)&fragments[i].fragment_header,
-                           sizeof (fragments[i].fragment_header),
-                           error))
-            return FALSE;
-
-        /* Write fragment data */
-        if (!device_write (self,
-                           fragments[i].data,
-                           fragments[i].data_length,
-                           error))
-            return FALSE;
     }
 
     return TRUE;
