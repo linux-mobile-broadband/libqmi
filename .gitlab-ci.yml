@@ -1,13 +1,82 @@
-image: gcc
+include:
+  - project: freedesktop/ci-templates
+    ref: 290b79e0e78eab67a83766f4e9691be554fc4afd
+    file:
+    - templates/ubuntu.yml
 
 stages:
-  - test
+  - container prep
+  - build
 
-before_script:
-  - apt update && apt -y install autoconf automake libtool autoconf-archive gtk-doc-tools libglib2.0-doc gobject-introspection libgirepository1.0-dev
+.common_variables:
+  variables:
+    FDO_UPSTREAM_REPO: mobile-broadband/libmbim
+    FDO_DISTRIBUTION_VERSION: '20.04'
+    FDO_DISTRIBUTION_TAG: '2021-04-28.2'
+    FDO_DISTRIBUTION_PACKAGES: ca-certificates git gcc autoconf automake libtool
+                               libgirepository1.0-dev libglib2.0-dev autopoint
+                               autoconf-archive gtk-doc-tools libglib2.0-doc
+                               gobject-introspection valac
 
-test:
-  stage: test
+build container:
+  extends:
+  - .fdo.container-build@ubuntu
+  - .common_variables
+  stage: container prep
+  only:
+    - master
+    - branches
+    - merge_requests
+    - tags
+    - pushes
+
+build-autotools-clean-distclean:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
+  script:
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection
+    - make
+    - make clean
+    - make
+    - make distclean
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection
+    - make
+
+build-autotools-vpath:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
+  script:
+    - NOCONFIGURE=1 ./autogen.sh
+    - mkdir build
+    - cd build
+    - ../configure --prefix=/usr --disable-gtk-doc --disable-introspection
+    - make
+
+build-autotools-default:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
   script:
     - NOCONFIGURE=1 ./autogen.sh
     - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection
@@ -17,7 +86,7 @@ test:
     - make distcheck
     - sha256sum $CI_PROJECT_NAME-*.tar.xz | awk '{print $1;}' > pkg_hash.txt
   artifacts:
-    name: "$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA"
+    name: "$CI_PROJECT_NAME-$CI_COMMIT_TAG"
     paths:
       - /builds/$CI_PROJECT_ROOT_NAMESPACE/$CI_PROJECT_NAME/$CI_PROJECT_NAME-*.tar.xz
       - /builds/$CI_PROJECT_ROOT_NAMESPACE/$CI_PROJECT_NAME/pkg_hash.txt
