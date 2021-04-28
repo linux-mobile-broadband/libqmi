@@ -432,7 +432,7 @@ static gchar *
 helpers_get_driver (const gchar  *device_basename,
                     GError      **error)
 {
-    static const gchar *subsystems[] = { "usbmisc", "usb" };
+    static const gchar *subsystems[] = { "usbmisc", "usb", "wwan" };
     guint               i;
     gchar              *driver = NULL;
 
@@ -505,6 +505,18 @@ qmi_helpers_get_transport_type (const gchar  *path,
     if (!g_strcmp0 (driver, "qmi_wwan")) {
         transport = QMI_HELPERS_TRANSPORT_TYPE_QMUX;
         goto out;
+    }
+
+    if (!g_strcmp0 (driver, "wwan")) {
+        /* MHI/PCIe uci devices have protocol in their name */
+        if (g_strrstr (device_basename, "QMI")) {
+            transport = QMI_HELPERS_TRANSPORT_TYPE_QMUX;
+            goto out;
+        }
+        if (g_strrstr (device_basename, "MBIM")) {
+            transport = QMI_HELPERS_TRANSPORT_TYPE_MBIM;
+            goto out;
+        }
     }
 
     g_set_error (&inner_error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
