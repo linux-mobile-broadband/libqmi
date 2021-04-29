@@ -3726,7 +3726,7 @@ get_rf_band_info_ready (QmiClientNas *client,
     if (qmi_message_nas_get_rf_band_information_output_get_extended_list (
         output,
         &extended_band_array,
-        &error)) {
+        NULL)) {
         g_print ("Band Information (Extended):\n");
         for (i = 0; extended_band_array && i < extended_band_array->len; i++) {
             QmiMessageNasGetRfBandInformationOutputExtendedListElement *info;
@@ -3744,7 +3744,7 @@ get_rf_band_info_ready (QmiClientNas *client,
     if (qmi_message_nas_get_rf_band_information_output_get_bandwidth_list (
         output,
         &bandwidth_array,
-        &error)) {
+        NULL)) {
         g_print ("Bandwidth:\n");
         for (i = 0; bandwidth_array && i < bandwidth_array->len; i++) {
             QmiMessageNasGetRfBandInformationOutputBandwidthListElement *info;
