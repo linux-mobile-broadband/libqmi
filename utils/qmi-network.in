@@ -61,13 +61,18 @@ help ()
     echo "   way:"
     echo "      IP_TYPE=[4|6]"
     echo
-
     echo "   6) If you want to instruct the qmi-network script to use the"
     echo "   qmi-proxy setup, you can do so by configuring the following line"
     echo "   in the profile:"
     echo "      PROXY=yes"
     echo
-    echo "   7) Once the qmi-network script reports a successful connection"
+    echo "   7) To instruct the qmi-network script to use an already existing"
+    echo "   Profile ID, or to create a new one on the fly, use the following"
+    echo "   configuration in the profile:"
+    echo "      PROFILE=number  # to use the profile-id number"
+    echo "      PROFILE=auto    # to create a temporary profile on the fly"
+    echo
+    echo "   8) Once the qmi-network script reports a successful connection"
     echo "   you still need to run a DHCP client on the associated WWAN network"
     echo "   interface."
     echo
@@ -179,6 +184,13 @@ load_profile ()
         else
             echo "    IP_TYPE: unset"
         fi
+
+        if [ -n "$PROFILE" ]; then
+            echo "    PROFILE: $PROFILE"
+        else
+            echo "    PROFILE: unset"
+        fi
+
     else
         echo "Profile at '$PROFILE_FILE' not found..."
     fi
@@ -326,6 +338,62 @@ Downlink data aggregation max datagrams: '0'
     fi
 }
 
+# qmicli -d /dev/cdc-wdm0 --wds-create-profile --client-no-release-cid
+create_profile()
+{
+    if [ -n "$CID" ]; then
+        USE_PREVIOUS_CID="--client-cid=$CID"
+    fi
+
+    CREATE_PROFILE_ARGS="3gpp"
+    if [ -n "$APN" ]; then
+        CREATE_PROFILE_ARGS="${CREATE_PROFILE_ARGS},apn='$APN'"
+    fi
+
+    if [ -n "$IP_TYPE" ]; then
+        if [ "$IP_TYPE" -eq 4 ]; then
+            CREATE_PROFILE_ARGS="${CREATE_PROFILE_ARGS},pdp-type='IP'"
+        fi
+        if [ "$IP_TYPE" -eq 6 ]; then
+            CREATE_PROFILE_ARGS="${CREATE_PROFILE_ARGS},pdp-type='IPV6'"
+        fi
+    fi
+
+    if [ -n "$APN_USER" ]; then
+        CREATE_PROFILE_ARGS="${CREATE_PROFILE_ARGS},username='$APN_USER'"
+        if [ -n "$APN_PASS" ]; then
+            CREATE_PROFILE_ARGS="${CREATE_PROFILE_ARGS},password='$APN_PASS'"
+        fi
+    fi
+
+    CREATE_PROFILE_CMD="qmicli -d $DEVICE --wds-create-profile=$CREATE_PROFILE_ARGS $USE_PREVIOUS_CID --client-no-release-cid $PROXY_OPT"
+
+    echo "Creating profile with '$CREATE_PROFILE_CMD'..."
+    CREATE_PROFILE_OUT=`$CREATE_PROFILE_CMD`
+
+    # Save the profile ID
+    PROFILE_ID=`echo "$CREATE_PROFILE_OUT" | sed -n "s/.*Profile index:\s*'\([0-9]*\)'.*/\1/p"`
+    if [ -z "$PROFILE_ID" ]; then
+        echo "Profile ID creation failed"
+        echo $CREATE_PROFILE_OUT
+        exit 255
+    fi
+}
+
+delete_profile()
+{
+    if [ -n "$PROFILE" -a "$PROFILE" = "auto" ]; then
+        if [ -n "$CID" ]; then
+            USE_PREVIOUS_CID="--client-cid=$CID"
+        fi
+
+        DELETE_PROFILE_CMD="qmicli -d $DEVICE --wds-delete-profile=3gpp,$PROFILE_ID $USE_PREVIOUS_CID --client-no-release-cid $PROXY_OPT"
+
+        echo "Deleting profile with '$DELETE_PROFILE_CMD'..."
+        $DELETE_PROFILE_CMD
+    fi
+}
+
 # qmicli -d /dev/cdc-wdm0 --wds-start-network --client-no-release-cid
 # [/dev/cdc-wdm0] Network started
 #   Packet data handle: 3634026241
@@ -345,7 +413,16 @@ start_network ()
 
     setup_data_format
 
-    if [ -n "$APN" ]; then
+    if [ -n "$PROFILE" ]; then
+        if [ "$PROFILE" = "auto" ]; then
+            create_profile
+        else
+            PROFILE_ID="$PROFILE"
+        fi
+        START_NETWORK_ARGS="3gpp-profile=$PROFILE_ID"
+    fi
+
+    if [ -z "$PROFILE" -a -n "$APN" ]; then
         START_NETWORK_ARGS="apn='$APN'"
         if [ -n "$APN_USER" ]; then
             START_NETWORK_ARGS="${START_NETWORK_ARGS},username='$APN_USER'"
@@ -353,10 +430,9 @@ start_network ()
                 START_NETWORK_ARGS="${START_NETWORK_ARGS},password='$APN_PASS'"
             fi
         fi
-    fi
-
-    if [ -n "$IP_TYPE" ]; then
-        START_NETWORK_ARGS="${START_NETWORK_ARGS},ip-type='$IP_TYPE'"
+        if [ -n "$IP_TYPE" ]; then
+            START_NETWORK_ARGS="${START_NETWORK_ARGS},ip-type='$IP_TYPE'"
+        fi
     fi
 
     START_NETWORK_CMD="qmicli -d $DEVICE --wds-start-network=$START_NETWORK_ARGS $USE_PREVIOUS_CID --client-no-release-cid $PROXY_OPT"
@@ -396,6 +472,9 @@ start_network ()
     fi
 
     echo "Network started successfully"
+    if [ "$PROFILE" = "auto" ]; then
+        delete_profile
+    fi
 }
 
 # qmicli -d /dev/cdc-wdm0 --wds-stop-network
