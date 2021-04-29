@@ -35,6 +35,8 @@
 
 #if defined HAVE_QMI_SERVICE_WMS
 
+#define VALIDATE_UNKNOWN(str) (str ? str : "unknown")
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -45,6 +47,7 @@ static Context *ctx;
 
 /* Options */
 static gboolean get_supported_messages_flag;
+static gboolean get_routes_flag;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -52,6 +55,12 @@ static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_WMS_GET_SUPPORTED_MESSAGES
     { "wms-get-supported-messages", 0, 0, G_OPTION_ARG_NONE, &get_supported_messages_flag,
       "Get supported messages",
+      NULL
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_WMS_GET_ROUTES
+    { "wms-get-routes", 0, 0, G_OPTION_ARG_NONE, &get_routes_flag,
+      "Get SMS route information",
       NULL
     },
 #endif
@@ -93,6 +102,7 @@ qmicli_wms_options_enabled (void)
         return !!n_actions;
 
     n_actions = (get_supported_messages_flag +
+                 get_routes_flag +
                  reset_flag +
                  noop_flag);
 
@@ -168,6 +178,58 @@ get_supported_messages_ready (QmiClientWms *client,
 
 #endif /* HAVE_QMI_MESSAGE_WMS_GET_SUPPORTED_MESSAGES */
 
+#if defined HAVE_QMI_MESSAGE_WMS_GET_ROUTES
+
+static void
+get_routes_ready (QmiClientWms *client,
+                  GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWmsGetRoutesOutput) output = NULL;
+    GError *error = NULL;
+    GArray *route_list;
+    guint i;
+
+    output = qmi_client_wms_get_routes_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wms_get_routes_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get SMS routes: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wms_get_routes_output_get_route_list (output, &route_list, &error)) {
+        g_printerr ("error: got invalid SMS routes: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Got %u SMS routes:\n", qmi_device_get_path_display (ctx->device),
+                                          route_list->len);
+
+    for (i = 0; i < route_list->len; i++) {
+        QmiMessageWmsGetRoutesOutputRouteListElement *route;
+
+        route = &g_array_index (route_list, QmiMessageWmsGetRoutesOutputRouteListElement, i);
+        g_print ("  Route #%u:\n", i + 1);
+        g_print ("      Message Type: %s\n", VALIDATE_UNKNOWN (qmi_wms_message_type_get_string (route->message_type)));
+        g_print ("     Message Class: %s\n", VALIDATE_UNKNOWN (qmi_wms_message_class_get_string (route->message_class)));
+        g_print ("      Storage Type: %s\n", VALIDATE_UNKNOWN (qmi_wms_storage_type_get_string (route->storage)));
+        g_print ("    Receipt Action: %s\n", VALIDATE_UNKNOWN (qmi_wms_receipt_action_get_string (route->receipt_action)));
+    }
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WMS_GET_ROUTES */
+
 #if defined HAVE_QMI_MESSAGE_WMS_RESET
 
 static void
@@ -229,6 +291,19 @@ qmicli_wms_run (QmiDevice *device,
                                                ctx->cancellable,
                                                (GAsyncReadyCallback)get_supported_messages_ready,
                                                NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WMS_GET_ROUTES
+    if (get_routes_flag) {
+        g_debug ("Asynchronously getting SMS routes...");
+        qmi_client_wms_get_routes (ctx->client,
+                                   NULL,
+                                   10,
+                                   ctx->cancellable,
+                                   (GAsyncReadyCallback)get_routes_ready,
+                                   NULL);
         return;
     }
 #endif
