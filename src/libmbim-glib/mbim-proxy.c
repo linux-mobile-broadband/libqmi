@@ -44,7 +44,12 @@
 #include "mbim-basic-connect.h"
 #include "mbim-proxy-helpers.h"
 
-#define BUFFER_SIZE 512
+/* The mbim-proxy may be used for bulk data transfer, such as modem
+ * firmware upgrade, and the BUFFER_SIZE should be at least equal
+ * to MAX_CONTROL_TRANSFER which defined in mbim-device.c, which
+ * will bring better performance in such case.
+ */
+#define BUFFER_SIZE 4096
 
 G_DEFINE_TYPE (MbimProxy, mbim_proxy, G_TYPE_OBJECT)
 
