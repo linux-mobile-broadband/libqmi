@@ -94,7 +94,7 @@ mbim_message_ms_basic_connect_extensions_lte_attach_status_response_parse (
             error))
         return FALSE;
 
-    *out_lte_attach_status = var;
+    *out_lte_attach_status = g_steal_pointer (&var);
     return TRUE;
 }
 
@@ -119,7 +119,7 @@ mbim_message_ms_basic_connect_extensions_lte_attach_status_notification_parse (
             error))
         return FALSE;
 
-    *out_lte_attach_status = var;
+    *out_lte_attach_status = g_steal_pointer (&var);
     return TRUE;
 }
 
