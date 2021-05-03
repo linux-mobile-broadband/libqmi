@@ -45,7 +45,8 @@ static Context *ctx;
 /* Options */
 static gchar    *query_pco_str;
 static gboolean  query_lte_attach_configuration_flag;
-static gboolean  query_lte_attach_status_flag;
+static gboolean  query_lte_attach_status_flag; /* support for the deprecated name */
+static gboolean  query_lte_attach_info_flag;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -61,8 +62,12 @@ static GOptionEntry entries[] = {
       "Query LTE attach configuration",
       NULL
     },
-    { "ms-query-lte-attach-status", 0, 0, G_OPTION_ARG_NONE, &query_lte_attach_status_flag,
-      "Query LTE attach status",
+    { "ms-query-lte-attach-status", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &query_lte_attach_status_flag,
+      NULL,
+      NULL
+    },
+    { "ms-query-lte-attach-info", 0, 0, G_OPTION_ARG_NONE, &query_lte_attach_info_flag,
+      "Query LTE attach status information",
       NULL
     },
     { NULL }
@@ -135,7 +140,7 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
 
     n_actions = (!!query_pco_str +
                  query_lte_attach_configuration_flag +
-                 query_lte_attach_status_flag);
+                 (query_lte_attach_status_flag || query_lte_attach_info_flag));
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -257,12 +262,18 @@ query_lte_attach_configuration_ready (MbimDevice   *device,
 }
 
 static void
-query_lte_attach_status_ready (MbimDevice   *device,
-                               GAsyncResult *res)
+query_lte_attach_info_ready (MbimDevice   *device,
+                             GAsyncResult *res)
 {
-    g_autoptr(MbimMessage)         response = NULL;
-    g_autoptr(GError)              error = NULL;
-    g_autoptr(MbimLteAttachStatus) lte_attach_status = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    guint32                 lte_attach_state;
+    guint32                 ip_type;
+    g_autofree gchar       *access_string = NULL;
+    g_autofree gchar       *user_name = NULL;
+    g_autofree gchar       *password = NULL;
+    guint32                 compression;
+    guint32                 auth_protocol;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -271,12 +282,18 @@ query_lte_attach_status_ready (MbimDevice   *device,
         return;
     }
 
-    g_print ("[%s] Successfully queried LTE attach status\n",
+    g_print ("[%s] Successfully queried LTE attach info\n",
              mbim_device_get_path_display (device));
 
-    if (!mbim_message_ms_basic_connect_extensions_lte_attach_status_response_parse (
+    if (!mbim_message_ms_basic_connect_extensions_lte_attach_info_response_parse (
             response,
-            &lte_attach_status,
+            &lte_attach_state,
+            &ip_type,
+            &access_string,
+            &user_name,
+            &password,
+            &compression,
+            &auth_protocol,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         shutdown (FALSE);
@@ -284,13 +301,13 @@ query_lte_attach_status_ready (MbimDevice   *device,
     }
 
 #define VALIDATE_NA(str) (str ? str : "n/a")
-    g_print ("  Attach state:  %s\n", mbim_lte_attach_state_get_string (lte_attach_status->lte_attach_state));
-    g_print ("  IP type:       %s\n", mbim_context_ip_type_get_string (lte_attach_status->ip_type));
-    g_print ("  Access string: %s\n", VALIDATE_NA (lte_attach_status->access_string));
-    g_print ("  Username:      %s\n", VALIDATE_NA (lte_attach_status->user_name));
-    g_print ("  Password:      %s\n", VALIDATE_NA (lte_attach_status->password));
-    g_print ("  Compression:   %s\n", mbim_compression_get_string (lte_attach_status->compression));
-    g_print ("  Auth protocol: %s\n", mbim_auth_protocol_get_string (lte_attach_status->auth_protocol));
+    g_print ("  Attach state:  %s\n", mbim_lte_attach_state_get_string (lte_attach_state));
+    g_print ("  IP type:       %s\n", mbim_context_ip_type_get_string (ip_type));
+    g_print ("  Access string: %s\n", VALIDATE_NA (access_string));
+    g_print ("  Username:      %s\n", VALIDATE_NA (user_name));
+    g_print ("  Password:      %s\n", VALIDATE_NA (password));
+    g_print ("  Compression:   %s\n", mbim_compression_get_string (compression));
+    g_print ("  Auth protocol: %s\n", mbim_auth_protocol_get_string (auth_protocol));
 #undef VALIDATE_NA
 
     shutdown (TRUE);
@@ -346,15 +363,15 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
 
-    /* Request to query LTE attach status? */
-    if (query_lte_attach_status_flag) {
-        g_debug ("Asynchronously querying LTE attach status...");
-        request = mbim_message_ms_basic_connect_extensions_lte_attach_status_query_new (NULL);
+    /* Request to query LTE attach info? */
+    if (query_lte_attach_status_flag || query_lte_attach_info_flag) {
+        g_debug ("Asynchronously querying LTE attach info...");
+        request = mbim_message_ms_basic_connect_extensions_lte_attach_info_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
                              ctx->cancellable,
-                             (GAsyncReadyCallback)query_lte_attach_status_ready,
+                             (GAsyncReadyCallback)query_lte_attach_info_ready,
                              NULL);
         return;
     }

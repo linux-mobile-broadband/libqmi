@@ -15,7 +15,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2014-2021 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _LIBMBIM_GLIB_MBIM_COMPAT_H_
@@ -28,6 +28,7 @@
 #include <glib.h>
 
 #include "mbim-basic-connect.h"
+#include "mbim-ms-basic-connect-extensions.h"
 #include "mbim-cid.h"
 
 G_BEGIN_DECLS
@@ -114,6 +115,113 @@ gboolean mbim_message_device_service_subscriber_list_response_parse (
     const MbimMessage *message,
     guint32 *events_count,
     MbimEventEntry ***events,
+    GError **error);
+
+/*****************************************************************************/
+/* 'LTE Attach Status' rename to 'LTE Attach Info', to avoid the unneeded
+ * MbimLteAttachStatus struct */
+
+/* The following type exists just so that we can get deprecation warnings */
+G_DEPRECATED
+typedef int MbimDeprecatedCidMsBasicConnectExtensions;
+
+/**
+ * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LTE_ATTACH_STATUS:
+ *
+ * LTE attach info.
+ *
+ * Since: 1.18
+ * Deprecated: 1.26: Use MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LTE_ATTACH_INFO instead.
+ */
+#define MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LTE_ATTACH_STATUS (MbimDeprecatedCidMsBasicConnectExtensions)MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LTE_ATTACH_INFO
+
+/**
+ * MbimLteAttachStatus:
+ * @lte_attach_state: a #guint32.
+ * @ip_type: a #guint32.
+ * @access_string: a string.
+ * @user_name: a string.
+ * @password: a string.
+ * @compression: a #guint32.
+ * @auth_protocol: a #guint32.
+ *
+ * Since: 1.18
+ * Deprecated: 1.26
+ */
+typedef struct {
+    guint32 lte_attach_state;
+    guint32 ip_type;
+    gchar *access_string;
+    gchar *user_name;
+    gchar *password;
+    guint32 compression;
+    guint32 auth_protocol;
+} MbimLteAttachStatus;
+
+/**
+ * mbim_lte_attach_status_free:
+ * @var: a #MbimLteAttachStatus.
+ *
+ * Frees the memory allocated for the #MbimLteAttachStatus.
+ *
+ * Since: 1.18
+ * Deprecated: 1.26
+ */
+G_DEPRECATED
+void mbim_lte_attach_status_free (MbimLteAttachStatus *var);
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimLteAttachStatus, mbim_lte_attach_status_free)
+
+/**
+ * mbim_message_ms_basic_connect_extensions_lte_attach_status_query_new:
+ * @error: return location for error or %NULL.
+ *
+ * Create a new request for the 'Lte Attach Status' query command in the 'Ms Basic Connect Extensions' service.
+ *
+ * Returns: a newly allocated #MbimMessage, which should be freed with mbim_message_unref().
+ *
+ * Since: 1.18
+ * Deprecated: 1.26: Use mbim_message_ms_basic_connect_extensions_lte_attach_info_query_new() instead.
+ */
+G_DEPRECATED_FOR (mbim_message_ms_basic_connect_extensions_lte_attach_info_query_new)
+MbimMessage *mbim_message_ms_basic_connect_extensions_lte_attach_status_query_new (
+    GError **error);
+
+/**
+ * mbim_message_ms_basic_connect_extensions_lte_attach_status_response_parse:
+ * @message: the #MbimMessage.
+ * @out_lte_attach_status: (out)(optional)(transfer full): return location for a newly allocated #MbimLteAttachStatus, or %NULL if the 'LteAttachStatus' field is not needed. Free the returned value with mbim_lte_attach_status_free().
+ * @error: return location for error or %NULL.
+ *
+ * Parses and returns parameters of the 'Lte Attach Status' response command in the 'Ms Basic Connect Extensions' service.
+ *
+ * Returns: %TRUE if the message was correctly parsed, %FALSE if @error is set.
+ *
+ * Since: 1.18
+ * Deprecated: 1.26: Use mbim_message_ms_basic_connect_extensions_lte_attach_info_response_parse() instead.
+ */
+G_DEPRECATED_FOR (mbim_message_ms_basic_connect_extensions_lte_attach_info_response_parse)
+gboolean mbim_message_ms_basic_connect_extensions_lte_attach_status_response_parse (
+    const MbimMessage *message,
+    MbimLteAttachStatus **out_lte_attach_status,
+    GError **error);
+
+/**
+ * mbim_message_ms_basic_connect_extensions_lte_attach_status_notification_parse:
+ * @message: the #MbimMessage.
+ * @out_lte_attach_status: (out)(optional)(transfer full): return location for a newly allocated #MbimLteAttachStatus, or %NULL if the 'LteAttachStatus' field is not needed. Free the returned value with mbim_lte_attach_status_free().
+ * @error: return location for error or %NULL.
+ *
+ * Parses and returns parameters of the 'Lte Attach Status' notification command in the 'Ms Basic Connect Extensions' service.
+ *
+ * Returns: %TRUE if the message was correctly parsed, %FALSE if @error is set.
+ *
+ * Since: 1.18
+ * Deprecated: 1.26: Use mbim_message_ms_basic_connect_extensions_lte_attach_info_notification_parse() instead.
+ */
+G_DEPRECATED_FOR (mbim_message_ms_basic_connect_extensions_lte_attach_info_notification_parse)
+gboolean mbim_message_ms_basic_connect_extensions_lte_attach_status_notification_parse (
+    const MbimMessage *message,
+    MbimLteAttachStatus **out_lte_attach_status,
     GError **error);
 
 #endif /* MBIM_DISABLE_DEPRECATED */
