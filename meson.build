@@ -3,7 +3,7 @@
 
 project(
   'libmbim', 'c',
-  version: '1.25.3',
+  version: '1.25.4',
   license: 'GPL2',
   default_options: [
     'buildtype=debugoptimized',
