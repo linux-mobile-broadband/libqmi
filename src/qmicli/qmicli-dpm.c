@@ -53,7 +53,7 @@ static gboolean  noop_flag;
 static GOptionEntry entries[] = {
 #if defined HAVE_QMI_MESSAGE_DPM_OPEN_PORT
     { "dpm-open-port", 0, 0, G_OPTION_ARG_STRING, &open_port_str,
-      "Open port (allowed-keys: ctrl-ep-type, ctrl-ep-iface-number, ctrl-port-name, hw-data-ep-type, hw-data-ep-iface-number, hw-data-rx-id, hw-data-tx-id, sw-data-ep-type, sw-data-ep-iface-number, sw-data-port-name)"
+      "Open port (allowed-keys: ctrl-ep-type, ctrl-ep-iface-number, ctrl-port-name, hw-data-ep-type, hw-data-ep-iface-number, hw-data-rx-id, hw-data-tx-id, sw-data-ep-type, sw-data-ep-iface-number, sw-data-port-name)",
       "[\"key=value,...\"]"
     },
 #endif
