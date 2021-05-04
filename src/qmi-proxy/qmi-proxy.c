@@ -103,7 +103,6 @@ log_handler (const gchar *log_domain,
         break;
 
     case G_LOG_LEVEL_CRITICAL:
-    case G_LOG_FLAG_FATAL:
     case G_LOG_LEVEL_ERROR:
         log_level_str = "-Error **";
         err = TRUE;
@@ -113,9 +112,16 @@ log_handler (const gchar *log_domain,
         log_level_str = "[Debug]";
         break;
 
-    default:
+    case G_LOG_LEVEL_MESSAGE:
+    case G_LOG_LEVEL_INFO:
         log_level_str = "";
         break;
+
+    case G_LOG_FLAG_FATAL:
+    case G_LOG_LEVEL_MASK:
+    case G_LOG_FLAG_RECURSION:
+    default:
+        g_assert_not_reached ();
     }
 
     if (!verbose_flag && !err)
