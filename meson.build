@@ -151,7 +151,7 @@ if enable_mbim_username
   # FIXME: udev base directory, prefix can't be overrided
   udev_udevdir = get_option('udevdir')
   if udev_udevdir == ''
-    udev_udevdir = dependency('udev').get_variable(pkgconfig: 'udevdir')
+    udev_udevdir = dependency('udev').get_pkgconfig_variable('udevdir')
   endif
 else
   mbim_username = 'no (root)'
