@@ -12,12 +12,12 @@ stages:
   variables:
     FDO_UPSTREAM_REPO: mobile-broadband/libqmi
     FDO_DISTRIBUTION_VERSION: '18.04'
-    FDO_DISTRIBUTION_TAG: '2021-04-30.1'
+    FDO_DISTRIBUTION_TAG: '2021-05-04.1'
     FDO_DISTRIBUTION_PACKAGES: ca-certificates git gcc autoconf automake libtool
                                libgirepository1.0-dev libglib2.0-dev autopoint
                                autoconf-archive gtk-doc-tools libglib2.0-doc
                                libgudev-1.0-dev gobject-introspection valac
-                               meson ninja-build
+                               bash-completion meson ninja-build
 
 build container:
   extends:
@@ -31,6 +31,23 @@ build container:
     - tags
     - pushes
 
+build-meson:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
+  script:
+    - meson setup _debug_build --prefix=/usr -Dwerror=true
+    - ninja -C _debug_build
+    - ninja -C _debug_build install
+    - meson setup _release_build --prefix=/usr --buildtype=release -Dwerror=true
+    - ninja -C _release_build
+    - ninja -C _release_build install
 
 build-autotools-no-deprecated:
   stage: build
