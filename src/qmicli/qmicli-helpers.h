@@ -51,7 +51,11 @@
     QMICLI_ENUM_LIST_ITEM (QmiLocOperationMode,                         loc_operation_mode,                           "operation mode")                \
     QMICLI_ENUM_LIST_ITEM (QmiLocLockType,                              loc_lock_type,                                "lock type")                     \
     QMICLI_ENUM_LIST_ITEM (QmiUimCardApplicationPersonalizationFeature, uim_card_application_personalization_feature, "personalization feature" )      \
-    QMICLI_ENUM_LIST_ITEM (QmiUimDepersonalizationOperation,            uim_depersonalization_operation,              "depersonalization operation" )
+    QMICLI_ENUM_LIST_ITEM (QmiUimDepersonalizationOperation,            uim_depersonalization_operation,              "depersonalization operation" )  \
+    QMICLI_ENUM_LIST_ITEM (QmiWmsMessageType,                           wms_message_type,                             "message type" )                 \
+    QMICLI_ENUM_LIST_ITEM (QmiWmsMessageClass,                          wms_message_class,                            "message class" )                \
+    QMICLI_ENUM_LIST_ITEM (QmiWmsStorageType,                           wms_storage_type,                             "storage type" )                 \
+    QMICLI_ENUM_LIST_ITEM (QmiWmsReceiptAction,                         wms_receipt_action,                           "receipt action" )
 
 #define QMICLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);

@@ -48,6 +48,7 @@ static Context *ctx;
 /* Options */
 static gboolean get_supported_messages_flag;
 static gboolean get_routes_flag;
+static gchar *set_routes_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
 
@@ -62,6 +63,12 @@ static GOptionEntry entries[] = {
     { "wms-get-routes", 0, 0, G_OPTION_ARG_NONE, &get_routes_flag,
       "Get SMS route information",
       NULL
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_WMS_SET_ROUTES
+    { "wms-set-routes", 0, 0, G_OPTION_ARG_STRING, &set_routes_str,
+      "Set SMS route information (keys: type, class, storage, receipt-action)",
+      "[\"key=value,...\"]"
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_WMS_RESET
@@ -103,6 +110,7 @@ qmicli_wms_options_enabled (void)
 
     n_actions = (get_supported_messages_flag +
                  get_routes_flag +
+                 !!set_routes_str +
                  reset_flag +
                  noop_flag);
 
@@ -230,6 +238,208 @@ get_routes_ready (QmiClientWms *client,
 
 #endif /* HAVE_QMI_MESSAGE_WMS_GET_ROUTES */
 
+#if defined HAVE_QMI_MESSAGE_WMS_SET_ROUTES
+
+typedef struct {
+    GArray *route_list;
+
+    gboolean message_type_set;
+    gboolean message_class_set;
+    gboolean storage_set;
+    gboolean receipt_action_set;
+} SetRoutesContext;
+
+static void
+set_routes_context_init (SetRoutesContext *routes_ctx)
+{
+    memset (routes_ctx, 0, sizeof(SetRoutesContext));
+    routes_ctx->route_list = g_array_new (FALSE, TRUE, sizeof (QmiMessageWmsSetRoutesInputRouteListElement));
+}
+
+static void
+set_routes_context_destroy (SetRoutesContext *routes_ctx)
+{
+    g_array_unref (routes_ctx->route_list);
+}
+
+static gboolean
+set_route_properties_handle (const gchar  *key,
+                             const gchar  *value,
+                             GError      **error,
+                             gpointer      user_data)
+{
+    SetRoutesContext *routes_ctx = user_data;
+    QmiMessageWmsSetRoutesInputRouteListElement *cur_route;
+    gboolean ret = FALSE;
+
+    if (!value || !value[0]) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "key '%s' required a value",
+                     key);
+        return FALSE;
+    }
+
+    if (!routes_ctx->message_type_set && !routes_ctx->message_class_set &&
+        !routes_ctx->storage_set && !routes_ctx->receipt_action_set) {
+        QmiMessageWmsSetRoutesInputRouteListElement new_elt;
+
+        memset (&new_elt, 0, sizeof (QmiMessageWmsSetRoutesInputRouteListElement));
+        g_array_append_val (routes_ctx->route_list, new_elt);
+    }
+    cur_route = &g_array_index (routes_ctx->route_list,
+                                QmiMessageWmsSetRoutesInputRouteListElement,
+                                routes_ctx->route_list->len - 1);
+
+    if (g_ascii_strcasecmp (key, "type") == 0 && !routes_ctx->message_type_set) {
+        if (!qmicli_read_wms_message_type_from_string (value, &cur_route->message_type)) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown message type '%s'",
+                         value);
+            return FALSE;
+        }
+        routes_ctx->message_type_set = TRUE;
+        ret = TRUE;
+    } else if (g_ascii_strcasecmp (key, "class") == 0 && !routes_ctx->message_class_set) {
+        if (!qmicli_read_wms_message_class_from_string (value, &cur_route->message_class)) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown message class '%s'",
+                         value);
+            return FALSE;
+        }
+        routes_ctx->message_class_set = TRUE;
+        ret = TRUE;
+    } else if (g_ascii_strcasecmp (key, "storage") == 0 && !routes_ctx->storage_set) {
+        if (!qmicli_read_wms_storage_type_from_string (value, &cur_route->storage)) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown storage type '%s'",
+                         value);
+            return FALSE;
+        }
+        routes_ctx->storage_set = TRUE;
+        ret = TRUE;
+    } else if (g_ascii_strcasecmp (key, "receipt-action") == 0 && !routes_ctx->receipt_action_set) {
+        if (!qmicli_read_wms_receipt_action_from_string (value, &cur_route->receipt_action)) {
+            g_set_error (error,
+                         QMI_CORE_ERROR,
+                         QMI_CORE_ERROR_FAILED,
+                         "unknown receipt action '%s'",
+                         value);
+            return FALSE;
+        }
+        routes_ctx->receipt_action_set = TRUE;
+        ret = TRUE;
+    }
+
+    if (routes_ctx->message_type_set && routes_ctx->message_class_set &&
+        routes_ctx->storage_set && routes_ctx->receipt_action_set) {
+        /* We have a complete set of details for this route. Reset the context state. */
+        routes_ctx->message_type_set = FALSE;
+        routes_ctx->message_class_set = FALSE;
+        routes_ctx->storage_set = FALSE;
+        routes_ctx->receipt_action_set = FALSE;
+    }
+
+    if (!ret) {
+        g_set_error (error,
+                     QMI_CORE_ERROR,
+                     QMI_CORE_ERROR_FAILED,
+                     "unrecognized or duplicate option '%s'",
+                     key);
+    }
+    return ret;
+}
+
+static QmiMessageWmsSetRoutesInput *
+set_routes_input_create (const gchar  *str,
+                         GError      **error)
+{
+    g_autoptr(QmiMessageWmsSetRoutesInput) input = NULL;
+    SetRoutesContext routes_ctx;
+    GError *inner_error = NULL;
+
+    set_routes_context_init (&routes_ctx);
+
+    if (!qmicli_parse_key_value_string (str,
+                                        &inner_error,
+                                        set_route_properties_handle,
+                                        &routes_ctx)) {
+        g_propagate_prefixed_error (error,
+                                    inner_error,
+                                    "couldn't parse input string: ");
+        set_routes_context_destroy (&routes_ctx);
+        return NULL;
+    }
+
+    if (routes_ctx.route_list->len == 0) {
+        g_set_error_literal (error,
+                             QMI_CORE_ERROR,
+                             QMI_CORE_ERROR_FAILED,
+                             "route list was empty");
+        set_routes_context_destroy (&routes_ctx);
+        return NULL;
+    }
+
+    if (routes_ctx.message_type_set || routes_ctx.message_class_set ||
+        routes_ctx.storage_set || routes_ctx.receipt_action_set) {
+        g_set_error_literal (error,
+                             QMI_CORE_ERROR,
+                             QMI_CORE_ERROR_FAILED,
+                             "final route was missing one or more options");
+        set_routes_context_destroy (&routes_ctx);
+        return NULL;
+    }
+
+    /* Create input */
+    input = qmi_message_wms_set_routes_input_new ();
+
+    if (!qmi_message_wms_set_routes_input_set_route_list (input, routes_ctx.route_list, &inner_error)) {
+        g_propagate_error (error, inner_error);
+        set_routes_context_destroy (&routes_ctx);
+        return NULL;
+    }
+
+    set_routes_context_destroy (&routes_ctx);
+    return g_steal_pointer (&input);
+}
+
+static void
+set_routes_ready (QmiClientWms *client,
+                  GAsyncResult *res)
+{
+    g_autoptr(QmiMessageWmsSetRoutesOutput) output = NULL;
+    GError *error = NULL;
+
+    output = qmi_client_wms_set_routes_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_wms_set_routes_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't set SMS routes: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully set SMS routes\n",
+             qmi_device_get_path_display (ctx->device));
+
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_WMS_SET_ROUTES */
+
 #if defined HAVE_QMI_MESSAGE_WMS_RESET
 
 static void
@@ -303,6 +513,29 @@ qmicli_wms_run (QmiDevice *device,
                                    10,
                                    ctx->cancellable,
                                    (GAsyncReadyCallback)get_routes_ready,
+                                   NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_WMS_SET_ROUTES
+    if (set_routes_str) {
+        g_autoptr(QmiMessageWmsSetRoutesInput) input = NULL;
+        GError *error = NULL;
+
+        input = set_routes_input_create (set_routes_str, &error);
+        if (!input) {
+            g_printerr ("Failed to set route: %s\n", error->message);
+            g_error_free (error);
+            operation_shutdown (FALSE);
+            return;
+        }
+        g_debug ("Asynchronously setting SMS routes...");
+        qmi_client_wms_set_routes (ctx->client,
+                                   input,
+                                   10,
+                                   ctx->cancellable,
+                                   (GAsyncReadyCallback)set_routes_ready,
                                    NULL);
         return;
     }
