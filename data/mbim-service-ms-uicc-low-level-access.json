@@ -10,6 +10,23 @@
     "since"    : "1.26",
     "query"    : [],
     "response" : [ { "name"   : "atr",
-                     "format" : "string" } ] }
+                     "format" : "string" } ] },
 
+  // *********************************************************************************
+  { "name"     : "Open Channel",
+    "service"  : "MS UICC Low Level Access",
+    "type"     : "Command",
+    "since"    : "1.26",
+    "set"      : [ { "name"   : "AppId",
+                     "format" : "uicc-ref-byte-array" },
+                   { "name"   : "SelectP2Arg",
+                     "format" : "guint32" },
+                   { "name"   : "ChannelGroup",
+                     "format" : "guint32" } ],
+    "response" : [ { "name"   : "Status",
+                     "format" : "guint32" },
+                   { "name"   : "Channel",
+                     "format" : "guint32" },
+                   { "name"   : "Response",
+                     "format" : "uicc-ref-byte-array" } ] }
 ]
