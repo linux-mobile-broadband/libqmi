@@ -184,6 +184,13 @@ static const CidConfig cid_qdu_config [MBIM_CID_QDU_LAST] = {
     { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QDU_FILE_OPEN */
     { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_QDU_FILE_WRITE */
 };
+
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_LAST MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_ATR
+static const CidConfig cid_ms_uicc_low_level_access_config [MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_LAST] = {
+    { NO_SET,    QUERY,    NO_NOTIFY    }, /* MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_ATR */
+};
+
 gboolean
 mbim_cid_can_set (MbimService service,
                   guint       cid)
@@ -227,6 +234,8 @@ mbim_cid_can_set (MbimService service,
         return cid_qdu_config[cid - 1].set;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return cid_ms_basic_connect_extensions_config[cid - 1].set;
+    case MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS:
+        return cid_ms_uicc_low_level_access_config[cid - 1].set;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -278,6 +287,8 @@ mbim_cid_can_query (MbimService service,
         return cid_qdu_config[cid - 1].query;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return cid_ms_basic_connect_extensions_config[cid - 1].query;
+    case MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS:
+        return cid_ms_uicc_low_level_access_config[cid - 1].query;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -329,6 +340,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_qdu_config[cid - 1].notify;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return cid_ms_basic_connect_extensions_config[cid - 1].notify;
+    case MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS:
+        return cid_ms_uicc_low_level_access_config[cid - 1].notify;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -381,6 +394,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_qdu_get_string (cid);
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return mbim_cid_ms_basic_connect_extensions_get_string (cid);
+    case MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS:
+        return mbim_cid_ms_uicc_low_level_access_get_string (cid);
     case MBIM_SERVICE_LAST:
     default:
         g_assert_not_reached ();

@@ -1,0 +1,15 @@
+[
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "MS UICC Low Level Access" },
+
+// *********************************************************************************
+  { "name"     : "ATR",
+    "service"  : "MS UICC Low Level Access",
+    "type"     : "Command",
+    "since"    : "1.26",
+    "query"    : [],
+    "response" : [ { "name"   : "atr",
+                     "format" : "string" } ] }
+
+]

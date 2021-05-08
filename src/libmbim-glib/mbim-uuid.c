@@ -239,6 +239,14 @@ static const MbimUuid uuid_ms_basic_connect_extensions = {
     .e = { 0xbe, 0xf7, 0x05, 0x8e, 0x9a, 0xaf }
 };
 
+static const MbimUuid uuid_ms_uicc_low_level_access = {
+    .a = { 0xc2, 0xf6, 0x58, 0x8e },
+    .b = { 0xf0, 0x37 },
+    .c = { 0x4b, 0xc9 },
+    .d = { 0x86, 0x65 },
+    .e = { 0xf4, 0xd4, 0x4b, 0xd0, 0x93, 0x67 }
+};
+
 static GList *mbim_custom_service_list = NULL;
 
 typedef struct {
@@ -366,6 +374,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_intel_firmware_update;
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         return &uuid_ms_basic_connect_extensions;
+    case MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS:
+        return &uuid_ms_uicc_low_level_access;
     case MBIM_SERVICE_LAST:
         g_assert_not_reached ();
     default:
@@ -429,6 +439,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_ms_basic_connect_extensions))
         return MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS;
+
+    if (mbim_uuid_cmp (uuid, &uuid_ms_uicc_low_level_access))
+        return MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
         if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))

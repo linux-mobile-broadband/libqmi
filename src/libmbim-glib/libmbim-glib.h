@@ -54,6 +54,7 @@
 #include "mbim-qdu.h"
 #include "mbim-intel-firmware-update.h"
 #include "mbim-ms-basic-connect-extensions.h"
+#include "mbim-ms-uicc-low-level-access.h"
 
 /* backwards compatibility */
 #include "mbim-compat.h"

@@ -15,5 +15,6 @@ EXTRA_DIST = \
 	mbim-service-qmi.json \
 	mbim-service-atds.json \
 	mbim-service-qdu.json \
+	mbim-service-ms-uicc-low-level-access.json \
 	mbim-service-intel-firmware-update.json \
 	mbim-service-ms-basic-connect-extensions.json

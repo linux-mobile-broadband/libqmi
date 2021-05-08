@@ -124,6 +124,7 @@ gboolean mbim_uuid_from_printable (const gchar *str,
  * @MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS: Microsoft basic connectivity extensions service. Since 1.18.
  * @MBIM_SERVICE_MS_SAR: Microsoft SAR service. Since 1.26.
  * @MBIM_SERVICE_QDU: QDU firmware update service. Since 1.26.
+ * @MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS: Microsoft UICC Low Level Access service. Since 1.26.
  * @MBIM_SERVICE_LAST: Internal value.
  *
  * Enumeration of the generic MBIM services.
@@ -148,6 +149,7 @@ typedef enum { /*< since=1.0 >*/
     MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS = 14,
     MBIM_SERVICE_MS_SAR                      = 15,
     MBIM_SERVICE_QDU                         = 16,
+    MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS    = 17,
 #if defined LIBMBIM_GLIB_COMPILATION
     MBIM_SERVICE_LAST /*< skip >*/
 #endif
@@ -475,6 +477,15 @@ const MbimUuid *mbim_uuid_from_context_type (MbimContextType context_type);
  * Since: 1.0
  */
 MbimContextType mbim_uuid_to_context_type (const MbimUuid *uuid);
+
+/**
+ * MBIM_UUID_MS_UICC_LOW_LEVEL_ACCESS:
+ *
+ * Get the UUID of the %MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS service.
+ *
+ * Returns: (transfer none): a #MbimUuid.
+ */
+#define MBIM_UUID_MS_UICC_LOW_LEVEL_ACCESS mbim_uuid_from_service (MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS)
 
 G_END_DECLS
 

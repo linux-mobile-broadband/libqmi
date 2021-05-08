@@ -29,6 +29,7 @@ MBIM_UUID_QDU
 MBIM_UUID_INTEL_FIRMWARE_UPDATE
 MBIM_UUID_MS_BASIC_CONNECT_EXTENSIONS
 MBIM_UUID_MS_SAR
+MBIM_UUID_MS_UICC_LOW_LEVEL_ACCESS
 <SUBSECTION Methods>
 mbim_service_get_string
 mbim_service_lookup_name
@@ -67,6 +68,7 @@ MbimCidQdu
 MbimCidIntelFirmwareUpdate
 MbimCidMsBasicConnectExtensions
 MbimCidMsSar
+MbimCidMsUiccLowLevelAccess
 <SUBSECTION Methods>
 mbim_cid_can_set
 mbim_cid_can_query
@@ -88,6 +90,7 @@ mbim_cid_qdu_get_string
 mbim_cid_intel_firmware_update_get_string
 mbim_cid_ms_basic_connect_extensions_get_string
 mbim_cid_ms_sar_get_string
+mbim_cid_ms_uicc_low_level_access_get_string
 <SUBSECTION Private>
 mbim_cid_atds_build_string_from_mask
 mbim_cid_basic_connect_build_string_from_mask
@@ -105,6 +108,7 @@ mbim_cid_qdu_build_string_from_mask
 mbim_cid_intel_firmware_update_build_string_from_mask
 mbim_cid_ms_basic_connect_extensions_build_string_from_mask
 mbim_cid_ms_sar_build_string_from_mask
+mbim_cid_ms_uicc_low_level_access_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_CID_ATDS
 MBIM_TYPE_CID_AUTH
@@ -122,6 +126,7 @@ MBIM_TYPE_CID_QDU
 MBIM_TYPE_CID_INTEL_FIRMWARE_UPDATE
 MBIM_TYPE_CID_MS_BASIC_CONNECT_EXTENSIONS
 MBIM_TYPE_CID_MS_SAR
+MBIM_TYPE_CID_MS_UICC_LOW_LEVEL_ACCESS
 mbim_cid_atds_get_type
 mbim_cid_auth_get_type
 mbim_cid_basic_connect_get_type
@@ -137,6 +142,7 @@ mbim_cid_qmi_get_type
 mbim_cid_qdu_get_type
 mbim_cid_intel_firmware_update_get_type
 mbim_cid_ms_basic_connect_extensions_get_type
+mbim_cid_ms_uicc_low_level_access_get_type
 mbim_cid_ms_sar_get_type
 </SECTION>
 

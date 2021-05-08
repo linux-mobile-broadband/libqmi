@@ -366,6 +366,20 @@ typedef enum { /*< since=1.18 >*/
 /* Command helpers */
 
 /**
+ * MbimCidMsUiccLowLevelAccess:
+ * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_UNKNOWN: Unknown command.
+ * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_ATR: ATR.
+ *
+ * MBIM commands in the %MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS service.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_UNKNOWN              = 0,
+    MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_ATR                  = 1,
+} MbimCidMsUiccLowLevelAccess;
+
+/**
  * mbim_cid_can_set:
  * @service: a #MbimService.
  * @cid: a command ID.

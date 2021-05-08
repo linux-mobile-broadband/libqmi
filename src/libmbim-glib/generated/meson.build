@@ -94,6 +94,7 @@ services_data = [
   ['dss', true],
   ['intel-firmware-update', true],
   ['ms-basic-connect-extensions', true],
+  ['ms-uicc-low-level-access', true],
   ['ms-firmware-id', true],
   ['ms-host-shutdown', true],
   ['ms-sar', true],

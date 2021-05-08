@@ -303,6 +303,7 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_PROXY_CONTROL:
     case MBIM_SERVICE_QMI:
     case MBIM_SERVICE_QDU:
+    case MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS:
         /* unsupported actions in the CLI */
     case MBIM_SERVICE_INVALID:
     default:

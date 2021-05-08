@@ -18,7 +18,8 @@ GENERATED_H = \
 	mbim-atds.h \
 	mbim-intel-firmware-update.h \
 	mbim-qdu.h \
-	mbim-ms-basic-connect-extensions.h
+	mbim-ms-basic-connect-extensions.h \
+	mbim-ms-uicc-low-level-access.h
 
 GENERATED_C = \
 	mbim-error-types.c \
@@ -39,7 +40,8 @@ GENERATED_C = \
 	mbim-atds.c \
 	mbim-intel-firmware-update.c \
 	mbim-qdu.c \
-	mbim-ms-basic-connect-extensions.c
+	mbim-ms-basic-connect-extensions.c \
+	mbim-ms-uicc-low-level-access.c
 
 GENERATED_SECTIONS = \
 	mbim-basic-connect.sections \
@@ -57,7 +59,8 @@ GENERATED_SECTIONS = \
 	mbim-atds.sections \
 	mbim-intel-firmware-update.sections \
 	mbim-qdu.sections \
-	mbim-ms-basic-connect-extensions.sections
+	mbim-ms-basic-connect-extensions.sections \
+	mbim-ms-uicc-low-level-access.sections
 
 # Error types
 mbim-error-types.h: $(top_srcdir)/src/libmbim-glib/mbim-errors.h $(top_srcdir)/build-aux/templates/mbim-error-types.h.template
@@ -241,6 +244,15 @@ mbim-ms-basic-connect-extensions.h mbim-ms-basic-connect-extensions.c mbim-ms-ba
 		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
 			--input $(top_srcdir)/data/mbim-service-ms-basic-connect-extensions.json \
 			--output mbim-ms-basic-connect-extensions
+
+# Microsoft UICC Low Level Access service for eSIM
+mbim-ms-uicc-low-level-access.h mbim-ms-uicc-low-level-access.c mbim-ms-uicc-low-level-access.sections: $(top_srcdir)/data/mbim-service-ms-uicc-low-level-access.json $(top_srcdir)/build-aux/mbim-codegen/*.py $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen
+	$(AM_V_GEN)  \
+		rm -f mbim-ms-uicc-low-level-access.h && \
+		rm -f mbim-ms-uicc-low-level-access.c && \
+		$(PYTHON) $(top_srcdir)/build-aux/mbim-codegen/mbim-codegen \
+			--input $(top_srcdir)/data/mbim-service-ms-uicc-low-level-access.json \
+			--output mbim-ms-uicc-low-level-access
 
 BUILT_SOURCES = $(GENERATED_H) $(GENERATED_C)
 
