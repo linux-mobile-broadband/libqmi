@@ -28,5 +28,17 @@
                    { "name"   : "Channel",
                      "format" : "guint32" },
                    { "name"   : "Response",
-                     "format" : "uicc-ref-byte-array" } ] }
+                     "format" : "uicc-ref-byte-array" } ] },
+
+  // *********************************************************************************
+  { "name"     : "Close Channel",
+    "service"  : "MS UICC Low Level Access",
+    "type"     : "Command",
+    "since"    : "1.26",
+    "set"      : [ { "name"   : "Channel",
+                     "format" : "guint32" },
+                   { "name"   : "ChannelGroup",
+                     "format" : "guint32" } ],
+    "response" : [ { "name"   : "Status",
+                     "format" : "guint32" } ] }
 ]
