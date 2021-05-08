@@ -371,6 +371,7 @@ typedef enum { /*< since=1.18 >*/
  * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_ATR: ATR.
  * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_OPEN_CHANNEL: Open Channel.
  * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_CLOSE_CHANNEL: Close Channel.
+ * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APDU: Apdu.
  *
  * MBIM commands in the %MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS service.
  *
@@ -381,6 +382,7 @@ typedef enum { /*< since=1.26 >*/
     MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_ATR                  = 1,
     MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_OPEN_CHANNEL         = 2,
     MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_CLOSE_CHANNEL        = 3,
+    MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APDU                 = 4,
 } MbimCidMsUiccLowLevelAccess;
 
 /**

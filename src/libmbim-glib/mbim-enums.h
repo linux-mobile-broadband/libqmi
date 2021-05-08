@@ -1401,6 +1401,37 @@ typedef enum { /*< since=1.26 >*/
     MBIM_UICC_SLOT_STATE_ACTIVE_ESIM_NO_PROFILES = 8
 } MbimUiccSlotState;
 
+/*****************************************************************************/
+/* 'UICC APDU' enums */
+
+/**
+ * MbimUiccSecureMessaging:
+ * @MBIM_UICC_SECURE_MESSAGING_NONE: No secure messaging.
+ * @MBIM_UICC_SECURE_MESSAGING_NO_HDR_AUTH: Secure, command header not authenticated.
+ *
+ * Specifies whether apdu is exchanged using secure messaging.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_UICC_SECURE_MESSAGING_NONE             = 0,
+    MBIM_UICC_SECURE_MESSAGING_NO_HDR_AUTH      = 1,
+} MbimUiccSecureMessaging;
+
+/**
+ * MbimUiccClassByteType:
+ * @MBIM_UICC_CLASS_BYTE_TYPE_INTER_INDUSTRY: Defined according to first interindustry definition in ISO 7816-4.
+ * @MBIM_UICC_CLASS_BYTE_TYPE_EXTENDED: Defined according to extended definition in ETSI 102 221.
+ *
+ * Specifies the type of class byte definition.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_UICC_CLASS_BYTE_TYPE_INTER_INDUSTRY   = 0,
+    MBIM_UICC_CLASS_BYTE_TYPE_EXTENDED         = 1,
+} MbimUiccClassByteType;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

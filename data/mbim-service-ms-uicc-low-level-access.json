@@ -40,5 +40,25 @@
                    { "name"   : "ChannelGroup",
                      "format" : "guint32" } ],
     "response" : [ { "name"   : "Status",
-                     "format" : "guint32" } ] }
+                     "format" : "guint32" } ] },
+
+  // *********************************************************************************
+  { "name"     : "APDU",
+    "service"  : "MS UICC Low Level Access",
+    "type"     : "Command",
+    "since"    : "1.26",
+    "set"      : [ { "name"   : "Channel",
+                     "format" : "guint32" },
+                   { "name"          : "SecureMessaging",
+                     "format"        : "guint32",
+                     "public-format" : "MbimUiccSecureMessaging" },
+                   { "name"          : "ClassByteType",
+                     "format"        : "guint32",
+                     "public-format" : "MbimUiccClassByteType" },
+                   { "name"   : "Command",
+                     "format" : "uicc-ref-byte-array" } ],
+    "response" : [ { "name"   : "Status",
+                     "format" : "guint32" },
+                   { "name"   : "Response",
+                     "format" : "uicc-ref-byte-array" } ] }
 ]
