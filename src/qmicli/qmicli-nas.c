@@ -4111,7 +4111,7 @@ swi_get_status_ready (QmiClientNas *client,
     QmiMessageNasSwiGetStatusOutput *output;
     GError *error = NULL;
 
-    guint8 temperature;
+    gint8 temperature;
     QmiNasSwiModemMode modem_mode;
     QmiNasSwiSystemMode system_mode;
     QmiNasSwiImsRegState ims_reg_state;
@@ -4144,7 +4144,7 @@ swi_get_status_ready (QmiClientNas *client,
     g_print ("[%s] Successfully got status:\n",
              qmi_device_get_path_display (ctx->device));
 
-    if (qmi_message_nas_swi_get_status_output_get_common_info (
+    if (qmi_message_nas_swi_get_status_output_get_common_info_v2 (
             output,
             &temperature,
             &modem_mode,
@@ -4153,7 +4153,7 @@ swi_get_status_ready (QmiClientNas *client,
             &ps_state,
             NULL)) {
         g_print ("Common Info:\n"
-                "\tTemperature: '%u'\n"
+                "\tTemperature: '%d'\n"
                 "\tModem mode: '%s'\n"
                 "\tSystem mode: '%s'\n"
                 "\tIMS registration state: '%s'\n"

@@ -2034,4 +2034,36 @@ qmi_indication_nas_system_info_output_get_td_scma_system_info (
 
 #endif /* HAVE_QMI_INDICATION_NAS_SYSTEM_INFO */
 
+#if defined HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS
+
+gboolean
+qmi_message_nas_swi_get_status_output_get_common_info (
+    QmiMessageNasSwiGetStatusOutput *self,
+    guint8 *value_common_info_temperature,
+    QmiNasSwiModemMode *value_common_info_modem_mode,
+    QmiNasSwiSystemMode *value_common_info_system_mode,
+    QmiNasSwiImsRegState *value_common_info_ims_registration_state,
+    QmiNasSwiPsState *value_common_info_packet_service_state,
+    GError **error)
+{
+    gint8 signed_temperature;
+
+    if (!qmi_message_nas_swi_get_status_output_get_common_info_v2 (
+            self,
+            &signed_temperature,
+            value_common_info_modem_mode,
+            value_common_info_system_mode,
+            value_common_info_ims_registration_state,
+            value_common_info_packet_service_state,
+            error))
+      return FALSE;
+
+    if (value_common_info_temperature)
+      memcpy (value_common_info_temperature, &signed_temperature, sizeof (guint8));
+
+    return TRUE;
+}
+
+#endif /* HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS */
+
 #endif /* QMI_DISABLE_DEPRECATED */

@@ -3289,6 +3289,37 @@ gboolean qmi_indication_nas_system_info_output_get_td_scma_system_info (
 
 #endif /* HAVE_QMI_INDICATION_NAS_SYSTEM_INFO */
 
+#if defined HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS
+
+/**
+ * qmi_message_nas_swi_get_status_output_get_common_info:
+ * @self: a #QmiMessageNasSwiGetStatusOutput.
+ * @value_common_info_temperature: (out)(optional): a placeholder for the output #guint8, or %NULL if not required.
+ * @value_common_info_modem_mode: (out)(optional): a placeholder for the output #QmiNasSwiModemMode, or %NULL if not required.
+ * @value_common_info_system_mode: (out)(optional): a placeholder for the output #QmiNasSwiSystemMode, or %NULL if not required.
+ * @value_common_info_ims_registration_state: (out)(optional): a placeholder for the output #QmiNasSwiImsRegState, or %NULL if not required.
+ * @value_common_info_packet_service_state: (out)(optional): a placeholder for the output #QmiNasSwiPsState, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Common Info' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.24
+ * Deprecated: 1.30: Use qmi_message_nas_swi_get_status_output_get_common_info_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_nas_swi_get_status_output_get_common_info_v2)
+gboolean qmi_message_nas_swi_get_status_output_get_common_info (
+    QmiMessageNasSwiGetStatusOutput *self,
+    guint8 *value_common_info_temperature,
+    QmiNasSwiModemMode *value_common_info_modem_mode,
+    QmiNasSwiSystemMode *value_common_info_system_mode,
+    QmiNasSwiImsRegState *value_common_info_ims_registration_state,
+    QmiNasSwiPsState *value_common_info_packet_service_state,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS */
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */

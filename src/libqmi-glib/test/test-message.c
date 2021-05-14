@@ -296,6 +296,24 @@ test_message_parse_string_with_trailing_tab (void)
 
 #endif
 
+#if defined HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS
+
+static void
+test_message_parse_signed_int (void)
+{
+    /* Temperature given as a signed int */
+    const guint8 buffer[] = {
+        0x01, 0x27, 0x00, 0x80, 0x03, 0x05, 0x02, 0x01, 0x00, 0x56, 0x55, 0x1B,
+        0x00, 0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x09, 0x00, 0x08,
+        0x01, 0xFC, 0x0D, 0xFF, 0xFF, 0x02, 0x00, 0x00, 0x01, 0x05, 0x00, 0xFB,
+        0x05, 0x09, 0x00, 0x00
+    };
+
+    test_message_printable_common (buffer, sizeof (buffer), 0x1199, "temperature = '-5'");
+}
+
+#endif
+
 /*****************************************************************************/
 
 static void
@@ -1599,6 +1617,9 @@ int main (int argc, char **argv)
 #endif
 #if defined HAVE_QMI_MESSAGE_DMS_GET_MODEL
     g_test_add_func ("/libqmi-glib/message/parse/string-with-trailing-tab", test_message_parse_string_with_trailing_tab);
+#endif
+#if defined HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS
+    g_test_add_func ("/libqmi-glib/message/parse/signed-int", test_message_parse_signed_int);
 #endif
 
     g_test_add_func ("/libqmi-glib/message/new/request",           test_message_new_request);
