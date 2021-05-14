@@ -1,4 +1,28 @@
 
+Overview of changes in libqmi 1.28.4
+----------------------------------------
+
+ * libqmi-glib:
+   ** Add 'wwan' subsystem support.
+   ** Plug memleak when allocating new links.
+   ** Plug memleak when QmiDevice is opened multiple times.
+   ** Fix build when ARPHRD_RAWIP isn't defined in libc.
+
+ * gir:
+   ** Flag all output TLV readers as optional.
+   ** Add explicit ownership information in the string and struct return
+      annotations.
+
+ * collections:
+   ** basic: added WMS Send ACK
+
+ * qmicli:
+   ** Fix double GError when both 'Extended List' and 'Bandwidth List' are
+      missing in --nas-get-rf-band-info.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.28.2
 ----------------------------------------
 
