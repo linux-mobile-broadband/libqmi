@@ -2066,4 +2066,17 @@ qmi_message_nas_swi_get_status_output_get_common_info (
 
 #endif /* HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS */
 
+#if defined HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE
+
+gboolean
+qmi_message_nas_set_system_selection_preference_input_get_mnc_pds_digit_include_status (
+    QmiMessageNasSetSystemSelectionPreferenceInput *self,
+    gboolean *value_mnc_pds_digit_include_status,
+    GError **error)
+{
+    return qmi_message_nas_set_system_selection_preference_input_get_mnc_pcs_digit_include_status (self, value_mnc_pds_digit_include_status, error);
+}
+
+#endif /* HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE */
+
 #endif /* QMI_DISABLE_DEPRECATED */

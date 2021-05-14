@@ -3320,6 +3320,29 @@ gboolean qmi_message_nas_swi_get_status_output_get_common_info (
 
 #endif /* HAVE_QMI_MESSAGE_NAS_SWI_GET_STATUS */
 
+#if defined HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE
+
+/**
+ * qmi_message_nas_set_system_selection_preference_input_get_mnc_pds_digit_include_status:
+ * @self: a #QmiMessageNasSetSystemSelectionPreferenceInput.
+ * @value_mnc_pds_digit_include_status: (out)(optional): a placeholder for the output #gboolean, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'MNC PDS Digit Include Status' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.30: Use qmi_message_nas_set_system_selection_preference_input_get_mnc_pcs_digit_include_status() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_nas_set_system_selection_preference_input_get_mnc_pcs_digit_include_status)
+gboolean qmi_message_nas_set_system_selection_preference_input_get_mnc_pds_digit_include_status (
+    QmiMessageNasSetSystemSelectionPreferenceInput *self,
+    gboolean *value_mnc_pds_digit_include_status,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE */
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */
