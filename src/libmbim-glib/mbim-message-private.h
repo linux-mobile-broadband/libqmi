@@ -279,7 +279,7 @@ gboolean _mbim_message_read_guint32_array (const MbimMessage  *self,
                                            guint32           **array,
                                            GError            **error);
 gboolean _mbim_message_read_guint64       (const MbimMessage  *self,
-                                           guint64             relative_offset,
+                                           guint32             relative_offset,
                                            guint64            *value,
                                            GError            **error);
 gboolean _mbim_message_read_string        (const MbimMessage  *self,
