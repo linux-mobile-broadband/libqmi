@@ -170,17 +170,17 @@ _mbim_message_read_guint32 (const MbimMessage  *self,
                             guint32            *value,
                             GError            **error)
 {
-    guint32 required_size;
+    guint64 required_size;
     guint32 information_buffer_offset;
 
     g_assert (value);
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    required_size = information_buffer_offset + relative_offset + 4;
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 4;
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read 32bit unsigned integer (4 bytes) (%u < %u)",
+                     "cannot read 32bit unsigned integer (4 bytes) (%u < %" G_GUINT64_FORMAT ")",
                      self->len, required_size);
         return FALSE;
     }
@@ -199,7 +199,7 @@ _mbim_message_read_guint32_array (const MbimMessage  *self,
                                   guint32           **array,
                                   GError            **error)
 {
-    guint32 required_size;
+    guint64 required_size;
     guint   i;
     guint32 information_buffer_offset;
 
@@ -212,11 +212,11 @@ _mbim_message_read_guint32_array (const MbimMessage  *self,
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    required_size = information_buffer_offset + relative_offset_array_start + (4 * array_size);
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)relative_offset_array_start + (4 * (guint64)array_size);
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read 32bit unsigned integer array (%u bytes) (%u < %u)",
-                     (4 * array_size), self->len, required_size);
+                     "cannot read 32bit unsigned integer array (%" G_GUINT64_FORMAT " bytes) (%u < %" G_GUINT64_FORMAT ")",
+                     (4 * (guint64)array_size), self->len, (guint64)required_size);
         return FALSE;
     }
 
@@ -239,17 +239,17 @@ _mbim_message_read_guint64 (const MbimMessage  *self,
                             guint64            *value,
                             GError            **error)
 {
-    guint32 required_size;
-    guint64 information_buffer_offset;
+    guint64 required_size;
+    guint32 information_buffer_offset;
 
     g_assert (value != NULL);
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    required_size = information_buffer_offset + relative_offset + 8;
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 8;
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read 64bit unsigned integer (8 bytes) (%u < %u)",
+                     "cannot read 64bit unsigned integer (8 bytes) (%u < %" G_GUINT64_FORMAT ")",
                      self->len, required_size);
         return FALSE;
     }
@@ -268,7 +268,7 @@ _mbim_message_read_string (const MbimMessage  *self,
                            gchar             **str,
                            GError            **error)
 {
-    guint32               required_size;
+    guint64               required_size;
     guint32               offset;
     guint32               size;
     guint32               information_buffer_offset;
@@ -277,10 +277,10 @@ _mbim_message_read_string (const MbimMessage  *self,
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    required_size = information_buffer_offset + relative_offset + 8;
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 8;
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read string offset and size (%u < %u)",
+                     "cannot read string offset and size (%u < %" G_GUINT64_FORMAT ")",
                      self->len, required_size);
         return FALSE;
     }
@@ -298,10 +298,10 @@ _mbim_message_read_string (const MbimMessage  *self,
         return TRUE;
     }
 
-    required_size = information_buffer_offset + struct_start_offset + offset + size;
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)struct_start_offset + (guint64)offset + (guint64)size;
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read string data (%u bytes) (%u < %u)",
+                     "cannot read string data (%u bytes) (%u < %" G_GUINT64_FORMAT ")",
                      size, self->len, required_size);
         return FALSE;
     }
@@ -394,16 +394,16 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
     /* (a) Offset + Length pair in static buffer, data in variable buffer. */
     if (has_offset && has_length) {
         guint32 offset;
-        guint32 required_size;
+        guint64 required_size;
 
         g_assert (array_size != NULL);
         g_assert (explicit_array_size == 0);
 
         /* requires 8 bytes in relative offset */
-        required_size = information_buffer_offset + relative_offset + 8;
-        if (self->len < required_size) {
+        required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 8;
+        if ((guint64)self->len < required_size) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                         "cannot read byte array offset and size (%u < %u)",
+                         "cannot read byte array offset and size (%u < %" G_GUINT64_FORMAT ")",
                          self->len, required_size);
             return FALSE;
         }
@@ -418,10 +418,10 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
                                            (information_buffer_offset + relative_offset + 4)));
 
         /* requires array_size bytes in offset */
-        required_size = information_buffer_offset + struct_start_offset + offset + *array_size;
-        if (self->len < required_size) {
+        required_size = (guint64)information_buffer_offset + (guint64)struct_start_offset + (guint64)offset + (guint64)(*array_size);
+        if ((guint64)self->len < required_size) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                         "cannot read byte array data (%u bytes) (%u < %u)",
+                         "cannot read byte array data (%u bytes) (%u < %" G_GUINT64_FORMAT ")",
                          *array_size, self->len, required_size);
             return FALSE;
         }
@@ -433,16 +433,16 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
 
     /* (b) Just length in static buffer, data just afterwards. */
     if (!has_offset && has_length) {
-        guint32 required_size;
+        guint64 required_size;
 
         g_assert (array_size != NULL);
         g_assert (explicit_array_size == 0);
 
         /* requires 4 bytes in relative offset */
-        required_size = information_buffer_offset + relative_offset + 4;
-        if (self->len < required_size) {
+        required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 4;
+        if ((guint64)self->len < required_size) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                         "cannot read byte array size (%u < %u)",
+                         "cannot read byte array size (%u < %" G_GUINT64_FORMAT ")",
                          self->len, required_size);
             return FALSE;
         }
@@ -453,10 +453,10 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
                                            (information_buffer_offset + relative_offset)));
 
         /* requires array_size bytes in after the array_size variable */
-        required_size += *array_size;
-        if (self->len < required_size) {
+        required_size += (guint64)(*array_size);
+        if ((guint64)self->len < required_size) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                         "cannot read byte array data (%u bytes) (%u < %u)",
+                         "cannot read byte array data (%u bytes) (%u < %" G_GUINT64_FORMAT ")",
                          *array_size, self->len, required_size);
             return FALSE;
         }
@@ -468,16 +468,16 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
 
     /* (c) Just offset in static buffer, length given in another variable, data in variable buffer. */
     if (has_offset && !has_length) {
-        guint32 required_size;
+        guint64 required_size;
         guint32 offset;
 
         g_assert (array_size == NULL);
 
         /* requires 4 bytes in relative offset */
-        required_size = information_buffer_offset + relative_offset + 4;
-        if (self->len < required_size) {
+        required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 4;
+        if ((guint64)self->len < required_size) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                         "cannot read byte array offset (%u < %u)",
+                         "cannot read byte array offset (%u < %" G_GUINT64_FORMAT ")",
                          self->len, required_size);
             return FALSE;
         }
@@ -488,10 +488,10 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
                                       (information_buffer_offset + relative_offset)));
 
         /* requires explicit_array_size bytes in offset */
-        required_size = information_buffer_offset + struct_start_offset + offset + explicit_array_size;
-        if (self->len < required_size) {
+        required_size = (guint64)information_buffer_offset + (guint64)struct_start_offset + (guint64)offset + (guint64)explicit_array_size;
+        if ((guint64)self->len < required_size) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                         "cannot read byte array data (%u bytes) (%u < %u)",
+                         "cannot read byte array data (%u bytes) (%u < %" G_GUINT64_FORMAT ")",
                          explicit_array_size, self->len, required_size);
             return FALSE;
         }
@@ -510,13 +510,13 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
              * length */
             *array_size = self->len - (information_buffer_offset + relative_offset);
         } else {
-            guint32 required_size;
+            guint64 required_size;
 
             /* requires explicit_array_size bytes in offset */
-            required_size = information_buffer_offset + relative_offset + explicit_array_size;
-            if (self->len < required_size) {
+            required_size = (guint64)information_buffer_offset + (guint64)relative_offset + (guint64)explicit_array_size;
+            if ((guint64)self->len < required_size) {
                 g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                             "cannot read byte array data (%u bytes) (%u < %u)",
+                             "cannot read byte array data (%u bytes) (%u < %" G_GUINT64_FORMAT ")",
                              explicit_array_size, self->len, required_size);
                 return FALSE;
             }
@@ -536,17 +536,17 @@ _mbim_message_read_uuid (const MbimMessage  *self,
                          const MbimUuid    **uuid,
                          GError            **error)
 {
-    guint32 required_size;
+    guint64 required_size;
     guint32 information_buffer_offset;
 
     g_assert (uuid);
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    required_size = information_buffer_offset + relative_offset + 16;
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 16;
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read UUID (16 bytes) (%u < %u)",
+                     "cannot read UUID (16 bytes) (%u < %" G_GUINT64_FORMAT ")",
                      self->len, required_size);
         return FALSE;
     }
@@ -563,7 +563,7 @@ _mbim_message_read_ipv4 (const MbimMessage  *self,
                          const MbimIPv4    **ipv4,
                          GError            **error)
 {
-    guint32 required_size;
+    guint64 required_size;
     guint32 information_buffer_offset;
     guint32 offset;
 
@@ -572,10 +572,10 @@ _mbim_message_read_ipv4 (const MbimMessage  *self,
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
     if (ref) {
-        required_size = information_buffer_offset + relative_offset + 4;
-        if (self->len < required_size) {
+        required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 4;
+        if ((guint64)self->len < required_size) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                         "cannot read IPv4 offset (4 bytes) (%u < %u)",
+                         "cannot read IPv4 offset (4 bytes) (%u < %" G_GUINT64_FORMAT ")",
                          self->len, required_size);
             return FALSE;
         }
@@ -590,10 +590,10 @@ _mbim_message_read_ipv4 (const MbimMessage  *self,
     } else
         offset = relative_offset;
 
-    required_size = information_buffer_offset + offset + 4;
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)offset + 4;
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read IPv4 (4 bytes) (%u < %u)",
+                     "cannot read IPv4 (4 bytes) (%u < %" G_GUINT64_FORMAT ")",
                      self->len, required_size);
         return FALSE;
     }
@@ -610,7 +610,7 @@ _mbim_message_read_ipv4_array (const MbimMessage  *self,
                                MbimIPv4          **array,
                                GError            **error)
 {
-    guint32 required_size;
+    guint64 required_size;
     guint32 offset;
     guint32 i;
     guint32 information_buffer_offset;
@@ -624,10 +624,10 @@ _mbim_message_read_ipv4_array (const MbimMessage  *self,
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    required_size = information_buffer_offset + relative_offset_array_start + 4;
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)relative_offset_array_start + 4;
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read IPv4 array offset (4 bytes) (%u < %u)",
+                     "cannot read IPv4 array offset (4 bytes) (%u < %" G_GUINT64_FORMAT ")",
                      self->len, required_size);
         return FALSE;
     }
@@ -637,11 +637,11 @@ _mbim_message_read_ipv4_array (const MbimMessage  *self,
                                   self->data,
                                   (information_buffer_offset + relative_offset_array_start)));
 
-    required_size = information_buffer_offset + offset + (4 * array_size);
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)offset + (4 * (guint64)array_size);
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read IPv4 array data (%u bytes) (%u < %u)",
-                     (4 * array_size), self->len, required_size);
+                     "cannot read IPv4 array data (%" G_GUINT64_FORMAT " bytes) (%u < %" G_GUINT64_FORMAT ")",
+                     (4 * (guint64)array_size), self->len, required_size);
         return FALSE;
     }
 
@@ -663,7 +663,7 @@ _mbim_message_read_ipv6 (const MbimMessage  *self,
                          const MbimIPv6    **ipv6,
                          GError            **error)
 {
-    guint32 required_size;
+    guint64 required_size;
     guint32 information_buffer_offset;
     guint32 offset;
 
@@ -672,10 +672,10 @@ _mbim_message_read_ipv6 (const MbimMessage  *self,
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
     if (ref) {
-        required_size = information_buffer_offset + relative_offset + 4;
-        if (self->len < required_size) {
+        required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 4;
+        if ((guint64)self->len < required_size) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                         "cannot read IPv6 offset (4 bytes) (%u < %u)",
+                         "cannot read IPv6 offset (4 bytes) (%u < %" G_GUINT64_FORMAT ")",
                          self->len, required_size);
             return FALSE;
         }
@@ -690,10 +690,10 @@ _mbim_message_read_ipv6 (const MbimMessage  *self,
     } else
         offset = relative_offset;
 
-    required_size = information_buffer_offset + offset + 16;
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)offset + 16;
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read IPv6 (16 bytes) (%u < %u)",
+                     "cannot read IPv6 (16 bytes) (%u < %" G_GUINT64_FORMAT ")",
                      self->len, required_size);
         return FALSE;
     }
@@ -710,7 +710,7 @@ _mbim_message_read_ipv6_array (const MbimMessage  *self,
                                MbimIPv6          **array,
                                GError            **error)
 {
-    guint32 required_size;
+    guint64 required_size;
     guint32 offset;
     guint32 i;
     guint32 information_buffer_offset;
@@ -724,10 +724,10 @@ _mbim_message_read_ipv6_array (const MbimMessage  *self,
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
-    required_size = information_buffer_offset + relative_offset_array_start + 4;
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)relative_offset_array_start + 4;
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read IPv6 array offset (4 bytes) (%u < %u)",
+                     "cannot read IPv6 array offset (4 bytes) (%u < %" G_GUINT64_FORMAT ")",
                      self->len, required_size);
         return FALSE;
     }
@@ -737,11 +737,11 @@ _mbim_message_read_ipv6_array (const MbimMessage  *self,
                                   self->data,
                                   (information_buffer_offset + relative_offset_array_start)));
 
-    required_size = information_buffer_offset + offset + (16 * array_size);
-    if (self->len < required_size) {
+    required_size = (guint64)information_buffer_offset + (guint64)offset + (16 * (guint64)array_size);
+    if ((guint64)self->len < required_size) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
-                     "cannot read IPv6 array data (%u bytes) (%u < %u)",
-                     (16 * array_size), self->len, required_size);
+                     "cannot read IPv6 array data (%" G_GUINT64_FORMAT " bytes) (%u < %" G_GUINT64_FORMAT ")",
+                     (16 * (guint64)array_size), self->len, required_size);
         return FALSE;
     }
 
