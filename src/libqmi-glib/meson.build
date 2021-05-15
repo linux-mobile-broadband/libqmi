@@ -92,14 +92,13 @@ sources = files(
   'qmi-utils.c',
 )
 
-deps = [
-  gio_unix_dep,
-  libqmi_glib_generated_dep,
-]
+deps = [libqmi_glib_generated_dep]
+
+private_deps = [gio_unix_dep]
 
 if enable_mbim_qmux
   sources += files('qmi-endpoint-mbim.c')
-  deps += mbim_glib_dep
+  private_deps += mbim_glib_dep
 endif
 
 if enable_qrtr
@@ -116,7 +115,7 @@ libqmi_glib = shared_library(
   version: qmi_glib_version,
   sources: sources + [version_header],
   include_directories: top_inc,
-  dependencies: deps,
+  dependencies: deps + private_deps,
   c_args: common_c_flags + ['-DLIBEXEC_PATH="@0@"'.format(join_paths(qmi_prefix, qmi_libexecdir))],
   link_whole: libqmi_glib_compat,
   install: true,
@@ -125,7 +124,7 @@ libqmi_glib = shared_library(
 libqmi_glib_dep = declare_dependency(
   sources: [gen_headers, version_header],
   include_directories: [libqmi_glib_inc, generated_inc],
-  dependencies: glib_deps,
+  dependencies: deps,
   link_with: libqmi_glib,
 )
 

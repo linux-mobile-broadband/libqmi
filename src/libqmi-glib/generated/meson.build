@@ -227,11 +227,17 @@ c_flags = [
   '-Wno-unused-function',
 ]
 
+deps = [glib_deps]
+
+if enable_qrtr
+  deps += qrtr_glib_dep
+endif
+
 libqmi_glib_generated = static_library(
   'qmi-glib-generated',
   sources: gen_sources + gen_headers,
   include_directories: incs,
-  dependencies: glib_deps,
+  dependencies: deps,
   c_args: c_flags,
 )
 
