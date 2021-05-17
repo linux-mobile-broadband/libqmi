@@ -181,16 +181,18 @@ endif
 config_h.set('QMI_USERNAME_ENABLED', enable_qmi_username)
 
 # MBIM QMUX service support
-enable_mbim_qmux = get_option('mbim_qmux')
-if enable_mbim_qmux
-  mbim_glib_dep = dependency('mbim-glib', version: '>= 1.18.0')
+enable_mbim_qmux = false
+if get_option('mbim_qmux')
+  mbim_glib_dep = dependency('mbim-glib', version: '>= 1.18.0', required: false)
+  enable_mbim_qmux = mbim_glib_dep.found()
 endif
 config_h.set('MBIM_QMUX_ENABLED', enable_mbim_qmux)
 
 # QRTR support
-enable_qrtr = get_option('qrtr')
-if enable_qrtr
-  qrtr_glib_dep = dependency('qrtr-glib', version: '>= 1.0.0')
+enable_qrtr = false
+if get_option('qrtr')
+  qrtr_glib_dep = dependency('qrtr-glib', version: '>= 1.0.0', required: false)
+  enable_qrtr = qrtr_glib_dep.found()
 endif
 config_h.set10('QMI_QRTR_SUPPORTED', enable_qrtr)
 
