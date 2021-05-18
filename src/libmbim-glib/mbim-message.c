@@ -92,18 +92,18 @@ set_error_from_status (GError          **error,
 GType
 mbim_message_get_type (void)
 {
-    static volatile gsize g_define_type_id__volatile = 0;
+    static gsize g_define_type_id_initialized = 0;
 
-    if (g_once_init_enter (&g_define_type_id__volatile)) {
+    if (g_once_init_enter (&g_define_type_id_initialized)) {
         GType g_define_type_id =
             g_boxed_type_register_static (g_intern_static_string ("MbimMessage"),
                                           (GBoxedCopyFunc) mbim_message_ref,
                                           (GBoxedFreeFunc) mbim_message_unref);
 
-        g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+        g_once_init_leave (&g_define_type_id_initialized, g_define_type_id);
     }
 
-    return g_define_type_id__volatile;
+    return g_define_type_id_initialized;
 }
 
 /*****************************************************************************/
