@@ -1,9 +1,9 @@
 [
-  // *********************************************************************************
+  // ************************************************************************
   { "type" : "Service",
     "name" : "MS UICC Low Level Access" },
 
-// *********************************************************************************
+  // ************************************************************************
   { "name"     : "ATR",
     "service"  : "MS UICC Low Level Access",
     "type"     : "Command",
@@ -12,7 +12,7 @@
     "response" : [ { "name"   : "atr",
                      "format" : "string" } ] },
 
-  // *********************************************************************************
+  // ************************************************************************
   { "name"     : "Open Channel",
     "service"  : "MS UICC Low Level Access",
     "type"     : "Command",
@@ -30,7 +30,7 @@
                    { "name"   : "Response",
                      "format" : "uicc-ref-byte-array" } ] },
 
-  // *********************************************************************************
+  // ************************************************************************
   { "name"     : "Close Channel",
     "service"  : "MS UICC Low Level Access",
     "type"     : "Command",
@@ -42,7 +42,7 @@
     "response" : [ { "name"   : "Status",
                      "format" : "guint32" } ] },
 
-  // *********************************************************************************
+  // ************************************************************************
   { "name"     : "APDU",
     "service"  : "MS UICC Low Level Access",
     "type"     : "Command",
@@ -60,5 +60,31 @@
     "response" : [ { "name"   : "Status",
                      "format" : "guint32" },
                    { "name"   : "Response",
-                     "format" : "uicc-ref-byte-array" } ] }
+                     "format" : "uicc-ref-byte-array" } ] },
+
+  // ************************************************************************
+
+  { "name"     : "MbimTerminalCapabilityInfo",
+    "type"     : "Struct",
+    "since"    : "1.26",
+    "contents" : [ { "name"   : "TerminalCapabilityData",
+                     "format" : "unsized-byte-array" } ] },
+
+  { "name"     : "Terminal Capability",
+    "service"  : "MS UICC Low Level Access",
+    "type"     : "Command",
+    "since"    : "1.26",
+    "set"      : [ { "name"   : "TerminalCapabilityCount",
+                     "format" : "guint32" },
+                   { "name"             : "TerminalCapability",
+                     "format"           : "ref-struct-array" ,
+                     "struct-type"      : "MbimTerminalCapabilityInfo",
+                     "array-size-field" : "TerminalCapabilityCount" } ],
+    "query"    : [],
+    "response" : [ { "name"   : "TerminalCapabilityCount",
+                     "format" : "guint32" },
+                   { "name"             : "TerminalCapability",
+                     "format"           : "ref-struct-array" ,
+                     "struct-type"      : "MbimTerminalCapabilityInfo",
+                     "array-size-field" : "TerminalCapabilityCount" } ] }
 ]
