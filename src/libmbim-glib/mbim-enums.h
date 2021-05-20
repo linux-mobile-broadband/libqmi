@@ -1432,6 +1432,37 @@ typedef enum { /*< since=1.26 >*/
     MBIM_UICC_CLASS_BYTE_TYPE_EXTENDED         = 1,
 } MbimUiccClassByteType;
 
+/* 'UICC Reset' enums */
+
+/**
+ * MbimUiccPassThroughAction:
+ * @MBIM_UICC_PASS_THROUGH_ACTION_DISABLE: Disable pass through.
+ * @MBIM_UICC_PASS_THROUGH_ACTION_ENABLE: Enable pass through.
+ *
+ * Pass through actions host can specify to modem. Upon reset
+ * treats UICC as if pass through or as a regular UICC
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_UICC_PASS_THROUGH_ACTION_DISABLE     = 0,
+    MBIM_UICC_PASS_THROUGH_ACTION_ENABLE      = 1,
+} MbimUiccPassThroughAction;
+
+/**
+ * MbimUiccPassThroughStatus:
+ * @MBIM_UICC_PASS_THROUGH_STATUS_DISABLED: Pass through disabled.
+ * @MBIM_UICC_PASS_THROUGH_STATUS_ENABLED: Pass through enabled.
+ *
+ * Pass through status of the modem specifies to the host.
+ *
+ * Since: 1.26
+ */
+typedef enum { /*< since=1.26 >*/
+    MBIM_UICC_PASS_THROUGH_STATUS_DISABLED   = 0,
+    MBIM_UICC_PASS_THROUGH_STATUS_ENABLED    = 1,
+} MbimUiccPassThroughStatus;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

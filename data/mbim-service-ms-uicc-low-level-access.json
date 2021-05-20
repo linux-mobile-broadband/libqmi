@@ -86,5 +86,19 @@
                    { "name"             : "TerminalCapability",
                      "format"           : "ref-struct-array" ,
                      "struct-type"      : "MbimTerminalCapabilityInfo",
-                     "array-size-field" : "TerminalCapabilityCount" } ] }
+                     "array-size-field" : "TerminalCapabilityCount" } ] },
+
+  // *********************************************************************************
+  { "name"     : "Reset",
+    "service"  : "MS UICC Low Level Access",
+    "type"     : "Command",
+    "since"    : "1.26",
+    "set"      : [ { "name"          : "PassThroughAction",
+                     "format"        : "guint32",
+                     "public-format" : "MbimUiccPassThroughAction" } ],
+    "query"    : [],
+    "response" : [ { "name"          : "PassThroughStatus",
+                     "format"        : "guint32",
+                     "public-format" : "MbimUiccPassThroughStatus" } ] }
+
 ]
