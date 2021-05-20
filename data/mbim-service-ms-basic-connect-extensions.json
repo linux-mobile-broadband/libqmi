@@ -128,5 +128,21 @@
                          "public-format" : "MbimCompression" },
                        { "name"          : "AuthProtocol",
                          "format"        : "guint32",
-                         "public-format" : "MbimAuthProtocol" } ] }
+                         "public-format" : "MbimAuthProtocol" } ] },
+                         
+  //**********************************************************************************
+  
+  { "name"     : "Sys Caps",
+    "service"  : "Ms Basic Connect Extensions",
+    "type"     : "Command",
+    "since"    : "1.26",
+    "query"    : [],
+    "response" : [ { "name"   : "NumberOfExecutors",
+                     "format" : "guint32" },
+                   { "name"   : "NumberOfSlots",
+                     "format" : "guint32" },
+                   { "name"   : "Concurrency",
+                     "format" : "guint32" },
+                   { "name"   : "ModemId",
+                     "format" : "guint64" } ] }
 ]

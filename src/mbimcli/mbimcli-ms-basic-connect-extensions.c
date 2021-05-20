@@ -47,6 +47,7 @@ static gchar    *query_pco_str;
 static gboolean  query_lte_attach_configuration_flag;
 static gboolean  query_lte_attach_status_flag; /* support for the deprecated name */
 static gboolean  query_lte_attach_info_flag;
+static gboolean  query_sys_caps_flag;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -68,6 +69,10 @@ static GOptionEntry entries[] = {
     },
     { "ms-query-lte-attach-info", 0, 0, G_OPTION_ARG_NONE, &query_lte_attach_info_flag,
       "Query LTE attach status information",
+      NULL
+    },
+    { "ms-query-sys-caps", 0, 0, G_OPTION_ARG_NONE, &query_sys_caps_flag,
+      "Query system capabilities",
       NULL
     },
     { NULL }
@@ -313,6 +318,53 @@ query_lte_attach_info_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+query_sys_caps_ready (MbimDevice   *device,
+                      GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    guint32                 number_executors;
+    guint32                 number_slots;
+    guint32                 concurrency;
+    guint64                 modem_id;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully queried sys caps\n",
+             mbim_device_get_path_display (device));
+
+    if (!mbim_message_ms_basic_connect_extensions_sys_caps_response_parse (
+            response,
+            &number_executors,
+            &number_slots,
+            &concurrency,
+            &modem_id,
+            &error)) {
+        g_printerr ("error: couldn't parse response messages: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] System capabilities retrieved:\n"
+             "\t Number of executors: '%u'\n"
+             "\t     Number of slots: '%u'\n"
+             "\t         Concurrency: '%u'\n"
+             "\t            Modem ID: '%" G_GUINT64_FORMAT "'\n",
+             mbim_device_get_path_display (device),
+             number_executors,
+             number_slots,
+             concurrency,
+             modem_id);
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -372,6 +424,18 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_lte_attach_info_ready,
+                             NULL);
+        return;
+    }
+
+    if (query_sys_caps_flag) {
+        g_debug ("Asynchronously querying system capabilities...");
+        request = mbim_message_ms_basic_connect_extensions_sys_caps_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_sys_caps_ready,
                              NULL);
         return;
     }
