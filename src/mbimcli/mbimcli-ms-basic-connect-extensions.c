@@ -145,7 +145,8 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
 
     n_actions = (!!query_pco_str +
                  query_lte_attach_configuration_flag +
-                 (query_lte_attach_status_flag || query_lte_attach_info_flag));
+                 (query_lte_attach_status_flag || query_lte_attach_info_flag) +
+                 query_sys_caps_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
