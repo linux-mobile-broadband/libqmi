@@ -163,5 +163,32 @@
                          "format"        : "guint32" },
                        { "name"          : "State",
                          "format"        : "guint32",
-                         "public-format" : "MbimUiccSlotState" } ] }
+                         "public-format" : "MbimUiccSlotState" } ] },
+
+//************************************************************************************
+
+  { "name"     : "MbimSlot",
+    "type"     : "Struct",
+    "since"    : "1.26",
+    "contents" : [ { "name"   : "Slot",
+                     "format" : "guint32" } ] },
+
+  { "name"     : "Device Slot Mappings",
+    "service"  : "Ms Basic Connect Extensions",
+    "type"     : "Command",
+    "since"    : "1.26",
+    "set"      : [ { "name"             : "MapCount",
+                     "format"           : "guint32" },
+                   { "name"             : "SlotMap",
+                     "format"           : "ref-struct-array",
+                     "struct-type"      : "MbimSlot",
+                     "array-size-field" : "MapCount" } ],
+    "query"    : [],
+    "response" : [ { "name"             : "MapCount",
+                     "format"           : "guint32" },
+                   { "name"             : "SlotMap",
+                     "format"           : "ref-struct-array",
+                     "struct-type"      : "MbimSlot",
+                     "array-size-field" : "MapCount" } ] }
+
 ]

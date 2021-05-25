@@ -49,6 +49,8 @@ static gboolean  query_lte_attach_status_flag; /* support for the deprecated nam
 static gboolean  query_lte_attach_info_flag;
 static gboolean  query_sys_caps_flag;
 static gchar    *query_slot_info_status_str;
+static gboolean  query_device_slot_mappings_flag;
+static gchar    *set_device_slot_mappings_str;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -80,6 +82,16 @@ static GOptionEntry entries[] = {
       "Query slot information status",
       "[SlotIndex]"
     },
+    { "ms-set-device-slot-mappings", 0, 0, G_OPTION_ARG_STRING, &set_device_slot_mappings_str,
+      "Set device slot mappings for each executor",
+      "[(SlotIndex)[,(SlotIndex)[,...]]]"
+
+    },
+    { "ms-query-device-slot-mappings", 0, 0, G_OPTION_ARG_NONE, &query_device_slot_mappings_flag,
+      "Query device slot mappings",
+      NULL
+    },
+
     { NULL }
 };
 
@@ -152,7 +164,9 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  query_lte_attach_configuration_flag +
                  (query_lte_attach_status_flag || query_lte_attach_info_flag) +
                  query_sys_caps_flag +
-                 !!query_slot_info_status_str);
+                 !!query_slot_info_status_str +
+                 !!set_device_slot_mappings_str +
+                 query_device_slot_mappings_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -443,6 +457,95 @@ query_slot_information_status_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static gboolean
+set_device_slot_mappings_input_parse (const gchar *str,
+                                      GPtrArray   **slot_array,
+                                      GError      **error)
+{
+    g_auto(GStrv) split = NULL;
+    gchar        *endptr = NULL;
+    gint64        n;
+    MbimSlot     *slot_index;
+    guint32       i = 0;
+
+    g_assert (slot_array != NULL);
+
+    split = g_strsplit (str, ",", 0);
+
+    if (g_strv_length (split) < 1) {
+        g_set_error (error,
+                     MBIM_CORE_ERROR,
+                     MBIM_CORE_ERROR_FAILED,
+                     "missing arguments");
+        return FALSE;
+    }
+
+    *slot_array = g_ptr_array_new_with_free_func (g_free);
+
+    while (split[i] != NULL) {
+        errno = 0;
+        n = g_ascii_strtoll (split[i], &endptr, 10);
+        if (errno || n < 0 || n > G_MAXUINT32 || ((size_t)(endptr - split[i]) < strlen (split[i]))) {
+            g_set_error (error,
+                         MBIM_CORE_ERROR,
+                         MBIM_CORE_ERROR_FAILED,
+                         "couldn't parse device slot index '%s'",
+                         split[i]);
+            return FALSE;
+        }
+        slot_index = g_new (MbimSlot, 1);
+        slot_index->slot = (guint32) n;
+        g_ptr_array_add (*slot_array, slot_index);
+        i++;
+    }
+
+    return TRUE;
+}
+
+static void
+query_device_slot_mappings_ready (MbimDevice   *device,
+                                  GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)   response = NULL;
+    g_autoptr(GError)        error = NULL;
+    guint32                  map_count = 0;
+    g_autoptr(MbimSlotArray) slot_mappings = NULL;
+    guint                    i;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_basic_connect_extensions_device_slot_mappings_response_parse (
+            response,
+            &map_count,
+            &slot_mappings,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (set_device_slot_mappings_str) {
+        g_print ("[%s] Updated slot mappings retrieved:\n",
+                 mbim_device_get_path_display (device));
+    } else {
+         g_print ("[%s] Slot mappings retrieved:\n",
+                  mbim_device_get_path_display (device));
+    }
+
+    for (i = 0; i < map_count; i++) {
+        g_print ("\t Executor '%u': slot '%u'\n",
+                 i,
+                 slot_mappings[i]->slot);
+    }
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -535,6 +638,42 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_slot_information_status_ready,
+                             NULL);
+        return;
+    }
+
+    /*Request to set device slot mappings */
+    if (set_device_slot_mappings_str) {
+        g_autoptr(GPtrArray) slot_array = NULL;
+
+        g_print ("Asynchronously set device slot mappings\n");
+        if (!set_device_slot_mappings_input_parse (set_device_slot_mappings_str, &slot_array, &error)) {
+            g_printerr ("error: couldn't parse setting argument: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_ms_basic_connect_extensions_device_slot_mappings_set_new (slot_array->len,
+                                                                                         (const MbimSlot **)slot_array->pdata,
+                                                                                         NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_device_slot_mappings_ready,
+                             NULL);
+        return;
+    }
+
+    /*Request to query device slot mappings? */
+    if (query_device_slot_mappings_flag) {
+        g_debug ("Asynchronously querying device slot mappings...");
+        request = mbim_message_ms_basic_connect_extensions_device_slot_mappings_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_device_slot_mappings_ready,
                              NULL);
         return;
     }
