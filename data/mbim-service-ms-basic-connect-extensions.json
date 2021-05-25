@@ -144,5 +144,24 @@
                    { "name"   : "Concurrency",
                      "format" : "guint32" },
                    { "name"   : "ModemId",
-                     "format" : "guint64" } ] }
+                     "format" : "guint64" } ] },
+
+  //**********************************************************************************
+  
+  { "name"         : "Slot Info Status",
+    "service"      : "Ms Basic Connect Extensions",
+    "type"         : "Command",
+    "since"        : "1.26",
+    "query"        : [ { "name"          : "SlotIndex",
+                         "format"        : "guint32" } ],
+    "response"     : [ { "name"          : "SlotIndex",
+                         "format"        : "guint32" },
+                       { "name"          : "State",
+                         "format"        : "guint32",
+                         "public-format" : "MbimUiccSlotState" } ],
+    "notification" : [ { "name"          : "SlotIndex",
+                         "format"        : "guint32" },
+                       { "name"          : "State",
+                         "format"        : "guint32",
+                         "public-format" : "MbimUiccSlotState" } ] }
 ]

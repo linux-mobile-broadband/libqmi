@@ -354,6 +354,7 @@ MbimSarControlMode
 MbimSarWifiHardwareState
 MbimTransmissionNotificationStatus
 MbimTransmissionState
+MbimUiccSlotState
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -420,6 +421,7 @@ mbim_qdu_session_action_get_string
 mbim_qdu_session_result_get_string
 mbim_qdu_session_status_get_string
 mbim_qdu_session_type_get_string
+mbim_uicc_slot_state_get_string
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -488,6 +490,7 @@ mbim_qdu_session_action_build_string_from_mask
 mbim_qdu_session_result_build_string_from_mask
 mbim_qdu_session_status_build_string_from_mask
 mbim_qdu_session_type_build_string_from_mask
+mbim_uicc_slot_state_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -559,6 +562,7 @@ MBIM_TYPE_QDU_SESSION_ACTION
 MBIM_TYPE_QDU_SESSION_RESULT
 MBIM_TYPE_QDU_SESSION_STATUS
 MBIM_TYPE_QDU_SESSION_TYPE
+MBIM_TYPE_UICC_SLOT_STATE
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type
@@ -629,6 +633,7 @@ mbim_qdu_session_action_get_type
 mbim_qdu_session_result_get_type
 mbim_qdu_session_status_get_type
 mbim_qdu_session_type_get_type
+mbim_uicc_slot_state_get_type
 </SECTION>
 
 <SECTION>

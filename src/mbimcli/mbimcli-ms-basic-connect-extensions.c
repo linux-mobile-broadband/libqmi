@@ -48,6 +48,7 @@ static gboolean  query_lte_attach_configuration_flag;
 static gboolean  query_lte_attach_status_flag; /* support for the deprecated name */
 static gboolean  query_lte_attach_info_flag;
 static gboolean  query_sys_caps_flag;
+static gchar    *query_slot_info_status_str;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -74,6 +75,10 @@ static GOptionEntry entries[] = {
     { "ms-query-sys-caps", 0, 0, G_OPTION_ARG_NONE, &query_sys_caps_flag,
       "Query system capabilities",
       NULL
+    },
+    { "ms-query-slot-info-status", 0, 0, G_OPTION_ARG_STRING, &query_slot_info_status_str,
+      "Query slot information status",
+      "[SlotIndex]"
     },
     { NULL }
 };
@@ -146,7 +151,8 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
     n_actions = (!!query_pco_str +
                  query_lte_attach_configuration_flag +
                  (query_lte_attach_status_flag || query_lte_attach_info_flag) +
-                 query_sys_caps_flag);
+                 query_sys_caps_flag +
+                 !!query_slot_info_status_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -366,6 +372,77 @@ query_sys_caps_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static gboolean
+query_slot_information_status_slot_index_parse (const gchar *str,
+                                                guint32     *slot_index,
+                                                GError      **error)
+{
+    gchar *endptr = NULL;
+    gint64 n;
+
+    g_assert (str != NULL);
+    g_assert (slot_index != NULL);
+
+    if (!str[0]) {
+        g_set_error (error,
+                     MBIM_CORE_ERROR,
+                     MBIM_CORE_ERROR_FAILED,
+                     "slot index not given");
+        return FALSE;
+    }
+
+    errno = 0;
+    n = g_ascii_strtoll (str, &endptr, 10);
+    if (errno || ((size_t)(endptr - str) < strlen (str))) {
+        g_set_error (error,
+                     MBIM_CORE_ERROR,
+                     MBIM_CORE_ERROR_FAILED,
+                     "couldn't parse slot index '%s'",
+                     str);
+        return FALSE;
+    }
+    *slot_index = (guint32) n;
+
+    return TRUE;
+}
+
+static void
+query_slot_information_status_ready (MbimDevice   *device,
+                                     GAsyncResult *res)
+{
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
+    guint32                slot_index;
+    MbimUiccSlotState      slot_state;
+    const gchar           *slot_state_str;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_basic_connect_extensions_slot_info_status_response_parse (
+                response,
+                &slot_index,
+                &slot_state,
+                &error)) {
+        g_printerr ("error: conldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    slot_state_str = mbim_uicc_slot_state_get_string (slot_state);
+
+    g_print ("[%s] Slot info status retrieved:\n"
+             "\t        Slot '%u': '%s'\n",
+             mbim_device_get_path_display (device),
+             slot_index,
+             VALIDATE_UNKNOWN (slot_state_str));
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -437,6 +514,27 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_sys_caps_ready,
+                             NULL);
+        return;
+    }
+
+    /*Request to query slot information status? */
+    if (query_slot_info_status_str) {
+        guint32 slot_index;
+
+        if (!query_slot_information_status_slot_index_parse (query_slot_info_status_str, &slot_index, &error)) {
+            g_printerr ("error: couldn't parse slot index: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously querying slot information status...");
+        request = mbim_message_ms_basic_connect_extensions_slot_info_status_query_new (slot_index, NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_slot_information_status_ready,
                              NULL);
         return;
     }
