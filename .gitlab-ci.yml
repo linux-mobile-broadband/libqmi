@@ -92,10 +92,24 @@ build-autotools-default:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
     - merge_requests
-    - tags
     - schedules
+  script:
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection
+    - make
+    - make check
+    - make install
+    - make distcheck
+
+build-autotools-default-artifacts:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - tags
   script:
     - NOCONFIGURE=1 ./autogen.sh
     - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection
