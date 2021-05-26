@@ -208,9 +208,7 @@ build-autotools-default:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
     - merge_requests
-    - tags
     - schedules
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
@@ -233,6 +231,17 @@ build-autotools-default:
     - make check
     - make install
     - make distcheck
+
+build-autotools-default-artifacts:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - tags
+  script:
+    - !reference [build-autotools-default, script]
     - sha256sum $CI_PROJECT_NAME-*.tar.xz | awk '{print $1;}' > pkg_hash.txt
   artifacts:
     name: "$CI_PROJECT_NAME-$CI_COMMIT_TAG"
