@@ -111,12 +111,7 @@ build-autotools-default-artifacts:
     - master
     - tags
   script:
-    - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection
-    - make
-    - make check
-    - make install
-    - make distcheck
+    - !reference [build-autotools-default, script]
     - sha256sum $CI_PROJECT_NAME-*.tar.xz | awk '{print $1;}' > pkg_hash.txt
   artifacts:
     name: "$CI_PROJECT_NAME-$CI_COMMIT_TAG"
