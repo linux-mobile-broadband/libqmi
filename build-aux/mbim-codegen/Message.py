@@ -49,6 +49,8 @@ def validate_fields(fields):
             pass
         elif field['format'] == 'ref-byte-array':
             pass
+        elif field['format'] == 'uicc-ref-byte-array':
+            pass
         elif field['format'] == 'ref-byte-array-no-offset':
             pass
         elif field['format'] == 'unsized-byte-array':
@@ -230,6 +232,7 @@ class Message:
                 inner_template = (' * @${field}: (in)(element-type guint8)(array fixed-size=${array_size}): the \'${name}\' field, given as an array of ${array_size} #guint8 values.\n')
             elif field['format'] == 'unsized-byte-array' or \
                  field['format'] == 'ref-byte-array' or \
+                 field['format'] == 'uicc-ref-byte-array' or \
                  field['format'] == 'ref-byte-array-no-offset':
                 inner_template = (' * @${field}_size: (in): size of the ${field} array.\n'
                                   ' * @${field}: (in)(element-type guint8)(array length=${field}_size): the \'${name}\' field, given as an array of #guint8 values.\n')
@@ -285,6 +288,7 @@ class Message:
                 inner_template = ('    const guint8 *${field},\n')
             elif field['format'] == 'unsized-byte-array' or \
                  field['format'] == 'ref-byte-array' or \
+                 field['format'] == 'uicc-ref-byte-array' or \
                  field['format'] == 'ref-byte-array-no-offset':
                 inner_template = ('    const guint32 ${field}_size,\n'
                                   '    const guint8 *${field},\n')
@@ -339,6 +343,7 @@ class Message:
                 inner_template = ('    const guint8 *${field},\n')
             elif field['format'] == 'unsized-byte-array' or \
                  field['format'] == 'ref-byte-array' or \
+                 field['format'] == 'uicc-ref-byte-array' or \
                  field['format'] == 'ref-byte-array-no-offset':
                 inner_template = ('    const guint32 ${field}_size,\n'
                                   '    const guint8 *${field},\n')
@@ -403,13 +408,15 @@ class Message:
                 inner_template += ('    {\n')
 
             if field['format'] == 'byte-array':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, FALSE, ${pad_array}, ${field}, ${array_size});\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, FALSE, ${pad_array}, ${field}, ${array_size}, FALSE);\n')
             elif field['format'] == 'unsized-byte-array':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, FALSE, ${pad_array}, ${field}, ${field}_size);\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, FALSE, ${pad_array}, ${field}, ${field}_size, FALSE);\n')
             elif field['format'] == 'ref-byte-array':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, TRUE, TRUE, ${pad_array}, ${field}, ${field}_size);\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, TRUE, TRUE, ${pad_array}, ${field}, ${field}_size, FALSE);\n')
+            elif field['format'] == 'uicc-ref-byte-array':
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, TRUE, TRUE, ${pad_array}, ${field}, ${field}_size, TRUE);\n')
             elif field['format'] == 'ref-byte-array-no-offset':
-                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, TRUE, ${pad_array}, ${field}, ${field}_size);\n')
+                inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, TRUE, ${pad_array}, ${field}, ${field}_size, FALSE);\n')
             elif field['format'] == 'uuid':
                 inner_template += ('        _mbim_message_command_builder_append_uuid (builder, ${field});\n')
             elif field['format'] == 'guint32':
@@ -481,7 +488,7 @@ class Message:
             inner_template = ''
             if field['format'] == 'byte-array':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none)(element-type guint8)(array fixed-size=${array_size}): return location for an array of ${array_size} #guint8 values. Do not free the returned value, it is owned by @message.\n')
-            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
+            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array' or field['format'] == 'uicc-ref-byte-array':
                 inner_template = (' * @out_${field}_size: (out)(optional): return location for the size of the ${field} array.\n'
                                   ' * @out_${field}: (out)(optional)(transfer none)(element-type guint8)(array length=out_${field}_size): return location for an array of #guint8 values. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'uuid':
@@ -535,7 +542,7 @@ class Message:
             inner_template = ''
             if field['format'] == 'byte-array':
                 inner_template = ('    const guint8 **out_${field},\n')
-            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
+            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array' or field['format'] == 'uicc-ref-byte-array':
                 inner_template = ('    guint32 *out_${field}_size,\n'
                                   '    const guint8 **out_${field},\n')
             elif field['format'] == 'uuid':
@@ -589,7 +596,7 @@ class Message:
             inner_template = ''
             if field['format'] == 'byte-array':
                 inner_template = ('    const guint8 **out_${field},\n')
-            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array':
+            elif field['format'] == 'unsized-byte-array' or field['format'] == 'ref-byte-array' or field['format'] == 'uicc-ref-byte-array':
                 inner_template = ('    guint32 *out_${field}_size,\n'
                                   '    const guint8 **out_${field},\n')
             elif field['format'] == 'uuid':
@@ -733,7 +740,8 @@ class Message:
                         '        if (out_${field})\n'
                         '            *out_${field} = NULL;\n')
                 elif field['format'] == 'unsized-byte-array' or \
-                   field['format'] == 'ref-byte-array':
+                   field['format'] == 'ref-byte-array' or \
+                   field['format'] == 'uicc-ref-byte-array':
                     inner_template += (
                         '        if (out_${field}_size)\n'
                         '            *out_${field}_size = 0;\n'
@@ -773,7 +781,7 @@ class Message:
                 inner_template += (
                     '        const guint8 *tmp;\n'
                     '\n'
-                    '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, ${array_size}, &tmp, NULL, error))\n'
+                    '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, ${array_size}, &tmp, NULL, error, FALSE))\n'
                     '            goto out;\n'
                     '        if (out_${field} != NULL)\n'
                     '            *out_${field} = tmp;\n'
@@ -783,7 +791,7 @@ class Message:
                     '        const guint8 *tmp;\n'
                     '        guint32 tmpsize;\n'
                     '\n'
-                    '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, 0, &tmp, &tmpsize, error))\n'
+                    '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, 0, &tmp, &tmpsize, error, FALSE))\n'
                     '            goto out;\n'
                     '        if (out_${field} != NULL)\n'
                     '            *out_${field} = tmp;\n'
@@ -795,7 +803,19 @@ class Message:
                     '        const guint8 *tmp;\n'
                     '        guint32 tmpsize;\n'
                     '\n'
-                    '        if (!_mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, 0, &tmp, &tmpsize, error))\n'
+                    '        if (!_mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, 0, &tmp, &tmpsize, error, FALSE))\n'
+                    '            goto out;\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            *out_${field} = tmp;\n'
+                    '        if (out_${field}_size != NULL)\n'
+                    '            *out_${field}_size = tmpsize;\n'
+                    '        offset += 8;\n')
+            elif field['format'] == 'uicc-ref-byte-array':
+                inner_template += (
+                    '        const guint8 *tmp;\n'
+                    '        guint32 tmpsize;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, 0, &tmp, &tmpsize, error, TRUE))\n'
                     '            goto out;\n'
                     '        if (out_${field} != NULL)\n'
                     '            *out_${field} = tmp;\n'
@@ -1051,6 +1071,7 @@ class Message:
             elif field['format'] == 'byte-array' or \
                  field['format'] == 'unsized-byte-array' or \
                  field['format'] == 'ref-byte-array' or \
+                 field['format'] == 'uicc-ref-byte-array' or \
                  field['format'] == 'ref-byte-array-no-offset':
                 inner_template += (
                     '        guint i;\n'
@@ -1059,25 +1080,31 @@ class Message:
                     '\n')
                 if field['format'] == 'byte-array':
                     inner_template += (
-                        '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, ${array_size}, &tmp, NULL, &inner_error))\n'
+                        '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, ${array_size}, &tmp, NULL, &inner_error, FALSE))\n'
                         '            goto out;\n'
                         '        tmpsize = ${array_size};\n'
                         '        offset += ${array_size};\n')
                 elif field['format'] == 'unsized-byte-array':
                     inner_template += (
-                        '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, 0, &tmp, &tmpsize, &inner_error))\n'
+                        '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, FALSE, 0, &tmp, &tmpsize, &inner_error, FALSE))\n'
                         '            goto out;\n'
                         '        offset += tmpsize;\n')
 
                 elif field['format'] == 'ref-byte-array':
                     inner_template += (
-                        '        if (!_mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, 0, &tmp, &tmpsize, &inner_error))\n'
+                        '        if (!_mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, 0, &tmp, &tmpsize, &inner_error, FALSE))\n'
+                        '            goto out;\n'
+                        '        offset += 8;\n')
+
+                elif field['format'] == 'uicc-ref-byte-array':
+                    inner_template += (
+                        '        if (!_mbim_message_read_byte_array (message, 0, offset, TRUE, TRUE, 0, &tmp, &tmpsize, &inner_error, TRUE))\n'
                         '            goto out;\n'
                         '        offset += 8;\n')
 
                 elif field['format'] == 'ref-byte-array-no-offset':
                     inner_template += (
-                        '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, TRUE, 0, &tmp, &tmpsize, &inner_error))\n'
+                        '        if (!_mbim_message_read_byte_array (message, 0, offset, FALSE, TRUE, 0, &tmp, &tmpsize, &inner_error, FALSE))\n'
                         '            goto out;\n'
                         '        offset += 4;\n')
 

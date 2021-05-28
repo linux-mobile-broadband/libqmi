@@ -179,7 +179,8 @@ void               _mbim_struct_builder_append_byte_array    (MbimStructBuilder 
                                                               gboolean           with_length,
                                                               gboolean           pad_buffer,
                                                               const guint8      *buffer,
-                                                              guint32            buffer_len);
+                                                              guint32            buffer_len,
+                                                              gboolean           swapped_offset_length);
 void               _mbim_struct_builder_append_uuid          (MbimStructBuilder *builder,
                                                               const MbimUuid    *value);
 void               _mbim_struct_builder_append_guint32       (MbimStructBuilder *builder,
@@ -225,7 +226,8 @@ void                       _mbim_message_command_builder_append_byte_array    (M
                                                                                gboolean                   with_length,
                                                                                gboolean                   pad_buffer,
                                                                                const guint8              *buffer,
-                                                                               guint32                    buffer_len);
+                                                                               guint32                    buffer_len,
+                                                                               gboolean                   swapped_offset_length);
 void                       _mbim_message_command_builder_append_uuid          (MbimMessageCommandBuilder *builder,
                                                                                const MbimUuid            *value);
 void                       _mbim_message_command_builder_append_guint32       (MbimMessageCommandBuilder *builder,
@@ -264,7 +266,8 @@ gboolean _mbim_message_read_byte_array    (const MbimMessage  *self,
                                            guint32             explicit_array_size,
                                            const guint8      **array,
                                            guint32            *array_size,
-                                           GError            **error);
+                                           GError            **error,
+                                           gboolean            swapped_offset_length);
 gboolean _mbim_message_read_uuid          (const MbimMessage  *self,
                                            guint32             relative_offset,
                                            const MbimUuid    **uuid,

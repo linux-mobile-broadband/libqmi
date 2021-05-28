@@ -466,7 +466,7 @@ class Struct:
                         '    {\n'
                         '        const guint8 *tmp;\n'
                         '\n'
-                        '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, ${has_offset}, FALSE, out->${array_size_field_name_underscore}, &tmp, NULL, error))\n'
+                        '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, ${has_offset}, FALSE, out->${array_size_field_name_underscore}, &tmp, NULL, error, FALSE))\n'
                         '            goto out;\n'
                         '        out->${field_name_underscore} = g_malloc (out->${array_size_field_name_underscore});\n'
                         '        memcpy (out->${field_name_underscore}, tmp, out->${array_size_field_name_underscore});\n'
@@ -478,7 +478,7 @@ class Struct:
                         '    {\n'
                         '        const guint8 *tmp;\n'
                         '\n'
-                        '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, ${has_offset}, TRUE, 0, &tmp, &(out->${field_name_underscore}_size), error))\n'
+                        '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, ${has_offset}, TRUE, 0, &tmp, &(out->${field_name_underscore}_size), error, FALSE))\n'
                         '            goto out;\n'
                         '        out->${field_name_underscore} = g_malloc (out->${field_name_underscore}_size);\n'
                         '        memcpy (out->${field_name_underscore}, tmp, out->${field_name_underscore}_size);\n'
@@ -490,7 +490,7 @@ class Struct:
                     '    {\n'
                     '        const guint8 *tmp;\n'
                     '\n'
-                    '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, 0, &tmp, &(out->${field_name_underscore}_size), error))\n'
+                    '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, 0, &tmp, &(out->${field_name_underscore}_size), error, FALSE))\n'
                     '            goto out;\n'
                     '        out->${field_name_underscore} = g_malloc (out->${field_name_underscore}_size);\n'
                     '        memcpy (out->${field_name_underscore}, tmp, out->${field_name_underscore}_size);\n'
@@ -503,7 +503,7 @@ class Struct:
                     '    {\n'
                     '        const guint8 *tmp;\n'
                     '\n'
-                    '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, ${array_size}, &tmp, NULL, error))\n'
+                    '        if (!_mbim_message_read_byte_array (self, relative_offset, offset, FALSE, FALSE, ${array_size}, &tmp, NULL, error, FALSE))\n'
                     '            goto out;\n'
                     '        memcpy (out->${field_name_underscore}, tmp, ${array_size});\n'
                     '        offset += ${array_size};\n'
@@ -694,15 +694,15 @@ class Struct:
             if field['format'] == 'uuid':
                 inner_template = ('    _mbim_struct_builder_append_uuid (builder, &(value->${field}));\n')
             elif field['format'] == 'byte-array':
-                inner_template = ('    _mbim_struct_builder_append_byte_array (builder, FALSE, FALSE, ${pad_array}, value->${field}, ${array_size});\n')
+                inner_template = ('    _mbim_struct_builder_append_byte_array (builder, FALSE, FALSE, ${pad_array}, value->${field}, ${array_size}, FALSE);\n')
             elif field['format'] == 'unsized-byte-array':
-                inner_template = ('    _mbim_struct_builder_append_byte_array (builder, FALSE, FALSE, ${pad_array}, value->${field}, value->${field}_size);\n')
+                inner_template = ('    _mbim_struct_builder_append_byte_array (builder, FALSE, FALSE, ${pad_array}, value->${field}, value->${field}_size, FALSE);\n')
             elif field['format'] in ['ref-byte-array', 'ref-byte-array-no-offset']:
                 translations['has_offset'] = 'TRUE' if field['format'] == 'ref-byte-array' else 'FALSE'
                 if 'array-size-field' in field:
-                    inner_template = ('    _mbim_struct_builder_append_byte_array (builder, ${has_offset}, FALSE, ${pad_array}, value->${field}, value->${array_size_field});\n')
+                    inner_template = ('    _mbim_struct_builder_append_byte_array (builder, ${has_offset}, FALSE, ${pad_array}, value->${field}, value->${array_size_field}, FALSE);\n')
                 else:
-                    inner_template = ('    _mbim_struct_builder_append_byte_array (builder, ${has_offset}, TRUE, ${pad_array}, value->${field}, value->${field}_size);\n')
+                    inner_template = ('    _mbim_struct_builder_append_byte_array (builder, ${has_offset}, TRUE, ${pad_array}, value->${field}, value->${field}_size, FALSE);\n')
             elif field['format'] == 'guint32':
                 inner_template = ('    _mbim_struct_builder_append_guint32 (builder, value->${field});\n')
             elif field['format'] == 'guint32-array':

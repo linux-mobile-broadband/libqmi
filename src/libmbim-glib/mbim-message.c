@@ -385,7 +385,8 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
                                guint32             explicit_array_size,
                                const guint8      **array,
                                guint32            *array_size,
-                               GError            **error)
+                               GError            **error,
+                               gboolean            swapped_offset_length)
 {
     guint32 information_buffer_offset;
 
@@ -408,14 +409,28 @@ _mbim_message_read_byte_array (const MbimMessage  *self,
             return FALSE;
         }
 
-        offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+        if (!swapped_offset_length) {
+            /* (b) Offset followed by length encoding format. */
+            offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
                                       guint32,
                                       self->data,
                                       (information_buffer_offset + relative_offset)));
-        *array_size = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+            *array_size = GUINT32_FROM_LE (G_STRUCT_MEMBER (
                                            guint32,
                                            self->data,
                                            (information_buffer_offset + relative_offset + 4)));
+        } else {
+            /* (b) length followed by offset encoding format. */
+            *array_size = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                           guint32,
+                                           self->data,
+                                           (information_buffer_offset + relative_offset)));
+
+            offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                      guint32,
+                                      self->data,
+                                      (information_buffer_offset + relative_offset + 4)));
+        }
 
         /* requires array_size bytes in offset */
         required_size = (guint64)information_buffer_offset + (guint64)struct_start_offset + (guint64)offset + (guint64)(*array_size);
@@ -823,7 +838,8 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
                                         gboolean           with_length,
                                         gboolean           pad_buffer,
                                         const guint8      *buffer,
-                                        guint32            buffer_len)
+                                        guint32            buffer_len,
+                                        gboolean           swapped_offset_length)
 {
     /*
      * (d) Fixed-sized array directly in the static buffer.
@@ -839,7 +855,17 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
     /* (a) Offset + Length pair in static buffer, data in variable buffer.
      * This case is the sum of cases b+c */
 
+    /* (b) Just length in static buffer, data just afterwards. */
+    if (swapped_offset_length && with_length) {
+        guint32 length;
+
+        /* Add the length value in beginning and offset in the end later*/
+        length = GUINT32_TO_LE (buffer_len);
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&length, sizeof (length));
+    }
+
     /* (c) Just offset in static buffer, length given in another variable, data in variable buffer. */
+
     if (with_offset) {
         guint32 offset;
 
@@ -864,7 +890,7 @@ _mbim_struct_builder_append_byte_array (MbimStructBuilder *builder,
     }
 
     /* (b) Just length in static buffer, data just afterwards. */
-    if (with_length) {
+    if (!swapped_offset_length && with_length) {
         guint32 length;
 
         /* Add the length value */
@@ -1139,9 +1165,10 @@ _mbim_message_command_builder_append_byte_array (MbimMessageCommandBuilder *buil
                                                  gboolean                   with_length,
                                                  gboolean                   pad_buffer,
                                                  const guint8              *buffer,
-                                                 guint32                    buffer_len)
+                                                 guint32                    buffer_len,
+                                                 gboolean                   swapped_offset_length)
 {
-    _mbim_struct_builder_append_byte_array (builder->contents_builder, with_offset, with_length, pad_buffer, buffer, buffer_len);
+    _mbim_struct_builder_append_byte_array (builder->contents_builder, with_offset, with_length, pad_buffer, buffer, buffer_len, swapped_offset_length);
 }
 
 void
