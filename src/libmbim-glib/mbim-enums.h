@@ -1370,6 +1370,9 @@ typedef enum { /*< since=1.26 >*/
     MBIM_TRANSMISSION_STATE_ACTIVE   = 1
 } MbimTransmissionState;
 
+/*****************************************************************************/
+/* 'Slot Info Status' enums */
+
 /**
  * MbimUiccSlotState:
  * @MBIM_UICC_SLOT_STATE_UNKNOWN: The modem is still in the process of initializing so the SIM slot state is not deterministic.
