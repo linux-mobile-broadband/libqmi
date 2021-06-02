@@ -48,6 +48,7 @@ static gboolean  query_lte_attach_configuration_flag;
 static gboolean  query_lte_attach_status_flag; /* support for the deprecated name */
 static gboolean  query_lte_attach_info_flag;
 static gboolean  query_sys_caps_flag;
+static gboolean  query_device_caps_flag;
 static gchar    *query_slot_info_status_str;
 static gboolean  query_device_slot_mappings_flag;
 static gchar    *set_device_slot_mappings_str;
@@ -76,6 +77,10 @@ static GOptionEntry entries[] = {
     },
     { "ms-query-sys-caps", 0, 0, G_OPTION_ARG_NONE, &query_sys_caps_flag,
       "Query system capabilities",
+      NULL
+    },
+    { "ms-query-device-caps", 0,0, G_OPTION_ARG_NONE, &query_device_caps_flag,
+      "Query device capabilities",
       NULL
     },
     { "ms-query-slot-info-status", 0, 0, G_OPTION_ARG_STRING, &query_slot_info_status_str,
@@ -164,6 +169,7 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  query_lte_attach_configuration_flag +
                  (query_lte_attach_status_flag || query_lte_attach_info_flag) +
                  query_sys_caps_flag +
+                 query_device_caps_flag +
                  !!query_slot_info_status_str +
                  !!set_device_slot_mappings_str +
                  query_device_slot_mappings_flag);
@@ -382,6 +388,101 @@ query_sys_caps_ready (MbimDevice   *device,
              number_slots,
              concurrency,
              modem_id);
+
+    shutdown (TRUE);
+}
+
+static void
+query_device_caps_ready (MbimDevice   *device,
+                         GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    MbimDeviceType          device_type;
+    const gchar            *device_type_str;
+    MbimVoiceClass          voice_class;
+    const gchar            *voice_class_str;
+    MbimCellularClass       cellular_class;
+    g_autofree gchar       *cellular_class_str = NULL;
+    MbimSimClass            sim_class;
+    g_autofree gchar       *sim_class_str = NULL;
+    MbimDataClass           data_class;
+    g_autofree gchar       *data_class_str = NULL;
+    MbimSmsCaps             sms_caps;
+    g_autofree gchar       *sms_caps_str = NULL;
+    MbimCtrlCaps            ctrl_caps;
+    g_autofree gchar       *ctrl_caps_str = NULL;
+    guint32                 max_sessions;
+    g_autofree gchar       *custom_data_class = NULL;
+    g_autofree gchar       *device_id = NULL;
+    g_autofree gchar       *firmware_info = NULL;
+    g_autofree gchar       *hardware_info = NULL;
+    guint32                 executor_index;
+
+    response = mbim_device_command_finish(device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_basic_connect_extensions_device_caps_response_parse (
+            response,
+            &device_type,
+            &cellular_class,
+            &voice_class,
+            &sim_class,
+            &data_class,
+            &sms_caps,
+            &ctrl_caps,
+            &max_sessions,
+            &custom_data_class,
+            &device_id,
+            &firmware_info,
+            &hardware_info,
+            &executor_index,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    device_type_str    = mbim_device_type_get_string (device_type);
+    cellular_class_str = mbim_cellular_class_build_string_from_mask (cellular_class);
+    voice_class_str    = mbim_voice_class_get_string (voice_class);
+    sim_class_str      = mbim_sim_class_build_string_from_mask (sim_class);
+    data_class_str     = mbim_data_class_build_string_from_mask (data_class);
+    sms_caps_str       = mbim_sms_caps_build_string_from_mask (sms_caps);
+    ctrl_caps_str      = mbim_ctrl_caps_build_string_from_mask (ctrl_caps);
+
+    g_print ("[%s] Device capabilities retrieved:\n"
+             "\t      Device type: '%s'\n"
+             "\t   Cellular class: '%s'\n"
+             "\t      Voice class: '%s'\n"
+             "\t        SIM class: '%s'\n"
+             "\t       Data class: '%s'\n"
+             "\t         SMS caps: '%s'\n"
+             "\t        Ctrl caps: '%s'\n"
+             "\t     Max sessions: '%u'\n"
+             "\tCustom data class: '%s'\n"
+             "\t        Device ID: '%s'\n"
+             "\t    Firmware info: '%s'\n"
+             "\t    Hardware info: '%s'\n"
+             "\t   Executor Index: '%u'\n",
+             mbim_device_get_path_display (device),
+             VALIDATE_UNKNOWN (device_type_str),
+             VALIDATE_UNKNOWN (cellular_class_str),
+             VALIDATE_UNKNOWN (voice_class_str),
+             VALIDATE_UNKNOWN (sim_class_str),
+             VALIDATE_UNKNOWN (data_class_str),
+             VALIDATE_UNKNOWN (sms_caps_str),
+             VALIDATE_UNKNOWN (ctrl_caps_str),
+             max_sessions,
+             VALIDATE_UNKNOWN (custom_data_class),
+             VALIDATE_UNKNOWN (device_id),
+             VALIDATE_UNKNOWN (firmware_info),
+             VALIDATE_UNKNOWN (hardware_info),
+             executor_index);
 
     shutdown (TRUE);
 }
@@ -621,6 +722,18 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
 
+    if (query_device_caps_flag) {
+        g_debug ("Asynchronously querying device capabilities...");
+        request = mbim_message_ms_basic_connect_extensions_device_caps_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_device_caps_ready,
+                             NULL);
+        return;
+    }
+    
     /*Request to query slot information status? */
     if (query_slot_info_status_str) {
         guint32 slot_index;
