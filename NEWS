@@ -1,4 +1,19 @@
 
+Overview of changes in libqmi 1.28.6
+----------------------------------------
+
+ * New request/responses:
+   ** dms: implement "Foxconn Set FCC authentication" request/response.
+
+ * libqmi-glib:
+   ** Fix transport detection in the 'wwan' subsystem.
+
+ * build:
+   ** Fix build with GCC 11 and -Wincompatible-pointer-types.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.28.4
 ----------------------------------------
 
