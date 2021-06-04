@@ -798,21 +798,6 @@ SESSION_INFORMATION_DEPRECATED_METHOD (ChangePin, change_pin)
 
 /*****************************************************************************/
 
-#if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
-
-gboolean
-qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size (
-    QmiMessageWdaGetDataFormatOutput *self,
-    guint32 *value_uplink_data_aggregation_max_size,
-    GError **error)
-{
-    return qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams (self, value_uplink_data_aggregation_max_size, error);
-}
-
-#endif /* HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT */
-
-/*****************************************************************************/
-
 GType
 qmi_dms_dell_firmware_version_type_get_type (void)
 {

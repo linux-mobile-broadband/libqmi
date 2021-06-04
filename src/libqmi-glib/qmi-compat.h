@@ -1684,29 +1684,6 @@ gboolean qmi_message_uim_change_pin_input_set_session_information (
 
 #endif /* HAVE_QMI_MESSAGE_UIM_CHANGE_PIN */
 
-#if defined HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT
-
-/**
- * qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size:
- * @self: a #QmiMessageWdaGetDataFormatOutput.
- * @value_uplink_data_aggregation_max_size: a placeholder for the output #guint32, or %NULL if not required.
- * @error: Return location for error or %NULL.
- *
- * Get the 'Uplink Data Aggregation Max Size' field from @self.
- *
- * Returns: %TRUE if the field is found, %FALSE otherwise.
- *
- * Since: 1.10
- * Deprecated: 1.24.6: Use qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams() instead.
- */
-G_DEPRECATED_FOR (qmi_message_wda_get_data_format_output_get_downlink_data_aggregation_max_datagrams)
-gboolean qmi_message_wda_get_data_format_output_get_uplink_data_aggregation_max_size
-    (QmiMessageWdaGetDataFormatOutput *self,
-     guint32 *value_uplink_data_aggregation_max_size,
-     GError **error);
-
-#endif /* HAVE_QMI_MESSAGE_WDA_GET_DATA_FORMAT */
-
 #if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_GET_FIRMWARE_VERSION
 
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_get_type)

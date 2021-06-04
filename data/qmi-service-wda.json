@@ -130,6 +130,18 @@
                      "type"          : "TLV",
                      "since"         : "1.10",
                      "format"        : "guint32",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] },
+                   { "name"          : "Uplink Data Aggregation Max Datagrams",
+                     "id"            : "0x17",
+                     "type"          : "TLV",
+                     "since"         : "1.30",
+                     "format"        : "guint32",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] },
+                   { "name"          : "Uplink Data Aggregation Max Size",
+                     "id"            : "0x18",
+                     "type"          : "TLV",
+                     "since"         : "1.30",
+                     "format"        : "guint32",
                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
@@ -195,6 +207,22 @@
                      "type"          : "TLV",
                      "since"         : "1.10",
                      "format"        : "guint32",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] },
+                   { "name"          : "Uplink Data Aggregation Max Datagrams",
+                     "id"            : "0x17",
+                     "type"          : "TLV",
+                     "since"         : "1.30",
+                     "format"        : "guint32",
+                     "prerequisites" : [ { "common-ref" : "Success" } ] },
+                   // We mistakenly had a different TLV named as "Uplink Data
+                   // Aggregation Max Size" since 1.10, and since then we kept
+                   // compat support to avoid breaking API/ABI. We now introduce
+                   // the correct TLV named in the same way, and so we keep the
+                   // original "since" tag and we remove the compat symbols.
+                   { "name"          : "Uplink Data Aggregation Max Size",
+                     "id"            : "0x18",
+                     "type"          : "TLV",
+                     "since"         : "1.10",
+                     "format"        : "guint32",
                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] }
-
 ]
