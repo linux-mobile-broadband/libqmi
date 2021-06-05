@@ -484,7 +484,7 @@ qmi_helpers_get_transport_type (const gchar  *path,
         return QMI_HELPERS_TRANSPORT_TYPE_UNKNOWN;
     }
 
-    /* MHI/PCIe uci devices have protocol in their name */
+    /* WWAN devices have protocol in their name */
     wwan_sysfs_path = g_strdup_printf ("/sys/class/wwan/%s", device_basename);
     if (g_file_test (wwan_sysfs_path, G_FILE_TEST_EXISTS)) {
         if (g_strrstr (device_basename, "QMI"))
