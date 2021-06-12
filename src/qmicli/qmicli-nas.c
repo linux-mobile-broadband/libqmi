@@ -483,19 +483,26 @@ get_signal_info_ready (QmiClientNas *client,
                                                                        &rsrp,
                                                                        &snr,
                                                                        NULL)) {
-        g_print ("5G:\n"
-                 "\tRSRP: '%d dBm'\n"
-                 "\tSNR: '%.1lf dB'\n",
-                 rsrp,
-                 (0.1) * ((gdouble)snr));
+        g_print ("5G:\n");
+        if (rsrp == (gint16)(0x8000))
+            g_print ("\tRSRP: 'n/a'\n");
+        else
+            g_print ("\tRSRP: '%d dBm'\n", rsrp);
+        if (snr == (gint16)(0x8000))
+            g_print ("\tSNR: 'n/a'\n");
+        else
+            g_print ("\tSNR: '%.1lf dB'\n", (0.1) * ((gdouble)snr));
     }
 
     /* 5G extended... */
     if (qmi_message_nas_get_signal_info_output_get_5g_signal_strength_extended (output,
                                                                                 &rsrq_5g,
                                                                                 NULL)) {
-        g_print ("\tRSRQ: '%d dB'\n",
-                 rsrq_5g);
+        if (rsrq_5g == (gint16)(0x8000))
+            g_print ("\tRSRQ: 'n/a'\n");
+        else
+            g_print ("\tRSRQ: '%d dB'\n",
+                     rsrq_5g);
     }
 
     qmi_message_nas_get_signal_info_output_unref (output);
