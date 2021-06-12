@@ -584,7 +584,6 @@ qmi_net_port_manager_qmiwwan_new (const gchar  *iface,
         !g_file_test (self->priv->del_mux_sysfs_path, G_FILE_TEST_EXISTS)) {
         g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
                      "No support for multiplexing in the interface");
-        g_object_unref (self);
         return NULL;
     }
 
