@@ -2397,18 +2397,6 @@ get_system_info_ready (QmiClientNas *client,
                     g_print ("\t\tCipher Domain: '%s'\n", qmi_nas_network_service_domain_get_string (cipher_domain));
             }
         }
-
-        /* Common */
-        {
-            QmiNasSimRejectState sim_reject_info;
-
-            if (qmi_message_nas_get_system_info_output_get_sim_reject_info (
-                    output,
-                    &sim_reject_info,
-                    NULL)) {
-                g_print ("\tSIM reject info: '%s'\n", qmi_nas_sim_reject_state_get_string (sim_reject_info));
-            }
-        }
     }
 
     /* 5G SA */
@@ -2508,6 +2496,18 @@ get_system_info_ready (QmiClientNas *client,
 
             g_print ("\t5GNR Tracking Area Code: '%" G_GUINT32_FORMAT "'\n",
                      tac);
+        }
+    }
+
+    /* Common */
+    {
+        QmiNasSimRejectState sim_reject_info;
+
+        if (qmi_message_nas_get_system_info_output_get_sim_reject_info (
+                output,
+                &sim_reject_info,
+                NULL)) {
+            g_print ("\tSIM reject info: '%s'\n", qmi_nas_sim_reject_state_get_string (sim_reject_info));
         }
     }
 
