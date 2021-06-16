@@ -111,4 +111,21 @@
  */
 #define QMI_QRTR_SUPPORTED @QMI_QRTR_SUPPORTED@
 
+/**
+ * QMI_RMNET_SUPPORTED:
+ *
+ * Symbol to expose wether RMNET link management operations are supported. The
+ * symbol is always defined and set to either or 1 or 0.
+ *
+ * E.g.:
+ * |[
+ *  #if QMI_RMNET_SUPPORTED
+ *      // do something
+ *  #endif
+ * ]|
+ *
+ * Since: 1.30
+ */
+#define QMI_RMNET_SUPPORTED @QMI_RMNET_SUPPORTED@
+
 #endif /* _QMI_VERSION_H_ */

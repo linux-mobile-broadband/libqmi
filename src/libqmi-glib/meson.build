@@ -106,7 +106,7 @@ if enable_qrtr
   deps += qrtr_glib_dep
 endif
 
-if have_rmnet
+if enable_rmnet
   sources += files('qmi-net-port-manager-rmnet.c')
 endif
 

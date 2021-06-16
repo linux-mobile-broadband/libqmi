@@ -6,6 +6,7 @@ option('mbim_qmux', type: 'boolean', value: true, description: 'enable support f
 option('mm_runtime_check', type: 'boolean', value: true, description: 'build ModemManager runtime check support')
 option('qmi_username', type: 'string', value: '', description: 'user allowed to access QMI devices')
 option('qrtr', type: 'boolean', value: true, description: 'enable support for QRTR protocol')
+option('rmnet', type: 'boolean', value: true, description: 'enable support for RMNET link management')
 
 option('udev', type: 'boolean', value: true, description: 'build udev support')
 option('udevdir', type: 'string', value: '', description: 'where udev base directory is')

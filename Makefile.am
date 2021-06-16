@@ -8,6 +8,7 @@ DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-gtk-doc \
 	--enable-mbim-qmux \
 	--enable-qrtr \
+	--enable-rmnet \
 	$(NULL)
 
 ChangeLog:

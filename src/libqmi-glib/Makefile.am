@@ -99,7 +99,7 @@ libqmi_glib_la_SOURCES += \
 	$(NULL)
 endif
 
-if RMNET_SUPPORT_ENABLED
+if QMI_RMNET_SUPPORTED
 libqmi_glib_la_SOURCES += \
 	qmi-net-port-manager-rmnet.h qmi-net-port-manager-rmnet.c \
 	$(NULL)

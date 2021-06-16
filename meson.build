@@ -157,8 +157,12 @@ config_h.set('WITH_UDEV', gudev_dep.found())
 
 bash_completion_completionsdir = dependency('bash-completion').get_pkgconfig_variable('completionsdir', define_variable: ['datadir', qmi_datadir])
 
-have_rmnet = cc.has_type('struct ifla_rmnet_flags', prefix: '#include<linux/if_link.h>')
-config_h.set('RMNET_SUPPORT_ENABLED', have_rmnet)
+# rmnet link management support
+enable_rmnet = false
+if get_option('rmnet')
+  enable_rmnet = cc.has_type('struct ifla_rmnet_flags', prefix: '#include<linux/if_link.h>')
+endif
+config_h.set('RMNET_SUPPORT_ENABLED', enable_rmnet)
 
 # runtime MM check is optional, enabled by default
 enable_mm_runtime_check = get_option('mm_runtime_check')
@@ -203,6 +207,7 @@ version_conf.set('QMI_MINOR_VERSION', qmi_minor_version)
 version_conf.set('QMI_MICRO_VERSION', qmi_micro_version)
 version_conf.set10('QMI_MBIM_QMUX_SUPPORTED', enable_mbim_qmux)
 version_conf.set10('QMI_QRTR_SUPPORTED', enable_qrtr)
+version_conf.set10('QMI_RMNET_SUPPORTED', enable_rmnet)
 
 # introspection support
 enable_gir = dependency('gobject-introspection-1.0', version: '>= 0.9.6', required: get_option('introspection')).found()
@@ -245,5 +250,5 @@ output += '  Features\n'
 output += '    QMI over MBIM:         ' + enable_mbim_qmux.to_string() + '\n'
 output += '    QMI over QRTR:         ' + enable_qrtr.to_string() + '\n'
 output += '    QMI username:          ' + qmi_username + '\n'
-output += '    rmnet support:         ' + have_rmnet.to_string()
+output += '    rmnet support:         ' + enable_rmnet.to_string()
 message(output)

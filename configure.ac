@@ -108,15 +108,35 @@ AM_PATH_PYTHON([], [], [PYTHON=python])
 dnl GObject Introspection
 GOBJECT_INTROSPECTION_CHECK([0.9.6])
 
-dnl rmnet support in the kernel
+dnl check for rmnet support in the kernel headers
+dnl note that this just means the corresponding kernel has rmnet support,
+dnl but it doesn't mean that support is built (i.e. CONFIG_RMNET may still
+dnl unset even if the kernel headers showed rmnet support)
 AC_EGREP_HEADER([ifla_rmnet_flags],
                 [linux/if_link.h],
-                [enable_rmnet_support=yes],
-                [enable_rmnet_support=no])
-if test "x$enable_rmnet_support" = "xyes"; then
-    AC_DEFINE(RMNET_SUPPORT_ENABLED, 1, [Define if rmnet support is built])
+                [have_rmnet_support=yes],
+                [have_rmnet_support=no])
+
+dnl rmnet support is optional, enabled by default if kernel headers support it;
+dnl if CONFIG_RMNET isn't set in the kernel, the user should explicitly
+dnl disable rmnet support in libqmi to avoid unwanted side effects
+AC_ARG_ENABLE(rmnet, AS_HELP_STRING([--disable-rmnet], [Build without rmnet support]), [], [enable_rmnet=auto])
+
+if test "x$enable_rmnet" = "xauto"; then
+    enable_rmnet=$have_rmnet_support
 fi
-AM_CONDITIONAL([RMNET_SUPPORT_ENABLED], test "x$enable_rmnet_support" = "xyes")
+
+if test "x$enable_rmnet" = "xyes"; then
+    if test "x$have_rmnet_support" = "xno"; then
+        AC_MSG_ERROR([Couldn't find rmnet support in the kernel headers. Update your kernel, or otherwise configure using --disable-rmnet to disable the rmnet support.])
+    fi
+    AC_DEFINE(RMNET_SUPPORT_ENABLED, 1, [Define if RMNET support enabled])
+    QMI_RMNET_SUPPORTED=1
+else
+    QMI_RMNET_SUPPORTED=0
+fi
+AC_SUBST(QMI_RMNET_SUPPORTED)
+AM_CONDITIONAL([QMI_RMNET_SUPPORTED], [test "x$QMI_RMNET_SUPPORTED" = "x1"])
 
 dnl message collection (existing file in data/qmi-collection-${COLLECTION}.json)
 dnl custom collections may be added as files in data/
@@ -329,7 +349,7 @@ echo "
       QMI over MBIM:            ${enable_mbim_qmux}
       QMI over QRTR:            ${enable_qrtr}
       QMI username:             ${QMI_USERNAME_ENABLED} (${QMI_USERNAME})
-      rmnet support:            ${enable_rmnet_support}
+      rmnet support:            ${enable_rmnet}
 
     Built items:
       libqmi-glib:              yes (${QMI_COLLECTION_NAME})
