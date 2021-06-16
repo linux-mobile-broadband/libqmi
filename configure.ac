@@ -108,28 +108,12 @@ AM_PATH_PYTHON([], [], [PYTHON=python])
 dnl GObject Introspection
 GOBJECT_INTROSPECTION_CHECK([0.9.6])
 
-dnl check for rmnet support in the kernel headers
-dnl note that this just means the corresponding kernel has rmnet support,
-dnl but it doesn't mean that support is built (i.e. CONFIG_RMNET may still
-dnl unset even if the kernel headers showed rmnet support)
-AC_EGREP_HEADER([ifla_rmnet_flags],
-                [linux/if_link.h],
-                [have_rmnet_support=yes],
-                [have_rmnet_support=no])
-
-dnl rmnet support is optional, enabled by default if kernel headers support it;
-dnl if CONFIG_RMNET isn't set in the kernel, the user should explicitly
-dnl disable rmnet support in libqmi to avoid unwanted side effects
-AC_ARG_ENABLE(rmnet, AS_HELP_STRING([--disable-rmnet], [Build without rmnet support]), [], [enable_rmnet=auto])
-
-if test "x$enable_rmnet" = "xauto"; then
-    enable_rmnet=$have_rmnet_support
-fi
+dnl rmnet support is optional, enabled by default; if CONFIG_RMNET isn't set
+dnl in the kernel, the user should explicitly disable rmnet support in libqmi
+dnl to avoid unwanted side effects
+AC_ARG_ENABLE(rmnet, AS_HELP_STRING([--disable-rmnet], [Build without rmnet support]), [], [enable_rmnet=yes])
 
 if test "x$enable_rmnet" = "xyes"; then
-    if test "x$have_rmnet_support" = "xno"; then
-        AC_MSG_ERROR([Couldn't find rmnet support in the kernel headers. Update your kernel, or otherwise configure using --disable-rmnet to disable the rmnet support.])
-    fi
     AC_DEFINE(RMNET_SUPPORT_ENABLED, 1, [Define if RMNET support enabled])
     QMI_RMNET_SUPPORTED=1
 else

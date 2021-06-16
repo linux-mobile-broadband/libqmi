@@ -69,7 +69,8 @@ IGNORE_HFILES = \
 	qmi-ctl.h \
 	qmi-helpers.h \
 	test-port-context.h \
-	test-fixture.h
+	test-fixture.h \
+	if_link_rmnet.h
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.

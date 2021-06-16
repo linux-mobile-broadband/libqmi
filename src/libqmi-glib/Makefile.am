@@ -101,6 +101,7 @@ endif
 
 if QMI_RMNET_SUPPORTED
 libqmi_glib_la_SOURCES += \
+	kernel/if_link_rmnet.h \
 	qmi-net-port-manager-rmnet.h qmi-net-port-manager-rmnet.c \
 	$(NULL)
 endif

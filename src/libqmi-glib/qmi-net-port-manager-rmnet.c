@@ -25,6 +25,10 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 
+/* This is a built-in file, not provided by the kernel headers,
+ * used to add unconditional  rmnet support if requested in the build */
+#include <kernel/if_link_rmnet.h>
+
 #include <net/if.h>
 #include <net/if_arp.h>
 
