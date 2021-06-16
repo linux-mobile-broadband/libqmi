@@ -102,7 +102,7 @@ build-autotools-no-mbim:
     - make install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --disable-mbim-qmux --enable-qrtr
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --disable-mbim-qmux --enable-qrtr --enable-rmnet
     - make
     - make check
     - make install
@@ -126,7 +126,31 @@ build-autotools-no-qrtr:
     - make install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --enable-mbim-qmux --disable-qrtr
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --enable-mbim-qmux --disable-qrtr --enable-rmnet
+    - make
+    - make check
+    - make install
+
+build-autotools-no-qrtr-no-rmnet:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
+  script:
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
+    - pushd libmbim
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection
+    - make
+    - make install
+    - popd
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --enable-mbim-qmux --disable-qrtr --disable-rmnet
     - make
     - make check
     - make install
@@ -143,7 +167,7 @@ build-autotools-collection-minimal:
     - schedules
   script:
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --disable-mbim-qmux --disable-qrtr --disable-firmware-update --enable-collection=minimal
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --disable-mbim-qmux --disable-qrtr --disable-rmnet --disable-firmware-update --enable-collection=minimal
     - make
     - make check
     - make install
@@ -160,7 +184,7 @@ build-autotools-collection-basic:
     - schedules
   script:
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --disable-mbim-qmux --disable-qrtr --enable-collection=basic
+    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --disable-mbim-qmux --disable-qrtr --disable-rmnet --enable-collection=basic
     - make
     - make check
     - make install
@@ -226,7 +250,7 @@ build-autotools-default:
     - make install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection --enable-mbim-qmux --enable-qrtr
+    - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection --enable-mbim-qmux --enable-qrtr --enable-rmnet
     - make
     - make check
     - make install
