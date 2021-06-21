@@ -465,8 +465,10 @@ qmi_helpers_get_transport_type (const gchar  *path,
     g_autofree gchar *device_basename = NULL;
     g_autofree gchar *usb_driver = NULL;
     g_autofree gchar *wwan_sysfs_path = NULL;
+    g_autofree gchar *wwan_type_sysfs_path = NULL;
     g_autofree gchar *smdpkt_sysfs_path = NULL;
     g_autofree gchar *rpmsg_sysfs_path = NULL;
+    gchar            wwan_type[16] = { 0 };
 
     device_basename = qmi_helpers_get_devname (path, error);
     if (!device_basename)
@@ -484,13 +486,24 @@ qmi_helpers_get_transport_type (const gchar  *path,
         return QMI_HELPERS_TRANSPORT_TYPE_UNKNOWN;
     }
 
-    /* WWAN devices have protocol in their name */
+    /* WWAN devices have a type attribute or protocol in their name */
     wwan_sysfs_path = g_strdup_printf ("/sys/class/wwan/%s", device_basename);
     if (g_file_test (wwan_sysfs_path, G_FILE_TEST_EXISTS)) {
-        if (g_strrstr (device_basename, "QMI"))
-            return QMI_HELPERS_TRANSPORT_TYPE_QMUX;
-        if (g_strrstr (device_basename, "MBIM"))
-            return QMI_HELPERS_TRANSPORT_TYPE_MBIM;
+        wwan_type_sysfs_path = g_strdup_printf ("/sys/class/wwan/%s/type", device_basename);
+        if (qmi_helpers_read_sysfs_file (wwan_type_sysfs_path, wwan_type,
+                                         sizeof (wwan_type) - 1, NULL)) {
+            g_strstrip (wwan_type);
+            if (!g_strcmp0 (wwan_type, "QMI"))
+                return QMI_HELPERS_TRANSPORT_TYPE_QMUX;
+            if (!g_strcmp0 (wwan_type, "MBIM"))
+                return QMI_HELPERS_TRANSPORT_TYPE_MBIM;
+        } else {
+            /* "type" attribute exists only on Linux 5.14+, fall back to device name */
+            if (g_strrstr (device_basename, "QMI"))
+                return QMI_HELPERS_TRANSPORT_TYPE_QMUX;
+            if (g_strrstr (device_basename, "MBIM"))
+                return QMI_HELPERS_TRANSPORT_TYPE_MBIM;
+        }
         g_set_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_FAILED,
                      "unsupported wwan port");
         return QMI_HELPERS_TRANSPORT_TYPE_UNKNOWN;
