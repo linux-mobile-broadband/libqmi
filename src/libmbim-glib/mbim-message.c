@@ -151,6 +151,34 @@ _mbim_message_get_information_buffer_offset (const MbimMessage *self)
 }
 
 gboolean
+_mbim_message_read_guint16 (const MbimMessage  *self,
+                            guint32             relative_offset,
+                            guint16            *value,
+                            GError            **error)
+{
+    guint64 required_size;
+    guint32 information_buffer_offset;
+
+    g_assert (value);
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+
+    required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 2;
+    if ((guint64)self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read 16bit unsigned integer (2 bytes) (%u < %" G_GUINT64_FORMAT ")",
+                     self->len, required_size);
+        return FALSE;
+    }
+
+    *value = GUINT16_FROM_LE (G_STRUCT_MEMBER (
+                                  guint16,
+                                  self->data,
+                                  (information_buffer_offset + relative_offset)));
+    return TRUE;
+}
+
+gboolean
 _mbim_message_read_guint32 (const MbimMessage  *self,
                             guint32             relative_offset,
                             guint32            *value,
@@ -913,6 +941,17 @@ _mbim_struct_builder_append_uuid (MbimStructBuilder *builder,
 }
 
 void
+_mbim_struct_builder_append_guint16 (MbimStructBuilder *builder,
+                                     guint16            value)
+{
+    guint16 tmp;
+
+    /* guint16 values are added in the static buffer only */
+    tmp = GUINT16_TO_LE (value);
+    g_byte_array_append (builder->fixed_buffer, (guint8 *)&tmp, sizeof (tmp));
+}
+
+void
 _mbim_struct_builder_append_guint32 (MbimStructBuilder *builder,
                                      guint32            value)
 {
@@ -1169,6 +1208,13 @@ _mbim_message_command_builder_append_guint32 (MbimMessageCommandBuilder *builder
                                               guint32                    value)
 {
     _mbim_struct_builder_append_guint32 (builder->contents_builder, value);
+}
+
+void
+_mbim_message_command_builder_append_guint16 (MbimMessageCommandBuilder *builder,
+                                              guint16                    value)
+{
+    _mbim_struct_builder_append_guint16 (builder->contents_builder, value);
 }
 
 void

@@ -45,6 +45,8 @@ def validate_fields(fields):
             pass
         elif field['format'] == 'uuid':
             pass
+        elif field['format'] == 'guint16':
+            pass
         elif field['format'] == 'guint32':
             pass
         elif field['format'] == 'guint32-array':
@@ -226,6 +228,8 @@ class Message:
                                   ' * @${field}: (in)(element-type guint8)(array length=${field}_size): the \'${name}\' field, given as an array of #guint8 values.\n')
             elif field['format'] == 'uuid':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimUuid.\n')
+            elif field['format'] == 'guint16':
+                inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #${public}.\n')
             elif field['format'] == 'guint32':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #${public}.\n')
             elif field['format'] == 'guint64':
@@ -282,6 +286,8 @@ class Message:
                                   '    const guint8 *${field},\n')
             elif field['format'] == 'uuid':
                 inner_template = ('    const MbimUuid *${field},\n')
+            elif field['format'] == 'guint16':
+                inner_template = ('    ${public} ${field},\n')
             elif field['format'] == 'guint32':
                 inner_template = ('    ${public} ${field},\n')
             elif field['format'] == 'guint64':
@@ -337,6 +343,8 @@ class Message:
                                   '    const guint8 *${field},\n')
             elif field['format'] == 'uuid':
                 inner_template = ('    const MbimUuid *${field},\n')
+            elif field['format'] == 'guint16':
+                inner_template = ('    ${public} ${field},\n')
             elif field['format'] == 'guint32':
                 inner_template = ('    ${public} ${field},\n')
             elif field['format'] == 'guint64':
@@ -407,6 +415,8 @@ class Message:
                 inner_template += ('        _mbim_message_command_builder_append_byte_array (builder, FALSE, TRUE, ${pad_array}, ${field}, ${field}_size, FALSE);\n')
             elif field['format'] == 'uuid':
                 inner_template += ('        _mbim_message_command_builder_append_uuid (builder, ${field});\n')
+            elif field['format'] == 'guint16':
+                inner_template += ('        _mbim_message_command_builder_append_guint16 (builder, ${field});\n')
             elif field['format'] == 'guint32':
                 inner_template += ('        _mbim_message_command_builder_append_guint32 (builder, ${field});\n')
             elif field['format'] == 'guint64':
@@ -481,6 +491,8 @@ class Message:
                                   ' * @out_${field}: (out)(optional)(transfer none)(element-type guint8)(array length=out_${field}_size): return location for an array of #guint8 values. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'uuid':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimUuid, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
+            elif field['format'] == 'guint16':
+                inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #${public}, or %NULL if the \'${name}\' field is not needed.\n')
             elif field['format'] == 'guint32':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #${public}, or %NULL if the \'${name}\' field is not needed.\n')
             elif field['format'] == 'guint64':
@@ -535,6 +547,8 @@ class Message:
                                   '    const guint8 **out_${field},\n')
             elif field['format'] == 'uuid':
                 inner_template = ('    const MbimUuid **out_${field},\n')
+            elif field['format'] == 'guint16':
+                inner_template = ('    ${public} *out_${field},\n')
             elif field['format'] == 'guint32':
                 inner_template = ('    ${public} *out_${field},\n')
             elif field['format'] == 'guint64':
@@ -589,6 +603,8 @@ class Message:
                                   '    const guint8 **out_${field},\n')
             elif field['format'] == 'uuid':
                 inner_template = ('    const MbimUuid **out_${field},\n')
+            elif field['format'] == 'guint16':
+                inner_template = ('    ${public} *out_${field},\n')
             elif field['format'] == 'guint32':
                 inner_template = ('    ${public} *out_${field},\n')
             elif field['format'] == 'guint64':
@@ -815,6 +831,23 @@ class Message:
                     '        if ((out_${field} != NULL) && !_mbim_message_read_uuid (message, offset, out_${field}, error))\n'
                     '            goto out;\n'
                     '        offset += 16;\n')
+            elif field['format'] == 'guint16':
+                if 'public-format' in field:
+                    translations['public'] = field['public-format'] if 'public-format' in field else field['format']
+                    inner_template += (
+                        '        if (out_${field} != NULL) {\n'
+                        '            guint16 aux;\n'
+                        '\n'
+                        '            if (!_mbim_message_read_guint16 (message, offset, &aux, error))\n'
+                        '                goto out;\n'
+                        '            *out_${field} = (${public})aux;\n'
+                        '        }\n')
+                else:
+                    inner_template += (
+                        '        if ((out_${field} != NULL) && !_mbim_message_read_guint16 (message, offset, out_${field}, error))\n'
+                        '            goto out;\n')
+                inner_template += (
+                    '        offset += 2;\n')
             elif field['format'] == 'guint32':
                 if 'public-format' in field:
                     translations['public'] = field['public-format'] if 'public-format' in field else field['format']
@@ -1113,12 +1146,18 @@ class Message:
                     '        tmpstr = mbim_uuid_get_printable (tmp);\n'
                     '        g_string_append_printf (str, "\'%s\'", tmpstr);\n')
 
-            elif field['format'] == 'guint32' or \
+            elif field['format'] == 'guint16' or \
+                 field['format'] == 'guint32' or \
                  field['format'] == 'guint64':
                 inner_template += (
                     '        ${field_format} tmp;\n'
                     '\n')
-                if field['format'] == 'guint32' :
+                if field['format'] == 'guint16' :
+                    inner_template += (
+                        '        if (!_mbim_message_read_guint16 (message, offset, &tmp, &inner_error))\n'
+                        '            goto out;\n'
+                        '        offset += 2;\n')
+                elif field['format'] == 'guint32' :
                     inner_template += (
                         '        if (!_mbim_message_read_guint32 (message, offset, &tmp, &inner_error))\n'
                         '            goto out;\n'
@@ -1144,6 +1183,9 @@ class Message:
                         '# error neither enum nor flags\n'
                         '#endif\n'
                         '\n')
+                elif field['format'] == 'guint16':
+                    inner_template += (
+                        '        g_string_append_printf (str, "\'%" G_GUINT16_FORMAT "\'", tmp);\n')
                 elif field['format'] == 'guint32':
                     inner_template += (
                         '        g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", tmp);\n')

@@ -31,7 +31,9 @@ class Struct:
         # Check whether the struct is composed of fixed-sized fields
         self.size = 0
         for field in self.contents:
-            if field['format'] == 'guint32':
+            if field['format'] == 'guint16':
+                self.size += 2
+            elif field['format'] == 'guint32':
                 self.size += 4
             elif field['format'] == 'guint64':
                 self.size += 8
@@ -68,6 +70,9 @@ class Struct:
                 if 'array-size-field' not in field:
                     inner_template += (' * @${field_name_underscore}_size: size of the ${field_name_underscore} array.\n')
                 inner_template += (' * @${field_name_underscore}: an array of #guint8 values.\n')
+            elif field['format'] == 'guint16':
+                inner_template = (
+                    ' * @${field_name_underscore}: a #guint16.\n')
             elif field['format'] == 'guint32':
                 inner_template = (
                     ' * @${field_name_underscore}: a #guint32.\n')
@@ -120,6 +125,9 @@ class Struct:
                         '    guint32 ${field_name_underscore}_size;\n')
                 inner_template += (
                     '    guint8 *${field_name_underscore};\n')
+            elif field['format'] == 'guint16':
+                inner_template = (
+                    '    guint16 ${field_name_underscore};\n')
             elif field['format'] == 'guint32':
                 inner_template = (
                     '    guint32 ${field_name_underscore};\n')
@@ -197,6 +205,8 @@ class Struct:
             elif field['format'] in ['unsized-byte-array', 'ref-byte-array', 'ref-byte-array-no-offset']:
                 inner_template += (
                     '    g_free (var->${field_name_underscore});\n')
+            elif field['format'] == 'guint16':
+                pass
             elif field['format'] == 'guint32':
                 pass
             elif field['format'] == 'guint32-array':
@@ -337,6 +347,10 @@ class Struct:
                     '        for (i = 0; i < array_size; i++)\n'
                     '            g_string_append_printf (str, "%02x%s", self->${field_name_underscore}[i], (i == (array_size - 1)) ? "" : ":" );\n'
                     '        g_string_append (str, "\'");\n')
+
+            elif field['format'] == 'guint16':
+                inner_template += (
+                    '        g_string_append_printf (str, "\'%" G_GUINT16_FORMAT "\'", self->${field_name_underscore});\n')
 
             elif field['format'] == 'guint32':
                 inner_template += (
@@ -496,6 +510,12 @@ class Struct:
                     '        memcpy (out->${field_name_underscore}, tmp, ${array_size});\n'
                     '        offset += ${array_size};\n'
                     '    }\n')
+            elif field['format'] == 'guint16':
+                inner_template += (
+                    '\n'
+                    '    if (!_mbim_message_read_guint16 (self, offset, &out->${field_name_underscore}, error))\n'
+                    '        goto out;\n'
+                    '    offset += 2;\n')
             elif field['format'] == 'guint32':
                 inner_template += (
                     '\n'
@@ -691,6 +711,8 @@ class Struct:
                     inner_template = ('    _mbim_struct_builder_append_byte_array (builder, ${has_offset}, FALSE, ${pad_array}, value->${field}, value->${array_size_field}, FALSE);\n')
                 else:
                     inner_template = ('    _mbim_struct_builder_append_byte_array (builder, ${has_offset}, TRUE, ${pad_array}, value->${field}, value->${field}_size, FALSE);\n')
+            elif field['format'] == 'guint16':
+                inner_template = ('    _mbim_struct_builder_append_guint16 (builder, value->${field});\n')
             elif field['format'] == 'guint32':
                 inner_template = ('    _mbim_struct_builder_append_guint32 (builder, value->${field});\n')
             elif field['format'] == 'guint32-array':

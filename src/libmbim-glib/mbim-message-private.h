@@ -168,6 +168,8 @@ void               _mbim_struct_builder_append_byte_array    (MbimStructBuilder 
                                                               gboolean           swapped_offset_length);
 void               _mbim_struct_builder_append_uuid          (MbimStructBuilder *builder,
                                                               const MbimUuid    *value);
+void               _mbim_struct_builder_append_guint16       (MbimStructBuilder *builder,
+                                                              guint16            value);
 void               _mbim_struct_builder_append_guint32       (MbimStructBuilder *builder,
                                                               guint32            value);
 void               _mbim_struct_builder_append_guint32_array (MbimStructBuilder *builder,
@@ -215,6 +217,8 @@ void                       _mbim_message_command_builder_append_byte_array    (M
                                                                                gboolean                   swapped_offset_length);
 void                       _mbim_message_command_builder_append_uuid          (MbimMessageCommandBuilder *builder,
                                                                                const MbimUuid            *value);
+void                       _mbim_message_command_builder_append_guint16       (MbimMessageCommandBuilder *builder,
+                                                                               guint16                    value);
 void                       _mbim_message_command_builder_append_guint32       (MbimMessageCommandBuilder *builder,
                                                                                guint32                    value);
 void                       _mbim_message_command_builder_append_guint32_array (MbimMessageCommandBuilder *builder,
@@ -256,6 +260,10 @@ gboolean _mbim_message_read_byte_array    (const MbimMessage  *self,
 gboolean _mbim_message_read_uuid          (const MbimMessage  *self,
                                            guint32             relative_offset,
                                            const MbimUuid    **uuid,
+                                           GError            **error);
+gboolean _mbim_message_read_guint16      (const MbimMessage  *self,
+                                           guint32             relative_offset,
+                                           guint16            *value,
                                            GError            **error);
 gboolean _mbim_message_read_guint32       (const MbimMessage  *self,
                                            guint32             relative_offset,
