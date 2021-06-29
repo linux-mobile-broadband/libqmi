@@ -249,6 +249,26 @@
     "response"   : [ { "name"   : "MbimVersion",
                        "format" : "guint16" },
                      { "name"   : "MbimExtendedVersion",
-                       "format" : "guint16" } ] }
+                       "format" : "guint16" } ] },
+
+//************************************************************************************
+
+  { "name"       : "Location Info Status",
+    "service"    : "Ms Basic Connect Extensions",
+    "type"       : "Command",
+    "since"      : "1.28",
+    "query"      : [],
+    "response"   : [ { "name"   : "LocationAreaCode",
+                       "format" : "guint32" },
+                     { "name"   : "TrackingAreaCode",
+                       "format" : "guint32" },
+                     { "name"   : "CellID",
+                       "format" : "guint32" } ],
+    "notification" : [ { "name" : "LocationAreaCode",
+                       "format" : "guint32" },
+                       { "name" : "TrackingAreaCode",
+                       "format" : "guint32" },
+                       { "name" : "CellID",
+                       "format" : "guint32" } ] }
 
 ]

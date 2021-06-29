@@ -329,6 +329,7 @@ typedef enum { /*< since=1.26 >*/
  * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_SLOT_INFO_STATUS: Slot info status.
  * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_PCO: Protocol configuration operations (PCO).
  * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_DEVICE_RESET: Device reset.
+ * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LOCATION_INFO_STATUS: Location info status. Since 1.28.
  * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION: Protocol version query and report. Since 1.28.
  *
  * MBIM commands in the %MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS service.
@@ -347,6 +348,7 @@ typedef enum { /*< since=1.18 >*/
     MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_SLOT_INFO_STATUS         = 8,
     MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_PCO                      = 9,
     MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_DEVICE_RESET             = 10,
+    MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LOCATION_INFO_STATUS     = 12,
     MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION                  = 15,
 } MbimCidMsBasicConnectExtensions;
 

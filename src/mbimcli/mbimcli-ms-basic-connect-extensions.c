@@ -41,6 +41,7 @@ static gboolean  query_device_caps_flag;
 static gchar    *query_slot_info_status_str;
 static gboolean  query_device_slot_mappings_flag;
 static gchar    *set_device_slot_mappings_str;
+static gboolean  query_location_info_status_flag;
 static gchar    *query_version_str;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
@@ -84,6 +85,10 @@ static GOptionEntry entries[] = {
     },
     { "ms-query-device-slot-mappings", 0, 0, G_OPTION_ARG_NONE, &query_device_slot_mappings_flag,
       "Query device slot mappings",
+      NULL
+    },
+    { "ms-query-location-info-status", 0, 0, G_OPTION_ARG_NONE, &query_location_info_status_flag,
+      "Query location info status",
       NULL
     },
     { "ms-query-version", 0, 0,G_OPTION_ARG_STRING , &query_version_str,
@@ -166,6 +171,7 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  !!query_slot_info_status_str +
                  !!set_device_slot_mappings_str +
                  query_device_slot_mappings_flag +
+                 query_location_info_status_flag +
                  !!query_version_str);
 
     if (n_actions > 1) {
@@ -642,6 +648,44 @@ query_device_slot_mappings_ready (MbimDevice   *device,
 }
 
 static void
+query_location_info_status_ready (MbimDevice   *device,
+                                  GAsyncResult *res)
+{
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
+    guint32                location_area_code = 0;
+    guint32                tracking_area_code = 0;
+    guint32                cell_id = 0;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully queried location info status\n",
+             mbim_device_get_path_display (device));
+
+    if (!mbim_message_ms_basic_connect_extensions_location_info_status_response_parse (
+            response,
+            &location_area_code,
+            &tracking_area_code,
+            &cell_id,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print (" Location area code:  %04X\n", location_area_code);
+    g_print (" Tracking area code:  %06X\n", tracking_area_code);
+    g_print (" Cell ID:             %08X\n", cell_id);
+
+    shutdown (TRUE);
+}
+
+static void
 query_version_ready (MbimDevice   *device,
                      GAsyncResult *res)
 {
@@ -816,6 +860,19 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_device_slot_mappings_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to query Location info status? */
+    if (query_location_info_status_flag) {
+        g_debug ("Asynchronously querying location info status...");
+        request = mbim_message_ms_basic_connect_extensions_location_info_status_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_location_info_status_ready,
                              NULL);
         return;
     }
