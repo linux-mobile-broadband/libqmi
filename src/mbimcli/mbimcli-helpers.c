@@ -37,6 +37,29 @@ mbimcli_read_uint_from_string (const gchar *str,
 }
 
 gboolean
+mbimcli_read_uint16_from_string (const gchar *str,
+                                 guint16 *out)
+{
+    gulong num;
+
+    if (!str || !str[0])
+        return FALSE;
+
+    for (num = 0; str[num]; num++) {
+        if (!g_ascii_isdigit (str[num]))
+            return FALSE;
+    }
+
+    errno = 0;
+    num = strtoul (str, NULL, 10);
+    if (!errno && num <= G_MAXUINT16) {
+        *out = (guint16)num;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+gboolean
 mbimcli_print_ip_config (MbimDevice   *device,
                          MbimMessage  *response,
                          GError      **error)

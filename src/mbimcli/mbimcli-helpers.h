@@ -13,6 +13,9 @@
 #ifndef __MBIMCLI_HELPERS_H__
 #define __MBIMCLI_HELPERS_H__
 
+gboolean mbimcli_read_uint16_from_string (const gchar *str,
+                                          guint16 *out);
+
 gboolean mbimcli_read_uint_from_string (const gchar *str,
                                         guint *out);
 

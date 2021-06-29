@@ -22,6 +22,7 @@
 
 #include "mbim-common.h"
 #include "mbimcli.h"
+#include "mbimcli-helpers.h"
 
 /* Context */
 typedef struct {
@@ -40,6 +41,7 @@ static gboolean  query_device_caps_flag;
 static gchar    *query_slot_info_status_str;
 static gboolean  query_device_slot_mappings_flag;
 static gchar    *set_device_slot_mappings_str;
+static gchar    *query_version_str;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -84,7 +86,10 @@ static GOptionEntry entries[] = {
       "Query device slot mappings",
       NULL
     },
-
+    { "ms-query-version", 0, 0,G_OPTION_ARG_STRING , &query_version_str,
+      "Query version",
+      "[(MBIM version),(MBIM extended version)]"
+    },
     { NULL }
 };
 
@@ -160,7 +165,8 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  query_device_caps_flag +
                  !!query_slot_info_status_str +
                  !!set_device_slot_mappings_str +
-                 query_device_slot_mappings_flag);
+                 query_device_slot_mappings_flag +
+                 !!query_version_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -635,6 +641,41 @@ query_device_slot_mappings_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+query_version_ready (MbimDevice   *device,
+                     GAsyncResult *res)
+{
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
+    guint16                mbim_version;
+    guint16                mbim_ext_version;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully exchanged version information\n",
+             mbim_device_get_path_display (device));
+    if (!mbim_message_ms_basic_connect_extensions_version_response_parse (
+            response,
+            &mbim_version,
+            &mbim_ext_version,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print (" MBIM version          : %x.%02x\n", mbim_version >> 8, mbim_version & 0xFF);
+    g_print (" MBIM extended version : %x.%02x\n", mbim_ext_version >> 8, mbim_ext_version & 0xFF);
+
+    shutdown (TRUE);
+    return;
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -775,6 +816,56 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_device_slot_mappings_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to query Version? */
+    if (query_version_str) {
+        guint16 bcd_mbim_version = 0;
+        guint16 bcd_mbim_extended_version = 0;
+        guint16 mbim_version_second_byte = 0, mbim_version_first_byte = 0;
+        guint16 mbim_extended_version_second_byte = 0, mbim_extended_version_first_byte = 0;
+        g_auto(GStrv) split = NULL;
+        g_auto(GStrv) mbim_version = NULL;
+        g_auto(GStrv) mbim_extended_version = NULL;
+
+        split = g_strsplit (query_version_str, ",", -1);
+
+        if (g_strv_length (split) > 2) {
+            g_printerr ("error: couldn't parse input string, too many arguments\n");
+            return;
+        }
+
+        if (g_strv_length (split) < 2) {
+            g_printerr ("error: couldn't parse input string, missing arguments\n");
+            return;
+        }
+
+        mbim_version = g_strsplit (split[0], ".", -1);
+        mbimcli_read_uint16_from_string (mbim_version[0], &mbim_version_second_byte);
+        mbimcli_read_uint16_from_string (mbim_version[1], &mbim_version_first_byte);
+        bcd_mbim_version = ((((mbim_version_second_byte / 10) << 4) | 
+                            (mbim_version_second_byte % 10)) << 8) | 
+                            (((mbim_version_first_byte / 10) << 4) | 
+                            (mbim_version_first_byte % 10));
+        g_debug("BCD version built:: 0x%x", bcd_mbim_version);
+
+        mbim_extended_version = g_strsplit (split[1], ".", -1);
+        mbimcli_read_uint16_from_string (mbim_extended_version[0], &mbim_extended_version_second_byte);
+        mbimcli_read_uint16_from_string (mbim_extended_version[1], &mbim_extended_version_first_byte);
+        bcd_mbim_extended_version = ((((mbim_extended_version_second_byte / 10) << 4) | 
+                                     (mbim_extended_version_second_byte % 10)) << 8) | 
+                                     (((mbim_extended_version_first_byte / 10) << 4) | 
+                                     (mbim_extended_version_first_byte % 10));
+        g_debug("BCD extended version built: 0x%x", bcd_mbim_extended_version);
+        g_debug ("Asynchronously querying Version...");
+        request = mbim_message_ms_basic_connect_extensions_version_query_new (bcd_mbim_version, bcd_mbim_extended_version, NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_version_ready,
                              NULL);
         return;
     }
