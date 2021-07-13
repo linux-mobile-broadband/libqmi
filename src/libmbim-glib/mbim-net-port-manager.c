@@ -308,15 +308,13 @@ session_id_to_vlan_id (guint session_id)
 /*****************************************************************************/
 
 static NetlinkMessage *
-netlink_message_new_link (guint  session_id,
+netlink_message_new_link (guint  vlan_id,
                           gchar *ifname,
                           guint  base_if_index)
 {
     NetlinkMessage *msg;
     guint           linkinfo_pos, datainfo_pos;
     struct rtattr   info;
-
-    g_assert (session_id != MBIM_DEVICE_SESSION_ID_AUTOMATIC);
 
     msg = netlink_message_new (RTM_NEWLINK, NLM_F_CREATE | NLM_F_EXCL);
     append_netlink_attribute_uint32 (msg, IFLA_LINK, base_if_index);
@@ -330,7 +328,7 @@ netlink_message_new_link (guint  session_id,
     /* Store the position of the next attribute to adjust its length later. */
     datainfo_pos = get_pos_of_next_attr (msg);
     append_netlink_attribute_nested (msg, IFLA_INFO_DATA);
-    append_netlink_attribute_uint16 (msg, IFLA_VLAN_ID, session_id_to_vlan_id (session_id));
+    append_netlink_attribute_uint16 (msg, IFLA_VLAN_ID, vlan_id);
 
     /* Use memcpy to preserve byte alignment */
     memcpy (&info, (char *) msg->data + datainfo_pos, sizeof (struct rtattr));
@@ -429,6 +427,7 @@ get_first_free_session_id (MbimNetPortManager *self,
 
 typedef struct {
     guint  session_id;
+    guint  vlan_id;
     gchar *ifname;
 } AddLinkContext;
 
@@ -513,8 +512,10 @@ mbim_net_port_manager_add_link (MbimNetPortManager  *self,
     }
 
     ctx->ifname = session_id_to_ifname (ifname_prefix, ctx->session_id);
+    ctx->vlan_id = session_id_to_vlan_id (ctx->session_id);
+    g_debug ("Using ifname '%s' and vlan id %u", ctx->ifname, ctx->vlan_id);
 
-    msg = netlink_message_new_link (ctx->session_id, ctx->ifname, base_if_index);
+    msg = netlink_message_new_link (ctx->vlan_id, ctx->ifname, base_if_index);
 
     /* The task ownership is transferred to the transaction. */
     tr = transaction_new (self, msg, timeout, task);
