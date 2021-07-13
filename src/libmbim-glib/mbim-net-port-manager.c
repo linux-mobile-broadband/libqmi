@@ -410,7 +410,10 @@ get_first_free_session_id (MbimNetPortManager *self,
 {
     guint i;
 
-    for (i = MBIM_DEVICE_SESSION_ID_MIN; i <= MBIM_DEVICE_SESSION_ID_MAX; i++) {
+    /* The minimum session id is really 0 (MBIM_DEVICE_SESSION_ID_MIN), but
+     * when we have to automatically allocate a new session id we'll start at
+     * 1, because 0 is also used by the non-muxed setup. */
+    for (i = 1; i <= MBIM_DEVICE_SESSION_ID_MAX; i++) {
         g_autofree gchar *ifname = NULL;
 
         ifname = session_id_to_ifname (ifname_prefix, i);
