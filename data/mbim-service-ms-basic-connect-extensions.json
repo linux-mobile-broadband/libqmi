@@ -129,9 +129,9 @@
                        { "name"          : "AuthProtocol",
                          "format"        : "guint32",
                          "public-format" : "MbimAuthProtocol" } ] },
-                         
+
   //**********************************************************************************
-  
+
   { "name"     : "Sys Caps",
     "service"  : "Ms Basic Connect Extensions",
     "type"     : "Command",
@@ -147,7 +147,7 @@
                      "format" : "guint64" } ] },
 
   //**********************************************************************************
-  
+
   { "name"         : "Slot Info Status",
     "service"      : "Ms Basic Connect Extensions",
     "type"         : "Command",
@@ -190,7 +190,7 @@
                      "format"           : "ref-struct-array",
                      "struct-type"      : "MbimSlot",
                      "array-size-field" : "MapCount" } ] },
-                     
+
 //************************************************************************************
 
   { "name"     : "Device Caps",
