@@ -84,6 +84,7 @@
   <chapter>
     <title>Qualcomm-defined services</title>
     <xi:include href="xml/mbim-qmi.xml"/>
+    <xi:include href="xml/mbim-qdu.xml"/>
   </chapter>
 
   <chapter>
@@ -94,11 +95,6 @@
   <chapter>
     <title>Intel-defined Services</title>
     <xi:include href="xml/mbim-intel-firmware-update.xml"/>
-  </chapter>
-
-  <chapter>
-    <title>QDU-defined Services</title>
-    <xi:include href="xml/mbim-qdu.xml"/>
   </chapter>
 
   <chapter>
