@@ -138,8 +138,8 @@
                       "type"          : "TLV",
                       "since"         : "1.0",
                       "format"        : "guint16",
-                      "public-format" : "QmiCtlDataLinkProtocol" } ],
-                      "prerequisites" : [ { "common-ref" : "Success" } ] },
+                      "public-format" : "QmiCtlDataLinkProtocol",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
   {  "name"    : "Sync",
