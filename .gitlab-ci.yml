@@ -12,12 +12,11 @@ stages:
   variables:
     FDO_UPSTREAM_REPO: mobile-broadband/libmbim
     FDO_DISTRIBUTION_VERSION: '18.04'
-    FDO_DISTRIBUTION_TAG: '2021-05-03.1'
+    FDO_DISTRIBUTION_TAG: '2021-07-22.1'
     FDO_DISTRIBUTION_PACKAGES: ca-certificates git gcc autoconf automake libtool
                                libgirepository1.0-dev libglib2.0-dev autopoint
-                               autoconf-archive gtk-doc-tools libglib2.0-doc
-                               gobject-introspection bash-completion valac meson
-                               ninja-build
+                               gtk-doc-tools libglib2.0-doc gobject-introspection
+                               bash-completion valac meson ninja-build
 
 build container:
   extends:
