@@ -32,6 +32,12 @@ class Message:
     Constructor
     """
     def __init__(self, dictionary, common_objects_dictionary):
+        # Validate input fields in the dictionary, and only allow those
+        # explicitly expected.
+        for message_key in dictionary:
+            if message_key not in [ "name", "type", "service", "id", "since", "input", "output", "vendor", "scope", "abort" ]:
+                raise ValueError('Invalid message field: "' + message_key + '"')
+
         # The message service, e.g. "Ctl"
         self.service = dictionary['service']
         # The name of the specific message, e.g. "Something"
@@ -40,10 +46,6 @@ class Message:
         self.id = dictionary['id']
         # The type, which must always be 'Message' or 'Indication'
         self.type = dictionary['type']
-
-        # The message version info is no longer supported
-        if 'version' in dictionary:
-            raise ValueError('The "version" tag is no longer supported')
 
         self.static = True if 'scope' in dictionary and dictionary['scope'] == 'library-only' else False
         self.abort = True if 'abort' in dictionary and dictionary['abort'] == 'yes' else False
