@@ -403,6 +403,7 @@
     <section>
       <title>Voice Indications</title>
       <xi:include href="xml/qmi-indication-voice-all-call-status.xml"/>
+      <xi:include href="xml/qmi-indication-voice-supplementary-service.xml"/>
       <xi:include href="xml/qmi-indication-voice-release-ussd.xml"/>
       <xi:include href="xml/qmi-indication-voice-ussd.xml"/>
       <xi:include href="xml/qmi-indication-voice-originate-ussd-no-wait.xml"/>
@@ -415,6 +416,9 @@
       <xi:include href="xml/qmi-message-voice-answer-call.xml"/>
       <xi:include href="xml/qmi-message-voice-get-config.xml"/>
       <xi:include href="xml/qmi-message-voice-get-supported-messages.xml"/>
+      <xi:include href="xml/qmi-message-voice-manage-calls.xml"/>
+      <xi:include href="xml/qmi-message-voice-set-supplementary-service.xml"/>
+      <xi:include href="xml/qmi-message-voice-get-call-waiting.xml"/>
       <xi:include href="xml/qmi-message-voice-originate-ussd.xml"/>
       <xi:include href="xml/qmi-message-voice-answer-ussd.xml"/>
       <xi:include href="xml/qmi-message-voice-cancel-ussd.xml"/>
