@@ -4,3 +4,5 @@ option('udevdir', type: 'string', value: '', description: 'where udev base direc
 
 option('introspection', type: 'boolean', value: true, description: 'build introspection support')
 option('gtk_doc', type: 'boolean', value: false, description: 'use gtk-doc to build documentation')
+
+option('bash_completion', type: 'boolean', value: true, description: 'install bash completion files')

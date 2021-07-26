@@ -21,6 +21,7 @@ mbim_micro_version = version_array[2].to_int()
 
 mbim_prefix = get_option('prefix')
 mbim_bindir = get_option('bindir')
+mbim_datadir = get_option('datadir')
 mbim_includedir = get_option('includedir')
 mbim_libexecdir = get_option('libexecdir')
 mbim_mandir = get_option('mandir')
@@ -138,7 +139,15 @@ glib_deps = declare_dependency(
   compile_args: c_flags,
 )
 
-bash_completion_completionsdir = dependency('bash-completion').get_pkgconfig_variable('completionsdir', define_variable: ['prefix', mbim_prefix])
+enable_bash_completion = get_option('bash_completion')
+if enable_bash_completion
+  bash_completion_dep = dependency('bash-completion')
+  bash_completion_completionsdir = bash_completion_dep.get_pkgconfig_variable(
+    'completionsdir',
+    # bash-completion 2.10 changed the substitutions
+    define_variable: bash_completion_dep.version().version_compare('>= 2.10') ? ['datadir', mbim_datadir] : ['prefix', mbim_prefix],
+  )
+endif
 
 glib_prefix = glib_dep.get_pkgconfig_variable('prefix')
 
@@ -191,7 +200,7 @@ configure_file(
 meson.add_install_script(
   'meson_post_install.py',
   get_option('bindir'),
-  bash_completion_completionsdir,
+  enable_bash_completion ? bash_completion_completionsdir : '',
 )
 
 output = '\n' + meson.project_name() + ' ' + meson.project_version() + '\n\n'
@@ -199,6 +208,7 @@ output += '  Build\n'
 output += '    compiler:              ' + cc.get_id() + '\n'
 output += '    cflags:                ' + ' '.join(cc_flags) + '\n'
 output += '    Documentation:         ' + enable_gtk_doc.to_string() + '\n'
+output += '    bash completion:       ' + enable_bash_completion.to_string() + '\n'
 output += '    gobject introspection: ' + enable_gir.to_string() + '\n\n'
 output += '  System paths\n'
 output += '    prefix:                ' + mbim_prefix + '\n'
