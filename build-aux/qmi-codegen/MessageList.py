@@ -33,9 +33,13 @@ class MessageList:
     Constructor
     """
     def __init__(self, collection, objects_dictionary, common_objects_dictionary):
+        # known requests enabled by the collection
         self.request_list = []
+        # known indications enabled by the collection
         self.indication_list = []
+        # known requests and indications disabled by the collection
         self.unsupported_list = []
+
         self.message_id_enum_name = None
         self.indication_id_enum_name = None
         self.service = None
@@ -68,6 +72,8 @@ class MessageList:
         if self.service is None:
             raise ValueError('Missing Service field')
 
+        self.request_prefix = utils.build_underscore_name("Qmi Request " + self.service).upper()
+        self.indication_prefix = utils.build_underscore_name("Qmi Indication " + self.service).upper()
 
     def __emit_message_build_symbols(self, f):
         template = ''
@@ -335,3 +341,15 @@ class MessageList:
             message.emit_sections(sfile)
         for message in self.request_list:
             message.emit_sections(sfile)
+
+    """
+    Check whether a given message exists in the list
+    """
+    def contains(self, message_id_enum_name):
+        for message in self.request_list:
+            if message.id_enum_name == message_id_enum_name:
+                return True
+        for message in self.indication_list:
+            if message.id_enum_name == message_id_enum_name:
+                return True
+        return False

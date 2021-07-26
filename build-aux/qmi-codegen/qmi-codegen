@@ -76,6 +76,14 @@ def codegen_main():
     object_list_json = json.loads(database_file_contents)
     message_list = MessageList(collection_list_json, object_list_json, common_object_list_json)
 
+    # Validate that all items in the collection are in the message list
+    if collection_list_json is not None:
+        for message_id_enum_name in collection_list_json:
+            if message_id_enum_name.startswith(message_list.request_prefix) or \
+               message_id_enum_name.startswith(message_list.indication_prefix):
+                if message_list.contains(message_id_enum_name) == False:
+                    raise ValueError('Message ' + message_id_enum_name + ' in collection does not exist')
+
     # Add common stuff to the output files
     utils.add_copyright(output_file_c);
     utils.add_copyright(output_file_h);
