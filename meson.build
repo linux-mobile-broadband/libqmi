@@ -155,7 +155,15 @@ enable_udev = get_option('udev')
 gudev_dep = dependency('gudev-1.0', version: '>= 232', required: enable_udev and enable_firmware_update)
 config_h.set('WITH_UDEV', gudev_dep.found())
 
-bash_completion_completionsdir = dependency('bash-completion').get_pkgconfig_variable('completionsdir', define_variable: ['datadir', qmi_datadir])
+enable_bash_completion = get_option('bash_completion')
+if enable_bash_completion
+  bash_completion_dep = dependency('bash-completion')
+  bash_completion_completionsdir = bash_completion_dep.get_pkgconfig_variable(
+    'completionsdir',
+    # bash-completion 2.10 changed the substitutions
+    define_variable: bash_completion_dep.version().version_compare('>= 2.10') ? ['datadir', qmi_datadir] : ['prefix', qmi_prefix],
+  )
+endif
 
 # rmnet link management support
 enable_rmnet = false
@@ -237,11 +245,18 @@ configure_file(
   configuration: config_h,
 )
 
+meson.add_install_script(
+  'meson_post_install.py',
+  get_option('bindir'),
+  enable_bash_completion ? bash_completion_completionsdir : '',
+)
+
 output = '\n' + meson.project_name() + ' ' + meson.project_version() + '\n\n'
 output += '  Build\n'
 output += '    compiler:              ' + cc.get_id() + '\n'
 output += '    cflags:                ' + ' '.join(cc_flags) + '\n'
 output += '    Documentation:         ' + enable_gtk_doc.to_string() + '\n'
+output += '    bash completion:       ' + enable_bash_completion.to_string() + '\n'
 output += '    gobject introspection: ' + enable_gir.to_string() + '\n\n'
 output += '  System paths\n'
 output += '    prefix:                ' + qmi_prefix + '\n'
