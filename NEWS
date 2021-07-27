@@ -1,4 +1,99 @@
 
+Overview of changes in libmbim 1.26
+----------------------------------------
+
+ * Build now requires GLib/GObject/GIO 2.56.
+
+ * The GUdev optional build/runtime requirement is now fully dropped, it's no
+   longer used.
+
+ * Building from git no longer requires autoconf-archive, the needed AX_ macros
+   are now shipped inside m4/.
+
+ * In addition to building from a source release tarball, or building from git
+   checkouts using the GNU autotools suite (autoconf/automake/libtool), this
+   release includes the initial support for the meson build system. The meson
+   port is not fully complete yet, as there are some missing things in the doc
+   generation steps, but for system integration or development purposes, the
+   port should be fully operational. This major release, including all its
+   stable updates in the 1.26.x series, will be the last ones providing support
+   for GNU autotools. The next major release will likely be a meson-only one,
+   and will therefore not be based on a source release tarball any more, but
+   on specific git tags instead.
+
+ * Implemented new link management operations, exclusively for the cdc_mbim
+   driver for now. These new operations allow creating or deleting VLAN network
+   interfaces in order to run multiplexed data sessions over one single physical
+   network interface.
+
+ * Added support for the Microsoft-defined SAR service, including the following
+   operations:
+   ** MBIM_CID_MS_SAR_CONFIG
+   ** MBIM_CID_MS_SAR_TRANSMISSION_STATUS
+
+ * Added support for the Microsoft-defined UICC Low Level Access service,
+   including the following operations:
+   ** MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_ATR
+   ** MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_OPEN_CHANNEL
+   ** MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_CLOSE_CHANNEL
+   ** MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APDU
+   ** MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_TERMINAL_CAPABILITY
+   ** MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_RESET
+
+ * Added support for the Qualcomm-defined QDU service, including the following
+   operations:
+   ** MBIM_CID_QDU_UPDATE_SESSION
+   ** MBIM_CID_QDU_FILE_OPEN
+   ** MBIM_CID_QDU_FILE_WRITE
+
+ * Extended the Microsoft-defined Basic Connect Extensions service, including
+   the following operations:
+   ** MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_DEVICE_CAPS
+   ** MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_SYS_CAPS
+   ** MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_SLOT_INFO_STATUS
+   ** MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_DEVICE_SLOT_MAPPINGS
+
+ * libmbim-glib:
+   ** Logic updated to make sure full packets are written at once, instead of
+      writing them in chunks.
+   ** Updated the "LTE attach status" APIs in order to avoid creating unneeded
+      struct types in the interface. The older methods have been deprecated and
+      maintained in the library for compatibility purposes only.
+
+ * mbim-proxy:
+   ** Internal buffer size updated from 512 bytes to 4096 bytes.
+
+ * mbimcli:
+   ** New '--ms-set-sar-config' and '--ms-query-sar-config' actions.
+   ** New '--ms-set-transmission-status' and '--ms-query-transmission-status'
+      actions.
+   ** Updated '--enter-pin', '--disable-pin' and '--unlock-pin' to allow other
+      PIN types, not just assuming PIN1.
+   ** New '--link-add', '--link-delete', '--link-list' and '--link-delete-all'
+      actions.
+   ** New '--ms-query-sys-caps' action.
+   ** New '--ms-query-slot-info-status' action.
+   ** New '--ms-query-device-slot-mappings' and '--ms-set-device-slot-mappings'
+      actions.
+   ** Renamed '--ms-query-lte-attach-status' to '--ms-query-lte-attach-info',
+      and kept the old name for compatibility purposes.
+
+ * mbim-network:
+   ** When using the mbim-proxy, skip trying to manage the MBIM session and
+      transaction ids as that is implicitly done by the proxy already.
+
+ * Several other minor improvements and fixes.
+
+The following features which were backported to 1.24.x releases are also present
+in libmbim 1.26.0:
+
+ * Fixed merged subscribe list reporting and handling in the proxy.
+ * Fixed transaction id handling when multiple fragments are involved.
+ * Fixed read overflows on malformed messages.
+ * Skip warnings if descriptors file cannot be read, as in new MBIM backends
+   other than cdc_mbim.
+
+
 Overview of changes in libmbim 1.24
 ----------------------------------------
 
