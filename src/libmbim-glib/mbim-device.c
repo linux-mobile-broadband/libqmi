@@ -1952,6 +1952,21 @@ mbim_device_close (MbimDevice          *self,
         return;
     }
 
+    /* If we're opening, fail with error. We could say we would abort the
+     * ongoing open attempt, but the way to abort that attempt is with the
+     * cancellable given in the open operation, not with an additional close.
+     */
+    if (self->priv->open_status == OPEN_STATUS_OPENING) {
+        g_task_return_new_error (
+            task, MBIM_CORE_ERROR, MBIM_CORE_ERROR_WRONG_STATE,
+            "Cannot close device: not yet fully open");
+        g_object_unref (task);
+        return;
+    }
+
+    g_debug ("[%s] closing device...", self->priv->path_display);
+    g_assert (self->priv->open_status == OPEN_STATUS_OPEN);
+
     /* If the device is in-session, avoid the close message */
     if (self->priv->in_session) {
         GError *error = NULL;
