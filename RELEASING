@@ -1,6 +1,14 @@
 
 The libmbim releases are generated using the GNU autotools.
 
+0.1) For major releases:
+     * Increment mbim_minor_version and reset mbim_micro_version.
+     * Assuming API/ABI compatibility, increment both mbim_glib_lt_current and
+       mbim_glib_lt_age.
+
+0.2) For stable branch releases:
+     * Increment mbim_micro_version.
+
 1) Configure and build the whole project, making sure gtk-doc is enabled:
 
     $ NOCONFIGURE=1 ./autogen.sh
@@ -23,9 +31,42 @@ The libmbim releases are generated using the GNU autotools.
     $ gpg --verify libmbim-${VERSION}.tar.xz.asc libmbim-${VERSION}.tar.xz
 
 5) Upload source tarball (.tar.xz) and signature (.tar.xz.asc) to
-   freedesktop.org
+   freedesktop.org.
+    $ scp libmbim-${VERSION}.tar.xz* fd.o:${libmbim}/
 
-TODO: manpages and gtk-doc references
+6) Create directories for the manpages and gtk-doc documentation in
+   freedesktop.org, and also update the 'latest' links:
+    $ ssh fd.o
+    [fd.o] $ cd ${libmbim}/man/
+    [fd.o] $ rm latest
+    [fd.o] $ mkdir -p ${VERSION}
+    [fd.o] $ ln -s ${VERSION} latest
+    [fd.o] $ cd ${libmbim}/libmbim-glib/
+    [fd.o] $ rm latest
+    [fd.o] $ mkdir -p ${VERSION}
+    [fd.o] $ ln -s ${VERSION} latest
+
+7) Generate HTML for the manpages:
+    $ roffit < docs/man/mbimcli.1 > mbimcli.1.html
+    $ roffit < docs/man/mbim-network.1 > mbim-network.1.html
+
+8) Upload manpages in HTML to freedesktop.org:
+    $ scp *.1.html fd.o:${libmbim}/man/${VERSION}/
+
+9) Upload the gtk-doc in HTML available inside the source tarball to
+   freedesktop.org. It must be the one inside the tarball because it contains
+   the correct fixed refs to the online documentation of the dependencies
+   (e.g. the glib/gobject/gio documentation URLs in http://developer.gnome.org)
+    $ tar -Jxvf libmbim-${VERSION}.tar.xz
+    $ scp libmbim-${VERSION}/docs/reference/libmbim-glib/html/* fd.o:${libmbim}/libmbim-glib/${VERSION}/
+
+10.1) For major releases:
+     * Fork new stable branch (e.g. mbim-${MAJOR}-${MINOR})
+     * Post-release version bump in the master branch, increment mbim_minor_version.
+     * Post-release version bump in the stable branch, increment mbim_micro_version.
+
+10.2) For stable branch releases:
+     * Post-release version bump, increment mbim_micro_version.
 
 -------------------------------------------------------------------------------
 
