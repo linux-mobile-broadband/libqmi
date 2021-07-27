@@ -1839,8 +1839,6 @@ destroy_iochannel (MbimDevice  *self,
 {
     GError *inner_error = NULL;
 
-    self->priv->open_status = OPEN_STATUS_CLOSED;
-
     /* Already closed? */
     if (!self->priv->iochannel && !self->priv->socket_connection && !self->priv->socket_client)
         return TRUE;
@@ -1908,16 +1906,21 @@ close_message_ready (MbimDevice   *self,
                      GAsyncResult *res,
                      GTask        *task)
 {
-    g_autoptr(MbimMessage)  response = NULL;
-    GError                 *error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
+    g_autoptr(GError)      iochannel_error = NULL;
 
     response = mbim_device_command_finish (self, res, &error);
-    if (!response)
-        g_task_return_error (task, error);
-    else if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_CLOSE_DONE, &error))
-        g_task_return_error (task, error);
-    else if (!destroy_iochannel (self, &error))
-        g_task_return_error (task, error);
+    if (response)
+        mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_CLOSE_DONE, &error);
+
+    self->priv->open_status = OPEN_STATUS_CLOSED;
+    destroy_iochannel (self, &iochannel_error);
+
+    if (error)
+        g_task_return_error (task, g_steal_pointer (&error));
+    else if (iochannel_error)
+        g_task_return_error (task, g_steal_pointer (&iochannel_error));
     else
         g_task_return_boolean (task, TRUE);
     g_object_unref (task);
@@ -1942,8 +1945,8 @@ mbim_device_close (MbimDevice          *self,
     task = g_task_new (self, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify)device_close_context_free);
 
-    /* Already closed? */
-    if (!self->priv->iochannel) {
+    /* If already closed, we're done */
+    if (self->priv->open_status == OPEN_STATUS_CLOSED) {
         g_task_return_boolean (task, TRUE);
         g_object_unref (task);
         return;
@@ -1953,6 +1956,7 @@ mbim_device_close (MbimDevice          *self,
     if (self->priv->in_session) {
         GError *error = NULL;
 
+        self->priv->open_status = OPEN_STATUS_CLOSED;
         if (!destroy_iochannel (self, &error))
             g_task_return_error (task, error);
         else
@@ -2445,6 +2449,7 @@ dispose (GObject *object)
 
     g_clear_object (&self->priv->file);
 
+    self->priv->open_status = OPEN_STATUS_CLOSED;
     destroy_iochannel (self, NULL);
     g_clear_object (&self->priv->net_port_manager);
 
