@@ -3,7 +3,7 @@
 
 project(
   'libmbim', 'c',
-  version: '1.25.6',
+  version: '1.26.0',
   license: 'GPL2',
   default_options: [
     'buildtype=debugoptimized',
@@ -34,9 +34,9 @@ mbim_glib_pkgincludedir = join_paths(mbim_includedir, mbim_glib_include_subdir)
 # - Otherwise, increment c and zero r.
 #   - If the interface has grown (that is, the new library is compatible with old code), increment a.
 #   - If the interface has changed in an incompatible way (that is, functions have changed or been removed), then zero a.
-current = 9
+current = 10
 revision = 0
-age = 5
+age = 6
 mbim_glib_version = '@0@.@1@.@2@'.format(current - age, age, revision)
 
 mbim_gir_version = '1.0'
