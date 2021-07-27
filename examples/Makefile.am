@@ -1,1 +1,0 @@
-SUBDIRS = simple-tester-python
