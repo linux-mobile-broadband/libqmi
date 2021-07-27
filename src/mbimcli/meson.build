@@ -34,7 +34,7 @@ mbimcli = executable(
 
 if enable_bash_completion
   install_data(
-    'mbimcli-completion',
+    'mbimcli',
     install_dir: bash_completion_completionsdir,
   )
 endif
