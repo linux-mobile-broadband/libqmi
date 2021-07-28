@@ -102,10 +102,9 @@ build-autotools-no-qrtr:
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
-    - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection
-    - make
-    - make install
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=false
+    - ninja -C build
+    - ninja -C build install
     - popd
     - NOCONFIGURE=1 ./autogen.sh
     - ./configure --prefix=/usr --disable-gtk-doc --disable-introspection --enable-mbim-qmux --disable-qrtr
@@ -197,10 +196,9 @@ build-autotools-default:
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
-    - NOCONFIGURE=1 ./autogen.sh
-    - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection
-    - make
-    - make install
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=true
+    - ninja -C build
+    - ninja -C build install
     - popd
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
     - pushd libqrtr-glib
