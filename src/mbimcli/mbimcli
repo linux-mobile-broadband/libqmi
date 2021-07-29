@@ -1,5 +1,9 @@
 # mbimcli(1) completion                                      -*- shell-script -*-
 
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Copyright (C) 2015 Aleksander Morgado <aleksander@aleksander.es>
+
 _mbimcli()
 {
     local cur prev words cword split
