@@ -32,7 +32,7 @@ foreach test_unit: test_units
   )
 
   test(
-    test_unit[0],
+    test_unit,
     exe,
     env: test_env,
   )
