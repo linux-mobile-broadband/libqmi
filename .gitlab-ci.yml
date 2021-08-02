@@ -31,7 +31,7 @@ build container:
     - tags
     - pushes
 
-build-meson:
+build-meson-default:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
@@ -42,10 +42,24 @@ build-meson:
     - tags
     - schedules
   script:
-    - meson setup _debug_build --prefix=/usr -Dwerror=true
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
+    - pushd libmbim
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=true
+    - ninja -C build
+    - ninja -C build install
+    - popd
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
+    - pushd libqrtr-glib
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --enable-gtk-doc --enable-introspection
+    - make
+    - make install
+    - popd
+    - meson setup _debug_build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=true -Dqrtr=true -Drmnet=true
     - ninja -C _debug_build
     - ninja -C _debug_build install
-    - meson setup _release_build --prefix=/usr --buildtype=release -Dwerror=true
+    - ninja -C _debug_build uninstall
+    - meson setup _release_build --prefix=/usr --buildtype=release -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=true -Dqrtr=true -Drmnet=true
     - ninja -C _release_build
     - ninja -C _release_build install
 
