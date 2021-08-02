@@ -1,4 +1,12 @@
 
+Overview of changes in libqmi 1.28.8
+----------------------------------------
+
+ * libqmi-glib:
+   ** Fix CTL "Set Data Format" output TLV prerequisites.
+   ** Fix double free in the qmiwwan based net port manager.
+
+
 Overview of changes in libqmi 1.28.6
 ----------------------------------------
 
