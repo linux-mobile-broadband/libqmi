@@ -92,9 +92,12 @@ sources = files(
   'qmi-utils.c',
 )
 
-deps = [libqmi_glib_generated_dep]
+deps = []
 
-private_deps = [gio_unix_dep]
+private_deps = [
+  gio_unix_dep,
+  libqmi_glib_generated_dep,
+]
 
 if enable_mbim_qmux
   sources += files('qmi-endpoint-mbim.c')
@@ -124,7 +127,7 @@ libqmi_glib = shared_library(
 libqmi_glib_dep = declare_dependency(
   sources: [gen_headers, version_header],
   include_directories: [libqmi_glib_inc, generated_inc],
-  dependencies: deps,
+  dependencies: deps + [glib_deps],
   link_with: libqmi_glib,
 )
 
