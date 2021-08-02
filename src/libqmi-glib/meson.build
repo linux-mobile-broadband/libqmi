@@ -136,8 +136,9 @@ pkg.generate(
   requires: ['glib-2.0', 'gobject-2.0', 'gio-2.0'],
   variables: [
     'exec_prefix=${prefix}',
-    'qmi_qrtr_supported=' + enable_qrtr.to_int().to_string(),
     'qmi_mbim_qmux_supported=' + enable_mbim_qmux.to_int().to_string(),
+    'qmi_qrtr_supported=' + enable_qrtr.to_int().to_string(),
+    'qmi_rmnet_supported=' + enable_rmnet.to_int().to_string(),
   ],
 )
 
