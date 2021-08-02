@@ -4,8 +4,11 @@
 mans = [
   ['qmicli', [help2man, '--output=@OUTPUT@', '--name=Control QMI devices', '--help-option="--help-all"', qmicli]],
   ['qmi-network', [help2man, '--output=@OUTPUT@', '--name=Simple network management of QMI devices', qmi_network]],
-  ['qmi-firmware-update', [help2man, '--output=@OUTPUT@', '--name=Update firmware in QMI devices', qmi_firmware_update]],
 ]
+
+if enable_firmware_update
+  mans += [['qmi-firmware-update', [help2man, '--output=@OUTPUT@', '--name=Update firmware in QMI devices', qmi_firmware_update]]]
+endif
 
 foreach man: mans
   custom_target(
