@@ -149,6 +149,36 @@ build-meson-no-mbim:
     - ninja -C build
     - ninja -C build install
 
+build-meson-collection-minimal:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
+  script:
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false -Dcollection=minimal -Dfirmware_update=false
+    - ninja -C build
+    - ninja -C build install
+
+build-meson-collection-basic:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
+  script:
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false -Dcollection=basic
+    - ninja -C build
+    - ninja -C build install
+
 build-autotools-no-deprecated:
   stage: build
   extends:
