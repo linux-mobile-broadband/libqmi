@@ -1,4 +1,125 @@
 
+Overview of changes in libqmi 1.30.0
+----------------------------------------
+
+ * Build now requires GLib/GObject/GIO 2.56 and libgudev 232.
+
+ * Building from git no longer requires autoconf-archive, the needed AX_ macros
+   are now shipped inside m4/.
+
+ * In addition to building from a source release tarball, or building from git
+   checkouts using the GNU autotools suite (autoconf/automake/libtool), this
+   release includes the initial support for the meson build system. The meson
+   port is not fully complete yet, as there are some missing things in the doc
+   generation steps, but for system integration or development purposes, the
+   port should be fully operational. This major release, including all its
+   stable updates in the 1.30.x series, will be the last ones providing support
+   for GNU autotools. The next major release will likely be a meson-only one,
+   and will therefore not be based on a source release tarball any more, but
+   on specific git tags instead.
+
+ * Updated the build to allow better control of the built-in RMNET support:
+   ** A new '--disable-rmnet' configure flag is available to request fully
+      disabling the RMNET support. When RMNET support is disabled, the link
+      management operations are done with the add_mux/del_mux qmi_wwan API
+      exclusively.
+   ** The library sources now ship the RMNET specific types from the kernel API
+      in a custom internal header, so that we don't require the latest kernel
+      headers during configure time and build time.
+   ** A new 'QMI_RMNET_SUPPORTED' symbol is given to flag the existence of the
+      RMNET support in the libqmi-glib headers.
+
+ * New services:
+   ** New 'DPM' (Data Port Mapper) service, which allows setting up the binding
+      between TX/RX endpoint ids in the hardware and the control port interface,
+      required for IPA based Qualcomm SoCs.
+
+ * New request/response/indications:
+   ** nas: implement "Get Preferred Networks" request/response.
+   ** nas: implement "Set Preferred Networks" request/response.
+   ** nas: implement "Network Reject" indications
+   ** uim: implement "Get Configuration" request/response.
+   ** uim: implement "Depersonalization" request/response.
+   ** voice: implement "Manage Calls" request/response.
+   ** voice: implement "Supplementary Service" indication.
+   ** voice: implement "Set Supplementary Service" request/response.
+   ** voice: implement "Get Call Waiting" request/response.
+
+ * New TLVs supported in existing messages:
+   ** nas: added the "Network Reject Information" TLV in "Register Indications".
+   ** nas: renamed several TLVs in the "System Info" response and indication
+      messages, in order to provide a QmiNasRejectCause value instead of a plain
+      guint8. The old names were flagged as deprecated and added to the compat
+      layer in order to avoid breaking API.
+      *** Renamed the "GSM System Info" TLV to "GSM System Info v2".
+      *** Renamed the "WCDMA System Info" TLV to "WCDMA System Info v2".
+      *** Renamed the "LTE System Info" TLV to "LTE System Info v2".
+      *** Renamed the "TD SCMA System Info" TLV to "TD SCMA System Info v2".
+   ** nas: added the "NR5G ARFCN" and "NR5G Cell Information" TLVs in "Get Cell
+      Location Info".
+   ** wds: added the "APN Type" TLV in "Get Profile Settings".
+   ** wds: added the "APN Type" TLV in "Create Profile".
+   ** wds: added the "APN Type" TLV in "Modify Profile".
+   ** nas: renamed the "Common Info" TLV in "Swi Get Status" to "Common Info v2"
+      in order to read the temperature field as a signed integer. The old name
+      was flagged as deprecated and added to the compat layer in order to avoid
+      breaking API.
+   ** nas: renamed the "MNC PDS Digit Include Status" TLV in "Get System
+      Selection Preference" to "MNC PCS Digit Include Status". The old name was
+      flagged as deprecated and added to the compat layer in order to avoid
+      breaking API.
+   ** wda: added the "Uplink Data Aggregation Max Datagrams", "Uplink Data
+      Aggregation Max Size", "Download Minimum Padding" and "Flow Control" TLVs
+      in "Get Data Format" and "Set Data Format" responses.
+   ** nas: added the "NR5G Service Status Info", "NR5G System Info", "EUTRA with
+      NR5G availability", DCNR restriction Info" and "NR5G Tracking Area Code"
+      TLVs in "Get System Info".
+
+ * libqmi-glib:
+   ** Added support for 'hsic', 'bam-dmux' and 'unknown' endpoint types.
+   ** Added support for QMAPv2, QMAPv3 and QMAPv4 data aggregation types.
+   ** Added support for 'NGRAN' access technology identifier.
+   ** New 'qmi_device_add_link_with_flags()' method, in order to give e.g. rmnet
+      specific checksum offload related flags when creating a new link.
+
+ * qmicli:
+   ** New '--nas-get-preferred-networks' command.
+   ** New '--nas-set-preferred-networks' command.
+   ** New '--uim-get-configuration' command.
+   ** New '--uim-depersonalization' command.
+   ** New '--wms-get-routes' command.
+   ** New '--dpm-open-port' command.
+   ** New '--dpm-close-port' command.
+   ** Updated '--wds-create-profile' with an additional 'apn-type-mask' setting.
+   ** Updated '--wds-modify-profile' with an additional 'apn-type-mask' setting.
+   ** Updated '--link-add' with an additional optional 'flags' setting.
+
+ * qmi-network:
+   ** New PROFILE configuration setting to allow specifying which WDS profile to
+      use when connecting.
+   ** New IP-TYPE configuration setting to allow selecting the IP type requested
+      (e.g. IPv4 or IPv6).
+
+ * collections:
+   ** basic: added voice call management operations.
+   ** basic: added voice supplementary service related operations.
+   ** basic: added NAS preferred networks related operations.
+   ** basic: added NAS network reject indications.
+   ** basic: added UIM depersonalization related operations.
+
+ * Several other minor improvements and fixes.
+
+The following features which were backported to 1.28.x releases are also present
+in libqmi 1.30.0:
+
+   ** gir: bindings updated to make all output TLV fields optional.
+   ** gir: bindings fixed with correct string/struct return annotations.
+   ** build: updated to disable gtkdocize during autoreconf.
+   ** build: updated to avoid gtkdoc-rebase on local install step.
+   ** libqmi-glib: added initial "wwan" subsystem support.
+   ** dms: implement "Foxconn Set FCC Authentication" command.
+
+
 Overview of changes in libqmi 1.28.0
 ----------------------------------------
 
