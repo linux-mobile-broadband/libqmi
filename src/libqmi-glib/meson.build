@@ -113,7 +113,7 @@ if enable_rmnet
   sources += files('qmi-net-port-manager-rmnet.c')
 endif
 
-libqmi_glib = shared_library(
+libqmi_glib = library(
   libname,
   version: qmi_glib_version,
   sources: sources + [version_header],
@@ -146,7 +146,7 @@ pkg.generate(
   ],
 )
 
-if enable_gir
+if enable_gir and get_option('default_library') != 'static'
   incs = [
     'Gio-2.0',
     'GLib-2.0',
