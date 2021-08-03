@@ -235,7 +235,7 @@ endif
 
 libqmi_glib_generated = static_library(
   'qmi-glib-generated',
-  sources: gen_sources + gen_headers,
+  sources: gen_sources + gen_headers + [version_header],
   include_directories: incs,
   dependencies: deps,
   c_args: c_flags,
