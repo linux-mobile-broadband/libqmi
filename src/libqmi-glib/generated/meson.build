@@ -241,9 +241,10 @@ libqmi_glib_generated = static_library(
   c_args: c_flags,
 )
 
-libqmi_glib_generated_dep = declare_dependency(
-  sources: gen_headers,
+# FIXME: in older versions of meson, if libqmi-glib-generated is linked as shared
+#        it will also try to link it in documentation generation
+generated_dep = declare_dependency(
+  sources: gen_headers + [version_header],
   include_directories: [libqmi_glib_inc, generated_inc],
-  dependencies: glib_deps,
-  link_with: libqmi_glib_generated,
+  dependencies: deps,
 )
