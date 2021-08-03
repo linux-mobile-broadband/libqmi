@@ -232,6 +232,7 @@ subdir('utils')
 
 enable_gtk_doc = get_option('gtk_doc')
 if enable_gtk_doc
+  assert(qmi_collection_name == 'full', 'Building documentation requires the \'full\' message collection.')
   subdir('docs/reference/libqmi-glib')
 endif
 
