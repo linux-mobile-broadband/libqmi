@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Copyright (C) 2019 - 2021 Iñigo Martinez <inigomartinez@gmail.com>
+
 option('collection', type: 'combo', choices: ['minimal', 'basic', 'full'], value: 'full', description: 'message collection to build')
 
 option('firmware_update', type: 'boolean', value: true, description: 'enable compilation of `qmi-firmware-update')
