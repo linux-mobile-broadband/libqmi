@@ -147,9 +147,8 @@ libmbim_glib_generated = static_library(
   c_args: c_flags,
 )
 
-libmbim_glib_generated_dep = declare_dependency(
+generated_dep = declare_dependency(
   sources: gen_headers,
   include_directories: [libmbim_glib_inc, generated_inc],
   dependencies: glib_deps,
-  link_with: libmbim_glib_generated,
 )

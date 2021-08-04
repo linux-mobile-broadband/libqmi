@@ -47,8 +47,8 @@ sources = files(
 )
 
 deps = [
+  generated_dep,
   libmbim_common_dep,
-  libmbim_glib_generated_dep,
 ]
 
 libmbim_glib_core = static_library(
@@ -57,6 +57,7 @@ libmbim_glib_core = static_library(
   include_directories: top_inc,
   dependencies: deps + [gio_unix_dep],
   c_args: common_c_flags,
+  link_whole: libmbim_glib_generated,
 )
 
 libmbim_glib_core_dep = declare_dependency(
@@ -81,6 +82,7 @@ libmbim_glib = library(
   version: mbim_glib_version,
   sources: version_header,
   include_directories: top_inc,
+  dependencies: generated_dep,
   link_args: '-Wl,--version-script,' + symbol_map,
   link_depends: symbol_map,
   link_whole: libmbim_glib_core,
