@@ -70,7 +70,6 @@ libqmi_glib_compat = static_library(
   include_directories: top_inc,
   dependencies: generated_dep,
   c_args: common_c_flags + no_deprecated_declarations_flags,
-  link_whole: libqmi_glib_generated,
 )
 
 libname = 'qmi-glib'
@@ -118,7 +117,7 @@ libqmi_glib = library(
   include_directories: top_inc,
   dependencies: deps,
   c_args: common_c_flags + ['-DLIBEXEC_PATH="@0@"'.format(join_paths(qmi_prefix, qmi_libexecdir))],
-  link_whole: libqmi_glib_compat,
+  link_whole: [libqmi_glib_compat, libqmi_glib_generated],
   install: true,
 )
 
