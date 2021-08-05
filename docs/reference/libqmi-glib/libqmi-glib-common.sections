@@ -1012,13 +1012,18 @@ qmi_wms_ack_failure_cause_get_type
 <FILE>qmi-enums-pdc</FILE>
 <TITLE>PDC enumerations and flags</TITLE>
 QmiPdcConfigurationType
+QmiPdcRefreshEventType
 <SUBSECTION Methods>
 qmi_pdc_configuration_type_get_string
+qmi_pdc_refresh_event_type_get_string
 <SUBSECTION Private>
 qmi_pdc_configuration_type_build_string_from_mask
+qmi_pdc_refresh_event_type_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_PDC_CONFIGURATION_TYPE
+QMI_TYPE_PDC_REFRESH_EVENT_TYPE
 qmi_pdc_configuration_type_get_type
+qmi_pdc_refresh_event_type_get_type
 </SECTION>
 
 <SECTION>

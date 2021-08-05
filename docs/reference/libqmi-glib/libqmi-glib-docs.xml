@@ -273,6 +273,7 @@
       <xi:include href="xml/qmi-indication-pdc-list-configs.xml"/>
       <xi:include href="xml/qmi-indication-pdc-load-config.xml"/>
       <xi:include href="xml/qmi-indication-pdc-set-selected-config.xml"/>
+      <xi:include href="xml/qmi-indication-pdc-refresh.xml"/>
     </section>
     <section>
       <title>PDC Requests</title>
@@ -637,6 +638,10 @@
   <chapter id="api-index-1-30" role="1.30">
     <title>Index of new symbols in 1.30</title>
     <xi:include href="xml/api-index-1.30.xml"></xi:include>
+  </chapter>
+  <chapter id="api-index-1-32" role="1.32">
+    <title>Index of new symbols in 1.32</title>
+    <xi:include href="xml/api-index-1.32.xml"></xi:include>
   </chapter>
 
   <xi:include href="xml/annotation-glossary.xml"></xi:include>
