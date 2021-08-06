@@ -149,6 +149,28 @@ build-meson-no-mbim:
     - ninja -C build
     - ninja -C build install
 
+build-meson-no-mbim-no-introspection:
+  stage: build
+  extends:
+  - .fdo.distribution-image@ubuntu
+  - .common_variables
+  only:
+    - master
+    - merge_requests
+    - tags
+    - schedules
+  script:
+    - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
+    - pushd libqrtr-glib
+    - NOCONFIGURE=1 ./autogen.sh
+    - ./configure --prefix=/usr --enable-gtk-doc --disable-introspection
+    - make
+    - make install
+    - popd
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=true -Drmnet=true
+    - ninja -C build
+    - ninja -C build install
+
 build-meson-collection-minimal:
   stage: build
   extends:
