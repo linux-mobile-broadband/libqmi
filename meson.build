@@ -218,7 +218,10 @@ version_conf.set10('QMI_QRTR_SUPPORTED', enable_qrtr)
 version_conf.set10('QMI_RMNET_SUPPORTED', enable_rmnet)
 
 # introspection support
-enable_gir = dependency('gobject-introspection-1.0', version: '>= 0.9.6', required: get_option('introspection')).found()
+enable_gir = get_option('introspection')
+if enable_gir
+  dependency('gobject-introspection-1.0', version: '>= 0.9.6')
+endif
 
 random_number = qmi_minor_version + meson.version().split('.').get(1).to_int()
 
