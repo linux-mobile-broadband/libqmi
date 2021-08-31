@@ -2598,6 +2598,8 @@ get_system_selection_preference_ready (QmiClientNas *client,
     guint16 mcc;
     guint16 mnc;
     guint64 extended_lte_band_preference[4];
+    guint64 nr5g_sa_band_preference[8];
+    guint64 nr5g_nsa_band_preference[8];
     gboolean has_pcs_digit;
     GArray *acquisition_order_preference;
 
@@ -2687,6 +2689,74 @@ get_system_selection_preference_ready (QmiClientNas *client,
                 guint band;
 
                 if (!(extended_lte_band_preference[i] & (((guint64) 1) << j)))
+                    continue;
+                band = 1 + j + (i * 64);
+                if (first) {
+                    g_print ("%u", band);
+                    first = FALSE;
+                } else
+                    g_print (", %u", band);
+            }
+        }
+        g_print ("'\n");
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_nr5g_sa_band_preference (
+            output,
+            &nr5g_sa_band_preference[0],
+            &nr5g_sa_band_preference[1],
+            &nr5g_sa_band_preference[2],
+            &nr5g_sa_band_preference[3],
+            &nr5g_sa_band_preference[4],
+            &nr5g_sa_band_preference[5],
+            &nr5g_sa_band_preference[6],
+            &nr5g_sa_band_preference[7],
+            NULL)) {
+        guint    i;
+        gboolean first = TRUE;
+
+        g_print ("\tNR5G SA band preference: '");
+        for (i = 0; i < G_N_ELEMENTS (nr5g_sa_band_preference); i++) {
+            guint j;
+
+            for (j = 0; j < 64; j++) {
+                guint band;
+
+                if (!(nr5g_sa_band_preference[i] & (((guint64) 1) << j)))
+                    continue;
+                band = 1 + j + (i * 64);
+                if (first) {
+                    g_print ("%u", band);
+                    first = FALSE;
+                } else
+                    g_print (", %u", band);
+            }
+        }
+        g_print ("'\n");
+    }
+
+    if (qmi_message_nas_get_system_selection_preference_output_get_nr5g_nsa_band_preference (
+            output,
+            &nr5g_nsa_band_preference[0],
+            &nr5g_nsa_band_preference[1],
+            &nr5g_nsa_band_preference[2],
+            &nr5g_nsa_band_preference[3],
+            &nr5g_nsa_band_preference[4],
+            &nr5g_nsa_band_preference[5],
+            &nr5g_nsa_band_preference[6],
+            &nr5g_nsa_band_preference[7],
+            NULL)) {
+        guint    i;
+        gboolean first = TRUE;
+
+        g_print ("\tNR5G NSA band preference: '");
+        for (i = 0; i < G_N_ELEMENTS (nr5g_nsa_band_preference); i++) {
+            guint j;
+
+            for (j = 0; j < 64; j++) {
+                guint band;
+
+                if (!(nr5g_nsa_band_preference[i] & (((guint64) 1) << j)))
                     continue;
                 band = 1 + j + (i * 64);
                 if (first) {
