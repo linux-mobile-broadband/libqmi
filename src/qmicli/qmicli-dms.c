@@ -2674,6 +2674,7 @@ get_band_capabilities_ready (QmiClientDms *client,
     QmiDmsBandCapability band_capability;
     QmiDmsLteBandCapability lte_band_capability;
     GArray *extended_lte_band_capability;
+    GArray *nr5g_band_capability;
     GError *error = NULL;
 
     output = qmi_client_dms_get_band_capabilities_finish (client, res, &error);
@@ -2726,6 +2727,20 @@ get_band_capabilities_ready (QmiClientDms *client,
             g_print ("%s%" G_GUINT16_FORMAT,
                      i == 0 ? "" : ", ",
                      g_array_index (extended_lte_band_capability, guint16, i));
+        g_print ("'\n");
+    }
+
+    if (qmi_message_dms_get_band_capabilities_output_get_nr5g_band_capability (
+            output,
+            &nr5g_band_capability,
+            NULL)) {
+        guint i;
+
+        g_print ("\tNR5G bands: '");
+        for (i = 0; i < nr5g_band_capability->len; i++)
+            g_print ("%s%" G_GUINT16_FORMAT,
+                     i == 0 ? "" : ", ",
+                     g_array_index (nr5g_band_capability, guint16, i));
         g_print ("'\n");
     }
 
