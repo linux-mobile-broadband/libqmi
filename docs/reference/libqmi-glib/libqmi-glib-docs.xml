@@ -640,6 +640,10 @@
     <title>Index of new symbols in 1.30</title>
     <xi:include href="xml/api-index-1.30.xml"></xi:include>
   </chapter>
+  <chapter id="api-index-1-30-2" role="1.30.2">
+    <title>Index of new symbols in 1.30.2</title>
+    <xi:include href="xml/api-index-1.30.2.xml"></xi:include>
+  </chapter>
   <chapter id="api-index-1-32" role="1.32">
     <title>Index of new symbols in 1.32</title>
     <xi:include href="xml/api-index-1.32.xml"></xi:include>
