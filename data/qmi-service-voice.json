@@ -257,7 +257,7 @@
                                                                  "public-format" : "gboolean" },
                                                                { "name"          : "ALS",
                                                                  "format"        : "guint8",
-                                                                 "public-format" : "QmiVoiceAls" } ] }, 
+                                                                 "public-format" : "QmiVoiceAls" } ] },
                        "prerequisites" : [ { "common-ref" : "Success" } ]
                      },
                      { "name"               : "Remote Party Number",
@@ -274,8 +274,9 @@
                                                                  "format"        : "guint8",
                                                                  "public-format" : "QmiVoicePresentation" },
                                                                { "name"   : "Type",
-                                                                 "format" : "string" } ] }, 
+                                                                 "format" : "string" } ] },
                        "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
+
     // *********************************************************************************
     { "name"    : "Manage Calls",
       "type"    : "Message",
@@ -294,7 +295,7 @@
                       "since"         : "1.30",
                       "format"        : "guint8" } ],
       "output"  : [ { "common-ref" : "Operation Result" } ] },
-    
+
     // *********************************************************************************
     { "name"    : "Supplementary Service",
       "type"    : "Indication",
@@ -311,7 +312,7 @@
                                       { "name"          : "Notification Type",
                                         "format"        : "guint8",
                                         "public-format" : "QmiVoiceSupplementaryServiceNotificationType" } ] } ] },
-    
+
     // *********************************************************************************
     { "name"    : "Set Supplementary Service",
       "type"    : "Message",
