@@ -1,4 +1,13 @@
 
+Overview of changes in libqmi 1.30.2
+----------------------------------------
+
+ * Build:
+   ** meson: fix disabling introspection support.
+
+ * New request/response/indications:
+   ** voice: implement "Get All Call Status" request/response.
+
 Overview of changes in libqmi 1.30.0
 ----------------------------------------
 
