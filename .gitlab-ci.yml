@@ -150,7 +150,7 @@ build-meson-no-mbim:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=true -Drmnet=true
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=false -Dqrtr=true -Drmnet=true
     - ninja -C build
     - ninja -C build install
 
