@@ -51,7 +51,7 @@ qmicli = executable(
 
 if enable_bash_completion
   install_data(
-    'qmicli-completion',
+    'qmicli',
     install_dir: bash_completion_completionsdir,
   )
 endif

@@ -252,7 +252,6 @@ configure_file(
 meson.add_install_script(
   'meson_post_install.py',
   get_option('bindir'),
-  enable_bash_completion ? bash_completion_completionsdir : '',
 )
 
 output = '\n' + meson.project_name() + ' ' + meson.project_version() + '\n\n'
