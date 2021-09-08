@@ -92,7 +92,7 @@ static GOptionEntry entries[] = {
       NULL
     },
     { "ms-query-version", 0, 0,G_OPTION_ARG_STRING , &query_version_str,
-      "Query version",
+      "Exchange supported version information",
       "[(MBIM version),(MBIM extended version)]"
     },
     { NULL }
