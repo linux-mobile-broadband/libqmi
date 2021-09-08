@@ -757,7 +757,6 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
 
-    /* Request to query LTE attach configuration? */
     if (query_lte_attach_configuration_flag) {
         g_debug ("Asynchronously querying LTE attach configuration...");
         request = mbim_message_ms_basic_connect_extensions_lte_attach_configuration_query_new (NULL);
@@ -770,7 +769,6 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
 
-    /* Request to query LTE attach info? */
     if (query_lte_attach_status_flag || query_lte_attach_info_flag) {
         g_debug ("Asynchronously querying LTE attach info...");
         request = mbim_message_ms_basic_connect_extensions_lte_attach_info_query_new (NULL);
@@ -806,8 +804,7 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              NULL);
         return;
     }
-    
-    /*Request to query slot information status? */
+
     if (query_slot_info_status_str) {
         guint32 slot_index;
 
@@ -828,7 +825,6 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
 
-    /*Request to set device slot mappings */
     if (set_device_slot_mappings_str) {
         g_autoptr(GPtrArray) slot_array = NULL;
 
@@ -851,7 +847,6 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
 
-    /*Request to query device slot mappings? */
     if (query_device_slot_mappings_flag) {
         g_debug ("Asynchronously querying device slot mappings...");
         request = mbim_message_ms_basic_connect_extensions_device_slot_mappings_query_new (NULL);
@@ -864,7 +859,6 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
 
-    /* Request to query Location info status? */
     if (query_location_info_status_flag) {
         g_debug ("Asynchronously querying location info status...");
         request = mbim_message_ms_basic_connect_extensions_location_info_status_query_new (NULL);
@@ -877,7 +871,6 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
 
-    /* Request to query Version? */
     if (query_version_str) {
         guint16 bcd_mbim_version = 0;
         guint16 bcd_mbim_extended_version = 0;
@@ -902,18 +895,18 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         mbim_version = g_strsplit (split[0], ".", -1);
         mbimcli_read_uint16_from_string (mbim_version[0], &mbim_version_second_byte);
         mbimcli_read_uint16_from_string (mbim_version[1], &mbim_version_first_byte);
-        bcd_mbim_version = ((((mbim_version_second_byte / 10) << 4) | 
-                            (mbim_version_second_byte % 10)) << 8) | 
-                            (((mbim_version_first_byte / 10) << 4) | 
+        bcd_mbim_version = ((((mbim_version_second_byte / 10) << 4) |
+                            (mbim_version_second_byte % 10)) << 8) |
+                            (((mbim_version_first_byte / 10) << 4) |
                             (mbim_version_first_byte % 10));
         g_debug("BCD version built:: 0x%x", bcd_mbim_version);
 
         mbim_extended_version = g_strsplit (split[1], ".", -1);
         mbimcli_read_uint16_from_string (mbim_extended_version[0], &mbim_extended_version_second_byte);
         mbimcli_read_uint16_from_string (mbim_extended_version[1], &mbim_extended_version_first_byte);
-        bcd_mbim_extended_version = ((((mbim_extended_version_second_byte / 10) << 4) | 
-                                     (mbim_extended_version_second_byte % 10)) << 8) | 
-                                     (((mbim_extended_version_first_byte / 10) << 4) | 
+        bcd_mbim_extended_version = ((((mbim_extended_version_second_byte / 10) << 4) |
+                                     (mbim_extended_version_second_byte % 10)) << 8) |
+                                     (((mbim_extended_version_first_byte / 10) << 4) |
                                      (mbim_extended_version_first_byte % 10));
         g_debug("BCD extended version built: 0x%x", bcd_mbim_extended_version);
         g_debug ("Asynchronously querying Version...");
