@@ -874,10 +874,10 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
     if (query_version_str) {
         guint16       bcd_mbim_version = 0;
         guint16       bcd_mbim_extended_version = 0;
-        guint16       mbim_version_second_byte = 0;
-        guint16       mbim_version_first_byte = 0;
-        guint16       mbim_extended_version_second_byte = 0;
-        guint16       mbim_extended_version_first_byte = 0;
+        guint8        mbim_version_major = 0;
+        guint8        mbim_version_minor = 0;
+        guint8        mbim_extended_version_major = 0;
+        guint8        mbim_extended_version_minor = 0;
         g_auto(GStrv) split = NULL;
         g_auto(GStrv) mbim_version = NULL;
         g_auto(GStrv) mbim_extended_version = NULL;
@@ -895,18 +895,23 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         }
 
         mbim_version = g_strsplit (split[0], ".", -1);
-        mbimcli_read_uint16_from_string (mbim_version[0], &mbim_version_second_byte);
-        mbimcli_read_uint16_from_string (mbim_version[1], &mbim_version_first_byte);
-        bcd_mbim_version = ((((mbim_version_second_byte / 10) << 4) | (mbim_version_second_byte % 10)) << 8) |
-                            (((mbim_version_first_byte  / 10) << 4) | (mbim_version_first_byte  % 10));
+        if (!mbimcli_read_uint8_from_bcd_string (mbim_version[0], &mbim_version_major) ||
+            !mbimcli_read_uint8_from_bcd_string (mbim_version[1], &mbim_version_minor)) {
+            g_printerr ("error: couldn't parse version string\n");
+            return;
+        }
+        bcd_mbim_version = mbim_version_major << 8 | mbim_version_minor;
         g_debug ("BCD version built: 0x%x", bcd_mbim_version);
 
         mbim_extended_version = g_strsplit (split[1], ".", -1);
-        mbimcli_read_uint16_from_string (mbim_extended_version[0], &mbim_extended_version_second_byte);
-        mbimcli_read_uint16_from_string (mbim_extended_version[1], &mbim_extended_version_first_byte);
-        bcd_mbim_extended_version = ((((mbim_extended_version_second_byte / 10) << 4) | (mbim_extended_version_second_byte % 10)) << 8) |
-                                     (((mbim_extended_version_first_byte  / 10) << 4) | (mbim_extended_version_first_byte  % 10));
+        if (!mbimcli_read_uint8_from_bcd_string (mbim_extended_version[0], &mbim_extended_version_major) ||
+            !mbimcli_read_uint8_from_bcd_string (mbim_extended_version[1], &mbim_extended_version_minor)) {
+            g_printerr ("error: couldn't parse extended version string\n");
+            return;
+        }
+        bcd_mbim_extended_version = mbim_extended_version_major << 8 | mbim_extended_version_minor;
         g_debug ("BCD extended version built: 0x%x", bcd_mbim_extended_version);
+
         g_debug ("Asynchronously querying Version...");
         request = mbim_message_ms_basic_connect_extensions_version_query_new (bcd_mbim_version, bcd_mbim_extended_version, NULL);
         mbim_device_command (ctx->device,
