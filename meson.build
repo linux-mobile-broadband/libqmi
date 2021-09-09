@@ -13,6 +13,7 @@ project(
   meson_version: '>= 0.53.0',
 )
 
+qmi_name = meson.project_name()
 qmi_version = meson.project_version()
 version_array = qmi_version.split('.')
 qmi_major_version = version_array[0].to_int()
@@ -26,7 +27,7 @@ qmi_includedir = get_option('includedir')
 qmi_libexecdir = get_option('libexecdir')
 qmi_mandir = get_option('mandir')
 
-qmi_glib_include_subdir = meson.project_name() + '-glib'
+qmi_glib_include_subdir = qmi_name + '-glib'
 qmi_glib_pkgincludedir = qmi_includedir / qmi_glib_include_subdir
 
 # libtool versioning for libqmi-glib (-version-info c:r:a)
