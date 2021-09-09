@@ -35,11 +35,10 @@ sources = files(
   'qmicli-wms.c',
 )
 
-deps = [libhelpers_dep]
-
-if enable_mbim_qmux
-  deps += mbim_glib_dep
-endif
+deps = [
+  libhelpers_dep,
+  mbim_glib_dep,
+]
 
 qmicli = executable(
   'qmicli',

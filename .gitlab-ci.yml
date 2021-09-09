@@ -54,11 +54,11 @@ build-meson-default:
     - ninja -C build
     - ninja -C build install
     - popd
-    - meson setup _debug_build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=true -Dqrtr=true -Drmnet=true
+    - meson setup _debug_build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=enabled -Drmnet=enabled
     - ninja -C _debug_build
     - ninja -C _debug_build install
     - ninja -C _debug_build uninstall
-    - meson setup _release_build --prefix=/usr --buildtype=release -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=true -Dqrtr=true -Drmnet=true
+    - meson setup _release_build --prefix=/usr --buildtype=release -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=enabled -Drmnet=enabled
     - ninja -C _release_build
     - ninja -C _release_build install
 
@@ -73,7 +73,7 @@ build-meson-no-qrtr-no-mbim-no-rmnet-no-introspection:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=disabled -Drmnet=disabled
     - ninja -C build
     - ninja -C build install
 
@@ -100,7 +100,7 @@ build-meson-no-rmnet:
     - ninja -C build
     - ninja -C build install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=true -Dqrtr=true -Drmnet=false
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=enabled -Drmnet=disabled
     - ninja -C build
     - ninja -C build install
 
@@ -121,7 +121,7 @@ build-meson-no-qrtr:
     - ninja -C build
     - ninja -C build install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=true -Dqrtr=false -Drmnet=true
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=disabled -Drmnet=enabled
     - ninja -C build
     - ninja -C build install
 
@@ -142,7 +142,7 @@ build-meson-no-qrtr-no-introspection:
     - ninja -C build
     - ninja -C build install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=true -Dqrtr=false -Drmnet=true
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=enabled -Dqrtr=disabled -Drmnet=enabled
     - ninja -C build
     - ninja -C build install
 
@@ -163,7 +163,7 @@ build-meson-no-mbim:
     - ninja -C build
     - ninja -C build install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=false -Dqrtr=true -Drmnet=true
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=disabled -Dqrtr=enabled -Drmnet=enabled
     - ninja -C build
     - ninja -C build install
 
@@ -184,7 +184,7 @@ build-meson-no-mbim-no-introspection:
     - ninja -C build
     - ninja -C build install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=true -Drmnet=true
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=enabled -Drmnet=enabled
     - ninja -C build
     - ninja -C build install
 
@@ -199,7 +199,7 @@ build-meson-collection-minimal:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false -Dcollection=minimal -Dfirmware_update=false
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=disabled -Drmnet=disabled -Dcollection=minimal -Dfirmware_update=false
     - ninja -C build
     - ninja -C build install
 
@@ -214,6 +214,6 @@ build-meson-collection-basic:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false -Dcollection=basic
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=disabled -Drmnet=disabled -Dcollection=basic
     - ninja -C build
     - ninja -C build install

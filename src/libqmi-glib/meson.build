@@ -95,11 +95,11 @@ sources = files(
 deps = [
   generated_dep,
   gio_unix_dep,
+  mbim_glib_dep,
 ]
 
 if enable_mbim_qmux
   sources += files('qmi-endpoint-mbim.c')
-  deps += mbim_glib_dep
 endif
 
 if enable_qrtr
