@@ -6,8 +6,10 @@ test_units = [
   ['test-firehose', libfirehose_dep],
 ]
 
-test_env.set('G_TEST_BUILDDIR', meson.current_build_dir())
-test_env.set('G_TEST_SRCDIR', meson.current_source_dir())
+test_env += {
+  'G_TEST_BUILDDIR': meson.current_build_dir(),
+  'G_TEST_SRCDIR': meson.current_source_dir(),
+}
 
 foreach test_unit: test_units
   exe = executable(

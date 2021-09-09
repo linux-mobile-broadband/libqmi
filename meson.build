@@ -225,10 +225,11 @@ endif
 
 random_number = qmi_minor_version + meson.version().split('.').get(1).to_int()
 
-test_env = environment()
-test_env.set('G_DEBUG', 'gc-friendly')
-test_env.set('MALLOC_CHECK_', '2')
-test_env.set('MALLOC_PERTURB_', (random_number % 256).to_string())
+test_env = {
+  'G_DEBUG': 'gc-friendly',
+  'MALLOC_CHECK_': '2',
+  'MALLOC_PERTURB_': (random_number % 256).to_string(),
+}
 
 subdir('src')
 subdir('utils')
