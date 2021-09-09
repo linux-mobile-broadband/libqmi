@@ -16,6 +16,6 @@ foreach man: mans
     output: man[0] + '.1',
     command: man[1],
     install: true,
-    install_dir: join_paths(qmi_mandir, 'man1'),
+    install_dir: qmi_mandir / 'man1',
   )
 endforeach

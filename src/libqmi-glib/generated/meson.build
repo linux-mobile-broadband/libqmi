@@ -19,7 +19,7 @@ gen_headers += custom_target(
     python,
     qmi_mkenums,
     '--fhead', '#ifndef __LIBQMI_GLIB_ERROR_TYPES_H__\n#define __LIBQMI_GLIB_ERROR_TYPES_H__\n#include "qmi-errors.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.h.template')),
+    '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBQMI_GLIB_ERROR_TYPES_H__ */\n',
     '@INPUT@'],
   capture: true,
@@ -35,7 +35,7 @@ gen_sources += custom_target(
     python,
     qmi_mkenums,
     '--fhead', '#include "qmi-errors.h"\n#include "qmi-error-types.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.c.template')),
+    '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
 )
@@ -50,7 +50,7 @@ gen_sources += custom_target(
     python,
     qmi_mkenums,
     '--fhead', '#include "qmi-errors.h"\n#include "qmi-error-types.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.c.template')),
+    '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
 )
@@ -66,7 +66,7 @@ gen_headers += custom_target(
     python,
     qmi_mkenums,
     '--fhead', '#ifndef __LIBQMI_GLIB_ENUM_TYPES_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_H__\n#include "qmi-enums.h"\n#include "qmi-enums-wds.h"\n#include "qmi-enums-dms.h"\n#include "qmi-enums-nas.h"\n#include "qmi-enums-wms.h"\n#include "qmi-enums-pds.h"\n#include "qmi-enums-pdc.h"\n#include "qmi-enums-pbm.h"\n#include "qmi-enums-uim.h"\n#include "qmi-enums-sar.h"\n#include "qmi-enums-oma.h"\n#include "qmi-enums-wda.h"\n#include "qmi-enums-voice.h"\n#include "qmi-enums-loc.h"\n#include "qmi-enums-qos.h"\n#include "qmi-enums-gas.h"\n#include "qmi-enums-dsd.h"\n#include "qmi-device.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.h.template')),
+    '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBQMI_GLIB_ENUM_TYPES_H__ */\n',
     '@INPUT@'],
   capture: true,
@@ -82,7 +82,7 @@ gen_sources += custom_target(
     python,
     qmi_mkenums,
     '--fhead', '#include "qmi-enum-types.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.c.template')),
+    '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
 )
@@ -98,7 +98,7 @@ gen_headers += custom_target(
     python,
     qmi_mkenums,
     '--fhead', '#ifndef __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__\n#define __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__\n#include "qmi-enums-private.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.h.template')),
+    '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBQMI_GLIB_ENUM_TYPES_PRIVATE_H__ */\n',
     '@INPUT@'],
   capture: true,
@@ -112,7 +112,7 @@ gen_sources += custom_target(
     python,
     qmi_mkenums,
     '--fhead', '#include "qmi-enum-types-private.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.c.template')),
+    '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
 )
@@ -128,7 +128,7 @@ gen_headers += custom_target(
     python,
     qmi_mkenums,
     '--fhead', '#ifndef __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#define __LIBQMI_GLIB_FLAGS64_TYPES_H__\n#include "qmi-flags64-dms.h"\n#include "qmi-flags64-nas.h"\n#include "qmi-flags64-loc.h"\n#include "qmi-flags64-dsd.h"\n#include "qmi-flags64-wds.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.h.template')),
+    '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBQMI_GLIB_FLAGS64_TYPES_H__ */\n',
     '@INPUT@'],
   capture: true,
@@ -144,21 +144,21 @@ gen_sources += custom_target(
     python,
     qmi_mkenums,
     '--fhead', '#include "qmi-flags64-types.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.c.template')),
+    '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
 )
 
-qmi_common = join_paths(data_dir, 'qmi-common.json')
+qmi_common = data_dir / 'qmi-common.json'
 
 service = 'ctl'
 name = 'qmi-' + service
 
 generated = custom_target(
   name,
-  input: join_paths(data_dir, 'qmi-service-@0@.json'.format(service)),
+  input: data_dir / 'qmi-service-@0@.json'.format(service),
   output: [name + '.c', name + '.h', name + '.sections'],
-  command: [qmi_codegen, '--input', '@INPUT@', '--include', qmi_common, '--output', join_paths('@OUTDIR@', name)],
+  command: [qmi_codegen, '--input', '@INPUT@', '--include', qmi_common, '--output', '@OUTDIR@' / name],
 )
 
 gen_sources += [generated[0], generated[1]]
@@ -191,7 +191,7 @@ command = [
 ]
 
 if qmi_collection_name != 'full'
-  command += ['--collection', join_paths(data_dir, 'qmi-collection-@0@.json'.format(qmi_collection_name))]
+  command += ['--collection', data_dir / 'qmi-collection-@0@.json'.format(qmi_collection_name)]
 endif
 
 foreach service: services
@@ -199,9 +199,9 @@ foreach service: services
 
   generated = custom_target(
     name,
-    input: join_paths(data_dir, 'qmi-service-@0@.json'.format(service)),
+    input: data_dir / 'qmi-service-@0@.json'.format(service),
     output: [name + '.c', name + '.h', name + '.sections'],
-    command: command + ['--output', join_paths('@OUTDIR@', name)],
+    command: command + ['--output', '@OUTDIR@' / name],
     install: true,
     install_dir: [false, qmi_glib_pkgincludedir, false],
   )
@@ -212,7 +212,7 @@ foreach service: services
   #        source file, to the path has to be used. the first workaround is to use the
   #        build paths to point to the files, and the second workaround is to use
   #        custom target objects to force its building.
-  gen_sections += [join_paths(meson.current_build_dir(), name + '.sections')]
+  gen_sections += [meson.current_build_dir() / name + '.sections']
   gen_sections_deps += [generated]
 endforeach
 

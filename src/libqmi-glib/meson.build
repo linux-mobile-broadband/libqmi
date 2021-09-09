@@ -116,7 +116,7 @@ libqmi_glib = library(
   sources: sources + [version_header],
   include_directories: top_inc,
   dependencies: deps,
-  c_args: common_c_flags + ['-DLIBEXEC_PATH="@0@"'.format(join_paths(qmi_prefix, qmi_libexecdir))],
+  c_args: common_c_flags + ['-DLIBEXEC_PATH="@0@"'.format(qmi_prefix / qmi_libexecdir)],
   link_whole: [libqmi_glib_compat, libqmi_glib_generated],
   install: true,
 )
