@@ -151,9 +151,7 @@ enable_firmware_update = get_option('firmware_update')
 assert(not enable_firmware_update or qmi_collection_name != 'minimal', 'Cannot build qmi-firmware-update when \'minimal\' collection enabled, use at least the \'basic\' collection instead.')
 
 # udev support is optional, enabled by default
-enable_udev = get_option('udev')
-
-gudev_dep = dependency('gudev-1.0', version: '>= 232', required: enable_udev and enable_firmware_update)
+gudev_dep = dependency((enable_firmware_update ? 'gudev-1.0' : ''), version: '>= 232', required: get_option('udev'))
 config_h.set('WITH_UDEV', gudev_dep.found())
 
 enable_bash_completion = get_option('bash_completion')
@@ -168,8 +166,10 @@ endif
 
 # rmnet link management support
 enable_rmnet = false
-if get_option('rmnet')
+rmnet = get_option('rmnet')
+if not rmnet.disabled()
   enable_rmnet = cc.has_type('struct ifla_rmnet_flags', prefix: '#include<linux/if_link.h>')
+  assert(enable_rmnet or rmnet.auto(), 'There is no \'rmnet\' link management support, use \'auto\' or \'disabled\' instead')
 endif
 config_h.set('RMNET_SUPPORT_ENABLED', enable_rmnet)
 
@@ -194,19 +194,13 @@ endif
 config_h.set('QMI_USERNAME_ENABLED', enable_qmi_username)
 
 # MBIM QMUX service support
-enable_mbim_qmux = false
-if get_option('mbim_qmux')
-  mbim_glib_dep = dependency('mbim-glib', version: '>= 1.18.0', required: false)
-  enable_mbim_qmux = mbim_glib_dep.found()
-endif
+mbim_glib_dep = dependency('mbim-glib', version: '>= 1.18.0', required: get_option('mbim_qmux'))
+enable_mbim_qmux = mbim_glib_dep.found()
 config_h.set('MBIM_QMUX_ENABLED', enable_mbim_qmux)
 
 # QRTR support
-enable_qrtr = false
-if get_option('qrtr')
-  qrtr_glib_dep = dependency('qrtr-glib', version: '>= 1.0.0', required: false)
-  enable_qrtr = qrtr_glib_dep.found()
-endif
+qrtr_glib_dep = dependency('qrtr-glib', version: '>= 1.0.0', required: get_option('qrtr'))
+enable_qrtr = qrtr_glib_dep.found()
 config_h.set10('QMI_QRTR_SUPPORTED', enable_qrtr)
 
 version_conf = configuration_data()
@@ -219,10 +213,7 @@ version_conf.set10('QMI_QRTR_SUPPORTED', enable_qrtr)
 version_conf.set10('QMI_RMNET_SUPPORTED', enable_rmnet)
 
 # introspection support
-enable_gir = get_option('introspection')
-if enable_gir
-  dependency('gobject-introspection-1.0', version: '>= 0.9.6')
-endif
+enable_gir = dependency('gobject-introspection-1.0', version: '>= 0.9.6', required: get_option('introspection')).found()
 
 test_env = {
   'G_DEBUG': 'gc-friendly',

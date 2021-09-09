@@ -44,7 +44,7 @@ build-meson-no-qrtr-no-mbim-no-rmnet-no-introspection:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=disabled -Drmnet=disabled
     - ninja -C build
     - ninja -C build install
 
@@ -73,7 +73,7 @@ build-meson-no-rmnet:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=true -Dqrtr=true -Drmnet=false
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=enabled -Drmnet=disabled
     - ninja -C build
     - ninja -C build install
 
@@ -95,7 +95,7 @@ build-meson-no-qrtr:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=true -Dqrtr=false -Drmnet=true
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=disabled -Drmnet=enabled
     - ninja -C build
     - ninja -C build install
 
@@ -117,7 +117,7 @@ build-meson-no-qrtr-no-introspection:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=true -Dqrtr=false -Drmnet=true
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=enabled -Dqrtr=disabled -Drmnet=enabled
     - ninja -C build
     - ninja -C build install
 
@@ -139,7 +139,7 @@ build-meson-no-mbim:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=false -Dqrtr=true -Drmnet=true
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=disabled -Dqrtr=enabled -Drmnet=enabled
     - ninja -C build
     - ninja -C build install
 
@@ -161,7 +161,7 @@ build-meson-no-mbim-no-introspection:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=true -Drmnet=true
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=enabled -Drmnet=enabled
     - ninja -C build
     - ninja -C build install
 
@@ -176,7 +176,7 @@ build-meson-collection-minimal:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false -Dcollection=minimal -Dfirmware_update=false
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=disabled -Drmnet=disabled -Dcollection=minimal -Dfirmware_update=false
     - ninja -C build
     - ninja -C build install
 
@@ -191,7 +191,7 @@ build-meson-collection-basic:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false -Dcollection=basic
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=disabled -Drmnet=disabled -Dcollection=basic
     - ninja -C build
     - ninja -C build install
 
@@ -220,7 +220,7 @@ build-meson-release:
     - make
     - make install
     - popd
-    - meson setup build --buildtype=release --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=true -Dqrtr=true -Drmnet=true
+    - meson setup build --buildtype=release --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=enabled -Drmnet=enabled
     - ninja -C build
     - ninja -C build install
     - ninja -C build dist

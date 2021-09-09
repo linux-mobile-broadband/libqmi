@@ -87,11 +87,8 @@ deps = [
   gudev_dep,
   libfirehose_dep,
   libutils_dep,
+  mbim_glib_dep,
 ]
-
-if enable_mbim_qmux
-  deps += mbim_glib_dep
-endif
 
 qmi_firmware_update = executable(
   'qmi-firmware-update',
