@@ -35,9 +35,9 @@ scan_args = [
 glib_prefix = glib_dep.get_pkgconfig_variable('prefix')
 
 fixxref_args = [
-  '--html-dir=' + join_paths(qmi_prefix, gnome.gtkdoc_html_dir(doc_module)),
-  '--extra-dir=' + join_paths(glib_prefix, gnome.gtkdoc_html_dir('glib')),
-  '--extra-dir=' + join_paths(glib_prefix, gnome.gtkdoc_html_dir('gio')),
+  '--html-dir=' + (qmi_prefix / gnome.gtkdoc_html_dir(doc_module)),
+  '--extra-dir=' + (glib_prefix / gnome.gtkdoc_html_dir('glib')),
+  '--extra-dir=' + (glib_prefix / gnome.gtkdoc_html_dir('gio')),
 ]
 
 name = doc_module + '-sections.txt'

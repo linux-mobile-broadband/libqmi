@@ -27,7 +27,7 @@ qmi_libexecdir = get_option('libexecdir')
 qmi_mandir = get_option('mandir')
 
 qmi_glib_include_subdir = meson.project_name() + '-glib'
-qmi_glib_pkgincludedir = join_paths(qmi_includedir, qmi_glib_include_subdir)
+qmi_glib_pkgincludedir = qmi_includedir / qmi_glib_include_subdir
 
 # libtool versioning for libqmi-glib (-version-info c:r:a)
 # - If the interface is unchanged, but the implementation has changed or been fixed, then increment r
@@ -48,11 +48,11 @@ python = import('python').find_installation('python3')
 
 source_root = meson.current_source_dir()
 
-data_dir = join_paths(source_root, 'data')
-templates_dir = join_paths(source_root, 'build-aux/templates')
+data_dir = source_root / 'data'
+templates_dir = source_root / 'build-aux/templates'
 
-qmi_codegen = find_program(join_paths(source_root, 'build-aux/qmi-codegen/qmi-codegen'))
-qmi_mkenums = find_program(join_paths(source_root, 'build-aux/qmi-mkenums'))
+qmi_codegen = find_program(source_root / 'build-aux/qmi-codegen/qmi-codegen')
+qmi_mkenums = find_program(source_root / 'build-aux/qmi-mkenums')
 
 top_inc = include_directories('.')
 
