@@ -223,12 +223,9 @@ if enable_gir
   dependency('gobject-introspection-1.0', version: '>= 0.9.6')
 endif
 
-random_number = qmi_minor_version + meson.version().split('.').get(1).to_int()
-
 test_env = {
   'G_DEBUG': 'gc-friendly',
   'MALLOC_CHECK_': '2',
-  'MALLOC_PERTURB_': (random_number % 256).to_string(),
 }
 
 subdir('src')
