@@ -10,7 +10,7 @@ project(
     'c_std=gnu89',
     'warning_level=2',
   ],
-  meson_version: '>= 0.48.0',
+  meson_version: '>= 0.53.0',
 )
 
 qmi_version = meson.project_version()
@@ -255,19 +255,22 @@ meson.add_install_script(
   enable_bash_completion ? bash_completion_completionsdir : '',
 )
 
-output = '\n' + meson.project_name() + ' ' + meson.project_version() + '\n\n'
-output += '  Build\n'
-output += '    compiler:              ' + cc.get_id() + '\n'
-output += '    cflags:                ' + ' '.join(cc_flags) + '\n'
-output += '    Documentation:         ' + enable_gtk_doc.to_string() + '\n'
-output += '    bash completion:       ' + enable_bash_completion.to_string() + '\n'
-output += '    gobject introspection: ' + enable_gir.to_string() + '\n\n'
-output += '  System paths\n'
-output += '    prefix:                ' + qmi_prefix + '\n'
-output += '    udev base directory:   ' + qmi_username + '\n\n'
-output += '  Features\n'
-output += '    QMI over MBIM:         ' + enable_mbim_qmux.to_string() + '\n'
-output += '    QMI over QRTR:         ' + enable_qrtr.to_string() + '\n'
-output += '    QMI username:          ' + qmi_username + '\n'
-output += '    rmnet support:         ' + enable_rmnet.to_string()
-message(output)
+summary({
+  'compiler': cc.get_id(),
+  'cflags': cc_flags,
+  'Documentation': enable_gtk_doc,
+  'bash completion': enable_bash_completion,
+  'gobject introspection': enable_gir,
+}, section: 'Build')
+
+summary({
+  'prefix': qmi_prefix,
+  'udev base directory': (enable_qmi_username ? udev_udevdir : 'disabled'),
+}, section: 'System paths')
+
+summary({
+  'QMI over MBIM': enable_mbim_qmux,
+  'QMI over QRTR': enable_qrtr,
+  'QMI username': qmi_username,
+  'rmnet support': enable_rmnet,
+}, section: 'Features')
