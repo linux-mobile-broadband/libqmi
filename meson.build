@@ -10,7 +10,7 @@ project(
     'c_std=gnu89',
     'warning_level=2',
   ],
-  meson_version: '>= 0.45.1',
+  meson_version: '>= 0.48.0',
 )
 
 qmi_version = meson.project_version()
@@ -44,7 +44,7 @@ qmi_gir_version = '1.0'
 gnome = import('gnome')
 i18n = import('i18n')
 pkg = import('pkgconfig')
-python = import('python3').find_python()
+python = import('python').find_installation('python3')
 
 source_root = meson.current_source_dir()
 

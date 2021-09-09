@@ -13,13 +13,13 @@ stages:
     LIBMBIM_BRANCH: mbim-1-18
     LIBQRTR_BRANCH: qrtr-1-0
     FDO_UPSTREAM_REPO: mobile-broadband/libqmi
-    FDO_DISTRIBUTION_VERSION: '18.04'
-    FDO_DISTRIBUTION_TAG: '2021-09-06.1'
+    FDO_DISTRIBUTION_VERSION: '20.04'
+    FDO_DISTRIBUTION_TAG: '2021-09-13.1'
     FDO_DISTRIBUTION_PACKAGES: ca-certificates git gcc autoconf automake libtool
                                libgirepository1.0-dev libglib2.0-dev autopoint
                                gtk-doc-tools libglib2.0-doc libgudev-1.0-dev
                                gobject-introspection valac bash-completion meson
-                               ninja-build autoconf-archive
+                               ninja-build autoconf-archive python-is-python3
 
 build container:
   extends:
