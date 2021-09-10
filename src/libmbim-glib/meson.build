@@ -24,7 +24,7 @@ headers = mbim_errors_header + mbim_enums_headers + files(
 
 install_headers(
   headers,
-  subdir: mbim_glib_include_subdir,
+  install_dir: mbim_glib_pkgincludedir,
 )
 
 common_c_flags = [
