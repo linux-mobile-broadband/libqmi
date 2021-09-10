@@ -10,7 +10,7 @@ project(
     'c_std=gnu89',
     'warning_level=2',
   ],
-  meson_version: '>= 0.48.0',
+  meson_version: '>= 0.53.0',
 )
 
 mbim_version = meson.project_version()
@@ -202,16 +202,19 @@ meson.add_install_script(
   get_option('bindir'),
 )
 
-output = '\n' + meson.project_name() + ' ' + meson.project_version() + '\n\n'
-output += '  Build\n'
-output += '    compiler:              ' + cc.get_id() + '\n'
-output += '    cflags:                ' + ' '.join(cc_flags) + '\n'
-output += '    Documentation:         ' + enable_gtk_doc.to_string() + '\n'
-output += '    bash completion:       ' + enable_bash_completion.to_string() + '\n'
-output += '    gobject introspection: ' + enable_gir.to_string() + '\n\n'
-output += '  System paths\n'
-output += '    prefix:                ' + mbim_prefix + '\n'
-output += '    udev base directory:   ' + mbim_username + '\n\n'
-output += '  Features\n'
-output += '    MBIM username:         ' + mbim_username
-message(output)
+summary({
+  'compiler': cc.get_id(),
+  'cflags': cc_flags,
+  'Documentation': enable_gtk_doc,
+  'bash completion': enable_bash_completion,
+  'gobject introspection': enable_gir,
+}, section: 'Build')
+
+summary({
+  'prefix': mbim_prefix,
+  'udev base directory': (enable_mbim_username ? udev_udevdir : 'disabled'),
+}, section: 'System paths')
+
+summary({
+  'MBIM username': mbim_username,
+}, section: 'Features')
