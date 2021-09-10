@@ -8,7 +8,7 @@ libhelpers = static_library(
 )
 
 libhelpers_dep = declare_dependency(
-  include_directories: include_directories('.'),
+  include_directories: '.',
   dependencies: libqmi_glib_dep,
   link_with: libhelpers,
 )
