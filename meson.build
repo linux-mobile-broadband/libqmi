@@ -13,6 +13,7 @@ project(
   meson_version: '>= 0.53.0',
 )
 
+mbim_name = meson.project_name()
 mbim_version = meson.project_version()
 version_array = mbim_version.split('.')
 mbim_major_version = version_array[0].to_int()
@@ -26,7 +27,7 @@ mbim_includedir = get_option('includedir')
 mbim_libexecdir = get_option('libexecdir')
 mbim_mandir = get_option('mandir')
 
-mbim_glib_include_subdir = meson.project_name() + '-glib'
+mbim_glib_include_subdir = mbim_name + '-glib'
 mbim_glib_pkgincludedir = join_paths(mbim_includedir, mbim_glib_include_subdir)
 
 # libtool versioning for libmbim-glib (-version-info c:r:a)
