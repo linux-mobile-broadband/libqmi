@@ -236,11 +236,6 @@ configure_file(
   configuration: config_h,
 )
 
-meson.add_install_script(
-  'meson_post_install.py',
-  get_option('bindir'),
-)
-
 summary({
   'compiler': cc.get_id(),
   'cflags': cc_flags,

@@ -18,4 +18,5 @@ qmi_network = configure_file(
   output: '@BASENAME@',
   configuration: version_conf,
   install_dir: qmi_bindir,
+  install_mode: 'rwxr-xr-x',
 )
