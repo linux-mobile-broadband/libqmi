@@ -9,7 +9,7 @@ libmbim_common = static_library(
 )
 
 libmbim_common_dep = declare_dependency(
-  include_directories: include_directories('.'),
+  include_directories: '.',
   dependencies: glib_dep,
   link_with: libmbim_common,
 )
