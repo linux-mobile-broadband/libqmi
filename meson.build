@@ -185,9 +185,7 @@ if enable_gtk_doc
 endif
 
 help2man = find_program('help2man', required: false)
-if help2man.found()
-  subdir('docs/man')
-endif
+subdir('docs/man', if_found: help2man)
 
 configure_file(
   output: 'config.h',
