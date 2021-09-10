@@ -74,5 +74,6 @@ gnome.gtkdoc(
   namespace: 'qmi',
   scan_args: scan_args,
   fixxref_args: fixxref_args,
+  content_files: [sections_txt, version_xml],
   install: true,
 )
