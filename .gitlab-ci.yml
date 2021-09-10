@@ -11,8 +11,8 @@ stages:
 .common_variables:
   variables:
     FDO_UPSTREAM_REPO: mobile-broadband/libmbim
-    FDO_DISTRIBUTION_VERSION: '18.04'
-    FDO_DISTRIBUTION_TAG: '2021-07-27.1'
+    FDO_DISTRIBUTION_VERSION: '20.04'
+    FDO_DISTRIBUTION_TAG: '2021-09-11.1'
     FDO_DISTRIBUTION_PACKAGES: ca-certificates git gcc libgirepository1.0-dev
                                libglib2.0-dev gtk-doc-tools libglib2.0-doc
                                gobject-introspection bash-completion valac
