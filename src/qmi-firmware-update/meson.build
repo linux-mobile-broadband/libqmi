@@ -9,7 +9,7 @@ libutils = static_library(
 )
 
 libutils_dep = declare_dependency(
-  include_directories: include_directories('.'),
+  include_directories: '.',
   dependencies: libqmi_glib_dep,
   link_with: libutils,
 )
@@ -21,7 +21,7 @@ libfirehose = static_library(
 )
 
 libfirehose_dep = declare_dependency(
-  include_directories: include_directories('.'),
+  include_directories: '.',
   dependencies: glib_deps,
   link_with: libfirehose,
 )
