@@ -9,9 +9,6 @@ import sys
 
 prefix = os.environ['MESON_INSTALL_DESTDIR_PREFIX']
 
-bindir = os.path.join(prefix, sys.argv[1])
-subprocess.check_call(['chmod', '755', os.path.join(bindir, 'qmi-network')])
-
 bash_completion_completionsdir = sys.argv[2]
 if bash_completion_completionsdir:
     if not os.path.isabs(bash_completion_completionsdir):
