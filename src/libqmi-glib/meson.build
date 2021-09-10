@@ -47,7 +47,7 @@ headers = qmi_errors_header + qmi_enums_headers + qmi_enums_private_header + qmi
 
 install_headers(
   headers + files('qmi-compat.h'),
-  subdir: qmi_glib_include_subdir,
+  install_dir: qmi_glib_pkgincludedir,
 )
 
 version_header = configure_file(
