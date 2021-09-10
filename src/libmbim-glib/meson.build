@@ -76,6 +76,7 @@ version_header = configure_file(
 )
 
 symbol_map = meson.current_source_dir() / 'symbol.map'
+ldflags = cc.get_supported_link_arguments('-Wl,--version-script,@0@'.format(symbol_map))
 
 libmbim_glib = library(
   libname,
@@ -83,7 +84,7 @@ libmbim_glib = library(
   sources: version_header,
   include_directories: top_inc,
   dependencies: generated_dep,
-  link_args: '-Wl,--version-script,' + symbol_map,
+  link_args: ldflags,
   link_depends: symbol_map,
   link_whole: libmbim_glib_core,
   install: true,
