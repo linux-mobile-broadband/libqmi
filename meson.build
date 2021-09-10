@@ -174,8 +174,7 @@ endif
 config_h.set('RMNET_SUPPORT_ENABLED', enable_rmnet)
 
 # runtime MM check is optional, enabled by default
-enable_mm_runtime_check = get_option('mm_runtime_check')
-config_h.set('MM_RUNTIME_CHECK_ENABLED', enable_mm_runtime_check)
+config_h.set('MM_RUNTIME_CHECK_ENABLED', get_option('mm_runtime_check'))
 
 # QMI username
 qmi_username = get_option('qmi_username')
