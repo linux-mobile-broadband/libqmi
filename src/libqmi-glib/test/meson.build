@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2019 - 2021 Iñigo Martinez <inigomartinez@gmail.com>
 
-test_units = [
-  ['test-compat-utils', files('test-compat-utils.c'), [libqmi_glib_dep]],
-  ['test-message', files('test-message.c'), [libqmi_glib_dep]],
-  ['test-utils', files('test-utils.c'), [libqmi_glib_dep]],
-]
+test_units = {
+  'test-compat-utils': {'sources': files('test-compat-utils.c'), 'dependencies': libqmi_glib_dep},
+  'test-message': {'sources': files('test-message.c'), 'dependencies': libqmi_glib_dep},
+  'test-utils': {'sources': files('test-utils.c'), 'dependencies': libqmi_glib_dep},
+}
 
 sources = files(
   'test-fixture.c',
@@ -18,24 +18,23 @@ deps = [
   libqmi_glib_dep,
 ]
 
-test_units += [['test-generated', sources, deps]]
+test_units += {'test-generated': {'sources': sources, 'dependencies': deps}}
 
 test_env += {
   'G_TEST_BUILDDIR': meson.current_build_dir(),
   'G_TEST_SRCDIR': meson.current_source_dir(),
 }
 
-foreach test_unit: test_units
+foreach test_name, test_args: test_units
   exe = executable(
-    test_unit[0],
-    sources: test_unit[1],
+    test_name,
     include_directories: top_inc,
-    dependencies: test_unit[2],
     c_args: ['-DLIBQMI_GLIB_COMPILATION'] + no_deprecated_declarations_flags,
+    kwargs: test_args,
   )
 
   test(
-    test_unit[0],
+    test_name,
     exe,
     env: test_env,
   )
