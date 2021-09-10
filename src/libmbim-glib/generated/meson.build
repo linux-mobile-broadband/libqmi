@@ -19,7 +19,7 @@ gen_headers += custom_target(
     python,
     mbim_mkenums,
     '--fhead', '#ifndef __LIBMBIM_GLIB_ERROR_TYPES_H__\n#define __LIBMBIM_GLIB_ERROR_TYPES_H__\n#include "mbim-errors.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.h.template')),
+    '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBMBIM_GLIB_ERROR_TYPES_H__ */\n',
     '@INPUT@'],
   capture: true,
@@ -35,7 +35,7 @@ gen_sources += custom_target(
     python,
     mbim_mkenums,
     '--fhead', '#include "mbim-errors.h"\n#include "mbim-error-types.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.c.template')),
+    '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
 )
@@ -50,7 +50,7 @@ gen_sources += custom_target(
     python,
     mbim_mkenums,
     '--fhead', '#include "mbim-errors.h"\n#include "mbim-error-types.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.c.template')),
+    '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
 )
@@ -66,7 +66,7 @@ gen_headers += custom_target(
     python,
     mbim_mkenums,
     '--fhead', '#ifndef __LIBMBIM_GLIB_ENUM_TYPES_H__\n#define __LIBMBIM_GLIB_ENUM_TYPES_H__\n#include "mbim-uuid.h"\n#include "mbim-cid.h"\n#include "mbim-message.h"\n#include "mbim-enums.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.h.template')),
+    '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBMBIM_GLIB_ENUM_TYPES_H__ */\n',
     '@INPUT@'],
   capture: true,
@@ -82,7 +82,7 @@ gen_sources += custom_target(
     python,
     mbim_mkenums,
     '--fhead', '#include "mbim-enum-types.h"\n',
-    '--template', files(join_paths(templates_dir, enum_types + '.c.template')),
+    '--template', files(templates_dir / enum_types + '.c.template'),
     '@INPUT@'],
   capture: true,
 )
@@ -113,9 +113,9 @@ foreach service_data: services_data
 
   generated = custom_target(
     name,
-    input: join_paths(data_dir, 'mbim-service-@0@.json'.format(service)),
+    input: data_dir / 'mbim-service-@0@.json'.format(service),
     output: [name + '.c', name + '.h', name + '.sections'],
-    command: [mbim_codegen, '--input', '@INPUT@', '--output', join_paths('@OUTDIR@', name)],
+    command: [mbim_codegen, '--input', '@INPUT@', '--output', '@OUTDIR@' / name],
     install: true,
     install_dir: [false, mbim_glib_pkgincludedir, false],
   )
@@ -128,7 +128,7 @@ foreach service_data: services_data
     #        source file, to the path has to be used. the first workaround is to use the
     #        build paths to point to the files, and the second workaround is to use
     #        custom target objects to force its building.
-    gen_sections += [join_paths(meson.current_build_dir(), name + '.sections')]
+    gen_sections += [meson.current_build_dir() / name + '.sections']
     gen_sections_deps += [generated]
   endif
 endforeach

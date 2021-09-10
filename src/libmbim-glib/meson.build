@@ -30,7 +30,7 @@ install_headers(
 common_c_flags = [
   '-DLIBMBIM_GLIB_COMPILATION',
   '-DG_LOG_DOMAIN="Mbim"',
-  '-DLIBEXEC_PATH="@0@"'.format(join_paths(mbim_prefix, mbim_libexecdir)),
+  '-DLIBEXEC_PATH="@0@"'.format(mbim_prefix / mbim_libexecdir),
 ]
 
 sources = files(
@@ -75,7 +75,7 @@ version_header = configure_file(
   install_dir: mbim_glib_pkgincludedir,
 )
 
-symbol_map = join_paths(meson.current_source_dir(), 'symbol.map')
+symbol_map = meson.current_source_dir() / 'symbol.map'
 
 libmbim_glib = library(
   libname,

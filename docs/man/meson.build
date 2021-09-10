@@ -13,6 +13,6 @@ foreach man: mans
     command: man[1],
     depend_files: man[2],
     install: true,
-    install_dir: join_paths(mbim_mandir, 'man1'),
+    install_dir: mbim_mandir / 'man1',
   )
 endforeach

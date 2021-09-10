@@ -17,6 +17,6 @@ if enable_mbim_username
     input: '76-mbim-proxy-device-ownership.rules.in',
     output: '@BASENAME@',
     configuration: config_h,
-    install_dir: join_paths(udev_udevdir, 'rules.d'),
+    install_dir: udev_udevdir / 'rules.d',
   )
 endif

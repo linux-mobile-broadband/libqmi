@@ -28,7 +28,7 @@ mbim_libexecdir = get_option('libexecdir')
 mbim_mandir = get_option('mandir')
 
 mbim_glib_include_subdir = mbim_name + '-glib'
-mbim_glib_pkgincludedir = join_paths(mbim_includedir, mbim_glib_include_subdir)
+mbim_glib_pkgincludedir = mbim_includedir / mbim_glib_include_subdir
 
 # libtool versioning for libmbim-glib (-version-info c:r:a)
 # - If the interface is unchanged, but the implementation has changed or been fixed, then increment r
@@ -49,11 +49,11 @@ python = import('python').find_installation('python3')
 
 source_root = meson.current_source_dir()
 
-data_dir = join_paths(source_root, 'data')
-templates_dir = join_paths(source_root, 'build-aux/templates')
+data_dir = source_root / 'data'
+templates_dir = source_root / 'build-aux/templates'
 
-mbim_codegen = find_program(join_paths(source_root, 'build-aux/mbim-codegen/mbim-codegen'))
-mbim_mkenums = find_program(join_paths(source_root, 'build-aux/mbim-mkenums'))
+mbim_codegen = find_program(source_root / 'build-aux/mbim-codegen/mbim-codegen')
+mbim_mkenums = find_program(source_root / 'build-aux/mbim-mkenums')
 
 top_inc = include_directories('.')
 
