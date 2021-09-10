@@ -6,4 +6,5 @@ mbim_network = configure_file(
   output: '@BASENAME@',
   configuration: version_conf,
   install_dir: mbim_bindir,
+  install_mode: 'rwxr-xr-x',
 )
