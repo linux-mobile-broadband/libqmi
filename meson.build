@@ -169,11 +169,12 @@ config_h.set('MBIM_USERNAME_ENABLED', enable_mbim_username)
 # introspection support
 enable_gir = dependency('gobject-introspection-1.0', version: '>= 0.9.6', required: get_option('introspection')).found()
 
-version_conf = configuration_data()
-version_conf.set('MBIM_MAJOR_VERSION', mbim_major_version)
-version_conf.set('MBIM_MINOR_VERSION', mbim_minor_version)
-version_conf.set('MBIM_MICRO_VERSION', mbim_micro_version)
-version_conf.set('VERSION', mbim_version)
+version_conf = {
+  'MBIM_MAJOR_VERSION': mbim_major_version,
+  'MBIM_MINOR_VERSION': mbim_minor_version,
+  'MBIM_MICRO_VERSION': mbim_micro_version,
+  'VERSION': mbim_version,
+}
 
 subdir('src')
 subdir('utils')
