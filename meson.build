@@ -150,8 +150,6 @@ if enable_bash_completion
   )
 endif
 
-glib_prefix = glib_dep.get_pkgconfig_variable('prefix')
-
 # MBIM username
 mbim_username = get_option('mbim_username')
 enable_mbim_username = (mbim_username != '')
