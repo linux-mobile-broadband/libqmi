@@ -31,7 +31,7 @@ build container:
     - tags
     - pushes
 
-build-meson-no-qrtr-no-mbim-no-rmnet-no-introspection:
+build-no-qrtr-no-mbim-no-rmnet-no-introspection:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
@@ -46,7 +46,7 @@ build-meson-no-qrtr-no-mbim-no-rmnet-no-introspection:
     - ninja -C build
     - ninja -C build install
 
-build-meson-no-rmnet:
+build-no-rmnet:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
@@ -73,7 +73,7 @@ build-meson-no-rmnet:
     - ninja -C build
     - ninja -C build install
 
-build-meson-no-qrtr:
+build-no-qrtr:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
@@ -94,7 +94,7 @@ build-meson-no-qrtr:
     - ninja -C build
     - ninja -C build install
 
-build-meson-no-qrtr-no-introspection:
+build-no-qrtr-no-introspection:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
@@ -115,7 +115,7 @@ build-meson-no-qrtr-no-introspection:
     - ninja -C build
     - ninja -C build install
 
-build-meson-no-mbim:
+build-no-mbim:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
@@ -136,7 +136,7 @@ build-meson-no-mbim:
     - ninja -C build
     - ninja -C build install
 
-build-meson-no-mbim-no-introspection:
+build-no-mbim-no-introspection:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
@@ -157,7 +157,7 @@ build-meson-no-mbim-no-introspection:
     - ninja -C build
     - ninja -C build install
 
-build-meson-collection-minimal:
+build-collection-minimal:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
@@ -172,7 +172,7 @@ build-meson-collection-minimal:
     - ninja -C build
     - ninja -C build install
 
-build-meson-collection-basic:
+build-collection-basic:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
@@ -187,7 +187,7 @@ build-meson-collection-basic:
     - ninja -C build
     - ninja -C build install
 
-build-meson-release:
+build-release:
   stage: build
   extends:
   - .fdo.distribution-image@ubuntu
