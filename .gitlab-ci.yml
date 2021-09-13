@@ -213,3 +213,5 @@ build-meson-release:
     - meson setup build --buildtype=release --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=enabled -Drmnet=enabled
     - ninja -C build
     - ninja -C build install
+    - ninja -C build dist
+    - ninja -C build uninstall
