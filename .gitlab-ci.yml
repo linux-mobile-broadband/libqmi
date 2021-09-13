@@ -44,13 +44,13 @@ build-meson-default:
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
-    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=true
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=enabled
     - ninja -C build
     - ninja -C build install
     - popd
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
     - pushd libqrtr-glib
-    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=true
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=enabled
     - ninja -C build
     - ninja -C build install
     - popd
@@ -90,13 +90,13 @@ build-meson-no-rmnet:
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
-    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=true
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=enabled
     - ninja -C build
     - ninja -C build install
     - popd
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
     - pushd libqrtr-glib
-    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=true
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=enabled
     - ninja -C build
     - ninja -C build install
     - popd
@@ -117,7 +117,7 @@ build-meson-no-qrtr:
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
-    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=true
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=enabled
     - ninja -C build
     - ninja -C build install
     - popd
@@ -138,7 +138,7 @@ build-meson-no-qrtr-no-introspection:
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
     - pushd libmbim
-    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=false
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=disabled
     - ninja -C build
     - ninja -C build install
     - popd
@@ -159,7 +159,7 @@ build-meson-no-mbim:
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
     - pushd libqrtr-glib
-    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=true
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=enabled
     - ninja -C build
     - ninja -C build install
     - popd
@@ -180,7 +180,7 @@ build-meson-no-mbim-no-introspection:
   script:
     - git clone --depth 1 https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git
     - pushd libqrtr-glib
-    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=false
+    - meson setup build --prefix=/usr -Dgtk_doc=false -Dintrospection=disabled
     - ninja -C build
     - ninja -C build install
     - popd
