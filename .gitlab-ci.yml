@@ -75,3 +75,4 @@ build-release:
     - ninja -C build
     - ninja -C build install
     - ninja -C build dist
+    - ninja -C build uninstall
