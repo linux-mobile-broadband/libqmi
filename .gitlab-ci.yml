@@ -201,6 +201,8 @@ build-meson-release:
     - meson setup build --buildtype=release --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=true -Dmbim_qmux=true -Dqrtr=true -Drmnet=true
     - ninja -C build
     - ninja -C build install
+    - ninja -C build dist
+    - ninja -C build uninstall
 
 build-autotools-no-deprecated:
   stage: build
