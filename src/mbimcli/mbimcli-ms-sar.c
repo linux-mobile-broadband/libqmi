@@ -270,9 +270,17 @@ sar_config_input_parse (const gchar         *str,
             while ((state_begin = strchr (state_begin, '{')) != NULL) {
                 guint32 antenna_index;
                 guint32 backoff_index;
+                gchar   antenna_index_str[10];
 
-                if (sscanf (state_begin, "{%d,%d}", &antenna_index, &backoff_index) == 2) {
+                if (sscanf (state_begin, "{%10[all|0-9],%d}", antenna_index_str, &backoff_index) == 2) {
                     MbimSarConfigState *config_state;
+
+                    if (g_ascii_strcasecmp (antenna_index_str, "all") == 0) {
+                        antenna_index = 0xFFFFFFFF;
+                    } else if (mbimcli_read_uint_from_string (antenna_index_str, &antenna_index) == 0) {
+                        g_printerr ("error: invalid antenna index: '%s', it must be 'all' or a number\n", antenna_index_str);
+                        return FALSE;
+                    }
 
                     config_state = g_new (MbimSarConfigState, 1);
                     config_state->antenna_index = antenna_index;
