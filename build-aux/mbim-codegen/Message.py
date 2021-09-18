@@ -92,9 +92,11 @@ class Message:
     """
     Constructor
     """
-    def __init__(self, service, dictionary):
+    def __init__(self, service, mbimex_service, mbimex_version, dictionary):
         # The message service, e.g. "Basic Connect"
         self.service = service
+        self.mbimex_service = mbimex_service
+        self.mbimex_version = mbimex_version
 
         # The name of the specific message, e.g. "Something"
         self.name = dictionary['name']
@@ -156,8 +158,18 @@ class Message:
         else:
             self.fullname = 'MBIM Message ' + self.service + ' ' + self.name
 
+        # Build SERVICE enum
+        if self.mbimex_service:
+            self.service_enum_name = 'MBIM Service ' + self.mbimex_service
+        else:
+            self.service_enum_name = 'MBIM Service ' + self.service
+        self.service_enum_name = utils.build_underscore_name(self.service_enum_name).upper()
+
         # Build CID enum
-        self.cid_enum_name = 'MBIM CID ' + self.service
+        if self.mbimex_service:
+            self.cid_enum_name = 'MBIM CID ' + self.mbimex_service
+        else:
+            self.cid_enum_name = 'MBIM CID ' + self.service
         if self.name != "":
             self.cid_enum_name += (' ' + self.name)
         self.cid_enum_name = utils.build_underscore_name(self.cid_enum_name).upper()
@@ -196,14 +208,14 @@ class Message:
     Emit message creator
     """
     def _emit_message_creator(self, hfile, cfile, message_type, fields, since):
-        translations = { 'message'                  : self.name,
-                         'service'                  : self.service,
-                         'since'                    : since,
-                         'underscore'               : utils.build_underscore_name (self.fullname),
-                         'message_type'             : message_type,
-                         'message_type_upper'       : message_type.upper(),
-                         'service_underscore_upper' : utils.build_underscore_name (self.service).upper(),
-                         'cid_enum_name'            : self.cid_enum_name }
+        translations = { 'message'            : self.name,
+                         'service'            : self.service,
+                         'since'              : since,
+                         'underscore'         : utils.build_underscore_name (self.fullname),
+                         'message_type'       : message_type,
+                         'message_type_upper' : message_type.upper(),
+                         'service_enum_name'  : self.service_enum_name,
+                         'cid_enum_name'      : self.cid_enum_name }
 
         template = (
             '\n'
@@ -380,7 +392,7 @@ class Message:
             '    MbimMessageCommandBuilder *builder;\n'
             '\n'
             '    builder = _mbim_message_command_builder_new (0,\n'
-            '                                                 MBIM_SERVICE_${service_underscore_upper},\n'
+            '                                                 ${service_enum_name},\n'
             '                                                 ${cid_enum_name},\n'
             '                                                 MBIM_MESSAGE_COMMAND_TYPE_${message_type_upper});\n')
 
@@ -461,13 +473,12 @@ class Message:
     Emit message parser
     """
     def _emit_message_parser(self, hfile, cfile, message_type, fields, since):
-        translations = { 'message'                  : self.name,
-                         'service'                  : self.service,
-                         'since'                    : since,
-                         'underscore'               : utils.build_underscore_name (self.fullname),
-                         'message_type'             : message_type,
-                         'message_type_upper'       : message_type.upper(),
-                         'service_underscore_upper' : utils.build_underscore_name (self.service).upper() }
+        translations = { 'message'            : self.name,
+                         'service'            : self.service,
+                         'since'              : since,
+                         'underscore'         : utils.build_underscore_name (self.fullname),
+                         'message_type'       : message_type,
+                         'message_type_upper' : message_type.upper() }
 
         template = (
             '\n'
@@ -1016,13 +1027,12 @@ class Message:
     Emit message printable
     """
     def _emit_message_printable(self, cfile, message_type, fields):
-        translations = { 'message'                  : self.name,
-                         'underscore'               : utils.build_underscore_name(self.name),
-                         'service'                  : self.service,
-                         'underscore'               : utils.build_underscore_name (self.fullname),
-                         'message_type'             : message_type,
-                         'message_type_upper'       : message_type.upper(),
-                         'service_underscore_upper' : utils.build_underscore_name (self.service).upper() }
+        translations = { 'message'            : self.name,
+                         'underscore'         : utils.build_underscore_name(self.name),
+                         'service'            : self.service,
+                         'underscore'         : utils.build_underscore_name (self.fullname),
+                         'message_type'       : message_type,
+                         'message_type_upper' : message_type.upper() }
         template = (
             '\n'
             'static gchar *\n'

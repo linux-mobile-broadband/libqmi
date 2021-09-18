@@ -40,17 +40,22 @@ class ObjectList:
         self.command_list = []
         self.struct_list = []
         self.service = ''
+        self.mbimex_service = ''
+        self.mbimex_version = ''
 
         # Loop items in the list, creating Message objects for the messages
         for object_dictionary in objects_dictionary:
             if object_dictionary['type'] == 'Command':
                 if self.service == '':
                     raise ValueError('Service name not specified before the first command')
-                self.command_list.append(Message(self.service, object_dictionary))
+                self.command_list.append(Message(self.service, self.mbimex_service, self.mbimex_version, object_dictionary))
             elif object_dictionary['type'] == 'Struct':
                 self.struct_list.append(Struct(object_dictionary))
             elif object_dictionary['type'] == 'Service':
                 self.service = object_dictionary['name']
+                if 'mbimex-service' in object_dictionary:
+                    self.mbimex_service = object_dictionary['mbimex-service']
+                    self.mbimex_version = object_dictionary['mbimex-version']
             else:
                 raise ValueError('Cannot handle object type \'%s\'' % object_dictionary['type'])
 
