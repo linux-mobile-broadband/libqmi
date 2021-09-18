@@ -3,7 +3,8 @@
 /*
  * libmbim-glib -- GLib/GIO based library to control MBIM devices
  *
- * Copyright (C) 2013 - 2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2013 - 2021 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2021 Intel Corporation
  */
 
 #ifndef _LIBMBIM_GLIB_MBIM_DEVICE_H_
@@ -215,14 +216,16 @@ gboolean mbim_device_is_open (MbimDevice *self);
  * MbimDeviceOpenFlags:
  * @MBIM_DEVICE_OPEN_FLAGS_NONE: None.
  * @MBIM_DEVICE_OPEN_FLAGS_PROXY: Try to open the port through the 'mbim-proxy'.
+ * @MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2: Try to enable MS MBIMEx 2.0 support. Since 1.28.
  *
  * Flags to specify which actions to be performed when the device is open.
  *
  * Since: 1.10
  */
 typedef enum { /*< since=1.10 >*/
-    MBIM_DEVICE_OPEN_FLAGS_NONE  = 0,
-    MBIM_DEVICE_OPEN_FLAGS_PROXY = 1 << 0
+    MBIM_DEVICE_OPEN_FLAGS_NONE         = 0,
+    MBIM_DEVICE_OPEN_FLAGS_PROXY        = 1 << 0,
+    MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2 = 1 << 1,
 } MbimDeviceOpenFlags;
 
 /**

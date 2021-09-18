@@ -3,8 +3,9 @@
 /*
  * libmbim-glib -- GLib/GIO based library to control MBIM devices
  *
- * Copyright (C) 2013-2014 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2013-2021 Aleksander Morgado <aleksander@aleksander.es>
  * Copyright (C) 2014 Smith Micro Software, Inc.
+ * Copyright (C) 2021 Intel Corporation
  *
  * Implementation based on the 'QmiDevice' GObject from libqmi-glib.
  */
@@ -38,6 +39,8 @@
 #include "mbim-proxy.h"
 #include "mbim-proxy-control.h"
 #include "mbim-net-port-manager.h"
+#include "mbim-basic-connect.h"
+#include "mbim-ms-basic-connect-extensions.h"
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
 
@@ -110,6 +113,10 @@ struct _MbimDevicePrivate {
 
     /* message size */
     guint16 max_control_transfer;
+
+    /* MBIM extensions major and minor versions agreed with the device */
+    guint8 ms_mbimex_version_major;
+    guint8 ms_mbimex_version_minor;
 
     /* Link management */
     MbimNetPortManager *net_port_manager;
@@ -1473,6 +1480,8 @@ typedef enum {
     DEVICE_OPEN_CONTEXT_STEP_FLAGS_PROXY,
     DEVICE_OPEN_CONTEXT_STEP_CLOSE_MESSAGE,
     DEVICE_OPEN_CONTEXT_STEP_OPEN_MESSAGE,
+    DEVICE_OPEN_CONTEXT_STEP_DEVICE_SERVICES,
+    DEVICE_OPEN_CONTEXT_STEP_MS_EXT_VERSION,
     DEVICE_OPEN_CONTEXT_STEP_LAST
 } DeviceOpenContextStep;
 
@@ -1491,8 +1500,6 @@ device_open_context_free (DeviceOpenContext *ctx)
     g_slice_free (DeviceOpenContext, ctx);
 }
 
-static void device_open_context_step (GTask *task);
-
 gboolean
 mbim_device_open_full_finish (MbimDevice    *self,
                               GAsyncResult  *res,
@@ -1509,7 +1516,155 @@ mbim_device_open_finish (MbimDevice   *self,
     return mbim_device_open_full_finish (self, res, error);
 }
 
-static void open_message (GTask *task);
+static void device_open_context_step (GTask *task);
+
+static void
+ms_ext_version_message_ready (MbimDevice   *self,
+                              GAsyncResult *res,
+                              GTask        *task)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    guint16                 mbim_version;
+    guint16                 ms_mbimex_version;
+    DeviceOpenContext      *ctx;
+
+    ctx = g_task_get_task_data (task);
+
+    response = mbim_device_command_finish (self, res, &error);
+    if (!response ||
+        !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error) ||
+        !mbim_message_ms_basic_connect_extensions_version_response_parse (
+            response,
+            &mbim_version,
+            &ms_mbimex_version,
+            &error)){
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    /* We fully ignore the MBIM version for now, we just assume it's 1.0, which
+     * is the only known release from the USB-IF for now. */
+    self->priv->ms_mbimex_version_major = (ms_mbimex_version >> 8) & 0xFF;
+    self->priv->ms_mbimex_version_minor = ms_mbimex_version & 0xFF;
+
+    g_debug ("[%s] successfully exchanged version information: version %x.%02x, extended version %x.%02x",
+             self->priv->path_display,
+             (mbim_version >> 8) & 0xFF,
+             mbim_version & 0xFF,
+             self->priv->ms_mbimex_version_major,
+             self->priv->ms_mbimex_version_minor);
+
+    ctx->step++;
+    device_open_context_step (task);
+}
+
+static void
+ms_ext_version_message (GTask *task)
+{
+    MbimDevice             *self;
+    DeviceOpenContext      *ctx;
+    g_autoptr(MbimMessage)  request = NULL;
+    guint32                 mbim_version = 0;
+    guint32                 ms_mbimex_version = 0;
+
+    self = g_task_get_source_object (task);
+    ctx = g_task_get_task_data (task);
+
+    /* User requested MBIMEx 2.0, so we'll report it along with MBIM 1.0 */
+    mbim_version      = 0x01 << 8 | 0x00;
+    ms_mbimex_version = 0x02 << 8 | 0x00;
+
+    request = mbim_message_ms_basic_connect_extensions_version_query_new (mbim_version, ms_mbimex_version, NULL);
+    g_assert (request);
+
+    mbim_device_command (self,
+                         request,
+                         ctx->timeout,
+                         g_task_get_cancellable (task),
+                         (GAsyncReadyCallback)ms_ext_version_message_ready,
+                         task);
+}
+
+static void
+device_services_message_ready (MbimDevice   *device,
+                               GAsyncResult *res,
+                               GTask        *task)
+{
+    g_autoptr(MbimMessage)                    response = NULL;
+    g_autoptr(GError)                         error = NULL;
+    g_autoptr(MbimDeviceServiceElementArray)  device_services = NULL;
+    guint32                                   device_services_count;
+    guint32                                   max_dss_sessions;
+    DeviceOpenContext                        *ctx;
+    guint                                     i;
+
+    ctx = g_task_get_task_data (task);
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response ||
+        !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error) ||
+        !mbim_message_device_services_response_parse (
+            response,
+            &device_services_count,
+            &max_dss_sessions,
+            &device_services,
+            &error)) {
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    if (device_services_count == 0) {
+        g_task_return_new_error (task, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                                 "No supported services reported by the modem");
+        g_object_unref (task);
+        return;
+    }
+
+    for (i = 0; i < device_services_count; i++) {
+        MbimService service;
+        guint32     j;
+
+        service = mbim_uuid_to_service (&device_services[i]->device_service_id);
+        for (j = 0; j < device_services[i]->cids_count; j++) {
+
+            if ((service == MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS) &&
+                device_services[i]->cids[j] == MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION) {
+                /* version command is supported, go on */
+                ctx->step++;
+                device_open_context_step (task);
+                return;
+            }
+        }
+    }
+
+    /* the version command isn't supported, so we can just jump to the end */
+    ctx->step = DEVICE_OPEN_CONTEXT_STEP_LAST;;
+    device_open_context_step (task);
+}
+
+static void
+device_services_message (GTask *task)
+{
+    MbimDevice             *self;
+    DeviceOpenContext      *ctx;
+    g_autoptr(MbimMessage)  request = NULL;
+
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
+
+    request = mbim_message_device_services_query_new (NULL);
+    g_assert (request);
+
+    mbim_device_command (self,
+                         request,
+                         ctx->timeout,
+                         g_task_get_cancellable (task),
+                         (GAsyncReadyCallback)device_services_message_ready,
+                         task);
+}
 
 static void
 open_message_ready (MbimDevice   *self,
@@ -1768,6 +1923,22 @@ device_open_context_step (GTask *task)
         /* If the device is already in-session, avoid the open message */
         if (!self->priv->in_session) {
             open_message (task);
+            return;
+        }
+        ctx->step++;
+        /* Fall through */
+
+        case DEVICE_OPEN_CONTEXT_STEP_DEVICE_SERVICES:
+        if (ctx->flags & MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2) {
+            device_services_message (task);
+            return;
+        }
+        ctx->step++;
+        /* Fall through */
+
+        case DEVICE_OPEN_CONTEXT_STEP_MS_EXT_VERSION:
+        if (ctx->flags & MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2) {
+            ms_ext_version_message (task);
             return;
         }
         ctx->step++;
@@ -2455,6 +2626,9 @@ mbim_device_init (MbimDevice *self)
     /* Initialize transaction ID */
     self->priv->transaction_id = 0x01;
     self->priv->open_status = OPEN_STATUS_CLOSED;
+
+    /* By default, assume v1.0 supported */
+    self->priv->ms_mbimex_version_major = 0x01;
 }
 
 static void
