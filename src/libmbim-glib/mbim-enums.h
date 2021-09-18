@@ -98,6 +98,8 @@ typedef enum { /*< since=1.0 >*/
  * @MBIM_DATA_CLASS_HSDPA: HSDPA.
  * @MBIM_DATA_CLASS_HSUPA: HSUPA.
  * @MBIM_DATA_CLASS_LTE: LTE.
+ * @MBIM_DATA_CLASS_5G_NSA: 5G NSA (MS MBIM Extension). Since 1.28.
+ * @MBIM_DATA_CLASS_5G_SA: 5G SA (MS MBIM Extension). Since 1.28.
  * @MBIM_DATA_CLASS_1XRTT: 1xRTT.
  * @MBIM_DATA_CLASS_1XEVDO: 1xEV-DO.
  * @MBIM_DATA_CLASS_1XEVDO_REVA: 1xEV-DO RevA
@@ -118,7 +120,9 @@ typedef enum { /*< since=1.0 >*/
     MBIM_DATA_CLASS_HSDPA       = 1 << 3,
     MBIM_DATA_CLASS_HSUPA       = 1 << 4,
     MBIM_DATA_CLASS_LTE         = 1 << 5,
-    /* Bits 6 to 15 reserved for future 3GPP classes */
+    MBIM_DATA_CLASS_5G_NSA      = 1 << 6,
+    MBIM_DATA_CLASS_5G_SA       = 1 << 7,
+    /* Bits 8 to 15 reserved for future 3GPP classes */
     MBIM_DATA_CLASS_1XRTT       = 1 << 16,
     MBIM_DATA_CLASS_1XEVDO      = 1 << 17,
     MBIM_DATA_CLASS_1XEVDO_REVA = 1 << 18,
