@@ -441,6 +441,44 @@ mbim_device_is_open (MbimDevice *self)
     return (self->priv->open_status == OPEN_STATUS_OPEN);
 }
 
+guint8
+mbim_device_get_ms_mbimex_version (MbimDevice *self,
+                                   guint8     *out_ms_mbimex_version_minor)
+{
+    g_return_val_if_fail (MBIM_IS_DEVICE (self), 0);
+
+    if (out_ms_mbimex_version_minor)
+        *out_ms_mbimex_version_minor = self->priv->ms_mbimex_version_minor;
+
+    return self->priv->ms_mbimex_version_major;
+}
+
+gboolean
+mbim_device_set_ms_mbimex_version (MbimDevice *self,
+                                   guint8      ms_mbimex_version_major,
+                                   guint8      ms_mbimex_version_minor,
+                                   GError    **error)
+{
+    g_return_val_if_fail (MBIM_IS_DEVICE (self), FALSE);
+
+    /* no checks that may make this method fail for now */
+    self->priv->ms_mbimex_version_major = ms_mbimex_version_major;
+    self->priv->ms_mbimex_version_minor = ms_mbimex_version_minor;
+    return TRUE;
+}
+
+gboolean
+mbim_device_check_ms_mbimex_version (MbimDevice *self,
+                                     guint8      ms_mbimex_version_major,
+                                     guint8      ms_mbimex_version_minor)
+{
+    g_return_val_if_fail (MBIM_IS_DEVICE (self), FALSE);
+
+    return ((self->priv->ms_mbimex_version_major > ms_mbimex_version_major) ||
+            ((self->priv->ms_mbimex_version_major == ms_mbimex_version_major) &&
+             (self->priv->ms_mbimex_version_minor >= ms_mbimex_version_minor)));
+}
+
 /*****************************************************************************/
 
 static void

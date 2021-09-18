@@ -233,6 +233,9 @@ mbim_device_peek_file
 mbim_device_get_path
 mbim_device_get_path_display
 mbim_device_is_open
+mbim_device_get_ms_mbimex_version
+mbim_device_set_ms_mbimex_version
+mbim_device_check_ms_mbimex_version
 mbim_device_open
 mbim_device_open_finish
 MbimDeviceOpenFlags
