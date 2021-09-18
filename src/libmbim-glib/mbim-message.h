@@ -160,6 +160,10 @@ void mbim_message_unref (MbimMessage *self);
  *
  * Gets a printable string with the contents of the whole MBIM message.
  *
+ * This method will not fail if the parsing of the message contents fails,
+ * a fallback text with the error will be included in the generated printable
+ * information instead.
+ *
  * Returns: a newly allocated string, which should be freed with g_free().
  *
  * Since: 1.0
@@ -167,6 +171,43 @@ void mbim_message_unref (MbimMessage *self);
 gchar *mbim_message_get_printable (const MbimMessage  *self,
                                    const gchar        *line_prefix,
                                    gboolean            headers_only);
+
+/**
+ * mbim_message_get_printable_full:
+ * @self: a #MbimMessage.
+ * @mbimex_version_major: major version of the agreed MBIMEx support.
+ * @mbimex_version_minor: minor version of the agreed MBIMEx support.
+ * @line_prefix: prefix string to use in each new generated line.
+ * @headers_only: %TRUE if only basic headers should be printed.
+ * @error: return location for error or %NULL.
+ *
+ * Gets a printable string with the contents of the whole MBIM message.
+ *
+ * Unlike mbim_message_get_printable(), this method allows specifying the
+ * MBIMEx version agreed between host and device, so that the correct
+ * processing and parsing is done on messages in the newer MBIMEx versions.
+ *
+ * If @mbimex_version_major < 2, this method behaves exactly as
+ * mbim_message_get_printable().
+ *
+ * If the specified @mbimex_version_major is unsupported, an error will be
+ * returned.
+ *
+ * This method will not fail if the parsing of the message contents fails,
+ * a fallback text with the error will be included in the generated printable
+ * information instead.
+ *
+ * Returns: a newly allocated string which should be freed with g_free(), or
+ * #NULL if @error is set.
+ *
+ * Since: 1.28
+ */
+gchar *mbim_message_get_printable_full (const MbimMessage  *self,
+                                        guint8              mbimex_version_major,
+                                        guint8              mbimex_version_minor,
+                                        const gchar        *line_prefix,
+                                        gboolean            headers_only,
+                                        GError            **error);
 
 /**
  * mbim_message_get_raw:

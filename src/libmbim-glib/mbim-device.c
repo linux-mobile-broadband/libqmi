@@ -866,7 +866,12 @@ process_message (MbimDevice        *self,
         if (is_partial_fragment) {
             g_autofree gchar *translated = NULL;
 
-            translated = mbim_message_get_printable (message, ">>>>>> ", TRUE);
+            translated = mbim_message_get_printable_full (message,
+                                                          self->priv->ms_mbimex_version_major,
+                                                          self->priv->ms_mbimex_version_minor,
+                                                          ">>>>>> ",
+                                                          TRUE,
+                                                          NULL);
             g_debug ("[%s] Received message fragment (translated)...\n%s",
                      self->priv->path_display,
                      translated);
@@ -913,7 +918,12 @@ process_message (MbimDevice        *self,
                 g_debug ("[%s] No transaction matched in received message",
                          self->priv->path_display);
                 /* Attempt to print a user friendly dump of the packet anyway */
-                printable = mbim_message_get_printable (message, ">>>>>> ", is_partial_fragment);
+                printable = mbim_message_get_printable_full (message,
+                                                             self->priv->ms_mbimex_version_major,
+                                                             self->priv->ms_mbimex_version_minor,
+                                                             ">>>>>> ",
+                                                             is_partial_fragment,
+                                                             NULL);
                 if (printable)
                     g_debug ("[%s] Received unexpected message (translated)...\n%s",
                              self->priv->path_display,
@@ -958,7 +968,12 @@ process_message (MbimDevice        *self,
             if (mbim_utils_get_traces_enabled ()) {
                 g_autofree gchar *printable = NULL;
 
-                printable = mbim_message_get_printable (ctx->fragments, ">>>>>> ", FALSE);
+                printable = mbim_message_get_printable_full (ctx->fragments,
+                                                             self->priv->ms_mbimex_version_major,
+                                                             self->priv->ms_mbimex_version_minor,
+                                                             ">>>>>> ",
+                                                             FALSE,
+                                                             NULL);
                 g_debug ("[%s] Received message (translated)...\n%s",
                          self->priv->path_display,
                          printable);
@@ -994,7 +1009,12 @@ process_message (MbimDevice        *self,
         if (mbim_utils_get_traces_enabled ()) {
             g_autofree gchar *printable = NULL;
 
-            printable = mbim_message_get_printable (message, ">>>>>> ", FALSE);
+            printable = mbim_message_get_printable_full (message,
+                                                         self->priv->ms_mbimex_version_major,
+                                                         self->priv->ms_mbimex_version_minor,
+                                                         ">>>>>> ",
+                                                         FALSE,
+                                                         NULL);
             g_debug ("[%s] Received message (translated)...\n%s",
                      self->priv->path_display,
                      printable);
@@ -2304,7 +2324,12 @@ device_send (MbimDevice   *self,
                  ((GByteArray *)message)->len,
                  hex);
 
-        printable = mbim_message_get_printable (message, "<<<<<< ", FALSE);
+        printable = mbim_message_get_printable_full (message,
+                                                     self->priv->ms_mbimex_version_major,
+                                                     self->priv->ms_mbimex_version_minor,
+                                                     "<<<<<< ",
+                                                     FALSE,
+                                                     NULL);
         g_debug ("[%s] Sent message (translated)...\n%s",
                  self->priv->path_display,
                  printable);
@@ -2329,7 +2354,12 @@ device_send (MbimDevice   *self,
 
         /* Build dummy message with only headers for printable purposes only */
         if (mbim_utils_get_traces_enabled ())
-            printable_headers = mbim_message_get_printable ((MbimMessage *)full_fragment, "<<<<<< ", TRUE);
+            printable_headers = mbim_message_get_printable_full ((MbimMessage *)full_fragment,
+                                                                 self->priv->ms_mbimex_version_major,
+                                                                 self->priv->ms_mbimex_version_minor,
+                                                                 "<<<<<< ",
+                                                                 TRUE,
+                                                                 NULL);
 
         /* Append the actual fragment data */
         g_byte_array_append (full_fragment, (guint8 *)fragments[i].data, fragments[i].data_length);

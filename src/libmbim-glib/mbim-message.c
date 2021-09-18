@@ -34,6 +34,7 @@
 #include "mbim-qdu.h"
 #include "mbim-ms-basic-connect-extensions.h"
 #include "mbim-ms-uicc-low-level-access.h"
+#include "mbim-ms-basic-connect-v2.h"
 
 /*****************************************************************************/
 
@@ -1378,11 +1379,37 @@ mbim_message_get_printable (const MbimMessage *self,
                             const gchar       *line_prefix,
                             gboolean           headers_only)
 {
-    GString *printable;
-    MbimService service_read_fields = MBIM_SERVICE_INVALID;
+    gchar *str;
 
     g_return_val_if_fail (self != NULL, NULL);
     g_return_val_if_fail (line_prefix != NULL, NULL);
+
+    str = mbim_message_get_printable_full (self, 1, 0, line_prefix, headers_only, NULL);
+    g_assert (str);
+
+    return str;
+}
+
+gchar *
+mbim_message_get_printable_full (const MbimMessage  *self,
+                                 guint8              mbimex_version_major,
+                                 guint8              mbimex_version_minor,
+                                 const gchar        *line_prefix,
+                                 gboolean            headers_only,
+                                 GError            **error)
+{
+    GString     *printable = NULL;
+    MbimService  service_read_fields = MBIM_SERVICE_INVALID;
+
+    g_return_val_if_fail (self != NULL, NULL);
+    g_return_val_if_fail (line_prefix != NULL, NULL);
+
+    if (mbimex_version_major > 2) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                     "MBIMEx version %x.%02x is unsupported",
+                     mbimex_version_major, mbimex_version_minor);
+        return NULL;
+    }
 
     if (!line_prefix)
         line_prefix = "";
@@ -1444,14 +1471,14 @@ mbim_message_get_printable (const MbimMessage *self,
     case MBIM_MESSAGE_TYPE_HOST_ERROR:
     case MBIM_MESSAGE_TYPE_FUNCTION_ERROR:
         if (!headers_only) {
-            MbimProtocolError error;
+            MbimProtocolError protocol_error;
 
-            error = mbim_message_error_get_error_status_code (self);
+            protocol_error = mbim_message_error_get_error_status_code (self);
             g_string_append_printf (printable,
                                     "%sContents:\n"
                                     "%s  error = '%s' (0x%08x)\n",
                                     line_prefix,
-                                    line_prefix, mbim_protocol_error_get_string (error), error);
+                                    line_prefix, mbim_protocol_error_get_string (protocol_error), protocol_error);
         }
         break;
 
@@ -1548,59 +1575,64 @@ mbim_message_get_printable (const MbimMessage *self,
 
     if (service_read_fields != MBIM_SERVICE_INVALID) {
         g_autofree gchar  *fields_printable = NULL;
-        g_autoptr(GError)  error = NULL;
+        g_autoptr(GError)  inner_error = NULL;
 
         switch (service_read_fields) {
         case MBIM_SERVICE_BASIC_CONNECT:
-            fields_printable = __mbim_message_basic_connect_get_printable_fields (self, line_prefix, &error);
+            if (mbimex_version_major < 2)
+                fields_printable = __mbim_message_basic_connect_get_printable_fields (self, line_prefix, &inner_error);
+            else if (mbimex_version_major == 2)
+                fields_printable = __mbim_message_ms_basic_connect_v2_get_printable_fields (self, line_prefix, &inner_error);
+            else
+                g_assert_not_reached ();
             break;
         case MBIM_SERVICE_SMS:
-            fields_printable = __mbim_message_sms_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_sms_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_USSD:
-            fields_printable = __mbim_message_ussd_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_ussd_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_PHONEBOOK:
-            fields_printable = __mbim_message_phonebook_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_phonebook_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_STK:
-            fields_printable = __mbim_message_stk_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_stk_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_AUTH:
-            fields_printable = __mbim_message_auth_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_auth_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_DSS:
-            fields_printable = __mbim_message_dss_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_dss_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_MS_FIRMWARE_ID:
-            fields_printable = __mbim_message_ms_firmware_id_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_ms_firmware_id_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_MS_HOST_SHUTDOWN:
-            fields_printable = __mbim_message_ms_host_shutdown_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_ms_host_shutdown_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_MS_SAR:
-            fields_printable = __mbim_message_ms_sar_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_ms_sar_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_PROXY_CONTROL:
-            fields_printable = __mbim_message_proxy_control_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_proxy_control_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_QMI:
-            fields_printable = __mbim_message_qmi_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_qmi_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_ATDS:
-            fields_printable = __mbim_message_atds_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_atds_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
-            fields_printable = __mbim_message_intel_firmware_update_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_intel_firmware_update_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_QDU:
-            fields_printable = __mbim_message_qdu_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_qdu_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
-            fields_printable = __mbim_message_ms_basic_connect_extensions_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_ms_basic_connect_extensions_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS:
-            fields_printable = __mbim_message_ms_uicc_low_level_access_get_printable_fields (self, line_prefix, &error);
+            fields_printable = __mbim_message_ms_uicc_low_level_access_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_INVALID:
         case MBIM_SERVICE_LAST:
@@ -1609,10 +1641,10 @@ mbim_message_get_printable (const MbimMessage *self,
             break;
         }
 
-        if (error)
+        if (inner_error)
             g_string_append_printf (printable,
                                     "%sFields: %s\n",
-                                    line_prefix, error->message);
+                                    line_prefix, inner_error->message);
         else if (fields_printable && fields_printable[0])
             g_string_append_printf (printable,
                                     "%sFields:\n"
