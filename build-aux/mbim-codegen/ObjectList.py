@@ -44,7 +44,9 @@ class ObjectList:
         # Loop items in the list, creating Message objects for the messages
         for object_dictionary in objects_dictionary:
             if object_dictionary['type'] == 'Command':
-                self.command_list.append(Message(object_dictionary))
+                if self.service == '':
+                    raise ValueError('Service name not specified before the first command')
+                self.command_list.append(Message(self.service, object_dictionary))
             elif object_dictionary['type'] == 'Struct':
                 self.struct_list.append(Struct(object_dictionary))
             elif object_dictionary['type'] == 'Service':

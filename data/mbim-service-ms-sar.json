@@ -14,7 +14,6 @@
                      "format" : "guint32" } ] },
 
   { "name"         : "Config",
-    "service"      : "MS SAR",
     "type"         : "Command",
     "since"        : "1.26",
     "set"          : [ { "name"          : "Mode",
@@ -49,7 +48,6 @@
   // *********************************************************************************
 
   { "name"         : "Transmission status",
-    "service"      : "MS SAR",
     "type"         : "Command",
     "since"        : "1.26",
     "set"          : [ { "name"             : "ChannelNotification",

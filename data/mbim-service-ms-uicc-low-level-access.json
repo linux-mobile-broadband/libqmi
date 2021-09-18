@@ -5,7 +5,6 @@
 
   // ************************************************************************
   { "name"     : "ATR",
-    "service"  : "MS UICC Low Level Access",
     "type"     : "Command",
     "since"    : "1.26",
     "query"    : [],
@@ -14,7 +13,6 @@
 
   // ************************************************************************
   { "name"     : "Open Channel",
-    "service"  : "MS UICC Low Level Access",
     "type"     : "Command",
     "since"    : "1.26",
     "set"      : [ { "name"   : "AppId",
@@ -32,7 +30,6 @@
 
   // ************************************************************************
   { "name"     : "Close Channel",
-    "service"  : "MS UICC Low Level Access",
     "type"     : "Command",
     "since"    : "1.26",
     "set"      : [ { "name"   : "Channel",
@@ -44,7 +41,6 @@
 
   // ************************************************************************
   { "name"     : "APDU",
-    "service"  : "MS UICC Low Level Access",
     "type"     : "Command",
     "since"    : "1.26",
     "set"      : [ { "name"   : "Channel",
@@ -71,7 +67,6 @@
                      "format" : "unsized-byte-array" } ] },
 
   { "name"     : "Terminal Capability",
-    "service"  : "MS UICC Low Level Access",
     "type"     : "Command",
     "since"    : "1.26",
     "set"      : [ { "name"   : "TerminalCapabilityCount",
@@ -90,7 +85,6 @@
 
   // *********************************************************************************
   { "name"     : "Reset",
-    "service"  : "MS UICC Low Level Access",
     "type"     : "Command",
     "since"    : "1.26",
     "set"      : [ { "name"          : "PassThroughAction",

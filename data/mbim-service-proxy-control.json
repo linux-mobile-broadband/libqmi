@@ -6,7 +6,6 @@
 
   // *********************************************************************************
   { "name"     : "Configuration",
-    "service"  : "Proxy Control",
     "type"     : "Command",
     "since"    : "1.10",
     "set"      : [ { "name"   : "DevicePath",

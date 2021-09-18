@@ -5,7 +5,6 @@
 
   // *********************************************************************************
   { "name"     : "Modem Reboot",
-    "service"  : "Intel Firmware Update",
     "type"     : "Command",
     "since"    : "1.16",
     "set"      : [] }

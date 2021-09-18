@@ -5,7 +5,6 @@
 
   // *********************************************************************************
   { "name"     : "Update Session",
-    "service"  : "QDU",
     "type"     : "Command",
     "since"    : "1.26",
     "set"      : [ { "name"             : "SessionAction",
@@ -31,10 +30,9 @@
                      "format"           : "guint32" },
                    { "name"             : "LastSessionErrorSize",
                      "format"           : "guint32" } ] },
-    
+
   // *********************************************************************************
   { "name"     : "File Open",
-    "service"  : "QDU",
     "type"     : "Command",
     "since"    : "1.26",
     "set"      : [ { "name"             : "FileType",
@@ -47,10 +45,9 @@
                      "format"           : "guint32" },
                    { "name"             : "MaxWindowSize",
                      "format"           : "guint32" } ] },
-    
+
   // *********************************************************************************
   { "name"     : "File Write",
-    "service"  : "QDU",
     "type"     : "Command",
     "since"    : "1.26",
     "set"      : [ { "name"   : "DataBuffer",

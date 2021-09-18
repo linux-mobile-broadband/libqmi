@@ -6,7 +6,6 @@
 
   // *********************************************************************************
   { "name"     : "Configuration",
-    "service"  : "SMS",
     "type"     : "Command",
     "since"    : "1.4",
     "set"      : [ { "name"          : "Format",
@@ -64,7 +63,6 @@
                      "format" : "guint32" } ] },
 
   { "name"         : "Read",
-    "service"      : "SMS",
     "type"         : "Command",
     "since"        : "1.4",
     "query"        : [ { "name"          : "Format",
@@ -138,7 +136,6 @@
                      "format" : "guint32" } ] },
 
   { "name"     : "Send",
-    "service"  : "SMS",
     "type"     : "Command",
     "since"    : "1.4",
     "set"      : [ { "name"          : "Format",
@@ -161,7 +158,6 @@
 
   // *********************************************************************************
   { "name"     : "Delete",
-    "service"  : "SMS",
     "type"     : "Command",
     "since"    : "1.4",
     "set"      : [ { "name"          : "Flag",
@@ -173,7 +169,6 @@
 
   // *********************************************************************************
   { "name"         : "Message Store Status",
-    "service"      : "SMS",
     "type"         : "Command",
     "since"        : "1.4",
     "query"        : [],

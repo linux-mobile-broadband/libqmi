@@ -92,9 +92,9 @@ class Message:
     """
     Constructor
     """
-    def __init__(self, dictionary):
+    def __init__(self, service, dictionary):
         # The message service, e.g. "Basic Connect"
-        self.service = dictionary['service']
+        self.service = service
 
         # The name of the specific message, e.g. "Something"
         self.name = dictionary['name']
