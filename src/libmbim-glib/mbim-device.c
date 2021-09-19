@@ -810,6 +810,29 @@ indication_ready (MbimDevice   *self,
         return;
     }
 
+    /* Indications in the internal proxy control service are not emitted as
+     * signals, they're consumed internally */
+    {
+        guint16 mbim_version;
+        guint16 ms_mbimex_version;
+
+        if ((mbim_message_indicate_status_get_service (indication) == MBIM_SERVICE_PROXY_CONTROL) &&
+            (mbim_message_indicate_status_get_cid (indication) == MBIM_CID_PROXY_CONTROL_VERSION) &&
+            mbim_message_proxy_control_version_notification_parse (indication, &mbim_version, &ms_mbimex_version, NULL)) {
+
+            self->priv->ms_mbimex_version_major = (ms_mbimex_version >> 8) & 0xFF;
+            self->priv->ms_mbimex_version_minor = ms_mbimex_version & 0xFF;
+
+            g_debug ("[%s] version information update reported: version %x.%02x, extended version %x.%02x",
+                     self->priv->path_display,
+                     (mbim_version >> 8) & 0xFF,
+                     mbim_version & 0xFF,
+                     self->priv->ms_mbimex_version_major,
+                     self->priv->ms_mbimex_version_minor);
+            return;
+        }
+    }
+
     g_signal_emit (self, signals[SIGNAL_INDICATE_STATUS], 0, indication);
 }
 
