@@ -27,6 +27,7 @@
 #include "mbim-enum-types.h"
 #include "mbim-error-types.h"
 #include "mbim-basic-connect.h"
+#include "mbim-ms-basic-connect-extensions.h"
 #include "mbim-proxy-helpers.h"
 
 /* The mbim-proxy may be used for bulk data transfer, such as modem
@@ -959,6 +960,32 @@ process_device_service_subscribe_list (MbimProxy   *self,
 }
 
 /*****************************************************************************/
+/* MBIMEx version detection */
+
+static void
+monitor_ms_basic_connect_extensions_version_response (MbimDevice  *device,
+                                                      MbimMessage *response)
+{
+    guint16 ms_mbimex_version;
+    guint8  ms_mbimex_version_major;
+    guint8  ms_mbimex_version_minor;
+
+    /* monitor the MBIMEx version agreed between the clients and the device */
+    if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, NULL) ||
+        (mbim_message_command_done_get_service (response) != MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS) ||
+        (mbim_message_command_done_get_cid (response) != MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION) ||
+        !mbim_message_ms_basic_connect_extensions_version_response_parse (response, NULL, &ms_mbimex_version, NULL))
+        return;
+
+    ms_mbimex_version_major = ms_mbimex_version >> 8;
+    ms_mbimex_version_minor = ms_mbimex_version & 0xFF;
+
+    g_message ("Proxy monitoring detected MBIMEx version agreed with device: %x.%02x",
+               ms_mbimex_version_major, ms_mbimex_version_minor);
+    mbim_device_set_ms_mbimex_version (device, ms_mbimex_version_major, ms_mbimex_version_minor, NULL);
+}
+
+/*****************************************************************************/
 /* Standard command */
 
 static void
@@ -989,6 +1016,10 @@ device_command_ready (MbimDevice   *device,
     /* replace reponse transaction id with the requested transaction id */
     g_debug ("[client %lu,0x%08x] response from device received",
              request->client->id, request->original_transaction_id);
+
+    /* try to match the MBIMEx version exchange */
+    monitor_ms_basic_connect_extensions_version_response (device, request->response);
+
     mbim_message_set_transaction_id (request->response, request->original_transaction_id);
     request_complete_and_free (request);
 }
