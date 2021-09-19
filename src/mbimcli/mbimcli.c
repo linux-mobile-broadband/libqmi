@@ -294,6 +294,9 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
         mbimcli_ms_basic_connect_extensions_run (dev, cancellable);
         return;
+    case MBIM_SERVICE_QUECTEL:
+        mbimcli_quectel_run (dev, cancellable);
+        return;
     case MBIM_SERVICE_SMS:
     case MBIM_SERVICE_USSD:
     case MBIM_SERVICE_STK:
@@ -302,7 +305,6 @@ device_open_ready (MbimDevice   *dev,
     case MBIM_SERVICE_QMI:
     case MBIM_SERVICE_QDU:
     case MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS:
-    case MBIM_SERVICE_QUECTEL:
         /* unsupported actions in the CLI */
     case MBIM_SERVICE_INVALID:
     default:
@@ -412,6 +414,11 @@ parse_actions (void)
         actions_enabled++;
     }
 
+    if (mbimcli_quectel_options_enabled ()) {
+        service = MBIM_SERVICE_QUECTEL;
+        actions_enabled++;
+    }
+
     /* Noop */
     if (noop_flag)
         actions_enabled++;
@@ -455,6 +462,7 @@ int main (int argc, char **argv)
     g_option_context_add_group (context, mbimcli_atds_get_option_group ());
     g_option_context_add_group (context, mbimcli_intel_firmware_update_get_option_group ());
     g_option_context_add_group (context, mbimcli_ms_basic_connect_extensions_get_option_group ());
+    g_option_context_add_group (context, mbimcli_quectel_get_option_group ());
     g_option_context_add_group (context, mbimcli_link_management_get_option_group ());
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {

@@ -12,6 +12,7 @@ mbimcli_sources = files(
   'mbimcli-ms-host-shutdown.c',
   'mbimcli-ms-sar.c',
   'mbimcli-phonebook.c',
+  'mbimcli-quectel.c',
 )
 
 sources = mbimcli_sources + files(
