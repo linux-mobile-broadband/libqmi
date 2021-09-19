@@ -328,6 +328,17 @@ typedef enum { /*< since=1.0 >*/
 #define MBIM_UUID_MS_BASIC_CONNECT_EXTENSIONS mbim_uuid_from_service (MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS)
 
 /**
+ * MBIM_UUID_MS_UICC_LOW_LEVEL_ACCESS:
+ *
+ * Get the UUID of the %MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS service.
+ *
+ * Returns: (transfer none): a #MbimUuid.
+ *
+ * Since: 1.26
+ */
+#define MBIM_UUID_MS_UICC_LOW_LEVEL_ACCESS mbim_uuid_from_service (MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS)
+
+/**
  * mbim_service_lookup_name:
  * @service: a MbimService or custom service.
  *
@@ -482,15 +493,6 @@ const MbimUuid *mbim_uuid_from_context_type (MbimContextType context_type);
  * Since: 1.0
  */
 MbimContextType mbim_uuid_to_context_type (const MbimUuid *uuid);
-
-/**
- * MBIM_UUID_MS_UICC_LOW_LEVEL_ACCESS:
- *
- * Get the UUID of the %MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS service.
- *
- * Returns: (transfer none): a #MbimUuid.
- */
-#define MBIM_UUID_MS_UICC_LOW_LEVEL_ACCESS mbim_uuid_from_service (MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS)
 
 G_END_DECLS
 
