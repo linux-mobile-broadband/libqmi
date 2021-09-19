@@ -962,19 +962,56 @@ process_device_service_subscribe_list (MbimProxy   *self,
 /*****************************************************************************/
 /* MBIMEx version detection */
 
+static MbimMessage *
+build_proxy_control_version_notification (guint16 mbim_version,
+                                          guint16 ms_mbimex_version)
+{
+    MbimMessage                    *message;
+    struct indicate_status_message *indicate_status;
+    guint16                         tmp;
+    guint                           buffer_i = 0;
+    gsize                           buffer_length = 0;
+
+    buffer_length = sizeof (mbim_version) + sizeof (ms_mbimex_version);
+
+    message = (MbimMessage *) _mbim_message_allocate (MBIM_MESSAGE_TYPE_INDICATE_STATUS,
+                                                      0,
+                                                      sizeof (struct indicate_status_message) + buffer_length);
+    indicate_status = &(((struct full_message *)(message->data))->message.indicate_status);
+    indicate_status->fragment_header.total   = GUINT32_TO_LE (1);
+    indicate_status->fragment_header.current = 0;
+    memcpy (indicate_status->service_id, MBIM_UUID_PROXY_CONTROL, sizeof (MbimUuid));
+    indicate_status->command_id  = GUINT32_TO_LE (MBIM_CID_PROXY_CONTROL_VERSION);
+    indicate_status->buffer_length = GUINT32_TO_LE (buffer_length);
+
+    tmp = GUINT16_TO_LE (mbim_version);
+    memcpy (&indicate_status->buffer[buffer_i], &tmp, sizeof (tmp));
+    buffer_i += sizeof (tmp);
+    tmp = GUINT16_TO_LE (ms_mbimex_version);
+    memcpy (&indicate_status->buffer[buffer_i], &tmp, sizeof (tmp));
+    buffer_i += sizeof (tmp);
+    g_assert (buffer_i == buffer_length);
+
+    return message;
+}
+
 static void
-monitor_ms_basic_connect_extensions_version_response (MbimDevice  *device,
+monitor_ms_basic_connect_extensions_version_response (MbimProxy   *self,
+                                                      MbimDevice  *device,
                                                       MbimMessage *response)
 {
-    guint16 ms_mbimex_version;
-    guint8  ms_mbimex_version_major;
-    guint8  ms_mbimex_version_minor;
+    g_autoptr(MbimMessage)  indication = NULL;
+    guint16                 mbim_version;
+    guint16                 ms_mbimex_version;
+    guint8                  ms_mbimex_version_major;
+    guint8                  ms_mbimex_version_minor;
+    GList                  *l;
 
     /* monitor the MBIMEx version agreed between the clients and the device */
     if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, NULL) ||
         (mbim_message_command_done_get_service (response) != MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS) ||
         (mbim_message_command_done_get_cid (response) != MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION) ||
-        !mbim_message_ms_basic_connect_extensions_version_response_parse (response, NULL, &ms_mbimex_version, NULL))
+        !mbim_message_ms_basic_connect_extensions_version_response_parse (response, &mbim_version, &ms_mbimex_version, NULL))
         return;
 
     ms_mbimex_version_major = ms_mbimex_version >> 8;
@@ -983,6 +1020,24 @@ monitor_ms_basic_connect_extensions_version_response (MbimDevice  *device,
     g_message ("Proxy monitoring detected MBIMEx version agreed with device: %x.%02x",
                ms_mbimex_version_major, ms_mbimex_version_minor);
     mbim_device_set_ms_mbimex_version (device, ms_mbimex_version_major, ms_mbimex_version_minor, NULL);
+
+    /* notify to all clients about the MBIMEx version update */
+    indication = build_proxy_control_version_notification (mbim_version, ms_mbimex_version);
+    for (l = self->priv->clients; l; l = g_list_next (l)) {
+        g_autoptr(GError)  error = NULL;
+        Client            *client;
+
+        client = l->data;
+        if (client->device != device)
+            continue;
+
+        if (!client_send_message (client, indication, &error))
+            g_warning ("[client %lu] couldn't report MBIMEx version update to %x.%02x: %s",
+                       client->id, ms_mbimex_version_major, ms_mbimex_version_minor, error->message);
+        else
+            g_debug ("[client %lu] reported MBIMEx version update to %x.%02x",
+                     client->id, ms_mbimex_version_major, ms_mbimex_version_minor);
+    }
 }
 
 /*****************************************************************************/
@@ -1018,7 +1073,7 @@ device_command_ready (MbimDevice   *device,
              request->client->id, request->original_transaction_id);
 
     /* try to match the MBIMEx version exchange */
-    monitor_ms_basic_connect_extensions_version_response (device, request->response);
+    monitor_ms_basic_connect_extensions_version_response (request->self, device, request->response);
 
     mbim_message_set_transaction_id (request->response, request->original_transaction_id);
     request_complete_and_free (request);

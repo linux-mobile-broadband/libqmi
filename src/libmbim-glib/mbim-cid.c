@@ -120,9 +120,10 @@ static const CidConfig cid_ms_sar_config [MBIM_CID_MS_SAR_LAST] = {
 };
 
 /* Note: index of the array is CID-1 */
-#define MBIM_CID_PROXY_CONTROL_LAST MBIM_CID_PROXY_CONTROL_CONFIGURATION
+#define MBIM_CID_PROXY_CONTROL_LAST MBIM_CID_PROXY_CONTROL_VERSION
 static const CidConfig cid_proxy_control_config [MBIM_CID_PROXY_CONTROL_LAST] = {
-    { SET, NO_QUERY, NO_NOTIFY }, /* MBIM_CID_PROXY_CONTROL_CONFIGURATION */
+    { SET,    NO_QUERY, NO_NOTIFY }, /* MBIM_CID_PROXY_CONTROL_CONFIGURATION */
+    { NO_SET, NO_QUERY, NOTIFY    }, /* MBIM_CID_PROXY_CONTROL_VERSION */
 };
 
 /* Note: index of the array is CID-1 */

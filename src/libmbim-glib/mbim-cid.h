@@ -238,6 +238,7 @@ typedef enum { /*< since=1.26 >*/
  * MbimCidProxyControl:
  * @MBIM_CID_PROXY_CONTROL_UNKNOWN: Unknown command.
  * @MBIM_CID_PROXY_CONTROL_CONFIGURATION: Configuration.
+ * @MBIM_CID_PROXY_CONTROL_VERSION: MBIM and MBIMEx Version reporting.
  *
  * MBIM commands in the %MBIM_SERVICE_PROXY_CONTROL service.
  *
@@ -245,7 +246,8 @@ typedef enum { /*< since=1.26 >*/
  */
 typedef enum { /*< since=1.10 >*/
     MBIM_CID_PROXY_CONTROL_UNKNOWN       = 0,
-    MBIM_CID_PROXY_CONTROL_CONFIGURATION = 1
+    MBIM_CID_PROXY_CONTROL_CONFIGURATION = 1,
+    MBIM_CID_PROXY_CONTROL_VERSION       = 2,
 } MbimCidProxyControl;
 
 /**
