@@ -37,6 +37,7 @@ static gboolean operation_status;
 /* Main options */
 static gchar *device_str;
 static gboolean device_open_proxy_flag;
+static gboolean device_open_ms_mbimex_v2_flag;
 static gchar *no_open_str;
 static gboolean no_close_flag;
 static gboolean noop_flag;
@@ -51,6 +52,10 @@ static GOptionEntry main_entries[] = {
     },
     { "device-open-proxy", 'p', 0, G_OPTION_ARG_NONE, &device_open_proxy_flag,
       "Request to use the 'mbim-proxy' proxy",
+      NULL
+    },
+    { "device-open-ms-mbimex-v2", 0, 0, G_OPTION_ARG_NONE, &device_open_ms_mbimex_v2_flag,
+      "Request to enable Microsoft MBIMEx v2.0 support",
       NULL
     },
     { "no-open", 0, 0, G_OPTION_ARG_STRING, &no_open_str,
@@ -332,6 +337,8 @@ device_new_ready (GObject      *unused,
     /* Setup device open flags */
     if (device_open_proxy_flag)
         open_flags |= MBIM_DEVICE_OPEN_FLAGS_PROXY;
+    if (device_open_ms_mbimex_v2_flag)
+        open_flags |= MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2;
 
     /* Open the device */
     mbim_device_open_full (device,
