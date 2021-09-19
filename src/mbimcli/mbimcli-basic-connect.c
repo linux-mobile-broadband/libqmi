@@ -1371,6 +1371,7 @@ register_state_ready (MbimDevice   *device,
     g_autofree gchar       *roaming_text = NULL;
     MbimRegistrationFlag    registration_flag;
     g_autofree gchar       *registration_flag_str = NULL;
+    MbimDataClass           preferred_data_classes;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -1379,20 +1380,44 @@ register_state_ready (MbimDevice   *device,
         return;
     }
 
-    if (!mbim_message_register_state_response_parse (response,
-                                                     &nw_error,
-                                                     &register_state,
-                                                     &register_mode,
-                                                     &available_data_classes,
-                                                     &cellular_class,
-                                                     &provider_id,
-                                                     &provider_name,
-                                                     &roaming_text,
-                                                     &registration_flag,
-                                                     &error)) {
-        g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        shutdown (FALSE);
-        return;
+    /* MBIMEx 2.0 support */
+    if (mbim_device_check_ms_mbimex_version (device, 2, 0)) {
+        if (!mbim_message_ms_basic_connect_v2_register_state_response_parse (response,
+                                                                             &nw_error,
+                                                                             &register_state,
+                                                                             &register_mode,
+                                                                             &available_data_classes,
+                                                                             &cellular_class,
+                                                                             &provider_id,
+                                                                             &provider_name,
+                                                                             &roaming_text,
+                                                                             &registration_flag,
+                                                                             &preferred_data_classes,
+                                                                             &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIMEx 2.0 Register State");
+    }
+    /* MBIM 1.0 support */
+    else {
+        if (!mbim_message_register_state_response_parse (response,
+                                                         &nw_error,
+                                                         &register_state,
+                                                         &register_mode,
+                                                         &available_data_classes,
+                                                         &cellular_class,
+                                                         &provider_id,
+                                                         &provider_name,
+                                                         &roaming_text,
+                                                         &registration_flag,
+                                                         &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIM 1.0 Register State");
     }
 
     if (GPOINTER_TO_UINT (user_data))
@@ -1423,6 +1448,14 @@ register_state_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (provider_name),
              VALIDATE_UNKNOWN (roaming_text),
              VALIDATE_UNKNOWN (registration_flag_str));
+
+    if (mbim_device_check_ms_mbimex_version (device, 2, 0)) {
+        g_autofree gchar *preferred_data_classes_str = NULL;
+
+        preferred_data_classes_str = mbim_data_class_build_string_from_mask (preferred_data_classes);
+        g_print ("\tPreferred data classes: '%s'\n",
+                 VALIDATE_UNKNOWN (preferred_data_classes_str));
+    }
 
     shutdown (TRUE);
 }
@@ -1877,7 +1910,10 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Query registration status? */
     if (query_register_state_flag) {
-        request = mbim_message_register_state_query_new (NULL);
+        if (mbim_device_check_ms_mbimex_version (device, 2, 0))
+            request = mbim_message_ms_basic_connect_v2_register_state_query_new (NULL);
+        else
+            request = mbim_message_register_state_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -1889,10 +1925,10 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Launch automatic registration? */
     if (set_register_state_automatic_flag) {
-        request = mbim_message_register_state_set_new (NULL,
-                                                       MBIM_REGISTER_ACTION_AUTOMATIC,
-                                                       0,
-                                                       &error);
+        if (mbim_device_check_ms_mbimex_version (device, 2, 0))
+            request = mbim_message_ms_basic_connect_v2_register_state_set_new (NULL, MBIM_REGISTER_ACTION_AUTOMATIC, 0, &error);
+        else
+            request = mbim_message_register_state_set_new (NULL, MBIM_REGISTER_ACTION_AUTOMATIC, 0, &error);
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
             shutdown (FALSE);
