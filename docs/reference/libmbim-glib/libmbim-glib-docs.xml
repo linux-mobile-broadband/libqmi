@@ -99,6 +99,11 @@
   </chapter>
 
   <chapter>
+    <title>Quectel-defined Services</title>
+    <xi:include href="xml/mbim-quectel.xml"/>
+  </chapter>
+
+  <chapter>
     <title>Compatibility</title>
     <xi:include href="xml/mbim-compat.xml"/>
   </chapter>

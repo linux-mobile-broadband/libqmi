@@ -232,6 +232,14 @@ static const MbimUuid uuid_ms_uicc_low_level_access = {
     .e = { 0xf4, 0xd4, 0x4b, 0xd0, 0x93, 0x67 }
 };
 
+static const MbimUuid uuid_quectel = {
+    .a = { 0x11, 0x22, 0x33, 0x44 },
+    .b = { 0x55, 0x66 },
+    .c = { 0x77, 0x88 },
+    .d = { 0x99, 0xaa },
+    .e = { 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x11 }
+};
+
 static GList *mbim_custom_service_list = NULL;
 
 typedef struct {
@@ -361,6 +369,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_ms_basic_connect_extensions;
     case MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS:
         return &uuid_ms_uicc_low_level_access;
+    case MBIM_SERVICE_QUECTEL:
+        return &uuid_quectel;
     case MBIM_SERVICE_LAST:
         g_assert_not_reached ();
     default:
@@ -427,6 +437,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_ms_uicc_low_level_access))
         return MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS;
+
+    if (mbim_uuid_cmp (uuid, &uuid_quectel))
+        return MBIM_SERVICE_QUECTEL;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
         if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))

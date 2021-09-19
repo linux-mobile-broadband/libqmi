@@ -1,0 +1,18 @@
+[
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Quectel" },
+
+  // *********************************************************************************
+
+  { "name"         : "Radio State",
+    "type"         : "Command",
+    "since"        : "1.28",
+    "set"          : [ { "name"          : "RadioState",
+                         "format"        : "guint32",
+                         "public-format" : "MbimQuectelRadioSwitchState" } ],
+    "query"        : [],
+    "response"     : [ { "name"          : "RadioState",
+                         "format"        : "guint32",
+                         "public-format" : "MbimQuectelRadioSwitchState" } ] }
+]

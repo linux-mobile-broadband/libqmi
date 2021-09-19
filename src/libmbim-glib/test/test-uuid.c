@@ -103,6 +103,13 @@ test_uuid_ms_basic_connect_extensions (void)
                           "3d01dcc5-fef5-4d05-0d3a-bef7058e9aaf");
 }
 
+static void
+test_uuid_quectel (void)
+{
+    compare_uuid_strings (MBIM_UUID_QUECTEL,
+                          "11223344-5566-7788-99aa-bbccddeeff11");
+}
+
 /*****************************************************************************/
 
 static void
@@ -215,6 +222,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/uuid/ms-sar",                      test_uuid_ms_sar);
     g_test_add_func ("/libmbim-glib/uuid/intel-firmware-update",       test_uuid_intel_firmware_update);
     g_test_add_func ("/libmbim-glib/uuid/ms-basic-connect-extensions", test_uuid_ms_basic_connect_extensions);
+    g_test_add_func ("/libmbim-glib/uuid/quectel",                     test_uuid_quectel);
 
     g_test_add_func ("/libmbim-glib/uuid/valid",           test_uuid_valid);
     g_test_add_func ("/libmbim-glib/uuid/valid/camelcase", test_uuid_valid_camelcase);

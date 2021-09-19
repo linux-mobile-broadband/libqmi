@@ -101,6 +101,7 @@ services_data = [
   [['phonebook'], true],
   [['proxy-control'], false],
   [['qdu'], true],
+  [['quectel'], true],
   [['qmi'], true],
   [['sms'], true],
   [['stk'], true],

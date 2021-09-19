@@ -389,6 +389,20 @@ typedef enum { /*< since=1.26 >*/
 } MbimCidMsUiccLowLevelAccess;
 
 /**
+ * MbimCidQuectel:
+ * @MBIM_CID_QUECTEL_UNKNOWN: Unknown command.
+ * @MBIM_CID_QUECTEL_RADIO_STATE: Radio state.
+ *
+ * MBIM commands in the %MBIM_SERVICE_QUECTEL service.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_CID_QUECTEL_UNKNOWN     = 0,
+    MBIM_CID_QUECTEL_RADIO_STATE = 1,
+} MbimCidQuectel;
+
+/**
  * mbim_cid_can_set:
  * @service: a #MbimService.
  * @cid: a command ID.
