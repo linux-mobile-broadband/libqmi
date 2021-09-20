@@ -37,6 +37,10 @@
  */
 #define BUFFER_SIZE 4096
 
+/* The proxy control "Version" indication reporting the last agreed
+ * MBIMEx version, if any */
+#define MBIM_DEVICE_PROXY_CONTROL_VERSION "mbim-device-proxy-control-version"
+
 G_DEFINE_TYPE (MbimProxy, mbim_proxy, G_TYPE_OBJECT)
 
 enum {
@@ -590,8 +594,9 @@ process_internal_proxy_open (MbimProxy   *self,
                              Client      *client,
                              MbimMessage *message)
 {
-    Request *request;
-    MbimStatusError status = MBIM_STATUS_ERROR_FAILURE;
+    Request                *request;
+    MbimStatusError         status = MBIM_STATUS_ERROR_FAILURE;
+    g_autoptr(MbimMessage)  indication = NULL;
 
     /* create request holder */
     request = request_new (self, client, message);
@@ -603,6 +608,17 @@ process_internal_proxy_open (MbimProxy   *self,
     else {
         g_debug ("[client %lu] connection to MBIM device '%s' established", client->id, mbim_device_get_path (client->device));
         status = MBIM_STATUS_ERROR_NONE;
+    }
+
+    /* notify the client about the MBIMEx version */
+    indication = (MbimMessage *) g_object_get_data (G_OBJECT (client->device), MBIM_DEVICE_PROXY_CONTROL_VERSION);
+    if (indication) {
+        g_autoptr(GError) error = NULL;
+
+        if (!client_send_message (client, indication, &error))
+            g_warning ("[client %lu] couldn't report MBIMEx version update: %s", client->id, error->message);
+        else
+            g_debug ("[client %lu] reported MBIMEx version update", client->id);
     }
 
     request->response = mbim_message_open_done_new (mbim_message_get_transaction_id (request->message), status);
@@ -1038,6 +1054,13 @@ monitor_ms_basic_connect_extensions_version_response (MbimProxy   *self,
             g_debug ("[client %lu] reported MBIMEx version update to %x.%02x",
                      client->id, ms_mbimex_version_major, ms_mbimex_version_minor);
     }
+
+    /* the indication is stored as data associated to the device, so that it can
+     * be reused any time new clients attempt an open */
+    g_object_set_data_full (G_OBJECT (device),
+                            MBIM_DEVICE_PROXY_CONTROL_VERSION,
+                            mbim_message_ref (indication),
+                            (GDestroyNotify)mbim_message_unref);
 }
 
 /*****************************************************************************/
