@@ -1581,9 +1581,14 @@ mbim_message_get_printable_full (const MbimMessage  *self,
         case MBIM_SERVICE_BASIC_CONNECT:
             if (mbimex_version_major < 2)
                 fields_printable = __mbim_message_basic_connect_get_printable_fields (self, line_prefix, &inner_error);
-            else if (mbimex_version_major == 2)
+            else if (mbimex_version_major == 2) {
                 fields_printable = __mbim_message_ms_basic_connect_v2_get_printable_fields (self, line_prefix, &inner_error);
-            else
+                /* attempt fallback to v1 printable */
+                if (g_error_matches (inner_error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNSUPPORTED)) {
+                    g_clear_error (&inner_error);
+                    fields_printable = __mbim_message_basic_connect_get_printable_fields (self, line_prefix, &inner_error);
+                }
+            } else
                 g_assert_not_reached ();
             break;
         case MBIM_SERVICE_SMS:
