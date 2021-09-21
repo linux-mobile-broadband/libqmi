@@ -368,6 +368,7 @@ MbimUiccSecureMessaging
 MbimUiccClassByteType
 MbimUiccPassThroughAction
 MbimUiccPassThroughStatus
+MbimFrequencyRange
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -439,6 +440,7 @@ mbim_uicc_secure_messaging_get_string
 mbim_uicc_class_byte_type_get_string
 mbim_uicc_pass_through_action_get_string
 mbim_uicc_pass_through_status_get_string
+mbim_frequency_range_build_string_from_mask
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -512,6 +514,7 @@ mbim_uicc_secure_messaging_build_string_from_mask
 mbim_uicc_class_byte_type_build_string_from_mask
 mbim_uicc_pass_through_action_build_string_from_mask
 mbim_uicc_pass_through_status_build_string_from_mask
+mbim_frequency_range_get_string
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -588,6 +591,7 @@ MBIM_TYPE_UICC_SECURE_MESSAGING
 MBIM_TYPE_UICC_CLASS_BYTE_TYPE
 MBIM_TYPE_UICC_PASS_THROUGH_ACTION
 MBIM_TYPE_UICC_PASS_THROUGH_STATUS
+MBIM_TYPE_FREQUENCY_RANGE
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type
@@ -663,6 +667,7 @@ mbim_uicc_class_byte_type_get_type
 mbim_uicc_secure_messaging_get_type
 mbim_uicc_pass_through_action_get_type
 mbim_uicc_pass_through_status_get_type
+mbim_frequency_range_get_type
 </SECTION>
 
 <SECTION>

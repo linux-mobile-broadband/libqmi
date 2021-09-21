@@ -1452,6 +1452,25 @@ typedef enum { /*< since=1.26 >*/
     MBIM_UICC_PASS_THROUGH_STATUS_ENABLED    = 1,
 } MbimUiccPassThroughStatus;
 
+/*****************************************************************************/
+/* 'Packet service v2'  enums */
+
+/**
+ * MbimFrequencyRange:
+ * @MBIM_FREQUENCY_RANGE_UNKNOWN: Unknown.
+ * @MBIM_FREQUENCY_RANGE_1: Frequency range 1 (FR1) in 3GPP TS 38.101-1 (Sub-6G).
+ * @MBIM_FREQUENCY_RANGE_2: FR2 in 3GPP TS 38.101-2 (mmWave).
+ *
+ * Frequency Range.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_FREQUENCY_RANGE_UNKNOWN = 0 << 0,
+    MBIM_FREQUENCY_RANGE_1       = 1 << 0,
+    MBIM_FREQUENCY_RANGE_2       = 1 << 1
+} MbimFrequencyRange;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */
