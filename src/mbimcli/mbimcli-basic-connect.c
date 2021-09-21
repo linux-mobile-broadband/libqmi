@@ -1529,6 +1529,7 @@ packet_service_ready (MbimDevice   *device,
     g_autofree gchar       *highest_available_data_class_str = NULL;
     guint64                 uplink_speed;
     guint64                 downlink_speed;
+    MbimFrequencyRange      frequency_range;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -1537,16 +1538,36 @@ packet_service_ready (MbimDevice   *device,
         return;
     }
 
-    if (!mbim_message_packet_service_response_parse (response,
-                                                     &nw_error,
-                                                     &packet_service_state,
-                                                     &highest_available_data_class,
-                                                     &uplink_speed,
-                                                     &downlink_speed,
-                                                     &error)) {
-        g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        shutdown (FALSE);
-        return;
+    /* MBIMEx 2.0 support */
+    if (mbim_device_check_ms_mbimex_version (device, 2, 0)) {
+        if (!mbim_message_ms_basic_connect_v2_packet_service_response_parse (response,
+                                                                             &nw_error,
+                                                                             &packet_service_state,
+                                                                             &highest_available_data_class,
+                                                                             &uplink_speed,
+                                                                             &downlink_speed,
+                                                                             &frequency_range,
+                                                                             &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIM 2.0 Packet Service");
+    }
+    /* MBIM 1.0 support */
+    else {
+        if (!mbim_message_packet_service_response_parse (response,
+                                                         &nw_error,
+                                                         &packet_service_state,
+                                                         &highest_available_data_class,
+                                                         &uplink_speed,
+                                                         &downlink_speed,
+                                                         &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIM 1.0 Packet Service");
     }
 
     switch (GPOINTER_TO_UINT (user_data)) {
@@ -1576,6 +1597,14 @@ packet_service_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (highest_available_data_class_str),
              uplink_speed,
              downlink_speed);
+
+    if (mbim_device_check_ms_mbimex_version (device, 2, 0)) {
+        g_autofree gchar *frequency_range_str = NULL;
+
+        frequency_range_str = mbim_frequency_range_build_string_from_mask (frequency_range);
+        g_print ("\t       Frequency range: '%s'\n",
+                 VALIDATE_UNKNOWN (frequency_range_str));
+    }
 
     shutdown (TRUE);
 }
@@ -1958,7 +1987,10 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Query packet service status? */
     if (query_packet_service_flag) {
-        request = mbim_message_packet_service_query_new (NULL);
+        if (mbim_device_check_ms_mbimex_version (device, 2, 0))
+            request = mbim_message_ms_basic_connect_v2_packet_service_query_new (NULL);
+        else
+            request = mbim_message_packet_service_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -1980,7 +2012,10 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         else
             g_assert_not_reached ();
 
-        request = mbim_message_packet_service_set_new (action, &error);
+        if (mbim_device_check_ms_mbimex_version (device, 2, 0))
+            request = mbim_message_ms_basic_connect_v2_packet_service_set_new (action, &error);
+        else
+            request = mbim_message_packet_service_set_new (action, &error);
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
             shutdown (FALSE);
