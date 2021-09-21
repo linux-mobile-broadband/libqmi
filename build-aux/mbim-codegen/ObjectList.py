@@ -208,8 +208,8 @@ class ObjectList:
             '\n'
             '    g_set_error (error,\n'
             '                 MBIM_CORE_ERROR,\n'
-            '                 MBIM_CORE_ERROR_INVALID_MESSAGE,\n'
-            '                 \"Unknown contents\");\n'
+            '                 MBIM_CORE_ERROR_UNSUPPORTED,\n'
+            '                 \"Unsupported message\");\n'
             '    return NULL;\n'
             '}\n')
 
