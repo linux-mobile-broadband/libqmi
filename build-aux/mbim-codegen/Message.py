@@ -255,7 +255,7 @@ class Message:
             elif field['format'] == 'struct-array':
                 inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type ${struct}): the \'${name}\' field, given as an array of #${struct} items.\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template = (' * @${field}: (in): the \'${name}\' field, given as an array of #${struct} items.\n')
+                inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type ${struct}): the \'${name}\' field, given as an array of #${struct} items.\n')
             elif field['format'] == 'ipv4':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimIPv4.\n')
             elif field['format'] == 'ref-ipv4':
