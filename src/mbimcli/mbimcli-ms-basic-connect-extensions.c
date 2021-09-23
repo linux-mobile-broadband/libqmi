@@ -43,6 +43,9 @@ static gboolean  query_device_slot_mappings_flag;
 static gchar    *set_device_slot_mappings_str;
 static gboolean  query_location_info_status_flag;
 static gchar    *query_version_str;
+static gboolean  query_provisioned_contexts_v2_flag;
+static gchar    *set_provisioned_contexts_v2_flag;
+
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -95,7 +98,15 @@ static GOptionEntry entries[] = {
       "Exchange supported version information",
       "[(MBIM version),(MBIM extended version)]"
     },
-    { NULL }
+    { "ms-set-provisioned-contexts-v2", 0, 0, G_OPTION_ARG_STRING, &set_provisioned_contexts_v2_flag,
+      "set provisioned contexts V2",
+      "[(access_string),(user_name),(password)]"
+    },
+    { "ms-query-provisioned-contexts-v2", 0, 0, G_OPTION_ARG_NONE, &query_provisioned_contexts_v2_flag,
+      "Query provisioned contexts V2",
+      NULL
+    },
+    {NULL }
 };
 
 static gboolean
@@ -172,7 +183,9 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  !!set_device_slot_mappings_str +
                  query_device_slot_mappings_flag +
                  query_location_info_status_flag +
-                 !!query_version_str);
+                 !!query_version_str +
+                 query_provisioned_contexts_v2_flag +
+                 !!set_provisioned_contexts_v2_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -720,6 +733,480 @@ query_version_ready (MbimDevice   *device,
     return;
 }
 
+static gboolean
+mbim_auth_protocol_from_string (const gchar      *str,
+                                MbimAuthProtocol *auth_protocol)
+{
+    if (g_ascii_strcasecmp (str, "0") == 0) {
+        *auth_protocol = MBIM_AUTH_PROTOCOL_NONE;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "1") == 0) {
+        *auth_protocol = MBIM_AUTH_PROTOCOL_PAP;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "2") == 0) {
+        *auth_protocol = MBIM_AUTH_PROTOCOL_CHAP;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "3") == 0) {
+        *auth_protocol = MBIM_AUTH_PROTOCOL_MSCHAPV2;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+static gboolean
+mbim_context_ip_type_from_string (const gchar       *str,
+                                  MbimContextIpType *ip_type)
+{
+    if (g_ascii_strcasecmp (str, "0") == 0) {
+        *ip_type = MBIM_CONTEXT_IP_TYPE_DEFAULT;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "1") == 0) {
+        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "2") == 0) {
+        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV6;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "3") == 0) {
+        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4V6;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "4") == 0) {
+        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4_AND_IPV6;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gboolean
+mbim_context_operation_from_string (const gchar             *str,
+                                    MbimContextOperationsV2 *operation)
+{
+    if (g_ascii_strcasecmp (str, "0") == 0) {
+        *operation = MBIM_CONTEXT_OPERATION_DEFAULT;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "1") == 0) {
+        *operation = MBIM_CONTEXT_OPERATION_DELETE;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "2") == 0) {
+        *operation = MBIM_CONTEXT_OPERATION_RESTORE_FACTORY;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gboolean
+mbim_context_enable_from_string (const gchar       *str,
+                                  MbimContextEnable *enable)
+{
+    if (g_ascii_strcasecmp (str, "1") == 0) {
+        *enable = MBIM_CONTEXT_ENABLED;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "0") == 0) {
+        *enable = MBIM_CONTEXT_DISABLED;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gboolean
+mbim_compression_from_string (const gchar       *str,
+                              MbimCompression *compression)
+{
+    if (g_ascii_strcasecmp (str, "1") == 0) {
+        *compression = MBIM_COMPRESSION_ENABLE;
+        return TRUE;
+    }
+        if (g_ascii_strcasecmp (str, "0") == 0) {
+        *compression = MBIM_COMPRESSION_NONE;
+        return TRUE;
+    }
+    return FALSE;
+}
+static gboolean
+mbim_roaming_control_from_string (const gchar       *str,
+                                  MbimContextRoamingControlV2 *roaming)
+{
+    if (g_ascii_strcasecmp (str, "0") == 0) {
+        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "1") == 0) {
+        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_ONLY;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "2") == 0) {
+        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_NON_PARTNER_ONLY;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "4") == 0) {
+        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_NON_PARTNER;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "5") == 0) {
+        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_AND_NON_PARTNER;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "3") == 0) {
+        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_PARTNER;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "6") == 0) {
+        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_ALLOW_ALL;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gboolean
+mbim_context_media_from_string (const gchar          *str,
+                                MbimContextMediaType *media_type)
+{
+    if (g_ascii_strcasecmp (str, "0") == 0) {
+        *media_type = MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "1") == 0) {
+        *media_type = MBIM_CONTEXT_MEDIA_TYPE_WIFI_ONLY;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "2") == 0) {
+        *media_type = MBIM_CONTEXT_MEDIA_TYPE_ALL;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gboolean
+mbim_context_source_from_string (const gchar       *str,
+                                 MbimContextSource *source)
+{
+    if (g_ascii_strcasecmp (str, "0") == 0) {
+        *source = MBIM_CONTEXT_SOURCE_ADMIN;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "1") == 0) {
+        *source = MBIM_CONTEXT_SOURCE_USER;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "2") == 0) {
+        *source = MBIM_CONTEXT_SOURCE_OPERATOR;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "3") == 0) {
+        *source = MBIM_CONTEXT_SOURCE_MODEM;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "4") == 0) {
+        *source = MBIM_CONTEXT_SOURCE_DEVICE;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gboolean
+mbim_context_type_from_string (const gchar     *str,
+                               MbimContextType *context_type )
+{
+    if (g_ascii_strcasecmp (str, "0") == 0) {
+        *context_type = MBIM_CONTEXT_TYPE_INVALID;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "b43f758c-a560-4b46-b35e-c5869641fb54") == 0) {
+        *context_type = MBIM_CONTEXT_TYPE_NONE;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "7e5e2a7e-4e6f-7272-736b-656e7e5e2a7e") == 0) {
+        *context_type = MBIM_CONTEXT_TYPE_INTERNET ;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "9b9f7bbe-8952-44b7-83ac-ca41318df7a0") == 0) {
+        *context_type = MBIM_CONTEXT_TYPE_VPN;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "b43f758c-a560-4b46-b35e-c5869641fb54") == 0) {
+        *context_type = MBIM_CONTEXT_TYPE_VOICE;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "05a2a716-7c34-4b4d-9a91-c5ef0c7aaacc") == 0) {
+        *context_type = MBIM_CONTEXT_TYPE_VIDEO_SHARE;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "b3272496-ac6c-422b-a8c0-acf687a27217") == 0) {
+        *context_type = MBIM_CONTEXT_TYPE_PURCHASE;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "21610d01-3074-4bce-9425-b53a07d697d6") == 0) {
+        *context_type = MBIM_CONTEXT_TYPE_IMS;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "46726664-7269-6bc6-9624-d1d35389aca9") == 0) {
+        *context_type = MBIM_CONTEXT_TYPE_MMS;
+        return TRUE;
+    }
+    if (g_ascii_strcasecmp (str, "a57a9afc-b09f-45d7-bb40-033c39f60db9") == 0) {
+        *context_type = MBIM_CONTEXT_TYPE_LOCAL;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+typedef struct {
+    MbimContextOperationsV2     operation;
+    MbimContextIpType           ip_type;
+    MbimContextEnable           enable;
+    MbimContextRoamingControlV2 roaming;
+    MbimContextMediaType        media_type;
+    MbimContextSource           source;
+    gchar                      *access_string;
+    gchar                      *user_name;
+    gchar                      *password;
+    MbimCompression             compression;
+    MbimAuthProtocol            auth_protocol;
+    MbimContextType             context_type;
+} provisioncontextv2;
+
+static void
+provision_context_clear (provisioncontextv2 *props)
+{
+    g_free (props->access_string);
+    g_free (props->user_name);
+    g_free (props->password);
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(provisioncontextv2, provision_context_clear);
+
+static gboolean
+provision_context_parse (const gchar        *str,
+                         MbimContextOperationsV2 *operation,
+                         MbimContextIpType *ip_type,
+                         MbimContextEnable *enable,
+                         MbimContextRoamingControlV2 *roaming,
+                         MbimContextMediaType *media_type,
+                         MbimContextSource *source,
+                         gchar **access_string,
+                         gchar **user_name,
+                         gchar **password,
+                         MbimCompression *compression,
+                         MbimAuthProtocol *auth_protocol,
+                         MbimContextType *context_type)
+{
+    g_auto(provisioncontextv2) props = {
+        .access_string = NULL,
+        .operation     = MBIM_CONTEXT_OPERATION_DELETE,
+        .auth_protocol = MBIM_AUTH_PROTOCOL_NONE,
+        .user_name     = NULL,
+        .password      = NULL,
+        .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT,
+        .enable        = MBIM_CONTEXT_DISABLED,
+        .roaming       = MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY,
+        .media_type    = MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY,
+        .source        = MBIM_CONTEXT_SOURCE_ADMIN,
+        .compression   = MBIM_COMPRESSION_NONE,
+        .context_type  = MBIM_CONTEXT_TYPE_INVALID
+    };
+    g_auto(GStrv)     split = NULL;
+    g_autoptr(GError) error = NULL;
+
+    g_assert (access_string != NULL);
+    g_assert (operation != NULL);
+    g_assert (auth_protocol != NULL);
+    g_assert (user_name != NULL);
+    g_assert (password != NULL);
+    g_assert (ip_type != NULL);
+    g_assert (enable != NULL);
+    g_assert (roaming != NULL);
+    g_assert (media_type != NULL);
+    g_assert (source != NULL);
+    g_assert (compression != NULL);
+    g_assert (context_type != NULL);
+    split = g_strsplit (str, ",", -1);
+
+    if (g_strv_length (split) > 12) {
+        g_printerr ("error: couldn't parse input string, too many arguments\n");
+        return FALSE;
+    }
+
+    if (g_strv_length (split) < 12) {
+        g_printerr ("error: couldn't parse input string, too few arguments\n");
+        return FALSE;
+    }
+
+    if (g_strv_length (split) > 0) {
+        /* Use authentication method */
+        if (split[0]) {
+            if (!mbim_context_operation_from_string (split[0], &props.operation)) {
+                g_printerr ("error: couldn't parse input string, operation '%s'\n", split[0]);
+            }
+        }/* Use authentication method */
+        if (split[1]) {
+            if (!mbim_context_type_from_string (split[1], &props.context_type)) {
+                g_printerr ("error: couldn't parse input string, contexttype '%s'\n", split[1]);
+            }
+        }
+        /* Use authentication method */
+        if (split[2]) {
+            if (!mbim_context_ip_type_from_string (split[2], &props.ip_type)) {
+                g_printerr ("error: couldn't parse input string, ip_type '%s'\n", split[2]);
+            }
+        }
+        /* Use authentication method */
+        if (split[3]) {
+            if (!mbim_context_enable_from_string (split[3], &props.enable)) {
+                g_printerr ("error: couldn't parse input string, enable '%s'\n", split[3]);
+            }
+        }
+        /* Use authentication method */
+        if (split[4]) {
+            if (!mbim_roaming_control_from_string (split[4], &props.roaming)) {
+                g_printerr ("error: couldn't parse input string, roaming '%s'\n", split[4]);
+            }
+        }
+        /* Use authentication method */
+        if (split[5]) {
+            if (!mbim_context_media_from_string (split[5], &props.media_type)) {
+                g_printerr ("error: couldn't parse input string, media_type '%s'\n", split[5]);
+            }
+        }
+        /* Use authentication method */
+        if (split[6]) {
+            if (!mbim_context_source_from_string (split[6], &props.source)) {
+                g_printerr ("error: couldn't parse input string, source '%s'\n", split[6]);
+            }
+        }
+        /* Use authentication method */
+        if (split[11]) {
+            if (!mbim_auth_protocol_from_string (split[11], &props.auth_protocol)) {
+                g_printerr ("error: couldn't parse input string, unknown auth protocol '%s'\n", split[11]);
+            }
+        }
+        /* Use authentication method */
+        if (split[10]) {
+            if (!mbim_compression_from_string (split[10], &props.compression)) {
+                g_printerr ("error: couldn't parse input string, unknown compression '%s'\n", split[10]);
+            }
+        }
+        if (split[7]){
+            /* Username */
+            props.user_name = g_strdup (split[7]);
+            /* Password */
+            props.password = g_strdup (split[8]);
+            /* accessstring */
+            props.access_string = g_strdup (split[9]);
+        }
+    }
+    if (props.auth_protocol == MBIM_AUTH_PROTOCOL_NONE) {
+        if (props.user_name || props.password) {
+            g_printerr ("error: username or password requires an auth protocol\n");
+            return FALSE;
+        }
+    } else {
+        if (!props.user_name) {
+            g_printerr ("error: auth protocol requires a username\n");
+            return FALSE;
+        }
+    }
+
+    *access_string = g_steal_pointer (&props.access_string);
+    *auth_protocol = props.auth_protocol;
+    *user_name     = g_steal_pointer (&props.user_name);
+    *password      = g_steal_pointer (&props.password);
+    *ip_type       = props.ip_type;
+    *operation     = props.operation;
+    *enable        = props.enable;
+    *roaming       = props.roaming;
+    *media_type    = props.media_type;
+    *source        = props.source;
+    *compression   = props.compression;
+    *context_type  = props.context_type;
+
+    return TRUE;
+}
+
+static void
+provisioned_contexts_v2_ready (MbimDevice   *device,
+                               GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)                          response = NULL;
+    g_autoptr(MbimProvisionedContextElementV2Array) provisioned_contexts = NULL;
+    g_autoptr(GError)                               error = NULL;
+    guint32 provisioned_contexts_count;
+    guint32 i = 0;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_basic_connect_extensions_provisioned_contexts_response_parse (
+            response,
+            &provisioned_contexts_count,
+            &provisioned_contexts,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+    g_print ("[%s] Provisioned contexts (%u):\n",
+             mbim_device_get_path_display (device),
+             provisioned_contexts_count);
+
+    for (i = 0; i < provisioned_contexts_count; i++) {
+        g_print ("\tContext ID %u:\n"
+                 "\t   Context type: '%s'\n"
+                 "\t        ip type: '%s'\n"
+                 "\t        enable: '%s'\n"
+                 "\t        roaming: '%s'\n"
+                 "\t     media_type: '%s'\n"
+                 "\t         source: '%s'\n"
+                 "\t  Access string: '%s'\n"
+                 "\t       Username: '%s'\n"
+                 "\t       Password: '%s'\n"
+                 "\t    Compression: '%s'\n"
+                 "\t  Auth protocol: '%s'\n",
+                 provisioned_contexts[i]->context_id,
+                 VALIDATE_UNKNOWN (mbim_context_type_get_string (
+                     mbim_uuid_to_context_type (&provisioned_contexts[i]->context_type))),
+                 VALIDATE_UNKNOWN (mbim_context_ip_type_get_string (
+                     provisioned_contexts[i]->ip_type)),
+                 VALIDATE_UNKNOWN (mbim_context_enable_get_string (
+                     provisioned_contexts[i]->enable)),
+                 VALIDATE_UNKNOWN (mbim_context_roaming_control_v2_get_string (
+                     provisioned_contexts[i]->roaming)),
+                 VALIDATE_UNKNOWN (mbim_context_media_type_get_string (
+                     provisioned_contexts[i]->media_type)),
+                 VALIDATE_UNKNOWN (mbim_context_source_get_string (
+                     provisioned_contexts[i]->source)),
+                 VALIDATE_UNKNOWN (provisioned_contexts[i]->access_string),
+                 VALIDATE_UNKNOWN (provisioned_contexts[i]->user_name),
+                 VALIDATE_UNKNOWN (provisioned_contexts[i]->password),
+                 VALIDATE_UNKNOWN (mbim_compression_get_string (
+                     provisioned_contexts[i]->compression)),
+                 VALIDATE_UNKNOWN (mbim_auth_protocol_get_string (
+                     provisioned_contexts[i]->auth_protocol)));
+    }
+
+    mbim_message_unref (response);
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -919,6 +1406,85 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_version_ready,
+                             NULL);
+        return;
+    }
+    if (set_provisioned_contexts_v2_flag) {
+        MbimContextOperationsV2 operation;
+        MbimContextType context_type;
+        MbimContextIpType  ip_type = MBIM_CONTEXT_IP_TYPE_DEFAULT;
+        MbimContextEnable enable;
+        MbimContextRoamingControlV2 roaming;
+        MbimContextMediaType media_type;
+        MbimContextSource source;
+        g_autofree gchar *access_string = NULL;
+        g_autofree gchar *user_name = NULL;
+        g_autofree gchar *password = NULL;
+        MbimCompression compression;
+        MbimAuthProtocol auth_protocol;
+
+        if (!provision_context_parse (set_provisioned_contexts_v2_flag,
+                                         &operation,
+                                         &ip_type,
+                                         &enable,
+                                         &roaming,
+                                         &media_type,
+                                         &source,
+                                         &access_string,
+                                         &user_name,
+                                         &password,
+                                         &compression,
+                                         &auth_protocol,
+                                         &context_type)) {
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_ms_basic_connect_extensions_provisioned_contexts_set_new (
+                      operation,
+                      mbim_uuid_from_context_type (context_type),
+                      ip_type,
+                      enable,
+                      roaming,
+                      media_type,
+                      source,
+                      access_string,
+                      user_name,
+                      password,
+                      compression,
+                      auth_protocol,
+                      &error);
+
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             60,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)provisioned_contexts_v2_ready,
+                             NULL);
+        return;
+    }
+    /* Request to query Provisioned contexts? */
+    if (query_provisioned_contexts_v2_flag) {
+        g_debug ("Asynchronously query Provision  Context...");
+        g_print ("Asynchronously query Provision  Context...");
+
+        request = mbim_message_ms_basic_connect_extensions_provisioned_contexts_query_new (NULL);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)provisioned_contexts_v2_ready,
                              NULL);
         return;
     }

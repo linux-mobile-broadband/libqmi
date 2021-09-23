@@ -1452,6 +1452,80 @@ typedef enum { /*< since=1.26 >*/
     MBIM_UICC_PASS_THROUGH_STATUS_ENABLED    = 1,
 } MbimUiccPassThroughStatus;
 
+
+/* 'Provisioned Context v2' enums */
+
+/**
+ * MbimContextRoamingControlV2:
+ * @MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY: Home.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_ONLY: Partner.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_NON_PARTNER_ONLY: Non Partner.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_PARTNER: Home and Partner.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_NON_PARTNER: Home and Non-Partner.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_AND_NON_PARTNER: Partner and Non-Partner.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_ALLOW_ALL: Allow All.
+ *
+ * Modem Context Roaming Control Status.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY               = 0,
+    MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_ONLY            = 1,
+    MBIM_CONTEXT_ROAMING_CONTROL_NON_PARTNER_ONLY        = 2,
+    MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_PARTNER        = 3,
+    MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_NON_PARTNER    = 4,
+    MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_AND_NON_PARTNER = 5,
+    MBIM_CONTEXT_ROAMING_CONTROL_ALLOW_ALL               = 6
+} MbimContextRoamingControlV2;
+
+/**
+ * MbimContextMediaType:
+ * @MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY: Cellular`.
+ * @MBIM_CONTEXT_MEDIA_TYPE_WIFI_ONLY: Wifi.
+ * @MBIM_CONTEXT_MEDIA_TYPE_ALL: All.
+ *
+ * Modem Context Media Type Status.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY = 0,
+    MBIM_CONTEXT_MEDIA_TYPE_WIFI_ONLY     = 1,
+    MBIM_CONTEXT_MEDIA_TYPE_ALL           = 2
+} MbimContextMediaType;
+
+/**
+ * MbimContextEnable:
+ * @MBIM_CONTEXT_DISABLED: Disabled`.
+ * @MBIM_CONTEXT_ENABLED: Enabled.
+ *
+ * Modem Context Enable Status.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_CONTEXT_DISABLED = 0,
+    MBIM_CONTEXT_ENABLED  = 1
+} MbimContextEnable;
+
+
+/**
+ * MbimContextOperations:
+ * @MBIM_CONTEXT_OPERATION_DEFAULT: Default.
+ * @MBIM_CONTEXT_OPERATION_DELETE: Delete.
+ * @MBIM_CONTEXT_OPERATION_RESTORE_FACTORY: Restore.
+ *
+ * Modem Context Operations Status.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_CONTEXT_OPERATION_DEFAULT         = 0,
+    MBIM_CONTEXT_OPERATION_DELETE          = 1,
+    MBIM_CONTEXT_OPERATION_RESTORE_FACTORY = 2
+} MbimContextOperationsV2;
+
 /*****************************************************************************/
 /* 'Packet service v2'  enums */
 
