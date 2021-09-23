@@ -20,10 +20,10 @@ def set_struct_usage(struct, fields):
             struct.single_member = True
             break
         if field['format'] == 'ref-struct-array' and field['struct-type'] == struct.name:
-            struct.array_member = True
+            struct.ref_struct_array_member = True
             break
         if field['format'] == 'struct-array' and field['struct-type'] == struct.name:
-            struct.array_member = True
+            struct.struct_array_member = True
             break
 
 

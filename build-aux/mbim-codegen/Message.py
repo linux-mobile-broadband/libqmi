@@ -440,9 +440,9 @@ class Message:
             elif field['format'] == 'struct':
                 inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_struct (builder, ${field});\n')
             elif field['format'] == 'struct-array':
-                inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_struct_array (builder, ${field}, ${array_size_field}, FALSE);\n')
+                inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_struct_array (builder, ${field}, ${array_size_field});\n')
             elif field['format'] == 'ref-struct-array':
-                inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_struct_array (builder, ${field}, ${array_size_field}, TRUE);\n')
+                inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_ref_struct_array (builder, ${field}, ${array_size_field});\n')
             elif field['format'] == 'ipv4':
                 inner_template += ('        _mbim_message_command_builder_append_ipv4 (builder, ${field}, FALSE);\n')
             elif field['format'] == 'ref-ipv4':
@@ -918,12 +918,12 @@ class Message:
                     '        offset += bytes_read;\n')
             elif field['format'] == 'struct-array':
                 inner_template += (
-                    '        if ((out_${field} != NULL) && !_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE, &_${field}, error))\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, &_${field}, error))\n'
                     '            goto out;\n'
                     '        offset += 4;\n')
             elif field['format'] == 'ref-struct-array':
                 inner_template += (
-                    '        if ((out_${field} != NULL) && !_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE, &_${field}, error))\n'
+                    '        if ((out_${field} != NULL) && !_mbim_message_read_${struct_name}_ref_struct_array (message, _${array_size_field}, offset, &_${field}, error))\n'
                     '            goto out;\n'
                     '        offset += (8 * _${array_size_field});\n')
             elif field['format'] == 'ipv4':
@@ -1255,12 +1255,12 @@ class Message:
 
                 if field['format'] == 'struct-array':
                     inner_template += (
-                    '        if (!_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, FALSE, &tmp, &inner_error))\n'
+                    '        if (!_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, &tmp, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += 4;\n')
                 elif field['format'] == 'ref-struct-array':
                     inner_template += (
-                    '        if (!_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, TRUE, &tmp, &inner_error))\n'
+                    '        if (!_mbim_message_read_${struct_name}_ref_struct_array (message, _${array_size_field}, offset, &tmp, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += (8 * _${array_size_field});\n')
 

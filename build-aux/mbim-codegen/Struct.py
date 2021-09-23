@@ -26,7 +26,8 @@ class Struct:
         # Whether the struct is used as a single field, or as an array of
         # fields. Will be updated after having created the object.
         self.single_member = False
-        self.array_member = False
+        self.ref_struct_array_member = False
+        self.struct_array_member = False
 
         # Check whether the struct is composed of fixed-sized fields
         self.size = 0
@@ -247,7 +248,7 @@ class Struct:
                 '}\n')
             cfile.write(string.Template(template).substitute(translations))
 
-        if self.array_member:
+        if self.struct_array_member == True or self.ref_struct_array_member == True:
             # TypeArray was introduced in 1.24
             translations['array_since'] = self.since if utils.version_compare('1.24', self.since) > 0 else '1.24'
             template = (
@@ -624,7 +625,7 @@ class Struct:
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
 
-        if self.array_member:
+        if self.struct_array_member == True:
             template = (
                 '\n'
                 'static gboolean\n'
@@ -632,7 +633,6 @@ class Struct:
                 '    const MbimMessage *self,\n'
                 '    guint32 array_size,\n'
                 '    guint32 relative_offset_array_start,\n'
-                '    gboolean refs,\n'
                 '    ${name}Array **out_array,\n'
                 '    GError **error)\n'
                 '{\n'
@@ -648,18 +648,50 @@ class Struct:
                 '\n'
                 '    out = g_new0 (${name} *, array_size + 1);\n'
                 '\n'
-                '    if (!refs) {\n'
-                '        _mbim_message_read_guint32 (self, relative_offset_array_start, &offset, &inner_error);\n'
-                '        for (i = 0; !inner_error && (i < array_size); i++, offset += ${struct_size})\n'
-                '            out[i] = _mbim_message_read_${name_underscore}_struct (self, offset, NULL, &inner_error);\n'
-                '    } else {\n'
-                '        offset = relative_offset_array_start;\n'
-                '        for (i = 0; !inner_error && (i < array_size); i++, offset += 8) {\n'
-                '            guint32 tmp_offset;\n'
+                '    _mbim_message_read_guint32 (self, relative_offset_array_start, &offset, &inner_error);\n'
+                '    for (i = 0; !inner_error && (i < array_size); i++, offset += ${struct_size})\n'
+                '        out[i] = _mbim_message_read_${name_underscore}_struct (self, offset, NULL, &inner_error);\n'
                 '\n'
-                '            if (_mbim_message_read_guint32 (self, offset, &tmp_offset, &inner_error))\n'
-                '                out[i] = _mbim_message_read_${name_underscore}_struct (self, tmp_offset, NULL, &inner_error);\n'
-                '        }\n'
+                '    if (!inner_error) {\n'
+                '        *out_array = out;\n'
+                '        return TRUE;\n'
+                '    }\n'
+                '\n'
+                '    ${name_underscore}_array_free (out);\n'
+                '    g_propagate_error (error, inner_error);\n'
+                '    return FALSE;\n'
+                '}\n')
+            cfile.write(string.Template(template).substitute(translations))
+
+        if self.ref_struct_array_member == True:
+            template = (
+                '\n'
+                'static gboolean\n'
+                '_mbim_message_read_${name_underscore}_ref_struct_array (\n'
+                '    const MbimMessage *self,\n'
+                '    guint32 array_size,\n'
+                '    guint32 relative_offset_array_start,\n'
+                '    ${name}Array **out_array,\n'
+                '    GError **error)\n'
+                '{\n'
+                '    GError *inner_error = NULL;\n'
+                '    ${name}Array *out;\n'
+                '    guint32 i;\n'
+                '    guint32 offset;\n'
+                '\n'
+                '    if (!array_size) {\n'
+                '        *out_array = NULL;\n'
+                '        return TRUE;\n'
+                '    }\n'
+                '\n'
+                '    out = g_new0 (${name} *, array_size + 1);\n'
+                '\n'
+                '    offset = relative_offset_array_start;\n'
+                '    for (i = 0; !inner_error && (i < array_size); i++, offset += 8) {\n'
+                '        guint32 tmp_offset;\n'
+                '\n'
+                '        if (_mbim_message_read_guint32 (self, offset, &tmp_offset, &inner_error))\n'
+                '            out[i] = _mbim_message_read_${name_underscore}_struct (self, tmp_offset, NULL, &inner_error);\n'
                 '    }\n'
                 '\n'
                 '    if (!inner_error) {\n'
@@ -765,93 +797,110 @@ class Struct:
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
 
-        template = (
-            '\n'
-            'static void\n'
-            '_mbim_struct_builder_append_${name_underscore}_struct_array (\n'
-            '    MbimStructBuilder *builder,\n'
-            '    const ${name} *const *values,\n'
-            '    guint32 n_values,\n'
-            '    gboolean refs)\n'
-            '{\n'
-            '    guint32 offset;\n'
-            '    guint32 i;\n'
-            '    GByteArray *raw_all = NULL;\n'
-            '\n'
-            '    if (!refs) {\n'
-            '        for (i = 0; i < n_values; i++) {\n'
-            '            GByteArray *raw;\n'
-            '\n'
-            '            raw = _${name_underscore}_struct_new (values[i]);\n'
-            '            if (!raw_all)\n'
-            '                raw_all = raw;\n'
-            '            else {\n'
-            '                g_byte_array_append (raw_all, raw->data, raw->len);\n'
-            '                g_byte_array_unref (raw);\n'
-            '            }\n'
-            '        }\n'
-            '\n'
-            '        if (!raw_all) {\n'
-            '            offset = 0;\n'
-            '            g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));\n'
-            '        } else {\n'
-            '            guint32 offset_offset;\n'
-            '\n'
-            '            /* Offset of the offset */\n'
-            '            offset_offset = builder->fixed_buffer->len;\n'
-            '            /* Length *not* in LE yet */\n'
-            '            offset = builder->variable_buffer->len;\n'
-            '            /* Add the offset value */\n'
-            '            g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));\n'
-            '            /* Configure the value to get updated */\n'
-            '            g_array_append_val (builder->offsets, offset_offset);\n'
-            '            /* Add the final array itself */\n'
-            '            g_byte_array_append (builder->variable_buffer, raw_all->data, raw_all->len);\n'
-            '            g_byte_array_unref (raw_all);\n'
-            '        }\n'
-            '    } else {\n'
-            '        for (i = 0; i < n_values; i++) {\n'
-            '            guint32 length;\n'
-            '            guint32 offset_offset;\n'
-            '            GByteArray *raw;\n'
-            '\n'
-            '            raw = _${name_underscore}_struct_new (values[i]);\n'
-            '            g_assert (raw->len > 0);\n'
-            '\n'
-            '            /* Offset of the offset */\n'
-            '            offset_offset = builder->fixed_buffer->len;\n'
-            '\n'
-            '            /* Length *not* in LE yet */\n'
-            '            offset = builder->variable_buffer->len;\n'
-            '            /* Add the offset value */\n'
-            '            g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));\n'
-            '            /* Configure the value to get updated */\n'
-            '            g_array_append_val (builder->offsets, offset_offset);\n'
-            '\n'
-            '            /* Add the length value */\n'
-            '            length = GUINT32_TO_LE (raw->len);\n'
-            '            g_byte_array_append (builder->fixed_buffer, (guint8 *)&length, sizeof (length));\n'
-            '\n'
-            '            /* And finally, the bytearray itself to the variable buffer */\n'
-            '            g_byte_array_append (builder->variable_buffer, (const guint8 *)raw->data, (guint)raw->len);\n'
-            '            g_byte_array_unref (raw);\n'
-            '        }\n'
-            '    }\n'
-            '}\n')
-        cfile.write(string.Template(template).substitute(translations))
+        if self.struct_array_member == True:
+            template = (
+                '\n'
+                'static void\n'
+                '_mbim_struct_builder_append_${name_underscore}_struct_array (\n'
+                '    MbimStructBuilder *builder,\n'
+                '    const ${name} *const *values,\n'
+                '    guint32 n_values)\n'
+                '{\n'
+                '    guint32 offset;\n'
+                '    guint32 i;\n'
+                '    GByteArray *raw_all = NULL;\n'
+                '\n'
+                '    for (i = 0; i < n_values; i++) {\n'
+                '        GByteArray *raw;\n'
+                '\n'
+                '        raw = _${name_underscore}_struct_new (values[i]);\n'
+                '        if (!raw_all)\n'
+                '            raw_all = raw;\n'
+                '        else {\n'
+                '            g_byte_array_append (raw_all, raw->data, raw->len);\n'
+                '            g_byte_array_unref (raw);\n'
+                '        }\n'
+                '    }\n'
+                '\n'
+                '    if (!raw_all) {\n'
+                '        offset = 0;\n'
+                '        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));\n'
+                '    } else {\n'
+                '        guint32 offset_offset;\n'
+                '\n'
+                '        /* Offset of the offset */\n'
+                '        offset_offset = builder->fixed_buffer->len;\n'
+                '        /* Length *not* in LE yet */\n'
+                '        offset = builder->variable_buffer->len;\n'
+                '        /* Add the offset value */\n'
+                '        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));\n'
+                '        /* Configure the value to get updated */\n'
+                '        g_array_append_val (builder->offsets, offset_offset);\n'
+                '        /* Add the final array itself */\n'
+                '        g_byte_array_append (builder->variable_buffer, raw_all->data, raw_all->len);\n'
+                '        g_byte_array_unref (raw_all);\n'
+                '    }\n'
+                '}\n'
+                '\n'
+                'static void\n'
+                '_mbim_message_command_builder_append_${name_underscore}_struct_array (\n'
+                '    MbimMessageCommandBuilder *builder,\n'
+                '    const ${name} *const *values,\n'
+                '    guint32 n_values)\n'
+                '{\n'
+                '    _mbim_struct_builder_append_${name_underscore}_struct_array (builder->contents_builder, values, n_values);\n'
+                '}\n')
+            cfile.write(string.Template(template).substitute(translations))
 
-        template = (
-            '\n'
-            'static void\n'
-            '_mbim_message_command_builder_append_${name_underscore}_struct_array (\n'
-            '    MbimMessageCommandBuilder *builder,\n'
-            '    const ${name} *const *values,\n'
-            '    guint32 n_values,\n'
-            '    gboolean refs)\n'
-            '{\n'
-            '    _mbim_struct_builder_append_${name_underscore}_struct_array (builder->contents_builder, values, n_values, refs);\n'
-            '}\n')
-        cfile.write(string.Template(template).substitute(translations))
+        if self.ref_struct_array_member == True:
+            template = (
+                '\n'
+                'static void\n'
+                '_mbim_struct_builder_append_${name_underscore}_ref_struct_array (\n'
+                '    MbimStructBuilder *builder,\n'
+                '    const ${name} *const *values,\n'
+                '    guint32 n_values)\n'
+                '{\n'
+                '    guint32 offset;\n'
+                '    guint32 i;\n'
+                '\n'
+                '    for (i = 0; i < n_values; i++) {\n'
+                '        guint32 length;\n'
+                '        guint32 offset_offset;\n'
+                '        GByteArray *raw;\n'
+                '\n'
+                '        raw = _${name_underscore}_struct_new (values[i]);\n'
+                '        g_assert (raw->len > 0);\n'
+                '\n'
+                '        /* Offset of the offset */\n'
+                '        offset_offset = builder->fixed_buffer->len;\n'
+                '\n'
+                '        /* Length *not* in LE yet */\n'
+                '        offset = builder->variable_buffer->len;\n'
+                '        /* Add the offset value */\n'
+                '        g_byte_array_append (builder->fixed_buffer, (guint8 *)&offset, sizeof (offset));\n'
+                '        /* Configure the value to get updated */\n'
+                '        g_array_append_val (builder->offsets, offset_offset);\n'
+                '\n'
+                '        /* Add the length value */\n'
+                '        length = GUINT32_TO_LE (raw->len);\n'
+                '        g_byte_array_append (builder->fixed_buffer, (guint8 *)&length, sizeof (length));\n'
+                '\n'
+                '        /* And finally, the bytearray itself to the variable buffer */\n'
+                '        g_byte_array_append (builder->variable_buffer, (const guint8 *)raw->data, (guint)raw->len);\n'
+                '        g_byte_array_unref (raw);\n'
+                '    }\n'
+                '}\n'
+                '\n'
+                'static void\n'
+                '_mbim_message_command_builder_append_${name_underscore}_ref_struct_array (\n'
+                '    MbimMessageCommandBuilder *builder,\n'
+                '    const ${name} *const *values,\n'
+                '    guint32 n_values)\n'
+                '{\n'
+                '    _mbim_struct_builder_append_${name_underscore}_ref_struct_array (builder->contents_builder, values, n_values);\n'
+                '}\n')
+            cfile.write(string.Template(template).substitute(translations))
 
 
     """
@@ -882,13 +931,13 @@ class Struct:
         template = (
             '<SUBSECTION ${struct_name}>\n'
             '${struct_name}\n')
-        if self.array_member == True:
+        if self.struct_array_member == True or self.ref_struct_array_member == True:
             template += (
                 '${struct_name}Array\n')
         if self.single_member == True:
             template += (
                 '${name_underscore}_free\n')
-        if self.array_member == True:
+        if self.struct_array_member == True or self.ref_struct_array_member == True:
             template += (
                 '${name_underscore}_array_free\n')
         sfile.write(string.Template(template).substitute(translations))
