@@ -326,8 +326,11 @@ class Struct:
             '\n')
 
         for field in self.contents:
-            translations['field_name'] = field['name']
-            translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
+            translations['field_name']              = field['name']
+            translations['field_name_underscore']   = utils.build_underscore_name_from_camelcase(field['name'])
+            translations['public']                  = field['public-format'] if 'public-format' in field else field['format']
+            translations['public_underscore']       = utils.build_underscore_name_from_camelcase(field['public-format']) if 'public-format' in field else ''
+            translations['public_underscore_upper'] = utils.build_underscore_name_from_camelcase(field['public-format']).upper() if 'public-format' in field else ''
 
             inner_template = (
                 '    g_string_append_printf (str, "%s  ${field_name} = ", line_prefix);\n'
@@ -365,18 +368,31 @@ class Struct:
                     '            g_string_append_printf (str, "%02x%s", self->${field_name_underscore}[i], (i == (array_size - 1)) ? "" : ":" );\n'
                     '        g_string_append (str, "\'");\n')
 
-            elif field['format'] == 'guint16':
-                inner_template += (
-                    '        g_string_append_printf (str, "\'%" G_GUINT16_FORMAT "\'", self->${field_name_underscore});\n')
-
-            elif field['format'] == 'guint32':
-                inner_template += (
-                    '        g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", self->${field_name_underscore});\n')
-
-            elif field['format'] == 'guint64':
-                inner_template += (
-                    '        g_string_append_printf (str, "\'%" G_GUINT64_FORMAT "\'", self->${field_name_underscore});\n')
-
+            elif field['format'] in ['guint16', 'guint32', 'guint64']:
+                if 'public-format' in field:
+                    inner_template += (
+                        '#if defined __${public_underscore_upper}_IS_ENUM__\n'
+                        '        g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})self->${field_name_underscore}));\n'
+                        '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
+                        '        {\n'
+                        '            g_autofree gchar *tmpstr = NULL;\n'
+                        '\n'
+                        '            tmpstr = ${public_underscore}_build_string_from_mask ((${public})self->${field_name_underscore});\n'
+                        '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
+                        '        }\n'
+                        '#else\n'
+                        '# error neither enum nor flags\n'
+                        '#endif\n'
+                        '\n')
+                elif field['format'] == 'guint16':
+                    inner_template += (
+                        '        g_string_append_printf (str, "\'%" G_GUINT16_FORMAT "\'", self->${field_name_underscore});\n')
+                elif field['format'] == 'guint32':
+                    inner_template += (
+                        '        g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", self->${field_name_underscore});\n')
+                elif field['format'] == 'guint64':
+                    inner_template += (
+                        '        g_string_append_printf (str, "\'%" G_GUINT64_FORMAT "\'", self->${field_name_underscore});\n')
             elif field['format'] == 'guint32-array':
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                 inner_template += (
