@@ -28,6 +28,7 @@ class Struct:
         self.single_member = False
         self.ref_struct_array_member = False
         self.struct_array_member = False
+        self.ms_struct_array_member = False
 
         # Check whether the struct is composed of fixed-sized fields
         self.size = 0
@@ -248,7 +249,7 @@ class Struct:
                 '}\n')
             cfile.write(string.Template(template).substitute(translations))
 
-        if self.struct_array_member == True or self.ref_struct_array_member == True:
+        if self.struct_array_member == True or self.ref_struct_array_member == True or self.ms_struct_array_member == True:
             # TypeArray was introduced in 1.24
             translations['array_since'] = self.since if utils.version_compare('1.24', self.since) > 0 else '1.24'
             template = (
@@ -705,6 +706,58 @@ class Struct:
                 '}\n')
             cfile.write(string.Template(template).substitute(translations))
 
+        if self.ms_struct_array_member == True:
+            template = (
+                '\n'
+                'static gboolean\n'
+                '_mbim_message_read_${name_underscore}_ms_struct_array (\n'
+                '    const MbimMessage *self,\n'
+                '    guint32 offset,\n'
+                '    guint32 *out_array_size,\n'
+                '    ${name}Array **out_array,\n'
+                '    GError **error)\n'
+                '{\n'
+                '    GError *inner_error = NULL;\n'
+                '    ${name}Array *out;\n'
+                '    guint32 i;\n'
+                '    guint32 intermediate_struct_offset;\n'
+                '    guint32 intermediate_struct_size;\n'
+                '    guint32 array_size;\n'
+                '\n'
+                '    if (!_mbim_message_read_guint32 (self, offset, &intermediate_struct_offset, error))\n'
+                '        return FALSE;\n'
+                '    offset += 4;\n'
+                '\n'
+                '    if (!_mbim_message_read_guint32 (self, offset, &intermediate_struct_size, error))\n'
+                '        return FALSE;\n'
+                '    offset += 4;\n'
+                '\n'
+                '    if (!intermediate_struct_offset) {\n'
+                '        *out_array = NULL;\n'
+                '        return TRUE;\n'
+                '    }\n'
+                '\n'
+                '    if (!_mbim_message_read_guint32 (self, intermediate_struct_offset, &array_size, error))\n'
+                '        return FALSE;\n'
+                '    intermediate_struct_offset += 4;\n'
+                '\n'
+                '    out = g_new0 (${name} *, array_size + 1);\n'
+                '\n'
+                '    for (i = 0; !inner_error && (i < array_size); i++, intermediate_struct_offset += ${struct_size}) {\n'
+                '        out[i] = _mbim_message_read_${name_underscore}_struct (self, intermediate_struct_offset, NULL, &inner_error);\n'
+                '    }\n'
+                '\n'
+                '    if (!inner_error) {\n'
+                '        *out_array_size = array_size;\n'
+                '        *out_array = out;\n'
+                '        return TRUE;\n'
+                '    }\n'
+                '\n'
+                '    ${name_underscore}_array_free (out);\n'
+                '    g_propagate_error (error, inner_error);\n'
+                '    return FALSE;\n'
+                '}\n')
+            cfile.write(string.Template(template).substitute(translations))
 
     """
     Emit the type's append methods
@@ -901,6 +954,8 @@ class Struct:
                 '    _mbim_struct_builder_append_${name_underscore}_ref_struct_array (builder->contents_builder, values, n_values);\n'
                 '}\n')
             cfile.write(string.Template(template).substitute(translations))
+
+        # append operations not implemented for self.ms_struct_array_member == True
 
 
     """

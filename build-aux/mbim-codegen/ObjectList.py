@@ -25,6 +25,9 @@ def set_struct_usage(struct, fields):
         if field['format'] == 'struct-array' and field['struct-type'] == struct.name:
             struct.struct_array_member = True
             break
+        if field['format'] == 'ms-struct-array' and field['struct-type'] == struct.name:
+            struct.ms_struct_array_member = True
+            break
 
 
 """
