@@ -1464,13 +1464,15 @@ static void
 signal_state_ready (MbimDevice   *device,
                     GAsyncResult *res)
 {
-    g_autoptr(MbimMessage) response = NULL;
-    g_autoptr(GError)      error = NULL;
-    guint32                rssi;
-    guint32                error_rate;
-    guint32                signal_strength_interval;
-    guint32                rssi_threshold;
-    guint32                error_rate_threshold;
+    g_autoptr(MbimMessage)          response = NULL;
+    g_autoptr(GError)               error = NULL;
+    guint32                         rssi;
+    guint32                         error_rate;
+    guint32                         signal_strength_interval;
+    guint32                         rssi_threshold;
+    guint32                         error_rate_threshold;
+    guint32                         rsrp_snr_count;
+    g_autoptr(MbimRsrpSnrInfoArray) rsrp_snr = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -1479,16 +1481,35 @@ signal_state_ready (MbimDevice   *device,
         return;
     }
 
-    if (!mbim_message_signal_state_response_parse (response,
-                                                   &rssi,
-                                                   &error_rate,
-                                                   &signal_strength_interval,
-                                                   &rssi_threshold,
-                                                   &error_rate_threshold,
-                                                   &error)) {
-        g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        shutdown (FALSE);
-        return;
+    /* MBIMEx 2.0 support */
+    if (mbim_device_check_ms_mbimex_version (device, 2, 0)) {
+        if (!mbim_message_ms_basic_connect_v2_signal_state_response_parse (response,
+                                                                           &rssi,
+                                                                           &error_rate,
+                                                                           &signal_strength_interval,
+                                                                           &rssi_threshold,
+                                                                           &error_rate_threshold,
+                                                                           &rsrp_snr_count,
+                                                                           &rsrp_snr,
+                                                                           &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+    }
+    /* MBIM 1.0 support */
+    else {
+        if (!mbim_message_signal_state_response_parse (response,
+                                                       &rssi,
+                                                       &error_rate,
+                                                       &signal_strength_interval,
+                                                       &rssi_threshold,
+                                                       &error_rate_threshold,
+                                                       &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
     }
 
     g_print ("[%s] Signal state:\n"
@@ -1506,6 +1527,52 @@ signal_state_ready (MbimDevice   *device,
         g_print ("\t    Error rate threshold: 'unspecified'\n");
     else
         g_print ("\t    Error rate threshold: '%u'\n", error_rate_threshold);
+
+    if (mbim_device_check_ms_mbimex_version (device, 2, 0)) {
+        g_print ("\n");
+        if (rsrp_snr_count == 0) {
+            g_print ("[%s] RSRP/SNR info: 'n/a'\n", mbim_device_get_path_display (device));
+        } else {
+            guint i;
+
+            for (i = 0; i < rsrp_snr_count; i++) {
+                g_autofree gchar *system_type_str = NULL;
+                MbimRsrpSnrInfo  *info;
+
+                info = rsrp_snr[i];
+
+                system_type_str = mbim_data_class_build_string_from_mask (info->system_type);
+                g_print ("[%s] RSRP/SNR info: '%s'\n",
+                         mbim_device_get_path_display (device),
+                         system_type_str);
+
+                if (info->rsrp >= 127)
+                    g_print ("\t           RSRP: 'unknown'\n");
+                else
+                    g_print ("\t           RSRP: '%d dBm'\n", -157 + info->rsrp);
+
+                if (info->snr >= 128)
+                    g_print ("\t            SNR: 'unknown'\n");
+                else
+                    g_print ("\t            SNR: '%.1lf dB'\n", -23.5 + (info->snr * 0.5));
+
+                if (info->rsrp_threshold == 0)
+                    g_print ("\t RSRP threshold: 'default'\n");
+                else if (info->rsrp_threshold == 0xFFFFFFFF)
+                    g_print ("\t RSRP threshold: 'unspecified'\n");
+                else
+                    g_print ("\t RSRP threshold: '%u'\n", info->rsrp_threshold);
+
+                if (info->snr_threshold == 0)
+                    g_print ("\t  SNR threshold: 'default'\n");
+                else if (info->snr_threshold == 0xFFFFFFFF)
+                    g_print ("\t  SNR threshold: 'unspecified'\n");
+                else
+                    g_print ("\t  SNR threshold: '%u'\n", info->snr_threshold);
+                g_print ("\n");
+            }
+        }
+    }
 
     shutdown (TRUE);
 }
@@ -1975,7 +2042,10 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Query signal status? */
     if (query_signal_state_flag) {
-        request = mbim_message_signal_state_query_new (NULL);
+        if (mbim_device_check_ms_mbimex_version (device, 2, 0))
+            request = mbim_message_ms_basic_connect_v2_signal_state_query_new (NULL);
+        else
+            request = mbim_message_signal_state_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
