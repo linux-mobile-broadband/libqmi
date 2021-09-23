@@ -63,11 +63,11 @@ def validate_fields(fields):
         elif field['format'] == 'struct-array':
             flag_always_read_field(fields, field['array-size-field'])
             if 'struct-type' not in field:
-                raise ValueError('Field type \'struct\' requires \'struct-type\' field')
+                raise ValueError('Field type \'struct-array\' requires \'struct-type\' field')
         elif field['format'] == 'ref-struct-array':
             flag_always_read_field(fields, field['array-size-field'])
             if 'struct-type' not in field:
-                raise ValueError('Field type \'struct\' requires \'struct-type\' field')
+                raise ValueError('Field type \'ref-struct-array\' requires \'struct-type\' field')
         elif field['format'] == 'ipv4':
             pass
         elif field['format'] == 'ref-ipv4':
