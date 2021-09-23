@@ -73,17 +73,32 @@ class Struct:
                     inner_template += (' * @${field_name_underscore}_size: size of the ${field_name_underscore} array.\n')
                 inner_template += (' * @${field_name_underscore}: an array of #guint8 values.\n')
             elif field['format'] == 'guint16':
-                inner_template = (
-                    ' * @${field_name_underscore}: a #guint16.\n')
+                if 'public-format' in field:
+                    translations['public'] = field['public-format']
+                    inner_template = (
+                        ' * @${field_name_underscore}: a ${public} given as a #guint16.\n')
+                else:
+                    inner_template = (
+                        ' * @${field_name_underscore}: a #guint16.\n')
             elif field['format'] == 'guint32':
-                inner_template = (
-                    ' * @${field_name_underscore}: a #guint32.\n')
+                if 'public-format' in field:
+                    translations['public'] = field['public-format']
+                    inner_template = (
+                        ' * @${field_name_underscore}: a ${public} given as a #guint32.\n')
+                else:
+                    inner_template = (
+                        ' * @${field_name_underscore}: a #guint32.\n')
             elif field['format'] == 'guint32-array':
                 inner_template = (
                     ' * @${field_name_underscore}: an array of #guint32 values.\n')
             elif field['format'] == 'guint64':
-                inner_template = (
-                    ' * @${field_name_underscore}: a #guint64.\n')
+                if 'public-format' in field:
+                    translations['public'] = field['public-format']
+                    inner_template = (
+                        ' * @${field_name_underscore}: a ${public} given as a #guint64.\n')
+                else:
+                    inner_template = (
+                        ' * @${field_name_underscore}: a #guint64.\n')
             elif field['format'] == 'string':
                 inner_template = (
                     ' * @${field_name_underscore}: a string.\n')
