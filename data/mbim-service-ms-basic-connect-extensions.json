@@ -255,12 +255,12 @@
                        "format" : "guint32" },
                      { "name"   : "CellID",
                        "format" : "guint32" } ],
-    "notification" : [ { "name" : "LocationAreaCode",
-                       "format" : "guint32" },
-                       { "name" : "TrackingAreaCode",
-                       "format" : "guint32" },
-                       { "name" : "CellID",
-                       "format" : "guint32" } ] },
+    "notification" : [ { "name"   : "LocationAreaCode",
+                         "format" : "guint32" },
+                       { "name"   : "TrackingAreaCode",
+                         "format" : "guint32" },
+                       { "name"   : "CellID",
+                         "format" : "guint32" } ] },
 
  // *********************************************************************************
 
