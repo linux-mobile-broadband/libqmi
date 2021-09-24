@@ -785,8 +785,8 @@ mbim_context_ip_type_from_string (const gchar       *str,
 }
 
 static gboolean
-mbim_context_operation_from_string (const gchar             *str,
-                                    MbimContextOperationsV2 *operation)
+mbim_context_operation_from_string (const gchar          *str,
+                                    MbimContextOperation *operation)
 {
     if (g_ascii_strcasecmp (str, "0") == 0) {
         *operation = MBIM_CONTEXT_OPERATION_DEFAULT;
@@ -805,15 +805,15 @@ mbim_context_operation_from_string (const gchar             *str,
 }
 
 static gboolean
-mbim_context_enable_from_string (const gchar       *str,
-                                  MbimContextEnable *enable)
+mbim_context_state_from_string (const gchar      *str,
+                                MbimContextState *enable)
 {
     if (g_ascii_strcasecmp (str, "1") == 0) {
-        *enable = MBIM_CONTEXT_ENABLED;
+        *enable = MBIM_CONTEXT_STATE_ENABLED;
         return TRUE;
     }
     if (g_ascii_strcasecmp (str, "0") == 0) {
-        *enable = MBIM_CONTEXT_DISABLED;
+        *enable = MBIM_CONTEXT_STATE_DISABLED;
         return TRUE;
     }
 
@@ -821,7 +821,7 @@ mbim_context_enable_from_string (const gchar       *str,
 }
 
 static gboolean
-mbim_compression_from_string (const gchar       *str,
+mbim_compression_from_string (const gchar     *str,
                               MbimCompression *compression)
 {
     if (g_ascii_strcasecmp (str, "1") == 0) {
@@ -835,8 +835,8 @@ mbim_compression_from_string (const gchar       *str,
     return FALSE;
 }
 static gboolean
-mbim_roaming_control_from_string (const gchar       *str,
-                                  MbimContextRoamingControlV2 *roaming)
+mbim_roaming_control_from_string (const gchar               *str,
+                                  MbimContextRoamingControl *roaming)
 {
     if (g_ascii_strcasecmp (str, "0") == 0) {
         *roaming = MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY;
@@ -920,7 +920,7 @@ mbim_context_source_from_string (const gchar       *str,
 
 static gboolean
 mbim_context_type_from_string (const gchar     *str,
-                               MbimContextType *context_type )
+                               MbimContextType *context_type)
 {
     if (g_ascii_strcasecmp (str, "0") == 0) {
         *context_type = MBIM_CONTEXT_TYPE_INVALID;
@@ -967,18 +967,18 @@ mbim_context_type_from_string (const gchar     *str,
 }
 
 typedef struct {
-    MbimContextOperationsV2     operation;
-    MbimContextIpType           ip_type;
-    MbimContextEnable           enable;
-    MbimContextRoamingControlV2 roaming;
-    MbimContextMediaType        media_type;
-    MbimContextSource           source;
-    gchar                      *access_string;
-    gchar                      *user_name;
-    gchar                      *password;
-    MbimCompression             compression;
-    MbimAuthProtocol            auth_protocol;
-    MbimContextType             context_type;
+    MbimContextOperation       operation;
+    MbimContextIpType          ip_type;
+    MbimContextState           state;
+    MbimContextRoamingControl  roaming;
+    MbimContextMediaType       media_type;
+    MbimContextSource          source;
+    gchar                     *access_string;
+    gchar                     *user_name;
+    gchar                     *password;
+    MbimCompression            compression;
+    MbimAuthProtocol           auth_protocol;
+    MbimContextType            context_type;
 } provisioncontextv2;
 
 static void
@@ -993,10 +993,10 @@ G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(provisioncontextv2, provision_context_clear);
 
 static gboolean
 provision_context_parse (const gchar        *str,
-                         MbimContextOperationsV2 *operation,
+                         MbimContextOperation *operation,
                          MbimContextIpType *ip_type,
-                         MbimContextEnable *enable,
-                         MbimContextRoamingControlV2 *roaming,
+                         MbimContextState *state,
+                         MbimContextRoamingControl *roaming,
                          MbimContextMediaType *media_type,
                          MbimContextSource *source,
                          gchar **access_string,
@@ -1013,7 +1013,7 @@ provision_context_parse (const gchar        *str,
         .user_name     = NULL,
         .password      = NULL,
         .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT,
-        .enable        = MBIM_CONTEXT_DISABLED,
+        .state         = MBIM_CONTEXT_STATE_DISABLED,
         .roaming       = MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY,
         .media_type    = MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY,
         .source        = MBIM_CONTEXT_SOURCE_ADMIN,
@@ -1029,7 +1029,7 @@ provision_context_parse (const gchar        *str,
     g_assert (user_name != NULL);
     g_assert (password != NULL);
     g_assert (ip_type != NULL);
-    g_assert (enable != NULL);
+    g_assert (state != NULL);
     g_assert (roaming != NULL);
     g_assert (media_type != NULL);
     g_assert (source != NULL);
@@ -1067,7 +1067,7 @@ provision_context_parse (const gchar        *str,
         }
         /* Use authentication method */
         if (split[3]) {
-            if (!mbim_context_enable_from_string (split[3], &props.enable)) {
+            if (!mbim_context_state_from_string (split[3], &props.state)) {
                 g_printerr ("error: couldn't parse input string, enable '%s'\n", split[3]);
             }
         }
@@ -1128,7 +1128,7 @@ provision_context_parse (const gchar        *str,
     *password      = g_steal_pointer (&props.password);
     *ip_type       = props.ip_type;
     *operation     = props.operation;
-    *enable        = props.enable;
+    *state         = props.state;
     *roaming       = props.roaming;
     *media_type    = props.media_type;
     *source        = props.source;
@@ -1172,7 +1172,7 @@ provisioned_contexts_v2_ready (MbimDevice   *device,
         g_print ("\tContext ID %u:\n"
                  "\t   Context type: '%s'\n"
                  "\t        ip type: '%s'\n"
-                 "\t        enable: '%s'\n"
+                 "\t        state:   '%s'\n"
                  "\t        roaming: '%s'\n"
                  "\t     media_type: '%s'\n"
                  "\t         source: '%s'\n"
@@ -1186,9 +1186,9 @@ provisioned_contexts_v2_ready (MbimDevice   *device,
                      mbim_uuid_to_context_type (&provisioned_contexts[i]->context_type))),
                  VALIDATE_UNKNOWN (mbim_context_ip_type_get_string (
                      provisioned_contexts[i]->ip_type)),
-                 VALIDATE_UNKNOWN (mbim_context_enable_get_string (
-                     provisioned_contexts[i]->enable)),
-                 VALIDATE_UNKNOWN (mbim_context_roaming_control_v2_get_string (
+                 VALIDATE_UNKNOWN (mbim_context_state_get_string (
+                     provisioned_contexts[i]->state)),
+                 VALIDATE_UNKNOWN (mbim_context_roaming_control_get_string (
                      provisioned_contexts[i]->roaming)),
                  VALIDATE_UNKNOWN (mbim_context_media_type_get_string (
                      provisioned_contexts[i]->media_type)),
@@ -1410,11 +1410,11 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
     if (set_provisioned_contexts_v2_flag) {
-        MbimContextOperationsV2 operation;
+        MbimContextOperation operation;
         MbimContextType context_type;
         MbimContextIpType  ip_type = MBIM_CONTEXT_IP_TYPE_DEFAULT;
-        MbimContextEnable enable;
-        MbimContextRoamingControlV2 roaming;
+        MbimContextState state;
+        MbimContextRoamingControl roaming;
         MbimContextMediaType media_type;
         MbimContextSource source;
         g_autofree gchar *access_string = NULL;
@@ -1426,7 +1426,7 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         if (!provision_context_parse (set_provisioned_contexts_v2_flag,
                                          &operation,
                                          &ip_type,
-                                         &enable,
+                                         &state,
                                          &roaming,
                                          &media_type,
                                          &source,
@@ -1444,7 +1444,7 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                       operation,
                       mbim_uuid_from_context_type (context_type),
                       ip_type,
-                      enable,
+                      state,
                       roaming,
                       media_type,
                       source,
@@ -1469,10 +1469,10 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              NULL);
         return;
     }
+
     /* Request to query Provisioned contexts? */
     if (query_provisioned_contexts_v2_flag) {
-        g_debug ("Asynchronously query Provision  Context...");
-        g_print ("Asynchronously query Provision  Context...");
+        g_debug ("Asynchronously query provisioned contexts...");
 
         request = mbim_message_ms_basic_connect_extensions_provisioned_contexts_query_new (NULL);
         if (!request) {

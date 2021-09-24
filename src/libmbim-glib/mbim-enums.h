@@ -1475,16 +1475,16 @@ typedef enum { /*< since=1.28 >*/
 /* 'Provisioned Context v2' enums */
 
 /**
- * MbimContextRoamingControlV2:
- * @MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY: Home.
- * @MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_ONLY: Partner.
- * @MBIM_CONTEXT_ROAMING_CONTROL_NON_PARTNER_ONLY: Non Partner.
- * @MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_PARTNER: Home and Partner.
- * @MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_NON_PARTNER: Home and Non-Partner.
- * @MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_AND_NON_PARTNER: Partner and Non-Partner.
- * @MBIM_CONTEXT_ROAMING_CONTROL_ALLOW_ALL: Allow All.
+ * MbimContextRoamingControl:
+ * @MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY: Context allowed to be used in home network.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_ONLY: Context allowed to be used in partner network.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_NON_PARTNER_ONLY: Context allowed to be used in non-partner network.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_PARTNER: Context allowed to be used in home and partner networks.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_NON_PARTNER: Context allowed to be used in home and non-partner networks.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_AND_NON_PARTNER: Context allowed to be used in partner and non-partner networks.
+ * @MBIM_CONTEXT_ROAMING_CONTROL_ALLOW_ALL: Context allowed to be used in any roaming condition.
  *
- * Modem Context Roaming Control Status.
+ * Type of roaming control.
  *
  * Since: 1.28
  */
@@ -1496,15 +1496,16 @@ typedef enum { /*< since=1.28 >*/
     MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_NON_PARTNER    = 4,
     MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_AND_NON_PARTNER = 5,
     MBIM_CONTEXT_ROAMING_CONTROL_ALLOW_ALL               = 6
-} MbimContextRoamingControlV2;
+} MbimContextRoamingControl;
 
 /**
  * MbimContextMediaType:
- * @MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY: Cellular`.
- * @MBIM_CONTEXT_MEDIA_TYPE_WIFI_ONLY: Wifi.
- * @MBIM_CONTEXT_MEDIA_TYPE_ALL: All.
+ * @MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY: Context allowed to be used only wen registered over cellular.
+ * @MBIM_CONTEXT_MEDIA_TYPE_WIFI_ONLY: Context allowed to be used only when registered over Wi-Fi.
+ * @MBIM_CONTEXT_MEDIA_TYPE_ALL: Context allowed to be used when registered either over cellular or Wi-Fi.
  *
- * Modem Context Media Type Status.
+ * Media type, specifying whether the modem is used for cellular or
+ * iWLAN (Wi-Fi offload).
  *
  * Since: 1.28
  */
@@ -1515,35 +1516,34 @@ typedef enum { /*< since=1.28 >*/
 } MbimContextMediaType;
 
 /**
- * MbimContextEnable:
- * @MBIM_CONTEXT_DISABLED: Disabled`.
- * @MBIM_CONTEXT_ENABLED: Enabled.
+ * MbimContextState:
+ * @MBIM_CONTEXT_STATE_DISABLED: Disabled.
+ * @MBIM_CONTEXT_STATE_ENABLED: Enabled.
  *
- * Modem Context Enable Status.
+ * Status of the context, specifying whether it's enabled or disabled.
  *
  * Since: 1.28
  */
 typedef enum { /*< since=1.28 >*/
-    MBIM_CONTEXT_DISABLED = 0,
-    MBIM_CONTEXT_ENABLED  = 1
-} MbimContextEnable;
-
+    MBIM_CONTEXT_STATE_DISABLED = 0,
+    MBIM_CONTEXT_STATE_ENABLED  = 1,
+} MbimContextState;
 
 /**
- * MbimContextOperations:
- * @MBIM_CONTEXT_OPERATION_DEFAULT: Default.
- * @MBIM_CONTEXT_OPERATION_DELETE: Delete.
- * @MBIM_CONTEXT_OPERATION_RESTORE_FACTORY: Restore.
+ * MbimContextOperation:
+ * @MBIM_CONTEXT_OPERATION_DEFAULT: Adds or replaces an existing context.
+ * @MBIM_CONTEXT_OPERATION_DELETE: Delete an existing context.
+ * @MBIM_CONTEXT_OPERATION_RESTORE_FACTORY: Restore preconfigured contexts for the provider ID of the current SIM card.
  *
- * Modem Context Operations Status.
+ * Command to run when updating context configuration.
  *
  * Since: 1.28
  */
 typedef enum { /*< since=1.28 >*/
     MBIM_CONTEXT_OPERATION_DEFAULT         = 0,
     MBIM_CONTEXT_OPERATION_DELETE          = 1,
-    MBIM_CONTEXT_OPERATION_RESTORE_FACTORY = 2
-} MbimContextOperationsV2;
+    MBIM_CONTEXT_OPERATION_RESTORE_FACTORY = 2,
+} MbimContextOperation;
 
 G_END_DECLS
 
