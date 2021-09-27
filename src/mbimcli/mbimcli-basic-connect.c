@@ -172,7 +172,7 @@ static GOptionEntry entries[] = {
       "[SessionID]"
     },
     { "connect", 0, 0, G_OPTION_ARG_STRING, &set_connect_activate_str,
-      "Connect (allowed keys: session-id, access-string, ip-type, auth, username, password)",
+      "Connect (allowed keys: session-id, access-string, ip-type, auth, username, password, compression)",
       "[\"key=value,...\"]"
     },
     { "query-ip-configuration", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_ip_configuration_arg_parse),
@@ -1008,6 +1008,7 @@ typedef struct {
     gchar             *username;
     gchar             *password;
     MbimContextIpType  ip_type;
+    MbimCompression    compression;
 } ConnectActivateProperties;
 
 static void
@@ -1063,6 +1064,12 @@ connect_activate_properties_handle (const gchar  *key,
         if (!mbimcli_read_context_ip_type_from_string (value, &props->ip_type)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown ip-type: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "compression") == 0) {
+        if (!mbimcli_read_compression_from_string (value, &props->compression)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown compression: '%s'", value);
             return FALSE;
         }
     } else {
@@ -2080,7 +2087,8 @@ mbimcli_basic_connect_run (MbimDevice   *device,
             .auth_protocol = MBIM_AUTH_PROTOCOL_NONE,
             .username      = NULL,
             .password      = NULL,
-            .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT
+            .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT,
+            .compression   = MBIM_COMPRESSION_NONE,
         };
 
         if (!set_connect_activate_parse (set_connect_activate_str, &props)) {
@@ -2093,7 +2101,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                                                 props.access_string,
                                                 props.username,
                                                 props.password,
-                                                MBIM_COMPRESSION_NONE,
+                                                props.compression,
                                                 props.auth_protocol,
                                                 props.ip_type,
                                                 mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
