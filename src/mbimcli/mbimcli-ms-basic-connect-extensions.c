@@ -43,8 +43,8 @@ static gboolean  query_device_slot_mappings_flag;
 static gchar    *set_device_slot_mappings_str;
 static gboolean  query_location_info_status_flag;
 static gchar    *query_version_str;
-static gboolean  query_provisioned_contexts_v2_flag;
-static gchar    *set_provisioned_contexts_v2_flag;
+static gboolean  query_provisioned_contexts_flag;
+static gchar    *set_provisioned_contexts_str;
 
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
@@ -98,12 +98,12 @@ static GOptionEntry entries[] = {
       "Exchange supported version information",
       "[(MBIM version),(MBIM extended version)]"
     },
-    { "ms-set-provisioned-contexts-v2", 0, 0, G_OPTION_ARG_STRING, &set_provisioned_contexts_v2_flag,
-      "set provisioned contexts V2",
+    { "ms-set-provisioned-contexts", 0, 0, G_OPTION_ARG_STRING, &set_provisioned_contexts_str,
+      "set provisioned contexts",
       "[(access_string),(user_name),(password)]"
     },
-    { "ms-query-provisioned-contexts-v2", 0, 0, G_OPTION_ARG_NONE, &query_provisioned_contexts_v2_flag,
-      "Query provisioned contexts V2",
+    { "ms-query-provisioned-contexts", 0, 0, G_OPTION_ARG_NONE, &query_provisioned_contexts_flag,
+      "Query provisioned contexts",
       NULL
     },
     {NULL }
@@ -184,8 +184,8 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  query_device_slot_mappings_flag +
                  query_location_info_status_flag +
                  !!query_version_str +
-                 query_provisioned_contexts_v2_flag +
-                 !!set_provisioned_contexts_v2_flag);
+                 query_provisioned_contexts_flag +
+                 !!set_provisioned_contexts_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -979,62 +979,25 @@ typedef struct {
     MbimCompression            compression;
     MbimAuthProtocol           auth_protocol;
     MbimContextType            context_type;
-} provisioncontextv2;
+} ProvisionedContextProperties;
 
 static void
-provision_context_clear (provisioncontextv2 *props)
+provisioned_context_properties_clear (ProvisionedContextProperties *props)
 {
     g_free (props->access_string);
     g_free (props->user_name);
     g_free (props->password);
 }
 
-G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(provisioncontextv2, provision_context_clear);
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(ProvisionedContextProperties, provisioned_context_properties_clear)
 
 static gboolean
-provision_context_parse (const gchar        *str,
-                         MbimContextOperation *operation,
-                         MbimContextIpType *ip_type,
-                         MbimContextState *state,
-                         MbimContextRoamingControl *roaming,
-                         MbimContextMediaType *media_type,
-                         MbimContextSource *source,
-                         gchar **access_string,
-                         gchar **user_name,
-                         gchar **password,
-                         MbimCompression *compression,
-                         MbimAuthProtocol *auth_protocol,
-                         MbimContextType *context_type)
+provisioned_context_properties_parse (const gchar                  *str,
+                                      ProvisionedContextProperties *props)
 {
-    g_auto(provisioncontextv2) props = {
-        .access_string = NULL,
-        .operation     = MBIM_CONTEXT_OPERATION_DELETE,
-        .auth_protocol = MBIM_AUTH_PROTOCOL_NONE,
-        .user_name     = NULL,
-        .password      = NULL,
-        .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT,
-        .state         = MBIM_CONTEXT_STATE_DISABLED,
-        .roaming       = MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY,
-        .media_type    = MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY,
-        .source        = MBIM_CONTEXT_SOURCE_ADMIN,
-        .compression   = MBIM_COMPRESSION_NONE,
-        .context_type  = MBIM_CONTEXT_TYPE_INVALID
-    };
     g_auto(GStrv)     split = NULL;
     g_autoptr(GError) error = NULL;
 
-    g_assert (access_string != NULL);
-    g_assert (operation != NULL);
-    g_assert (auth_protocol != NULL);
-    g_assert (user_name != NULL);
-    g_assert (password != NULL);
-    g_assert (ip_type != NULL);
-    g_assert (state != NULL);
-    g_assert (roaming != NULL);
-    g_assert (media_type != NULL);
-    g_assert (source != NULL);
-    g_assert (compression != NULL);
-    g_assert (context_type != NULL);
     split = g_strsplit (str, ",", -1);
 
     if (g_strv_length (split) > 12) {
@@ -1050,97 +1013,85 @@ provision_context_parse (const gchar        *str,
     if (g_strv_length (split) > 0) {
         /* Use authentication method */
         if (split[0]) {
-            if (!mbim_context_operation_from_string (split[0], &props.operation)) {
+            if (!mbim_context_operation_from_string (split[0], &props->operation)) {
                 g_printerr ("error: couldn't parse input string, operation '%s'\n", split[0]);
             }
         }/* Use authentication method */
         if (split[1]) {
-            if (!mbim_context_type_from_string (split[1], &props.context_type)) {
+            if (!mbim_context_type_from_string (split[1], &props->context_type)) {
                 g_printerr ("error: couldn't parse input string, contexttype '%s'\n", split[1]);
             }
         }
         /* Use authentication method */
         if (split[2]) {
-            if (!mbim_context_ip_type_from_string (split[2], &props.ip_type)) {
+            if (!mbim_context_ip_type_from_string (split[2], &props->ip_type)) {
                 g_printerr ("error: couldn't parse input string, ip_type '%s'\n", split[2]);
             }
         }
         /* Use authentication method */
         if (split[3]) {
-            if (!mbim_context_state_from_string (split[3], &props.state)) {
+            if (!mbim_context_state_from_string (split[3], &props->state)) {
                 g_printerr ("error: couldn't parse input string, enable '%s'\n", split[3]);
             }
         }
         /* Use authentication method */
         if (split[4]) {
-            if (!mbim_roaming_control_from_string (split[4], &props.roaming)) {
+            if (!mbim_roaming_control_from_string (split[4], &props->roaming)) {
                 g_printerr ("error: couldn't parse input string, roaming '%s'\n", split[4]);
             }
         }
         /* Use authentication method */
         if (split[5]) {
-            if (!mbim_context_media_from_string (split[5], &props.media_type)) {
+            if (!mbim_context_media_from_string (split[5], &props->media_type)) {
                 g_printerr ("error: couldn't parse input string, media_type '%s'\n", split[5]);
             }
         }
         /* Use authentication method */
         if (split[6]) {
-            if (!mbim_context_source_from_string (split[6], &props.source)) {
+            if (!mbim_context_source_from_string (split[6], &props->source)) {
                 g_printerr ("error: couldn't parse input string, source '%s'\n", split[6]);
             }
         }
         /* Use authentication method */
         if (split[11]) {
-            if (!mbim_auth_protocol_from_string (split[11], &props.auth_protocol)) {
+            if (!mbim_auth_protocol_from_string (split[11], &props->auth_protocol)) {
                 g_printerr ("error: couldn't parse input string, unknown auth protocol '%s'\n", split[11]);
             }
         }
         /* Use authentication method */
         if (split[10]) {
-            if (!mbim_compression_from_string (split[10], &props.compression)) {
+            if (!mbim_compression_from_string (split[10], &props->compression)) {
                 g_printerr ("error: couldn't parse input string, unknown compression '%s'\n", split[10]);
             }
         }
         if (split[7]){
             /* Username */
-            props.user_name = g_strdup (split[7]);
+            props->user_name = g_strdup (split[7]);
             /* Password */
-            props.password = g_strdup (split[8]);
+            props->password = g_strdup (split[8]);
             /* accessstring */
-            props.access_string = g_strdup (split[9]);
+            props->access_string = g_strdup (split[9]);
         }
     }
-    if (props.auth_protocol == MBIM_AUTH_PROTOCOL_NONE) {
-        if (props.user_name || props.password) {
+
+    if (props->auth_protocol == MBIM_AUTH_PROTOCOL_NONE) {
+        if (props->user_name || props->password) {
             g_printerr ("error: username or password requires an auth protocol\n");
             return FALSE;
         }
     } else {
-        if (!props.user_name) {
+        if (!props->user_name) {
             g_printerr ("error: auth protocol requires a username\n");
             return FALSE;
         }
     }
 
-    *access_string = g_steal_pointer (&props.access_string);
-    *auth_protocol = props.auth_protocol;
-    *user_name     = g_steal_pointer (&props.user_name);
-    *password      = g_steal_pointer (&props.password);
-    *ip_type       = props.ip_type;
-    *operation     = props.operation;
-    *state         = props.state;
-    *roaming       = props.roaming;
-    *media_type    = props.media_type;
-    *source        = props.source;
-    *compression   = props.compression;
-    *context_type  = props.context_type;
-
     return TRUE;
 }
 
 static void
-provisioned_contexts_v2_ready (MbimDevice   *device,
-                               GAsyncResult *res)
+provisioned_contexts_ready (MbimDevice   *device,
+                            GAsyncResult *res)
 {
     g_autoptr(MbimMessage)                          response = NULL;
     g_autoptr(MbimProvisionedContextElementV2Array) provisioned_contexts = NULL;
@@ -1171,11 +1122,11 @@ provisioned_contexts_v2_ready (MbimDevice   *device,
     for (i = 0; i < provisioned_contexts_count; i++) {
         g_print ("\tContext ID %u:\n"
                  "\t   Context type: '%s'\n"
-                 "\t        ip type: '%s'\n"
-                 "\t        state:   '%s'\n"
-                 "\t        roaming: '%s'\n"
-                 "\t     media_type: '%s'\n"
-                 "\t         source: '%s'\n"
+                 "\t        IP type: '%s'\n"
+                 "\t          State: '%s'\n"
+                 "\tRoaming control: '%s'\n"
+                 "\t     Media type: '%s'\n"
+                 "\t         Source: '%s'\n"
                  "\t  Access string: '%s'\n"
                  "\t       Username: '%s'\n"
                  "\t       Password: '%s'\n"
@@ -1409,50 +1360,41 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              NULL);
         return;
     }
-    if (set_provisioned_contexts_v2_flag) {
-        MbimContextOperation operation;
-        MbimContextType context_type;
-        MbimContextIpType  ip_type = MBIM_CONTEXT_IP_TYPE_DEFAULT;
-        MbimContextState state;
-        MbimContextRoamingControl roaming;
-        MbimContextMediaType media_type;
-        MbimContextSource source;
-        g_autofree gchar *access_string = NULL;
-        g_autofree gchar *user_name = NULL;
-        g_autofree gchar *password = NULL;
-        MbimCompression compression;
-        MbimAuthProtocol auth_protocol;
 
-        if (!provision_context_parse (set_provisioned_contexts_v2_flag,
-                                         &operation,
-                                         &ip_type,
-                                         &state,
-                                         &roaming,
-                                         &media_type,
-                                         &source,
-                                         &access_string,
-                                         &user_name,
-                                         &password,
-                                         &compression,
-                                         &auth_protocol,
-                                         &context_type)) {
+    if (set_provisioned_contexts_str) {
+        g_auto(ProvisionedContextProperties) props = {
+            .access_string = NULL,
+            .operation     = MBIM_CONTEXT_OPERATION_DELETE,
+            .auth_protocol = MBIM_AUTH_PROTOCOL_NONE,
+            .user_name     = NULL,
+            .password      = NULL,
+            .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT,
+            .state         = MBIM_CONTEXT_STATE_DISABLED,
+            .roaming       = MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY,
+            .media_type    = MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY,
+            .source        = MBIM_CONTEXT_SOURCE_ADMIN,
+            .compression   = MBIM_COMPRESSION_NONE,
+            .context_type  = MBIM_CONTEXT_TYPE_INVALID
+        };
+
+        if (!provisioned_context_properties_parse (set_provisioned_contexts_str, &props)) {
             shutdown (FALSE);
             return;
         }
 
         request = mbim_message_ms_basic_connect_extensions_provisioned_contexts_set_new (
-                      operation,
-                      mbim_uuid_from_context_type (context_type),
-                      ip_type,
-                      state,
-                      roaming,
-                      media_type,
-                      source,
-                      access_string,
-                      user_name,
-                      password,
-                      compression,
-                      auth_protocol,
+                      props.operation,
+                      mbim_uuid_from_context_type (props.context_type),
+                      props.ip_type,
+                      props.state,
+                      props.roaming,
+                      props.media_type,
+                      props.source,
+                      props.access_string,
+                      props.user_name,
+                      props.password,
+                      props.compression,
+                      props.auth_protocol,
                       &error);
 
         if (!request) {
@@ -1465,13 +1407,13 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              request,
                              60,
                              ctx->cancellable,
-                             (GAsyncReadyCallback)provisioned_contexts_v2_ready,
+                             (GAsyncReadyCallback)provisioned_contexts_ready,
                              NULL);
         return;
     }
 
     /* Request to query Provisioned contexts? */
-    if (query_provisioned_contexts_v2_flag) {
+    if (query_provisioned_contexts_flag) {
         g_debug ("Asynchronously query provisioned contexts...");
 
         request = mbim_message_ms_basic_connect_extensions_provisioned_contexts_query_new (NULL);
@@ -1484,7 +1426,7 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              request,
                              10,
                              ctx->cancellable,
-                             (GAsyncReadyCallback)provisioned_contexts_v2_ready,
+                             (GAsyncReadyCallback)provisioned_contexts_ready,
                              NULL);
         return;
     }
