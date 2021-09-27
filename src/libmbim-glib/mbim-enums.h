@@ -199,6 +199,26 @@ typedef enum { /*< since=1.0 >*/
     MBIM_SUBSCRIBER_READY_STATE_DEVICE_LOCKED    = 6,
 } MbimSubscriberReadyState;
 
+/* 'Subscriber Ready Status v3' enums */
+
+/**
+ * MbimSubscriberReadyStatusFlags:
+ * @MBIM_SUBSCRIBER_READY_STATUS_FLAGS_NONE: Status is not known.
+ * @MBIM_SUBSCRIBER_READY_STATUS_FLAGS_ESIM: Status started.
+ * @MBIM_SUBSCRIBER_READY_STATUS_FLAGS_SIM_REMOVABLITY_KNOWN: Status Completed.
+ * @MBIM_SUBSCRIBER_READY_STATUS_FLAGS_SIM_REMOVABLE: Status Completed.
+ *
+ * Modem SubscriberReadyFlag Status.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_SUBSCRIBER_READY_STATUS_FLAGS_NONE                  = 0,
+    MBIM_SUBSCRIBER_READY_STATUS_FLAGS_ESIM                  = 1,
+    MBIM_SUBSCRIBER_READY_STATUS_FLAGS_SIM_REMOVABLITY_KNOWN = 2,
+    MBIM_SUBSCRIBER_READY_STATUS_FLAGS_SIM_REMOVABLE         = 3
+} MbimSubscriberReadyStatusFlags;
+
 /**
  * MbimReadyInfoFlag:
  * @MBIM_READY_INFO_FLAG_NONE: Device in normal mode. Since 1.16.

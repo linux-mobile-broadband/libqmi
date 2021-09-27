@@ -22,6 +22,8 @@
 #include "mbim-common.h"
 #include "mbimcli.h"
 #include "mbimcli-helpers.h"
+#include "mbim-ms-basic-connect-v3.h"
+
 
 /* Context */
 typedef struct {
@@ -427,6 +429,7 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
     guint32                   telephone_numbers_count;
     g_auto(GStrv)             telephone_numbers = NULL;
     g_autofree gchar         *telephone_numbers_str = NULL;
+    MbimSubscriberReadyStatusFlags flags;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -435,18 +438,40 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
         return;
     }
 
-    if (!mbim_message_subscriber_ready_status_response_parse (
-            response,
-            &ready_state,
-            &subscriber_id,
-            &sim_iccid,
-            &ready_info,
-            &telephone_numbers_count,
-            &telephone_numbers,
-            &error)) {
-        g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        shutdown (FALSE);
-        return;
+    /* MBIMEx 3.0 support */
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        if (!mbim_message_ms_basic_connect_v3_subscriber_ready_status_response_parse (response,
+                                                                                      &ready_state,
+                                                                                      &flags,
+                                                                                      &subscriber_id,
+                                                                                      &sim_iccid,
+                                                                                      &ready_info,
+                                                                                      &telephone_numbers_count,
+                                                                                      &telephone_numbers,
+                                                                                      &error)) {
+
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIMEx 3.0 Subscriber State");
+    }
+    /* MBIM 1.0 support */
+    else {
+        if (!mbim_message_subscriber_ready_status_response_parse (response,
+                                                                  &ready_state,
+                                                                  &subscriber_id,
+                                                                  &sim_iccid,
+                                                                  &ready_info,
+                                                                  &telephone_numbers_count,
+                                                                  &telephone_numbers,
+                                                                  &error)) {
+
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+         }
+        g_debug ("Successfully parsed response as MBIM 1.0 Subscriber State");
     }
 
     telephone_numbers_str = (telephone_numbers ? g_strjoinv (", ", telephone_numbers) : NULL);
@@ -465,6 +490,11 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (sim_iccid),
              VALIDATE_UNKNOWN (ready_info_str),
              telephone_numbers_count, VALIDATE_UNKNOWN (telephone_numbers_str));
+
+        if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        g_print ("\tready status flag: '%s'\n",
+                 VALIDATE_UNKNOWN (mbim_subscriber_ready_status_flags_get_string(flags)));
+    }
 
     shutdown (TRUE);
 }
@@ -1768,7 +1798,12 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     /* Request to get subscriber ready status? */
     if (query_subscriber_ready_status_flag) {
         g_debug ("Asynchronously querying subscriber ready status...");
-        request = (mbim_message_subscriber_ready_status_query_new (NULL));
+
+        if (mbim_device_check_ms_mbimex_version (device, 3, 0))
+            request = mbim_message_ms_basic_connect_v3_subscriber_ready_status_query_new (NULL);
+        else
+            request = (mbim_message_subscriber_ready_status_query_new (NULL));
+
         mbim_device_command (ctx->device,
                              request,
                              10,
