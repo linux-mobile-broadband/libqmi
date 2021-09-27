@@ -172,7 +172,7 @@ static GOptionEntry entries[] = {
       "[SessionID]"
     },
     { "connect", 0, 0, G_OPTION_ARG_STRING, &set_connect_activate_str,
-      "Connect (allowed keys: session-id, access-string, ip-type, auth, username, password, compression)",
+      "Connect (allowed keys: session-id, access-string, ip-type, auth, username, password, compression, context-type)",
       "[\"key=value,...\"]"
     },
     { "query-ip-configuration", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_ip_configuration_arg_parse),
@@ -1009,6 +1009,7 @@ typedef struct {
     gchar             *password;
     MbimContextIpType  ip_type;
     MbimCompression    compression;
+    MbimContextType    context_type;
 } ConnectActivateProperties;
 
 static void
@@ -1070,6 +1071,12 @@ connect_activate_properties_handle (const gchar  *key,
         if (!mbimcli_read_compression_from_string (value, &props->compression)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown compression: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "context-type") == 0) {
+        if (!mbimcli_read_context_type_from_string (value, &props->context_type)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown context-type: '%s'", value);
             return FALSE;
         }
     } else {
@@ -2089,6 +2096,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
             .password      = NULL,
             .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT,
             .compression   = MBIM_COMPRESSION_NONE,
+            .context_type  = MBIM_CONTEXT_TYPE_INTERNET,
         };
 
         if (!set_connect_activate_parse (set_connect_activate_str, &props)) {
@@ -2104,7 +2112,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                                                 props.compression,
                                                 props.auth_protocol,
                                                 props.ip_type,
-                                                mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
+                                                mbim_uuid_from_context_type (props.context_type),
                                                 &error);
 
         if (!request) {
