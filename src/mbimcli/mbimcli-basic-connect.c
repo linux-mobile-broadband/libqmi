@@ -963,46 +963,6 @@ ip_packet_filters_ready (MbimDevice   *device,
 }
 
 static gboolean
-mbim_auth_protocol_from_string (const gchar      *str,
-                                MbimAuthProtocol *auth_protocol)
-{
-    if (g_ascii_strcasecmp (str, "PAP") == 0) {
-        *auth_protocol = MBIM_AUTH_PROTOCOL_PAP;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "CHAP") == 0) {
-        *auth_protocol = MBIM_AUTH_PROTOCOL_CHAP;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "MSCHAPV2") == 0) {
-        *auth_protocol = MBIM_AUTH_PROTOCOL_MSCHAPV2;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static gboolean
-mbim_context_ip_type_from_string (const gchar       *str,
-                                  MbimContextIpType *ip_type)
-{
-    if (g_ascii_strcasecmp (str, "ipv4") == 0) {
-        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "ipv6") == 0) {
-        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV6;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "ipv4v6") == 0) {
-        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4V6;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static gboolean
 connect_session_id_parse (const gchar  *str,
                           gboolean      allow_empty,
                           guint32      *session_id,
@@ -1088,7 +1048,7 @@ connect_activate_properties_handle (const gchar  *key,
         g_free (props->access_string);
         props->access_string = g_strdup (value);
     } else if (g_ascii_strcasecmp (key, "auth") == 0) {
-        if (!mbim_auth_protocol_from_string (value, &props->auth_protocol)) {
+        if (!mbimcli_read_auth_protocol_from_string (value, &props->auth_protocol)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown auth: '%s'", value);
             return FALSE;
@@ -1100,7 +1060,7 @@ connect_activate_properties_handle (const gchar  *key,
         g_free (props->password);
         props->password = g_strdup (value);
     } else if (g_ascii_strcasecmp (key, "ip-type") == 0) {
-        if (!mbim_context_ip_type_from_string (value, &props->ip_type)) {
+        if (!mbimcli_read_context_ip_type_from_string (value, &props->ip_type)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown ip-type: '%s'", value);
             return FALSE;
@@ -1148,7 +1108,7 @@ set_connect_activate_parse (const gchar               *str,
 
             /* Use authentication method */
             if (split[1]) {
-                if (!mbim_auth_protocol_from_string (split[1], &props->auth_protocol)) {
+                if (!mbimcli_read_auth_protocol_from_string (split[1], &props->auth_protocol)) {
                     g_printerr ("error: couldn't parse input string, unknown auth protocol '%s'\n", split[1]);
                     return FALSE;
                 }
