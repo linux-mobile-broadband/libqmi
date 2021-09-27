@@ -346,6 +346,41 @@
                        { "name"             : "ProvisionedContexts",
                          "format"           : "ref-struct-array",
                          "struct-type"      : "MbimProvisionedContextElementV2",
-                         "array-size-field" : "ProvisionedContextsCount" } ] }
+                         "array-size-field" : "ProvisionedContextsCount" } ] },
+
+  //************************************************************************************
+
+  { "name"       : "Registration Params",
+    "type"       : "Command",
+    "since"      : "1.28",
+    "set"        : [ { "name"          : "MicoMode",
+                       "format"        : "guint32",
+                       "public-format" : "MbimMicoMode" },
+                     { "name"          : "DrxParams",
+                       "format"        : "guint32",
+                       "public-format" : "MbimDrxParams" },
+                     { "name"          : "LadnInfo",
+                       "format"        : "guint32",
+                       "public-format" : "MbimLadnInd" },
+                     { "name"          : "DefaultPduHint",
+                       "format"        : "guint32",
+                       "public-format" : "MbimDefaultPduHint" },
+                     { "name"          : "ReRegisterIfNedeed",
+                       "format"        : "guint32" } ],
+    "query"      : [],
+    "response"   : [ { "name"          : "MicoMode",
+                       "format"        : "guint32",
+                       "public-format" : "MbimMicoMode" },
+                     { "name"          : "DrxParams",
+                       "format"        : "guint32",
+                       "public-format" : "MbimDrxParams" },
+                     { "name"          : "LadnInfo",
+                       "format"        : "guint32",
+                       "public-format" : "MbimLadnInd" },
+                     { "name"          : "DefaultPduHint",
+                       "format"        : "guint32",
+                       "public-format" : "MbimDefaultPduHint" },
+                     { "name"          : "ReRegisterIfNedeed",
+                       "format"        : "guint32" } ] }
 
 ]

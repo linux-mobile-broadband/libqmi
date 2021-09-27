@@ -1545,6 +1545,78 @@ typedef enum { /*< since=1.28 >*/
     MBIM_CONTEXT_OPERATION_RESTORE_FACTORY = 2,
 } MbimContextOperation;
 
+/*****************************************************************************/
+/* Registration Params' enums */
+
+/**
+ * MbimMicoMode:
+ * @MBIM_MICO_MODE_DISABLED: Mico Mode Disabled.
+ * @MBIM_MICO_MODE_ENABLED: Mico Mode Enabled.
+ * @MBIM_MICO_MODE_UNSUPPORTED: Mico Mode Enabled.
+ * @MBIM_MICO_MODE_DEFAULT: Mico Mode Default.
+ *
+ * Mico Mode State.
+ *
+ * Since: 1.28
+ */
+typedef enum {/*< since=1.28 >*/
+    MBIM_MICO_MODE_DISABLED    = 0,
+    MBIM_MICO_MODE_ENABLED     = 1,
+    MBIM_MICO_MODE_UNSUPPORTED = 2,
+    MBIM_MICO_MODE_DEFAULT     = 3
+} MbimMicoMode;
+
+/**
+ * MbimDefaultPduHint:
+ * @MBIM_DEAFAULT_PDU_HINT_ACTIVATION_UNLIKELY: PDU ACTiVATION Unlikely.
+ * @MBIM_DEAFAULT_PDU_HINT_ACTIVATION_LIKELY: PDU ACTiVATION likely.
+ *
+ * Default Pdu Hint.
+ *
+ * Since: 1.28
+ */
+typedef enum {/*< since=1.28 >*/
+    MBIM_DEAFAULT_PDU_HINT_ACTIVATION_UNLIKELY = 0,
+    MBIM_DEAFAULT_PDU_HINT_ACTIVATION_LIKELY   = 1
+} MbimDefaultPduHint;
+
+
+/**
+ * MbimLadnInd:
+ * @MBIM_LADN_IND_NOT_NEEDED: Information Not Needed.
+ * @MBIM_LADN_IND_REQUESTED: Information Requested.
+ *
+ * Default Ladn Ind.
+ *
+ * Since: 1.28
+ */
+typedef enum {/*< since=1.28 >*/
+    MBIM_LADN_IND_NOT_NEEDED = 0,
+    MBIM_LADN_IND_REQUESTED  = 1
+} MbimLadnInd;
+
+/**
+ * MbimDrxParams:
+ * @MBIM_DRX_PARAMS_NOT_SPECIFIED: Drx Not specified.
+ * @MBIM_DRX_PARAMS_NOT_SUPPORTED: Drx Not supported.
+ * @MBIM_DRX_PARAMS_CYCLE_32: DRX cycle T=32.
+ * @MBIM_DRX_PARAMS_CYCLE_64: DRX cycle T=64.
+ * @MBIM_DRX_PARAMS_CYCLE_128: DRX cycle T=128.
+ * @MBIM_DRX_PARAMS_CYCLE_256: DRX cycle T=256.
+ *
+ * Default Drx Params.
+ *
+ * Since: 1.28
+ */
+typedef enum {/*< since=1.28 >*/
+    MBIM_DRX_PARAMS_NOT_SPECIFIED = 0,
+    MBIM_DRX_PARAMS_NOT_SUPPORTED = 1,
+    MBIM_DRX_PARAMS_CYCLE_32      = 2,
+    MBIM_DRX_PARAMS_CYCLE_64      = 3,
+    MBIM_DRX_PARAMS_CYCLE_128     = 4,
+    MBIM_DRX_PARAMS_CYCLE_256     = 5
+} MbimDrxParams;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

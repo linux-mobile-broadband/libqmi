@@ -45,7 +45,8 @@ static gboolean  query_location_info_status_flag;
 static gchar    *query_version_str;
 static gboolean  query_provisioned_contexts_flag;
 static gchar    *set_provisioned_contexts_str;
-
+static gboolean  query_registration_params_flag;
+static gchar    *set_registration_params_str;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -106,7 +107,15 @@ static GOptionEntry entries[] = {
       "Query provisioned contexts",
       NULL
     },
-    {NULL }
+    { "ms-query-registration-params", 0, 0, G_OPTION_ARG_NONE, &query_registration_params_flag,
+      "Query registration parameters",
+      NULL
+    },
+    { "ms-set-registration-params", 0, 0,G_OPTION_ARG_STRING , &set_registration_params_str,
+      "Set registration parameters",
+      "[(disabled|enabled|unsupported|default),(0|1|2|3|4|5),(not-needed|requested),(likely|unlikely),(0|1)]"
+    },
+    { NULL }
 };
 
 static gboolean
@@ -185,7 +194,9 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  query_location_info_status_flag +
                  !!query_version_str +
                  query_provisioned_contexts_flag +
-                 !!set_provisioned_contexts_str);
+                 !!set_provisioned_contexts_str +
+                 query_registration_params_flag +
+                 !!set_registration_params_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -862,6 +873,7 @@ provisioned_contexts_ready (MbimDevice   *device,
         shutdown (FALSE);
         return;
     }
+
     g_print ("[%s] Provisioned contexts (%u):\n",
              mbim_device_get_path_display (device),
              provisioned_contexts_count);
@@ -900,6 +912,49 @@ provisioned_contexts_ready (MbimDevice   *device,
                  VALIDATE_UNKNOWN (mbim_auth_protocol_get_string (
                      provisioned_contexts[i]->auth_protocol)));
     }
+
+    shutdown (TRUE);
+}
+
+static void
+registration_params_ready (MbimDevice   *device,
+                           GAsyncResult *res)
+{
+    g_autoptr(MbimMessage) response = NULL;
+    g_autoptr(GError)      error = NULL;
+    MbimMicoMode           mico_mode;
+    MbimDrxParams          drx_params;
+    MbimLadnInd            ladn_info;
+    MbimDefaultPduHint     pdu_hint;
+    guint32                re_register_if_nedeed;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully received registration parameters information\n",
+             mbim_device_get_path_display (device));
+    if (!mbim_message_ms_basic_connect_extensions_registration_params_response_parse (
+            response,
+            &mico_mode,
+            &drx_params,
+            &ladn_info,
+            &pdu_hint,
+            &re_register_if_nedeed,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print (" MbimMicoMode          : %s\n", mbim_mico_mode_get_string (mico_mode));
+    g_print (" MbimDrxParams         : %s\n", mbim_drx_params_get_string (drx_params));
+    g_print (" MbimLadnInd           : %s\n", mbim_ladn_ind_get_string (ladn_info));
+    g_print (" MbimDefaultPduHint    : %s\n", mbim_default_pdu_hint_get_string (pdu_hint));
+    g_print (" ReRegisterIfNedeed    : %x\n", re_register_if_nedeed);
 
     shutdown (TRUE);
 }
@@ -1172,11 +1227,83 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
             shutdown (FALSE);
             return;
         }
+
         mbim_device_command (ctx->device,
                              request,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)provisioned_contexts_ready,
+                             NULL);
+        return;
+    }
+
+    if (query_registration_params_flag) {
+        g_debug (" Asynchronously querying registration parameters...");
+        request = mbim_message_ms_basic_connect_extensions_registration_params_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)registration_params_ready,
+                             NULL);
+        return;
+    }
+
+    if (set_registration_params_str) {
+        MbimMicoMode           mico_mode = 0;
+        MbimDrxParams          drx_params = 0;
+        MbimLadnInd            ladn_info = 0;
+        MbimDefaultPduHint     pdu_hint = 0;
+        guint32                re_register_if_nedeed = 0;
+        g_auto(GStrv) split = NULL;
+
+        split = g_strsplit (set_registration_params_str, ",", -1);
+
+        if (g_strv_length (split) > 5) {
+            g_printerr ("error: couldn't parse input string, too many arguments\n");
+            return;
+        }
+
+        if (g_strv_length (split) < 5) {
+            g_printerr ("error: couldn't parse input string, missing arguments\n");
+            return;
+        }
+
+        if (!g_strcmp0 (split[0], "disabled"))
+             mico_mode = MBIM_MICO_MODE_DISABLED;
+        else if (!g_strcmp0 (split[0], "enabled"))
+             mico_mode = MBIM_MICO_MODE_ENABLED;
+        else if (!g_strcmp0 (split[0], "unsupported"))
+             mico_mode = MBIM_MICO_MODE_UNSUPPORTED;
+        else if (!g_strcmp0 (split[0], "default"))
+             mico_mode = MBIM_MICO_MODE_DEFAULT;
+
+        drx_params = g_ascii_digit_value (*split[1]);
+
+        if (!g_strcmp0 (split[2], "not-needed"))
+             ladn_info = MBIM_LADN_IND_NOT_NEEDED;
+        else if (!g_strcmp0 (split[2], "requested"))
+             ladn_info = MBIM_LADN_IND_REQUESTED;
+
+        if (!g_strcmp0 (split[3], "unlikely"))
+             pdu_hint = MBIM_DEAFAULT_PDU_HINT_ACTIVATION_UNLIKELY;
+        else if (!g_strcmp0 (split[3], "likely"))
+             pdu_hint = MBIM_DEAFAULT_PDU_HINT_ACTIVATION_LIKELY;
+
+        re_register_if_nedeed = g_ascii_digit_value (*split[4]);
+
+        g_debug ("Asynchronously set registration params\n");
+        request = mbim_message_ms_basic_connect_extensions_registration_params_set_new (mico_mode,
+                                                                                        drx_params,
+                                                                                        ladn_info,
+                                                                                        pdu_hint,
+                                                                                        re_register_if_nedeed,
+                                                                                        NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)registration_params_ready,
                              NULL);
         return;
     }
