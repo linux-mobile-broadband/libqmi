@@ -172,7 +172,7 @@ static GOptionEntry entries[] = {
       "[SessionID]"
     },
     { "connect", 0, 0, G_OPTION_ARG_STRING, &set_connect_activate_str,
-      "Connect (allowed keys: session-id, apn, ip-type (ipv4|ipv6|ipv4v6), auth (PAP|CHAP|MSCHAPV2), username, password)",
+      "Connect (allowed keys: session-id, apn, ip-type, auth, username, password)",
       "[\"key=value,...\"]"
     },
     { "query-ip-configuration", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_ip_configuration_arg_parse),
