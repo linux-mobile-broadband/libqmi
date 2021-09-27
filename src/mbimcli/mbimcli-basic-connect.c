@@ -1064,47 +1064,38 @@ connect_activate_properties_handle (const gchar  *key,
 
     /* APN may be empty */
     if ((g_ascii_strcasecmp (key, "apn") != 0) && (!value || !value[0])) {
-        g_set_error (error,
-                     MBIM_CORE_ERROR,
-                     MBIM_CORE_ERROR_FAILED,
-                     "key '%s' required a value",
-                     key);
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "key '%s' required a value", key);
         return FALSE;
     }
 
     if (g_ascii_strcasecmp (key, "session-id") == 0) {
         if (!connect_session_id_parse (value, FALSE, &props->session_id, error))
             return FALSE;
-    } else if (g_ascii_strcasecmp (key, "apn") == 0 && !props->apn) {
+    } else if (g_ascii_strcasecmp (key, "apn") == 0) {
+        g_free (props->apn);
         props->apn = g_strdup (value);
     } else if (g_ascii_strcasecmp (key, "auth") == 0) {
         if (!mbim_auth_protocol_from_string (value, &props->auth_protocol)) {
-            g_set_error (error,
-                         MBIM_CORE_ERROR,
-                         MBIM_CORE_ERROR_FAILED,
-                         "unknown auth protocol '%s'",
-                         value);
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown auth: '%s'", value);
             return FALSE;
         }
-    } else if (g_ascii_strcasecmp (key, "username") == 0 && !props->username) {
+    } else if (g_ascii_strcasecmp (key, "username") == 0) {
+        g_free (props->username);
         props->username = g_strdup (value);
-    } else if (g_ascii_strcasecmp (key, "password") == 0 && !props->password) {
+    } else if (g_ascii_strcasecmp (key, "password") == 0) {
+        g_free (props->password);
         props->password = g_strdup (value);
     } else if (g_ascii_strcasecmp (key, "ip-type") == 0) {
         if (!mbim_context_ip_type_from_string (value, &props->ip_type)) {
-            g_set_error (error,
-                         MBIM_CORE_ERROR,
-                         MBIM_CORE_ERROR_FAILED,
-                         "unknown ip type '%s'",
-                         value);
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown ip-type: '%s'", value);
             return FALSE;
         }
     } else {
-            g_set_error (error,
-                         MBIM_CORE_ERROR,
-                         MBIM_CORE_ERROR_FAILED,
-                         "unrecognized or duplicate option '%s'",
-                         key);
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
         return FALSE;
     }
 
