@@ -901,7 +901,6 @@ provisioned_contexts_ready (MbimDevice   *device,
                      provisioned_contexts[i]->auth_protocol)));
     }
 
-    mbim_message_unref (response);
     shutdown (TRUE);
 }
 
