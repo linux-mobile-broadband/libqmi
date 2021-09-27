@@ -35,8 +35,17 @@ gboolean mbimcli_parse_key_value_string (const gchar *str,
 
 
 /* Common helpers to read enums from strings */
-#define MBIMCLI_ENUM_LIST                                       \
-    MBIMCLI_ENUM_LIST_ITEM (MbimPinType, pin_type, "pin type")
+#define MBIMCLI_ENUM_LIST                                                                                  \
+    MBIMCLI_ENUM_LIST_ITEM (MbimPinType,               pin_type,                "pin type")                \
+    MBIMCLI_ENUM_LIST_ITEM (MbimContextType,           context_type,            "context type")            \
+    MBIMCLI_ENUM_LIST_ITEM (MbimContextIpType,         context_ip_type,         "context ip type")         \
+    MBIMCLI_ENUM_LIST_ITEM (MbimContextState,          context_state,           "context state")           \
+    MBIMCLI_ENUM_LIST_ITEM (MbimContextRoamingControl, context_roaming_control, "context roaming control") \
+    MBIMCLI_ENUM_LIST_ITEM (MbimContextMediaType,      context_media_type,      "context media type")      \
+    MBIMCLI_ENUM_LIST_ITEM (MbimContextSource,         context_source,          "context source")          \
+    MBIMCLI_ENUM_LIST_ITEM (MbimContextOperation,      context_operation,       "context operation")       \
+    MBIMCLI_ENUM_LIST_ITEM (MbimAuthProtocol,          auth_protocol,           "auth protocol")           \
+    MBIMCLI_ENUM_LIST_ITEM (MbimCompression,           compression,             "compression")
 
 #define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);

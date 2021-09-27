@@ -733,239 +733,6 @@ query_version_ready (MbimDevice   *device,
     return;
 }
 
-static gboolean
-mbim_auth_protocol_from_string (const gchar      *str,
-                                MbimAuthProtocol *auth_protocol)
-{
-    if (g_ascii_strcasecmp (str, "0") == 0) {
-        *auth_protocol = MBIM_AUTH_PROTOCOL_NONE;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "1") == 0) {
-        *auth_protocol = MBIM_AUTH_PROTOCOL_PAP;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "2") == 0) {
-        *auth_protocol = MBIM_AUTH_PROTOCOL_CHAP;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "3") == 0) {
-        *auth_protocol = MBIM_AUTH_PROTOCOL_MSCHAPV2;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-static gboolean
-mbim_context_ip_type_from_string (const gchar       *str,
-                                  MbimContextIpType *ip_type)
-{
-    if (g_ascii_strcasecmp (str, "0") == 0) {
-        *ip_type = MBIM_CONTEXT_IP_TYPE_DEFAULT;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "1") == 0) {
-        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "2") == 0) {
-        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV6;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "3") == 0) {
-        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4V6;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "4") == 0) {
-        *ip_type = MBIM_CONTEXT_IP_TYPE_IPV4_AND_IPV6;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static gboolean
-mbim_context_operation_from_string (const gchar          *str,
-                                    MbimContextOperation *operation)
-{
-    if (g_ascii_strcasecmp (str, "0") == 0) {
-        *operation = MBIM_CONTEXT_OPERATION_DEFAULT;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "1") == 0) {
-        *operation = MBIM_CONTEXT_OPERATION_DELETE;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "2") == 0) {
-        *operation = MBIM_CONTEXT_OPERATION_RESTORE_FACTORY;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static gboolean
-mbim_context_state_from_string (const gchar      *str,
-                                MbimContextState *enable)
-{
-    if (g_ascii_strcasecmp (str, "1") == 0) {
-        *enable = MBIM_CONTEXT_STATE_ENABLED;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "0") == 0) {
-        *enable = MBIM_CONTEXT_STATE_DISABLED;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static gboolean
-mbim_compression_from_string (const gchar     *str,
-                              MbimCompression *compression)
-{
-    if (g_ascii_strcasecmp (str, "1") == 0) {
-        *compression = MBIM_COMPRESSION_ENABLE;
-        return TRUE;
-    }
-        if (g_ascii_strcasecmp (str, "0") == 0) {
-        *compression = MBIM_COMPRESSION_NONE;
-        return TRUE;
-    }
-    return FALSE;
-}
-static gboolean
-mbim_roaming_control_from_string (const gchar               *str,
-                                  MbimContextRoamingControl *roaming)
-{
-    if (g_ascii_strcasecmp (str, "0") == 0) {
-        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "1") == 0) {
-        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_ONLY;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "2") == 0) {
-        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_NON_PARTNER_ONLY;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "4") == 0) {
-        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_NON_PARTNER;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "5") == 0) {
-        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_PARTNER_AND_NON_PARTNER;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "3") == 0) {
-        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_HOME_AND_PARTNER;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "6") == 0) {
-        *roaming = MBIM_CONTEXT_ROAMING_CONTROL_ALLOW_ALL;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static gboolean
-mbim_context_media_type_from_string (const gchar          *str,
-                                     MbimContextMediaType *media_type)
-{
-    if (g_ascii_strcasecmp (str, "0") == 0) {
-        *media_type = MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "1") == 0) {
-        *media_type = MBIM_CONTEXT_MEDIA_TYPE_WIFI_ONLY;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "2") == 0) {
-        *media_type = MBIM_CONTEXT_MEDIA_TYPE_ALL;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static gboolean
-mbim_context_source_from_string (const gchar       *str,
-                                 MbimContextSource *source)
-{
-    if (g_ascii_strcasecmp (str, "0") == 0) {
-        *source = MBIM_CONTEXT_SOURCE_ADMIN;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "1") == 0) {
-        *source = MBIM_CONTEXT_SOURCE_USER;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "2") == 0) {
-        *source = MBIM_CONTEXT_SOURCE_OPERATOR;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "3") == 0) {
-        *source = MBIM_CONTEXT_SOURCE_MODEM;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "4") == 0) {
-        *source = MBIM_CONTEXT_SOURCE_DEVICE;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static gboolean
-mbim_context_type_from_string (const gchar     *str,
-                               MbimContextType *context_type)
-{
-    if (g_ascii_strcasecmp (str, "0") == 0) {
-        *context_type = MBIM_CONTEXT_TYPE_INVALID;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "b43f758c-a560-4b46-b35e-c5869641fb54") == 0) {
-        *context_type = MBIM_CONTEXT_TYPE_NONE;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "7e5e2a7e-4e6f-7272-736b-656e7e5e2a7e") == 0) {
-        *context_type = MBIM_CONTEXT_TYPE_INTERNET ;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "9b9f7bbe-8952-44b7-83ac-ca41318df7a0") == 0) {
-        *context_type = MBIM_CONTEXT_TYPE_VPN;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "b43f758c-a560-4b46-b35e-c5869641fb54") == 0) {
-        *context_type = MBIM_CONTEXT_TYPE_VOICE;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "05a2a716-7c34-4b4d-9a91-c5ef0c7aaacc") == 0) {
-        *context_type = MBIM_CONTEXT_TYPE_VIDEO_SHARE;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "b3272496-ac6c-422b-a8c0-acf687a27217") == 0) {
-        *context_type = MBIM_CONTEXT_TYPE_PURCHASE;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "21610d01-3074-4bce-9425-b53a07d697d6") == 0) {
-        *context_type = MBIM_CONTEXT_TYPE_IMS;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "46726664-7269-6bc6-9624-d1d35389aca9") == 0) {
-        *context_type = MBIM_CONTEXT_TYPE_MMS;
-        return TRUE;
-    }
-    if (g_ascii_strcasecmp (str, "a57a9afc-b09f-45d7-bb40-033c39f60db9") == 0) {
-        *context_type = MBIM_CONTEXT_TYPE_LOCAL;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
 typedef struct {
     MbimContextOperation       operation;
     MbimContextIpType          ip_type;
@@ -998,55 +765,55 @@ set_provisioned_contexts_foreach_cb (const gchar                   *key,
                                      ProvisionedContextProperties  *props)
 {
     if (g_ascii_strcasecmp (key, "operation") == 0) {
-        if (!mbim_context_operation_from_string (value, &props->operation)) {
+        if (!mbimcli_read_context_operation_from_string (value, &props->operation)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown operation: '%s'", value);
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "context-type") == 0) {
-        if (!mbim_context_type_from_string (value, &props->context_type)) {
+        if (!mbimcli_read_context_type_from_string (value, &props->context_type)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown context-type: '%s'", value);
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "ip-type") == 0) {
-        if (!mbim_context_ip_type_from_string (value, &props->ip_type)) {
+        if (!mbimcli_read_context_ip_type_from_string (value, &props->ip_type)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown ip-type: '%s'", value);
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "state") == 0) {
-        if (!mbim_context_state_from_string (value, &props->state)) {
+        if (!mbimcli_read_context_state_from_string (value, &props->state)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown state: '%s'", value);
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "roaming-control") == 0) {
-        if (!mbim_roaming_control_from_string (value, &props->roaming_control)) {
+        if (!mbimcli_read_context_roaming_control_from_string (value, &props->roaming_control)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown roaming-control: '%s'", value);
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "media-type") == 0) {
-        if (!mbim_context_media_type_from_string (value, &props->media_type)) {
+        if (!mbimcli_read_context_media_type_from_string (value, &props->media_type)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown media-type: '%s'", value);
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "source") == 0) {
-        if (!mbim_context_source_from_string (value, &props->source)) {
+        if (!mbimcli_read_context_source_from_string (value, &props->source)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown source: '%s'", value);
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "auth") == 0) {
-        if (!mbim_auth_protocol_from_string (value, &props->auth_protocol)) {
+        if (!mbimcli_read_auth_protocol_from_string (value, &props->auth_protocol)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown auth: '%s'", value);
             return FALSE;
         }
     } else if (g_ascii_strcasecmp (key, "compression") == 0) {
-        if (!mbim_compression_from_string (value, &props->compression)) {
+        if (!mbimcli_read_compression_from_string (value, &props->compression)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                          "unknown compression: '%s'", value);
             return FALSE;
