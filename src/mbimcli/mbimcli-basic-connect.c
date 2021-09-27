@@ -1154,17 +1154,17 @@ set_connect_activate_parse (const gchar               *str,
                 }
             }
         }
-    }
 
-    if (props->auth_protocol == MBIM_AUTH_PROTOCOL_NONE) {
-        if (props->username || props->password) {
-            g_printerr ("error: username or password requires an auth protocol\n");
-            return FALSE;
-        }
-    } else {
-        if (!props->username) {
-            g_printerr ("error: auth protocol requires a username\n");
-            return FALSE;
+        if (props->auth_protocol == MBIM_AUTH_PROTOCOL_NONE) {
+            if (props->username || props->password) {
+                g_printerr ("error: username or password requires an auth protocol\n");
+                return FALSE;
+            }
+        } else {
+            if (!props->username) {
+                g_printerr ("error: auth protocol requires a username\n");
+                return FALSE;
+            }
         }
     }
 
