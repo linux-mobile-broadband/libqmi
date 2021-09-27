@@ -1109,31 +1109,11 @@ connect_activate_properties_handle (const gchar  *key,
 }
 
 static gboolean
-set_connect_activate_parse (const gchar        *str,
-                            guint32            *session_id,
-                            gchar             **access_string,
-                            MbimAuthProtocol   *auth_protocol,
-                            gchar             **username,
-                            gchar             **password,
-                            MbimContextIpType  *ip_type)
+set_connect_activate_parse (const gchar               *str,
+                            ConnectActivateProperties *props)
 {
-    g_auto(ConnectActivateProperties) props = {
-        .session_id    = 0,
-        .access_string = NULL,
-        .auth_protocol = MBIM_AUTH_PROTOCOL_NONE,
-        .username      = NULL,
-        .password      = NULL,
-        .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT
-    };
     g_auto(GStrv)     split = NULL;
     g_autoptr(GError) error = NULL;
-
-    g_assert (session_id != NULL);
-    g_assert (access_string != NULL);
-    g_assert (auth_protocol != NULL);
-    g_assert (username != NULL);
-    g_assert (password != NULL);
-    g_assert (ip_type != NULL);
 
     if (strchr (str, '=')) {
         /* New key=value format */
@@ -1148,6 +1128,7 @@ set_connect_activate_parse (const gchar        *str,
         /* Old non key=value format, like this:
          *    "[(APN),(PAP|CHAP|MSCHAPV2),(Username),(Password)]"
          */
+        g_printerr ("warning: positional input arguments format is deprecated, use key-value format instead\n");
         split = g_strsplit (str, ",", -1);
 
         if (g_strv_length (split) > 4) {
@@ -1157,42 +1138,35 @@ set_connect_activate_parse (const gchar        *str,
 
         if (g_strv_length (split) > 0) {
             /* APN */
-            props.access_string = g_strdup (split[0]);
+            props->access_string = g_strdup (split[0]);
 
             /* Use authentication method */
             if (split[1]) {
-                if (!mbim_auth_protocol_from_string (split[1], &props.auth_protocol)) {
+                if (!mbim_auth_protocol_from_string (split[1], &props->auth_protocol)) {
                     g_printerr ("error: couldn't parse input string, unknown auth protocol '%s'\n", split[1]);
                     return FALSE;
                 }
                 /* Username */
                 if (split[2]) {
-                    props.username = g_strdup (split[2]);
+                    props->username = g_strdup (split[2]);
                     /* Password */
-                    props.password = g_strdup (split[3]);
+                    props->password = g_strdup (split[3]);
                 }
             }
         }
     }
 
-    if (props.auth_protocol == MBIM_AUTH_PROTOCOL_NONE) {
-        if (props.username || props.password) {
+    if (props->auth_protocol == MBIM_AUTH_PROTOCOL_NONE) {
+        if (props->username || props->password) {
             g_printerr ("error: username or password requires an auth protocol\n");
             return FALSE;
         }
     } else {
-        if (!props.username) {
+        if (!props->username) {
             g_printerr ("error: auth protocol requires a username\n");
             return FALSE;
         }
     }
-
-    *session_id    = props.session_id;
-    *access_string = g_steal_pointer (&props.access_string);
-    *auth_protocol = props.auth_protocol;
-    *username      = g_steal_pointer (&props.username);
-    *password      = g_steal_pointer (&props.password);
-    *ip_type       = props.ip_type;
 
     return TRUE;
 }
@@ -2134,32 +2108,28 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Connect? */
     if (set_connect_activate_str) {
-        guint32            session_id = 0;
-        g_autofree gchar  *access_string = NULL;
-        MbimAuthProtocol   auth_protocol;
-        g_autofree gchar  *username = NULL;
-        g_autofree gchar  *password = NULL;
-        MbimContextIpType  ip_type = MBIM_CONTEXT_IP_TYPE_DEFAULT;
+        g_auto(ConnectActivateProperties) props = {
+            .session_id    = 0,
+            .access_string = NULL,
+            .auth_protocol = MBIM_AUTH_PROTOCOL_NONE,
+            .username      = NULL,
+            .password      = NULL,
+            .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT
+        };
 
-        if (!set_connect_activate_parse (set_connect_activate_str,
-                                         &session_id,
-                                         &access_string,
-                                         &auth_protocol,
-                                         &username,
-                                         &password,
-                                         &ip_type)) {
+        if (!set_connect_activate_parse (set_connect_activate_str, &props)) {
             shutdown (FALSE);
             return;
         }
 
-        request = mbim_message_connect_set_new (session_id,
+        request = mbim_message_connect_set_new (props.session_id,
                                                 MBIM_ACTIVATION_COMMAND_ACTIVATE,
-                                                access_string,
-                                                username,
-                                                password,
+                                                props.access_string,
+                                                props.username,
+                                                props.password,
                                                 MBIM_COMPRESSION_NONE,
-                                                auth_protocol,
-                                                ip_type,
+                                                props.auth_protocol,
+                                                props.ip_type,
                                                 mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
                                                 &error);
 
