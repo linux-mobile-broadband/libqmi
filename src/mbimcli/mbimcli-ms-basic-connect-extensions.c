@@ -99,8 +99,8 @@ static GOptionEntry entries[] = {
       "[(MBIM version),(MBIM extended version)]"
     },
     { "ms-set-provisioned-contexts", 0, 0, G_OPTION_ARG_STRING, &set_provisioned_contexts_str,
-      "set provisioned contexts",
-      "[(access_string),(user_name),(password)]"
+      "Set provisioned contexts (allowed keys: operation, context-type, ip-type, state, roaming-control, media-type, source, auth, compression, username, password, access-string)",
+      "[\"key=value,...\"]"
     },
     { "ms-query-provisioned-contexts", 0, 0, G_OPTION_ARG_NONE, &query_provisioned_contexts_flag,
       "Query provisioned contexts",
@@ -871,8 +871,8 @@ mbim_roaming_control_from_string (const gchar               *str,
 }
 
 static gboolean
-mbim_context_media_from_string (const gchar          *str,
-                                MbimContextMediaType *media_type)
+mbim_context_media_type_from_string (const gchar          *str,
+                                     MbimContextMediaType *media_type)
 {
     if (g_ascii_strcasecmp (str, "0") == 0) {
         *media_type = MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY;
@@ -970,11 +970,11 @@ typedef struct {
     MbimContextOperation       operation;
     MbimContextIpType          ip_type;
     MbimContextState           state;
-    MbimContextRoamingControl  roaming;
+    MbimContextRoamingControl  roaming_control;
     MbimContextMediaType       media_type;
     MbimContextSource          source;
     gchar                     *access_string;
-    gchar                     *user_name;
+    gchar                     *username;
     gchar                     *password;
     MbimCompression            compression;
     MbimAuthProtocol           auth_protocol;
@@ -985,105 +985,85 @@ static void
 provisioned_context_properties_clear (ProvisionedContextProperties *props)
 {
     g_free (props->access_string);
-    g_free (props->user_name);
+    g_free (props->username);
     g_free (props->password);
 }
 
 G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(ProvisionedContextProperties, provisioned_context_properties_clear)
 
 static gboolean
-provisioned_context_properties_parse (const gchar                  *str,
-                                      ProvisionedContextProperties *props)
+set_provisioned_contexts_foreach_cb (const gchar                   *key,
+                                     const gchar                   *value,
+                                     GError                       **error,
+                                     ProvisionedContextProperties  *props)
 {
-    g_auto(GStrv)     split = NULL;
-    g_autoptr(GError) error = NULL;
-
-    split = g_strsplit (str, ",", -1);
-
-    if (g_strv_length (split) > 12) {
-        g_printerr ("error: couldn't parse input string, too many arguments\n");
-        return FALSE;
-    }
-
-    if (g_strv_length (split) < 12) {
-        g_printerr ("error: couldn't parse input string, too few arguments\n");
-        return FALSE;
-    }
-
-    if (g_strv_length (split) > 0) {
-        /* Use authentication method */
-        if (split[0]) {
-            if (!mbim_context_operation_from_string (split[0], &props->operation)) {
-                g_printerr ("error: couldn't parse input string, operation '%s'\n", split[0]);
-            }
-        }/* Use authentication method */
-        if (split[1]) {
-            if (!mbim_context_type_from_string (split[1], &props->context_type)) {
-                g_printerr ("error: couldn't parse input string, contexttype '%s'\n", split[1]);
-            }
-        }
-        /* Use authentication method */
-        if (split[2]) {
-            if (!mbim_context_ip_type_from_string (split[2], &props->ip_type)) {
-                g_printerr ("error: couldn't parse input string, ip_type '%s'\n", split[2]);
-            }
-        }
-        /* Use authentication method */
-        if (split[3]) {
-            if (!mbim_context_state_from_string (split[3], &props->state)) {
-                g_printerr ("error: couldn't parse input string, enable '%s'\n", split[3]);
-            }
-        }
-        /* Use authentication method */
-        if (split[4]) {
-            if (!mbim_roaming_control_from_string (split[4], &props->roaming)) {
-                g_printerr ("error: couldn't parse input string, roaming '%s'\n", split[4]);
-            }
-        }
-        /* Use authentication method */
-        if (split[5]) {
-            if (!mbim_context_media_from_string (split[5], &props->media_type)) {
-                g_printerr ("error: couldn't parse input string, media_type '%s'\n", split[5]);
-            }
-        }
-        /* Use authentication method */
-        if (split[6]) {
-            if (!mbim_context_source_from_string (split[6], &props->source)) {
-                g_printerr ("error: couldn't parse input string, source '%s'\n", split[6]);
-            }
-        }
-        /* Use authentication method */
-        if (split[11]) {
-            if (!mbim_auth_protocol_from_string (split[11], &props->auth_protocol)) {
-                g_printerr ("error: couldn't parse input string, unknown auth protocol '%s'\n", split[11]);
-            }
-        }
-        /* Use authentication method */
-        if (split[10]) {
-            if (!mbim_compression_from_string (split[10], &props->compression)) {
-                g_printerr ("error: couldn't parse input string, unknown compression '%s'\n", split[10]);
-            }
-        }
-        if (split[7]){
-            /* Username */
-            props->user_name = g_strdup (split[7]);
-            /* Password */
-            props->password = g_strdup (split[8]);
-            /* accessstring */
-            props->access_string = g_strdup (split[9]);
-        }
-    }
-
-    if (props->auth_protocol == MBIM_AUTH_PROTOCOL_NONE) {
-        if (props->user_name || props->password) {
-            g_printerr ("error: username or password requires an auth protocol\n");
+    if (g_ascii_strcasecmp (key, "operation") == 0) {
+        if (!mbim_context_operation_from_string (value, &props->operation)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown operation: '%s'", value);
             return FALSE;
         }
+    } else if (g_ascii_strcasecmp (key, "context-type") == 0) {
+        if (!mbim_context_type_from_string (value, &props->context_type)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown context-type: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "ip-type") == 0) {
+        if (!mbim_context_ip_type_from_string (value, &props->ip_type)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown ip-type: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "state") == 0) {
+        if (!mbim_context_state_from_string (value, &props->state)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown state: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "roaming-control") == 0) {
+        if (!mbim_roaming_control_from_string (value, &props->roaming_control)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown roaming-control: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "media-type") == 0) {
+        if (!mbim_context_media_type_from_string (value, &props->media_type)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown media-type: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "source") == 0) {
+        if (!mbim_context_source_from_string (value, &props->source)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown source: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "auth") == 0) {
+        if (!mbim_auth_protocol_from_string (value, &props->auth_protocol)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown auth: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "compression") == 0) {
+        if (!mbim_compression_from_string (value, &props->compression)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown compression: '%s'", value);
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "username") == 0) {
+        g_free (props->username);
+        props->username = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "password") == 0) {
+        g_free (props->password);
+        props->password = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "access-string") == 0) {
+        g_free (props->access_string);
+        props->access_string = g_strdup (value);
     } else {
-        if (!props->user_name) {
-            g_printerr ("error: auth protocol requires a username\n");
-            return FALSE;
-        }
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
     }
 
     return TRUE;
@@ -1363,21 +1343,25 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
 
     if (set_provisioned_contexts_str) {
         g_auto(ProvisionedContextProperties) props = {
-            .access_string = NULL,
-            .operation     = MBIM_CONTEXT_OPERATION_DELETE,
-            .auth_protocol = MBIM_AUTH_PROTOCOL_NONE,
-            .user_name     = NULL,
-            .password      = NULL,
-            .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT,
-            .state         = MBIM_CONTEXT_STATE_DISABLED,
-            .roaming       = MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY,
-            .media_type    = MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY,
-            .source        = MBIM_CONTEXT_SOURCE_ADMIN,
-            .compression   = MBIM_COMPRESSION_NONE,
-            .context_type  = MBIM_CONTEXT_TYPE_INVALID
+            .access_string   = NULL,
+            .operation       = MBIM_CONTEXT_OPERATION_DELETE,
+            .auth_protocol   = MBIM_AUTH_PROTOCOL_NONE,
+            .username        = NULL,
+            .password        = NULL,
+            .ip_type         = MBIM_CONTEXT_IP_TYPE_DEFAULT,
+            .state           = MBIM_CONTEXT_STATE_DISABLED,
+            .roaming_control = MBIM_CONTEXT_ROAMING_CONTROL_HOME_ONLY,
+            .media_type      = MBIM_CONTEXT_MEDIA_TYPE_CELLULAR_ONLY,
+            .source          = MBIM_CONTEXT_SOURCE_ADMIN,
+            .compression     = MBIM_COMPRESSION_NONE,
+            .context_type    = MBIM_CONTEXT_TYPE_INVALID
         };
 
-        if (!provisioned_context_properties_parse (set_provisioned_contexts_str, &props)) {
+        if (!mbimcli_parse_key_value_string (set_provisioned_contexts_str,
+                                             &error,
+                                             (MbimParseKeyValueForeachFn)set_provisioned_contexts_foreach_cb,
+                                             &props)) {
+            g_printerr ("error: couldn't parse input string: %s\n", error->message);
             shutdown (FALSE);
             return;
         }
@@ -1387,11 +1371,11 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                       mbim_uuid_from_context_type (props.context_type),
                       props.ip_type,
                       props.state,
-                      props.roaming,
+                      props.roaming_control,
                       props.media_type,
                       props.source,
                       props.access_string,
-                      props.user_name,
+                      props.username,
                       props.password,
                       props.compression,
                       props.auth_protocol,
