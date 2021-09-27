@@ -678,7 +678,13 @@ set_pin_input_parse (const gchar  *str,
     }
 
     if (pin_type && (g_strv_length (split) == n_max)) {
-        new_pin_type = mbimcli_read_pintype_from_string (split[n++]);
+        const gchar *pin_type_str;
+
+        pin_type_str = split[n++];
+        if (!mbimcli_read_pin_type_from_string (pin_type_str, &new_pin_type)) {
+            g_printerr ("error: couldn't parse input pin-type: %s\n", pin_type_str);
+            return FALSE;
+        }
         if (new_pin_type == MBIM_PIN_TYPE_UNKNOWN ||
             (*pin_type == MBIM_PIN_TYPE_PIN1 && new_pin_type >= MBIM_PIN_TYPE_PUK1) ||
             (*pin_type == MBIM_PIN_TYPE_PUK1 && new_pin_type < MBIM_PIN_TYPE_PUK1)) {

@@ -33,6 +33,14 @@ gboolean mbimcli_parse_key_value_string (const gchar *str,
                                          MbimParseKeyValueForeachFn callback,
                                          gpointer user_data);
 
-MbimPinType mbimcli_read_pintype_from_string (const gchar *str);
+
+/* Common helpers to read enums from strings */
+#define MBIMCLI_ENUM_LIST                                       \
+    MBIMCLI_ENUM_LIST_ITEM (MbimPinType, pin_type, "pin type")
+
+#define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
+    gboolean mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);
+MBIMCLI_ENUM_LIST
+#undef MBIMCLI_ENUM_LIST_ITEM
 
 #endif /* __MBIMCLI_H__ */

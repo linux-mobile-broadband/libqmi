@@ -345,22 +345,26 @@ mbimcli_parse_key_value_string (const gchar                 *str,
     return TRUE;
 }
 
-MbimPinType
-mbimcli_read_pintype_from_string (const gchar *str)
-{
-    const gchar *feature;
-    gint i;
-
-    if (str == NULL)
-        return MBIM_PIN_TYPE_UNKNOWN;
-
-    /* Compare string to nicknames from mbim_pin_type_values */
-    i = MBIM_PIN_TYPE_CUSTOM;
-    while (NULL != (feature = mbim_pin_type_get_string (i))) {
-        if (g_str_equal (feature, str))
-            return i;
-        i++;
+#define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)                    \
+    gboolean                                                                  \
+    mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str,         \
+                                                    TYPE *out)                \
+    {                                                                         \
+        GType type;                                                           \
+        GEnumClass *enum_class;                                               \
+        GEnumValue *enum_value;                                               \
+                                                                              \
+        type = mbim_## TYPE_UNDERSCORE ##_get_type ();                         \
+        enum_class = G_ENUM_CLASS (g_type_class_ref (type));                  \
+        enum_value = g_enum_get_value_by_nick (enum_class, str);              \
+                                                                              \
+        if (enum_value)                                                       \
+            *out = (TYPE)enum_value->value;                                   \
+        else                                                                  \
+            g_printerr ("error: invalid " DESCR " value given: '%s'\n", str); \
+                                                                              \
+        g_type_class_unref (enum_class);                                      \
+        return !!enum_value;                                                  \
     }
-
-    return MBIM_PIN_TYPE_UNKNOWN;
-}
+MBIMCLI_ENUM_LIST
+#undef MBIMCLI_ENUM_LIST_ITEM
