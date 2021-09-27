@@ -172,7 +172,7 @@ static GOptionEntry entries[] = {
       "[SessionID]"
     },
     { "connect", 0, 0, G_OPTION_ARG_STRING, &set_connect_activate_str,
-      "Connect (allowed keys: session-id, apn, ip-type, auth, username, password)",
+      "Connect (allowed keys: session-id, access-string, ip-type, auth, username, password)",
       "[\"key=value,...\"]"
     },
     { "query-ip-configuration", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, G_CALLBACK (query_ip_configuration_arg_parse),
@@ -1037,7 +1037,7 @@ connect_session_id_parse (const gchar  *str,
 
 typedef struct {
     guint32            session_id;
-    gchar             *apn;
+    gchar             *access_string;
     MbimAuthProtocol   auth_protocol;
     gchar             *username;
     gchar             *password;
@@ -1047,7 +1047,7 @@ typedef struct {
 static void
 connect_activate_properties_clear (ConnectActivateProperties *props)
 {
-    g_free (props->apn);
+    g_free (props->access_string);
     g_free (props->username);
     g_free (props->password);
 }
@@ -1062,8 +1062,10 @@ connect_activate_properties_handle (const gchar  *key,
 {
     ConnectActivateProperties *props = user_data;
 
-    /* APN may be empty */
-    if ((g_ascii_strcasecmp (key, "apn") != 0) && (!value || !value[0])) {
+    /* access-string/apn may be empty */
+    if ((g_ascii_strcasecmp (key, "access-string") != 0) &&
+        (g_ascii_strcasecmp (key, "apn") != 0) &&
+        (!value || !value[0])) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
                      "key '%s' required a value", key);
         return FALSE;
@@ -1073,8 +1075,12 @@ connect_activate_properties_handle (const gchar  *key,
         if (!connect_session_id_parse (value, FALSE, &props->session_id, error))
             return FALSE;
     } else if (g_ascii_strcasecmp (key, "apn") == 0) {
-        g_free (props->apn);
-        props->apn = g_strdup (value);
+        g_printerr ("warning: key 'apn' is deprecated, use 'access-string' instead\n");
+        g_free (props->access_string);
+        props->access_string = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "access-string") == 0) {
+        g_free (props->access_string);
+        props->access_string = g_strdup (value);
     } else if (g_ascii_strcasecmp (key, "auth") == 0) {
         if (!mbim_auth_protocol_from_string (value, &props->auth_protocol)) {
             g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
@@ -1105,7 +1111,7 @@ connect_activate_properties_handle (const gchar  *key,
 static gboolean
 set_connect_activate_parse (const gchar        *str,
                             guint32            *session_id,
-                            gchar             **apn,
+                            gchar             **access_string,
                             MbimAuthProtocol   *auth_protocol,
                             gchar             **username,
                             gchar             **password,
@@ -1113,7 +1119,7 @@ set_connect_activate_parse (const gchar        *str,
 {
     g_auto(ConnectActivateProperties) props = {
         .session_id    = 0,
-        .apn           = NULL,
+        .access_string = NULL,
         .auth_protocol = MBIM_AUTH_PROTOCOL_NONE,
         .username      = NULL,
         .password      = NULL,
@@ -1123,7 +1129,7 @@ set_connect_activate_parse (const gchar        *str,
     g_autoptr(GError) error = NULL;
 
     g_assert (session_id != NULL);
-    g_assert (apn != NULL);
+    g_assert (access_string != NULL);
     g_assert (auth_protocol != NULL);
     g_assert (username != NULL);
     g_assert (password != NULL);
@@ -1151,7 +1157,7 @@ set_connect_activate_parse (const gchar        *str,
 
         if (g_strv_length (split) > 0) {
             /* APN */
-            props.apn = g_strdup (split[0]);
+            props.access_string = g_strdup (split[0]);
 
             /* Use authentication method */
             if (split[1]) {
@@ -1182,7 +1188,7 @@ set_connect_activate_parse (const gchar        *str,
     }
 
     *session_id    = props.session_id;
-    *apn           = g_steal_pointer (&props.apn);
+    *access_string = g_steal_pointer (&props.access_string);
     *auth_protocol = props.auth_protocol;
     *username      = g_steal_pointer (&props.username);
     *password      = g_steal_pointer (&props.password);
@@ -2129,7 +2135,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     /* Connect? */
     if (set_connect_activate_str) {
         guint32            session_id = 0;
-        g_autofree gchar  *apn = NULL;
+        g_autofree gchar  *access_string = NULL;
         MbimAuthProtocol   auth_protocol;
         g_autofree gchar  *username = NULL;
         g_autofree gchar  *password = NULL;
@@ -2137,7 +2143,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         if (!set_connect_activate_parse (set_connect_activate_str,
                                          &session_id,
-                                         &apn,
+                                         &access_string,
                                          &auth_protocol,
                                          &username,
                                          &password,
@@ -2148,7 +2154,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
         request = mbim_message_connect_set_new (session_id,
                                                 MBIM_ACTIVATION_COMMAND_ACTIVATE,
-                                                apn,
+                                                access_string,
                                                 username,
                                                 password,
                                                 MBIM_COMPRESSION_NONE,
