@@ -36,6 +36,7 @@
 #include "mbim-ms-uicc-low-level-access.h"
 #include "mbim-ms-basic-connect-v2.h"
 #include "mbim-ms-basic-connect-v3.h"
+#include "mbim-ms-basic-connect-extensions-v3.h"
 
 /*****************************************************************************/
 
@@ -1647,7 +1648,17 @@ mbim_message_get_printable_full (const MbimMessage  *self,
             fields_printable = __mbim_message_qdu_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS:
-            fields_printable = __mbim_message_ms_basic_connect_extensions_get_printable_fields (self, line_prefix, &inner_error);
+            if (mbimex_version_major < 3)
+                fields_printable = __mbim_message_ms_basic_connect_extensions_get_printable_fields (self, line_prefix, &inner_error);
+            else if (mbimex_version_major == 3) {
+                fields_printable = __mbim_message_ms_basic_connect_extensions_v3_get_printable_fields (self, line_prefix, &inner_error);
+                /* attempt fallback to v1 printable */
+                if (g_error_matches (inner_error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNSUPPORTED)) {
+                    g_clear_error (&inner_error);
+                    fields_printable = __mbim_message_ms_basic_connect_extensions_get_printable_fields (self, line_prefix, &inner_error);
+                }
+             } else
+               g_assert_not_reached ();
             break;
         case MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS:
             fields_printable = __mbim_message_ms_uicc_low_level_access_get_printable_fields (self, line_prefix, &inner_error);
