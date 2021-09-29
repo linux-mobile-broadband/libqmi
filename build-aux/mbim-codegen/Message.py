@@ -1104,8 +1104,6 @@ class Message:
             translations['field_format']            = field['format']
             translations['field_format_underscore'] = utils.build_underscore_name_from_camelcase(field['format'])
             translations['public']                  = field['public-format'] if 'public-format' in field else field['format']
-            translations['public_underscore']       = utils.build_underscore_name_from_camelcase(field['public-format']) if 'public-format' in field else ''
-            translations['public_underscore_upper'] = utils.build_underscore_name_from_camelcase(field['public-format']).upper() if 'public-format' in field else ''
             translations['field_name']              = field['name']
             translations['array_size_field']        = utils.build_underscore_name_from_camelcase(field['array-size-field']) if 'array-size-field' in field else ''
             translations['struct_name']             = utils.build_underscore_name_from_camelcase(field['struct-type']) if 'struct-type' in field else ''
@@ -1214,20 +1212,28 @@ class Message:
                         '        offset += 8;\n')
 
                 if 'public-format' in field:
-                    inner_template += (
-                        '#if defined __${public_underscore_upper}_IS_ENUM__\n'
-                        '        g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})tmp));\n'
-                        '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
-                        '        {\n'
-                        '            g_autofree gchar *tmpstr = NULL;\n'
-                        '\n'
-                        '            tmpstr = ${public_underscore}_build_string_from_mask ((${public})tmp);\n'
-                        '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
-                        '        }\n'
-                        '#else\n'
-                        '# error neither enum nor flags\n'
-                        '#endif\n'
-                        '\n')
+                    if field['public-format'] == 'gboolean':
+                        inner_template += (
+                            '        g_string_append_printf (str, "\'%s\'", tmp ? "true" : "false");\n'
+                            '\n')
+                    else:
+                        translations['public_underscore']       = utils.build_underscore_name_from_camelcase(field['public-format'])
+                        translations['public_underscore_upper'] = utils.build_underscore_name_from_camelcase(field['public-format']).upper()
+                        inner_template += (
+                            '#if defined __${public_underscore_upper}_IS_ENUM__\n'
+                            '        g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})tmp));\n'
+                            '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
+                            '        {\n'
+                            '            g_autofree gchar *tmpstr = NULL;\n'
+                            '\n'
+                            '            tmpstr = ${public_underscore}_build_string_from_mask ((${public})tmp);\n'
+                            '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
+                            '        }\n'
+                            '#else\n'
+                            '# error neither enum nor flags\n'
+                            '#endif\n'
+                            '\n')
+
                 elif field['format'] == 'guint16':
                     inner_template += (
                         '        g_string_append_printf (str, "\'%" G_GUINT16_FORMAT "\'", tmp);\n')
