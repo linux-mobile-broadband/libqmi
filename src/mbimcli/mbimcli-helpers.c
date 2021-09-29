@@ -63,6 +63,23 @@ mbimcli_read_uint8_from_bcd_string (const gchar *str,
 }
 
 gboolean
+mbimcli_read_boolean_from_string (const gchar *value,
+                                  gboolean    *out)
+{
+    if (!g_ascii_strcasecmp (value, "true") || g_str_equal (value, "1") || !g_ascii_strcasecmp (value, "yes")) {
+        *out = TRUE;
+        return TRUE;
+    }
+
+    if (!g_ascii_strcasecmp (value, "false") || g_str_equal (value, "0") || !g_ascii_strcasecmp (value, "no")) {
+        *out = FALSE;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+gboolean
 mbimcli_print_ip_config (MbimDevice   *device,
                          MbimMessage  *response,
                          GError      **error)

@@ -112,8 +112,8 @@ static GOptionEntry entries[] = {
       NULL
     },
     { "ms-set-registration-parameters", 0, 0,G_OPTION_ARG_STRING , &set_registration_parameters_str,
-      "Set registration parameters",
-      "[(disabled|enabled|unsupported|default),(0|1|2|3|4|5),(not-needed|requested),(likely|unlikely),(0|1)]"
+      "Set registration parameters (required keys: mico-mode, drx-cycle, ladn-info, default-pdu-activation-hint, re-register-if-needed)",
+      "[\"key=value,...\"]"
     },
     { NULL }
 };
@@ -916,6 +916,69 @@ provisioned_contexts_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+typedef struct {
+    MbimMicoMode                 mico_mode;
+    gboolean                     mico_mode_set;
+    MbimDrxCycle                 drx_cycle;
+    gboolean                     drx_cycle_set;
+    MbimLadnInfo                 ladn_info;
+    gboolean                     ladn_info_set;
+    MbimDefaultPduActivationHint pdu_hint;
+    gboolean                     pdu_hint_set;
+    gboolean                     re_register_if_needed;
+    gboolean                     re_register_if_needed_set;
+} RegistrationParameters;
+
+static gboolean
+set_registration_parameters_foreach_cb (const gchar             *key,
+                                        const gchar             *value,
+                                        GError                 **error,
+                                        RegistrationParameters  *params)
+{
+    if (g_ascii_strcasecmp (key, "mico-mode") == 0) {
+        if (!mbimcli_read_mico_mode_from_string (value, &params->mico_mode)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown mico-mode: '%s'", value);
+            return FALSE;
+        }
+        params->mico_mode_set = TRUE;
+    } else if (g_ascii_strcasecmp (key, "drx-cycle") == 0) {
+        if (!mbimcli_read_drx_cycle_from_string (value, &params->drx_cycle)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown drx-cycle: '%s'", value);
+            return FALSE;
+        }
+        params->drx_cycle_set = TRUE;
+    } else if (g_ascii_strcasecmp (key, "ladn-info") == 0) {
+        if (!mbimcli_read_ladn_info_from_string (value, &params->ladn_info)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown ladn-info: '%s'", value);
+            return FALSE;
+        }
+        params->ladn_info_set = TRUE;
+    } else if (g_ascii_strcasecmp (key, "default-pdu-activation-hint") == 0) {
+        if (!mbimcli_read_default_pdu_activation_hint_from_string (value, &params->pdu_hint)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown default-pdu-activation-hint: '%s'", value);
+            return FALSE;
+        }
+        params->pdu_hint_set = TRUE;
+    } else if (g_ascii_strcasecmp (key, "re-register-if-needed") == 0) {
+        if (!mbimcli_read_boolean_from_string (value, &params->re_register_if_needed)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown re-register-if-needed: '%s'", value);
+            return FALSE;
+        }
+        params->re_register_if_needed_set = TRUE;
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 static void
 registration_parameters_ready (MbimDevice   *device,
                                GAsyncResult *res)
@@ -1250,54 +1313,43 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
     }
 
     if (set_registration_parameters_str) {
-        MbimMicoMode                 mico_mode = 0;
-        MbimDrxCycle                 drx_cycle = 0;
-        MbimLadnInfo                 ladn_info = 0;
-        MbimDefaultPduActivationHint pdu_hint = 0;
-        gboolean                     re_register_if_needed = 0;
-        g_auto(GStrv)                split = NULL;
+        RegistrationParameters params = { 0 };
 
-        split = g_strsplit (set_registration_parameters_str, ",", -1);
-
-        if (g_strv_length (split) > 5) {
-            g_printerr ("error: couldn't parse input string, too many arguments\n");
+        if (!mbimcli_parse_key_value_string (set_registration_parameters_str,
+                                             &error,
+                                             (MbimParseKeyValueForeachFn)set_registration_parameters_foreach_cb,
+                                             &params)) {
+            g_printerr ("error: couldn't parse input string: %s\n", error->message);
+            shutdown (FALSE);
             return;
         }
 
-        if (g_strv_length (split) < 5) {
-            g_printerr ("error: couldn't parse input string, missing arguments\n");
+        if (!params.mico_mode_set ||
+            !params.drx_cycle_set ||
+            !params.ladn_info_set ||
+            !params.pdu_hint_set  ||
+            !params.re_register_if_needed_set) {
+            g_printerr ("error: missing required keys\n");
+            if (!params.mico_mode_set)
+                g_printerr ("error: key 'mico-mode' is missing\n");
+            if (!params.drx_cycle_set)
+                g_printerr ("error: key 'drx-cycle' is missing\n");
+            if (!params.ladn_info_set)
+                g_printerr ("error: key 'ladn-info' is missing\n");
+            if (!params.pdu_hint_set)
+                g_printerr ("error: key 'default-pdu-activation-hint' is missing\n");
+            if (!params.re_register_if_needed_set)
+                g_printerr ("error: key 're-register-is-needed' is missing\n");
+            shutdown (FALSE);
             return;
         }
-
-        if (!g_strcmp0 (split[0], "disabled"))
-             mico_mode = MBIM_MICO_MODE_DISABLED;
-        else if (!g_strcmp0 (split[0], "enabled"))
-             mico_mode = MBIM_MICO_MODE_ENABLED;
-        else if (!g_strcmp0 (split[0], "unsupported"))
-             mico_mode = MBIM_MICO_MODE_UNSUPPORTED;
-        else if (!g_strcmp0 (split[0], "default"))
-             mico_mode = MBIM_MICO_MODE_DEFAULT;
-
-        drx_cycle = g_ascii_digit_value (*split[1]);
-
-        if (!g_strcmp0 (split[2], "not-needed"))
-             ladn_info = MBIM_LADN_INFO_NOT_NEEDED;
-        else if (!g_strcmp0 (split[2], "requested"))
-             ladn_info = MBIM_LADN_INFO_REQUESTED;
-
-        if (!g_strcmp0 (split[3], "unlikely"))
-             pdu_hint = MBIM_DEFAULT_PDU_ACTIVATION_HINT_UNLIKELY;
-        else if (!g_strcmp0 (split[3], "likely"))
-             pdu_hint = MBIM_DEFAULT_PDU_ACTIVATION_HINT_LIKELY;
-
-        re_register_if_needed = g_ascii_digit_value (*split[4]);
 
         g_debug ("Asynchronously set registration parameters\n");
-        request = mbim_message_ms_basic_connect_extensions_registration_parameters_set_new (mico_mode,
-                                                                                            drx_cycle,
-                                                                                            ladn_info,
-                                                                                            pdu_hint,
-                                                                                            re_register_if_needed,
+        request = mbim_message_ms_basic_connect_extensions_registration_parameters_set_new (params.mico_mode,
+                                                                                            params.drx_cycle,
+                                                                                            params.ladn_info,
+                                                                                            params.pdu_hint,
+                                                                                            params.re_register_if_needed,
                                                                                             NULL);
         mbim_device_command (ctx->device,
                              request,
