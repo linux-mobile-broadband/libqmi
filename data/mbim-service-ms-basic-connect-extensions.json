@@ -350,7 +350,7 @@
 
   //************************************************************************************
 
-  { "name"       : "Registration Params",
+  { "name"       : "Registration Parameters",
     "type"       : "Command",
     "since"      : "1.28",
     "set"        : [ { "name"          : "MicoMode",

@@ -1546,7 +1546,7 @@ typedef enum { /*< since=1.28 >*/
 } MbimContextOperation;
 
 /*****************************************************************************/
-/* Registration Params' enums */
+/* 'Registration Parameters' enums */
 
 /**
  * MbimMicoMode:

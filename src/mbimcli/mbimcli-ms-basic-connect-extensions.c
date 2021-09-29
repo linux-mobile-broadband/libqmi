@@ -45,8 +45,8 @@ static gboolean  query_location_info_status_flag;
 static gchar    *query_version_str;
 static gboolean  query_provisioned_contexts_flag;
 static gchar    *set_provisioned_contexts_str;
-static gboolean  query_registration_params_flag;
-static gchar    *set_registration_params_str;
+static gboolean  query_registration_parameters_flag;
+static gchar    *set_registration_parameters_str;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -107,11 +107,11 @@ static GOptionEntry entries[] = {
       "Query provisioned contexts",
       NULL
     },
-    { "ms-query-registration-params", 0, 0, G_OPTION_ARG_NONE, &query_registration_params_flag,
+    { "ms-query-registration-parameters", 0, 0, G_OPTION_ARG_NONE, &query_registration_parameters_flag,
       "Query registration parameters",
       NULL
     },
-    { "ms-set-registration-params", 0, 0,G_OPTION_ARG_STRING , &set_registration_params_str,
+    { "ms-set-registration-parameters", 0, 0,G_OPTION_ARG_STRING , &set_registration_parameters_str,
       "Set registration parameters",
       "[(disabled|enabled|unsupported|default),(0|1|2|3|4|5),(not-needed|requested),(likely|unlikely),(0|1)]"
     },
@@ -195,8 +195,8 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  !!query_version_str +
                  query_provisioned_contexts_flag +
                  !!set_provisioned_contexts_str +
-                 query_registration_params_flag +
-                 !!set_registration_params_str);
+                 query_registration_parameters_flag +
+                 !!set_registration_parameters_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -917,8 +917,8 @@ provisioned_contexts_ready (MbimDevice   *device,
 }
 
 static void
-registration_params_ready (MbimDevice   *device,
-                           GAsyncResult *res)
+registration_parameters_ready (MbimDevice   *device,
+                               GAsyncResult *res)
 {
     g_autoptr(MbimMessage) response = NULL;
     g_autoptr(GError)      error = NULL;
@@ -937,7 +937,7 @@ registration_params_ready (MbimDevice   *device,
 
     g_print ("[%s] Successfully received registration parameters information\n",
              mbim_device_get_path_display (device));
-    if (!mbim_message_ms_basic_connect_extensions_registration_params_response_parse (
+    if (!mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
             response,
             &mico_mode,
             &drx_params,
@@ -1237,19 +1237,19 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
 
-    if (query_registration_params_flag) {
+    if (query_registration_parameters_flag) {
         g_debug (" Asynchronously querying registration parameters...");
-        request = mbim_message_ms_basic_connect_extensions_registration_params_query_new (NULL);
+        request = mbim_message_ms_basic_connect_extensions_registration_parameters_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
                              ctx->cancellable,
-                             (GAsyncReadyCallback)registration_params_ready,
+                             (GAsyncReadyCallback)registration_parameters_ready,
                              NULL);
         return;
     }
 
-    if (set_registration_params_str) {
+    if (set_registration_parameters_str) {
         MbimMicoMode           mico_mode = 0;
         MbimDrxParams          drx_params = 0;
         MbimLadnInd            ladn_info = 0;
@@ -1257,7 +1257,7 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         guint32                re_register_if_nedeed = 0;
         g_auto(GStrv) split = NULL;
 
-        split = g_strsplit (set_registration_params_str, ",", -1);
+        split = g_strsplit (set_registration_parameters_str, ",", -1);
 
         if (g_strv_length (split) > 5) {
             g_printerr ("error: couldn't parse input string, too many arguments\n");
@@ -1292,18 +1292,18 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
 
         re_register_if_nedeed = g_ascii_digit_value (*split[4]);
 
-        g_debug ("Asynchronously set registration params\n");
-        request = mbim_message_ms_basic_connect_extensions_registration_params_set_new (mico_mode,
-                                                                                        drx_params,
-                                                                                        ladn_info,
-                                                                                        pdu_hint,
-                                                                                        re_register_if_nedeed,
-                                                                                        NULL);
+        g_debug ("Asynchronously set registration parameters\n");
+        request = mbim_message_ms_basic_connect_extensions_registration_parameters_set_new (mico_mode,
+                                                                                            drx_params,
+                                                                                            ladn_info,
+                                                                                            pdu_hint,
+                                                                                            re_register_if_nedeed,
+                                                                                            NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
                              ctx->cancellable,
-                             (GAsyncReadyCallback)registration_params_ready,
+                             (GAsyncReadyCallback)registration_parameters_ready,
                              NULL);
         return;
     }
