@@ -1653,9 +1653,21 @@ ms_ext_version_message (GTask *task)
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
-    /* User requested MBIMEx 2.0, so we'll report it along with MBIM 1.0 */
-    mbim_version      = 0x01 << 8 | 0x00;
-    ms_mbimex_version = 0x02 << 8 | 0x00;
+    if ((ctx->flags & MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2) && (ctx->flags & MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V3)) {
+        g_task_return_new_error (task, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                                 "Cannot request both MBIMEx v2.0 and v3.0 at the same time");
+        g_object_unref (task);
+        return;
+    }
+
+    /* User requested MBIMEx 2.0 or 3.0, so we'll report it along with MBIM 1.0 */
+    mbim_version = 0x01 << 8 | 0x00;
+    if (ctx->flags & MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2)
+        ms_mbimex_version = 0x02 << 8 | 0x00;
+    else if (ctx->flags & MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V3)
+        ms_mbimex_version = 0x03 << 8 | 0x00;
+    else
+        g_assert_not_reached ();
 
     request = mbim_message_ms_basic_connect_extensions_version_query_new (mbim_version, ms_mbimex_version, NULL);
     g_assert (request);
@@ -2010,7 +2022,7 @@ device_open_context_step (GTask *task)
         /* Fall through */
 
         case DEVICE_OPEN_CONTEXT_STEP_DEVICE_SERVICES:
-        if (ctx->flags & MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2) {
+        if (ctx->flags & (MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2 | MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V3)) {
             device_services_message (task);
             return;
         }
@@ -2018,7 +2030,7 @@ device_open_context_step (GTask *task)
         /* Fall through */
 
         case DEVICE_OPEN_CONTEXT_STEP_MS_EXT_VERSION:
-        if (ctx->flags & MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2) {
+        if (ctx->flags & (MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2 | MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V3)) {
             ms_ext_version_message (task);
             return;
         }

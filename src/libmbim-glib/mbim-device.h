@@ -222,7 +222,8 @@ gboolean mbim_device_is_open (MbimDevice *self);
  *
  * The reported version will be 1 if the initialization sequence to agree on
  * which version to use hasn't been run (e.g. with mbim_device_open_full() and
- * the explicit %MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2 flag).
+ * the explicit %MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2 or
+ * %MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V3 flag).
  *
  * Returns: the major version number of the MS MBIMEx support.
  *
@@ -247,7 +248,8 @@ guint8 mbim_device_get_ms_mbimex_version (MbimDevice *self,
  *
  * This operation does not do any MBIMEx version exchange with the device,
  * the only way to do that is with mbim_device_open_full() and the explicit
- * %MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2 flag.
+ * %MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2 or %MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V3
+ * flag.
  *
  * Returns: %TRUE if successful, %FALSE if @error is set.
  *
@@ -281,6 +283,7 @@ gboolean mbim_device_check_ms_mbimex_version (MbimDevice *self,
  * @MBIM_DEVICE_OPEN_FLAGS_NONE: None.
  * @MBIM_DEVICE_OPEN_FLAGS_PROXY: Try to open the port through the 'mbim-proxy'.
  * @MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2: Try to enable MS MBIMEx 2.0 support. Since 1.28.
+ * @MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V3: Try to enable MS MBIMEx 3.0 support. Since 1.28.
  *
  * Flags to specify which actions to be performed when the device is open.
  *
@@ -290,6 +293,7 @@ typedef enum { /*< since=1.10 >*/
     MBIM_DEVICE_OPEN_FLAGS_NONE         = 0,
     MBIM_DEVICE_OPEN_FLAGS_PROXY        = 1 << 0,
     MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2 = 1 << 1,
+    MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V3 = 1 << 2,
 } MbimDeviceOpenFlags;
 
 /**
