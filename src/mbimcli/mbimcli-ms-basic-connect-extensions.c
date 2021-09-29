@@ -48,6 +48,7 @@ static gboolean  query_base_stations_flag;
 static gchar    *query_version_str;
 static gboolean  query_registration_parameters_flag;
 static gchar    *set_registration_parameters_str;
+static gboolean  query_modem_configuration_flag;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -119,6 +120,10 @@ static GOptionEntry entries[] = {
     { "ms-set-registration-parameters", 0, 0,G_OPTION_ARG_STRING , &set_registration_parameters_str,
       "Set registration parameters (required keys: mico-mode, drx-cycle, ladn-info, default-pdu-activation-hint, re-register-if-needed). Since MBIMEx v3.0.",
       "[\"key=value,...\"]"
+    },
+    { "ms-query-modem-configuration", 0, 0, G_OPTION_ARG_NONE, &query_modem_configuration_flag,
+      "Query modem configuration. Since MBIMEx v3.0.",
+      NULL
     },
     { NULL }
 };
@@ -202,7 +207,8 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  query_base_stations_flag +
                  !!query_version_str +
                  query_registration_parameters_flag +
-                 !!set_registration_parameters_str);
+                 !!set_registration_parameters_str +
+                 query_modem_configuration_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -1491,6 +1497,43 @@ registration_parameters_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+query_modem_configuration_ready (MbimDevice   *device,
+                                 GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)         response = NULL;
+    g_autoptr(GError)              error = NULL;
+    MbimModemConfigurationStatus   configuration_status;
+    g_autofree gchar              *configuration_name = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_basic_connect_extensions_v3_modem_configuration_response_parse (
+            response,
+            &configuration_status,
+            &configuration_name,
+            NULL, /* ignore unnamed IEs for now */
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Modem configuration retrieved: \n",
+             mbim_device_get_path_display (device));
+    g_print ("\tStatus: '%s'\n"
+             "\t  Name: '%s'\n",
+             VALIDATE_UNKNOWN (mbim_modem_configuration_status_get_string (configuration_status)),
+             VALIDATE_UNKNOWN (configuration_name));
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -1840,6 +1883,19 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)registration_parameters_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to query modem configuration? */
+    if (query_modem_configuration_flag) {
+        g_debug ("Asynchronously query modem configuration\n");
+        request = mbim_message_ms_basic_connect_extensions_v3_modem_configuration_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_modem_configuration_ready,
                              NULL);
         return;
     }

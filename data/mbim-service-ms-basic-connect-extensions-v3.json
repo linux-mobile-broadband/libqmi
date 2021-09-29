@@ -56,6 +56,27 @@
 
   //**********************************************************************************
 
+  { "name"         : "Modem Configuration",
+    "type"         : "Command",
+    "since"        : "1.28",
+    "query"        : [],
+    "response"     : [ { "name"          : "ConfigurationStatus",
+			 "format"        : "guint32",
+			 "public-format" : "MbimModemConfigurationStatus" },
+                       { "name"          : "ConfigurationName",
+			 "format"        : "tlv-string" },
+		       { "name"          : "UnnamedIes",
+			 "format"        : "tlv-list" } ],
+    "notification" : [ { "name"          : "ModemConfigurationStatus",
+			 "format"        : "guint32",
+			 "public-format" : "MbimModemConfigurationStatus" },
+                       { "name"          : "ConfigurationName",
+			 "format"        : "tlv-string" },
+		       { "name"          : "UnnamedIes",
+			 "format"        : "tlv-list" } ] },
+
+  //************************************************************************************
+
   { "name"       : "Registration Parameters",
     "type"       : "Command",
     "since"      : "1.28",

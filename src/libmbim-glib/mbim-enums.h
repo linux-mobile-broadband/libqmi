@@ -1490,6 +1490,25 @@ typedef enum { /*< since=1.26 >*/
 } MbimUiccPassThroughStatus;
 
 /*****************************************************************************/
+/* 'Modem Configuration' enums */
+
+/**
+ * MbimModemConfigurationStatus:
+ * @MBIM_MODEM_CONFIGURATION_STATUS_UNKNOWN: Unknown
+ * @MBIM_MODEM_CONFIGURATION_STATUS_STARTED: SIM is ready and configuration started.
+ * @MBIM_MODEM_CONFIGURATION_STATUS_COMPLETED: SIM is ready and configuration completed.
+ *
+ * Modem configuration status.
+ *
+ * Since: 1.28
+ */
+typedef enum {/*< since=1.28 >*/
+    MBIM_MODEM_CONFIGURATION_STATUS_UNKNOWN   = 0,
+    MBIM_MODEM_CONFIGURATION_STATUS_STARTED   = 1,
+    MBIM_MODEM_CONFIGURATION_STATUS_COMPLETED = 2
+} MbimModemConfigurationStatus;
+
+/*****************************************************************************/
 /* 'Packet service v2'  enums */
 
 /**
