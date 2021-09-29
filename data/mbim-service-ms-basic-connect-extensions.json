@@ -356,35 +356,37 @@
     "set"        : [ { "name"          : "MicoMode",
                        "format"        : "guint32",
                        "public-format" : "MbimMicoMode" },
-                     { "name"          : "DrxParams",
+                     { "name"          : "DrxCycle",
                        "format"        : "guint32",
-                       "public-format" : "MbimDrxParams" },
+                       "public-format" : "MbimDrxCycle" },
                      { "name"          : "LadnInfo",
                        "format"        : "guint32",
-                       "public-format" : "MbimLadnInd" },
-                     { "name"          : "DefaultPduHint",
+                       "public-format" : "MbimLadnInfo" },
+                     { "name"          : "DefaultPduActivationHint",
                        "format"        : "guint32",
-                       "public-format" : "MbimDefaultPduHint" },
+                       "public-format" : "MbimDefaultPduActivationHint" },
                      { "name"          : "ReRegisterIfNedeed",
-                       "format"        : "guint32" }
-		   ],
+                       "format"        : "guint32",
+                       "public-format" : "gboolean" }
                      // Optional unnamed IEs encoded as MBIM_TLV_IE are currently ignored
+           ],
     "query"      : [],
     "response"   : [ { "name"          : "MicoMode",
                        "format"        : "guint32",
                        "public-format" : "MbimMicoMode" },
-                     { "name"          : "DrxParams",
+                     { "name"          : "DrxCycle",
                        "format"        : "guint32",
-                       "public-format" : "MbimDrxParams" },
+                       "public-format" : "MbimDrxCycle" },
                      { "name"          : "LadnInfo",
                        "format"        : "guint32",
-                       "public-format" : "MbimLadnInd" },
-                     { "name"          : "DefaultPduHint",
+                       "public-format" : "MbimLadnInfo" },
+                     { "name"          : "DefaultPduActivationHint",
                        "format"        : "guint32",
-                       "public-format" : "MbimDefaultPduHint" },
+                       "public-format" : "MbimDefaultPduActivationHint" },
                      { "name"          : "ReRegisterIfNedeed",
-                       "format"        : "guint32" }
-		   ] }
+                       "format"        : "guint32",
+                       "public-format" : "gboolean" }
                      // Optional unnamed IEs encoded as MBIM_TLV_IE are currently ignored
+           ] }
 
 ]

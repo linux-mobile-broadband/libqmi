@@ -920,13 +920,13 @@ static void
 registration_parameters_ready (MbimDevice   *device,
                                GAsyncResult *res)
 {
-    g_autoptr(MbimMessage) response = NULL;
-    g_autoptr(GError)      error = NULL;
-    MbimMicoMode           mico_mode;
-    MbimDrxParams          drx_params;
-    MbimLadnInd            ladn_info;
-    MbimDefaultPduHint     pdu_hint;
-    guint32                re_register_if_nedeed;
+    g_autoptr(MbimMessage)       response = NULL;
+    g_autoptr(GError)            error = NULL;
+    MbimMicoMode                 mico_mode;
+    MbimDrxCycle                 drx_cycle;
+    MbimLadnInfo                 ladn_info;
+    MbimDefaultPduActivationHint pdu_hint;
+    gboolean                     re_register_if_nedeed;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -940,7 +940,7 @@ registration_parameters_ready (MbimDevice   *device,
     if (!mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
             response,
             &mico_mode,
-            &drx_params,
+            &drx_cycle,
             &ladn_info,
             &pdu_hint,
             &re_register_if_nedeed,
@@ -950,11 +950,11 @@ registration_parameters_ready (MbimDevice   *device,
         return;
     }
 
-    g_print (" MbimMicoMode          : %s\n", mbim_mico_mode_get_string (mico_mode));
-    g_print (" MbimDrxParams         : %s\n", mbim_drx_params_get_string (drx_params));
-    g_print (" MbimLadnInd           : %s\n", mbim_ladn_ind_get_string (ladn_info));
-    g_print (" MbimDefaultPduHint    : %s\n", mbim_default_pdu_hint_get_string (pdu_hint));
-    g_print (" ReRegisterIfNedeed    : %x\n", re_register_if_nedeed);
+    g_print ("\t             MICO mode: %s\n", mbim_mico_mode_get_string (mico_mode));
+    g_print ("\t             DRX cycle: %s\n", mbim_drx_cycle_get_string (drx_cycle));
+    g_print ("\t      LADN information: %s\n", mbim_ladn_info_get_string (ladn_info));
+    g_print ("\tDefault PDU activation: %s\n", mbim_default_pdu_activation_hint_get_string (pdu_hint));
+    g_print ("\t Re-register if needed: %s\n", re_register_if_nedeed ? "yes" : "no");
 
     shutdown (TRUE);
 }
@@ -1250,12 +1250,12 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
     }
 
     if (set_registration_parameters_str) {
-        MbimMicoMode           mico_mode = 0;
-        MbimDrxParams          drx_params = 0;
-        MbimLadnInd            ladn_info = 0;
-        MbimDefaultPduHint     pdu_hint = 0;
-        guint32                re_register_if_nedeed = 0;
-        g_auto(GStrv) split = NULL;
+        MbimMicoMode                 mico_mode = 0;
+        MbimDrxCycle                 drx_cycle = 0;
+        MbimLadnInfo                 ladn_info = 0;
+        MbimDefaultPduActivationHint pdu_hint = 0;
+        gboolean                     re_register_if_needed = 0;
+        g_auto(GStrv)                split = NULL;
 
         split = g_strsplit (set_registration_parameters_str, ",", -1);
 
@@ -1278,26 +1278,26 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         else if (!g_strcmp0 (split[0], "default"))
              mico_mode = MBIM_MICO_MODE_DEFAULT;
 
-        drx_params = g_ascii_digit_value (*split[1]);
+        drx_cycle = g_ascii_digit_value (*split[1]);
 
         if (!g_strcmp0 (split[2], "not-needed"))
-             ladn_info = MBIM_LADN_IND_NOT_NEEDED;
+             ladn_info = MBIM_LADN_INFO_NOT_NEEDED;
         else if (!g_strcmp0 (split[2], "requested"))
-             ladn_info = MBIM_LADN_IND_REQUESTED;
+             ladn_info = MBIM_LADN_INFO_REQUESTED;
 
         if (!g_strcmp0 (split[3], "unlikely"))
-             pdu_hint = MBIM_DEAFAULT_PDU_HINT_ACTIVATION_UNLIKELY;
+             pdu_hint = MBIM_DEFAULT_PDU_ACTIVATION_HINT_UNLIKELY;
         else if (!g_strcmp0 (split[3], "likely"))
-             pdu_hint = MBIM_DEAFAULT_PDU_HINT_ACTIVATION_LIKELY;
+             pdu_hint = MBIM_DEFAULT_PDU_ACTIVATION_HINT_LIKELY;
 
-        re_register_if_nedeed = g_ascii_digit_value (*split[4]);
+        re_register_if_needed = g_ascii_digit_value (*split[4]);
 
         g_debug ("Asynchronously set registration parameters\n");
         request = mbim_message_ms_basic_connect_extensions_registration_parameters_set_new (mico_mode,
-                                                                                            drx_params,
+                                                                                            drx_cycle,
                                                                                             ladn_info,
                                                                                             pdu_hint,
-                                                                                            re_register_if_nedeed,
+                                                                                            re_register_if_needed,
                                                                                             NULL);
         mbim_device_command (ctx->device,
                              request,
