@@ -149,7 +149,7 @@ static const CidConfig cid_intel_firmware_update_config [MBIM_CID_INTEL_FIRMWARE
 };
 
 /* Note: index of the array is CID-1 */
-#define MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LAST MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION
+#define MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LAST MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_REGISTRATION_PARAMETERS
 static const CidConfig cid_ms_basic_connect_extensions_config [MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_LAST] = {
     { SET,    QUERY,    NOTIFY    }, /* MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_PROVISIONED_CONTEXTS */
     { SET,    QUERY,    NOTIFY    }, /* MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_NETWORK_BLACKLIST */
@@ -166,6 +166,8 @@ static const CidConfig cid_ms_basic_connect_extensions_config [MBIM_CID_MS_BASIC
     { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
     { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
     { NO_SET, QUERY,    NO_NOTIFY }, /* MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_REGISTRATION_PARAMETERS */
 };
 
 /* Note: index of the array is CID-1 */
