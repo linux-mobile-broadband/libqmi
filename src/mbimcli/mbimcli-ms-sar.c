@@ -166,12 +166,12 @@ ms_sar_ready (MbimDevice   *device,
 
 
     for (i = 0; i < config_states_count; i++) {
-        g_print ("\t\t[%u]\n"
-                 "\t\t  Antenna index: %u\n"
-                 "\t\t  Backoff index: %u\n",
-                 i,
-                 config_states[i]->antenna_index,
-                 config_states[i]->backoff_index);
+        g_print ("\t\t[%u]\n", i);
+        if (config_states[i]->antenna_index == 0xFFFFFFFF)
+            g_print ("\t\t  Antenna index: all\n");
+        else
+            g_print ("\t\t  Antenna index: %u\n", config_states[i]->antenna_index);
+        g_print ("\t\t  Backoff index: %u\n", config_states[i]->backoff_index);
     }
 
     shutdown (TRUE);
