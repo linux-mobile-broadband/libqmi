@@ -94,6 +94,7 @@ services_data = [
   ['dss', true],
   ['intel-firmware-update', true],
   ['ms-basic-connect-extensions', true],
+  ['ms-basic-connect-extensions-v3', true],
   ['ms-uicc-low-level-access', true],
   ['ms-basic-connect-v2', true],
   ['ms-basic-connect-v3', true],
