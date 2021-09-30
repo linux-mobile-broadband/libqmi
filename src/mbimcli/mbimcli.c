@@ -38,6 +38,7 @@ static gboolean operation_status;
 static gchar *device_str;
 static gboolean device_open_proxy_flag;
 static gboolean device_open_ms_mbimex_v2_flag;
+static gboolean device_open_ms_mbimex_v3_flag;
 static gchar *no_open_str;
 static gboolean no_close_flag;
 static gboolean noop_flag;
@@ -56,6 +57,10 @@ static GOptionEntry main_entries[] = {
     },
     { "device-open-ms-mbimex-v2", 0, 0, G_OPTION_ARG_NONE, &device_open_ms_mbimex_v2_flag,
       "Request to enable Microsoft MBIMEx v2.0 support",
+      NULL
+    },
+    { "device-open-ms-mbimex-v3", 0, 0, G_OPTION_ARG_NONE, &device_open_ms_mbimex_v3_flag,
+      "Request to enable Microsoft MBIMEx v3.0 support",
       NULL
     },
     { "no-open", 0, 0, G_OPTION_ARG_STRING, &no_open_str,
@@ -339,6 +344,8 @@ device_new_ready (GObject      *unused,
         open_flags |= MBIM_DEVICE_OPEN_FLAGS_PROXY;
     if (device_open_ms_mbimex_v2_flag)
         open_flags |= MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V2;
+    if (device_open_ms_mbimex_v3_flag)
+        open_flags |= MBIM_DEVICE_OPEN_FLAGS_MS_MBIMEX_V3;
 
     /* Open the device */
     mbim_device_open_full (device,
@@ -417,6 +424,11 @@ parse_actions (void)
     /* No options? */
     if (actions_enabled == 0) {
         g_printerr ("error: no actions specified\n");
+        exit (EXIT_FAILURE);
+    }
+
+    if (device_open_ms_mbimex_v2_flag && device_open_ms_mbimex_v3_flag) {
+        g_printerr ("error: cannot request both MBIMEx v2.0 and 3.0 at the same time\n");
         exit (EXIT_FAILURE);
     }
 
