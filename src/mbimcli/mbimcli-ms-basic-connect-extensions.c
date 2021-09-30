@@ -345,13 +345,13 @@ query_lte_attach_info_ready (MbimDevice   *device,
         if (!mbim_message_ms_basic_connect_extensions_v3_lte_attach_info_response_parse (
                 response,
                 &lte_attach_state,
+                &nw_error,
                 &ip_type,
                 &access_string,
                 &user_name,
                 &password,
                 &compression,
                 &auth_protocol,
-                &nw_error,
                 &error)) {
             g_printerr ("error: couldn't parse response message: %s\n", error->message);
             shutdown (FALSE);
