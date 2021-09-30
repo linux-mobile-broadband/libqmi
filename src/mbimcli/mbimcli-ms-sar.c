@@ -254,37 +254,25 @@ sar_config_input_parse (const gchar         *str,
 
     /* Check whether we have the optional item array: [{antenna_index,backoff_index}...] */
     if (split[2]) {
-        const gchar *state_begin;
+        const gchar      *array_begin;
+        const gchar      *array_end;
+        g_autofree gchar *array_str = NULL;
 
-        state_begin = strchr (split[2], '[');
-        if (state_begin != NULL) {
-            *states_array = g_ptr_array_new_with_free_func (g_free);
-            while ((state_begin = strchr (state_begin, '{')) != NULL) {
-                guint32 antenna_index;
-                guint32 backoff_index;
-                gchar   antenna_index_str[10];
+        array_begin = strchr (split[2], '[');
+        array_end   = strchr (split[2], ']');
 
-                if (sscanf (state_begin, "{%10[all|0-9],%d}", antenna_index_str, &backoff_index) == 2) {
-                    MbimSarConfigState *config_state;
-
-                    if (g_ascii_strcasecmp (antenna_index_str, "all") == 0) {
-                        antenna_index = 0xFFFFFFFF;
-                    } else if (mbimcli_read_uint_from_string (antenna_index_str, &antenna_index) == 0) {
-                        g_printerr ("error: invalid antenna index: '%s', it must be 'all' or a number\n", antenna_index_str);
-                        return FALSE;
-                    }
-
-                    config_state = g_new (MbimSarConfigState, 1);
-                    config_state->antenna_index = antenna_index;
-                    config_state->backoff_index = backoff_index;
-                    g_ptr_array_add (*states_array, config_state);
-                    ++state_begin;
-                } else {
-                    break;
-                }
-            }
+        if (!array_begin || !array_end || (array_begin > array_end)) {
+            g_printerr ("error: invalid SAR config state array: '%s'\n", split[2]);
+            return FALSE;
         }
-    }
+
+        array_str = g_strndup (&array_begin[1], array_end - array_begin - 1);
+        if (!mbimcli_parse_sar_config_state_array (array_str, states_array)) {
+            g_printerr ("error: failure parsing the SAR config state array contents: '%s'\n", array_str);
+            return FALSE;
+        }
+    } else
+        *states_array = NULL;
 
     return TRUE;
 }
@@ -345,11 +333,8 @@ mbimcli_ms_sar_run (MbimDevice   *device,
     /* Request to set SAR config */
     if (set_sar_config_str) {
         g_autoptr(GPtrArray) states_array = NULL;
-
-        MbimSarControlMode         mode;
-        MbimSarBackoffState        state;
-        guint                      states_count = 0;
-        const MbimSarConfigState **states_ptrs  = NULL;
+        MbimSarControlMode   mode;
+        MbimSarBackoffState  state;
 
         g_print ("Asynchronously set sar config\n");
         if (!sar_config_input_parse (set_sar_config_str, &mode, &state, &states_array)) {
@@ -357,12 +342,11 @@ mbimcli_ms_sar_run (MbimDevice   *device,
             return;
         }
 
-        if (states_array != NULL) {
-            states_count = states_array->len;
-            states_ptrs  = (const MbimSarConfigState **)states_array->pdata;
-        }
-
-        request = mbim_message_ms_sar_config_set_new (mode, state, states_count, states_ptrs, NULL);
+        request = mbim_message_ms_sar_config_set_new (mode,
+                                                      state,
+                                                      states_array ? states_array->len : 0,
+                                                      states_array ? (const MbimSarConfigState **)states_array->pdata : NULL,
+                                                      NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,

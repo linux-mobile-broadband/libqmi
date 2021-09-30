@@ -33,6 +33,8 @@ gboolean mbimcli_parse_key_value_string (const gchar *str,
                                          MbimParseKeyValueForeachFn callback,
                                          gpointer user_data);
 
+gboolean mbimcli_parse_sar_config_state_array (const gchar  *str,
+                                               GPtrArray   **out);
 
 /* Common helpers to read enums from strings */
 #define MBIMCLI_ENUM_LIST                                                                                  \

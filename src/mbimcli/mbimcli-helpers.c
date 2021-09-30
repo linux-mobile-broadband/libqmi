@@ -345,6 +345,65 @@ mbimcli_parse_key_value_string (const gchar                 *str,
     return TRUE;
 }
 
+gboolean
+mbimcli_parse_sar_config_state_array (const gchar  *str,
+                                      GPtrArray   **out)
+{
+    g_autoptr(GPtrArray)  config_state_array = NULL;
+    g_autoptr(GRegex)     regex = NULL;
+    g_autoptr(GMatchInfo) match_info = NULL;
+    g_autoptr(GError)     inner_error = NULL;
+
+    config_state_array = g_ptr_array_new_with_free_func (g_free);
+
+    if (!str || !str[0]) {
+        *out = NULL;
+        return TRUE;
+    }
+
+    regex = g_regex_new ("\\s*{\\s*(\\d+|all)\\s*,\\s*(\\d+)\\s*}(?:\\s*,)?", G_REGEX_RAW, 0, NULL);
+    g_assert (regex);
+
+    g_regex_match_full (regex, str, strlen (str), 0, 0, &match_info, &inner_error);
+    while (!inner_error && g_match_info_matches (match_info)) {
+        g_autofree MbimSarConfigState *config_state = NULL;
+        g_autofree gchar              *antenna_index_str = NULL;
+        g_autofree gchar              *backoff_index_str = NULL;
+
+        config_state = g_new (MbimSarConfigState, 1);
+
+        antenna_index_str = g_match_info_fetch (match_info, 1);
+        backoff_index_str = g_match_info_fetch (match_info, 2);
+
+        if (g_ascii_strcasecmp (antenna_index_str, "all") == 0)
+            config_state->antenna_index = 0xFFFFFFFF;
+        else if (!mbimcli_read_uint_from_string (antenna_index_str, &config_state->antenna_index)) {
+            g_printerr ("error: invalid antenna index: '%s'\n", antenna_index_str);
+            return FALSE;
+        }
+        if (!mbimcli_read_uint_from_string (backoff_index_str, &config_state->backoff_index)) {
+            g_printerr ("error: invalid backoff index: '%s'\n", backoff_index_str);
+            return FALSE;
+        }
+
+        g_ptr_array_add (config_state_array, g_steal_pointer (&config_state));
+        g_match_info_next (match_info, &inner_error);
+    }
+
+    if (inner_error) {
+        g_printerr ("error: couldn't match config state array: %s\n", inner_error->message);
+        return FALSE;
+    }
+
+    if (config_state_array->len == 0) {
+        g_printerr ("error: no elements found in the array\n");
+        return FALSE;
+    }
+
+    *out = (config_state_array->len > 0) ? g_steal_pointer (&config_state_array) : NULL;
+    return TRUE;
+}
+
 #define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)                    \
     gboolean                                                                  \
     mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str,         \
