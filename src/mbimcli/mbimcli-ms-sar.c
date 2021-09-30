@@ -157,15 +157,18 @@ ms_sar_ready (MbimDevice   *device,
              "\t                Mode: %s\n"
              "\t       Backoff state: %s\n"
              "\tWi-Fi hardware state: %s\n"
-             "\t       Config States: (%u)\n",
+             "\t       Config states: %u\n",
              mbim_device_get_path_display (device),
              VALIDATE_UNKNOWN (mode_str),
              VALIDATE_UNKNOWN (backoff_state_str),
              VALIDATE_UNKNOWN (wifi_integration_str),
              config_states_count);
+
+
     for (i = 0; i < config_states_count; i++) {
-        g_print ("\t\t[%u] Antenna index: %u\n"
-                 "\t\t     Backoff index: %u\n",
+        g_print ("\t\t[%u]\n"
+                 "\t\t  Antenna index: %u\n"
+                 "\t\t  Backoff index: %u\n",
                  i,
                  config_states[i]->antenna_index,
                  config_states[i]->backoff_index);
