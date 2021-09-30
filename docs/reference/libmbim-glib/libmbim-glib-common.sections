@@ -377,6 +377,7 @@ MbimMicoMode
 MbimDefaultPduActivationHint
 MbimLadnInfo
 MbimDrxCycle
+MbimSubscriberReadyStatusFlag
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -457,6 +458,7 @@ mbim_mico_mode_get_string
 mbim_default_pdu_activation_hint_get_string
 mbim_ladn_info_get_string
 mbim_drx_cycle_get_string
+mbim_subscriber_ready_status_flag_build_string_from_mask
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -539,6 +541,7 @@ mbim_mico_mode_build_string_from_mask
 mbim_default_pdu_activation_hint_build_string_from_mask
 mbim_ladn_info_build_string_from_mask
 mbim_drx_cycle_build_string_from_mask
+mbim_subscriber_ready_status_flag_get_string
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -624,6 +627,7 @@ MBIM_TYPE_MICO_MODE
 MBIM_TYPE_DEFAULT_PDU_ACTIVATION_HINT
 MBIM_TYPE_LADN_INFO
 MBIM_TYPE_DRX_CYCLE
+MBIM_TYPE_SUBSCRIBER_READY_STATUS_FLAG
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type
@@ -708,6 +712,7 @@ mbim_mico_mode_get_type
 mbim_default_pdu_activation_hint_get_type
 mbim_ladn_info_get_type
 mbim_drx_cycle_get_type
+mbim_subscriber_ready_status_flag_get_type
 </SECTION>
 
 <SECTION>
