@@ -416,18 +416,18 @@ static void
 query_subscriber_ready_status_ready (MbimDevice   *device,
                                      GAsyncResult *res)
 {
-    g_autoptr (MbimMessage)   response = NULL;
-    g_autoptr (GError)        error = NULL;
-    MbimSubscriberReadyState  ready_state;
-    const gchar              *ready_state_str;
-    g_autofree gchar         *subscriber_id = NULL;
-    g_autofree gchar         *sim_iccid = NULL;
-    MbimReadyInfoFlag         ready_info;
-    g_autofree gchar         *ready_info_str = NULL;
-    guint32                   telephone_numbers_count;
-    g_auto(GStrv)             telephone_numbers = NULL;
-    g_autofree gchar         *telephone_numbers_str = NULL;
-    MbimSubscriberReadyStatusFlags flags;
+    g_autoptr (MbimMessage)        response = NULL;
+    g_autoptr (GError)             error = NULL;
+    MbimSubscriberReadyState       ready_state;
+    const gchar                   *ready_state_str;
+    g_autofree gchar              *subscriber_id = NULL;
+    g_autofree gchar              *sim_iccid = NULL;
+    MbimReadyInfoFlag              ready_info;
+    g_autofree gchar              *ready_info_str = NULL;
+    guint32                        telephone_numbers_count;
+    g_auto(GStrv)                  telephone_numbers = NULL;
+    g_autofree gchar              *telephone_numbers_str = NULL;
+    MbimSubscriberReadyStatusFlag  flags;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -489,9 +489,12 @@ query_subscriber_ready_status_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (ready_info_str),
              telephone_numbers_count, VALIDATE_UNKNOWN (telephone_numbers_str));
 
-        if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
-        g_print ("\tready status flag: '%s'\n",
-                 VALIDATE_UNKNOWN (mbim_subscriber_ready_status_flags_get_string(flags)));
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        g_autofree gchar *flags_str = NULL;
+
+        flags_str = mbim_subscriber_ready_status_flag_build_string_from_mask (flags);
+        g_print ("\t            Flags: '%s'\n",
+                 VALIDATE_UNKNOWN (flags_str));
     }
 
     shutdown (TRUE);
