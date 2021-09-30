@@ -242,21 +242,13 @@ sar_config_input_parse (const gchar         *str,
         return FALSE;
     }
 
-    if (g_ascii_strcasecmp (split[0], "device") == 0) {
-        *mode = MBIM_SAR_CONTROL_MODE_DEVICE;
-    } else if (g_ascii_strcasecmp (split[0], "os") == 0) {
-        *mode = MBIM_SAR_CONTROL_MODE_OS;
-    } else {
-        g_printerr ("error: invalid mode: '%s', it must be device or os\n", split[0]);
+    if (!mbimcli_read_sar_control_mode_from_string (split[0], mode)) {
+        g_printerr ("error: invalid mode: '%s'\n", split[0]);
         return FALSE;
     }
 
-    if (g_ascii_strcasecmp (split[1], "disabled") == 0) {
-        *state = MBIM_SAR_BACKOFF_STATE_DISABLED;
-    } else if (g_ascii_strcasecmp (split[1], "enabled") == 0) {
-        *state = MBIM_SAR_BACKOFF_STATE_ENABLED;
-    } else {
-        g_printerr ("error: invalid state: '%s', it must be enabled or disabled\n", split[1]);
+    if (!mbimcli_read_sar_backoff_state_from_string (split[1], state)) {
+        g_printerr ("error: invalid state: '%s'\n", split[1]);
         return FALSE;
     }
 

@@ -45,7 +45,9 @@ gboolean mbimcli_parse_key_value_string (const gchar *str,
     MBIMCLI_ENUM_LIST_ITEM (MbimContextSource,         context_source,          "context source")          \
     MBIMCLI_ENUM_LIST_ITEM (MbimContextOperation,      context_operation,       "context operation")       \
     MBIMCLI_ENUM_LIST_ITEM (MbimAuthProtocol,          auth_protocol,           "auth protocol")           \
-    MBIMCLI_ENUM_LIST_ITEM (MbimCompression,           compression,             "compression")
+    MBIMCLI_ENUM_LIST_ITEM (MbimCompression,           compression,             "compression")             \
+    MBIMCLI_ENUM_LIST_ITEM (MbimSarControlMode,        sar_control_mode,        "sar control mode")        \
+    MBIMCLI_ENUM_LIST_ITEM (MbimSarBackoffState,       sar_backoff_state,       "sar backoff state")
 
 #define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);
