@@ -35,6 +35,7 @@
 #include "mbim-ms-basic-connect-extensions.h"
 #include "mbim-ms-uicc-low-level-access.h"
 #include "mbim-ms-basic-connect-v2.h"
+#include "mbim-ms-basic-connect-v3.h"
 
 /*****************************************************************************/
 
@@ -1404,7 +1405,7 @@ mbim_message_get_printable_full (const MbimMessage  *self,
     g_return_val_if_fail (self != NULL, NULL);
     g_return_val_if_fail (line_prefix != NULL, NULL);
 
-    if (mbimex_version_major > 2) {
+    if (mbimex_version_major > 3) {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
                      "MBIMEx version %x.%02x is unsupported",
                      mbimex_version_major, mbimex_version_minor);
@@ -1587,6 +1588,18 @@ mbim_message_get_printable_full (const MbimMessage  *self,
                 if (g_error_matches (inner_error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNSUPPORTED)) {
                     g_clear_error (&inner_error);
                     fields_printable = __mbim_message_basic_connect_get_printable_fields (self, line_prefix, &inner_error);
+                }
+            } else if (mbimex_version_major == 3) {
+                fields_printable = __mbim_message_ms_basic_connect_v3_get_printable_fields (self, line_prefix, &inner_error);
+                /* attempt fallback to v2 printable */
+                if (g_error_matches (inner_error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNSUPPORTED)) {
+                    g_clear_error (&inner_error);
+                    fields_printable = __mbim_message_ms_basic_connect_v2_get_printable_fields (self, line_prefix, &inner_error);
+                    /* attempt fallback to v1 printable */
+                    if (g_error_matches (inner_error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNSUPPORTED)) {
+                        g_clear_error (&inner_error);
+                        fields_printable = __mbim_message_basic_connect_get_printable_fields (self, line_prefix, &inner_error);
+                    }
                 }
             } else
                 g_assert_not_reached ();
