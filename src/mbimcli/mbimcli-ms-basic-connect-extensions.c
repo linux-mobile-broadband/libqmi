@@ -388,8 +388,21 @@ query_lte_attach_info_ready (MbimDevice   *device,
     g_print ("  Password:      %s\n", VALIDATE_NA (password));
     g_print ("  Compression:   %s\n", mbim_compression_get_string (compression));
     g_print ("  Auth protocol: %s\n", mbim_auth_protocol_get_string (auth_protocol));
-    if (mbim_device_check_ms_mbimex_version (device, 3, 0))
-        g_print ("  Network error: %s\n", mbim_nw_error_get_string (nw_error));
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        if (nw_error == 0)
+            g_print ("  Network error: none\n");
+        else if (nw_error == 0xFFFFFFFF)
+            g_print ("  Network error: unknown\n");
+        else {
+            const gchar *nw_error_str;
+
+            nw_error_str = mbim_nw_error_get_string (nw_error);
+            if (nw_error_str)
+                g_print ("  Network error: %s\n", nw_error_str);
+            else
+                g_print ("  Network error: unknown (0x%08x)\n", nw_error);
+        }
+    }
 #undef VALIDATE_NA
 
     shutdown (TRUE);
