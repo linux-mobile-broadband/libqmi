@@ -395,7 +395,7 @@ typedef enum { /*< since=1.2 >*/
 
 /**
  * MbimNwError:
- * @MBIM_NW_ERROR_UNKNOWN: Unknown or unset error.
+ * @MBIM_NW_ERROR_NONE: No error. Since 1.28.
  * @MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR: IMSI unknown in the HLR.
  * @MBIM_NW_ERROR_ILLEGAL_MS: Illegal MS. Since 1.10.
  * @MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR: IMSI unknown in the VLR.
@@ -447,7 +447,7 @@ typedef enum { /*< since=1.2 >*/
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
-    MBIM_NW_ERROR_UNKNOWN                                                    = 0,
+    MBIM_NW_ERROR_NONE                                                       = 0,
     MBIM_NW_ERROR_IMSI_UNKNOWN_IN_HLR                                        = 2,
     MBIM_NW_ERROR_ILLEGAL_MS                                                 = 3,
     MBIM_NW_ERROR_IMSI_UNKNOWN_IN_VLR                                        = 4,

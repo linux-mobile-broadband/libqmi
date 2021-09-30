@@ -210,6 +210,23 @@ gboolean mbim_message_ms_basic_connect_extensions_lte_attach_status_notification
     MbimLteAttachStatus **out_lte_attach_status,
     GError **error);
 
+/*****************************************************************************/
+/* Network errors fixup */
+
+/* The following type exists just so that we can get deprecation warnings */
+G_DEPRECATED
+typedef int MbimNwErrorDeprecated;
+
+/**
+ * MBIM_NW_ERROR_UNKNOWN:
+ *
+ * Network error not set.
+ *
+ * Since: 1.0
+ * Deprecated: 1.28: Use %MBIM_NW_ERROR_NONE instead.
+ */
+#define MBIM_NW_ERROR_UNKNOWN (MbimNwErrorDeprecated) MBIM_NW_ERROR_NONE
+
 #endif /* MBIM_DISABLE_DEPRECATED */
 
 G_END_DECLS

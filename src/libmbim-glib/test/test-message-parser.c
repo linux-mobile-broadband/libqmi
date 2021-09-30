@@ -614,7 +614,7 @@ test_message_parser_basic_connect_register_state (void)
 
     g_assert_no_error (error);
 
-    g_assert_cmpuint (nw_error, ==, MBIM_NW_ERROR_UNKNOWN);
+    g_assert_cmpuint (nw_error, ==, MBIM_NW_ERROR_NONE);
     g_assert_cmpuint (register_state, ==, MBIM_REGISTER_STATE_HOME);
     g_assert_cmpuint (register_mode, ==, MBIM_REGISTER_MODE_AUTOMATIC);
     g_assert_cmpuint (available_data_classes, ==, (MBIM_DATA_CLASS_UMTS |
