@@ -339,7 +339,7 @@ mbimcli_ms_sar_run (MbimDevice   *device,
         MbimSarControlMode   mode;
         MbimSarBackoffState  state;
 
-        g_print ("Asynchronously set sar config\n");
+        g_debug ("Asynchronously setting SAR config");
         if (!sar_config_input_parse (set_sar_config_str, &mode, &state, &states_array)) {
             shutdown (FALSE);
             return;
