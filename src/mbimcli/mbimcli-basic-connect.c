@@ -22,8 +22,6 @@
 #include "mbim-common.h"
 #include "mbimcli.h"
 #include "mbimcli-helpers.h"
-#include "mbim-ms-basic-connect-v3.h"
-
 
 /* Context */
 typedef struct {

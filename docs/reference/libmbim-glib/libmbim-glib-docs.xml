@@ -76,6 +76,7 @@
     <title>Microsoft-defined services</title>
     <xi:include href="xml/mbim-ms-basic-connect-extensions.xml"/>
     <xi:include href="xml/mbim-ms-basic-connect-v2.xml"/>
+    <xi:include href="xml/mbim-ms-basic-connect-v3.xml"/>
     <xi:include href="xml/mbim-ms-uicc-low-level-access.xml"/>
     <xi:include href="xml/mbim-ms-firmware-id.xml"/>
     <xi:include href="xml/mbim-ms-host-shutdown.xml"/>

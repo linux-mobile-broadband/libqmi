@@ -96,6 +96,7 @@ services_data = [
   ['ms-basic-connect-extensions', true],
   ['ms-uicc-low-level-access', true],
   ['ms-basic-connect-v2', true],
+  ['ms-basic-connect-v3', true],
   ['ms-firmware-id', true],
   ['ms-host-shutdown', true],
   ['ms-sar', true],
