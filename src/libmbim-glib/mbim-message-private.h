@@ -196,6 +196,8 @@ void               _mbim_struct_builder_append_ipv6          (MbimStructBuilder 
 void               _mbim_struct_builder_append_ipv6_array    (MbimStructBuilder *builder,
                                                               const MbimIPv6    *values,
                                                               guint32            n_values);
+void               _mbim_struct_builder_append_string_tlv    (MbimStructBuilder *builder,
+                                                              const gchar       *values);
 
 /*****************************************************************************/
 /* Message builder */
@@ -314,6 +316,12 @@ gboolean _mbim_message_read_ipv6_array    (const MbimMessage  *self,
                                            guint32             array_size,
                                            guint32             relative_offset_array_start,
                                            MbimIPv6          **array,
+                                           GError            **error);
+gboolean _mbim_message_read_string_tlv    (const MbimMessage  *self,
+                                           guint32             struct_start_offset,
+                                           guint32             relative_offset,
+                                           gchar             **str,
+                                           guint32            *tpv_size,
                                            GError            **error);
 
 G_END_DECLS

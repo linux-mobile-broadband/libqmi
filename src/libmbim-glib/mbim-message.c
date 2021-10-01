@@ -374,6 +374,78 @@ _mbim_message_read_string (const MbimMessage  *self,
 }
 
 gboolean
+_mbim_message_read_string_tlv (const MbimMessage  *self,
+                               guint32             struct_start_offset,
+                               guint32             relative_offset,
+                               gchar             **str,
+                               guint32            *tpv_size,
+                               GError            **error)
+{
+    guint32 required_size;
+    guint32 size = 0;
+    guint32 information_buffer_offset;
+    gunichar2 *utf16d = NULL;
+    const gunichar2 *utf16 = NULL;
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+    required_size = information_buffer_offset + relative_offset;
+
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read string offset and size (%u < %u)",
+                     self->len, required_size);
+        return FALSE;
+    }
+
+    size = GUINT32_FROM_LE (G_STRUCT_MEMBER (
+                                guint32,
+                                self->data,
+                                (information_buffer_offset + relative_offset)));
+
+    if (!size) {
+        *str = NULL;
+        *tpv_size = 4;
+        return TRUE;
+    } else {
+        *tpv_size = size+4;
+    }
+    required_size = information_buffer_offset + struct_start_offset + size;
+
+    if (self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read string data (%u bytes) (%u < %u)",
+                     size, self->len, required_size);
+        return FALSE;
+    }
+
+    utf16 = (const gunichar2 *) G_STRUCT_MEMBER_P (self->data, (information_buffer_offset + relative_offset+4 ));
+
+    /* For BE systems, convert from LE to BE */
+    if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+        guint i;
+
+        utf16d = (gunichar2 *) g_malloc (size);
+        for (i = 0; i < (size / 2); i++)
+            utf16d[i] = GUINT16_FROM_LE (utf16[i]);
+    }
+
+    *str = g_utf16_to_utf8 (utf16d ? utf16d : utf16,
+                            size / 2,
+                            NULL,
+                            NULL,
+                            error);
+
+    g_free (utf16d);
+
+    if (!(*str)) {
+        g_prefix_error (error, "Error converting string to UTF-8: ");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean
 _mbim_message_read_string_array (const MbimMessage   *self,
                                  guint32              array_size,
                                  guint32              struct_start_offset,
@@ -1089,6 +1161,61 @@ _mbim_struct_builder_append_string (MbimStructBuilder *builder,
         g_byte_array_append (builder->variable_buffer, (const guint8 *)utf16, (guint)utf16_bytes);
         bytearray_apply_padding (builder->variable_buffer, &utf16_bytes);
     }
+}
+
+void
+_mbim_struct_builder_append_string_tlv (MbimStructBuilder *builder,
+                                        const gchar       *value)
+{
+    guint8 reserved = 0;
+    guint8 padding = 0;
+    guint32 length;
+    gunichar2 *utf16 = NULL;
+    guint32 utf16_bytes = 0;
+    GError *error = NULL;
+
+    /* Add the reserved value */
+    g_byte_array_append (builder->fixed_buffer, (guint8 *)&reserved, sizeof (reserved));
+
+    /* Convert the string from UTF-8 to UTF-16HE */
+    if (value && value[0]) {
+        glong items_written = 0;
+        utf16 = g_utf8_to_utf16 (value,
+                                 -1,
+                                 NULL, /* bytes */
+                                 &items_written, /* gunichar2 */
+                                 &error);
+
+        if (!utf16) {
+            g_warning ("Error converting string: %s", error->message);
+            g_error_free (error);
+            return;
+        }
+        utf16_bytes = items_written * 2;
+
+        /* Add the padding value */
+        padding = utf16_bytes % 4;
+        g_byte_array_append (builder->fixed_buffer, (guint8 *)&padding, sizeof (padding));
+        g_debug ("padding:%d", padding);
+    }
+
+    /* Add the length value */
+    length = GUINT32_TO_LE (utf16_bytes);
+    g_byte_array_append (builder->fixed_buffer, (guint8 *)&length, sizeof (length));
+
+    /* And finally, the string itself to the variable buffer */
+    if (utf16_bytes) {
+        /* For BE systems, convert from BE to LE */
+        if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+            guint i;
+
+            for (i = 0; i < (utf16_bytes / 2); i++)
+                utf16[i] = GUINT16_TO_LE (utf16[i]);
+        }
+        g_byte_array_append (builder->variable_buffer, (const guint8 *)utf16, (guint)utf16_bytes);
+        bytearray_apply_padding (builder->variable_buffer, &utf16_bytes);
+    }
+    g_free (utf16);
 }
 
 void

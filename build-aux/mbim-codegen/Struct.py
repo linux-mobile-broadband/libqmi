@@ -108,6 +108,9 @@ class Struct:
             elif field['format'] == 'string':
                 inner_template = (
                     ' * @${field_name_underscore}: a string.\n')
+            elif field['format'] == 'string-tlv':
+                inner_template = (
+                    ' * @${field_name_underscore}: a string.\n')
             elif field['format'] == 'string-array':
                 inner_template = (
                     ' * @${field_name_underscore}: an array of strings.\n')
@@ -164,6 +167,9 @@ class Struct:
                 inner_template = (
                     '    guint64 ${field_name_underscore};\n')
             elif field['format'] == 'string':
+                inner_template = (
+                    '    gchar *${field_name_underscore};\n')
+            elif field['format'] == 'string-tlv':
                 inner_template = (
                     '    gchar *${field_name_underscore};\n')
             elif field['format'] == 'string-array':
@@ -243,6 +249,9 @@ class Struct:
             elif field['format'] == 'guint64':
                 pass
             elif field['format'] == 'string':
+                inner_template += (
+                    '    g_free (var->${field_name_underscore});\n')
+            elif field['format'] == 'string-tlv':
                 inner_template += (
                     '    g_free (var->${field_name_underscore});\n')
             elif field['format'] == 'string-array':
@@ -420,6 +429,9 @@ class Struct:
             elif field['format'] == 'string':
                 inner_template += (
                     '        g_string_append_printf (str, "\'%s\'", self->${field_name_underscore});\n')
+            elif field['format'] == 'string-tlv':
+                inner_template += (
+                    '        g_string_append_printf (str, "\'%s\'", self->${field_name_underscore});\n')
 
             elif field['format'] == 'string-array':
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
@@ -489,7 +501,9 @@ class Struct:
             '\n'
             '    g_assert (self != NULL);\n'
             '\n'
-            '    out = g_new0 (${name}, 1);\n')
+            '    out = g_new0 (${name}, 1);\n'
+            '\n')
+
 
         for field in self.contents:
             translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
@@ -594,6 +608,13 @@ class Struct:
                     '    if (!_mbim_message_read_string (self, relative_offset, offset, &out->${field_name_underscore}, error))\n'
                     '        goto out;\n'
                     '    offset += 8;\n')
+            elif field['format'] == 'string-tlv':
+                inner_template += (
+                    '{\n'
+                    '    guint32 size = 0;\n'
+                    '    if (!_mbim_message_read_string_tlv (self, relative_offset, offset, &out->${field_name_underscore}, &size, error))\n'
+                    '        goto out;\n'
+                    '    offset += size + (size % 4);\n}')
             elif field['format'] == 'string-array':
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                 inner_template += (
@@ -665,7 +686,7 @@ class Struct:
         for field in self.contents:
             translations['field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['name'])
             inner_template = ''
-            if field['format'] in ['ref-byte-array', 'ref-byte-array-no-offset', 'unsized-byte-array', 'byte-array', 'string']:
+            if field['format'] in ['ref-byte-array', 'ref-byte-array-no-offset', 'unsized-byte-array', 'byte-array', 'string', 'string-tlv']:
                 inner_template = ('    g_free (out->${field_name_underscore});\n')
             elif field['format'] == 'string-array':
                 inner_template = ('    g_strfreev (out->${field_name_underscore});\n')
@@ -904,6 +925,8 @@ class Struct:
                 inner_template = ('    _mbim_struct_builder_append_guint64 (builder, value->${field});\n')
             elif field['format'] == 'string':
                 inner_template = ('    _mbim_struct_builder_append_string (builder, value->${field});\n')
+            elif field['format'] == 'string-tlv':
+                inner_template = ('    _mbim_struct_builder_append_string_tlv (builder, value->${field});\n')
             elif field['format'] == 'string-array':
                 inner_template = ('    _mbim_struct_builder_append_string_array (builder, value->${field}, value->${array_size_field});\n')
             elif field['format'] == 'ipv4':

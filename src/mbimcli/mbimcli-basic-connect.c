@@ -880,14 +880,16 @@ connect_ready (MbimDevice   *device,
                GAsyncResult *res,
                gpointer      user_data)
 {
-    g_autoptr(MbimMessage)  response = NULL;
-    g_autoptr(GError)       error = NULL;
-    guint32                 session_id;
-    MbimActivationState     activation_state;
-    MbimVoiceCallState      voice_call_state;
-    MbimContextIpType       ip_type;
-    const MbimUuid         *context_type;
-    guint32                 nw_error;
+    g_autoptr(MbimMessage)   response = NULL;
+    g_autoptr(GError)        error = NULL;
+    guint32                  session_id;
+    MbimActivationState      activation_state;
+    MbimVoiceCallState       voice_call_state;
+    MbimContextIpType        ip_type;
+    MbimAccessMediaType      media_type;
+    MbimConnectAccessString *access_string;
+    const MbimUuid          *context_type;
+    guint32                  nw_error;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -896,18 +898,36 @@ connect_ready (MbimDevice   *device,
         return;
     }
 
-    if (!mbim_message_connect_response_parse (
-            response,
-            &session_id,
-            &activation_state,
-            &voice_call_state,
-            &ip_type,
-            &context_type,
-            &nw_error,
-            &error)) {
-        g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        shutdown (FALSE);
-        return;
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        if (!mbim_message_ms_basic_connect_v3_connect_response_parse (
+                response,
+                &session_id,
+                &activation_state,
+                &voice_call_state,
+                &ip_type,
+                &context_type,
+                &nw_error,
+                &media_type,
+                &access_string,
+                &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+    } else {
+        if (!mbim_message_connect_response_parse (
+                response,
+                &session_id,
+                &activation_state,
+                &voice_call_state,
+                &ip_type,
+                &context_type,
+                &nw_error,
+                &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
     }
 
     switch (GPOINTER_TO_UINT (user_data)) {
@@ -937,6 +957,13 @@ connect_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (mbim_context_ip_type_get_string (ip_type)),
              VALIDATE_UNKNOWN (mbim_context_type_get_string (mbim_uuid_to_context_type (context_type))),
              VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)));
+
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        g_print ("\tAccess media type: '%s'\n"
+                 "\t    Access string: '%s'\n",
+                 VALIDATE_UNKNOWN (mbim_access_media_type_get_string (media_type)),
+                 access_string->data);
+    }
 
     if (GPOINTER_TO_UINT (user_data) == CONNECT) {
         ip_configuration_query (device, NULL, session_id);
@@ -1033,14 +1060,15 @@ connect_session_id_parse (const gchar  *str,
 }
 
 typedef struct {
-    guint32            session_id;
-    gchar             *access_string;
-    MbimAuthProtocol   auth_protocol;
-    gchar             *username;
-    gchar             *password;
-    MbimContextIpType  ip_type;
-    MbimCompression    compression;
-    MbimContextType    context_type;
+    guint32             session_id;
+    gchar              *access_string;
+    MbimAuthProtocol    auth_protocol;
+    gchar              *username;
+    gchar              *password;
+    MbimContextIpType   ip_type;
+    MbimCompression     compression;
+    MbimContextType     context_type;
+    MbimAccessMediaType media_type;
 } ConnectActivateProperties;
 
 static void
@@ -1110,6 +1138,12 @@ connect_activate_properties_handle (const gchar  *key,
                          "unknown context-type: '%s'", value);
             return FALSE;
         }
+    } else if (g_ascii_strcasecmp (key, "media-type") == 0) {
+        if (!mbimcli_read_access_media_type_from_string (value, &props->media_type)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown media-type: '%s'", value);
+            return FALSE;
+        }
     } else {
         g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
                      "unrecognized option '%s'", key);
@@ -1121,7 +1155,8 @@ connect_activate_properties_handle (const gchar  *key,
 
 static gboolean
 set_connect_activate_parse (const gchar               *str,
-                            ConnectActivateProperties *props)
+                            ConnectActivateProperties *props,
+			    MbimDevice                *device)
 {
     g_auto(GStrv)     split = NULL;
     g_autoptr(GError) error = NULL;
@@ -1142,10 +1177,17 @@ set_connect_activate_parse (const gchar               *str,
         g_printerr ("warning: positional input arguments format is deprecated, use key-value format instead\n");
         split = g_strsplit (str, ",", -1);
 
-        if (g_strv_length (split) > 4) {
-            g_printerr ("error: couldn't parse input string, too many arguments\n");
-            return FALSE;
-        }
+	if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+	    if (g_strv_length (split) > 5) {
+                g_printerr ("error: couldn't parse input string, too many arguments\n");
+		return FALSE;
+	    }
+	} else {
+            if (g_strv_length (split) > 4) {
+                g_printerr ("error: couldn't parse input string, too many arguments\n");
+                return FALSE;
+	    }
+	}
 
         if (g_strv_length (split) > 0) {
             /* APN */
@@ -1163,6 +1205,14 @@ set_connect_activate_parse (const gchar               *str,
                     /* Password */
                     props->password = g_strdup (split[3]);
                 }
+		if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+		    if (split[4]) {
+			if (!mbimcli_read_access_media_type_from_string (split[4], &props->media_type)) {
+			    g_printerr ("error: couldn't parse input string, unknown media type '%s'\n", split[4]);
+			    return FALSE;
+			}
+		    }
+		}
             }
         }
 
@@ -2147,13 +2197,18 @@ mbimcli_basic_connect_run (MbimDevice   *device,
             return;
         }
 
-        request = mbim_message_connect_query_new (session_id,
-                                                  MBIM_ACTIVATION_STATE_UNKNOWN,
-                                                  MBIM_VOICE_CALL_STATE_NONE,
-                                                  MBIM_CONTEXT_IP_TYPE_DEFAULT,
-                                                  mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
-                                                  0,
-                                                  &error);
+        if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+            request = mbim_message_ms_basic_connect_v3_connect_query_new (session_id,
+                                                                      &error);
+        } else {
+            request = mbim_message_connect_query_new (session_id,
+                                                      MBIM_ACTIVATION_STATE_UNKNOWN,
+                                                      MBIM_VOICE_CALL_STATE_NONE,
+                                                      MBIM_CONTEXT_IP_TYPE_DEFAULT,
+                                                      mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
+                                                      0,
+                                                      &error);
+        }
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
             shutdown (FALSE);
@@ -2180,23 +2235,51 @@ mbimcli_basic_connect_run (MbimDevice   *device,
             .ip_type       = MBIM_CONTEXT_IP_TYPE_DEFAULT,
             .compression   = MBIM_COMPRESSION_NONE,
             .context_type  = MBIM_CONTEXT_TYPE_INTERNET,
-        };
+            .media_type    = MBIM_ACCESS_MEDIA_TYPE_UNKNOWN,
+    };
+    MbimConnectAccessString *access_string_v3 = NULL;
+    MbimConnectUserName     *username_v3 = NULL;
+    MbimConnectPassword     *password_v3 = NULL;
 
-        if (!set_connect_activate_parse (set_connect_activate_str, &props)) {
+        if (!set_connect_activate_parse (set_connect_activate_str, &props, device)) {
             shutdown (FALSE);
             return;
         }
 
-        request = mbim_message_connect_set_new (props.session_id,
-                                                MBIM_ACTIVATION_COMMAND_ACTIVATE,
-                                                props.access_string,
-                                                props.username,
-                                                props.password,
-                                                props.compression,
-                                                props.auth_protocol,
-                                                props.ip_type,
-                                                mbim_uuid_from_context_type (props.context_type),
-                                                &error);
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        access_string_v3 = g_new0 (MbimConnectAccessString, 1);
+        username_v3      = g_new0 (MbimConnectUserName, 1);
+        password_v3      = g_new0 (MbimConnectPassword, 1);
+        access_string_v3->type = 10;
+        username_v3->type      = 10;
+        password_v3->type      = 10;
+        access_string_v3->data = props.access_string;
+        username_v3->data      = props.username;
+        password_v3->data      = props.password;
+        g_debug ("acstr %s, username %s, password %s, media %s, auth %s", access_string_v3->data, username_v3->data, password_v3->data, mbim_access_media_type_get_string(props.media_type), mbim_auth_protocol_get_string(props.auth_protocol));
+        request = mbim_message_ms_basic_connect_v3_connect_set_new (props.session_id,
+                                                                    MBIM_ACTIVATION_COMMAND_ACTIVATE,
+                                                                    props.compression,
+                                                                    props.auth_protocol,
+                                                                    props.ip_type,
+                                                                    mbim_uuid_from_context_type (props.context_type),
+                                                                    props.media_type,
+                                                                    access_string_v3,
+                                                                    username_v3,
+                                                                    password_v3,
+                                                                    &error);
+    } else {
+            request = mbim_message_connect_set_new (props.session_id,
+                                                    MBIM_ACTIVATION_COMMAND_ACTIVATE,
+                                                    props.access_string,
+                                                    props.username,
+                                                    props.password,
+                                                    props.compression,
+                                                    props.auth_protocol,
+                                                    props.ip_type,
+                                                    mbim_uuid_from_context_type (props.context_type),
+                                                    &error);
+    }
 
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
@@ -2237,16 +2320,31 @@ mbimcli_basic_connect_run (MbimDevice   *device,
             return;
         }
 
-        request = mbim_message_connect_set_new (session_id,
-                                                MBIM_ACTIVATION_COMMAND_DEACTIVATE,
-                                                NULL,
-                                                NULL,
-                                                NULL,
-                                                MBIM_COMPRESSION_NONE,
-                                                MBIM_AUTH_PROTOCOL_NONE,
-                                                MBIM_CONTEXT_IP_TYPE_DEFAULT,
-                                                mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
-                                                &error);
+        if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+            request = mbim_message_ms_basic_connect_v3_connect_set_new (session_id,
+                                                                        MBIM_ACTIVATION_COMMAND_DEACTIVATE,
+                                                                        MBIM_COMPRESSION_NONE,
+                                                                        MBIM_AUTH_PROTOCOL_NONE,
+                                                                        MBIM_CONTEXT_IP_TYPE_DEFAULT,
+                                                                        mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
+                                                                        MBIM_ACCESS_MEDIA_TYPE_UNKNOWN,
+                                                                        NULL,
+                                                                        NULL,
+                                                                        NULL,
+                                                                        &error);
+        } else {
+            request = mbim_message_connect_set_new (session_id,
+                                                    MBIM_ACTIVATION_COMMAND_DEACTIVATE,
+                                                    NULL,
+                                                    NULL,
+                                                    NULL,
+                                                    MBIM_COMPRESSION_NONE,
+                                                    MBIM_AUTH_PROTOCOL_NONE,
+                                                    MBIM_CONTEXT_IP_TYPE_DEFAULT,
+                                                    mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
+                                                    &error);
+        }
+
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
             shutdown (FALSE);

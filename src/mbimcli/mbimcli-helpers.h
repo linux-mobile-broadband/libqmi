@@ -58,7 +58,8 @@ gboolean mbimcli_parse_sar_config_state_array (const gchar  *str,
     MBIMCLI_ENUM_LIST_ITEM (MbimMicoMode,                 mico_mode,                   "mico mode")                   \
     MBIMCLI_ENUM_LIST_ITEM (MbimDrxCycle,                 drx_cycle,                   "drx cycle")                   \
     MBIMCLI_ENUM_LIST_ITEM (MbimLadnInfo,                 ladn_info,                   "ladn info")                   \
-    MBIMCLI_ENUM_LIST_ITEM (MbimDefaultPduActivationHint, default_pdu_activation_hint, "default pdu activation hint")
+    MBIMCLI_ENUM_LIST_ITEM (MbimDefaultPduActivationHint, default_pdu_activation_hint, "default pdu activation hint") \
+    MBIMCLI_ENUM_LIST_ITEM (MbimAccessMediaType,          access_media_type,           "access media type")
 
 #define MBIMCLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean mbimcli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);
