@@ -381,6 +381,7 @@ MbimSubscriberReadyStatusFlag
 MbimDataClassV3
 MbimDataSublass
 MbimModemConfigurationStatus
+MbimWakeType
 <SUBSECTION Methods>
 mbim_device_type_get_string
 mbim_cellular_class_build_string_from_mask
@@ -465,6 +466,7 @@ mbim_subscriber_ready_status_flag_build_string_from_mask
 mbim_data_class_v3_build_string_from_mask
 mbim_data_subclass_build_string_from_mask
 mbim_modem_configuration_status_get_string
+mbim_wake_type_get_string
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
 mbim_cellular_class_get_string
@@ -551,6 +553,7 @@ mbim_subscriber_ready_status_flag_get_string
 mbim_data_class_v3_get_string
 mbim_data_subclass_get_string
 mbim_modem_configuration_status_build_string_from_mask
+mbim_wake_type_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
 MBIM_TYPE_ACTIVATION_STATE
@@ -640,6 +643,7 @@ MBIM_TYPE_SUBSCRIBER_READY_STATUS_FLAG
 MBIM_TYPE_DATA_CLASS_V3
 MBIM_TYPE_DATA_SUBCLASS
 MBIM_TYPE_MODEM_CONFIGURATION_STATUS
+MBIM_TYPE_WAKE_TYPE
 mbim_activation_command_get_type
 mbim_activation_state_get_type
 mbim_auth_protocol_get_type
@@ -728,6 +732,7 @@ mbim_subscriber_ready_status_flag_get_type
 mbim_data_class_v3_get_type
 mbim_data_subclass_get_type
 mbim_modem_configuration_status_get_type
+mbim_wake_type_get_type
 </SECTION>
 
 <SECTION>

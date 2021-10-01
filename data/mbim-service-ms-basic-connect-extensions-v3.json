@@ -261,5 +261,20 @@
                        "struct-type"   : "MbimCellInfoServingNr" },
                      { "name"          : "NrNeighborCells",
                        "format"        : "ms-struct-array",
-                       "struct-type"   : "MbimCellInfoNeighboringNr" } ] }
+                       "struct-type"   : "MbimCellInfoNeighboringNr" } ] },
+
+  //************************************************************************************
+
+  { "name"      : "Wake Reason",
+    "type"      : "Command",
+    "since"     : "1.28",
+    "query"     : [],
+    "response"  : [  { "name"              : "WakeType",
+                       "format"            : "guint32",
+                       "public-format"     : "MbimWakeType" },
+                     { "name"              : "SessionId",
+                       "format"            : "guint32" },
+                     { "name"              : "DataBuffer",
+                       "format"            : "unsized-byte-array" } ] }
+
 ]

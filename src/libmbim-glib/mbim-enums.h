@@ -603,6 +603,24 @@ typedef enum { /*< since=1.0 >*/
 } MbimRegistrationFlag;
 
 /*****************************************************************************/
+/* 'Wake Reason' enums */
+/**
+ * MbimWaketype:
+ * @MBIM_WAKE_TYPE_CID_RESPONSE: A CID response wakes device.
+ * @MBIM_WAKE_TYPE_CID_INDICATION: A CID indication wakes device.
+ * @MBIM_WAKE_TYPE_PACKET: An incoming packet wakes device.
+ *
+ * Wake type.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_WAKE_TYPE_CID_RESPONSE   = 0,
+    MBIM_WAKE_TYPE_CID_INDICATION = 1,
+    MBIM_WAKE_TYPE_PACKET         = 2,
+} MbimWakeType;
+
+/*****************************************************************************/
 /* 'Packet Service' enums */
 
 /**

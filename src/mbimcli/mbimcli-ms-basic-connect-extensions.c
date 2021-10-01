@@ -49,6 +49,7 @@ static gchar    *query_version_str;
 static gboolean  query_registration_parameters_flag;
 static gchar    *set_registration_parameters_str;
 static gboolean  query_modem_configuration_flag;
+static gboolean  query_wake_reason_flag;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -125,7 +126,11 @@ static GOptionEntry entries[] = {
       "Query modem configuration. Since MBIMEx v3.0.",
       NULL
     },
-    { NULL }
+    { "ms-query-wake-reason", 0, 0, G_OPTION_ARG_NONE, &query_wake_reason_flag,
+      "Query wake reason. Since MBIMEx v3.0.",
+      NULL
+    },
+    {NULL }
 };
 
 static gboolean
@@ -208,7 +213,8 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  !!query_version_str +
                  query_registration_parameters_flag +
                  !!set_registration_parameters_str +
-                 query_modem_configuration_flag);
+                 query_modem_configuration_flag +
+                 query_wake_reason_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -1534,6 +1540,48 @@ query_modem_configuration_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+query_wake_reason_ready (MbimDevice   *device,
+                         GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    MbimWakeType            wake_type;
+    guint32                 session_id;
+    const guint8           *data_buffer;
+    guint32                 data_buffer_size;
+    g_autofree gchar       *data_buffer_str = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_basic_connect_extensions_v3_wake_reason_response_parse (
+            response,
+            &wake_type,
+            &session_id,
+            &data_buffer_size,
+            &data_buffer,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully queried wake reason\n",
+             mbim_device_get_path_display (device));
+
+    data_buffer_str = mbim_common_str_hex (data_buffer, data_buffer_size, ':');
+    g_print ("\t  Wake type:  '%s'\n", mbim_wake_type_get_string (wake_type));
+    g_print ("\t Session ID:  '%u'\n", session_id);
+    g_print ("\tData buffer:  '%s'\n", data_buffer_str);
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -1896,6 +1944,19 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_modem_configuration_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to query Wake Reason? */
+    if (query_wake_reason_flag) {
+        g_debug ("Asynchronously querying wake reason...");
+        request = mbim_message_ms_basic_connect_extensions_v3_wake_reason_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_wake_reason_ready,
                              NULL);
         return;
     }

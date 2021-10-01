@@ -336,6 +336,7 @@ typedef enum { /*< since=1.26 >*/
  * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION: Protocol version query and report, defined in MBIMEx v2.0. Since 1.28.
  * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_MODEM_CONFIGURATION: Modem configuration status, defined in MBIMEx v3.0. Since 1.28.
  * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_REGISTRATION_PARAMETERS: Registration parameters, defined in MBIMEx v3.0. Since 1.28.
+ * @MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_WAKE_REASON: Protocol wake reason query and report, defined in MBIMEx v3.0. Since 1.28
  *
  * MBIM commands in the %MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS service.
  *
@@ -358,6 +359,7 @@ typedef enum { /*< since=1.18 >*/
     MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION                  = 15,
     MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_MODEM_CONFIGURATION      = 16,
     MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_REGISTRATION_PARAMETERS  = 17,
+    MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_WAKE_REASON              = 19,
 } MbimCidMsBasicConnectExtensions;
 
 /* Command helpers */
