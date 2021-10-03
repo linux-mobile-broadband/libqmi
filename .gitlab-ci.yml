@@ -12,7 +12,7 @@ stages:
   variables:
     FDO_UPSTREAM_REPO: mobile-broadband/libqmi
     FDO_DISTRIBUTION_VERSION: '20.04'
-    FDO_DISTRIBUTION_TAG: '2021-09-10.2'
+    FDO_DISTRIBUTION_TAG: '2021-10-03.1'
     FDO_DISTRIBUTION_PACKAGES: ca-certificates git gcc autoconf automake libtool
                                libgirepository1.0-dev libglib2.0-dev autopoint
                                gtk-doc-tools python-is-python3 libglib2.0-doc
