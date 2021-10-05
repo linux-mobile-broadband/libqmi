@@ -13,6 +13,7 @@
 #include "mbim-auth.h"
 #include "mbim-stk.h"
 #include "mbim-ms-firmware-id.h"
+#include "mbim-ms-basic-connect-extensions.h"
 #include "mbim-message.h"
 #include "mbim-cid.h"
 #include "mbim-common.h"
@@ -1847,6 +1848,133 @@ test_message_parser_basic_connect_visible_providers_overflow (void)
     g_assert (!result);
 }
 
+static void
+test_message_parser_ms_basic_connect_extensions_base_stations (void)
+{
+    g_autoptr(GError)                              error = NULL;
+    g_autoptr(MbimMessage)                         response = NULL;
+    gboolean                                       result;
+    MbimDataClass                                  system_type;
+	g_autoptr(MbimCellInfoServingGsm)              gsm_serving_cell = NULL;
+    g_autoptr(MbimCellInfoServingUmts)             umts_serving_cell = NULL;
+    g_autoptr(MbimCellInfoServingTdscdma)          tdscdma_serving_cell = NULL;
+    g_autoptr(MbimCellInfoServingLte)              lte_serving_cell = NULL;
+    guint32                                        gsm_neighboring_cells_count;
+    g_autoptr(MbimCellInfoNeighboringGsmArray)     gsm_neighboring_cells = NULL;
+    guint32                                        umts_neighboring_cells_count;
+    g_autoptr(MbimCellInfoNeighboringUmtsArray)    umts_neighboring_cells = NULL;
+    guint32                                        tdscdma_neighboring_cells_count;
+    g_autoptr(MbimCellInfoNeighboringTdscdmaArray) tdscdma_neighboring_cells = NULL;
+    guint32                                        lte_neighboring_cells_count;
+    g_autoptr(MbimCellInfoNeighboringLteArray)     lte_neighboring_cells = NULL;
+    guint32                                        cdma_cells_count;
+    g_autoptr(MbimCellInfoCdmaArray)               cdma_cells = NULL;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0xD8, 0x00, 0x00, 0x00, /* length */
+        0x03, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x3D, 0x01, 0xDC, 0xC5, /* service id */
+        0xFE, 0xF5, 0x4D, 0x05,
+        0x0D, 0x3A, 0xBE, 0xF7,
+        0x05, 0x8E, 0x9A, 0xAF,
+        0x0B, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0xA8, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x60, 0x00, 0x00, 0x00, /* system type */
+        0x00, 0x00, 0x00, 0x00, /* gsm serving cell offset */
+        0x00, 0x00, 0x00, 0x00, /* gsm serving cell size */
+        0x00, 0x00, 0x00, 0x00, /* umts serving cell offset */
+        0x00, 0x00, 0x00, 0x00, /* umts serving cell size */
+        0x00, 0x00, 0x00, 0x00, /* tdscdma serving cell offset */
+        0x00, 0x00, 0x00, 0x00, /* tdscdma serving cell size */
+        0x4C, 0x00, 0x00, 0x00, /* lte serving cell offset*/
+        0x2E, 0x00, 0x00, 0x00, /* lte serving cell size*/
+        0xA0, 0x00, 0x00, 0x00, /* gsm network measurement report offset */
+        0x04, 0x00, 0x00, 0x00, /* gsm network measurement report size */
+        0xA4, 0x00, 0x00, 0x00, /* umts network measurement report offset */
+        0x04, 0x00, 0x00, 0x00, /* umts network measurement report size */
+        0x00, 0x00, 0x00, 0x00, /* tdscdma network measurement report offset */
+        0x00, 0x00, 0x00, 0x00, /* tdscdma network measurement report size */
+        0x7C, 0x00, 0x00, 0x00, /* lte network measurement report offset */
+        0x24, 0x00, 0x00, 0x00, /* lte network measurement report size */
+        0x00, 0x00, 0x00, 0x00, /* cdma network measurement report offset */
+        0x00, 0x00, 0x00, 0x00, /* cdma network measurement report size */
+        /* lte serving cell */
+/*4C*/  0x24, 0x00, 0x00, 0x00, /* provider id offset */
+        0x0A, 0x00, 0x00, 0x00, /* provider id size */
+        0x1F, 0xCD, 0x65, 0x04, /* cell id */
+        0x00, 0x19, 0x00, 0x00, /* earfcn */
+        0x36, 0x01, 0x00, 0x00, /* physical cell id */
+        0xFE, 0x6F, 0x00, 0x00, /* tac */
+        0x99, 0xFF, 0xFF, 0xFF, /* rsrp */
+        0xF4, 0xFF, 0xFF, 0xFF, /* rsrq */
+        0xFF, 0xFF, 0xFF, 0xFF, /* timing advance */
+        0x32, 0x00, 0x31, 0x00, /* provider id string */
+        0x34, 0x00, 0x30, 0x00,
+        0x37, 0x00, 0x00, 0x00,
+        /* lte network measurement report */
+/*7C*/  0x01, 0x00, 0x00, 0x00, /* element count */
+        0x00, 0x00, 0x00, 0x00, /* provider id offset */
+        0x00, 0x00, 0x00, 0x00, /* provider id size */
+        0xFF, 0xFF, 0xFF, 0xFF, /* cell id */
+        0xFF, 0xFF, 0xFF, 0xFF, /* earfcn */
+        0x36, 0x01, 0x00, 0x00, /* physical cell id */
+        0xFF, 0xFF, 0xFF, 0xFF, /* tac */
+        0x99, 0xFF, 0xFF, 0xFF, /* rsrp */
+        0xF4, 0xFF, 0xFF, 0xFF, /* rsrq */
+        /* gsm network measurement report */
+/*A0*/  0x00, 0x00, 0x00, 0x00,
+        /* umts network measurement report */
+/*A4*/  0x00, 0x00, 0x00, 0x00
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    result = (mbim_message_ms_basic_connect_extensions_base_stations_info_response_parse (
+                  response,
+                  &system_type,
+                  &gsm_serving_cell,
+                  &umts_serving_cell,
+                  &tdscdma_serving_cell,
+                  &lte_serving_cell,
+                  &gsm_neighboring_cells_count,
+                  &gsm_neighboring_cells,
+                  &umts_neighboring_cells_count,
+                  &umts_neighboring_cells,
+                  &tdscdma_neighboring_cells_count,
+                  &tdscdma_neighboring_cells,
+                  &lte_neighboring_cells_count,
+                  &lte_neighboring_cells,
+                  &cdma_cells_count,
+                  &cdma_cells,
+                  &error));
+
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_null (gsm_serving_cell);
+    g_assert_null (umts_serving_cell);
+    g_assert_null (tdscdma_serving_cell);
+    g_assert_nonnull (lte_serving_cell);
+    g_assert_cmpuint (gsm_neighboring_cells_count, ==, 0);
+    g_assert_null (gsm_neighboring_cells);
+    g_assert_cmpuint (umts_neighboring_cells_count, ==, 0);
+    g_assert_null (umts_neighboring_cells);
+    g_assert_cmpuint (tdscdma_neighboring_cells_count, ==, 0);
+    g_assert_null (tdscdma_neighboring_cells);
+    g_assert_cmpuint (lte_neighboring_cells_count, ==, 1);
+    g_assert_nonnull (lte_neighboring_cells);
+    g_assert_cmpuint (cdma_cells_count, ==, 0);
+    g_assert_null (cdma_cells);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -1873,6 +2001,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/parser/ms-firmware-id/get", test_message_parser_ms_firmware_id_get);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/connect/short", test_message_parser_basic_connect_connect_short);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/visible-providers/overflow", test_message_parser_basic_connect_visible_providers_overflow);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/base-stations", test_message_parser_ms_basic_connect_extensions_base_stations);
 
     return g_test_run ();
 }

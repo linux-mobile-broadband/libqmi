@@ -47,6 +47,7 @@ static gboolean  query_provisioned_contexts_flag;
 static gchar    *set_provisioned_contexts_str;
 static gboolean  query_registration_parameters_flag;
 static gchar    *set_registration_parameters_str;
+static gboolean  query_base_stations_flag;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -114,6 +115,10 @@ static GOptionEntry entries[] = {
     { "ms-set-registration-parameters", 0, 0,G_OPTION_ARG_STRING , &set_registration_parameters_str,
       "Set registration parameters (required keys: mico-mode, drx-cycle, ladn-info, default-pdu-activation-hint, re-register-if-needed)",
       "[\"key=value,...\"]"
+    },
+    { "ms-query-base-stations-info", 0, 0, G_OPTION_ARG_NONE, &query_base_stations_flag,
+      "Query base stations info",
+      NULL
     },
     { NULL }
 };
@@ -196,7 +201,8 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  query_provisioned_contexts_flag +
                  !!set_provisioned_contexts_str +
                  query_registration_parameters_flag +
-                 !!set_registration_parameters_str);
+                 !!set_registration_parameters_str +
+                 query_base_stations_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -1061,6 +1067,253 @@ registration_parameters_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+query_base_stations_ready (MbimDevice   *device,
+                           GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)                         response = NULL;
+    g_autoptr(GError)                              error = NULL;
+    MbimDataClass                                  system_type;
+    g_autofree gchar                              *system_type_str = NULL;
+    g_autoptr(MbimCellInfoServingGsm)              gsm_serving_cell = NULL;
+    g_autoptr(MbimCellInfoServingUmts)             umts_serving_cell = NULL;
+    g_autoptr(MbimCellInfoServingTdscdma)          tdscdma_serving_cell = NULL;
+    g_autoptr(MbimCellInfoServingLte)              lte_serving_cell = NULL;
+    guint32                                        gsm_neighboring_cells_count;
+    g_autoptr(MbimCellInfoNeighboringGsmArray)     gsm_neighboring_cells = NULL;
+    guint32                                        umts_neighboring_cells_count;
+    g_autoptr(MbimCellInfoNeighboringUmtsArray)    umts_neighboring_cells = NULL;
+    guint32                                        tdscdma_neighboring_cells_count;
+    g_autoptr(MbimCellInfoNeighboringTdscdmaArray) tdscdma_neighboring_cells = NULL;
+    guint32                                        lte_neighboring_cells_count;
+    g_autoptr(MbimCellInfoNeighboringLteArray)     lte_neighboring_cells = NULL;
+    guint32                                        cdma_cells_count;
+    g_autoptr(MbimCellInfoCdmaArray)               cdma_cells = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_basic_connect_extensions_base_stations_info_response_parse (
+            response,
+            &system_type,
+            &gsm_serving_cell,
+            &umts_serving_cell,
+            &tdscdma_serving_cell,
+            &lte_serving_cell,
+            &gsm_neighboring_cells_count,
+            &gsm_neighboring_cells,
+            &umts_neighboring_cells_count,
+            &umts_neighboring_cells,
+            &tdscdma_neighboring_cells_count,
+            &tdscdma_neighboring_cells,
+            &lte_neighboring_cells_count,
+            &lte_neighboring_cells,
+            &cdma_cells_count,
+            &cdma_cells,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+#define PRINT_VALIDATED_UINT(number, invalid, format, units) do {       \
+        if (number == invalid)                                          \
+            g_print ("%s: unknown\n", format);                          \
+        else                                                            \
+            g_print ("%s: %u%s\n", format, number, units ? units : ""); \
+    } while (0)
+
+#define PRINT_VALIDATED_INT(number, invalid, format, units) do {        \
+        if (number == (gint32)invalid)                                  \
+            g_print ("%s: unknown\n", format);                          \
+        else                                                            \
+            g_print ("%s: %d%s\n", format, number, units ? units : ""); \
+    } while (0)
+
+#define PRINT_VALIDATED_RX_LEVEL(number, format) do {                   \
+        if (number == 0xFFFFFFFF)                                       \
+            g_print ("%s: unknown\n", format);                          \
+        else                                                            \
+            g_print ("%s: %d dBm\n", format, (gint32)number - 110);     \
+    } while (0)
+
+    system_type_str = mbim_data_class_build_string_from_mask (system_type);
+    g_print ("System type: %s\n", system_type_str);
+
+    if (gsm_serving_cell) {
+        g_print ("GSM serving cell:\n"
+                 "\t    Provider id: %s\n",
+                 VALIDATE_UNKNOWN (gsm_serving_cell->provider_id));
+        PRINT_VALIDATED_UINT     (gsm_serving_cell->location_area_code, 0xFFFFFFFF, "\t            LAC", NULL);
+        PRINT_VALIDATED_UINT     (gsm_serving_cell->cell_id,            0xFFFFFFFF, "\t        Cell ID", NULL);
+        PRINT_VALIDATED_UINT     (gsm_serving_cell->timing_advance,     0xFFFFFFFF, "\t Timing advance", " bit periods");
+        PRINT_VALIDATED_UINT     (gsm_serving_cell->arfcn,              0xFFFFFFFF, "\t          ARFCN", NULL);
+        PRINT_VALIDATED_UINT     (gsm_serving_cell->base_station_id,    0xFFFFFFFF, "\tBase station ID", NULL);
+        PRINT_VALIDATED_RX_LEVEL (gsm_serving_cell->rx_level,                       "\t       Rx level");
+    } else
+        g_print ("GSM serving cell: n/a\n");
+
+    if (gsm_neighboring_cells_count && gsm_neighboring_cells) {
+        guint i;
+
+        g_print ("Neighboring GSM cells: %d\n", gsm_neighboring_cells_count);
+        for (i = 0; i < gsm_neighboring_cells_count; i++) {
+            g_print ("\tNeighboring cell [%u]:\n"
+                     "\t\t    Provider id: %s\n",
+                     i + 1,
+                     VALIDATE_UNKNOWN (gsm_neighboring_cells[i]->provider_id));
+            PRINT_VALIDATED_UINT     (gsm_neighboring_cells[i]->location_area_code, 0xFFFFFFFF, "\t\t            LAC", NULL);
+            PRINT_VALIDATED_UINT     (gsm_neighboring_cells[i]->cell_id,            0xFFFFFFFF, "\t\t        Cell ID", NULL);
+            PRINT_VALIDATED_UINT     (gsm_neighboring_cells[i]->arfcn,              0xFFFFFFFF, "\t\t          ARFCN", NULL);
+            PRINT_VALIDATED_UINT     (gsm_neighboring_cells[i]->base_station_id,    0xFFFFFFFF, "\t\tBase station ID", NULL);
+            PRINT_VALIDATED_RX_LEVEL (gsm_neighboring_cells[i]->rx_level,                       "\t\t       Rx level");
+        }
+    } else
+        g_print ("Neighboring GSM cells: n/a\n");
+
+    if (umts_serving_cell) {
+        g_print ("UMTS Serving cell:\n"
+                 "\t            Provider id: %s\n",
+                 VALIDATE_UNKNOWN (umts_serving_cell->provider_id));
+        PRINT_VALIDATED_UINT (umts_serving_cell->location_area_code,      0xFFFFFFFF, "\t                    LAC", NULL);
+        PRINT_VALIDATED_UINT (umts_serving_cell->cell_id,                 0xFFFFFFFF, "\t                Cell id", NULL);
+        PRINT_VALIDATED_UINT (umts_serving_cell->frequency_info_ul,       0xFFFFFFFF, "\t  Frequency info uplink", NULL);
+        PRINT_VALIDATED_UINT (umts_serving_cell->frequency_info_dl,       0xFFFFFFFF, "\tFrequency info downlink", NULL);
+        PRINT_VALIDATED_UINT (umts_serving_cell->frequency_info_nt,       0xFFFFFFFF, "\t     Frequency info TDD", NULL);
+        PRINT_VALIDATED_UINT (umts_serving_cell->uarfcn,                  0xFFFFFFFF, "\t                 UARFCN", NULL);
+        PRINT_VALIDATED_UINT (umts_serving_cell->primary_scrambling_code, 0xFFFFFFFF, "\tPrimary Scrambling Code", NULL);
+        /* note: docs say unknown value in this case is 0
+         * https://github.com/MicrosoftDocs/windows-driver-docs/issues/2932 */
+        PRINT_VALIDATED_INT  (umts_serving_cell->rscp,                    0xFFFFFFFF, "\t                   RSCP", " dBm");
+        PRINT_VALIDATED_INT  (umts_serving_cell->ecno,                    1,          "\t                   ECNO", " dBm");
+        PRINT_VALIDATED_UINT (umts_serving_cell->path_loss,               0xFFFFFFFF, "\t              Path loss", NULL);
+    } else
+        g_print ("UMTS serving cell: n/a\n");
+
+    if (umts_neighboring_cells_count && umts_neighboring_cells) {
+        guint i;
+
+        g_print ("Neighboring UMTS cells: %d\n", umts_neighboring_cells_count);
+        for (i = 0; i < umts_neighboring_cells_count; i++) {
+            g_print ("\tNeighboring cell [%u]:\n"
+                     "\t\t            Provider id: %s\n",
+                     i + 1,
+                     VALIDATE_UNKNOWN (umts_neighboring_cells[i]->provider_id));
+            PRINT_VALIDATED_UINT (umts_neighboring_cells[i]->location_area_code,      0xFFFFFFFF, "\t\t                    LAC", NULL);
+            PRINT_VALIDATED_UINT (umts_neighboring_cells[i]->cell_id,                 0xFFFFFFFF, "\t\t                Cell id", NULL);
+            PRINT_VALIDATED_UINT (umts_neighboring_cells[i]->uarfcn,                  0xFFFFFFFF, "\t\t                 UARFCN", NULL);
+            PRINT_VALIDATED_UINT (umts_neighboring_cells[i]->primary_scrambling_code, 0xFFFFFFFF, "\t\tPrimary Scrambling Code", NULL);
+            PRINT_VALIDATED_INT  (umts_neighboring_cells[i]->rscp,                    0xFFFFFFFF, "\t\t                   RSCP", " dBm");
+            PRINT_VALIDATED_INT  (umts_neighboring_cells[i]->ecno,                    1,          "\t\t                   ECNO", " dBm");
+            PRINT_VALIDATED_UINT (umts_neighboring_cells[i]->path_loss,               0xFFFFFFFF, "\t\t              Path loss", NULL);
+        }
+    } else
+        g_print ("Neighboring UMTS cells: n/a\n");
+
+    if (tdscdma_serving_cell) {
+        g_print ("TDSCDMA Serving cell:\n"
+                 "\t      Provider id: %s\n",
+                 VALIDATE_UNKNOWN (tdscdma_serving_cell->provider_id));
+        PRINT_VALIDATED_UINT (tdscdma_serving_cell->location_area_code, 0xFFFFFFFF, "\t              LAC", NULL);
+        PRINT_VALIDATED_UINT (tdscdma_serving_cell->cell_id,            0xFFFFFFFF, "\t          Cell id", NULL);
+        PRINT_VALIDATED_UINT (tdscdma_serving_cell->uarfcn,             0xFFFFFFFF, "\t           UARFCN", NULL);
+        PRINT_VALIDATED_UINT (tdscdma_serving_cell->cell_parameter_id,  0xFFFFFFFF, "\tCell parameter id", NULL);
+        PRINT_VALIDATED_UINT (tdscdma_serving_cell->timing_advance,     0xFFFFFFFF, "\t   Timing advance", NULL);
+        PRINT_VALIDATED_INT  (tdscdma_serving_cell->rscp,               0xFFFFFFFF, "\t             RSCP", " dBm");
+        PRINT_VALIDATED_UINT (tdscdma_serving_cell->path_loss,          0xFFFFFFFF, "\t        Path loss", NULL);
+    } else
+        g_print ("TDSCDMA serving cell: n/a\n");
+
+    if (tdscdma_neighboring_cells_count && tdscdma_neighboring_cells) {
+        guint i;
+
+        g_print ("Neighboring TDSCDMA cells: %d\n", tdscdma_neighboring_cells_count);
+        for (i = 0; i < tdscdma_neighboring_cells_count; i++) {
+            g_print ("\tNeighboring cell [%u]:\n"
+                     "\t\t      Provider id: %s\n",
+                     i + 1,
+                     VALIDATE_UNKNOWN (tdscdma_neighboring_cells[i]->provider_id));
+            PRINT_VALIDATED_UINT (tdscdma_neighboring_cells[i]->location_area_code, 0xFFFFFFFF, "\t\t              LAC", NULL);
+            PRINT_VALIDATED_UINT (tdscdma_neighboring_cells[i]->cell_id,            0xFFFFFFFF, "\t\t          Cell id", NULL);
+            PRINT_VALIDATED_UINT (tdscdma_neighboring_cells[i]->uarfcn,             0xFFFFFFFF, "\t\t           UARFCN", NULL);
+            PRINT_VALIDATED_UINT (tdscdma_neighboring_cells[i]->cell_parameter_id,  0xFFFFFFFF, "\t\tCell parameter id", NULL);
+            PRINT_VALIDATED_UINT (tdscdma_neighboring_cells[i]->timing_advance,     0xFFFFFFFF, "\t\t   Timing advance", NULL);
+            PRINT_VALIDATED_INT  (tdscdma_neighboring_cells[i]->rscp,               0xFFFFFFFF, "\t\t             RSCP", " dBm");
+            PRINT_VALIDATED_UINT (tdscdma_neighboring_cells[i]->path_loss,          0xFFFFFFFF, "\t\t        Path Loss", NULL);
+        }
+    } else
+        g_print ("Neighboring TDSCDMA cells: n/a\n");
+
+    if (lte_serving_cell) {
+        g_print ("LTE Serving cell:\n"
+                 "\t      Provider id: %s\n",
+                 VALIDATE_UNKNOWN (lte_serving_cell->provider_id));
+        PRINT_VALIDATED_UINT (lte_serving_cell->cell_id,          0xFFFFFFFF, "\t          Cell id", NULL);
+        PRINT_VALIDATED_UINT (lte_serving_cell->earfcn,           0xFFFFFFFF, "\t           EARFCN", NULL);
+        PRINT_VALIDATED_UINT (lte_serving_cell->physical_cell_id, 0xFFFFFFFF, "\t Physical cell id", NULL);
+        PRINT_VALIDATED_UINT (lte_serving_cell->tac,              0xFFFFFFFF, "\t              TAC", NULL);
+        PRINT_VALIDATED_INT  (lte_serving_cell->rsrp,             0xFFFFFFFF, "\t             RSRP", " dBm");
+        PRINT_VALIDATED_INT  (lte_serving_cell->rsrq,             0xFFFFFFFF, "\t             RSRQ", " dBm");
+        PRINT_VALIDATED_UINT (lte_serving_cell->timing_advance,   0xFFFFFFFF, "\t   Timing advance", NULL);
+    } else
+        g_print ("LTE serving cell: n/a\n");
+
+    if (lte_neighboring_cells_count && lte_neighboring_cells) {
+        guint i;
+
+        g_print ("Neighboring LTE cells: %d\n", lte_neighboring_cells_count);
+        for (i = 0; i < lte_neighboring_cells_count; i++) {
+            g_print ("\tNeighboring cell [%u]:\n"
+                     "\t\t      Provider id: %s\n",
+                     i + 1,
+                     VALIDATE_UNKNOWN (lte_neighboring_cells[i]->provider_id));
+            PRINT_VALIDATED_UINT (lte_neighboring_cells[i]->cell_id,          0xFFFFFFFF, "\t\t          Cell id", NULL);
+            PRINT_VALIDATED_UINT (lte_neighboring_cells[i]->earfcn,           0xFFFFFFFF, "\t\t           EARFCN", NULL);
+            PRINT_VALIDATED_UINT (lte_neighboring_cells[i]->physical_cell_id, 0xFFFFFFFF, "\t\t Physical cell id", NULL);
+            PRINT_VALIDATED_UINT (lte_neighboring_cells[i]->tac,              0xFFFFFFFF, "\t\t              TAC", NULL);
+            PRINT_VALIDATED_INT  (lte_neighboring_cells[i]->rsrp,             0xFFFFFFFF, "\t\t             RSRP", " dBm");
+            PRINT_VALIDATED_INT  (lte_neighboring_cells[i]->rsrq,             0xFFFFFFFF, "\t\t             RSRQ", " dBm");
+        }
+    } else
+        g_print ("Neighboring LTE cells: n/a\n");
+
+    if (cdma_cells_count && cdma_cells) {
+        guint i;
+
+        g_print ("CDMA cells: %d\n", cdma_cells_count);
+        for (i = 0; i < cdma_cells_count; i++)
+            g_print ("Cell [%u]:\n"
+                     "\t        Serving: %s\n",
+                     i + 1,
+                     cdma_cells[i]->serving_cell_flag ? "yes" : "no");
+        PRINT_VALIDATED_UINT (cdma_cells[i]->nid,             0xFFFFFFFF, "\t            NID", NULL);
+        PRINT_VALIDATED_UINT (cdma_cells[i]->sid,             0xFFFFFFFF, "\t            SID", NULL);
+        PRINT_VALIDATED_UINT (cdma_cells[i]->base_station_id, 0xFFFFFFFF, "\tBase station id", NULL);
+        /* TODO: The Base Station Latitude (0-4194303). This is encoded in units of 0.25 seconds, expressed
+         * in two’s complement representation within the low 22 bits of the DWORD. As a signed value,
+         * North latitudes are positive. Use 0xFFFFFFFF when this information is not available. */
+        PRINT_VALIDATED_UINT (cdma_cells[i]->base_latitude,   0xFFFFFFFF, "\t  Base latitude", NULL);
+        /* TODO: The Base Station Longitude (0-8388607). This is encoded in units of 0.25 seconds, expressed
+         * in two’s complement representation within the low 23 bits of the DWORD. As a signed value, East
+         * longitudes are positive. Use 0xFFFFFFFF when this information is not available. */
+        PRINT_VALIDATED_UINT (cdma_cells[i]->base_longitude,  0xFFFFFFFF, "\t Base longitude", NULL);
+        PRINT_VALIDATED_UINT (cdma_cells[i]->ref_pn,          0xFFFFFFFF, "\t          RefPN", NULL);
+        PRINT_VALIDATED_UINT (cdma_cells[i]->gps_seconds,     0xFFFFFFFF, "\t    GPS seconds", " seconds");
+        PRINT_VALIDATED_UINT (cdma_cells[i]->pilot_strength,  0xFFFFFFFF, "\t Pilot strength", NULL);
+    } else
+        g_print ("CDMA cells: n/a\n");
+
+#undef PRINT_VALIDATED_RX_LEVEL
+#undef PRINT_VALIDATED_UINT
+#undef PRINT_VALIDATED_INT
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -1401,6 +1654,19 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)registration_parameters_ready,
+                             NULL);
+        return;
+    }
+
+    if (query_base_stations_flag) {
+        g_debug ("Asynchronously querying base stations...");
+        /* default capacity is 15, so use that value when querying */
+        request = mbim_message_ms_basic_connect_extensions_base_stations_info_query_new (15, 15, 15, 15, 15, NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_base_stations_ready,
                              NULL);
         return;
     }
