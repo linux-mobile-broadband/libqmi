@@ -60,6 +60,9 @@ def validate_fields(fields):
         elif field['format'] == 'struct':
             if 'struct-type' not in field:
                 raise ValueError('Field type \'struct\' requires \'struct-type\' field')
+        elif field['format'] == 'ms-struct':
+            if 'struct-type' not in field:
+                raise ValueError('Field type \'ms-struct\' requires \'struct-type\' field')
         elif field['format'] == 'struct-array':
             flag_always_read_field(fields, field['array-size-field'])
             if 'struct-type' not in field:
@@ -255,6 +258,8 @@ class Message:
                 inner_template = (' * @${field}: (in)(type GStrv): the \'${name}\' field, given as an array of strings.\n')
             elif field['format'] == 'struct':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #${struct}.\n')
+            elif field['format'] == 'ms-struct':
+                raise ValueError('type \'ms-struct\' unsupported as input')
             elif field['format'] == 'struct-array':
                 inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type ${struct}): the \'${name}\' field, given as an array of #${struct} items.\n')
             elif field['format'] == 'ref-struct-array':
@@ -315,6 +320,8 @@ class Message:
                 inner_template = ('    const gchar *const *${field},\n')
             elif field['format'] == 'struct':
                 inner_template = ('    const ${struct} *${field},\n')
+            elif field['format'] == 'ms-struct':
+                raise ValueError('type \'ms-struct\' unsupported as input')
             elif field['format'] == 'struct-array':
                 inner_template = ('    const ${struct} *const *${field},\n')
             elif field['format'] == 'ref-struct-array':
@@ -374,6 +381,8 @@ class Message:
                 inner_template = ('    const gchar *const *${field},\n')
             elif field['format'] == 'struct':
                 inner_template = ('    const ${struct} *${field},\n')
+            elif field['format'] == 'ms-struct':
+                raise ValueError('type \'ms-struct\' unsupported as input')
             elif field['format'] == 'struct-array':
                 inner_template = ('    const ${struct} *const *${field},\n')
             elif field['format'] == 'ref-struct-array':
@@ -448,6 +457,8 @@ class Message:
                 inner_template += ('        _mbim_message_command_builder_append_string_array (builder, ${field}, ${array_size_field});\n')
             elif field['format'] == 'struct':
                 inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_struct (builder, ${field});\n')
+            elif field['format'] == 'ms-struct':
+                raise ValueError('type \'ms-struct\' unsupported as input')
             elif field['format'] == 'struct-array':
                 inner_template += ('        _mbim_message_command_builder_append_${struct_underscore}_struct_array (builder, ${field}, ${array_size_field});\n')
             elif field['format'] == 'ref-struct-array':
@@ -525,6 +536,8 @@ class Message:
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full)(type GStrv): return location for a newly allocated array of strings, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_strfreev().\n')
             elif field['format'] == 'struct':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated #${struct}, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_free().\n')
+            elif field['format'] == 'ms-struct':
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated #${struct}, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_free().\n')
             elif field['format'] == 'struct-array':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type ${struct}): return location for a newly allocated array of #${struct} items, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
             elif field['format'] == 'ref-struct-array':
@@ -583,6 +596,8 @@ class Message:
             elif field['format'] == 'string-array':
                 inner_template = ('    gchar ***out_${field},\n')
             elif field['format'] == 'struct':
+                inner_template = ('    ${struct} **out_${field},\n')
+            elif field['format'] == 'ms-struct':
                 inner_template = ('    ${struct} **out_${field},\n')
             elif field['format'] == 'struct-array':
                 inner_template = ('    ${struct}Array **out_${field},\n')
@@ -643,6 +658,8 @@ class Message:
                 inner_template = ('    gchar ***out_${field},\n')
             elif field['format'] == 'struct':
                 inner_template = ('    ${struct} **out_${field},\n')
+            elif field['format'] == 'ms-struct':
+                inner_template = ('    ${struct} **out_${field},\n')
             elif field['format'] == 'struct-array':
                 inner_template = ('    ${struct}Array **out_${field},\n')
             elif field['format'] == 'ref-struct-array':
@@ -690,6 +707,9 @@ class Message:
                 count_allocated_variables += 1
                 inner_template = ('    gchar **_${field} = NULL;\n')
             elif field['format'] == 'struct':
+                count_allocated_variables += 1
+                inner_template = ('    ${struct} *_${field} = NULL;\n')
+            elif field['format'] == 'ms-struct':
                 count_allocated_variables += 1
                 inner_template = ('    ${struct} *_${field} = NULL;\n')
             elif field['format'] == 'struct-array':
@@ -788,6 +808,7 @@ class Message:
                 elif field['format'] == 'string' or \
                      field['format'] == 'string-array' or \
                      field['format'] == 'struct' or \
+                     field['format'] == 'ms-struct' or \
                      field['format'] == 'struct-array' or \
                      field['format'] == 'ref-struct-array' or \
                      field['format'] == 'ipv4' or \
@@ -945,6 +966,17 @@ class Message:
                     '        else\n'
                     '             _${struct_name}_free (tmp);\n'
                     '        offset += bytes_read;\n')
+            elif field['format'] == 'ms-struct':
+                inner_template += (
+                    '        ${struct_type} *tmp = NULL;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_${struct_name}_ms_struct (message, offset, &tmp, error))\n'
+                    '            goto out;\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            _${field} = tmp;\n'
+                    '        else\n'
+                    '             _${struct_name}_free (tmp);\n'
+                    '        offset += 8;\n')
             elif field['format'] == 'struct-array':
                 inner_template += (
                     '        if ((out_${field} != NULL) && !_mbim_message_read_${struct_name}_struct_array (message, _${array_size_field}, offset, &_${field}, error))\n'
@@ -1016,6 +1048,7 @@ class Message:
                 if field['format'] == 'string' or \
                    field['format'] == 'string-array' or \
                    field['format'] == 'struct' or \
+                   field['format'] == 'ms-struct' or \
                    field['format'] == 'struct-array' or \
                    field['format'] == 'ref-struct-array' or \
                    field['format'] == 'ms-struct-array' or \
@@ -1037,7 +1070,7 @@ class Message:
                     inner_template = ('        g_free (_${field});\n')
                 elif field['format'] == 'string-array':
                     inner_template = ('        g_strfreev (_${field});\n')
-                elif field['format'] == 'struct':
+                elif field['format'] == 'struct' or field['format'] == 'ms-struct':
                     inner_template = ('        ${struct_underscore}_free (_${field});\n')
                 elif field['format'] == 'struct-array' or field['format'] == 'ref-struct-array' or field['format'] == 'ms-struct-array':
                     inner_template = ('        ${struct_underscore}_array_free (_${field});\n')
@@ -1285,7 +1318,24 @@ class Message:
                     '        new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
                     '        struct_str = _mbim_message_print_${struct_name}_struct (tmp, new_line_prefix);\n'
                     '        g_string_append (str, struct_str);\n'
-                    '        g_string_append_printf (str, "%s  }\\n", line_prefix);\n')
+                    '        g_string_append_printf (str, "%s  }", line_prefix);\n')
+
+            elif field['format'] == 'ms-struct':
+                inner_template += (
+                    '        g_autoptr(${struct_type}) tmp = NULL;\n'
+                    '        g_autofree gchar *new_line_prefix = NULL;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_${struct_name}_ms_struct (message, offset, &tmp, &inner_error))\n'
+                    '            goto out;\n'
+                    '        offset += 8;\n'
+                    '        g_string_append (str, "{\\n");\n'
+                    '        new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
+                    '        if (tmp) {\n'
+                    '            g_autofree gchar *struct_str = NULL;\n'
+                    '            struct_str = _mbim_message_print_${struct_name}_struct (tmp, new_line_prefix);\n'
+                    '            g_string_append (str, struct_str);\n'
+                    '        }\n'
+                    '        g_string_append_printf (str, "%s  }", line_prefix);\n')
 
             elif field['format'] == 'struct-array' or field['format'] == 'ref-struct-array' or field['format'] == 'ms-struct-array':
                 inner_template += (

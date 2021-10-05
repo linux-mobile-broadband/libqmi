@@ -26,6 +26,7 @@ class Struct:
         # Whether the struct is used as a single field, or as an array of
         # fields. Will be updated after having created the object.
         self.single_member = False
+        self.ms_struct = False
         self.ref_struct_array_member = False
         self.struct_array_member = False
         self.ms_struct_array_member = False
@@ -656,6 +657,43 @@ class Struct:
             '    return NULL;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
+
+        if self.ms_struct == True:
+            template = (
+                '\n'
+                'static gboolean\n'
+                '_mbim_message_read_${name_underscore}_ms_struct (\n'
+                '    const MbimMessage *self,\n'
+                '    guint32 relative_offset,\n'
+                '    ${name} **out_struct,\n'
+                '    GError **error)\n'
+                '{\n'
+                '    ${name} *out;\n'
+                '    guint32 offset;\n'
+                '    guint32 size;\n'
+                '\n'
+                '    g_assert (self != NULL);\n'
+                '\n'
+                '    if (!_mbim_message_read_guint32 (self, relative_offset, &offset, error))\n'
+                '        return FALSE;\n'
+                '    relative_offset += 4;\n'
+                '\n'
+                '    if (!_mbim_message_read_guint32 (self, relative_offset, &size, error))\n'
+                '        return FALSE;\n'
+                '    relative_offset += 4;\n'
+                '\n'
+                '    if (!offset) {\n'
+                '        *out_struct = NULL;\n'
+                '        return TRUE;\n'
+                '    }\n'
+                '\n'
+                '    out = _mbim_message_read_${name_underscore}_struct (self, offset, NULL, error);\n'
+                '    if (!out)\n'
+                '        return FALSE;\n'
+                '    *out_struct = out;\n'
+                '    return TRUE;\n'
+                '}\n')
+            cfile.write(string.Template(template).substitute(translations))
 
         if self.struct_array_member == True:
             template = (

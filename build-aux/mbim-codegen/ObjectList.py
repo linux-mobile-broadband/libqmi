@@ -19,6 +19,10 @@ def set_struct_usage(struct, fields):
         if field['format'] == 'struct' and field['struct-type'] == struct.name:
             struct.single_member = True
             break
+        if field['format'] == 'ms-struct' and field['struct-type'] == struct.name:
+            struct.single_member = True
+            struct.ms_struct = True
+            break
         if field['format'] == 'ref-struct-array' and field['struct-type'] == struct.name:
             struct.ref_struct_array_member = True
             break
