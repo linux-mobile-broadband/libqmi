@@ -610,17 +610,6 @@ process_internal_proxy_open (MbimProxy   *self,
         status = MBIM_STATUS_ERROR_NONE;
     }
 
-    /* notify the client about the MBIMEx version */
-    indication = (MbimMessage *) g_object_get_data (G_OBJECT (client->device), MBIM_DEVICE_PROXY_CONTROL_VERSION);
-    if (indication) {
-        g_autoptr(GError) error = NULL;
-
-        if (!client_send_message (client, indication, &error))
-            g_warning ("[client %lu] couldn't report MBIMEx version update: %s", client->id, error->message);
-        else
-            g_debug ("[client %lu] reported MBIMEx version update", client->id);
-    }
-
     request->response = mbim_message_open_done_new (mbim_message_get_transaction_id (request->message), status);
     request_complete_and_free (request);
     return TRUE;
@@ -676,7 +665,8 @@ proxy_config_internal_device_open_ready (MbimProxy    *self,
                                          GAsyncResult *res,
                                          Request      *request)
 {
-    g_autoptr(GError) error = NULL;
+    g_autoptr(GError)      error = NULL;
+    g_autoptr(MbimMessage) indication = NULL;
 
     if (!internal_device_open_finish (self, res, &error)) {
         g_warning ("[client %lu,0x%08x] cannot configure proxy: couldn't open MBIM device: %s",
@@ -689,6 +679,15 @@ proxy_config_internal_device_open_ready (MbimProxy    *self,
 
     g_debug ("[client %lu,0x%08x] proxy configured",
              request->client->id, request->original_transaction_id);
+
+    /* notify the client about the MBIMEx version */
+    indication = (MbimMessage *) g_object_get_data (G_OBJECT (request->client->device), MBIM_DEVICE_PROXY_CONTROL_VERSION);
+    if (indication) {
+        if (!client_send_message (request->client, indication, &error))
+            g_warning ("[client %lu] couldn't report MBIMEx version update: %s", request->client->id, error->message);
+        else
+            g_debug ("[client %lu] reported MBIMEx version update", request->client->id);
+    }
 
     if (request->client->config_ongoing == TRUE)
         request->client->config_ongoing = FALSE;
