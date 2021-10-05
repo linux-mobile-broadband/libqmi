@@ -764,6 +764,7 @@ class Struct:
                 '    offset += 4;\n'
                 '\n'
                 '    if (!intermediate_struct_offset) {\n'
+                '        *out_array_size = 0;\n'
                 '        *out_array = NULL;\n'
                 '        return TRUE;\n'
                 '    }\n'
