@@ -46,27 +46,33 @@ class ObjectList:
     def __init__(self, objects_dictionary):
         self.command_list = []
         self.struct_list = []
-        self.service = ''
-        self.mbimex_service = ''
-        self.mbimex_version = ''
+        self.service_list = []
 
         # Loop items in the list, creating Message objects for the messages
+        service_iter = ''
+        mbimex_service_iter = ''
+        mbimex_version_iter = ''
+
         for object_dictionary in objects_dictionary:
             if object_dictionary['type'] == 'Command':
-                if self.service == '':
+                if service_iter == '':
                     raise ValueError('Service name not specified before the first command')
-                self.command_list.append(Message(self.service, self.mbimex_service, self.mbimex_version, object_dictionary))
+                self.command_list.append(Message(service_iter, mbimex_service_iter, mbimex_version_iter, object_dictionary))
             elif object_dictionary['type'] == 'Struct':
                 self.struct_list.append(Struct(object_dictionary))
             elif object_dictionary['type'] == 'Service':
-                self.service = object_dictionary['name']
+                service_iter = object_dictionary['name']
+                self.service_list.append(service_iter)
                 if 'mbimex-service' in object_dictionary:
-                    self.mbimex_service = object_dictionary['mbimex-service']
-                    self.mbimex_version = object_dictionary['mbimex-version']
+                    mbimex_service_iter = object_dictionary['mbimex-service']
+                    mbimex_version_iter = object_dictionary['mbimex-version']
+                else:
+                    mbimex_service_iter = ''
+                    mbimex_version_iter = ''
             else:
                 raise ValueError('Cannot handle object type \'%s\'' % object_dictionary['type'])
 
-        if self.service == '':
+        if not self.service_list:
             raise ValueError('Service name not specified')
 
         # Populate struct usages
@@ -90,61 +96,47 @@ class ObjectList:
 
 
     """
-    Emit support for printing messages in this service
+    Emit support for printing messages in a single service
     """
-    def emit_printable(self, hfile, cfile):
-        translations = { 'service_underscore' : utils.build_underscore_name(self.service),
-                         'service'            : self.service }
-
+    def emit_printable_service(self, hfile, cfile, service):
+        translations = { 'service_underscore' : utils.build_underscore_name(service),
+                         'service'            : service }
 
         template = (
-            '\n'
-            '/*****************************************************************************/\n'
-            '/* Service helper for printable fields */\n'
-            '\n'
-            '#if defined (LIBMBIM_GLIB_COMPILATION)\n'
             '\n'
             'G_GNUC_INTERNAL\n'
             'gchar *\n'
             '__mbim_message_${service_underscore}_get_printable_fields (\n'
             '    const MbimMessage *message,\n'
             '    const gchar *line_prefix,\n'
-            '    GError **error);\n'
-            '\n'
-            '#endif\n')
+            '    GError **error);\n')
         hfile.write(string.Template(template).substitute(translations))
 
         template = (
             '\n'
-            'typedef struct {\n'
-            '  gchar * (* query_cb)        (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
-            '  gchar * (* set_cb)          (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
-            '  gchar * (* response_cb)     (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
-            '  gchar * (* notification_cb) (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
-            '} GetPrintableCallbacks;\n'
-            '\n'
-            'static const GetPrintableCallbacks get_printable_callbacks[] = {\n')
+            'static const GetPrintableCallbacks ${service_underscore}_get_printable_callbacks[] = {\n')
 
         for item in self.command_list:
-            translations['message'] = utils.build_underscore_name (item.fullname)
-            translations['cid']     = item.cid_enum_name
-            inner_template = (
-                '    [${cid}] = {\n')
-            if item.has_query:
+            if item.service == service:
+                translations['message'] = utils.build_underscore_name (item.fullname)
+                translations['cid']     = item.cid_enum_name
+                inner_template = (
+                    '    [${cid}] = {\n')
+                if item.has_query:
+                    inner_template += (
+                        '        .query_cb = ${message}_query_get_printable,\n')
+                if item.has_set:
+                    inner_template += (
+                        '        .set_cb = ${message}_set_get_printable,\n')
+                if item.has_response:
+                    inner_template += (
+                        '        .response_cb = ${message}_response_get_printable,\n')
+                if item.has_notification:
+                    inner_template += (
+                        '        .notification_cb = ${message}_notification_get_printable,\n')
                 inner_template += (
-                    '        .query_cb = ${message}_query_get_printable,\n')
-            if item.has_set:
-                inner_template += (
-                    '        .set_cb = ${message}_set_get_printable,\n')
-            if item.has_response:
-                inner_template += (
-                    '        .response_cb = ${message}_response_get_printable,\n')
-            if item.has_notification:
-                inner_template += (
-                    '        .notification_cb = ${message}_notification_get_printable,\n')
-            inner_template += (
-                '    },\n')
-            template += (string.Template(inner_template).substitute(translations))
+                    '    },\n')
+                template += (string.Template(inner_template).substitute(translations))
 
         template += (
             '};\n'
@@ -160,15 +152,15 @@ class ObjectList:
             '    switch (mbim_message_get_message_type (message)) {\n'
             '        case MBIM_MESSAGE_TYPE_COMMAND: {\n'
             '            cid = mbim_message_command_get_cid (message);\n'
-            '            if (cid < G_N_ELEMENTS (get_printable_callbacks)) {\n'
+            '            if (cid < G_N_ELEMENTS (${service_underscore}_get_printable_callbacks)) {\n'
             '                switch (mbim_message_command_get_command_type (message)) {\n'
             '                    case MBIM_MESSAGE_COMMAND_TYPE_QUERY:\n'
-            '                        if (get_printable_callbacks[cid].query_cb)\n'
-            '                            return get_printable_callbacks[cid].query_cb (message, line_prefix, error);\n'
+            '                        if (${service_underscore}_get_printable_callbacks[cid].query_cb)\n'
+            '                            return ${service_underscore}_get_printable_callbacks[cid].query_cb (message, line_prefix, error);\n'
             '                        break;\n'
             '                    case MBIM_MESSAGE_COMMAND_TYPE_SET:\n'
-            '                        if (get_printable_callbacks[cid].set_cb)\n'
-            '                            return get_printable_callbacks[cid].set_cb (message, line_prefix, error);\n'
+            '                        if (${service_underscore}_get_printable_callbacks[cid].set_cb)\n'
+            '                            return ${service_underscore}_get_printable_callbacks[cid].set_cb (message, line_prefix, error);\n'
             '                        break;\n'
             '                    case MBIM_MESSAGE_COMMAND_TYPE_UNKNOWN:\n'
             '                    default:\n'
@@ -184,17 +176,17 @@ class ObjectList:
             '\n'
             '        case MBIM_MESSAGE_TYPE_COMMAND_DONE:\n'
             '            cid = mbim_message_command_done_get_cid (message);\n'
-            '            if (cid < G_N_ELEMENTS (get_printable_callbacks)) {\n'
-            '                if (get_printable_callbacks[cid].response_cb)\n'
-            '                    return get_printable_callbacks[cid].response_cb (message, line_prefix, error);\n'
+            '            if (cid < G_N_ELEMENTS (${service_underscore}_get_printable_callbacks)) {\n'
+            '                if (${service_underscore}_get_printable_callbacks[cid].response_cb)\n'
+            '                    return ${service_underscore}_get_printable_callbacks[cid].response_cb (message, line_prefix, error);\n'
             '            }\n'
             '            break;\n'
             '\n'
             '        case MBIM_MESSAGE_TYPE_INDICATE_STATUS:\n'
             '            cid = mbim_message_indicate_status_get_cid (message);\n'
-            '            if (cid < G_N_ELEMENTS (get_printable_callbacks)) {\n'
-            '                if (get_printable_callbacks[cid].notification_cb)\n'
-            '                    return get_printable_callbacks[cid].notification_cb (message, line_prefix, error);\n'
+            '            if (cid < G_N_ELEMENTS (${service_underscore}_get_printable_callbacks)) {\n'
+            '                if (${service_underscore}_get_printable_callbacks[cid].notification_cb)\n'
+            '                    return ${service_underscore}_get_printable_callbacks[cid].notification_cb (message, line_prefix, error);\n'
             '            }\n'
             '            break;\n'
             '\n'
@@ -222,13 +214,41 @@ class ObjectList:
 
         cfile.write(string.Template(template).substitute(translations))
 
+    def emit_printable(self, hfile, cfile):
+
+        template = (
+            '\n'
+            '/*****************************************************************************/\n'
+            '/* Service helpers for printable fields */\n'
+            '\n'
+            '#if defined (LIBMBIM_GLIB_COMPILATION)\n')
+        hfile.write(template)
+
+        template = (
+            '\n'
+            'typedef struct {\n'
+            '  gchar * (* query_cb)        (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
+            '  gchar * (* set_cb)          (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
+            '  gchar * (* response_cb)     (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
+            '  gchar * (* notification_cb) (const MbimMessage *message, const gchar *line_prefix, GError **error);\n'
+            '} GetPrintableCallbacks;\n')
+        cfile.write(template)
+
+        for service in self.service_list:
+            self.emit_printable_service(hfile, cfile, service)
+
+        template = (
+            '\n'
+            '#endif\n')
+        hfile.write(template)
+
 
     """
-    Emit the sections
+    Emit the section for a single service
     """
-    def emit_sections(self, sfile):
-        translations = { 'service_dashed' : utils.build_dashed_name(self.service),
-                         'service'        : self.service }
+    def emit_sections_service(self, sfile, service):
+        translations = { 'service_dashed' : utils.build_dashed_name(service),
+                         'service'        : service }
 
         # Emit section header
         template = (
@@ -248,3 +268,7 @@ class ObjectList:
 
         sfile.write(
             '</SECTION>\n')
+
+    def emit_sections(self, sfile):
+        for service in self.service_list:
+            self.emit_sections_service(sfile, service)

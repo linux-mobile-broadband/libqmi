@@ -17,13 +17,11 @@ import utils
 def codegen_main():
     # Input arguments
     arg_parser = optparse.OptionParser('%prog [options]')
-    arg_parser.add_option('', '--input', metavar='JSONFILE',
-                          help='Input JSON-formatted database')
     arg_parser.add_option('', '--output', metavar='OUTFILES',
                           help='Generate C code in OUTFILES.[ch]')
     (opts, args) = arg_parser.parse_args();
 
-    if opts.input == None:
+    if args == None:
         raise RuntimeError('Input JSON file is mandatory')
     if opts.output == None:
         raise RuntimeError('Output file pattern is mandatory')
@@ -33,11 +31,11 @@ def codegen_main():
     output_file_h = open(opts.output + ".h", 'w')
     output_file_sections = open(opts.output + ".sections", 'w')
 
-    # Load database file contents
-    database_file_contents = utils.read_json_file(opts.input)
-
-    # Build message list
-    object_list_json = json.loads(database_file_contents)
+    # Build message list from all input files
+    object_list_json = []
+    for input_file in args:
+        database_file_contents = utils.read_json_file(input_file)
+        object_list_json += json.loads(database_file_contents)
     object_list = ObjectList(object_list_json)
 
     # Add common stuff to the output files

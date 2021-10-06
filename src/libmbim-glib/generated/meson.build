@@ -88,37 +88,39 @@ gen_sources += custom_target(
 )
 
 services_data = [
-  ['atds', true],
-  ['auth', true],
-  ['basic-connect', true],
-  ['dss', true],
-  ['intel-firmware-update', true],
-  ['ms-basic-connect-extensions', true],
-  ['ms-basic-connect-extensions-v3', true],
-  ['ms-uicc-low-level-access', true],
-  ['ms-basic-connect-v2', true],
-  ['ms-basic-connect-v3', true],
-  ['ms-firmware-id', true],
-  ['ms-host-shutdown', true],
-  ['ms-sar', true],
-  ['phonebook', true],
-  ['proxy-control', false],
-  ['qdu', true],
-  ['qmi', true],
-  ['sms', true],
-  ['stk', true],
-  ['ussd', true],
+  [['atds'], true],
+  [['auth'], true],
+  [['basic-connect', 'ms-basic-connect-v2', 'ms-basic-connect-v3'], true],
+  [['dss'], true],
+  [['intel-firmware-update'], true],
+  [['ms-basic-connect-extensions', 'ms-basic-connect-extensions-v3'], true],
+  [['ms-uicc-low-level-access'], true],
+  [['ms-firmware-id'], true],
+  [['ms-host-shutdown'], true],
+  [['ms-sar'], true],
+  [['phonebook'], true],
+  [['proxy-control'], false],
+  [['qdu'], true],
+  [['qmi'], true],
+  [['sms'], true],
+  [['stk'], true],
+  [['ussd'], true],
 ]
 
 foreach service_data: services_data
-  service = service_data[0]
+  service = service_data[0][0]
   name = 'mbim-' + service
+
+  input = []
+  foreach service_file: service_data[0]
+    input += data_dir / 'mbim-service-@0@.json'.format(service_file)
+  endforeach
 
   generated = custom_target(
     name,
-    input: data_dir / 'mbim-service-@0@.json'.format(service),
+    input: input,
     output: [name + '.c', name + '.h', name + '.sections'],
-    command: [mbim_codegen, '--input', '@INPUT@', '--output', '@OUTDIR@' / name],
+    command: [mbim_codegen, '--output', '@OUTDIR@' / name, '@INPUT@'],
     install: true,
     install_dir: [false, mbim_glib_pkgincludedir, false],
   )

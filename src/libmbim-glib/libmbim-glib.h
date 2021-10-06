@@ -41,9 +41,6 @@
 #include "mbim-intel-firmware-update.h"
 #include "mbim-ms-basic-connect-extensions.h"
 #include "mbim-ms-uicc-low-level-access.h"
-#include "mbim-ms-basic-connect-v2.h"
-#include "mbim-ms-basic-connect-v3.h"
-#include "mbim-ms-basic-connect-extensions-v3.h"
 
 /* backwards compatibility */
 #include "mbim-compat.h"
