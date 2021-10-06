@@ -1799,12 +1799,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
     /* Request to get subscriber ready status? */
     if (query_subscriber_ready_status_flag) {
         g_debug ("Asynchronously querying subscriber ready status...");
-
-        if (mbim_device_check_ms_mbimex_version (device, 3, 0))
-            request = mbim_message_ms_basic_connect_v3_subscriber_ready_status_query_new (NULL);
-        else
-            request = (mbim_message_subscriber_ready_status_query_new (NULL));
-
+        request = (mbim_message_subscriber_ready_status_query_new (NULL));
         mbim_device_command (ctx->device,
                              request,
                              10,

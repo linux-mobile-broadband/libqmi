@@ -10,7 +10,7 @@
   { "name"         : "Subscriber Ready Status",
     "type"         : "Command",
     "since"        : "1.28",
-    "query"        : [],
+    // query same as in v1
     "response"     : [ { "name"             : "ReadyState",
                          "format"           : "guint32",
                          "public-format"    : "MbimSubscriberReadyState" },
