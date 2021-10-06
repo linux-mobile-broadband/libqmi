@@ -172,6 +172,8 @@ void               _mbim_struct_builder_append_guint16       (MbimStructBuilder 
                                                               guint16            value);
 void               _mbim_struct_builder_append_guint32       (MbimStructBuilder *builder,
                                                               guint32            value);
+void               _mbim_struct_builder_append_gint32        (MbimStructBuilder *builder,
+                                                              gint32             value);
 void               _mbim_struct_builder_append_guint32_array (MbimStructBuilder *builder,
                                                               const guint32     *values,
                                                               guint32            n_values);
@@ -268,6 +270,10 @@ gboolean _mbim_message_read_guint16      (const MbimMessage  *self,
 gboolean _mbim_message_read_guint32       (const MbimMessage  *self,
                                            guint32             relative_offset,
                                            guint32            *value,
+                                           GError            **error);
+gboolean _mbim_message_read_gint32        (const MbimMessage  *self,
+                                           guint32             relative_offset,
+                                           gint32             *value,
                                            GError            **error);
 gboolean _mbim_message_read_guint32_array (const MbimMessage  *self,
                                            guint32             array_size,

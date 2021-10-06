@@ -38,6 +38,8 @@ class Struct:
                 self.size += 2
             elif field['format'] == 'guint32':
                 self.size += 4
+            elif field['format'] == 'gint32':
+                self.size += 4
             elif field['format'] == 'guint64':
                 self.size += 8
             elif field['format'] == 'uuid':
@@ -89,6 +91,9 @@ class Struct:
                 else:
                     inner_template = (
                         ' * @${field_name_underscore}: a #guint32.\n')
+            elif field['format'] == 'gint32':
+                inner_template = (
+                    ' * @${field_name_underscore}: a #gint32.\n')
             elif field['format'] == 'guint32-array':
                 inner_template = (
                     ' * @${field_name_underscore}: an array of #guint32 values.\n')
@@ -149,6 +154,9 @@ class Struct:
             elif field['format'] == 'guint32':
                 inner_template = (
                     '    guint32 ${field_name_underscore};\n')
+            elif field['format'] == 'gint32':
+                inner_template = (
+                    '    gint32 ${field_name_underscore};\n')
             elif field['format'] == 'guint32-array':
                 inner_template = (
                     '    guint32 *${field_name_underscore};\n')
@@ -226,6 +234,8 @@ class Struct:
             elif field['format'] == 'guint16':
                 pass
             elif field['format'] == 'guint32':
+                pass
+            elif field['format'] == 'gint32':
                 pass
             elif field['format'] == 'guint32-array':
                 inner_template += (
@@ -394,6 +404,9 @@ class Struct:
                 elif field['format'] == 'guint64':
                     inner_template += (
                         '        g_string_append_printf (str, "\'%" G_GUINT64_FORMAT "\'", self->${field_name_underscore});\n')
+            elif field['format'] == 'gint32':
+                    inner_template += (
+                        '        g_string_append_printf (str, "\'%" G_GINT32_FORMAT "\'", self->${field_name_underscore});\n')
             elif field['format'] == 'guint32-array':
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
                 inner_template += (
@@ -554,6 +567,12 @@ class Struct:
                 inner_template += (
                     '\n'
                     '    if (!_mbim_message_read_guint32 (self, offset, &out->${field_name_underscore}, error))\n'
+                    '        goto out;\n'
+                    '    offset += 4;\n')
+            elif field['format'] == 'gint32':
+                inner_template += (
+                    '\n'
+                    '    if (!_mbim_message_read_gint32 (self, offset, &out->${field_name_underscore}, error))\n'
                     '        goto out;\n'
                     '    offset += 4;\n')
             elif field['format'] == 'guint32-array':
@@ -877,6 +896,8 @@ class Struct:
                 inner_template = ('    _mbim_struct_builder_append_guint16 (builder, value->${field});\n')
             elif field['format'] == 'guint32':
                 inner_template = ('    _mbim_struct_builder_append_guint32 (builder, value->${field});\n')
+            elif field['format'] == 'gint32':
+                inner_template = ('    _mbim_struct_builder_append_gint32 (builder, value->${field});\n')
             elif field['format'] == 'guint32-array':
                 inner_template = ('    _mbim_struct_builder_append_guint32_array (builder, value->${field}, value->${array_size_field});\n')
             elif field['format'] == 'guint64':

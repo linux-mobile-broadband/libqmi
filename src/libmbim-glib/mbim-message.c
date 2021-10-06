@@ -210,6 +210,34 @@ _mbim_message_read_guint32 (const MbimMessage  *self,
 }
 
 gboolean
+_mbim_message_read_gint32 (const MbimMessage  *self,
+                           guint32             relative_offset,
+                           gint32             *value,
+                           GError            **error)
+{
+    guint64 required_size;
+    guint32 information_buffer_offset;
+
+    g_assert (value);
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+
+    required_size = (guint64)information_buffer_offset + (guint64)relative_offset + 4;
+    if ((guint64)self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read 32bit signed integer (4 bytes) (%u < %" G_GUINT64_FORMAT ")",
+                     self->len, required_size);
+        return FALSE;
+    }
+
+    *value = GINT32_FROM_LE (G_STRUCT_MEMBER (
+                                 gint32,
+                                 self->data,
+                                 (information_buffer_offset + relative_offset)));
+    return TRUE;
+}
+
+gboolean
 _mbim_message_read_guint32_array (const MbimMessage  *self,
                                   guint32             array_size,
                                   guint32             relative_offset_array_start,
@@ -962,6 +990,17 @@ _mbim_struct_builder_append_guint32 (MbimStructBuilder *builder,
 
     /* guint32 values are added in the static buffer only */
     tmp = GUINT32_TO_LE (value);
+    g_byte_array_append (builder->fixed_buffer, (guint8 *)&tmp, sizeof (tmp));
+}
+
+void
+_mbim_struct_builder_append_gint32 (MbimStructBuilder *builder,
+                                    gint32             value)
+{
+    gint32 tmp;
+
+    /* gint32 values are added in the static buffer only */
+    tmp = GINT32_TO_LE (value);
     g_byte_array_append (builder->fixed_buffer, (guint8 *)&tmp, sizeof (tmp));
 }
 
