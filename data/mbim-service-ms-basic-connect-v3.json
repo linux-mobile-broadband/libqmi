@@ -49,11 +49,13 @@
                          "array-size-field" : "TelephoneNumbersCount" } ] },
 
   // *********************************************************************************
-  { "name"     : "MbimTAI",
+  { "name"     : "MbimTai",
     "type"     : "Struct",
     "since"    : "1.28",
-    "contents" : [ { "name"   : "Plmn",
-                     "format" : "guint32" },
+    "contents" : [ { "name"   : "PlmnMcc",
+                     "format" : "guint16" },
+                   { "name"   : "PlmnMnc",
+                     "format" : "guint16" },
                    { "name"   : "Tac",
                      "format" : "guint32" } ] },
 
@@ -80,9 +82,9 @@
                        { "name"          : "DataSubclass",
                          "format"        : "guint32",
                          "public-format" : "MbimDataSubclass" },
-                       { "name"     : "TAI",
-                         "format"   : "struct",
-                         "struct-type" : "MbimTAI" } ],
+                       { "name"        : "Tai",
+                         "format"      : "struct",
+                         "struct-type" : "MbimTai" } ],
     "notification" : [ { "name"   : "NwError",
                          "format" : "guint32" },
                        { "name"          : "PacketServiceState",
@@ -101,7 +103,7 @@
                        { "name"          : "DataSubclass",
                          "format"        : "guint32",
                          "public-format" : "MbimDataSubclass" },
-                       { "name"     : "TAI",
-                         "format"   : "struct",
-                         "struct-type" : "MbimTAI" } ] }
+                       { "name"        : "Tai",
+                         "format"      : "struct",
+                         "struct-type" : "MbimTai" } ] }
 ]

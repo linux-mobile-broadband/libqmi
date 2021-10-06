@@ -37,8 +37,8 @@ mbimcli_read_uint_from_string (const gchar *str,
 }
 
 gboolean
-mbimcli_read_uint8_from_bcd_string (const gchar *str,
-                                    guint8      *out)
+mbimcli_read_uint_from_bcd_string (const gchar *str,
+                                   guint       *out)
 {
     gulong num;
 
@@ -55,11 +55,24 @@ mbimcli_read_uint8_from_bcd_string (const gchar *str,
      * (base 16) and it will be valid bcd */
     errno = 0;
     num = strtoul (str, NULL, 16);
-    if (!errno && num <= G_MAXUINT8) {
-        *out = (guint8)num;
+    if (!errno && num <= G_MAXUINT) {
+        *out = (guint)num;
         return TRUE;
     }
     return FALSE;
+}
+
+gboolean
+mbimcli_read_uint8_from_bcd_string (const gchar *str,
+                                    guint8      *out)
+{
+    guint num;
+
+    if (!mbimcli_read_uint_from_bcd_string (str, &num) || (num > G_MAXUINT8))
+        return FALSE;
+
+    *out = (guint8)num;
+    return TRUE;
 }
 
 gboolean

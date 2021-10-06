@@ -1581,7 +1581,7 @@ packet_service_ready (MbimDevice   *device,
     guint64                 downlink_speed;
     MbimFrequencyRange      frequency_range;
     MbimDataSubclass        data_subclass;
-    MbimTAI                *tai = NULL;
+    g_autoptr(MbimTai)      tai = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -1681,13 +1681,44 @@ packet_service_ready (MbimDevice   *device,
 
     if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
         g_autofree gchar *data_subclass_str  = NULL;
+        g_autofree gchar *tai_plmn_mcc_str = NULL;
+        g_autofree gchar *tai_plmn_mnc_str = NULL;
+
+        /* Mobile Country Code of 3 decimal digits; The
+         * least significant 12 bits contains BCD-encoded
+         * 3 decimal digits sequentially for the MCC, with
+         * the last digit of the MCC in the least significant
+         * 4 bits. The unused bits in the UINT16 integer
+         * must be zeros. */
+        tai_plmn_mcc_str = g_strdup_printf ("%03x", tai->plmn_mcc & 0x0FFF);
+
+        /* Mobile Network Code of either 3 or 2 decimal
+         * digits; The most significant bit indicates
+         * whether the MNC has 2 decimal digits or 3
+         * decimal digits. If this bit has 1, the MNC has 2
+         * decimal digits and the least significant 8 bits
+         * contains them in BCD-encoded form
+         * sequentially, with the last digit of the MNC in
+         * the least significant 4 bits. If the most
+         * significant bit has 0, the MNC has 3 decimal
+         * digits and the least significant 12 bits contains
+         * them in BCD-encoded form sequentially, with
+         * the last digit of the MNC in the least
+         * esignificant 4 bits. The unused bits in the
+         * UINT16 integer must be zeros. */
+        if (tai->plmn_mnc & 0x8000)
+            tai_plmn_mnc_str = g_strdup_printf ("%02x", tai->plmn_mnc & 0x00FF);
+        else
+            tai_plmn_mnc_str = g_strdup_printf ("%03x", tai->plmn_mnc & 0x0FFF);
 
         data_subclass_str = mbim_data_subclass_build_string_from_mask (data_subclass);
         g_print ("\t        Data sub class: '%s'\n"
-                 "\t              TAI PLMN: '%u'\n"
+                 "\t          TAI PLMN MCC: '%s'\n"
+                 "\t          TAI PLMN MNC: '%s'\n"
                  "\t              TAI  TAC: '%u'\n",
                  VALIDATE_UNKNOWN (data_subclass_str),
-                 tai->plmn,
+                 tai_plmn_mcc_str,
+                 tai_plmn_mnc_str,
                  tai->tac);
     }
 
