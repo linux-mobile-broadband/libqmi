@@ -1074,7 +1074,8 @@ query_base_stations_ready (MbimDevice   *device,
     g_autoptr(MbimMessage)                         response = NULL;
     g_autoptr(GError)                              error = NULL;
     MbimDataClass                                  system_type;
-    g_autofree gchar                              *system_type_str = NULL;
+    MbimDataClassV2                                system_type_v2;
+    MbimDataSubclass                               system_subtype;
     g_autoptr(MbimCellInfoServingGsm)              gsm_serving_cell = NULL;
     g_autoptr(MbimCellInfoServingUmts)             umts_serving_cell = NULL;
     g_autoptr(MbimCellInfoServingTdscdma)          tdscdma_serving_cell = NULL;
@@ -1089,6 +1090,10 @@ query_base_stations_ready (MbimDevice   *device,
     g_autoptr(MbimCellInfoNeighboringLteArray)     lte_neighboring_cells = NULL;
     guint32                                        cdma_cells_count;
     g_autoptr(MbimCellInfoCdmaArray)               cdma_cells = NULL;
+    guint32                                        nr_serving_cells_count;
+    g_autoptr(MbimCellInfoServingNrArray)          nr_serving_cells = NULL;
+    guint32                                        nr_neighboring_cells_count;
+    g_autoptr(MbimCellInfoNeighboringNrArray)      nr_neighboring_cells = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -1097,27 +1102,62 @@ query_base_stations_ready (MbimDevice   *device,
         return;
     }
 
-    if (!mbim_message_ms_basic_connect_extensions_base_stations_info_response_parse (
-            response,
-            &system_type,
-            &gsm_serving_cell,
-            &umts_serving_cell,
-            &tdscdma_serving_cell,
-            &lte_serving_cell,
-            &gsm_neighboring_cells_count,
-            &gsm_neighboring_cells,
-            &umts_neighboring_cells_count,
-            &umts_neighboring_cells,
-            &tdscdma_neighboring_cells_count,
-            &tdscdma_neighboring_cells,
-            &lte_neighboring_cells_count,
-            &lte_neighboring_cells,
-            &cdma_cells_count,
-            &cdma_cells,
-            &error)) {
-        g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        shutdown (FALSE);
-        return;
+    /* MBIMEx 3.0 support */
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        if (!mbim_message_ms_basic_connect_extensions_v3_base_stations_info_response_parse (
+                response,
+                &system_type_v2,
+                &system_subtype,
+                &gsm_serving_cell,
+                &umts_serving_cell,
+                &tdscdma_serving_cell,
+                &lte_serving_cell,
+                &gsm_neighboring_cells_count,
+                &gsm_neighboring_cells,
+                &umts_neighboring_cells_count,
+                &umts_neighboring_cells,
+                &tdscdma_neighboring_cells_count,
+                &tdscdma_neighboring_cells,
+                &lte_neighboring_cells_count,
+                &lte_neighboring_cells,
+                &cdma_cells_count,
+                &cdma_cells,
+                &nr_serving_cells_count,
+                &nr_serving_cells,
+                &nr_neighboring_cells_count,
+                &nr_neighboring_cells,
+                &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIMEx 3.0 Base Stations Info");
+    }
+    /* MBIMEx 1.0 support */
+    else {
+        if (!mbim_message_ms_basic_connect_extensions_base_stations_info_response_parse (
+                response,
+                &system_type,
+                &gsm_serving_cell,
+                &umts_serving_cell,
+                &tdscdma_serving_cell,
+                &lte_serving_cell,
+                &gsm_neighboring_cells_count,
+                &gsm_neighboring_cells,
+                &umts_neighboring_cells_count,
+                &umts_neighboring_cells,
+                &tdscdma_neighboring_cells_count,
+                &tdscdma_neighboring_cells,
+                &lte_neighboring_cells_count,
+                &lte_neighboring_cells,
+                &cdma_cells_count,
+                &cdma_cells,
+                &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIMEx 1.0 Base Stations Info");
     }
 
 #define PRINT_VALIDATED_UINT(number, invalid, format, units) do {       \
@@ -1127,6 +1167,13 @@ query_base_stations_ready (MbimDevice   *device,
             g_print ("%s: %u%s\n", format, number, units ? units : ""); \
     } while (0)
 
+#define PRINT_VALIDATED_UINT64(number, invalid, format, units) do {     \
+        if (number == invalid)                                          \
+            g_print ("%s: unknown\n", format);                          \
+        else                                                            \
+            g_print ("%s: %" G_GUINT64_FORMAT "%s\n", format, number, units ? units : ""); \
+    } while (0)
+
 #define PRINT_VALIDATED_INT(number, invalid, format, units) do {        \
         if (number == (gint32)invalid)                                  \
             g_print ("%s: unknown\n", format);                          \
@@ -1134,26 +1181,40 @@ query_base_stations_ready (MbimDevice   *device,
             g_print ("%s: %d%s\n", format, number, units ? units : ""); \
     } while (0)
 
-#define PRINT_VALIDATED_RX_LEVEL(number, format) do {                   \
-        if (number == 0xFFFFFFFF)                                       \
-            g_print ("%s: unknown\n", format);                          \
-        else                                                            \
-            g_print ("%s: %d dBm\n", format, (gint32)number - 110);     \
+#define PRINT_VALIDATED_SCALED_UINT(number, invalid, scale, format, units) do {           \
+        if (number == 0xFFFFFFFF)                                                         \
+            g_print ("%s: unknown\n", format);                                            \
+        else                                                                              \
+            g_print ("%s: %d%s\n", format, ((gint32)number) + scale, units ? units : ""); \
     } while (0)
 
-    system_type_str = mbim_data_class_build_string_from_mask (system_type);
-    g_print ("System type: %s\n", system_type_str);
+
+
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        g_autofree gchar *system_type_str = NULL;
+        g_autofree gchar *system_subtype_str = NULL;
+
+        system_type_str = mbim_data_class_v2_build_string_from_mask (system_type_v2);
+        g_print ("System type: %s\n", system_type_str);
+        system_subtype_str = mbim_data_subclass_build_string_from_mask (system_subtype);
+        g_print ("System subtype: %s\n", VALIDATE_UNKNOWN (system_subtype_str));
+    } else {
+        g_autofree gchar *system_type_str = NULL;
+
+        system_type_str = mbim_data_class_build_string_from_mask (system_type);
+        g_print ("System type: %s\n", system_type_str);
+    }
 
     if (gsm_serving_cell) {
         g_print ("GSM serving cell:\n"
                  "\t    Provider id: %s\n",
                  VALIDATE_UNKNOWN (gsm_serving_cell->provider_id));
-        PRINT_VALIDATED_UINT     (gsm_serving_cell->location_area_code, 0xFFFFFFFF, "\t            LAC", NULL);
-        PRINT_VALIDATED_UINT     (gsm_serving_cell->cell_id,            0xFFFFFFFF, "\t        Cell ID", NULL);
-        PRINT_VALIDATED_UINT     (gsm_serving_cell->timing_advance,     0xFFFFFFFF, "\t Timing advance", " bit periods");
-        PRINT_VALIDATED_UINT     (gsm_serving_cell->arfcn,              0xFFFFFFFF, "\t          ARFCN", NULL);
-        PRINT_VALIDATED_UINT     (gsm_serving_cell->base_station_id,    0xFFFFFFFF, "\tBase station ID", NULL);
-        PRINT_VALIDATED_RX_LEVEL (gsm_serving_cell->rx_level,                       "\t       Rx level");
+        PRINT_VALIDATED_UINT        (gsm_serving_cell->location_area_code, 0xFFFFFFFF,       "\t            LAC", NULL);
+        PRINT_VALIDATED_UINT        (gsm_serving_cell->cell_id,            0xFFFFFFFF,       "\t        Cell ID", NULL);
+        PRINT_VALIDATED_UINT        (gsm_serving_cell->timing_advance,     0xFFFFFFFF,       "\t Timing advance", " bit periods");
+        PRINT_VALIDATED_UINT        (gsm_serving_cell->arfcn,              0xFFFFFFFF,       "\t          ARFCN", NULL);
+        PRINT_VALIDATED_UINT        (gsm_serving_cell->base_station_id,    0xFFFFFFFF,       "\tBase station ID", NULL);
+        PRINT_VALIDATED_SCALED_UINT (gsm_serving_cell->rx_level,           0xFFFFFFFF, -110, "\t       Rx level", " dBm");
     } else
         g_print ("GSM serving cell: n/a\n");
 
@@ -1166,11 +1227,11 @@ query_base_stations_ready (MbimDevice   *device,
                      "\t\t    Provider id: %s\n",
                      i + 1,
                      VALIDATE_UNKNOWN (gsm_neighboring_cells[i]->provider_id));
-            PRINT_VALIDATED_UINT     (gsm_neighboring_cells[i]->location_area_code, 0xFFFFFFFF, "\t\t            LAC", NULL);
-            PRINT_VALIDATED_UINT     (gsm_neighboring_cells[i]->cell_id,            0xFFFFFFFF, "\t\t        Cell ID", NULL);
-            PRINT_VALIDATED_UINT     (gsm_neighboring_cells[i]->arfcn,              0xFFFFFFFF, "\t\t          ARFCN", NULL);
-            PRINT_VALIDATED_UINT     (gsm_neighboring_cells[i]->base_station_id,    0xFFFFFFFF, "\t\tBase station ID", NULL);
-            PRINT_VALIDATED_RX_LEVEL (gsm_neighboring_cells[i]->rx_level,                       "\t\t       Rx level");
+            PRINT_VALIDATED_UINT        (gsm_neighboring_cells[i]->location_area_code, 0xFFFFFFFF,       "\t\t            LAC", NULL);
+            PRINT_VALIDATED_UINT        (gsm_neighboring_cells[i]->cell_id,            0xFFFFFFFF,       "\t\t        Cell ID", NULL);
+            PRINT_VALIDATED_UINT        (gsm_neighboring_cells[i]->arfcn,              0xFFFFFFFF,       "\t\t          ARFCN", NULL);
+            PRINT_VALIDATED_UINT        (gsm_neighboring_cells[i]->base_station_id,    0xFFFFFFFF,       "\t\tBase station ID", NULL);
+            PRINT_VALIDATED_SCALED_UINT (gsm_neighboring_cells[i]->rx_level,           0xFFFFFFFF, -110, "\t\t       Rx level", " dBm");
         }
     } else
         g_print ("Neighboring GSM cells: n/a\n");
@@ -1307,7 +1368,54 @@ query_base_stations_ready (MbimDevice   *device,
     } else
         g_print ("CDMA cells: n/a\n");
 
-#undef PRINT_VALIDATED_RX_LEVEL
+    if (nr_serving_cells_count && nr_serving_cells) {
+        guint i;
+
+        g_print ("Serving NR cells: %d\n", nr_serving_cells_count);
+        for (i = 0; i < nr_serving_cells_count; i++) {
+            g_print ("\tServing cell [%u]:\n"
+                     "\t\t     Provider id: %s\n",
+                     i + 1,
+                     VALIDATE_UNKNOWN (nr_serving_cells[i]->provider_id));
+            PRINT_VALIDATED_UINT64      (nr_serving_cells[i]->nci,              0xFFFFFFFFFFFFFFFF, "\t\t             NCI", NULL);
+            PRINT_VALIDATED_UINT        (nr_serving_cells[i]->physical_cell_id, 0xFFFFFFFF,         "\t\tPhysical cell id", NULL);
+            PRINT_VALIDATED_UINT        (nr_serving_cells[i]->nrarfcn,          0xFFFFFFFF,         "\t\t         NRARFCN", NULL);
+            PRINT_VALIDATED_UINT        (nr_serving_cells[i]->tac,              0xFFFFFFFF,         "\t\t             TAC", NULL);
+            PRINT_VALIDATED_SCALED_UINT (nr_serving_cells[i]->rsrp,             0xFFFFFFFF, -156,   "\t\t            RSRP", " dBm");
+            PRINT_VALIDATED_SCALED_UINT (nr_serving_cells[i]->rsrq,             0xFFFFFFFF, -43,    "\t\t            RSRQ", " dB");
+            PRINT_VALIDATED_SCALED_UINT (nr_serving_cells[i]->sinr,             0xFFFFFFFF, -23,    "\t\t            SINR", " dB");
+            PRINT_VALIDATED_UINT64      (nr_serving_cells[i]->timing_advance,   0xFFFFFFFFFFFFFFFF, "\t\t  Timing advance", " us");
+        }
+    } else
+        g_print ("Serving NR cells: n/a\n");
+
+    if (nr_neighboring_cells_count && nr_neighboring_cells) {
+        guint i;
+
+        g_print ("Neighboring NR cells: %d\n", nr_neighboring_cells_count);
+        for (i = 0; i < nr_neighboring_cells_count; i++) {
+            g_autofree gchar *system_subtype_str = NULL;
+
+            system_subtype_str = mbim_data_subclass_build_string_from_mask (nr_neighboring_cells[i]->system_sub_type);
+            g_print ("\tNeighboring cell [%u]:\n"
+                     "\t\t  System subtype: %s\n"
+                     "\t\t     Provider id: %s\n"
+                     "\t\t         Cell id: %s\n",
+                     i + 1,
+                     VALIDATE_UNKNOWN (system_subtype_str),
+                     VALIDATE_UNKNOWN (nr_neighboring_cells[i]->provider_id),
+                     VALIDATE_UNKNOWN (nr_neighboring_cells[i]->cell_id));
+            PRINT_VALIDATED_UINT        (nr_neighboring_cells[i]->physical_cell_id, 0xFFFFFFFF,       "\t\tPhysical cell id", NULL);
+            PRINT_VALIDATED_UINT        (nr_neighboring_cells[i]->tac,              0xFFFFFFFF,       "\t\t             TAC", NULL);
+            PRINT_VALIDATED_SCALED_UINT (nr_neighboring_cells[i]->rsrp,             0xFFFFFFFF, -156, "\t\t            RSRP", " dBm");
+            PRINT_VALIDATED_SCALED_UINT (nr_neighboring_cells[i]->rsrq,             0xFFFFFFFF, -43,  "\t\t            RSRQ", " dB");
+            PRINT_VALIDATED_SCALED_UINT (nr_neighboring_cells[i]->sinr,             0xFFFFFFFF, -23,  "\t\t            SINR", " dB");
+        }
+    } else
+        g_print ("Neighboring NR cells: n/a\n");
+
+#undef PRINT_VALIDATED_SCALED_UINT
+#undef PRINT_VALIDATED_UINT64
 #undef PRINT_VALIDATED_UINT
 #undef PRINT_VALIDATED_INT
 
