@@ -1576,6 +1576,7 @@ packet_service_ready (MbimDevice   *device,
     MbimPacketServiceState  packet_service_state;
     MbimDataClass           highest_available_data_class;
     MbimDataClassV2         highest_available_data_class_v2;
+    g_autofree gchar       *highest_available_data_class_str = NULL;
     guint64                 uplink_speed;
     guint64                 downlink_speed;
     MbimFrequencyRange      frequency_range;
@@ -1652,60 +1653,42 @@ packet_service_ready (MbimDevice   *device,
         break;
     }
 
-    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0))
+        highest_available_data_class_str = mbim_data_class_v2_build_string_from_mask (highest_available_data_class_v2);
+    else
+        highest_available_data_class_str = mbim_data_class_build_string_from_mask (highest_available_data_class);
+
+    g_print ("[%s] Packet service status:\n"
+             "\t         Network error: '%s'\n"
+             "\t  Packet service state: '%s'\n"
+             "\tAvailable data classes: '%s'\n"
+             "\t          Uplink speed: '%" G_GUINT64_FORMAT " bps'\n"
+             "\t        Downlink speed: '%" G_GUINT64_FORMAT " bps'\n",
+             mbim_device_get_path_display (device),
+             VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)),
+             VALIDATE_UNKNOWN (mbim_packet_service_state_get_string (packet_service_state)),
+             VALIDATE_UNKNOWN (highest_available_data_class_str),
+             uplink_speed,
+             downlink_speed);
+
+    if (mbim_device_check_ms_mbimex_version (device, 2, 0)) {
         g_autofree gchar *frequency_range_str = NULL;
+
+        frequency_range_str = mbim_frequency_range_build_string_from_mask (frequency_range);
+        g_print ("\t       Frequency range: '%s'\n",
+                 VALIDATE_UNKNOWN (frequency_range_str));
+    }
+
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
         g_autofree gchar *data_subclass_str  = NULL;
-        g_autofree gchar *highest_available_data_class_str = NULL;
 
         data_subclass_str = mbim_data_subclass_build_string_from_mask (data_subclass);
-        frequency_range_str = mbim_frequency_range_build_string_from_mask (frequency_range);
-        highest_available_data_class_str = mbim_data_class_v2_build_string_from_mask (highest_available_data_class_v2);
-
-        g_print ("[%s] Packet service status:\n"
-                 "\t         Network error: '%s'\n"
-                 "\t  Packet service state: '%s'\n"
-                 "\tAvailable data classes: '%s'\n"
-                 "\t          Uplink speed: '%" G_GUINT64_FORMAT " bps'\n"
-                 "\t        Downlink speed: '%" G_GUINT64_FORMAT " bps'\n"
-                 "\t       Frequency range: '%s'\n"
-                 "\t        Data sub class: '%s'\n"
-                 "\t          TAI PLMN: '%d'\n"
-                 "\t          TAI  TAC: '%d'\n",
-                 mbim_device_get_path_display (device),
-                 VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)),
-                 VALIDATE_UNKNOWN (mbim_packet_service_state_get_string (packet_service_state)),
-                 VALIDATE_UNKNOWN (highest_available_data_class_str),
-                 uplink_speed,
-                 downlink_speed,
-                 VALIDATE_UNKNOWN (frequency_range_str),
+        g_print ("\t        Data sub class: '%s'\n"
+                 "\t              TAI PLMN: '%u'\n"
+                 "\t              TAI  TAC: '%u'\n",
                  VALIDATE_UNKNOWN (data_subclass_str),
                  tai->plmn,
                  tai->tac);
-    }
-    else {
-        g_autofree gchar *highest_available_data_class_str = NULL;
-
-        highest_available_data_class_str = mbim_data_class_build_string_from_mask (highest_available_data_class);
-        g_print ("[%s] Packet service status:\n"
-                 "\t         Network error: '%s'\n"
-                 "\t  Packet service state: '%s'\n"
-                 "\tAvailable data classes: '%s'\n"
-                 "\t          Uplink speed: '%" G_GUINT64_FORMAT " bps'\n"
-                 "\t        Downlink speed: '%" G_GUINT64_FORMAT " bps'\n",
-                 mbim_device_get_path_display (device),
-                 VALIDATE_UNKNOWN (mbim_nw_error_get_string (nw_error)),
-                 VALIDATE_UNKNOWN (mbim_packet_service_state_get_string (packet_service_state)),
-                 VALIDATE_UNKNOWN (highest_available_data_class_str),
-                 uplink_speed,
-                 downlink_speed);
-
-        if (mbim_device_check_ms_mbimex_version (device, 2, 0)) {
-            g_autofree gchar *frequency_range_str = NULL;
-
-            frequency_range_str = mbim_frequency_range_build_string_from_mask (frequency_range);
-            g_print ("\t       Frequency range: '%s'\n",
-                     VALIDATE_UNKNOWN (frequency_range_str));
-        }
     }
 
     shutdown (TRUE);
