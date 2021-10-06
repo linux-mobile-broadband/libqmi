@@ -1364,14 +1364,8 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
     }
 
     if (query_lte_attach_status_flag || query_lte_attach_info_flag) {
-        if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
-            g_debug ("Asynchronously querying v3.0 LTE attach info...");
-            request = mbim_message_ms_basic_connect_extensions_v3_lte_attach_info_query_new (NULL);
-        }
-        else {
-            g_debug ("Asynchronously querying v1.0 LTE attach info...");
-            request = mbim_message_ms_basic_connect_extensions_lte_attach_info_query_new (NULL);
-        }
+        g_debug ("Asynchronously querying LTE attach info...");
+        request = mbim_message_ms_basic_connect_extensions_lte_attach_info_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,

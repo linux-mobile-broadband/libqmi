@@ -9,7 +9,7 @@
   { "name"       : "Lte Attach Info",
     "type"       : "Command",
     "since"      : "1.28",
-    "query"      : [],
+    // query same as in v1
     "response"   : [ { "name"          : "LteAttachState",
                        "format"        : "guint32",
                        "public-format" : "MbimLteAttachState" },
