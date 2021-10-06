@@ -10,15 +10,8 @@
   { "name"         : "Register State",
     "type"         : "Command",
     "since"        : "1.28",
-    "set"          : [ { "name"          : "ProviderId",
-                         "format"        : "string" },
-                       { "name"          : "RegisterAction",
-                         "format"        : "guint32",
-                         "public-format" : "MbimRegisterAction" },
-                       { "name"          : "DataClass",
-                         "format"        : "guint32",
-                         "public-format" : "MbimDataClass" } ],
-    "query"        : [],
+    // set same as in v1
+    // query same as in v1
     "response"     : [ { "name"          : "NwError",
                          "format"        : "guint32",
                          "public-format" : "MbimNwError" },
@@ -78,10 +71,8 @@
   { "name"         : "Packet Service",
     "type"         : "Command",
     "since"        : "1.28",
-    "set"          : [ { "name"          : "PacketServiceAction",
-                         "format"        : "guint32",
-                         "public-format" : "MbimPacketServiceAction" } ],
-    "query"        : [],
+    // set same as in v1
+    // query same as in v1
     "response"     : [ { "name"          : "NwError",
                          "format"        : "guint32" },
                        { "name"          : "PacketServiceState",
@@ -132,13 +123,8 @@
   { "name"         : "Signal State",
     "type"         : "Command",
     "since"        : "1.28",
-    "set"          : [ { "name"   : "SignalStrengthInterval",
-                         "format" : "guint32" },
-                       { "name"   : "RssiThreshold",
-                         "format" : "guint32" },
-                       { "name"   : "ErrorRateThreshold",
-                         "format" : "guint32" } ],
-    "query"        : [],
+    // set same as in v1
+    // query same as in v1
     "response"     : [ { "name"         : "Rssi",
                          "format"       : "guint32" },
                        { "name"         : "ErrorRate",

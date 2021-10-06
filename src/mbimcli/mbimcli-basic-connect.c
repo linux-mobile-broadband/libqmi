@@ -1993,10 +1993,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Query registration status? */
     if (query_register_state_flag) {
-        if (mbim_device_check_ms_mbimex_version (device, 2, 0))
-            request = mbim_message_ms_basic_connect_v2_register_state_query_new (NULL);
-        else
-            request = mbim_message_register_state_query_new (NULL);
+        request = mbim_message_register_state_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -2008,10 +2005,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Launch automatic registration? */
     if (set_register_state_automatic_flag) {
-        if (mbim_device_check_ms_mbimex_version (device, 2, 0))
-            request = mbim_message_ms_basic_connect_v2_register_state_set_new (NULL, MBIM_REGISTER_ACTION_AUTOMATIC, 0, &error);
-        else
-            request = mbim_message_register_state_set_new (NULL, MBIM_REGISTER_ACTION_AUTOMATIC, 0, &error);
+        request = mbim_message_register_state_set_new (NULL, MBIM_REGISTER_ACTION_AUTOMATIC, 0, &error);
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
             shutdown (FALSE);
@@ -2029,10 +2023,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Query signal status? */
     if (query_signal_state_flag) {
-        if (mbim_device_check_ms_mbimex_version (device, 2, 0))
-            request = mbim_message_ms_basic_connect_v2_signal_state_query_new (NULL);
-        else
-            request = mbim_message_signal_state_query_new (NULL);
+        request = mbim_message_signal_state_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -2044,10 +2035,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
 
     /* Query packet service status? */
     if (query_packet_service_flag) {
-        if (mbim_device_check_ms_mbimex_version (device, 2, 0))
-            request = mbim_message_ms_basic_connect_v2_packet_service_query_new (NULL);
-        else
-            request = mbim_message_packet_service_query_new (NULL);
+        request = mbim_message_packet_service_query_new (NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
@@ -2069,10 +2057,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
         else
             g_assert_not_reached ();
 
-        if (mbim_device_check_ms_mbimex_version (device, 2, 0))
-            request = mbim_message_ms_basic_connect_v2_packet_service_set_new (action, &error);
-        else
-            request = mbim_message_packet_service_set_new (action, &error);
+        request = mbim_message_packet_service_set_new (action, &error);
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
             shutdown (FALSE);
