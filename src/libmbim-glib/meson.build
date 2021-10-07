@@ -10,6 +10,7 @@ mbim_enums_headers = files(
   'mbim-enums.h',
   'mbim-message.h',
   'mbim-uuid.h',
+  'mbim-tlv.h',
 )
 
 subdir('generated')
@@ -44,6 +45,7 @@ sources = files(
   'mbim-proxy-helpers.c',
   'mbim-utils.c',
   'mbim-uuid.c',
+  'mbim-tlv.c',
 )
 
 deps = [

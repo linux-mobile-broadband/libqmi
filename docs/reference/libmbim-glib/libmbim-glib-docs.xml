@@ -59,6 +59,7 @@
     <xi:include href="xml/mbim-enums.xml"/>
     <xi:include href="xml/mbim-errors.xml"/>
     <xi:include href="xml/mbim-utils.xml"/>
+    <xi:include href="xml/mbim-tlv.xml"/>
   </chapter>
 
   <chapter>

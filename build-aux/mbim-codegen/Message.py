@@ -86,6 +86,12 @@ def validate_fields(fields):
             pass
         elif field['format'] == 'ipv6-array':
             flag_always_read_field(fields, field['array-size-field'])
+        elif field['format'] == 'tlv':
+            pass
+        elif field['format'] == 'tlv-string':
+            pass
+        elif field['format'] == 'tlv-list':
+            pass
         else:
             raise ValueError('Cannot handle field type \'%s\'' % field['format'])
 
@@ -278,6 +284,12 @@ class Message:
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a #MbimIPv6.\n')
             elif field['format'] == 'ipv6-array':
                 inner_template = (' * @${field}: (in)(array zero-terminated=1)(element-type MbimIPv6): the \'${name}\' field, given as an array of #MbimIPv6 items.\n')
+            elif field['format'] == 'tlv':
+                inner_template = (' * @${field}: (in)(transfer none): the \'${name}\' field, given as a #${struct} item.\n')
+            elif field['format'] == 'tlv-string':
+                inner_template = (' * @${field}: (in): the \'${name}\' field, given as a string.\n')
+            elif field['format'] == 'tlv-list':
+                inner_template = (' * @${field}: (in)(element-type MbimTlv)(transfer none): the \'${name}\' field, given as a list of #${struct} items.\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
@@ -340,6 +352,12 @@ class Message:
                 inner_template = ('    const MbimIPv6 *${field},\n')
             elif field['format'] == 'ipv6-array':
                 inner_template = ('    const MbimIPv6 *${field},\n')
+            elif field['format'] == 'tlv':
+                inner_template = ('    const MbimTlv *${field},\n')
+            elif field['format'] == 'tlv-string':
+                inner_template = ('    const gchar *${field},\n')
+            elif field['format'] == 'tlv-list':
+                inner_template = ('    const GList *${field},\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
@@ -401,6 +419,12 @@ class Message:
                 inner_template = ('    const MbimIPv6 *${field},\n')
             elif field['format'] == 'ipv6-array':
                 inner_template = ('    const MbimIPv6 *${field},\n')
+            elif field['format'] == 'tlv':
+                inner_template = ('    const MbimTlv *${field},\n')
+            elif field['format'] == 'tlv-string':
+                inner_template = ('    const gchar *${field},\n')
+            elif field['format'] == 'tlv-list':
+                inner_template = ('    const GList *${field},\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
@@ -477,6 +501,13 @@ class Message:
                 inner_template += ('        _mbim_message_command_builder_append_ipv6 (builder, ${field}, TRUE);\n')
             elif field['format'] == 'ipv6-array':
                 inner_template += ('        _mbim_message_command_builder_append_ipv6_array (builder, ${field}, ${array_size_field});\n')
+            elif field['format'] == 'tlv':
+                inner_template += ('        _mbim_message_command_builder_append_tlv (builder, ${field});\n')
+            elif field['format'] == 'tlv-string':
+                inner_template += ('        _mbim_message_command_builder_append_tlv_string (builder, ${field});\n')
+            elif field['format'] == 'tlv-list':
+                inner_template += ('        _mbim_message_command_builder_append_tlv_list (builder, ${field});\n')
+
             else:
                 raise ValueError('Cannot handle field type \'%s\'' % field['format'])
 
@@ -557,6 +588,12 @@ class Message:
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv6, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ipv6-array':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type MbimIPv6): return location for a newly allocated array of #MbimIPv6 items, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+            elif field['format'] == 'tlv':
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated #MbimTlv, or %NULL if the \'${name}\' field is not needed. Free the returned value with mbim_tlv_unref().\n')
+            elif field['format'] == 'tlv-string':
+                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated string, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+            elif field['format'] == 'tlv-list':
+                inner_template = (' * @out_${field}: (out)(optional)(element-type MbimTlv)(transfer full): return location for a newly allocated list of #MbimTlv items, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_list_free_full() using mbim_tlv_unref() as #GDestroyNotify.\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
@@ -618,6 +655,12 @@ class Message:
                 inner_template = ('    const MbimIPv6 **out_${field},\n')
             elif field['format'] == 'ipv6-array':
                 inner_template = ('    MbimIPv6 **out_${field},\n')
+            elif field['format'] == 'tlv':
+                inner_template = ('    MbimTlv **out_${field},\n')
+            elif field['format'] == 'tlv-string':
+                inner_template = ('    gchar **out_${field},\n')
+            elif field['format'] == 'tlv-list':
+                inner_template = ('    GList **out_${field},\n')
             else:
                 raise ValueError('Cannot handle field type \'%s\'' % field['format'])
 
@@ -679,6 +722,12 @@ class Message:
                 inner_template = ('    const MbimIPv6 **out_${field},\n')
             elif field['format'] == 'ipv6-array':
                 inner_template = ('    MbimIPv6 **out_${field},\n')
+            elif field['format'] == 'tlv':
+                inner_template = ('    MbimTlv **out_${field},\n')
+            elif field['format'] == 'tlv-string':
+                inner_template = ('    gchar **out_${field},\n')
+            elif field['format'] == 'tlv-list':
+                inner_template = ('    GList **out_${field},\n')
 
             template += (string.Template(inner_template).substitute(translations))
 
@@ -727,6 +776,15 @@ class Message:
             elif field['format'] == 'ipv6-array':
                 count_allocated_variables += 1
                 inner_template = ('    MbimIPv6 *_${field} = NULL;\n')
+            elif field['format'] == 'tlv':
+                count_allocated_variables += 1
+                inner_template = ('    MbimTlv *_${field} = NULL;\n')
+            elif field['format'] == 'tlv-string':
+                count_allocated_variables += 1
+                inner_template = ('    gchar *_${field} = NULL;\n')
+            elif field['format'] == 'tlv-list':
+                count_allocated_variables += 1
+                inner_template = ('    GList *_${field} = NULL;\n')
             template += (string.Template(inner_template).substitute(translations))
 
         if message_type == 'response':
@@ -1022,6 +1080,42 @@ class Message:
                     '        if ((out_${field} != NULL) && !_mbim_message_read_ipv6_array (message, _${array_size_field}, offset, &_${field}, error))\n'
                     '            goto out;\n'
                     '        offset += 4;\n')
+            elif field['format'] == 'tlv':
+                inner_template += (
+                    '        MbimTlv *tmp = NULL;\n'
+                    '        guint32 bytes_read = 0;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_tlv (message, offset, &tmp, &bytes_read, error))\n'
+                    '            goto out;\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            _${field} = tmp;\n'
+                    '        else\n'
+                    '             mbim_tlv_unref (tmp);\n'
+                    '        offset += bytes_read;\n')
+            elif field['format'] == 'tlv-string':
+                inner_template += (
+                    '        gchar *tmp = NULL;\n'
+                    '        guint32 bytes_read = 0;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_tlv_string (message, offset, &tmp, &bytes_read, error))\n'
+                    '            goto out;\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            _${field} = tmp;\n'
+                    '        else\n'
+                    '             g_free (tmp);\n'
+                    '        offset += bytes_read;\n')
+            elif field['format'] == 'tlv-list':
+                inner_template += (
+                    '        GList *tmp = NULL;\n'
+                    '        guint32 bytes_read = 0;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_tlv_list (message, offset, &tmp, &bytes_read, error))\n'
+                    '            goto out;\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            _${field} = tmp;\n'
+                    '        else\n'
+                    '             g_list_free_full (tmp, (GDestroyNotify)mbim_tlv_unref);\n'
+                    '        offset += bytes_read;\n')
 
             inner_template += (
                 '    }\n')
@@ -1053,7 +1147,10 @@ class Message:
                    field['format'] == 'ref-struct-array' or \
                    field['format'] == 'ms-struct-array' or \
                    field['format'] == 'ipv4-array' or \
-                   field['format'] == 'ipv6-array':
+                   field['format'] == 'ipv6-array' or \
+                   field['format'] == 'tlv' or \
+                   field['format'] == 'tlv-string' or \
+                   field['format'] == 'tlv-list':
                     inner_template = ('        if (out_${field} != NULL)\n'
                                       '            *out_${field} = _${field};\n')
                     template += (string.Template(inner_template).substitute(translations))
@@ -1066,7 +1163,8 @@ class Message:
                 inner_template = ''
                 if field['format'] == 'string' or \
                    field['format'] == 'ipv4-array' or \
-                   field['format'] == 'ipv6-array':
+                   field['format'] == 'ipv6-array' or \
+                   field['format'] == 'tlv-string':
                     inner_template = ('        g_free (_${field});\n')
                 elif field['format'] == 'string-array':
                     inner_template = ('        g_strfreev (_${field});\n')
@@ -1074,6 +1172,10 @@ class Message:
                     inner_template = ('        ${struct_underscore}_free (_${field});\n')
                 elif field['format'] == 'struct-array' or field['format'] == 'ref-struct-array' or field['format'] == 'ms-struct-array':
                     inner_template = ('        ${struct_underscore}_array_free (_${field});\n')
+                elif field['format'] == 'tlv':
+                    inner_template = ('        mbim_tlv_unref (_${field});\n')
+                elif field['format'] == 'tlv-list':
+                    inner_template = ('        g_list_free_full (_${field}, (GDestroyNotify)mbim_tlv_unref);\n')
                 template += (string.Template(inner_template).substitute(translations))
             template += (
                 '    }\n')
@@ -1475,6 +1577,43 @@ class Message:
                     '            }\n'
                     '        }\n'
                     '        g_string_append (str, "\'");\n')
+
+            elif field['format'] == 'tlv' or field['format'] == 'tlv-string':
+                inner_template += (
+                    '        g_autoptr(MbimTlv) tmp = NULL;\n'
+                    '        guint32 bytes_read = 0;\n'
+                    '        g_autofree gchar *tlv_str = NULL;\n'
+                    '        g_autofree gchar *new_line_prefix = NULL;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_tlv (message, offset, &tmp, &bytes_read, &inner_error))\n'
+                    '            goto out;\n'
+                    '        offset += bytes_read;\n'
+                    '\n'
+                    '        new_line_prefix = g_strdup_printf ("%s  ", line_prefix);\n'
+                    '        tlv_str = _mbim_tlv_print (tmp, new_line_prefix);\n'
+                    '        g_string_append_printf (str, "\'%s\'", tlv_str);\n')
+
+            elif field['format'] == 'tlv-list':
+                inner_template += (
+                    '        GList *tmp = NULL;\n'
+                    '        GList *walker = NULL;\n'
+                    '        guint32 bytes_read = 0;\n'
+                    '        g_autofree gchar *new_line_prefix = NULL;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_tlv_list (message, offset, &tmp, &bytes_read, &inner_error))\n'
+                    '            goto out;\n'
+                    '        offset += bytes_read;\n'
+                    '\n'
+                    '        new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
+                    '        g_string_append (str, "\'[ ");\n'
+                    '        for (walker = tmp; walker; walker = g_list_next (walker)) {\n'
+                    '            g_autofree gchar *tlv_str = NULL;\n'
+                    '\n'
+                    '            tlv_str = _mbim_tlv_print ((MbimTlv *)walker->data, new_line_prefix);\n'
+                    '            g_string_append_printf (str, "%s,", tlv_str);\n'
+                    '        }\n'
+                    '        g_string_append_printf (str, "\\n%s  ]\'", line_prefix);\n'
+                    '        g_list_free_full (tmp, (GDestroyNotify)mbim_tlv_unref);\n')
 
             else:
                 raise ValueError('Field format \'%s\' not printable' % field['format'])

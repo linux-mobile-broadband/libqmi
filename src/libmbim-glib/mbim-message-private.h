@@ -18,6 +18,7 @@
 #include <glib.h>
 
 #include "mbim-message.h"
+#include "mbim-tlv.h"
 
 G_BEGIN_DECLS
 
@@ -247,6 +248,12 @@ void                       _mbim_message_command_builder_append_ipv6          (M
 void                       _mbim_message_command_builder_append_ipv6_array    (MbimMessageCommandBuilder *builder,
                                                                                const MbimIPv6            *values,
                                                                                guint32                    n_values);
+void                       _mbim_message_command_builder_append_tlv           (MbimMessageCommandBuilder *builder,
+                                                                               const MbimTlv             *tlv);
+void                       _mbim_message_command_builder_append_tlv_string    (MbimMessageCommandBuilder *builder,
+                                                                               const gchar               *str);
+void                       _mbim_message_command_builder_append_tlv_list      (MbimMessageCommandBuilder *builder,
+                                                                               const GList               *tlvs);
 
 /*****************************************************************************/
 /* Message parser */
@@ -322,6 +329,21 @@ gboolean _mbim_message_read_string_tlv    (const MbimMessage  *self,
                                            guint32             relative_offset,
                                            gchar             **str,
                                            guint32            *tpv_size,
+                                           GError            **error);
+gboolean _mbim_message_read_tlv           (const MbimMessage  *self,
+                                           guint32             relative_offset,
+                                           MbimTlv           **tlv,
+                                           guint32            *bytes_read,
+                                           GError            **error);
+gboolean _mbim_message_read_tlv_string    (const MbimMessage  *self,
+                                           guint32             relative_offset,
+                                           gchar             **str,
+                                           guint32            *bytes_read,
+                                           GError            **error);
+gboolean _mbim_message_read_tlv_list      (const MbimMessage  *self,
+                                           guint32             relative_offset,
+                                           GList             **tlv,
+                                           guint32            *bytes_read,
                                            GError            **error);
 
 G_END_DECLS

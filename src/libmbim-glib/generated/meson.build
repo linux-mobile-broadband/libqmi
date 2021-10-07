@@ -65,7 +65,7 @@ gen_headers += custom_target(
   command: [
     python,
     mbim_mkenums,
-    '--fhead', '#ifndef __LIBMBIM_GLIB_ENUM_TYPES_H__\n#define __LIBMBIM_GLIB_ENUM_TYPES_H__\n#include "mbim-uuid.h"\n#include "mbim-cid.h"\n#include "mbim-message.h"\n#include "mbim-enums.h"\n',
+    '--fhead', '#ifndef __LIBMBIM_GLIB_ENUM_TYPES_H__\n#define __LIBMBIM_GLIB_ENUM_TYPES_H__\n#include "mbim-uuid.h"\n#include "mbim-cid.h"\n#include "mbim-message.h"\n#include "mbim-enums.h"\n#include "mbim-tlv.h"\n',
     '--template', files(templates_dir / enum_types + '.h.template'),
     '--ftail', '#endif /* __LIBMBIM_GLIB_ENUM_TYPES_H__ */\n',
     '@INPUT@'],

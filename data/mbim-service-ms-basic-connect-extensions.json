@@ -367,9 +367,9 @@
                        "public-format" : "MbimDefaultPduActivationHint" },
                      { "name"          : "ReRegisterIfNedeed",
                        "format"        : "guint32",
-                       "public-format" : "gboolean" }
-                     // Optional unnamed IEs encoded as MBIM_TLV_IE are currently ignored
-           ],
+                       "public-format" : "gboolean" },
+                     { "name"          : "UnnamedIes",
+                       "format"        : "tlv-list" } ],
     "query"      : [],
     "response"   : [ { "name"          : "MicoMode",
                        "format"        : "guint32",
@@ -385,9 +385,9 @@
                        "public-format" : "MbimDefaultPduActivationHint" },
                      { "name"          : "ReRegisterIfNedeed",
                        "format"        : "guint32",
-                       "public-format" : "gboolean" }
-                     // Optional unnamed IEs encoded as MBIM_TLV_IE are currently ignored
-           ] },
+                       "public-format" : "gboolean" },
+                     { "name"          : "UnnamedIes",
+                       "format"        : "tlv-list" } ] },
 
   // *********************************************************************************
   { "name"     : "MbimCellInfoServingGsm",

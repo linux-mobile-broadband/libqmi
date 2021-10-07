@@ -1052,6 +1052,7 @@ registration_parameters_ready (MbimDevice   *device,
             &ladn_info,
             &pdu_hint,
             &re_register_if_nedeed,
+            NULL, /* ignore unnamed IEs for now */
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         shutdown (FALSE);
@@ -1750,6 +1751,7 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                                                                             params.ladn_info,
                                                                                             params.pdu_hint,
                                                                                             params.re_register_if_needed,
+                                                                                            NULL, /* ignore unnamed IEs for now */
                                                                                             NULL);
         mbim_device_command (ctx->device,
                              request,

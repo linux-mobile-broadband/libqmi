@@ -761,6 +761,26 @@ mbim_utils_set_traces_enabled
 </SECTION>
 
 <SECTION>
+<FILE>mbim-tlv</FILE>
+MbimTlv
+MbimTlvType
+<SUBSECTION Methods>
+mbim_tlv_new
+mbim_tlv_dup
+mbim_tlv_ref
+mbim_tlv_unref
+mbim_tlv_get_raw
+mbim_tlv_get_tlv_type
+mbim_tlv_get_tlv_data
+mbim_tlv_type_get_string
+<SUBSECTION Private>
+mbim_tlv_type_build_string_from_mask
+<SUBSECTION Standard>
+MBIM_TYPE_TLV
+mbim_tlv_get_type
+</SECTION>
+
+<SECTION>
 <FILE>mbim-compat</FILE>
 <SUBSECTION>
 MBIM_CID_BASIC_CONNECT_DEVICE_SERVICE_SUBSCRIBER_LIST

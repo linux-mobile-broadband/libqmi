@@ -16,6 +16,7 @@
 #include "mbim-message-private.h"
 #include "mbim-error-types.h"
 #include "mbim-enum-types.h"
+#include "mbim-tlv-private.h"
 
 #include "mbim-basic-connect.h"
 #include "mbim-auth.h"
@@ -885,6 +886,126 @@ _mbim_message_read_ipv6_array (const MbimMessage  *self,
     return TRUE;
 }
 
+gboolean
+_mbim_message_read_tlv (const MbimMessage  *self,
+                        guint32             relative_offset,
+                        MbimTlv           **tlv,
+                        guint32            *bytes_read,
+                        GError            **error)
+{
+    guint32       information_buffer_offset;
+    guint64       tlv_offset;
+    guint64       required_size;
+    const guint8 *tlv_raw;
+    guint64       tlv_size;
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+    tlv_offset = (guint64)information_buffer_offset + (guint64)relative_offset;
+    tlv_raw = (const guint8 *) G_STRUCT_MEMBER_P (self->data, tlv_offset);
+    tlv_size = ((guint64)sizeof (struct tlv) +
+                (guint64)GUINT32_FROM_LE (((struct tlv *)tlv_raw)->data_length) +
+                (guint64)((struct tlv *)tlv_raw)->padding_length);
+
+    required_size = tlv_offset + tlv_size;
+    if ((guint64)self->len < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read TLV (%" G_GUINT64_FORMAT " bytes) (%u < %" G_GUINT64_FORMAT ")",
+                     tlv_size, self->len, required_size);
+        return FALSE;
+    }
+
+    *tlv = _mbim_tlv_new_from_raw (tlv_raw, (guint32)tlv_size, bytes_read, error);
+    return (*tlv) ? TRUE : FALSE;
+}
+
+gboolean
+_mbim_message_read_tlv_string (const MbimMessage  *self,
+                               guint32             relative_offset,
+                               gchar             **str,
+                               guint32            *bytes_read,
+                               GError            **error)
+{
+    g_autoptr(MbimTlv)  tlv = NULL;
+    guint32             tlv_bytes_read = 0;
+    gchar              *tlv_str;
+
+    if (!_mbim_message_read_tlv (self,
+                                 relative_offset,
+                                 &tlv,
+                                 &tlv_bytes_read,
+                                 error))
+        return FALSE;
+
+    tlv_str = mbim_tlv_string_get (tlv, error);
+    if (!tlv_str)
+        return FALSE;
+
+    *str = tlv_str;
+    *bytes_read = tlv_bytes_read;
+    return TRUE;
+}
+
+gboolean
+_mbim_message_read_tlv_list (const MbimMessage  *self,
+                             guint32             relative_offset,
+                             GList             **tlv_list,
+                             guint32            *bytes_read,
+                             GError            **error)
+{
+    guint32       information_buffer_offset;
+    guint64       tlv_list_offset;
+    const guint8 *tlv_list_raw;
+    guint32       tlv_list_raw_size;
+    GList        *list = NULL;
+    guint32       total_bytes_read = 0;
+    GError       *inner_error = NULL;
+
+    information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
+    tlv_list_offset = (guint64)information_buffer_offset + (guint64)relative_offset;
+
+    /* TLV list always at the end of the message */
+    if ((guint64)self->len < tlv_list_offset) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read TLV at offset (%u < %" G_GUINT64_FORMAT ")",
+                     self->len, tlv_list_offset);
+        return FALSE;
+    }
+
+    tlv_list_raw_size = self->len - (guint32)tlv_list_offset;
+    tlv_list_raw = (const guint8 *) G_STRUCT_MEMBER_P (self->data, tlv_list_offset);
+
+    while ((tlv_list_raw_size > 0) && !inner_error) {
+        MbimTlv *tlv;
+        guint32  tlv_size;
+
+        if (tlv_list_raw_size < sizeof (struct tlv)) {
+            g_warning ("Left %u bytes unused after the TLV list", tlv_list_raw_size);
+            break;
+        }
+
+        tlv = _mbim_tlv_new_from_raw (tlv_list_raw, tlv_list_raw_size, &tlv_size, &inner_error);
+        if (!tlv)
+            break;
+
+        list = g_list_append (list, tlv);
+        total_bytes_read += tlv_size;
+
+        g_assert (tlv_list_raw_size >= tlv_size);
+        tlv_list_raw += tlv_size;
+        tlv_list_raw_size -= tlv_size;
+    }
+
+    if (inner_error) {
+        g_propagate_error (error, inner_error);
+        g_list_free_full (list, (GDestroyNotify)mbim_tlv_unref);
+        return FALSE;
+    }
+
+    *bytes_read = total_bytes_read;
+    *tlv_list = list;
+    return TRUE;
+}
+
 /*****************************************************************************/
 /* Struct builder interface
  *
@@ -1443,6 +1564,47 @@ _mbim_message_command_builder_append_ipv6_array (MbimMessageCommandBuilder *buil
                                                  guint32                    n_values)
 {
     _mbim_struct_builder_append_ipv6_array (builder->contents_builder, values, n_values);
+}
+
+/*****************************************************************************/
+/* TLVs only expected as primary message fields, not inside structs */
+
+void
+_mbim_message_command_builder_append_tlv (MbimMessageCommandBuilder *builder,
+                                          const MbimTlv             *tlv)
+{
+    const guint8 *raw_tlv;
+    guint32       raw_tlv_size;
+
+    raw_tlv = mbim_tlv_get_raw (tlv, &raw_tlv_size, NULL);
+    _mbim_struct_builder_append_byte_array (builder->contents_builder,
+                                            FALSE, FALSE, FALSE,
+                                            raw_tlv, raw_tlv_size,
+                                            FALSE);
+}
+
+void
+_mbim_message_command_builder_append_tlv_string (MbimMessageCommandBuilder *builder,
+                                                 const gchar               *str)
+{
+    g_autoptr(MbimTlv) tlv = NULL;
+    g_autoptr(GError)  error = NULL;
+
+    tlv = mbim_tlv_string_new (str, &error);
+    if (!tlv)
+        g_warning ("Error appending TLV: %s", error->message);
+    else
+        _mbim_message_command_builder_append_tlv (builder, tlv);
+}
+
+void
+_mbim_message_command_builder_append_tlv_list (MbimMessageCommandBuilder *builder,
+                                               const GList               *tlvs)
+{
+    const GList *l;
+
+    for (l = tlvs; l; l = g_list_next (l))
+        _mbim_message_command_builder_append_tlv (builder, (MbimTlv *)(l->data));
 }
 
 /*****************************************************************************/

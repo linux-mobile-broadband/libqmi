@@ -15,6 +15,7 @@
 #include "mbim-ms-firmware-id.h"
 #include "mbim-ms-basic-connect-extensions.h"
 #include "mbim-message.h"
+#include "mbim-tlv.h"
 #include "mbim-cid.h"
 #include "mbim-common.h"
 #include "mbim-error-types.h"
@@ -1975,6 +1976,256 @@ test_message_parser_ms_basic_connect_extensions_base_stations (void)
     g_assert_null (cdma_cells);
 }
 
+static void
+test_message_parser_ms_basic_connect_extensions_registration_parameters_0_unnamed_tlvs (void)
+{
+    g_autoptr(GError)             error = NULL;
+    g_autoptr(MbimMessage)        response = NULL;
+    gboolean                      result;
+    MbimMicoMode                  mico_mode;
+    MbimDrxCycle                  drx_cycle;
+    MbimLadnInfo                  ladn_info;
+    MbimDefaultPduActivationHint  pdu_hint;
+    gboolean                      re_register_if_needed;
+    GList                        *unnamed_ies = NULL;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x44, 0x00, 0x00, 0x00, /* length */
+        0x04, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x3D, 0x01, 0xDC, 0xC5, /* service id */
+        0xFE, 0xF5, 0x4D, 0x05,
+        0x0D, 0x3A, 0xBE, 0xF7,
+        0x05, 0x8E, 0x9A, 0xAF,
+        0x11, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x14, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* mico mode */
+        0x00, 0x00, 0x00, 0x00, /* drx cycle */
+        0x00, 0x00, 0x00, 0x00, /* ladn info */
+        0x01, 0x00, 0x00, 0x00, /* pdu hint */
+        0x01, 0x00, 0x00, 0x00, /* re register if needed */
+        /* no unnamed TLVs */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    result = (mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
+                  response,
+                  &mico_mode,
+                  &drx_cycle,
+                  &ladn_info,
+                  &pdu_hint,
+                  &re_register_if_needed,
+                  &unnamed_ies,
+                  &error));
+
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (mico_mode, ==, MBIM_MICO_MODE_DISABLED);
+    g_assert_cmpuint (drx_cycle, ==, MBIM_DRX_CYCLE_NOT_SPECIFIED);
+    g_assert_cmpuint (ladn_info, ==, MBIM_LADN_INFO_NOT_NEEDED);
+    g_assert_cmpuint (pdu_hint, ==, MBIM_DEFAULT_PDU_ACTIVATION_HINT_LIKELY);
+    g_assert_cmpuint (re_register_if_needed, ==, TRUE);
+    g_assert_cmpuint (g_list_length (unnamed_ies), ==, 0);
+}
+
+static void
+test_message_parser_ms_basic_connect_extensions_registration_parameters_1_unnamed_tlv (void)
+{
+    g_autoptr(GError)             error = NULL;
+    g_autoptr(MbimMessage)        response = NULL;
+    gboolean                      result;
+    MbimMicoMode                  mico_mode;
+    MbimDrxCycle                  drx_cycle;
+    MbimLadnInfo                  ladn_info;
+    MbimDefaultPduActivationHint  pdu_hint;
+    gboolean                      re_register_if_needed;
+    GList                        *unnamed_ies = NULL;
+    MbimTlv                      *tlv;
+    g_autofree gchar             *tlv_str = NULL;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x58, 0x00, 0x00, 0x00, /* length */
+        0x04, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x3D, 0x01, 0xDC, 0xC5, /* service id */
+        0xFE, 0xF5, 0x4D, 0x05,
+        0x0D, 0x3A, 0xBE, 0xF7,
+        0x05, 0x8E, 0x9A, 0xAF,
+        0x11, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x28, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* mico mode */
+        0x00, 0x00, 0x00, 0x00, /* drx cycle */
+        0x00, 0x00, 0x00, 0x00, /* ladn info */
+        0x01, 0x00, 0x00, 0x00, /* pdu hint */
+        0x01, 0x00, 0x00, 0x00, /* re register if needed */
+        /* First unnamed TLV */
+        0x0A, 0x00, 0x00, 0x00, /* TLV type MBIM_TLV_TYPE_WCHAR_STR, no padding */
+        0x0C, 0x00, 0x00, 0x00, /* TLV data length */
+        0x4F, 0x00, 0x72, 0x00, /* TLV data string */
+        0x61, 0x00, 0x6E, 0x00,
+        0x67, 0x00, 0x65, 0x00,
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    result = (mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
+                  response,
+                  &mico_mode,
+                  &drx_cycle,
+                  &ladn_info,
+                  &pdu_hint,
+                  &re_register_if_needed,
+                  &unnamed_ies,
+                  &error));
+
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (mico_mode, ==, MBIM_MICO_MODE_DISABLED);
+    g_assert_cmpuint (drx_cycle, ==, MBIM_DRX_CYCLE_NOT_SPECIFIED);
+    g_assert_cmpuint (ladn_info, ==, MBIM_LADN_INFO_NOT_NEEDED);
+    g_assert_cmpuint (pdu_hint, ==, MBIM_DEFAULT_PDU_ACTIVATION_HINT_LIKELY);
+    g_assert_cmpuint (re_register_if_needed, ==, TRUE);
+    g_assert_cmpuint (g_list_length (unnamed_ies), ==, 1);
+
+    tlv = (MbimTlv *)(unnamed_ies->data);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (tlv), ==, MBIM_TLV_TYPE_WCHAR_STR);
+
+    tlv_str = mbim_tlv_string_get (tlv, &error);
+    g_assert_no_error (error);
+    g_assert_cmpstr (tlv_str, ==, "Orange");
+
+    g_list_free_full (unnamed_ies, (GDestroyNotify)mbim_tlv_unref);
+}
+
+static void
+test_message_parser_ms_basic_connect_extensions_registration_parameters_3_unnamed_tlvs (void)
+{
+    g_autoptr(GError)             error = NULL;
+    g_autoptr(MbimMessage)        response = NULL;
+    gboolean                      result;
+    MbimMicoMode                  mico_mode;
+    MbimDrxCycle                  drx_cycle;
+    MbimLadnInfo                  ladn_info;
+    MbimDefaultPduActivationHint  pdu_hint;
+    gboolean                      re_register_if_needed;
+    GList                        *unnamed_ies = NULL;
+    GList                        *iter;
+    MbimTlv                      *tlv;
+    g_autofree gchar             *tlv_str_1 = NULL;
+    const gchar                  *expected_tlv_str_1 = "abcde";
+    g_autofree gchar             *tlv_str_2 = NULL;
+    const gchar                  *expected_tlv_str_2 = "Orange";
+    const guint8                 *pco_3 = NULL;
+    guint32                       pco_3_size = 0;
+    const guint8                  expected_pco[] = { 0x01, 0x02, 0x03, 0x04,
+                                                     0x05, 0x06, 0x07, 0x08,
+                                                     0x09, 0x0A, 0x0B };
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x80, 0x00, 0x00, 0x00, /* length */
+        0x04, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x3D, 0x01, 0xDC, 0xC5, /* service id */
+        0xFE, 0xF5, 0x4D, 0x05,
+        0x0D, 0x3A, 0xBE, 0xF7,
+        0x05, 0x8E, 0x9A, 0xAF,
+        0x11, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x50, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* mico mode */
+        0x00, 0x00, 0x00, 0x00, /* drx cycle */
+        0x00, 0x00, 0x00, 0x00, /* ladn info */
+        0x01, 0x00, 0x00, 0x00, /* pdu hint */
+        0x01, 0x00, 0x00, 0x00, /* re register if needed */
+        /* First unnamed TLV */
+        0x0A, 0x00, 0x00, 0x02, /* TLV type MBIM_TLV_TYPE_WCHAR_STR, padding 2 */
+        0x0A, 0x00, 0x00, 0x00, /* TLV data length */
+        0x61, 0x00, 0x62, 0x00, /* TLV data string */
+        0x63, 0x00, 0x64, 0x00,
+        0x65, 0x00, 0x00, 0x00,
+        /* Second unnamed TLV */
+        0x0A, 0x00, 0x00, 0x00, /* TLV type MBIM_TLV_TYPE_WCHAR_STR, no padding */
+        0x0C, 0x00, 0x00, 0x00, /* TLV data length */
+        0x4F, 0x00, 0x72, 0x00, /* TLV data string */
+        0x61, 0x00, 0x6E, 0x00,
+        0x67, 0x00, 0x65, 0x00,
+        /* Third unnamed TLV */
+        0x0D, 0x00, 0x00, 0x01, /* TLV type MBIM_TLV_TYPE_PCO, padding 1 */
+        0x0B, 0x00, 0x00, 0x00, /* TLV data length */
+        0x01, 0x02, 0x03, 0x04, /* TLV data bytes */
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x00,
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+
+    result = (mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
+                  response,
+                  &mico_mode,
+                  &drx_cycle,
+                  &ladn_info,
+                  &pdu_hint,
+                  &re_register_if_needed,
+                  &unnamed_ies,
+                  &error));
+
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (mico_mode, ==, MBIM_MICO_MODE_DISABLED);
+    g_assert_cmpuint (drx_cycle, ==, MBIM_DRX_CYCLE_NOT_SPECIFIED);
+    g_assert_cmpuint (ladn_info, ==, MBIM_LADN_INFO_NOT_NEEDED);
+    g_assert_cmpuint (pdu_hint, ==, MBIM_DEFAULT_PDU_ACTIVATION_HINT_LIKELY);
+    g_assert_cmpuint (re_register_if_needed, ==, TRUE);
+    g_assert_cmpuint (g_list_length (unnamed_ies), ==, 3);
+
+    iter = unnamed_ies;
+    tlv = (MbimTlv *)(iter->data);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (tlv), ==, MBIM_TLV_TYPE_WCHAR_STR);
+    tlv_str_1 = mbim_tlv_string_get (tlv, &error);
+    g_assert_no_error (error);
+    g_assert_cmpstr (tlv_str_1, ==, expected_tlv_str_1);
+
+    iter = g_list_next (iter);
+    tlv = (MbimTlv *)(iter->data);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (tlv), ==, MBIM_TLV_TYPE_WCHAR_STR);
+    tlv_str_2 = mbim_tlv_string_get (tlv, &error);
+    g_assert_no_error (error);
+    g_assert_cmpstr (tlv_str_2, ==, expected_tlv_str_2);
+
+    iter = g_list_next (iter);
+    tlv = (MbimTlv *)(iter->data);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (tlv), ==, MBIM_TLV_TYPE_PCO);
+    pco_3 = mbim_tlv_get_tlv_data (tlv, &pco_3_size);
+    g_assert_cmpuint (pco_3_size, ==, sizeof (expected_pco));
+    g_assert (memcmp (pco_3, expected_pco, sizeof (expected_pco)) == 0);
+
+    g_list_free_full (unnamed_ies, (GDestroyNotify)mbim_tlv_unref);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -2002,6 +2253,9 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/connect/short", test_message_parser_basic_connect_connect_short);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect/visible-providers/overflow", test_message_parser_basic_connect_visible_providers_overflow);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/base-stations", test_message_parser_ms_basic_connect_extensions_base_stations);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/registration-parameters/0-unnamed-tlvs", test_message_parser_ms_basic_connect_extensions_registration_parameters_0_unnamed_tlvs);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/registration-parameters/1-unnamed-tlv", test_message_parser_ms_basic_connect_extensions_registration_parameters_1_unnamed_tlv);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/registration-parameters/3-unnamed-tlvs", test_message_parser_ms_basic_connect_extensions_registration_parameters_3_unnamed_tlvs);
 
     return g_test_run ();
 }
