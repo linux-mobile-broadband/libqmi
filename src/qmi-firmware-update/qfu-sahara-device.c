@@ -50,7 +50,9 @@ enum {
 
 static GParamSpec *properties[PROP_LAST];
 
-#define MAX_PRINTABLE_SIZE 80
+#define DEFAULT_SECTOR_SIZE_IN_BYTES 4096
+#define DEFAULT_PAGES_IN_BLOCK       64
+#define MAX_PRINTABLE_SIZE           80
 
 struct _QfuSaharaDevicePrivate {
     GFile      *file;
@@ -60,8 +62,6 @@ struct _QfuSaharaDevicePrivate {
     /* target and transfer settings */
     guint max_payload_size_to_target_in_bytes;
     guint sector_size_in_bytes;
-    guint num_partition_sectors;
-    guint total_sector_size_in_bytes;
     guint pages_in_block;
     /* computed from settings */
     guint transfer_block_size;
@@ -874,8 +874,6 @@ typedef struct {
     FirehoseInitStep step;
     guint            max_payload_size_to_target_in_bytes;
     guint            sector_size_in_bytes;
-    guint            num_partition_sectors;
-    guint            total_sector_size_in_bytes;
     guint            pages_in_block;
 } FirehoseInitContext;
 
@@ -896,10 +894,6 @@ firehose_init_context_process_log_message (const gchar         *rsp,
         g_strstrip (strv[1]);
         if (g_ascii_strcasecmp (strv[0], "sector_size_in_bytes") == 0)
             ctx->sector_size_in_bytes = atoi (strv[1]);
-        else if (g_ascii_strcasecmp (strv[0], "num_partition_sectors") == 0)
-            ctx->num_partition_sectors = atoi (strv[1]);
-        else if (g_ascii_strcasecmp (strv[0], "total_sector_size_in_bytes") == 0)
-            ctx->total_sector_size_in_bytes = atoi (strv[1]);
         else if (g_ascii_strcasecmp (strv[0], "pages_in_block") == 0)
             ctx->pages_in_block = atoi (strv[1]);
     }
@@ -1020,8 +1014,6 @@ sahara_device_firehose_init (QfuSaharaDevice  *self,
         .step                                = FIREHOSE_INIT_STEP_PING,
         .max_payload_size_to_target_in_bytes = 0,
         .sector_size_in_bytes                = 0,
-        .num_partition_sectors               = 0,
-        .total_sector_size_in_bytes          = 0,
         .pages_in_block                      = 0,
     };
 
@@ -1037,21 +1029,23 @@ sahara_device_firehose_init (QfuSaharaDevice  *self,
                                  error))
         return FALSE;
 
-#define VALIDATE_FIELD(FIELD,DESCR) do {                                          \
-        if (!ctx.FIELD) {                                                         \
-            g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "unknown " DESCR); \
-            return FALSE;                                                         \
-        }                                                                         \
-        self->priv->FIELD = ctx.FIELD;                                                \
-    } while (0)
+    if (!ctx.sector_size_in_bytes) {
+        g_debug ("[qfu-sahara-device] using default sector size (%u bytes)", DEFAULT_SECTOR_SIZE_IN_BYTES);
+        self->priv->sector_size_in_bytes = DEFAULT_SECTOR_SIZE_IN_BYTES;
+    } else
+        self->priv->sector_size_in_bytes = ctx.sector_size_in_bytes;
 
-    VALIDATE_FIELD (max_payload_size_to_target_in_bytes, "max payload size");
-    VALIDATE_FIELD (sector_size_in_bytes,                "sector size");
-    VALIDATE_FIELD (num_partition_sectors,               "number of partition sectors");
-    VALIDATE_FIELD (total_sector_size_in_bytes,          "total sector size");
-    VALIDATE_FIELD (pages_in_block,                      "pages in block");
+    if (!ctx.pages_in_block) {
+        g_debug ("[qfu-sahara-device] using default pages in block (%u)", DEFAULT_PAGES_IN_BLOCK);
+        self->priv->pages_in_block = DEFAULT_PAGES_IN_BLOCK;
+    } else
+        self->priv->pages_in_block = ctx.pages_in_block;
 
-#undef VALIDATE_FIELD
+    if (!ctx.max_payload_size_to_target_in_bytes) {
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "unknown max payload size");
+        return FALSE;
+    }
+    self->priv->max_payload_size_to_target_in_bytes = ctx.max_payload_size_to_target_in_bytes;
 
     /* compute transfer block size, which will be equal to the max payload size
      * to target if it's multiple of sector size */
