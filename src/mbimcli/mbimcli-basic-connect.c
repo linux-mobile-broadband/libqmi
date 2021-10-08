@@ -1157,7 +1157,7 @@ connect_activate_properties_handle (const gchar  *key,
 static gboolean
 set_connect_activate_parse (const gchar               *str,
                             ConnectActivateProperties *props,
-			    MbimDevice                *device)
+                            MbimDevice                *device)
 {
     g_auto(GStrv)     split = NULL;
     g_autoptr(GError) error = NULL;
@@ -1178,17 +1178,10 @@ set_connect_activate_parse (const gchar               *str,
         g_printerr ("warning: positional input arguments format is deprecated, use key-value format instead\n");
         split = g_strsplit (str, ",", -1);
 
-	if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
-	    if (g_strv_length (split) > 5) {
-                g_printerr ("error: couldn't parse input string, too many arguments\n");
-		return FALSE;
+        if (g_strv_length (split) > 4) {
+            g_printerr ("error: couldn't parse input string, too many arguments\n");
+            return FALSE;
 	    }
-	} else {
-            if (g_strv_length (split) > 4) {
-                g_printerr ("error: couldn't parse input string, too many arguments\n");
-                return FALSE;
-	    }
-	}
 
         if (g_strv_length (split) > 0) {
             /* APN */
@@ -1206,14 +1199,6 @@ set_connect_activate_parse (const gchar               *str,
                     /* Password */
                     props->password = g_strdup (split[3]);
                 }
-		if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
-		    if (split[4]) {
-			if (!mbimcli_read_access_media_type_from_string (split[4], &props->media_type)) {
-			    g_printerr ("error: couldn't parse input string, unknown media type '%s'\n", split[4]);
-			    return FALSE;
-			}
-		    }
-		}
             }
         }
 
