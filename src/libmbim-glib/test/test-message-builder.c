@@ -56,8 +56,29 @@ test_message_trace (const guint8 *computed,
     g_free (message_str);
     g_free (expected_str);
 }
+
+static void
+test_message_printable (MbimMessage *message,
+                        guint8       mbimex_version_major,
+                        guint8       mbimex_version_minor)
+{
+    g_autofree gchar *printable = NULL;
+
+    printable = mbim_message_get_printable_full (message,
+                                                 mbimex_version_major,
+                                                 mbimex_version_minor,
+                                                 "---- ",
+                                                 FALSE,
+                                                 NULL);
+    g_print ("\n"
+             "Message printable:\n"
+             "%s\n",
+             printable);
+}
+
 #else
 #define test_message_trace(...)
+#define test_message_printable(...)
 #endif
 
 static void
@@ -121,6 +142,8 @@ test_message_builder_basic_connect_pin_set_raw (void)
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
+    test_message_printable (message, 1, 0);
+
     mbim_message_unref (message);
 }
 
@@ -181,6 +204,8 @@ test_message_builder_basic_connect_pin_set (void)
 
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    test_message_printable (message, 1, 0);
 
     mbim_message_unref (message);
 }
@@ -263,6 +288,8 @@ test_message_builder_basic_connect_connect_set_raw (void)
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
+    test_message_printable (message, 1, 0);
+
     mbim_message_unref (message);
 }
 
@@ -342,6 +369,8 @@ test_message_builder_basic_connect_connect_set (void)
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
+    test_message_printable (message, 1, 0);
+
     mbim_message_unref (message);
 }
 
@@ -398,6 +427,8 @@ test_message_builder_basic_connect_service_activation_set (void)
 
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    test_message_printable (message, 1, 0);
 
     mbim_message_unref (message);
 }
@@ -489,6 +520,8 @@ test_message_builder_basic_connect_device_service_subscribe_list_set (void)
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
+    test_message_printable (message, 1, 0);
+
     mbim_message_unref (message);
 }
 
@@ -558,6 +591,8 @@ test_message_builder_ussd_set (void)
 
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    test_message_printable (message, 1, 0);
 
     mbim_message_unref (message);
 }
@@ -639,6 +674,8 @@ test_message_builder_auth_akap_query (void)
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
+    test_message_printable (message, 1, 0);
+
     mbim_message_unref (message);
 }
 
@@ -710,6 +747,8 @@ test_message_builder_stk_pac_set (void)
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
+    test_message_printable (message, 1, 0);
+
     mbim_message_unref (message);
 }
 
@@ -780,6 +819,8 @@ test_message_builder_stk_terminal_response_set (void)
 
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    test_message_printable (message, 1, 0);
 
     mbim_message_unref (message);
 }
@@ -857,6 +898,8 @@ test_message_builder_stk_envelope_set (void)
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
+    test_message_printable (message, 1, 0);
+
     mbim_message_unref (message);
 }
 
@@ -908,6 +951,8 @@ test_message_builder_basic_connect_ip_packet_filters_set_none (void)
 
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    test_message_printable (message, 1, 0);
 
     mbim_message_unref (message);
 }
@@ -993,6 +1038,8 @@ test_message_builder_basic_connect_ip_packet_filters_set_one (void)
 
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    test_message_printable (message, 1, 0);
 
     mbim_message_unref (message);
 
@@ -1108,6 +1155,8 @@ test_message_builder_basic_connect_ip_packet_filters_set_two (void)
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
+    test_message_printable (message, 1, 0);
+
     mbim_message_unref (message);
 
     mbim_packet_filter_array_free (filters);
@@ -1177,6 +1226,8 @@ test_message_builder_dss_connect_set (void)
 
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    test_message_printable (message, 1, 0);
 
     mbim_message_unref (message);
 }
@@ -1285,6 +1336,8 @@ test_message_builder_basic_connect_multicarrier_providers_set (void)
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
+    test_message_printable (message, 1, 0);
+
     mbim_message_unref (message);
     mbim_provider_array_free (providers);
 }
@@ -1334,6 +1387,8 @@ test_message_builder_ms_host_shutdown_notify_set (void)
 
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    test_message_printable (message, 1, 0);
 
     mbim_message_unref (message);
 }
@@ -1396,6 +1451,8 @@ test_message_builder_ms_basic_connect_extensions_registration_parameters_set_0_u
 
     g_assert_cmpuint (((GByteArray *)message)->len, ==, sizeof (expected_message));
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
+
+    test_message_printable (message, 3, 0);
 }
 
 static void
@@ -1470,6 +1527,8 @@ test_message_builder_ms_basic_connect_extensions_registration_parameters_set_1_u
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
     g_list_free_full (tlv_list, (GDestroyNotify)mbim_tlv_unref);
+
+    test_message_printable (message, 3, 0);
 }
 
 static void
@@ -1569,6 +1628,8 @@ test_message_builder_ms_basic_connect_extensions_registration_parameters_set_3_u
     g_assert (memcmp (((GByteArray *)message)->data, expected_message, sizeof (expected_message)) == 0);
 
     g_list_free_full (tlv_list, (GDestroyNotify)mbim_tlv_unref);
+
+    test_message_printable (message, 3, 0);
 }
 
 int main (int argc, char **argv)
