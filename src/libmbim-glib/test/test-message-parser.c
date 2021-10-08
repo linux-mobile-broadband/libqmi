@@ -53,8 +53,29 @@ test_message_trace (const guint8 *computed,
         }
     }
 }
+
+static void
+test_message_printable (MbimMessage *message,
+                        guint8       mbimex_version_major,
+                        guint8       mbimex_version_minor)
+{
+    g_autofree gchar *printable = NULL;
+
+    printable = mbim_message_get_printable_full (message,
+                                                 mbimex_version_major,
+                                                 mbimex_version_minor,
+                                                 "---- ",
+                                                 FALSE,
+                                                 NULL);
+    g_print ("\n"
+             "Message printable:\n"
+             "%s\n",
+             printable);
+}
+
 #else
 #define test_message_trace(...)
+#define test_message_printable(...)
 #endif
 
 static void
@@ -119,6 +140,7 @@ test_message_parser_basic_connect_visible_providers (void)
         0x67, 0x00, 0x65, 0x00 };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_visible_providers_response_parse (
                   response,
@@ -236,6 +258,7 @@ test_message_parser_basic_connect_subscriber_ready_status (void)
         0x31, 0x00, 0x32, 0x00 };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_subscriber_ready_status_response_parse (
                   response,
@@ -331,6 +354,7 @@ test_message_parser_basic_connect_device_caps (void)
                                 0x4D, 0x00, 0x00, 0x00 };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_device_caps_response_parse (
                   response,
@@ -430,6 +454,7 @@ test_message_parser_basic_connect_ip_configuration (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ip_configuration_response_parse (
                   response,
@@ -535,6 +560,7 @@ test_message_parser_basic_connect_service_activation (void)
         0x05, 0x06, 0x07, 0x08  };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_service_activation_response_parse (
                   response,
@@ -600,6 +626,7 @@ test_message_parser_basic_connect_register_state (void)
         0x36, 0x00, 0x00, 0x00 };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_register_state_response_parse (
                   response,
@@ -656,6 +683,8 @@ test_message_parser_provisioned_contexts (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
+
     g_assert (!mbim_message_provisioned_contexts_response_parse (
                   response,
                   &provisioned_contexts_count,
@@ -697,6 +726,7 @@ test_message_parser_sms_read_zero_pdu (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_sms_read_response_parse (
                   response,
@@ -764,6 +794,7 @@ test_message_parser_sms_read_single_pdu (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_sms_read_response_parse (
                   response,
@@ -860,6 +891,7 @@ test_message_parser_sms_read_multiple_pdu (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_sms_read_response_parse (
                   response,
@@ -956,6 +988,7 @@ test_message_parser_ussd (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ussd_response_parse (
                   response,
@@ -1051,8 +1084,8 @@ test_message_parser_auth_akap (void)
         0x73, 0x72
     };
 
-
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_auth_akap_response_parse (
                   response,
@@ -1141,6 +1174,7 @@ test_message_parser_stk_pac_notification (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_stk_pac_notification_parse (
                   response,
@@ -1318,6 +1352,7 @@ test_message_parser_stk_pac_response (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_stk_pac_response_parse (
                   response,
@@ -1374,6 +1409,7 @@ test_message_parser_stk_terminal_response (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_stk_terminal_response_response_parse (
                   response,
@@ -1439,6 +1475,7 @@ test_message_parser_stk_envelope_response (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_stk_envelope_response_parse (
                   response,
@@ -1484,6 +1521,7 @@ test_message_parser_basic_connect_ip_packet_filters_none (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ip_packet_filters_response_parse (
                   response,
@@ -1548,6 +1586,7 @@ test_message_parser_basic_connect_ip_packet_filters_one (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ip_packet_filters_response_parse (
                   response,
@@ -1646,6 +1685,7 @@ test_message_parser_basic_connect_ip_packet_filters_two (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ip_packet_filters_response_parse (
                   response,
@@ -1718,6 +1758,7 @@ test_message_parser_ms_firmware_id_get (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     g_assert (mbim_message_ms_firmware_id_get_response_parse (
                   response,
@@ -1937,6 +1978,7 @@ test_message_parser_ms_basic_connect_extensions_base_stations (void)
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_base_stations_info_response_parse (
                   response,
@@ -2015,6 +2057,7 @@ test_message_parser_ms_basic_connect_extensions_registration_parameters_0_unname
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
                   response,
@@ -2083,6 +2126,7 @@ test_message_parser_ms_basic_connect_extensions_registration_parameters_1_unname
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
                   response,
@@ -2181,6 +2225,7 @@ test_message_parser_ms_basic_connect_extensions_registration_parameters_3_unname
     };
 
     response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 3, 0);
 
     result = (mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
                   response,
