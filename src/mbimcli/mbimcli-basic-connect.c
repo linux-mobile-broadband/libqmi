@@ -886,8 +886,8 @@ connect_ready (MbimDevice   *device,
     MbimActivationState      activation_state;
     MbimVoiceCallState       voice_call_state;
     MbimContextIpType        ip_type;
-    MbimAccessMediaType      media_type;
-    MbimConnectAccessString *access_string;
+    MbimAccessMediaType      media_type = MBIM_ACCESS_MEDIA_TYPE_UNKNOWN;
+    g_autofree gchar        *access_string = NULL;
     const MbimUuid          *context_type;
     guint32                  nw_error;
 
@@ -909,6 +909,7 @@ connect_ready (MbimDevice   *device,
                 &nw_error,
                 &media_type,
                 &access_string,
+                NULL, /* unnamed IEs ignored */
                 &error)) {
             g_printerr ("error: couldn't parse response message: %s\n", error->message);
             shutdown (FALSE);
@@ -962,7 +963,7 @@ connect_ready (MbimDevice   *device,
         g_print ("\tAccess media type: '%s'\n"
                  "\t    Access string: '%s'\n",
                  VALIDATE_UNKNOWN (mbim_access_media_type_get_string (media_type)),
-                 access_string->data);
+                 access_string);
     }
 
     if (GPOINTER_TO_UINT (user_data) == CONNECT) {
@@ -2236,39 +2237,27 @@ mbimcli_basic_connect_run (MbimDevice   *device,
             .compression   = MBIM_COMPRESSION_NONE,
             .context_type  = MBIM_CONTEXT_TYPE_INTERNET,
             .media_type    = MBIM_ACCESS_MEDIA_TYPE_UNKNOWN,
-    };
-    MbimConnectAccessString *access_string_v3 = NULL;
-    MbimConnectUserName     *username_v3 = NULL;
-    MbimConnectPassword     *password_v3 = NULL;
+        };
 
         if (!set_connect_activate_parse (set_connect_activate_str, &props, device)) {
             shutdown (FALSE);
             return;
         }
 
-    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
-        access_string_v3 = g_new0 (MbimConnectAccessString, 1);
-        username_v3      = g_new0 (MbimConnectUserName, 1);
-        password_v3      = g_new0 (MbimConnectPassword, 1);
-        access_string_v3->type = 10;
-        username_v3->type      = 10;
-        password_v3->type      = 10;
-        access_string_v3->data = props.access_string;
-        username_v3->data      = props.username;
-        password_v3->data      = props.password;
-        g_debug ("acstr %s, username %s, password %s, media %s, auth %s", access_string_v3->data, username_v3->data, password_v3->data, mbim_access_media_type_get_string(props.media_type), mbim_auth_protocol_get_string(props.auth_protocol));
-        request = mbim_message_ms_basic_connect_v3_connect_set_new (props.session_id,
-                                                                    MBIM_ACTIVATION_COMMAND_ACTIVATE,
-                                                                    props.compression,
-                                                                    props.auth_protocol,
-                                                                    props.ip_type,
-                                                                    mbim_uuid_from_context_type (props.context_type),
-                                                                    props.media_type,
-                                                                    access_string_v3,
-                                                                    username_v3,
-                                                                    password_v3,
-                                                                    &error);
-    } else {
+        if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+            request = mbim_message_ms_basic_connect_v3_connect_set_new (props.session_id,
+                                                                        MBIM_ACTIVATION_COMMAND_ACTIVATE,
+                                                                        props.compression,
+                                                                        props.auth_protocol,
+                                                                        props.ip_type,
+                                                                        mbim_uuid_from_context_type (props.context_type),
+                                                                        props.media_type,
+                                                                        props.access_string,
+                                                                        props.username,
+                                                                        props.password,
+                                                                        NULL, /* unnamed IEs */
+                                                                        &error);
+        } else {
             request = mbim_message_connect_set_new (props.session_id,
                                                     MBIM_ACTIVATION_COMMAND_ACTIVATE,
                                                     props.access_string,
@@ -2279,7 +2268,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                                                     props.ip_type,
                                                     mbim_uuid_from_context_type (props.context_type),
                                                     &error);
-    }
+        }
 
         if (!request) {
             g_printerr ("error: couldn't create request: %s\n", error->message);
@@ -2328,6 +2317,7 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                                                                         MBIM_CONTEXT_IP_TYPE_DEFAULT,
                                                                         mbim_uuid_from_context_type (MBIM_CONTEXT_TYPE_INTERNET),
                                                                         MBIM_ACCESS_MEDIA_TYPE_UNKNOWN,
+                                                                        NULL,
                                                                         NULL,
                                                                         NULL,
                                                                         NULL,

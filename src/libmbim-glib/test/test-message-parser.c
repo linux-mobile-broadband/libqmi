@@ -2271,6 +2271,317 @@ test_message_parser_ms_basic_connect_extensions_registration_parameters_3_unname
     g_list_free_full (unnamed_ies, (GDestroyNotify)mbim_tlv_unref);
 }
 
+static void
+test_message_parser_ms_basic_connect_v3_connect_0_unnamed_tlvs (void)
+{
+    g_autoptr(GError)       error = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+    gboolean                result;
+    GList                  *unnamed_ies = NULL;
+    guint32                 session_id;
+    MbimActivationState     activation_state;
+    MbimVoiceCallState      voice_call_state;
+    MbimContextIpType       ip_type;
+    MbimAccessMediaType     media_type = MBIM_ACCESS_MEDIA_TYPE_UNKNOWN;
+    g_autofree gchar       *access_string = NULL;
+    const MbimUuid         *context_type;
+    guint32                 nw_error;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x6C, 0x00, 0x00, 0x00, /* length */
+        0x04, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x0C, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x3C, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* session id */
+        0x01, 0x00, 0x00, 0x00, /* activation state */
+        0x00, 0x00, 0x00, 0x00, /* voice call state */
+        0x01, 0x00, 0x00, 0x00, /* ip type */
+        0x7E, 0x5E, 0x2A, 0x7E, /* context type */
+        0x4E, 0x6F, 0x72, 0x72,
+        0x73, 0x6B, 0x65, 0x6E,
+        0x7E, 0x5E, 0x2A, 0x7E,
+        0x00, 0x00, 0x00, 0x00, /* nw error */
+        0x01, 0x00, 0x00, 0x00, /* media type */
+        0x0A, 0x00, 0x00, 0x00, /* access string */
+        0x10, 0x00, 0x00, 0x00,
+        0x69, 0x00, 0x6E, 0x00,
+        0x74, 0x00, 0x65, 0x00,
+        0x72, 0x00, 0x6E, 0x00,
+        0x65, 0x00, 0x74, 0x00,
+        /* no unnamed TLVs */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 3, 0);
+
+    result = (mbim_message_ms_basic_connect_v3_connect_response_parse (
+                  response,
+                  &session_id,
+                  &activation_state,
+                  &voice_call_state,
+                  &ip_type,
+                  &context_type,
+                  &nw_error,
+                  &media_type,
+                  &access_string,
+                  &unnamed_ies,
+                  &error));
+
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (session_id, ==, 1);
+    g_assert_cmpuint (activation_state, ==, MBIM_ACTIVATION_STATE_ACTIVATED);
+    g_assert_cmpuint (voice_call_state, ==, MBIM_VOICE_CALL_STATE_NONE);
+    g_assert_cmpuint (ip_type, ==, MBIM_CONTEXT_IP_TYPE_IPV4);
+    g_assert_cmpuint (mbim_uuid_to_context_type (context_type), ==, MBIM_CONTEXT_TYPE_INTERNET);
+    g_assert_cmpuint (media_type, ==, MBIM_ACCESS_MEDIA_TYPE_3GPP);
+    g_assert_cmpstr  (access_string, ==, "internet");
+    g_assert_cmpuint (g_list_length (unnamed_ies), ==, 0);
+}
+
+static void
+test_message_parser_ms_basic_connect_v3_connect_1_unnamed_tlv (void)
+{
+    g_autoptr(GError)       error = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+    gboolean                result;
+    GList                  *unnamed_ies = NULL;
+    guint32                 session_id;
+    MbimActivationState     activation_state;
+    MbimVoiceCallState      voice_call_state;
+    MbimContextIpType       ip_type;
+    MbimAccessMediaType     media_type = MBIM_ACCESS_MEDIA_TYPE_UNKNOWN;
+    g_autofree gchar       *access_string = NULL;
+    const MbimUuid         *context_type;
+    guint32                 nw_error;
+    MbimTlv                *tlv;
+    g_autofree gchar       *tlv_str = NULL;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x82, 0x00, 0x00, 0x00, /* length */
+        0x04, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x0C, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x52, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* session id */
+        0x01, 0x00, 0x00, 0x00, /* activation state */
+        0x00, 0x00, 0x00, 0x00, /* voice call state */
+        0x01, 0x00, 0x00, 0x00, /* ip type */
+        0x7E, 0x5E, 0x2A, 0x7E, /* context type */
+        0x4E, 0x6F, 0x72, 0x72,
+        0x73, 0x6B, 0x65, 0x6E,
+        0x7E, 0x5E, 0x2A, 0x7E,
+        0x00, 0x00, 0x00, 0x00, /* nw error */
+        0x01, 0x00, 0x00, 0x00, /* media type */
+        0x0A, 0x00, 0x00, 0x00, /* access string */
+        0x10, 0x00, 0x00, 0x00,
+        0x69, 0x00, 0x6E, 0x00,
+        0x74, 0x00, 0x65, 0x00,
+        0x72, 0x00, 0x6E, 0x00,
+        0x65, 0x00, 0x74, 0x00,
+        /* First unnamed TLV */
+        0x0A, 0x00, 0x00, 0x00, /* TLV type MBIM_TLV_TYPE_WCHAR_STR, no padding */
+        0x0C, 0x00, 0x00, 0x00, /* TLV data length */
+        0x4F, 0x00, 0x72, 0x00, /* TLV data string */
+        0x61, 0x00, 0x6E, 0x00,
+        0x67, 0x00, 0x65, 0x00,
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 3, 0);
+
+    result = (mbim_message_ms_basic_connect_v3_connect_response_parse (
+                  response,
+                  &session_id,
+                  &activation_state,
+                  &voice_call_state,
+                  &ip_type,
+                  &context_type,
+                  &nw_error,
+                  &media_type,
+                  &access_string,
+                  &unnamed_ies,
+                  &error));
+
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (session_id, ==, 1);
+    g_assert_cmpuint (activation_state, ==, MBIM_ACTIVATION_STATE_ACTIVATED);
+    g_assert_cmpuint (voice_call_state, ==, MBIM_VOICE_CALL_STATE_NONE);
+    g_assert_cmpuint (ip_type, ==, MBIM_CONTEXT_IP_TYPE_IPV4);
+    g_assert_cmpuint (mbim_uuid_to_context_type (context_type), ==, MBIM_CONTEXT_TYPE_INTERNET);
+    g_assert_cmpuint (media_type, ==, MBIM_ACCESS_MEDIA_TYPE_3GPP);
+    g_assert_cmpstr  (access_string, ==, "internet");
+    g_assert_cmpuint (g_list_length (unnamed_ies), ==, 1);
+
+    tlv = (MbimTlv *)(unnamed_ies->data);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (tlv), ==, MBIM_TLV_TYPE_WCHAR_STR);
+
+    tlv_str = mbim_tlv_string_get (tlv, &error);
+    g_assert_no_error (error);
+    g_assert_cmpstr (tlv_str, ==, "Orange");
+
+    g_list_free_full (unnamed_ies, (GDestroyNotify)mbim_tlv_unref);
+}
+
+static void
+test_message_parser_ms_basic_connect_v3_connect_3_unnamed_tlvs (void)
+{
+    g_autoptr(GError)       error = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+    gboolean                result;
+    GList                  *unnamed_ies = NULL;
+    guint32                 session_id;
+    MbimActivationState     activation_state;
+    MbimVoiceCallState      voice_call_state;
+    MbimContextIpType       ip_type;
+    MbimAccessMediaType     media_type = MBIM_ACCESS_MEDIA_TYPE_UNKNOWN;
+    g_autofree gchar       *access_string = NULL;
+    const MbimUuid         *context_type;
+    guint32                 nw_error;
+    GList                  *iter;
+    MbimTlv                *tlv;
+    g_autofree gchar       *tlv_str_1 = NULL;
+    const gchar            *expected_tlv_str_1 = "abcde";
+    g_autofree gchar       *tlv_str_2 = NULL;
+    const gchar            *expected_tlv_str_2 = "Orange";
+    const guint8           *pco_3 = NULL;
+    guint32                 pco_3_size = 0;
+    const guint8            expected_pco[] = { 0x01, 0x02, 0x03, 0x04,
+                                               0x05, 0x06, 0x07, 0x08,
+                                               0x09, 0x0A, 0x0B };
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0xAA, 0x00, 0x00, 0x00, /* length */
+        0x04, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x0C, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x7A, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* session id */
+        0x01, 0x00, 0x00, 0x00, /* activation state */
+        0x00, 0x00, 0x00, 0x00, /* voice call state */
+        0x01, 0x00, 0x00, 0x00, /* ip type */
+        0x7E, 0x5E, 0x2A, 0x7E, /* context type */
+        0x4E, 0x6F, 0x72, 0x72,
+        0x73, 0x6B, 0x65, 0x6E,
+        0x7E, 0x5E, 0x2A, 0x7E,
+        0x00, 0x00, 0x00, 0x00, /* nw error */
+        0x01, 0x00, 0x00, 0x00, /* media type */
+        0x0A, 0x00, 0x00, 0x00, /* access string */
+        0x10, 0x00, 0x00, 0x00,
+        0x69, 0x00, 0x6E, 0x00,
+        0x74, 0x00, 0x65, 0x00,
+        0x72, 0x00, 0x6E, 0x00,
+        0x65, 0x00, 0x74, 0x00,
+        /* First unnamed TLV */
+        0x0A, 0x00, 0x00, 0x02, /* TLV type MBIM_TLV_TYPE_WCHAR_STR, padding 2 */
+        0x0A, 0x00, 0x00, 0x00, /* TLV data length */
+        0x61, 0x00, 0x62, 0x00, /* TLV data string */
+        0x63, 0x00, 0x64, 0x00,
+        0x65, 0x00, 0x00, 0x00,
+        /* Second unnamed TLV */
+        0x0A, 0x00, 0x00, 0x00, /* TLV type MBIM_TLV_TYPE_WCHAR_STR, no padding */
+        0x0C, 0x00, 0x00, 0x00, /* TLV data length */
+        0x4F, 0x00, 0x72, 0x00, /* TLV data string */
+        0x61, 0x00, 0x6E, 0x00,
+        0x67, 0x00, 0x65, 0x00,
+        /* Third unnamed TLV */
+        0x0D, 0x00, 0x00, 0x01, /* TLV type MBIM_TLV_TYPE_PCO, padding 1 */
+        0x0B, 0x00, 0x00, 0x00, /* TLV data length */
+        0x01, 0x02, 0x03, 0x04, /* TLV data bytes */
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x0B, 0x00,
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 3, 0);
+
+    result = (mbim_message_ms_basic_connect_v3_connect_response_parse (
+                  response,
+                  &session_id,
+                  &activation_state,
+                  &voice_call_state,
+                  &ip_type,
+                  &context_type,
+                  &nw_error,
+                  &media_type,
+                  &access_string,
+                  &unnamed_ies,
+                  &error));
+
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (session_id, ==, 1);
+    g_assert_cmpuint (activation_state, ==, MBIM_ACTIVATION_STATE_ACTIVATED);
+    g_assert_cmpuint (voice_call_state, ==, MBIM_VOICE_CALL_STATE_NONE);
+    g_assert_cmpuint (ip_type, ==, MBIM_CONTEXT_IP_TYPE_IPV4);
+    g_assert_cmpuint (mbim_uuid_to_context_type (context_type), ==, MBIM_CONTEXT_TYPE_INTERNET);
+    g_assert_cmpuint (media_type, ==, MBIM_ACCESS_MEDIA_TYPE_3GPP);
+    g_assert_cmpstr  (access_string, ==, "internet");
+    g_assert_cmpuint (g_list_length (unnamed_ies), ==, 3);
+
+
+    iter = unnamed_ies;
+    tlv = (MbimTlv *)(iter->data);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (tlv), ==, MBIM_TLV_TYPE_WCHAR_STR);
+    tlv_str_1 = mbim_tlv_string_get (tlv, &error);
+    g_assert_no_error (error);
+    g_assert_cmpstr (tlv_str_1, ==, expected_tlv_str_1);
+
+    iter = g_list_next (iter);
+    tlv = (MbimTlv *)(iter->data);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (tlv), ==, MBIM_TLV_TYPE_WCHAR_STR);
+    tlv_str_2 = mbim_tlv_string_get (tlv, &error);
+    g_assert_no_error (error);
+    g_assert_cmpstr (tlv_str_2, ==, expected_tlv_str_2);
+
+    iter = g_list_next (iter);
+    tlv = (MbimTlv *)(iter->data);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (tlv), ==, MBIM_TLV_TYPE_PCO);
+    pco_3 = mbim_tlv_get_tlv_data (tlv, &pco_3_size);
+    g_assert_cmpuint (pco_3_size, ==, sizeof (expected_pco));
+    g_assert (memcmp (pco_3, expected_pco, sizeof (expected_pco)) == 0);
+
+    g_list_free_full (unnamed_ies, (GDestroyNotify)mbim_tlv_unref);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -2301,6 +2612,9 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/registration-parameters/0-unnamed-tlvs", test_message_parser_ms_basic_connect_extensions_registration_parameters_0_unnamed_tlvs);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/registration-parameters/1-unnamed-tlv", test_message_parser_ms_basic_connect_extensions_registration_parameters_1_unnamed_tlv);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/registration-parameters/3-unnamed-tlvs", test_message_parser_ms_basic_connect_extensions_registration_parameters_3_unnamed_tlvs);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-v3/connect/0-unnamed-tlvs", test_message_parser_ms_basic_connect_v3_connect_0_unnamed_tlvs);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-v3/connect/1-unnamed-tlv", test_message_parser_ms_basic_connect_v3_connect_1_unnamed_tlv);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-v3/connect/3-unnamed-tlvs", test_message_parser_ms_basic_connect_v3_connect_3_unnamed_tlvs);
 
     return g_test_run ();
 }
