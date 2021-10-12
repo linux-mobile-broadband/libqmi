@@ -22,7 +22,8 @@ G_BEGIN_DECLS
 /**
  * SECTION:mbim-tlv
  * @title: MbimTlv
- * @short_description: A variable-sized data structure specified in Microsoft MBIM extensions.
+ * @short_description: A variable-sized data structure specified in Microsoft
+ *   MBIM extension v3.0.
  *
  * The #MbimTlv structure is capable of exchanging a wide range of information
  * between an MBIM host and an MBIM device.
