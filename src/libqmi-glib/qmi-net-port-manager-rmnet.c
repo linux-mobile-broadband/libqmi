@@ -543,8 +543,15 @@ net_port_manager_add_link (QmiNetPortManager     *_self,
         rmnet_flags |= RMNET_FLAGS_INGRESS_MAP_CKSUMV4;
     if (flags & QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV4)
         rmnet_flags |= RMNET_FLAGS_EGRESS_MAP_CKSUMV4;
+    if (flags & QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV5)
+        rmnet_flags |= RMNET_FLAGS_INGRESS_MAP_CKSUMV5;
+    if (flags & QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV5)
+        rmnet_flags |= RMNET_FLAGS_EGRESS_MAP_CKSUMV5;
+
     rmnet_mask = (RMNET_FLAGS_EGRESS_MAP_CKSUMV4  |
                   RMNET_FLAGS_INGRESS_MAP_CKSUMV4 |
+                  RMNET_FLAGS_EGRESS_MAP_CKSUMV5  |
+                  RMNET_FLAGS_INGRESS_MAP_CKSUMV5 |
                   RMNET_FLAGS_INGRESS_DEAGGREGATION);
 
     msg = netlink_message_new_link (ctx->mux_id, ctx->ifname, base_if_index, rmnet_flags, rmnet_mask);

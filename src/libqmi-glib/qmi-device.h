@@ -953,6 +953,8 @@ gchar *qmi_device_add_link_finish (QmiDevice     *self,
  * @QMI_DEVICE_ADD_LINK_FLAGS_NONE: none.
  * @QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV4: checksum offload (v4) is enabled in ingress path.
  * @QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV4: checksum offload (v4) is enabled in egress path.
+ * @QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV5: checksum offload (v5) is enabled in ingress path. Since 1.32.
+ * @QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV5: checksum offload (v5) is enabled in egress path. Since 1.32.
  *
  * Flags specifying the behavior of the new link.
  *
@@ -962,6 +964,8 @@ typedef enum { /*< since=1.30 >*/
     QMI_DEVICE_ADD_LINK_FLAGS_NONE                = 0,
     QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV4 = 1 << 1,
     QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV4  = 1 << 2,
+    QMI_DEVICE_ADD_LINK_FLAGS_INGRESS_MAP_CKSUMV5 = 1 << 3,
+    QMI_DEVICE_ADD_LINK_FLAGS_EGRESS_MAP_CKSUMV5  = 1 << 4,
 } QmiDeviceAddLinkFlags;
 
 /**
