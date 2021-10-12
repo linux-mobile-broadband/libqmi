@@ -98,8 +98,8 @@ typedef enum { /*< since=1.0 >*/
  * @MBIM_DATA_CLASS_HSDPA: HSDPA.
  * @MBIM_DATA_CLASS_HSUPA: HSUPA.
  * @MBIM_DATA_CLASS_LTE: LTE.
- * @MBIM_DATA_CLASS_5G_NSA: 5G NSA (MS MBIM Extension). Since 1.28.
- * @MBIM_DATA_CLASS_5G_SA: 5G SA (MS MBIM Extension). Since 1.28.
+ * @MBIM_DATA_CLASS_5G_NSA: 5G NSA (MS MBIMEx v2.0). Since 1.28.
+ * @MBIM_DATA_CLASS_5G_SA: 5G SA (MS MBIMEx v2.0). Since 1.28.
  * @MBIM_DATA_CLASS_1XRTT: 1xRTT.
  * @MBIM_DATA_CLASS_1XEVDO: 1xEV-DO.
  * @MBIM_DATA_CLASS_1XEVDO_REVA: 1xEV-DO RevA
@@ -110,6 +110,13 @@ typedef enum { /*< since=1.0 >*/
  * @MBIM_DATA_CLASS_CUSTOM: Custom.
  *
  * Data class.
+ *
+ * Both 5G related values are introduced in MBIM Extension v2.0, but given
+ * the update is compatible with the original MBIM enumeration, devices may
+ * report them without having enabled MBIM Extension v2.0 support.
+ *
+ * This type is updated in MBIM Extension v3.0 in a non-backwards compatible
+ * way, see #MbimDataClassV2.
  *
  * Since: 1.0
  */
