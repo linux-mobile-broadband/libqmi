@@ -191,6 +191,7 @@ typedef enum { /*< since=1.0 >*/
  * @MBIM_SUBSCRIBER_READY_STATE_FAILURE: Failure.
  * @MBIM_SUBSCRIBER_READY_STATE_NOT_ACTIVATED: Not activated.
  * @MBIM_SUBSCRIBER_READY_STATE_DEVICE_LOCKED: Device locked.
+ * @MBIM_SUBSCRIBER_READY_STATE_NO_ESIM_PROFILE: ESIM disabled.
  *
  * Ready state of the subscriber.
  *
@@ -204,6 +205,7 @@ typedef enum { /*< since=1.0 >*/
     MBIM_SUBSCRIBER_READY_STATE_FAILURE          = 4,
     MBIM_SUBSCRIBER_READY_STATE_NOT_ACTIVATED    = 5,
     MBIM_SUBSCRIBER_READY_STATE_DEVICE_LOCKED    = 6,
+    MBIM_SUBSCRIBER_READY_STATE_NO_ESIM_PROFILE  = 7,
 } MbimSubscriberReadyState;
 
 /**
