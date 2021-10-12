@@ -93,7 +93,7 @@ services_data = [
   [['basic-connect', 'ms-basic-connect-v2', 'ms-basic-connect-v3'], true],
   [['dss'], true],
   [['intel-firmware-update'], true],
-  [['ms-basic-connect-extensions', 'ms-basic-connect-extensions-v3'], true],
+  [['ms-basic-connect-extensions', 'ms-basic-connect-extensions-v2', 'ms-basic-connect-extensions-v3'], true],
   [['ms-uicc-low-level-access'], true],
   [['ms-firmware-id'], true],
   [['ms-host-shutdown'], true],

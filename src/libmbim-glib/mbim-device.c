@@ -1615,7 +1615,7 @@ ms_ext_version_message_ready (MbimDevice   *self,
     response = mbim_device_command_finish (self, res, &error);
     if (!response ||
         !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error) ||
-        !mbim_message_ms_basic_connect_extensions_version_response_parse (
+        !mbim_message_ms_basic_connect_extensions_v2_version_response_parse (
             response,
             &mbim_version,
             &ms_mbimex_version,
@@ -1669,7 +1669,7 @@ ms_ext_version_message (GTask *task)
     else
         g_assert_not_reached ();
 
-    request = mbim_message_ms_basic_connect_extensions_version_query_new (mbim_version, ms_mbimex_version, NULL);
+    request = mbim_message_ms_basic_connect_extensions_v2_version_query_new (mbim_version, ms_mbimex_version, NULL);
     g_assert (request);
 
     mbim_device_command (self,

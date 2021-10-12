@@ -1026,7 +1026,7 @@ monitor_ms_basic_connect_extensions_version_response (MbimProxy   *self,
     if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, NULL) ||
         (mbim_message_command_done_get_service (response) != MBIM_SERVICE_MS_BASIC_CONNECT_EXTENSIONS) ||
         (mbim_message_command_done_get_cid (response) != MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_VERSION) ||
-        !mbim_message_ms_basic_connect_extensions_version_response_parse (response, &mbim_version, &ms_mbimex_version, NULL))
+        !mbim_message_ms_basic_connect_extensions_v2_version_response_parse (response, &mbim_version, &ms_mbimex_version, NULL))
         return;
 
     ms_mbimex_version_major = ms_mbimex_version >> 8;

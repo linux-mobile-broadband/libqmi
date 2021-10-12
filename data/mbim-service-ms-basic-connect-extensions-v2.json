@@ -1,0 +1,21 @@
+[
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Ms Basic Connect Extensions V2",
+    "mbimex-service" : "Ms Basic Connect Extensions",
+    "mbimex-version" : "2.0" },
+
+  // *********************************************************************************
+
+  { "name"       : "Version",
+    "type"       : "Command",
+    "since"      : "1.28",
+    "query"      : [ { "name"   : "MbimVersion",
+                       "format" : "guint16" },
+                     { "name"   : "MbimExtendedVersion",
+                       "format" : "guint16" } ],
+    "response"   : [ { "name"   : "MbimVersion",
+                       "format" : "guint16" },
+                     { "name"   : "MbimExtendedVersion",
+                       "format" : "guint16" } ] }
+]
