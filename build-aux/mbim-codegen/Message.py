@@ -568,14 +568,14 @@ class Message:
             elif field['format'] == 'struct':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated #${struct}, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_free().\n')
             elif field['format'] == 'ms-struct':
-                inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated #${struct}, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_free().\n')
+                inner_template = (' * @out_${field}: (out)(optional)(nullable)(transfer full): return location for a newly allocated #${struct}, or %NULL if the \'${name}\' field is not needed. The availability of this field is not always guaranteed, and therefore %NULL may be given as a valid output. Free the returned value with ${struct_underscore}_free().\n')
             elif field['format'] == 'struct-array':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type ${struct}): return location for a newly allocated array of #${struct} items, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
             elif field['format'] == 'ref-struct-array':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type ${struct}): return location for a newly allocated array of #${struct} items, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
             elif field['format'] == 'ms-struct-array':
                 inner_template = (' * @out_${field}_count: (out)(optional)(transfer none): return location for a #guint32, or %NULL if the field is not needed.\n'
-                                  ' * @out_${field}: (out)(optional)(transfer full)(array zero-terminated=1)(element-type ${struct}): return location for a newly allocated array of #${struct} items, or %NULL if the \'${name}\' field is not needed. Free the returned value with ${struct_underscore}_array_free().\n')
+                                  ' * @out_${field}: (out)(optional)(nullable)(transfer full)(array zero-terminated=1)(element-type ${struct}): return location for a newly allocated array of #${struct} items, or %NULL if the \'${name}\' field is not needed. The availability of this field is not always guaranteed, and therefore %NULL may be given as a valid output. Free the returned value with ${struct_underscore}_array_free().\n')
             elif field['format'] == 'ipv4':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer none): return location for a #MbimIPv4, or %NULL if the \'${name}\' field is not needed. Do not free the returned value, it is owned by @message.\n')
             elif field['format'] == 'ref-ipv4':
