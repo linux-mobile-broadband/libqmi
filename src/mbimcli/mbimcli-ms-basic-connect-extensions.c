@@ -44,10 +44,10 @@ static gchar    *set_device_slot_mappings_str;
 static gboolean  query_location_info_status_flag;
 static gboolean  query_provisioned_contexts_flag;
 static gchar    *set_provisioned_contexts_str;
-static gboolean  query_registration_parameters_flag;
-static gchar    *set_registration_parameters_str;
 static gboolean  query_base_stations_flag;
 static gchar    *query_version_str;
+static gboolean  query_registration_parameters_flag;
+static gchar    *set_registration_parameters_str;
 
 static gboolean query_pco_arg_parse (const gchar  *option_name,
                                      const gchar  *value,
@@ -104,14 +104,6 @@ static GOptionEntry entries[] = {
       "Query provisioned contexts",
       NULL
     },
-    { "ms-query-registration-parameters", 0, 0, G_OPTION_ARG_NONE, &query_registration_parameters_flag,
-      "Query registration parameters",
-      NULL
-    },
-    { "ms-set-registration-parameters", 0, 0,G_OPTION_ARG_STRING , &set_registration_parameters_str,
-      "Set registration parameters (required keys: mico-mode, drx-cycle, ladn-info, default-pdu-activation-hint, re-register-if-needed)",
-      "[\"key=value,...\"]"
-    },
     { "ms-query-base-stations-info", 0, 0, G_OPTION_ARG_NONE, &query_base_stations_flag,
       "Query base stations info",
       NULL
@@ -119,6 +111,14 @@ static GOptionEntry entries[] = {
     { "ms-query-version", 0, 0,G_OPTION_ARG_STRING , &query_version_str,
       "Exchange supported version information. Since MBIMEx v2.0.",
       "[(MBIM version),(MBIM extended version)]"
+    },
+    { "ms-query-registration-parameters", 0, 0, G_OPTION_ARG_NONE, &query_registration_parameters_flag,
+      "Query registration parameters. Since MBIMEx v3.0.",
+      NULL
+    },
+    { "ms-set-registration-parameters", 0, 0,G_OPTION_ARG_STRING , &set_registration_parameters_str,
+      "Set registration parameters (required keys: mico-mode, drx-cycle, ladn-info, default-pdu-activation-hint, re-register-if-needed). Since MBIMEx v3.0.",
+      "[\"key=value,...\"]"
     },
     { NULL }
 };
@@ -199,10 +199,10 @@ mbimcli_ms_basic_connect_extensions_options_enabled (void)
                  query_location_info_status_flag +
                  query_provisioned_contexts_flag +
                  !!set_provisioned_contexts_str +
-                 query_registration_parameters_flag +
-                 !!set_registration_parameters_str +
                  query_base_stations_flag +
-                 !!query_version_str);
+                 !!query_version_str +
+                 query_registration_parameters_flag +
+                 !!set_registration_parameters_str);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft Basic Connect Extensions Service actions requested\n");
@@ -926,113 +926,6 @@ provisioned_contexts_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
-typedef struct {
-    MbimMicoMode                 mico_mode;
-    gboolean                     mico_mode_set;
-    MbimDrxCycle                 drx_cycle;
-    gboolean                     drx_cycle_set;
-    MbimLadnInfo                 ladn_info;
-    gboolean                     ladn_info_set;
-    MbimDefaultPduActivationHint pdu_hint;
-    gboolean                     pdu_hint_set;
-    gboolean                     re_register_if_needed;
-    gboolean                     re_register_if_needed_set;
-} RegistrationParameters;
-
-static gboolean
-set_registration_parameters_foreach_cb (const gchar             *key,
-                                        const gchar             *value,
-                                        GError                 **error,
-                                        RegistrationParameters  *params)
-{
-    if (g_ascii_strcasecmp (key, "mico-mode") == 0) {
-        if (!mbimcli_read_mico_mode_from_string (value, &params->mico_mode)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown mico-mode: '%s'", value);
-            return FALSE;
-        }
-        params->mico_mode_set = TRUE;
-    } else if (g_ascii_strcasecmp (key, "drx-cycle") == 0) {
-        if (!mbimcli_read_drx_cycle_from_string (value, &params->drx_cycle)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown drx-cycle: '%s'", value);
-            return FALSE;
-        }
-        params->drx_cycle_set = TRUE;
-    } else if (g_ascii_strcasecmp (key, "ladn-info") == 0) {
-        if (!mbimcli_read_ladn_info_from_string (value, &params->ladn_info)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown ladn-info: '%s'", value);
-            return FALSE;
-        }
-        params->ladn_info_set = TRUE;
-    } else if (g_ascii_strcasecmp (key, "default-pdu-activation-hint") == 0) {
-        if (!mbimcli_read_default_pdu_activation_hint_from_string (value, &params->pdu_hint)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown default-pdu-activation-hint: '%s'", value);
-            return FALSE;
-        }
-        params->pdu_hint_set = TRUE;
-    } else if (g_ascii_strcasecmp (key, "re-register-if-needed") == 0) {
-        if (!mbimcli_read_boolean_from_string (value, &params->re_register_if_needed)) {
-            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
-                         "unknown re-register-if-needed: '%s'", value);
-            return FALSE;
-        }
-        params->re_register_if_needed_set = TRUE;
-    } else {
-        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
-                     "unrecognized option '%s'", key);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-static void
-registration_parameters_ready (MbimDevice   *device,
-                               GAsyncResult *res)
-{
-    g_autoptr(MbimMessage)       response = NULL;
-    g_autoptr(GError)            error = NULL;
-    MbimMicoMode                 mico_mode;
-    MbimDrxCycle                 drx_cycle;
-    MbimLadnInfo                 ladn_info;
-    MbimDefaultPduActivationHint pdu_hint;
-    gboolean                     re_register_if_nedeed;
-
-    response = mbim_device_command_finish (device, res, &error);
-    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
-        g_printerr ("error: operation failed: %s\n", error->message);
-        shutdown (FALSE);
-        return;
-    }
-
-    g_print ("[%s] Successfully received registration parameters information\n",
-             mbim_device_get_path_display (device));
-    if (!mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
-            response,
-            &mico_mode,
-            &drx_cycle,
-            &ladn_info,
-            &pdu_hint,
-            &re_register_if_nedeed,
-            NULL, /* ignore unnamed IEs for now */
-            &error)) {
-        g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        shutdown (FALSE);
-        return;
-    }
-
-    g_print ("\t             MICO mode: %s\n", mbim_mico_mode_get_string (mico_mode));
-    g_print ("\t             DRX cycle: %s\n", mbim_drx_cycle_get_string (drx_cycle));
-    g_print ("\t      LADN information: %s\n", mbim_ladn_info_get_string (ladn_info));
-    g_print ("\tDefault PDU activation: %s\n", mbim_default_pdu_activation_hint_get_string (pdu_hint));
-    g_print ("\t Re-register if needed: %s\n", re_register_if_nedeed ? "yes" : "no");
-
-    shutdown (TRUE);
-}
-
 static void
 query_base_stations_ready (MbimDevice   *device,
                            GAsyncResult *res)
@@ -1423,6 +1316,113 @@ query_version_ready (MbimDevice   *device,
     return;
 }
 
+typedef struct {
+    MbimMicoMode                 mico_mode;
+    gboolean                     mico_mode_set;
+    MbimDrxCycle                 drx_cycle;
+    gboolean                     drx_cycle_set;
+    MbimLadnInfo                 ladn_info;
+    gboolean                     ladn_info_set;
+    MbimDefaultPduActivationHint pdu_hint;
+    gboolean                     pdu_hint_set;
+    gboolean                     re_register_if_needed;
+    gboolean                     re_register_if_needed_set;
+} RegistrationParameters;
+
+static gboolean
+set_registration_parameters_foreach_cb (const gchar             *key,
+                                        const gchar             *value,
+                                        GError                 **error,
+                                        RegistrationParameters  *params)
+{
+    if (g_ascii_strcasecmp (key, "mico-mode") == 0) {
+        if (!mbimcli_read_mico_mode_from_string (value, &params->mico_mode)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown mico-mode: '%s'", value);
+            return FALSE;
+        }
+        params->mico_mode_set = TRUE;
+    } else if (g_ascii_strcasecmp (key, "drx-cycle") == 0) {
+        if (!mbimcli_read_drx_cycle_from_string (value, &params->drx_cycle)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown drx-cycle: '%s'", value);
+            return FALSE;
+        }
+        params->drx_cycle_set = TRUE;
+    } else if (g_ascii_strcasecmp (key, "ladn-info") == 0) {
+        if (!mbimcli_read_ladn_info_from_string (value, &params->ladn_info)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown ladn-info: '%s'", value);
+            return FALSE;
+        }
+        params->ladn_info_set = TRUE;
+    } else if (g_ascii_strcasecmp (key, "default-pdu-activation-hint") == 0) {
+        if (!mbimcli_read_default_pdu_activation_hint_from_string (value, &params->pdu_hint)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown default-pdu-activation-hint: '%s'", value);
+            return FALSE;
+        }
+        params->pdu_hint_set = TRUE;
+    } else if (g_ascii_strcasecmp (key, "re-register-if-needed") == 0) {
+        if (!mbimcli_read_boolean_from_string (value, &params->re_register_if_needed)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                         "unknown re-register-if-needed: '%s'", value);
+            return FALSE;
+        }
+        params->re_register_if_needed_set = TRUE;
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static void
+registration_parameters_ready (MbimDevice   *device,
+                               GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)       response = NULL;
+    g_autoptr(GError)            error = NULL;
+    MbimMicoMode                 mico_mode;
+    MbimDrxCycle                 drx_cycle;
+    MbimLadnInfo                 ladn_info;
+    MbimDefaultPduActivationHint pdu_hint;
+    gboolean                     re_register_if_nedeed;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully received registration parameters information\n",
+             mbim_device_get_path_display (device));
+    if (!mbim_message_ms_basic_connect_extensions_v3_registration_parameters_response_parse (
+            response,
+            &mico_mode,
+            &drx_cycle,
+            &ladn_info,
+            &pdu_hint,
+            &re_register_if_nedeed,
+            NULL, /* ignore unnamed IEs for now */
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("\t             MICO mode: %s\n", mbim_mico_mode_get_string (mico_mode));
+    g_print ("\t             DRX cycle: %s\n", mbim_drx_cycle_get_string (drx_cycle));
+    g_print ("\t      LADN information: %s\n", mbim_ladn_info_get_string (ladn_info));
+    g_print ("\tDefault PDU activation: %s\n", mbim_default_pdu_activation_hint_get_string (pdu_hint));
+    g_print ("\t Re-register if needed: %s\n", re_register_if_nedeed ? "yes" : "no");
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                                          GCancellable *cancellable)
@@ -1649,67 +1649,6 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
         return;
     }
 
-    if (query_registration_parameters_flag) {
-        g_debug (" Asynchronously querying registration parameters...");
-        request = mbim_message_ms_basic_connect_extensions_registration_parameters_query_new (NULL);
-        mbim_device_command (ctx->device,
-                             request,
-                             10,
-                             ctx->cancellable,
-                             (GAsyncReadyCallback)registration_parameters_ready,
-                             NULL);
-        return;
-    }
-
-    if (set_registration_parameters_str) {
-        RegistrationParameters params = { 0 };
-
-        if (!mbimcli_parse_key_value_string (set_registration_parameters_str,
-                                             &error,
-                                             (MbimParseKeyValueForeachFn)set_registration_parameters_foreach_cb,
-                                             &params)) {
-            g_printerr ("error: couldn't parse input string: %s\n", error->message);
-            shutdown (FALSE);
-            return;
-        }
-
-        if (!params.mico_mode_set ||
-            !params.drx_cycle_set ||
-            !params.ladn_info_set ||
-            !params.pdu_hint_set  ||
-            !params.re_register_if_needed_set) {
-            g_printerr ("error: missing required keys\n");
-            if (!params.mico_mode_set)
-                g_printerr ("error: key 'mico-mode' is missing\n");
-            if (!params.drx_cycle_set)
-                g_printerr ("error: key 'drx-cycle' is missing\n");
-            if (!params.ladn_info_set)
-                g_printerr ("error: key 'ladn-info' is missing\n");
-            if (!params.pdu_hint_set)
-                g_printerr ("error: key 'default-pdu-activation-hint' is missing\n");
-            if (!params.re_register_if_needed_set)
-                g_printerr ("error: key 're-register-is-needed' is missing\n");
-            shutdown (FALSE);
-            return;
-        }
-
-        g_debug ("Asynchronously set registration parameters\n");
-        request = mbim_message_ms_basic_connect_extensions_registration_parameters_set_new (params.mico_mode,
-                                                                                            params.drx_cycle,
-                                                                                            params.ladn_info,
-                                                                                            params.pdu_hint,
-                                                                                            params.re_register_if_needed,
-                                                                                            NULL, /* ignore unnamed IEs for now */
-                                                                                            NULL);
-        mbim_device_command (ctx->device,
-                             request,
-                             10,
-                             ctx->cancellable,
-                             (GAsyncReadyCallback)registration_parameters_ready,
-                             NULL);
-        return;
-    }
-
     if (query_base_stations_flag) {
         g_debug ("Asynchronously querying base stations...");
         /* default capacity is 15, so use that value when querying */
@@ -1771,6 +1710,68 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_version_ready,
+                             NULL);
+        return;
+    }
+
+    if (query_registration_parameters_flag) {
+        g_debug (" Asynchronously querying registration parameters...");
+        request = mbim_message_ms_basic_connect_extensions_v3_registration_parameters_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)registration_parameters_ready,
+                             NULL);
+        return;
+    }
+
+    if (set_registration_parameters_str) {
+        RegistrationParameters params = { 0 };
+
+        if (!mbimcli_parse_key_value_string (set_registration_parameters_str,
+                                             &error,
+                                             (MbimParseKeyValueForeachFn)set_registration_parameters_foreach_cb,
+                                             &params)) {
+            g_printerr ("error: couldn't parse input string: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        if (!params.mico_mode_set ||
+            !params.drx_cycle_set ||
+            !params.ladn_info_set ||
+            !params.pdu_hint_set  ||
+            !params.re_register_if_needed_set) {
+            g_printerr ("error: missing required keys\n");
+            if (!params.mico_mode_set)
+                g_printerr ("error: key 'mico-mode' is missing\n");
+            if (!params.drx_cycle_set)
+                g_printerr ("error: key 'drx-cycle' is missing\n");
+            if (!params.ladn_info_set)
+                g_printerr ("error: key 'ladn-info' is missing\n");
+            if (!params.pdu_hint_set)
+                g_printerr ("error: key 'default-pdu-activation-hint' is missing\n");
+            if (!params.re_register_if_needed_set)
+                g_printerr ("error: key 're-register-is-needed' is missing\n");
+            shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously set registration parameters\n");
+        request = (mbim_message_ms_basic_connect_extensions_v3_registration_parameters_set_new (
+                       params.mico_mode,
+                       params.drx_cycle,
+                       params.ladn_info,
+                       params.pdu_hint,
+                       params.re_register_if_needed,
+                       NULL, /* ignore unnamed IEs for now */
+                       NULL));
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)registration_parameters_ready,
                              NULL);
         return;
     }

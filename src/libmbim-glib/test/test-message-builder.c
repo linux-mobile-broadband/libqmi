@@ -1423,7 +1423,7 @@ test_message_builder_ms_basic_connect_extensions_registration_parameters_set_0_u
         /* no unnamed TLVs */
     };
 
-    message = (mbim_message_ms_basic_connect_extensions_registration_parameters_set_new (
+    message = (mbim_message_ms_basic_connect_extensions_v3_registration_parameters_set_new (
                    MBIM_MICO_MODE_DISABLED,
                    MBIM_DRX_CYCLE_NOT_SPECIFIED,
                    MBIM_LADN_INFO_NOT_NEEDED,
@@ -1497,7 +1497,7 @@ test_message_builder_ms_basic_connect_extensions_registration_parameters_set_1_u
     g_assert (tlv);
     tlv_list = g_list_append (tlv_list, tlv);
 
-    message = (mbim_message_ms_basic_connect_extensions_registration_parameters_set_new (
+    message = (mbim_message_ms_basic_connect_extensions_v3_registration_parameters_set_new (
                    MBIM_MICO_MODE_DISABLED,
                    MBIM_DRX_CYCLE_NOT_SPECIFIED,
                    MBIM_LADN_INFO_NOT_NEEDED,
@@ -1598,7 +1598,7 @@ test_message_builder_ms_basic_connect_extensions_registration_parameters_set_3_u
     g_assert (tlv);
     tlv_list = g_list_append (tlv_list, tlv);
 
-    message = (mbim_message_ms_basic_connect_extensions_registration_parameters_set_new (
+    message = (mbim_message_ms_basic_connect_extensions_v3_registration_parameters_set_new (
                    MBIM_MICO_MODE_DISABLED,
                    MBIM_DRX_CYCLE_NOT_SPECIFIED,
                    MBIM_LADN_INFO_NOT_NEEDED,

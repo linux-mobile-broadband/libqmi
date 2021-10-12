@@ -2059,7 +2059,7 @@ test_message_parser_ms_basic_connect_extensions_registration_parameters_0_unname
     response = mbim_message_new (buffer, sizeof (buffer));
     test_message_printable (response, 3, 0);
 
-    result = (mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
+    result = (mbim_message_ms_basic_connect_extensions_v3_registration_parameters_response_parse (
                   response,
                   &mico_mode,
                   &drx_cycle,
@@ -2128,7 +2128,7 @@ test_message_parser_ms_basic_connect_extensions_registration_parameters_1_unname
     response = mbim_message_new (buffer, sizeof (buffer));
     test_message_printable (response, 3, 0);
 
-    result = (mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
+    result = (mbim_message_ms_basic_connect_extensions_v3_registration_parameters_response_parse (
                   response,
                   &mico_mode,
                   &drx_cycle,
@@ -2227,7 +2227,7 @@ test_message_parser_ms_basic_connect_extensions_registration_parameters_3_unname
     response = mbim_message_new (buffer, sizeof (buffer));
     test_message_printable (response, 3, 0);
 
-    result = (mbim_message_ms_basic_connect_extensions_registration_parameters_response_parse (
+    result = (mbim_message_ms_basic_connect_extensions_v3_registration_parameters_response_parse (
                   response,
                   &mico_mode,
                   &drx_cycle,
