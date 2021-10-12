@@ -1649,6 +1649,8 @@ typedef enum { /*< since=1.28 >*/
  * @MBIM_SUBSCRIBER_READY_STATUS_FLAG_SIM_REMOVABLE: Whether the SIM is removable or not, valid only if @MBIM_SUBSCRIBER_READY_STATUS_FLAG_SIM_REMOVABLITY_KNOWN is also given.
  *
  * Flags specifying SIM related details.
+ *
+ * Since: 1.28
  */
 typedef enum { /*< since=1.28 >*/
     MBIM_SUBSCRIBER_READY_STATUS_FLAG_NONE                   = 0,
@@ -1715,6 +1717,8 @@ typedef enum { /*< since=1.28 >*/
  * @MBIM_DATA_SUBCLASS_5G_NGENDC: Next-gen eLTE and NR dual connectivity as in 5G option 7.
  *
  * Flags specifying the data subclass.
+ *
+ * Since: 1.28
  */
 typedef enum { /*< since=1.28 >*/
     MBIM_DATA_SUBCLASS_NONE      = 0,
