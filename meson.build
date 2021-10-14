@@ -165,12 +165,7 @@ if enable_bash_completion
 endif
 
 # rmnet link management support
-enable_rmnet = false
-rmnet = get_option('rmnet')
-if not rmnet.disabled()
-  enable_rmnet = cc.has_type('struct ifla_rmnet_flags', prefix: '#include<linux/if_link.h>')
-  assert(enable_rmnet or rmnet.auto(), 'There is no \'rmnet\' link management support, use \'auto\' or \'disabled\' instead')
-endif
+enable_rmnet = not get_option('rmnet').disabled()
 config_h.set('RMNET_SUPPORT_ENABLED', enable_rmnet)
 
 # runtime MM check is optional, enabled by default
