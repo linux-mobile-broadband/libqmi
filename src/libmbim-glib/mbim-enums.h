@@ -1495,7 +1495,7 @@ typedef enum { /*< since=1.26 >*/
  * Since: 1.28
  */
 typedef enum { /*< since=1.28 >*/
-    MBIM_FREQUENCY_RANGE_UNKNOWN = 0 << 0,
+    MBIM_FREQUENCY_RANGE_UNKNOWN = 0,
     MBIM_FREQUENCY_RANGE_1       = 1 << 0,
     MBIM_FREQUENCY_RANGE_2       = 1 << 1
 } MbimFrequencyRange;
