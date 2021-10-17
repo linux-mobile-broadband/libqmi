@@ -665,8 +665,8 @@ proxy_config_internal_device_open_ready (MbimProxy    *self,
                                          GAsyncResult *res,
                                          Request      *request)
 {
-    g_autoptr(GError)      error = NULL;
-    g_autoptr(MbimMessage) indication = NULL;
+    g_autoptr(GError)  error = NULL;
+    MbimMessage       *indication;
 
     if (!internal_device_open_finish (self, res, &error)) {
         g_warning ("[client %lu,0x%08x] cannot configure proxy: couldn't open MBIM device: %s",
