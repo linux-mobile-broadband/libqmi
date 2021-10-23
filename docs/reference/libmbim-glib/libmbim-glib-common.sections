@@ -773,6 +773,9 @@ mbim_tlv_get_raw
 mbim_tlv_get_tlv_type
 mbim_tlv_get_tlv_data
 mbim_tlv_type_get_string
+<SUBSECTION TlvString>
+mbim_tlv_string_new
+mbim_tlv_string_get
 <SUBSECTION Private>
 mbim_tlv_type_build_string_from_mask
 <SUBSECTION Standard>
