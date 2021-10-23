@@ -324,12 +324,6 @@ gboolean _mbim_message_read_ipv6_array    (const MbimMessage  *self,
                                            guint32             relative_offset_array_start,
                                            MbimIPv6          **array,
                                            GError            **error);
-gboolean _mbim_message_read_string_tlv    (const MbimMessage  *self,
-                                           guint32             struct_start_offset,
-                                           guint32             relative_offset,
-                                           gchar             **str,
-                                           guint32            *tpv_size,
-                                           GError            **error);
 gboolean _mbim_message_read_tlv           (const MbimMessage  *self,
                                            guint32             relative_offset,
                                            MbimTlv           **tlv,
