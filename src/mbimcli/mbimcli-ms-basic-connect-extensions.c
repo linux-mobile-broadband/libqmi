@@ -475,13 +475,20 @@ query_device_caps_ready (MbimDevice   *device,
     g_autofree gchar       *cellular_class_str = NULL;
     MbimSimClass            sim_class;
     g_autofree gchar       *sim_class_str = NULL;
-    MbimDataClass           data_class;
+    MbimDataClass           data_class = 0;
+    MbimDataClassV3         data_class_v3 = 0;
     g_autofree gchar       *data_class_str = NULL;
+    MbimDataSubclass        data_subclass;
     MbimSmsCaps             sms_caps;
     g_autofree gchar       *sms_caps_str = NULL;
     MbimCtrlCaps            ctrl_caps;
     g_autofree gchar       *ctrl_caps_str = NULL;
     guint32                 max_sessions;
+    guint32                 wcdma_band_class = 0;
+    guint32                 lte_band_class_array_size = 0;
+    g_autofree guint16     *lte_band_class_array = NULL;
+    guint32                 nr_band_class_array_size = 0;
+    g_autofree guint16     *nr_band_class_array = NULL;
     g_autofree gchar       *custom_data_class = NULL;
     g_autofree gchar       *device_id = NULL;
     g_autofree gchar       *firmware_info = NULL;
@@ -495,32 +502,67 @@ query_device_caps_ready (MbimDevice   *device,
         return;
     }
 
-    if (!mbim_message_ms_basic_connect_extensions_device_caps_response_parse (
-            response,
-            &device_type,
-            &cellular_class,
-            &voice_class,
-            &sim_class,
-            &data_class,
-            &sms_caps,
-            &ctrl_caps,
-            &max_sessions,
-            &custom_data_class,
-            &device_id,
-            &firmware_info,
-            &hardware_info,
-            &executor_index,
-            &error)) {
-        g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        shutdown (FALSE);
-        return;
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        if (!mbim_message_ms_basic_connect_extensions_v3_device_caps_response_parse (
+                response,
+                &device_type,
+                &cellular_class,
+                &voice_class,
+                &sim_class,
+                &data_class_v3,
+                &sms_caps,
+                &ctrl_caps,
+                &data_subclass,
+                &max_sessions,
+                &executor_index,
+                &wcdma_band_class,
+                &lte_band_class_array_size,
+                &lte_band_class_array,
+                &nr_band_class_array_size,
+                &nr_band_class_array,
+                &custom_data_class,
+                &device_id,
+                &firmware_info,
+                &hardware_info,
+                &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIMEx 3.0 Device Caps");
+    } else {
+        if (!mbim_message_ms_basic_connect_extensions_device_caps_response_parse (
+                response,
+                &device_type,
+                &cellular_class,
+                &voice_class,
+                &sim_class,
+                &data_class,
+                &sms_caps,
+                &ctrl_caps,
+                &max_sessions,
+                &custom_data_class,
+                &device_id,
+                &firmware_info,
+                &hardware_info,
+                &executor_index,
+                &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIMEx 1.0 Device Caps");
     }
+
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0))
+        data_class_str = mbim_data_class_v3_build_string_from_mask (data_class_v3);
+    else
+        data_class_str = mbim_data_class_build_string_from_mask (data_class);
 
     device_type_str    = mbim_device_type_get_string (device_type);
     cellular_class_str = mbim_cellular_class_build_string_from_mask (cellular_class);
     voice_class_str    = mbim_voice_class_get_string (voice_class);
     sim_class_str      = mbim_sim_class_build_string_from_mask (sim_class);
-    data_class_str     = mbim_data_class_build_string_from_mask (data_class);
     sms_caps_str       = mbim_sms_caps_build_string_from_mask (sms_caps);
     ctrl_caps_str      = mbim_ctrl_caps_build_string_from_mask (ctrl_caps);
 
@@ -552,6 +594,34 @@ query_device_caps_ready (MbimDevice   *device,
              VALIDATE_UNKNOWN (firmware_info),
              VALIDATE_UNKNOWN (hardware_info),
              executor_index);
+
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        g_autofree gchar *data_subclass_str = NULL;
+        guint             i;
+        gboolean          n_printed;
+
+        data_subclass_str = mbim_data_subclass_build_string_from_mask (data_subclass);
+        g_print ("\t    Data subclass: '%s'\n", data_subclass_str);
+
+        g_print ("\t WCDMA band class: '");
+        for (n_printed = 0, i = 0; i < 31; i++) {
+            if (wcdma_band_class & (1 << i)) {
+                g_print ("%s%u", n_printed > 0 ? ", " : "", i + 1);
+                n_printed++;
+            }
+        }
+        g_print ("'\n");
+
+        g_print ("\t   LTE band class: '");
+        for (i = 0; i < lte_band_class_array_size; i++)
+            g_print ("%s%" G_GUINT16_FORMAT, i > 0 ? ", " : "", lte_band_class_array[i]);
+        g_print ("'\n");
+
+        g_print ("\t    NR band class: '");
+        for (i = 0; i < nr_band_class_array_size; i++)
+            g_print ("%s%" G_GUINT16_FORMAT, i > 0 ? ", " : "", nr_band_class_array[i]);
+        g_print ("'\n");
+    }
 
     shutdown (TRUE);
 }
@@ -1046,8 +1116,6 @@ query_base_stations_ready (MbimDevice   *device,
         else                                                                              \
             g_print ("%s: %d%s\n", format, ((gint32)number) + scale, units ? units : ""); \
     } while (0)
-
-
 
     if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
         g_autofree gchar *system_type_str = NULL;
