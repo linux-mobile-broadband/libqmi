@@ -776,6 +776,8 @@ mbim_tlv_type_get_string
 <SUBSECTION TlvString>
 mbim_tlv_string_new
 mbim_tlv_string_get
+<SUBSECTION TlvUint16Array>
+mbim_tlv_guint16_array_get
 <SUBSECTION Private>
 mbim_tlv_type_build_string_from_mask
 <SUBSECTION Standard>

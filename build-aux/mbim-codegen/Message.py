@@ -90,6 +90,8 @@ def validate_fields(fields):
             pass
         elif field['format'] == 'tlv-string':
             pass
+        elif field['format'] == 'tlv-guint16-array':
+            pass
         elif field['format'] == 'tlv-list':
             pass
         else:
@@ -288,6 +290,8 @@ class Message:
                 inner_template = (' * @${field}: (in)(transfer none): the \'${name}\' field, given as a #${struct} item.\n')
             elif field['format'] == 'tlv-string':
                 inner_template = (' * @${field}: (in): the \'${name}\' field, given as a string.\n')
+            elif field['format'] == 'tlv-guint16-array':
+                raise ValueError('type \'tlv-guint16-array\' unsupported as input')
             elif field['format'] == 'tlv-list':
                 inner_template = (' * @${field}: (in)(element-type MbimTlv)(transfer none): the \'${name}\' field, given as a list of #${struct} items.\n')
 
@@ -356,6 +360,8 @@ class Message:
                 inner_template = ('    const MbimTlv *${field},\n')
             elif field['format'] == 'tlv-string':
                 inner_template = ('    const gchar *${field},\n')
+            elif field['format'] == 'tlv-guint16-array':
+                raise ValueError('type \'tlv-guint16-array\' unsupported as input')
             elif field['format'] == 'tlv-list':
                 inner_template = ('    const GList *${field},\n')
 
@@ -423,6 +429,8 @@ class Message:
                 inner_template = ('    const MbimTlv *${field},\n')
             elif field['format'] == 'tlv-string':
                 inner_template = ('    const gchar *${field},\n')
+            elif field['format'] == 'tlv-guint16-array':
+                raise ValueError('type \'tlv-guint16-array\' unsupported as input')
             elif field['format'] == 'tlv-list':
                 inner_template = ('    const GList *${field},\n')
 
@@ -505,6 +513,8 @@ class Message:
                 inner_template += ('        _mbim_message_command_builder_append_tlv (builder, ${field});\n')
             elif field['format'] == 'tlv-string':
                 inner_template += ('        _mbim_message_command_builder_append_tlv_string (builder, ${field});\n')
+            elif field['format'] == 'tlv-guint16-array':
+                raise ValueError('type \'tlv-guint16-array\' unsupported as input')
             elif field['format'] == 'tlv-list':
                 inner_template += ('        _mbim_message_command_builder_append_tlv_list (builder, ${field});\n')
 
@@ -592,6 +602,9 @@ class Message:
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated #MbimTlv, or %NULL if the \'${name}\' field is not needed. Free the returned value with mbim_tlv_unref().\n')
             elif field['format'] == 'tlv-string':
                 inner_template = (' * @out_${field}: (out)(optional)(transfer full): return location for a newly allocated string, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_free().\n')
+            elif field['format'] == 'tlv-guint16-array':
+                inner_template = (' * @out_${field}_count: (out)(optional)(transfer none): return location for a #guint32, or %NULL if the field is not needed.\n'
+                                  ' * @out_${field}: (out)(optional)(nullable)(transfer full): return location for a newly allocated array of #guint16 items, or %NULL if the \'${name}\' field is not needed. The availability of this field is not always guaranteed, and therefore %NULL may be given as a valid output. Free the returned value with g_free().\n')
             elif field['format'] == 'tlv-list':
                 inner_template = (' * @out_${field}: (out)(optional)(element-type MbimTlv)(transfer full): return location for a newly allocated list of #MbimTlv items, or %NULL if the \'${name}\' field is not needed. Free the returned value with g_list_free_full() using mbim_tlv_unref() as #GDestroyNotify.\n')
 
@@ -659,6 +672,9 @@ class Message:
                 inner_template = ('    MbimTlv **out_${field},\n')
             elif field['format'] == 'tlv-string':
                 inner_template = ('    gchar **out_${field},\n')
+            elif field['format'] == 'tlv-guint16-array':
+                inner_template = ('    guint32 *out_${field}_count,\n'
+                                  '    guint16 **out_${field},\n')
             elif field['format'] == 'tlv-list':
                 inner_template = ('    GList **out_${field},\n')
             else:
@@ -726,6 +742,9 @@ class Message:
                 inner_template = ('    MbimTlv **out_${field},\n')
             elif field['format'] == 'tlv-string':
                 inner_template = ('    gchar **out_${field},\n')
+            elif field['format'] == 'tlv-guint16-array':
+                inner_template = ('    guint32 *out_${field}_count,\n'
+                                  '    guint16 **out_${field},\n')
             elif field['format'] == 'tlv-list':
                 inner_template = ('    GList **out_${field},\n')
 
@@ -782,6 +801,9 @@ class Message:
             elif field['format'] == 'tlv-string':
                 count_allocated_variables += 1
                 inner_template = ('    gchar *_${field} = NULL;\n')
+            elif field['format'] == 'tlv-guint16-array':
+                count_allocated_variables += 1
+                inner_template = ('    guint16 *_${field} = NULL;\n')
             elif field['format'] == 'tlv-list':
                 count_allocated_variables += 1
                 inner_template = ('    GList *_${field} = NULL;\n')
@@ -1104,6 +1126,18 @@ class Message:
                     '        else\n'
                     '             g_free (tmp);\n'
                     '        offset += bytes_read;\n')
+            elif field['format'] == 'tlv-guint16-array':
+                inner_template += (
+                    '        guint16 *tmp = NULL;\n'
+                    '        guint32 bytes_read = 0;\n'
+                    '\n'
+                    '        if (!_mbim_message_read_tlv_guint16_array (message, offset, out_${field}_count, &tmp, &bytes_read, error))\n'
+                    '            goto out;\n'
+                    '        if (out_${field} != NULL)\n'
+                    '            _${field} = tmp;\n'
+                    '        else\n'
+                    '             g_free (tmp);\n'
+                    '        offset += bytes_read;\n')
             elif field['format'] == 'tlv-list':
                 inner_template += (
                     '        GList *tmp = NULL;\n'
@@ -1150,6 +1184,7 @@ class Message:
                    field['format'] == 'ipv6-array' or \
                    field['format'] == 'tlv' or \
                    field['format'] == 'tlv-string' or \
+                   field['format'] == 'tlv-guint16-array' or \
                    field['format'] == 'tlv-list':
                     inner_template = ('        if (out_${field} != NULL)\n'
                                       '            *out_${field} = _${field};\n')
@@ -1164,7 +1199,8 @@ class Message:
                 if field['format'] == 'string' or \
                    field['format'] == 'ipv4-array' or \
                    field['format'] == 'ipv6-array' or \
-                   field['format'] == 'tlv-string':
+                   field['format'] == 'tlv-string' or \
+                   field['format'] == 'tlv-guint16-array':
                     inner_template = ('        g_free (_${field});\n')
                 elif field['format'] == 'string-array':
                     inner_template = ('        g_strfreev (_${field});\n')
@@ -1579,7 +1615,9 @@ class Message:
                     '        }\n'
                     '        g_string_append (str, "\'");\n')
 
-            elif field['format'] == 'tlv' or field['format'] == 'tlv-string':
+            elif field['format'] == 'tlv' or \
+                 field['format'] == 'tlv-string' or \
+                 field['format'] == 'tlv-guint16-array':
                 inner_template += (
                     '        g_autoptr(MbimTlv) tmp = NULL;\n'
                     '        guint32 bytes_read = 0;\n'

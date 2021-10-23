@@ -220,6 +220,33 @@ MbimTlv *mbim_tlv_string_new (const gchar  *str,
 gchar *mbim_tlv_string_get (const MbimTlv  *self,
                             GError        **error);
 
+/*****************************************************************************/
+/* guint16 array type helpers */
+
+/**
+ * mbim_tlv_guint16_array_get:
+ * @self: a #MbimTlv of type %MBIM_TLV_TYPE_UINT16_TBL.
+ * @array_size: (out)(optional)(transfer none): return location for a #guint32,
+ *  or %NULL if the field is not needed.
+ * @array: (out)(optional)(transfer full)(type guint16): return location for a
+ *  newly allocated array of #guint16 values, or %NULL if the field is not
+ *  needed. Free the returned value with g_free().
+ * @error: return location for error or %NULL.
+ *
+ * Get an array of #guint16 values with the contents in the #MbimTlv.
+ *
+ * The method may return a successful return even with on empty arrays (i.e.
+ * with @array_size set to 0 and @array set to %NULL).
+ *
+ * Returns: %TRUE if on success, %FALSE if @error is set.
+ *
+ * Since: 1.28
+ */
+gboolean mbim_tlv_guint16_array_get (const MbimTlv  *self,
+                                     guint32        *array_size,
+                                     guint16       **array,
+                                     GError        **error);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_TLV_H_ */

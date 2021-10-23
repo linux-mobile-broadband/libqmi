@@ -70,6 +70,25 @@ _mbim_tlv_print (const MbimTlv *tlv,
         if (!tlv_data_string_str)
             tlv_data_string_str = g_strdup_printf ("*** error: %s", error->message);
         g_string_append_printf (str, "%s  tlv string = %s\n", line_prefix, tlv_data_string_str ? tlv_data_string_str : "");
+    } else if (tlv_type == MBIM_TLV_TYPE_UINT16_TBL) {
+        g_autoptr(GError)   error = NULL;
+        guint32             array_size = 0;
+        g_autofree guint16 *array = NULL;
+        g_autofree gchar   *tlv_data_string_str = NULL;
+
+        if (!mbim_tlv_guint16_array_get (tlv, &array_size, &array, &error))
+            tlv_data_string_str = g_strdup_printf ("*** error: %s", error->message);
+        else {
+            GString *aux;
+            guint32  i;
+
+            aux = g_string_new ("[");
+            for (i = 0; i < array_size; i++)
+                g_string_append_printf (aux, "%s%" G_GUINT16_FORMAT, (i == 0) ? "" : ",", array[i]);
+            g_string_append (aux, "]");
+            tlv_data_string_str = g_string_free (aux, FALSE);
+        }
+        g_string_append_printf (str, "%s  tlv uint16 array = %s\n", line_prefix, tlv_data_string_str ? tlv_data_string_str : "");
     }
 
     g_string_append_printf (str, "%s}", line_prefix);
@@ -256,4 +275,51 @@ mbim_tlv_string_get (const MbimTlv  *self,
                             NULL,
                             NULL,
                             error);
+}
+
+/*****************************************************************************/
+
+gboolean
+mbim_tlv_guint16_array_get (const MbimTlv  *self,
+                            guint32        *array_size,
+                            guint16       **array,
+                            GError        **error)
+{
+    guint32             size;
+    g_autofree guint16 *tmp = NULL;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    if (MBIM_TLV_GET_TLV_TYPE (self) != MBIM_TLV_TYPE_UINT16_TBL) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                     "TLV is not a UINT16 array");
+        return FALSE;
+    }
+
+    size = MBIM_TLV_GET_DATA_LENGTH (self);
+    if (size % 2 != 0) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                     "Invalid TLV data length, must be multiple of 2: %u",
+                     size);
+        return FALSE;
+    }
+
+    if (size) {
+        tmp = (guint16 *) g_memdup ((const guint16 *)MBIM_TLV_FIELD_DATA (self), size);
+
+        /* For BE systems, convert from LE to BE */
+        if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+            guint i;
+
+            for (i = 0; i < (size / 2); i++)
+                tmp[i] = GUINT16_FROM_LE (tmp[i]);
+        }
+    }
+
+    if (array_size)
+        *array_size = size / 2;
+    if (array)
+        *array = g_steal_pointer (&tmp);
+
+    return TRUE;
 }

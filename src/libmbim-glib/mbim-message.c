@@ -874,6 +874,31 @@ _mbim_message_read_tlv_string (const MbimMessage  *self,
 }
 
 gboolean
+_mbim_message_read_tlv_guint16_array (const MbimMessage  *self,
+                                      guint32             relative_offset,
+                                      guint32            *array_size,
+                                      guint16           **array,
+                                      guint32            *bytes_read,
+                                      GError            **error)
+{
+    g_autoptr(MbimTlv) tlv = NULL;
+    guint32            tlv_bytes_read = 0;
+
+    if (!_mbim_message_read_tlv (self,
+                                 relative_offset,
+                                 &tlv,
+                                 &tlv_bytes_read,
+                                 error))
+        return FALSE;
+
+    if (!mbim_tlv_guint16_array_get (tlv, array_size, array, error))
+        return FALSE;
+
+    *bytes_read = tlv_bytes_read;
+    return TRUE;
+}
+
+gboolean
 _mbim_message_read_tlv_list (const MbimMessage  *self,
                              guint32             relative_offset,
                              GList             **tlv_list,

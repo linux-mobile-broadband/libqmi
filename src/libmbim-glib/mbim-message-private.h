@@ -324,21 +324,28 @@ gboolean _mbim_message_read_ipv6_array    (const MbimMessage  *self,
                                            guint32             relative_offset_array_start,
                                            MbimIPv6          **array,
                                            GError            **error);
-gboolean _mbim_message_read_tlv           (const MbimMessage  *self,
-                                           guint32             relative_offset,
-                                           MbimTlv           **tlv,
-                                           guint32            *bytes_read,
-                                           GError            **error);
-gboolean _mbim_message_read_tlv_string    (const MbimMessage  *self,
-                                           guint32             relative_offset,
-                                           gchar             **str,
-                                           guint32            *bytes_read,
-                                           GError            **error);
-gboolean _mbim_message_read_tlv_list      (const MbimMessage  *self,
-                                           guint32             relative_offset,
-                                           GList             **tlv,
-                                           guint32            *bytes_read,
-                                           GError            **error);
+
+gboolean _mbim_message_read_tlv               (const MbimMessage  *self,
+                                               guint32             relative_offset,
+                                               MbimTlv           **tlv,
+                                               guint32            *bytes_read,
+                                               GError            **error);
+gboolean _mbim_message_read_tlv_string        (const MbimMessage  *self,
+                                               guint32             relative_offset,
+                                               gchar             **str,
+                                               guint32            *bytes_read,
+                                               GError            **error);
+gboolean _mbim_message_read_tlv_guint16_array (const MbimMessage  *self,
+                                               guint32             relative_offset,
+                                               guint32            *array_size,
+                                               guint16           **array,
+                                               guint32            *bytes_read,
+                                               GError            **error);
+gboolean _mbim_message_read_tlv_list          (const MbimMessage  *self,
+                                               guint32             relative_offset,
+                                               GList             **tlv,
+                                               guint32            *bytes_read,
+                                               GError            **error);
 
 G_END_DECLS
 
