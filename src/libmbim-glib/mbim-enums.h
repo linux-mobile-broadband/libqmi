@@ -161,22 +161,30 @@ typedef enum { /*< since=1.0 >*/
 
 /**
  * MbimCtrlCaps:
+ * MBIM_CTRL_CAPS_NONE: None. Since 1.28.
  * @MBIM_CTRL_CAPS_REG_MANUAL: Device allows manual network selection.
  * @MBIM_CTRL_CAPS_HW_RADIO_SWITCH: Device has a hardware radio power switch.
  * @MBIM_CTRL_CAPS_CDMA_MOBILE_IP: The CDMA function supports Mobile IP.
  * @MBIM_CTRL_CAPS_CDMA_SIMPLE_IP: The CDMA function supports Simple IP.
  * @MBIM_CTRL_CAPS_MULTI_CARRIER: Device can work with multiple providers.
+ * @MBIM_CTRL_CAPS_ESIM: Device supports eSIM (MS MBIMEx v3.0). Since 1.28.
+ * @MBIM_CTRL_CAPS_UE_POLICY_ROUTE_SELECTION: Device supports including the route selection descriptors as part of the UE policies (MS MBIMEx v3.0). Since 1.28.
+ * @MBIM_CTRL_CAPS_SIM_HOT_SWAP_CAPABLE: Device supports SIM hot-swap (MS MBIMEx v3.0). Since 1.28.
  *
  * Control capabilities.
  *
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
-    MBIM_CTRL_CAPS_REG_MANUAL      = 1 << 0,
-    MBIM_CTRL_CAPS_HW_RADIO_SWITCH = 1 << 1,
-    MBIM_CTRL_CAPS_CDMA_MOBILE_IP  = 1 << 2,
-    MBIM_CTRL_CAPS_CDMA_SIMPLE_IP  = 1 << 3,
-    MBIM_CTRL_CAPS_MULTI_CARRIER   = 1 << 4
+    MBIM_CTRL_CAPS_NONE                      = 0,
+    MBIM_CTRL_CAPS_REG_MANUAL                = 1 << 0,
+    MBIM_CTRL_CAPS_HW_RADIO_SWITCH           = 1 << 1,
+    MBIM_CTRL_CAPS_CDMA_MOBILE_IP            = 1 << 2,
+    MBIM_CTRL_CAPS_CDMA_SIMPLE_IP            = 1 << 3,
+    MBIM_CTRL_CAPS_MULTI_CARRIER             = 1 << 4,
+    MBIM_CTRL_CAPS_ESIM                      = 1 << 5,
+    MBIM_CTRL_CAPS_UE_POLICY_ROUTE_SELECTION = 1 << 6,
+    MBIM_CTRL_CAPS_SIM_HOT_SWAP_CAPABLE      = 1 << 7,
 } MbimCtrlCaps;
 
 /*****************************************************************************/
