@@ -240,7 +240,7 @@ mbim_tlv_string_get (const MbimTlv  *self,
     }
 
     utf16 = (const gunichar2 *) MBIM_TLV_FIELD_DATA (self);
-    size = MBIM_TLV_FIELD_DATA_LENGTH (self);
+    size = MBIM_TLV_GET_DATA_LENGTH (self);
 
     /* For BE systems, convert from LE to BE */
     if (G_BYTE_ORDER == G_BIG_ENDIAN) {
