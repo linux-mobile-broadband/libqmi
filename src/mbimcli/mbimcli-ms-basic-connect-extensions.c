@@ -933,7 +933,7 @@ query_base_stations_ready (MbimDevice   *device,
     g_autoptr(MbimMessage)                         response = NULL;
     g_autoptr(GError)                              error = NULL;
     MbimDataClass                                  system_type;
-    MbimDataClassV2                                system_type_v2;
+    MbimDataClassV3                                system_type_v3;
     MbimDataSubclass                               system_subtype;
     g_autoptr(MbimCellInfoServingGsm)              gsm_serving_cell = NULL;
     g_autoptr(MbimCellInfoServingUmts)             umts_serving_cell = NULL;
@@ -965,7 +965,7 @@ query_base_stations_ready (MbimDevice   *device,
     if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
         if (!mbim_message_ms_basic_connect_extensions_v3_base_stations_info_response_parse (
                 response,
-                &system_type_v2,
+                &system_type_v3,
                 &system_subtype,
                 &gsm_serving_cell,
                 &umts_serving_cell,
@@ -1053,7 +1053,7 @@ query_base_stations_ready (MbimDevice   *device,
         g_autofree gchar *system_type_str = NULL;
         g_autofree gchar *system_subtype_str = NULL;
 
-        system_type_str = mbim_data_class_v2_build_string_from_mask (system_type_v2);
+        system_type_str = mbim_data_class_v3_build_string_from_mask (system_type_v3);
         g_print ("System type: %s\n", system_type_str);
         system_subtype_str = mbim_data_subclass_build_string_from_mask (system_subtype);
         g_print ("System subtype: %s\n", VALIDATE_UNKNOWN (system_subtype_str));

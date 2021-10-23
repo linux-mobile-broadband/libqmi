@@ -378,7 +378,7 @@ MbimDefaultPduActivationHint
 MbimLadnInfo
 MbimDrxCycle
 MbimSubscriberReadyStatusFlag
-MbimDataClassV2
+MbimDataClassV3
 MbimDataSublass
 <SUBSECTION Methods>
 mbim_device_type_get_string
@@ -461,7 +461,7 @@ mbim_default_pdu_activation_hint_get_string
 mbim_ladn_info_get_string
 mbim_drx_cycle_get_string
 mbim_subscriber_ready_status_flag_build_string_from_mask
-mbim_data_class_v2_build_string_from_mask
+mbim_data_class_v3_build_string_from_mask
 mbim_data_subclass_build_string_from_mask
 <SUBSECTION Private>
 mbim_device_type_build_string_from_mask
@@ -546,7 +546,7 @@ mbim_default_pdu_activation_hint_build_string_from_mask
 mbim_ladn_info_build_string_from_mask
 mbim_drx_cycle_build_string_from_mask
 mbim_subscriber_ready_status_flag_get_string
-mbim_data_class_v2_get_string
+mbim_data_class_v3_get_string
 mbim_data_subclass_get_string
 <SUBSECTION Standard>
 MBIM_TYPE_ACTIVATION_COMMAND
@@ -634,7 +634,7 @@ MBIM_TYPE_DEFAULT_PDU_ACTIVATION_HINT
 MBIM_TYPE_LADN_INFO
 MBIM_TYPE_DRX_CYCLE
 MBIM_TYPE_SUBSCRIBER_READY_STATUS_FLAG
-MBIM_TYPE_DATA_CLASS_V2
+MBIM_TYPE_DATA_CLASS_V3
 MBIM_TYPE_DATA_SUBCLASS
 mbim_activation_command_get_type
 mbim_activation_state_get_type
@@ -721,7 +721,7 @@ mbim_default_pdu_activation_hint_get_type
 mbim_ladn_info_get_type
 mbim_drx_cycle_get_type
 mbim_subscriber_ready_status_flag_get_type
-mbim_data_class_v2_get_type
+mbim_data_class_v3_get_type
 mbim_data_subclass_get_type
 </SECTION>
 

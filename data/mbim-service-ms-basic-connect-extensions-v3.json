@@ -155,7 +155,7 @@
                        "format"        : "guint32" } ],
     "response"   : [ { "name"          : "SystemType",
                        "format"        : "guint32",
-                       "public-format" : "MbimDataClassV2" },
+                       "public-format" : "MbimDataClassV3" },
                      { "name"          : "SystemSubType",
                        "format"        : "guint32",
                        "public-format" : "MbimDataSubclass" },

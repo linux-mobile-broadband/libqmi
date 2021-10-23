@@ -1611,7 +1611,7 @@ packet_service_ready (MbimDevice   *device,
     guint32                 nw_error;
     MbimPacketServiceState  packet_service_state;
     MbimDataClass           highest_available_data_class;
-    MbimDataClassV2         highest_available_data_class_v2;
+    MbimDataClassV3         highest_available_data_class_v3;
     g_autofree gchar       *highest_available_data_class_str = NULL;
     guint64                 uplink_speed;
     guint64                 downlink_speed;
@@ -1631,7 +1631,7 @@ packet_service_ready (MbimDevice   *device,
         if (!mbim_message_ms_basic_connect_v3_packet_service_response_parse (response,
                                                                              &nw_error,
                                                                              &packet_service_state,
-                                                                             &highest_available_data_class_v2,
+                                                                             &highest_available_data_class_v3,
                                                                              &uplink_speed,
                                                                              &downlink_speed,
                                                                              &frequency_range,
@@ -1690,7 +1690,7 @@ packet_service_ready (MbimDevice   *device,
     }
 
     if (mbim_device_check_ms_mbimex_version (device, 3, 0))
-        highest_available_data_class_str = mbim_data_class_v2_build_string_from_mask (highest_available_data_class_v2);
+        highest_available_data_class_str = mbim_data_class_v3_build_string_from_mask (highest_available_data_class_v3);
     else
         highest_available_data_class_str = mbim_data_class_build_string_from_mask (highest_available_data_class);
 

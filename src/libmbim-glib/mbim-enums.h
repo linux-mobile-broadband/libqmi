@@ -116,7 +116,7 @@ typedef enum { /*< since=1.0 >*/
  * report them without having enabled MBIM Extension v2.0 support.
  *
  * This type is updated in MBIM Extension v3.0 in a non-backwards compatible
- * way, see #MbimDataClassV2.
+ * way, see #MbimDataClassV3.
  *
  * Since: 1.0
  */
@@ -1670,52 +1670,54 @@ typedef enum { /*< since=1.28 >*/
 } MbimSubscriberReadyStatusFlag;
 
 /*****************************************************************************/
-/* 'Base Stations Info v3' enums */
+/* 'Device Caps v3' and 'Base Stations Info v3' enums */
 
 /**
- * MbimDataClassV2:
- * @MBIM_DATA_CLASS_V2_GPRS: GPRS.
- * @MBIM_DATA_CLASS_V2_EDGE: EDGE.
- * @MBIM_DATA_CLASS_V2_UMTS: UMTS.
- * @MBIM_DATA_CLASS_V2_HSDPA: HSDPA.
- * @MBIM_DATA_CLASS_V2_HSUPA: HSUPA.
- * @MBIM_DATA_CLASS_V2_LTE: LTE.
- * @MBIM_DATA_CLASS_V2_5G: 5G.
- * @MBIM_DATA_CLASS_V2_1XRTT: 1xRTT.
- * @MBIM_DATA_CLASS_V2_1XEVDO: 1xEV-DO.
- * @MBIM_DATA_CLASS_V2_1XEVDO_REVA: 1xEV-DO RevA
- * @MBIM_DATA_CLASS_V2_1XEVDV: 1xEV-DV.
- * @MBIM_DATA_CLASS_V2_3XRTT: 3xRTT.
- * @MBIM_DATA_CLASS_V2_1XEVDO_REVB: 1xEV-DO RevB.
- * @MBIM_DATA_CLASS_V2_UMB: UMB.
- * @MBIM_DATA_CLASS_V2_CUSTOM: Custom.
+ * MbimDataClassV3:
+ * @MBIM_DATA_CLASS_V3_GPRS: GPRS.
+ * @MBIM_DATA_CLASS_V3_EDGE: EDGE.
+ * @MBIM_DATA_CLASS_V3_UMTS: UMTS.
+ * @MBIM_DATA_CLASS_V3_HSDPA: HSDPA.
+ * @MBIM_DATA_CLASS_V3_HSUPA: HSUPA.
+ * @MBIM_DATA_CLASS_V3_LTE: LTE.
+ * @MBIM_DATA_CLASS_V3_5G: 5G.
+ * @MBIM_DATA_CLASS_V3_1XRTT: 1xRTT.
+ * @MBIM_DATA_CLASS_V3_1XEVDO: 1xEV-DO.
+ * @MBIM_DATA_CLASS_V3_1XEVDO_REVA: 1xEV-DO RevA
+ * @MBIM_DATA_CLASS_V3_1XEVDV: 1xEV-DV.
+ * @MBIM_DATA_CLASS_V3_3XRTT: 3xRTT.
+ * @MBIM_DATA_CLASS_V3_1XEVDO_REVB: 1xEV-DO RevB.
+ * @MBIM_DATA_CLASS_V3_UMB: UMB.
+ * @MBIM_DATA_CLASS_V3_CUSTOM: Custom.
  *
  * Data class update in MBIMEx v3.0.
  *
  * There is now a single flag for 5G, and the new #MbimDataSubclass helps to
  * identify the specific 5G setup.
  *
+ * This type should be considered incompatible with #MbimDataClass.
+ *
  * Since: 1.28
  */
 typedef enum { /*< since=1.28 >*/
-    MBIM_DATA_CLASS_V2_GPRS        = 1 << 0,
-    MBIM_DATA_CLASS_V2_EDGE        = 1 << 1,
-    MBIM_DATA_CLASS_V2_UMTS        = 1 << 2,
-    MBIM_DATA_CLASS_V2_HSDPA       = 1 << 3,
-    MBIM_DATA_CLASS_V2_HSUPA       = 1 << 4,
-    MBIM_DATA_CLASS_V2_LTE         = 1 << 5,
-    MBIM_DATA_CLASS_V2_5G          = 1 << 6,
+    MBIM_DATA_CLASS_V3_GPRS        = 1 << 0,
+    MBIM_DATA_CLASS_V3_EDGE        = 1 << 1,
+    MBIM_DATA_CLASS_V3_UMTS        = 1 << 2,
+    MBIM_DATA_CLASS_V3_HSDPA       = 1 << 3,
+    MBIM_DATA_CLASS_V3_HSUPA       = 1 << 4,
+    MBIM_DATA_CLASS_V3_LTE         = 1 << 5,
+    MBIM_DATA_CLASS_V3_5G          = 1 << 6,
     /* Bit 7 unused, bits 8 to 15 reserved for future 3GPP classes */
-    MBIM_DATA_CLASS_V2_1XRTT       = 1 << 16,
-    MBIM_DATA_CLASS_V2_1XEVDO      = 1 << 17,
-    MBIM_DATA_CLASS_V2_1XEVDO_REVA = 1 << 18,
-    MBIM_DATA_CLASS_V2_1XEVDV      = 1 << 19,
-    MBIM_DATA_CLASS_V2_3XRTT       = 1 << 20,
-    MBIM_DATA_CLASS_V2_1XEVDO_REVB = 1 << 21,
-    MBIM_DATA_CLASS_V2_UMB         = 1 << 22,
+    MBIM_DATA_CLASS_V3_1XRTT       = 1 << 16,
+    MBIM_DATA_CLASS_V3_1XEVDO      = 1 << 17,
+    MBIM_DATA_CLASS_V3_1XEVDO_REVA = 1 << 18,
+    MBIM_DATA_CLASS_V3_1XEVDV      = 1 << 19,
+    MBIM_DATA_CLASS_V3_3XRTT       = 1 << 20,
+    MBIM_DATA_CLASS_V3_1XEVDO_REVB = 1 << 21,
+    MBIM_DATA_CLASS_V3_UMB         = 1 << 22,
     /* Bits 23 to 30 reserved for future 3GPP2 classes */
-    MBIM_DATA_CLASS_V2_CUSTOM      = 1 << 31
-} MbimDataClassV2;
+    MBIM_DATA_CLASS_V3_CUSTOM      = 1 << 31
+} MbimDataClassV3;
 
 /**
  * MbimDataSubclass:
