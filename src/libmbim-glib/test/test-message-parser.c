@@ -20,7 +20,6 @@
 #include "mbim-common.h"
 #include "mbim-error-types.h"
 
-#if defined ENABLE_TEST_MESSAGE_TRACES
 static void
 test_message_trace (const guint8 *computed,
                     guint32       computed_size,
@@ -72,11 +71,6 @@ test_message_printable (MbimMessage *message,
              "%s\n",
              printable);
 }
-
-#else
-#define test_message_trace(...)
-#define test_message_printable(...)
-#endif
 
 static void
 test_message_parser_basic_connect_visible_providers (void)
