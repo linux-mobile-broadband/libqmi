@@ -1173,7 +1173,8 @@ class Message:
                 elif field['format'] == 'struct-array' or field['format'] == 'ref-struct-array' or field['format'] == 'ms-struct-array':
                     inner_template = ('        ${struct_underscore}_array_free (_${field});\n')
                 elif field['format'] == 'tlv':
-                    inner_template = ('        mbim_tlv_unref (_${field});\n')
+                    inner_template = ('        if (_${field})\n'
+                                      '            mbim_tlv_unref (_${field});\n')
                 elif field['format'] == 'tlv-list':
                     inner_template = ('        g_list_free_full (_${field}, (GDestroyNotify)mbim_tlv_unref);\n')
                 template += (string.Template(inner_template).substitute(translations))
