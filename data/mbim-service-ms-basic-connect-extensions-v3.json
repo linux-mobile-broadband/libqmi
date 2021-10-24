@@ -274,7 +274,7 @@
                        "public-format"     : "MbimWakeType" },
                      { "name"              : "SessionId",
                        "format"            : "guint32" },
-                     { "name"              : "DataBuffer",
-                       "format"            : "unsized-byte-array" } ] }
+                     { "name"              : "WakeTlv",
+                       "format"            : "tlv" } ] }
 
 ]

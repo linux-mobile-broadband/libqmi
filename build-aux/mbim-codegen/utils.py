@@ -46,6 +46,7 @@ def add_header_start(f, output_name):
         "#include \"mbim-message.h\"\n"
         "#include \"mbim-device.h\"\n"
         "#include \"mbim-enums.h\"\n"
+        "#include \"mbim-tlv.h\"\n"
         "\n"
         "#ifndef ${guard}\n"
         "#define ${guard}\n"

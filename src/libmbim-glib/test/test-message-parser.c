@@ -2582,6 +2582,247 @@ test_message_parser_ms_basic_connect_v3_connect_3_unnamed_tlvs (void)
     g_list_free_full (unnamed_ies, (GDestroyNotify)mbim_tlv_unref);
 }
 
+static void
+test_message_parser_ms_basic_connect_extensions_wake_reason_command (void)
+{
+    g_autoptr(GError)       error = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+    gboolean                result;
+    MbimWakeType            wake_type;
+    guint32                 session_id;
+    g_autoptr(MbimTlv)      wake_tlv = NULL;
+    const MbimUuid         *service = NULL;
+    guint32                 cid = 0;
+    guint32                 payload_size = 0;
+    g_autofree guint8      *payload = NULL;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x5C, 0x00, 0x00, 0x00, /* length */
+        0x04, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x3D, 0x01, 0xDC, 0xC5, /* service id */
+        0xFE, 0xF5, 0x4D, 0x05,
+        0x0D, 0x3A, 0xBE, 0xF7,
+        0x05, 0x8E, 0x9A, 0xAF,
+        0x13, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x2C, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* wake type: cid indication */
+        0x02, 0x00, 0x00, 0x00, /* session id */
+        /* TLV */
+        0x10, 0x00, 0x00, 0x00, /* TLV type MBIM_TLV_TYPE_WAKE_COMMAND, padding 0 */
+        0x1C, 0x00, 0x00, 0x00, /* TLV data length */
+        0xA2, 0x89, 0xCC, 0x33, /* service id: basic connect */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x0B, 0x00, 0x00, 0x00, /* command id: signal state */
+        0x00, 0x00, 0x00, 0x00, /* payload offset: none */
+        0x00, 0x00, 0x00, 0x00, /* payload size: none */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 3, 0);
+
+    result = (mbim_message_ms_basic_connect_extensions_v3_wake_reason_response_parse (
+                  response,
+                  &wake_type,
+                  &session_id,
+                  &wake_tlv,
+                  &error));
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (wake_type, ==, MBIM_WAKE_TYPE_CID_INDICATION);
+    g_assert_cmpuint (session_id, ==, 2);
+    g_assert_nonnull (wake_tlv);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (wake_tlv), ==, MBIM_TLV_TYPE_WAKE_COMMAND);
+
+    result = (mbim_tlv_wake_command_get (wake_tlv,
+                                         &service,
+                                         &cid,
+                                         &payload_size,
+                                         &payload,
+                                         &error));
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (mbim_uuid_to_service (service), ==, MBIM_SERVICE_BASIC_CONNECT);
+    g_assert_cmpuint (cid, ==, MBIM_CID_BASIC_CONNECT_SIGNAL_STATE);
+    g_assert_cmpuint (payload_size, ==, 0);
+    g_assert_null (payload);
+}
+
+static void
+test_message_parser_ms_basic_connect_extensions_wake_reason_command_payload (void)
+{
+    g_autoptr(GError)       error = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+    gboolean                result;
+    MbimWakeType            wake_type;
+    guint32                 session_id;
+    g_autoptr(MbimTlv)      wake_tlv = NULL;
+    const MbimUuid         *service = NULL;
+    guint32                 cid = 0;
+    guint32                 payload_size = 0;
+    g_autofree guint8      *payload = NULL;
+    guint32                 payload_uint;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x60, 0x00, 0x00, 0x00, /* length */
+        0x04, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x3D, 0x01, 0xDC, 0xC5, /* service id */
+        0xFE, 0xF5, 0x4D, 0x05,
+        0x0D, 0x3A, 0xBE, 0xF7,
+        0x05, 0x8E, 0x9A, 0xAF,
+        0x13, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x30, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* wake type: cid response */
+        0x02, 0x00, 0x00, 0x00, /* session id */
+        /* TLV */
+        0x10, 0x00, 0x00, 0x00, /* TLV type MBIM_TLV_TYPE_WAKE_COMMAND, padding 0 */
+        0x20, 0x00, 0x00, 0x00, /* TLV data length */
+        0xA2, 0x89, 0xCC, 0x33, /* service id: basic connect */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x0C, 0x00, 0x00, 0x00, /* command id: connect */
+        0x1C, 0x00, 0x00, 0x00, /* payload offset: 28 */
+        0x04, 0x00, 0x00, 0x00, /* payload size: 4 */
+        0x01, 0x00, 0x00, 0x00, /* payload: a guint32 */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 3, 0);
+
+    result = (mbim_message_ms_basic_connect_extensions_v3_wake_reason_response_parse (
+                  response,
+                  &wake_type,
+                  &session_id,
+                  &wake_tlv,
+                  &error));
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (wake_type, ==, MBIM_WAKE_TYPE_CID_RESPONSE);
+    g_assert_cmpuint (session_id, ==, 2);
+    g_assert_nonnull (wake_tlv);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (wake_tlv), ==, MBIM_TLV_TYPE_WAKE_COMMAND);
+
+    result = (mbim_tlv_wake_command_get (wake_tlv,
+                                         &service,
+                                         &cid,
+                                         &payload_size,
+                                         &payload,
+                                         &error));
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (mbim_uuid_to_service (service), ==, MBIM_SERVICE_BASIC_CONNECT);
+    g_assert_cmpuint (cid, ==, MBIM_CID_BASIC_CONNECT_CONNECT);
+    g_assert_cmpuint (payload_size, ==, 4);
+    g_assert_nonnull (payload);
+
+    memcpy (&payload_uint, payload, payload_size);
+    payload_uint = GUINT32_FROM_LE (payload_uint);
+    g_assert_cmpuint (payload_uint, ==, 1);
+}
+
+static void
+test_message_parser_ms_basic_connect_extensions_wake_reason_packet (void)
+{
+    g_autoptr(GError)       error = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+    gboolean                result;
+    MbimWakeType            wake_type;
+    guint32                 session_id;
+    g_autoptr(MbimTlv)      wake_tlv = NULL;
+    guint32                 filter_id = 0;
+    guint32                 original_packet_size = 0;
+    guint32                 packet_size = 0;
+    g_autofree guint8      *packet = NULL;
+    const guint8            expected_packet[] = { 0x01, 0x02, 0x03, 0x04,
+                                                  0x05, 0x06, 0x07, 0x08,
+                                                  0x09, 0x0A };
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x5C, 0x00, 0x00, 0x00, /* length */
+        0x04, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0x3D, 0x01, 0xDC, 0xC5, /* service id */
+        0xFE, 0xF5, 0x4D, 0x05,
+        0x0D, 0x3A, 0xBE, 0xF7,
+        0x05, 0x8E, 0x9A, 0xAF,
+        0x13, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x2C, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x02, 0x00, 0x00, 0x00, /* wake type: packet */
+        0x02, 0x00, 0x00, 0x00, /* session id */
+        /* TLV */
+        0x11, 0x00, 0x00, 0x02, /* TLV type MBIM_TLV_TYPE_WAKE_PACKET, padding 2 */
+        0x1A, 0x00, 0x00, 0x00, /* TLV data length */
+        0x0B, 0x00, 0x00, 0x00, /* filter id */
+        0x0C, 0x00, 0x00, 0x00, /* original packet size: 12 */
+        0x10, 0x00, 0x00, 0x00, /* packet offset: 16 */
+        0x0A, 0x00, 0x00, 0x00, /* packet size: 10 */
+        0x01, 0x02, 0x03, 0x04,
+        0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0A, 0x00, 0x00, /* last 2 bytes padding */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 3, 0);
+
+    result = (mbim_message_ms_basic_connect_extensions_v3_wake_reason_response_parse (
+                  response,
+                  &wake_type,
+                  &session_id,
+                  &wake_tlv,
+                  &error));
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (wake_type, ==, MBIM_WAKE_TYPE_PACKET);
+    g_assert_cmpuint (session_id, ==, 2);
+    g_assert_nonnull (wake_tlv);
+    g_assert_cmpuint (mbim_tlv_get_tlv_type (wake_tlv), ==, MBIM_TLV_TYPE_WAKE_PACKET);
+
+    result = (mbim_tlv_wake_packet_get (wake_tlv,
+                                        &filter_id,
+                                        &original_packet_size,
+                                        &packet_size,
+                                        &packet,
+                                        &error));
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (filter_id, ==, 0x0B);
+    g_assert_cmpuint (original_packet_size, ==, 12);
+    g_assert_cmpuint (packet_size, ==, sizeof (expected_packet));
+    g_assert_nonnull (packet);
+    g_assert (memcmp (packet, expected_packet, sizeof (expected_packet)) == 0);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -2615,6 +2856,9 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-v3/connect/0-unnamed-tlvs", test_message_parser_ms_basic_connect_v3_connect_0_unnamed_tlvs);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-v3/connect/1-unnamed-tlv", test_message_parser_ms_basic_connect_v3_connect_1_unnamed_tlv);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-v3/connect/3-unnamed-tlvs", test_message_parser_ms_basic_connect_v3_connect_3_unnamed_tlvs);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/wake-reason/command", test_message_parser_ms_basic_connect_extensions_wake_reason_command);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/wake-reason/command/payload", test_message_parser_ms_basic_connect_extensions_wake_reason_command_payload);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/wake-reason/packet", test_message_parser_ms_basic_connect_extensions_wake_reason_packet);
 
     return g_test_run ();
 }

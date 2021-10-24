@@ -788,6 +788,10 @@ mbim_tlv_string_new
 mbim_tlv_string_get
 <SUBSECTION TlvUint16Array>
 mbim_tlv_guint16_array_get
+<SUBSECTION TlvWakeCommand>
+mbim_tlv_wake_command_get
+<SUBSECTION TlvWakePacket>
+mbim_tlv_wake_packet_get
 <SUBSECTION Private>
 mbim_tlv_type_build_string_from_mask
 <SUBSECTION Standard>

@@ -1548,9 +1548,7 @@ query_wake_reason_ready (MbimDevice   *device,
     g_autoptr(GError)       error = NULL;
     MbimWakeType            wake_type;
     guint32                 session_id;
-    const guint8           *data_buffer;
-    guint32                 data_buffer_size;
-    g_autofree gchar       *data_buffer_str = NULL;
+    MbimTlv                *wake_tlv = NULL;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
@@ -1563,8 +1561,7 @@ query_wake_reason_ready (MbimDevice   *device,
             response,
             &wake_type,
             &session_id,
-            &data_buffer_size,
-            &data_buffer,
+            &wake_tlv,
             &error)) {
         g_printerr ("error: couldn't parse response message: %s\n", error->message);
         shutdown (FALSE);
@@ -1574,12 +1571,84 @@ query_wake_reason_ready (MbimDevice   *device,
     g_print ("[%s] Successfully queried wake reason\n",
              mbim_device_get_path_display (device));
 
-    data_buffer_str = mbim_common_str_hex (data_buffer, data_buffer_size, ':');
-    g_print ("\t  Wake type:  '%s'\n", mbim_wake_type_get_string (wake_type));
-    g_print ("\t Session ID:  '%u'\n", session_id);
-    g_print ("\tData buffer:  '%s'\n", data_buffer_str);
+    g_print ("\t Wake type: '%s'\n", mbim_wake_type_get_string (wake_type));
+    g_print ("\tSession ID: '%u'\n", session_id);
 
-    shutdown (TRUE);
+    if ((wake_type == MBIM_WAKE_TYPE_CID_RESPONSE) ||
+        (wake_type == MBIM_WAKE_TYPE_CID_INDICATION)) {
+        const MbimUuid    *service = NULL;
+        g_autofree gchar  *service_str = NULL;
+        guint32            cid = 0;
+        guint32            payload_size = 0;
+        g_autofree guint8 *payload = NULL;
+        g_autofree gchar  *payload_str = NULL;
+
+        if (!mbim_tlv_wake_command_get (wake_tlv,
+                                        &service,
+                                        &cid,
+                                        &payload_size,
+                                        &payload,
+                                        &error)) {
+            g_printerr ("error: couldn't parse wake command TLV: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        /* Known payload defined right now only for the Connect CID */
+        if ((mbim_uuid_to_service (service) == MBIM_SERVICE_BASIC_CONNECT) &&
+            (cid == MBIM_CID_BASIC_CONNECT_CONNECT) &&
+            (payload_size == 4)) {
+            guint32 activate;
+
+            memcpy (&activate, payload, payload_size);
+            activate = GUINT32_FROM_LE (activate);
+            if (activate == 0x00000001 || activate == 0x00000000)
+                payload_str = g_strdup (activate ? "activate" : "deactivate");
+        }
+
+        if (!payload_str)
+            payload_str = mbim_common_str_hex (payload, payload_size, ':');
+
+        service_str = mbim_uuid_get_printable (service);
+
+        g_print ("\t   Service: '%s'\n", service_str);
+        g_print ("\t       CID: '0x%08x'\n", cid);
+        g_print ("\t   Payload: '%s'\n", payload_str);
+        shutdown (TRUE);
+        return;
+    }
+
+    if (wake_type == MBIM_WAKE_TYPE_PACKET) {
+        guint32            filter_id = 0;
+        guint32            original_packet_size = 0;
+        guint32            packet_size = 0;
+        g_autofree guint8 *packet = NULL;
+        g_autofree gchar  *packet_str = NULL;
+
+        if (!mbim_tlv_wake_packet_get (wake_tlv,
+                                       &filter_id,
+                                       &original_packet_size,
+                                       &packet_size,
+                                       &packet,
+                                       &error)) {
+            g_printerr ("error: couldn't parse wake packet TLV: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        packet_str = mbim_common_str_hex (packet, packet_size, ':');
+
+        g_print ("\t    Filter ID: '%u'\n", filter_id);
+        g_print ("\tOriginal size: '%u'\n", original_packet_size);
+        g_print ("\t   Saved size: '%u'\n", packet_size);
+        g_print ("\t       Packet: '%s'\n", packet_str);
+
+        shutdown (TRUE);
+        return;
+    }
+
+    g_printerr ("error: unknown wake type: 0x%08x\n", wake_type);
+    shutdown (FALSE);
 }
 
 void

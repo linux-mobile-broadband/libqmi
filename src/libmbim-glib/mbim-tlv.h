@@ -17,6 +17,8 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include "mbim-uuid.h"
+
 G_BEGIN_DECLS
 
 /**
@@ -246,6 +248,67 @@ gboolean mbim_tlv_guint16_array_get (const MbimTlv  *self,
                                      guint32        *array_size,
                                      guint16       **array,
                                      GError        **error);
+
+/*****************************************************************************/
+/* wake command type helpers */
+
+/**
+ * mbim_tlv_wake_command_get:
+ * @self: a #MbimTlv of type %MBIM_TLV_TYPE_WAKE_COMMAND.
+ * @service: (out)(optional)(transfer none): return location for a #MbimUuid
+ *   specifying the service that triggered the wake.
+ * @cid: (out)(optional)(transfer none): return location for the command id that
+ *   triggered the wake.
+ * @payload_size: (out)(optional)(transfer none): return location for a #guint32,
+ *  or %NULL if the field is not needed.
+ * @payload: (out)(optional)(transfer full)(type guint8): return location for a
+ *  newly allocated array of #guint8 values, or %NULL if the field is not
+ *  needed. Free the returned value with g_free().
+ *
+ * Get the contents of a wake command TLV.
+ *
+ * The method may return a successful return even with on empty payload (i.e.
+ * with @payload_size set to 0 and @payload set to %NULL).
+ *
+ * Returns: %TRUE if on success, %FALSE if @error is set.
+ *
+ * Since: 1.28
+ */
+gboolean mbim_tlv_wake_command_get (const MbimTlv   *self,
+                                    const MbimUuid **service,
+                                    guint32         *cid,
+                                    guint32         *payload_size,
+                                    guint8         **payload,
+                                    GError         **error);
+
+/*****************************************************************************/
+/* wake packet type helpers */
+
+/**
+ * mbim_tlv_wake_packet_get:
+ * @self: a #MbimTlv of type %MBIM_TLV_TYPE_WAKE_PACKET.
+ * @filter_id: (out)(optional)(transfer none): return location for a #guint32
+ *   specifying the filter id.
+ * @original_packet_size: (out)(optional)(transfer none): return location for a
+ *  #guint32, or %NULL if the field is not needed.
+ * @packet_size: (out)(optional)(transfer none): return location for a #guint32,
+ *  or %NULL if the field is not needed.
+ * @packet: (out)(optional)(transfer full)(type guint8): return location for a
+ *  newly allocated array of #guint8 values, or %NULL if the field is not
+ *  needed. Free the returned value with g_free().
+ *
+ * Get the contents of a wake packet TLV.
+ *
+ * Returns: %TRUE if on success, %FALSE if @error is set.
+ *
+ * Since: 1.28
+ */
+gboolean mbim_tlv_wake_packet_get (const MbimTlv  *self,
+                                   guint32        *filter_id,
+                                   guint32        *original_packet_size,
+                                   guint32        *packet_size,
+                                   guint8        **packet,
+                                   GError        **error);
 
 G_END_DECLS
 

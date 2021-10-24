@@ -323,3 +323,154 @@ mbim_tlv_guint16_array_get (const MbimTlv  *self,
 
     return TRUE;
 }
+
+/*****************************************************************************/
+
+gboolean
+mbim_tlv_wake_command_get (const MbimTlv   *self,
+                           const MbimUuid **service,
+                           guint32         *cid,
+                           guint32         *payload_size,
+                           guint8         **payload,
+                           GError         **error)
+{
+    const guint8 *tlv_data;
+    guint32       tlv_data_size;
+    guint32       buffer_offset;
+    guint32       buffer_size;
+    guint32       offset = 0;
+    guint64       required_size;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    if (MBIM_TLV_GET_TLV_TYPE (self) != MBIM_TLV_TYPE_WAKE_COMMAND) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                     "TLV is not a wake command");
+        return FALSE;
+    }
+
+    tlv_data = mbim_tlv_get_tlv_data (self, &tlv_data_size);
+    tlv_data_size = MBIM_TLV_GET_DATA_LENGTH (self);
+
+    required_size = 28;
+    if (tlv_data_size < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read wake command TLV (%u < %" G_GUINT64_FORMAT ")",
+                     tlv_data_size, required_size);
+        return FALSE;
+    }
+
+    if (service)
+        *service = (const MbimUuid *) G_STRUCT_MEMBER_P (tlv_data, offset);
+    offset += 16;
+
+    if (cid)
+        *cid = GUINT32_FROM_LE (G_STRUCT_MEMBER (guint32, tlv_data, offset));
+    offset += 4;
+
+    buffer_offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (guint32, tlv_data, offset));
+    offset += 4;
+
+    buffer_size = GUINT32_FROM_LE (G_STRUCT_MEMBER (guint32, tlv_data, offset));
+    offset += 4;
+
+    if (buffer_size > 0) {
+        if (buffer_offset != required_size) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read wake command TLV: invalid payload offset (%u)",
+                         buffer_offset);
+            return FALSE;
+        }
+
+        required_size += buffer_size;
+        if (tlv_data_size < required_size) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read wake command TLV payload (%u bytes) (%u < %" G_GUINT64_FORMAT ")",
+                         buffer_size, tlv_data_size, required_size);
+            return FALSE;
+        }
+    }
+
+    if (payload_size)
+        *payload_size = buffer_size;
+    if (payload)
+        *payload = (buffer_size ? g_memdup (&tlv_data[offset], buffer_size) : NULL);
+
+    return TRUE;
+}
+
+/*****************************************************************************/
+
+gboolean
+mbim_tlv_wake_packet_get (const MbimTlv  *self,
+                          guint32        *filter_id,
+                          guint32        *original_packet_size,
+                          guint32        *packet_size,
+                          guint8        **packet,
+                          GError        **error)
+{
+
+    const guint8 *tlv_data;
+    guint32       tlv_data_size;
+    guint32       buffer_offset;
+    guint32       buffer_size;
+    guint32       offset = 0;
+    guint64       required_size;
+
+    g_return_val_if_fail (self != NULL, FALSE);
+
+    if (MBIM_TLV_GET_TLV_TYPE (self) != MBIM_TLV_TYPE_WAKE_PACKET) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_ARGS,
+                     "TLV is not a wake packet");
+        return FALSE;
+    }
+
+    tlv_data = mbim_tlv_get_tlv_data (self, &tlv_data_size);
+    tlv_data_size = MBIM_TLV_GET_DATA_LENGTH (self);
+
+    required_size = 16;
+    if (tlv_data_size < required_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                     "cannot read wake packet TLV (%u < %" G_GUINT64_FORMAT ")",
+                     tlv_data_size, required_size);
+        return FALSE;
+    }
+
+    if (filter_id)
+        *filter_id = GUINT32_FROM_LE (G_STRUCT_MEMBER (guint32, tlv_data, offset));
+    offset += 4;
+
+    if (original_packet_size)
+        *original_packet_size = GUINT32_FROM_LE (G_STRUCT_MEMBER (guint32, tlv_data, offset));
+    offset += 4;
+
+    buffer_offset = GUINT32_FROM_LE (G_STRUCT_MEMBER (guint32, tlv_data, offset));
+    offset += 4;
+
+    buffer_size = GUINT32_FROM_LE (G_STRUCT_MEMBER (guint32, tlv_data, offset));
+    offset += 4;
+
+    if (buffer_size > 0) {
+        if (buffer_offset != offset) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read wake packet TLV: invalid saved packet offset (%u)",
+                         buffer_offset);
+            return FALSE;
+        }
+
+        required_size += buffer_size;
+        if (tlv_data_size < required_size) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_INVALID_MESSAGE,
+                         "cannot read wake packet TLV payload (%u bytes) (%u < %" G_GUINT64_FORMAT ")",
+                         buffer_size, tlv_data_size, required_size);
+            return FALSE;
+        }
+    }
+
+    if (packet_size)
+        *packet_size = buffer_size;
+    if (packet)
+        *packet = (buffer_size ? g_memdup (&tlv_data[offset], buffer_size) : NULL);
+
+    return TRUE;
+}
