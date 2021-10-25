@@ -76,7 +76,7 @@ test_message_printable (MbimMessage *message,
 }
 
 static void
-test_message_builder_basic_connect_pin_set_raw (void)
+test_basic_connect_pin_set_raw (void)
 {
     MbimMessage *message;
     MbimMessageCommandBuilder *builder;
@@ -142,7 +142,7 @@ test_message_builder_basic_connect_pin_set_raw (void)
 }
 
 static void
-test_message_builder_basic_connect_pin_set (void)
+test_basic_connect_pin_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -205,7 +205,7 @@ test_message_builder_basic_connect_pin_set (void)
 }
 
 static void
-test_message_builder_basic_connect_connect_set_raw (void)
+test_basic_connect_connect_set_raw (void)
 {
     MbimMessage *message;
     MbimMessageCommandBuilder *builder;
@@ -288,7 +288,7 @@ test_message_builder_basic_connect_connect_set_raw (void)
 }
 
 static void
-test_message_builder_basic_connect_connect_set (void)
+test_basic_connect_connect_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -369,7 +369,7 @@ test_message_builder_basic_connect_connect_set (void)
 }
 
 static void
-test_message_builder_basic_connect_service_activation_set (void)
+test_basic_connect_service_activation_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -428,7 +428,7 @@ test_message_builder_basic_connect_service_activation_set (void)
 }
 
 static void
-test_message_builder_basic_connect_device_service_subscribe_list_set (void)
+test_basic_connect_device_service_subscribe_list_set (void)
 {
     GError *error = NULL;
     MbimEventEntry **entries;
@@ -520,7 +520,7 @@ test_message_builder_basic_connect_device_service_subscribe_list_set (void)
 }
 
 static void
-test_message_builder_ussd_set (void)
+test_ussd_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -592,7 +592,7 @@ test_message_builder_ussd_set (void)
 }
 
 static void
-test_message_builder_auth_akap_query (void)
+test_auth_akap_query (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -674,7 +674,7 @@ test_message_builder_auth_akap_query (void)
 }
 
 static void
-test_message_builder_stk_pac_set (void)
+test_stk_pac_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -747,7 +747,7 @@ test_message_builder_stk_pac_set (void)
 }
 
 static void
-test_message_builder_stk_terminal_response_set (void)
+test_stk_terminal_response_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -820,7 +820,7 @@ test_message_builder_stk_terminal_response_set (void)
 }
 
 static void
-test_message_builder_stk_envelope_set (void)
+test_stk_envelope_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -898,7 +898,7 @@ test_message_builder_stk_envelope_set (void)
 }
 
 static void
-test_message_builder_basic_connect_ip_packet_filters_set_none (void)
+test_basic_connect_ip_packet_filters_set_none (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -952,7 +952,7 @@ test_message_builder_basic_connect_ip_packet_filters_set_none (void)
 }
 
 static void
-test_message_builder_basic_connect_ip_packet_filters_set_one (void)
+test_basic_connect_ip_packet_filters_set_one (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -1041,7 +1041,7 @@ test_message_builder_basic_connect_ip_packet_filters_set_one (void)
 }
 
 static void
-test_message_builder_basic_connect_ip_packet_filters_set_two (void)
+test_basic_connect_ip_packet_filters_set_two (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -1157,7 +1157,7 @@ test_message_builder_basic_connect_ip_packet_filters_set_two (void)
 }
 
 static void
-test_message_builder_dss_connect_set (void)
+test_dss_connect_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -1227,7 +1227,7 @@ test_message_builder_dss_connect_set (void)
 }
 
 static void
-test_message_builder_basic_connect_multicarrier_providers_set (void)
+test_basic_connect_multicarrier_providers_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -1337,7 +1337,7 @@ test_message_builder_basic_connect_multicarrier_providers_set (void)
 }
 
 static void
-test_message_builder_ms_host_shutdown_notify_set (void)
+test_ms_host_shutdown_notify_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -1388,7 +1388,7 @@ test_message_builder_ms_host_shutdown_notify_set (void)
 }
 
 static void
-test_message_builder_ms_basic_connect_extensions_registration_parameters_set_0_unnamed_tlvs (void)
+test_ms_basic_connect_extensions_registration_parameters_set_0_unnamed_tlvs (void)
 {
     g_autoptr(GError)      error = NULL;
     g_autoptr(MbimMessage) message = NULL;
@@ -1450,7 +1450,7 @@ test_message_builder_ms_basic_connect_extensions_registration_parameters_set_0_u
 }
 
 static void
-test_message_builder_ms_basic_connect_extensions_registration_parameters_set_1_unnamed_tlv (void)
+test_ms_basic_connect_extensions_registration_parameters_set_1_unnamed_tlv (void)
 {
     MbimTlv                *tlv;
     GList                  *tlv_list = NULL;
@@ -1526,7 +1526,7 @@ test_message_builder_ms_basic_connect_extensions_registration_parameters_set_1_u
 }
 
 static void
-test_message_builder_ms_basic_connect_extensions_registration_parameters_set_3_unnamed_tlvs (void)
+test_ms_basic_connect_extensions_registration_parameters_set_3_unnamed_tlvs (void)
 {
     MbimTlv                *tlv;
     GList                  *tlv_list = NULL;
@@ -1627,7 +1627,7 @@ test_message_builder_ms_basic_connect_extensions_registration_parameters_set_3_u
 }
 
 static void
-test_message_builder_ms_basic_connect_v3_connect_set (void)
+test_ms_basic_connect_v3_connect_set (void)
 {
     GError *error = NULL;
     MbimMessage *message;
@@ -1715,27 +1715,31 @@ int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
 
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/pin/set/raw", test_message_builder_basic_connect_pin_set_raw);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/pin/set", test_message_builder_basic_connect_pin_set);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/connect/set/raw", test_message_builder_basic_connect_connect_set_raw);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/connect/set", test_message_builder_basic_connect_connect_set);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/service-activation/set", test_message_builder_basic_connect_service_activation_set);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/device-service-subscribe-list/set", test_message_builder_basic_connect_device_service_subscribe_list_set);
-    g_test_add_func ("/libmbim-glib/message/builder/ussd/set", test_message_builder_ussd_set);
-    g_test_add_func ("/libmbim-glib/message/builder/auth/akap/query", test_message_builder_auth_akap_query);
-    g_test_add_func ("/libmbim-glib/message/builder/stk/pac/set", test_message_builder_stk_pac_set);
-    g_test_add_func ("/libmbim-glib/message/builder/stk/terminal-response/set", test_message_builder_stk_terminal_response_set);
-    g_test_add_func ("/libmbim-glib/message/builder/stk/envelope/set", test_message_builder_stk_envelope_set);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/ip-packet-filters/set/none", test_message_builder_basic_connect_ip_packet_filters_set_none);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/ip-packet-filters/set/one", test_message_builder_basic_connect_ip_packet_filters_set_one);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/ip-packet-filters/set/two", test_message_builder_basic_connect_ip_packet_filters_set_two);
-    g_test_add_func ("/libmbim-glib/message/builder/dss/connect/set", test_message_builder_dss_connect_set);
-    g_test_add_func ("/libmbim-glib/message/builder/basic-connect/multicarrier-providers/set", test_message_builder_basic_connect_multicarrier_providers_set);
-    g_test_add_func ("/libmbim-glib/message/builder/ms-host-shutdown/notify/set", test_message_builder_ms_host_shutdown_notify_set);
-    g_test_add_func ("/libmbim-glib/message/builder/ms-basic-connect-extensions/registration-parameters/set/0-unnamed-tlvs", test_message_builder_ms_basic_connect_extensions_registration_parameters_set_0_unnamed_tlvs);
-    g_test_add_func ("/libmbim-glib/message/builder/ms-basic-connect-extensions/registration-parameters/set/1-unnamed-tlv", test_message_builder_ms_basic_connect_extensions_registration_parameters_set_1_unnamed_tlv);
-    g_test_add_func ("/libmbim-glib/message/builder/ms-basic-connect-extensions/registration-parameters/set/3-unnamed-tlvs", test_message_builder_ms_basic_connect_extensions_registration_parameters_set_3_unnamed_tlvs);
-    g_test_add_func ("/libmbim-glib/message/builder/ms-basic-connect-v3/connect/set", test_message_builder_ms_basic_connect_v3_connect_set);
+#define PREFIX "/libmbim-glib/message/builder"
+
+    g_test_add_func (PREFIX "/basic-connect/pin/set/raw", test_basic_connect_pin_set_raw);
+    g_test_add_func (PREFIX "/basic-connect/pin/set", test_basic_connect_pin_set);
+    g_test_add_func (PREFIX "/basic-connect/connect/set/raw", test_basic_connect_connect_set_raw);
+    g_test_add_func (PREFIX "/basic-connect/connect/set", test_basic_connect_connect_set);
+    g_test_add_func (PREFIX "/basic-connect/service-activation/set", test_basic_connect_service_activation_set);
+    g_test_add_func (PREFIX "/basic-connect/device-service-subscribe-list/set", test_basic_connect_device_service_subscribe_list_set);
+    g_test_add_func (PREFIX "/ussd/set", test_ussd_set);
+    g_test_add_func (PREFIX "/auth/akap/query", test_auth_akap_query);
+    g_test_add_func (PREFIX "/stk/pac/set", test_stk_pac_set);
+    g_test_add_func (PREFIX "/stk/terminal-response/set", test_stk_terminal_response_set);
+    g_test_add_func (PREFIX "/stk/envelope/set", test_stk_envelope_set);
+    g_test_add_func (PREFIX "/basic-connect/ip-packet-filters/set/none", test_basic_connect_ip_packet_filters_set_none);
+    g_test_add_func (PREFIX "/basic-connect/ip-packet-filters/set/one", test_basic_connect_ip_packet_filters_set_one);
+    g_test_add_func (PREFIX "/basic-connect/ip-packet-filters/set/two", test_basic_connect_ip_packet_filters_set_two);
+    g_test_add_func (PREFIX "/dss/connect/set", test_dss_connect_set);
+    g_test_add_func (PREFIX "/basic-connect/multicarrier-providers/set", test_basic_connect_multicarrier_providers_set);
+    g_test_add_func (PREFIX "/ms-host-shutdown/notify/set", test_ms_host_shutdown_notify_set);
+    g_test_add_func (PREFIX "/ms-basic-connect-extensions/registration-parameters/set/0-unnamed-tlvs", test_ms_basic_connect_extensions_registration_parameters_set_0_unnamed_tlvs);
+    g_test_add_func (PREFIX "/ms-basic-connect-extensions/registration-parameters/set/1-unnamed-tlv", test_ms_basic_connect_extensions_registration_parameters_set_1_unnamed_tlv);
+    g_test_add_func (PREFIX "/ms-basic-connect-extensions/registration-parameters/set/3-unnamed-tlvs", test_ms_basic_connect_extensions_registration_parameters_set_3_unnamed_tlvs);
+    g_test_add_func (PREFIX "/ms-basic-connect-v3/connect/set", test_ms_basic_connect_v3_connect_set);
+
+#undef PREFIX
 
     return g_test_run ();
 }
