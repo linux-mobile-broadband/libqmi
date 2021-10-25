@@ -2577,6 +2577,128 @@ test_message_parser_ms_basic_connect_v3_connect_3_unnamed_tlvs (void)
 }
 
 static void
+test_message_parser_ms_basic_connect_extensions_device_caps_v3 (void)
+{
+    g_autoptr(GError)       error = NULL;
+    g_autoptr(MbimMessage)  response = NULL;
+    gboolean                result;
+    MbimDeviceType          device_type;
+    MbimVoiceClass          voice_class;
+    MbimCellularClass       cellular_class;
+    MbimSimClass            sim_class;
+    MbimDataClassV3         data_class;
+    MbimDataSubclass        data_subclass;
+    MbimSmsCaps             sms_caps;
+    MbimCtrlCaps            ctrl_caps;
+    guint32                 max_sessions;
+    guint32                 wcdma_band_class = 0;
+    guint32                 lte_band_class_array_size = 0;
+    g_autofree guint16     *lte_band_class_array = NULL;
+    guint32                 nr_band_class_array_size = 0;
+    g_autofree guint16     *nr_band_class_array = NULL;
+    g_autofree gchar       *custom_data_class = NULL;
+    g_autofree gchar       *device_id = NULL;
+    g_autofree gchar       *firmware_info = NULL;
+    g_autofree gchar       *hardware_info = NULL;
+    guint32                 executor_index;
+    static const guint16    expected_lte_band_class_array[] = {
+        1, 2, 3, 4, 5, 7, 8, 12, 13, 14, 17, 18, 19, 20, 25, 26, 28, 29, 30, 32, 34, 38, 39, 40, 41, 42, 43, 46, 48
+    };
+    static const guint16    expected_nr_band_class_array[] = {
+        1, 2, 3, 5, 7, 8, 20, 25, 28, 30, 38, 40, 41, 48, 66, 71, 77, 78, 79
+    };
+
+    const guint8 buffer [] =  {
+        0x03, 0x00, 0x00, 0x80, 0x68, 0x01, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x3D, 0x01, 0xDC, 0xC5, 0xFE, 0xF5, 0x4D, 0x05, 0x0D, 0x3A, 0xBE, 0xF7,
+        0x05, 0x8E, 0x9A, 0xAF, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x38, 0x01, 0x00, 0x00,
+        0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+        0x7C, 0x00, 0x00, 0x80, 0x03, 0x00, 0x00, 0x00, 0xA3, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x9B, 0x00, 0x00, 0x00,
+        0x0B, 0x00, 0x00, 0x02, 0x3A, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00,
+        0x05, 0x00, 0x07, 0x00, 0x08, 0x00, 0x0C, 0x00, 0x0D, 0x00, 0x0E, 0x00, 0x11, 0x00, 0x12, 0x00,
+        0x13, 0x00, 0x14, 0x00, 0x19, 0x00, 0x1A, 0x00, 0x1C, 0x00, 0x1D, 0x00, 0x1E, 0x00, 0x20, 0x00,
+        0x22, 0x00, 0x26, 0x00, 0x27, 0x00, 0x28, 0x00, 0x29, 0x00, 0x2A, 0x00, 0x2B, 0x00, 0x2E, 0x00,
+        0x30, 0x00, 0x00, 0x00, 0x0B, 0x00, 0x00, 0x02, 0x26, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00,
+        0x03, 0x00, 0x05, 0x00, 0x07, 0x00, 0x08, 0x00, 0x14, 0x00, 0x19, 0x00, 0x1C, 0x00, 0x1E, 0x00,
+        0x26, 0x00, 0x28, 0x00, 0x29, 0x00, 0x30, 0x00, 0x42, 0x00, 0x47, 0x00, 0x4D, 0x00, 0x4E, 0x00,
+        0x4F, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x00, 0x02, 0x0A, 0x00, 0x00, 0x00, 0x48, 0x00, 0x53, 0x00,
+        0x50, 0x00, 0x41, 0x00, 0x2B, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x00, 0x02, 0x1E, 0x00, 0x00, 0x00,
+        0x38, 0x00, 0x36, 0x00, 0x32, 0x00, 0x31, 0x00, 0x34, 0x00, 0x36, 0x00, 0x30, 0x00, 0x35, 0x00,
+        0x30, 0x00, 0x30, 0x00, 0x38, 0x00, 0x34, 0x00, 0x35, 0x00, 0x35, 0x00, 0x35, 0x00, 0x00, 0x00,
+        0x0A, 0x00, 0x00, 0x00, 0x3C, 0x00, 0x00, 0x00, 0x38, 0x00, 0x31, 0x00, 0x36, 0x00, 0x30, 0x00,
+        0x30, 0x00, 0x2E, 0x00, 0x30, 0x00, 0x30, 0x00, 0x30, 0x00, 0x30, 0x00, 0x2E, 0x00, 0x39, 0x00,
+        0x39, 0x00, 0x2E, 0x00, 0x32, 0x00, 0x39, 0x00, 0x2E, 0x00, 0x31, 0x00, 0x37, 0x00, 0x2E, 0x00,
+        0x31, 0x00, 0x39, 0x00, 0x5F, 0x00, 0x47, 0x00, 0x43, 0x00, 0x0D, 0x00, 0x0A, 0x00, 0x42, 0x00,
+        0x39, 0x00, 0x30, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x56, 0x00, 0x31, 0x00,
+        0x2E, 0x00, 0x30, 0x00, 0x2E, 0x00, 0x36, 0x00
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 3, 0);
+
+    result = (mbim_message_ms_basic_connect_extensions_v3_device_caps_response_parse (
+                response,
+                &device_type,
+                &cellular_class,
+                &voice_class,
+                &sim_class,
+                &data_class,
+                &sms_caps,
+                &ctrl_caps,
+                &data_subclass,
+                &max_sessions,
+                &executor_index,
+                &wcdma_band_class,
+                &lte_band_class_array_size,
+                &lte_band_class_array,
+                &nr_band_class_array_size,
+                &nr_band_class_array,
+                &custom_data_class,
+                &device_id,
+                &firmware_info,
+                &hardware_info,
+                &error));
+
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (device_type, ==, MBIM_DEVICE_TYPE_EMBEDDED);
+    g_assert_cmpuint (cellular_class, ==, MBIM_CELLULAR_CLASS_GSM);
+    g_assert_cmpuint (voice_class, ==, MBIM_VOICE_CLASS_NO_VOICE);
+    g_assert_cmpuint (sim_class, ==, MBIM_SIM_CLASS_REMOVABLE);
+    g_assert_cmpuint (data_class, ==, (MBIM_DATA_CLASS_V3_UMTS |
+                                       MBIM_DATA_CLASS_V3_HSDPA |
+                                       MBIM_DATA_CLASS_V3_HSUPA |
+                                       MBIM_DATA_CLASS_V3_LTE |
+                                       MBIM_DATA_CLASS_V3_5G |
+                                       MBIM_DATA_CLASS_V3_CUSTOM));
+    g_assert_cmpuint (sms_caps, ==, (MBIM_SMS_CAPS_PDU_RECEIVE |
+                                     MBIM_SMS_CAPS_PDU_SEND));
+    g_assert_cmpuint (ctrl_caps, ==, (MBIM_CTRL_CAPS_REG_MANUAL |
+                                      MBIM_CTRL_CAPS_HW_RADIO_SWITCH |
+                                      MBIM_CTRL_CAPS_ESIM |
+                                      MBIM_CTRL_CAPS_SIM_HOT_SWAP_CAPABLE));
+    g_assert_cmpuint (data_subclass, ==, (MBIM_DATA_SUBCLASS_5G_ENDC |
+                                          MBIM_DATA_SUBCLASS_5G_NR));
+    g_assert_cmpuint (max_sessions, ==, 2);
+    g_assert_cmpuint (executor_index, ==, 0);
+    g_assert_cmpuint (wcdma_band_class, ==, (1 << (1 - 1) |
+                                             1 << (2 - 1) |
+                                             1 << (4 - 1) |
+                                             1 << (5 - 1) |
+                                             1 << (8 - 1)));
+    g_assert_cmpuint (G_N_ELEMENTS (expected_lte_band_class_array), ==, lte_band_class_array_size);
+    g_assert (memcmp (lte_band_class_array, expected_lte_band_class_array, lte_band_class_array_size * sizeof (guint16)) == 0);
+    g_assert_cmpuint (G_N_ELEMENTS (expected_nr_band_class_array), ==, nr_band_class_array_size);
+    g_assert (memcmp (nr_band_class_array, expected_nr_band_class_array, nr_band_class_array_size * sizeof (guint16)) == 0);
+    g_assert_cmpstr (custom_data_class, ==, "HSPA+");
+    g_assert_cmpstr (device_id, ==, "862146050084555");
+    g_assert_cmpstr (firmware_info, ==, "81600.0000.99.29.17.19_GC\r\nB90");
+    g_assert_cmpstr (hardware_info, ==, "V1.0.6");
+}
+
+static void
 test_message_parser_ms_basic_connect_extensions_wake_reason_command (void)
 {
     g_autoptr(GError)       error = NULL;
@@ -2850,6 +2972,7 @@ int main (int argc, char **argv)
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-v3/connect/0-unnamed-tlvs", test_message_parser_ms_basic_connect_v3_connect_0_unnamed_tlvs);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-v3/connect/1-unnamed-tlv", test_message_parser_ms_basic_connect_v3_connect_1_unnamed_tlv);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-v3/connect/3-unnamed-tlvs", test_message_parser_ms_basic_connect_v3_connect_3_unnamed_tlvs);
+    g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/device-caps-v3", test_message_parser_ms_basic_connect_extensions_device_caps_v3);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/wake-reason/command", test_message_parser_ms_basic_connect_extensions_wake_reason_command);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/wake-reason/command/payload", test_message_parser_ms_basic_connect_extensions_wake_reason_command_payload);
     g_test_add_func ("/libmbim-glib/message/parser/basic-connect-extensions/wake-reason/packet", test_message_parser_ms_basic_connect_extensions_wake_reason_packet);
