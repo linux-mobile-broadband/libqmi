@@ -58,6 +58,7 @@ static gchar    *query_ip_configuration_str;
 static gchar    *set_connect_deactivate_str;
 static gboolean  query_packet_statistics_flag;
 static gchar    *query_ip_packet_filters_str;
+static gchar    *set_ip_packet_filters_str;
 static gboolean  query_provisioned_contexts_flag;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
@@ -191,6 +192,10 @@ static GOptionEntry entries[] = {
       "Query IP packet filters (SessionID is optional, defaults to 0)",
       "[SessionID]"
     },
+    { "set-ip-packet-filters", 0, 0, G_OPTION_ARG_STRING, &set_ip_packet_filters_str,
+      "Set IP packet filters (allowed keys: session-id, packet-filter, packet-mask, filter-id)",
+      "[\"key=value,...\"]"
+    },
     { "query-provisioned-contexts", 0, 0, G_OPTION_ARG_NONE, &query_provisioned_contexts_flag,
       "Query provisioned contexts",
       NULL
@@ -289,6 +294,7 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_connect_deactivate_str +
                  query_packet_statistics_flag +
                  !!query_ip_packet_filters_str +
+                 !!set_ip_packet_filters_str +
                  query_provisioned_contexts_flag);
 
     if (n_actions > 1) {
@@ -978,11 +984,12 @@ static void
 ip_packet_filters_ready (MbimDevice   *device,
                          GAsyncResult *res)
 {
-    g_autoptr(MbimMessage)           response = NULL;
-    g_autoptr(GError)                error = NULL;
-    g_autoptr(MbimPacketFilterArray) filters = NULL;
-    guint32                          filters_count;
-    guint32                          i;
+    g_autoptr(MbimMessage)             response = NULL;
+    g_autoptr(GError)                  error = NULL;
+    g_autoptr(MbimPacketFilterArray)   filters = NULL;
+    g_autoptr(MbimPacketFilterV3Array) filters_v3 = NULL;
+    guint32                            filters_count;
+    guint32                            i;
 
     response = mbim_device_command_finish (device, res, &error);
     if (!response ||
@@ -992,30 +999,59 @@ ip_packet_filters_ready (MbimDevice   *device,
         return;
     }
 
-    if (!mbim_message_ip_packet_filters_response_parse (
-            response,
-            NULL, /* sessionid */
-            &filters_count,
-            &filters,
-            &error)) {
-        g_printerr ("error: couldn't parse response message: %s\n", error->message);
-        shutdown (FALSE);
-        return;
+    /* MBIMEx 3.0 support */
+    if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+        if (!mbim_message_ms_basic_connect_v3_ip_packet_filters_response_parse (
+                response,
+                NULL, /* sessionid */
+                &filters_count,
+                &filters_v3,
+                &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIMEx 3.0 IP Packet Filters");
+    }
+    /* MBIM 1.0 support */
+    else {
+        if (!mbim_message_ip_packet_filters_response_parse (
+                response,
+                NULL, /* sessionid */
+                &filters_count,
+                &filters,
+                &error)) {
+            g_printerr ("error: couldn't parse response message: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+        g_debug ("Successfully parsed response as MBIM 1.0 IP Packet Filters");
     }
 
-    g_print ("\n[%s] IP packet filters: (%u)\n", mbim_device_get_path_display (device), filters_count);
+    g_print ("[%s] IP packet filters: (%u)\n", mbim_device_get_path_display (device), filters_count);
 
     for (i = 0; i < filters_count; i++) {
         g_autofree gchar *packet_filter = NULL;
-        g_autofree gchar *packet_mask = NULL;
+        g_autofree gchar *packet_mask   = NULL;
+        guint32           filter_size = 0;
 
-        packet_filter = mbim_common_str_hex (filters[i]->packet_filter, filters[i]->filter_size, ' ');
-        packet_mask   = mbim_common_str_hex (filters[i]->packet_mask, filters[i]->filter_size, ' ');
+        if (filters_v3) {
+            filter_size   = filters_v3[i]->filter_size;
+            packet_filter = mbim_common_str_hex (filters_v3[i]->packet_filter, filter_size, ' ');
+            packet_mask   = mbim_common_str_hex (filters_v3[i]->packet_mask, filter_size, ' ');
+        } else if (filters) {
+            filter_size   = filters[i]->filter_size;
+            packet_filter = mbim_common_str_hex (filters[i]->packet_filter, filter_size, ' ');
+            packet_mask   = mbim_common_str_hex (filters[i]->packet_mask, filter_size, ' ');
+        } else
+            g_assert_not_reached ();
 
-        g_print ("\n");
-        g_print ("\tFilter size: %u\n", filters[i]->filter_size);
-        g_print ("\tPacket filter: %s\n", VALIDATE_UNKNOWN (packet_filter));
-        g_print ("\tPacket mask: %s\n", VALIDATE_UNKNOWN (packet_mask));
+        g_print ("Filter %u:\n", i);
+        g_print ("\tFilter size   : %u\n", filter_size);
+        g_print ("\tPacket filter : %s\n", VALIDATE_UNKNOWN (packet_filter));
+        g_print ("\tPacket mask   : %s\n", VALIDATE_UNKNOWN (packet_mask));
+        if (filters_v3)
+            g_print ("\tFilter ID     : %u\n", filters_v3[i]->filter_id);
     }
 
     shutdown (TRUE);
@@ -1056,6 +1092,194 @@ connect_session_id_parse (const gchar  *str,
         return FALSE;
     }
     *session_id = (guint32) n;
+
+    return TRUE;
+}
+
+typedef struct {
+    gboolean   v3;
+    guint32    session_id;
+    GPtrArray *array;
+    gchar     *tmp_packet_filter;
+    gchar     *tmp_packet_mask;
+    gchar     *tmp_filter_id;
+} SetIpPacketFiltersProperties;
+
+static void
+mbim_packet_filter_v3_free (MbimPacketFilterV3 *var)
+{
+    if (!var)
+        return;
+
+    g_free (var->packet_filter);
+    g_free (var->packet_mask);
+    g_free (var);
+}
+
+static void
+mbim_packet_filter_free (MbimPacketFilter *var)
+{
+    if (!var)
+        return;
+
+    g_free (var->packet_filter);
+    g_free (var->packet_mask);
+    g_free (var);
+}
+
+static void
+set_ip_packet_filters_properties_clear (SetIpPacketFiltersProperties *props)
+{
+    g_free (props->tmp_packet_filter);
+    g_free (props->tmp_packet_mask);
+    g_free (props->tmp_filter_id);
+    g_ptr_array_unref (props->array);
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(SetIpPacketFiltersProperties, set_ip_packet_filters_properties_clear);
+
+static gboolean
+check_filter_add (SetIpPacketFiltersProperties  *props,
+                  GError                       **error)
+{
+    g_autofree guint8 *packet_filter = NULL;
+    gsize              packet_filter_size = 0;
+    g_autofree guint8 *packet_mask = NULL;
+    gsize              packet_mask_size = 0;
+
+    if (!props->tmp_packet_filter) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Option 'packet-filter' is missing");
+        return FALSE;
+    }
+
+    if (!props->tmp_packet_mask) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Option 'packet-mask' is missing");
+        return FALSE;
+    }
+
+    if (!props->v3 && props->tmp_filter_id) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Option 'filter-id' is specific to MBIMEx v3.0");
+        return FALSE;
+    }
+
+    if (props->v3 && !props->tmp_filter_id) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Option 'filter-id' is missing");
+        return FALSE;
+    }
+
+    packet_filter = mbimcli_read_buffer_from_string (props->tmp_packet_filter, -1, &packet_filter_size, error);
+    if (!packet_filter)
+        return FALSE;
+
+    packet_mask = mbimcli_read_buffer_from_string (props->tmp_packet_mask, -1, &packet_mask_size, error);
+    if (!packet_mask)
+        return FALSE;
+
+    if (packet_filter_size != packet_mask_size) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Option 'packet-filter' and 'packet-mask' must have same size");
+        return FALSE;
+    }
+
+    if (props->v3) {
+        MbimPacketFilterV3 *filter;
+        guint               filter_id;
+
+        if (!mbimcli_read_uint_from_string (props->tmp_filter_id, &filter_id)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Failed to parse 'filter-id' field as an integer");
+            return FALSE;
+        }
+
+        filter = g_new0 (MbimPacketFilterV3, 1);
+        filter->filter_size = packet_filter_size;
+        filter->packet_filter = g_steal_pointer (&packet_filter);
+        filter->packet_mask = g_steal_pointer (&packet_mask);
+        filter->filter_id = filter_id;
+        g_ptr_array_add (props->array, filter);
+    } else {
+        MbimPacketFilter *filter;
+
+        filter = g_new0 (MbimPacketFilter, 1);
+        filter->filter_size = packet_filter_size;
+        filter->packet_filter = g_steal_pointer (&packet_filter);
+        filter->packet_mask = g_steal_pointer (&packet_mask);
+        g_ptr_array_add (props->array, filter);
+    }
+
+    g_clear_pointer (&props->tmp_filter_id, g_free);
+    g_clear_pointer (&props->tmp_packet_filter, g_free);
+    g_clear_pointer (&props->tmp_packet_mask, g_free);
+
+    return TRUE;
+}
+
+static gboolean
+set_ip_packet_filters_properties_handle (const gchar  *key,
+                                         const gchar  *value,
+                                         GError      **error,
+                                         gpointer      user_data)
+{
+    SetIpPacketFiltersProperties *props = user_data;
+
+    if (g_ascii_strcasecmp (key, "session-id") == 0) {
+        if (!connect_session_id_parse (value, FALSE, &props->session_id, error))
+            return FALSE;
+    } else if (g_ascii_strcasecmp (key, "packet-filter") == 0) {
+        if (props->tmp_packet_filter) {
+            if (!check_filter_add (props, error))
+                return FALSE;
+            g_clear_pointer (&props->tmp_packet_filter, g_free);
+        }
+        props->tmp_packet_filter = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "packet-mask") == 0) {
+        if (props->tmp_packet_mask) {
+            if (!check_filter_add (props, error))
+                return FALSE;
+            g_clear_pointer (&props->tmp_packet_mask, g_free);
+        }
+        props->tmp_packet_mask = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "filter-id") == 0) {
+        if (props->tmp_filter_id) {
+            if (!check_filter_add (props, error))
+                return FALSE;
+            g_clear_pointer (&props->tmp_filter_id, g_free);
+        }
+        props->tmp_filter_id = g_strdup (value);
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+set_ip_packet_filters_parse (const gchar                  *str,
+                             SetIpPacketFiltersProperties *props,
+                             MbimDevice                   *device)
+{
+    g_auto(GStrv)     split = NULL;
+    g_autoptr(GError) error = NULL;
+
+    if (!mbimcli_parse_key_value_string (str,
+                                         &error,
+                                         set_ip_packet_filters_properties_handle,
+                                         props)) {
+        g_printerr ("error: couldn't parse input string: %s\n", error->message);
+        return FALSE;
+    }
+
+    if ((props->tmp_packet_filter || props->tmp_packet_mask) &&
+        !check_filter_add (props, &error)) {
+        g_printerr ("error: failed to add last packet filter item: %s\n", error->message);
+        return FALSE;
+    }
 
     return TRUE;
 }
@@ -2357,11 +2581,62 @@ mbimcli_basic_connect_run (MbimDevice   *device,
             return;
         }
 
-        request = (mbim_message_ip_packet_filters_query_new (
-                       session_id,
-                       0, /* packet_filters_count */
-                       NULL, /* packet_filters */
-                       &error));
+        if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+            g_debug ("Asychronously querying v3.0 IP packet filter......");
+            request = mbim_message_ms_basic_connect_v3_ip_packet_filters_query_new (session_id, 0, NULL, &error);
+        } else {
+            g_debug ("Asychronously querying v1.0 IP packet filter......");
+            request = mbim_message_ip_packet_filters_query_new (session_id, 0, NULL, &error);
+        }
+
+        if (!request) {
+            g_printerr ("error: couldn't create IP packet filters request: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)ip_packet_filters_ready,
+                             NULL);
+        return;
+    }
+
+    /* Set IP packet filters? */
+    if (set_ip_packet_filters_str) {
+        g_auto(SetIpPacketFiltersProperties) props = {
+            .v3 = FALSE,
+            .session_id = 0,
+            .array = NULL,
+        };
+
+        props.v3 = mbim_device_check_ms_mbimex_version (device, 3, 0);
+        if (props.v3)
+            props.array = g_ptr_array_new_with_free_func ((GDestroyNotify)mbim_packet_filter_v3_free);
+        else
+            props.array = g_ptr_array_new_with_free_func ((GDestroyNotify)mbim_packet_filter_free);
+
+        if (!set_ip_packet_filters_parse (set_ip_packet_filters_str, &props, device)) {
+            shutdown (FALSE);
+            return;
+        }
+
+        if (mbim_device_check_ms_mbimex_version (device, 3, 0)) {
+            g_debug ("Asychronously set v3.0 IP packet filter......");
+            request = mbim_message_ms_basic_connect_v3_ip_packet_filters_set_new (props.session_id,
+                                                                                  props.array->len,
+                                                                                  (const MbimPacketFilterV3 *const *)props.array->pdata,
+                                                                                  &error);
+        } else {
+            g_debug ("Asychronously set v1.0 IP packet filter......");
+            request = mbim_message_ip_packet_filters_set_new (props.session_id,
+                                                              props.array->len,
+                                                              (const MbimPacketFilter *const *)props.array->pdata,
+                                                              &error);
+        }
+
         if (!request) {
             g_printerr ("error: couldn't create IP packet filters request: %s\n", error->message);
             shutdown (FALSE);

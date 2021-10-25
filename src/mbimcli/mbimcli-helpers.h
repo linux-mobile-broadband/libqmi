@@ -23,6 +23,11 @@ gboolean mbimcli_read_uint8_from_bcd_string (const gchar *str,
 gboolean mbimcli_read_boolean_from_string (const gchar *value,
                                            gboolean    *out);
 
+guint8  *mbimcli_read_buffer_from_string (const gchar  *hex,
+                                          gssize        len,
+                                          gsize        *out_len,
+                                          GError      **error);
+
 gboolean mbimcli_print_ip_config (MbimDevice *device,
                                   MbimMessage *response,
                                   GError **error);

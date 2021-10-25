@@ -92,6 +92,78 @@ mbimcli_read_boolean_from_string (const gchar *value,
     return FALSE;
 }
 
+/* Based on ModemManager's mm_utils_hexstr2bin() */
+
+static gint
+hex2num (gchar c)
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+    return -1;
+}
+
+static gint
+hex2byte (const gchar *hex)
+{
+    gint a, b;
+
+    a = hex2num (*hex++);
+    if (a < 0)
+        return -1;
+    b = hex2num (*hex++);
+    if (b < 0)
+        return -1;
+    return (a << 4) | b;
+}
+
+guint8 *
+mbimcli_read_buffer_from_string (const gchar  *hex,
+                                 gssize        len,
+                                 gsize        *out_len,
+                                 GError      **error)
+{
+    const gchar *ipos = hex;
+    g_autofree guint8 *buf = NULL;
+    gssize i;
+    gint a;
+    guint8 *opos;
+
+    if (len < 0)
+        len = strlen (hex);
+
+    if (len == 0) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Hex conversion failed: empty string");
+        return NULL;
+    }
+
+    /* Length must be a multiple of 2 */
+    if ((len % 2) != 0) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Hex conversion failed: invalid input length");
+        return NULL;
+    }
+
+    opos = buf = g_malloc0 (len / 2);
+    for (i = 0; i < len; i += 2) {
+        a = hex2byte (ipos);
+        if (a < 0) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Hex byte conversion from '%c%c' failed",
+                         ipos[0], ipos[1]);
+            return NULL;
+        }
+        *opos++ = (guint8)a;
+        ipos += 2;
+    }
+    *out_len = len / 2;
+    return g_steal_pointer (&buf);
+}
+
 gboolean
 mbimcli_print_ip_config (MbimDevice   *device,
                          MbimMessage  *response,
