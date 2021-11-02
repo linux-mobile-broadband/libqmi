@@ -1797,9 +1797,9 @@ typedef enum { /*< since=1.28 >*/
  *
  * Radio switch state.
  *
- * Since: 1.28
+ * Since: 1.26.2
  */
-typedef enum { /*< since=1.28 >*/
+typedef enum { /*< since=1.26.2 >*/
     MBIM_QUECTEL_RADIO_SWITCH_STATE_OFF        = 0,
     MBIM_QUECTEL_RADIO_SWITCH_STATE_ON         = 1,
     MBIM_QUECTEL_RADIO_SWITCH_STATE_FCC_LOCKED = 4,

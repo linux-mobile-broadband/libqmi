@@ -7,7 +7,7 @@
 
   { "name"         : "Radio State",
     "type"         : "Command",
-    "since"        : "1.28",
+    "since"        : "1.26.2",
     "set"          : [ { "name"          : "RadioState",
                          "format"        : "guint32",
                          "public-format" : "MbimQuectelRadioSwitchState" } ],

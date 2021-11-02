@@ -110,7 +110,7 @@ gboolean mbim_uuid_from_printable (const gchar *str,
  * @MBIM_SERVICE_MS_SAR: Microsoft SAR service. Since 1.26.
  * @MBIM_SERVICE_QDU: QDU firmware update service. Since 1.26.
  * @MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS: Microsoft UICC Low Level Access service. Since 1.26.
- * @MBIM_SERVICE_QUECTEL: Quectel specific operations. Since 1.28.
+ * @MBIM_SERVICE_QUECTEL: Quectel specific operations. Since 1.26.2.
  * @MBIM_SERVICE_LAST: Internal value.
  *
  * Enumeration of the generic MBIM services.
@@ -347,7 +347,7 @@ typedef enum { /*< since=1.0 >*/
  *
  * Returns: (transfer none): a #MbimUuid.
  *
- * Since: 1.28
+ * Since: 1.26.2
  */
 #define MBIM_UUID_QUECTEL mbim_uuid_from_service (MBIM_SERVICE_QUECTEL)
 

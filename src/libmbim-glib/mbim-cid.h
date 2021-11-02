@@ -395,9 +395,9 @@ typedef enum { /*< since=1.26 >*/
  *
  * MBIM commands in the %MBIM_SERVICE_QUECTEL service.
  *
- * Since: 1.28
+ * Since: 1.26.2
  */
-typedef enum { /*< since=1.28 >*/
+typedef enum { /*< since=1.26.2 >*/
     MBIM_CID_QUECTEL_UNKNOWN     = 0,
     MBIM_CID_QUECTEL_RADIO_STATE = 1,
 } MbimCidQuectel;
