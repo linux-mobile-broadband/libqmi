@@ -2387,7 +2387,7 @@ device_send (MbimDevice   *self,
         g_byte_array_append (full_fragment, (guint8 *)&fragments[i].header, sizeof (fragments[i].header));
         g_byte_array_append (full_fragment, (guint8 *)&fragments[i].fragment_header, sizeof (fragments[i].fragment_header));
 
-        /* Build dummy message with only headers for printable purposes only */
+        /* Build placeholder message with only headers for printable purposes only */
         if (mbim_utils_get_traces_enabled ())
             printable_headers = mbim_message_get_printable_full ((MbimMessage *)full_fragment,
                                                                  self->priv->ms_mbimex_version_major,
