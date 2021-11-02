@@ -413,30 +413,50 @@ MbimService mbim_uuid_to_service (const MbimUuid *uuid);
  * MbimContextType:
  * @MBIM_CONTEXT_TYPE_INVALID: Invalid context type.
  * @MBIM_CONTEXT_TYPE_NONE: Context not yet provisioned.
- * @MBIM_CONTEXT_TYPE_INTERNET: Connection to the Internet.
- * @MBIM_CONTEXT_TYPE_VPN: Connection to a VPN.
- * @MBIM_CONTEXT_TYPE_VOICE: Connection to a VoIP service.
- * @MBIM_CONTEXT_TYPE_VIDEO_SHARE: Connection to a video sharing service.
- * @MBIM_CONTEXT_TYPE_PURCHASE: Connection to an over-the-air activation site.
- * @MBIM_CONTEXT_TYPE_IMS: Connection to IMS.
- * @MBIM_CONTEXT_TYPE_MMS: Connection to MMS.
- * @MBIM_CONTEXT_TYPE_LOCAL: A local.
+ * @MBIM_CONTEXT_TYPE_INTERNET: Context representing a connection to the
+ *  Internet.
+ * @MBIM_CONTEXT_TYPE_VPN: Context representing a connection to a a private
+ *  network (e.g. VPN to a corporate network).
+ * @MBIM_CONTEXT_TYPE_VOICE: Context representing a connection to a VoIP service.
+ * @MBIM_CONTEXT_TYPE_VIDEO_SHARE: Context representing a connection to a video
+ *  sharing service.
+ * @MBIM_CONTEXT_TYPE_PURCHASE: Context representing a connection to an
+ *  OTA (over-the-air) activation site.
+ * @MBIM_CONTEXT_TYPE_IMS: Context representing a connection to IMS.
+ * @MBIM_CONTEXT_TYPE_MMS: Context representing a connection to MMS.
+ * @MBIM_CONTEXT_TYPE_LOCAL: Context representing a connection which is
+ *  terminated at the device. No IP traffic sent over the air.
+ * @MBIM_CONTEXT_TYPE_ADMIN: Context used for administrative purposes, such as
+ *  device management (MS MBIMEx). Since 1.28.
+ * @MBIM_CONTEXT_TYPE_APP: Context used for certain applications allowed by
+ *  mobile operators (MS MBIMEx). Since 1.28.
+ * @MBIM_CONTEXT_TYPE_XCAP: Context used for XCAP provisioning on IMS services
+ *  (MS MBIMEx). Since 1.28.
+ * @MBIM_CONTEXT_TYPE_TETHERING: Context used for mobile hotspot tethering
+ *  (MS MBIMEx). Since 1.28.
+ * @MBIM_CONTEXT_TYPE_EMERGENCY_CALLING: Context used for IMS emergency calling
+ *  (MS MBIMEx). Since 1.28.
  *
  * Enumeration of the generic MBIM context types.
  *
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
-    MBIM_CONTEXT_TYPE_INVALID     = 0,
-    MBIM_CONTEXT_TYPE_NONE        = 1,
-    MBIM_CONTEXT_TYPE_INTERNET    = 2,
-    MBIM_CONTEXT_TYPE_VPN         = 3,
-    MBIM_CONTEXT_TYPE_VOICE       = 4,
-    MBIM_CONTEXT_TYPE_VIDEO_SHARE = 5,
-    MBIM_CONTEXT_TYPE_PURCHASE    = 6,
-    MBIM_CONTEXT_TYPE_IMS         = 7,
-    MBIM_CONTEXT_TYPE_MMS         = 8,
-    MBIM_CONTEXT_TYPE_LOCAL       = 9,
+    MBIM_CONTEXT_TYPE_INVALID           = 0,
+    MBIM_CONTEXT_TYPE_NONE              = 1,
+    MBIM_CONTEXT_TYPE_INTERNET          = 2,
+    MBIM_CONTEXT_TYPE_VPN               = 3,
+    MBIM_CONTEXT_TYPE_VOICE             = 4,
+    MBIM_CONTEXT_TYPE_VIDEO_SHARE       = 5,
+    MBIM_CONTEXT_TYPE_PURCHASE          = 6,
+    MBIM_CONTEXT_TYPE_IMS               = 7,
+    MBIM_CONTEXT_TYPE_MMS               = 8,
+    MBIM_CONTEXT_TYPE_LOCAL             = 9,
+    MBIM_CONTEXT_TYPE_ADMIN             = 10,
+    MBIM_CONTEXT_TYPE_APP               = 11,
+    MBIM_CONTEXT_TYPE_XCAP              = 12,
+    MBIM_CONTEXT_TYPE_TETHERING         = 13,
+    MBIM_CONTEXT_TYPE_EMERGENCY_CALLING = 14,
 } MbimContextType;
 
 /**
