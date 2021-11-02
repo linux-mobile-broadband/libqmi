@@ -396,18 +396,18 @@ typedef enum { /*< since=1.2 >*/
 
 /**
  * MbimAccessMediaType:
- * @MBIM_ACCESS_MEDIA_TYPE_UNKNOWN: Unknown.
- * @MBIM_ACCESS_MEDIA_TYPE_3GPP: 3GPP.
+ * @MBIM_ACCESS_MEDIA_TYPE_UNKNOWN: None, or unknown.
+ * @MBIM_ACCESS_MEDIA_TYPE_3GPP: 3GPP only.
  * @MBIM_ACCESS_MEDIA_TYPE_3GPP_PREFERRED: 3GPP Preferred.
  *
- * Nw BlackList State.
+ * Access type preference.
  *
  * Since: 1.28
  */
 typedef enum { /*< since=1.28 >*/
-    MBIM_ACCESS_MEDIA_TYPE_UNKNOWN             = 0,
-    MBIM_ACCESS_MEDIA_TYPE_3GPP                = 1,
-    MBIM_ACCESS_MEDIA_TYPE_3GPP_PREFERRED      = 2
+    MBIM_ACCESS_MEDIA_TYPE_UNKNOWN        = 0,
+    MBIM_ACCESS_MEDIA_TYPE_3GPP           = 1,
+    MBIM_ACCESS_MEDIA_TYPE_3GPP_PREFERRED = 2,
 } MbimAccessMediaType;
 
 /*****************************************************************************/
