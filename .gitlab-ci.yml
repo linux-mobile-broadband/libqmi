@@ -25,7 +25,7 @@ build container:
   - .common_variables
   stage: container prep
   only:
-    - master
+    - main
     - branches
     - merge_requests
     - tags
@@ -37,7 +37,7 @@ build-no-qrtr-no-mbim-no-rmnet-no-introspection:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
@@ -52,7 +52,7 @@ build-no-rmnet:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
@@ -79,7 +79,7 @@ build-no-qrtr:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
@@ -100,7 +100,7 @@ build-no-qrtr-no-introspection:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
@@ -121,7 +121,7 @@ build-no-mbim:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
@@ -142,7 +142,7 @@ build-no-mbim-no-introspection:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
@@ -163,7 +163,7 @@ build-collection-minimal:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
@@ -178,7 +178,7 @@ build-collection-basic:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
@@ -193,7 +193,7 @@ build-release:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
