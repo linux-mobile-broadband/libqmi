@@ -24,7 +24,7 @@ build container:
   - .common_variables
   stage: container prep
   only:
-    - master
+    - main
     - branches
     - merge_requests
     - tags
@@ -36,7 +36,7 @@ build-no-introspection:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
@@ -51,7 +51,7 @@ build-introspection:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
@@ -66,7 +66,7 @@ build-release:
   - .fdo.distribution-image@ubuntu
   - .common_variables
   only:
-    - master
+    - main
     - merge_requests
     - tags
     - schedules
