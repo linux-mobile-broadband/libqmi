@@ -223,7 +223,12 @@ if enable_gtk_doc
   subdir('docs/reference/libqmi-glib')
 endif
 
-help2man = find_program('help2man', required: false)
+help2man = find_program(
+  'help2man',
+# When meson >= 0.59 is popular enough, replace with
+# required: get_option('man').require(meson.can_run_host_binaries())
+  required: get_option('man'),
+)
 subdir('docs/man', if_found: help2man)
 
 configure_file(
@@ -243,6 +248,7 @@ summary({
   'Documentation': enable_gtk_doc,
   'bash completion': enable_bash_completion,
   'gobject introspection': enable_gir,
+  'man pages': help2man.found(),
 }, section: 'Build')
 
 summary({
