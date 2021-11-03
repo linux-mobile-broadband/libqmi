@@ -57,7 +57,7 @@ qfu_firehose_message_build_configure (guint8 *buffer,
                 "<configure MemoryName=\"eMMC\" Verbose=\"0\" AlwaysValidate=\"0\" MaxDigestTableSizeInBytes=\"8192\" MaxPayloadSizeToTargetInBytes=\"%u\" ZlpAwareHost=\"0\" SkipStorageInit=\"0\" TargetName=\"8960\" />"
                 "%s",
                 FIREHOSE_MESSAGE_HEADER,
-                /* if not a specific value given, pass some dummy big value; we expect the modem
+                /* if not a specific value given, pass some placeholder big value; we expect the modem
                  * to return a NAK with the correct value to use after that. */
                 max_payload_size_to_target_in_bytes ? max_payload_size_to_target_in_bytes : 1048576,
                 FIREHOSE_MESSAGE_TRAILER);
