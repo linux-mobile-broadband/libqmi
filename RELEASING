@@ -63,7 +63,7 @@ The libqmi releases are generated using the GNU autotools.
 
 10.1) For major releases:
      * Fork new stable branch (e.g. qmi-${MAJOR}-${MINOR})
-     * Post-release version bump in the master branch, increment qmi_minor_version.
+     * Post-release version bump in the main branch, increment qmi_minor_version.
      * Post-release version bump in the stable branch, increment qmi_micro_version.
 
 10.2) For stable branch releases:
