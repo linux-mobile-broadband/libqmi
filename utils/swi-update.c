@@ -922,7 +922,7 @@ int main(int argc, char *argv[])
 /* FIXME: should do the following for a complete image upload*
  *
  *  For CWE images:
- *    - verify image sanity and retrive model/version data for next step if applicable
+ *    - verify image and retrive model/version data for next step if applicable
  *    - if application mode:
  *       + verify qmi model/version matching image
  *       + check usb sysfs (serial++) to match against bootloader mode
