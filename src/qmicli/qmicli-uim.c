@@ -311,9 +311,9 @@ set_pin_protection_input_create (const gchar *str)
         qmicli_read_enable_disable_from_string (split[1], &enable_disable) &&
         qmicli_read_non_empty_string (split[2], "current PIN", &current_pin)) {
         GError *error = NULL;
-        GArray *dummy_aid;
+        GArray *placeholder_aid;
 
-        dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+        placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
 
         input = qmi_message_uim_set_pin_protection_input_new ();
         if (!qmi_message_uim_set_pin_protection_input_set_info (
@@ -325,7 +325,7 @@ set_pin_protection_input_create (const gchar *str)
             !qmi_message_uim_set_pin_protection_input_set_session (
                 input,
                 QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-                dummy_aid, /* ignored */
+                placeholder_aid, /* ignored */
                 &error)) {
             g_printerr ("error: couldn't create input data bundle: '%s'\n",
                         error->message);
@@ -333,7 +333,7 @@ set_pin_protection_input_create (const gchar *str)
             qmi_message_uim_set_pin_protection_input_unref (input);
             input = NULL;
         }
-        g_array_unref (dummy_aid);
+        g_array_unref (placeholder_aid);
     }
     g_strfreev (split);
 
@@ -407,9 +407,9 @@ verify_pin_input_create (const gchar *str)
     if (qmicli_read_uim_pin_id_from_string (split[0], &pin_id) &&
         qmicli_read_non_empty_string (split[1], "current PIN", &current_pin)) {
         GError *error = NULL;
-        GArray *dummy_aid;
+        GArray *placeholder_aid;
 
-        dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+        placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
 
         input = qmi_message_uim_verify_pin_input_new ();
         if (!qmi_message_uim_verify_pin_input_set_info (
@@ -420,7 +420,7 @@ verify_pin_input_create (const gchar *str)
             !qmi_message_uim_verify_pin_input_set_session (
                 input,
                 QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-                dummy_aid, /* ignored */
+                placeholder_aid, /* ignored */
                 &error)) {
             g_printerr ("error: couldn't create input data bundle: '%s'\n",
                         error->message);
@@ -428,7 +428,7 @@ verify_pin_input_create (const gchar *str)
             qmi_message_uim_verify_pin_input_unref (input);
             input = NULL;
         }
-        g_array_unref (dummy_aid);
+        g_array_unref (placeholder_aid);
     }
     g_strfreev (split);
 
@@ -504,9 +504,9 @@ unblock_pin_input_create (const gchar *str)
         qmicli_read_non_empty_string (split[1], "PUK", &puk) &&
         qmicli_read_non_empty_string (split[2], "new PIN", &new_pin)) {
         GError *error = NULL;
-        GArray *dummy_aid;
+        GArray *placeholder_aid;
 
-        dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+        placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
 
         input = qmi_message_uim_unblock_pin_input_new ();
         if (!qmi_message_uim_unblock_pin_input_set_info (
@@ -518,7 +518,7 @@ unblock_pin_input_create (const gchar *str)
             !qmi_message_uim_unblock_pin_input_set_session (
                 input,
                 QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-                dummy_aid, /* ignored */
+                placeholder_aid, /* ignored */
                 &error)) {
             g_printerr ("error: couldn't create input data bundle: '%s'\n",
                         error->message);
@@ -526,7 +526,7 @@ unblock_pin_input_create (const gchar *str)
             qmi_message_uim_unblock_pin_input_unref (input);
             input = NULL;
         }
-        g_array_unref (dummy_aid);
+        g_array_unref (placeholder_aid);
     }
     g_strfreev (split);
 
@@ -602,9 +602,9 @@ change_pin_input_create (const gchar *str)
         qmicli_read_non_empty_string (split[1], "old PIN", &old_pin) &&
         qmicli_read_non_empty_string (split[2], "new PIN", &new_pin)) {
         GError *error = NULL;
-        GArray *dummy_aid;
+        GArray *placeholder_aid;
 
-        dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+        placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
 
         input = qmi_message_uim_change_pin_input_new ();
         if (!qmi_message_uim_change_pin_input_set_info (
@@ -616,7 +616,7 @@ change_pin_input_create (const gchar *str)
             !qmi_message_uim_change_pin_input_set_session (
                 input,
                 QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-                dummy_aid, /* ignored */
+                placeholder_aid, /* ignored */
                 &error)) {
             g_printerr ("error: couldn't create input data bundle: '%s'\n",
                         error->message);
@@ -624,7 +624,7 @@ change_pin_input_create (const gchar *str)
             qmi_message_uim_change_pin_input_unref (input);
             input = NULL;
         }
-        g_array_unref (dummy_aid);
+        g_array_unref (placeholder_aid);
     }
     g_strfreev (split);
 
@@ -1721,18 +1721,18 @@ read_transparent_build_input (const gchar *file_path_str)
     QmiMessageUimReadTransparentInput *input;
     guint16 file_id = 0;
     GArray *file_path = NULL;
-    GArray *dummy_aid;
+    GArray *placeholder_aid;
 
     if (!get_sim_file_id_and_path (file_path_str, &file_id, &file_path))
         return NULL;
 
-    dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+    placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
 
     input = qmi_message_uim_read_transparent_input_new ();
     qmi_message_uim_read_transparent_input_set_session (
         input,
         QMI_UIM_SESSION_TYPE_PRIMARY_GW_PROVISIONING,
-        dummy_aid, /* ignored */
+        placeholder_aid, /* ignored */
         NULL);
     qmi_message_uim_read_transparent_input_set_file (
         input,
@@ -1741,7 +1741,7 @@ read_transparent_build_input (const gchar *file_path_str)
         NULL);
     qmi_message_uim_read_transparent_input_set_read_information (input, 0, 0, NULL);
     g_array_unref (file_path);
-    g_array_unref (dummy_aid);
+    g_array_unref (placeholder_aid);
     return input;
 }
 
@@ -1893,7 +1893,7 @@ read_record_input_create (const gchar *str)
     };
     guint16 file_id = 0;
     GArray *file_path = NULL;
-    GArray *dummy_aid;
+    GArray *placeholder_aid;
 
     if (!qmicli_parse_key_value_string (str,
                                         &error,
@@ -1909,14 +1909,14 @@ read_record_input_create (const gchar *str)
     if (!get_sim_file_id_and_path_with_separator (props.file, &file_id, &file_path, "-"))
         goto out;
 
-    dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+    placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
 
     input = qmi_message_uim_read_record_input_new ();
 
     qmi_message_uim_read_record_input_set_session (
         input,
         QMI_UIM_SESSION_TYPE_PRIMARY_GW_PROVISIONING,
-        dummy_aid, /* ignored */
+        placeholder_aid, /* ignored */
         NULL);
     qmi_message_uim_read_record_input_set_file (
         input,
@@ -1929,7 +1929,7 @@ read_record_input_create (const gchar *str)
         props.record_length,
         NULL);
 
-    g_array_unref (dummy_aid);
+    g_array_unref (placeholder_aid);
 
 out:
     free (props.file);
@@ -2089,25 +2089,25 @@ get_file_attributes_build_input (const gchar *file_path_str)
     QmiMessageUimGetFileAttributesInput *input;
     guint16 file_id = 0;
     GArray *file_path = NULL;
-    GArray *dummy_aid;
+    GArray *placeholder_aid;
 
     if (!get_sim_file_id_and_path (file_path_str, &file_id, &file_path))
         return NULL;
 
-    dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+    placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
 
     input = qmi_message_uim_get_file_attributes_input_new ();
     qmi_message_uim_get_file_attributes_input_set_session (
         input,
         QMI_UIM_SESSION_TYPE_PRIMARY_GW_PROVISIONING,
-        dummy_aid, /* ignored */
+        placeholder_aid, /* ignored */
         NULL);
     qmi_message_uim_get_file_attributes_input_set_file (
         input,
         file_id,
         file_path,
         NULL);
-    g_array_unref (dummy_aid);
+    g_array_unref (placeholder_aid);
     g_array_unref (file_path);
     return input;
 }
@@ -2148,15 +2148,15 @@ refresh_complete (QmiClientUim *client,
                   gboolean success)
 {
     QmiMessageUimRefreshCompleteInput *refresh_complete_input;
-    GArray *dummy_aid;
+    GArray *placeholder_aid;
 
-    dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+    placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
 
     refresh_complete_input = qmi_message_uim_refresh_complete_input_new ();
     qmi_message_uim_refresh_complete_input_set_session (
         refresh_complete_input,
         QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-        dummy_aid, /* ignored */
+        placeholder_aid, /* ignored */
         NULL);
     qmi_message_uim_refresh_complete_input_set_info (
         refresh_complete_input,
@@ -2171,7 +2171,7 @@ refresh_complete (QmiClientUim *client,
         (GAsyncReadyCallback) refresh_complete_ready,
         NULL);
     qmi_message_uim_refresh_complete_input_unref (refresh_complete_input);
-    g_array_unref (dummy_aid);
+    g_array_unref (placeholder_aid);
 }
 
 static void
@@ -2280,7 +2280,7 @@ static void
 register_refresh_events (gchar **file_path_array)
 {
     QmiMessageUimRefreshRegisterInput *refresh_input;
-    GArray *dummy_aid;
+    GArray *placeholder_aid;
     GArray *file_list;
     QmiMessageUimRefreshRegisterInputInfoFilesElement file_element;
     guint i;
@@ -2295,12 +2295,12 @@ register_refresh_events (gchar **file_path_array)
         file_path_array++;
     }
 
-    dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+    placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
     refresh_input = qmi_message_uim_refresh_register_input_new ();
     qmi_message_uim_refresh_register_input_set_session (
         refresh_input,
         QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-        dummy_aid, /* ignored */
+        placeholder_aid, /* ignored */
         NULL);
     qmi_message_uim_refresh_register_input_set_info (
         refresh_input,
@@ -2317,7 +2317,7 @@ register_refresh_events (gchar **file_path_array)
         (GAsyncReadyCallback) register_refresh_events_ready,
         NULL);
     qmi_message_uim_refresh_register_input_unref (refresh_input);
-    g_array_unref (dummy_aid);
+    g_array_unref (placeholder_aid);
 
 out:
     for (i = 0; i < file_list->len; i++) {
@@ -2374,14 +2374,14 @@ static void
 register_refresh_all_events (void)
 {
     QmiMessageUimRefreshRegisterAllInput *refresh_all_input;
-    GArray *dummy_aid;
+    GArray *placeholder_aid;
 
     refresh_all_input = qmi_message_uim_refresh_register_all_input_new ();
-    dummy_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
+    placeholder_aid = g_array_new (FALSE, FALSE, sizeof (guint8));
     qmi_message_uim_refresh_register_all_input_set_session (
         refresh_all_input,
         QMI_UIM_SESSION_TYPE_CARD_SLOT_1,
-        dummy_aid, /* ignored */
+        placeholder_aid, /* ignored */
         NULL);
 
     qmi_message_uim_refresh_register_all_input_set_info (
@@ -2396,7 +2396,7 @@ register_refresh_all_events (void)
         (GAsyncReadyCallback) register_refresh_all_events_ready,
         NULL);
     qmi_message_uim_refresh_register_all_input_unref (refresh_all_input);
-    g_array_unref (dummy_aid);
+    g_array_unref (placeholder_aid);
 }
 
 #endif /* HAVE_QMI_MESSAGE_UIM_REFRESH_REGISTER_ALL */
