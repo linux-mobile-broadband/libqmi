@@ -167,7 +167,10 @@ endif
 config_h.set('MBIM_USERNAME_ENABLED', enable_mbim_username)
 
 # introspection support
-enable_gir = dependency('gobject-introspection-1.0', version: '>= 0.9.6', required: get_option('introspection')).found()
+enable_gir = get_option('introspection')
+if enable_gir
+  dependency('gobject-introspection-1.0', version: '>= 0.9.6')
+endif
 
 version_conf = {
   'MBIM_MAJOR_VERSION': mbim_major_version,
@@ -184,13 +187,10 @@ if enable_gtk_doc
   subdir('docs/reference/libmbim-glib')
 endif
 
-help2man = find_program(
-  'help2man',
-# When meson >= 0.59 is popular enough, replace with
-# required: get_option('man').require(meson.can_run_host_binaries())
-  required: get_option('man'),
-)
-subdir('docs/man', if_found: help2man)
+enable_man = get_option('man')
+if enable_man
+  subdir('docs/man')
+endif
 
 configure_file(
   output: 'config.h',
@@ -203,7 +203,7 @@ summary({
   'Documentation': enable_gtk_doc,
   'bash completion': enable_bash_completion,
   'gobject introspection': enable_gir,
-  'man pages': help2man.found(),
+  'man pages': enable_man,
 }, section: 'Build')
 
 summary({

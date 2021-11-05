@@ -12,11 +12,11 @@ stages:
   variables:
     FDO_UPSTREAM_REPO: mobile-broadband/libmbim
     FDO_DISTRIBUTION_VERSION: '20.04'
-    FDO_DISTRIBUTION_TAG: '2021-10-03.1'
+    FDO_DISTRIBUTION_TAG: '2021-11-05.1'
     FDO_DISTRIBUTION_PACKAGES: ca-certificates git gcc libgirepository1.0-dev
                                libglib2.0-dev gtk-doc-tools libglib2.0-doc
                                gobject-introspection bash-completion valac
-                               meson ninja-build
+                               meson ninja-build help2man
 
 build container:
   extends:
@@ -41,7 +41,7 @@ build-no-introspection:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dintrospection=disabled
+    - meson setup build --prefix=/usr -Dwerror=true -Dintrospection=false
     - ninja -C build
     - ninja -C build install
 
@@ -56,7 +56,7 @@ build-introspection:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dintrospection=enabled
+    - meson setup build --prefix=/usr -Dwerror=true
     - ninja -C build
     - ninja -C build install
 
@@ -71,7 +71,7 @@ build-release:
     - tags
     - schedules
   script:
-    - meson setup build --buildtype=release --prefix=/usr -Dwerror=true -Dintrospection=enabled
+    - meson setup build --buildtype=release --prefix=/usr -Dwerror=true
     - ninja -C build
     - ninja -C build install
     - ninja -C build dist
