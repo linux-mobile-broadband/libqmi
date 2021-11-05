@@ -151,8 +151,12 @@ enable_firmware_update = get_option('firmware_update')
 assert(not enable_firmware_update or qmi_collection_name != 'minimal', 'Cannot build qmi-firmware-update when \'minimal\' collection enabled, use at least the \'basic\' collection instead.')
 
 # udev support is optional, enabled by default
-gudev_dep = dependency((enable_firmware_update ? 'gudev-1.0' : ''), version: '>= 232', required: get_option('udev'))
-config_h.set('WITH_UDEV', gudev_dep.found())
+enable_udev = get_option('udev')
+if enable_udev
+  assert(enable_firmware_update, 'Cannot build udev support without firmware_update support')
+  gudev_dep = dependency('gudev-1.0', version: '>= 232')
+endif
+config_h.set('WITH_UDEV', enable_udev)
 
 enable_bash_completion = get_option('bash_completion')
 if enable_bash_completion
@@ -165,7 +169,7 @@ if enable_bash_completion
 endif
 
 # rmnet link management support
-enable_rmnet = not get_option('rmnet').disabled()
+enable_rmnet = get_option('rmnet')
 config_h.set('RMNET_SUPPORT_ENABLED', enable_rmnet)
 
 # runtime MM check is optional, enabled by default
@@ -188,13 +192,17 @@ endif
 config_h.set('QMI_USERNAME_ENABLED', enable_qmi_username)
 
 # MBIM QMUX service support
-mbim_glib_dep = dependency('mbim-glib', version: '>= 1.18.0', required: get_option('mbim_qmux'))
-enable_mbim_qmux = mbim_glib_dep.found()
+enable_mbim_qmux = get_option('mbim_qmux')
+if enable_mbim_qmux
+  mbim_glib_dep = dependency('mbim-glib', version: '>= 1.18.0')
+endif
 config_h.set('MBIM_QMUX_ENABLED', enable_mbim_qmux)
 
 # QRTR support
-qrtr_glib_dep = dependency('qrtr-glib', version: '>= 1.0.0', required: get_option('qrtr'))
-enable_qrtr = qrtr_glib_dep.found()
+enable_qrtr = get_option('qrtr')
+if enable_qrtr
+  qrtr_glib_dep = dependency('qrtr-glib', version: '>= 1.0.0')
+endif
 config_h.set10('QMI_QRTR_SUPPORTED', enable_qrtr)
 
 version_conf = configuration_data()
@@ -207,7 +215,10 @@ version_conf.set10('QMI_QRTR_SUPPORTED', enable_qrtr)
 version_conf.set10('QMI_RMNET_SUPPORTED', enable_rmnet)
 
 # introspection support
-enable_gir = dependency('gobject-introspection-1.0', version: '>= 0.9.6', required: get_option('introspection')).found()
+enable_gir = get_option('introspection')
+if enable_gir
+  dependency('gobject-introspection-1.0', version: '>= 0.9.6')
+endif
 
 test_env = {
   'G_DEBUG': 'gc-friendly',
@@ -223,13 +234,10 @@ if enable_gtk_doc
   subdir('docs/reference/libqmi-glib')
 endif
 
-help2man = find_program(
-  'help2man',
-# When meson >= 0.59 is popular enough, replace with
-# required: get_option('man').require(meson.can_run_host_binaries())
-  required: get_option('man'),
-)
-subdir('docs/man', if_found: help2man)
+enable_man = get_option('man')
+if enable_man
+  subdir('docs/man')
+endif
 
 configure_file(
   output: 'config.h',
@@ -242,7 +250,7 @@ summary({
   'Documentation': enable_gtk_doc,
   'bash completion': enable_bash_completion,
   'gobject introspection': enable_gir,
-  'man pages': help2man.found(),
+  'man pages': enable_man,
 }, section: 'Build')
 
 summary({

@@ -5,17 +5,17 @@ option('collection', type: 'combo', choices: ['minimal', 'basic', 'full'], value
 
 option('firmware_update', type: 'boolean', value: true, description: 'enable compilation of `qmi-firmware-update')
 
-option('mbim_qmux', type: 'feature', value: 'auto', description: 'enable support for QMI over MBIM QMUX service')
+option('mbim_qmux', type: 'boolean', value: true, description: 'enable support for QMI over MBIM QMUX service')
 option('mm_runtime_check', type: 'boolean', value: true, description: 'build ModemManager runtime check support')
 option('qmi_username', type: 'string', value: '', description: 'user allowed to access QMI devices')
-option('qrtr', type: 'feature', value: 'auto', description: 'enable support for QRTR protocol')
-option('rmnet', type: 'feature', value: 'auto', description: 'enable support for RMNET link management')
+option('qrtr', type: 'boolean', value: true, description: 'enable support for QRTR protocol')
+option('rmnet', type: 'boolean', value: true, description: 'enable support for RMNET link management')
 
-option('udev', type: 'feature', value: 'auto', description: 'build udev support')
+option('udev', type: 'boolean', value: true, description: 'build udev support')
 option('udevdir', type: 'string', value: '', description: 'where udev base directory is')
 
-option('introspection', type: 'feature', value: 'auto', description: 'build introspection support')
+option('introspection', type: 'boolean', value: true, description: 'build introspection support')
 option('gtk_doc', type: 'boolean', value: false, description: 'use gtk-doc to build documentation')
-option('man', type: 'feature', value: 'auto', description: 'build man pages using help2man')
+option('man', type: 'boolean', value: true, description: 'build man pages using help2man')
 
 option('bash_completion', type: 'boolean', value: true, description: 'install bash completion files')
