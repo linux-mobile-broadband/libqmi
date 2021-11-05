@@ -14,12 +14,13 @@ stages:
     LIBQRTR_BRANCH: qrtr-1-0
     FDO_UPSTREAM_REPO: mobile-broadband/libqmi
     FDO_DISTRIBUTION_VERSION: '20.04'
-    FDO_DISTRIBUTION_TAG: '2021-09-13.1'
+    FDO_DISTRIBUTION_TAG: '2021-11-05.1.QMI-1-30'
     FDO_DISTRIBUTION_PACKAGES: ca-certificates git gcc autoconf automake libtool
                                libgirepository1.0-dev libglib2.0-dev autopoint
                                gtk-doc-tools libglib2.0-doc libgudev-1.0-dev
                                gobject-introspection valac bash-completion meson
                                ninja-build autoconf-archive python-is-python3
+                               help2man
 
 build container:
   extends:
@@ -44,7 +45,7 @@ build-meson-no-qrtr-no-mbim-no-rmnet-no-introspection:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=disabled -Drmnet=disabled
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false
     - ninja -C build
     - ninja -C build install
 
@@ -73,7 +74,7 @@ build-meson-no-rmnet:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=enabled -Drmnet=disabled
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Drmnet=false
     - ninja -C build
     - ninja -C build install
 
@@ -95,7 +96,7 @@ build-meson-no-qrtr:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=disabled -Drmnet=enabled
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dqrtr=false
     - ninja -C build
     - ninja -C build install
 
@@ -117,7 +118,7 @@ build-meson-no-qrtr-no-introspection:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=enabled -Dqrtr=disabled -Drmnet=enabled
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dqrtr=false
     - ninja -C build
     - ninja -C build install
 
@@ -139,7 +140,7 @@ build-meson-no-mbim:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=disabled -Dqrtr=enabled -Drmnet=enabled
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dmbim_qmux=false
     - ninja -C build
     - ninja -C build install
 
@@ -161,7 +162,7 @@ build-meson-no-mbim-no-introspection:
     - make
     - make install
     - popd
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=enabled -Drmnet=enabled
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false
     - ninja -C build
     - ninja -C build install
 
@@ -176,7 +177,7 @@ build-meson-collection-minimal:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=disabled -Drmnet=disabled -Dcollection=minimal -Dfirmware_update=false
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false -Dcollection=minimal -Dfirmware_update=false -Dudev=false
     - ninja -C build
     - ninja -C build install
 
@@ -191,7 +192,7 @@ build-meson-collection-basic:
     - tags
     - schedules
   script:
-    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=disabled -Dmbim_qmux=disabled -Dqrtr=disabled -Drmnet=disabled -Dcollection=basic
+    - meson setup build --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=false -Dmbim_qmux=false -Dqrtr=false -Drmnet=false -Dcollection=basic
     - ninja -C build
     - ninja -C build install
 
@@ -220,7 +221,7 @@ build-meson-release:
     - make
     - make install
     - popd
-    - meson setup build --buildtype=release --prefix=/usr -Dwerror=true -Dgtk_doc=false -Dintrospection=enabled -Dmbim_qmux=enabled -Dqrtr=enabled -Drmnet=enabled
+    - meson setup build --buildtype=release --prefix=/usr -Dwerror=true -Dgtk_doc=false
     - ninja -C build
     - ninja -C build install
     - ninja -C build dist
