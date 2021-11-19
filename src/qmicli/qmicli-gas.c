@@ -47,9 +47,16 @@ static Context *ctx;
 static gboolean get_firmware_list_flag;
 static gboolean get_active_firmware_flag;
 static gint     set_active_firmware_int = -1;
+static gint     set_usb_composition_int = -1;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_SET_USB_COMPOSITION
+    { "gas-dms-set-usb-composition", 0, 0, G_OPTION_ARG_INT, &set_usb_composition_int,
+      "Sets the USB composition",
+      "[pid]"
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_LIST
     { "gas-dms-get-firmware-list", 0, 0, G_OPTION_ARG_NONE, &get_firmware_list_flag,
       "Gets the list of stored firmware",
@@ -97,7 +104,8 @@ qmicli_gas_options_enabled (void)
     if (checked)
         return !!n_actions;
 
-    n_actions = (get_firmware_list_flag +
+    n_actions = ((set_usb_composition_int >= 0) +
+                 get_firmware_list_flag +
                  get_active_firmware_flag +
                  (set_active_firmware_int >= 0) +
                  noop_flag);
@@ -133,6 +141,40 @@ operation_shutdown (gboolean operation_status)
     context_free (ctx);
     qmicli_async_operation_done (operation_status, FALSE);
 }
+
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_SET_USB_COMPOSITION
+
+static void
+set_usb_composition_ready (QmiClientGas *client,
+                           GAsyncResult *res)
+{
+    QmiMessageGasDmsSetUsbCompositionOutput *output;
+    GError *error = NULL;
+
+    output = qmi_client_gas_dms_set_usb_composition_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_gas_dms_set_usb_composition_output_get_result (output, &error)) {
+        g_printerr ("error: unable to switch composition: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_gas_dms_set_usb_composition_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully switched composition.\n",
+             qmi_device_get_path_display (ctx->device));
+
+    qmi_message_gas_dms_set_usb_composition_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_GAS_DMS_SET_USB_COMPOSITION */
 
 #if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_LIST
 
@@ -249,6 +291,28 @@ qmicli_gas_run (QmiDevice *device,
     ctx->device = g_object_ref (device);
     ctx->client = g_object_ref (client);
     ctx->cancellable = g_object_ref (cancellable);
+
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_SET_USB_COMPOSITION
+    if (set_usb_composition_int >= 0) {
+        QmiMessageGasDmsSetUsbCompositionInput *input;
+
+        input = qmi_message_gas_dms_set_usb_composition_input_new ();
+        qmi_message_gas_dms_set_usb_composition_input_set_usb_composition (input, set_usb_composition_int, NULL);
+        qmi_message_gas_dms_set_usb_composition_input_set_endpoint_type (input, QMI_GAS_USB_COMPOSITION_ENDPOINT_TYPE_HSUSB, NULL);
+        qmi_message_gas_dms_set_usb_composition_input_set_composition_persistence (input, TRUE, NULL);
+        qmi_message_gas_dms_set_usb_composition_input_set_immediate_setting (input, FALSE, NULL);
+        qmi_message_gas_dms_set_usb_composition_input_set_reboot_after_setting (input, TRUE, NULL);
+        g_debug ("Asynchronously switching the USB composition...");
+        qmi_client_gas_dms_set_usb_composition (ctx->client,
+                                                input,
+                                                10,
+                                                ctx->cancellable,
+                                                (GAsyncReadyCallback)set_usb_composition_ready,
+                                                NULL);
+        qmi_message_gas_dms_set_usb_composition_input_unref (input);
+        return;
+    }
+#endif
 
 #if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_LIST
     if (get_firmware_list_flag || get_active_firmware_flag) {

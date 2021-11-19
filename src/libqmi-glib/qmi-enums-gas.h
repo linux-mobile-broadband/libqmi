@@ -50,4 +50,18 @@ typedef enum { /*< since=1.24 >*/
     QMI_GAS_FIRMWARE_LISTING_MODE_SPECIFIC_FIRMWARE = 2,
 } QmiGasFirmwareListingMode;
 
+/**
+ * QmiGasUsbCompositionEndpointType:
+ * @QMI_GAS_USB_COMPOSITION_ENDPOINT_TYPE_HSUSB: High-speed USB.
+ * @QMI_GAS_USB_COMPOSITION_ENDPOINT_TYPE_HSIC: High-speed inter-chip interface.
+ *
+ * Peripheral endpoint type.
+ *
+ * Since: 1.32
+ */
+typedef enum { /*< since=1.32 >*/
+    QMI_GAS_USB_COMPOSITION_ENDPOINT_TYPE_HSUSB = 0,
+    QMI_GAS_USB_COMPOSITION_ENDPOINT_TYPE_HSIC  = 1,
+} QmiGasUsbCompositionEndpointType;
+
 #endif /* _LIBQMI_GLIB_QMI_ENUMS_GAS_H_ */

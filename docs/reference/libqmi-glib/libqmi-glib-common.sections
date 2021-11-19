@@ -1500,13 +1500,18 @@ qmi_qos_event_get_type
 <FILE>qmi-enums-gas</FILE>
 <TITLE>GAS enumerations and flags</TITLE>
 QmiGasFirmwareListingMode
+QmiGasUsbCompositionEndpointType
 <SUBSECTION Methods>
 qmi_gas_firmware_listing_mode_get_string
+qmi_gas_usb_composition_endpoint_type_get_string
 <SUBSECTION Private>
 qmi_gas_firmware_listing_mode_build_string_from_mask
+qmi_gas_usb_composition_endpoint_type_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_GAS_FIRMWARE_LISTING_MODE
+QMI_TYPE_GAS_USB_COMPOSITION_ENDPOINT_TYPE
 qmi_gas_firmware_listing_mode_get_type
+qmi_gas_usb_composition_endpoint_type_get_type
 </SECTION>
 
 <SECTION>
