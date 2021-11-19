@@ -48,6 +48,7 @@ static gboolean get_firmware_list_flag;
 static gboolean get_active_firmware_flag;
 static gint     set_active_firmware_int = -1;
 static gint     set_usb_composition_int = -1;
+static gboolean get_usb_composition_flag;
 static gboolean noop_flag;
 
 static GOptionEntry entries[] = {
@@ -55,6 +56,12 @@ static GOptionEntry entries[] = {
     { "gas-dms-set-usb-composition", 0, 0, G_OPTION_ARG_INT, &set_usb_composition_int,
       "Sets the USB composition",
       "[pid]"
+    },
+#endif
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_USB_COMPOSITION
+    { "gas-dms-get-usb-composition", 0, 0, G_OPTION_ARG_NONE, &get_usb_composition_flag,
+      "Gets the current USB composition",
+      NULL
     },
 #endif
 #if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_LIST
@@ -105,6 +112,7 @@ qmicli_gas_options_enabled (void)
         return !!n_actions;
 
     n_actions = ((set_usb_composition_int >= 0) +
+                 get_usb_composition_flag +
                  get_firmware_list_flag +
                  get_active_firmware_flag +
                  (set_active_firmware_int >= 0) +
@@ -175,6 +183,43 @@ set_usb_composition_ready (QmiClientGas *client,
 }
 
 #endif /* HAVE_QMI_MESSAGE_GAS_DMS_SET_USB_COMPOSITION */
+
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_USB_COMPOSITION
+
+static void
+get_usb_composition_ready (QmiClientGas *client,
+                           GAsyncResult *res)
+{
+    QmiMessageGasDmsGetUsbCompositionOutput *output;
+    GError *error = NULL;
+    guint32 composition;
+
+    output = qmi_client_gas_dms_get_usb_composition_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_gas_dms_get_usb_composition_output_get_result (output, &error)) {
+        g_printerr ("error: unable to get current composition: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_gas_dms_get_usb_composition_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_gas_dms_get_usb_composition_output_get_usb_composition (output, &composition, NULL);
+    g_print ("[%s] Current composition is 0x%x\n",
+             qmi_device_get_path_display (ctx->device),
+             composition);
+
+    qmi_message_gas_dms_get_usb_composition_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_GAS_DMS_GET_USB_COMPOSITION */
 
 #if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_FIRMWARE_LIST
 
@@ -310,6 +355,19 @@ qmicli_gas_run (QmiDevice *device,
                                                 (GAsyncReadyCallback)set_usb_composition_ready,
                                                 NULL);
         qmi_message_gas_dms_set_usb_composition_input_unref (input);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_GAS_DMS_GET_USB_COMPOSITION
+    if (get_usb_composition_flag) {
+        g_debug ("Asynchronously getting the USB composition...");
+        qmi_client_gas_dms_get_usb_composition (ctx->client,
+                                                NULL,
+                                                10,
+                                                ctx->cancellable,
+                                                (GAsyncReadyCallback)get_usb_composition_ready,
+                                                NULL);
         return;
     }
 #endif

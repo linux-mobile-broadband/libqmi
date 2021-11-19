@@ -497,6 +497,7 @@
     <section>
       <title>GAS Requests</title>
       <xi:include href="xml/qmi-message-gas-dms-set-usb-composition.xml"/>
+      <xi:include href="xml/qmi-message-gas-dms-get-usb-composition.xml"/>
       <xi:include href="xml/qmi-message-gas-dms-get-firmware-list.xml"/>
       <xi:include href="xml/qmi-message-gas-dms-set-active-firmware.xml"/>
     </section>
