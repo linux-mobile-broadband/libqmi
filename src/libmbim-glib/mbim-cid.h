@@ -306,6 +306,8 @@ typedef enum { /*< since=1.16 >*/
  * @MBIM_CID_QDU_UPDATE_SESSION: Update session command.
  * @MBIM_CID_QDU_FILE_OPEN: Open QDU file for firmware update.
  * @MBIM_CID_QDU_FILE_WRITE: Write QDU file for firmware update.
+ * @MBIM_CID_QDU_QUECTEL_EDL_SWITCH: Switch to Emergency Download (Quectel specific). Since 1.28.
+ * @MBIM_CID_QDU_QUECTEL_READ_VERSION: Read firmware version (Quectel specific). Since 1.28.
  *
  * MBIM commands in the %MBIM_SERVICE_QDU service.
  *
@@ -316,6 +318,8 @@ typedef enum { /*< since=1.26 >*/
     MBIM_CID_QDU_UPDATE_SESSION      = 1,
     MBIM_CID_QDU_FILE_OPEN           = 2,
     MBIM_CID_QDU_FILE_WRITE          = 3,
+    MBIM_CID_QDU_QUECTEL_EDL_SWITCH   = 4,
+    MBIM_CID_QDU_QUECTEL_READ_VERSION = 7
 } MbimCidQdu;
 
 /**
