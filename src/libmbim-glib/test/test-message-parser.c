@@ -519,6 +519,186 @@ test_basic_connect_ip_configuration (void)
     g_assert (ipv6dnsserver == NULL);
 }
 
+
+static void
+test_basic_connect_ip_configuration_2 (void)
+{
+    guint32 session_id;
+    MbimIPConfigurationAvailableFlag ipv4configurationavailable;
+    MbimIPConfigurationAvailableFlag ipv6configurationavailable;
+    guint32 ipv4addresscount;
+    guint32 ipv6addresscount;
+    const MbimIPv4 *ipv4gateway;
+    const MbimIPv6 *ipv6gateway;
+    guint32 ipv4dnsservercount;
+    guint32 ipv6dnsservercount;
+    guint32 ipv4mtu;
+    guint32 ipv6mtu;
+    g_autofree MbimIPv4 *ipv4dnsserver = NULL;
+    g_autofree MbimIPv6 *ipv6dnsserver = NULL;
+    g_autoptr(MbimIPv4ElementArray) ipv4address = NULL;
+    g_autoptr(MbimIPv6ElementArray) ipv6address = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(MbimMessage) response = NULL;
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0xC4, 0x00, 0x00, 0x00, /* length */
+        0x24, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done_message */
+        0xA2, 0x89, 0xCC, 0x33, /* service id */
+        0xBC, 0xBB, 0x8B, 0x4F,
+        0xB6, 0xB0, 0x13, 0x3E,
+        0xC2, 0xAA, 0xE6, 0xDF,
+        0x0F, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x94, 0x00, 0x00, 0x00, /* buffer length */
+        /* information buffer */
+        0x00, 0x00, 0x00, 0x00, /* session id */
+        0x0F, 0x00, 0x00, 0x00, /* IPv4ConfigurationAvailable */
+        0x0F, 0x00, 0x00, 0x00, /* IPv6ConfigurationAvailable */
+        0x01, 0x00, 0x00, 0x00, /* IPv4 element count */
+        0x3C, 0x00, 0x00, 0x00, /* IPv4 element offset */
+        0x01, 0x00, 0x00, 0x00, /* IPv6 element count */
+        0x50, 0x00, 0x00, 0x00, /* IPv6 element offset */
+        0x44, 0x00, 0x00, 0x00, /* IPv4 gateway offset */
+        0x64, 0x00, 0x00, 0x00, /* IPv6 gateway offset */
+        0x02, 0x00, 0x00, 0x00, /* IPv4 DNS count */
+        0x48, 0x00, 0x00, 0x00, /* IPv4 DNS offset */
+        0x02, 0x00, 0x00, 0x00, /* IPv6 DNS count */
+        0x74, 0x00, 0x00, 0x00, /* IPv6 DNS offset */
+        0xDC, 0x05, 0x00, 0x00, /* IPv4 MTU */
+        0xDC, 0x05, 0x00, 0x00, /* IPv6 MTU */
+        /* data buffer */
+        0x1D, 0x00, 0x00, 0x00, /* IPv4 element (netmask) */
+        0x1C, 0xF6, 0xC9, 0xDB, /* IPv4 element (address) */
+        0x1C, 0xF6, 0xC9, 0xDC, /* IPv4 gateway */
+        0x0A, 0xB1, 0x00, 0x22, /* IPv4 DNS1 */
+        0x0A, 0xB1, 0x00, 0xD2, /* IPv4 DNS2 */
+        0x40, 0x00, 0x00, 0x00, /* IPv6 element (netmask) */
+        0x26, 0x07, 0xFB, 0x90, /* IPv6 element (address) */
+        0x64, 0x3B, 0x28, 0x1F,
+        0x1D, 0xFF, 0xBF, 0x3D,
+        0xC5, 0xC8, 0x48, 0xAD,
+        0x26, 0x07, 0xFB, 0x90, /* IPv6 gateway */
+        0x64, 0x3B, 0x28, 0x1F,
+        0xFD, 0xF7, 0x80, 0xF4,
+        0xE3, 0x99, 0x98, 0x4A,
+        0xFD, 0x00, 0x97, 0x6A, /* IPv6 DNS1 */
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x09,
+        0xFD, 0x00, 0x97, 0x6A, /* IPv6 DNS2 */
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x10
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
+
+    g_assert (mbim_message_ip_configuration_response_parse (
+                  response,
+                  &session_id,
+                  &ipv4configurationavailable,
+                  &ipv6configurationavailable,
+                  &ipv4addresscount,
+                  &ipv4address,
+                  &ipv6addresscount,
+                  &ipv6address,
+                  &ipv4gateway,
+                  &ipv6gateway,
+                  &ipv4dnsservercount,
+                  &ipv4dnsserver,
+                  &ipv6dnsservercount,
+                  &ipv6dnsserver,
+                  &ipv4mtu,
+                  &ipv6mtu,
+                  &error));
+
+    /*
+     *   IPv4 configuration available: 'address, gateway, dns, mtu'
+     *     IP addresses (1)
+     *       IP [0]: '28.246.201.219/29'
+     *     gateway: '28.246.201.220'
+     *     DNS addresses (2)
+     *       DNS [0]: '10.177.0.34'
+     *       DNS [1]: '10.177.0.210'
+     *     MTU: '1500'
+     *   IPv6 configuration available: 'address, gateway, dns, mtu'
+     *     IP addresses (1)
+     *       IP [0]: '2607:fb90:643b:281f:1dff:bf3d:c5c8:48ad/64'
+     *     gateway: '2607:fb90:643b:281f:fdf7:80f4:e399:984a'
+     *     DNS addresses (2)
+     *       DNS [0]: 'fd00:976a::9'
+     */
+
+    g_assert_cmpuint (session_id, ==, 0);
+    g_assert_cmpuint (ipv4configurationavailable, ==, (MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS |
+                                                       MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_GATEWAY |
+                                                       MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS |
+                                                       MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_MTU));
+    g_assert_cmpuint (ipv6configurationavailable, ==, MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_ADDRESS |
+                                                       MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_GATEWAY |
+                                                       MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_DNS |
+                                                       MBIM_IP_CONFIGURATION_AVAILABLE_FLAG_MTU);
+
+    {
+        MbimIPv4 addr = { .addr = { 0x1C, 0xF6, 0xC9, 0xDB } };
+
+        g_assert_cmpuint (ipv4addresscount, ==, 1);
+        g_assert_cmpuint (ipv4address[0]->on_link_prefix_length, ==, 29);
+        g_assert (memcmp (&addr, &(ipv4address[0]->ipv4_address), 4) == 0);
+    }
+
+    {
+        MbimIPv4 gateway_addr = { .addr = { 0x1C, 0xF6, 0xC9, 0xDC } };
+
+        g_assert (memcmp (&gateway_addr, ipv4gateway, 4) == 0);
+    }
+
+    {
+        MbimIPv4 dns_addr_1 = { .addr = { 0x0A, 0xB1, 0x00, 0x22 } };
+        MbimIPv4 dns_addr_2 = { .addr = { 0x0A, 0xB1, 0x00, 0xD2 } };
+
+        g_assert_cmpuint (ipv4dnsservercount, ==, 2);
+        g_assert (memcmp (&dns_addr_1, &ipv4dnsserver[0], 4) == 0);
+        g_assert (memcmp (&dns_addr_2, &ipv4dnsserver[1], 4) == 0);
+    }
+
+    g_assert_cmpuint (ipv4mtu, ==, 1500);
+
+    {
+        MbimIPv6 addr = { .addr = { 0x26, 0x07, 0xFB, 0x90,
+                                    0x64, 0x3B, 0x28, 0x1F,
+                                    0x1D, 0xFF, 0xBF, 0x3D,
+                                    0xC5, 0xC8, 0x48, 0xAD } };
+
+        g_assert_cmpuint (ipv6addresscount, ==, 1);
+        g_assert_cmpuint (ipv6address[0]->on_link_prefix_length, ==, 64);
+        g_assert (memcmp (&addr, &(ipv6address[0]->ipv6_address), 16) == 0);
+    }
+
+    {
+        MbimIPv6 dns_addr_1 = { .addr = { 0xFD, 0x00, 0x97, 0x6A,
+                                          0x00, 0x00, 0x00, 0x00,
+                                          0x00, 0x00, 0x00, 0x00,
+                                          0x00, 0x00, 0x00, 0x09 } };
+        MbimIPv6 dns_addr_2 = { .addr = { 0xFD, 0x00, 0x97, 0x6A,
+                                          0x00, 0x00, 0x00, 0x00,
+                                          0x00, 0x00, 0x00, 0x00,
+                                          0x00, 0x00, 0x00, 0x10 } };
+
+        g_assert_cmpuint (ipv6dnsservercount, ==, 2);
+        g_assert (memcmp (&dns_addr_1, &ipv6dnsserver[0], 16) == 0);
+        g_assert (memcmp (&dns_addr_2, &ipv6dnsserver[1], 16) == 0);
+    }
+}
+
 static void
 test_basic_connect_service_activation (void)
 {
@@ -2948,7 +3128,8 @@ int main (int argc, char **argv)
     g_test_add_func (PREFIX "/basic-connect/visible-providers", test_basic_connect_visible_providers);
     g_test_add_func (PREFIX "/basic-connect/subscriber-ready-status", test_basic_connect_subscriber_ready_status);
     g_test_add_func (PREFIX "/basic-connect/device-caps", test_basic_connect_device_caps);
-    g_test_add_func (PREFIX "/basic-connect/ip-configuration", test_basic_connect_ip_configuration);
+    g_test_add_func (PREFIX "/basic-connect/ip-configuration/1", test_basic_connect_ip_configuration);
+    g_test_add_func (PREFIX "/basic-connect/ip-configuration/2", test_basic_connect_ip_configuration_2);
     g_test_add_func (PREFIX "/basic-connect/service-activation", test_basic_connect_service_activation);
     g_test_add_func (PREFIX "/basic-connect/register-state", test_basic_connect_register_state);
     g_test_add_func (PREFIX "/basic-connect/provisioned-contexts", test_provisioned_contexts);
