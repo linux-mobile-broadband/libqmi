@@ -52,23 +52,5 @@
     "since"    : "1.26",
     "set"      : [ { "name"   : "DataBuffer",
                      "format" : "unsized-byte-array" } ],
-    "response" : []},
-
-  // *********************************************************************************
-  { "name"     : "Quectel EDL Switch",
-    "type"     : "Command",
-    "since"    : "1.28",
-    "set"      : [ { "name"   : "DataBuffer",
-                     "format" : "unsized-byte-array" } ],
-    "response" : []},
-
-  // *********************************************************************************
-  { "name"     : "Quectel Read Version",
-    "type"     : "Command",
-    "since"    : "1.28",
-    "set"      : [ { "name"   : "DataBuffer",
-                     "format" : "unsized-byte-array" } ],
-    "query"    : [],
-    "response" : [ { "name"             : "Version",
-                     "format"           : "unsized-byte-array" } ] }
+    "response" : []}
 ]
