@@ -52,5 +52,27 @@
     "since"    : "1.26",
     "set"      : [ { "name"   : "DataBuffer",
                      "format" : "unsized-byte-array" } ],
-    "response" : []}
+    "response" : []},
+
+  // *********************************************************************************
+  { "name"     : "Quectel Reboot",
+    "type"     : "Command",
+    "since"    : "1.28",
+    "set"      : [ { "name"          : "RebootType",
+                     "format"        : "guint16",
+                     "public-format" : "MbimQduQuectelRebootType" } ],
+    "response" : []},
+
+  // *********************************************************************************
+  { "name"     : "Quectel Read Version",
+    "type"     : "Command",
+    "since"    : "1.28",
+    "set"      : [ { "name"   : "VersionType",
+                     "format" : "guint16",
+                     "public-format" : "MbimQduQuectelVersionType" } ],
+    "response" : [ { "name"   : "VersionId",
+                     "format" : "guint32" },
+                   { "name"   : "Version",
+                     "format" : "string",
+                     "max-size" : "120" } ] }
 ]

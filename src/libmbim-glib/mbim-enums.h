@@ -1218,6 +1218,36 @@ typedef enum { /*< since=1.26 >*/
 } MbimQduFileType;
 
 /*****************************************************************************/
+/* 'QDU Quectel Reboot' enums */
+
+/**
+ * MbimQduQuectelRebootType:
+ * @MBIM_QDU_QUECTEL_REBOOT_TYPE_EDL: Reboot to Emergency Download mode
+ *
+ * QDU Quectel Reboot session type.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_QDU_QUECTEL_REBOOT_TYPE_EDL = 17,
+} MbimQduQuectelRebootType;
+
+/*****************************************************************************/
+/* 'QDU Quectel Version' enums */
+
+/**
+ * MbimQduQuectelVersionType:
+ * @MBIM_QDU_QUECTEL_VERSION_TYPE_FW_BUILD_ID: Firmware Build ID
+ *
+ * QDU Quectel Read Version session type.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_QDU_QUECTEL_VERSION_TYPE_FW_BUILD_ID = 256,
+} MbimQduQuectelVersionType;
+
+/*****************************************************************************/
 /* 'ATDS RAT' enums */
 
 /**
