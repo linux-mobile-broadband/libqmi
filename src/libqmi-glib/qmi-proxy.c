@@ -793,8 +793,6 @@ device_close_if_unused (QmiProxy  *self,
             return;
         }
     }
-
-    g_assert_not_reached ();
 }
 
 /*****************************************************************************/
