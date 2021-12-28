@@ -239,7 +239,7 @@ static GOptionEntry entries[] = {
 #endif
 #if defined HAVE_QMI_MESSAGE_WDS_BIND_MUX_DATA_PORT
     { "wds-bind-mux-data-port", 0, 0, G_OPTION_ARG_STRING, &bind_mux_str,
-      "Bind qmux data port to controller device (allowed keys: mux-id, ep-type (undefined|hsusb|pcie|embedded), ep-iface-number) to be used with `--client-no-release-cid'",
+      "Bind qmux data port to controller device (allowed keys: mux-id, ep-type (undefined|hsusb|pcie|embedded|bam-dmux), ep-iface-number) to be used with `--client-no-release-cid'",
       "[\"key=value,...\"]"
     },
 #endif
