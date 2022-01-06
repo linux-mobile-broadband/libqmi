@@ -129,6 +129,8 @@ class Struct:
 
         template += (
             ' *\n'
+            ' * A ${name} element.\n'
+            ' *\n'
             ' * Since: ${since}\n'
             ' */\n'
             'typedef struct {\n')
