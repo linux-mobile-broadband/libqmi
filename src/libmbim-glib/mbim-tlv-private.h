@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 /* Defined in the same way as GByteArray */
 struct _MbimTlv {
+  /*< private >*/
   guint8 *data;
   guint   len;
 };
