@@ -161,7 +161,7 @@ typedef enum { /*< since=1.0 >*/
 
 /**
  * MbimCtrlCaps:
- * MBIM_CTRL_CAPS_NONE: None. Since 1.28.
+ * @MBIM_CTRL_CAPS_NONE: None. Since 1.28.
  * @MBIM_CTRL_CAPS_REG_MANUAL: Device allows manual network selection.
  * @MBIM_CTRL_CAPS_HW_RADIO_SWITCH: Device has a hardware radio power switch.
  * @MBIM_CTRL_CAPS_CDMA_MOBILE_IP: The CDMA function supports Mobile IP.
