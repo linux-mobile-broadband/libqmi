@@ -605,7 +605,7 @@ typedef enum { /*< since=1.0 >*/
 /*****************************************************************************/
 /* 'Wake Reason' enums */
 /**
- * MbimWaketype:
+ * MbimWakeType:
  * @MBIM_WAKE_TYPE_CID_RESPONSE: A CID response wakes device.
  * @MBIM_WAKE_TYPE_CID_INDICATION: A CID indication wakes device.
  * @MBIM_WAKE_TYPE_PACKET: An incoming packet wakes device.
