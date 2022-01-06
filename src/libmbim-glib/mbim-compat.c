@@ -42,7 +42,7 @@ mbim_message_device_service_subscriber_list_response_parse (
  * MbimLteAttachStatus struct */
 
 void
-mbim_lte_attach_status_free (MbimLteAttachStatus *var)
+mbim_lte_attach_status_free (MbimDeprecatedLteAttachStatus *var)
 {
     if (!var)
         return;
@@ -62,12 +62,12 @@ mbim_message_ms_basic_connect_extensions_lte_attach_status_query_new (GError **e
 gboolean
 mbim_message_ms_basic_connect_extensions_lte_attach_status_response_parse (
     const MbimMessage *message,
-    MbimLteAttachStatus **out_lte_attach_status,
+    MbimDeprecatedLteAttachStatus **out_lte_attach_status,
     GError **error)
 {
     g_autoptr(MbimLteAttachStatus) var = NULL;
 
-    var = g_new0 (MbimLteAttachStatus, 1);
+    var = g_new0 (MbimDeprecatedLteAttachStatus, 1);
     if (!mbim_message_ms_basic_connect_extensions_lte_attach_info_response_parse (
             message,
             &var->lte_attach_state,
@@ -87,12 +87,12 @@ mbim_message_ms_basic_connect_extensions_lte_attach_status_response_parse (
 gboolean
 mbim_message_ms_basic_connect_extensions_lte_attach_status_notification_parse (
     const MbimMessage *message,
-    MbimLteAttachStatus **out_lte_attach_status,
+    MbimDeprecatedLteAttachStatus **out_lte_attach_status,
     GError **error)
 {
     g_autoptr(MbimLteAttachStatus) var = NULL;
 
-    var = g_new0 (MbimLteAttachStatus, 1);
+    var = g_new0 (MbimDeprecatedLteAttachStatus, 1);
     if (!mbim_message_ms_basic_connect_extensions_lte_attach_info_notification_parse (
             message,
             &var->lte_attach_state,

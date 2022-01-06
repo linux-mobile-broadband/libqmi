@@ -842,4 +842,5 @@ MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_NETWORK_BLACKLIST
 MbimDeprecatedCidBasicConnect
 MbimDeprecatedRegistrationFlag
 MbimDeprecatedCidMsBasicConnectExtensions
+MbimDeprecatedLteAttachStatus
 </SECTION>

@@ -134,6 +134,9 @@ typedef int MbimDeprecatedCidMsBasicConnectExtensions;
  * Since: 1.18
  * Deprecated: 1.26
  */
+
+/* The following type exists just so that we don't getdeprecation warnings on
+ * our own methods */
 typedef struct {
     guint32 lte_attach_state;
     guint32 ip_type;
@@ -142,7 +145,10 @@ typedef struct {
     gchar *password;
     guint32 compression;
     guint32 auth_protocol;
-} MbimLteAttachStatus;
+} MbimDeprecatedLteAttachStatus;
+
+G_DEPRECATED
+typedef MbimDeprecatedLteAttachStatus MbimLteAttachStatus;
 
 /**
  * mbim_lte_attach_status_free:
@@ -154,8 +160,21 @@ typedef struct {
  * Deprecated: 1.26
  */
 G_DEPRECATED
-void mbim_lte_attach_status_free (MbimLteAttachStatus *var);
+void mbim_lte_attach_status_free (MbimDeprecatedLteAttachStatus *var);
+
+#if defined(__clang__)
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(__GNUC__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (MbimLteAttachStatus, mbim_lte_attach_status_free)
+#if defined(__clang__)
+# pragma clang diagnostic pop
+#elif defined(__GNUC__)
+# pragma GCC diagnostic pop
+#endif
 
 /**
  * mbim_message_ms_basic_connect_extensions_lte_attach_status_query_new:
@@ -188,7 +207,7 @@ MbimMessage *mbim_message_ms_basic_connect_extensions_lte_attach_status_query_ne
 G_DEPRECATED_FOR (mbim_message_ms_basic_connect_extensions_lte_attach_info_response_parse)
 gboolean mbim_message_ms_basic_connect_extensions_lte_attach_status_response_parse (
     const MbimMessage *message,
-    MbimLteAttachStatus **out_lte_attach_status,
+    MbimDeprecatedLteAttachStatus **out_lte_attach_status,
     GError **error);
 
 /**
@@ -207,7 +226,7 @@ gboolean mbim_message_ms_basic_connect_extensions_lte_attach_status_response_par
 G_DEPRECATED_FOR (mbim_message_ms_basic_connect_extensions_lte_attach_info_notification_parse)
 gboolean mbim_message_ms_basic_connect_extensions_lte_attach_status_notification_parse (
     const MbimMessage *message,
-    MbimLteAttachStatus **out_lte_attach_status,
+    MbimDeprecatedLteAttachStatus **out_lte_attach_status,
     GError **error);
 
 /*****************************************************************************/
