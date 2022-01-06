@@ -79,7 +79,7 @@ class Struct:
                 if 'public-format' in field:
                     translations['public'] = field['public-format']
                     inner_template = (
-                        ' * @${field_name_underscore}: a ${public} given as a #guint16.\n')
+                        ' * @${field_name_underscore}: a #${public} given as a #guint16.\n')
                 else:
                     inner_template = (
                         ' * @${field_name_underscore}: a #guint16.\n')
@@ -87,7 +87,7 @@ class Struct:
                 if 'public-format' in field:
                     translations['public'] = field['public-format']
                     inner_template = (
-                        ' * @${field_name_underscore}: a ${public} given as a #guint32.\n')
+                        ' * @${field_name_underscore}: a #${public} given as a #guint32.\n')
                 else:
                     inner_template = (
                         ' * @${field_name_underscore}: a #guint32.\n')
@@ -101,7 +101,7 @@ class Struct:
                 if 'public-format' in field:
                     translations['public'] = field['public-format']
                     inner_template = (
-                        ' * @${field_name_underscore}: a ${public} given as a #guint64.\n')
+                        ' * @${field_name_underscore}: a #${public} given as a #guint64.\n')
                 else:
                     inner_template = (
                         ' * @${field_name_underscore}: a #guint64.\n')
