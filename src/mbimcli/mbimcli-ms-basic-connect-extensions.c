@@ -1186,9 +1186,7 @@ query_base_stations_ready (MbimDevice   *device,
         PRINT_VALIDATED_UINT (umts_serving_cell->frequency_info_nt,       0xFFFFFFFF, "\t     Frequency info TDD", NULL);
         PRINT_VALIDATED_UINT (umts_serving_cell->uarfcn,                  0xFFFFFFFF, "\t                 UARFCN", NULL);
         PRINT_VALIDATED_UINT (umts_serving_cell->primary_scrambling_code, 0xFFFFFFFF, "\tPrimary Scrambling Code", NULL);
-        /* note: docs say unknown value in this case is 0
-         * https://github.com/MicrosoftDocs/windows-driver-docs/issues/2932 */
-        PRINT_VALIDATED_INT  (umts_serving_cell->rscp,                    0xFFFFFFFF, "\t                   RSCP", " dBm");
+        PRINT_VALIDATED_INT  (umts_serving_cell->rscp,                    0,          "\t                   RSCP", " dBm");
         PRINT_VALIDATED_INT  (umts_serving_cell->ecno,                    1,          "\t                   ECNO", " dBm");
         PRINT_VALIDATED_UINT (umts_serving_cell->path_loss,               0xFFFFFFFF, "\t              Path loss", NULL);
     } else
@@ -1207,7 +1205,7 @@ query_base_stations_ready (MbimDevice   *device,
             PRINT_VALIDATED_UINT (umts_neighboring_cells[i]->cell_id,                 0xFFFFFFFF, "\t\t                Cell id", NULL);
             PRINT_VALIDATED_UINT (umts_neighboring_cells[i]->uarfcn,                  0xFFFFFFFF, "\t\t                 UARFCN", NULL);
             PRINT_VALIDATED_UINT (umts_neighboring_cells[i]->primary_scrambling_code, 0xFFFFFFFF, "\t\tPrimary Scrambling Code", NULL);
-            PRINT_VALIDATED_INT  (umts_neighboring_cells[i]->rscp,                    0xFFFFFFFF, "\t\t                   RSCP", " dBm");
+            PRINT_VALIDATED_INT  (umts_neighboring_cells[i]->rscp,                    0,          "\t\t                   RSCP", " dBm");
             PRINT_VALIDATED_INT  (umts_neighboring_cells[i]->ecno,                    1,          "\t\t                   ECNO", " dBm");
             PRINT_VALIDATED_UINT (umts_neighboring_cells[i]->path_loss,               0xFFFFFFFF, "\t\t              Path loss", NULL);
         }
