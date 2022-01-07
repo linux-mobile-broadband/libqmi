@@ -1880,7 +1880,10 @@ mbimcli_ms_basic_connect_extensions_run (MbimDevice   *device,
     if (query_base_stations_flag) {
         g_debug ("Asynchronously querying base stations...");
         /* default capacity is 15, so use that value when querying */
-        request = mbim_message_ms_basic_connect_extensions_base_stations_info_query_new (15, 15, 15, 15, 15, NULL);
+        if (mbim_device_check_ms_mbimex_version (ctx->device, 3, 0))
+            request = mbim_message_ms_basic_connect_extensions_v3_base_stations_info_query_new (15, 15, 15, 15, 15, 15, NULL);
+        else
+            request = mbim_message_ms_basic_connect_extensions_base_stations_info_query_new (15, 15, 15, 15, 15, NULL);
         mbim_device_command (ctx->device,
                              request,
                              10,
