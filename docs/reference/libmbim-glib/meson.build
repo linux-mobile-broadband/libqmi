@@ -65,4 +65,5 @@ gnome.gtkdoc(
   fixxref_args: fixxref_args,
   content_files: [sections_txt, version_xml],
   install: true,
+  check: true,
 )
