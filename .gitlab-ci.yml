@@ -71,7 +71,7 @@ build-release:
     - tags
     - schedules
   script:
-    - meson setup build --buildtype=release --prefix=/usr -Dwerror=true
+    - meson setup build --buildtype=release --prefix=/usr -Dgtk_doc=true -Dwerror=true
     - ninja -C build
     - ninja -C build install
     - ninja -C build dist
