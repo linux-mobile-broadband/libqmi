@@ -822,7 +822,9 @@ mbim_tlv_wake_packet_get
 mbim_tlv_type_build_string_from_mask
 <SUBSECTION Standard>
 MBIM_TYPE_TLV
+MBIM_TYPE_TLV_TYPE
 mbim_tlv_get_type
+mbim_tlv_type_get_type
 </SECTION>
 
 <SECTION>
