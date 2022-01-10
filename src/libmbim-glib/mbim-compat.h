@@ -249,6 +249,10 @@ typedef int MbimDeprecatedNwError;
 /*****************************************************************************/
 /* Rename blacklist to denylist */
 
+/* The following type exists just so that we can get deprecation warnings */
+G_DEPRECATED
+typedef int MbimDeprecatedCidMsBasicConnectExtensions;
+
 /**
  * MBIM_CID_MS_BASIC_CONNECT_EXTENSIONS_NETWORK_BLACKLIST:
  *
