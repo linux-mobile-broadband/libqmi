@@ -165,6 +165,7 @@ mbim_message_dup
 mbim_message_ref
 mbim_message_unref
 mbim_message_get_printable
+mbim_message_get_printable_full
 mbim_message_get_raw
 mbim_message_get_message_type
 mbim_message_get_message_length
