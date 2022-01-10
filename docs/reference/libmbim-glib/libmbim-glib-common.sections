@@ -848,4 +848,5 @@ MbimDeprecatedCidBasicConnect
 MbimDeprecatedRegistrationFlag
 MbimDeprecatedCidMsBasicConnectExtensions
 MbimDeprecatedLteAttachStatus
+MbimDeprecatedNwError
 </SECTION>

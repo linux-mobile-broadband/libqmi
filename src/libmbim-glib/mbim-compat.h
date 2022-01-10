@@ -234,7 +234,7 @@ gboolean mbim_message_ms_basic_connect_extensions_lte_attach_status_notification
 
 /* The following type exists just so that we can get deprecation warnings */
 G_DEPRECATED
-typedef int MbimNwErrorDeprecated;
+typedef int MbimDeprecatedNwError;
 
 /**
  * MBIM_NW_ERROR_UNKNOWN:
@@ -244,7 +244,7 @@ typedef int MbimNwErrorDeprecated;
  * Since: 1.0
  * Deprecated: 1.28: Use %MBIM_NW_ERROR_NONE instead.
  */
-#define MBIM_NW_ERROR_UNKNOWN (MbimNwErrorDeprecated) MBIM_NW_ERROR_NONE
+#define MBIM_NW_ERROR_UNKNOWN (MbimDeprecatedNwError) MBIM_NW_ERROR_NONE
 
 /*****************************************************************************/
 /* Rename blacklist to denylist */
