@@ -387,7 +387,7 @@ MbimLadnInfo
 MbimDrxCycle
 MbimSubscriberReadyStatusFlag
 MbimDataClassV3
-MbimDataSublass
+MbimDataSubclass
 MbimModemConfigurationStatus
 MbimWakeType
 MbimQuectelRadioSwitchState
