@@ -16,7 +16,12 @@ class Struct:
     """
     Constructor
     """
-    def __init__(self, dictionary):
+    def __init__(self, service, mbimex_service, mbimex_version, dictionary):
+        # The message service, e.g. "Basic Connect"
+        self.service = service
+        self.mbimex_service = mbimex_service
+        self.mbimex_version = mbimex_version
+
         self.name = dictionary['name']
         self.contents = dictionary['contents']
         self.since = dictionary['since'] if 'since' in dictionary else None

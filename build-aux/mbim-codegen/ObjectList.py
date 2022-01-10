@@ -59,7 +59,7 @@ class ObjectList:
                     raise ValueError('Service name not specified before the first command')
                 self.command_list.append(Message(service_iter, mbimex_service_iter, mbimex_version_iter, object_dictionary))
             elif object_dictionary['type'] == 'Struct':
-                self.struct_list.append(Struct(object_dictionary))
+                self.struct_list.append(Struct(service_iter, mbimex_service_iter, mbimex_version_iter, object_dictionary))
             elif object_dictionary['type'] == 'Service':
                 service_iter = object_dictionary['name']
                 self.service_list.append(service_iter)
@@ -260,11 +260,13 @@ class ObjectList:
 
         # Emit subsection per type
         for struct in self.struct_list:
-            struct.emit_section_content(sfile)
+            if struct.service == service:
+                struct.emit_section_content(sfile)
 
         # Emit subsection per command
         for command in self.command_list:
-            command.emit_section_content(sfile)
+            if command.service == service:
+                command.emit_section_content(sfile)
 
         sfile.write(
             '</SECTION>\n')
