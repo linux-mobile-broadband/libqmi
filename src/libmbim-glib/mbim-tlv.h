@@ -75,7 +75,7 @@ GType mbim_tlv_get_type (void) G_GNUC_CONST;
  *
  * Since: 1.28
  */
-typedef enum {
+typedef enum { /*< since=1.28 >*/
     MBIM_TLV_TYPE_INVALID                     = 0,
     MBIM_TLV_TYPE_UE_POLICITES                = 1,
     MBIM_TLV_TYPE_SINGLE_NSSAI                = 2,
