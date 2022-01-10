@@ -1093,13 +1093,13 @@ class Struct:
         template = (
             '<SUBSECTION ${struct_name}>\n'
             '${struct_name}\n')
-        if self.struct_array_member == True or self.ref_struct_array_member == True:
+        if self.struct_array_member == True or self.ref_struct_array_member == True or self.ms_struct_array_member == True:
             template += (
                 '${struct_name}Array\n')
         if self.single_member == True:
             template += (
                 '${name_underscore}_free\n')
-        if self.struct_array_member == True or self.ref_struct_array_member == True:
+        if self.struct_array_member == True or self.ref_struct_array_member == True or self.ms_struct_array_member == True:
             template += (
                 '${name_underscore}_array_free\n')
         sfile.write(string.Template(template).substitute(translations))
