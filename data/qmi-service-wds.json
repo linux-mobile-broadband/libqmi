@@ -715,6 +715,21 @@
      "output"  : [  { "common-ref" : "Operation Result" } ] },
 
   // *********************************************************************************
+  {  "name"    : "Indication Register",
+     "type"    : "Message",
+     "service" : "WDS",
+     "id"      : "0x0003",
+     "since"   : "1.32",
+     "input"   : [  { "name"          : "Report Extended IP Configuration Change",
+                      "id"            : "0x12",
+                      "mandatory"     : "no",
+                      "type"          : "TLV",
+                      "since"         : "1.32",
+                      "format"        : "guint8",
+                      "public-format" : "gboolean" } ],
+     "output"  : [  { "common-ref"    : "Operation Result" } ] },
+
+  // *********************************************************************************
   {  "name"    : "Get Supported Messages",
      "type"    : "Message",
      "service" : "WDS",
@@ -1825,6 +1840,25 @@
                       // guint16 with equivalent positive enum values.
                       "format"    : "guint16",
                       "public-format" : "QmiWdsExtendedTechnologyPreference",
+                      "prerequisites" : [ { "common-ref" : "Success" } ] },
+                    { "name"      : "Operator Reserved PCO",
+                      "id"        : "0x2F",
+                      "type"      : "TLV",
+                      "since"     : "1.32",
+                      "format"    : "sequence",
+                      "contents"  : [ { "name"          : "MCC",
+                                        "format"        : "guint16"},
+                                      { "name"          : "MNC",
+                                        "format"        : "guint16" },
+                                      { "name"          : "MNC Includes PCS Digit",
+                                        "format"        : "guint8",
+                                        "public-format" : "gboolean" },
+                                      { "name"               : "App Specific Info",
+                                        "format"             : "array",
+                                        "size-prefix-format" : "guint8",
+                                        "array-element"      : { "format" : "guint8" } },
+                                      { "name"          : "Container Id",
+                                        "format"        : "guint16" } ],
                       "prerequisites" : [ { "common-ref" : "Success" } ] } ] },
 
   // *********************************************************************************
@@ -2087,6 +2121,19 @@
                      "format"        : "guint16",
                      "public-format" : "QmiSioPort" } ],
      "output"  : [ { "common-ref" : "Operation Result" } ] },
+
+  // *********************************************************************************
+  {   "name"    : "Extended Ip Config",
+      "type"    : "Indication",
+      "service" : "WDS",
+      "id"      : "0x008C",
+      "since"   : "1.32",
+      "output"  : [ { "name"          : "Changed IP Configuration",
+                      "id"            : "0x10",
+                      "type"          : "TLV",
+                      "since"         : "1.32",
+                      "format"        : "guint32",
+                      "public-format" : "QmiWdsGetCurrentSettingsRequestedSettings" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get Max LTE Attach PDN Number",

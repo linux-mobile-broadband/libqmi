@@ -20,6 +20,7 @@
  * Copyright (C) 2012 Lanedo GmbH
  * Copyright (C) 2015 Velocloud Inc.
  * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc.
  */
 
 #ifndef _LIBQMI_GLIB_QMI_ENUMS_WDS_H_
@@ -1244,6 +1245,7 @@ typedef enum { /*< underscore_name=qmi_wds_so_evdo_revb,since=1.18 >*/
  * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_FAMILY: request IP family, ie IPv4 or IPv6.
  * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IMCN_FLAG: request IMCN flag
  * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_EXTENDED_TECHNOLOGY: request extended technology info
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO: Operator Reserved Protocol Configuration Option
  *
  * Flags specifying which specific settings to return when requesting the
  * current WDS bearer settings.
@@ -1270,6 +1272,7 @@ typedef enum { /*< since=1.0 >*/
     QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_FAMILY                 = 1 << 15,
     QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IMCN_FLAG                 = 1 << 16,
     QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_EXTENDED_TECHNOLOGY       = 1 << 17,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO     = 1 << 18,
 } QmiWdsGetCurrentSettingsRequestedSettings;
 
 /**
