@@ -9,6 +9,11 @@ Copyright (C) 2013 Aleksander Morgado <aleksander@aleksander.es>
 libmbim is a glib-based library for talking to WWAN modems and devices which
 speak the Mobile Broadband Interface Model (MBIM) protocol.
 
+## Documentation
+
+Project documentation is kept in:
+https://modemmanager.org/docs/libmbim/
+
 ## License
 
 * `libmbim-glib` library is released under the LGPL-2.1-or-later license.
