@@ -17,7 +17,7 @@ https://modemmanager.org/docs/libmbim/
 ## License
 
 * `libmbim-glib` library is released under the LGPL-2.1-or-later license.
-* `mbimcli` tool is released under the GPL-2.0-or-later license.
+* `mbimcli` and `mbim-network` tools are released under the GPL-2.0-or-later license.
 
 License texts can be found under the `LICENSES` folder.
 
