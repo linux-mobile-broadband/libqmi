@@ -1,4 +1,28 @@
 
+Overview of changes in libqmi 1.30.4
+----------------------------------------
+
+ * Build:
+   ** meson: switch to use the new python module in meson.
+   ** meson: added a new boolean 'man' option in the meson setup to explicitly
+      enable or disable building the man pages.
+   ** meson: removed the option to detect if rmnet is supported.
+   ** meson: multiple updates to use newer meson features like install_dir(),
+      install_mode() or summary().
+   ** meson: options 'mbim_qmux' and 'qrtr' are enabled by default and must be
+      explicitly disabled if they're not needed, there is no attempt to
+      autodetect whether they can be enabled or not.
+
+ * qmi-proxy:
+   ** Remove assert when attempting to close ghost device.
+
+ * qmi-firmware-update:
+   ** Use defaults if FLASH variables not reported, enabling support to flash
+      the new Sierra Wireless EM9190 and EM9191 modules.
+
+ * Several other minor improvements and fixes.
+
+
 Overview of changes in libqmi 1.30.2
 ----------------------------------------
 
