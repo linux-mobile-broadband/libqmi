@@ -108,6 +108,11 @@
   </chapter>
 
   <chapter>
+    <title>libmbim-defined Services</title>
+    <xi:include href="xml/mbim-proxy-control.xml"/>
+  </chapter>
+
+  <chapter>
     <title>Compatibility</title>
     <xi:include href="xml/mbim-compat.xml"/>
   </chapter>
