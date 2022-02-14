@@ -561,7 +561,7 @@ void mbim_device_add_link (MbimDevice          *self,
 
 /**
  * mbim_device_add_link_finish:
- * @self: a #QmiDevice.
+ * @self: a #MbimDevice.
  * @res: a #GAsyncResult.
  * @session_id: the session ID for the link created.
  * @error: Return location for error or %NULL.
