@@ -38,7 +38,9 @@
 G_BEGIN_DECLS
 
 /**
- * SECTION:qmi-utils
+ * SECTION: qmi-utils
+ * @title: Common utilities
+ * @short_description: Common utilities in the library.
  *
  * This section exposes a set of common utilities that may be used to work
  * with the QMI library.
