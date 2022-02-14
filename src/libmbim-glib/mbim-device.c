@@ -2819,7 +2819,7 @@ mbim_device_class_init (MbimDeviceClass *klass)
     g_object_class_install_property (object_class, PROP_TRANSACTION_ID, properties[PROP_TRANSACTION_ID]);
 
     /**
-     * MbimDevice:in-session
+     * MbimDevice:device-in-session
      *
      * Since: 1.4
      */
