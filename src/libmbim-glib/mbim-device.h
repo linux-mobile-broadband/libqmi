@@ -671,6 +671,9 @@ gboolean mbim_device_delete_all_links_finish (MbimDevice    *self,
  *   output #GPtrArray of link names.
  * @error: Return location for error or %NULL.
  *
+ * Synchronously lists all virtual network interfaces that have been previously
+ * created with mbim_device_add_link() in @base_ifname.
+ *
  * Returns: %TRUE if successful, %FALSE if @error is set.
  *
  * Since: 1.26
