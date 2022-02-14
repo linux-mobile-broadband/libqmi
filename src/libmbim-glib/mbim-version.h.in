@@ -51,6 +51,8 @@
  * @minor: minor version (e.g. 2 for version 1.2.5)
  * @micro: micro version (e.g. 5 for version 1.2.5)
  *
+ * Checks the version of the library that is being compiled against.
+ *
  * Returns: %TRUE if the version of the libmbim-glib header files
  * is the same as or newer than the passed-in version.
  *
