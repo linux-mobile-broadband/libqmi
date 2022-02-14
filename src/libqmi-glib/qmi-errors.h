@@ -29,6 +29,8 @@
 
 /**
  * SECTION: qmi-errors
+ * @title: Errors
+ * @short_description: Common errors in the library.
  *
  * This section defines common error types used in the interface.
  */
