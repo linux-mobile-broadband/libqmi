@@ -36,7 +36,7 @@ def build_header_guard(output_name):
 Write the common header start chunk
 """
 def add_header_start(f, output_name):
-    translations = { 'guard'   : build_header_guard(output_name) }
+    translations = { 'guard' : build_header_guard(output_name) }
     template = (
         "\n"
         "#include <glib.h>\n"
@@ -52,6 +52,25 @@ def add_header_start(f, output_name):
         "#define ${guard}\n"
         "\n"
         "G_BEGIN_DECLS\n")
+    f.write(string.Template(template).substitute(translations))
+
+
+"""
+Write the header documentation sections
+"""
+def add_header_sections(f, input_name):
+    translations = { 'section_name' : "mbim-" + remove_prefix(input_name,"mbim-service-"),
+                     'service_name' : string.capwords(remove_prefix(input_name,"mbim-service-").replace('-', ' ')) }
+    template = (
+        "\n"
+        "/**\n"
+        " * SECTION:${section_name}\n"
+        " * @title: ${service_name} service\n"
+        " * @short_description: Support for the ${service_name} service.\n"
+        " *\n"
+        " * This section implements support for requests, responses and notifications in the\n"
+        " * ${service_name} service.\n"
+        " */\n")
     f.write(string.Template(template).substitute(translations))
 
 
