@@ -131,6 +131,8 @@ typedef int MbimDeprecatedCidMsBasicConnectExtensions;
  * @compression: a #guint32.
  * @auth_protocol: a #guint32.
  *
+ * LTE attach status information.
+ *
  * Since: 1.18
  * Deprecated: 1.26
  */
