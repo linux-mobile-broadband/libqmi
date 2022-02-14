@@ -166,7 +166,7 @@ if enable_gir and get_option('default_library') != 'static'
     symbol_prefix: ns.to_lower() + '_',
     extra_args: common_c_flags + ['--identifier-prefix=' + ns.to_upper()],
     header: 'libqmi-glib.h',
-    export_packages: 'libqmi-glib',
+    export_packages: libname,
     install: true,
   )
 endif
