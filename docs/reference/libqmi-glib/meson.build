@@ -25,6 +25,7 @@ private_headers = [
   'qmi-net-port-manager-qmiwwan.h',
   'test-fixture.h',
   'test-port-context.h',
+  'if_link_rmnet.h',
 ]
 
 scan_args = [
