@@ -11,9 +11,10 @@
 /**
  * SECTION:mbim-utils
  * @title: Common utilities
+ * @short_description: Common utilities in the libmbim-glib library.
  *
  * This section exposes a set of common utilities that may be used to work
- * with the MBIM library.
+ * with the libmbim-glib library.
  */
 
 static volatile gint __traces_enabled = FALSE;
