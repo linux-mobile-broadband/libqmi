@@ -805,7 +805,7 @@ qmi_dms_dell_firmware_version_type_get_type (void)
 }
 
 const gchar *
-qmi_dms_dell_firmware_version_type_get_string (QmiDmsDellFirmwareVersionType val)
+qmi_dms_dell_firmware_version_type_get_string (QmiDeprecatedDmsDellFirmwareVersionType val)
 {
     return qmi_dms_foxconn_firmware_version_type_get_string ((QmiDmsFoxconnFirmwareVersionType) val);
 }
@@ -844,7 +844,7 @@ qmi_message_dms_dell_get_firmware_version_input_get_type (void)
 gboolean
 qmi_message_dms_dell_get_firmware_version_input_get_version_type (
     QmiMessageDmsDellGetFirmwareVersionInput *self,
-    QmiDmsDellFirmwareVersionType *value_version_type,
+    QmiDeprecatedDmsDellFirmwareVersionType *value_version_type,
     GError **error)
 {
     return qmi_message_dms_foxconn_get_firmware_version_input_get_version_type (self, (QmiDmsFoxconnFirmwareVersionType *)value_version_type, error);
@@ -853,7 +853,7 @@ qmi_message_dms_dell_get_firmware_version_input_get_version_type (
 gboolean
 qmi_message_dms_dell_get_firmware_version_input_set_version_type (
     QmiMessageDmsDellGetFirmwareVersionInput *self,
-    QmiDmsDellFirmwareVersionType value_version_type,
+    QmiDeprecatedDmsDellFirmwareVersionType value_version_type,
     GError **error)
 {
     return qmi_message_dms_foxconn_get_firmware_version_input_set_version_type (self, (QmiDmsFoxconnFirmwareVersionType)value_version_type, error);
@@ -921,7 +921,7 @@ qmi_dms_dell_device_mode_get_type (void)
 }
 
 const gchar *
-qmi_dms_dell_device_mode_get_string (QmiDmsDellDeviceMode val)
+qmi_dms_dell_device_mode_get_string (QmiDeprecatedDmsDellDeviceMode val)
 {
     return qmi_dms_foxconn_device_mode_get_string ((QmiDmsFoxconnDeviceMode) val);
 }
@@ -937,7 +937,7 @@ qmi_message_dms_dell_change_device_mode_input_get_type (void)
 gboolean
 qmi_message_dms_dell_change_device_mode_input_get_mode (
     QmiMessageDmsDellChangeDeviceModeInput *self,
-    QmiDmsDellDeviceMode *value_mode,
+    QmiDeprecatedDmsDellDeviceMode *value_mode,
     GError **error)
 {
     return qmi_message_dms_foxconn_change_device_mode_input_get_mode (self, (QmiDmsFoxconnDeviceMode *) value_mode, error);
@@ -946,7 +946,7 @@ qmi_message_dms_dell_change_device_mode_input_get_mode (
 gboolean
 qmi_message_dms_dell_change_device_mode_input_set_mode (
     QmiMessageDmsDellChangeDeviceModeInput *self,
-    QmiDmsDellDeviceMode value_mode,
+    QmiDeprecatedDmsDellDeviceMode value_mode,
     GError **error)
 {
     return qmi_message_dms_foxconn_change_device_mode_input_set_mode (self, (QmiDmsFoxconnDeviceMode) value_mode, error);

@@ -1121,11 +1121,17 @@ gboolean qmi_message_tlv_read_gfloat (QmiMessage  *self,
  * Since: 1.22.4
  * Deprecated: 1.26: Use #QmiDmsFoxconnFirmwareVersionType instead.
  */
+
+/* The following type exists just so that we don't get deprecation warnings on
+ * our own methods */
 typedef enum {
     QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG      = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG,
     QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_FIRMWARE_MCFG_APPS,
     QMI_DMS_DELL_FIRMWARE_VERSION_TYPE_APPS               = QMI_DMS_FOXCONN_FIRMWARE_VERSION_TYPE_APPS,
-} QmiDmsDellFirmwareVersionType;
+} QmiDeprecatedDmsDellFirmwareVersionType;
+
+G_DEPRECATED
+typedef QmiDeprecatedDmsDellFirmwareVersionType QmiDmsDellFirmwareVersionType;
 
 G_DEPRECATED_FOR (qmi_dms_foxconn_firmware_version_type_get_type)
 GType qmi_dms_dell_firmware_version_type_get_type (void) G_GNUC_CONST;
@@ -1142,7 +1148,8 @@ GType qmi_dms_dell_firmware_version_type_get_type (void) G_GNUC_CONST;
  * Since: 1.22.4
  * Deprecated: 1.26: Use qmi_dms_foxconn_firmware_version_type_get_string() instead.
  */
-const gchar *qmi_dms_dell_firmware_version_type_get_string (QmiDmsDellFirmwareVersionType val);
+G_DEPRECATED_FOR (qmi_dms_foxconn_firmware_version_type_get_string)
+const gchar *qmi_dms_dell_firmware_version_type_get_string (QmiDeprecatedDmsDellFirmwareVersionType val);
 
 /**
  * QmiDmsDellDeviceMode:
@@ -1155,11 +1162,17 @@ const gchar *qmi_dms_dell_firmware_version_type_get_string (QmiDmsDellFirmwareVe
  * Since: 1.22.4
  * Deprecated: 1.26: Use #QmiDmsFoxconnDeviceMode instead.
  */
+
+/* The following type exists just so that we don't get deprecation warnings on
+ * our own methods */
 typedef enum {
     QMI_DMS_DELL_DEVICE_MODE_UNKNOWN         = QMI_DMS_FOXCONN_DEVICE_MODE_UNKNOWN,
     QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_ONLINE = QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_ONLINE,
     QMI_DMS_DELL_DEVICE_MODE_FASTBOOT_OTA    = QMI_DMS_FOXCONN_DEVICE_MODE_FASTBOOT_OTA,
-} QmiDmsDellDeviceMode;
+} QmiDeprecatedDmsDellDeviceMode;
+
+G_DEPRECATED
+typedef QmiDeprecatedDmsDellDeviceMode QmiDmsDellDeviceMode;
 
 G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_type)
 GType qmi_dms_dell_device_mode_get_type (void) G_GNUC_CONST;
@@ -1177,7 +1190,7 @@ GType qmi_dms_dell_device_mode_get_type (void) G_GNUC_CONST;
  * Deprecated: 1.26: Use qmi_dms_foxconn_device_mode_get_string() instead.
  */
 G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_string)
-const gchar *qmi_dms_dell_device_mode_get_string (QmiDmsDellDeviceMode val);
+const gchar *qmi_dms_dell_device_mode_get_string (QmiDeprecatedDmsDellDeviceMode val);
 
 /******************************************************************************/
 /* Note: these defines are on purpose out of the #ifdefs, so that gtkdoc-scan
@@ -1705,7 +1718,7 @@ GType qmi_message_dms_dell_get_firmware_version_input_get_type (void) G_GNUC_CON
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_get_version_type)
 gboolean qmi_message_dms_dell_get_firmware_version_input_get_version_type (
     QmiMessageDmsDellGetFirmwareVersionInput *self,
-    QmiDmsDellFirmwareVersionType *value_version_type,
+    QmiDeprecatedDmsDellFirmwareVersionType *value_version_type,
     GError **error);
 
 /**
@@ -1724,7 +1737,7 @@ gboolean qmi_message_dms_dell_get_firmware_version_input_get_version_type (
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_get_firmware_version_input_set_version_type)
 gboolean qmi_message_dms_dell_get_firmware_version_input_set_version_type (
     QmiMessageDmsDellGetFirmwareVersionInput *self,
-    QmiDmsDellFirmwareVersionType value_version_type,
+    QmiDeprecatedDmsDellFirmwareVersionType value_version_type,
     GError **error);
 
 /**
@@ -1902,7 +1915,7 @@ GType qmi_message_dms_dell_change_device_mode_input_get_type (void) G_GNUC_CONST
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_get_mode)
 gboolean qmi_message_dms_dell_change_device_mode_input_get_mode (
     QmiMessageDmsDellChangeDeviceModeInput *self,
-    QmiDmsDellDeviceMode *value_mode,
+    QmiDeprecatedDmsDellDeviceMode *value_mode,
     GError **error);
 
 /**
@@ -1921,7 +1934,7 @@ gboolean qmi_message_dms_dell_change_device_mode_input_get_mode (
 G_DEPRECATED_FOR (qmi_message_dms_foxconn_change_device_mode_input_set_mode)
 gboolean qmi_message_dms_dell_change_device_mode_input_set_mode (
     QmiMessageDmsDellChangeDeviceModeInput *self,
-    QmiDmsDellDeviceMode value_mode,
+    QmiDeprecatedDmsDellDeviceMode value_mode,
     GError **error);
 
 /**
