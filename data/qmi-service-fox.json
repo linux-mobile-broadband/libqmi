@@ -1,0 +1,34 @@
+[
+  // *********************************************************************************
+  {  "name"    : "FOX",
+     "type"    : "Service" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Client FOX",
+     "type"    : "Client",
+     "since"   : "1.32" },
+
+  // *********************************************************************************
+  {  "name"    : "QMI Message FOX",
+     "type"    : "Message-ID-Enum" },
+
+  // *********************************************************************************
+  {  "name"    : "Get Firmware Version",
+     "type"    : "Message",
+     "service" : "FOX",
+     "id"      : "0x555E",
+     "since"   : "1.32",
+     "input"   : [ { "name"          : "Version Type",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.32",
+                     "format"        : "guint8",
+                     "public-format" : "QmiFoxFirmwareVersionType" } ],
+     "output"  : [ { "common-ref" : "Operation Result" },
+                   { "name"      : "Version",
+                     "id"        : "0x01",
+                     "type"      : "TLV",
+                     "since"     : "1.32",
+                     "format"    : "string",
+                     "prerequisites": [ { "common-ref" : "Success" } ] } ] }
+]

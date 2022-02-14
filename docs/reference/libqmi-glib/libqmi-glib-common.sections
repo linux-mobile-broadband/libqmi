@@ -29,6 +29,7 @@ HAVE_QMI_SERVICE_WDA
 HAVE_QMI_SERVICE_WDS
 HAVE_QMI_SERVICE_WMS
 HAVE_QMI_SERVICE_DPM
+HAVE_QMI_SERVICE_FOX
 </SECTION>
 
 <SECTION>
@@ -1564,6 +1565,19 @@ qmi_sar_rf_state_build_string_from_mask
 <SUBSECTION Standard>
 QMI_TYPE_SAR_RF_STATE
 qmi_sar_rf_state_get_type
+</SECTION>
+
+<SECTION>
+<FILE>qmi-enums-fox</FILE>
+<TITLE>FOX enumerations and flags</TITLE>
+QmiFoxFirmwareVersionType
+<SUBSECTION Methods>
+qmi_fox_firmware_version_type_get_string
+<SUBSECTION Private>
+qmi_fox_firmware_version_type_build_string_from_mask
+<SUBSECTION Standard>
+QMI_TYPE_FOX_FIRMWARE_VERSION_TYPE
+qmi_fox_firmware_version_type_get_type
 </SECTION>
 
 <SECTION>

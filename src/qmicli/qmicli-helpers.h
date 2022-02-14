@@ -55,7 +55,8 @@
     QMICLI_ENUM_LIST_ITEM (QmiWmsMessageType,                           wms_message_type,                             "message type" )                 \
     QMICLI_ENUM_LIST_ITEM (QmiWmsMessageClass,                          wms_message_class,                            "message class" )                \
     QMICLI_ENUM_LIST_ITEM (QmiWmsStorageType,                           wms_storage_type,                             "storage type" )                 \
-    QMICLI_ENUM_LIST_ITEM (QmiWmsReceiptAction,                         wms_receipt_action,                           "receipt action" )
+    QMICLI_ENUM_LIST_ITEM (QmiWmsReceiptAction,                         wms_receipt_action,                           "receipt action" )               \
+    QMICLI_ENUM_LIST_ITEM (QmiFoxFirmwareVersionType,                   fox_firmware_version_type,                    "fox firmware version type")
 
 #define QMICLI_ENUM_LIST_ITEM(TYPE,TYPE_UNDERSCORE,DESCR)        \
     gboolean qmicli_read_## TYPE_UNDERSCORE ##_from_string (const gchar *str, TYPE *out);

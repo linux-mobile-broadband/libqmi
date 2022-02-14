@@ -169,4 +169,12 @@ void          qmicli_dpm_run              (QmiDevice *device,
                                            GCancellable *cancellable);
 #endif
 
+#if defined HAVE_QMI_SERVICE_FOX
+GOptionGroup *qmicli_fox_get_option_group (void);
+gboolean      qmicli_fox_options_enabled  (void);
+void          qmicli_fox_run              (QmiDevice *device,
+                                           QmiClientFox *client,
+                                           GCancellable *cancellable);
+#endif
+
 #endif /* __QMICLI_H__ */

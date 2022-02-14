@@ -85,6 +85,7 @@
  * @QMI_SERVICE_CAT: Card Application Toolkit service (v1).
  * @QMI_SERVICE_RMS: Remote Management Service.
  * @QMI_SERVICE_OMA: Open Mobile Alliance device management service.
+ * @QMI_SERVICE_FOX: Foxconn General Modem Service. Since: 1.32.
  * @QMI_SERVICE_FOTA: Firmware Over The Air service. Since: 1.24.
  * @QMI_SERVICE_GMS: Telit General Modem Service. Since: 1.24.
  * @QMI_SERVICE_GAS: Telit General Application Service. Since: 1.24.
@@ -143,6 +144,7 @@ typedef enum { /*< since=1.0 >*/
     QMI_SERVICE_CAT     = 0xE0,
     QMI_SERVICE_RMS     = 0xE1,
     QMI_SERVICE_OMA     = 0xE2,
+    QMI_SERVICE_FOX     = 0xE3,
     QMI_SERVICE_FOTA    = 0xE6,
     QMI_SERVICE_GMS     = 0xE7,
     QMI_SERVICE_GAS     = 0xE8,

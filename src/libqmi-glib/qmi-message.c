@@ -59,6 +59,7 @@
 #include "qmi-dsd.h"
 #include "qmi-sar.h"
 #include "qmi-dpm.h"
+#include "qmi-fox.h"
 
 #define PACKED __attribute__((packed))
 
@@ -1721,6 +1722,11 @@ qmi_message_get_printable_full (QmiMessage        *self,
         contents = __qmi_message_dpm_get_printable (self, context, line_prefix);
 #endif
         break;
+    case QMI_SERVICE_FOX:
+#if defined HAVE_QMI_SERVICE_FOX
+        contents = __qmi_message_fox_get_printable (self, context, line_prefix);
+#endif
+        break;
 
     case QMI_SERVICE_UNKNOWN:
         g_assert_not_reached ();
@@ -1836,6 +1842,7 @@ __qmi_message_is_abortable (QmiMessage        *self,
     case QMI_SERVICE_PDC:
     case QMI_SERVICE_DSD:
     case QMI_SERVICE_QOS:
+    case QMI_SERVICE_FOX:
     default:
         return FALSE;
     }

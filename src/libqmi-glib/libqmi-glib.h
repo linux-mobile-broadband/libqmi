@@ -96,6 +96,9 @@
 
 #include "qmi-dpm.h"
 
+#include "qmi-enums-fox.h"
+#include "qmi-fox.h"
+
 /* generated */
 #include "qmi-error-types.h"
 #include "qmi-enum-types.h"

@@ -10,6 +10,7 @@ qmi_enums_headers = files(
   'qmi-enums.h',
   'qmi-enums-dms.h',
   'qmi-enums-dsd.h',
+  'qmi-enums-fox.h',
   'qmi-enums-gas.h',
   'qmi-enums-loc.h',
   'qmi-enums-nas.h',
