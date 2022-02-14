@@ -2140,7 +2140,7 @@ gboolean qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
  * @base_station_identity_code: a #guint8.
  * @rx_level: a #guint16.
  *
- * A QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement struct.
+ * GERAN info cell.
  *
  * Since: 1.10
  * Deprecated: 1.26.6.
@@ -2155,6 +2155,19 @@ typedef struct _QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement {
     guint16 rx_level;
 } QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement;
 
+/**
+ * QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement:
+ *
+ * Intra-frequency LTE info cell.
+ *
+ * The format of this deprecated type is really the same as for the
+ * new #QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement type,
+ * it is only a name change.
+ *
+ * Since: 1.10
+ * Deprecated: 1.26.6. Use #QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement instead.
+ */
+G_DEPRECATED_FOR (QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement)
 typedef QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoCellElement;
 
 /**
@@ -2199,7 +2212,34 @@ gboolean qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_in
     GArray **value_intrafrequency_lte_info_cell,
     GError **error);
 
+/**
+ * QmiMessageNasGetCellLocationInfoOutputUmtsInfoCellElement:
+ *
+ * UMTS info cell.
+ *
+ * The format of this deprecated type is really the same as for the
+ * new #QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2CellElement type,
+ * it is only a name change.
+ *
+ * Since: 1.10
+ * Deprecated: 1.26.6. Use #QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2CellElement instead.
+ */
+G_DEPRECATED_FOR (QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2CellElement)
 typedef QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2CellElement QmiMessageNasGetCellLocationInfoOutputUmtsInfoCellElement;
+
+/**
+ * QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringGeranElement:
+ *
+ * UMTS info neighboring GERAN cell.
+ *
+ * The format of this deprecated type is really the same as for the
+ * new #QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2NeighboringGeranElement type,
+ * it is only a name change.
+ *
+ * Since: 1.10
+ * Deprecated: 1.26.6. Use #QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2NeighboringGeranElement instead.
+ */
+G_DEPRECATED_FOR (QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2NeighboringGeranElement)
 typedef QmiMessageNasGetCellLocationInfoOutputUmtsInfoV2NeighboringGeranElement QmiMessageNasGetCellLocationInfoOutputUmtsInfoNeighboringGeranElement;
 
 /**
