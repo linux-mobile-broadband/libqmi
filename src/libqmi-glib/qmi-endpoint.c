@@ -326,9 +326,6 @@ qmi_endpoint_class_init (QmiEndpointClass *klass)
     klass->setup_indications = endpoint_setup_indications;
     klass->setup_indications_finish = endpoint_setup_indications_finish;
 
-    /**
-     * QmiEndpoint:endpoint-file:
-     */
     properties[PROP_FILE] =
         g_param_spec_object (QMI_ENDPOINT_FILE,
                              "Device file",
@@ -337,13 +334,6 @@ qmi_endpoint_class_init (QmiEndpointClass *klass)
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
     g_object_class_install_property (object_class, PROP_FILE, properties[PROP_FILE]);
 
-    /**
-     * QmiEndpoint::new-data:
-     * @object: A #QmiEndpoint.
-     * @output: none
-     *
-     * The ::new-data signal is emitted when the endpoint receives data.
-     */
     signals[SIGNAL_NEW_DATA] =
         g_signal_new (QMI_ENDPOINT_SIGNAL_NEW_DATA,
                       G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
@@ -355,13 +345,6 @@ qmi_endpoint_class_init (QmiEndpointClass *klass)
                       G_TYPE_NONE,
                       0);
 
-    /**
-     * QmiEndpoint::hangup:
-     * @object: A #QmiEndpoint.
-     * @output: none
-     *
-     * The ::endpoint signal is emitted when an unexpected port hang-up is received.
-     */
     signals[SIGNAL_HANGUP] =
         g_signal_new (QMI_ENDPOINT_SIGNAL_HANGUP,
                       G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),
