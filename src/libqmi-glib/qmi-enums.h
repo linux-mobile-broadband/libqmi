@@ -30,6 +30,8 @@
 
 /**
  * SECTION: qmi-enums
+ * @title: Common enumerations and flags
+ * @short_description: Common enumerations and flags in the library.
  *
  * This section defines common enumerations and flags used in the interface.
  */

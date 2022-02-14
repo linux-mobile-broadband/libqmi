@@ -29,6 +29,8 @@
 
 /**
  * SECTION: qmi-enums-qos
+ * @title: QOS enumerations and flags
+ * @short_description: Enumerations and flags in the QOS service.
  *
  * This section defines enumerations and flags used in the QOS service
  * interface.

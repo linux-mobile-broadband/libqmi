@@ -30,6 +30,8 @@
 
 /**
  * SECTION: qmi-enums-pds
+ * @title: PDS enumerations and flags
+ * @short_description: Enumerations and flags in the PDS service.
  *
  * This section defines enumerations and flags used in the PDS service
  * interface.

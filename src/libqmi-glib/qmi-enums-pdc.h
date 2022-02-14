@@ -30,6 +30,8 @@
 
 /**
  * SECTION: qmi-enums-pdc
+ * @title: PDC enumerations and flags
+ * @short_description: Enumerations and flags in the PDC service.
  *
  * This section defines enumerations and flags used in the PDC service
  * interface.

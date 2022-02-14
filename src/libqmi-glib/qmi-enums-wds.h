@@ -31,6 +31,8 @@
 
 /**
  * SECTION: qmi-enums-wds
+ * @title: WDS enumerations and flags
+ * @short_description: Enumerations and flags in the WDS service.
  *
  * This section defines enumerations and flags used in the WDS service
  * interface.

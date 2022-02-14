@@ -30,6 +30,8 @@
 
 /**
  * SECTION: qmi-enums-loc
+ * @title: LOC enumerations and flags
+ * @short_description: Enumerations and flags in the LOC service.
  *
  * This section defines enumerations and flags used in the LOC service
  * interface.

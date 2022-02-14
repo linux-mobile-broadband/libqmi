@@ -30,6 +30,8 @@
 
 /**
  * SECTION: qmi-enums-nas
+ * @title: NAS enumerations and flags
+ * @short_description: Enumerations and flags in the NAS service.
  *
  * This section defines enumerations and flags used in the NAS service
  * interface.

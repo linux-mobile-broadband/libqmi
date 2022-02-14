@@ -30,6 +30,8 @@
 
 /**
  * SECTION: qmi-enums-voice
+ * @title: VOICE enumerations and flags
+ * @short_description: Enumerations and flags in the VOICE service.
  *
  * This section defines enumerations and flags used in the VOICE service
  * interface.

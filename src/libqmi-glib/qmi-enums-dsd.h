@@ -29,6 +29,8 @@
 
 /**
  * SECTION: qmi-enums-dsd
+ * @title: DSD enumerations and flags
+ * @short_description: Enumerations and flags in the DSD service.
  *
  * This section defines enumerations and flags used in the DSD service
  * interface.
