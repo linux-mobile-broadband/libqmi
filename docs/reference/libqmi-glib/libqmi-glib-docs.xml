@@ -300,6 +300,7 @@
     <section>
       <title>PDS Indications</title>
       <xi:include href="xml/qmi-indication-pds-event-report.xml"/>
+      <xi:include href="xml/qmi-indication-pds-gps-ready.xml"/>
     </section>
     <section>
       <title>PDS Requests</title>
