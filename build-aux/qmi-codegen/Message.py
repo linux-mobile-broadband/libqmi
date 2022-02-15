@@ -400,6 +400,22 @@ class Message:
             utils.add_separator(hfile, 'INDICATION', self.fullname);
             utils.add_separator(cfile, 'INDICATION', self.fullname);
 
+        if not self.static and self.service != 'CTL':
+            translations = { 'hyphened' : utils.build_dashed_name (self.fullname),
+                             'fullname' : self.service + ' ' + self.name,
+                             'type'     : 'response' if self.type == 'Message' else 'indication',
+                             'operation' : 'create requests and parse responses' if self.type == 'Message' else 'parse indications' }
+            template = (
+                '\n'
+                '/**\n'
+                ' * SECTION: ${hyphened}\n'
+                ' * @title: ${fullname} ${type}\n'
+                ' * @short_description: Methods to manage the ${fullname} ${type}.\n'
+                ' *\n'
+                ' * Collection of methods to ${operation} of the ${fullname} message.\n'
+                ' */\n')
+            hfile.write(string.Template(template).substitute(translations))
+
         if self.type == 'Message':
             hfile.write('\n/* --- Input -- */\n');
             cfile.write('\n/* --- Input -- */\n');
@@ -455,7 +471,6 @@ class Message:
         template = (
             '<SECTION>\n'
             '<FILE>${hyphened}</FILE>\n'
-            '<TITLE>${fullname} ${message_type}</TITLE>\n'
             '${public_types}'
             '${public_methods}'
             '<SUBSECTION Private>\n'
