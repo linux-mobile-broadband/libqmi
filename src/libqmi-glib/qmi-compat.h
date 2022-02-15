@@ -612,10 +612,6 @@ void qmi_utils_write_fixed_size_string_to_buffer  (guint8      **buffer,
                                                    guint16       fixed_size,
                                                    const gchar  *in);
 
-/* The following type exists just so that we can get deprecation warnings */
-G_DEPRECATED
-typedef int QmiDeprecatedNasSimRejectState;
-
 /**
  * QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE:
  *
@@ -624,6 +620,7 @@ typedef int QmiDeprecatedNasSimRejectState;
  * Since: 1.0
  * Deprecated: 1.14.0: Use the correct #QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedNasSimRejectState;
 #define QMI_NAS_SIM_REJECT_STATE_SIM_VAILABLE (QmiDeprecatedNasSimRejectState) QMI_NAS_SIM_REJECT_STATE_SIM_AVAILABLE
 
 /**
@@ -767,10 +764,6 @@ QmiMessage  *qmi_device_command_finish (QmiDevice     *self,
                                         GAsyncResult  *res,
                                         GError       **error);
 
-/* The following type exists just so that we can get deprecation warnings */
-G_DEPRECATED
-typedef int QmiDeprecatedWdsCdmaCauseCode;
-
 /**
  * QMI_WDS_CDMA_CAUSE_CODE_NETWORK_ADDRESS_VACANT:
  *
@@ -779,6 +772,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_NETWORK_ADDRESS_VACANT name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_NETWORK_ADDRESS_VACANT (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_NETWORK_ADDRESS_VACANT
 
 /**
@@ -789,6 +783,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_NETWORK_ADDRESS_TRANSLATION_FAILURE name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_NETWORK_ADDRESS_TRANSLATION_FAILURE (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_NETWORK_ADDRESS_TRANSLATION_FAILURE
 
 /**
@@ -799,6 +794,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_NETWORK_RESOURCE_SHORTAGE name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_NETWORK_RESOURCE_SHORTAGE (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_NETWORK_RESOURCE_SHORTAGE
 
 /**
@@ -809,6 +805,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_NETWORK_FAILURE name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_NETWORK_FAILURE (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_NETWORK_FAILURE
 
 /**
@@ -819,6 +816,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_NETWORK_INVALID_TELESERVICE_ID name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_NETWORK_INVALID_TELESERVICE_ID (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_NETWORK_INVALID_TELESERVICE_ID
 
 /**
@@ -829,6 +827,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_NETWORK_OTHER name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_NETWORK_OTHER (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_NETWORK_OTHER
 
 /**
@@ -839,6 +838,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_NO_PAGE_RESPONSE name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_DESTINATION_NO_PAGE_RESPONSE (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_NO_PAGE_RESPONSE
 
 /**
@@ -849,6 +849,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_BUSY name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_DESTINATION_BUSY (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_BUSY
 
 /**
@@ -859,8 +860,8 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_NO_ACK name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_DESTINATION_NO_ACK (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_NO_ACK
-
 
 /**
  * QMI_WDS_CDMA_CAUSE_CODE_DESTINATION_RESOURCE_SHORTAGE:
@@ -870,6 +871,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_RESOURCE_SHORTAGE name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_DESTINATION_RESOURCE_SHORTAGE (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_RESOURCE_SHORTAGE
 
 /**
@@ -880,6 +882,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_SMS_DELIVERY_POSTPONED name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_DESTINATION_SMS_DELIVERY_POSTPONED (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_SMS_DELIVERY_POSTPONED
 
 /**
@@ -890,6 +893,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_OUT_OF_SERVICE name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_DESTINATION_OUT_OF_SERVICE (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_OUT_OF_SERVICE
 
 /**
@@ -900,6 +904,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_NOT_AT_ADDRESS name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_DESTINATION_NOT_AT_ADDRESS (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_NOT_AT_ADDRESS
 
 /**
@@ -910,6 +915,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_OTHER name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_DESTINATION_OTHER (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_DESTINATION_OTHER
 
 /**
@@ -920,6 +926,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_RADIO_INTERFACE_RESOURCE_SHORTAGE name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_RADIO_INTERFACE_RESOURCE_SHORTAGE (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_RADIO_INTERFACE_RESOURCE_SHORTAGE
 
 /**
@@ -930,6 +937,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_RADIO_INTERFACE_INCOMPATIBILITY name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_RADIO_INTERFACE_INCOMPATIBILITY (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_RADIO_INTERFACE_INCOMPATIBILITY
 
 /**
@@ -940,6 +948,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_RADIO_INTERFACE_OTHER name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_RADIO_INTERFACE_OTHER (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_RADIO_INTERFACE_OTHER
 
 /**
@@ -950,6 +959,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_ENCODING name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_ENCODING (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_ENCODING
 
 /**
@@ -960,6 +970,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_SMS_ORIGIN_DENIED name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_SMS_ORIGIN_DENIED (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_SMS_ORIGIN_DENIED
 
 /**
@@ -970,6 +981,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_SMS_DESTINATION_DENIED name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_SMS_DESTINATION_DENIED (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_SMS_DESTINATION_DENIED
 
 /**
@@ -980,6 +992,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_SUPPLEMENTARY_SERVICE_NOT_SUPPORTED name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_SUPPLEMENTARY_SERVICE_NOT_SUPPORTED (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_SUPPLEMENTARY_SERVICE_NOT_SUPPORTED
 
 /**
@@ -990,6 +1003,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_SMS_NOT_SUPPORTED name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_SMS_NOT_SUPPORTED (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_SMS_NOT_SUPPORTED
 
 /**
@@ -1000,6 +1014,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_MISSING_EXPECTED_PARAMETER name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_MISSING_EXPECTED_PARAMETER (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_MISSING_EXPECTED_PARAMETER
 
 /**
@@ -1010,6 +1025,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_MISSING_MANDATORY_PARAMETER name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_MISSING_MANDATORY_PARAMETER (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_MISSING_MANDATORY_PARAMETER
 
 /**
@@ -1020,6 +1036,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_UNRECOGNIZED_PARAMETER_VALUE name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_UNRECOGNIZED_PARAMETER_VALUE (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_UNRECOGNIZED_PARAMETER_VALUE
 
 /**
@@ -1030,6 +1047,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_UNEXPECTED_PARAMETER_VALUE name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_UNEXPECTED_PARAMETER_VALUE (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_UNEXPECTED_PARAMETER_VALUE
 
 /**
@@ -1040,6 +1058,7 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_USER_DATA_SIZE_ERROR name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_USER_DATA_SIZE_ERROR (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_USER_DATA_SIZE_ERROR
 
 /**
@@ -1050,11 +1069,8 @@ typedef int QmiDeprecatedWdsCdmaCauseCode;
  * Since: 1.0
  * Deprecated: 1.18.0: Use the correct #QMI_WMS_CDMA_CAUSE_CODE_GENERAL_OTHER name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsCdmaCauseCode;
 #define QMI_WDS_CDMA_CAUSE_CODE_GENERAL_OTHER (QmiDeprecatedWdsCdmaCauseCode) QMI_WMS_CDMA_CAUSE_CODE_GENERAL_OTHER
-
-/* The following type exists just so that we can get deprecation warnings */
-G_DEPRECATED
-typedef int QmiDeprecatedProtocolError;
 
 /**
  * QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE:
@@ -1064,11 +1080,8 @@ typedef int QmiDeprecatedProtocolError;
  * Since: 1.0
  * Deprecated: 1.22.0: Use the #QMI_PROTOCOL_ERROR_REQUESTED_NUMBER_UNSUPPORTED instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedProtocolError;
 #define QMI_PROTOCOL_ERROR_QOS_UNAVAILABLE (QmiDeprecatedProtocolError) QMI_PROTOCOL_ERROR_REQUESTED_NUMBER_UNSUPPORTED
-
-/* The following type exists just so that we can get deprecation warnings */
-G_DEPRECATED
-typedef int QmiDeprecatedWdsVerboseCallEndReasonCm;
 
 /**
  * QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFIGURATION_FAILED:
@@ -1078,6 +1091,7 @@ typedef int QmiDeprecatedWdsVerboseCallEndReasonCm;
  * Since: 1.0
  * Deprecated: 1.24.10: Use the correct #QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFERENCE_FAILED name instead.
  */
+G_DEPRECATED typedef int QmiDeprecatedWdsVerboseCallEndReasonCm;
 #define QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFIGURATION_FAILED (QmiDeprecatedWdsVerboseCallEndReasonCm) QMI_WDS_VERBOSE_CALL_END_REASON_CM_CONFERENCE_FAILED
 
 /**
