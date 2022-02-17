@@ -143,7 +143,7 @@ def new_ready(unused,result,user_data=None):
         main_loop.quit()
         return
 
-    qmidev.open(Qmi.DeviceOpenFlags.PROXY, 10, None, open_ready, None)
+    qmidev.open(Qmi.DeviceOpenFlags.PROXY | Qmi.DeviceOpenFlags.AUTO, 10, None, open_ready, None)
 
 
 if __name__ == "__main__":
