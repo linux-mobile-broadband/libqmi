@@ -64,41 +64,41 @@ class VariableStruct(Variable):
     """
     Emit all types for the members of the struct plus the new struct type itself
     """
-    def emit_types(self, f, since, static):
+    def emit_types(self, hfile, cfile, since, static):
         # Emit types for each member
         for member in self.members:
-            member['object'].emit_types(f, since, static)
+            member['object'].emit_types(hfile, cfile, since, static)
 
         translations = { 'format' : self.public_format,
                          'since'  : since }
         template = '\n'
-        f.write(string.Template(template).substitute(translations))
+        hfile.write(string.Template(template).substitute(translations))
 
         if static == False and self.service != 'CTL':
             template = (
                 '\n'
                 '/**\n'
                 ' * ${format}:\n')
-            f.write(string.Template(template).substitute(translations))
+            hfile.write(string.Template(template).substitute(translations))
             for member in self.members:
-                f.write(member['object'].build_struct_field_documentation(' * ', member['name']))
+                hfile.write(member['object'].build_struct_field_documentation(' * ', member['name']))
             template = (
                 ' *\n'
                 ' * A ${format} struct.\n'
                 ' *\n'
                 ' * Since: ${since}\n'
                 ' */\n')
-            f.write(string.Template(template).substitute(translations))
+            hfile.write(string.Template(template).substitute(translations))
 
         template = (
             'typedef struct _${format} {\n')
-        f.write(string.Template(template).substitute(translations))
+        hfile.write(string.Template(template).substitute(translations))
 
         for member in self.members:
-            f.write(member['object'].build_variable_declaration(True, '    ', member['name']))
+            hfile.write(member['object'].build_variable_declaration(True, '    ', member['name']))
 
         template = ('} ${format};\n')
-        f.write(string.Template(template).substitute(translations))
+        hfile.write(string.Template(template).substitute(translations))
 
 
     """

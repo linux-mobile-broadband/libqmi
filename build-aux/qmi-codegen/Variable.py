@@ -76,7 +76,7 @@ class Variable:
     """
     Emits the code to declare specific new types required by the variable.
     """
-    def emit_types(self, f, since, static):
+    def emit_types(self, hfile, cfile, since, static):
         pass
 
 

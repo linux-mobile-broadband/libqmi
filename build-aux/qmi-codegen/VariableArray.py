@@ -88,8 +88,8 @@ class VariableArray(Variable):
     """
     Emit the type for the array element
     """
-    def emit_types(self, f, since, static):
-        self.array_element.emit_types(f, since, static)
+    def emit_types(self, hfile, cfile, since, static):
+        self.array_element.emit_types(hfile, cfile, since, static)
 
 
     """
