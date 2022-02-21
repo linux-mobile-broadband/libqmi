@@ -5,6 +5,8 @@ generated_inc = include_directories('.')
 
 gen_sources = []
 gen_headers = []
+private_gen_sources = []
+private_gen_headers = []
 gen_sections = []
 gen_sections_deps = []
 
@@ -90,7 +92,7 @@ gen_sources += custom_target(
 # Private Enum/Flag types
 enum_types = 'qmi-enum-types-private'
 
-gen_headers += custom_target(
+private_gen_headers += custom_target(
   enum_types + '.h',
   input: qmi_enums_private_header,
   output: enum_types + '.h',
@@ -104,7 +106,7 @@ gen_headers += custom_target(
   capture: true,
 )
 
-gen_sources += custom_target(
+private_gen_sources += custom_target(
   enum_types + '.c',
   input: qmi_enums_private_header,
   output: enum_types + '.c',
@@ -161,7 +163,7 @@ generated = custom_target(
   command: [qmi_codegen, '--input', '@INPUT@', '--include', qmi_common, '--output', '@OUTDIR@' / name],
 )
 
-gen_sources += [generated[0], generated[1]]
+private_gen_sources += [generated[0], generated[1]]
 
 services = [
   'dms',
@@ -235,7 +237,7 @@ endif
 
 libqmi_glib_generated = static_library(
   'qmi-glib-generated',
-  sources: gen_sources + gen_headers + [version_header],
+  sources: private_gen_sources + private_gen_headers + gen_sources + gen_headers + [version_header],
   include_directories: incs,
   dependencies: deps,
   c_args: c_flags,
@@ -244,7 +246,7 @@ libqmi_glib_generated = static_library(
 # FIXME: in older versions of meson, if libqmi-glib-generated is linked as shared
 #        it will also try to link it in documentation generation
 generated_dep = declare_dependency(
-  sources: gen_headers + [version_header],
+  sources: private_gen_headers + gen_headers + [version_header],
   include_directories: [libqmi_glib_inc, generated_inc],
   dependencies: deps,
 )
