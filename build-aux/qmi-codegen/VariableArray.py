@@ -31,10 +31,10 @@ class VariableArray(Variable):
     """
     Constructor
     """
-    def __init__(self, dictionary, array_element_type, container_type):
+    def __init__(self, service, dictionary, array_element_type, container_type):
 
         # Call the parent constructor
-        Variable.__init__(self, dictionary)
+        Variable.__init__(self, service, dictionary)
 
         self.private_format  = 'GArray *'
         self.public_format = self.private_format
@@ -52,9 +52,9 @@ class VariableArray(Variable):
 
         # Load variable type of this array
         if 'name' in dictionary['array-element']:
-            self.array_element = VariableFactory.create_variable(dictionary['array-element'], array_element_type + ' ' + dictionary['array-element']['name'], self.container_type)
+            self.array_element = VariableFactory.create_variable(self.service, dictionary['array-element'], array_element_type + ' ' + dictionary['array-element']['name'], self.container_type)
         else:
-            self.array_element = VariableFactory.create_variable(dictionary['array-element'], '', self.container_type)
+            self.array_element = VariableFactory.create_variable(self.service, dictionary['array-element'], '', self.container_type)
 
         # Load variable type for the array size prefix
         if 'size-prefix-format' in dictionary:
@@ -62,7 +62,7 @@ class VariableArray(Variable):
             if dictionary['size-prefix-format'] not in [ 'guint8', 'guint16', 'guint32' ]:
                 raise ValueError('Invalid size prefix format (%s): not guint8 or guint16 or guint32' % dictionary['size-prefix-format'])
             default_array_size = { 'format' : dictionary['size-prefix-format'] }
-            self.array_size_element = VariableFactory.create_variable(default_array_size, '', self.container_type)
+            self.array_size_element = VariableFactory.create_variable(self.service, default_array_size, '', self.container_type)
         elif 'fixed-size' in dictionary:
             # fixed-size arrays have no size element, obviously
             self.fixed_size = dictionary['fixed-size']
@@ -71,12 +71,12 @@ class VariableArray(Variable):
         else:
             # Default to 'guint8' if no explicit array size given
             default_array_size = { 'format' : 'guint8' }
-            self.array_size_element = VariableFactory.create_variable(default_array_size, '', self.container_type)
+            self.array_size_element = VariableFactory.create_variable(self.service, default_array_size, '', self.container_type)
 
         # Load variable type for the sequence prefix
         if 'sequence-prefix-format' in dictionary:
             sequence = { 'format' : dictionary['sequence-prefix-format'] }
-            self.array_sequence_element = VariableFactory.create_variable(sequence, '', self.container_type)
+            self.array_sequence_element = VariableFactory.create_variable(self.service, sequence, '', self.container_type)
         else:
             self.array_sequence_element = ''
 

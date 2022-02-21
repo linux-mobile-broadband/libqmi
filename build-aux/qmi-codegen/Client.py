@@ -84,15 +84,18 @@ class Client:
             '\n'
             'typedef struct _${camelcase} ${camelcase};\n'
             'typedef struct _${camelcase}Class ${camelcase}Class;\n'
-            '\n'
-            '/**\n'
-            ' * ${camelcase}:\n'
-            ' *\n'
-            ' * The #${camelcase} structure contains private data and should only be accessed\n'
-            ' * using the provided API.\n'
-            ' *\n'
-            ' * Since: ${since}\n'
-            ' */\n'
+            '\n')
+        if self.service != 'CTL':
+            template += (
+                '/**\n'
+                ' * ${camelcase}:\n'
+                ' *\n'
+                ' * The #${camelcase} structure contains private data and should only be accessed\n'
+                ' * using the provided API.\n'
+                ' *\n'
+                ' * Since: ${since}\n'
+                ' */\n')
+        template += (
             'struct _${camelcase} {\n'
             '    /*< private >*/\n'
             '    QmiClient parent;\n'
@@ -105,11 +108,9 @@ class Client:
             '};\n'
             '\n'
             'GType ${underscore}_get_type (void);\n'
-            'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${camelcase}, g_object_unref)\n'
-            '\n')
+            'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${camelcase}, g_object_unref)\n')
         hfile.write(string.Template(template).substitute(translations))
 
-        # Emit class source. Documentation skipped for the CTL service.
         template = ''
         if self.service != 'CTL':
             template += (
@@ -218,16 +219,19 @@ class Client:
                 translations['service'] = self.service.upper()
                 translations['message_name_dashed'] = message.name.replace(' ', '-')
                 inner_template += (
-                    '\n'
-                    '    /**\n'
-                    '     * ${camelcase}::${signal_name}:\n'
-                    '     * @object: A #${camelcase}.\n'
-                    '     * @output: A #${output_camelcase}.\n'
-                    '     *\n'
-                    '     * The ::${signal_name} signal gets emitted when a \'<link linkend=\"libqmi-glib-${service}-${message_name_dashed}-indication.top_of_page\">${message_name}</link>\' indication is received.\n'
-                    '     *\n'
-                    '     * Since: ${since}\n'
-                    '     */\n'
+                    '\n')
+                if self.service != 'CTL':
+                    inner_template += (
+                        '    /**\n'
+                        '     * ${camelcase}::${signal_name}:\n'
+                        '     * @object: A #${camelcase}.\n'
+                        '     * @output: A #${output_camelcase}.\n'
+                        '     *\n'
+                        '     * The ::${signal_name} signal gets emitted when a \'<link linkend=\"libqmi-glib-${service}-${message_name_dashed}-indication.top_of_page\">${message_name}</link>\' indication is received.\n'
+                        '     *\n'
+                        '     * Since: ${since}\n'
+                        '     */\n')
+                inner_template += (
                     '    signals[SIGNAL_${signal_id}] =\n'
                     '        g_signal_new ("${signal_name}",\n'
                     '                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),\n'
@@ -242,15 +246,18 @@ class Client:
             else:
                 # No output field in the indication
                 inner_template += (
-                    '\n'
-                    '    /**\n'
-                    '     * ${camelcase}::${signal_name}:\n'
-                    '     * @object: A #${camelcase}.\n'
-                    '     *\n'
-                    '     * The ::${signal_name} signal gets emitted when a \'${message_name}\' indication is received.\n'
-                    '     *\n'
-                    '     * Since: ${since}\n'
-                    '     */\n'
+                    '\n')
+                if self.service != 'CTL':
+                    inner_template += (
+                        '    /**\n'
+                        '     * ${camelcase}::${signal_name}:\n'
+                        '     * @object: A #${camelcase}.\n'
+                        '     *\n'
+                        '     * The ::${signal_name} signal gets emitted when a \'${message_name}\' indication is received.\n'
+                        '     *\n'
+                        '     * Since: ${since}\n'
+                        '     */\n')
+                inner_template += (
                     '    signals[SIGNAL_${signal_id}] =\n'
                     '        g_signal_new ("${signal_name}",\n'
                     '                      G_OBJECT_CLASS_TYPE (G_OBJECT_CLASS (klass)),\n'
@@ -302,36 +309,39 @@ class Client:
                 translations['input_var'] = 'input'
                 translations['input_doc'] = 'input: a #' + translations['input_camelcase'] + '.'
             template = (
-                '\n'
-                '/**\n'
-                ' * ${underscore}_${message_underscore}:\n'
-                ' * @self: a #${camelcase}.\n'
-                ' * @${input_doc}\n'
-                ' * @timeout: maximum time to wait for the method to complete, in seconds.\n'
-                ' * @cancellable: a #GCancellable or %NULL.\n'
-                ' * @callback: a #GAsyncReadyCallback to call when the request is satisfied.\n'
-                ' * @user_data: user data to pass to @callback.\n'
-                ' *\n'
-                ' * Asynchronously sends a ${message_name} request to the device.\n')
+                '\n')
+            if self.service != 'CTL':
+                template += (
+                    '/**\n'
+                    ' * ${underscore}_${message_underscore}:\n'
+                    ' * @self: a #${camelcase}.\n'
+                    ' * @${input_doc}\n'
+                    ' * @timeout: maximum time to wait for the method to complete, in seconds.\n'
+                    ' * @cancellable: a #GCancellable or %NULL.\n'
+                    ' * @callback: a #GAsyncReadyCallback to call when the request is satisfied.\n'
+                    ' * @user_data: user data to pass to @callback.\n'
+                    ' *\n'
+                    ' * Asynchronously sends a ${message_name} request to the device.\n')
 
-            if message.abort:
+                if message.abort:
+                    template += (
+                        ' *\n'
+                        ' * This message is abortable. If @cancellable is cancelled or if @timeout expires,\n'
+                        ' * an abort request will be sent to the device, and the asynchronous operation will\n'
+                        ' * not return until the abort response is received. It is not an error if a successful\n'
+                        ' * response is returned for the asynchronous operation even after the user has cancelled\n'
+                        ' * the cancellable, because it may happen that the response is received before the\n'
+                        ' * modem had a chance to run the abort.\n')
+
                 template += (
                     ' *\n'
-                    ' * This message is abortable. If @cancellable is cancelled or if @timeout expires,\n'
-                    ' * an abort request will be sent to the device, and the asynchronous operation will\n'
-                    ' * not return until the abort response is received. It is not an error if a successful\n'
-                    ' * response is returned for the asynchronous operation even after the user has cancelled\n'
-                    ' * the cancellable, because it may happen that the response is received before the\n'
-                    ' * modem had a chance to run the abort.\n')
-
+                    ' * When the operation is finished, @callback will be invoked in the thread-default main loop of the thread you are calling this method from.\n'
+                    ' *\n'
+                    ' * You can then call ${underscore}_${message_underscore}_finish() to get the result of the operation.\n'
+                    ' *\n'
+                    ' * Since: ${message_since}\n'
+                    ' */\n')
             template += (
-                ' *\n'
-                ' * When the operation is finished, @callback will be invoked in the thread-default main loop of the thread you are calling this method from.\n'
-                ' *\n'
-                ' * You can then call ${underscore}_${message_underscore}_finish() to get the result of the operation.\n'
-                ' *\n'
-                ' * Since: ${message_since}\n'
-                ' */\n'
                 'void ${underscore}_${message_underscore} (\n'
                 '    ${camelcase} *self,\n'
                 '    ${input_arg},\n'
@@ -339,19 +349,22 @@ class Client:
                 '    GCancellable *cancellable,\n'
                 '    GAsyncReadyCallback callback,\n'
                 '    gpointer user_data);\n'
-                '\n'
-                '/**\n'
-                ' * ${underscore}_${message_underscore}_finish:\n'
-                ' * @self: a #${camelcase}.\n'
-                ' * @res: the #GAsyncResult obtained from the #GAsyncReadyCallback passed to ${underscore}_${message_underscore}().\n'
-                ' * @error: Return location for error or %NULL.\n'
-                ' *\n'
-                ' * Finishes an async operation started with ${underscore}_${message_underscore}().\n'
-                ' *\n'
-                ' * Returns: a #${output_camelcase}, or %NULL if @error is set. The returned value should be freed with ${output_underscore}_unref().\n'
-                ' *\n'
-                ' * Since: ${message_since}\n'
-                ' */\n'
+                '\n')
+            if self.service != 'CTL':
+                template += (
+                    '/**\n'
+                    ' * ${underscore}_${message_underscore}_finish:\n'
+                    ' * @self: a #${camelcase}.\n'
+                    ' * @res: the #GAsyncResult obtained from the #GAsyncReadyCallback passed to ${underscore}_${message_underscore}().\n'
+                    ' * @error: Return location for error or %NULL.\n'
+                    ' *\n'
+                    ' * Finishes an async operation started with ${underscore}_${message_underscore}().\n'
+                    ' *\n'
+                    ' * Returns: a #${output_camelcase}, or %NULL if @error is set. The returned value should be freed with ${output_underscore}_unref().\n'
+                    ' *\n'
+                    ' * Since: ${message_since}\n'
+                    ' */\n')
+            template += (
                 '${output_camelcase} *${underscore}_${message_underscore}_finish (\n'
                 '    ${camelcase} *self,\n'
                 '    GAsyncResult *res,\n'

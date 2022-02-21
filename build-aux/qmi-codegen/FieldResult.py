@@ -53,7 +53,7 @@ class FieldResult(Field):
 
         # Emit the getter header
         template = '\n'
-        if self.static == False:
+        if self.static == False and self.service != 'CTL':
             template += (
                 '\n'
                 '/**\n'

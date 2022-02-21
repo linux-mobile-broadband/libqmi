@@ -33,7 +33,9 @@ class Container:
     """
     Constructor
     """
-    def __init__(self, prefix, container_type, dictionary, common_objects_dictionary, static, since, compat):
+    def __init__(self, service, prefix, container_type, dictionary, common_objects_dictionary, static, since, compat):
+        # The current QMI service
+        self.service = service
         # The field container prefix usually contains the name of the Message,
         # e.g. "Qmi Message Ctl Something"
         self.prefix = prefix
@@ -99,9 +101,9 @@ class Container:
                 if field_dictionary['type'] == 'TLV':
                     if field_dictionary['format'] == 'struct' and \
                        field_dictionary['name'] == 'Result':
-                        self.fields.append(FieldResult(self.fullname, field_dictionary, common_objects_dictionary, container_type, static))
+                        self.fields.append(FieldResult(self.service, self.fullname, field_dictionary, common_objects_dictionary, container_type, static))
                     else:
-                        self.fields.append(Field(self.fullname, field_dictionary, common_objects_dictionary, container_type, static))
+                        self.fields.append(Field(self.service, self.fullname, field_dictionary, common_objects_dictionary, container_type, static))
 
 
     """
@@ -127,7 +129,7 @@ class Container:
         translations['type_macro'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(self.fullname), 'QMI_')
         # Emit types header
         template = '\n'
-        if self.static == False:
+        if self.static == False and self.service != 'CTL':
             template += (
                 '/**\n'
                 ' * ${camelcase}:\n'
@@ -187,7 +189,7 @@ class Container:
     def __emit_core(self, hfile, cfile, translations):
         # Emit container core header
         template = '\n'
-        if self.static == False:
+        if self.static == False and self.service != 'CTL':
             template += (
                 '\n'
                 '/**\n'
@@ -203,7 +205,7 @@ class Container:
         template += (
             '${static}${camelcase} *${underscore}_ref (${camelcase} *self);\n'
             '\n')
-        if self.static == False:
+        if self.static == False and self.service != 'CTL':
             template += (
                 '/**\n'
                 ' * ${underscore}_unref:\n'

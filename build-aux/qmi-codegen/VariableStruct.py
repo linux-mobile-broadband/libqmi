@@ -31,10 +31,10 @@ class VariableStruct(Variable):
     """
     Constructor
     """
-    def __init__(self, dictionary, struct_type_name, container_type):
+    def __init__(self, service, dictionary, struct_type_name, container_type):
 
         # Call the parent constructor
-        Variable.__init__(self, dictionary)
+        Variable.__init__(self, service, dictionary)
 
         # The public format of the struct is built directly from the suggested
         # struct type name
@@ -48,7 +48,7 @@ class VariableStruct(Variable):
         for member_dictionary in dictionary['contents']:
             member = {}
             member['name'] = utils.build_underscore_name(member_dictionary['name'])
-            member['object'] = VariableFactory.create_variable(member_dictionary, struct_type_name + ' ' + member['name'], self.container_type)
+            member['object'] = VariableFactory.create_variable(self.service, member_dictionary, struct_type_name + ' ' + member['name'], self.container_type)
             # Specify that the variable will be defined in the public header
             member['object'].flag_public()
             self.members.append(member)
@@ -72,7 +72,7 @@ class VariableStruct(Variable):
         template = '\n'
         f.write(string.Template(template).substitute(translations))
 
-        if static == False:
+        if static == False and self.service != 'CTL':
             template = (
                 '\n'
                 '/**\n'

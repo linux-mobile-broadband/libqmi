@@ -32,7 +32,9 @@ class Field:
     """
     Constructor
     """
-    def __init__(self, prefix, dictionary, common_objects_dictionary, container_type, static):
+    def __init__(self, service, prefix, dictionary, common_objects_dictionary, container_type, static):
+        # The current QMI service
+        self.service = service
         # The field prefix, usually the name of the Container,
         #  e.g. "Qmi Message Ctl Something Output"
         self.prefix = prefix
@@ -59,7 +61,7 @@ class Field:
             raise ValueError('TLV ' + self.fullname + ' requires a "since" tag specifying the major version where it was introduced')
 
         # Create our variable object
-        self.variable = VariableFactory.create_variable(dictionary, self.fullname, self.container_type)
+        self.variable = VariableFactory.create_variable(self.service, dictionary, self.fullname, self.container_type)
 
         # Create the variable name within the Container
         self.variable_name = 'arg_' + utils.build_underscore_name(self.name).lower()
@@ -125,7 +127,7 @@ class Field:
 
         # Emit the getter header
         template = '\n'
-        if self.static == False:
+        if self.static == False and self.service != 'CTL':
             template += (
                 '\n'
                 '/**\n'
@@ -195,7 +197,7 @@ class Field:
 
         # Emit the setter header
         template = '\n'
-        if self.static == False:
+        if self.static == False and self.service != 'CTL':
             template += (
                 '\n'
                 '/**\n'

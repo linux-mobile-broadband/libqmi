@@ -30,10 +30,10 @@ class VariableString(Variable):
     """
     Constructor
     """
-    def __init__(self, dictionary):
+    def __init__(self, service, dictionary):
 
         # Call the parent constructor
-        Variable.__init__(self, dictionary)
+        Variable.__init__(self, service, dictionary)
 
         self.private_format = 'gchar *'
         self.public_format = self.private_format

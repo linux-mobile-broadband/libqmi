@@ -36,10 +36,10 @@ class VariableInteger(Variable):
     """
     Constructor
     """
-    def __init__(self, dictionary):
+    def __init__(self, service, dictionary):
 
         # Call the parent constructor
-        Variable.__init__(self, dictionary)
+        Variable.__init__(self, service, dictionary)
 
         self.guint_sized_size = ''
         if self.format == "guint-sized":

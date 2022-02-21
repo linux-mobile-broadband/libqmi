@@ -79,7 +79,8 @@ class Message:
         # field. This applies to both Request/Response and Indications.
         # Output containers are actually optional in Indications
         self.output_compat = True if 'output-compat' in dictionary and dictionary['output-compat'] == 'yes' else False
-        self.output = Container(self.fullname,
+        self.output = Container(self.service,
+                                self.fullname,
                                 'Output',
                                 dictionary['output'] if 'output' in dictionary else None,
                                 common_objects_dictionary,
@@ -94,7 +95,8 @@ class Message:
             # will generate a new Input type and public getters for each input
             # field
             self.input_compat = True if 'input-compat' in dictionary and dictionary['input-compat'] == 'yes' else False
-            self.input = Container(self.fullname,
+            self.input = Container(self.service,
+                                   self.fullname,
                                    'Input',
                                    dictionary['input'] if 'input' in dictionary else None,
                                    common_objects_dictionary,

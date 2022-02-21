@@ -29,7 +29,11 @@ class Variable:
     """
     Constructor with common variable handling
     """
-    def __init__(self, dictionary):
+    def __init__(self, service, dictionary):
+        """
+        The current QMI service
+        """
+        self.service = service
         """
         Variables can define specific public and private formats to be used.
         The public format will be that used in the generated interface file,
