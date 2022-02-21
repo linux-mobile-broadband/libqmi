@@ -1164,7 +1164,8 @@ qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info (
              error))
       return FALSE;
 
-    *value_intrafrequency_lte_info_plmn = invalid_plmn_str;
+    if (value_intrafrequency_lte_info_plmn)
+        *value_intrafrequency_lte_info_plmn = invalid_plmn_str;
     return TRUE;
 }
 
@@ -1196,7 +1197,8 @@ qmi_message_nas_get_cell_location_info_output_get_umts_info (
            error))
         return FALSE;
 
-    *value_umts_info_plmn = invalid_plmn_str;
+    if (value_umts_info_plmn)
+        *value_umts_info_plmn = invalid_plmn_str;
     return TRUE;
 }
 
@@ -1226,8 +1228,10 @@ qmi_message_nas_get_cell_location_info_output_get_geran_info (
             error))
         return FALSE;
 
-    *value_geran_info_plmn = invalid_plmn_str;
-    *value_geran_info_cell = NULL;
+    if (value_geran_info_plmn)
+      *value_geran_info_plmn = invalid_plmn_str;
+    if (value_geran_info_cell)
+      *value_geran_info_cell = NULL;
     return TRUE;
 }
 
