@@ -1129,6 +1129,32 @@ qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
 
 #if defined HAVE_QMI_MESSAGE_NAS_GET_CELL_LOCATION_INFO
 
+typedef struct {
+    GArray *geran_info_cell;
+} MessageNasGetCellLocationInfoOutputCompatContext;
+
+static void
+message_nas_get_cell_location_info_output_compat_context_free (MessageNasGetCellLocationInfoOutputCompatContext *ctx)
+{
+    if (ctx->geran_info_cell)
+        g_array_unref (ctx->geran_info_cell);
+    g_slice_free (MessageNasGetCellLocationInfoOutputCompatContext, ctx);
+}
+
+static MessageNasGetCellLocationInfoOutputCompatContext *
+message_nas_get_cell_location_info_output_get_compat_context (QmiMessageNasGetCellLocationInfoOutput *self)
+{
+    MessageNasGetCellLocationInfoOutputCompatContext *ctx;
+
+    ctx = qmi_message_nas_get_cell_location_info_output_get_compat_context (self);
+    if (!ctx) {
+        ctx = g_slice_new0 (MessageNasGetCellLocationInfoOutputCompatContext);
+        qmi_message_nas_get_cell_location_info_output_set_compat_context (self, ctx, (GDestroyNotify)message_nas_get_cell_location_info_output_compat_context_free);
+    }
+
+    return ctx;
+}
+
 /* This PLMN string is returned because it's a 3-char long valid UTF-8. */
 static const gchar invalid_plmn_str[] = "   ";
 
@@ -1215,6 +1241,8 @@ qmi_message_nas_get_cell_location_info_output_get_geran_info (
     GArray **value_geran_info_cell,
     GError **error)
 {
+    GArray *geran_info_v2_cell = NULL;
+
     if (!qmi_message_nas_get_cell_location_info_output_get_geran_info_v2 (
             self,
             value_geran_info_cell_id,
@@ -1224,14 +1252,41 @@ qmi_message_nas_get_cell_location_info_output_get_geran_info (
             value_geran_info_base_station_identity_code,
             value_geran_info_timing_advance,
             value_geran_info_rx_level,
-            NULL,
+            &geran_info_v2_cell,
             error))
         return FALSE;
 
     if (value_geran_info_plmn)
       *value_geran_info_plmn = invalid_plmn_str;
-    if (value_geran_info_cell)
-      *value_geran_info_cell = NULL;
+
+    if (value_geran_info_cell) {
+        MessageNasGetCellLocationInfoOutputCompatContext *ctx;
+
+        /* We have an array of QmiMessageNasGetCellLocationInfoOutputGeranInfoV2CellElement elements,
+         * we need to return an array of QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement elements
+         * instead.
+         */
+        ctx = message_nas_get_cell_location_info_output_get_compat_context (self);
+        if (!ctx->geran_info_cell) {
+            guint i;
+
+            ctx->geran_info_cell = g_array_sized_new (FALSE, FALSE, sizeof (QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement), geran_info_v2_cell->len);
+            for (i = 0; i < geran_info_v2_cell->len; i++) {
+                QmiMessageNasGetCellLocationInfoOutputGeranInfoV2CellElement *elemv2;
+                QmiMessageNasGetCellLocationInfoOutputGeranInfoCellElement elem;
+
+                elemv2 = &g_array_index (geran_info_v2_cell, QmiMessageNasGetCellLocationInfoOutputGeranInfoV2CellElement, i);
+                elem.cell_id = elemv2->cell_id;
+                elem.plmn = (gchar *)invalid_plmn_str;
+                elem.lac = elemv2->lac;
+                elem.geran_absolute_rf_channel_number = elemv2->geran_absolute_rf_channel_number;
+                elem.base_station_identity_code = elemv2->base_station_identity_code;
+                elem.rx_level = elemv2->rx_level;
+                g_array_append_val (ctx->geran_info_cell, elem);
+            }
+        }
+        *value_geran_info_cell = ctx->geran_info_cell;
+    }
     return TRUE;
 }
 

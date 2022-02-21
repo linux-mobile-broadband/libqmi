@@ -2156,6 +2156,8 @@ gboolean qmi_message_nas_get_home_network_output_get_home_network_3gpp2 (
  *
  * GERAN info cell.
  *
+ * This type is deprecated and returns always an empty @plmn string.
+ *
  * Since: 1.10
  * Deprecated: 1.26.6.
  */
@@ -2310,7 +2312,7 @@ gboolean qmi_message_nas_get_cell_location_info_output_get_umts_info (
  * Get the 'GERAN Info' field from @self.
  *
  * This method is deprecated and returns an empty @value_geran_info_plmn
- * string and an empty @value_geran_info_cell array.
+ * string.
  *
  * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
  *

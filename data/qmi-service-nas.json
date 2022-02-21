@@ -1789,6 +1789,7 @@
      "service" : "NAS",
      "id"      : "0x0043",
      "since"   : "1.10",
+     "output-compat" : "yes",
      "output"  : [  { "common-ref" : "Operation Result" },
                     { "name"      : "GERAN Info v2",
                       "id"        : "0x10",
