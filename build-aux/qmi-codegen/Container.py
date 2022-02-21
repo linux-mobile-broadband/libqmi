@@ -33,7 +33,7 @@ class Container:
     """
     Constructor
     """
-    def __init__(self, prefix, container_type, dictionary, common_objects_dictionary, static, since):
+    def __init__(self, prefix, container_type, dictionary, common_objects_dictionary, static, since, compat):
         # The field container prefix usually contains the name of the Message,
         # e.g. "Qmi Message Ctl Something"
         self.prefix = prefix
@@ -50,6 +50,7 @@ class Container:
 
         self.static = static
         self.since = since
+        self.compat = compat
 
         # Create the composed full name (prefix + name),
         #  e.g. "Qmi Message Ctl Something Output"
@@ -140,6 +141,15 @@ class Container:
             'typedef struct _${camelcase} ${camelcase};\n'
             '${static}GType ${underscore}_get_type (void) G_GNUC_CONST;\n'
             '#define ${type_macro} (${underscore}_get_type ())\n')
+        if self.compat == True:
+            template += (
+                'G_GNUC_INTERNAL\n'
+                'gpointer ${underscore}_get_compat_context (${camelcase} *self);\n'
+                'G_GNUC_INTERNAL\n'
+                'void ${underscore}_set_compat_context (\n'
+                '    ${camelcase} *self,\n'
+                '    gpointer compat_context,\n'
+                '    GDestroyNotify compat_context_free);\n')
         hfile.write(string.Template(template).substitute(translations))
 
         # Emit types source
@@ -147,6 +157,11 @@ class Container:
             '\n'
             'struct _${camelcase} {\n'
             '    volatile gint ref_count;\n')
+        if self.compat == True:
+            template += (
+                '\n'
+                '    gpointer compat_context;\n'
+                '    GDestroyNotify compat_context_free;\n')
         cfile.write(string.Template(template).substitute(translations))
 
         if self.fields is not None:
@@ -259,6 +274,11 @@ class Container:
             '\n'
             '    if (g_atomic_int_dec_and_test (&self->ref_count)) {\n')
 
+        if self.compat == True:
+            template += (
+                '        if (self->compat_context && self->compat_context_free)\n'
+                '            self->compat_context_free (self->compat_context);\n')
+
         if self.fields is not None:
             for field in self.fields:
                 if field.variable is not None and field.variable.needs_dispose is True:
@@ -268,6 +288,31 @@ class Container:
             '        g_slice_free (${camelcase}, self);\n'
             '    }\n'
             '}\n')
+
+        if self.compat == True:
+            template += (
+                'gpointer\n'
+                '${underscore}_get_compat_context (${camelcase} *self)\n'
+                '{\n'
+                '    g_return_val_if_fail (self != NULL, NULL);\n'
+                '\n'
+                '    return self->compat_context;\n'
+                '}\n'
+                '\n'
+                'void\n'
+                '${underscore}_set_compat_context (\n'
+                '    ${camelcase} *self,\n'
+                '    gpointer compat_context,\n'
+                '    GDestroyNotify compat_context_free)\n'
+                '{\n'
+                '    g_return_if_fail (self != NULL);\n'
+                '\n'
+                '    if (self->compat_context && self->compat_context_free)\n'
+                '        self->compat_context_free (self->compat_context);\n'
+                '\n'
+                '    self->compat_context = compat_context;\n'
+                '    self->compat_context_free = compat_context_free;\n'
+                '}\n')
         cfile.write(string.Template(template).substitute(translations))
 
         # _new() is only generated if the container is not readonly
@@ -345,6 +390,13 @@ class Container:
             '${underscore}_get_type\n'
             '${type_macro}\n')
         sections['standard'] += string.Template(template).substitute(translations)
+
+        # Private
+        if self.compat == True:
+            template = (
+                '${underscore}_get_compat_context\n'
+                '${underscore}_set_compat_context\n')
+            sections['private'] += string.Template(template).substitute(translations)
 
         # Public types
         template = (

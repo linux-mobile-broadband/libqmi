@@ -35,7 +35,7 @@ class Message:
         # Validate input fields in the dictionary, and only allow those
         # explicitly expected.
         for message_key in dictionary:
-            if message_key not in [ "name", "type", "service", "id", "since", "input", "output", "vendor", "scope", "abort" ]:
+            if message_key not in [ "name", "type", "service", "id", "since", "input", "output", "vendor", "scope", "abort", "output-compat", "input-compat" ]:
                 raise ValueError('Invalid message field: "' + message_key + '"')
 
         # The message service, e.g. "Ctl"
@@ -78,12 +78,14 @@ class Message:
         # will generate a new Output type and public getters for each output
         # field. This applies to both Request/Response and Indications.
         # Output containers are actually optional in Indications
+        self.output_compat = True if 'output-compat' in dictionary and dictionary['output-compat'] == 'yes' else False
         self.output = Container(self.fullname,
                                 'Output',
                                 dictionary['output'] if 'output' in dictionary else None,
                                 common_objects_dictionary,
                                 self.static,
-                                self.since)
+                                self.since,
+                                self.output_compat)
 
         self.input = None
         if self.type == 'Message':
@@ -91,12 +93,14 @@ class Message:
             # Every defined message will have its own input container, which
             # will generate a new Input type and public getters for each input
             # field
+            self.input_compat = True if 'input-compat' in dictionary and dictionary['input-compat'] == 'yes' else False
             self.input = Container(self.fullname,
                                    'Input',
                                    dictionary['input'] if 'input' in dictionary else None,
                                    common_objects_dictionary,
                                    self.static,
-                                   self.since)
+                                   self.since,
+                                   self.input_compat)
 
 
     """
