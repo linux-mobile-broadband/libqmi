@@ -471,7 +471,9 @@ position_report_received (QmiClientLoc                         *client,
         QmiLocTechnologyUsed technology;
         QmiLocTimeSource time_source;
         QmiLocSensorDataUsage sensor_data_usage;
-        QmiIndicationLocPositionReportOutputDilutionOfPrecision dop;
+        gfloat pdop;
+        gfloat hdop;
+        gfloat vdop;
         QmiIndicationLocPositionReportOutputGpsTime gps_time;
         gboolean auxb;
         GArray *array;
@@ -579,10 +581,10 @@ position_report_received (QmiClientLoc                         *client,
         } else
             g_print ("   technology: n/a\n");
 
-        if (qmi_indication_loc_position_report_output_get_dilution_of_precision (output, &dop, NULL)) {
-            g_print ("   position DOP:   %lf\n", (gdouble)dop.position_dilution_of_precision);
-            g_print ("   horizontal DOP: %lf\n", (gdouble)dop.horizontal_dilution_of_precision);
-            g_print ("   vertical DOP:   %lf\n", (gdouble)dop.vertical_dilution_of_precision);
+        if (qmi_indication_loc_position_report_output_get_dop (output, &pdop, &hdop, &vdop, NULL)) {
+            g_print ("   position DOP:   %lf\n", (gdouble)pdop);
+            g_print ("   horizontal DOP: %lf\n", (gdouble)hdop);
+            g_print ("   vertical DOP:   %lf\n", (gdouble)vdop);
         } else {
             g_print ("   position DOP:   n/a\n");
             g_print ("   horizontal DOP: n/a\n");
