@@ -40,6 +40,7 @@ class VariableStruct(Variable):
 
         # The public format of the struct is built directly from the suggested
         # struct type name
+        self.struct_type_name = struct_type_name
         self.public_format = utils.build_camelcase_name(struct_type_name)
         self.private_format = self.public_format
         self.element_type = self.public_format
@@ -59,6 +60,8 @@ class VariableStruct(Variable):
         for member in self.members:
             if member['object'].needs_dispose == True:
                 self.needs_dispose = True
+                self.clear_method = '__' + utils.build_underscore_name(self.struct_type_name) + '_clear'
+                break
 
 
     """
@@ -99,6 +102,21 @@ class VariableStruct(Variable):
 
         template = ('} ${format};\n')
         hfile.write(string.Template(template).substitute(translations))
+
+        # No need for the clear func if no need to dispose the contents,
+        # or if we were not the ones who created the array
+        if self.needs_dispose and self.container_type != "Input":
+            translations['clear_method'] = self.clear_method
+            template = (
+                '\n'
+                'static void\n'
+                '${clear_method} (${format} *value)\n'
+                '{\n')
+            for member in self.members:
+                template += member['object'].build_dispose('    ', 'value->' + member['name'])
+            template += (
+                '}\n')
+            cfile.write(string.Template(template).substitute(translations))
 
 
     """

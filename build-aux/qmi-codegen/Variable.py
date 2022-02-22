@@ -58,6 +58,12 @@ class Variable:
         """
         self.needs_dispose = False
 
+        """
+        Variables that get allocated in heap need to have a clear method so that it
+        can be used as part of an array of this variable type.
+        """
+        self.clear_method = ''
+
         self.endian = "QMI_ENDIAN_LITTLE"
         if 'endian' in dictionary:
             endian = dictionary['endian']

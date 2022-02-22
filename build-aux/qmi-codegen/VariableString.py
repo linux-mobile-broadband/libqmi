@@ -52,6 +52,7 @@ class VariableString(Variable):
             self.fixed_size = '-1'
             # Variable-length strings in heap
             self.needs_dispose = True
+            self.clear_method = 'qmi_helpers_clear_string'
             if 'size-prefix-format' in dictionary:
                 if dictionary['size-prefix-format'] == 'guint8':
                     self.length_prefix_size = 8

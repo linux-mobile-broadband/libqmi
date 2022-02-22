@@ -44,6 +44,7 @@ class VariableArray(Variable):
 
         # The array and its contents need to get disposed
         self.needs_dispose = True
+        self.clear_method = 'qmi_helpers_clear_array'
 
         # We need to know whether the variable comes in an Input container or in
         # an Output container, as we should not dump the element clear() helper method
@@ -93,44 +94,11 @@ class VariableArray(Variable):
 
 
     """
-    Constructs the name of the array clear function
-    """
-    def clear_func_name(self):
-        # element public format might be a base type like 'gchar *' rather
-        # than a structure name like QmiFooBar
-        elt_name = self.array_element.public_format.replace('*', 'pointer')
-        return utils.build_underscore_name(self.name) + \
-             '_' + \
-             utils.build_underscore_name_from_camelcase(utils.build_camelcase_name(elt_name))
-
-
-    """
     Emits the code to clear the element of the array
     """
     def emit_helper_methods(self, hfile, cfile):
         self.array_element.emit_helper_methods(hfile, cfile)
 
-        # No need for the clear func if no need to dispose the contents
-        if self.array_element.needs_dispose == False:
-            return
-
-        # No need for the clear func if we were not the ones who created
-        # the array
-        if self.container_type == "Input":
-            return
-
-        translations = { 'element_format'   : self.array_element.public_format,
-                         'underscore'       : self.clear_func_name(),
-                         'dispose_contents' : self.array_element.build_dispose('    ', '(*p)') }
-
-        template = (
-            '\n'
-            'static void\n'
-            '${underscore}_clear (${element_format} *p)\n'
-            '{\n'
-            '$dispose_contents'
-            '}\n')
-        cfile.write(string.Template(template).substitute(translations))
 
 
     """
@@ -143,7 +111,7 @@ class VariableArray(Variable):
                          'variable_name'               : variable_name,
                          'private_format'              : self.private_format,
                          'public_array_element_format' : self.array_element.public_format,
-                         'underscore'                  : self.clear_func_name(),
+                         'array_element_clear_method'  : self.array_element.clear_method,
                          'common_var_prefix'           : common_var_prefix }
 
         template = (
@@ -197,8 +165,7 @@ class VariableArray(Variable):
 
         if self.array_element.needs_dispose == True:
             template += (
-                '${lp}    g_array_set_clear_func (${variable_name},\n'
-                '${lp}                            (GDestroyNotify)${underscore}_clear);\n'
+                '${lp}    g_array_set_clear_func (${variable_name}, (GDestroyNotify)${array_element_clear_method});\n'
                 '\n')
 
         template += (

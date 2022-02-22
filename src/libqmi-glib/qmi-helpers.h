@@ -90,6 +90,12 @@ gboolean qmi_helpers_list_links (GFile         *sysfs_file,
                                  GPtrArray    **out_links,
                                  GError       **error);
 
+G_GNUC_INTERNAL
+void qmi_helpers_clear_string (gchar **value);
+
+G_GNUC_INTERNAL
+void qmi_helpers_clear_array (GArray **value);
+
 static inline gfloat
 QMI_GFLOAT_SWAP_LE_BE (gfloat in)
 {
