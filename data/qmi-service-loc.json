@@ -300,7 +300,6 @@
                      "id"            : "0x2C",
                      "type"          : "TLV",
                      "since"         : "1.22",
-                     "format"        : "struct",
                      "format"        : "array",
                      "array-element" : { "format" : "guint16" } },
                    { "name"          : "Altitude Assumed",
