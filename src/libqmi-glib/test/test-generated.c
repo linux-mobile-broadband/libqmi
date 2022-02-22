@@ -777,7 +777,7 @@ nas_get_cell_location_info_invalid_ready (QmiClientNas *client,
                                           TestFixture  *fixture)
 {
     QmiMessageNasGetCellLocationInfoOutput *output;
-    GError *error = NULL;
+    g_autoptr(GError) error = NULL;
 
     output = qmi_client_nas_get_cell_location_info_finish (client, res, &error);
     g_assert_error (error, QMI_CORE_ERROR, QMI_CORE_ERROR_UNEXPECTED_MESSAGE);
