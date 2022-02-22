@@ -2322,6 +2322,24 @@ qmi_indication_loc_position_report_output_get_dilution_of_precision (
     return TRUE;
 }
 
+gboolean
+qmi_indication_loc_position_report_output_get_gps_time (
+    QmiIndicationLocPositionReportOutput *self,
+    QmiDeprecatedIndicationLocPositionReportOutputGpsTime *value_gps_time,
+    GError **error)
+{
+    guint16 gps_weeks = 0;
+    guint32 gps_time_of_week_milliseconds = 0;
+
+    if (!qmi_indication_loc_position_report_output_get_gps_date_time (self, &gps_weeks, &gps_time_of_week_milliseconds, error))
+        return FALSE;
+    if (value_gps_time) {
+        value_gps_time->gps_weeks = gps_weeks;
+        value_gps_time->gps_time_of_week_milliseconds = gps_time_of_week_milliseconds;
+    }
+    return TRUE;
+}
+
 #endif /* HAVE_QMI_INDICATION_LOC_POSITION_REPORT */
 
 #endif /* QMI_DISABLE_DEPRECATED */

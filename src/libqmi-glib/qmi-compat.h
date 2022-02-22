@@ -3758,6 +3758,45 @@ gboolean qmi_indication_loc_position_report_output_get_dilution_of_precision (
     QmiDeprecatedIndicationLocPositionReportOutputDilutionOfPrecision *value_dilution_of_precision,
     GError **error);
 
+/**
+ * QmiIndicationLocPositionReportOutputGpsTime:
+ * @gps_weeks: a #guint16.
+ * @gps_time_of_week_milliseconds: a #guint32.
+ *
+ * A QmiIndicationLocPositionReportOutputGpsTime struct.
+ *
+ * This type is deprecated and there is no replacement as the
+ * new methods don't require any intermediate type any more.
+ *
+ * Since: 1.22
+ * Deprecated: 1.32
+ */
+typedef struct _QmiDeprecatedIndicationLocPositionReportOutputGpsTime {
+    guint16 gps_weeks;
+    guint32 gps_time_of_week_milliseconds;
+} QmiDeprecatedIndicationLocPositionReportOutputGpsTime;
+G_DEPRECATED
+typedef QmiDeprecatedIndicationLocPositionReportOutputGpsTime QmiIndicationLocPositionReportOutputGpsTime;
+
+/**
+ * qmi_indication_loc_position_report_output_get_gps_time:
+ * @self: a #QmiIndicationLocPositionReportOutput.
+ * @value_gps_time: (out)(optional)(transfer none): a placeholder for the output constant #QmiIndicationLocPositionReportOutputGpsTime, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'GPS Time' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.22
+ * Deprecated: 1.32: Use qmi_indication_loc_position_report_output_get_gps_date_time() instead.
+ */
+G_DEPRECATED_FOR (qmi_indication_loc_position_report_output_get_gps_date_time)
+gboolean qmi_indication_loc_position_report_output_get_gps_time (
+    QmiIndicationLocPositionReportOutput *self,
+    QmiDeprecatedIndicationLocPositionReportOutputGpsTime *value_gps_time,
+    GError **error);
+
 #endif /* HAVE_QMI_INDICATION_LOC_POSITION_REPORT */
 
 #endif /* QMI_DISABLE_DEPRECATED */
