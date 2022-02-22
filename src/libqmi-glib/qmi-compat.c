@@ -2267,4 +2267,37 @@ qmi_message_dms_delete_stored_image_input_set_image (
 
 #endif /* HAVE_QMI_MESSAGE_DMS_DELETE_STORED_IMAGE */
 
+#if defined HAVE_QMI_MESSAGE_DMS_GET_STORED_IMAGE_INFO
+
+gboolean
+qmi_message_dms_get_stored_image_info_input_get_image (
+    QmiMessageDmsGetStoredImageInfoInput *self,
+    QmiDeprecatedMessageDmsGetStoredImageInfoInputImage *value_image,
+    GError **error)
+{
+    QmiDmsFirmwareImageType  type = QMI_DMS_FIRMWARE_IMAGE_TYPE_MODEM;
+    GArray                  *unique_id = NULL;
+    const gchar             *build_id = NULL;
+
+    if (!qmi_message_dms_get_stored_image_info_input_get_image_details (self, &type, &unique_id, &build_id, error))
+        return FALSE;
+    if (value_image) {
+        value_image->type = type;
+        value_image->unique_id = unique_id;
+        value_image->build_id = (gchar *) build_id;
+    }
+    return TRUE;
+}
+
+gboolean
+qmi_message_dms_get_stored_image_info_input_set_image (
+    QmiMessageDmsGetStoredImageInfoInput *self,
+    const QmiDeprecatedMessageDmsGetStoredImageInfoInputImage *value_image,
+    GError **error)
+{
+    return qmi_message_dms_get_stored_image_info_input_set_image_details (self, value_image->type, value_image->unique_id, value_image->build_id, error);
+}
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_STORED_IMAGE_INFO */
+
 #endif /* QMI_DISABLE_DEPRECATED */

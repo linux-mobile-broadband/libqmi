@@ -3650,6 +3650,70 @@ gboolean qmi_message_dms_delete_stored_image_input_set_image (
 
 #endif /* HAVE_QMI_MESSAGE_DMS_DELETE_STORED_IMAGE */
 
+#if defined HAVE_QMI_MESSAGE_DMS_GET_STORED_IMAGE_INFO
+
+/**
+ * QmiMessageDmsGetStoredImageInfoInputImage:
+ * @type: a #QmiDmsFirmwareImageType.
+ * @unique_id: a #GArray of #guint8 elements.
+ * @build_id: a string.
+ *
+ * A QmiMessageDmsGetStoredImageInfoInputImage struct.
+ *
+ * This type is deprecated and there is no replacement as the
+ * new methods don't require any intermediate type any more.
+ *
+ * Since: 1.0
+ * Deprecated: 1.32
+ */
+typedef struct _QmiDeprecatedMessageDmsGetStoredImageInfoInputImage {
+    QmiDmsFirmwareImageType type;
+    GArray *unique_id;
+    gchar *build_id;
+} QmiDeprecatedMessageDmsGetStoredImageInfoInputImage;
+G_DEPRECATED
+typedef QmiDeprecatedMessageDmsGetStoredImageInfoInputImage QmiMessageDmsGetStoredImageInfoInputImage;
+
+/**
+ * qmi_message_dms_get_stored_image_info_input_get_image:
+ * @self: a #QmiMessageDmsGetStoredImageInfoInput.
+ * @value_image: (out)(optional)(transfer none): a placeholder for the output constant #QmiMessageDmsGetStoredImageInfoInputImage, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Image' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.32: Use qmi_message_dms_get_stored_image_info_input_get_image_details() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_get_stored_image_info_input_get_image_details)
+gboolean qmi_message_dms_get_stored_image_info_input_get_image (
+    QmiMessageDmsGetStoredImageInfoInput *self,
+    QmiDeprecatedMessageDmsGetStoredImageInfoInputImage *value_image,
+    GError **error);
+
+/**
+ * qmi_message_dms_get_stored_image_info_input_set_image:
+ * @self: a #QmiMessageDmsGetStoredImageInfoInput.
+ * @value_image: the address of the #QmiMessageDmsGetStoredImageInfoInputImage to set.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Image' field in the message.
+ *
+ * Returns: (skip): %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.0
+ * Deprecated: 1.32: Use qmi_message_dms_get_stored_image_info_input_set_image_details() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_dms_get_stored_image_info_input_set_image_details)
+gboolean qmi_message_dms_get_stored_image_info_input_set_image (
+    QmiMessageDmsGetStoredImageInfoInput *self,
+    const QmiDeprecatedMessageDmsGetStoredImageInfoInputImage *value_image,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_DMS_GET_STORED_IMAGE_INFO */
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */
