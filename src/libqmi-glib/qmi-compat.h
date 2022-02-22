@@ -35,6 +35,7 @@
 #include "qmi-wda.h"
 #include "qmi-wds.h"
 #include "qmi-pdc.h"
+#include "qmi-loc.h"
 #include "qmi-enums-nas.h"
 #include "qmi-enums-wms.h"
 #include "qmi-enums-pdc.h"
@@ -3713,6 +3714,51 @@ gboolean qmi_message_dms_get_stored_image_info_input_set_image (
     GError **error);
 
 #endif /* HAVE_QMI_MESSAGE_DMS_GET_STORED_IMAGE_INFO */
+
+#if defined HAVE_QMI_INDICATION_LOC_POSITION_REPORT
+
+/**
+ * QmiIndicationLocPositionReportOutputDilutionOfPrecision:
+ * @position_dilution_of_precision: a #gfloat.
+ * @horizontal_dilution_of_precision: a #gfloat.
+ * @vertical_dilution_of_precision: a #gfloat.
+ *
+ * A QmiIndicationLocPositionReportOutputDilutionOfPrecision struct.
+ *
+ * This type is deprecated and there is no replacement as the
+ * new methods don't require any intermediate type any more.
+ *
+ * Since: 1.22
+ * Deprecated: 1.32
+ */
+typedef struct _QmiDeprecatedIndicationLocPositionReportOutputDilutionOfPrecision {
+    gfloat position_dilution_of_precision;
+    gfloat horizontal_dilution_of_precision;
+    gfloat vertical_dilution_of_precision;
+} QmiDeprecatedIndicationLocPositionReportOutputDilutionOfPrecision;
+G_DEPRECATED
+typedef QmiDeprecatedIndicationLocPositionReportOutputDilutionOfPrecision QmiIndicationLocPositionReportOutputDilutionOfPrecision;
+
+/**
+ * qmi_indication_loc_position_report_output_get_dilution_of_precision:
+ * @self: a #QmiIndicationLocPositionReportOutput.
+ * @value_dilution_of_precision: (out)(optional)(transfer none): a placeholder for the output constant #QmiIndicationLocPositionReportOutputDilutionOfPrecision, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Dilution of Precision' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.22
+ * Deprecated: 1.32: Use qmi_indication_loc_position_report_output_get_dop() instead.
+ */
+G_DEPRECATED_FOR (qmi_indication_loc_position_report_output_get_dop)
+gboolean qmi_indication_loc_position_report_output_get_dilution_of_precision (
+    QmiIndicationLocPositionReportOutput *self,
+    QmiDeprecatedIndicationLocPositionReportOutputDilutionOfPrecision *value_dilution_of_precision,
+    GError **error);
+
+#endif /* HAVE_QMI_INDICATION_LOC_POSITION_REPORT */
 
 #endif /* QMI_DISABLE_DEPRECATED */
 

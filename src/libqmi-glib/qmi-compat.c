@@ -2300,4 +2300,28 @@ qmi_message_dms_get_stored_image_info_input_set_image (
 
 #endif /* HAVE_QMI_MESSAGE_DMS_GET_STORED_IMAGE_INFO */
 
+#if defined  HAVE_QMI_INDICATION_LOC_POSITION_REPORT
+
+gboolean
+qmi_indication_loc_position_report_output_get_dilution_of_precision (
+    QmiIndicationLocPositionReportOutput *self,
+    QmiDeprecatedIndicationLocPositionReportOutputDilutionOfPrecision *value_dilution_of_precision,
+    GError **error)
+{
+    gfloat pdop = 0.0;
+    gfloat hdop = 0.0;
+    gfloat vdop = 0.0;
+
+    if (!qmi_indication_loc_position_report_output_get_dop (self, &pdop, &hdop, &vdop, error))
+        return FALSE;
+    if (value_dilution_of_precision) {
+        value_dilution_of_precision->position_dilution_of_precision = pdop;
+        value_dilution_of_precision->horizontal_dilution_of_precision = hdop;
+        value_dilution_of_precision->vertical_dilution_of_precision = vdop;
+    }
+    return TRUE;
+}
+
+#endif /* HAVE_QMI_INDICATION_LOC_POSITION_REPORT */
+
 #endif /* QMI_DISABLE_DEPRECATED */
