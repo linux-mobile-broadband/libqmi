@@ -25,6 +25,8 @@ import VariableFactory
 
 """
 Variable type for Structs ('struct' format)
+These variables are exclusively used as array elements, they can not be used as
+independent TLVs. Use Sequence instead for that.
 """
 class VariableStruct(Variable):
 
@@ -152,134 +154,6 @@ class VariableStruct(Variable):
         template = (
             '${lp}g_string_append (printable, " ]");\n')
         f.write(string.Template(template).substitute(translations))
-
-
-    """
-    Variable declaration
-    """
-    def build_variable_declaration(self, public, line_prefix, variable_name):
-        translations = { 'lp'     : line_prefix,
-                         'format' : self.public_format,
-                         'name'   : variable_name }
-
-        template = (
-            '${lp}${format} ${name};\n')
-        return string.Template(template).substitute(translations)
-
-
-    """
-    The getter for a struct variable will include independent getters for each
-    of the variables in the struct.
-    """
-    def build_getter_declaration(self, line_prefix, variable_name):
-        if not self.visible:
-            return ""
-
-        translations = { 'lp'     : line_prefix,
-                         'format' : self.public_format,
-                         'name'   : variable_name }
-
-        template = (
-            '${lp}${format} *${name},\n')
-        return string.Template(template).substitute(translations)
-
-
-    """
-    Documentation for the getter
-    """
-    def build_getter_documentation(self, line_prefix, variable_name):
-        if not self.visible:
-            return ""
-
-        translations = { 'lp'     : line_prefix,
-                         'format' : self.public_format,
-                         'name'   : variable_name }
-
-        template = (
-            '${lp}@${name}: (out)(optional)(transfer none): a placeholder for the output constant #${format}, or %NULL if not required.\n')
-        return string.Template(template).substitute(translations)
-
-
-    """
-    Builds the Struct getter implementation
-    """
-    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
-        if not self.visible:
-            return ""
-
-        translations = { 'lp'   : line_prefix,
-                         'from' : variable_name_from,
-                         'to'   : variable_name_to }
-
-        if to_is_reference:
-            template = (
-                '${lp}if (${to})\n'
-                '${lp}    *${to} = ${from};\n')
-            return string.Template(template).substitute(translations)
-        else:
-            template = (
-                '${lp}${to} = ${from};\n')
-            return string.Template(template).substitute(translations)
-
-
-    """
-    The setter for a struct variable will include independent setters for each
-    of the variables in the struct.
-    """
-    def build_setter_declaration(self, line_prefix, variable_name):
-        if not self.visible:
-            return ""
-
-        translations = { 'lp'     : line_prefix,
-                         'format' : self.public_format,
-                         'name'   : variable_name }
-
-        template = (
-            '${lp}const ${format} *${name},\n')
-        return string.Template(template).substitute(translations)
-
-
-    """
-    Documentation for the setter
-    """
-    def build_setter_documentation(self, line_prefix, variable_name):
-        if not self.visible:
-            return ""
-
-        translations = { 'lp'     : line_prefix,
-                         'format' : self.public_format,
-                         'name'   : variable_name }
-
-        template = (
-            '${lp}@${name}: the address of the #${format} to set.\n')
-        return string.Template(template).substitute(translations)
-
-    """
-    Builds the Struct setter implementation
-    """
-    def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
-        if not self.visible:
-            return ""
-
-        built = ''
-        for member in self.members:
-            built += member['object'].build_setter_implementation(line_prefix,
-                                                                  variable_name_from + '->' + member['name'],
-                                                                  variable_name_to + '.' + member['name'])
-        return built
-
-
-    """
-    Documentation for the struct field
-    """
-    def build_struct_field_documentation(self, line_prefix, variable_name):
-        translations = { 'lp'     : line_prefix,
-                         'format' : self.public_format,
-                         'name'   : variable_name }
-
-        template = (
-            '${lp}@${name}: a #${format} struct.\n')
-        return string.Template(template).substitute(translations)
 
 
     """

@@ -60,6 +60,10 @@ class Field:
         if self.since is None:
             raise ValueError('TLV ' + self.fullname + ' requires a "since" tag specifying the major version where it was introduced')
 
+        # TLVs can no longer be structs, they must be sequences instead
+        if dictionary['format'] == 'struct':
+            raise RuntimeError('TLV ' + self.fullname + ' cannot have type "struct": use "sequence" instead')
+
         # Create our variable object
         self.variable = VariableFactory.create_variable(self.service, dictionary, self.fullname, self.container_type)
 
