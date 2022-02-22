@@ -474,7 +474,8 @@ position_report_received (QmiClientLoc                         *client,
         gfloat pdop;
         gfloat hdop;
         gfloat vdop;
-        QmiIndicationLocPositionReportOutputGpsTime gps_time;
+        guint16 gps_weeks;
+        guint32 gps_time_of_week_milliseconds;
         gboolean auxb;
         GArray *array;
 
@@ -601,8 +602,8 @@ position_report_received (QmiClientLoc                         *client,
         else
             g_print ("   Leap seconds: n/a\n");
 
-        if (qmi_indication_loc_position_report_output_get_gps_time (output, &gps_time, NULL))
-            g_print ("   GPS time: %u weeks and %ums\n", gps_time.gps_weeks, gps_time.gps_time_of_week_milliseconds);
+        if (qmi_indication_loc_position_report_output_get_gps_date_time (output, &gps_weeks, &gps_time_of_week_milliseconds, NULL))
+            g_print ("   GPS time: %u weeks and %ums\n", gps_weeks, gps_time_of_week_milliseconds);
         else
             g_print ("   GPS time: n/a\n");
 
