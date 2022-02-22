@@ -92,7 +92,7 @@ class FieldResult(Field):
             '        return FALSE;\n'
             '    }\n'
             '\n'
-            '    if (self->${variable_name}.error_status == QMI_STATUS_SUCCESS) {\n'
+            '    if (self->${variable_name}_error_status == QMI_STATUS_SUCCESS) {\n'
             '        /* Operation succeeded */\n'
             '        return TRUE;\n'
             '    }\n'
@@ -100,10 +100,10 @@ class FieldResult(Field):
             '    /* Report a QMI protocol error */\n'
             '    g_set_error (error,\n'
             '                 QMI_PROTOCOL_ERROR,\n'
-            '                 (QmiProtocolError) self->${variable_name}.error_code,\n'
+            '                 (QmiProtocolError) self->${variable_name}_error_code,\n'
             '                 "QMI protocol error (%u): \'%s\'",\n'
-            '                 self->${variable_name}.error_code,\n'
-            '                 qmi_protocol_error_get_string ((QmiProtocolError) self->${variable_name}.error_code));\n'
+            '                 self->${variable_name}_error_code,\n'
+            '                 qmi_protocol_error_get_string ((QmiProtocolError) self->${variable_name}_error_code));\n'
             '    return FALSE;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))

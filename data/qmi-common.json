@@ -4,7 +4,7 @@
       "fullname"   : "Qmi Message Result",
       "id"         : "0x02",
       "type"       : "TLV",
-      "format"     : "struct",
+      "format"     : "sequence",
       "contents"   : [ { "name"   : "Error Status",
                          "format" : "guint16" },
                        { "name"   : "Error Code",
@@ -12,13 +12,13 @@
 
     { "common-ref" : "Success",
       "type"       : "prerequisite",
-      "field"      : "Result.Error Status",
+      "field"      : "Result Error Status",
       "operation"  : "==",
       "value"      : "QMI_STATUS_SUCCESS" },
 
     { "common-ref" : "No Success",
       "type"       : "prerequisite",
-      "field"      : "Result.Error Status",
+      "field"      : "Result Error Status",
       "operation"  : "!=",
       "value"      : "QMI_STATUS_SUCCESS" }
 

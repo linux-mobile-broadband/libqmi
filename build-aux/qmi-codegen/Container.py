@@ -99,7 +99,7 @@ class Container:
             # Then, really parse each field
             for field_dictionary in sorted_dictionary:
                 if field_dictionary['type'] == 'TLV':
-                    if field_dictionary['format'] == 'struct' and \
+                    if field_dictionary['format'] == 'sequence' and \
                        field_dictionary['name'] == 'Result':
                         self.fields.append(FieldResult(self.service, self.fullname, field_dictionary, common_objects_dictionary, container_type, static))
                     else:
