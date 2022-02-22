@@ -34,8 +34,10 @@
 #include "qmi-uim.h"
 #include "qmi-wda.h"
 #include "qmi-wds.h"
+#include "qmi-pdc.h"
 #include "qmi-enums-nas.h"
 #include "qmi-enums-wms.h"
+#include "qmi-enums-pdc.h"
 
 /**
  * SECTION:qmi-compat
@@ -3408,6 +3410,180 @@ gboolean qmi_message_nas_set_system_selection_preference_input_get_mnc_pds_digit
     GError **error);
 
 #endif /* HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE */
+
+#if defined HAVE_QMI_MESSAGE_PDC_CONFIG_CHANGE ||          \
+    defined HAVE_QMI_MESSAGE_PDC_SET_SELECTED_CONFIG ||    \
+    defined HAVE_QMI_MESSAGE_PDC_GET_CONFIG_INFO
+
+/**
+ * QmiConfigTypeAndId:
+ * @config_type: a #QmiPdcConfigurationType.
+ * @id: a #GArray of #guint8 elements.
+ *
+ * A QmiConfigTypeAndId struct.
+ *
+ * This type is deprecated and there is no replacement as the
+ * new methods don't require any intermediate type any more.
+ *
+ * Since: 1.18
+ * Deprecated: 1.32
+ */
+typedef struct _QmiDeprecatedConfigTypeAndId {
+    QmiPdcConfigurationType  config_type;
+    GArray                  *id;
+} QmiDeprecatedConfigTypeAndId;
+G_DEPRECATED
+typedef QmiDeprecatedConfigTypeAndId QmiConfigTypeAndId;
+
+#endif /* HAVE_QMI_MESSAGE_PDC_CONFIG_CHANGE
+        * HAVE_QMI_MESSAGE_PDC_SET_SELECTED_CONFIG
+        * HAVE_QMI_MESSAGE_PDC_GET_CONFIG_INFO */
+
+#if defined HAVE_QMI_MESSAGE_PDC_CONFIG_CHANGE
+
+/**
+ * qmi_message_pdc_config_change_input_get_type_with_id:
+ * @self: a #QmiMessagePdcConfigChangeInput.
+ * @value_type_with_id: (out)(optional)(transfer none): a placeholder for the output constant #QmiConfigTypeAndId, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Type With Id' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.18
+ * Deprecated: 1.32: Use qmi_message_pdc_config_change_input_get_type_with_id_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_pdc_config_change_input_get_type_with_id_v2)
+gboolean qmi_message_pdc_config_change_input_get_type_with_id (
+    QmiMessagePdcConfigChangeInput *self,
+    QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error);
+
+/**
+ * qmi_message_pdc_config_change_input_set_type_with_id:
+ * @self: a #QmiMessagePdcConfigChangeInput.
+ * @value_type_with_id: the address of the #QmiConfigTypeAndId to set.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Type With Id' field in the message.
+ *
+ * Returns: (skip): %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.18
+ * Deprecated: 1.32: Use qmi_message_pdc_config_change_input_set_type_with_id_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_pdc_config_change_input_set_type_with_id_v2)
+gboolean qmi_message_pdc_config_change_input_set_type_with_id (
+    QmiMessagePdcConfigChangeInput *self,
+    const QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error);
+
+/**
+ * qmi_message_pdc_config_change_output_get_type_with_id:
+ * @self: a #QmiMessagePdcConfigChangeOutput.
+ * @value_type_with_id: (out)(optional)(transfer none): a placeholder for the output constant #QmiConfigTypeAndId, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Type With Id' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.18
+ * Deprecated: 1.32: Use qmi_message_pdc_config_change_output_get_type_with_id_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_pdc_config_change_output_get_type_with_id_v2)
+gboolean qmi_message_pdc_config_change_output_get_type_with_id (
+    QmiMessagePdcConfigChangeOutput *self,
+    QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_PDC_CONFIG_CHANGE */
+
+#if defined HAVE_QMI_MESSAGE_PDC_SET_SELECTED_CONFIG
+
+/**
+ * qmi_message_pdc_set_selected_config_input_get_type_with_id:
+ * @self: a #QmiMessagePdcSetSelectedConfigInput.
+ * @value_type_with_id: (out)(optional)(transfer none): a placeholder for the output constant #QmiConfigTypeAndId, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Type With Id' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.18
+ * Deprecated: 1.32: Use qmi_message_pdc_set_selected_config_input_get_type_with_id_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_pdc_set_selected_config_input_get_type_with_id_v2)
+gboolean qmi_message_pdc_set_selected_config_input_get_type_with_id (
+    QmiMessagePdcSetSelectedConfigInput *self,
+    QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error);
+
+
+/**
+ * qmi_message_pdc_set_selected_config_input_set_type_with_id:
+ * @self: a #QmiMessagePdcSetSelectedConfigInput.
+ * @value_type_with_id: the address of the #QmiConfigTypeAndId to set.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Type With Id' field in the message.
+ *
+ * Returns: (skip): %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.18
+ * Deprecated: 1.32: Use qmi_message_pdc_set_selected_config_input_set_type_with_id() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_pdc_set_selected_config_input_set_type_with_id_v2)
+gboolean qmi_message_pdc_set_selected_config_input_set_type_with_id (
+    QmiMessagePdcSetSelectedConfigInput *self,
+    const QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_PDC_SET_SELECTED_CONFIG */
+
+#if defined HAVE_QMI_MESSAGE_PDC_GET_CONFIG_INFO
+
+/**
+ * qmi_message_pdc_get_config_info_input_get_type_with_id:
+ * @self: a #QmiMessagePdcGetConfigInfoInput.
+ * @value_type_with_id: (out)(optional)(transfer none): a placeholder for the output constant #QmiConfigTypeAndId, or %NULL if not required.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Type With Id' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.18
+ * Deprecated: 1.32: Use qmi_message_pdc_get_config_info_input_get_type_with_id_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_pdc_get_config_info_input_get_type_with_id_v2)
+gboolean qmi_message_pdc_get_config_info_input_get_type_with_id (
+    QmiMessagePdcGetConfigInfoInput *self,
+    QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error);
+
+/**
+ * qmi_message_pdc_get_config_info_input_set_type_with_id:
+ * @self: a #QmiMessagePdcGetConfigInfoInput.
+ * @value_type_with_id: the address of the #QmiConfigTypeAndId to set.
+ * @error: Return location for error or %NULL.
+ *
+ * Set the 'Type With Id' field in the message.
+ *
+ * Returns: (skip): %TRUE if @value was successfully set, %FALSE otherwise.
+ *
+ * Since: 1.18
+ * Deprecated: 1.32: Use qmi_message_pdc_get_config_info_input_set_type_with_id_v2() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_pdc_get_config_info_input_set_type_with_id_v2)
+gboolean qmi_message_pdc_get_config_info_input_set_type_with_id (
+    QmiMessagePdcGetConfigInfoInput *self,
+    const QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_PDC_GET_CONFIG_INFO */
 
 #endif /* QMI_DISABLE_DEPRECATED */
 

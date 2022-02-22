@@ -2123,4 +2123,115 @@ qmi_message_nas_set_system_selection_preference_input_get_mnc_pds_digit_include_
 
 #endif /* HAVE_QMI_MESSAGE_NAS_SET_SYSTEM_SELECTION_PREFERENCE */
 
+#if defined HAVE_QMI_MESSAGE_PDC_CONFIG_CHANGE
+
+gboolean
+qmi_message_pdc_config_change_input_get_type_with_id (
+    QmiMessagePdcConfigChangeInput *self,
+    QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error)
+{
+    QmiPdcConfigurationType config_type = QMI_PDC_CONFIGURATION_TYPE_PLATFORM;
+    GArray *id = NULL;
+
+    if (!qmi_message_pdc_config_change_input_get_type_with_id_v2 (self, &config_type, &id, error))
+        return FALSE;
+    if (value_type_with_id) {
+        value_type_with_id->config_type = config_type;
+        value_type_with_id->id = id;
+    }
+    return TRUE;
+}
+
+gboolean
+qmi_message_pdc_config_change_input_set_type_with_id (
+    QmiMessagePdcConfigChangeInput *self,
+    const QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error)
+{
+    return qmi_message_pdc_config_change_input_set_type_with_id_v2 (self, value_type_with_id->config_type, value_type_with_id->id, error);
+}
+
+gboolean
+qmi_message_pdc_config_change_output_get_type_with_id (
+    QmiMessagePdcConfigChangeOutput *self,
+    QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error)
+{
+    QmiPdcConfigurationType config_type = QMI_PDC_CONFIGURATION_TYPE_PLATFORM;
+    GArray *id = NULL;
+
+    if (!qmi_message_pdc_config_change_output_get_type_with_id_v2 (self, &config_type, &id, error))
+        return FALSE;
+    if (value_type_with_id) {
+        value_type_with_id->config_type = config_type;
+        value_type_with_id->id = id;
+    }
+    return TRUE;
+}
+
+#endif /* HAVE_QMI_MESSAGE_PDC_CONFIG_CHANGE */
+
+#if defined HAVE_QMI_MESSAGE_PDC_SET_SELECTED_CONFIG
+
+gboolean
+qmi_message_pdc_set_selected_config_input_get_type_with_id (
+    QmiMessagePdcSetSelectedConfigInput *self,
+    QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error)
+{
+    QmiPdcConfigurationType config_type = QMI_PDC_CONFIGURATION_TYPE_PLATFORM;
+    GArray *id = NULL;
+
+    if (!qmi_message_pdc_set_selected_config_input_get_type_with_id_v2 (self, &config_type, &id, error))
+        return FALSE;
+    if (value_type_with_id) {
+        value_type_with_id->config_type = config_type;
+        value_type_with_id->id = id;
+    }
+    return TRUE;
+}
+
+gboolean
+qmi_message_pdc_set_selected_config_input_set_type_with_id (
+    QmiMessagePdcSetSelectedConfigInput *self,
+    const QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error)
+{
+    return qmi_message_pdc_set_selected_config_input_set_type_with_id_v2 (self, value_type_with_id->config_type, value_type_with_id->id, error);
+}
+
+#endif /* HAVE_QMI_MESSAGE_PDC_SET_SELECTED_CONFIG */
+
+#if defined HAVE_QMI_MESSAGE_PDC_GET_CONFIG_INFO
+
+gboolean
+qmi_message_pdc_get_config_info_input_get_type_with_id (
+    QmiMessagePdcGetConfigInfoInput *self,
+    QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error)
+{
+    QmiPdcConfigurationType config_type = QMI_PDC_CONFIGURATION_TYPE_PLATFORM;
+    GArray *id = NULL;
+
+    if (!qmi_message_pdc_get_config_info_input_get_type_with_id_v2 (self, &config_type, &id, error))
+        return FALSE;
+    if (value_type_with_id) {
+        value_type_with_id->config_type = config_type;
+        value_type_with_id->id = id;
+    }
+    return TRUE;
+}
+
+gboolean
+qmi_message_pdc_get_config_info_input_set_type_with_id (
+    QmiMessagePdcGetConfigInfoInput *self,
+    const QmiDeprecatedConfigTypeAndId *value_type_with_id,
+    GError **error)
+{
+    return qmi_message_pdc_get_config_info_input_set_type_with_id_v2 (self, value_type_with_id->config_type, value_type_with_id->id, error);
+}
+
+#endif /* HAVE_QMI_MESSAGE_PDC_GET_CONFIG_INFO */
+
 #endif /* QMI_DISABLE_DEPRECATED */
