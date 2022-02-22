@@ -2919,7 +2919,6 @@ get_image_info (ListImagesContext *operation_ctx)
     GArray *array;
     QmiMessageDmsListStoredImagesOutputListImage *image;
     QmiMessageDmsListStoredImagesOutputListImageSublistSublistElement *subimage;
-    QmiMessageDmsGetStoredImageInfoInputImage image_id;
     g_autoptr(QmiMessageDmsGetStoredImageInfoInput) input = NULL;
 
     qmi_message_dms_list_stored_images_output_get_list (
@@ -2961,11 +2960,12 @@ get_image_info (ListImagesContext *operation_ctx)
                                operation_ctx->j);
 
     /* Query image info */
-    image_id.type = image->type;
-    image_id.unique_id = subimage->unique_id;
-    image_id.build_id = subimage->build_id;
     input = qmi_message_dms_get_stored_image_info_input_new ();
-    qmi_message_dms_get_stored_image_info_input_set_image (input, &image_id, NULL);
+    qmi_message_dms_get_stored_image_info_input_set_image_details (input,
+                                                                   image->type,
+                                                                   subimage->unique_id,
+                                                                   subimage->build_id,
+                                                                   NULL);
     qmi_client_dms_get_stored_image_info (ctx->client,
                                           input,
                                           10,
