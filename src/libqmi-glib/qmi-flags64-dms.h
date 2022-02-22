@@ -79,6 +79,8 @@
  *
  * Frequency band capabilities.
  *
+ * This type is bit to bit compatible with #QmiNasBandPreference.
+ *
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
@@ -124,7 +126,7 @@ typedef enum { /*< since=1.0 >*/
     QMI_DMS_BAND_CAPABILITY_BC_18            = ((guint64) 1) << 58,
     QMI_DMS_BAND_CAPABILITY_BC_19            = ((guint64) 1) << 59,
     QMI_DMS_BAND_CAPABILITY_WCDMA_850_JAPAN  = ((guint64) 1) << 60,
-    QMI_DMS_BAND_CAPABILITY_WCDMA_1500       = ((guint64) 1) << 61
+    QMI_DMS_BAND_CAPABILITY_WCDMA_1500       = ((guint64) 1) << 61,
     /* Bits 62-63 reserved */
 } QmiDmsBandCapability;
 

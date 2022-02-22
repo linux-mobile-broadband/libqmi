@@ -79,6 +79,8 @@
  *
  * Flags to specify frequency band preferences.
  *
+ * This type is bit to bit compatible with #QmiDmsBandCapability.
+ *
  * Since: 1.0
  */
 typedef enum { /*< since=1.0 >*/
@@ -124,7 +126,7 @@ typedef enum { /*< since=1.0 >*/
     QMI_NAS_BAND_PREFERENCE_BC_18            = ((guint64) 1) << 58,
     QMI_NAS_BAND_PREFERENCE_BC_19            = ((guint64) 1) << 59,
     QMI_NAS_BAND_PREFERENCE_WCDMA_850_JAPAN  = ((guint64) 1) << 60,
-    QMI_NAS_BAND_PREFERENCE_WCDMA_1500       = ((guint64) 1) << 61
+    QMI_NAS_BAND_PREFERENCE_WCDMA_1500       = ((guint64) 1) << 61,
     /* Bits 62-63 reserved */
 } QmiNasBandPreference;
 
