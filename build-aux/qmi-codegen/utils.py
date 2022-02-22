@@ -15,7 +15,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright (C) 2012 Lanedo GmbH
-# Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (C) 2012-2022 Aleksander Morgado <aleksander@aleksander.es>
 #
 
 import string
@@ -46,7 +46,7 @@ def add_copyright(f):
         " * Boston, MA 02110-1301 USA.\n"
         " *\n"
         " * Copyright (C) 2012 Lanedo GmbH\n"
-        " * Copyright (C) 2012-2017 Aleksander Morgado <aleksander@aleksander.es>\n"
+        " * Copyright (C) 2012-2022 Aleksander Morgado <aleksander@aleksander.es>\n"
         " */\n"
         "\n");
 
