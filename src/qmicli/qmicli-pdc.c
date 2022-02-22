@@ -303,40 +303,33 @@ operation_shutdown (gboolean operation_status)
     defined HAVE_QMI_ACTION_PDC_DEACTIVATE_CONFIG || \
     defined HAVE_QMI_MESSAGE_PDC_DELETE_CONFIG
 
-static QmiConfigTypeAndId *
-parse_type_and_id (const gchar *str)
+static gboolean
+parse_type_and_id (const gchar              *str,
+                   QmiPdcConfigurationType  *config_type,
+                   GArray                  **id)
 {
-    GArray *id = NULL;
-    guint num_parts;
-    gchar **substrings;
-    QmiPdcConfigurationType config_type;
-    QmiConfigTypeAndId *result = NULL;
+    guint         num_parts;
+    g_auto(GStrv) substrings = NULL;
 
     substrings = g_strsplit (str, ",", -1);
     num_parts = g_strv_length (substrings);
 
     if (num_parts != 2) {
         g_printerr ("Expected 2 parameters, but found %u\n", num_parts);
-        g_strfreev (substrings);
-        return NULL;
+        return FALSE;
     }
 
-    if (!qmicli_read_pdc_configuration_type_from_string (substrings[0], &config_type)) {
+    if (!qmicli_read_pdc_configuration_type_from_string (substrings[0], config_type)) {
         g_printerr ("Incorrect id specified: %s\n", substrings[0]);
-        g_strfreev (substrings);
-        return NULL;
+        return FALSE;
     }
 
-    if (!qmicli_read_binary_array_from_string (substrings[1], &id)) {
+    if (!qmicli_read_binary_array_from_string (substrings[1], id)) {
         g_printerr ("Incorrect config type specified: %s\n", substrings[1]);
-        g_strfreev (substrings);
-        return NULL;
+        return FALSE;
     }
 
-    result = g_slice_new0 (QmiConfigTypeAndId);
-    result->config_type = config_type;
-    result->id = id;
-    return result;
+    return TRUE;
 }
 
 #endif /* HAVE_QMI_ACTION_PDC_ACTIVATE_CONFIG
@@ -499,10 +492,10 @@ static void
 list_configs_ready_indication (QmiClientPdc *client,
                                QmiIndicationPdcListConfigsOutput *output)
 {
-    GError *error = NULL;
-    GArray *configs = NULL;
-    guint i;
-    guint16 error_code = 0;
+    g_autoptr(GError)  error = NULL;
+    GArray            *configs = NULL;
+    guint              i;
+    guint16            error_code = 0;
 
     /* Remove timeout as soon as we get the indication */
     if (ctx->timeout_id) {
@@ -512,21 +505,18 @@ list_configs_ready_indication (QmiClientPdc *client,
 
     if (!qmi_indication_pdc_list_configs_output_get_indication_result (output, &error_code, &error)) {
         g_printerr ("error: couldn't list configs: %s\n", error->message);
-        g_error_free (error);
         operation_shutdown (FALSE);
         return;
     }
 
     if (error_code != 0) {
-        g_printerr ("error: couldn't list config: %s\n",
-                    qmi_protocol_error_get_string ((QmiProtocolError) error_code));
+        g_printerr ("error: couldn't list config: %s\n", qmi_protocol_error_get_string ((QmiProtocolError) error_code));
         operation_shutdown (FALSE);
         return;
     }
 
     if (!qmi_indication_pdc_list_configs_output_get_configs (output, &configs, &error)) {
         g_printerr ("error: couldn't list configs: %s\n", error->message);
-        g_error_free (error);
         operation_shutdown (FALSE);
         return;
     }
@@ -536,11 +526,12 @@ list_configs_ready_indication (QmiClientPdc *client,
     g_array_set_size (ctx->config_list, configs->len);
 
     for (i = 0; i < configs->len; i++) {
-        ConfigInfo *current_info;
+        ConfigInfo                                      *current_info;
         QmiIndicationPdcListConfigsOutputConfigsElement *element;
-        QmiConfigTypeAndId type_with_id;
-        QmiMessagePdcGetConfigInfoInput *input;
-        guint32 token = ctx->token++;
+        guint32                                          token;
+        g_autoptr(QmiMessagePdcGetConfigInfoInput)       input = NULL;
+
+        token = ctx->token++;
 
         element = &g_array_index (configs, QmiIndicationPdcListConfigsOutputConfigsElement, i);
 
@@ -552,11 +543,8 @@ list_configs_ready_indication (QmiClientPdc *client,
         input = qmi_message_pdc_get_config_info_input_new ();
 
         /* Add type with id */
-        type_with_id.config_type = element->config_type;
-        type_with_id.id = current_info->id;
-        if (!qmi_message_pdc_get_config_info_input_set_type_with_id (input, &type_with_id, &error)) {
+        if (!qmi_message_pdc_get_config_info_input_set_type_with_id_v2 (input, element->config_type, current_info->id, &error)) {
             g_printerr ("error: couldn't set type with id: %s\n", error->message);
-            g_error_free (error);
             operation_shutdown (FALSE);
             return;
         }
@@ -564,7 +552,6 @@ list_configs_ready_indication (QmiClientPdc *client,
         /* Add token */
         if (!qmi_message_pdc_get_config_info_input_set_token (input, token, &error)) {
             g_printerr ("error: couldn't set token: %s\n", error->message);
-            g_error_free (error);
             operation_shutdown (FALSE);
             return;
         }
@@ -574,7 +561,6 @@ list_configs_ready_indication (QmiClientPdc *client,
                                         10,
                                         ctx->cancellable,
                                         (GAsyncReadyCallback) get_config_info_ready, NULL);
-        qmi_message_pdc_get_config_info_input_unref (input);
     }
 
     check_list_config_completed ();
@@ -841,26 +827,23 @@ activate_config_ready (QmiClientPdc *client,
 static QmiMessagePdcActivateConfigInput *
 activate_config_input_create (const gchar *str)
 {
-    QmiMessagePdcActivateConfigInput *input = NULL;
-    QmiConfigTypeAndId *type_and_id;
-    GError *error = NULL;
+    g_autoptr(QmiMessagePdcActivateConfigInput)  input = NULL;
+    g_autoptr(GError)                            error = NULL;
+    QmiPdcConfigurationType                      config_type;
+    g_autoptr(GArray)                            id = NULL;
 
-    type_and_id = parse_type_and_id (str);
-    if (!type_and_id)
+    /* Note: id not needed here really */
+    if (!parse_type_and_id (str, &config_type, &id))
         return NULL;
 
     input = qmi_message_pdc_activate_config_input_new ();
-    if (!qmi_message_pdc_activate_config_input_set_config_type (input, type_and_id->config_type, &error) ||
+    if (!qmi_message_pdc_activate_config_input_set_config_type (input, config_type, &error) ||
         !qmi_message_pdc_activate_config_input_set_token (input, ctx->token++, &error)) {
         g_printerr ("error: couldn't create input data bundle: '%s'\n", error->message);
-        g_error_free (error);
-        qmi_message_pdc_activate_config_input_unref (input);
-        input = NULL;
+        return NULL;
     }
 
-    g_array_unref (type_and_id->id);
-    g_slice_free (QmiConfigTypeAndId, type_and_id);
-    return input;
+    return g_steal_pointer (&input);
 }
 
 static void
@@ -930,26 +913,22 @@ set_selected_config_ready (QmiClientPdc *client,
 static QmiMessagePdcSetSelectedConfigInput *
 set_selected_config_input_create (const gchar *str)
 {
-    QmiMessagePdcSetSelectedConfigInput *input = NULL;
-    QmiConfigTypeAndId *type_and_id;
-    GError *error = NULL;
+    g_autoptr(QmiMessagePdcSetSelectedConfigInput) input = NULL;
+    g_autoptr(GError)                              error = NULL;
+    QmiPdcConfigurationType                        config_type;
+    g_autoptr(GArray)                              id = NULL;
 
-    type_and_id = parse_type_and_id (str);
-    if (!type_and_id)
+    if (!parse_type_and_id (str, &config_type, &id))
         return NULL;
 
     input = qmi_message_pdc_set_selected_config_input_new ();
-    if (!qmi_message_pdc_set_selected_config_input_set_type_with_id (input, type_and_id, &error) ||
+    if (!qmi_message_pdc_set_selected_config_input_set_type_with_id_v2 (input, config_type, id, &error) ||
         !qmi_message_pdc_set_selected_config_input_set_token (input, ctx->token++, &error)) {
         g_printerr ("error: couldn't create input data bundle: '%s'\n", error->message);
-        g_error_free (error);
-        qmi_message_pdc_set_selected_config_input_unref (input);
-        input = NULL;
+        return NULL;
     }
 
-    g_array_unref (type_and_id->id);
-    g_slice_free (QmiConfigTypeAndId, type_and_id);
-    return input;
+    return g_steal_pointer (&input);
 }
 
 static void
@@ -1041,26 +1020,23 @@ deactivate_config_ready (QmiClientPdc *client,
 static QmiMessagePdcDeactivateConfigInput *
 deactivate_config_input_create (const gchar *str)
 {
-    QmiMessagePdcDeactivateConfigInput *input = NULL;
-    QmiConfigTypeAndId *type_and_id;
-    GError *error = NULL;
+    g_autoptr(QmiMessagePdcDeactivateConfigInput) input = NULL;
+    g_autoptr(GError)                            error = NULL;
+    QmiPdcConfigurationType                      config_type;
+    g_autoptr(GArray)                            id = NULL;
 
-    type_and_id = parse_type_and_id (str);
-    if (!type_and_id)
+    /* Note: id not needed here really */
+    if (!parse_type_and_id (str, &config_type, &id))
         return NULL;
 
     input = qmi_message_pdc_deactivate_config_input_new ();
-    if (!qmi_message_pdc_deactivate_config_input_set_config_type (input, type_and_id->config_type, &error) ||
+    if (!qmi_message_pdc_deactivate_config_input_set_config_type (input, config_type, &error) ||
         !qmi_message_pdc_deactivate_config_input_set_token (input, ctx->token++, &error)) {
         g_printerr ("error: couldn't create input data bundle: '%s'\n", error->message);
-        g_error_free (error);
-        qmi_message_pdc_deactivate_config_input_unref (input);
-        input = NULL;
+        return NULL;
     }
 
-    g_array_unref (type_and_id->id);
-    g_slice_free (QmiConfigTypeAndId, type_and_id);
-    return input;
+    return g_steal_pointer (&input);
 }
 
 static void
@@ -1131,27 +1107,23 @@ delete_config_ready (QmiClientPdc *client,
 static QmiMessagePdcDeleteConfigInput *
 delete_config_input_create (const gchar *str)
 {
-    QmiMessagePdcDeleteConfigInput *input = NULL;
-    QmiConfigTypeAndId *type_and_id;
-    GError *error = NULL;
+    g_autoptr(QmiMessagePdcDeleteConfigInput) input = NULL;
+    g_autoptr(GError)                         error = NULL;
+    QmiPdcConfigurationType                   config_type;
+    g_autoptr(GArray)                         id = NULL;
 
-    type_and_id = parse_type_and_id (str);
-    if (!type_and_id)
+    if (!parse_type_and_id (str, &config_type, &id))
         return NULL;
 
     input = qmi_message_pdc_delete_config_input_new ();
-    if (!qmi_message_pdc_delete_config_input_set_config_type (input, type_and_id->config_type, &error) ||
+    if (!qmi_message_pdc_delete_config_input_set_config_type (input, config_type, &error) ||
         !qmi_message_pdc_delete_config_input_set_token (input, ctx->token++, &error) ||
-        !qmi_message_pdc_delete_config_input_set_id (input, type_and_id->id, &error)) {
+        !qmi_message_pdc_delete_config_input_set_id (input, id, &error)) {
         g_printerr ("error: couldn't create input data bundle: '%s'\n", error->message);
-        g_error_free (error);
-        qmi_message_pdc_delete_config_input_unref (input);
-        input = NULL;
+        return NULL;
     }
 
-    g_array_unref (type_and_id->id);
-    g_slice_free (QmiConfigTypeAndId, type_and_id);
-    return input;
+    return g_steal_pointer (&input);
 }
 
 static void
