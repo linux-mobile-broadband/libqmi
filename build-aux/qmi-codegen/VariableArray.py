@@ -94,14 +94,6 @@ class VariableArray(Variable):
 
 
     """
-    Emits the code to clear the element of the array
-    """
-    def emit_helper_methods(self, hfile, cfile):
-        self.array_element.emit_helper_methods(hfile, cfile)
-
-
-
-    """
     Reading an array from the raw byte buffer is just about providing a loop to
     read every array element one by one.
     """
