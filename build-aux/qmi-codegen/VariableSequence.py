@@ -46,11 +46,11 @@ class VariableSequence(Variable):
             member['object'] = VariableFactory.create_variable(self.service, member_dictionary, sequence_type_name + ' ' + member_dictionary['name'], self.container_type)
             self.members.append(member)
 
-        # TODO: do we need this?
         # We'll need to dispose if at least one of the members needs it
         for member in self.members:
-            if member['object'].needs_dispose == True:
+            if member['object'].needs_dispose:
                 self.needs_dispose = True
+                break
 
 
     """
