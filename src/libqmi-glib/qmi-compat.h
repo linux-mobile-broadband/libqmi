@@ -3799,6 +3799,52 @@ gboolean qmi_indication_loc_position_report_output_get_gps_time (
 
 #endif /* HAVE_QMI_INDICATION_LOC_POSITION_REPORT */
 
+#if defined HAVE_QMI_MESSAGE_UIM_GET_SLOT_STATUS
+
+/**
+ * qmi_message_uim_get_slot_status_output_get_slot_eid_information:
+ * @self: a #QmiMessageUimGetSlotStatusOutput.
+ * @value_slot_eid_information: (out)(optional)(element-type GArray)(transfer none): a placeholder for the output #GArray of #GArray * elements, or %NULL if not required. Do not free it, it is owned by @self.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Slot EID Information' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.26
+ * Deprecated: 1.32: Use qmi_message_uim_get_slot_status_output_get_slot_eid() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_get_slot_status_output_get_slot_eid)
+gboolean qmi_message_uim_get_slot_status_output_get_slot_eid_information (
+    QmiMessageUimGetSlotStatusOutput *self,
+    GArray **value_slot_eid_information,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_UIM_GET_SLOT_STATUS */
+
+#if defined HAVE_QMI_INDICATION_UIM_SLOT_STATUS
+
+/**
+ * qmi_indication_uim_slot_status_output_get_slot_eid_information:
+ * @self: a #QmiIndicationUimSlotStatusOutput.
+ * @value_slot_eid_information: (out)(optional)(element-type GArray)(transfer none): a placeholder for the output #GArray of #GArray * elements, or %NULL if not required. Do not free it, it is owned by @self.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Slot EID Information' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.26
+ * Deprecated: 1.32: Use qmi_indication_uim_slot_status_output_get_slot_eid() instead.
+ */
+G_DEPRECATED_FOR (qmi_indication_uim_slot_status_output_get_slot_eid)
+gboolean qmi_indication_uim_slot_status_output_get_slot_eid_information (
+    QmiIndicationUimSlotStatusOutput *self,
+    GArray **value_slot_eid_information,
+    GError **error);
+
+#endif /* HAVE_QMI_INDICATION_UIM_SLOT_STATUS */
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */

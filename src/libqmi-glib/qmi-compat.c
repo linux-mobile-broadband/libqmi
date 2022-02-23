@@ -2342,4 +2342,154 @@ qmi_indication_loc_position_report_output_get_gps_time (
 
 #endif /* HAVE_QMI_INDICATION_LOC_POSITION_REPORT */
 
+#if defined HAVE_QMI_MESSAGE_UIM_GET_SLOT_STATUS
+
+typedef struct {
+    GArray *slot_eid_information;
+} MessageUimGetSlotStatusOutputCompatContext;
+
+static void
+message_uim_get_slot_status_output_clear_slot_eid_information (GArray *array)
+{
+    guint i;
+
+    for (i = 0; i < array->len; i++)
+        g_array_unref (g_array_index (array, GArray *, i));
+    g_array_unref (array);
+}
+
+static void
+message_uim_get_slot_status_output_compat_context_free (MessageUimGetSlotStatusOutputCompatContext *ctx)
+{
+    if (ctx->slot_eid_information)
+        message_uim_get_slot_status_output_clear_slot_eid_information (ctx->slot_eid_information);
+    g_slice_free (MessageUimGetSlotStatusOutputCompatContext, ctx);
+}
+
+static MessageUimGetSlotStatusOutputCompatContext *
+message_uim_get_slot_status_output_get_compat_context (QmiMessageUimGetSlotStatusOutput *self)
+{
+    MessageUimGetSlotStatusOutputCompatContext *ctx;
+
+    ctx = qmi_message_uim_get_slot_status_output_get_compat_context (self);
+    if (!ctx) {
+        ctx = g_slice_new0 (MessageUimGetSlotStatusOutputCompatContext);
+        qmi_message_uim_get_slot_status_output_set_compat_context (self, ctx, (GDestroyNotify)message_uim_get_slot_status_output_compat_context_free);
+    }
+
+    return ctx;
+}
+
+gboolean
+qmi_message_uim_get_slot_status_output_get_slot_eid_information (
+    QmiMessageUimGetSlotStatusOutput *self,
+    GArray **value_slot_eid_information,
+    GError **error)
+{
+    GArray *slot_eid = NULL;
+
+    if (!qmi_message_uim_get_slot_status_output_get_slot_eid (self, &slot_eid, error))
+        return FALSE;
+
+    if (value_slot_eid_information) {
+        MessageUimGetSlotStatusOutputCompatContext *ctx;
+        guint                                       i;
+
+        ctx = message_uim_get_slot_status_output_get_compat_context (self);
+        ctx->slot_eid_information = g_array_sized_new (FALSE, FALSE, sizeof (GArray *), slot_eid->len);
+
+        if (ctx->slot_eid_information)
+            message_uim_get_slot_status_output_clear_slot_eid_information (ctx->slot_eid_information);
+
+        for (i = 0; i < slot_eid->len; i++) {
+            QmiSlotEidElement *element;
+            GArray            *aux;
+
+            element = &g_array_index (slot_eid, QmiSlotEidElement, i);
+            aux = g_array_ref (element->eid);
+            g_array_append_val (ctx->slot_eid_information, aux);
+        }
+
+        *value_slot_eid_information = ctx->slot_eid_information;
+    }
+    return TRUE;
+}
+
+#endif /* HAVE_QMI_MESSAGE_UIM_GET_SLOT_STATUS */
+
+#if defined HAVE_QMI_INDICATION_UIM_SLOT_STATUS
+
+typedef struct {
+    GArray *slot_eid_information;
+} IndicationUimSlotStatusOutputCompatContext;
+
+static void
+indication_uim_slot_status_output_clear_slot_eid_information (GArray *array)
+{
+    guint i;
+
+    for (i = 0; i < array->len; i++)
+        g_array_unref (g_array_index (array, GArray *, i));
+    g_array_unref (array);
+}
+
+static void
+indication_uim_slot_status_output_compat_context_free (IndicationUimSlotStatusOutputCompatContext *ctx)
+{
+    if (ctx->slot_eid_information)
+        indication_uim_slot_status_output_clear_slot_eid_information (ctx->slot_eid_information);
+    g_slice_free (IndicationUimSlotStatusOutputCompatContext, ctx);
+}
+
+static IndicationUimSlotStatusOutputCompatContext *
+indication_uim_slot_status_output_get_compat_context (QmiIndicationUimSlotStatusOutput *self)
+{
+    IndicationUimSlotStatusOutputCompatContext *ctx;
+
+    ctx = qmi_indication_uim_slot_status_output_get_compat_context (self);
+    if (!ctx) {
+        ctx = g_slice_new0 (IndicationUimSlotStatusOutputCompatContext);
+        qmi_indication_uim_slot_status_output_set_compat_context (self, ctx, (GDestroyNotify)indication_uim_slot_status_output_compat_context_free);
+    }
+
+    return ctx;
+}
+
+gboolean
+qmi_indication_uim_slot_status_output_get_slot_eid_information (
+    QmiIndicationUimSlotStatusOutput *self,
+    GArray **value_slot_eid_information,
+    GError **error)
+{
+    GArray *slot_eid = NULL;
+
+    if (!qmi_indication_uim_slot_status_output_get_slot_eid (self, &slot_eid, error))
+        return FALSE;
+
+    if (value_slot_eid_information) {
+        IndicationUimSlotStatusOutputCompatContext *ctx;
+        guint                                       i;
+
+        ctx = indication_uim_slot_status_output_get_compat_context (self);
+
+        if (ctx->slot_eid_information)
+            indication_uim_slot_status_output_clear_slot_eid_information (ctx->slot_eid_information);
+
+        ctx->slot_eid_information = g_array_sized_new (FALSE, FALSE, sizeof (GArray *), slot_eid->len);
+        for (i = 0; i < slot_eid->len; i++) {
+            QmiSlotEidElement *element;
+            GArray            *aux;
+
+            element = &g_array_index (slot_eid, QmiSlotEidElement, i);
+            aux = g_array_ref (element->eid);
+            g_array_append_val (ctx->slot_eid_information, aux);
+        }
+
+        *value_slot_eid_information = ctx->slot_eid_information;
+    }
+    return TRUE;
+}
+
+#endif /* HAVE_QMI_INDICATION_UIM_SLOT_STATUS */
+
 #endif /* QMI_DISABLE_DEPRECATED */

@@ -153,17 +153,19 @@
                                          "public-format" : "gboolean" } ] } },
 
   // *********************************************************************************
-  { "common-ref"         : "Slot EID Information",
-    "name"               : "Slot EID Information",
-    "fullname"           : "Qmi Slot EID Information",
+  { "common-ref"         : "Slot EID",
+    "name"               : "Slot EID",
+    "fullname"           : "Qmi Slot EID",
     "id"                 : "0x12",
     "type"               : "TLV",
     "format"             : "array",
     "size-prefix-format" : "guint8",
-    "array-element" : { "name"               : "EID",
-                        "format"             : "array",
-                        "size-prefix-format" : "guint8",
-                        "array-element"      : { "format" : "guint8" } } },
+    "array-element"      : { "name"     : "Element",
+                             "format"   : "struct",
+                             "contents" : [ { "name"               : "EID",
+                                              "format"             : "array",
+                                              "size-prefix-format" : "guint8",
+                                              "array-element"      : { "format" : "guint8" } } ] } },
 
   // *********************************************************************************
   {  "name"    : "Reset",
@@ -941,13 +943,14 @@
      "service" : "UIM",
      "id"      : "0x0047",
      "since"   : "1.26",
+     "output-compat" : "yes",
      "output"  : [ { "common-ref" : "Operation Result" },
                    { "common-ref" : "Physical Slot Status",
                      "since"      : "1.26" },
                    { "common-ref" : "Physical Slot Information",
                      "since"      : "1.26" },
-                   { "common-ref" : "Slot EID Information",
-                     "since"      : "1.26" } ] },
+                   { "common-ref" : "Slot EID",
+                     "since"      : "1.32" } ] },
 
   // *********************************************************************************
   {  "name"    : "Slot Status",
@@ -955,11 +958,12 @@
      "service" : "UIM",
      "id"      : "0x0048",
      "since"   : "1.26",
+     "output-compat" : "yes",
      "output"  : [ { "common-ref" : "Physical Slot Status",
                      "since"      : "1.26" },
                    { "common-ref" : "Physical Slot Information",
                      "since"      : "1.26" },
-                   { "common-ref" : "Slot EID Information",
-                     "since"      : "1.26" } ] }
+                   { "common-ref" : "Slot EID",
+                     "since"      : "1.32" } ] }
 
 ]
