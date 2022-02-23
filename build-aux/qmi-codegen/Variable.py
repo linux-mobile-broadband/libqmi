@@ -131,7 +131,7 @@ class Variable:
     """
     Builds the code to implement getting this kind of variable.
     """
-    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         return ''
 
     """

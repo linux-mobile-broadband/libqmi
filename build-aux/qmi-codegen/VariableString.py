@@ -221,7 +221,7 @@ class VariableString(Variable):
     """
     Builds the String getter implementation
     """
-    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
             return ""
 
@@ -229,15 +229,10 @@ class VariableString(Variable):
                          'from' : variable_name_from,
                          'to'   : variable_name_to }
 
-        if to_is_reference:
-            template = (
-                '${lp}if (${to})\n'
-                '${lp}    *${to} = ${from};\n')
-            return string.Template(template).substitute(translations)
-        else:
-            template = (
-                '${lp}${to} = ${from};\n')
-            return string.Template(template).substitute(translations)
+        template = (
+            '${lp}if (${to})\n'
+            '${lp}    *${to} = ${from};\n')
+        return string.Template(template).substitute(translations)
 
 
     """

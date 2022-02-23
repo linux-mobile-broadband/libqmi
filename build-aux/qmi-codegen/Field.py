@@ -117,7 +117,7 @@ class Field:
         input_variable_name = 'value_' + utils.build_underscore_name(self.name)
         variable_getter_dec = self.variable.build_getter_declaration('    ', input_variable_name)
         variable_getter_doc = self.variable.build_getter_documentation(' * ', input_variable_name)
-        variable_getter_imp = self.variable.build_getter_implementation('    ', 'self->' + self.variable_name, input_variable_name, True)
+        variable_getter_imp = self.variable.build_getter_implementation('    ', 'self->' + self.variable_name, input_variable_name)
         translations = { 'name'                : self.name,
                          'variable_name'       : self.variable_name,
                          'variable_getter_dec' : variable_getter_dec,

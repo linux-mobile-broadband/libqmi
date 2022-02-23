@@ -304,7 +304,7 @@ class VariableInteger(Variable):
     """
     Builds the Integer getter implementation
     """
-    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
             return ""
 
@@ -315,15 +315,10 @@ class VariableInteger(Variable):
                          'cast_ini' : '(' + self.public_format + ')(' if needs_cast else '',
                          'cast_end' : ')' if needs_cast else '' }
 
-        if to_is_reference:
-            template = (
-                '${lp}if (${to})\n'
-                '${lp}    *${to} = ${cast_ini}${from}${cast_end};\n')
-            return string.Template(template).substitute(translations)
-        else:
-            template = (
-                '${lp}${to} = ${cast_ini}${from}${cast_end};\n')
-            return string.Template(template).substitute(translations)
+        template = (
+            '${lp}if (${to})\n'
+            '${lp}    *${to} = ${cast_ini}${from}${cast_end};\n')
+        return string.Template(template).substitute(translations)
 
 
     """

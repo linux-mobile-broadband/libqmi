@@ -391,7 +391,7 @@ class VariableArray(Variable):
     """
     Builds the array getter implementation
     """
-    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
             return ""
 
@@ -405,13 +405,9 @@ class VariableArray(Variable):
                 '${lp}if (${to}_sequence)\n'
                 '${lp}    *${to}_sequence = ${from}_sequence;\n')
 
-        if to_is_reference:
-            template += (
-                '${lp}if (${to})\n'
-                '${lp}    *${to} = ${from};\n')
-        else:
-            template += (
-                '${lp}${to} = ${from};\n')
+        template += (
+            '${lp}if (${to})\n'
+            '${lp}    *${to} = ${from};\n')
 
         return string.Template(template).substitute(translations)
 

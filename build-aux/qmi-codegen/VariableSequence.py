@@ -157,7 +157,7 @@ class VariableSequence(Variable):
     """
     Builds the Struct getter implementation
     """
-    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to, to_is_reference):
+    def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
             return ""
 
@@ -165,8 +165,7 @@ class VariableSequence(Variable):
         for member in self.members:
             built += member['object'].build_getter_implementation(line_prefix,
                                                                   variable_name_from + '_' + member['name'],
-                                                                  variable_name_to + '_' + member['name'],
-                                                                  to_is_reference)
+                                                                  variable_name_to + '_' + member['name'])
         return built
 
 
