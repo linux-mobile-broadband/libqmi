@@ -1053,7 +1053,7 @@ print_slot_status (GArray *physical_slots,
     for (i = 0; i < physical_slots->len; i++) {
         QmiPhysicalSlotStatusSlot *slot_status;
         QmiPhysicalSlotInformationSlot *slot_info = NULL;
-        GArray *slot_eid = NULL;
+        QmiSlotEidElement *slot_eid = NULL;
         g_autofree gchar *iccid = NULL;
         g_autofree gchar *eid = NULL;
 
@@ -1089,9 +1089,9 @@ print_slot_status (GArray *physical_slots,
         if (!slot_info->is_euicc || !slot_eids)
             continue;
 
-        slot_eid = g_array_index (slot_eids, GArray *, i);
-        if (slot_eid->len)
-            eid = decode_eid (slot_eid->data, slot_eid->len);
+        slot_eid = &g_array_index (slot_eids, QmiSlotEidElement, i);
+        if (slot_eid->eid)
+            eid = decode_eid (slot_eid->eid->data, slot_eid->eid->len);
         g_print ("             EID: %s\n", VALIDATE_UNKNOWN (eid));
     }
 }
@@ -1140,7 +1140,7 @@ get_slot_status_ready (QmiClientUim *client,
 
     /* Both of these are recoverable, just print less information per slot */
     qmi_message_uim_get_slot_status_output_get_physical_slot_information (output, &ext_information, NULL);
-    qmi_message_uim_get_slot_status_output_get_slot_eid_information (output, &slot_eids, NULL);
+    qmi_message_uim_get_slot_status_output_get_slot_eid (output, &slot_eids, NULL);
 
     g_print ("[%s] %u physical slots found:\n",
              qmi_device_get_path_display (ctx->device), physical_slots->len);
@@ -1312,7 +1312,7 @@ slot_status_received (QmiClientUim *client,
 
     /* Both of these are recoverable, just print less information per slot */
     qmi_indication_uim_slot_status_output_get_physical_slot_information (output, &ext_information, NULL);
-    qmi_indication_uim_slot_status_output_get_slot_eid_information (output, &slot_eids, NULL);
+    qmi_indication_uim_slot_status_output_get_slot_eid (output, &slot_eids, NULL);
 
     print_slot_status (physical_slots, ext_information, slot_eids);
 }
