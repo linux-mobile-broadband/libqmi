@@ -60,11 +60,13 @@ class VariableArray(Variable):
         else:
             self.array_element = VariableFactory.create_variable(self.service, dictionary['array-element'], '', self.container_type)
 
-        # Load variable type for the array size prefix
-        if 'size-prefix-format' in dictionary:
+        if 'size-prefix-format' in dictionary and 'fixed-size' in dictionary:
+            raise ValueError('Cannot give \'size-prefix-format\' and \'fixed-size\' in %s array at the same time' % self.name)
+        elif 'size-prefix-format' in dictionary:
+            # Load variable type for the array size prefix
             # We do NOT allow 64-bit types as array sizes (GArray won't support them)
             if dictionary['size-prefix-format'] not in [ 'guint8', 'guint16', 'guint32' ]:
-                raise ValueError('Invalid size prefix format (%s): not guint8 or guint16 or guint32' % dictionary['size-prefix-format'])
+                raise ValueError('Invalid size prefix format (%s) in %s array: not guint8 or guint16 or guint32' % (dictionary['size-prefix-format'], self.name))
             default_array_size = { 'format' : dictionary['size-prefix-format'] }
             self.array_size_element = VariableFactory.create_variable(self.service, default_array_size, '', self.container_type)
         elif 'fixed-size' in dictionary:
@@ -73,9 +75,7 @@ class VariableArray(Variable):
             if int(self.fixed_size) == 0 or int(self.fixed_size) > 512:
                 raise ValueError('Fixed array size %s out of bounds (not between 0 and 512)' % self.fixed_size)
         else:
-            # Default to 'guint8' if no explicit array size given
-            default_array_size = { 'format' : 'guint8' }
-            self.array_size_element = VariableFactory.create_variable(self.service, default_array_size, '', self.container_type)
+            raise ValueError('Missing \'size-prefix-format\' or \'fixed-size\' in %s array' % self.name)
 
         # Load variable type for the sequence prefix
         if 'sequence-prefix-format' in dictionary:
