@@ -70,20 +70,24 @@ class VariableArray(Variable):
                 raise ValueError('Invalid size prefix format (%s) in %s array: not guint8 or guint16 or guint32' % (dictionary['size-prefix-format'], self.name))
             default_array_size = { 'format' : dictionary['size-prefix-format'] }
             self.array_size_element = VariableFactory.create_variable(self.service, default_array_size, '', self.container_type)
+            # Load variable type for the sequence prefix, if any
+            if 'sequence-prefix-format' in dictionary:
+                sequence = { 'format' : dictionary['sequence-prefix-format'] }
+                self.array_sequence_element = VariableFactory.create_variable(self.service, sequence, '', self.container_type)
+            else:
+                self.array_sequence_element = ''
+
         elif 'fixed-size' in dictionary:
             # fixed-size arrays have no size element, obviously
             self.fixed_size = dictionary['fixed-size']
             if int(self.fixed_size) == 0 or int(self.fixed_size) > 512:
                 raise ValueError('Fixed array size %s out of bounds (not between 0 and 512)' % self.fixed_size)
+            if 'sequence-prefix-format' in dictionary:
+                raise ValueError('\'sequence-prefix-format\' is not supported along with \'fixed-size\' in %s array' % self.name)
+            else:
+                self.array_sequence_element = ''
         else:
             raise ValueError('Missing \'size-prefix-format\' or \'fixed-size\' in %s array' % self.name)
-
-        # Load variable type for the sequence prefix
-        if 'sequence-prefix-format' in dictionary:
-            sequence = { 'format' : dictionary['sequence-prefix-format'] }
-            self.array_sequence_element = VariableFactory.create_variable(self.service, sequence, '', self.container_type)
-        else:
-            self.array_sequence_element = ''
 
 
     """
