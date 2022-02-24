@@ -2492,4 +2492,84 @@ qmi_indication_uim_slot_status_output_get_slot_eid_information (
 
 #endif /* HAVE_QMI_INDICATION_UIM_SLOT_STATUS */
 
+#if defined HAVE_QMI_MESSAGE_UIM_GET_CONFIGURATION
+
+typedef struct {
+    GArray *personalization_status_other_slots;
+} MessageUimGetConfigurationOutputCompatContext;
+
+static void
+message_uim_get_configuration_output_clear_personalization_status_other_slots (GArray *array)
+{
+    guint i;
+
+    for (i = 0; i < array->len; i++)
+        g_array_unref (g_array_index (array, GArray *, i));
+    g_array_unref (array);
+}
+
+static void
+message_uim_get_configuration_output_compat_context_free (MessageUimGetConfigurationOutputCompatContext *ctx)
+{
+    if (ctx->personalization_status_other_slots)
+        message_uim_get_configuration_output_clear_personalization_status_other_slots (ctx->personalization_status_other_slots);
+    g_slice_free (MessageUimGetConfigurationOutputCompatContext, ctx);
+}
+
+static MessageUimGetConfigurationOutputCompatContext *
+message_uim_get_configuration_output_get_compat_context (QmiMessageUimGetConfigurationOutput *self)
+{
+    MessageUimGetConfigurationOutputCompatContext *ctx;
+
+    ctx = qmi_message_uim_get_configuration_output_get_compat_context (self);
+    if (!ctx) {
+        ctx = g_slice_new0 (MessageUimGetConfigurationOutputCompatContext);
+        qmi_message_uim_get_configuration_output_set_compat_context (self, ctx, (GDestroyNotify)message_uim_get_configuration_output_compat_context_free);
+    }
+
+    return ctx;
+}
+
+gboolean
+qmi_message_uim_get_configuration_output_get_personalization_status_other_slots (
+    QmiMessageUimGetConfigurationOutput *self,
+    GArray **value_personalization_status_other_slots,
+    GError **error)
+{
+    GArray *array = NULL;
+
+    if (!qmi_message_uim_get_configuration_output_get_personalization_status_other (self, &array, error))
+        return FALSE;
+
+    if (value_personalization_status_other_slots) {
+        MessageUimGetConfigurationOutputCompatContext *ctx;
+        guint                                          i;
+
+        ctx = message_uim_get_configuration_output_get_compat_context (self);
+
+        if (ctx->personalization_status_other_slots)
+            message_uim_get_configuration_output_clear_personalization_status_other_slots (ctx->personalization_status_other_slots);
+
+        ctx->personalization_status_other_slots = g_array_sized_new (FALSE, FALSE, sizeof (GArray *), array->len);
+
+
+        for (i = 0; i < array->len; i++) {
+            QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElement *element;
+            GArray                                                               *aux;
+
+            element = &g_array_index (array, QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElement, i);
+
+            /* We can do this because QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotElement (the new type)
+             * and QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherSlotsSlotsElement (the old type) are equivalent */
+            aux = g_array_ref (element->slot);
+            g_array_append_val (ctx->personalization_status_other_slots, aux);
+        }
+
+        *value_personalization_status_other_slots = ctx->personalization_status_other_slots;
+    }
+    return TRUE;
+}
+
+#endif /* HAVE_QMI_MESSAGE_UIM_GET_CONFIGURATION */
+
 #endif /* QMI_DISABLE_DEPRECATED */

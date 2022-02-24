@@ -3845,6 +3845,47 @@ gboolean qmi_indication_uim_slot_status_output_get_slot_eid_information (
 
 #endif /* HAVE_QMI_INDICATION_UIM_SLOT_STATUS */
 
+#if defined HAVE_QMI_MESSAGE_UIM_GET_CONFIGURATION
+
+/**
+ * QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherSlotsSlotsElement:
+ * @feature: a #QmiUimCardApplicationPersonalizationFeature.
+ * @verify_left: a #guint8.
+ * @unblock_left: a #guint8.
+ *
+ * A QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherSlotsSlotsElement struct.
+ *
+ * Since: 1.30
+ * Deprecated: 1.32: Use #QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotsElement instead.
+ */
+G_DEPRECATED_FOR (QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotsElement)
+typedef struct _QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherSlotsSlotsElement {
+    QmiUimCardApplicationPersonalizationFeature feature;
+    guint8 verify_left;
+    guint8 unblock_left;
+} QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherSlotsSlotsElement;
+
+/**
+ * qmi_message_uim_get_configuration_output_get_personalization_status_other_slots:
+ * @self: a #QmiMessageUimGetConfigurationOutput.
+ * @value_personalization_status_other_slots: (out)(optional)(element-type GArray)(transfer none): a placeholder for the output #GArray of #GArray * elements, or %NULL if not required. Do not free it, it is owned by @self.
+ * @error: Return location for error or %NULL.
+ *
+ * Get the 'Personalization Status Other Slots' field from @self.
+ *
+ * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.
+ *
+ * Since: 1.30
+ * Deprecated: 1.32: Use qmi_message_uim_get_configuration_output_get_personalization_status_other() instead.
+ */
+G_DEPRECATED_FOR (qmi_message_uim_get_configuration_output_get_personalization_status_other)
+gboolean qmi_message_uim_get_configuration_output_get_personalization_status_other_slots (
+    QmiMessageUimGetConfigurationOutput *self,
+    GArray **value_personalization_status_other_slots,
+    GError **error);
+
+#endif /* HAVE_QMI_MESSAGE_UIM_GET_CONFIGURATION */
+
 #endif /* QMI_DISABLE_DEPRECATED */
 
 #endif /* _LIBQMI_GLIB_QMI_COMPAT_H_ */
