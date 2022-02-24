@@ -50,6 +50,10 @@ class VariableArray(Variable):
         # if the variable is from an Input container.
         self.container_type = container_type
 
+        # Disallow arrays of arrays, always use an intermediate struct
+        if dictionary['array-element']['format'] == 'array':
+                raise ValueError('Arrays of arrays not allowed in %s array: use an intermediate struct instead' % self.name)
+
         # Load variable type of this array
         if 'name' in dictionary['array-element']:
             self.array_element = VariableFactory.create_variable(self.service, dictionary['array-element'], array_element_type + ' ' + dictionary['array-element']['name'], self.container_type)
