@@ -16,7 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA.
  *
- * Copyright (C) 2016-2020 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2016-2022 Aleksander Morgado <aleksander@aleksander.es>
  */
 
 #ifndef _LIBQMI_GLIB_QMI_COMPAT_H_
