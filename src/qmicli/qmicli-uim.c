@@ -2443,7 +2443,7 @@ get_configuration_ready (QmiClientUim *client,
     g_print ("Configuration successfully retrieved\n");
 
     /* Other slots TLV contains info for slots > 1 */
-    qmi_message_uim_get_configuration_output_get_personalization_status_other_slots (output, &other_slots, NULL);
+    qmi_message_uim_get_configuration_output_get_personalization_status_other (output, &other_slots, NULL);
 
     if (qmi_message_uim_get_configuration_output_get_personalization_status (output, &elements, NULL)) {
         if (elements->len == 0)
@@ -2473,20 +2473,22 @@ get_configuration_ready (QmiClientUim *client,
         if (other_slots->len == 0)
             g_print ("Personalization features in other slots: all disabled\n");
         else {
-            guint slot;
+            guint i_slot;
 
-            for (slot = 0; slot < other_slots->len; slot++) {
-                QmiMessageUimGetConfigurationOutputPersonalizationStatusElement *element;
+            for (i_slot = 0; i_slot < other_slots->len; i_slot++) {
+                QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElement *slot_element;
                 guint i;
 
-                elements = g_array_index (other_slots, GArray *, slot);
-                if (!elements)
+                slot_element = &g_array_index (other_slots, QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElement, i_slot);
+                if (!slot_element->slot)
                     continue;
 
-                g_print ("Personalization features in slot %u:\n", slot + 2);
-                for (i = 0; i < elements->len; i++) {
-                    element = &g_array_index (elements,
-                                              QmiMessageUimGetConfigurationOutputPersonalizationStatusElement,
+                g_print ("Personalization features in slot %u:\n", i_slot + 2);
+                for (i = 0; i < slot_element->slot->len; i++) {
+                    QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotElement *element;
+
+                    element = &g_array_index (slot_element->slot,
+                                              QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotElement,
                                               i);
                     g_print ("\tPersonalization: %s\n"
                              "\t\tVerify left:  %u\n"
