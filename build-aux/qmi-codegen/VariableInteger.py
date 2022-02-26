@@ -33,9 +33,6 @@ Variable type for signed/unsigned Integers and floating point numbers:
 """
 class VariableInteger(Variable):
 
-    """
-    Constructor
-    """
     def __init__(self, service, dictionary):
 
         # Call the parent constructor
@@ -54,9 +51,7 @@ class VariableInteger(Variable):
             self.public_format = dictionary['public-format'] if 'public-format' in dictionary else self.private_format
         self.element_type = self.public_format
 
-    """
-    Read a single integer from the raw byte buffer
-    """
+
     def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
         translations = { 'lp'             : line_prefix,
                          'tlv_out'        : tlv_out,
@@ -95,9 +90,6 @@ class VariableInteger(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    """
-    Return the data type size of fixed c-types
-    """
     @staticmethod
     def fixed_type_byte_size(fmt):
         if fmt == 'guint8':
@@ -118,9 +110,7 @@ class VariableInteger(Variable):
             return 8
         raise Exception("Unsupported format %s" % (fmt))
 
-    """
-    Write a single integer to the raw byte buffer
-    """
+
     def emit_buffer_write(self, f, line_prefix, tlv_name, variable_name):
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
@@ -162,9 +152,6 @@ class VariableInteger(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    """
-    Get the integer as a printable string.
-    """
     def emit_get_printable(self, f, line_prefix):
         common_format = ''
         common_cast = ''
@@ -251,9 +238,6 @@ class VariableInteger(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    """
-    Variable declaration
-    """
     def build_variable_declaration(self, public, line_prefix, variable_name):
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
@@ -269,9 +253,6 @@ class VariableInteger(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Getter for the integer type
-    """
     def build_getter_declaration(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -285,9 +266,6 @@ class VariableInteger(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Documentation for the getter
-    """
     def build_getter_documentation(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -300,9 +278,7 @@ class VariableInteger(Variable):
             '${lp}@${name}: (out)(optional): a placeholder for the output #${public_format}, or %NULL if not required.\n')
         return string.Template(template).substitute(translations)
 
-    """
-    Builds the Integer getter implementation
-    """
+
     def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
             return ""
@@ -320,9 +296,6 @@ class VariableInteger(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Setter for the integer type
-    """
     def build_setter_declaration(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -336,9 +309,6 @@ class VariableInteger(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Documentation for the setter
-    """
     def build_setter_documentation(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -352,9 +322,6 @@ class VariableInteger(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Implementation of the setter
-    """
     def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
             return ""
@@ -371,9 +338,6 @@ class VariableInteger(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Documentation for the struct field
-    """
     def build_struct_field_documentation(self, line_prefix, variable_name):
         translations = { 'lp'            : line_prefix,
                          'public_format' : self.public_format,

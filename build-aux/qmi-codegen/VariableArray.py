@@ -28,9 +28,6 @@ Variable type for Arrays ('array' format)
 """
 class VariableArray(Variable):
 
-    """
-    Constructor
-    """
     def __init__(self, service, dictionary, array_element_type, container_type):
 
         # Call the parent constructor
@@ -97,17 +94,10 @@ class VariableArray(Variable):
             raise ValueError('Missing \'size-prefix-format\' or \'fixed-size\' in %s array' % self.name)
 
 
-    """
-    Emit the type for the array element
-    """
     def emit_types(self, hfile, cfile, since, static):
         self.array_element.emit_types(hfile, cfile, since, static)
 
 
-    """
-    Reading an array from the raw byte buffer is just about providing a loop to
-    read every array element one by one.
-    """
     def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
         common_var_prefix = utils.build_underscore_name(self.name)
         translations = { 'lp'                          : line_prefix,
@@ -186,10 +176,6 @@ class VariableArray(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    """
-    Writing an array to the raw byte buffer is just about providing a loop to
-    write every array element one by one.
-    """
     def emit_buffer_write(self, f, line_prefix, tlv_name, variable_name):
         common_var_prefix = utils.build_underscore_name(self.name)
         translations = { 'lp'                : line_prefix,
@@ -230,10 +216,6 @@ class VariableArray(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    """
-    The array will be printed as a list of fields enclosed between curly
-    brackets
-    """
     def emit_get_printable(self, f, line_prefix):
         common_var_prefix = utils.build_underscore_name(self.name)
         translations = { 'lp'                : line_prefix,
@@ -297,9 +279,6 @@ class VariableArray(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    """
-    Variable declaration
-    """
     def build_variable_declaration(self, public, line_prefix, variable_name):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
@@ -315,9 +294,6 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Getter for the array type
-    """
     def build_getter_declaration(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -336,9 +312,6 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Documentation for the getter
-    """
     def build_getter_documentation(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -358,9 +331,6 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Builds the array getter implementation
-    """
     def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
             return ""
@@ -382,9 +352,6 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Setter for the array type
-    """
     def build_setter_declaration(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -403,9 +370,6 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Documentation for the setter
-    """
     def build_setter_documentation(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -425,9 +389,6 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Builds the array setter implementation
-    """
     def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
             return ""
@@ -448,9 +409,6 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Documentation for the struct field
-    """
     def build_struct_field_documentation(self, line_prefix, variable_name):
         translations = { 'lp'                          : line_prefix,
                          'array_element_public_format' : self.array_element.public_format,
@@ -466,9 +424,6 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Dispose the array just with an unref
-    """
     def build_dispose(self, line_prefix, variable_name):
         translations = { 'lp'            : line_prefix,
                          'variable_name' : variable_name }
@@ -479,8 +434,5 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Add sections
-    """
     def add_sections(self, sections):
         self.array_element.add_sections(sections)

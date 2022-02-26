@@ -27,9 +27,6 @@ Variable type for Strings ('string' format)
 """
 class VariableString(Variable):
 
-    """
-    Constructor
-    """
     def __init__(self, service, dictionary):
 
         # Call the parent constructor
@@ -74,9 +71,6 @@ class VariableString(Variable):
             self.max_size = dictionary['max-size'] if 'max-size' in dictionary else ''
 
 
-    """
-    Read a string from the raw byte buffer.
-    """
     def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
         translations = { 'lp'            : line_prefix,
                          'tlv_out'       : tlv_out,
@@ -112,9 +106,6 @@ class VariableString(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    """
-    Write a string to the raw byte buffer.
-    """
     def emit_buffer_write(self, f, line_prefix, tlv_name, variable_name):
         translations = { 'lp'                  : line_prefix,
                          'tlv_name'            : tlv_name,
@@ -131,9 +122,6 @@ class VariableString(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    """
-    Get the string as printable
-    """
     def emit_get_printable(self, f, line_prefix):
         translations = { 'lp' : line_prefix }
 
@@ -166,9 +154,6 @@ class VariableString(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    """
-    Variable declaration
-    """
     def build_variable_declaration(self, public, line_prefix, variable_name):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
@@ -189,9 +174,6 @@ class VariableString(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Getter for the string type
-    """
     def build_getter_declaration(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -204,9 +186,6 @@ class VariableString(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Documentation for the getter
-    """
     def build_getter_documentation(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -219,9 +198,6 @@ class VariableString(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Builds the String getter implementation
-    """
     def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
             return ""
@@ -236,9 +212,6 @@ class VariableString(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Setter for the string type
-    """
     def build_setter_declaration(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -251,9 +224,6 @@ class VariableString(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Documentation for the setter
-    """
     def build_setter_documentation(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -275,9 +245,6 @@ class VariableString(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Builds the String setter implementation
-    """
     def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
             return ""
@@ -317,9 +284,6 @@ class VariableString(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Documentation for the struct field
-    """
     def build_struct_field_documentation(self, line_prefix, variable_name):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
@@ -338,9 +302,6 @@ class VariableString(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Dispose the string
-    """
     def build_dispose(self, line_prefix, variable_name):
         # Fixed-size strings don't need dispose
         if self.is_fixed_size and not self.public:
@@ -354,9 +315,6 @@ class VariableString(Variable):
         return string.Template(template).substitute(translations)
 
 
-    """
-    Flag as being public
-    """
     def flag_public(self):
         # Call the parent method
         Variable.flag_public(self)

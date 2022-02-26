@@ -30,9 +30,6 @@ independent TLVs. Use Sequence instead for that.
 """
 class VariableStruct(Variable):
 
-    """
-    Constructor
-    """
     def __init__(self, service, dictionary, struct_type_name, container_type):
 
         # Call the parent constructor
@@ -65,9 +62,6 @@ class VariableStruct(Variable):
                 break
 
 
-    """
-    Emit all types for the members of the struct plus the new struct type itself
-    """
     def emit_types(self, hfile, cfile, since, static):
         for member in self.members:
             member['object'].emit_types(hfile, cfile, since, static)
@@ -119,28 +113,16 @@ class VariableStruct(Variable):
             cfile.write(string.Template(template).substitute(translations))
 
 
-    """
-    Reading the contents of a struct is just about reading each of the struct
-    fields one by one.
-    """
     def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
         for member in self.members:
             member['object'].emit_buffer_read(f, line_prefix, tlv_out, error, variable_name + '.' +  member['name'])
 
 
-    """
-    Writing the contents of a struct is just about writing each of the struct
-    fields one by one.
-    """
     def emit_buffer_write(self, f, line_prefix, tlv_name, variable_name):
         for member in self.members:
             member['object'].emit_buffer_write(f, line_prefix, tlv_name, variable_name + '.' +  member['name'])
 
 
-    """
-    The struct will be printed as a list of fields enclosed between square
-    brackets
-    """
     def emit_get_printable(self, f, line_prefix):
         translations = { 'lp' : line_prefix }
 
@@ -165,10 +147,6 @@ class VariableStruct(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    """
-    Disposing a struct is just about disposing each of the struct fields one by
-    one.
-    """
     def build_dispose(self, line_prefix, variable_name):
         built = ''
         for member in self.members:
@@ -176,11 +154,7 @@ class VariableStruct(Variable):
         return built
 
 
-    """
-    Add sections
-    """
     def add_sections(self, sections):
-        # Add sections for each member
         for member in self.members:
             member['object'].add_sections(sections)
 
