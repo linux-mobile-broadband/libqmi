@@ -38,7 +38,6 @@ class VariableArray(Variable):
 
         # The array and its contents need to get disposed
         self.needs_dispose = True
-        self.clear_method = 'qmi_helpers_clear_array'
 
         # We need to know whether the variable comes in an Input container or in
         # an Output container, as we should not dump the element clear() helper method
