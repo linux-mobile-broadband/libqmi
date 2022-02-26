@@ -62,7 +62,7 @@ class Field:
 
         # TLVs can no longer be structs, they must be sequences instead
         if dictionary['format'] == 'struct':
-            raise RuntimeError('TLV ' + self.fullname + ' cannot have type "struct": use "sequence" instead')
+            raise ValueError('TLV ' + self.fullname + ' cannot have type "struct": use "sequence" instead')
 
         # Create our variable object
         self.variable = VariableFactory.create_variable(self.service, dictionary, self.fullname, self.container_type)
@@ -103,7 +103,7 @@ class Field:
     Emit new types required by this field
     """
     def emit_types(self, hfile, cfile):
-        if TypeFactory.is_type_emitted(self.fullname) is False:
+        if not TypeFactory.is_type_emitted(self.fullname):
             TypeFactory.set_type_emitted(self.fullname)
             self.variable.emit_types(hfile, cfile, self.since, False)
 
@@ -130,7 +130,7 @@ class Field:
 
         # Emit the getter header
         template = '\n'
-        if self.static == False and self.service != 'CTL':
+        if not self.static and self.service != 'CTL':
             template += (
                 '\n'
                 '/**\n'
@@ -200,7 +200,7 @@ class Field:
 
         # Emit the setter header
         template = '\n'
-        if self.static == False and self.service != 'CTL':
+        if not self.static and self.service != 'CTL':
             template += (
                 '\n'
                 '/**\n'
@@ -408,7 +408,7 @@ class Field:
                          'prefix_camelcase'  : utils.build_camelcase_name(self.prefix),
                          'prefix_underscore' : utils.build_underscore_name(self.prefix) }
 
-        if TypeFactory.is_section_emitted(self.fullname) is False:
+        if not TypeFactory.is_section_emitted(self.fullname):
             TypeFactory.set_section_emitted(self.fullname)
             self.variable.add_sections(sections)
 

@@ -81,7 +81,7 @@ def codegen_main():
         for message_id_enum_name in collection_list_json:
             if message_id_enum_name.startswith(message_list.request_prefix) or \
                message_id_enum_name.startswith(message_list.indication_prefix):
-                if message_list.contains(message_id_enum_name) == False:
+                if message_list.contains(message_id_enum_name) is False:
                     raise ValueError('Message ' + message_id_enum_name + ' in collection does not exist')
 
     # Add common stuff to the output files

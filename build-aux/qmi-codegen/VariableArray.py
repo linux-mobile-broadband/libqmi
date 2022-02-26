@@ -57,9 +57,15 @@ class VariableArray(Variable):
 
         # Load variable type of this array
         if 'name' in dictionary['array-element']:
-            self.array_element = VariableFactory.create_variable(self.service, dictionary['array-element'], array_element_type + ' ' + dictionary['array-element']['name'], self.container_type)
+            self.array_element = VariableFactory.create_variable(self.service,
+                                                                 dictionary['array-element'],
+                                                                 array_element_type + ' ' + dictionary['array-element']['name'],
+                                                                 self.container_type)
         else:
-            self.array_element = VariableFactory.create_variable(self.service, dictionary['array-element'], '', self.container_type)
+            self.array_element = VariableFactory.create_variable(self.service,
+                                                                 dictionary['array-element'],
+                                                                 '',
+                                                                 self.container_type)
 
         if 'size-prefix-format' in dictionary and 'fixed-size' in dictionary:
             raise ValueError('Cannot give \'size-prefix-format\' and \'fixed-size\' in %s array at the same time' % self.name)
@@ -67,7 +73,8 @@ class VariableArray(Variable):
             # Load variable type for the array size prefix
             # We do NOT allow 64-bit types as array sizes (GArray won't support them)
             if dictionary['size-prefix-format'] not in [ 'guint8', 'guint16', 'guint32' ]:
-                raise ValueError('Invalid size prefix format (%s) in %s array: not guint8 or guint16 or guint32' % (dictionary['size-prefix-format'], self.name))
+                raise ValueError('Invalid size prefix format (%s) in %s array: not guint8 or guint16 or guint32' %
+                                 (dictionary['size-prefix-format'], self.name))
             default_array_size = { 'format' : dictionary['size-prefix-format'] }
             self.array_size_element = VariableFactory.create_variable(self.service, default_array_size, '', self.container_type)
             # Load variable type for the sequence prefix, if any
@@ -106,7 +113,7 @@ class VariableArray(Variable):
         translations = { 'lp'                          : line_prefix,
                          'variable_name'               : variable_name,
                          'private_format'              : self.private_format,
-                         'public_array_element_format' : self.array_element.public_format,
+                         'array_element_public_format' : self.array_element.public_format,
                          'array_element_clear_method'  : self.array_element.clear_method,
                          'common_var_prefix'           : common_var_prefix }
 
@@ -155,18 +162,18 @@ class VariableArray(Variable):
             '${lp}    ${variable_name} = g_array_sized_new (\n'
             '${lp}        FALSE,\n'
             '${lp}        FALSE,\n'
-            '${lp}        sizeof (${public_array_element_format}),\n'
+            '${lp}        sizeof (${array_element_public_format}),\n'
             '${lp}        (guint)${common_var_prefix}_n_items);\n'
             '\n')
 
-        if self.array_element.needs_dispose == True:
+        if self.array_element.needs_dispose:
             template += (
                 '${lp}    g_array_set_clear_func (${variable_name}, (GDestroyNotify)${array_element_clear_method});\n'
                 '\n')
 
         template += (
             '${lp}    for (${common_var_prefix}_i = 0; ${common_var_prefix}_i < ${common_var_prefix}_n_items; ${common_var_prefix}_i++) {\n'
-            '${lp}        ${public_array_element_format} ${common_var_prefix}_aux;\n'
+            '${lp}        ${array_element_public_format} ${common_var_prefix}_aux;\n'
             '\n')
         f.write(string.Template(template).substitute(translations))
 
@@ -337,8 +344,8 @@ class VariableArray(Variable):
             return ""
 
         translations = { 'lp'                          : line_prefix,
-                         'public_array_element_format' : self.array_element.public_format,
-                         'public_array_element_type'   : self.array_element.element_type,
+                         'array_element_public_format' : self.array_element.public_format,
+                         'array_element_element_type'  : self.array_element.element_type,
                          'name'                        : variable_name }
 
         template = ''
@@ -347,7 +354,7 @@ class VariableArray(Variable):
                 '${lp}@${name}_sequence: (out)(optional): a placeholder for the output sequence number, or %NULL if not required.\n')
 
         template += (
-            '${lp}@${name}: (out)(optional)(element-type ${public_array_element_type})(transfer none): a placeholder for the output #GArray of #${public_array_element_format} elements, or %NULL if not required. Do not free it, it is owned by @self.\n')
+            '${lp}@${name}: (out)(optional)(element-type ${array_element_element_type})(transfer none): a placeholder for the output #GArray of #${array_element_public_format} elements, or %NULL if not required. Do not free it, it is owned by @self.\n')
         return string.Template(template).substitute(translations)
 
 
@@ -404,8 +411,8 @@ class VariableArray(Variable):
             return ""
 
         translations = { 'lp'                          : line_prefix,
-                         'public_array_element_format' : self.array_element.public_format,
-                         'public_array_element_type'   : self.array_element.element_type,
+                         'array_element_public_format' : self.array_element.public_format,
+                         'array_element_element_type'  : self.array_element.element_type,
                          'name'                        : variable_name }
 
         template = ''
@@ -414,7 +421,7 @@ class VariableArray(Variable):
                 '${lp}@${name}_sequence: the sequence number.\n')
 
         template += (
-            '${lp}@${name}: (in)(element-type ${public_array_element_type}): a #GArray of #${public_array_element_format} elements. A new reference to @${name} will be taken.\n')
+            '${lp}@${name}: (in)(element-type ${array_element_element_type}): a #GArray of #${array_element_public_format} elements. A new reference to @${name} will be taken.\n')
         return string.Template(template).substitute(translations)
 
 
@@ -446,7 +453,7 @@ class VariableArray(Variable):
     """
     def build_struct_field_documentation(self, line_prefix, variable_name):
         translations = { 'lp'                          : line_prefix,
-                         'public_array_element_format' : self.array_element.public_format,
+                         'array_element_public_format' : self.array_element.public_format,
                          'name'                        : variable_name }
 
         template = ''
@@ -455,7 +462,7 @@ class VariableArray(Variable):
                 '${lp}@${name}_sequence: the sequence number.\n')
 
         template += (
-            '${lp}@${name}: a #GArray of #${public_array_element_format} elements.\n')
+            '${lp}@${name}: a #GArray of #${array_element_public_format} elements.\n')
         return string.Template(template).substitute(translations)
 
 

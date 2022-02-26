@@ -38,13 +38,14 @@ class VariableStruct(Variable):
         # Call the parent constructor
         Variable.__init__(self, service, dictionary)
 
+        self.container_type = container_type
+
         # The public format of the struct is built directly from the suggested
         # struct type name
         self.struct_type_name = struct_type_name
         self.public_format = utils.build_camelcase_name(struct_type_name)
         self.private_format = self.public_format
         self.element_type = self.public_format
-        self.container_type = container_type
 
         # Load members of this struct
         self.members = []
@@ -58,7 +59,7 @@ class VariableStruct(Variable):
 
         # We'll need to dispose if at least one of the members needs it
         for member in self.members:
-            if member['object'].needs_dispose == True:
+            if member['object'].needs_dispose:
                 self.needs_dispose = True
                 self.clear_method = '__' + utils.build_underscore_name(self.struct_type_name) + '_clear'
                 break
@@ -68,7 +69,6 @@ class VariableStruct(Variable):
     Emit all types for the members of the struct plus the new struct type itself
     """
     def emit_types(self, hfile, cfile, since, static):
-        # Emit types for each member
         for member in self.members:
             member['object'].emit_types(hfile, cfile, since, static)
 
@@ -77,7 +77,7 @@ class VariableStruct(Variable):
         template = '\n'
         hfile.write(string.Template(template).substitute(translations))
 
-        if static == False and self.service != 'CTL':
+        if not static and self.service != 'CTL':
             template = (
                 '\n'
                 '/**\n'
@@ -184,4 +184,4 @@ class VariableStruct(Variable):
         for member in self.members:
             member['object'].add_sections(sections)
 
-        sections['public-types'] += self.public_format + '\n'
+        sections['public-types'] += self.element_type + '\n'

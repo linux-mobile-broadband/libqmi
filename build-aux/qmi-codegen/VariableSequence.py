@@ -57,7 +57,6 @@ class VariableSequence(Variable):
     Emit all types for the members of the sequence
     """
     def emit_types(self, hfile, cfile, since, static):
-        # Emit types for each member
         for member in self.members:
             member['object'].emit_types(hfile, cfile, since, static)
 
@@ -188,7 +187,7 @@ class VariableSequence(Variable):
 
 
     """
-    Builds the Sequence setter implementation
+    Builds the sequence setter implementation
     """
     def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:

@@ -34,6 +34,7 @@ class Variable:
         The current QMI service
         """
         self.service = service
+
         """
         Variables can define specific public and private formats to be used.
         The public format will be that used in the generated interface file,
@@ -64,6 +65,10 @@ class Variable:
         """
         self.clear_method = ''
 
+        """
+        Custom endianness configuration for a specific variable; if none given, defaults
+        to host endian.
+        """
         self.endian = "QMI_ENDIAN_LITTLE"
         if 'endian' in dictionary:
             endian = dictionary['endian']
@@ -85,7 +90,6 @@ class Variable:
     def emit_types(self, hfile, cfile, since, static):
         pass
 
-
     """
     Emits the code involved in reading the variable from the raw byte stream
     into the specific private format.
@@ -93,14 +97,12 @@ class Variable:
     def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
         pass
 
-
     """
     Emits the code involved in writing the variable to the raw byte stream
     from the specific private format.
     """
     def emit_buffer_write(self, f, line_prefix, tlv_name, variable_name):
         pass
-
 
     """
     Emits the code to get the contents of the given variable as a printable string.

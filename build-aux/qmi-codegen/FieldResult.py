@@ -35,7 +35,7 @@ class FieldResult(Field):
     interface)
     """
     def emit_types(self, hfile, cfile):
-        if TypeFactory.is_type_emitted(self.fullname) is False:
+        if not TypeFactory.is_type_emitted(self.fullname):
             TypeFactory.set_type_emitted(self.fullname)
             self.variable.emit_types(cfile, cfile, self.since, True)
 
@@ -53,7 +53,7 @@ class FieldResult(Field):
 
         # Emit the getter header
         template = '\n'
-        if self.static == False and self.service != 'CTL':
+        if not self.static and self.service != 'CTL':
             template += (
                 '\n'
                 '/**\n'

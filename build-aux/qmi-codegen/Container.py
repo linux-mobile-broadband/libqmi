@@ -129,7 +129,7 @@ class Container:
         translations['type_macro'] = 'QMI_TYPE_' + utils.remove_prefix(utils.build_underscore_uppercase_name(self.fullname), 'QMI_')
         # Emit types header
         template = '\n'
-        if self.static == False and self.service != 'CTL':
+        if not self.static and self.service != 'CTL':
             template += (
                 '/**\n'
                 ' * ${camelcase}:\n'
@@ -143,7 +143,7 @@ class Container:
             'typedef struct _${camelcase} ${camelcase};\n'
             '${static}GType ${underscore}_get_type (void) G_GNUC_CONST;\n'
             '#define ${type_macro} (${underscore}_get_type ())\n')
-        if self.compat == True:
+        if self.compat:
             template += (
                 'G_GNUC_INTERNAL\n'
                 'gpointer ${underscore}_get_compat_context (${camelcase} *self);\n'
@@ -159,7 +159,7 @@ class Container:
             '\n'
             'struct _${camelcase} {\n'
             '    volatile gint ref_count;\n')
-        if self.compat == True:
+        if self.compat:
             template += (
                 '\n'
                 '    gpointer compat_context;\n'
@@ -189,7 +189,7 @@ class Container:
     def __emit_core(self, hfile, cfile, translations):
         # Emit container core header
         template = '\n'
-        if self.static == False and self.service != 'CTL':
+        if not self.static and self.service != 'CTL':
             template += (
                 '\n'
                 '/**\n'
@@ -205,7 +205,7 @@ class Container:
         template += (
             '${static}${camelcase} *${underscore}_ref (${camelcase} *self);\n'
             '\n')
-        if self.static == False and self.service != 'CTL':
+        if not self.static and self.service != 'CTL':
             template += (
                 '/**\n'
                 ' * ${underscore}_unref:\n'
@@ -219,8 +219,8 @@ class Container:
         template += (
             '${static}void ${underscore}_unref (${camelcase} *self);\n'
             'G_DEFINE_AUTOPTR_CLEANUP_FUNC (${camelcase}, ${underscore}_unref)\n')
-        if self.readonly == False:
-            if self.static == False:
+        if not self.readonly:
+            if not self.static:
                 template += (
                     '\n'
                     '/**\n'
@@ -276,14 +276,14 @@ class Container:
             '\n'
             '    if (g_atomic_int_dec_and_test (&self->ref_count)) {\n')
 
-        if self.compat == True:
+        if self.compat:
             template += (
                 '        if (self->compat_context && self->compat_context_free)\n'
                 '            self->compat_context_free (self->compat_context);\n')
 
         if self.fields is not None:
             for field in self.fields:
-                if field.variable is not None and field.variable.needs_dispose is True:
+                if field.variable is not None and field.variable.needs_dispose:
                     template += field.variable.build_dispose('        ', 'self->' + field.variable_name)
 
         template += (
@@ -291,7 +291,7 @@ class Container:
             '    }\n'
             '}\n')
 
-        if self.compat == True:
+        if self.compat:
             template += (
                 'gpointer\n'
                 '${underscore}_get_compat_context (${camelcase} *self)\n'
@@ -318,7 +318,7 @@ class Container:
         cfile.write(string.Template(template).substitute(translations))
 
         # _new() is only generated if the container is not readonly
-        if self.readonly == True:
+        if self.readonly:
             return
 
         template = (
@@ -368,7 +368,7 @@ class Container:
         if self.fields is not None:
             for field in self.fields:
                 field.emit_getter(auxfile, cfile)
-                if self.readonly == False:
+                if not self.readonly:
                     field.emit_setter(auxfile, cfile)
 
         # Emit the container core
@@ -394,7 +394,7 @@ class Container:
         sections['standard'] += string.Template(template).substitute(translations)
 
         # Private
-        if self.compat == True:
+        if self.compat:
             template = (
                 '${underscore}_get_compat_context\n'
                 '${underscore}_set_compat_context\n')
@@ -407,7 +407,7 @@ class Container:
 
         # Public methods
         template = '<SUBSECTION ${camelcase}Methods>\n'
-        if self.readonly == False:
+        if not self.readonly:
             template += (
                 '${underscore}_new\n')
         template += (
