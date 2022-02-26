@@ -33,9 +33,6 @@ class VariableArray(Variable):
         # Call the parent constructor
         Variable.__init__(self, service, dictionary)
 
-        self.private_format  = 'GArray *'
-        self.public_format = self.private_format
-        self.element_type = 'GArray'
         self.fixed_size = 0
         self.name = dictionary['name']
 
