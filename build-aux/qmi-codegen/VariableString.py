@@ -154,23 +154,28 @@ class VariableString(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    def build_variable_declaration(self, public, line_prefix, variable_name):
+    def build_variable_declaration(self, line_prefix, variable_name):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
-        if public:
-            # Fixed sized strings given in public structs are given as pointers,
-            # instead of as fixed-sized arrays directly in the struct.
-            template = (
-                '${lp}gchar *${name};\n')
-            self.is_public = True
-        elif self.is_fixed_size:
+        if self.is_fixed_size:
             translations['fixed_size_plus_one'] = int(self.fixed_size) + 1
             template = (
                 '${lp}gchar ${name}[${fixed_size_plus_one}];\n')
         else:
             template = (
                 '${lp}gchar *${name};\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_struct_field_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        # Fixed sized strings given in public structs are given as pointers,
+        # instead of as fixed-sized arrays directly in the struct.
+        template = (
+            '${lp}gchar *${name};\n')
         return string.Template(template).substitute(translations)
 
 

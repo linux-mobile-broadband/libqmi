@@ -62,6 +62,14 @@ class VariableStruct(Variable):
                 break
 
 
+    def build_variable_declaration(self, line_prefix, variable_name):
+        raise RuntimeError('Variable of type "struct" can only be defined as array members')
+
+
+    def build_struct_field_declaration(self, line_prefix, variable_name):
+        raise RuntimeError('Variable of type "struct" cannot be defined as struct fields')
+
+
     def emit_types(self, hfile, cfile, since, static):
         for member in self.members:
             member['object'].emit_types(hfile, cfile, since, static)
@@ -92,7 +100,7 @@ class VariableStruct(Variable):
         hfile.write(string.Template(template).substitute(translations))
 
         for member in self.members:
-            hfile.write(member['object'].build_variable_declaration(True, '    ', member['name']))
+            hfile.write(member['object'].build_struct_field_declaration('    ', member['name']))
 
         template = ('} ${format};\n')
         hfile.write(string.Template(template).substitute(translations))

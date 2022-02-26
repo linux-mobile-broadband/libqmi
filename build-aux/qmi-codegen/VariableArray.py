@@ -279,7 +279,7 @@ class VariableArray(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    def build_variable_declaration(self, public, line_prefix, variable_name):
+    def build_variable_declaration(self, line_prefix, variable_name):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
 
@@ -292,6 +292,10 @@ class VariableArray(Variable):
         template += (
             '${lp}GArray *${name};\n')
         return string.Template(template).substitute(translations)
+
+
+    def build_struct_field_declaration(self, line_prefix, variable_name):
+        return self.build_variable_declaration(line_prefix, variable_name)
 
 
     def build_getter_declaration(self, line_prefix, variable_name):

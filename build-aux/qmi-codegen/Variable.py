@@ -111,9 +111,10 @@ class Variable:
         pass
 
     """
-    Builds the code to include the declaration of a variable of this kind.
+    Builds the code to include the declaration of a variable of this kind,
+    used when generating input/output bundles.
     """
-    def build_variable_declaration(self, public, line_prefix, variable_name):
+    def build_variable_declaration(self, line_prefix, variable_name):
         return ''
 
     """
@@ -150,6 +151,13 @@ class Variable:
     Builds the code to implement setting this kind of variable.
     """
     def build_setter_implementation(self, line_prefix, variable_name_from, variable_name_to):
+        return ''
+
+    """
+    Builds the code to include the declaration of a variable of this kind
+    as a field in a public struct
+    """
+    def build_struct_field_declaration(self, line_prefix, variable_name):
         return ''
 
     """

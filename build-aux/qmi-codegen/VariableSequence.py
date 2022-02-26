@@ -89,11 +89,15 @@ class VariableSequence(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    def build_variable_declaration(self, public, line_prefix, variable_name):
+    def build_variable_declaration(self, line_prefix, variable_name):
         built = ''
         for member in self.members:
-            built += member['object'].build_variable_declaration(public, line_prefix, variable_name + '_' + member['name'])
+            built += member['object'].build_variable_declaration(line_prefix, variable_name + '_' + member['name'])
         return built
+
+
+    def build_struct_field_declaration(self, line_prefix, variable_name):
+        raise RuntimeError('Variable of type "sequence" is never expected as a struct field')
 
 
     def build_getter_declaration(self, line_prefix, variable_name):

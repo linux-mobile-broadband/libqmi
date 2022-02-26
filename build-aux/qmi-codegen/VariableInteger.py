@@ -238,18 +238,21 @@ class VariableInteger(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    def build_variable_declaration(self, public, line_prefix, variable_name):
+    def build_variable_declaration(self, line_prefix, variable_name):
         translations = { 'lp'             : line_prefix,
                          'private_format' : self.private_format,
-                         'public_format'  : self.public_format,
                          'name'           : variable_name }
-        template = ''
-        if public:
-            template += (
-                '${lp}${public_format} ${name};\n')
-        else:
-            template += (
-                '${lp}${private_format} ${name};\n')
+        template = (
+            '${lp}${private_format} ${name};\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_struct_field_declaration(self, line_prefix, variable_name):
+        translations = { 'lp'            : line_prefix,
+                         'public_format' : self.public_format,
+                         'name'          : variable_name }
+        template = (
+            '${lp}${public_format} ${name};\n')
         return string.Template(template).substitute(translations)
 
 
