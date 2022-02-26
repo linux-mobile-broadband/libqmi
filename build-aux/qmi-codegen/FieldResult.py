@@ -181,7 +181,4 @@ class FieldResult(Field):
         # Public methods
         template = (
             '${prefix_underscore}_get_${underscore}\n')
-        if self.container_type == 'Input':
-            template += (
-                '${prefix_underscore}_set_${underscore}\n')
         sections['public-methods'] += string.Template(template).substitute(translations)
