@@ -3856,7 +3856,7 @@ gboolean qmi_indication_uim_slot_status_output_get_slot_eid_information (
  * A QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherSlotsSlotsElement struct.
  *
  * Since: 1.30
- * Deprecated: 1.32: Use #QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotsElement instead.
+ * Deprecated: 1.32: Use #QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotElement instead.
  */
 G_DEPRECATED_FOR (QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotsElement)
 typedef struct _QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherSlotsSlotsElement {
