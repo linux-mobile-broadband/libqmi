@@ -1391,7 +1391,7 @@ set_connect_activate_parse (const gchar               *str,
         if (!mbimcli_parse_key_value_string (str,
                                              &error,
                                              connect_activate_properties_handle,
-                                             &props)) {
+                                             props)) {
             g_printerr ("error: couldn't parse input string: %s\n", error->message);
             return FALSE;
         }
