@@ -3858,7 +3858,7 @@ gboolean qmi_indication_uim_slot_status_output_get_slot_eid_information (
  * Since: 1.30
  * Deprecated: 1.32: Use #QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotElement instead.
  */
-G_DEPRECATED_FOR (QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotsElement)
+G_DEPRECATED_FOR (QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherElementSlotElement)
 typedef struct _QmiMessageUimGetConfigurationOutputPersonalizationStatusOtherSlotsSlotsElement {
     QmiUimCardApplicationPersonalizationFeature feature;
     guint8 verify_left;
