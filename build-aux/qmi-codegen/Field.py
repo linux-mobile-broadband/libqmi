@@ -106,26 +106,24 @@ class Field:
         if not TypeFactory.is_type_emitted(self.fullname):
             TypeFactory.set_type_emitted(self.fullname)
             self.variable.emit_types(hfile, cfile, self.since, False)
+            if self.variable.needs_compat_gir and self.service != 'CTL':
+                self.variable.emit_types_gir(hfile, cfile, self.since)
 
 
     """
-    Emit the method responsible for getting this TLV from the input/output
-    container
+    Common getter logic
     """
-    def emit_getter(self, hfile, cfile):
-        input_variable_name = 'value_' + utils.build_underscore_name(self.name)
-        variable_getter_dec = self.variable.build_getter_declaration('    ', input_variable_name)
-        variable_getter_doc = self.variable.build_getter_documentation(' * ', input_variable_name)
-        variable_getter_imp = self.variable.build_getter_implementation('    ', 'self->' + self.variable_name, input_variable_name)
+    def emit_getter_common(self, hfile, cfile, dec, doc, imp, since, suffix_gir):
         translations = { 'name'                : self.name,
                          'variable_name'       : self.variable_name,
-                         'variable_getter_dec' : variable_getter_dec,
-                         'variable_getter_doc' : variable_getter_doc,
-                         'variable_getter_imp' : variable_getter_imp,
+                         'variable_getter_dec' : dec,
+                         'variable_getter_doc' : doc,
+                         'variable_getter_imp' : imp,
                          'underscore'          : utils.build_underscore_name(self.name),
+                         'suffix_gir'          : suffix_gir,
                          'prefix_camelcase'    : utils.build_camelcase_name(self.prefix),
                          'prefix_underscore'   : utils.build_underscore_name(self.prefix),
-                         'since'               : self.since,
+                         'since'               : since,
                          'static'              : 'static ' if self.static else '' }
 
         # Emit the getter header
@@ -133,20 +131,45 @@ class Field:
         if not self.static and self.service != 'CTL':
             template += (
                 '\n'
-                '/**\n'
-                ' * ${prefix_underscore}_get_${underscore}:\n'
+                '/**\n')
+
+            if self.variable.needs_compat_gir:
+                # Rename the GIR specific method to the original method name, and
+                # skip the original method completely
+                if suffix_gir == '':
+                    template += (
+                        ' * ${prefix_underscore}_get_${underscore}: (skip)\n')
+                else:
+                    template += (
+                        ' * ${prefix_underscore}_get_${underscore}${suffix_gir}: (rename-to ${prefix_underscore}_get_${underscore})\n')
+            else:
+                if suffix_gir != '':
+                    raise RuntimeError('GIR suffix given and variable does not need compat GIR support')
+                template += (
+                    ' * ${prefix_underscore}_get_${underscore}:\n')
+
+            template += (
                 ' * @self: a #${prefix_camelcase}.\n'
                 '${variable_getter_doc}'
                 ' * @error: Return location for error or %NULL.\n'
                 ' *\n'
-                ' * Get the \'${name}\' field from @self.\n'
+                ' * Get the \'${name}\' field from @self.\n')
+
+            if self.variable.needs_compat_gir:
+                if suffix_gir != '':
+                    template += (
+                        ' *\n'
+                        ' * Version of ${prefix_underscore}_get_${underscore}() using arrays of pointers to\n'
+                        ' * structs instead of arrays of structs, for easier binding in other languages.\n')
+
+            template += (
                 ' *\n'
                 ' * Returns: (skip): %TRUE if the field is found, %FALSE otherwise.\n'
                 ' *\n'
                 ' * Since: ${since}\n'
                 ' */\n')
         template += (
-            '${static}gboolean ${prefix_underscore}_get_${underscore} (\n'
+            '${static}gboolean ${prefix_underscore}_get_${underscore}${suffix_gir} (\n'
             '    ${prefix_camelcase} *self,\n'
             '${variable_getter_dec}'
             '    GError **error);\n')
@@ -156,7 +179,7 @@ class Field:
         template = (
             '\n'
             '${static}gboolean\n'
-            '${prefix_underscore}_get_${underscore} (\n'
+            '${prefix_underscore}_get_${underscore}${suffix_gir} (\n'
             '    ${prefix_camelcase} *self,\n'
             '${variable_getter_dec}'
             '    GError **error)\n'
@@ -179,23 +202,54 @@ class Field:
 
 
     """
-    Emit the method responsible for setting this TLV in the input/output
+    Emit the method responsible for declaring variable(s) for this TLV in the
+    input/output container
+    """
+    def emit_variable_declaration(self, cfile):
+
+        template = self.variable.build_variable_declaration('    ', self.variable_name)
+        cfile.write(template)
+
+        if self.variable.needs_compat_gir and self.service != 'CTL':
+            template = self.variable.build_variable_declaration_gir('    ', self.variable_name)
+            cfile.write(template)
+
+
+    """
+    Emit the method responsible for getting this TLV from the input/output
     container
     """
-    def emit_setter(self, hfile, cfile):
+    def emit_getter(self, hfile, cfile):
         input_variable_name = 'value_' + utils.build_underscore_name(self.name)
-        variable_setter_dec = self.variable.build_setter_declaration('    ', input_variable_name)
-        variable_setter_doc = self.variable.build_setter_documentation(' * ', input_variable_name)
-        variable_setter_imp = self.variable.build_setter_implementation('    ', input_variable_name, 'self->' + self.variable_name)
+        dec = self.variable.build_getter_declaration('    ', input_variable_name)
+        doc = self.variable.build_getter_documentation(' * ', input_variable_name)
+        imp = self.variable.build_getter_implementation('    ', 'self->' + self.variable_name, input_variable_name)
+        since = self.since
+        self.emit_getter_common(hfile, cfile, dec, doc, imp, since, '')
+
+        if self.variable.needs_compat_gir and self.service != 'CTL':
+            input_variable_name = 'value_' + utils.build_underscore_name(self.name)
+            dec = self.variable.build_getter_declaration_gir('    ', input_variable_name)
+            doc = self.variable.build_getter_documentation_gir(' * ', input_variable_name)
+            imp = self.variable.build_getter_implementation_gir('    ', 'self->' + self.variable_name, input_variable_name)
+            since = self.since if utils.version_compare('1.32',self.since) > 0 else '1.32'
+            self.emit_getter_common(hfile, cfile, dec, doc, imp, since, '_gir')
+
+
+    """
+    Common setter logic
+    """
+    def emit_setter_common(self, hfile, cfile, dec, doc, imp, since, suffix_gir):
         translations = { 'name'                : self.name,
                          'variable_name'       : self.variable_name,
-                         'variable_setter_dec' : variable_setter_dec,
-                         'variable_setter_doc' : variable_setter_doc,
-                         'variable_setter_imp' : variable_setter_imp,
+                         'variable_setter_dec' : dec,
+                         'variable_setter_doc' : doc,
+                         'variable_setter_imp' : imp,
                          'underscore'          : utils.build_underscore_name(self.name),
                          'prefix_camelcase'    : utils.build_camelcase_name(self.prefix),
                          'prefix_underscore'   : utils.build_underscore_name(self.prefix),
-                         'since'               : self.since,
+                         'since'               : since,
+                         'suffix_gir'          : suffix_gir,
                          'static'              : 'static ' if self.static else '' }
 
         # Emit the setter header
@@ -203,8 +257,24 @@ class Field:
         if not self.static and self.service != 'CTL':
             template += (
                 '\n'
-                '/**\n'
-                ' * ${prefix_underscore}_set_${underscore}:\n'
+                '/**\n')
+
+            if self.variable.needs_compat_gir:
+                # Rename the GIR specific method to the original method name, and
+                # skip the original method completely
+                if suffix_gir == '':
+                    template += (
+                        ' * ${prefix_underscore}_set_${underscore}: (skip)\n')
+                else:
+                    template += (
+                        ' * ${prefix_underscore}_set_${underscore}${suffix_gir}: (rename-to ${prefix_underscore}_set_${underscore})\n')
+            else:
+                if suffix_gir != '':
+                    raise RuntimeError('GIR suffix given and variable does not need compat GIR support')
+                template += (
+                    ' * ${prefix_underscore}_set_${underscore}:\n')
+
+            template += (
                 ' * @self: a #${prefix_camelcase}.\n'
                 '${variable_setter_doc}'
                 ' * @error: Return location for error or %NULL.\n'
@@ -216,7 +286,7 @@ class Field:
                 ' * Since: ${since}\n'
                 ' */\n')
         template += (
-            '${static}gboolean ${prefix_underscore}_set_${underscore} (\n'
+            '${static}gboolean ${prefix_underscore}_set_${underscore}${suffix_gir} (\n'
             '    ${prefix_camelcase} *self,\n'
             '${variable_setter_dec}'
             '    GError **error);\n')
@@ -226,7 +296,7 @@ class Field:
         template = (
             '\n'
             '${static}gboolean\n'
-            '${prefix_underscore}_set_${underscore} (\n'
+            '${prefix_underscore}_set_${underscore}${suffix_gir} (\n'
             '    ${prefix_camelcase} *self,\n'
             '${variable_setter_dec}'
             '    GError **error)\n'
@@ -239,6 +309,26 @@ class Field:
             '    return TRUE;\n'
             '}\n')
         cfile.write(string.Template(template).substitute(translations))
+
+    """
+    Emit the method responsible for setting this TLV in the input/output
+    container
+    """
+    def emit_setter(self, hfile, cfile):
+        input_variable_name = 'value_' + utils.build_underscore_name(self.name)
+        dec = self.variable.build_setter_declaration('    ', input_variable_name)
+        doc = self.variable.build_setter_documentation(' * ', input_variable_name)
+        imp = self.variable.build_setter_implementation('    ', input_variable_name, 'self->' + self.variable_name)
+        since = self.since
+        self.emit_setter_common(hfile, cfile, dec, doc, imp, since, '')
+
+        if self.variable.needs_compat_gir and self.service != 'CTL':
+            input_variable_name = 'value_' + utils.build_underscore_name(self.name)
+            dec = self.variable.build_setter_declaration_gir('    ', input_variable_name)
+            doc = self.variable.build_setter_documentation_gir(' * ', input_variable_name)
+            imp = self.variable.build_setter_implementation_gir('    ', input_variable_name, 'self->' + self.variable_name)
+            since = self.since if utils.version_compare('1.32',self.since) > 0 else '1.32'
+            self.emit_setter_common(hfile, cfile, dec, doc, imp, since, '_gir')
 
 
     """
@@ -415,7 +505,13 @@ class Field:
         # Public methods
         template = (
             '${prefix_underscore}_get_${underscore}\n')
+        if self.variable.needs_compat_gir and self.service != 'CTL':
+            template += (
+                '${prefix_underscore}_get_${underscore}_gir\n')
         if self.container_type == 'Input':
             template += (
                 '${prefix_underscore}_set_${underscore}\n')
+            if self.variable.needs_compat_gir and self.service != 'CTL':
+                template += (
+                    '${prefix_underscore}_set_${underscore}_gir\n')
         sections['public-methods'] += string.Template(template).substitute(translations)

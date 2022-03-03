@@ -468,6 +468,7 @@ nas_network_scan_ready (QmiClientNas *client,
     GError *error = NULL;
     gboolean st;
     GArray *network_information = NULL;
+    GPtrArray *network_information_ptr = NULL;
     GArray *radio_access_technology = NULL;
     GArray *mnc_pcs_digit_include_status = NULL;
     guint i;
@@ -492,6 +493,26 @@ nas_network_scan_ready (QmiClientNas *client,
         QmiMessageNasNetworkScanOutputNetworkInformationElement *el;
 
         el = &g_array_index (network_information, QmiMessageNasNetworkScanOutputNetworkInformationElement, i);
+
+        g_assert_cmpuint (el->mcc, ==, scan_results[i].mcc);
+        g_assert_cmpuint (el->mnc, ==, scan_results[i].mnc);
+        g_assert_cmpuint (el->network_status, ==, scan_results[i].network_status);
+        g_assert_cmpstr  (el->description, ==, scan_results[i].description);
+    }
+
+    /* GIR compat method with GPtrArray */
+    st = (qmi_message_nas_network_scan_output_get_network_information_gir (
+              output,
+              &network_information_ptr,
+              &error));
+    g_assert_no_error (error);
+    g_assert (st);
+    g_assert (network_information_ptr);
+    g_assert_cmpuint (network_information_ptr->len, ==, 8);
+    for (i = 0; i < network_information_ptr->len; i++) {
+        QmiMessageNasNetworkScanOutputNetworkInformationElement *el;
+
+        el = g_ptr_array_index (network_information_ptr, i);
 
         g_assert_cmpuint (el->mcc, ==, scan_results[i].mcc);
         g_assert_cmpuint (el->mnc, ==, scan_results[i].mnc);
@@ -699,6 +720,20 @@ nas_get_cell_location_info_2_ready (QmiClientNas *client,
         guint8    value_intrafrequency_lte_info_s_intra_search_threshold = 0;
         GArray   *value_intrafrequency_lte_info_cell = NULL;
 
+        gboolean  value_intrafrequency_lte_info_ue_in_idle_gir = FALSE;
+        GArray   *value_intrafrequency_lte_info_plmn_gir = NULL;
+        guint16   value_intrafrequency_lte_info_tracking_area_code_gir = 0;
+        guint32   value_intrafrequency_lte_info_global_cell_id_gir = 0;
+        guint16   value_intrafrequency_lte_info_eutra_absolute_rf_channel_number_gir = 0;
+        guint16   value_intrafrequency_lte_info_serving_cell_id_gir = 0;
+        guint8    value_intrafrequency_lte_info_cell_reselection_priority_gir = 0;
+        guint8    value_intrafrequency_lte_info_s_non_intra_search_threshold_gir = 0;
+        guint8    value_intrafrequency_lte_info_serving_cell_low_threshold_gir = 0;
+        guint8    value_intrafrequency_lte_info_s_intra_search_threshold_gir = 0;
+        GPtrArray   *value_intrafrequency_lte_info_cell_gir = NULL;
+
+        guint i;
+
         st = qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2 (output,
                                                                                            &value_intrafrequency_lte_info_ue_in_idle,
                                                                                            &value_intrafrequency_lte_info_plmn,
@@ -714,6 +749,48 @@ nas_get_cell_location_info_2_ready (QmiClientNas *client,
                                                                                            &error);
         g_assert_no_error (error);
         g_assert (st);
+
+        st = qmi_message_nas_get_cell_location_info_output_get_intrafrequency_lte_info_v2_gir (output,
+                                                                                               &value_intrafrequency_lte_info_ue_in_idle_gir,
+                                                                                               &value_intrafrequency_lte_info_plmn_gir,
+                                                                                               &value_intrafrequency_lte_info_tracking_area_code_gir,
+                                                                                               &value_intrafrequency_lte_info_global_cell_id_gir,
+                                                                                               &value_intrafrequency_lte_info_eutra_absolute_rf_channel_number_gir,
+                                                                                               &value_intrafrequency_lte_info_serving_cell_id_gir,
+                                                                                               &value_intrafrequency_lte_info_cell_reselection_priority_gir,
+                                                                                               &value_intrafrequency_lte_info_s_non_intra_search_threshold_gir,
+                                                                                               &value_intrafrequency_lte_info_serving_cell_low_threshold_gir,
+                                                                                               &value_intrafrequency_lte_info_s_intra_search_threshold_gir,
+                                                                                               &value_intrafrequency_lte_info_cell_gir,
+                                                                                               &error);
+        g_assert_no_error (error);
+        g_assert (st);
+
+        g_assert_cmpuint (value_intrafrequency_lte_info_ue_in_idle, ==, value_intrafrequency_lte_info_ue_in_idle_gir);
+        g_assert_cmpuint (value_intrafrequency_lte_info_plmn->len, ==, value_intrafrequency_lte_info_plmn_gir->len);
+        for (i = 0; i < value_intrafrequency_lte_info_plmn->len; i++)
+            g_assert_cmpuint (g_array_index (value_intrafrequency_lte_info_plmn, guint8, i), ==, g_array_index (value_intrafrequency_lte_info_plmn_gir, guint8, i));
+        g_assert_cmpuint (value_intrafrequency_lte_info_tracking_area_code, ==, value_intrafrequency_lte_info_tracking_area_code_gir);
+        g_assert_cmpuint (value_intrafrequency_lte_info_global_cell_id, == , value_intrafrequency_lte_info_global_cell_id_gir);
+        g_assert_cmpuint (value_intrafrequency_lte_info_eutra_absolute_rf_channel_number, == , value_intrafrequency_lte_info_eutra_absolute_rf_channel_number_gir);
+        g_assert_cmpuint (value_intrafrequency_lte_info_serving_cell_id, == , value_intrafrequency_lte_info_serving_cell_id_gir);
+        g_assert_cmpuint (value_intrafrequency_lte_info_cell_reselection_priority, == , value_intrafrequency_lte_info_cell_reselection_priority_gir);
+        g_assert_cmpuint (value_intrafrequency_lte_info_s_non_intra_search_threshold, == , value_intrafrequency_lte_info_s_non_intra_search_threshold_gir);
+        g_assert_cmpuint (value_intrafrequency_lte_info_serving_cell_low_threshold, == , value_intrafrequency_lte_info_serving_cell_low_threshold_gir);
+        g_assert_cmpuint (value_intrafrequency_lte_info_s_intra_search_threshold, == , value_intrafrequency_lte_info_s_intra_search_threshold_gir);
+        g_assert_cmpuint (value_intrafrequency_lte_info_cell->len, ==, value_intrafrequency_lte_info_cell_gir->len);
+        for (i = 0; i < value_intrafrequency_lte_info_cell->len; i++) {
+            QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement *cell;
+            QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement *cell_gir;
+
+            cell = &g_array_index (value_intrafrequency_lte_info_cell, QmiMessageNasGetCellLocationInfoOutputIntrafrequencyLteInfoV2CellElement, i);
+            cell_gir = g_ptr_array_index (value_intrafrequency_lte_info_cell_gir, i);
+            g_assert_cmpuint (cell->physical_cell_id, ==, cell_gir->physical_cell_id);
+            g_assert_cmpuint (cell->rsrq, ==, cell_gir->rsrq);
+            g_assert_cmpuint (cell->rsrp, ==, cell_gir->rsrp);
+            g_assert_cmpuint (cell->rssi, ==, cell_gir->rssi);
+            g_assert_cmpuint (cell->cell_selection_rx_level, ==, cell_gir->cell_selection_rx_level);
+        }
     }
 
     qmi_message_nas_get_cell_location_info_output_unref (output);

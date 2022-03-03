@@ -169,7 +169,6 @@ class Container:
         if self.fields is not None:
             for field in self.fields:
                 if field.variable is not None:
-                    variable_declaration = field.variable.build_variable_declaration('    ', field.variable_name)
                     translations['field_variable_name'] = field.variable_name
                     translations['field_name'] = field.name
                     template = (
@@ -177,7 +176,7 @@ class Container:
                         '    /* ${field_name} */\n'
                         '    gboolean ${field_variable_name}_set;\n')
                     cfile.write(string.Template(template).substitute(translations))
-                    cfile.write(variable_declaration)
+                    field.emit_variable_declaration(cfile)
 
         cfile.write(
             '};\n')
@@ -285,6 +284,8 @@ class Container:
             for field in self.fields:
                 if field.variable is not None and field.variable.needs_dispose:
                     template += field.variable.build_dispose('        ', 'self->' + field.variable_name)
+                    if field.variable.needs_compat_gir and self.service != 'CTL':
+                        template += field.variable.build_dispose_gir('        ', 'self->' + field.variable_name)
 
         template += (
             '        g_slice_free (${camelcase}, self);\n'

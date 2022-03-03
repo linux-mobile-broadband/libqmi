@@ -89,9 +89,17 @@ class VariableArray(Variable):
         else:
             raise ValueError('Missing \'size-prefix-format\' or \'fixed-size\' in %s array' % self.name)
 
+        # Arrays need compat GIR support if the array element needs compat GIR support
+        self.needs_compat_gir = self.array_element.needs_compat_gir
+
 
     def emit_types(self, hfile, cfile, since, static):
         self.array_element.emit_types(hfile, cfile, since, static)
+
+
+    def emit_types_gir(self, hfile, cfile, since):
+        if self.array_element.needs_compat_gir:
+            self.array_element.emit_types_gir(hfile, cfile, since)
 
 
     def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
@@ -275,6 +283,9 @@ class VariableArray(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
+    """
+    We need to include SEQUENCE + GARRAY
+    """
     def build_variable_declaration(self, line_prefix, variable_name):
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
@@ -290,13 +301,53 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
+    """
+    We need to include GPTRARRAY
+    """
+    def build_variable_declaration_gir(self, line_prefix, variable_name):
+        if not self.array_element.needs_compat_gir:
+            return ''
+
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = (
+            '${lp}GPtrArray *${name}_ptr;\n')
+        return string.Template(template).substitute(translations)
+
+
+    """
+    We need to include SEQUENCE + GARRAY
+    """
     def build_struct_field_declaration(self, line_prefix, variable_name):
         return self.build_variable_declaration(line_prefix, variable_name)
 
 
+    """
+    We need to include SEQUENCE + GPTRARRAY
+    """
+    def build_struct_field_declaration_gir(self, line_prefix, variable_name):
+        if not self.array_element.needs_compat_gir:
+            return self.build_struct_field_declaration(line_prefix, variable_name)
+
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = ''
+
+        if self.array_sequence_element != '':
+            translations['array_sequence_element_format'] = self.array_sequence_element.public_format
+            template += (
+                '${lp}${array_sequence_element_format} ${name}_sequence;\n')
+
+        template += (
+            '${lp}GPtrArray *${name};\n')
+        return string.Template(template).substitute(translations)
+
+
     def build_getter_declaration(self, line_prefix, variable_name):
         if not self.visible:
-            return ""
+            return ''
 
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
@@ -312,9 +363,30 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
+    def build_getter_declaration_gir(self, line_prefix, variable_name):
+        if not self.array_element.needs_compat_gir:
+            return self.build_getter_declaration(line_prefix, variable_name)
+
+        if not self.visible:
+            return ''
+
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = ''
+        if self.array_sequence_element != '':
+            translations['array_sequence_element_format'] = self.array_sequence_element.public_format
+            template += (
+                '${lp}${array_sequence_element_format} *${name}_sequence,\n')
+
+        template += (
+            '${lp}GPtrArray **${name}_ptr,\n')
+        return string.Template(template).substitute(translations)
+
+
     def build_getter_documentation(self, line_prefix, variable_name):
         if not self.visible:
-            return ""
+            return ''
 
         translations = { 'lp'                          : line_prefix,
                          'array_element_public_format' : self.array_element.public_format,
@@ -331,9 +403,30 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
+    def build_getter_documentation_gir(self, line_prefix, variable_name):
+        if not self.array_element.needs_compat_gir:
+            return self.build_getter_documentation(line_prefix, variable_name)
+        if not self.visible:
+            return ''
+
+        translations = { 'lp'                             : line_prefix,
+                         'array_element_public_format'    : self.array_element.public_format,
+                         'array_element_element_type_gir' : self.array_element.element_type_gir,
+                         'name'                           : variable_name }
+
+        template = ''
+        if self.array_sequence_element != '':
+            template += (
+                '${lp}@${name}_sequence: (out)(optional): a placeholder for the output sequence number, or %NULL if not required.\n')
+
+        template += (
+            '${lp}@${name}_ptr: (out)(optional)(element-type ${array_element_element_type_gir})(transfer none): a placeholder for the output array of #${array_element_public_format} elements, or %NULL if not required. Do not free or modify it, it is owned by @self.\n')
+        return string.Template(template).substitute(translations)
+
+
     def build_getter_implementation(self, line_prefix, variable_name_from, variable_name_to):
         if not self.visible:
-            return ""
+            return ''
 
         translations = { 'lp'   : line_prefix,
                          'from' : variable_name_from,
@@ -352,9 +445,42 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
+    def build_getter_implementation_gir(self, line_prefix, variable_name_from, variable_name_to):
+        if not self.array_element.needs_compat_gir:
+            return self.build_getter_implementation(line_prefix, variable_name_from, variable_name_to)
+        if not self.visible:
+            return ''
+
+        common_var_prefix = utils.build_underscore_name(self.name)
+        translations = { 'lp'   : line_prefix,
+                         'from' : variable_name_from,
+                         'to'   : variable_name_to }
+
+        template = ''
+        if self.array_sequence_element != '':
+            template += (
+                '${lp}if (${to}_sequence)\n'
+                '${lp}    *${to}_sequence = ${from}_sequence;\n')
+
+        template += (
+            '${lp}if (${to}_ptr) {\n'
+            '${lp}    if (!${from}_ptr) {\n')
+
+        template += self.build_copy_to_gir(line_prefix + '        ',
+                                           variable_name_from,
+                                           variable_name_from + '_ptr')
+
+        template += (
+            '${lp}    }\n'
+            '${lp}    *${to}_ptr = ${from}_ptr;\n'
+            '${lp}}')
+
+        return string.Template(template).substitute(translations)
+
+
     def build_setter_declaration(self, line_prefix, variable_name):
         if not self.visible:
-            return ""
+            return ''
 
         translations = { 'lp'   : line_prefix,
                          'name' : variable_name }
@@ -367,6 +493,26 @@ class VariableArray(Variable):
 
         template += (
             '${lp}GArray *${name},\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_setter_declaration_gir(self, line_prefix, variable_name):
+        if not self.array_element.needs_compat_gir:
+            return self.build_setter_declaration(line_prefix, variable_name)
+        if not self.visible:
+            return ''
+
+        translations = { 'lp'   : line_prefix,
+                         'name' : variable_name }
+
+        template = ''
+        if self.array_sequence_element != '':
+            translations['array_sequence_element_format'] = self.array_sequence_element.public_format
+            template += (
+                '${lp}${array_sequence_element_format} ${name}_sequence,\n')
+
+        template += (
+            '${lp}GPtrArray *${name}_ptr,\n')
         return string.Template(template).substitute(translations)
 
 
@@ -385,7 +531,28 @@ class VariableArray(Variable):
                 '${lp}@${name}_sequence: the sequence number.\n')
 
         template += (
-            '${lp}@${name}: (in)(element-type ${array_element_element_type}): a #GArray of #${array_element_public_format} elements. A new reference to @${name} will be taken.\n')
+            '${lp}@${name}: (in)(element-type ${array_element_element_type})(transfer none): a #GArray of #${array_element_public_format} elements. A new reference to @${name} will be taken, so the caller must make sure the array was created with the correct #GDestroyNotify as clear function for each element in the array.\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_setter_documentation_gir(self, line_prefix, variable_name):
+        if not self.array_element.needs_compat_gir:
+            return self.build_setter_documentation(line_prefix, variable_name)
+        if not self.visible:
+            return ""
+
+        translations = { 'lp'                             : line_prefix,
+                         'array_element_public_format'    : self.array_element.public_format,
+                         'array_element_element_type_gir' : self.array_element.element_type_gir,
+                         'name'                           : variable_name }
+
+        template = ''
+        if self.array_sequence_element != '':
+            template += (
+                '${lp}@${name}_sequence: the sequence number.\n')
+
+        template += (
+            '${lp}@${name}_ptr: (in)(element-type ${array_element_element_type_gir})(transfer none): array of #${array_element_public_format} elements. The contents of the given array will be copied, the #GPtrArray will not increase its reference count.\n')
         return string.Template(template).substitute(translations)
 
 
@@ -402,10 +569,34 @@ class VariableArray(Variable):
             template += (
                 '${lp}${to}_sequence = ${from}_sequence;\n')
 
-        template += (
-            '${lp}if (${to})\n'
-            '${lp}    g_array_unref (${to});\n'
+        template += self.build_dispose(line_prefix, variable_name_to)
+        template += self.build_dispose_gir(line_prefix, variable_name_to)
+
+        template +=(
             '${lp}${to} = g_array_ref (${from});\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_setter_implementation_gir(self, line_prefix, variable_name_from, variable_name_to):
+        if not self.array_element.needs_compat_gir:
+            return self.build_setter_implementation(line_prefix, variable_name_from, variable_name_to)
+        if not self.visible:
+            return ""
+
+        common_var_prefix = utils.build_underscore_name(self.name)
+        translations = { 'lp'   : line_prefix,
+                         'from' : variable_name_from,
+                         'to'   : variable_name_to }
+
+        template = ''
+        if self.array_sequence_element != '':
+            template += (
+                '${lp}${to}_sequence = ${from}_sequence;\n')
+
+        template += self.build_dispose(line_prefix, variable_name_to)
+        template += self.build_dispose_gir(line_prefix, variable_name_to + '_ptr')
+        template += self.build_copy_from_gir(line_prefix, variable_name_from + '_ptr', variable_name_to)
+
         return string.Template(template).substitute(translations)
 
 
@@ -424,13 +615,140 @@ class VariableArray(Variable):
         return string.Template(template).substitute(translations)
 
 
+    def build_struct_field_documentation_gir(self, line_prefix, variable_name):
+        if not self.array_element.needs_compat_gir:
+            return self.build_struct_field_documentation(line_prefix, variable_name)
+
+        translations = { 'lp'                          : line_prefix,
+                         'array_element_public_format' : self.array_element.public_format,
+                         'array_element_element_type'  : self.array_element.element_type,
+                         'name'                        : variable_name }
+
+        template = ''
+        if self.array_sequence_element != '':
+            template += (
+                '${lp}@${name}_sequence: the sequence number.\n')
+
+        template += (
+            '${lp}@${name}: (element-type ${array_element_element_type}): an array of #${array_element_public_format} elements.\n')
+        return string.Template(template).substitute(translations)
+
+
     def build_dispose(self, line_prefix, variable_name):
         translations = { 'lp'            : line_prefix,
                          'variable_name' : variable_name }
 
         template = (
-            '${lp}if (${variable_name})\n'
-            '${lp}    g_array_unref (${variable_name});\n')
+            '${lp}g_clear_pointer (&${variable_name}, (GDestroyNotify)g_array_unref);\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_dispose_gir(self, line_prefix, variable_name):
+        if not self.array_element.needs_compat_gir:
+            self.build_dispose(line_prefix, variable_name)
+
+        translations = { 'lp'            : line_prefix,
+                         'variable_name' : variable_name }
+
+        template = (
+            '${lp}g_clear_pointer (&${variable_name}, (GDestroyNotify)g_ptr_array_unref);\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_copy_to_gir(self, line_prefix, variable_name_from, variable_name_to):
+        common_var_prefix = utils.build_underscore_name(self.name)
+        translations = { 'lp'   : line_prefix,
+                         'to'   : variable_name_to,
+                         'from' : variable_name_from }
+
+        if self.array_element.needs_compat_gir:
+
+            translations['common_var_prefix']               = common_var_prefix
+            translations['array_element_public_format']     = self.array_element.public_format
+            translations['array_element_public_format_gir'] = self.array_element.public_format_gir
+            translations['array_element_element_type_gir']  = self.array_element.element_type_gir
+            translations['array_element_free_method_gir']   = self.array_element.free_method_gir
+            translations['array_element_new_method_gir']    = self.array_element.new_method_gir
+
+            template = (
+                '${lp}{\n'
+                '${lp}    guint ${common_var_prefix}_i;\n'
+                '\n'
+                '${lp}    ${to} = g_ptr_array_new_full (${from}->len, (GDestroyNotify)${array_element_free_method_gir});\n'
+                '${lp}    for (${common_var_prefix}_i = 0; ${common_var_prefix}_i < ${from}->len; ${common_var_prefix}_i++) {\n'
+                '${lp}        ${array_element_public_format} *${common_var_prefix}_aux_from;\n'
+                '${lp}        ${array_element_public_format_gir} *${common_var_prefix}_aux_to;\n'
+                '\n'
+                '${lp}        ${common_var_prefix}_aux_from = &g_array_index (${from}, ${array_element_public_format}, ${common_var_prefix}_i);\n'
+                '\n'
+                '${lp}        ${common_var_prefix}_aux_to = ${array_element_new_method_gir} ();\n')
+
+            template += self.array_element.build_copy_to_gir(line_prefix + '        ',
+                                                             '(*${common_var_prefix}_aux_from)',
+                                                             '${common_var_prefix}_aux_to')
+
+            template += (
+                '\n'
+                '${lp}        g_ptr_array_add (${to}, ${common_var_prefix}_aux_to);\n'
+                '${lp}    }\n'
+                '${lp}}\n')
+        else:
+            template = (
+                '${lp}${to} = g_array_ref (${from});\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_copy_from_gir(self, line_prefix, variable_name_from, variable_name_to):
+        translations = { 'lp'   : line_prefix,
+                         'to'   : variable_name_to,
+                         'from' : variable_name_from }
+
+        if self.array_element.needs_compat_gir:
+            common_var_prefix = utils.build_underscore_name(self.name)
+            translations['common_var_prefix']               = common_var_prefix
+            translations['array_element_public_format']     = self.array_element.public_format
+            translations['array_element_public_format_gir'] = self.array_element.public_format_gir
+
+            template = (
+                '${lp}{\n'
+                '${lp}    guint ${common_var_prefix}_i;\n'
+                '\n'
+                '${lp}    ${to} = g_array_sized_new (FALSE, FALSE, sizeof (${array_element_public_format}), ${from}->len);\n'
+                '${lp}    for (${common_var_prefix}_i = 0; ${common_var_prefix}_i < ${from}->len; ${common_var_prefix}_i++) {\n'
+                '${lp}        ${array_element_public_format} ${common_var_prefix}_aux_to;\n'
+                '${lp}        ${array_element_public_format_gir} *${common_var_prefix}_aux_from;\n'
+                '\n'
+                '${lp}        ${common_var_prefix}_aux_from = g_ptr_array_index (${from}, ${common_var_prefix}_i);\n'
+                '\n')
+
+            template += self.array_element.build_copy_from_gir(line_prefix + '        ',
+                                                               '${common_var_prefix}_aux_from',
+                                                               '${common_var_prefix}_aux_to')
+
+            template += (
+                '\n'
+                '${lp}        g_array_append_val (${to}, ${common_var_prefix}_aux_to);\n'
+                '${lp}    }\n'
+                '${lp}}\n')
+        else:
+            template = (
+                '${lp}${to} = g_array_ref (${from});\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_copy_gir(self, line_prefix, variable_name_from, variable_name_to):
+        common_var_prefix = utils.build_underscore_name(self.name)
+        translations = { 'lp'   : line_prefix,
+                         'to'   : variable_name_to,
+                         'from' : variable_name_from }
+
+        # our GPtrArrays and GArrays are immutable, we can just ref the array as a copy
+        if self.array_element.needs_compat_gir:
+            template = (
+                '${lp}${to} = g_ptr_array_ref (${from});\n')
+        else:
+            template = (
+                '${lp}${to} = g_array_ref (${from});\n')
         return string.Template(template).substitute(translations)
 
 

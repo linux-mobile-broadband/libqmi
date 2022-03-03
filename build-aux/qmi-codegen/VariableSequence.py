@@ -49,10 +49,22 @@ class VariableSequence(Variable):
                 self.needs_dispose = True
                 break
 
+        # We'll flag the variable as needing compat GIR methods if we find any
+        # sequence member needing it
+        for member in self.members:
+            if member['object'].needs_compat_gir:
+                self.needs_compat_gir = True
+                break
+
 
     def emit_types(self, hfile, cfile, since, static):
         for member in self.members:
             member['object'].emit_types(hfile, cfile, since, static)
+
+
+    def emit_types_gir(self, hfile, cfile, since):
+        for member in self.members:
+            member['object'].emit_types_gir(hfile, cfile, since)
 
 
     def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
@@ -96,6 +108,13 @@ class VariableSequence(Variable):
         return built
 
 
+    def build_variable_declaration_gir(self, line_prefix, variable_name):
+        built = ''
+        for member in self.members:
+            built += member['object'].build_variable_declaration_gir(line_prefix, variable_name + '_' + member['name'])
+        return built
+
+
     def build_struct_field_declaration(self, line_prefix, variable_name):
         raise RuntimeError('Variable of type "sequence" is never expected as a struct field')
 
@@ -110,6 +129,16 @@ class VariableSequence(Variable):
         return built
 
 
+    def build_getter_declaration_gir(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
+        built = ''
+        for member in self.members:
+            built += member['object'].build_getter_declaration_gir(line_prefix, variable_name + '_' + member['name'])
+        return built
+
+
     def build_getter_documentation(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -117,6 +146,16 @@ class VariableSequence(Variable):
         built = ''
         for member in self.members:
             built += member['object'].build_getter_documentation(line_prefix, variable_name + '_' + member['name'])
+        return built
+
+
+    def build_getter_documentation_gir(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
+        built = ''
+        for member in self.members:
+            built += member['object'].build_getter_documentation_gir(line_prefix, variable_name + '_' + member['name'])
         return built
 
 
@@ -132,6 +171,18 @@ class VariableSequence(Variable):
         return built
 
 
+    def build_getter_implementation_gir(self, line_prefix, variable_name_from, variable_name_to):
+        if not self.visible:
+            return ""
+
+        built = ''
+        for member in self.members:
+            built += member['object'].build_getter_implementation_gir(line_prefix,
+                                                                      variable_name_from + '_' + member['name'],
+                                                                      variable_name_to + '_' + member['name'])
+        return built
+
+
     def build_setter_declaration(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -142,6 +193,16 @@ class VariableSequence(Variable):
         return built
 
 
+    def build_setter_declaration_gir(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
+        built = ''
+        for member in self.members:
+            built += member['object'].build_setter_declaration_gir(line_prefix, variable_name + '_' + member['name'])
+        return built
+
+
     def build_setter_documentation(self, line_prefix, variable_name):
         if not self.visible:
             return ""
@@ -149,6 +210,16 @@ class VariableSequence(Variable):
         built = ''
         for member in self.members:
             built += member['object'].build_setter_documentation(line_prefix, variable_name + '_' + member['name'])
+        return built
+
+
+    def build_setter_documentation_gir(self, line_prefix, variable_name):
+        if not self.visible:
+            return ""
+
+        built = ''
+        for member in self.members:
+            built += member['object'].build_setter_documentation_gir(line_prefix, variable_name + '_' + member['name'])
         return built
 
 
@@ -164,10 +235,50 @@ class VariableSequence(Variable):
         return built
 
 
+    def build_setter_implementation_gir(self, line_prefix, variable_name_from, variable_name_to):
+        if not self.visible:
+            return ""
+
+        built = ''
+        for member in self.members:
+            built += member['object'].build_setter_implementation_gir(line_prefix,
+                                                                      variable_name_from + '_' + member['name'],
+                                                                      variable_name_to + '_' + member['name'])
+        return built
+
+
     def build_dispose(self, line_prefix, variable_name):
         built = ''
         for member in self.members:
             built += member['object'].build_dispose(line_prefix, variable_name + '_' + member['name'])
+        return built
+
+
+    def build_dispose_gir(self, line_prefix, variable_name):
+        built = ''
+        for member in self.members:
+            built += member['object'].build_dispose_gir(line_prefix, variable_name + '_' + member['name'])
+        return built
+
+
+    def build_copy_to_gir(self, line_prefix, variable_name_from, variable_name_to):
+        built = ''
+        for member in self.members:
+            built += member['object'].build_copy_to_gir(line_prefix, variable_name_from, variable_name_to)
+        return built
+
+
+    def build_copy_from_gir(self, line_prefix, variable_name_from, variable_name_to):
+        built = ''
+        for member in self.members:
+            built += member['object'].build_copy_from_gir(line_prefix, variable_name_from, variable_name_to)
+        return built
+
+
+    def build_copy_gir(self, line_prefix, variable_name_from, variable_name_to):
+        built = ''
+        for member in self.members:
+            built += member['object'].build_copy_gir(line_prefix, variable_name_from, variable_name_to)
         return built
 
 

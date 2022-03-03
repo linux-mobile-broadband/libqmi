@@ -84,6 +84,30 @@ class Variable:
         """
         self.public = False
 
+        # -----------------------------------------------------------------------------
+        # Variables to support the new GIR array/struct compat methods in 1.32
+
+        """
+        Flag specifying whether a given variable contains any kind of array, indicating
+        the GIR array/struct compat methods in 1.32 are required. There is no need to
+        flag structs independently, because it is ensured that structs are always array
+        members.
+        """
+        self.needs_compat_gir = False
+
+        """
+        Formats and element types
+        """
+        self.public_format_gir = None
+        self.private_format_gir = None
+        self.element_type_gir = None
+
+        """
+        Types involved in GIR support may need additional free() and new() methods.
+        """
+        self.new_method_gir = ''
+        self.free_method_gir = ''
+
     """
     Emits the code to declare specific new types required by the variable.
     """
@@ -183,3 +207,94 @@ class Variable:
     """
     def flag_public(self):
         self.public = True
+
+    # -----------------------------------------------------------------------------
+    # Support for GIR array/struct compat methods in 1.32
+
+    """
+    Emits the code to declare specific new types required by the variable
+    """
+    def emit_types_gir(self, hfile, cfile, since):
+        pass
+
+    """
+    Builds the code to include the declaration of a variable of this kind,
+    used when generating input/output bundles
+    """
+    def build_variable_declaration_gir(self, line_prefix, variable_name):
+        # By default, no extra variable is required in the input/output bundle
+        # for GIR compat methods
+        return ''
+
+    """
+    Builds the code to include in the getter method declaration for this kind of variable
+    """
+    def build_getter_declaration_gir(self, line_prefix, variable_name):
+        return self.build_getter_declaration(line_prefix, variable_name)
+
+    """
+    Builds the documentation of the getter code
+    """
+    def build_getter_documentation_gir(self, line_prefix, variable_name):
+        return self.build_getter_documentation(line_prefix, variable_name)
+
+    """
+    Builds the code to implement getting this kind of variable
+    """
+    def build_getter_implementation_gir(self, line_prefix, variable_name_from, variable_name_to):
+        return self.build_getter_implementation(line_prefix, variable_name_from, variable_name_to)
+
+    """
+    Builds the code to include in the setter method declaration for this kind of variable
+    """
+    def build_setter_declaration_gir(self, line_prefix, variable_name):
+        return self.build_setter_declaration(line_prefix, variable_name)
+
+    """
+    Builds the documentation of the setter code
+    """
+    def build_setter_documentation_gir(self, line_prefix, variable_name):
+        return self.build_setter_documentation(line_prefix, variable_name)
+
+    """
+    Builds the code to implement setting this kind of variable
+    """
+    def build_setter_implementation_gir(self, line_prefix, variable_name_from, variable_name_to):
+        return self.build_setter_implementation(line_prefix, variable_name_from, variable_name_to)
+
+    """
+    Declaration of the variable as a struct field
+    """
+    def build_struct_field_declaration_gir(self, line_prefix, variable_name):
+        return self.build_struct_field_declaration(line_prefix, variable_name)
+
+    """
+    Documentation for the struct field
+    """
+    def build_struct_field_documentation_gir(self, line_prefix, variable_name):
+        return self.build_struct_field_documentation(line_prefix, variable_name)
+
+    """
+    Emits the code to dispose the variable
+    """
+    def build_dispose_gir(self, line_prefix, variable_name):
+        return self.build_dispose(line_prefix, variable_name)
+
+    """
+    Emits the code to copy a variable into its GIR specific format
+    """
+    def build_copy_to_gir(self, line_prefix, variable_name_from, variable_name_to):
+        return ''
+
+    """
+    Emits the code to copy a variable from its GIR specific format
+    """
+    def build_copy_from_gir(self, line_prefix, variable_name_from, variable_name_to):
+        return ''
+
+    """
+    Emits the code to copy a variable from its GIR specific format to another
+    variable in the same format
+    """
+    def build_copy_gir(self, line_prefix, variable_name_from, variable_name_to):
+        return ''

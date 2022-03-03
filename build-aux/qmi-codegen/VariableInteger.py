@@ -51,6 +51,11 @@ class VariableInteger(Variable):
             self.public_format = dictionary['public-format'] if 'public-format' in dictionary else self.private_format
         self.element_type = self.public_format
 
+        # Public format for the GIR array compat methods in 1.32
+        self.private_format_gir = self.private_format
+        self.public_format_gir = self.public_format
+        self.element_type_gir = self.element_type
+
 
     def emit_buffer_read(self, f, line_prefix, tlv_out, error, variable_name):
         translations = { 'lp'             : line_prefix,
@@ -349,3 +354,21 @@ class VariableInteger(Variable):
         template = (
             '${lp}@${name}: a #${public_format}.\n')
         return string.Template(template).substitute(translations)
+
+
+    def build_copy_gir(self, line_prefix, variable_name_from, variable_name_to):
+        translations = { 'lp'                 : line_prefix,
+                         'variable_name_from' : variable_name_from,
+                         'variable_name_to'   : variable_name_to }
+
+        template = (
+            '${lp}${variable_name_to} = ${variable_name_from};\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_copy_to_gir(self, line_prefix, variable_name_from, variable_name_to):
+        return self.build_copy_gir (line_prefix, variable_name_from, variable_name_to)
+
+
+    def build_copy_from_gir(self, line_prefix, variable_name_from, variable_name_to):
+        return self.build_copy_gir (line_prefix, variable_name_from, variable_name_to)

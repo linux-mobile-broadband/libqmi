@@ -251,3 +251,34 @@ def format_is_integer(fmt):
         return True
     else:
         return False
+
+
+"""
+Compare two version strings given in MAJOR.MINOR[.MICRO] format.
+Just to avoid needing to include e.g. packaging.version.parse just for this
+"""
+def version_compare(v1,v2):
+    v1_split = v1.split(".")
+    v2_split = v2.split(".")
+    major_v1 = int(v1_split[0])
+    major_v2 = int(v2_split[0])
+    if major_v2 > major_v1:
+        return 1
+    if major_v2 < major_v1:
+        return -1
+    # major_v2 == major_v1
+    minor_v1 = int(v1_split[1])
+    minor_v2 = int(v2_split[1])
+    if minor_v2 > minor_v1:
+        return 1
+    if minor_v2 < minor_v1:
+        return -1
+    # minor_v2 == minor_v1
+    micro_v1 = int(v1_split[2]) if len(v1_split) > 2 else 0
+    micro_v2 = int(v2_split[2]) if len(v2_split) > 2 else 0
+    if micro_v2 > micro_v1:
+        return 1
+    if micro_v2 < micro_v1:
+        return -1
+    # micro_v2 == micro_v1
+    return 0

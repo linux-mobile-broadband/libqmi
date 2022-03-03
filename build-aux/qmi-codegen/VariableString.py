@@ -36,6 +36,11 @@ class VariableString(Variable):
         self.public_format = self.private_format
         self.element_type = 'utf8'
 
+        # Public format for the GIR array compat methods in 1.32
+        self.private_format_gir = self.private_format
+        self.public_format_gir = self.public_format
+        self.element_type_gir = self.element_type
+
         if 'fixed-size' in dictionary:
             self.is_fixed_size = True
             # Fixed-size strings
@@ -50,6 +55,7 @@ class VariableString(Variable):
             # Variable-length strings in heap
             self.needs_dispose = True
             self.clear_method = 'qmi_helpers_clear_string'
+            self.free_method_gir = 'g_free'
             if 'size-prefix-format' in dictionary:
                 if dictionary['size-prefix-format'] == 'guint8':
                     self.length_prefix_size = 8
@@ -316,8 +322,26 @@ class VariableString(Variable):
                          'variable_name' : variable_name }
 
         template = (
-            '${lp}g_free (${variable_name});\n')
+            '${lp}g_clear_pointer (&${variable_name}, (GDestroyNotify)g_free);\n')
         return string.Template(template).substitute(translations)
+
+
+    def build_copy_gir(self, line_prefix, variable_name_from, variable_name_to):
+        translations = { 'lp'                 : line_prefix,
+                         'variable_name_from' : variable_name_from,
+                         'variable_name_to'   : variable_name_to }
+
+        template = (
+            '${lp}${variable_name_to} = g_strdup (${variable_name_from});\n')
+        return string.Template(template).substitute(translations)
+
+
+    def build_copy_to_gir(self, line_prefix, variable_name_from, variable_name_to):
+        return self.build_copy_gir (line_prefix, variable_name_from, variable_name_to)
+
+
+    def build_copy_from_gir(self, line_prefix, variable_name_from, variable_name_to):
+        return self.build_copy_gir (line_prefix, variable_name_from, variable_name_to)
 
 
     def flag_public(self):
