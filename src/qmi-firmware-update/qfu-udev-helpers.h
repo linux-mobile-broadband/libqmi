@@ -29,12 +29,12 @@
 G_BEGIN_DECLS
 
 typedef enum {
-    QFU_UDEV_HELPER_DEVICE_TYPE_TTY,
-    QFU_UDEV_HELPER_DEVICE_TYPE_CDC_WDM,
-    QFU_UDEV_HELPER_DEVICE_TYPE_LAST
-} QfuUdevHelperDeviceType;
+    QFU_HELPERS_DEVICE_TYPE_TTY,
+    QFU_HELPERS_DEVICE_TYPE_CDC_WDM,
+    QFU_HELPERS_DEVICE_TYPE_LAST
+} QfuHelpersDeviceType;
 
-const gchar *qfu_udev_helper_device_type_to_string (QfuUdevHelperDeviceType type);
+const gchar *qfu_helpers_device_type_to_string (QfuHelpersDeviceType type);
 
 #if defined WITH_UDEV
 
@@ -50,17 +50,17 @@ gchar *qfu_udev_helper_find_by_device_info   (guint16       vid,
                                               guint         devnum,
                                               GError      **error);
 
-GList *qfu_udev_helper_list_devices           (QfuUdevHelperDeviceType   device_type,
-                                               const gchar              *sysfs_path);
+GList *qfu_udev_helper_list_devices           (QfuHelpersDeviceType   device_type,
+                                               const gchar           *sysfs_path);
 
-void   qfu_udev_helper_wait_for_device        (QfuUdevHelperDeviceType   device_type,
-                                               const gchar              *sysfs_path,
-                                               const gchar              *peer_port,
-                                               GCancellable             *cancellable,
-                                               GAsyncReadyCallback       callback,
-                                               gpointer                  user_data);
-GFile *qfu_udev_helper_wait_for_device_finish (GAsyncResult             *res,
-                                               GError                  **error);
+void   qfu_udev_helper_wait_for_device        (QfuHelpersDeviceType   device_type,
+                                               const gchar           *sysfs_path,
+                                               const gchar           *peer_port,
+                                               GCancellable          *cancellable,
+                                               GAsyncReadyCallback    callback,
+                                               gpointer               user_data);
+GFile *qfu_udev_helper_wait_for_device_finish (GAsyncResult          *res,
+                                               GError               **error);
 
 typedef struct _QfuUdevHelperGenericMonitor QfuUdevHelperGenericMonitor;
 QfuUdevHelperGenericMonitor *qfu_udev_helper_generic_monitor_new  (const gchar *sysfs_path);
