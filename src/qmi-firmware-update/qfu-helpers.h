@@ -37,35 +37,14 @@ typedef enum {
 const gchar *qfu_helpers_device_type_to_string (QfuHelpersDeviceType type);
 
 #if defined WITH_UDEV
-
-gchar *qfu_helpers_udev_find_by_file          (GFile        *file,
-                                               GError      **error);
-gchar *qfu_helpers_udev_find_by_file_path     (const gchar  *path,
-                                               GError      **error);
-gchar *qfu_helpers_udev_find_peer_port        (const gchar  *sysfs_path,
-                                               GError      **error);
-gchar *qfu_helpers_udev_find_by_device_info   (guint16       vid,
-                                               guint16       pid,
-                                               guint         busnum,
-                                               guint         devnum,
-                                               GError      **error);
-
-GList *qfu_helpers_udev_list_devices           (QfuHelpersDeviceType   device_type,
-                                                const gchar           *sysfs_path);
-
-void   qfu_helpers_udev_wait_for_device        (QfuHelpersDeviceType   device_type,
-                                                const gchar           *sysfs_path,
-                                                const gchar           *peer_port,
-                                                GCancellable          *cancellable,
-                                                GAsyncReadyCallback    callback,
-                                                gpointer               user_data);
-GFile *qfu_helpers_udev_wait_for_device_finish (GAsyncResult          *res,
-                                                GError               **error);
-
-typedef struct _QfuHelpersUdevGenericMonitor QfuHelpersUdevGenericMonitor;
-QfuHelpersUdevGenericMonitor *qfu_helpers_udev_generic_monitor_new  (const gchar *sysfs_path);
-void                          qfu_helpers_udev_generic_monitor_free (QfuHelpersUdevGenericMonitor *self);
-
+# include "qfu-helpers-udev.h"
+# define qfu_helpers_find_by_file           qfu_helpers_udev_find_by_file
+# define qfu_helpers_find_by_file_path      qfu_helpers_udev_find_by_file_path
+# define qfu_helpers_find_peer_port         qfu_helpers_udev_find_peer_port
+# define qfu_helpers_find_by_device_info    qfu_helpers_udev_find_by_device_info
+# define qfu_helpers_list_devices           qfu_helpers_udev_list_devices
+# define qfu_helpers_wait_for_device        qfu_helpers_udev_wait_for_device
+# define qfu_helpers_wait_for_device_finish qfu_helpers_udev_wait_for_device_finish
 #endif
 
 G_END_DECLS
