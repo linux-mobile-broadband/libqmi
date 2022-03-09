@@ -214,22 +214,6 @@ qfu_helpers_udev_find_by_file_path (const gchar  *path,
     return sysfs_path;
 }
 
-gchar *
-qfu_helpers_udev_find_peer_port (const gchar  *sysfs_path,
-                                 GError      **error)
-{
-    gchar *tmp, *path;
-
-    tmp = g_build_filename (sysfs_path, "port", "peer", NULL);
-    path = realpath (tmp, NULL);
-    g_free (tmp);
-    if (!path)
-        return NULL;
-
-    g_debug ("[qfu-udev] peer port for '%s' found: %s", sysfs_path, path);
-    return path;
-}
-
 /******************************************************************************/
 
 static gboolean

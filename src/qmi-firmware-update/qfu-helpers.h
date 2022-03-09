@@ -36,11 +36,17 @@ typedef enum {
 
 const gchar *qfu_helpers_device_type_to_string (QfuHelpersDeviceType type);
 
+/******************************************************************************/
+
+gchar *qfu_helpers_find_peer_port (const gchar  *sysfs_path,
+                                   GError      **error);
+
+/******************************************************************************/
+
 #if defined WITH_UDEV
 # include "qfu-helpers-udev.h"
 # define qfu_helpers_find_by_file           qfu_helpers_udev_find_by_file
 # define qfu_helpers_find_by_file_path      qfu_helpers_udev_find_by_file_path
-# define qfu_helpers_find_peer_port         qfu_helpers_udev_find_peer_port
 # define qfu_helpers_find_by_device_info    qfu_helpers_udev_find_by_device_info
 # define qfu_helpers_list_devices           qfu_helpers_udev_list_devices
 # define qfu_helpers_wait_for_device        qfu_helpers_udev_wait_for_device

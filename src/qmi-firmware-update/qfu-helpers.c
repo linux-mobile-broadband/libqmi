@@ -37,3 +37,21 @@ qfu_helpers_device_type_to_string (QfuHelpersDeviceType type)
 {
     return device_type_str[type];
 }
+
+/******************************************************************************/
+
+gchar *
+qfu_helpers_find_peer_port (const gchar  *sysfs_path,
+                            GError      **error)
+{
+    gchar *tmp, *path;
+
+    tmp = g_build_filename (sysfs_path, "port", "peer", NULL);
+    path = realpath (tmp, NULL);
+    g_free (tmp);
+    if (!path)
+        return NULL;
+
+    g_debug ("[qfu-helpers] peer port for '%s' found: %s", sysfs_path, path);
+    return path;
+}

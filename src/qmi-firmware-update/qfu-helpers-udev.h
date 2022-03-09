@@ -35,8 +35,6 @@ gchar *qfu_helpers_udev_find_by_file          (GFile        *file,
                                                GError      **error);
 gchar *qfu_helpers_udev_find_by_file_path     (const gchar  *path,
                                                GError      **error);
-gchar *qfu_helpers_udev_find_peer_port        (const gchar  *sysfs_path,
-                                               GError      **error);
 gchar *qfu_helpers_udev_find_by_device_info   (guint16       vid,
                                                guint16       pid,
                                                guint         busnum,
