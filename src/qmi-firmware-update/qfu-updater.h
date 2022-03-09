@@ -52,7 +52,6 @@ struct _QfuUpdaterClass {
 GType qfu_updater_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (QfuUpdater, g_object_unref);
 
-#if defined WITH_UDEV
 QfuUpdater *qfu_updater_new          (QfuDeviceSelection   *device_selection,
                                       const gchar          *firmware_version,
                                       const gchar          *config_version,
@@ -62,8 +61,6 @@ QfuUpdater *qfu_updater_new          (QfuDeviceSelection   *device_selection,
                                       gboolean              override_download,
                                       guint8                modem_storage_index,
                                       gboolean              skip_validation);
-#endif
-
 QfuUpdater *qfu_updater_new_download (QfuDeviceSelection   *device_selection);
 void        qfu_updater_run          (QfuUpdater           *self,
                                       GList                *image_file_list,

@@ -39,19 +39,18 @@ struct _QfuDeviceSelectionPrivate {
     guint    preferred_busnum;
     guint    preferred_devnum;
 
-#if defined WITH_UDEV
     /* sysfs path */
     gchar   *sysfs_path;
     /* peer port sysfs path */
     gchar   *peer_port;
+
+#if defined WITH_UDEV
     /* generic udev monitor */
     QfuHelpersUdevGenericMonitor *monitor;
 #endif
 };
 
 /******************************************************************************/
-
-#if defined WITH_UDEV
 
 static GFile *
 device_selection_get_single (QfuDeviceSelection   *self,
@@ -98,23 +97,6 @@ device_selection_get_single (QfuDeviceSelection   *self,
     return NULL;
 }
 
-#else
-
-static GFile *
-device_selection_get_single (QfuDeviceSelection   *self,
-                             QfuHelpersDeviceType  device_type)
-{
-
-    if (!self->priv->preferred_devices[device_type]) {
-        g_warning ("[qfu,device-selection] no %s device defined", qfu_helpers_device_type_to_string (device_type));
-        return NULL;
-    }
-
-    return g_file_new_for_commandline_arg (self->priv->preferred_devices[device_type]);
-}
-
-#endif
-
 GFile *
 qfu_device_selection_get_single_cdc_wdm (QfuDeviceSelection *self)
 {
@@ -128,7 +110,6 @@ qfu_device_selection_get_single_tty (QfuDeviceSelection *self)
 }
 
 /******************************************************************************/
-#if defined WITH_UDEV
 
 static GList *
 device_selection_get_multiple (QfuDeviceSelection   *self,
@@ -167,24 +148,13 @@ device_selection_get_multiple (QfuDeviceSelection   *self,
     return NULL;
 }
 
-#endif
-
 GList *
 qfu_device_selection_get_multiple_ttys (QfuDeviceSelection *self)
 {
-#if defined WITH_UDEV
     return device_selection_get_multiple (self, QFU_HELPERS_DEVICE_TYPE_TTY);
-#else
-    GFile *single;
-
-    single = qfu_device_selection_get_single_tty (self);
-    return (single ? g_list_append (NULL, single) : NULL);
-#endif
 }
 
 /******************************************************************************/
-
-#if defined WITH_UDEV
 
 GFile *
 qfu_device_selection_wait_for_cdc_wdm_finish (QfuDeviceSelection  *self,
@@ -252,8 +222,6 @@ qfu_device_selection_wait_for_tty (QfuDeviceSelection  *self,
                                  task);
 }
 
-#endif
-
 /******************************************************************************/
 
 QfuDeviceSelection *
@@ -298,27 +266,26 @@ qfu_device_selection_new (const gchar  *preferred_cdc_wdm,
     self->priv->preferred_busnum  = preferred_busnum;
     self->priv->preferred_devnum  = preferred_devnum;
 
-#if defined WITH_UDEV
-    {
-        /* Initialize sysfs path from inputs */
-        if (preferred_vid || preferred_devnum)
-            self->priv->sysfs_path = qfu_helpers_find_by_device_info (preferred_vid, preferred_pid, preferred_busnum, preferred_devnum, error);
-        else if (preferred_cdc_wdm || preferred_tty)
-            self->priv->sysfs_path = qfu_helpers_find_by_file_path (preferred_cdc_wdm ? preferred_cdc_wdm : preferred_tty, error);
-        else
-            g_assert_not_reached ();
 
-        if (!self->priv->sysfs_path) {
-            g_object_unref (self);
-            return NULL;
-        }
+    /* Initialize sysfs path from inputs */
+    if (preferred_vid || preferred_devnum)
+        self->priv->sysfs_path = qfu_helpers_find_by_device_info (preferred_vid, preferred_pid, preferred_busnum, preferred_devnum, error);
+    else if (preferred_cdc_wdm || preferred_tty)
+        self->priv->sysfs_path = qfu_helpers_find_by_file_path (preferred_cdc_wdm ? preferred_cdc_wdm : preferred_tty, error);
+    else
+        g_assert_not_reached ();
 
-        /* look for a peer port */
-        self->priv->peer_port = qfu_helpers_find_peer_port (self->priv->sysfs_path, error);
-
-        /* Initialize right away the generic udev monitor for this sysfs path */
-        self->priv->monitor = qfu_helpers_udev_generic_monitor_new (self->priv->sysfs_path);
+    if (!self->priv->sysfs_path) {
+        g_object_unref (self);
+        return NULL;
     }
+
+    /* look for a peer port */
+    self->priv->peer_port = qfu_helpers_find_peer_port (self->priv->sysfs_path, error);
+
+#if defined WITH_UDEV
+    /* Initialize right away the generic udev monitor for this sysfs path */
+    self->priv->monitor = qfu_helpers_udev_generic_monitor_new (self->priv->sysfs_path);
 #endif
 
     return self;
@@ -339,9 +306,10 @@ finalize (GObject *object)
 #if defined WITH_UDEV
     if (self->priv->monitor)
         qfu_helpers_udev_generic_monitor_free (self->priv->monitor);
+#endif
+
     g_free (self->priv->sysfs_path);
     g_free (self->priv->peer_port);
-#endif
 
     for (i = 0; i < QFU_HELPERS_DEVICE_TYPE_LAST; i++)
         g_free (self->priv->preferred_devices[i]);
