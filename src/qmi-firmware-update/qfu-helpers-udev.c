@@ -27,7 +27,6 @@
 # error udev is required
 #endif
 
-
 #include "qfu-helpers.h"
 #include "qfu-helpers-udev.h"
 #include <gudev/gudev.h>

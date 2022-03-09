@@ -51,6 +51,14 @@ gchar *qfu_helpers_find_peer_port (const gchar  *sysfs_path,
 # define qfu_helpers_list_devices           qfu_helpers_udev_list_devices
 # define qfu_helpers_wait_for_device        qfu_helpers_udev_wait_for_device
 # define qfu_helpers_wait_for_device_finish qfu_helpers_udev_wait_for_device_finish
+#else
+# include "qfu-helpers-sysfs.h"
+# define qfu_helpers_find_by_file           qfu_helpers_sysfs_find_by_file
+# define qfu_helpers_find_by_file_path      qfu_helpers_sysfs_find_by_file_path
+# define qfu_helpers_find_by_device_info    qfu_helpers_sysfs_find_by_device_info
+# define qfu_helpers_list_devices           qfu_helpers_sysfs_list_devices
+# define qfu_helpers_wait_for_device        qfu_helpers_sysfs_wait_for_device
+# define qfu_helpers_wait_for_device_finish qfu_helpers_sysfs_wait_for_device_finish
 #endif
 
 G_END_DECLS

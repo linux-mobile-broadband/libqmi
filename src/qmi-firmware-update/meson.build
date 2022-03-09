@@ -56,6 +56,8 @@ sources = files(
 
 if enable_udev
   sources += files('qfu-helpers-udev.c')
+else
+  sources += files('qfu-helpers-sysfs.c')
 endif
 
 enum_types = 'qfu-enum-types'
