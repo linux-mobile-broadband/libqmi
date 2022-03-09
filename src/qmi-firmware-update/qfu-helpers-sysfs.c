@@ -39,14 +39,6 @@ qfu_helpers_sysfs_find_by_file (GFile   *file,
 }
 
 gchar *
-qfu_helpers_sysfs_find_by_file_path (const gchar  *path,
-                                     GError      **error)
-{
-    g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "not implemented");
-    return NULL;
-}
-
-gchar *
 qfu_helpers_sysfs_find_by_device_info (guint16   vid,
                                        guint16   pid,
                                        guint     busnum,

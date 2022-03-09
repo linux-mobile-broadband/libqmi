@@ -200,19 +200,6 @@ out:
     return sysfs_path;
 }
 
-gchar *
-qfu_helpers_udev_find_by_file_path (const gchar  *path,
-                                    GError      **error)
-{
-    GFile *file;
-    gchar *sysfs_path;
-
-    file = g_file_new_for_path (path);
-    sysfs_path = qfu_helpers_udev_find_by_file (file, error);
-    g_object_unref (file);
-    return sysfs_path;
-}
-
 /******************************************************************************/
 
 static gboolean
