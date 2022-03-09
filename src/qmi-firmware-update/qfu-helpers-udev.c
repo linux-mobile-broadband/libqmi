@@ -20,17 +20,17 @@
  */
 
 #include "config.h"
-
 #include <stdlib.h>
-
 #include <gio/gio.h>
 
-#if defined WITH_UDEV
-# include <gudev/gudev.h>
+#if !defined WITH_UDEV
+# error udev is required
 #endif
+
 
 #include "qfu-helpers.h"
 #include "qfu-helpers-udev.h"
+#include <gudev/gudev.h>
 
 /******************************************************************************/
 
