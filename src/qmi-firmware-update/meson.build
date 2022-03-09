@@ -37,6 +37,7 @@ sources = files(
   'qfu-at-device.c',
   'qfu-device-selection.c',
   'qfu-dload-message.c',
+  'qfu-helpers.c',
   'qfu-image.c',
   'qfu-image-cwe.c',
   'qfu-image-factory.c',

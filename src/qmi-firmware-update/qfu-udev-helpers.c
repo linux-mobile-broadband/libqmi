@@ -33,21 +33,6 @@
 
 /******************************************************************************/
 
-static const gchar *device_type_str[] = {
-    [QFU_HELPERS_DEVICE_TYPE_TTY]     = "tty",
-    [QFU_HELPERS_DEVICE_TYPE_CDC_WDM] = "cdc-wdm",
-};
-
-G_STATIC_ASSERT (G_N_ELEMENTS (device_type_str) == QFU_HELPERS_DEVICE_TYPE_LAST);
-
-const gchar *
-qfu_helpers_device_type_to_string (QfuHelpersDeviceType type)
-{
-    return device_type_str[type];
-}
-
-/******************************************************************************/
-
 #if defined WITH_UDEV
 
 static const gchar *tty_subsys_list[]     = { "tty", NULL };
