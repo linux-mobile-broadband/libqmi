@@ -38,6 +38,7 @@ sources = files(
   'qfu-device-selection.c',
   'qfu-dload-message.c',
   'qfu-helpers.c',
+  'qfu-helpers-udev.c',
   'qfu-image.c',
   'qfu-image-cwe.c',
   'qfu-image-factory.c',
@@ -51,7 +52,6 @@ sources = files(
   'qfu-reseter.c',
   'qfu-sahara-device.c',
   'qfu-sahara-message.c',
-  'qfu-udev-helpers.c',
   'qfu-updater.c',
 )
 

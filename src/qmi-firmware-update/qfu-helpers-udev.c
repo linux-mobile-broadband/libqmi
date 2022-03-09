@@ -151,8 +151,8 @@ udev_helper_get_udev_interface_details (GUdevDevice  *device,
 /******************************************************************************/
 
 gchar *
-qfu_udev_helper_find_by_file (GFile   *file,
-                              GError **error)
+qfu_helpers_udev_find_by_file (GFile   *file,
+                               GError **error)
 {
     GUdevClient  *client = NULL;
     GUdevDevice  *device = NULL;
@@ -201,21 +201,21 @@ out:
 }
 
 gchar *
-qfu_udev_helper_find_by_file_path (const gchar  *path,
-                                   GError      **error)
+qfu_helpers_udev_find_by_file_path (const gchar  *path,
+                                    GError      **error)
 {
     GFile *file;
     gchar *sysfs_path;
 
     file = g_file_new_for_path (path);
-    sysfs_path = qfu_udev_helper_find_by_file (file, error);
+    sysfs_path = qfu_helpers_udev_find_by_file (file, error);
     g_object_unref (file);
     return sysfs_path;
 }
 
 gchar *
-qfu_udev_helper_find_peer_port (const gchar  *sysfs_path,
-                                GError      **error)
+qfu_helpers_udev_find_peer_port (const gchar  *sysfs_path,
+                                 GError      **error)
 {
     gchar *tmp, *path;
 
@@ -292,11 +292,11 @@ udev_helper_find_by_device_info_in_subsystem (GPtrArray    *sysfs_paths,
 }
 
 gchar *
-qfu_udev_helper_find_by_device_info (guint16   vid,
-                                     guint16   pid,
-                                     guint     busnum,
-                                     guint     devnum,
-                                     GError  **error)
+qfu_helpers_udev_find_by_device_info (guint16   vid,
+                                      guint16   pid,
+                                      guint     busnum,
+                                      guint     devnum,
+                                      GError  **error)
 {
     GUdevClient *udev;
     guint        i;
@@ -411,8 +411,8 @@ out:
 }
 
 GList *
-qfu_udev_helper_list_devices (QfuHelpersDeviceType  device_type,
-                              const gchar          *sysfs_path)
+qfu_helpers_udev_list_devices (QfuHelpersDeviceType  device_type,
+                               const gchar          *sysfs_path)
 {
     GUdevClient  *udev;
     const gchar **subsys_list = NULL;
@@ -480,8 +480,8 @@ wait_for_device_context_free (WaitForDeviceContext *ctx)
 }
 
 GFile *
-qfu_udev_helper_wait_for_device_finish (GAsyncResult  *res,
-                                        GError       **error)
+qfu_helpers_udev_wait_for_device_finish (GAsyncResult  *res,
+                                         GError       **error)
 {
     return G_FILE (g_task_propagate_pointer (G_TASK (res), error));
 }
@@ -583,12 +583,12 @@ wait_for_device_cancelled (GCancellable *cancellable,
 }
 
 void
-qfu_udev_helper_wait_for_device (QfuHelpersDeviceType  device_type,
-                                 const gchar          *sysfs_path,
-                                 const gchar          *peer_port,
-                                 GCancellable         *cancellable,
-                                 GAsyncReadyCallback   callback,
-                                 gpointer              user_data)
+qfu_helpers_udev_wait_for_device (QfuHelpersDeviceType  device_type,
+                                  const gchar          *sysfs_path,
+                                  const gchar          *peer_port,
+                                  GCancellable         *cancellable,
+                                  GAsyncReadyCallback   callback,
+                                  gpointer              user_data)
 {
     GTask                *task;
     WaitForDeviceContext *ctx;
@@ -630,15 +630,15 @@ qfu_udev_helper_wait_for_device (QfuHelpersDeviceType  device_type,
 
 /******************************************************************************/
 
-struct _QfuUdevHelperGenericMonitor {
+struct _QfuHelpersUdevGenericMonitor {
     GUdevClient *udev;
 };
 
 void
-qfu_udev_helper_generic_monitor_free (QfuUdevHelperGenericMonitor *self)
+qfu_helpers_udev_generic_monitor_free (QfuHelpersUdevGenericMonitor *self)
 {
     g_object_unref (self->udev);
-    g_slice_free (QfuUdevHelperGenericMonitor, self);
+    g_slice_free (QfuHelpersUdevGenericMonitor, self);
 }
 
 static void
@@ -650,8 +650,8 @@ handle_uevent_generic (GUdevClient *client,
     g_debug ("[qfu-udev] event: %s %s", action, g_udev_device_get_name (device));
 }
 
-QfuUdevHelperGenericMonitor *
-qfu_udev_helper_generic_monitor_new (const gchar *sysfs_path)
+QfuHelpersUdevGenericMonitor *
+qfu_helpers_udev_generic_monitor_new (const gchar *sysfs_path)
 {
     static const gchar *all_list[] = {
         "usbmisc", "usb",
@@ -659,9 +659,9 @@ qfu_udev_helper_generic_monitor_new (const gchar *sysfs_path)
         "net",
         NULL };
 
-    QfuUdevHelperGenericMonitor *self;
+    QfuHelpersUdevGenericMonitor *self;
 
-    self = g_slice_new0 (QfuUdevHelperGenericMonitor);
+    self = g_slice_new0 (QfuHelpersUdevGenericMonitor);
     self->udev = g_udev_client_new (all_list);
 
     /* Monitor for device events. */

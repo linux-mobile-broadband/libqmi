@@ -45,7 +45,7 @@ struct _QfuDeviceSelectionPrivate {
     /* peer port sysfs path */
     gchar   *peer_port;
     /* generic udev monitor */
-    QfuUdevHelperGenericMonitor *monitor;
+    QfuHelpersUdevGenericMonitor *monitor;
 #endif
 };
 
@@ -66,7 +66,7 @@ device_selection_get_single (QfuDeviceSelection   *self,
              qfu_helpers_device_type_to_string (device_type),
              self->priv->sysfs_path);
 
-    list = qfu_udev_helper_list_devices (device_type, self->priv->sysfs_path);
+    list = qfu_helpers_udev_list_devices (device_type, self->priv->sysfs_path);
     for (l = list; l; l = g_list_next (l)) {
         path = g_file_get_path (G_FILE (l->data));
         g_debug ("[qfu,device-selection]   device found: %s", path);
@@ -142,7 +142,7 @@ device_selection_get_multiple (QfuDeviceSelection   *self,
              qfu_helpers_device_type_to_string (device_type),
              self->priv->sysfs_path);
 
-    list = qfu_udev_helper_list_devices (device_type, self->priv->sysfs_path);
+    list = qfu_helpers_udev_list_devices (device_type, self->priv->sysfs_path);
     for (l = list; l; l = g_list_next (l)) {
         path = g_file_get_path (G_FILE (l->data));
         g_debug ("[qfu,device-selection]   device found: %s", path);
@@ -210,7 +210,7 @@ wait_for_device_ready (gpointer      unused,
     GError *error = NULL;
     GFile  *file;
 
-    file = qfu_udev_helper_wait_for_device_finish (res, &error);
+    file = qfu_helpers_udev_wait_for_device_finish (res, &error);
     if (!file)
         g_task_return_error (task, error);
     else
@@ -227,12 +227,12 @@ qfu_device_selection_wait_for_cdc_wdm (QfuDeviceSelection  *self,
     GTask *task;
 
     task = g_task_new (self, cancellable, callback, user_data);
-    qfu_udev_helper_wait_for_device (QFU_HELPERS_DEVICE_TYPE_CDC_WDM,
-                                     self->priv->sysfs_path,
-                                     self->priv->peer_port,
-                                     cancellable,
-                                     (GAsyncReadyCallback) wait_for_device_ready,
-                                     task);
+    qfu_helpers_udev_wait_for_device (QFU_HELPERS_DEVICE_TYPE_CDC_WDM,
+                                      self->priv->sysfs_path,
+                                      self->priv->peer_port,
+                                      cancellable,
+                                      (GAsyncReadyCallback) wait_for_device_ready,
+                                      task);
 }
 
 void
@@ -244,12 +244,12 @@ qfu_device_selection_wait_for_tty (QfuDeviceSelection  *self,
     GTask *task;
 
     task = g_task_new (self, cancellable, callback, user_data);
-    qfu_udev_helper_wait_for_device (QFU_HELPERS_DEVICE_TYPE_TTY,
-                                     self->priv->sysfs_path,
-                                     self->priv->peer_port,
-                                     cancellable,
-                                     (GAsyncReadyCallback) wait_for_device_ready,
-                                     task);
+    qfu_helpers_udev_wait_for_device (QFU_HELPERS_DEVICE_TYPE_TTY,
+                                      self->priv->sysfs_path,
+                                      self->priv->peer_port,
+                                      cancellable,
+                                      (GAsyncReadyCallback) wait_for_device_ready,
+                                      task);
 }
 
 #endif
@@ -302,9 +302,9 @@ qfu_device_selection_new (const gchar  *preferred_cdc_wdm,
     {
         /* Initialize sysfs path from inputs */
         if (preferred_vid || preferred_devnum)
-            self->priv->sysfs_path = qfu_udev_helper_find_by_device_info (preferred_vid, preferred_pid, preferred_busnum, preferred_devnum, error);
+            self->priv->sysfs_path = qfu_helpers_udev_find_by_device_info (preferred_vid, preferred_pid, preferred_busnum, preferred_devnum, error);
         else if (preferred_cdc_wdm || preferred_tty)
-            self->priv->sysfs_path = qfu_udev_helper_find_by_file_path (preferred_cdc_wdm ? preferred_cdc_wdm : preferred_tty, error);
+            self->priv->sysfs_path = qfu_helpers_udev_find_by_file_path (preferred_cdc_wdm ? preferred_cdc_wdm : preferred_tty, error);
         else
             g_assert_not_reached ();
 
@@ -314,10 +314,10 @@ qfu_device_selection_new (const gchar  *preferred_cdc_wdm,
         }
 
         /* look for a peer port */
-        self->priv->peer_port = qfu_udev_helper_find_peer_port (self->priv->sysfs_path, error);
+        self->priv->peer_port = qfu_helpers_udev_find_peer_port (self->priv->sysfs_path, error);
 
         /* Initialize right away the generic udev monitor for this sysfs path */
-        self->priv->monitor = qfu_udev_helper_generic_monitor_new (self->priv->sysfs_path);
+        self->priv->monitor = qfu_helpers_udev_generic_monitor_new (self->priv->sysfs_path);
     }
 #endif
 
@@ -338,7 +338,7 @@ finalize (GObject *object)
 
 #if defined WITH_UDEV
     if (self->priv->monitor)
-        qfu_udev_helper_generic_monitor_free (self->priv->monitor);
+        qfu_helpers_udev_generic_monitor_free (self->priv->monitor);
     g_free (self->priv->sysfs_path);
     g_free (self->priv->peer_port);
 #endif
