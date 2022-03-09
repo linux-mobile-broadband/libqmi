@@ -27,7 +27,7 @@
 #include <libqmi-glib.h>
 
 #include "qfu-device-selection.h"
-#include "qfu-udev-helpers.h"
+#include "qfu-helpers.h"
 
 G_DEFINE_TYPE (QfuDeviceSelection, qfu_device_selection, G_TYPE_OBJECT)
 

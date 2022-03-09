@@ -19,8 +19,8 @@
  * Copyright (C) 2016-2017 Aleksander Morgado <aleksander@aleksander.es>
  */
 
-#ifndef QFU_UDEV_HELPERS_H
-#define QFU_UDEV_HELPERS_H
+#ifndef QFU_HELPERS_H
+#define QFU_HELPERS_H
 
 #include "config.h"
 
@@ -70,4 +70,4 @@ void                         qfu_udev_helper_generic_monitor_free (QfuUdevHelper
 
 G_END_DECLS
 
-#endif /* QFU_UDEV_HELPERS_H */
+#endif /* QFU_HELPERS_H */

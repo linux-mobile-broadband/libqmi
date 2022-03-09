@@ -31,7 +31,7 @@
 #include "qfu-updater.h"
 #include "qfu-reseter.h"
 #include "qfu-utils.h"
-#include "qfu-udev-helpers.h"
+#include "qfu-helpers.h"
 #include "qfu-qdl-device.h"
 #include "qfu-sahara-device.h"
 #include "qfu-enum-types.h"

@@ -32,7 +32,7 @@
 #include "qfu-log.h"
 #include "qfu-operation.h"
 #include "qfu-device-selection.h"
-#include "qfu-udev-helpers.h"
+#include "qfu-helpers.h"
 #include "qfu-utils.h"
 
 #define PROGRAM_NAME    "qmi-firmware-update"

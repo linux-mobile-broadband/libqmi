@@ -29,7 +29,7 @@
 # include <gudev/gudev.h>
 #endif
 
-#include "qfu-udev-helpers.h"
+#include "qfu-helpers.h"
 
 /******************************************************************************/
 
