@@ -28,6 +28,8 @@
 
 G_BEGIN_DECLS
 
+/******************************************************************************/
+
 typedef enum {
     QFU_HELPERS_DEVICE_TYPE_TTY,
     QFU_HELPERS_DEVICE_TYPE_CDC_WDM,
@@ -35,6 +37,17 @@ typedef enum {
 } QfuHelpersDeviceType;
 
 const gchar *qfu_helpers_device_type_to_string (QfuHelpersDeviceType type);
+
+/******************************************************************************/
+
+typedef enum {
+    QFU_HELPERS_DEVICE_MODE_UNKNOWN,
+    QFU_HELPERS_DEVICE_MODE_MODEM,
+    QFU_HELPERS_DEVICE_MODE_DOWNLOAD,
+    QFU_HELPERS_DEVICE_MODE_LAST
+} QfuHelpersDeviceMode;
+
+const gchar *qfu_helpers_device_mode_to_string (QfuHelpersDeviceMode mode);
 
 /******************************************************************************/
 

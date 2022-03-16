@@ -39,13 +39,14 @@ static const gchar *tty_subsys_list[]     = { "tty", NULL };
 static const gchar *cdc_wdm_subsys_list[] = { "usbmisc", "usb", NULL };
 
 static gboolean
-udev_helper_get_udev_device_details (GUdevDevice  *device,
-                                     gchar       **out_sysfs_path,
-                                     guint16      *out_vid,
-                                     guint16      *out_pid,
-                                     guint        *out_busnum,
-                                     guint        *out_devnum,
-                                     GError      **error)
+get_device_details (GUdevDevice           *device,
+                    gchar                **out_sysfs_path,
+                    QfuHelpersDeviceMode  *out_device_mode,
+                    guint16               *out_vid,
+                    guint16               *out_pid,
+                    guint                 *out_busnum,
+                    guint                 *out_devnum,
+                    GError               **error)
 {
     GUdevDevice *parent;
     gulong       aux;
@@ -60,6 +61,8 @@ udev_helper_get_udev_device_details (GUdevDevice  *device,
         *out_busnum = 0;
     if (out_devnum)
         *out_devnum = 0;
+    if (out_device_mode)
+        *out_device_mode = QFU_HELPERS_DEVICE_MODE_UNKNOWN;
 
     /* We need to look for the parent GUdevDevice which has a "usb_device"
      * devtype. */
@@ -84,6 +87,15 @@ udev_helper_get_udev_device_details (GUdevDevice  *device,
 
     if (out_sysfs_path)
         *out_sysfs_path = g_strdup (g_udev_device_get_sysfs_path (parent));
+
+    if (out_device_mode) {
+        aux = strtoul (g_udev_device_get_sysfs_attr (parent, "bNumInterfaces"), NULL, 10);
+        /* QDL download mode has exactly one single USB interface */
+        if (aux == 1)
+            *out_device_mode = QFU_HELPERS_DEVICE_MODE_DOWNLOAD;
+        else if (aux > 1)
+            *out_device_mode = QFU_HELPERS_DEVICE_MODE_MODEM;
+    }
 
     if (out_vid) {
         aux = strtoul (g_udev_device_get_property (parent, "ID_VENDOR_ID"), NULL, 16);
@@ -186,9 +198,9 @@ qfu_helpers_udev_find_by_file (GFile   *file,
         goto out;
     }
 
-    if (!udev_helper_get_udev_device_details (device,
-                                              &sysfs_path, NULL, NULL, NULL, NULL,
-                                              error))
+    if (!get_device_details (device,
+                             &sysfs_path, NULL, NULL, NULL, NULL, NULL,
+                             error))
         goto out;
 
     g_debug ("[qfu-udev] sysfs path for '%s' found: %s", basename, sysfs_path);
@@ -239,13 +251,14 @@ udev_helper_find_by_device_info_in_subsystem (GPtrArray    *sysfs_paths,
 
         device = G_UDEV_DEVICE (iter->data);
 
-        if (udev_helper_get_udev_device_details (device,
-                                                 &device_sysfs_path,
-                                                 &device_vid,
-                                                 &device_pid,
-                                                 &device_busnum,
-                                                 &device_devnum,
-                                                 NULL)) {
+        if (get_device_details (device,
+                                &device_sysfs_path,
+                                NULL,
+                                &device_vid,
+                                &device_pid,
+                                &device_busnum,
+                                &device_devnum,
+                                NULL)) {
             if ((vid == 0 || vid == device_vid) &&
                 (pid == 0 || pid == device_pid) &&
                 (busnum == 0 || busnum == device_busnum) &&
@@ -332,18 +345,20 @@ out:
 /******************************************************************************/
 
 static GFile *
-device_matches_sysfs_and_type (GUdevDevice          *device,
-                               const gchar          *sysfs_path,
-                               QfuHelpersDeviceType  type)
+device_matches (GUdevDevice          *device,
+                QfuHelpersDeviceType  type,
+                QfuHelpersDeviceMode  mode,
+                const gchar          *sysfs_path)
 {
-    GFile *file = NULL;
-    gchar *device_sysfs_path = NULL;
-    gchar *device_driver = NULL;
-    gchar *device_path = NULL;
+    GFile                *file = NULL;
+    gchar                *device_sysfs_path = NULL;
+    gchar                *device_driver = NULL;
+    gchar                *device_path = NULL;
+    QfuHelpersDeviceMode  device_mode = QFU_HELPERS_DEVICE_MODE_UNKNOWN;
 
-    if (!udev_helper_get_udev_device_details (device,
-                                              &device_sysfs_path, NULL, NULL, NULL, NULL,
-                                              NULL))
+    if (!get_device_details (device,
+                             &device_sysfs_path, &device_mode, NULL, NULL, NULL, NULL,
+                             NULL))
         goto out;
 
     if (!device_sysfs_path)
@@ -351,6 +366,9 @@ device_matches_sysfs_and_type (GUdevDevice          *device,
 
     if (g_strcmp0 (device_sysfs_path, sysfs_path) != 0)
         goto out;
+
+    if (device_mode != mode)
+        return NULL;
 
     if (!udev_helper_get_udev_interface_details (device,
                                                  &device_driver,
@@ -383,6 +401,7 @@ out:
 
 GList *
 qfu_helpers_udev_list_devices (QfuHelpersDeviceType  device_type,
+                               QfuHelpersDeviceMode  device_mode,
                                const gchar          *sysfs_path)
 {
     GUdevClient  *udev;
@@ -411,7 +430,7 @@ qfu_helpers_udev_list_devices (QfuHelpersDeviceType  device_type,
         for (iter = devices; iter; iter = g_list_next (iter)) {
             GFile *file;
 
-            file = device_matches_sysfs_and_type (G_UDEV_DEVICE (iter->data), sysfs_path, device_type);
+            file = device_matches (G_UDEV_DEVICE (iter->data), device_type, device_mode, sysfs_path);
             if (file)
                 files = g_list_prepend (files, file);
             g_object_unref (G_OBJECT (iter->data));
@@ -429,6 +448,7 @@ qfu_helpers_udev_list_devices (QfuHelpersDeviceType  device_type,
 
 typedef struct {
     QfuHelpersDeviceType  device_type;
+    QfuHelpersDeviceMode  device_mode;
     GUdevClient          *udev;
     gchar                *sysfs_path;
     gchar                *peer_port;
@@ -471,7 +491,7 @@ handle_uevent (GUdevClient *client,
     if (!g_str_equal (action, "add") && !g_str_equal (action, "move") && !g_str_equal (action, "change"))
         return;
 
-    file = device_matches_sysfs_and_type (device, ctx->sysfs_path, ctx->device_type);
+    file = device_matches (device, ctx->device_type, ctx->device_mode, ctx->sysfs_path);
     if (!file && ctx->peer_port) {
         gchar *tmp, *path;
 
@@ -481,7 +501,7 @@ handle_uevent (GUdevClient *client,
         if (!path)
             return;
 
-        file = device_matches_sysfs_and_type (device, path, ctx->device_type);
+        file = device_matches (device, ctx->device_type, ctx->device_mode, path);
         g_debug ("[qfu-udev] peer lookup for %s: %s => %s",  g_udev_device_get_name (device), ctx->peer_port, path);
         g_free (path);
     }
@@ -555,6 +575,7 @@ wait_for_device_cancelled (GCancellable *cancellable,
 
 void
 qfu_helpers_udev_wait_for_device (QfuHelpersDeviceType  device_type,
+                                  QfuHelpersDeviceMode  device_mode,
                                   const gchar          *sysfs_path,
                                   const gchar          *peer_port,
                                   GCancellable         *cancellable,
@@ -566,6 +587,7 @@ qfu_helpers_udev_wait_for_device (QfuHelpersDeviceType  device_type,
 
     ctx = g_slice_new0 (WaitForDeviceContext);
     ctx->device_type = device_type;
+    ctx->device_mode = device_mode;
     ctx->sysfs_path = g_strdup (sysfs_path);
     ctx->peer_port = g_strdup (peer_port);
 

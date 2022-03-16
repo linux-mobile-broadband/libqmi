@@ -876,14 +876,14 @@ wait_for_tty_ready (QfuDeviceSelection *device_selection,
     g_assert (!ctx->serial_file);
     ctx->serial_file = qfu_device_selection_wait_for_tty_finish (device_selection, res, &error);
     if (!ctx->serial_file) {
-        g_prefix_error (&error, "error waiting for TTY: ");
+        g_prefix_error (&error, "error waiting for serial device in download mode: ");
         g_task_return_error (task, error);
         g_object_unref (task);
         return;
     }
 
     path = g_file_get_path (ctx->serial_file);
-    g_debug ("[qfu-updater] TTY device found: %s", path);
+    g_debug ("[qfu-updater] serial device in download mode found: %s", path);
     g_free (path);
 
     g_print ("download mode detected\n");
@@ -901,8 +901,9 @@ run_context_step_wait_for_tty (GTask *task)
 
     g_print ("rebooting in download mode...\n");
 
-    g_debug ("[qfu-updater] reset requested, now waiting for TTY device...");
+    g_debug ("[qfu-updater] reset requested, now waiting for serial device...");
     qfu_device_selection_wait_for_tty (self->priv->device_selection,
+                                       QFU_HELPERS_DEVICE_MODE_DOWNLOAD,
                                        g_task_get_cancellable (task),
                                        (GAsyncReadyCallback) wait_for_tty_ready,
                                        task);
@@ -1530,10 +1531,10 @@ qfu_updater_run (QfuUpdater          *self,
         break;
     case UPDATER_TYPE_DOWNLOAD:
         ctx->step = RUN_CONTEXT_STEP_SELECT_DEVICE;
-        ctx->serial_file = qfu_device_selection_get_single_tty (self->priv->device_selection);
+        ctx->serial_file = qfu_device_selection_get_single_tty (self->priv->device_selection, QFU_HELPERS_DEVICE_MODE_DOWNLOAD);
         if (!ctx->serial_file) {
             g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
-                                     "No serial device found to run QDL update operation");
+                                     "No serial device in download mode found to run QDL update operation");
             g_object_unref (task);
             return;
         }

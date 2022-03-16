@@ -54,7 +54,8 @@ struct _QfuDeviceSelectionPrivate {
 
 static GFile *
 device_selection_get_single (QfuDeviceSelection   *self,
-                             QfuHelpersDeviceType  device_type)
+                             QfuHelpersDeviceType  device_type,
+                             QfuHelpersDeviceMode  device_mode)
 {
     GFile *first_selection = NULL;
     GFile *preferred_selection = NULL;
@@ -65,7 +66,7 @@ device_selection_get_single (QfuDeviceSelection   *self,
              qfu_helpers_device_type_to_string (device_type),
              self->priv->sysfs_path);
 
-    list = qfu_helpers_list_devices (device_type, self->priv->sysfs_path);
+    list = qfu_helpers_list_devices (device_type, device_mode, self->priv->sysfs_path);
     for (l = list; l; l = g_list_next (l)) {
         path = g_file_get_path (G_FILE (l->data));
         g_debug ("[qfu,device-selection]   device found: %s", path);
@@ -100,20 +101,22 @@ device_selection_get_single (QfuDeviceSelection   *self,
 GFile *
 qfu_device_selection_get_single_cdc_wdm (QfuDeviceSelection *self)
 {
-    return device_selection_get_single (self, QFU_HELPERS_DEVICE_TYPE_CDC_WDM);
+    return device_selection_get_single (self, QFU_HELPERS_DEVICE_TYPE_CDC_WDM, QFU_HELPERS_DEVICE_MODE_MODEM);
 }
 
 GFile *
-qfu_device_selection_get_single_tty (QfuDeviceSelection *self)
+qfu_device_selection_get_single_tty (QfuDeviceSelection   *self,
+                                     QfuHelpersDeviceMode  mode)
 {
-    return device_selection_get_single (self, QFU_HELPERS_DEVICE_TYPE_TTY);
+    return device_selection_get_single (self, QFU_HELPERS_DEVICE_TYPE_TTY, mode);
 }
 
 /******************************************************************************/
 
 static GList *
 device_selection_get_multiple (QfuDeviceSelection   *self,
-                               QfuHelpersDeviceType  device_type)
+                               QfuHelpersDeviceType  device_type,
+                               QfuHelpersDeviceMode  device_mode)
 {
     GFile *preferred_selection = NULL;
     GList *list, *l;
@@ -123,7 +126,7 @@ device_selection_get_multiple (QfuDeviceSelection   *self,
              qfu_helpers_device_type_to_string (device_type),
              self->priv->sysfs_path);
 
-    list = qfu_helpers_list_devices (device_type, self->priv->sysfs_path);
+    list = qfu_helpers_list_devices (device_type, device_mode, self->priv->sysfs_path);
     for (l = list; l; l = g_list_next (l)) {
         path = g_file_get_path (G_FILE (l->data));
         g_debug ("[qfu,device-selection]   device found: %s", path);
@@ -149,9 +152,10 @@ device_selection_get_multiple (QfuDeviceSelection   *self,
 }
 
 GList *
-qfu_device_selection_get_multiple_ttys (QfuDeviceSelection *self)
+qfu_device_selection_get_multiple_ttys (QfuDeviceSelection   *self,
+                                        QfuHelpersDeviceMode  mode)
 {
-    return device_selection_get_multiple (self, QFU_HELPERS_DEVICE_TYPE_TTY);
+    return device_selection_get_multiple (self, QFU_HELPERS_DEVICE_TYPE_TTY, mode);
 }
 
 /******************************************************************************/
@@ -198,6 +202,7 @@ qfu_device_selection_wait_for_cdc_wdm (QfuDeviceSelection  *self,
 
     task = g_task_new (self, cancellable, callback, user_data);
     qfu_helpers_wait_for_device (QFU_HELPERS_DEVICE_TYPE_CDC_WDM,
+                                 QFU_HELPERS_DEVICE_MODE_MODEM,
                                  self->priv->sysfs_path,
                                  self->priv->peer_port,
                                  cancellable,
@@ -207,6 +212,7 @@ qfu_device_selection_wait_for_cdc_wdm (QfuDeviceSelection  *self,
 
 void
 qfu_device_selection_wait_for_tty (QfuDeviceSelection  *self,
+                                   QfuHelpersDeviceMode mode,
                                    GCancellable        *cancellable,
                                    GAsyncReadyCallback  callback,
                                    gpointer             user_data)
@@ -215,6 +221,7 @@ qfu_device_selection_wait_for_tty (QfuDeviceSelection  *self,
 
     task = g_task_new (self, cancellable, callback, user_data);
     qfu_helpers_wait_for_device (QFU_HELPERS_DEVICE_TYPE_TTY,
+                                 mode,
                                  self->priv->sysfs_path,
                                  self->priv->peer_port,
                                  cancellable,
@@ -265,7 +272,6 @@ qfu_device_selection_new (const gchar  *preferred_cdc_wdm,
     self->priv->preferred_pid     = preferred_pid;
     self->priv->preferred_busnum  = preferred_busnum;
     self->priv->preferred_devnum  = preferred_devnum;
-
 
     /* Initialize sysfs path from inputs */
     if (preferred_vid || preferred_devnum)

@@ -89,13 +89,14 @@ read_sysfs_attribute_link_basename (const gchar *path,
 }
 
 static gboolean
-get_device_details (const gchar  *port_sysfs_path,
-                    gchar       **out_sysfs_path,
-                    guint16      *out_vid,
-                    guint16      *out_pid,
-                    guint        *out_busnum,
-                    guint        *out_devnum,
-                    GError      **error)
+get_device_details (const gchar           *port_sysfs_path,
+                    gchar                **out_sysfs_path,
+                    QfuHelpersDeviceMode  *out_device_mode,
+                    guint16               *out_vid,
+                    guint16               *out_pid,
+                    guint                 *out_busnum,
+                    guint                 *out_devnum,
+                    GError               **error)
 {
     g_autofree gchar *iter = NULL;
     g_autofree gchar *physdev_sysfs_path = NULL;
@@ -111,6 +112,8 @@ get_device_details (const gchar  *port_sysfs_path,
         *out_devnum = 0;
     if (out_sysfs_path)
         *out_sysfs_path = NULL;
+    if (out_device_mode)
+        *out_device_mode = QFU_HELPERS_DEVICE_MODE_UNKNOWN;
 
     iter = realpath (port_sysfs_path, NULL);
 
@@ -132,6 +135,15 @@ get_device_details (const gchar  *port_sysfs_path,
     if (!physdev_sysfs_path) {
         g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "couldn't find parent physical USB device");
         return FALSE;
+    }
+
+    if (out_device_mode) {
+        aux = read_sysfs_attribute_as_num (physdev_sysfs_path, "bNumInterfaces", 10);
+        /* QDL download mode has exactly one single USB interface */
+        if (aux == 1)
+            *out_device_mode = QFU_HELPERS_DEVICE_MODE_DOWNLOAD;
+        else if (aux > 1)
+            *out_device_mode = QFU_HELPERS_DEVICE_MODE_MODEM;
     }
 
     if (out_vid) {
@@ -213,7 +225,7 @@ qfu_helpers_sysfs_find_by_file (GFile   *file,
     g_autofree gchar  *physdev_sysfs_path = NULL;
     g_autofree gchar  *found_port_sysfs_path = NULL;
     g_autofree gchar  *basename = NULL;
-    guint              i;
+    guint             i;
 
     basename = g_file_get_basename (file);
     if (!basename) {
@@ -247,7 +259,7 @@ qfu_helpers_sysfs_find_by_file (GFile   *file,
     }
 
     if (!get_device_details (found_port_sysfs_path,
-                             &physdev_sysfs_path, NULL, NULL, NULL, NULL,
+                             &physdev_sysfs_path, NULL, NULL, NULL, NULL, NULL,
                              error))
         return NULL;
 
@@ -272,12 +284,12 @@ device_already_added (GPtrArray   *ptr,
 }
 
 static GPtrArray *
-find_by_device_info_in_subsystem (GPtrArray    *sysfs_paths,
-                                  const gchar  *subsystem,
-                                  guint16       vid,
-                                  guint16       pid,
-                                  guint         busnum,
-                                  guint         devnum)
+find_by_device_info_in_subsystem (GPtrArray             *sysfs_paths,
+                                  const gchar           *subsystem,
+                                  guint16                vid,
+                                  guint16                pid,
+                                  guint                  busnum,
+                                  guint                  devnum)
 {
     g_autofree gchar           *subsys_sysfs_path = NULL;
     g_autoptr(GFile)            subsys_sysfs_file = NULL;
@@ -292,14 +304,14 @@ find_by_device_info_in_subsystem (GPtrArray    *sysfs_paths,
                                          NULL);
     if (direnum) {
         while (TRUE) {
-            GFileInfo        *info = NULL;
-            g_autoptr(GFile)  child = NULL;
-            g_autofree gchar *child_path = NULL;
-            guint16           device_vid = 0;
-            guint16           device_pid = 0;
-            guint             device_busnum = 0;
-            guint             device_devnum = 0;
-            g_autofree gchar *device_sysfs_path = NULL;
+            GFileInfo            *info = NULL;
+            g_autoptr(GFile)      child = NULL;
+            g_autofree gchar     *child_path = NULL;
+            guint16               device_vid = 0;
+            guint16               device_pid = 0;
+            guint                 device_busnum = 0;
+            guint                 device_devnum = 0;
+            g_autofree gchar     *device_sysfs_path = NULL;
 
             if (!g_file_enumerator_iterate (direnum, &info, NULL, NULL, NULL) || !info)
                 break;
@@ -308,6 +320,7 @@ find_by_device_info_in_subsystem (GPtrArray    *sysfs_paths,
             child_path = g_file_get_path (child);
             if (get_device_details (child_path,
                                     &device_sysfs_path,
+                                    NULL,
                                     &device_vid,
                                     &device_pid,
                                     &device_busnum,
@@ -383,18 +396,20 @@ qfu_helpers_sysfs_find_by_device_info (guint16   vid,
 /******************************************************************************/
 
 static GFile *
-device_matches_sysfs_and_type (GFile                *file,
-                               const gchar          *sysfs_path,
-                               QfuHelpersDeviceType  type)
+device_matches (GFile                *file,
+                QfuHelpersDeviceType  type,
+                QfuHelpersDeviceMode  mode,
+                const gchar          *sysfs_path)
 {
-    g_autofree gchar *port_sysfs_path = NULL;
-    g_autofree gchar *device_sysfs_path = NULL;
-    g_autofree gchar *device_driver = NULL;
-    g_autofree gchar *device_path = NULL;
+    g_autofree gchar     *port_sysfs_path = NULL;
+    g_autofree gchar     *device_sysfs_path = NULL;
+    g_autofree gchar     *device_driver = NULL;
+    g_autofree gchar     *device_path = NULL;
+    QfuHelpersDeviceMode  device_mode = QFU_HELPERS_DEVICE_MODE_UNKNOWN;
 
     port_sysfs_path = g_file_get_path (file);
     if (!get_device_details (port_sysfs_path,
-                             &device_sysfs_path, NULL, NULL, NULL, NULL,
+                             &device_sysfs_path, &device_mode, NULL, NULL, NULL, NULL,
                              NULL))
         return NULL;
 
@@ -402,6 +417,9 @@ device_matches_sysfs_and_type (GFile                *file,
         return NULL;
 
     if (g_strcmp0 (device_sysfs_path, sysfs_path) != 0)
+        return NULL;
+
+    if (device_mode != mode)
         return NULL;
 
     if (!get_interface_details (port_sysfs_path, &device_driver, NULL))
@@ -427,6 +445,7 @@ device_matches_sysfs_and_type (GFile                *file,
 
 GList *
 qfu_helpers_sysfs_list_devices (QfuHelpersDeviceType  device_type,
+                                QfuHelpersDeviceMode  device_mode,
                                 const gchar          *sysfs_path)
 {
     const gchar **subsys_list = NULL;
@@ -469,7 +488,7 @@ qfu_helpers_sysfs_list_devices (QfuHelpersDeviceType  device_type,
                 break;
 
             child = g_file_enumerator_get_child (direnum, info);
-            devfile = device_matches_sysfs_and_type (child, sysfs_path, device_type);
+            devfile = device_matches (child, device_type, device_mode, sysfs_path);
             if (devfile)
                 files = g_list_prepend (files, g_steal_pointer (&devfile));
         }
@@ -488,6 +507,7 @@ qfu_helpers_sysfs_list_devices (QfuHelpersDeviceType  device_type,
 
 typedef struct {
     QfuHelpersDeviceType  device_type;
+    QfuHelpersDeviceMode  device_mode;
     gchar                *sysfs_path;
     gchar                *peer_port;
     guint                 check_attempts;
@@ -515,13 +535,14 @@ qfu_helpers_sysfs_wait_for_device_finish (GAsyncResult  *res,
 
 static GFile *
 wait_for_device_lookup (QfuHelpersDeviceType  device_type,
+                        QfuHelpersDeviceMode  device_mode,
                         const gchar          *sysfs_path,
                         const gchar          *peer_port)
 {
     GList *devices;
     GFile *file;
 
-    devices = qfu_helpers_sysfs_list_devices (device_type, sysfs_path);
+    devices = qfu_helpers_sysfs_list_devices (device_type, device_mode, sysfs_path);
     if (!devices) {
         g_autofree gchar *tmp = NULL;
         g_autofree gchar *path = NULL;
@@ -534,7 +555,7 @@ wait_for_device_lookup (QfuHelpersDeviceType  device_type,
         path = realpath (tmp, NULL);
         if (path) {
             g_debug ("[qfu-sysfs] peer lookup: %s => %s", peer_port, path);
-            devices = qfu_helpers_sysfs_list_devices (device_type, path);
+            devices = qfu_helpers_sysfs_list_devices (device_type, device_mode, path);
             if (!devices)
                 return NULL;
         }
@@ -561,7 +582,7 @@ wait_for_device_check (GTask *task)
     ctx = (WaitForDeviceContext *) g_task_get_task_data (task);
 
     /* Check devices matching */
-    device = wait_for_device_lookup (ctx->device_type, ctx->sysfs_path, ctx->peer_port);
+    device = wait_for_device_lookup (ctx->device_type, ctx->device_mode, ctx->sysfs_path, ctx->peer_port);
     if (!device) {
         /* No devices found */
         if (ctx->check_attempts == WAIT_FOR_DEVICE_CHECK_ATTEMPTS) {
@@ -625,18 +646,20 @@ wait_for_device_cancelled (GCancellable *cancellable,
 }
 
 void
-qfu_helpers_sysfs_wait_for_device (QfuHelpersDeviceType   device_type,
-                                   const gchar           *sysfs_path,
-                                   const gchar           *peer_port,
-                                   GCancellable          *cancellable,
-                                   GAsyncReadyCallback    callback,
-                                   gpointer               user_data)
+qfu_helpers_sysfs_wait_for_device (QfuHelpersDeviceType  device_type,
+                                   QfuHelpersDeviceMode  device_mode,
+                                   const gchar          *sysfs_path,
+                                   const gchar          *peer_port,
+                                   GCancellable         *cancellable,
+                                   GAsyncReadyCallback   callback,
+                                   gpointer              user_data)
 {
     GTask                *task;
     WaitForDeviceContext *ctx;
 
     ctx = g_slice_new0 (WaitForDeviceContext);
     ctx->device_type = device_type;
+    ctx->device_mode = device_mode;
     ctx->sysfs_path = g_strdup (sysfs_path);
     ctx->peer_port = g_strdup (peer_port);
 

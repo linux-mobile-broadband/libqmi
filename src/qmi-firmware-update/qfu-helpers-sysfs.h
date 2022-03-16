@@ -30,20 +30,20 @@
 
 G_BEGIN_DECLS
 
-gchar *qfu_helpers_sysfs_find_by_file          (GFile        *file,
-                                                GError      **error);
-gchar *qfu_helpers_sysfs_find_by_file_path     (const gchar  *path,
-                                                GError      **error);
-gchar *qfu_helpers_sysfs_find_by_device_info   (guint16       vid,
-                                                guint16       pid,
-                                                guint         busnum,
-                                                guint         devnum,
-                                                GError      **error);
+gchar *qfu_helpers_sysfs_find_by_file          (GFile    *file,
+                                                GError  **error);
+gchar *qfu_helpers_sysfs_find_by_device_info   (guint16   vid,
+                                                guint16   pid,
+                                                guint     busnum,
+                                                guint     devnum,
+                                                GError  **error);
 
 GList *qfu_helpers_sysfs_list_devices           (QfuHelpersDeviceType   device_type,
+                                                 QfuHelpersDeviceMode   device_mode,
                                                  const gchar           *sysfs_path);
 
 void   qfu_helpers_sysfs_wait_for_device        (QfuHelpersDeviceType   device_type,
+                                                 QfuHelpersDeviceMode   device_mode,
                                                  const gchar           *sysfs_path,
                                                  const gchar           *peer_port,
                                                  GCancellable          *cancellable,

@@ -40,6 +40,22 @@ qfu_helpers_device_type_to_string (QfuHelpersDeviceType type)
 
 /******************************************************************************/
 
+static const gchar *device_mode_str[] = {
+    [QFU_HELPERS_DEVICE_MODE_UNKNOWN]  = "unknown",
+    [QFU_HELPERS_DEVICE_MODE_MODEM]    = "modem",
+    [QFU_HELPERS_DEVICE_MODE_DOWNLOAD] = "download",
+};
+
+G_STATIC_ASSERT (G_N_ELEMENTS (device_mode_str) == QFU_HELPERS_DEVICE_MODE_LAST);
+
+const gchar *
+qfu_helpers_device_mode_to_string (QfuHelpersDeviceMode mode)
+{
+    return device_mode_str[mode];
+}
+
+/******************************************************************************/
+
 gchar *
 qfu_helpers_find_by_file_path (const gchar  *path,
                                GError      **error)

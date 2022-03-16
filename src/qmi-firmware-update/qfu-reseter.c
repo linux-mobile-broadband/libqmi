@@ -360,7 +360,7 @@ qfu_reseter_run (QfuReseter          *self,
     /* List devices to use */
     if (!self->priv->qmi_client)
         ctx->cdc_wdm = qfu_device_selection_get_single_cdc_wdm (self->priv->device_selection);
-    ctx->ttys = qfu_device_selection_get_multiple_ttys  (self->priv->device_selection);
+    ctx->ttys = qfu_device_selection_get_multiple_ttys (self->priv->device_selection, QFU_HELPERS_DEVICE_MODE_MODEM);
 
     if (!ctx->ttys && !ctx->cdc_wdm && !self->priv->qmi_client) {
         g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,

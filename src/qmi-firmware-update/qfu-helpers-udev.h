@@ -42,9 +42,11 @@ gchar *qfu_helpers_udev_find_by_device_info   (guint16       vid,
                                                GError      **error);
 
 GList *qfu_helpers_udev_list_devices           (QfuHelpersDeviceType   device_type,
+                                                QfuHelpersDeviceMode   device_mode,
                                                 const gchar           *sysfs_path);
 
 void   qfu_helpers_udev_wait_for_device        (QfuHelpersDeviceType   device_type,
+                                                QfuHelpersDeviceMode   device_mode,
                                                 const gchar           *sysfs_path,
                                                 const gchar           *peer_port,
                                                 GCancellable          *cancellable,
