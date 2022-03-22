@@ -43,6 +43,7 @@
 #include "mbim-ms-basic-connect-extensions.h"
 #include "mbim-ms-uicc-low-level-access.h"
 #include "mbim-quectel.h"
+#include "mbim-intel-thermal-rf.h"
 
 /* backwards compatibility */
 #include "mbim-compat.h"

@@ -106,6 +106,7 @@ services_data = [
   ['sms'],
   ['stk'],
   ['ussd'],
+  ['intel-thermal-rf'],
 ]
 
 foreach service_data: services_data

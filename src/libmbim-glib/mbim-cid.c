@@ -195,6 +195,20 @@ static const CidConfig cid_quectel_config [MBIM_CID_QUECTEL_LAST] = {
     { NO_SET, QUERY, NO_NOTIFY }, /* MBIM_CID_QUECTEL_RADIO_STATE */
 };
 
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_INTEL_THERMAL_RF_LAST MBIM_CID_INTEL_THERMAL_RF_RFIM
+static const CidConfig cid_intel_thermal_rf_config [MBIM_CID_INTEL_THERMAL_RF_LAST] = {
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { SET,       QUERY, NOTIFY    }, /* MBIM_CID_INTEL_THERMAL_RF_RFIM */
+};
+
 gboolean
 mbim_cid_can_set (MbimService service,
                   guint       cid)
@@ -242,6 +256,8 @@ mbim_cid_can_set (MbimService service,
         return cid_ms_uicc_low_level_access_config[cid - 1].set;
     case MBIM_SERVICE_QUECTEL:
         return cid_quectel_config[cid - 1].set;
+    case MBIM_SERVICE_INTEL_THERMAL_RF:
+        return cid_intel_thermal_rf_config[cid - 1].set;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -297,6 +313,8 @@ mbim_cid_can_query (MbimService service,
         return cid_ms_uicc_low_level_access_config[cid - 1].query;
     case MBIM_SERVICE_QUECTEL:
         return cid_quectel_config[cid - 1].query;
+    case MBIM_SERVICE_INTEL_THERMAL_RF:
+        return cid_intel_thermal_rf_config[cid - 1].query;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -352,6 +370,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_ms_uicc_low_level_access_config[cid - 1].notify;
     case MBIM_SERVICE_QUECTEL:
         return cid_quectel_config[cid - 1].notify;
+    case MBIM_SERVICE_INTEL_THERMAL_RF:
+        return cid_intel_thermal_rf_config[cid - 1].notify;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -408,6 +428,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_ms_uicc_low_level_access_get_string (cid);
     case MBIM_SERVICE_QUECTEL:
         return mbim_cid_quectel_get_string (cid);
+    case MBIM_SERVICE_INTEL_THERMAL_RF:
+        return mbim_cid_intel_thermal_rf_get_string (cid);
     case MBIM_SERVICE_LAST:
     default:
         g_assert_not_reached ();

@@ -13,6 +13,7 @@ mbimcli_sources = files(
   'mbimcli-ms-sar.c',
   'mbimcli-phonebook.c',
   'mbimcli-quectel.c',
+  'mbimcli-intel-thermal-rf.c',
 )
 
 sources = mbimcli_sources + files(

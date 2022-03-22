@@ -1835,6 +1835,29 @@ typedef enum { /*< since=1.26.2 >*/
     MBIM_QUECTEL_RADIO_SWITCH_STATE_FCC_LOCKED = 4,
 } MbimQuectelRadioSwitchState;
 
+/*****************************************************************************/
+/* 'Serving Cell Information' */
+
+/**
+ * MbimIntelServingCellInfo:
+ * @MBIM_INTEL_SERVING_CELL_INFO_PCELL: Primary cell.
+ * @MBIM_INTEL_SERVING_CELL_INFO_SCELL: Secondary cell.
+ * @MBIM_INTEL_SERVING_CELL_INFO_PSCELL: Primary cell in SCS.
+ * @MBIM_INTEL_SERVING_CELL_INFO_SSCELL: Secondary cell in SCS.
+ * @MBIM_INTEL_SERVING_CELL_INFO_RADIO_OFF: Radio state is off.
+ *
+ * Serving cell information.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_INTEL_SERVING_CELL_INFO_PCELL     = 0,
+    MBIM_INTEL_SERVING_CELL_INFO_SCELL     = 1,
+    MBIM_INTEL_SERVING_CELL_INFO_PSCELL    = 2,
+    MBIM_INTEL_SERVING_CELL_INFO_SSCELL    = 3,
+    MBIM_INTEL_SERVING_CELL_INFO_RADIO_OFF = 0xFFFFFFFF,
+} MbimIntelServingCellInfo;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

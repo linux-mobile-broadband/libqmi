@@ -240,6 +240,14 @@ static const MbimUuid uuid_quectel = {
     .e = { 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x11 }
 };
 
+static const MbimUuid uuid_intel_thermal_rf = {
+    .a = { 0xfd, 0xc2, 0x2a, 0xf2 },
+    .b = { 0xf4, 0x41 },
+    .c = { 0x4d, 0x46 },
+    .d = { 0xaf, 0x8d },
+    .e = { 0x25, 0x9f, 0xcd, 0xde, 0x46, 0x35 }
+};
+
 static GList *mbim_custom_service_list = NULL;
 
 typedef struct {
@@ -371,6 +379,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_ms_uicc_low_level_access;
     case MBIM_SERVICE_QUECTEL:
         return &uuid_quectel;
+    case MBIM_SERVICE_INTEL_THERMAL_RF:
+        return &uuid_intel_thermal_rf;
     case MBIM_SERVICE_LAST:
         g_assert_not_reached ();
     default:
@@ -440,6 +450,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_quectel))
         return MBIM_SERVICE_QUECTEL;
+
+    if (mbim_uuid_cmp (uuid, &uuid_intel_thermal_rf))
+        return MBIM_SERVICE_INTEL_THERMAL_RF;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
         if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))

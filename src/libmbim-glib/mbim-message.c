@@ -36,6 +36,7 @@
 #include "mbim-ms-basic-connect-extensions.h"
 #include "mbim-ms-uicc-low-level-access.h"
 #include "mbim-quectel.h"
+#include "mbim-intel-thermal-rf.h"
 
 /*****************************************************************************/
 
@@ -1956,6 +1957,9 @@ mbim_message_get_printable_full (const MbimMessage  *self,
             break;
         case MBIM_SERVICE_QUECTEL:
             fields_printable = __mbim_message_quectel_get_printable_fields (self, line_prefix, &inner_error);
+            break;
+        case MBIM_SERVICE_INTEL_THERMAL_RF:
+            fields_printable = __mbim_message_intel_thermal_rf_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_INVALID:
         case MBIM_SERVICE_LAST:

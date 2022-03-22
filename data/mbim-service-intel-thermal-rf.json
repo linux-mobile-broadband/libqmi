@@ -1,0 +1,71 @@
+[
+  // *********************************************************************************
+  { "type" : "Service",
+    "name" : "Intel Thermal RF" },
+
+  // ***********************************************************************************
+
+  { "name"     : "MbimIntelRfimFrequencyValue",
+    "type"     : "Struct",
+    "since"    : "1.28",
+    "contents" : [   { "name"          : "ServingCellInfo",
+                       "format"        : "guint32",
+                       "public-format" : "MbimIntelServingCellInfo" },
+                     { "name"          : "CenterFrequency",
+                       "format"        : "guint64" },
+                     { "name"          : "Bandwidth",
+                       "format"        : "guint32" },
+
+                     // 0:   -140 or less dBm
+                     // <97: dBm = -140 + rsrp
+                     // 97:  -43 or greater dBm
+                     // 0xFFFFFFFF: unknown/undetectable
+                     { "name"          : "RSRP",
+                       "format"        : "guint32" },
+
+                     // 0:   -19.5 or less dB
+                     // <34: dB = -19.5 + ((float)rsrq/2)
+                     // 34:  -2.5 or greater dB
+                     // 0xFFFFFFFF: unknown/undetectable
+                     { "name"          : "RSRQ",
+                       "format"        : "guint32" },
+
+                     // 0:  -23 or less dB
+                     //<127: ((float)sinr/2) - 23
+                     // 127: 40 or greater dB
+                     // 0xFFFFFFFF: unknown/undetectable
+                     { "name"          : "SINR",
+                       "format"        : "guint32" },
+
+                     // 0-31: dBm = -113 + (2*rssi)
+                     // 99:   unknown/undetectable
+                     { "name"          : "RSSI",
+                       "format"        : "guint32" },
+                     { "name"          : "ConnectionStatus",
+                       "format"        : "guint32",
+                       "public-format" : "gboolean" } ] },
+
+  { "name"         : "RFIM",
+    "type"         : "Command",
+    "service"      : "Intel Thermal RF",
+    "since"        : "1.28",
+    "set"          : [   { "name"          : "ActivationState",
+                           "format"        : "guint32",
+                           "public-format" : "gboolean" } ],
+
+    "query"        : [],
+
+    "response"     : [ { "name"             : "RfimFrequencyValuesCount",
+                         "format"           : "guint32" },
+                       { "name"             : "RfimFrequencyValues",
+                         "format"           : "ref-struct-array",
+                         "struct-type"      : "MbimIntelRfimFrequencyValue",
+                         "array-size-field" : "RfimFrequencyValuesCount" } ],
+
+    "notification" : [ { "name"             : "RfimFrequencyValuesCount",
+                         "format"           : "guint32" },
+                       { "name"             : "RfimFrequencyValues",
+                         "format"           : "ref-struct-array",
+                         "struct-type"      : "MbimIntelRfimFrequencyValue",
+                         "array-size-field" : "RfimFrequencyValuesCount" } ] }
+]
