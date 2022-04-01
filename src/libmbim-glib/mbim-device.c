@@ -874,9 +874,16 @@ process_message (MbimDevice        *self,
     if (mbim_utils_get_traces_enabled ()) {
         g_autofree gchar *printable = NULL;
 
-        printable = mbim_common_str_hex (((GByteArray *)message)->data,
-                                         ((GByteArray *)message)->len,
-                                         ':');
+        if (mbim_utils_get_show_personal_info ()) {
+            printable = mbim_common_str_hex (((GByteArray *)message)->data,
+                                             ((GByteArray *)message)->len,
+                                             ':');
+        } else {
+            g_autofree gchar *printable_hide = NULL;
+            printable_hide = g_strdup (":###...");
+            printable = mbim_common_str_hex (((GByteArray *)message)->data, 12, ':');
+            printable = g_strconcat (printable, printable_hide, (char *)0);
+        }
         g_debug ("[%s] Received message...%s\n"
                  ">>>>>> RAW:\n"
                  ">>>>>>   length = %u\n"

@@ -40,6 +40,27 @@ gboolean mbim_utils_get_traces_enabled (void);
  */
 void mbim_utils_set_traces_enabled (gboolean enabled);
 
+/**
+ * mbim_utils_set_show_personal_info:
+ * @show_personal_info: %TRUE to show personal info in traces, %FALSE otherwise.
+ *
+ * Sets whether personal info is printed when traces are enabled.
+ *
+ * Since: 1.28
+ */
+void mbim_utils_set_show_personal_info (gboolean show_personal_info);
+
+/**
+ * mbim_utils_get_show_personal_info:
+ *
+ * Checks whether personal info should be hidden when traces are enabled.
+ *
+ * Returns: %TRUE to show personal info in trace, %FALSE otherwise.
+ *
+ * Since: 1.28
+ */
+gboolean mbim_utils_get_show_personal_info (void);
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_UTILS_H_ */

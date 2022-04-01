@@ -358,9 +358,14 @@ class Struct:
                 inner_template += (
                     '        gchar *tmpstr;\n'
                     '\n'
-                    '        tmpstr = mbim_uuid_get_printable (&(self->${field_name_underscore}));\n'
-                    '        g_string_append_printf (str, "\'%s\'", tmpstr);\n'
-                    '        g_free (tmpstr);\n')
+                    '        tmpstr = mbim_uuid_get_printable (&(self->${field_name_underscore}));\n')
+                if 'personal-info' in field:
+                    inner_template += (
+                        '        g_string_append_printf (str, "%s", mbim_utils_get_show_personal_info () ? tmpstr : "###");\n')
+                else:
+                    inner_template += (
+                        '        g_string_append_printf (str, "\'%s\'", tmpstr);\n'
+                        '        g_free (tmpstr);\n')
 
             elif field['format'] in ['byte-array', 'ref-byte-array', 'ref-byte-array-no-offset', 'unsized-byte-array']:
                 inner_template += (
@@ -382,40 +387,88 @@ class Struct:
 
                 inner_template += (
                     '        g_string_append (str, "\'");\n'
-                    '        for (i = 0; i < array_size; i++)\n'
-                    '            g_string_append_printf (str, "%02x%s", self->${field_name_underscore}[i], (i == (array_size - 1)) ? "" : ":" );\n'
+                    '        for (i = 0; i < array_size; i++)\n')
+                if 'personal-info' in field:
+                    inner_template += (
+                        '        g_string_append_printf (str, "%02x%s", mbim_utils_get_show_personal_info () ? self->${field_name_underscore}[i] : "#", (i == (array_size - 1)) ? "" : ":" );\n')
+                else:
+                    inner_template += (
+                    '            g_string_append_printf (str, "%02x%s", self->${field_name_underscore}[i], (i == (array_size - 1)) ? "" : ":" );\n')
+                inner_template += (
                     '        g_string_append (str, "\'");\n')
 
             elif field['format'] in ['guint16', 'guint32', 'guint64']:
                 if 'public-format' in field:
-                    inner_template += (
-                        '#if defined __${public_underscore_upper}_IS_ENUM__\n'
-                        '        g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})self->${field_name_underscore}));\n'
-                        '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
-                        '        {\n'
-                        '            g_autofree gchar *tmpstr = NULL;\n'
-                        '\n'
-                        '            tmpstr = ${public_underscore}_build_string_from_mask ((${public})self->${field_name_underscore});\n'
-                        '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
-                        '        }\n'
-                        '#else\n'
-                        '# error neither enum nor flags\n'
-                        '#endif\n'
-                        '\n')
+                    if 'personal-info' in field:
+                        inner_template += (
+                            '        if (!mbim_utils_get_show_personal_info ())\n'
+                            '            g_string_append_printf (str, "###");\n'
+                            '        else {\n')
+                    else:
+                        inner_template += (
+                            '#if defined __${public_underscore_upper}_IS_ENUM__\n'
+                            '        g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})self->${field_name_underscore}));\n'
+                            '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
+                            '        {\n'
+                            '            g_autofree gchar *tmpstr = NULL;\n'
+                            '\n'
+                            '            tmpstr = ${public_underscore}_build_string_from_mask ((${public})self->${field_name_underscore});\n'
+                            '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
+                            '        }\n'
+                            '#else\n'
+                            '# error neither enum nor flags\n'
+                            '#endif\n'
+                            '\n')
+                    if 'personal-info' in field:
+                        inner_template += (
+                            '        }\n')
                 elif field['format'] == 'guint16':
-                    inner_template += (
-                        '        g_string_append_printf (str, "\'%" G_GUINT16_FORMAT "\'", self->${field_name_underscore});\n')
+                    if 'personal-info' in field:
+                        inner_template += (
+                            '        if (!mbim_utils_get_show_personal_info ())\n'
+                            '            g_string_append_printf (str, "###");\n'
+                            '        else\n'
+                            '            g_string_append_printf (str, "'%" G_GUINT16_FORMAT "', self->${field_name_underscore});\n')
+                    else:
+                        inner_template += (
+                            '        g_string_append_printf (str, "\'%" G_GUINT16_FORMAT "\'", self->${field_name_underscore});\n')
                 elif field['format'] == 'guint32':
-                    inner_template += (
-                        '        g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", self->${field_name_underscore});\n')
+                    if 'personal-info' in field:
+                        inner_template += (
+                            '        if (!mbim_utils_get_show_personal_info ())\n'
+                            '            g_string_append_printf (str, "###");\n'
+                            '        else\n'
+                            '            g_string_append_printf (str, "'%" G_GUINT32_FORMAT "', self->${field_name_underscore});\n')
+                    else:
+                        inner_template += (
+                            '        g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", self->${field_name_underscore});\n')
                 elif field['format'] == 'guint64':
-                    inner_template += (
-                        '        g_string_append_printf (str, "\'%" G_GUINT64_FORMAT "\'", self->${field_name_underscore});\n')
+                    if 'personal-info' in field:
+                        inner_template += (
+                            '        if (!mbim_utils_get_show_personal_info ())\n'
+                            '            g_string_append_printf (str, "###");\n'
+                            '        else\n'
+                            '            g_string_append_printf (str, "'%" G_GUINT64_FORMAT "', self->${field_name_underscore});\n')
+                    else:
+                        inner_template += (
+                            '        g_string_append_printf (str, "\'%" G_GUINT64_FORMAT "\'", self->${field_name_underscore});\n')
             elif field['format'] == 'gint32':
-                    inner_template += (
-                        '        g_string_append_printf (str, "\'%" G_GINT32_FORMAT "\'", self->${field_name_underscore});\n')
+                    if 'personal-info' in field:
+                        inner_template += (
+                            '        if (!mbim_utils_get_show_personal_info ())\n'
+                            '            g_string_append_printf (str, "###");\n'
+                            '        else\n'
+                            '            g_string_append_printf (str, "'%" G_GINT32_FORMAT "', self->${field_name_underscore});\n')
+                    else:
+                        inner_template += (
+                            '        g_string_append_printf (str, "\'%" G_GINT32_FORMAT "\'", self->${field_name_underscore});\n')
             elif field['format'] == 'guint32-array':
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
+                if 'personal-info' in field:
+                    inner_template += (
+                        '        if (!mbim_utils_get_show_personal_info ())\n'
+                        '            g_string_append_printf (str, "###");\n'
+                        '        else {\n')
                 inner_template += (
                     '        guint i;\n'
                     '\n'
@@ -423,13 +476,25 @@ class Struct:
                     '        for (i = 0; i < self->${array_size_field_name_underscore}; i++)\n'
                     '            g_string_append_printf (str, "%" G_GUINT32_FORMAT "%s", self->${field_name_underscore}[i], (i == (self->${array_size_field_name_underscore} - 1)) ? "" : "," );\n'
                     '        g_string_append (str, "\'");\n')
+                if 'personal-info' in field:
+                    inner_template += (
+                        '        }\n')
 
             elif field['format'] == 'string':
-                inner_template += (
-                    '        g_string_append_printf (str, "\'%s\'", self->${field_name_underscore});\n')
+                if 'personal-info' in field:
+                    inner_template += (
+                        '        g_string_append_printf (str, "%s", mbim_utils_get_show_personal_info () ? self->${field_name_underscore} : "###");\n')
+                else:
+                    inner_template += (
+                        '        g_string_append_printf (str, "\'%s\'", self->${field_name_underscore});\n')
 
             elif field['format'] == 'string-array':
                 translations['array_size_field_name_underscore'] = utils.build_underscore_name_from_camelcase(field['array-size-field'])
+                if 'personal-info' in field:
+                    inner_template += (
+                        '        if (!mbim_utils_get_show_personal_info ())\n'
+                        '            g_string_append_printf (str, "###");\n'
+                        '        else {\n')
                 inner_template += (
                     '        guint i;\n'
                     '\n'
@@ -437,6 +502,9 @@ class Struct:
                     '        for (i = 0; i < self->${array_size_field_name_underscore}; i++)\n'
                     '            g_string_append_printf (str, "%s%s", self->${field_name_underscore}[i], (i == (self->${array_size_field_name_underscore} - 1)) ? "" : "," );\n'
                     '        g_string_append (str, "\'");\n')
+                if 'personal-info' in field:
+                    inner_template += (
+                        '        }\n')
 
             elif field['format'] == 'ipv4' or \
                  field['format'] == 'ref-ipv4' or \
@@ -456,9 +524,17 @@ class Struct:
                     inner_template += (
                         '        addr = g_inet_address_new_from_bytes ((guint8 *)&(self->${field_name_underscore}.addr), G_SOCKET_FAMILY_IPV6);\n')
 
+                if 'personal-info' in field:
+                    inner_template += (
+                        '        if (!mbim_utils_get_show_personal_info ())\n'
+                        '            g_string_append_printf (str, "###");\n'
+                        '        else {\n')
                 inner_template += (
                     '        tmpstr = g_inet_address_to_string (addr);\n'
                     '        g_string_append_printf (str, "\'%s\'", tmpstr);\n')
+                if 'personal-info' in field:
+                    inner_template += (
+                        '        }\n')
 
             else:
                 raise ValueError('Cannot handle format \'%s\' in struct' % field['format'])

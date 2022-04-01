@@ -45,6 +45,7 @@ static gboolean noop_flag;
 static gboolean verbose_flag;
 static gboolean silent_flag;
 static gboolean version_flag;
+static gboolean verbose_full_flag;
 
 static GOptionEntry main_entries[] = {
     { "device", 'd', 0, G_OPTION_ARG_STRING, &device_str,
@@ -77,6 +78,10 @@ static GOptionEntry main_entries[] = {
     },
     { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose_flag,
       "Run action with verbose logs, including the debug ones",
+      NULL
+    },
+    { "verbose-full", 'v', 0, G_OPTION_ARG_NONE, &verbose_full_flag,
+      "Run action with verbose logs, including the debug ones and personal info",
       NULL
     },
     { "silent", 0, 0, G_OPTION_ARG_NONE, &silent_flag,
@@ -161,7 +166,7 @@ log_handler (const gchar *log_domain,
         g_assert_not_reached ();
     }
 
-    if (!verbose_flag && !err)
+    if (!verbose_flag && !verbose_full_flag && !err)
         return;
 
     g_fprintf (err ? stderr : stdout,
@@ -475,9 +480,16 @@ int main (int argc, char **argv)
 
     g_log_set_handler (NULL, G_LOG_LEVEL_MASK, log_handler, NULL);
     g_log_set_handler ("Mbim", G_LOG_LEVEL_MASK, log_handler, NULL);
-    if (verbose_flag)
-        mbim_utils_set_traces_enabled (TRUE);
 
+    if (verbose_flag) {
+        mbim_utils_set_traces_enabled (TRUE);
+        mbim_utils_set_show_personal_info (FALSE);
+    }
+
+    if (verbose_full_flag) {
+        mbim_utils_set_traces_enabled (TRUE);
+        mbim_utils_set_show_personal_info (TRUE);
+    }
     /* No device path given? */
     if (!device_str) {
         g_printerr ("error: no device path specified\n");

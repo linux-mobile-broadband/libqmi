@@ -18,6 +18,7 @@
  */
 
 static volatile gint __traces_enabled = FALSE;
+static volatile gint __hide_personal_info = FALSE;
 
 gboolean
 mbim_utils_get_traces_enabled (void)
@@ -29,4 +30,16 @@ void
 mbim_utils_set_traces_enabled (gboolean enabled)
 {
     g_atomic_int_set (&__traces_enabled, enabled);
+}
+
+void
+mbim_utils_set_show_personal_info (gboolean hide_personal_info)
+{
+    g_atomic_int_set (&__hide_personal_info, hide_personal_info);
+}
+
+gboolean
+mbim_utils_get_show_personal_info (void)
+{
+    return (gboolean) g_atomic_int_get (&__hide_personal_info);
 }

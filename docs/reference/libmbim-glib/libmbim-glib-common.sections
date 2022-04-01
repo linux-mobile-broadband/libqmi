@@ -796,6 +796,8 @@ mbim_status_error_get_type
 <FILE>mbim-utils</FILE>
 mbim_utils_get_traces_enabled
 mbim_utils_set_traces_enabled
+mbim_utils_set_show_personal_info
+mbim_utils_get_show_personal_info
 </SECTION>
 
 <SECTION>
