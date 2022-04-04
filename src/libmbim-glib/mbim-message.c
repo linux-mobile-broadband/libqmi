@@ -1923,7 +1923,15 @@ mbim_message_get_printable_full (const MbimMessage  *self,
             fields_printable = __mbim_message_atds_get_printable_fields (self, line_prefix, &inner_error);
             break;
         case MBIM_SERVICE_INTEL_FIRMWARE_UPDATE:
-            fields_printable = __mbim_message_intel_firmware_update_get_printable_fields (self, line_prefix, &inner_error);
+            if (mbimex_version_major < 2)
+                fields_printable = __mbim_message_intel_firmware_update_get_printable_fields (self, line_prefix, &inner_error);
+            else if (mbimex_version_major >= 2) {
+                fields_printable = __mbim_message_intel_firmware_update_v2_get_printable_fields (self, line_prefix, &inner_error);
+                if (g_error_matches (inner_error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNSUPPORTED)) {
+                    g_clear_error (&inner_error);
+                    fields_printable = __mbim_message_intel_firmware_update_get_printable_fields (self, line_prefix, &inner_error);
+                }
+            }
             break;
         case MBIM_SERVICE_QDU:
             fields_printable = __mbim_message_qdu_get_printable_fields (self, line_prefix, &inner_error);

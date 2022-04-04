@@ -101,6 +101,7 @@
   <chapter>
     <title>Intel-defined Services</title>
     <xi:include href="xml/mbim-intel-firmware-update.xml"/>
+    <xi:include href="xml/mbim-intel-firmware-update-v2.xml"/>
     <xi:include href="xml/mbim-intel-thermal-rf.xml"/>
   </chapter>
 

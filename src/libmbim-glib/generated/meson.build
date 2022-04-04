@@ -92,7 +92,7 @@ services_data = [
   ['auth'],
   ['basic-connect', 'ms-basic-connect-v2', 'ms-basic-connect-v3'],
   ['dss'],
-  ['intel-firmware-update'],
+  ['intel-firmware-update', 'intel-firmware-update-v2'],
   ['intel-thermal-rf'],
   ['ms-basic-connect-extensions', 'ms-basic-connect-extensions-v2', 'ms-basic-connect-extensions-v3'],
   ['ms-uicc-low-level-access'],

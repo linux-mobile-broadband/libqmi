@@ -1,0 +1,17 @@
+[
+  // *********************************************************************************
+  { "type"           : "Service",
+    "name"           : "Intel Firmware Update V2",
+    "mbimex-service" : "Intel Firmware Update",
+    "mbimex-version" : "2.0" },
+
+  // *********************************************************************************
+  { "name"     : "Modem Reboot",
+    "type"     : "Command",
+    "since"    : "1.28",
+    "set"      : [ { "name"          : "BootMode",
+                     "format"        : "guint32",
+                     "public-format" : "MbimIntelBootMode" },
+                   { "name"          : "Timeout",
+                     "format"        : "guint32" } ] }
+]
