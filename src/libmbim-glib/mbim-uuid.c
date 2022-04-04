@@ -248,6 +248,14 @@ static const MbimUuid uuid_intel_thermal_rf = {
     .e = { 0x25, 0x9f, 0xcd, 0xde, 0x46, 0x35 }
 };
 
+static const MbimUuid uuid_ms_voice_extensions = {
+    .a = { 0x8d, 0x8b, 0x9e, 0xba },
+    .b = { 0x37, 0xbe },
+    .c = { 0x44, 0x9b },
+    .d = { 0x8f, 0x1e },
+    .e = { 0x61, 0xcb, 0x03, 0x4a, 0x70, 0x2e }
+};
+
 static GList *mbim_custom_service_list = NULL;
 
 typedef struct {
@@ -381,6 +389,8 @@ mbim_uuid_from_service (MbimService service)
         return &uuid_quectel;
     case MBIM_SERVICE_INTEL_THERMAL_RF:
         return &uuid_intel_thermal_rf;
+    case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
+        return &uuid_ms_voice_extensions;
     case MBIM_SERVICE_LAST:
         g_assert_not_reached ();
     default:
@@ -453,6 +463,9 @@ mbim_uuid_to_service (const MbimUuid *uuid)
 
     if (mbim_uuid_cmp (uuid, &uuid_intel_thermal_rf))
         return MBIM_SERVICE_INTEL_THERMAL_RF;
+
+    if (mbim_uuid_cmp (uuid, &uuid_ms_voice_extensions))
+        return MBIM_SERVICE_MS_VOICE_EXTENSIONS;
 
     for (l = mbim_custom_service_list; l != NULL; l = l->next) {
         if (mbim_uuid_cmp (&((MbimCustomService *)l->data)->uuid, uuid))

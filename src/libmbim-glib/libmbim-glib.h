@@ -44,6 +44,7 @@
 #include "mbim-ms-uicc-low-level-access.h"
 #include "mbim-quectel.h"
 #include "mbim-intel-thermal-rf.h"
+#include "mbim-ms-voice-extensions.h"
 
 /* backwards compatibility */
 #include "mbim-compat.h"

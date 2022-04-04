@@ -209,6 +209,21 @@ static const CidConfig cid_intel_thermal_rf_config [MBIM_CID_INTEL_THERMAL_RF_LA
     { SET,       QUERY, NOTIFY    }, /* MBIM_CID_INTEL_THERMAL_RF_RFIM */
 };
 
+/* Note: index of the array is CID-1 */
+#define MBIM_CID_MS_VOICE_EXTENSIONS_LAST MBIM_CID_MS_VOICE_EXTENSIONS_NITZ
+static const CidConfig cid_ms_voice_extensions_config [MBIM_CID_MS_VOICE_EXTENSIONS_LAST] = {
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET, NO_QUERY, NO_NOTIFY }, /* Unused */
+    { NO_SET,    QUERY,    NOTIFY }, /* MBIM_CID_MS_VOICE_EXTENSIONS_NITZ */
+};
+
 gboolean
 mbim_cid_can_set (MbimService service,
                   guint       cid)
@@ -258,6 +273,8 @@ mbim_cid_can_set (MbimService service,
         return cid_quectel_config[cid - 1].set;
     case MBIM_SERVICE_INTEL_THERMAL_RF:
         return cid_intel_thermal_rf_config[cid - 1].set;
+    case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
+        return cid_ms_voice_extensions_config[cid - 1].set;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -315,6 +332,8 @@ mbim_cid_can_query (MbimService service,
         return cid_quectel_config[cid - 1].query;
     case MBIM_SERVICE_INTEL_THERMAL_RF:
         return cid_intel_thermal_rf_config[cid - 1].query;
+    case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
+        return cid_ms_voice_extensions_config[cid - 1].query;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -372,6 +391,8 @@ mbim_cid_can_notify (MbimService service,
         return cid_quectel_config[cid - 1].notify;
     case MBIM_SERVICE_INTEL_THERMAL_RF:
         return cid_intel_thermal_rf_config[cid - 1].notify;
+    case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
+        return cid_ms_voice_extensions_config[cid - 1].notify;
     case MBIM_SERVICE_INVALID:
     case MBIM_SERVICE_LAST:
     default:
@@ -430,6 +451,8 @@ mbim_cid_get_printable (MbimService service,
         return mbim_cid_quectel_get_string (cid);
     case MBIM_SERVICE_INTEL_THERMAL_RF:
         return mbim_cid_intel_thermal_rf_get_string (cid);
+    case MBIM_SERVICE_MS_VOICE_EXTENSIONS:
+        return mbim_cid_ms_voice_extensions_get_string (cid);
     case MBIM_SERVICE_LAST:
     default:
         g_assert_not_reached ();

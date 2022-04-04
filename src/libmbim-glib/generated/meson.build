@@ -99,6 +99,7 @@ services_data = [
   ['ms-firmware-id'],
   ['ms-host-shutdown'],
   ['ms-sar'],
+  ['ms-voice-extensions'],
   ['phonebook'],
   ['proxy-control'],
   ['qdu'],
