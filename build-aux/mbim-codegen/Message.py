@@ -1261,6 +1261,14 @@ class Message:
                 inner_template = ('    guint32 _${field};\n')
                 template += (string.Template(inner_template).substitute(translations))
 
+        for field in fields:
+            if 'personal-info' in field:
+                template += (
+                    '    gboolean show_field;\n'
+                    '\n'
+                    '    show_field = mbim_utils_get_show_personal_info ();\n')
+                break
+
         if message_type == 'response':
             template += (
                 '\n'
@@ -1282,6 +1290,11 @@ class Message:
             translations['struct_type']             = field['struct-type'] if 'struct-type' in field else ''
             translations['array_size']              = field['array-size'] if 'array-size' in field else ''
 
+            if 'personal-info' in field:
+                translations['if_show_field'] = 'if (show_field) '
+            else:
+                translations['if_show_field'] = ''
+
             inner_template = (
                 '\n'
                 '    g_string_append_printf (str, "%s  ${field_name} = ", line_prefix);\n')
@@ -1302,7 +1315,9 @@ class Message:
                     '        if (!_mbim_message_read_guint32 (message, offset, &_${field}, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += 4;\n'
-                    '        g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", _${field});\n')
+                    '        ${if_show_field}{\n'
+                    '            g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", _${field});\n'
+                    '        }\n')
 
             elif field['format'] == 'byte-array' or \
                  field['format'] == 'unsized-byte-array' or \
@@ -1344,16 +1359,13 @@ class Message:
                         '            goto out;\n'
                         '        offset += 4;\n')
 
-                if 'personal-info' in field:
-                    inner_template += (
-                        '       if (!mbim_utils_get_show_personal_info ())\n'
-                        '           memset (tmp, "#", 3);\n')
-
                 inner_template += (
-                    '        g_string_append (str, "\'");\n'
-                    '        for (i = 0; i  < tmpsize; i++)\n'
-                    '            g_string_append_printf (str, "%02x%s", tmp[i], (i == (tmpsize - 1)) ? "" : ":" );\n'
-                    '        g_string_append (str, "\'");\n')
+                    '        ${if_show_field}{\n'
+                    '            g_string_append (str, "\'");\n'
+                    '            for (i = 0; i  < tmpsize; i++)\n'
+                    '                g_string_append_printf (str, "%02x%s", tmp[i], (i == (tmpsize - 1)) ? "" : ":" );\n'
+                    '            g_string_append (str, "\'");\n'
+                    '        }\n')
 
             elif field['format'] == 'uuid':
                 inner_template += (
@@ -1363,13 +1375,10 @@ class Message:
                     '        if (!_mbim_message_read_uuid (message, offset, &tmp, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += 16;\n'
-                    '        tmpstr = mbim_uuid_get_printable (tmp);\n')
-                if 'personal-info' in field:
-                    inner_template += (
-                        '       g_string_append_printf (str, "%s", mbim_utils_get_show_personal_info () ? tmpstr : "###"); \n')
-                else:
-                    inner_template += (
-                        '        g_string_append_printf (str, "\'%s\'", tmpstr);\n')
+                    '        tmpstr = mbim_uuid_get_printable (tmp);\n'
+                    '        ${if_show_field}{\n'
+                    '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
+                    '        }\n')
 
             elif field['format'] == 'guint16' or \
                  field['format'] == 'guint32' or \
@@ -1395,14 +1404,11 @@ class Message:
 
                 if 'public-format' in field:
                     if field['public-format'] == 'gboolean':
-                        if 'personal-info' in field:
-                            inner_template += (
-                                '       g_string_append_printf (str, "%s", mbim_utils_get_show_personal_info () ? (tmp ? "true" : "false") : "###");\n'
-                                '\n')
-                        else:
-                            inner_template += (
-                                '        g_string_append_printf (str, "\'%s\'", tmp ? "true" : "false");\n'
-                                '\n')
+                        inner_template += (
+                            '        ${if_show_field}{\n'
+                            '            g_string_append_printf (str, "\'%s\'", tmp ? "true" : "false");\n'
+                            '        }\n'
+                            '\n')
                     else:
                         translations['public_underscore']       = utils.build_underscore_name_from_camelcase(field['public-format'])
                         translations['public_underscore_upper'] = utils.build_underscore_name_from_camelcase(field['public-format']).upper()
@@ -1413,53 +1419,35 @@ class Message:
                                 '        else {\n')
                         else:
                             inner_template += (
+                                '        ${if_show_field}{\n'
                                 '#if defined __${public_underscore_upper}_IS_ENUM__\n'
-                                '        g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})tmp));\n'
+                                '            g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})tmp));\n'
                                 '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
-                                '        {\n'
                                 '            g_autofree gchar *tmpstr = NULL;\n'
                                 '\n'
                                 '            tmpstr = ${public_underscore}_build_string_from_mask ((${public})tmp);\n'
                                 '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
-                                '        }\n'
                                 '#else\n'
                                 '# error neither enum nor flags\n'
                                 '#endif\n'
+                                '        }\n'
                                 '\n')
-                        if 'personal-info' in field:
-                            inner_template += (
-                                '        }\n')
 
                 elif field['format'] == 'guint16':
-                    if 'personal-info' in field:
-                        inner_template += (
-                            '        if (!mbim_utils_get_show_personal_info ())\n'
-                            '            g_string_append_printf (str, "'###'");\n'
-                            '        else\n'
-                            '            g_string_append_printf (str, "'%" G_GUINT16_FORMAT "', tmp);\n')
-                    else:
-                        inner_template += (
-                            '        g_string_append_printf (str, "\'%" G_GUINT16_FORMAT "\'", tmp);\n')
+                    inner_template += (
+                        '        ${if_show_field}{\n'
+                        '            g_string_append_printf (str, "\'%" G_GUINT16_FORMAT "\'", tmp);\n'
+                        '        }\n')
                 elif field['format'] == 'guint32':
-                    if 'personal-info' in field:
-                        inner_template += (
-                            '        if (!mbim_utils_get_show_personal_info ())\n'
-                            '            g_string_append_printf (str, "'###'");\n'
-                            '        else\n'
-                            '            g_string_append_printf (str, "'%" G_GUINT32_FORMAT "', tmp);\n')
-                    else:
-                        inner_template += (
-                            '        g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", tmp);\n')
+                    inner_template += (
+                        '        ${if_show_field}{\n'
+                        '            g_string_append_printf (str, "\'%" G_GUINT32_FORMAT "\'", tmp);\n'
+                        '        }\n')
                 elif field['format'] == 'guint64':
-                    if 'personal-info' in field:
-                        inner_template += (
-                            '        if (!mbim_utils_get_show_personal_info ())\n'
-                            '            g_string_append_printf (str, "'###'");\n'
-                            '        else\n'
-                            '            g_string_append_printf (str, "'%" G_GUINT64_FORMAT "', tmp);\n')
-                    else:
-                        inner_template += (
-                            '        g_string_append_printf (str, "\'%" G_GUINT64_FORMAT "\'", tmp);\n')
+                    inner_template += (
+                        '        ${if_show_field}{\n'
+                        '            g_string_append_printf (str, "\'%" G_GUINT64_FORMAT "\'", tmp);\n'
+                        '        }\n')
 
             elif field['format'] == 'string':
                 inner_template += (
@@ -1467,13 +1455,10 @@ class Message:
                     '\n'
                     '        if (!_mbim_message_read_string (message, 0, offset, &tmp, &inner_error))\n'
                     '            goto out;\n'
-                    '        offset += 8;\n')
-                if 'personal-info' in field:
-                    inner_template += (
-                    '        g_string_append_printf (str, "%s", mbim_utils_get_show_personal_info () ? tmp : "###");\n')
-                else:
-                    inner_template += (
-                        '        g_string_append_printf (str, "\'%s\'", tmp);\n')
+                    '        offset += 8;\n'
+                    '        ${if_show_field}{\n'
+                    '            g_string_append_printf (str, "\'%s\'", tmp);\n'
+                    '        }\n')
 
             elif field['format'] == 'string-array':
                 inner_template += (
@@ -1484,59 +1469,59 @@ class Message:
                     '            goto out;\n'
                     '        offset += (8 * _${array_size_field});\n'
                     '\n'
-                    '        g_string_append (str, "\'");\n'
-                    '        for (i = 0; i < _${array_size_field}; i++) {\n')
-                if 'personal-info' in field:
-                    inner_template += (
-                        '        g_string_append_printf (str, "%s", mbim_utils_get_show_personal_info () ? tmp[i] : "###");\n')
-                else:
-                    inner_template += (
-                        '            g_string_append (str, tmp[i]);\n')
-                inner_template += (
-                    '            if (i < (_${array_size_field} - 1))\n'
-                    '                g_string_append (str, ", ");\n'
-                    '        }\n'
-                    '        g_string_append (str, "\'");\n')
+                    '        ${if_show_field}{\n'
+                    '            g_string_append (str, "\'");\n'
+                    '            for (i = 0; i < _${array_size_field}; i++) {\n'
+                    '                g_string_append (str, tmp[i]);\n'
+                    '                if (i < (_${array_size_field} - 1))\n'
+                    '                    g_string_append (str, ", ");\n'
+                    '            }\n'
+                    '            g_string_append (str, "\'");\n'
+                    '        }\n')
 
             elif field['format'] == 'struct':
                 inner_template += (
                     '        g_autoptr(${struct_type}) tmp = NULL;\n'
-                    '        g_autofree gchar *new_line_prefix = NULL;\n'
-                    '        g_autofree gchar *struct_str = NULL;\n'
                     '        guint32 bytes_read = 0;\n'
                     '\n'
                     '        tmp = _mbim_message_read_${struct_name}_struct (message, offset, &bytes_read, &inner_error);\n'
                     '        if (!tmp)\n'
                     '            goto out;\n'
                     '        offset += bytes_read;\n'
-                    '        g_string_append (str, "{\\n");\n'
-                    '        new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
-                    '        struct_str = _mbim_message_print_${struct_name}_struct (tmp, new_line_prefix);\n'
-                    '        g_string_append (str, struct_str);\n'
-                    '        g_string_append_printf (str, "%s  }", line_prefix);\n')
+                    '        ${if_show_field}{\n'
+                    '            g_autofree gchar *new_line_prefix = NULL;\n'
+                    '            g_autofree gchar *struct_str = NULL;\n'
+                    '\n'
+                    '            g_string_append (str, "{\\n");\n'
+                    '            new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
+                    '            struct_str = _mbim_message_print_${struct_name}_struct (tmp, new_line_prefix);\n'
+                    '            g_string_append (str, struct_str);\n'
+                    '            g_string_append_printf (str, "%s  }", line_prefix);\n'
+                    '        }\n')
 
             elif field['format'] == 'ms-struct':
                 inner_template += (
                     '        g_autoptr(${struct_type}) tmp = NULL;\n'
-                    '        g_autofree gchar *new_line_prefix = NULL;\n'
                     '\n'
                     '        if (!_mbim_message_read_${struct_name}_ms_struct (message, offset, &tmp, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += 8;\n'
-                    '        g_string_append (str, "{\\n");\n'
-                    '        new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
-                    '        if (tmp) {\n'
-                    '            g_autofree gchar *struct_str = NULL;\n'
-                    '            struct_str = _mbim_message_print_${struct_name}_struct (tmp, new_line_prefix);\n'
-                    '            g_string_append (str, struct_str);\n'
-                    '        }\n'
-                    '        g_string_append_printf (str, "%s  }", line_prefix);\n')
+                    '        ${if_show_field}{\n'
+                    '            g_autofree gchar *new_line_prefix = NULL;\n'
+                    '\n'
+                    '            g_string_append (str, "{\\n");\n'
+                    '            new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
+                    '            if (tmp) {\n'
+                    '                g_autofree gchar *struct_str = NULL;\n'
+                    '                struct_str = _mbim_message_print_${struct_name}_struct (tmp, new_line_prefix);\n'
+                    '                g_string_append (str, struct_str);\n'
+                    '            }\n'
+                    '            g_string_append_printf (str, "%s  }", line_prefix);\n'
+                    '        }\n')
 
             elif field['format'] == 'struct-array' or field['format'] == 'ref-struct-array' or field['format'] == 'ms-struct-array':
                 inner_template += (
-                    '        g_autoptr(${struct_type}Array) tmp = NULL;\n'
-                    '        g_autofree gchar *new_line_prefix = NULL;\n'
-                    '        guint i;\n')
+                    '        g_autoptr(${struct_type}Array) tmp = NULL;\n')
                 if field['format'] == 'ms-struct-array':
                     inner_template += (
                         '        guint32 tmp_count = 0;\n')
@@ -1560,25 +1545,30 @@ class Message:
                     '        offset += 8;\n')
 
                 inner_template += (
-                    '        new_line_prefix = g_strdup_printf ("%s        ", line_prefix);\n'
-                    '        g_string_append (str, "\'{\\n");\n')
+                    '        ${if_show_field}{\n'
+                    '            guint i;\n'
+                    '            g_autofree gchar *new_line_prefix = NULL;\n'
+                    '\n'
+                    '            new_line_prefix = g_strdup_printf ("%s        ", line_prefix);\n'
+                    '            g_string_append (str, "\'{\\n");\n')
 
                 if field['format'] == 'ms-struct-array':
                     inner_template += (
-                        '        for (i = 0; i < tmp_count; i++) {\n')
+                        '            for (i = 0; i < tmp_count; i++) {\n')
                 else:
                     inner_template += (
-                        '        for (i = 0; i < _${array_size_field}; i++) {\n')
+                        '            for (i = 0; i < _${array_size_field}; i++) {\n')
 
                 inner_template += (
-                    '            g_autofree gchar *struct_str = NULL;\n'
+                    '                g_autofree gchar *struct_str = NULL;\n'
                     '\n'
-                    '            g_string_append_printf (str, "%s    [%u] = {\\n", line_prefix, i);\n'
-                    '            struct_str = _mbim_message_print_${struct_name}_struct (tmp[i], new_line_prefix);\n'
-                    '            g_string_append (str, struct_str);\n'
-                    '            g_string_append_printf (str, "%s    },\\n", line_prefix);\n'
-                    '        }\n'
-                    '        g_string_append_printf (str, "%s  }\'", line_prefix);\n')
+                    '                g_string_append_printf (str, "%s    [%u] = {\\n", line_prefix, i);\n'
+                    '                struct_str = _mbim_message_print_${struct_name}_struct (tmp[i], new_line_prefix);\n'
+                    '                g_string_append (str, struct_str);\n'
+                    '                g_string_append_printf (str, "%s    },\\n", line_prefix);\n'
+                    '            }\n'
+                    '            g_string_append_printf (str, "%s  }\'", line_prefix);\n'
+                    '        }\n')
 
             elif field['format'] == 'ipv4' or \
                  field['format'] == 'ref-ipv4' or \
@@ -1644,38 +1634,34 @@ class Message:
                         '        offset += 4;\n')
 
                 inner_template += (
-                    '        g_string_append (str, "\'");\n'
-                    '        if (tmp) {\n'
-                    '            for (i = 0; i < array_size; i++) {\n'
-                    '                g_autoptr(GInetAddress)  addr = NULL;\n'
-                    '                g_autofree gchar        *tmpstr = NULL;\n'
+                    '        ${if_show_field}{\n'
+                    '            g_string_append (str, "\'");\n'
+                    '            if (tmp) {\n'
+                    '                for (i = 0; i < array_size; i++) {\n'
+                    '                    g_autoptr(GInetAddress)  addr = NULL;\n'
+                    '                    g_autofree gchar        *tmpstr = NULL;\n'
                     '\n')
 
                 if field['format'] == 'ipv4' or \
                    field['format'] == 'ref-ipv4' or \
                    field['format'] == 'ipv4-array':
                     inner_template += (
-                        '                addr = g_inet_address_new_from_bytes ((guint8 *)&(tmp[i].addr), G_SOCKET_FAMILY_IPV4);\n')
+                        '                    addr = g_inet_address_new_from_bytes ((guint8 *)&(tmp[i].addr), G_SOCKET_FAMILY_IPV4);\n')
                 elif field['format'] == 'ipv6' or \
                      field['format'] == 'ref-ipv6' or \
                      field['format'] == 'ipv6-array':
                     inner_template += (
-                        '                addr = g_inet_address_new_from_bytes ((guint8 *)&(tmp[i].addr), G_SOCKET_FAMILY_IPV6);\n')
+                        '                    addr = g_inet_address_new_from_bytes ((guint8 *)&(tmp[i].addr), G_SOCKET_FAMILY_IPV6);\n')
 
                 inner_template += (
-                    '                tmpstr = g_inet_address_to_string (addr);\n')
-                if 'personal-info' in field:
-                    inner_template += (
-                        '        g_string_append_printf (str, "%s", mbim_utils_get_show_personal_info () ? tmpstr : "###");\n')
-                else:
-                    inner_template += (
-                        '                g_string_append_printf (str, "%s", tmpstr);\n')
-                inner_template += (
-                    '                if (i < (array_size - 1))\n'
-                    '                    g_string_append (str, ", ");\n'
+                    '                    tmpstr = g_inet_address_to_string (addr);\n'
+                    '                    g_string_append_printf (str, "%s", tmpstr);\n'
+                    '                    if (i < (array_size - 1))\n'
+                    '                        g_string_append (str, ", ");\n'
+                    '                }\n'
                     '            }\n'
-                    '        }\n'
-                    '        g_string_append (str, "\'");\n')
+                    '            g_string_append (str, "\'");\n'
+                    '        }\n')
 
             elif field['format'] == 'tlv' or \
                  field['format'] == 'tlv-string' or \
@@ -1683,41 +1669,52 @@ class Message:
                 inner_template += (
                     '        g_autoptr(MbimTlv) tmp = NULL;\n'
                     '        guint32 bytes_read = 0;\n'
-                    '        g_autofree gchar *tlv_str = NULL;\n'
-                    '        g_autofree gchar *new_line_prefix = NULL;\n'
                     '\n'
                     '        if (!_mbim_message_read_tlv (message, offset, &tmp, &bytes_read, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += bytes_read;\n'
                     '\n'
-                    '        new_line_prefix = g_strdup_printf ("%s  ", line_prefix);\n'
-                    '        tlv_str = _mbim_tlv_print (tmp, new_line_prefix);\n'
-                    '        g_string_append_printf (str, "\'%s\'", tlv_str);\n')
+                    '        ${if_show_field}{\n'
+                    '            g_autofree gchar *tlv_str = NULL;\n'
+                    '            g_autofree gchar *new_line_prefix = NULL;\n'
+                    '\n'
+                    '            new_line_prefix = g_strdup_printf ("%s  ", line_prefix);\n'
+                    '            tlv_str = _mbim_tlv_print (tmp, new_line_prefix);\n'
+                    '            g_string_append_printf (str, "\'%s\'", tlv_str);\n'
+                    '        }\n')
 
             elif field['format'] == 'tlv-list':
                 inner_template += (
                     '        GList *tmp = NULL;\n'
-                    '        GList *walker = NULL;\n'
                     '        guint32 bytes_read = 0;\n'
-                    '        g_autofree gchar *new_line_prefix = NULL;\n'
                     '\n'
                     '        if (!_mbim_message_read_tlv_list (message, offset, &tmp, &bytes_read, &inner_error))\n'
                     '            goto out;\n'
                     '        offset += bytes_read;\n'
                     '\n'
-                    '        new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
-                    '        g_string_append (str, "\'[ ");\n'
-                    '        for (walker = tmp; walker; walker = g_list_next (walker)) {\n'
-                    '            g_autofree gchar *tlv_str = NULL;\n'
+                    '        ${if_show_field}{\n'
+                    '            g_autofree gchar *new_line_prefix = NULL;\n'
+                    '            GList *walker = NULL;\n'
                     '\n'
-                    '            tlv_str = _mbim_tlv_print ((MbimTlv *)walker->data, new_line_prefix);\n'
-                    '            g_string_append_printf (str, "%s,", tlv_str);\n'
+                    '            new_line_prefix = g_strdup_printf ("%s    ", line_prefix);\n'
+                    '            g_string_append (str, "\'[ ");\n'
+                    '            for (walker = tmp; walker; walker = g_list_next (walker)) {\n'
+                    '                g_autofree gchar *tlv_str = NULL;\n'
+                    '\n'
+                    '                tlv_str = _mbim_tlv_print ((MbimTlv *)walker->data, new_line_prefix);\n'
+                    '                g_string_append_printf (str, "%s,", tlv_str);\n'
+                    '            }\n'
+                    '            g_string_append_printf (str, "\\n%s  ]\'", line_prefix);\n'
                     '        }\n'
-                    '        g_string_append_printf (str, "\\n%s  ]\'", line_prefix);\n'
                     '        g_list_free_full (tmp, (GDestroyNotify)mbim_tlv_unref);\n')
 
             else:
                 raise ValueError('Field format \'%s\' not printable' % field['format'])
+
+            if 'personal-info' in field:
+                inner_template += (
+                    '        if (!show_field)\n'
+                    '           g_string_append (str, "\'###\'");\n')
 
             inner_template += (
                 '    }\n'
