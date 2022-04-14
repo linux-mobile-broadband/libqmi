@@ -80,7 +80,7 @@ static GOptionEntry main_entries[] = {
       "Run action with verbose logs, including the debug ones",
       NULL
     },
-    { "verbose-full", 'v', 0, G_OPTION_ARG_NONE, &verbose_full_flag,
+    { "verbose-full", 0, 0, G_OPTION_ARG_NONE, &verbose_full_flag,
       "Run action with verbose logs, including the debug ones and personal info",
       NULL
     },
