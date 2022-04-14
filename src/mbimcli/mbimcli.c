@@ -43,9 +43,9 @@ static gchar *no_open_str;
 static gboolean no_close_flag;
 static gboolean noop_flag;
 static gboolean verbose_flag;
+static gboolean verbose_full_flag;
 static gboolean silent_flag;
 static gboolean version_flag;
-static gboolean verbose_full_flag;
 
 static GOptionEntry main_entries[] = {
     { "device", 'd', 0, G_OPTION_ARG_STRING, &device_str,
@@ -481,15 +481,17 @@ int main (int argc, char **argv)
     g_log_set_handler (NULL, G_LOG_LEVEL_MASK, log_handler, NULL);
     g_log_set_handler ("Mbim", G_LOG_LEVEL_MASK, log_handler, NULL);
 
-    if (verbose_flag) {
+    if (verbose_flag && verbose_full_flag) {
+        g_printerr ("error: cannot specify --verbose and --verbose-full at the same time\n");
+        exit (EXIT_FAILURE);
+    } else if (verbose_flag) {
         mbim_utils_set_traces_enabled (TRUE);
         mbim_utils_set_show_personal_info (FALSE);
-    }
-
-    if (verbose_full_flag) {
+    } else if (verbose_full_flag) {
         mbim_utils_set_traces_enabled (TRUE);
         mbim_utils_set_show_personal_info (TRUE);
     }
+
     /* No device path given? */
     if (!device_str) {
         g_printerr ("error: no device path specified\n");
