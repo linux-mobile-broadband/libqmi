@@ -38,10 +38,12 @@
     "since"    : "1.4",
     "contents" : [ { "name"   : "EntryIndex",
                      "format" : "guint32" },
-                   { "name"   : "Number",
-                     "format" : "string" },
-                   { "name"   : "Name",
-                     "format" : "string" } ] },
+                   { "name"          : "Number",
+                     "format"        : "string",
+                     "personal-info" : "true" },
+                   { "name"          : "Name",
+                     "format"        : "string",
+                     "personal-info" : "true" } ] },
 
   { "name"     : "Read",
     "type"     : "Command",
@@ -79,10 +81,12 @@
                      "public-format" : "MbimPhonebookWriteFlag" },
                    { "name"   : "SaveIndex",
                      "format" : "guint32" },
-                   { "name"   : "Number",
-                     "format" : "string" },
-                   { "name"   : "Name",
-                     "format" : "string" } ],
+                   { "name"          : "Number",
+                     "format"        : "string",
+                     "personal-info" : "true" },
+                   { "name"          : "Name",
+                     "format"        : "string",
+                     "personal-info" : "true" } ],
     "response" : [] }
 
 ]
