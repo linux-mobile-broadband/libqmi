@@ -2358,7 +2358,15 @@ device_send (MbimDevice   *self,
         g_autofree gchar *hex = NULL;
         g_autofree gchar *printable = NULL;
 
-        hex = mbim_common_str_hex (raw_message, raw_message_len, ':');
+        if (mbim_utils_get_show_personal_info ()) {
+            hex = mbim_common_str_hex (raw_message, raw_message_len, ':');
+        } else {
+            g_autofree gchar *tmp = NULL;
+
+            tmp = mbim_common_str_hex (raw_message, MIN (12, raw_message_len), ':');
+            hex = g_strdup_printf ("%s...", tmp);
+        }
+
         g_debug ("[%s] Sent message...\n"
                  "<<<<<< RAW:\n"
                  "<<<<<<   length = %u\n"
