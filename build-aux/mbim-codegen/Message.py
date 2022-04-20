@@ -1412,26 +1412,20 @@ class Message:
                     else:
                         translations['public_underscore']       = utils.build_underscore_name_from_camelcase(field['public-format'])
                         translations['public_underscore_upper'] = utils.build_underscore_name_from_camelcase(field['public-format']).upper()
-                        if 'personal-info' in field:
-                            inner_template += (
-                                '        if (!mbim_utils_get_show_personal_info ())\n'
-                                '            g_string_append_printf (str, "'###'");\n'
-                                '        else {\n')
-                        else:
-                            inner_template += (
-                                '        ${if_show_field}{\n'
-                                '#if defined __${public_underscore_upper}_IS_ENUM__\n'
-                                '            g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})tmp));\n'
-                                '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
-                                '            g_autofree gchar *tmpstr = NULL;\n'
-                                '\n'
-                                '            tmpstr = ${public_underscore}_build_string_from_mask ((${public})tmp);\n'
-                                '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
-                                '#else\n'
-                                '# error neither enum nor flags\n'
-                                '#endif\n'
-                                '        }\n'
-                                '\n')
+                        inner_template += (
+                            '        ${if_show_field}{\n'
+                            '#if defined __${public_underscore_upper}_IS_ENUM__\n'
+                            '            g_string_append_printf (str, "\'%s\'", ${public_underscore}_get_string ((${public})tmp));\n'
+                            '#elif defined __${public_underscore_upper}_IS_FLAGS__\n'
+                            '            g_autofree gchar *tmpstr = NULL;\n'
+                            '\n'
+                            '            tmpstr = ${public_underscore}_build_string_from_mask ((${public})tmp);\n'
+                            '            g_string_append_printf (str, "\'%s\'", tmpstr);\n'
+                            '#else\n'
+                            '# error neither enum nor flags\n'
+                            '#endif\n'
+                            '        }\n'
+                            '\n')
 
                 elif field['format'] == 'guint16':
                     inner_template += (
