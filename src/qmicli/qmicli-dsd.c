@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Copyright (C) 2019 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc.
  */
 
 #include "config.h"
@@ -35,6 +36,9 @@
 
 #if defined HAVE_QMI_SERVICE_DSD
 
+#undef VALIDATE_MASK_NONE
+#define VALIDATE_MASK_NONE(str) (str ? str : "none")
+
 /* Context */
 typedef struct {
     QmiDevice *device;
@@ -46,6 +50,7 @@ static Context *ctx;
 /* Options */
 static gchar    *get_apn_info_str;
 static gchar    *set_apn_type_str;
+static gboolean  get_system_status_flag;
 static gboolean  noop_flag;
 
 static GOptionEntry entries[] = {
@@ -61,6 +66,13 @@ static GOptionEntry entries[] = {
       "[(name), (type1|type2|type3...)]"
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_DSD_GET_SYSTEM_STATUS
+    { "dsd-get-system-status", 0, 0, G_OPTION_ARG_NONE, &get_system_status_flag,
+      "Gets system status",
+      NULL
+    },
+#endif
+
     { "dsd-noop", 0, 0, G_OPTION_ARG_NONE, &noop_flag,
       "Just allocate or release a DSD client. Use with `--client-no-release-cid' and/or `--client-cid'",
       NULL
@@ -94,6 +106,7 @@ qmicli_dsd_options_enabled (void)
 
     n_actions = (!!get_apn_info_str +
                  !!set_apn_type_str +
+                 get_system_status_flag +
                  noop_flag);
 
     if (n_actions > 1) {
@@ -261,6 +274,63 @@ set_apn_type_input_create (const gchar *str)
 
 #endif /* HAVE_QMI_MESSAGE_DSD_SET_APN_TYPE */
 
+#if defined HAVE_QMI_MESSAGE_DSD_GET_SYSTEM_STATUS
+
+static void
+get_system_status_ready (QmiClientDsd *client,
+                         GAsyncResult *res)
+{
+    QmiMessageDsdGetSystemStatusOutput *output;
+    GError                             *error = NULL;
+    GArray                             *available_systems = NULL;
+    guint                               i;
+
+    output = qmi_client_dsd_get_system_status_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        g_error_free (error);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dsd_get_system_status_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't get system status: %s\n", error->message);
+        g_error_free (error);
+        qmi_message_dsd_get_system_status_output_unref (output);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    qmi_message_dsd_get_system_status_output_get_available_systems (output, &available_systems, NULL);
+
+    if (!available_systems || !available_systems->len) {
+        g_print ("No available data system\n");
+    } else {
+        g_print ("Available data systems retrieved:\n");
+        for (i = 0; i < available_systems->len; i++) {
+            QmiMessageDsdGetSystemStatusOutputAvailableSystemsSystem *system;
+            g_autofree gchar *so_mask_str = NULL;
+
+            system = &g_array_index (available_systems, QmiMessageDsdGetSystemStatusOutputAvailableSystemsSystem, i);
+            so_mask_str = qmi_dsd_so_mask_build_string_from_mask ((QmiDsdSoMask)system->so_mask);
+            g_print ("System [%u]%s:\n"
+                     "\tNetwork type: '%s'\n"
+                     "\tRAT: '%s'\n"
+                     "\tService option: '%s'\n",
+                     i,
+                     i > 0 ? "" : " (current preferred)",
+                     qmi_dsd_data_system_network_type_get_string (system->technology),
+                     qmi_dsd_radio_access_technology_get_string (system->rat),
+                     VALIDATE_MASK_NONE (so_mask_str));
+        }
+    }
+
+    qmi_message_dsd_get_system_status_output_unref (output);
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_DSD_GET_SYSTEM_STATUS */
+
 static gboolean
 noop_cb (gpointer unused)
 {
@@ -317,6 +387,19 @@ qmicli_dsd_run (QmiDevice    *device,
                                      (GAsyncReadyCallback)set_apn_type_ready,
                                      NULL);
         qmi_message_dsd_set_apn_type_input_unref (input);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_DSD_GET_SYSTEM_STATUS
+    if (get_system_status_flag) {
+        g_debug ("Asynchronously getting system status...");
+        qmi_client_dsd_get_system_status (ctx->client,
+                                          NULL,
+                                          10,
+                                          ctx->cancellable,
+                                          (GAsyncReadyCallback)get_system_status_ready,
+                                          NULL);
         return;
     }
 #endif

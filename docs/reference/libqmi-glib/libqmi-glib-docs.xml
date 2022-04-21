@@ -522,7 +522,13 @@
     <xi:include href="xml/qmi-client-dsd.xml"/>
     <xi:include href="xml/qmi-enums-dsd.xml"/>
     <section>
+      <title>DSD Indications</title>
+      <xi:include href="xml/qmi-indication-dsd-system-status.xml"/>
+    </section>
+    <section>
       <title>DSD Requests</title>
+      <xi:include href="xml/qmi-message-dsd-get-system-status.xml"/>
+      <xi:include href="xml/qmi-message-dsd-system-status-change.xml"/>
       <xi:include href="xml/qmi-message-dsd-get-apn-info.xml"/>
       <xi:include href="xml/qmi-message-dsd-set-apn-type.xml"/>
     </section>
