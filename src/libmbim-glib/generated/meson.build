@@ -93,6 +93,7 @@ services_data = [
   ['basic-connect', 'ms-basic-connect-v2', 'ms-basic-connect-v3'],
   ['dss'],
   ['intel-firmware-update'],
+  ['intel-thermal-rf'],
   ['ms-basic-connect-extensions', 'ms-basic-connect-extensions-v2', 'ms-basic-connect-extensions-v3'],
   ['ms-uicc-low-level-access'],
   ['ms-firmware-id'],
@@ -106,7 +107,6 @@ services_data = [
   ['sms'],
   ['stk'],
   ['ussd'],
-  ['intel-thermal-rf'],
 ]
 
 foreach service_data: services_data
