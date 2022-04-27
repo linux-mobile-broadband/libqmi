@@ -1281,6 +1281,7 @@ GType qmi_wds_get_current_settings_requested_settings_get_type (void) G_GNUC_CON
  * Since: 1.0
  * Deprecated: 1.32: Use qmi_wds_requested_settings_build_string_from_mask() instead.
  */
+G_DEPRECATED_FOR (qmi_wds_requested_settings_build_string_from_mask)
 gchar *qmi_wds_get_current_settings_requested_settings_build_string_from_mask (QmiDeprecatedWdsGetCurrentSettingsRequestedSettings mask);
 
 /******************************************************************************/
