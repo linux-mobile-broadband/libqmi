@@ -1631,7 +1631,7 @@
                       "type"          : "TLV",
                       "since"         : "1.0",
                       "format"        : "guint32",
-                      "public-format" : "QmiWdsGetCurrentSettingsRequestedSettings" } ],
+                      "public-format" : "QmiWdsRequestedSettings" } ],
      "output"  : [  { "common-ref" : "Operation Result" },
                     { "common-ref"    : "WDS Profile Name",
                       "since"         : "1.0",
@@ -2133,7 +2133,7 @@
                       "type"          : "TLV",
                       "since"         : "1.32",
                       "format"        : "guint32",
-                      "public-format" : "QmiWdsGetCurrentSettingsRequestedSettings" } ] },
+                      "public-format" : "QmiWdsRequestedSettings" } ] },
 
   // *********************************************************************************
   {  "name"    : "Get Max LTE Attach PDN Number",

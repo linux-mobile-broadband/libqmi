@@ -1,4 +1,3 @@
-
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * This library is free software; you can redistribute it and/or
@@ -1208,6 +1207,81 @@ GType qmi_dms_dell_device_mode_get_type (void) G_GNUC_CONST;
  */
 G_DEPRECATED_FOR (qmi_dms_foxconn_device_mode_get_string)
 const gchar *qmi_dms_dell_device_mode_get_string (QmiDeprecatedDmsDellDeviceMode val);
+
+
+/**
+ * QmiWdsGetCurrentSettingsRequestedSettings:
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_NONE: no settings requested
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PROFILE_ID: request profile ID
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PROFILE_NAME: request profile name
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PDP_TYPE: request PDP context type
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_APN_NAME: request APN name
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DNS_ADDRESS: request DNS server addresses
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GRANTED_QOS: request granted QoS
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_USERNAME: request username
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_AUTH_PROTOCOL: request authentication protocol, ie PAP/CHAP/none.
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_ADDRESS: request IP address
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GATEWAY_INFO: request gateway address
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_ADDRESS: request PCSCF address
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_SERVER_ADDRESS_LIST: request PCSCF server address list
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_DOMAIN_NAME_LIST: request PCSCF domain name list
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_MTU: request MTU
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST: request domain name list
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_FAMILY: request IP family, ie IPv4 or IPv6.
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IMCN_FLAG: request IMCN flag
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_EXTENDED_TECHNOLOGY: request extended technology info
+ * @QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO: operator reserved protocol configuration option. Since 1.32.
+ *
+ * Flags specifying WDS bearer settings.
+ *
+ * Since: 1.0
+ * Deprecated: 1.32: Use #QmiWdsRequestedSettings instead.
+ */
+
+/* The following type exists just so that we don't get deprecation warnings on
+ * our own methods */
+typedef enum {
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_NONE                      = QMI_WDS_REQUESTED_SETTINGS_NONE,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PROFILE_ID                = QMI_WDS_REQUESTED_SETTINGS_PROFILE_ID,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PROFILE_NAME              = QMI_WDS_REQUESTED_SETTINGS_PROFILE_NAME,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PDP_TYPE                  = QMI_WDS_REQUESTED_SETTINGS_PDP_TYPE,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_APN_NAME                  = QMI_WDS_REQUESTED_SETTINGS_APN_NAME,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DNS_ADDRESS               = QMI_WDS_REQUESTED_SETTINGS_DNS_ADDRESS,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GRANTED_QOS               = QMI_WDS_REQUESTED_SETTINGS_GRANTED_QOS,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_USERNAME                  = QMI_WDS_REQUESTED_SETTINGS_USERNAME,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_AUTH_PROTOCOL             = QMI_WDS_REQUESTED_SETTINGS_AUTH_PROTOCOL,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_ADDRESS                = QMI_WDS_REQUESTED_SETTINGS_IP_ADDRESS,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GATEWAY_INFO              = QMI_WDS_REQUESTED_SETTINGS_GATEWAY_INFO,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_ADDRESS             = QMI_WDS_REQUESTED_SETTINGS_PCSCF_ADDRESS,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_SERVER_ADDRESS_LIST = QMI_WDS_REQUESTED_SETTINGS_PCSCF_SERVER_ADDRESS_LIST,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_PCSCF_DOMAIN_NAME_LIST    = QMI_WDS_REQUESTED_SETTINGS_PCSCF_DOMAIN_NAME_LIST,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_MTU                       = QMI_WDS_REQUESTED_SETTINGS_MTU,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST          = QMI_WDS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_FAMILY                 = QMI_WDS_REQUESTED_SETTINGS_IP_FAMILY,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IMCN_FLAG                 = QMI_WDS_REQUESTED_SETTINGS_IMCN_FLAG,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_EXTENDED_TECHNOLOGY       = QMI_WDS_REQUESTED_SETTINGS_EXTENDED_TECHNOLOGY,
+    QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO     = QMI_WDS_REQUESTED_SETTINGS_OPERATOR_RESERVED_PCO,
+} QmiDeprecatedWdsGetCurrentSettingsRequestedSettings;
+
+G_DEPRECATED
+typedef QmiDeprecatedWdsGetCurrentSettingsRequestedSettings QmiWdsGetCurrentSettingsRequestedSettings;
+
+G_DEPRECATED_FOR (qmi_wds_get_current_settings_requested_settings_get_type)
+GType qmi_wds_get_current_settings_requested_settings_get_type (void) G_GNUC_CONST;
+#define QMI_TYPE_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS QMI_TYPE_WDS_REQUESTED_SETTINGS
+
+/**
+ * qmi_wds_get_current_settings_requested_settings_build_string_from_mask:
+ * @mask: bitmask of QmiWdsGetCurrentSettingsRequestedSettings values.
+ *
+ * Builds a string containing a comma-separated list of nicknames for
+ * each #QmiWdsGetCurrentSettingsRequestedSettings in @mask.
+ *
+ * Returns: (transfer full): a string with the list of nicknames, or %NULL if none given. The returned value should be freed with g_free().
+ * Since: 1.0
+ * Deprecated: 1.32: Use qmi_wds_requested_settings_build_string_from_mask() instead.
+ */
+gchar *qmi_wds_get_current_settings_requested_settings_build_string_from_mask (QmiDeprecatedWdsGetCurrentSettingsRequestedSettings mask);
 
 /******************************************************************************/
 /* Conditional method definitions */
