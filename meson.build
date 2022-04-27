@@ -3,7 +3,7 @@
 
 project(
   'libqmi', 'c',
-  version: '1.31.4',
+  version: '1.31.5',
   license: 'GPL2',
   default_options: [
     'buildtype=debugoptimized',
