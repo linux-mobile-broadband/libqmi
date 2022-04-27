@@ -3231,13 +3231,13 @@ qmicli_wds_run (QmiDevice *device,
         input = qmi_message_wds_get_current_settings_input_new ();
         qmi_message_wds_get_current_settings_input_set_requested_settings (
             input,
-            (QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DNS_ADDRESS      |
-             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GRANTED_QOS      |
-             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_ADDRESS       |
-             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_GATEWAY_INFO     |
-             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_MTU              |
-             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST |
-             QMI_WDS_GET_CURRENT_SETTINGS_REQUESTED_SETTINGS_IP_FAMILY),
+            (QMI_WDS_REQUESTED_SETTINGS_DNS_ADDRESS      |
+             QMI_WDS_REQUESTED_SETTINGS_GRANTED_QOS      |
+             QMI_WDS_REQUESTED_SETTINGS_IP_ADDRESS       |
+             QMI_WDS_REQUESTED_SETTINGS_GATEWAY_INFO     |
+             QMI_WDS_REQUESTED_SETTINGS_MTU              |
+             QMI_WDS_REQUESTED_SETTINGS_DOMAIN_NAME_LIST |
+             QMI_WDS_REQUESTED_SETTINGS_IP_FAMILY),
             NULL);
 
         g_debug ("Asynchronously getting current settings...");
