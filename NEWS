@@ -1,4 +1,14 @@
 
+Overview of changes in libqmi 1.30.6
+----------------------------------------
+
+ * build:
+   ** meson: fix 'export_packages' in GIR setup.
+
+ * libqmi-glib:
+   ** net-port-manager: use unaligned netlink attribute length.
+
+
 Overview of changes in libqmi 1.30.4
 ----------------------------------------
 
