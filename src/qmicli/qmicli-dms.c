@@ -106,6 +106,7 @@ static gchar *foxconn_change_device_mode_str;
 static gchar *dell_get_firmware_version_str; /* deprecated */
 static gchar *foxconn_get_firmware_version_str;
 static gint foxconn_set_fcc_authentication_int = -1;
+static gchar *foxconn_set_fcc_authentication_v2_str;
 static gchar *get_mac_address_str;
 static gboolean reset_flag;
 static gboolean noop_flag;
@@ -436,6 +437,12 @@ static GOptionEntry entries[] = {
       "[magic]"
     },
 #endif
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_SET_FCC_AUTHENTICATION_V2
+    { "dms-foxconn-set-fcc-authentication-v2", 0, 0, G_OPTION_ARG_STRING, &foxconn_set_fcc_authentication_v2_str,
+      "Set FCC authentication (Foxconn specific, v2)",
+      "[magic-string,magic-number]"
+    },
+#endif
 #if defined HAVE_QMI_MESSAGE_DMS_GET_MAC_ADDRESS
     { "dms-get-mac-address", 0, 0, G_OPTION_ARG_STRING, &get_mac_address_str,
       "Get default MAC address",
@@ -548,6 +555,7 @@ qmicli_dms_options_enabled (void)
                  !!dell_get_firmware_version_str +
                  !!foxconn_get_firmware_version_str +
                  (foxconn_set_fcc_authentication_int >= 0) +
+                 !!foxconn_set_fcc_authentication_v2_str +
                  !!get_mac_address_str +
                  reset_flag +
                  noop_flag);
@@ -4332,6 +4340,35 @@ foxconn_set_fcc_authentication_ready (QmiClientDms *client,
 
 #endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_SET_FCC_AUTHENTICATION */
 
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_SET_FCC_AUTHENTICATION_V2
+
+static void
+foxconn_set_fcc_authentication_v2_ready (QmiClientDms *client,
+                                         GAsyncResult *res)
+{
+    g_autoptr(QmiMessageDmsFoxconnSetFccAuthenticationV2Output) output = NULL;
+    g_autoptr(GError)                                           error = NULL;
+
+    output = qmi_client_dms_foxconn_set_fcc_authentication_v2_finish (client, res, &error);
+    if (!output) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    if (!qmi_message_dms_foxconn_set_fcc_authentication_v2_output_get_result (output, &error)) {
+        g_printerr ("error: couldn't run Foxconn FCC authentication: %s\n", error->message);
+        operation_shutdown (FALSE);
+        return;
+    }
+
+    g_print ("[%s] Successfully run Foxconn FCC authentication v2\n",
+             qmi_device_get_path_display (ctx->device));
+    operation_shutdown (TRUE);
+}
+
+#endif /* HAVE_QMI_MESSAGE_DMS_FOXCONN_SET_FCC_AUTHENTICATION_V2 */
+
 #if defined HAVE_QMI_MESSAGE_DMS_GET_MAC_ADDRESS
 
 static QmiMessageDmsGetMacAddressInput *
@@ -5345,6 +5382,46 @@ qmicli_dms_run (QmiDevice *device,
                                                        ctx->cancellable,
                                                        (GAsyncReadyCallback)foxconn_set_fcc_authentication_ready,
                                                        NULL);
+        return;
+    }
+#endif
+
+#if defined HAVE_QMI_MESSAGE_DMS_FOXCONN_SET_FCC_AUTHENTICATION_V2
+    if (foxconn_set_fcc_authentication_v2_str) {
+        g_autoptr(QmiMessageDmsFoxconnSetFccAuthenticationV2Input) input = NULL;
+        g_auto(GStrv) split = NULL;
+        gulong magic_number;
+
+        split = g_strsplit (foxconn_set_fcc_authentication_v2_str, ",", -1);
+        if (g_strv_length (split) < 2) {
+            g_printerr ("error: missing fields\n");
+            operation_shutdown (FALSE);
+            return;
+        }
+        if (g_strv_length (split) > 2) {
+            g_printerr ("error: too many fields given\n");
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        magic_number = strtoul (split[1], NULL, 10);
+        if (magic_number > 0xFF) {
+            g_printerr ("error: magic number value out of [0,255] range\n");
+            operation_shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously running Foxconn FCC authentication v2...");
+
+        input = qmi_message_dms_foxconn_set_fcc_authentication_v2_input_new ();
+        qmi_message_dms_foxconn_set_fcc_authentication_v2_input_set_magic_string (input, split[0], NULL);
+        qmi_message_dms_foxconn_set_fcc_authentication_v2_input_set_magic_number (input, magic_number, NULL);
+        qmi_client_dms_foxconn_set_fcc_authentication_v2 (ctx->client,
+                                                          input,
+                                                          10,
+                                                          ctx->cancellable,
+                                                          (GAsyncReadyCallback)foxconn_set_fcc_authentication_v2_ready,
+                                                          NULL);
         return;
     }
 #endif
