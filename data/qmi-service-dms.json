@@ -1439,6 +1439,30 @@
                      "type"          : "TLV",
                      "since"         : "1.28.6",
                      "format"        : "guint8" } ],
-     "output"  : [ { "common-ref" : "Operation Result" } ] }
+     "output"  : [ { "common-ref" : "Operation Result" } ] },
 
+  // *********************************************************************************
+  {  "name"    : "Foxconn Set FCC Authentication v2",
+     "type"    : "Message",
+     "service" : "DMS",
+     "id"      : "0x5571",
+     // this vendor id number just needs to be different to any other one
+     // defined in other messages; in this case both are foxconn messages, so
+     // we +1 the foxconn vid. A better solution would be to rename this field
+     // to something like "unique-id" and forget about defining any vendor id
+     // there.
+     "vendor"  : "0x0490",
+     "since"   : "1.32",
+     "input"   : [ { "name"          : "Magic String",
+                     "id"            : "0x01",
+                     "type"          : "TLV",
+                     "since"         : "1.32",
+                     "format"        : "string" },
+                   { "name"          : "Magic Number",
+                     "id"            : "0x02",
+                     "type"          : "TLV",
+                     "since"         : "1.32",
+                     "format"        : "guint8",
+                     "prerequisites" : "0x01-first" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] }
 ]
