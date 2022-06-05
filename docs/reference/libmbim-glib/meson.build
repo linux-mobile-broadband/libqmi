@@ -12,6 +12,7 @@ src_dirs = [
 
 private_headers = [
   'mbim-helpers.h',
+  'mbim-helpers-netlink.h',
   'mbim-message-private.h',
   'mbim-net-port-manager.h',
 ]
