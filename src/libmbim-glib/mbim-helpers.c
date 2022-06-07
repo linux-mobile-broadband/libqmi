@@ -102,11 +102,11 @@ mbim_helpers_get_devname (const gchar  *cdc_wdm_path,
 /*****************************************************************************/
 
 gboolean
-mbim_helpers_list_links (GFile         *sysfs_file,
-                         GCancellable  *cancellable,
-                         GPtrArray     *previous_links,
-                         GPtrArray    **out_links,
-                         GError       **error)
+mbim_helpers_list_links_wdm (GFile         *sysfs_file,
+                             GCancellable  *cancellable,
+                             GPtrArray     *previous_links,
+                             GPtrArray    **out_links,
+                             GError       **error)
 {
     g_autofree gchar           *sysfs_path = NULL;
     g_autoptr(GFileEnumerator)  direnum = NULL;

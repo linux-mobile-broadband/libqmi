@@ -15,6 +15,8 @@ private_headers = [
   'mbim-helpers-netlink.h',
   'mbim-message-private.h',
   'mbim-net-port-manager.h',
+  'mbim-net-port-manager-wdm.h',
+  'wwan.h',
 ]
 
 scan_args = [

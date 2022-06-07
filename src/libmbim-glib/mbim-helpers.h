@@ -31,11 +31,11 @@ gchar *mbim_helpers_get_devname (const gchar  *cdc_wdm_path,
                                  GError      **error);
 
 G_GNUC_INTERNAL
-gboolean mbim_helpers_list_links (GFile         *sysfs_file,
-                                  GCancellable  *cancellable,
-                                  GPtrArray     *previous_links,
-                                  GPtrArray    **out_links,
-                                  GError       **error);
+gboolean mbim_helpers_list_links_wdm (GFile         *sysfs_file,
+                                      GCancellable  *cancellable,
+                                      GPtrArray     *previous_links,
+                                      GPtrArray    **out_links,
+                                      GError       **error);
 
 #if !GLIB_CHECK_VERSION(2,54,0)
 

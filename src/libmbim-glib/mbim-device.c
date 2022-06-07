@@ -39,6 +39,7 @@
 #include "mbim-proxy.h"
 #include "mbim-proxy-control.h"
 #include "mbim-net-port-manager.h"
+#include "mbim-net-port-manager-wdm.h"
 #include "mbim-basic-connect.h"
 #include "mbim-ms-basic-connect-extensions.h"
 
@@ -593,7 +594,8 @@ setup_net_port_manager (MbimDevice  *self,
         return FALSE;
     }
 
-    self->priv->net_port_manager = mbim_net_port_manager_new (self->priv->wwan_iface, error);
+    self->priv->net_port_manager = MBIM_NET_PORT_MANAGER (mbim_net_port_manager_wdm_new (self->priv->wwan_iface, error));
+
     return !!self->priv->net_port_manager;
 }
 

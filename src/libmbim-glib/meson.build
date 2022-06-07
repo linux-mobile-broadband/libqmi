@@ -42,6 +42,7 @@ sources = files(
   'mbim-helpers-netlink.c',
   'mbim-message.c',
   'mbim-net-port-manager.c',
+  'mbim-net-port-manager-wdm.c',
   'mbim-proxy.c',
   'mbim-proxy-helpers.c',
   'mbim-utils.c',
