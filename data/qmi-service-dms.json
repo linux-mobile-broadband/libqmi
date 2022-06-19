@@ -1452,16 +1452,16 @@
      // to something like "unique-id" and forget about defining any vendor id
      // there.
      "vendor"  : "0x0490",
-     "since"   : "1.32",
+     "since"   : "1.30.8",
      "input"   : [ { "name"          : "Magic String",
                      "id"            : "0x01",
                      "type"          : "TLV",
-                     "since"         : "1.32",
+                     "since"         : "1.30.8",
                      "format"        : "string" },
                    { "name"          : "Magic Number",
                      "id"            : "0x02",
                      "type"          : "TLV",
-                     "since"         : "1.32",
+                     "since"         : "1.30.8",
                      "format"        : "guint8",
                      "prerequisites" : "0x01-first" } ],
      "output"  : [ { "common-ref" : "Operation Result" } ] }
