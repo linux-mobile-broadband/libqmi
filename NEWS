@@ -1,4 +1,11 @@
 
+Overview of changes in libqmi 1.30.8
+----------------------------------------
+
+ * New request/response/indications:
+   ** dms: new 'Foxconn FCC authentication v2' request/response.
+
+
 Overview of changes in libqmi 1.30.6
 ----------------------------------------
 
