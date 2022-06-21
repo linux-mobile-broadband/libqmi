@@ -43,6 +43,7 @@ sources = files(
   'mbim-message.c',
   'mbim-net-port-manager.c',
   'mbim-net-port-manager-wdm.c',
+  'mbim-net-port-manager-wwan.c',
   'mbim-proxy.c',
   'mbim-proxy-helpers.c',
   'mbim-utils.c',

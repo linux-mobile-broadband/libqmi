@@ -16,6 +16,7 @@ private_headers = [
   'mbim-message-private.h',
   'mbim-net-port-manager.h',
   'mbim-net-port-manager-wdm.h',
+  'mbim-net-port-manager-wwan.h',
   'wwan.h',
 ]
 

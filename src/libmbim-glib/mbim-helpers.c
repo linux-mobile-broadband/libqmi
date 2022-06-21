@@ -163,6 +163,73 @@ mbim_helpers_list_links_wdm (GFile         *sysfs_file,
     return TRUE;
 }
 
+/*****************************************************************************/
+
+gboolean
+mbim_helpers_list_links_wwan (const gchar   *base_ifname,
+                              GFile         *sysfs_file,
+                              GCancellable  *cancellable,
+                              GPtrArray     *previous_links,
+                              GPtrArray    **out_links,
+                              GError       **error)
+{
+    g_autofree gchar           *sysfs_path = NULL;
+    g_autoptr(GFileEnumerator)  direnum = NULL;
+    g_autoptr(GPtrArray)        links = NULL;
+
+    direnum = g_file_enumerate_children (sysfs_file,
+                                         G_FILE_ATTRIBUTE_STANDARD_NAME,
+                                         G_FILE_QUERY_INFO_NONE,
+                                         cancellable,
+                                         error);
+    if (!direnum)
+        return FALSE;
+
+    sysfs_path = g_file_get_path (sysfs_file);
+    links = g_ptr_array_new_with_free_func (g_free);
+
+    while (TRUE) {
+        GFileInfo        *info;
+        g_autofree gchar *filename = NULL;
+        g_autofree gchar *link_path = NULL;
+        g_autofree gchar *real_path = NULL;
+        g_autofree gchar *basename = NULL;
+
+        if (!g_file_enumerator_iterate (direnum, &info, NULL, cancellable, error))
+            return FALSE;
+        if (!info)
+            break;
+
+        filename = g_file_info_get_attribute_as_string (info, G_FILE_ATTRIBUTE_STANDARD_NAME);
+        if (!g_strcmp0(base_ifname, filename))
+            continue;
+
+        link_path = g_strdup_printf ("%s/%s", sysfs_path, filename);
+        real_path = realpath (link_path, NULL);
+        if (!real_path)
+            continue;
+
+        basename = g_path_get_basename (real_path);
+
+        /* skip interface if it was already known */
+        if (previous_links && g_ptr_array_find_with_equal_func (previous_links, basename, g_str_equal, NULL))
+            continue;
+
+        g_ptr_array_add (links, g_steal_pointer (&basename));
+    }
+
+    if (!links || !links->len) {
+        *out_links = NULL;
+        return TRUE;
+    }
+
+    g_ptr_array_sort (links, (GCompareFunc) g_ascii_strcasecmp);
+    *out_links = g_steal_pointer (&links);
+    return TRUE;
+}
+
+/*****************************************************************************/
+
 #if !GLIB_CHECK_VERSION(2,54,0)
 
 gboolean

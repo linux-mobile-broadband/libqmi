@@ -14,6 +14,11 @@
 #include <linux/if_link.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
+
+/* This is a built-in file, not provided by the kernel headers,
+ * used to add wwan symbols if not available */
+#include <kernel/wwan.h>
+
 #include <sys/socket.h>
 
 #include "mbim-helpers-netlink.h"
@@ -81,6 +86,14 @@ mbim_helpers_netlink_append_attribute_string (NetlinkMessage *msg,
                                               const gchar    *value)
 {
     append_netlink_attribute (msg, type, value, strlen (value));
+}
+
+void
+mbim_helpers_netlink_append_attribute_string_null (NetlinkMessage *msg,
+                                                   gushort         type,
+                                                   const gchar    *value)
+{
+    append_netlink_attribute (msg, type, value, strlen (value) + 1);
 }
 
 void

@@ -46,6 +46,11 @@ void mbim_helpers_netlink_append_attribute_string (NetlinkMessage *msg,
                                                    const gchar    *value);
 
 G_GNUC_INTERNAL
+void mbim_helpers_netlink_append_attribute_string_null (NetlinkMessage *msg,
+                                                        gushort         type,
+                                                        const gchar    *value);
+
+G_GNUC_INTERNAL
 void mbim_helpers_netlink_append_attribute_uint16 (NetlinkMessage *msg,
                                                    gushort         type,
                                                    guint16         value);

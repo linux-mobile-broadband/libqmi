@@ -40,6 +40,7 @@
 #include "mbim-proxy-control.h"
 #include "mbim-net-port-manager.h"
 #include "mbim-net-port-manager-wdm.h"
+#include "mbim-net-port-manager-wwan.h"
 #include "mbim-basic-connect.h"
 #include "mbim-ms-basic-connect-extensions.h"
 
@@ -586,15 +587,12 @@ setup_net_port_manager (MbimDevice  *self,
     if (self->priv->net_port_manager)
         return TRUE;
 
-    /* For now we only support link management with cdc-mbim */
     reload_wwan_iface_name (self);
-    if (!self->priv->wwan_iface) {
-        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_UNSUPPORTED,
-                     "Link management is unsupported");
-        return FALSE;
-    }
-
-    self->priv->net_port_manager = MBIM_NET_PORT_MANAGER (mbim_net_port_manager_wdm_new (self->priv->wwan_iface, error));
+    if (!self->priv->wwan_iface)
+        /* If wwan_iface is not set wwan subsystem is probably in use */
+        self->priv->net_port_manager = MBIM_NET_PORT_MANAGER (mbim_net_port_manager_wwan_new (error));
+    else
+        self->priv->net_port_manager = MBIM_NET_PORT_MANAGER (mbim_net_port_manager_wdm_new (self->priv->wwan_iface, error));
 
     return !!self->priv->net_port_manager;
 }
@@ -736,7 +734,7 @@ mbim_device_delete_link (MbimDevice          *self,
 
     g_assert (self->priv->net_port_manager);
     mbim_net_port_manager_del_link (self->priv->net_port_manager,
-                                   ifname,
+                                    ifname,
                                     5, /* timeout */
                                     cancellable,
                                     (GAsyncReadyCallback) device_del_link_ready,

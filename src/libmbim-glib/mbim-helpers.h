@@ -37,6 +37,14 @@ gboolean mbim_helpers_list_links_wdm (GFile         *sysfs_file,
                                       GPtrArray    **out_links,
                                       GError       **error);
 
+G_GNUC_INTERNAL
+gboolean mbim_helpers_list_links_wwan (const gchar   *base_ifname,
+                                       GFile         *sysfs_file,
+                                       GCancellable  *cancellable,
+                                       GPtrArray     *previous_links,
+                                       GPtrArray    **out_links,
+                                       GError       **error);
+
 #if !GLIB_CHECK_VERSION(2,54,0)
 
 /* Pointer Array lookup with a GEqualFunc, imported from GLib 2.54 */
