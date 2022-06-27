@@ -16,6 +16,7 @@
 #
 # Copyright (C) 2012 Lanedo GmbH
 # Copyright (C) 2012-2022 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc.
 #
 
 import string
@@ -108,6 +109,14 @@ class Variable:
         self.new_method_gir = ''
         self.free_method_gir = ''
 
+        """
+        Whether the variable is personal info or not
+        """
+        if 'personal-info' in dictionary:
+            self.personal_info = True;
+        else:
+            self.personal_info = False;
+
     """
     Emits the code to declare specific new types required by the variable.
     """
@@ -131,7 +140,7 @@ class Variable:
     """
     Emits the code to get the contents of the given variable as a printable string.
     """
-    def emit_get_printable(self, f, line_prefix):
+    def emit_get_printable(self, f, line_prefix, is_personal):
         pass
 
     """

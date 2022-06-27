@@ -1705,6 +1705,8 @@ qmi_message_context_get_type
 <TITLE>Common utilities</TITLE>
 qmi_utils_get_traces_enabled
 qmi_utils_set_traces_enabled
+qmi_utils_set_show_personal_info
+qmi_utils_get_show_personal_info
 </SECTION>
 
 <SECTION>

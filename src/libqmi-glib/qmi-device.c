@@ -19,6 +19,7 @@
  *
  * Copyright (C) 2012 Lanedo GmbH
  * Copyright (C) 2012-2021 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc.
  */
 
 #include <config.h>
@@ -72,6 +73,10 @@
 #if defined RMNET_SUPPORT_ENABLED
 # include "qmi-net-port-manager-rmnet.h"
 #endif
+
+/* maximum number of printed data bytes when personal info
+ * should be hidden */
+#define MAX_PRINTED_BYTES 12
 
 static void async_initable_iface_init (GAsyncInitableIface *iface);
 
@@ -1682,9 +1687,17 @@ trace_message (QmiDevice         *self,
         action_str = "received";
     }
 
-    printable = qmi_helpers_str_hex (((GByteArray *)message)->data,
-                                     ((GByteArray *)message)->len,
-                                     ':');
+    if (qmi_utils_get_show_personal_info () || (((GByteArray *)message)->len < MAX_PRINTED_BYTES)) {
+        printable = qmi_helpers_str_hex (((GByteArray *)message)->data,
+                                         ((GByteArray *)message)->len,
+                                         ':');
+    } else {
+        g_autofree gchar *tmp = NULL;
+
+        tmp = qmi_helpers_str_hex (((GByteArray *)message)->data, MAX_PRINTED_BYTES, ':');
+        printable = g_strdup_printf ("%s...", tmp);
+    }
+
     g_debug ("[%s] %s message...\n"
              "%sRAW:\n"
              "%s  length = %u\n"

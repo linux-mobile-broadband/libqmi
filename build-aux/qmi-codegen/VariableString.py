@@ -16,6 +16,7 @@
 #
 # Copyright (C) 2012 Lanedo GmbH
 # Copyright (C) 2012-2022 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc.
 #
 
 import string
@@ -128,7 +129,7 @@ class VariableString(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    def emit_get_printable(self, f, line_prefix):
+    def emit_get_printable(self, f, line_prefix, is_personal):
         translations = { 'lp' : line_prefix }
 
         if self.is_fixed_size:
@@ -141,9 +142,7 @@ class VariableString(Variable):
                 '\n'
                 '${lp}    if (!qmi_message_tlv_read_fixed_size_string (message, init_offset, &offset, ${fixed_size}, &tmp[0], &error))\n'
                 '${lp}        goto out;\n'
-                '${lp}    tmp[${fixed_size}] = \'\\0\';\n'
-                '${lp}    g_string_append (printable, tmp);\n'
-                '${lp}}\n')
+                '${lp}    tmp[${fixed_size}] = \'\\0\';\n')
         else:
             translations['n_size_prefix_bytes'] = self.n_size_prefix_bytes
             translations['max_size'] = self.max_size if self.max_size != '' else '0'
@@ -153,9 +152,25 @@ class VariableString(Variable):
                 '${lp}    g_autofree gchar *tmp = NULL;\n'
                 '\n'
                 '${lp}    if (!qmi_message_tlv_read_string (message, init_offset, &offset, ${n_size_prefix_bytes}, ${max_size}, &tmp, &error))\n'
-                '${lp}        goto out;\n'
-                '${lp}    g_string_append (printable, tmp);\n'
-                '${lp}}\n')
+                '${lp}        goto out;\n')
+
+        if self.personal_info or is_personal:
+            translations['if_show_field'] = 'if (qmi_utils_get_show_personal_info ()) '
+        else:
+            translations['if_show_field'] = ''
+
+        template += (
+            '${lp}    ${if_show_field}{\n'
+            '${lp}        g_string_append (printable, tmp);\n')
+
+        if self.personal_info or is_personal:
+            template += (
+                '${lp}    } else {\n'
+                '${lp}        g_string_append_printf (printable, "\'###\'");\n')
+
+        template += (
+            '${lp}    }\n'
+            '${lp}}\n')
 
         f.write(string.Template(template).substitute(translations))
 

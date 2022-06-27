@@ -16,6 +16,7 @@
 #
 # Copyright (C) 2012 Lanedo GmbH
 # Copyright (C) 2012-2022 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc.
 #
 
 import string
@@ -90,6 +91,11 @@ class Field:
                            break
                     else:
                         raise RuntimeError('Common type \'%s\' not found' % prerequisite_dictionary['name'])
+
+        if 'personal-info' in dictionary:
+            self.personal_info = True;
+        else:
+            self.personal_info = False;
 
 
     @property
@@ -473,7 +479,7 @@ class Field:
         f.write(string.Template(template).substitute(translations))
 
         # Now, read the contents of the buffer into the printable representation
-        self.variable.emit_get_printable(f, '    ')
+        self.variable.emit_get_printable(f, '    ', self.personal_info)
 
         template = (
             '\n'

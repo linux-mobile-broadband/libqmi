@@ -16,6 +16,7 @@
 #
 # Copyright (C) 2012 Lanedo GmbH
 # Copyright (C) 2012-2022 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc.
 #
 
 import string
@@ -157,7 +158,7 @@ class VariableInteger(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    def emit_get_printable(self, f, line_prefix):
+    def emit_get_printable(self, f, line_prefix, is_personal):
         common_format = ''
         common_cast = ''
 
@@ -214,30 +215,43 @@ class VariableInteger(Variable):
                 '${lp}    if (!qmi_message_tlv_read_${private_format} (message, init_offset, &offset,${endian} &tmp, &error))\n'
                 '${lp}        goto out;\n')
 
+        if self.personal_info or is_personal:
+            translations['if_show_field'] = 'if (qmi_utils_get_show_personal_info ()) '
+        else:
+            translations['if_show_field'] = ''
+
+        template += (
+            '${lp}    ${if_show_field}{\n')
         if self.public_format == 'gboolean':
             template += (
-                '${lp}    g_string_append_printf (printable, "%s", tmp ? "yes" : "no");\n')
+                '${lp}        g_string_append_printf (printable, "%s", tmp ? "yes" : "no");\n')
         elif self.public_format != self.private_format:
             translations['public_type_underscore'] = utils.build_underscore_name_from_camelcase(self.public_format)
             translations['public_type_underscore_upper'] = utils.build_underscore_name_from_camelcase(self.public_format).upper()
             template += (
                 '#if defined  __${public_type_underscore_upper}_IS_ENUM__\n'
-                '${lp}    g_string_append_printf (printable, "%s", ${public_type_underscore}_get_string ((${public_format})tmp));\n'
+                '${lp}        g_string_append_printf (printable, "%s", ${public_type_underscore}_get_string ((${public_format})tmp));\n'
                 '#elif defined  __${public_type_underscore_upper}_IS_FLAGS__\n'
-                '${lp}    {\n'
-                '${lp}        g_autofree gchar *flags_str = NULL;\n'
+                '${lp}        {\n'
+                '${lp}            g_autofree gchar *flags_str = NULL;\n'
                 '\n'
-                '${lp}        flags_str = ${public_type_underscore}_build_string_from_mask ((${public_format})tmp);\n'
-                '${lp}        g_string_append_printf (printable, "%s", flags_str);\n'
-                '${lp}    }\n'
+                '${lp}            flags_str = ${public_type_underscore}_build_string_from_mask ((${public_format})tmp);\n'
+                '${lp}            g_string_append_printf (printable, "%s", flags_str);\n'
+                '${lp}        }\n'
                 '#else\n'
                 '# error unexpected public format: ${public_format}\n'
                 '#endif\n')
         else:
             template += (
-                '${lp}    g_string_append_printf (printable, "${common_format}", ${common_cast}tmp);\n')
+                '${lp}        g_string_append_printf (printable, "${common_format}", ${common_cast}tmp);\n')
+
+        if self.personal_info or is_personal:
+            template += (
+                '${lp}    } else {\n'
+                '${lp}        g_string_append_printf (printable, "\'###\'");\n')
 
         template += (
+            '${lp}    }\n'
             '${lp}}\n')
 
         f.write(string.Template(template).substitute(translations))

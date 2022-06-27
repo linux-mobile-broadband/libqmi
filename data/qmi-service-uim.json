@@ -127,7 +127,8 @@
                                             { "name"               : "ICCID",
                                               "format"             : "array",
                                               "size-prefix-format" : "guint8",
-                                              "array-element"      : { "format" : "guint8" } } ] } },
+                                              "array-element"      : { "format" : "guint8" },
+                                              "personal-info"      : "true" } ] } },
 
   // *********************************************************************************
   { "common-ref"         : "Physical Slot Information",
@@ -165,7 +166,9 @@
                              "contents" : [ { "name"               : "EID",
                                               "format"             : "array",
                                               "size-prefix-format" : "guint8",
-                                              "array-element"      : { "format" : "guint8" } } ] } },
+                                              "array-element"      : { "format" : "guint8" },
+
+                                              "personal-info"      : "true" } ] } },
 
   // *********************************************************************************
   {  "name"    : "Reset",
@@ -247,6 +250,7 @@
                      "format"             : "array",
                      "size-prefix-format" : "guint16",
                      "array-element"      : { "format" : "guint8" },
+                     "personal-info"      : "true",
                      "prerequisites"      : [ { "common-ref" : "Success" } ] },
                    { "name"          : "Response In Indication Token",
                      "id"            : "0x12",
@@ -317,6 +321,7 @@
                      "format"             : "array",
                      "size-prefix-format" : "guint16",
                      "array-element"      : { "format" : "guint8" },
+                     "personal-info"      : "true",
                      "prerequisites"      : [ { "common-ref" : "Success" } ] },
                    { "name"               : "Additional Read Result",
                      "id"                 : "0x12",
@@ -325,6 +330,7 @@
                      "format"             : "array",
                      "size-prefix-format" : "guint16",
                      "array-element"      : { "format" : "guint8" },
+                     "personal-info"      : "true",
                      "prerequisites"      : [ { "common-ref" : "Success" } ] },
                    { "name"          : "Response In Indication Token",
                      "id"            : "0x13",
@@ -823,7 +829,8 @@
                                            "format"        : "guint8",
                                            "public-format" : "QmiUimDepersonalizationOperation" },
                                          { "name"          : "Control Key",
-                                           "format"        : "string" } ] },
+                                           "format"        : "string",
+                                           "personal-info" : "true" } ] },
                    { "name"          : "Slot",
                      "id"            : "0x10",
                      "type"          : "TLV",

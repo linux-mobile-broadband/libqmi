@@ -16,6 +16,7 @@
 #
 # Copyright (C) 2012 Lanedo GmbH
 # Copyright (C) 2012-2022 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc.
 #
 
 import string
@@ -347,7 +348,11 @@ class Message:
                 '    } else {\n'
                 '        g_autofree gchar *value_hex = NULL;\n'
                 '\n'
-                '        value_hex = qmi_helpers_str_hex (value, length, \':\');\n'
+                '        if (qmi_utils_get_show_personal_info ())\n'
+                '            value_hex = qmi_helpers_str_hex (value, length, \':\');\n'
+                '        else\n'
+                '            value_hex = g_strdup ("###...");\n'
+                '\n'
                 '        g_string_append_printf (ctx->printable,\n'
                 '                                "%sTLV:\\n"\n'
                 '                                "%s  type       = \\"%s\\" (0x%02x)\\n"\n'

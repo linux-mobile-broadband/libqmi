@@ -16,6 +16,7 @@
 #
 # Copyright (C) 2012 Lanedo GmbH
 # Copyright (C) 2012-2022 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc.
 #
 
 import string
@@ -247,7 +248,7 @@ class VariableStruct(Variable):
             member['object'].emit_buffer_write(f, line_prefix, tlv_name, variable_name + '.' +  member['name'])
 
 
-    def emit_get_printable(self, f, line_prefix):
+    def emit_get_printable(self, f, line_prefix, is_personal):
         translations = { 'lp' : line_prefix }
 
         template = (
@@ -260,7 +261,7 @@ class VariableStruct(Variable):
                 '${lp}g_string_append (printable, " ${variable_name} = \'");\n')
             f.write(string.Template(template).substitute(translations))
 
-            member['object'].emit_get_printable(f, line_prefix)
+            member['object'].emit_get_printable(f, line_prefix, self.personal_info or is_personal)
 
             template = (
                 '${lp}g_string_append (printable, "\'");\n')

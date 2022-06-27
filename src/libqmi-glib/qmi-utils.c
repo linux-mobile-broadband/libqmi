@@ -20,6 +20,7 @@
  *
  * Copyright (C) 2012-2020 Dan Williams <dcbw@redhat.com>
  * Copyright (C) 2012-2020 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc.
  */
 
 #include <config.h>
@@ -28,6 +29,7 @@
 /*****************************************************************************/
 
 static volatile gint __traces_enabled = FALSE;
+static volatile gint __hide_personal_info = FALSE;
 
 gboolean
 qmi_utils_get_traces_enabled (void)
@@ -39,4 +41,16 @@ void
 qmi_utils_set_traces_enabled (gboolean enabled)
 {
     g_atomic_int_set (&__traces_enabled, enabled);
+}
+
+void
+qmi_utils_set_show_personal_info (gboolean hide_personal_info)
+{
+    g_atomic_int_set (&__hide_personal_info, hide_personal_info);
+}
+
+gboolean
+qmi_utils_get_show_personal_info (void)
+{
+    return (gboolean) g_atomic_int_get (&__hide_personal_info);
 }

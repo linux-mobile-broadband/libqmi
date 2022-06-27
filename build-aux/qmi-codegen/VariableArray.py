@@ -16,6 +16,7 @@
 #
 # Copyright (C) 2012 Lanedo GmbH
 # Copyright (C) 2012-2022 Aleksander Morgado <aleksander@aleksander.es>
+# Copyright (c) 2022 Qualcomm Innovation Center, Inc.
 #
 
 import string
@@ -220,7 +221,7 @@ class VariableArray(Variable):
         f.write(string.Template(template).substitute(translations))
 
 
-    def emit_get_printable(self, f, line_prefix):
+    def emit_get_printable(self, f, line_prefix, is_personal):
         common_var_prefix = utils.build_underscore_name(self.name)
         translations = { 'lp'                : line_prefix,
                          'common_var_prefix' : common_var_prefix }
@@ -272,7 +273,7 @@ class VariableArray(Variable):
             '${lp}        g_string_append_printf (printable, " [%u] = \'", ${common_var_prefix}_i);\n')
         f.write(string.Template(template).substitute(translations))
 
-        self.array_element.emit_get_printable(f, line_prefix + '        ');
+        self.array_element.emit_get_printable(f, line_prefix + '        ', self.personal_info or is_personal);
 
         template = (
             '${lp}        g_string_append (printable, " \'");\n'

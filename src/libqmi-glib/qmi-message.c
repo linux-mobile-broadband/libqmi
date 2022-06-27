@@ -25,6 +25,7 @@
  * Boston, MA 02110-1301 USA.
  *
  * Copyright (C) 2012-2019 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc.
  */
 
 #include <glib.h>
@@ -1546,7 +1547,11 @@ qmi_message_get_tlv_printable (QmiMessage *self,
     g_return_val_if_fail (line_prefix != NULL, NULL);
     g_return_val_if_fail (raw != NULL, NULL);
 
-    value_hex = qmi_helpers_str_hex (raw, raw_length, ':');
+    if (qmi_utils_get_show_personal_info ())
+        value_hex = qmi_helpers_str_hex (raw, raw_length, ':');
+    else
+        value_hex = g_strdup ("###...");
+
     printable = g_strdup_printf ("%sTLV:\n"
                                  "%s  type   = 0x%02x\n"
                                  "%s  length = %" G_GSIZE_FORMAT "\n"
