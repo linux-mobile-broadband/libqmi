@@ -101,6 +101,15 @@ typedef struct _QmiDevicePrivate QmiDevicePrivate;
 #define QMI_DEVICE_WWAN_IFACE "device-wwan-iface"
 
 /**
+ * QMI_DEVICE_CONSECUTIVE_TIMEOUTS:
+ *
+ * Symbol defining the #QmiDevice:device-consecutive-timeouts property.
+ *
+ * Since: 1.32
+ */
+#define QMI_DEVICE_CONSECUTIVE_TIMEOUTS "device-consecutive-timeouts"
+
+/**
  * QMI_DEVICE_SIGNAL_INDICATION:
  *
  * Symbol defining the #QmiDevice::indication signal.
@@ -720,6 +729,18 @@ void qmi_device_get_service_version_info (QmiDevice           *self,
 GArray *qmi_device_get_service_version_info_finish (QmiDevice     *self,
                                                     GAsyncResult  *res,
                                                     GError       **error);
+
+/**
+ * qmi_device_get_consecutive_timeouts:
+ * @self: a #QmiDevice.
+ *
+ * Gets the number of consecutive transaction timeouts in the device.
+ *
+ * Returns: a #guint.
+ *
+ * Since: 1.32
+ */
+guint qmi_device_get_consecutive_timeouts (QmiDevice *self);
 
 /******************************************************************************/
 /* qmi_wwan specific APIs */

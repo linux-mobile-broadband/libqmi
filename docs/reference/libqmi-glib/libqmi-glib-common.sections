@@ -73,6 +73,7 @@ QMI_DEVICE_FILE
 QMI_DEVICE_NO_FILE_CHECK
 QMI_DEVICE_PROXY_PATH
 QMI_DEVICE_WWAN_IFACE
+QMI_DEVICE_CONSECUTIVE_TIMEOUTS
 QMI_DEVICE_SIGNAL_INDICATION
 QMI_DEVICE_SIGNAL_REMOVED
 QmiDevice
@@ -83,6 +84,7 @@ qmi_device_peek_file
 qmi_device_get_path
 qmi_device_get_path_display
 qmi_device_is_open
+qmi_device_get_consecutive_timeouts
 QmiDeviceOpenFlags
 qmi_device_open_flags_build_string_from_mask
 qmi_device_open
