@@ -56,6 +56,7 @@ enum {
     PROP_FILE,
     PROP_TRANSACTION_ID,
     PROP_IN_SESSION,
+    PROP_CONSECUTIVE_TIMEOUTS,
     PROP_LAST
 };
 
@@ -124,6 +125,9 @@ struct _MbimDevicePrivate {
 
     /* Link management */
     MbimNetPortManager *net_port_manager;
+
+    /* Number of consecutive timeouts detected */
+    guint consecutive_timeouts;
 };
 
 #define MAX_SPAWN_RETRIES             10
@@ -228,13 +232,31 @@ transaction_task_complete_and_free (GTask        *task,
                                     const GError *error)
 {
     TransactionContext *ctx;
+    MbimDevice         *self;
 
-    ctx = g_task_get_task_data (task);
+    self = g_task_get_source_object (task);
+    ctx  = g_task_get_task_data (task);
 
     if (error) {
+        /* Increase number of consecutive timeouts */
+        if (g_error_matches (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_TIMEOUT) ||
+            g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_TIMEOUT_FRAGMENT)) {
+            self->priv->consecutive_timeouts++;
+            g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONSECUTIVE_TIMEOUTS]);
+            g_debug ("[%s] Number of consecutive timeouts: %u",
+                     self->priv->path_display,
+                     self->priv->consecutive_timeouts);
+        }
         transaction_task_trace (task, "complete: error");
         g_task_return_error (task, g_error_copy (error));
     } else {
+        /* Reset number of consecutive timeouts */
+        if (self->priv->consecutive_timeouts > 0) {
+            g_debug ("[%s] Reseted number of consecutive timeouts",
+                     self->priv->path_display);
+            self->priv->consecutive_timeouts = 0;
+            g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONSECUTIVE_TIMEOUTS]);
+        }
         transaction_task_trace (task, "complete: response");
         g_assert (ctx->fragments != NULL);
         g_task_return_pointer (task, mbim_message_ref (ctx->fragments), (GDestroyNotify) mbim_message_unref);
@@ -292,11 +314,11 @@ transaction_timed_out (TransactionWaitContext *wait_ctx)
     ctx->timeout_source = NULL;
 
     /* If no fragment was received, complete transaction with a timeout error */
-    if (!ctx->fragments)
+    if (!ctx->fragments) {
         error = g_error_new (MBIM_CORE_ERROR,
                              MBIM_CORE_ERROR_TIMEOUT,
                              "Transaction timed out");
-    else {
+    } else {
         /* Fragment timeout... */
         error = g_error_new (MBIM_PROTOCOL_ERROR,
                              MBIM_PROTOCOL_ERROR_TIMEOUT_FRAGMENT,
@@ -481,6 +503,14 @@ mbim_device_check_ms_mbimex_version (MbimDevice *self,
     return ((self->priv->ms_mbimex_version_major > ms_mbimex_version_major) ||
             ((self->priv->ms_mbimex_version_major == ms_mbimex_version_major) &&
              (self->priv->ms_mbimex_version_minor >= ms_mbimex_version_minor)));
+}
+
+guint
+mbim_device_get_consecutive_timeouts (MbimDevice *self)
+{
+    g_return_val_if_fail (MBIM_IS_DEVICE (self), 0);
+
+    return self->priv->consecutive_timeouts;
 }
 
 /*****************************************************************************/
@@ -2709,6 +2739,9 @@ set_property (GObject      *object,
     case PROP_IN_SESSION:
         self->priv->in_session = g_value_get_boolean (value);
         break;
+    case PROP_CONSECUTIVE_TIMEOUTS:
+        g_assert_not_reached ();
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -2732,6 +2765,9 @@ get_property (GObject    *object,
         break;
     case PROP_IN_SESSION:
         g_value_set_boolean (value, self->priv->in_session);
+        break;
+    case PROP_CONSECUTIVE_TIMEOUTS:
+        g_value_set_uint (value, self->priv->consecutive_timeouts);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2850,6 +2886,19 @@ mbim_device_class_init (MbimDeviceClass *klass)
                               FALSE,
                               G_PARAM_READWRITE);
     g_object_class_install_property (object_class, PROP_IN_SESSION, properties[PROP_IN_SESSION]);
+
+    /**
+     * MbimDevice:device-consecutive-timeouts:
+     *
+     * Since: 1.28
+     */
+    properties[PROP_CONSECUTIVE_TIMEOUTS] =
+        g_param_spec_uint (MBIM_DEVICE_CONSECUTIVE_TIMEOUTS,
+                           "Consecutive timeouts",
+                           "Number of consecutive timeouts detected in requests sent to the device",
+                           0, G_MAXUINT, 0,
+                           G_PARAM_READABLE);
+    g_object_class_install_property (object_class, PROP_CONSECUTIVE_TIMEOUTS, properties[PROP_CONSECUTIVE_TIMEOUTS]);
 
   /**
    * MbimDevice::device-indicate-status:

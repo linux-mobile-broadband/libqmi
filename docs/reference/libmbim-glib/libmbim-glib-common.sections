@@ -242,6 +242,7 @@ mbim_message_get_type
 MBIM_DEVICE_FILE
 MBIM_DEVICE_IN_SESSION
 MBIM_DEVICE_TRANSACTION_ID
+MBIM_DEVICE_CONSECUTIVE_TIMEOUTS
 MBIM_DEVICE_SIGNAL_REMOVED
 MBIM_DEVICE_SIGNAL_INDICATE_STATUS
 MBIM_DEVICE_SIGNAL_ERROR
@@ -256,6 +257,7 @@ mbim_device_is_open
 mbim_device_get_ms_mbimex_version
 mbim_device_set_ms_mbimex_version
 mbim_device_check_ms_mbimex_version
+mbim_device_get_consecutive_timeouts
 mbim_device_open
 mbim_device_open_finish
 MbimDeviceOpenFlags

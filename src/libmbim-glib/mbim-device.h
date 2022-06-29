@@ -71,6 +71,15 @@ typedef struct _MbimDevicePrivate MbimDevicePrivate;
 #define MBIM_DEVICE_IN_SESSION "device-in-session"
 
 /**
+ * MBIM_DEVICE_CONSECUTIVE_TIMEOUTS:
+ *
+ * Symbol defining the #MbimDevice:device-consecutive-timeouts property.
+ *
+ * Since: 1.28
+ */
+#define MBIM_DEVICE_CONSECUTIVE_TIMEOUTS "device-consecutive-timeouts"
+
+/**
  * MBIM_DEVICE_SIGNAL_INDICATE_STATUS:
  *
  * Symbol defining the #MbimDevice::device-indicate-status signal.
@@ -451,6 +460,18 @@ guint32 mbim_device_get_next_transaction_id (MbimDevice *self);
  * Since: 1.24.4
  */
 guint32 mbim_device_get_transaction_id (MbimDevice *self);
+
+/**
+ * mbim_device_get_consecutive_timeouts:
+ * @self: a #MbimDevice.
+ *
+ * Gets the number of consecutive transaction timeouts in the device.
+ *
+ * Returns: a #guint.
+ *
+ * Since: 1.28
+ */
+guint mbim_device_get_consecutive_timeouts (MbimDevice *self);
 
 /**
  * mbim_device_command:
