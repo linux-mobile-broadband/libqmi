@@ -430,6 +430,7 @@
       <xi:include href="xml/qmi-message-voice-cancel-ussd.xml"/>
       <xi:include href="xml/qmi-message-voice-originate-ussd-no-wait.xml"/>
       <xi:include href="xml/qmi-message-voice-get-all-call-info.xml"/>
+      <xi:include href="xml/qmi-message-voice-burst-dtmf.xml"/>
     </section>
   </chapter>
 
