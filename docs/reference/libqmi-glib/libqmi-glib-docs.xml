@@ -431,6 +431,8 @@
       <xi:include href="xml/qmi-message-voice-originate-ussd-no-wait.xml"/>
       <xi:include href="xml/qmi-message-voice-get-all-call-info.xml"/>
       <xi:include href="xml/qmi-message-voice-burst-dtmf.xml"/>
+      <xi:include href="xml/qmi-message-voice-start-continuous-dtmf.xml"/>
+      <xi:include href="xml/qmi-message-voice-stop-continuous-dtmf.xml"/>
     </section>
   </chapter>
 
