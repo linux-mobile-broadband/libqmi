@@ -50,8 +50,9 @@
   { "name"     : "File Write",
     "type"     : "Command",
     "since"    : "1.26",
-    "set"      : [ { "name"   : "DataBuffer",
-                     "format" : "unsized-byte-array" } ],
+    "set"      : [ { "name"      : "DataBuffer",
+                     "format"    : "unsized-byte-array",
+                     "pad-array" : "FALSE" } ],
     "response" : []},
 
   // *********************************************************************************
