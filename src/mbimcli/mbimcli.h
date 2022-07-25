@@ -35,6 +35,7 @@ GOptionGroup *mbimcli_intel_mutual_authentication_get_option_group (void);
 GOptionGroup *mbimcli_intel_tools_get_option_group                 (void);
 GOptionGroup *mbimcli_google_get_option_group                      (void);
 GOptionGroup *mbimcli_fibocom_get_option_group                     (void);
+GOptionGroup *mbimcli_sms_get_option_group                         (void);
 
 gboolean      mbimcli_basic_connect_options_enabled               (void);
 gboolean      mbimcli_phonebook_options_enabled                   (void);
@@ -53,6 +54,7 @@ gboolean      mbimcli_intel_mutual_authentication_options_enabled (void);
 gboolean      mbimcli_intel_tools_options_enabled                 (void);
 gboolean      mbimcli_google_options_enabled                      (void);
 gboolean      mbimcli_fibocom_options_enabled                     (void);
+gboolean      mbimcli_sms_options_enabled                         (void);
 
 void          mbimcli_basic_connect_run                 (MbimDevice   *device,
                                                          GCancellable *cancellable);
@@ -88,7 +90,8 @@ void          mbimcli_google_run                        (MbimDevice   *device,
                                                          GCancellable *cancellable);
 void          mbimcli_fibocom_run                       (MbimDevice   *device,
                                                          GCancellable *cancellable);
-
+void          mbimcli_sms_run                           (MbimDevice *device,
+                                                         GCancellable *cancellable);
 
 /* link management */
 GOptionGroup *mbimcli_link_management_get_option_group (void);

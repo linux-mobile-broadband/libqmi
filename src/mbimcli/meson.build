@@ -20,6 +20,7 @@ mbimcli_sources = files(
   'mbimcli-intel-mutual-authentication.c',
   'mbimcli-intel-tools.c',
   'mbimcli-fibocom.c',
+  'mbimcli-sms.c',
 )
 
 sources = mbimcli_sources + files(

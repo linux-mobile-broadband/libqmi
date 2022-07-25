@@ -358,6 +358,8 @@ device_open_ready (MbimDevice   *dev,
         mbimcli_google_run (dev, cancellable);
         return;
     case MBIM_SERVICE_SMS:
+        mbimcli_sms_run (dev, cancellable);
+        return;
     case MBIM_SERVICE_USSD:
     case MBIM_SERVICE_STK:
     case MBIM_SERVICE_AUTH:
@@ -520,6 +522,11 @@ parse_actions (void)
         actions_enabled++;
     }
 
+    if (mbimcli_sms_options_enabled()) {
+        service = MBIM_SERVICE_SMS;
+        actions_enabled++;
+    }
+
     /* Noop */
     if (noop_flag)
         actions_enabled++;
@@ -572,6 +579,7 @@ int main (int argc, char **argv)
     g_option_context_add_group (context, mbimcli_intel_tools_get_option_group ());
     g_option_context_add_group (context, mbimcli_google_get_option_group());
     g_option_context_add_group (context, mbimcli_fibocom_get_option_group());
+    g_option_context_add_group (context, mbimcli_sms_get_option_group ());
 
     g_option_context_add_main_entries (context, main_entries, NULL);
     if (!g_option_context_parse (context, &argc, &argv, &error)) {
