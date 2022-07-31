@@ -118,10 +118,6 @@ endif
 
 add_project_arguments(common_flags + cc_flags, language: 'c')
 
-if cc.check_header('linux/wwan.h')
-    add_project_arguments(['-DHAVE_WWAN_KERNEL_HEADER'], language: 'c')
-endif
-
 glib_version = '2.56'
 
 glib_dep = dependency('glib-2.0', version: '>= ' + glib_version)

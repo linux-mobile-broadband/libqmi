@@ -15,9 +15,10 @@
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 
-/* This is a built-in file, not provided by the kernel headers,
- * used to add wwan symbols if not available */
+/* These are built-in files, not provided by the kernel headers,
+ * used to add wwan/link symbols if not available */
 #include <kernel/wwan.h>
+#include <kernel/if_link.h>
 
 #include <net/if.h>
 #include <net/if_arp.h>
@@ -49,7 +50,7 @@ netlink_message_new_link (guint        link_id,
 
     msg = mbim_helpers_netlink_message_new (RTM_NEWLINK, NLM_F_CREATE | NLM_F_EXCL);
     /* IFLA_PARENT_DEV_NAME has type NLA_NUL_STRING */
-    mbim_helpers_netlink_append_attribute_string_null (msg, IFLA_PARENT_DEV_NAME, base_if_name);
+    mbim_helpers_netlink_append_attribute_string_null (msg, MBIM_IFLA_PARENT_DEV_NAME, base_if_name);
     mbim_helpers_netlink_append_attribute_string (msg, IFLA_IFNAME, ifname);
 
     /* Store the position of the next attribute to adjust its length later. */
@@ -60,7 +61,7 @@ netlink_message_new_link (guint        link_id,
     /* Store the position of the next attribute to adjust its length later. */
     datainfo_pos = mbim_helpers_netlink_get_pos_of_next_attr (msg);
     mbim_helpers_netlink_append_attribute_nested (msg, IFLA_INFO_DATA);
-    mbim_helpers_netlink_append_attribute_uint32 (msg, IFLA_WWAN_LINK_ID, link_id);
+    mbim_helpers_netlink_append_attribute_uint32 (msg, MBIM_IFLA_WWAN_LINK_ID, link_id);
 
     /* Use memcpy to preserve byte alignment */
     memcpy (&info, (char *) msg->data + datainfo_pos, sizeof (struct rtattr));
