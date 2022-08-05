@@ -1294,8 +1294,7 @@ get_descriptors_filepath (MbimDevice *self)
     }
 
     if (descriptors_path && !g_file_test (descriptors_path, G_FILE_TEST_EXISTS)) {
-        g_warning ("[%s] Descriptors file doesn't exist",
-                   self->priv->path_display);
+        g_warning ("[%s] descriptors file doesn't exist", self->priv->path_display);
         return NULL;
     }
 
@@ -1318,9 +1317,9 @@ read_max_control_transfer (MbimDevice *self)
         /* If descriptors file doesn't exist, it's probably because we're using
          * some other kernel driver, not the cdc_wdm/cdc_mbim pair, so fallback to
          * the default and avoid warning about it. */
-        g_debug ("[%s] Couldn't find descriptors file, possibly not using cdc_mbim",
+        g_debug ("[%s] couldn't find descriptors file, possibly not using cdc_mbim",
                  self->priv->path_display);
-        g_debug ("[%s] Fallback to default max control message size: %u",
+        g_debug ("[%s] fallback to default max control message size: %u",
                  self->priv->path_display, MAX_CONTROL_TRANSFER);
         return MAX_CONTROL_TRANSFER;
     }
@@ -1329,7 +1328,7 @@ read_max_control_transfer (MbimDevice *self)
                               &contents,
                               &length,
                               &error)) {
-        g_warning ("[%s] Couldn't read descriptors file: %s",
+        g_warning ("[%s] couldn't read descriptors file: %s",
                    self->priv->path_display,
                    error->message);
         return MAX_CONTROL_TRANSFER;
@@ -1343,7 +1342,7 @@ read_max_control_transfer (MbimDevice *self)
 
             /* Found! */
             max = GUINT16_FROM_LE (((struct usb_cdc_mbim_desc *)&contents[i])->wMaxControlMessage);
-            g_debug ("[%s] Read max control message size from descriptors file: %" G_GUINT16_FORMAT,
+            g_debug ("[%s] read max control message size from descriptors file: %" G_GUINT16_FORMAT,
                      self->priv->path_display,
                      max);
             return max;
@@ -1354,7 +1353,7 @@ read_max_control_transfer (MbimDevice *self)
         i += contents[i];
     }
 
-    g_warning ("[%s] Couldn't find MBIM signature in descriptors file",
+    g_warning ("[%s] couldn't find MBIM signature in descriptors file",
                self->priv->path_display);
     return MAX_CONTROL_TRANSFER;
 }
@@ -1443,14 +1442,14 @@ create_iochannel_with_fd (GTask *task)
 
     /* Query message size */
     if (ioctl (fd, IOCTL_WDM_MAX_COMMAND, &max) < 0) {
-        g_debug ("[%s] Couldn't query maximum message size: "
+        g_debug ("[%s] couldn't query maximum message size: "
                  "IOCTL_WDM_MAX_COMMAND failed: %s",
                  self->priv->path_display,
                  strerror (errno));
         /* Fallback, try to read the descriptor file */
         max = read_max_control_transfer (self);
     } else {
-        g_debug ("[%s] Queried max control message size: %" G_GUINT16_FORMAT,
+        g_debug ("[%s] queried max control message size: %" G_GUINT16_FORMAT,
                  self->priv->path_display,
                  max);
     }
@@ -1516,7 +1515,7 @@ create_iochannel_with_socket (GTask *task)
         g_auto(GStrv)      argc = NULL;
         g_autoptr(GSource) source = NULL;
 
-        g_debug ("cannot connect to proxy: %s", error->message);
+        g_debug ("[%s] cannot connect to proxy: %s", self->priv->path_display, error->message);
         g_clear_error (&error);
         g_clear_object (&self->priv->socket_client);
 
@@ -1531,7 +1530,7 @@ create_iochannel_with_socket (GTask *task)
             return;
         }
 
-        g_debug ("spawning new mbim-proxy (try %u)...", ctx->spawn_retries);
+        g_debug ("[%s] spawning new mbim-proxy (try %u)...", self->priv->path_display, ctx->spawn_retries);
 
         argc = g_new0 (gchar *, 2);
         argc[0] = g_strdup (LIBEXEC_PATH "/mbim-proxy");
@@ -1543,7 +1542,7 @@ create_iochannel_with_socket (GTask *task)
                             NULL, /* child_setup_user_data */
                             NULL,
                             &error)) {
-            g_debug ("error spawning mbim-proxy: %s", error->message);
+            g_debug ("[%s] error spawning mbim-proxy: %s", self->priv->path_display, error->message);
             g_clear_error (&error);
         }
 
@@ -1831,7 +1830,7 @@ open_message_ready (MbimDevice   *self,
             return;
         }
 
-        g_debug ("error reported in open operation: closed");
+        g_debug ("[%s] error reported in open operation: closed", self->priv->path_display);
         self->priv->open_status = OPEN_STATUS_CLOSED;
         g_task_return_error (task, g_steal_pointer (&error));
         g_object_unref (task);
@@ -1839,7 +1838,7 @@ open_message_ready (MbimDevice   *self,
     }
 
     if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_OPEN_DONE, &error)) {
-        g_debug ("getting open done result failed: closed");
+        g_debug ("[%s] getting open done result failed: closed", self->priv->path_display);
         self->priv->open_status = OPEN_STATUS_CLOSED;
         g_task_return_error (task, g_steal_pointer (&error));
         g_object_unref (task);
@@ -1884,9 +1883,9 @@ close_message_before_open_ready (MbimDevice   *self,
 
     response = mbim_device_command_finish (self, res, &error);
     if (!response)
-        g_debug ("error reported in close before open: %s (ignored)", error->message);
+        g_debug ("[%s] error reported in close before open: %s (ignored)", self->priv->path_display, error->message);
     else if (!mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_CLOSE_DONE, &error))
-        g_debug ("getting close done result failed: %s (ignored)", error->message);
+        g_debug ("[%s] getting close done result failed: %s (ignored)", self->priv->path_display, error->message);
 
     /* go on */
     ctx->step++;
@@ -1925,7 +1924,7 @@ proxy_cfg_message_ready (MbimDevice   *self,
     response = mbim_device_command_finish (self, res, &error);
     if (!response) {
         /* Hard error if proxy cfg command fails */
-        g_debug ("proxy configuration failed: closed");
+        g_debug ("[%s] proxy configuration failed: closed", self->priv->path_display);
         self->priv->open_status = OPEN_STATUS_CLOSED;
         g_task_return_error (task, error);
         g_object_unref (task);
@@ -1968,7 +1967,7 @@ create_iochannel_ready (MbimDevice   *self,
     GError            *error = NULL;
 
     if (!create_iochannel_finish (self, res, &error)) {
-        g_debug ("creating iochannel failed: closed");
+        g_debug ("[%s] creating iochannel failed: closed", self->priv->path_display);
         self->priv->open_status = OPEN_STATUS_CLOSED;
         g_task_return_error (task, error);
         g_object_unref (task);
@@ -1992,7 +1991,7 @@ device_open_context_step (GTask *task)
 
     /* Timed out? */
     if (g_timer_elapsed (ctx->timer, NULL) > ctx->timeout) {
-        g_debug ("open operation timed out: closed");
+        g_debug ("[%s] open operation timed out: closed", self->priv->path_display);
         self->priv->open_status = OPEN_STATUS_CLOSED;
         g_task_return_new_error (task,
                                  MBIM_CORE_ERROR,
@@ -2022,7 +2021,7 @@ device_open_context_step (GTask *task)
             return;
         }
 
-        g_debug ("opening device...");
+        g_debug ("[%s] opening device...", self->priv->path_display);
         g_assert (self->priv->open_status == OPEN_STATUS_CLOSED);
         self->priv->open_status = OPEN_STATUS_OPENING;
 
@@ -2401,7 +2400,7 @@ device_send (MbimDevice   *self,
             hex = g_strdup_printf ("%s...", tmp);
         }
 
-        g_debug ("[%s] Sent message...\n"
+        g_debug ("[%s] sent message...\n"
                  "<<<<<< RAW:\n"
                  "<<<<<<   length = %u\n"
                  "<<<<<<   data   = %s\n",
@@ -2415,7 +2414,7 @@ device_send (MbimDevice   *self,
                                                      "<<<<<< ",
                                                      FALSE,
                                                      NULL);
-        g_debug ("[%s] Sent message (translated)...\n%s",
+        g_debug ("[%s] sent message (translated)...\n%s",
                  self->priv->path_display,
                  printable);
     }
@@ -2453,7 +2452,7 @@ device_send (MbimDevice   *self,
             g_autofree gchar *printable_full = NULL;
 
             printable_full  = mbim_common_str_hex ((const guint8 *)full_fragment->data, full_fragment->len, ':');
-            g_debug ("[%s] Sent fragment (%u)...\n"
+            g_debug ("[%s] sent fragment (%u)...\n"
                      "<<<<<< RAW:\n"
                      "<<<<<<   length = %u\n"
                      "<<<<<<   data   = %s\n",
@@ -2461,7 +2460,7 @@ device_send (MbimDevice   *self,
                      full_fragment->len,
                      printable_full);
 
-            g_debug ("[%s] Sent fragment (translated)...\n%s",
+            g_debug ("[%s] sent fragment (translated)...\n%s",
                      self->priv->path_display,
                      printable_headers);
         }
@@ -2505,7 +2504,7 @@ device_report_error_in_idle (ReportErrorContext *ctx)
         g_autoptr(GError) error = NULL;
 
         if (!device_send (ctx->self, ctx->message, &error))
-            g_warning ("[%s] Couldn't send host error message: %s",
+            g_warning ("[%s] couldn't send host error message: %s",
                        ctx->self->priv->path_display,
                        error->message);
     }
