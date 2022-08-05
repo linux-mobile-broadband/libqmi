@@ -83,7 +83,7 @@ qmi_endpoint_parse_buffer (QmiEndpoint        *self,
                 return TRUE;
 
             /* Warn about the issue */
-            g_warning ("[%s] Invalid QMI message received: '%s'",
+            g_warning ("[%s] invalid message received: '%s'",
                        qmi_file_get_path_display (self->priv->file),
                        inner_error->message);
             g_error_free (inner_error);

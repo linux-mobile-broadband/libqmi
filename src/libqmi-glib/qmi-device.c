@@ -205,11 +205,8 @@ transaction_complete_and_free (Transaction  *tr,
     if (reply) {
         /* if we got a valid response, we can cancel any ongoing abort
          * operation for this request */
-        if (tr->abort_cancellable) {
-            g_debug ("transaction 0x%x completed with a response: cancelling the abort operation",
-                     qmi_message_get_transaction_id (tr->message));
+        if (tr->abort_cancellable)
             g_cancellable_cancel (tr->abort_cancellable);
-        }
         g_simple_async_result_set_op_res_gpointer (tr->result,
                                                    qmi_message_ref (reply),
                                                    (GDestroyNotify)qmi_message_unref);
@@ -300,7 +297,8 @@ transaction_abort_ready (QmiDevice    *self,
      * we totally ignore the result of the abort operation. */
     tr = device_release_transaction (self, key);
     if (!tr) {
-        g_debug ("not processing abort response, operation has already been completed");
+        g_debug ("[%s] not processing abort response, operation has already been completed",
+                 qmi_file_get_path_display (self->priv->file));
         return;
     }
 
@@ -314,7 +312,8 @@ transaction_abort_ready (QmiDevice    *self,
                                       &error)) {
         GError *built_error;
 
-        g_debug ("abort operation failed: %s", error->message);
+        g_debug ("[%s] abort operation failed: %s",
+                 qmi_file_get_path_display (self->priv->file), error->message);
 
         /* We don't want to return any kind of error, because what failed here
          * is the abort operation for the user request, so always return
@@ -352,7 +351,8 @@ transaction_abort (QmiDevice   *self,
     /* If the command is not abortable, we'll return the error right away
      * to the user. */
     if (!__qmi_message_is_abortable (tr->message, tr->message_context)) {
-        g_debug ("transaction 0x%x aborted, but message is not abortable", transaction_id);
+        g_debug ("[%s] transaction 0x%x aborted, but message is not abortable",
+                 qmi_file_get_path_display (self->priv->file), transaction_id);
         device_release_transaction (self, tr->wait_ctx->key);
         transaction_complete_and_free (tr, NULL, abort_error_take);
         g_error_free (abort_error_take);
@@ -362,14 +362,16 @@ transaction_abort (QmiDevice   *self,
     /* if the command is abortable but the user didn't use qmi_device_command_abortable(),
      * then return the error right away anyway */
     if (!tr->abort_build_request_fn || !tr->abort_parse_response_fn) {
-        g_debug ("transaction 0x%x aborted, but no way to build abort request", transaction_id);
+        g_debug ("[%s] transaction 0x%x aborted, but no way to build abort request",
+                 qmi_file_get_path_display (self->priv->file), transaction_id);
         device_release_transaction (self, tr->wait_ctx->key);
         transaction_complete_and_free (tr, NULL, abort_error_take);
         g_error_free (abort_error_take);
         return;
     }
 
-    g_debug ("transaction 0x%x aborted, building abort request...", transaction_id);
+    g_debug ("[%s] transaction 0x%x aborted, building abort request...",
+             qmi_file_get_path_display (self->priv->file), transaction_id);
 
     /* Try to build abort request */
     abort_request = tr->abort_build_request_fn (self,
@@ -379,7 +381,8 @@ transaction_abort (QmiDevice   *self,
     if (!abort_request) {
         /* complete the transaction with the error we got while building the
          * abort request */
-        g_debug ("transaction 0x%x aborted, but building abort request failed", transaction_id);
+        g_debug ("[%s] transaction 0x%x aborted, but building abort request failed",
+                 qmi_file_get_path_display (self->priv->file), transaction_id);
         device_release_transaction (self, tr->wait_ctx->key);
         transaction_complete_and_free (tr, NULL, error);
         g_error_free (error);
@@ -418,7 +421,7 @@ transaction_timed_out (TransactionWaitContext *ctx)
     /* Increase number of consecutive timeouts */
     ctx->self->priv->consecutive_timeouts++;
     g_object_notify_by_pspec (G_OBJECT (ctx->self), properties[PROP_CONSECUTIVE_TIMEOUTS]);
-    g_debug ("[%s] Number of consecutive timeouts: %u",
+    g_debug ("[%s] number of consecutive timeouts: %u",
              qmi_file_get_path_display (ctx->self->priv->file),
              ctx->self->priv->consecutive_timeouts);
 
@@ -657,7 +660,7 @@ check_service_supported (QmiDevice *self,
 {
     /* If we didn't check supported services, just assume it is supported */
     if (!self->priv->supported_services) {
-        g_debug ("[%s] Assuming service '%s' is supported...",
+        g_debug ("[%s] assuming service '%s' is supported...",
                  qmi_file_get_path_display (self->priv->file),
                  qmi_service_get_string (service));
         return TRUE;
@@ -1071,7 +1074,7 @@ build_client_object (GTask *task)
     else if (self->priv->node) {
         /* QRTR does not have any way of fetching version information. Assume
          * all services can handle all message types and TLVs. */
-        g_debug ("[%s] Client version cannot be retrieved when using QRTR",
+        g_debug ("[%s] client version cannot be retrieved when using QRTR",
                  qmi_file_get_path_display (self->priv->file));
         g_object_set (client,
                       QMI_CLIENT_VERSION_MAJOR, QMI_CLIENT_VERSION_UNKNOWN,
@@ -1101,7 +1104,7 @@ build_client_object (GTask *task)
             version_string = g_strdup_printf ("%u.%u", info->major_version, info->minor_version);
     }
 
-    g_debug ("[%s] Registered '%s' (version %s) client with ID '%u'",
+    g_debug ("[%s] registered '%s' (version %s) client with ID '%u'",
              qmi_file_get_path_display (self->priv->file),
              qmi_service_get_string (ctx->service),
              version_string ? version_string : "unknown",
@@ -1357,7 +1360,7 @@ qmi_device_allocate_client (QmiDevice *self,
         input = qmi_message_ctl_allocate_cid_input_new ();
         qmi_message_ctl_allocate_cid_input_set_service (input, ctx->service, NULL);
 
-        g_debug ("[%s] Allocating new client ID...",
+        g_debug ("[%s] allocating new client ID...",
                  qmi_file_get_path_display (self->priv->file));
         qmi_client_ctl_allocate_cid (self->priv->client_ctl,
                                      input,
@@ -1371,7 +1374,7 @@ qmi_device_allocate_client (QmiDevice *self,
     }
 
     /* Reuse the given CID */
-    g_debug ("[%s] Reusing client CID '%u'...",
+    g_debug ("[%s] reusing client CID '%u'...",
              qmi_file_get_path_display (self->priv->file),
              cid);
     ctx->cid = cid;
@@ -1445,7 +1448,7 @@ qmi_device_release_client (QmiDevice *self,
     g_return_if_fail (service != QMI_SERVICE_CTL);
 
     flags_str = qmi_device_release_client_flags_build_string_from_mask (flags);
-    g_debug ("[%s] Releasing '%s' client with flags '%s'...",
+    g_debug ("[%s] releasing '%s' client with flags '%s'...",
              qmi_file_get_path_display (self->priv->file),
              qmi_service_get_string (service),
              flags_str);
@@ -1469,7 +1472,7 @@ qmi_device_release_client (QmiDevice *self,
     /* Unregister from device */
     unregister_client (self, client);
 
-    g_debug ("[%s] Unregistered '%s' client with ID '%u'",
+    g_debug ("[%s] unregistered '%s' client with ID '%u'",
              qmi_file_get_path_display (self->priv->file),
              qmi_service_get_string (service),
              cid);
@@ -1600,7 +1603,7 @@ endpoint_new_data_cb (QmiEndpoint *endpoint,
                                     (QmiMessageHandler)process_message,
                                     self,
                                     &error)) {
-        g_warning ("[%s] QMI parsing error: %s",
+        g_warning ("[%s] parsing error: %s",
                    qmi_file_get_path_display (self->priv->file), error->message);
         g_error_free (error);
     }
@@ -1610,7 +1613,7 @@ static void
 endpoint_hangup_cb (QmiEndpoint *endpoint,
                     QmiDevice   *self)
 {
-    g_debug ("[%s] QMI endpoint hangup: removed",
+    g_debug ("[%s] endpoint hangup: removed",
              qmi_file_get_path_display (self->priv->file));
 
     /* cancel all ongoing transactions as the endpoing hangup happened */
@@ -1673,10 +1676,10 @@ trace_message (QmiDevice         *self,
 
     if (sent_or_received) {
         prefix_str = "<<<<<< ";
-        action_str = "Sent";
+        action_str = "sent";
     } else {
         prefix_str = "<<<<<< ";
-        action_str = "Received";
+        action_str = "received";
     }
 
     printable = qmi_helpers_str_hex (((GByteArray *)message)->data,
@@ -1754,7 +1757,7 @@ process_message (QmiMessage *message,
         if (!tr) {
             /* Unmatched transactions translated without an explicit context */
             trace_message (self, message, FALSE, "response", NULL);
-            g_debug ("[%s] No transaction matched in received message",
+            g_debug ("[%s] no transaction matched in received message",
                      qmi_file_get_path_display (self->priv->file));
             return;
         }
@@ -1774,7 +1777,7 @@ process_message (QmiMessage *message,
             /* Translate without an explicit context as this message has nothing to do with the
              * request. */
             trace_message (self, message, FALSE, "response", NULL);
-            g_debug ("[%s] Mismatched message id in received message for transaction 0x%04x (expected 0x%04x, received 0x%04x)",
+            g_debug ("[%s] mismatched message id in received message for transaction 0x%04x (expected 0x%04x, received 0x%04x)",
                      qmi_file_get_path_display (self->priv->file),
                      qmi_message_get_transaction_id (message),
                      qmi_message_get_message_id (tr->message),
@@ -1785,7 +1788,7 @@ process_message (QmiMessage *message,
 
         /* Reset number of consecutive timeouts */
         if (self->priv->consecutive_timeouts > 0) {
-            g_debug ("[%s] Reseted number of consecutive timeouts",
+            g_debug ("[%s] reseted number of consecutive timeouts",
                      qmi_file_get_path_display (self->priv->file));
             self->priv->consecutive_timeouts = 0;
             g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONSECUTIVE_TIMEOUTS]);
@@ -1800,7 +1803,7 @@ process_message (QmiMessage *message,
 
     /* Unexpected message types translated without an explicit context */
     trace_message (self, message, FALSE, "unexpected message", NULL);
-    g_debug ("[%s] Message received but it is neither an indication nor a response. Skipping it.",
+    g_debug ("[%s] message received but it is neither an indication nor a response. Skipping it.",
              qmi_file_get_path_display (self->priv->file));
 }
 
@@ -2194,7 +2197,7 @@ ctl_set_data_format_ready (QmiClientCtl *client,
 
     self = g_task_get_source_object (task);
 
-    g_debug ("[%s] Network port data format operation finished",
+    g_debug ("[%s] network port data format operation finished",
              qmi_file_get_path_display (self->priv->file));
 
     qmi_message_ctl_set_data_format_output_unref (output);
@@ -2251,7 +2254,7 @@ sync_ready (QmiClientCtl *client_ctl,
         return;
     }
 
-    g_debug ("[%s] Sync operation finished",
+    g_debug ("[%s] sync operation finished",
              qmi_file_get_path_display (self->priv->file));
 
     qmi_message_ctl_sync_output_unref (output);
@@ -2319,7 +2322,7 @@ open_version_info_ready (QmiClientCtl *client_ctl,
     g_clear_pointer (&self->priv->supported_services, g_array_unref);
     self->priv->supported_services = g_array_ref (service_list);
 
-    g_debug ("[%s] QMI Device supports %u services:",
+    g_debug ("[%s] device supports %u services:",
              qmi_file_get_path_display (self->priv->file),
              self->priv->supported_services->len);
     for (i = 0; i < self->priv->supported_services->len; i++) {
@@ -2376,7 +2379,7 @@ build_services_from_qrtr_node (GTask *task)
                                                         sizeof (QmiMessageCtlGetVersionInfoOutputServiceListService),
                                                         n_services);
 
-    g_debug ("[%s] QMI Device supports %u services:",
+    g_debug ("[%s] device supports %u services:",
              qmi_file_get_path_display (self->priv->file),
              n_services);
 
@@ -2479,7 +2482,8 @@ device_setup_open_flags_by_transport (QmiDevice          *self,
 
     transport = qmi_helpers_get_transport_type (qmi_file_get_path (self->priv->file), &inner_error);
     if ((transport == QMI_HELPERS_TRANSPORT_TYPE_UNKNOWN) && !self->priv->no_file_check)
-        g_warning ("[%s] couldn't detect transport type of port: %s", qmi_file_get_path_display (self->priv->file), inner_error->message);
+        g_warning ("[%s] couldn't detect transport type of port: %s",
+                   qmi_file_get_path_display (self->priv->file), inner_error->message);
     g_clear_error (&inner_error);
 
 #if defined MBIM_QMUX_ENABLED
@@ -2597,7 +2601,7 @@ device_open_step (GTask *task)
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_VERSION_INFO) {
             /* Setup how many times to retry... We'll retry once per second */
             ctx->version_check_retries = ctx->timeout > 0 ? ctx->timeout : 1;
-            g_debug ("[%s] Checking version info (%u retries)...",
+            g_debug ("[%s] checking version info (%u retries)...",
                      qmi_file_get_path_display (self->priv->file),
                      ctx->version_check_retries);
 #if QMI_QRTR_SUPPORTED
@@ -2625,7 +2629,7 @@ device_open_step (GTask *task)
         if (ctx->flags & QMI_DEVICE_OPEN_FLAGS_SYNC) {
             /* Setup how many times to retry... We'll retry once per second */
             ctx->sync_retries = ctx->timeout > SYNC_TIMEOUT_SECS ? (ctx->timeout / SYNC_TIMEOUT_SECS) : 1;
-            g_debug ("[%s] Running sync (%u retries)...",
+            g_debug ("[%s] running sync (%u retries)...",
                      qmi_file_get_path_display (self->priv->file),
                      ctx->sync_retries);
             qmi_client_ctl_sync (self->priv->client_ctl,
@@ -2646,7 +2650,7 @@ device_open_step (GTask *task)
             QmiCtlDataFormat qos = QMI_CTL_DATA_FORMAT_QOS_FLOW_HEADER_ABSENT;
             QmiCtlDataLinkProtocol link_protocol = QMI_CTL_DATA_LINK_PROTOCOL_802_3;
 
-            g_debug ("[%s] Setting network port data format...",
+            g_debug ("[%s] setting network port data format...",
                      qmi_file_get_path_display (self->priv->file));
 
             input = qmi_message_ctl_set_data_format_input_new ();
@@ -2720,7 +2724,7 @@ qmi_device_open (QmiDevice *self,
     g_return_if_fail (QMI_IS_DEVICE (self));
 
     flags_str = qmi_device_open_flags_build_string_from_mask (flags);
-    g_debug ("[%s] Opening device with flags '%s'...",
+    g_debug ("[%s] opening device with flags '%s'...",
              qmi_file_get_path_display (self->priv->file),
              flags_str);
     g_free (flags_str);
@@ -3067,7 +3071,7 @@ sync_indication_cb (QmiClientCtl *client_ctl,
                     QmiDevice *self)
 {
     /* Just log about it */
-    g_debug ("[%s] Sync indication received",
+    g_debug ("[%s] sync indication received",
              qmi_file_get_path_display (self->priv->file));
 }
 
@@ -3269,7 +3273,7 @@ foreach_warning (gpointer key,
                  QmiClient *client,
                  QmiDevice *self)
 {
-    g_warning ("[%s] QMI client for service '%s' with CID '%u' wasn't released",
+    g_warning ("[%s] client for service '%s' with CID '%u' wasn't released",
                qmi_file_get_path_display (self->priv->file),
                qmi_service_get_string (qmi_client_get_service (client)),
                qmi_client_get_cid (client));
