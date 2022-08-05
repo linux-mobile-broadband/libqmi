@@ -70,21 +70,16 @@ quit_cb (gpointer user_data)
 }
 
 static void
-log_handler (const gchar *log_domain,
-             GLogLevelFlags log_level,
-             const gchar *message,
-             gpointer user_data)
+log_handler (const gchar    *log_domain,
+             GLogLevelFlags  log_level,
+             const gchar    *message,
+             gpointer        user_data)
 {
     const gchar *log_level_str;
-    time_t now;
-    gchar time_str[64];
-    struct tm *local_time;
-    gboolean err;
-
-    now = time ((time_t *) NULL);
-    local_time = localtime (&now);
-    strftime (time_str, 64, "%d %b %Y, %H:%M:%S", local_time);
-    err = FALSE;
+    time_t       now;
+    gchar        time_str[64];
+    struct tm   *local_time;
+    gboolean     err = FALSE;
 
     switch (log_level) {
     case G_LOG_LEVEL_WARNING:
@@ -116,6 +111,10 @@ log_handler (const gchar *log_domain,
 
     if (!verbose_flag && !err)
         return;
+
+    now = time ((time_t *) NULL);
+    local_time = localtime (&now);
+    strftime (time_str, 64, "%d %b %Y, %H:%M:%S", local_time);
 
     g_fprintf (err ? stderr : stdout,
                "[%s] %s %s\n",
