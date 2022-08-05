@@ -243,7 +243,7 @@ transaction_task_complete_and_free (GTask        *task,
             g_error_matches (error, MBIM_PROTOCOL_ERROR, MBIM_PROTOCOL_ERROR_TIMEOUT_FRAGMENT)) {
             self->priv->consecutive_timeouts++;
             g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONSECUTIVE_TIMEOUTS]);
-            g_debug ("[%s] Number of consecutive timeouts: %u",
+            g_debug ("[%s] number of consecutive timeouts: %u",
                      self->priv->path_display,
                      self->priv->consecutive_timeouts);
         }
@@ -252,7 +252,7 @@ transaction_task_complete_and_free (GTask        *task,
     } else {
         /* Reset number of consecutive timeouts */
         if (self->priv->consecutive_timeouts > 0) {
-            g_debug ("[%s] Reseted number of consecutive timeouts",
+            g_debug ("[%s] reseted number of consecutive timeouts",
                      self->priv->path_display);
             self->priv->consecutive_timeouts = 0;
             g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONSECUTIVE_TIMEOUTS]);
@@ -838,7 +838,7 @@ indication_ready (MbimDevice   *self,
     g_autoptr(MbimMessage) indication = NULL;
 
     if (!(indication = g_task_propagate_pointer (G_TASK (res), &error))) {
-        g_debug ("[%s] Error processing indication message: %s",
+        g_debug ("[%s] error processing indication message: %s",
                  self->priv->path_display,
                  error->message);
         return;
@@ -919,7 +919,7 @@ process_message (MbimDevice        *self,
             printable = g_strdup_printf ("%s...", tmp);
         }
 
-        g_debug ("[%s] Received message...%s\n"
+        g_debug ("[%s] received message...%s\n"
                  ">>>>>> RAW:\n"
                  ">>>>>>   length = %u\n"
                  ">>>>>>   data   = %s\n",
@@ -937,7 +937,7 @@ process_message (MbimDevice        *self,
                                                           ">>>>>> ",
                                                           TRUE,
                                                           NULL);
-            g_debug ("[%s] Received message fragment (translated)...\n%s",
+            g_debug ("[%s] received message fragment (translated)...\n%s",
                      self->priv->path_display,
                      translated);
         }
@@ -980,7 +980,7 @@ process_message (MbimDevice        *self,
             if (!task) {
                 g_autofree gchar *printable = NULL;
 
-                g_debug ("[%s] No transaction matched in received message",
+                g_debug ("[%s] no transaction matched in received message",
                          self->priv->path_display);
                 /* Attempt to print a user friendly dump of the packet anyway */
                 printable = mbim_message_get_printable_full (message,
@@ -990,7 +990,7 @@ process_message (MbimDevice        *self,
                                                              is_partial_fragment,
                                                              NULL);
                 if (printable)
-                    g_debug ("[%s] Received unexpected message (translated)...\n%s",
+                    g_debug ("[%s] received unexpected message (translated)...\n%s",
                              self->priv->path_display,
                              printable);
 
@@ -1039,7 +1039,7 @@ process_message (MbimDevice        *self,
                                                              ">>>>>> ",
                                                              FALSE,
                                                              NULL);
-                g_debug ("[%s] Received message (translated)...\n%s",
+                g_debug ("[%s] received message (translated)...\n%s",
                          self->priv->path_display,
                          printable);
             }
@@ -1080,7 +1080,7 @@ process_message (MbimDevice        *self,
                                                          ">>>>>> ",
                                                          FALSE,
                                                          NULL);
-            g_debug ("[%s] Received message (translated)...\n%s",
+            g_debug ("[%s] received message (translated)...\n%s",
                      self->priv->path_display,
                      printable);
         }
@@ -1150,7 +1150,7 @@ parse_response (MbimDevice *self)
 
         /* Fully ignore data that is clearly not a MBIM message */
         if (!validate_message_type (message)) {
-            g_warning ("[%s] discarding %u bytes in MBIM stream as message type validation fails",
+            g_warning ("[%s] discarding %u bytes in stream as message type validation fails",
                        self->priv->path_display, self->priv->response->len);
             g_byte_array_remove_range (self->priv->response, 0, self->priv->response->len);
             return;
