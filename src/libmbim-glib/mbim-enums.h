@@ -1929,6 +1929,30 @@ typedef enum { /*< since=1.28 >*/
     MBIM_INTEL_BOOT_MODE_FAST_DOWNLOAD_MODE       = 5,
 } MbimIntelBootMode;
 
+/**
+ * MbimUiccApplicationType:
+ * @MBIM_UICC_APPLICATION_TYPE_UNKNOWN: Unknown.
+ * @MBIM_UICC_APPLICATION_TYPE_MF: Legacy SIM directories rooted at the MF.
+ * @MBIM_UICC_APPLICATION_TYPE_MF_SIM: Legacy SIM directories rooted at the DF_GSM.
+ * @MBIM_UICC_APPLICATION_TYPE_MF_RUIM: Legacy SIM directories rooted at the DF_CDMA.
+ * @MBIM_UICC_APPLICATION_TYPE_USIM: USIM application.
+ * @MBIM_UICC_APPLICATION_TYPE_CSIM: CSIM application.
+ * @MBIM_UICC_APPLICATION_TYPE_ISIM: ISIM application.
+ *
+ * Type of UICC application.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_UICC_APPLICATION_TYPE_UNKNOWN = 0,
+    MBIM_UICC_APPLICATION_TYPE_MF      = 1,
+    MBIM_UICC_APPLICATION_TYPE_MF_SIM  = 2,
+    MBIM_UICC_APPLICATION_TYPE_MF_RUIM = 3,
+    MBIM_UICC_APPLICATION_TYPE_USIM    = 4,
+    MBIM_UICC_APPLICATION_TYPE_CSIM    = 5,
+    MBIM_UICC_APPLICATION_TYPE_ISIM    = 6,
+} MbimUiccApplicationType;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */

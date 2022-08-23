@@ -179,7 +179,7 @@ static const CidConfig cid_qdu_config [MBIM_CID_QDU_LAST] = {
 };
 
 /* Note: index of the array is CID-1 */
-#define MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_LAST MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_RESET
+#define MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_LAST MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APPLICATION_LIST
 static const CidConfig cid_ms_uicc_low_level_access_config [MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_LAST] = {
     { NO_SET,    QUERY,    NO_NOTIFY    }, /* MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_ATR */
     { SET,    NO_QUERY,    NO_NOTIFY    }, /* MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_OPEN_CHANNEL */
@@ -187,6 +187,7 @@ static const CidConfig cid_ms_uicc_low_level_access_config [MBIM_CID_MS_UICC_LOW
     { SET,    NO_QUERY,    NO_NOTIFY    }, /* MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APDU */
     { SET,       QUERY,    NO_NOTIFY    }, /* MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_TERMINAL_CAPABILITY */
     { SET,       QUERY,    NO_NOTIFY    }, /* MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_RESET */
+    { NO_SET,    QUERY,    NO_NOTIFY    }, /* MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APPLICATION_LIST */
 };
 
 /* Note: index of the array is CID-1 */

@@ -377,6 +377,7 @@ typedef enum { /*< since=1.18 >*/
  * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APDU: Apdu.
  * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_TERMINAL_CAPABILITY: Terminal capabilities.
  * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_RESET: Reset.
+ * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APPLICATION_LIST: Retrieve application list. Since 1.28.
  *
  * MBIM commands in the %MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS service.
  *
@@ -390,6 +391,7 @@ typedef enum { /*< since=1.26 >*/
     MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APDU                 = 4,
     MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_TERMINAL_CAPABILITY  = 5,
     MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_RESET                = 6,
+    MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APPLICATION_LIST     = 7,
 } MbimCidMsUiccLowLevelAccess;
 
 /**

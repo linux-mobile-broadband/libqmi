@@ -93,6 +93,41 @@
     "query"    : [],
     "response" : [ { "name"          : "PassThroughStatus",
                      "format"        : "guint32",
-                     "public-format" : "MbimUiccPassThroughStatus" } ] }
+                     "public-format" : "MbimUiccPassThroughStatus" } ] },
+
+  // *********************************************************************************
+
+  { "name"     : "MbimUiccApplication",
+    "type"     : "Struct",
+    "since"    : "1.28",
+    "contents" : [ { "name"          : "ApplicationType",
+                     "format"        : "guint32",
+                     "public-format" : "MbimUiccApplicationType" },
+                   { "name"   : "ApplicationId",
+                     "format" : "ref-byte-array" },
+                   { "name"     : "ApplicationName",
+                     "format"   : "string",
+                     "encoding" : "utf-8" },
+                   { "name"   : "PinKeyReferenceCount",
+                     "format" : "guint32" },
+                   { "name"   : "PinKeyReferences",
+                     "format" : "ref-byte-array" } ] },
+
+  { "name"     : "Application List",
+    "type"     : "Command",
+    "since"    : "1.28",
+    "query"    : [],
+    "response" : [ { "name"   : "Version",
+                     "format" : "guint32" },
+                   { "name"   : "ApplicationCount",
+                     "format" : "guint32" },
+                   { "name"   : "ActiveApplicationIndex",
+                     "format" : "guint32" },
+                   { "name"   : "ApplicationListSizeBytes",
+                     "format" : "guint32" },
+                   { "name"             : "Applications",
+                     "format"           : "ref-struct-array" ,
+                     "struct-type"      : "MbimUiccApplication",
+                     "array-size-field" : "ApplicationCount" } ] }
 
 ]

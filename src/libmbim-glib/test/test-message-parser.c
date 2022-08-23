@@ -14,6 +14,7 @@
 #include "mbim-stk.h"
 #include "mbim-ms-firmware-id.h"
 #include "mbim-ms-basic-connect-extensions.h"
+#include "mbim-ms-uicc-low-level-access.h"
 #include "mbim-message.h"
 #include "mbim-tlv.h"
 #include "mbim-cid.h"
@@ -3119,6 +3120,93 @@ test_ms_basic_connect_extensions_wake_reason_packet (void)
     g_assert (memcmp (packet, expected_packet, sizeof (expected_packet)) == 0);
 }
 
+static void
+test_ms_uicc_low_level_access_application_list (void)
+{
+    g_autoptr(GError)                   error = NULL;
+    g_autoptr(MbimMessage)              response = NULL;
+    gboolean                            result;
+    guint32                             version;
+    guint32                             application_count;
+    guint32                             active_application_index;
+    guint32                             application_list_size_bytes;
+    g_autoptr(MbimUiccApplicationArray) applications = NULL;
+
+    const guint8  expected_application_id[] = { 0xA0, 0x00, 0x00, 0x00,
+                                                0x87, 0x10, 0x02, 0xFF,
+                                                0x34, 0xFF, 0x07, 0x89,
+                                                0x31, 0x2E, 0x30, 0xFF };
+    const gchar  *expected_application_name = "Movistar";
+    const guint8  expected_pin_key_references[] = { 0x01, 0x81 };
+
+    const guint8 buffer [] =  {
+        /* header */
+        0x03, 0x00, 0x00, 0x80, /* type */
+        0x84, 0x00, 0x00, 0x00, /* length */
+        0x03, 0x00, 0x00, 0x00, /* transaction id */
+        /* fragment header */
+        0x01, 0x00, 0x00, 0x00, /* total */
+        0x00, 0x00, 0x00, 0x00, /* current */
+        /* command_done message */
+        0xC2, 0xF6, 0x58, 0x8E, /* service id */
+        0xF0, 0x37, 0x4B, 0xC9,
+        0x86, 0x65, 0xF4, 0xD4,
+        0x4B, 0xD0, 0x93, 0x67,
+        0x07, 0x00, 0x00, 0x00, /* command id */
+        0x00, 0x00, 0x00, 0x00, /* status code */
+        0x54, 0x00, 0x00, 0x00, /* buffer_length */
+        /* information buffer */
+        0x01, 0x00, 0x00, 0x00, /* version: 1 */
+        0x01, 0x00, 0x00, 0x00, /* app count: 1 */
+        0x00, 0x00, 0x00, 0x00, /* active app index: 0 */
+        0x3C, 0x00, 0x00, 0x00, /* app list size bytes: 60 */
+        0x18, 0x00, 0x00, 0x00, /* application 0 offset: 24 bytes */
+        0x3C, 0x00, 0x00, 0x00, /* application 0 length: 60 bytes */
+        /* application 0 */
+        0x04, 0x00, 0x00, 0x00, /* application type: usim */
+        0x20, 0x00, 0x00, 0x00, /* application id offset: 32 bytes */
+        0x10, 0x00, 0x00, 0x00, /* application id length: 16 bytes */
+        0x30, 0x00, 0x00, 0x00, /* application name offset: 48 bytes */
+        0x08, 0x00, 0x00, 0x00, /* application name length: 8 bytes */
+        0x02, 0x00, 0x00, 0x00, /* num pin key refs: 2 */
+        0x38, 0x00, 0x00, 0x00, /* pin key refs offset: 56 bytes */
+        0x02, 0x00, 0x00, 0x00, /* pin key refs length: 2 bytes */
+        /* application 0 databuffer */
+        0xA0, 0x00, 0x00, 0x00, /* application id */
+        0x87, 0x10, 0x02, 0xFF,
+        0x34, 0xFF, 0x07, 0x89,
+        0x31, 0x2E, 0x30, 0xFF,
+        0x4D, 0x6F, 0x76, 0x69, /* application name */
+        0x73, 0x74, 0x61, 0x72,
+        0x01, 0x81, 0x00, 0x00, /* pin key refs plus 2 padding bytes */
+    };
+
+    response = mbim_message_new (buffer, sizeof (buffer));
+    test_message_printable (response, 1, 0);
+
+    result = (mbim_message_ms_uicc_low_level_access_application_list_response_parse (
+                  response,
+                  &version,
+                  &application_count,
+                  &active_application_index,
+                  &application_list_size_bytes,
+                  &applications,
+                  &error));
+    g_assert_no_error (error);
+    g_assert (result);
+
+    g_assert_cmpuint (version, ==, 1);
+    g_assert_cmpuint (application_count, ==, 1);
+    g_assert_cmpuint (active_application_index, ==, 0);
+    g_assert_cmpuint (application_list_size_bytes, ==, 60);
+    g_assert_cmpuint (applications[0]->application_id_size, ==, sizeof (expected_application_id));
+    g_assert (memcmp (applications[0]->application_id, expected_application_id, sizeof (expected_application_id)) == 0);
+    g_assert (g_strcmp0 (applications[0]->application_name, expected_application_name) == 0);
+    g_assert_cmpuint (applications[0]->pin_key_reference_count, ==, 2);
+    g_assert_cmpuint (applications[0]->pin_key_references_size, ==, sizeof (expected_pin_key_references));
+    g_assert (memcmp (applications[0]->pin_key_references, expected_pin_key_references, sizeof (expected_pin_key_references)) == 0);
+}
+
 int main (int argc, char **argv)
 {
     g_test_init (&argc, &argv, NULL);
@@ -3159,6 +3247,7 @@ int main (int argc, char **argv)
     g_test_add_func (PREFIX "/basic-connect-extensions/wake-reason/command", test_ms_basic_connect_extensions_wake_reason_command);
     g_test_add_func (PREFIX "/basic-connect-extensions/wake-reason/command/payload", test_ms_basic_connect_extensions_wake_reason_command_payload);
     g_test_add_func (PREFIX "/basic-connect-extensions/wake-reason/packet", test_ms_basic_connect_extensions_wake_reason_packet);
+    g_test_add_func (PREFIX "/ms-uicc-low-level-access/application-list", test_ms_uicc_low_level_access_application_list);
 
 #undef PREFIX
 
