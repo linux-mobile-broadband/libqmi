@@ -1953,6 +1953,60 @@ typedef enum { /*< since=1.28 >*/
     MBIM_UICC_APPLICATION_TYPE_ISIM    = 6,
 } MbimUiccApplicationType;
 
+/**
+ * MbimUiccFileAccessibility:
+ * @MBIM_UICC_FILE_ACCESSIBILITY_UNKNOWN: Unknown.
+ * @MBIM_UICC_FILE_ACCESSIBILITY_NOT_SHAREABLE: Not shareable.
+ * @MBIM_UICC_FILE_ACCESSIBILITY_SHAREABLE: Shareable.
+ *
+ * The UICC file accessibility.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_UICC_FILE_ACCESSIBILITY_UNKNOWN       = 0,
+    MBIM_UICC_FILE_ACCESSIBILITY_NOT_SHAREABLE = 1,
+    MBIM_UICC_FILE_ACCESSIBILITY_SHAREABLE     = 2,
+} MbimUiccFileAccessibility;
+
+/**
+ * MbimUiccFileType:
+ * @MBIM_UICC_FILE_TYPE_UNKNOWN: Unknown.
+ * @MBIM_UICC_FILE_TYPE_WORKING_EF: Working EF.
+ * @MBIM_UICC_FILE_TYPE_INTERNAL_EF: Internal EF.
+ * @MBIM_UICC_FILE_TYPE_DF_OR_ADF: Dedicated file, DF or ADF.
+ *
+ * The UICC file type.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_UICC_FILE_TYPE_UNKNOWN     = 0,
+    MBIM_UICC_FILE_TYPE_WORKING_EF  = 1,
+    MBIM_UICC_FILE_TYPE_INTERNAL_EF = 2,
+    MBIM_UICC_FILE_TYPE_DF_OR_ADF   = 3,
+} MbimUiccFileType;
+
+/**
+ * MbimUiccFileStructure:
+ * @MBIM_UICC_FILE_STRUCTURE_UNKNOWN: Unknown.
+ * @MBIM_UICC_FILE_STRUCTURE_TRANSPARENT: A single record of variable length.
+ * @MBIM_UICC_FILE_STRUCTURE_CYCLIC: A cyclic set of records, each of the same length.
+ * @MBIM_UICC_FILE_STRUCTURE_LINEAR: A linear set of records, each of the same length.
+ * @MBIM_UICC_FILE_STRUCTURE_BER_TLV: A set of data values accessible by tag.
+ *
+ * The UICC file structure.
+ *
+ * Since: 1.28
+ */
+typedef enum { /*< since=1.28 >*/
+    MBIM_UICC_FILE_STRUCTURE_UNKNOWN     = 0,
+    MBIM_UICC_FILE_STRUCTURE_TRANSPARENT = 1,
+    MBIM_UICC_FILE_STRUCTURE_CYCLIC      = 2,
+    MBIM_UICC_FILE_STRUCTURE_LINEAR      = 3,
+    MBIM_UICC_FILE_STRUCTURE_BER_TLV     = 4,
+} MbimUiccFileStructure;
+
 G_END_DECLS
 
 #endif /* _LIBMBIM_GLIB_MBIM_ENUMS_H_ */
