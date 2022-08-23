@@ -258,6 +258,11 @@ void                       _mbim_message_command_builder_append_tlv_list      (M
 /*****************************************************************************/
 /* Message parser */
 
+typedef enum {
+    MBIM_STRING_ENCODING_UTF16,
+    MBIM_STRING_ENCODING_UTF8,
+} MbimStringEncoding;
+
 gboolean _mbim_message_read_byte_array    (const MbimMessage  *self,
                                            guint32             struct_start_offset,
                                            guint32             relative_offset,
@@ -296,12 +301,14 @@ gboolean _mbim_message_read_guint64       (const MbimMessage  *self,
 gboolean _mbim_message_read_string        (const MbimMessage  *self,
                                            guint32             struct_start_offset,
                                            guint32             relative_offset,
+                                           MbimStringEncoding  encoding,
                                            gchar             **str,
                                            GError            **error);
 gboolean _mbim_message_read_string_array  (const MbimMessage   *self,
                                            guint32              array_size,
                                            guint32              struct_start_offset,
                                            guint32              relative_offset_array_start,
+                                           MbimStringEncoding   encoding,
                                            gchar             ***array,
                                            GError             **error);
 gboolean _mbim_message_read_ipv4          (const MbimMessage  *self,

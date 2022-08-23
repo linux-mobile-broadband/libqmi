@@ -308,18 +308,17 @@ _mbim_message_read_guint64 (const MbimMessage  *self,
 }
 
 gboolean
-_mbim_message_read_string (const MbimMessage  *self,
-                           guint32             struct_start_offset,
-                           guint32             relative_offset,
-                           gchar             **str,
-                           GError            **error)
+_mbim_message_read_string (const MbimMessage   *self,
+                           guint32              struct_start_offset,
+                           guint32              relative_offset,
+                           MbimStringEncoding   encoding,
+                           gchar              **str,
+                           GError             **error)
 {
     guint64               required_size;
     guint32               offset;
     guint32               size;
     guint32               information_buffer_offset;
-    g_autofree gunichar2 *utf16d = NULL;
-    const gunichar2      *utf16 = NULL;
 
     information_buffer_offset = _mbim_message_get_information_buffer_offset (self);
 
@@ -352,27 +351,48 @@ _mbim_message_read_string (const MbimMessage  *self,
         return FALSE;
     }
 
-    utf16 = (const gunichar2 *) G_STRUCT_MEMBER_P (self->data, (information_buffer_offset + struct_start_offset + offset));
+    if (encoding == MBIM_STRING_ENCODING_UTF16) {
+        g_autofree gunichar2 *utf16d = NULL;
+        const gunichar2      *utf16 = NULL;
 
-    /* For BE systems, convert from LE to BE */
-    if (G_BYTE_ORDER == G_BIG_ENDIAN) {
-        guint i;
+        utf16 = (const gunichar2 *) G_STRUCT_MEMBER_P (self->data, (information_buffer_offset + struct_start_offset + offset));
 
-        utf16d = (gunichar2 *) g_malloc (size);
-        for (i = 0; i < (size / 2); i++)
-            utf16d[i] = GUINT16_FROM_LE (utf16[i]);
-    }
+        /* For BE systems, convert from LE to BE */
+        if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+            guint i;
 
-    *str = g_utf16_to_utf8 (utf16d ? utf16d : utf16,
-                            size / 2,
-                            NULL,
-                            NULL,
-                            error);
+            utf16d = (gunichar2 *) g_malloc (size);
+            for (i = 0; i < (size / 2); i++)
+                utf16d[i] = GUINT16_FROM_LE (utf16[i]);
+        }
 
-    if (!(*str)) {
-        g_prefix_error (error, "Error converting string to UTF-8: ");
-        return FALSE;
-    }
+        *str = g_utf16_to_utf8 (utf16d ? utf16d : utf16,
+                                size / 2,
+                                NULL,
+                                NULL,
+                                error);
+
+        if (!(*str)) {
+            g_prefix_error (error, "Error converting string to UTF-8: ");
+            return FALSE;
+        }
+    } else if (encoding == MBIM_STRING_ENCODING_UTF8) {
+        const gchar *utf8;
+
+        utf8 = (const gchar *) G_STRUCT_MEMBER_P (self->data, (information_buffer_offset + struct_start_offset + offset));
+
+        /* size may include the trailing NUL byte, skip it from the check */
+        while (size > 0 && utf8[size - 1] == '\0')
+            size--;
+
+        if (!g_utf8_validate (utf8, size, NULL)) {
+            g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "Error validating UTF-8 string");
+            return FALSE;
+        }
+
+        *str = g_strndup (utf8, size);
+    } else
+        g_assert_not_reached ();
 
     return TRUE;
 }
@@ -382,6 +402,7 @@ _mbim_message_read_string_array (const MbimMessage   *self,
                                  guint32              array_size,
                                  guint32              struct_start_offset,
                                  guint32              relative_offset_array_start,
+                                 MbimStringEncoding   encoding,
                                  gchar             ***array,
                                  GError             **error)
 {
@@ -401,7 +422,7 @@ _mbim_message_read_string_array (const MbimMessage   *self,
          i < array_size;
          offset += 8, i++) {
         /* Read next string in the OL pair list */
-        if (!_mbim_message_read_string (self, struct_start_offset, offset, &((*array)[i]), &inner_error))
+        if (!_mbim_message_read_string (self, struct_start_offset, offset, encoding, &((*array)[i]), &inner_error))
             break;
     }
 
