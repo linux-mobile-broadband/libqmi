@@ -271,6 +271,8 @@ typedef enum { /*< since=1.0 >*/
  * @MBIM_PIN_TYPE_NETWORK_SUBSET_PUK: The network subset personalization unlock key.
  * @MBIM_PIN_TYPE_SERVICE_PROVIDER_PUK: The service provider (SP) personalization unlock key.
  * @MBIM_PIN_TYPE_CORPORATE_PUK: The corporate personalization unlock key.
+ * @MBIM_PIN_TYPE_NEV: The NEV key (MS UICC low-level access). Since 1.28.
+ * @MBIM_PIN_TYPE_ADM: The administrative key (MS UICC low-level access). Since 1.28.
  *
  * PIN Types.
  *
@@ -294,7 +296,9 @@ typedef enum { /*< since=1.0 >*/
     MBIM_PIN_TYPE_NETWORK_PUK          = 14,
     MBIM_PIN_TYPE_NETWORK_SUBSET_PUK   = 15,
     MBIM_PIN_TYPE_SERVICE_PROVIDER_PUK = 16,
-    MBIM_PIN_TYPE_CORPORATE_PUK        = 17
+    MBIM_PIN_TYPE_CORPORATE_PUK        = 17,
+    MBIM_PIN_TYPE_NEV                  = 18,
+    MBIM_PIN_TYPE_ADM                  = 19,
 } MbimPinType;
 
 /**
