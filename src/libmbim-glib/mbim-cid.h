@@ -380,6 +380,7 @@ typedef enum { /*< since=1.18 >*/
  * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APPLICATION_LIST: Retrieve application list. Since 1.28.
  * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_FILE_STATUS: Retrieve information about a specific UICC file. Since 1.28.
  * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_READ_BINARY: Read a UICC binary file. Since 1.28.
+ * @MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_READ_RECORD: Read a UICC linear fixed or cyclic file. Since 1.28.
  *
  * MBIM commands in the %MBIM_SERVICE_MS_UICC_LOW_LEVEL_ACCESS service.
  *
@@ -396,6 +397,7 @@ typedef enum { /*< since=1.26 >*/
     MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_APPLICATION_LIST     = 7,
     MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_FILE_STATUS          = 8,
     MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_READ_BINARY          = 9,
+    MBIM_CID_MS_UICC_LOW_LEVEL_ACCESS_READ_RECORD          = 10,
 } MbimCidMsUiccLowLevelAccess;
 
 /**
