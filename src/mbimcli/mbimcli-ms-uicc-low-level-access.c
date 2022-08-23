@@ -33,6 +33,7 @@ static Context *ctx;
 /* Options */
 static gboolean  query_uicc_application_list_flag;
 static gchar    *query_uicc_file_status_str;
+static gchar    *query_uicc_read_binary_str;
 
 static GOptionEntry entries[] = {
     { "ms-query-uicc-application-list", 0, 0, G_OPTION_ARG_NONE, &query_uicc_application_list_flag,
@@ -41,6 +42,10 @@ static GOptionEntry entries[] = {
     },
     { "ms-query-uicc-file-status", 0, 0, G_OPTION_ARG_STRING, &query_uicc_file_status_str,
       "Query UICC file status (allowed keys: application-id, file-path)",
+      "[\"key=value,...\"]"
+    },
+    { "ms-query-uicc-read-binary", 0, 0, G_OPTION_ARG_STRING, &query_uicc_read_binary_str,
+      "Read UICC binary file (allowed keys: application-id, file-path, read-offset, read-size, local-pin and data)",
       "[\"key=value,...\"]"
     },
     { NULL }
@@ -71,7 +76,8 @@ mbimcli_ms_uicc_low_level_access_options_enabled (void)
         return !!n_actions;
 
     n_actions = query_uicc_application_list_flag +
-                !!query_uicc_file_status_str;
+                !!query_uicc_file_status_str +
+                !!query_uicc_read_binary_str;
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft UICC Low Level Access Service actions requested\n");
@@ -101,6 +107,154 @@ shutdown (gboolean operation_status)
     /* Cleanup context and finish async operation */
     context_free (ctx);
     mbimcli_async_operation_done (operation_status);
+}
+
+static void
+read_binary_query_ready (MbimDevice   *device,
+                         GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)    response = NULL;
+    g_autoptr(GError)         error = NULL;
+    guint32                   status_word_1;
+    guint32                   status_word_2;
+    const guint8             *data;
+    guint32                   data_size;
+    g_autofree gchar         *data_str = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_uicc_low_level_access_read_binary_response_parse (
+            response,
+            NULL, /* version */
+            &status_word_1,
+            &status_word_2,
+            &data_size,
+            &data,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    data_str = mbim_common_str_hex (data, data_size, ':');
+
+    g_print ("[%s] UICC file binary read:\n"
+             "\tStatus word 1: %u\n"
+             "\tStatus word 2: %u\n"
+             "\t         Data: %s\n",
+             mbim_device_get_path_display (device),
+             status_word_1,
+             status_word_2,
+             data_str);
+
+    shutdown (TRUE);
+}
+
+typedef struct {
+    gsize    application_id_size;
+    guint8  *application_id;
+    gsize    file_path_size;
+    guint8  *file_path;
+    guint32  read_offset;
+    guint32  read_size;
+    gchar   *local_pin;
+    gsize    data_size;
+    guint8  *data;
+} ReadBinaryQueryProperties;
+
+static void
+read_binary_query_properties_clear (ReadBinaryQueryProperties *props)
+{
+    g_clear_pointer (&props->application_id, g_free);
+    g_clear_pointer (&props->file_path, g_free);
+    g_clear_pointer (&props->local_pin, g_free);
+    g_clear_pointer (&props->data, g_free);
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(ReadBinaryQueryProperties, read_binary_query_properties_clear);
+
+static gboolean
+read_binary_query_properties_handle (const gchar  *key,
+                                     const gchar  *value,
+                                     GError      **error,
+                                     gpointer      user_data)
+{
+    ReadBinaryQueryProperties *props = user_data;
+
+    if (g_ascii_strcasecmp (key, "application-id") == 0) {
+        g_clear_pointer (&props->application_id, g_free);
+        props->application_id_size = 0;
+        props->application_id = mbimcli_read_buffer_from_string (value, -1, &props->application_id_size, error);
+        if (!props->application_id)
+            return FALSE;
+    } else if (g_ascii_strcasecmp (key, "file-path") == 0) {
+        g_clear_pointer (&props->file_path, g_free);
+        props->file_path_size = 0;
+        props->file_path = mbimcli_read_buffer_from_string (value, -1, &props->file_path_size, error);
+        if (!props->file_path)
+            return FALSE;
+    } else if (g_ascii_strcasecmp (key, "read-offset") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->read_offset)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Failed to parse field as an integer");
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "read-size") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->read_size)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Failed to parse field as an integer");
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "local-pin") == 0) {
+        g_clear_pointer (&props->local_pin, g_free);
+        props->local_pin = g_strdup (value);
+    } else if (g_ascii_strcasecmp (key, "data") == 0) {
+        g_clear_pointer (&props->data, g_free);
+        props->data_size = 0;
+        props->data = mbimcli_read_buffer_from_string (value, -1, &props->data_size, error);
+        if (!props->data)
+            return FALSE;
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+read_binary_query_input_parse (const gchar                *str,
+                               ReadBinaryQueryProperties  *props,
+                               GError                    **error)
+{
+
+    if (!mbimcli_parse_key_value_string (str,
+                                         error,
+                                         read_binary_query_properties_handle,
+                                         props))
+        return FALSE;
+
+    if (!props->application_id_size || !props->application_id) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Option 'application-id' is missing");
+        return FALSE;
+    }
+
+    if (!props->file_path_size || !props->file_path) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Option 'file-path' is missing");
+        return FALSE;
+    }
+
+    /* all the other fields are optional */
+
+    return TRUE;
 }
 
 static void
@@ -355,6 +509,48 @@ mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)file_status_query_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to UICC read binary? */
+    if (query_uicc_read_binary_str) {
+        g_auto(ReadBinaryQueryProperties) props = {
+            .application_id_size = 0,
+            .application_id      = NULL,
+            .file_path_size      = 0,
+            .file_path           = NULL,
+            .read_offset         = 0,
+            .read_size           = 0,
+            .local_pin           = NULL,
+            .data_size           = 0,
+            .data                = NULL,
+        };
+
+        g_debug ("Asynchronously reading from UICC in binary...");
+
+        if (!read_binary_query_input_parse (query_uicc_read_binary_str, &props, &error)) {
+            g_printerr ("error: couldn't parse input arguments: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_ms_uicc_low_level_access_read_binary_query_new (1, /* version fixed */
+                                                                               props.application_id_size,
+                                                                               props.application_id,
+                                                                               props.file_path_size,
+                                                                               props.file_path,
+                                                                               props.read_offset,
+                                                                               props.read_size,
+                                                                               props.local_pin,
+                                                                               props.data_size,
+                                                                               props.data,
+                                                                               NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)read_binary_query_ready,
                              NULL);
         return;
     }

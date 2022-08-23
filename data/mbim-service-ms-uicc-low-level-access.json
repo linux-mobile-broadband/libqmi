@@ -171,5 +171,32 @@
                      "public-format" : "MbimPinType" },
                    { "name"          : "AccessConditionDeactivate",
                      "format"        : "guint32",
-                     "public-format" : "MbimPinType" } ] }
+                     "public-format" : "MbimPinType" } ] },
+
+  // *********************************************************************************
+  { "name"     : "Read Binary",
+    "type"     : "Command",
+    "since"    : "1.28",
+    "query"    : [ { "name"   : "Version",
+                     "format" : "guint32" },
+                   { "name"   : "ApplicationId",
+                     "format" : "ref-byte-array" },
+                   { "name"   : "FilePath",
+                     "format" : "ref-byte-array" },
+		   { "name"   : "ReadOffset",
+		     "format" : "guint32" },
+		   { "name"   : "ReadSize",
+		     "format" : "guint32" },
+		   { "name"   : "LocalPin",
+		     "format" : "string" },
+                   { "name"   : "Data",
+                     "format" : "ref-byte-array" } ],
+    "response" : [ { "name"   : "Version",
+                     "format" : "guint32" },
+                   { "name"   : "StatusWord1",
+                     "format" : "guint32" },
+                   { "name"   : "StatusWord2",
+                     "format" : "guint32" },
+                   { "name"   : "Data",
+                     "format" : "ref-byte-array" } ] }
 ]
