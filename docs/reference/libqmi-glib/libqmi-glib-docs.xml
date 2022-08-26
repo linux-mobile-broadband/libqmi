@@ -173,6 +173,7 @@
       <xi:include href="xml/qmi-message-nas-get-system-info.xml"/>
       <xi:include href="xml/qmi-message-nas-get-signal-info.xml"/>
       <xi:include href="xml/qmi-message-nas-config-signal-info.xml"/>
+      <xi:include href="xml/qmi-message-nas-config-signal-info-v2.xml"/>
       <xi:include href="xml/qmi-message-nas-force-network-search.xml"/>
       <xi:include href="xml/qmi-message-nas-get-cdma-position-info.xml"/>
       <xi:include href="xml/qmi-message-nas-get-tx-rx-info.xml"/>
