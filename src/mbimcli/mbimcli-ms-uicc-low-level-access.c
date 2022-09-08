@@ -35,6 +35,7 @@ static gboolean  query_uicc_application_list_flag;
 static gchar    *query_uicc_file_status_str;
 static gchar    *query_uicc_read_binary_str;
 static gchar    *query_uicc_read_record_str;
+static gchar    *set_uicc_open_channel_str;
 
 static GOptionEntry entries[] = {
     { "ms-query-uicc-application-list", 0, 0, G_OPTION_ARG_NONE, &query_uicc_application_list_flag,
@@ -51,6 +52,10 @@ static GOptionEntry entries[] = {
     },
     { "ms-query-uicc-read-record", 0, 0, G_OPTION_ARG_STRING, &query_uicc_read_record_str,
       "Read UICC record file (allowed keys: application-id, file-path, record-number, local-pin and data)",
+      "[\"key=value,...\"]"
+    },
+    { "ms-set-uicc-open-channel", 0, 0, G_OPTION_ARG_STRING, &set_uicc_open_channel_str,
+      "Set UICC open channel (allowed keys: application-id, selectp2arg, channel-group)",
       "[\"key=value,...\"]"
     },
     { NULL }
@@ -83,7 +88,8 @@ mbimcli_ms_uicc_low_level_access_options_enabled (void)
     n_actions = query_uicc_application_list_flag +
                 !!query_uicc_file_status_str +
                 !!query_uicc_read_binary_str +
-                !!query_uicc_read_record_str;
+                !!query_uicc_read_record_str +
+                !!set_uicc_open_channel_str;
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft UICC Low Level Access Service actions requested\n");
@@ -603,6 +609,119 @@ application_list_query_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+open_channel_ready (MbimDevice   *device,
+                    GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    guint32                 status = 0;
+    guint32                 channel = 0;
+    const guint8           *open_channel_response = NULL;
+    guint32                 open_channel_response_size = 0;
+    g_autofree gchar       *open_channel_response_str = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_uicc_low_level_access_open_channel_response_parse (
+            response,
+            &status,
+            &channel,
+            &open_channel_response_size,
+            &open_channel_response,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    open_channel_response_str = mbim_common_str_hex (open_channel_response, open_channel_response_size, ':');
+    g_print ("Succesfully retrieved open channel info:\n"
+             "\t  status: %u\n"
+             "\t channel: %u\n"
+             "\tresponse: %s\n",
+             status,
+             channel,
+             open_channel_response_str);
+
+    shutdown (TRUE);
+}
+
+typedef struct {
+    guint32  channel_group;
+    guint32  selectprg;
+    gsize    application_id_size;
+    guint8  *application_id;
+} OpenChannelProperties;
+
+static void
+open_channel_properties_clear (OpenChannelProperties *props)
+{
+    g_clear_pointer (&props->application_id, g_free);
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(OpenChannelProperties, open_channel_properties_clear);
+
+static gboolean
+open_channel_properties_handle (const gchar  *key,
+                                const gchar  *value,
+                                GError      **error,
+                                gpointer      user_data)
+{
+    OpenChannelProperties *props = user_data;
+
+    if (g_ascii_strcasecmp (key, "application-id") == 0) {
+        g_clear_pointer (&props->application_id, g_free);
+        props->application_id_size = 0;
+        props->application_id = mbimcli_read_buffer_from_string (value, -1, &props->application_id_size, error);
+        if (!props->application_id)
+            return FALSE;
+    } else if (g_ascii_strcasecmp (key, "selectp2arg") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->selectprg)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Failed to parse selectp2arg field as an integer");
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "channel-group") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->channel_group)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Failed to parse channel-group field as an integer");
+            return FALSE;
+        }
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+open_channel_input_parse (const gchar            *str,
+                          OpenChannelProperties  *props,
+                          GError                **error)
+{
+    if (!mbimcli_parse_key_value_string (str,
+                                         error,
+                                         open_channel_properties_handle,
+                                         props))
+        return FALSE;
+
+    if (!props->application_id_size || !props->application_id) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Option 'application-id' is missing");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 void
 mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                                       GCancellable *cancellable)
@@ -738,6 +857,42 @@ mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)read_record_query_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to Set UICC open channel */
+    if (set_uicc_open_channel_str) {
+        g_auto(OpenChannelProperties) props = {
+            .application_id_size = 0,
+            .application_id      = NULL,
+            .selectprg           = 0,
+            .channel_group       = 0,
+        };
+
+        if (!open_channel_input_parse (set_uicc_open_channel_str, &props, &error)) {
+            g_printerr ("error: couldn't parse input arguments: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously setting UICC open channel.");
+        request = mbim_message_ms_uicc_low_level_access_open_channel_set_new (props.application_id_size,
+                                                                              props.application_id,
+                                                                              props.selectprg,
+                                                                              props.channel_group,
+                                                                              &error);
+        if (!request) {
+            g_printerr ("error: couldn't create open channel Request %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             30,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)open_channel_ready,
                              NULL);
         return;
     }
