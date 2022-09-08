@@ -36,6 +36,7 @@ static gchar    *query_uicc_file_status_str;
 static gchar    *query_uicc_read_binary_str;
 static gchar    *query_uicc_read_record_str;
 static gchar    *set_uicc_open_channel_str;
+static gchar    *set_uicc_close_channel_str;
 
 static GOptionEntry entries[] = {
     { "ms-query-uicc-application-list", 0, 0, G_OPTION_ARG_NONE, &query_uicc_application_list_flag,
@@ -56,6 +57,10 @@ static GOptionEntry entries[] = {
     },
     { "ms-set-uicc-open-channel", 0, 0, G_OPTION_ARG_STRING, &set_uicc_open_channel_str,
       "Set UICC open channel (allowed keys: application-id, selectp2arg, channel-group)",
+      "[\"key=value,...\"]"
+    },
+    { "ms-set-uicc-close-channel", 0, 0, G_OPTION_ARG_STRING, &set_uicc_close_channel_str,
+      "Set UICC close channel (allowed keys: channel, channel-group)",
       "[\"key=value,...\"]"
     },
     { NULL }
@@ -89,7 +94,8 @@ mbimcli_ms_uicc_low_level_access_options_enabled (void)
                 !!query_uicc_file_status_str +
                 !!query_uicc_read_binary_str +
                 !!query_uicc_read_record_str +
-                !!set_uicc_open_channel_str;
+                !!set_uicc_open_channel_str +
+                !!set_uicc_close_channel_str;
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft UICC Low Level Access Service actions requested\n");
@@ -722,6 +728,70 @@ open_channel_input_parse (const gchar            *str,
     return TRUE;
 }
 
+static void
+close_channel_ready (MbimDevice   *device,
+                     GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    guint32                 status = 0;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_uicc_low_level_access_close_channel_response_parse (
+            response,
+            &status,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Succesfully retrieved close channel info:\n"
+             "\tstatus: %u\n", status);
+
+    shutdown (TRUE);
+}
+
+typedef struct {
+    guint32  channel;
+    guint32  channel_group;
+} CloseChannelProperties;
+
+static gboolean
+close_channel_properties_handle (const gchar  *key,
+                                 const gchar  *value,
+                                 GError      **error,
+                                 gpointer      user_data)
+{
+    CloseChannelProperties *props = user_data;
+
+    if (g_ascii_strcasecmp (key, "channel") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->channel)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Failed to parse channel field as an integer");
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "channel-group") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->channel_group)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Failed to parse channel-group field as an integer");
+            return FALSE;
+        }
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 void
 mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                                       GCancellable *cancellable)
@@ -893,6 +963,41 @@ mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                              30,
                              ctx->cancellable,
                              (GAsyncReadyCallback)open_channel_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to Set UICC close channel */
+    if (set_uicc_close_channel_str) {
+        CloseChannelProperties props = {
+            .channel       = 0,
+            .channel_group = 0,
+        };
+
+        if (!mbimcli_parse_key_value_string (set_uicc_close_channel_str,
+                                             &error,
+                                             close_channel_properties_handle,
+                                             &props)) {
+            g_printerr ("error: couldn't parse input arguments: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously setting UICC close channel...");
+        request = mbim_message_ms_uicc_low_level_access_close_channel_set_new (props.channel,
+                                                                               props.channel_group,
+                                                                               &error);
+        if (!request) {
+            g_printerr ("error: couldn't create close channel request %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             30,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)close_channel_ready,
                              NULL);
         return;
     }
