@@ -977,6 +977,30 @@
                    { "common-ref" : "Physical Slot Information",
                      "since"      : "1.26" },
                    { "common-ref" : "Slot EID",
-                     "since"      : "1.32" } ] }
+                     "since"      : "1.32" } ] },
+
+  // *********************************************************************************
+  {  "name"    : "Remote Unlock",
+     "type"    : "Message",
+     "service" : "UIM",
+     "id"      : "0x005D",
+     "since"   : "1.32",
+     "input"   : [ { "name"               : "SimLock Data",
+                     "id"                 : "0x10",
+                     "type"               : "TLV",
+                     "since"              : "1.32",
+                     "format"             : "array",
+                     "size-prefix-format" : "guint16",
+                     "array-element"      : { "format" : "guint8" },
+                     "personal-info"      : "true" },
+                   { "name"               : "SimLock Extended Data",
+                     "id"                 : "0x12",
+                     "type"               : "TLV",
+                     "since"              : "1.32",
+                     "format"             : "array",
+                     "size-prefix-format" : "guint16",
+                     "array-element"      : { "format" : "guint8" },
+                     "personal-info"      : "true" } ],
+     "output"  : [ { "common-ref" : "Operation Result" } ] }
 
 ]
