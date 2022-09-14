@@ -37,6 +37,7 @@ static gchar    *query_uicc_read_binary_str;
 static gchar    *query_uicc_read_record_str;
 static gchar    *set_uicc_open_channel_str;
 static gchar    *set_uicc_close_channel_str;
+static gboolean  query_uicc_atr_flag;
 
 static GOptionEntry entries[] = {
     { "ms-query-uicc-application-list", 0, 0, G_OPTION_ARG_NONE, &query_uicc_application_list_flag,
@@ -62,6 +63,10 @@ static GOptionEntry entries[] = {
     { "ms-set-uicc-close-channel", 0, 0, G_OPTION_ARG_STRING, &set_uicc_close_channel_str,
       "Set UICC close channel (allowed keys: channel, channel-group)",
       "[\"key=value,...\"]"
+    },
+    { "ms-query-uicc-atr", 0, 0, G_OPTION_ARG_NONE, &query_uicc_atr_flag,
+      "Query UICC atr",
+      NULL
     },
     { NULL }
 };
@@ -95,7 +100,8 @@ mbimcli_ms_uicc_low_level_access_options_enabled (void)
                 !!query_uicc_read_binary_str +
                 !!query_uicc_read_record_str +
                 !!set_uicc_open_channel_str +
-                !!set_uicc_close_channel_str;
+                !!set_uicc_close_channel_str +
+                query_uicc_atr_flag;
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft UICC Low Level Access Service actions requested\n");
@@ -792,6 +798,40 @@ close_channel_properties_handle (const gchar  *key,
     return TRUE;
 }
 
+static void
+query_atr_ready (MbimDevice   *device,
+                 GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    const guint8           *atr = NULL;
+    g_autofree gchar       *atr_buffer = NULL;
+    guint32                 atr_size = 0;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_uicc_low_level_access_atr_response_parse (
+            response,
+            &atr_size,
+            &atr,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    atr_buffer = mbim_common_str_hex (atr, atr_size, ':');
+    g_print ("Succesfully retrieved ATR info:\n"
+             "\tresponse: %s\n", atr_buffer);
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                                       GCancellable *cancellable)
@@ -998,6 +1038,19 @@ mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                              30,
                              ctx->cancellable,
                              (GAsyncReadyCallback)close_channel_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to UICC atr? */
+    if (query_uicc_atr_flag) {
+        g_debug ("Asynchronously querying UICC atr Info...");
+        request = mbim_message_ms_uicc_low_level_access_atr_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_atr_ready,
                              NULL);
         return;
     }
