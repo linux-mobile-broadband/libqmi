@@ -62,6 +62,8 @@ static gchar    *set_ip_packet_filters_str;
 static gboolean  query_provisioned_contexts_flag;
 static gchar    *set_provisioned_contexts_str;
 static gchar    *set_signal_state_str;
+static gchar    *set_network_idle_hint_str;
+static gboolean  query_network_idle_hint_flag;
 
 static gboolean query_connection_state_arg_parse (const char *option_name,
                                                   const char *value,
@@ -210,6 +212,14 @@ static GOptionEntry entries[] = {
       "Set signal state (allowed keys: signal-strength-interval, rssi-threshold, error-rate-threshold)",
       "[\"key=value,...\"]"
     },
+    { "set-network-idle-hint", 0, 0, G_OPTION_ARG_STRING, &set_network_idle_hint_str,
+      "Set network idle hint",
+      "[(enabled|disabled)]"
+    },
+    { "query-network-idle-hint", 0, 0, G_OPTION_ARG_NONE, &query_network_idle_hint_flag,
+      "Query network idle hint",
+      NULL
+    },
     { NULL }
 };
 
@@ -307,7 +317,9 @@ mbimcli_basic_connect_options_enabled (void)
                  !!set_ip_packet_filters_str +
                  query_provisioned_contexts_flag +
                  !!set_provisioned_contexts_str +
-                 !!set_signal_state_str);
+                 !!set_signal_state_str +
+                 !!set_network_idle_hint_str +
+                 query_network_idle_hint_flag);
 
     if (n_actions > 1) {
         g_printerr ("error: too many Basic Connect actions requested\n");
@@ -2222,6 +2234,39 @@ set_signal_state_foreach_cb (const gchar            *key,
     return TRUE;
 }
 
+static void
+network_idle_hint_ready (MbimDevice   *device,
+                         GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)    response = NULL;
+    g_autoptr(GError)         error = NULL;
+    MbimNetworkIdleHintState  network_state;
+    const gchar              *network_state_str = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_network_idle_hint_response_parse (
+            response,
+            &network_state,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    network_state_str = mbim_network_idle_hint_state_get_string (network_state);
+    g_print ("[%s] Network idle hint state: '%s'\n",
+             mbim_device_get_path_display (device),
+             VALIDATE_UNKNOWN (network_state_str));
+
+    shutdown (TRUE);
+}
+
 void
 mbimcli_basic_connect_run (MbimDevice   *device,
                            GCancellable *cancellable)
@@ -2866,6 +2911,43 @@ mbimcli_basic_connect_run (MbimDevice   *device,
                              60,
                              ctx->cancellable,
                              (GAsyncReadyCallback)signal_state_ready,
+                             NULL);
+        return;
+    }
+
+    /* Set network idle hint state */
+    if (set_network_idle_hint_str) {
+        MbimNetworkIdleHintState  network_state;
+
+        if (!mbimcli_read_network_idle_hint_state_from_string (set_network_idle_hint_str, &network_state)) {
+            shutdown (FALSE);
+            return;
+        }
+
+        request = mbim_message_network_idle_hint_set_new (network_state, &error);
+        if (!request) {
+            g_printerr ("error: couldn't create request: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)network_idle_hint_ready,
+                             NULL);
+        return;
+    }
+
+    /* Get network idle hint state */
+    if (query_network_idle_hint_flag) {
+        request = mbim_message_network_idle_hint_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)network_idle_hint_ready,
                              NULL);
         return;
     }
