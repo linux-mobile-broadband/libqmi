@@ -41,6 +41,8 @@ static gboolean  query_uicc_atr_flag;
 static gchar    *set_uicc_apdu_str;
 static gchar    *set_uicc_reset_str;
 static gboolean  query_uicc_reset_flag;
+static gchar    *set_uicc_terminal_capability_str;
+static gboolean  query_uicc_terminal_capability_flag;
 
 static GOptionEntry entries[] = {
     { "ms-query-uicc-application-list", 0, 0, G_OPTION_ARG_NONE, &query_uicc_application_list_flag,
@@ -83,6 +85,14 @@ static GOptionEntry entries[] = {
       "Query UICC reset",
       NULL
     },
+    { "ms-set-uicc-terminal-capability", 0, 0, G_OPTION_ARG_STRING, &set_uicc_terminal_capability_str,
+      "Set UICC terminal capability (allowed keys: terminal-capability)",
+      "[\"key=value,...\"]"
+    },
+    { "ms-query-uicc-terminal-capability", 0, 0, G_OPTION_ARG_NONE, &query_uicc_terminal_capability_flag,
+      "Query UICC terminal capability",
+      NULL
+    },
     { NULL }
 };
 
@@ -119,7 +129,9 @@ mbimcli_ms_uicc_low_level_access_options_enabled (void)
                 query_uicc_atr_flag +
                 !!set_uicc_apdu_str +
                 !!set_uicc_reset_str +
-                query_uicc_reset_flag;
+                query_uicc_reset_flag +
+                !!set_uicc_terminal_capability_str +
+                query_uicc_terminal_capability_flag;
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft UICC Low Level Access Service actions requested\n");
@@ -997,6 +1009,171 @@ uicc_reset_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+set_terminal_capability_ready (MbimDevice   *device,
+                               GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_print ("Succesfully set terminal capability info\n");
+
+    shutdown (TRUE);
+}
+
+static void
+query_terminal_capability_ready (MbimDevice   *device,
+                                 GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)                      response = NULL;
+    g_autoptr(GError)                           error = NULL;
+    g_autoptr(MbimTerminalCapabilityInfoArray)  terminal_capability = NULL;
+    guint32                                     terminal_capability_count;
+    guint32                                     i = 0;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_uicc_low_level_access_terminal_capability_response_parse (
+             response,
+             &terminal_capability_count,
+             &terminal_capability,
+             &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    g_debug ("Successfully queried terminal capability information");
+    g_print ("Terminal capability: (%u)\n", terminal_capability_count);
+
+    for (i = 0; i < terminal_capability_count; i++) {
+        g_autofree gchar *terminal_caps = NULL;
+        guint32           terminal_size = 0;
+
+        if (terminal_capability) {
+            terminal_size = terminal_capability[i]->terminal_capability_data_size;
+            terminal_caps = mbim_common_str_hex (terminal_capability[i]->terminal_capability_data, terminal_size, ':');
+        } else {
+            g_assert_not_reached ();
+        }
+
+        g_print ("\t terminal capability count: %u\n", i);
+        g_print ("\t terminal capability size : %u\n", terminal_size);
+        g_print ("\t terminal capability      : %s\n", VALIDATE_UNKNOWN (terminal_caps));
+    }
+
+    shutdown (TRUE);
+}
+
+typedef struct {
+    GPtrArray *array;
+    gchar     *terminal_capability;
+} terminalcapabilityProperties;
+
+static void
+mbim_terminal_capability_free (MbimTerminalCapabilityInfo *var)
+{
+    if (!var)
+        return;
+
+    g_free (var->terminal_capability_data);
+    g_free (var);
+}
+
+static void
+terminal_capability_properties_clear (terminalcapabilityProperties *props)
+{
+    g_free(props->terminal_capability);
+    g_ptr_array_unref (props->array);
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(terminalcapabilityProperties, terminal_capability_properties_clear);
+
+static gboolean
+check_terminal_add (terminalcapabilityProperties  *props,
+                    GError                       **error)
+{
+    MbimTerminalCapabilityInfo *terminal;
+    g_autofree guint8          *terminal_capability = NULL;
+    gsize                       terminal_capability_data_size = 0;
+
+    if (!props->terminal_capability) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Option 'Terminal Capability' is missing");
+        return FALSE;
+    }
+
+    terminal_capability = mbimcli_read_buffer_from_string (props->terminal_capability, -1, &terminal_capability_data_size, error);
+    if (!terminal_capability)
+        return FALSE;
+
+    terminal = g_new0 (MbimTerminalCapabilityInfo, 1);
+    terminal->terminal_capability_data_size = terminal_capability_data_size;
+    terminal->terminal_capability_data = g_steal_pointer (&terminal_capability);
+    g_ptr_array_add (props->array, terminal);
+
+    g_clear_pointer (&props->terminal_capability, g_free);
+
+    return TRUE;
+}
+
+static gboolean
+set_terminal_foreach_cb (const gchar                   *key,
+                         const gchar                   *value,
+                         GError                       **error,
+                         terminalcapabilityProperties  *props)
+{
+    if (g_ascii_strcasecmp (key, "terminal-capability") == 0) {
+        if (props->terminal_capability) {
+            if (!check_terminal_add (props, error))
+                return FALSE;
+            g_clear_pointer (&props->terminal_capability, g_free);
+        }
+        props->terminal_capability = g_strdup (value);
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+terminal_capability_parse (const gchar                   *str,
+                           terminalcapabilityProperties  *props)
+{
+    g_autoptr(GError) error = NULL;
+
+    if (!mbimcli_parse_key_value_string (str,
+                                         &error,
+                                         (MbimParseKeyValueForeachFn)set_terminal_foreach_cb,
+                                         props)) {
+       g_printerr ("error: couldn't parse input string: %s\n", error->message);
+       shutdown (FALSE);
+       return FALSE;
+    }
+
+    if (props->terminal_capability && !check_terminal_add (props, &error)) {
+        g_printerr ("error: failed to add last terminal item: %s\n", error->message);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 void
 mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                                       GCancellable *cancellable)
@@ -1292,6 +1469,48 @@ mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                              30,
                              ctx->cancellable,
                              (GAsyncReadyCallback)uicc_reset_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to set UICC terminal capability */
+    if (set_uicc_terminal_capability_str) {
+        g_auto(terminalcapabilityProperties) props = {NULL, NULL};
+
+        props.array = g_ptr_array_new_with_free_func ((GDestroyNotify)mbim_terminal_capability_free);
+        if (!terminal_capability_parse (set_uicc_terminal_capability_str, &props)) {
+            shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously set UICC terminal capability.");
+        request = mbim_message_ms_uicc_low_level_access_terminal_capability_set_new ((guint32)props.array->len,
+                                                                                     (const MbimTerminalCapabilityInfo *const *)props.array->pdata,
+                                                                                     &error);
+        if (!request) {
+            g_printerr ("error: couldn't create Terminal Capability request %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             30,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)set_terminal_capability_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to query UICC terminal capability */
+    if (query_uicc_terminal_capability_flag) {
+        g_debug ("Asynchronously querying UICC terminal capability...");
+        request = mbim_message_ms_uicc_low_level_access_terminal_capability_query_new (NULL);
+        mbim_device_command (ctx->device,
+                             request,
+                             10,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)query_terminal_capability_ready,
                              NULL);
         return;
     }
