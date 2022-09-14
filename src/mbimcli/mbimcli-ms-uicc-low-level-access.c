@@ -38,6 +38,7 @@ static gchar    *query_uicc_read_record_str;
 static gchar    *set_uicc_open_channel_str;
 static gchar    *set_uicc_close_channel_str;
 static gboolean  query_uicc_atr_flag;
+static gchar    *set_uicc_apdu_str;
 
 static GOptionEntry entries[] = {
     { "ms-query-uicc-application-list", 0, 0, G_OPTION_ARG_NONE, &query_uicc_application_list_flag,
@@ -67,6 +68,10 @@ static GOptionEntry entries[] = {
     { "ms-query-uicc-atr", 0, 0, G_OPTION_ARG_NONE, &query_uicc_atr_flag,
       "Query UICC atr",
       NULL
+    },
+    { "ms-set-uicc-apdu", 0, 0, G_OPTION_ARG_STRING, &set_uicc_apdu_str,
+      "Set UICC apdu (allowed keys: channel, secure-message, classbyte-type, command)",
+      "[\"key=value,...\"]"
     },
     { NULL }
 };
@@ -101,7 +106,8 @@ mbimcli_ms_uicc_low_level_access_options_enabled (void)
                 !!query_uicc_read_record_str +
                 !!set_uicc_open_channel_str +
                 !!set_uicc_close_channel_str +
-                query_uicc_atr_flag;
+                query_uicc_atr_flag +
+                !!set_uicc_apdu_str;
 
     if (n_actions > 1) {
         g_printerr ("error: too many Microsoft UICC Low Level Access Service actions requested\n");
@@ -832,6 +838,122 @@ query_atr_ready (MbimDevice   *device,
     shutdown (TRUE);
 }
 
+static void
+set_apdu_ready (MbimDevice   *device,
+                GAsyncResult *res)
+{
+    g_autoptr(MbimMessage)  response = NULL;
+    g_autoptr(GError)       error = NULL;
+    guint32                 status = 0;
+    const guint8           *apdu_response;
+    guint32                 apdu_response_size = 0;
+    g_autofree gchar       *apdu_response_str = NULL;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (!response || !mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error)) {
+        g_printerr ("error: operation failed: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    if (!mbim_message_ms_uicc_low_level_access_apdu_response_parse (
+            response,
+            &status,
+            &apdu_response_size,
+            &apdu_response,
+            &error)) {
+        g_printerr ("error: couldn't parse response message: %s\n", error->message);
+        shutdown (FALSE);
+        return;
+    }
+
+    apdu_response_str = mbim_common_str_hex (apdu_response, apdu_response_size, ':');
+    g_print ("Succesfully retrieved UICC APDU response:\n"
+             "\t  status: %u\n"
+             "\tresponse: %s\n",
+             status,
+             apdu_response_str);
+
+    shutdown (TRUE);
+}
+
+typedef struct {
+    MbimUiccSecureMessaging  secure_messaging;
+    MbimUiccClassByteType    class_byte_type;
+    guint32                  channel;
+    gsize                    command_size;
+    guint8                  *command;
+} ApduProperties;
+
+static void
+apdu_properties_clear (ApduProperties *props)
+{
+    g_clear_pointer (&props->command, g_free);
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(ApduProperties, apdu_properties_clear);
+
+static gboolean
+apdu_properties_handle (const gchar  *key,
+                        const gchar  *value,
+                        GError      **error,
+                        gpointer      user_data)
+{
+    ApduProperties *props = user_data;
+
+    if (g_ascii_strcasecmp (key, "command") == 0) {
+        g_clear_pointer (&props->command, g_free);
+        props->command_size = 0;
+        props->command = mbimcli_read_buffer_from_string (value, -1, &props->command_size, error);
+        if (!props->command)
+            return FALSE;
+    } else if (g_ascii_strcasecmp (key, "secure-message") == 0) {
+        if (!mbimcli_read_uicc_secure_messaging_from_string (value, &props->secure_messaging)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Failed to parse secure-message field");
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "channel") == 0) {
+        if (!mbimcli_read_uint_from_string (value, &props->channel)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Failed to parse channel field as an integer");
+            return FALSE;
+        }
+    } else if (g_ascii_strcasecmp (key, "classbyte-type") == 0) {
+        if (!mbimcli_read_uicc_class_byte_type_from_string (value, &props->class_byte_type)) {
+            g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                         "Failed to parse classbyte-type field");
+            return FALSE;
+        }
+    } else {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "unrecognized option '%s'", key);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+apdu_input_parse (const gchar     *str,
+                  ApduProperties  *props,
+                  GError         **error)
+{
+    if (!mbimcli_parse_key_value_string (str,
+                                         error,
+                                         apdu_properties_handle,
+                                         props))
+        return FALSE;
+
+    if (!props->command_size || !props->command) {
+        g_set_error (error, MBIM_CORE_ERROR, MBIM_CORE_ERROR_FAILED,
+                     "Option 'command' is missing");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 void
 mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                                       GCancellable *cancellable)
@@ -1051,6 +1173,44 @@ mbimcli_ms_uicc_low_level_access_run (MbimDevice   *device,
                              10,
                              ctx->cancellable,
                              (GAsyncReadyCallback)query_atr_ready,
+                             NULL);
+        return;
+    }
+
+    /* Request to set UICC Apdu */
+    if (set_uicc_apdu_str) {
+        g_auto(ApduProperties) props = {
+            .secure_messaging = MBIM_UICC_SECURE_MESSAGING_NONE,
+            .class_byte_type  = MBIM_UICC_CLASS_BYTE_TYPE_INTER_INDUSTRY,
+            .channel          = 0,
+            .command_size     = 0,
+            .command          = NULL,
+        };
+
+        if (!apdu_input_parse (set_uicc_apdu_str, &props, &error)) {
+            g_printerr ("error: couldn't parse input arguments: %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        g_debug ("Asynchronously sending UICC set apdu command.");
+        request = mbim_message_ms_uicc_low_level_access_apdu_set_new (props.channel,
+                                                                      props.secure_messaging,
+                                                                      props.class_byte_type,
+                                                                      props.command_size,
+                                                                      props.command,
+                                                                      &error);
+        if (!request) {
+            g_printerr ("error: couldn't create APDU request %s\n", error->message);
+            shutdown (FALSE);
+            return;
+        }
+
+        mbim_device_command (ctx->device,
+                             request,
+                             30,
+                             ctx->cancellable,
+                             (GAsyncReadyCallback)set_apdu_ready,
                              NULL);
         return;
     }
